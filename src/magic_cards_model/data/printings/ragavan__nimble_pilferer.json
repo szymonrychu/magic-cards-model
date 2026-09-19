@@ -141,19 +141,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 276,
+  "edhrec_rank": 280,
   "preview": {
     "source": "Amy the Amazonian",
     "source_uri": "https://twitter.com/coL_Amazonian/status/1397966381434511360",
     "previewed_at": "2021-05-27"
   },
   "prices": {
-    "usd": "42.27",
-    "usd_foil": "57.26",
+    "usd": "43.97",
+    "usd_foil": "58.04",
     "usd_etched": null,
-    "eur": "33.76",
-    "eur_foil": "48.08",
-    "tix": "7.62"
+    "eur": "33.74",
+    "eur_foil": "52.51",
+    "tix": "7.65"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=522214&printed=false",

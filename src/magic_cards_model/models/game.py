@@ -2627,7 +2627,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 32
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 33
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3108,6 +3108,27 @@ class Game(EngineModel):
     (CR 500.8's queued extra-phase steps, Aggravated Assault's "After this
     main phase, there is an additional combat phase followed by an
     additional main phase.") - both new fields per the bump rule above.
+
+    Bumped 32 -> 33: FRA S8b's own merge, folded into one combined bump
+    rather than left at its own branch's stale 31 - `machines/delayed.
+    DelayedTrigger` gained `attacking_alone_only` (The Last Ronin's own Saga
+    chapter III, CR 506.5's "attacks alone" read as a structured field the
+    same way `combat_only`/`to_player_only` already are, since `DelayedTrigger
+    .matches` has no string condition to parse it off) and `machines/delayed.
+    DelayedEffectSpec` gained a new discriminated-union member,
+    `CountersAndKeywordsEventSubject` (the same chapter's own permanent-
+    counter-plus-temporary-keyword-grant resolution) - both reachable from
+    `Game.delayed_triggers.triggers`, so both are new-field/new-kind bumps
+    per the rule above even though no pre-existing decoded snapshot could
+    ever have exercised either (CR 603.7's delayed trigger did not exist to
+    create one before this change). `machines/decisions.DecisionKind` also
+    gained `CHOOSE_PILE` (CR 700.3's pile-choice primitive, Liliana of the
+    Veil's own `-6`/Do or Die) - not itself reachable from a `Game` dump (a
+    pending `Decision` is raised, never persisted, per `schema_version`'s
+    own docstring on why this field exists at all), so that addition alone
+    would not have forced this bump on its own; bumped together with the
+    two `DelayedTrigger`/`DelayedEffectSpec` additions above as one merge-
+    wide note rather than two.
     """
 
     @model_validator(mode="before")
@@ -8333,6 +8354,11 @@ class Game(EngineModel):
         if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
             if not isinstance(value, bool):
                 raise ValueError(f"{decision.prompt}: needs a top-or-bottom bool answer")
+            return value
+
+        if decision.kind is DecisionKind.CHOOSE_PILE:
+            if not isinstance(value, bool):
+                raise ValueError(f"{decision.prompt}: needs a which-pile bool answer")
             return value
 
         if decision.kind is DecisionKind.OPENING_HAND_ACTION:

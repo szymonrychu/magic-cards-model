@@ -330,6 +330,28 @@ class DecisionKind(StrEnum):
     #: same "least destructive, most reversible" posture `SCRY`/`SURVEIL`'s own
     #: "keep everything on top" default already takes.
     PUT_ON_TOP_OR_BOTTOM = "put_on_top_or_bottom"
+    #: CR 700.3's own two-way pile split (Liliana of the Veil's own `-6`,
+    #: "Separate all permanents target player controls into two piles. That
+    #: player sacrifices all permanents in the pile of their choice."; Do or
+    #: Die's identical shape). Two *different* players are involved and two
+    #: *different* `Game.ask` calls happen, in order - CR 608.2c's own
+    #: unattributed "Separate ... into two piles" is CR 608.2c's resolving
+    #: controller's own instruction (confirmed against the card's official
+    #: ruling: "you put each permanent the player controls into one of the
+    #: two piles"), read the identical `CHOOSE_CARDS` way `SCRY`/`SURVEIL`
+    #: already read "which of these move" (`exact=False`, 0 up to all,
+    #: CR 700.3d's "a pile can contain zero or more objects") - "pile one" is
+    #: whatever that first answer names, "pile two" the complement among the
+    #: same qualifying set. Only the *second* choice - which whole pile the
+    #: instruction actually acts on - is this kind, asked of the player the
+    #: card names for it (Liliana's/Do or Die's own "that player", i.e. the
+    #: ability's target), a plain boolean the identical shape `PUT_ON_TOP_OR_
+    #: BOTTOM` already is: `True` for pile one (`Decision.cards`, the first
+    #: player's own choice of what to put there), `False` for its complement
+    #: - not enumerated a second time on the decision, since the chooser is a
+    #: real player who can already see every permanent the target controls
+    #: and just read off which of them `Decision.cards` names.
+    CHOOSE_PILE = "choose_pile"
     #: CR 603.3b: "If multiple abilities have triggered since the last time a
     #: player received priority, the abilities are placed on the stack in a
     #: two-part process. First, each player, in APNAP order, puts each
@@ -594,6 +616,13 @@ def default_answer(decision: Decision) -> object:
         return 0
     if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
         return True
+    if decision.kind is DecisionKind.CHOOSE_PILE:
+        # Neither pile is more "destructive" than the other here - both name
+        # the same consequence (sacrifice, destroy) - so this is an arbitrary
+        # but consistent choice, the same way `PUT_ON_TOP_OR_BOTTOM`'s own
+        # default is a documented pick rather than a claim that pile one is
+        # somehow correct for an unscripted player.
+        return True
     if decision.kind is DecisionKind.ORDER_TRIGGERS:
         # CR 603.3b's "in any order they choose" with nobody choosing: the
         # order they triggered in, which is exactly what `apnap_order` gave
@@ -756,6 +785,7 @@ _ANSWER_FIELD_FOR_KIND: dict[DecisionKind, str] = {
     DecisionKind.MULLIGAN: "accept",
     DecisionKind.OPENING_HAND_ACTION: "accept",
     DecisionKind.PUT_ON_TOP_OR_BOTTOM: "accept",
+    DecisionKind.CHOOSE_PILE: "accept",
     DecisionKind.PAY_ENERGY_AMOUNT: "amount",
     DecisionKind.PAY_LIFE_AMOUNT: "amount",
     DecisionKind.CHOOSE_CARDS: "card_ids",
@@ -951,11 +981,12 @@ class Answer(EngineModel):
     reasoning: str | None = None
 
     #: `MAY`, `PAY_LIFE`, `PAY_ENERGY`, `PAY_MANA`, `MULLIGAN`,
-    #: `OPENING_HAND_ACTION`, `PUT_ON_TOP_OR_BOTTOM` - every yes/no question
-    #: this module asks, including the two that are not `Game.ask` questions
-    #: at all (`MULLIGAN`, CR 103.5) and the one whose two options are not
-    #: literally yes/no but are still a plain boolean (`PUT_ON_TOP_OR_BOTTOM`,
-    #: `True` for the top).
+    #: `OPENING_HAND_ACTION`, `PUT_ON_TOP_OR_BOTTOM`, `CHOOSE_PILE` - every
+    #: yes/no question this module asks, including the two that are not
+    #: `Game.ask` questions at all (`MULLIGAN`, CR 103.5) and the two whose
+    #: two options are not literally yes/no but are still a plain boolean
+    #: (`PUT_ON_TOP_OR_BOTTOM`, `True` for the top; `CHOOSE_PILE`, `True` for
+    #: pile one).
     accept: bool | None = None
     #: `PAY_ENERGY_AMOUNT`, `PAY_LIFE_AMOUNT` - how much was paid, 0 or more.
     amount: int | None = None

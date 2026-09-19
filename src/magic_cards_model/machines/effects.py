@@ -123,6 +123,7 @@ from .delayed import (
     AddManaWhenLandTapped,
     CombatDamageToPlayerDraw,
     CopyNextSpellYouCast,
+    CountersAndKeywordsEventSubject,
     CreateAttackingTokens,
     CreateTokenCopyOfControlledToken,
     DelayedBlinkReturnWithRider,
@@ -4642,6 +4643,28 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
             return rest(state) and Supertype.SNOW in state.supertypes
 
         return snow_matches
+    # CR 205.4a's legendary supertype, stacked on the rest of the phrase the
+    # identical way "basic "/"snow " already do - Sisay, Weatherlight
+    # Captain's own "a legendary permanent card" needs both halves at once
+    # ("permanent" alone is CR 110.4a's six-type umbrella `_named_type_
+    # matcher` already reads for a bare "permanent card"; "legendary" alone
+    # was already readable as one word, but "legendary permanent" is two
+    # words with no comma/"or" between them to split on, so it never reached
+    # `_named_type_matcher` as either word on its own). Gated on there being
+    # no comma/" or " anywhere in the phrase: Nashi, Searcher in the Dark's
+    # own "legendary or enchantment" is a genuine two-word *disjunction*
+    # ("legendary" is already one whole alternative on its own, CR 205.4a) -
+    # `lowered.startswith("legendary ")` is true for that phrase too, and
+    # stacking it onto "or enchantment" as though "or" were a noun instead of
+    # letting the split below read "legendary" and "enchantment" as the two
+    # separate alternatives they are broke that card's own reading.
+    if lowered.startswith("legendary ") and not re.search(r",|\bor\b", lowered):
+        rest = _quality_matcher(lowered.removeprefix("legendary "))
+
+        def legendary_matches(state: CardState) -> bool:
+            return rest(state) and Supertype.LEGENDARY in state.supertypes
+
+        return legendary_matches
     if lowered == "historic":
         return _historic
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
@@ -5323,6 +5346,66 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
             reveal=True,
             source=source,
             source_id=source_id_of(stack_object),
+        )
+
+    return effect
+
+
+#: Sisay, Weatherlight Captain's own shape: "Search your library for a
+#: `<quality>` card with mana value less than this permanent's power, put
+#: that card onto the battlefield, then shuffle." `_SEARCH_MV_LTE_COUNT_RE`'s
+#: own `<expr>` is a board count (`count_expression`, `(game, controller) ->
+#: int`); this bound is a *source's own* characteristic (CR 613's computed
+#: power) instead, which needs the source object itself, not just its
+#: controller - `_self_normalized_effect_text` has already turned Sisay's own
+#: printed name into "this permanent" by the time this ever runs, the same
+#: normalisation `_COUNTER_ON_SELF_RE` relies on. No printed reveal
+#: instruction (CR 701.23e), so the find goes straight to the battlefield
+#: unrevealed - genuinely different from `_SEARCH_MV_LTE_COUNT_RE`'s reveal-
+#: to-hand destination, which is why this is its own regex rather than a
+#: widened `expr` on that one.
+_SEARCH_MV_LESS_THAN_SELF_POWER_RE = re.compile(
+    r"^search (?:your|their) library for a (?P<quality>.+?) card with mana value less than "
+    r"this (?:permanent|creature)'s power, put that card onto the battlefield, "
+    r"then shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_search_mv_less_than_self_power_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SEARCH_MV_LESS_THAN_SELF_POWER_RE`'s shape - ability-only, the same
+    reason `_parse_put_counters_on_self_clause` is: a spell has no permanent
+    self to read a power off (CR 613 layers apply to objects on the
+    battlefield)."""
+    if for_spell:
+        return None
+    match = _SEARCH_MV_LESS_THAN_SELF_POWER_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    quality_matches = _quality_matcher(match.group("quality"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        ability = stack_object
+        source = ability.source(game)
+        if source is None:
+            return
+        power = game.power_of(source)
+        if power is None:
+            return
+
+        def matches(state: CardState) -> bool:
+            return state.mana_value < power and quality_matches(state)
+
+        game.search_and_put(
+            game.controller_of(ability),
+            matches,
+            destination=Zone.BATTLEFIELD,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
         )
 
     return effect
@@ -6177,6 +6260,24 @@ _COLOR_AMONG_OTHER_QUALITY_RE = re.compile(
 )
 
 
+#: "for each `<kind>` counter on it"/"... on this `<noun>`" - Vexing Sphinx's
+#: own dies trigger ("draw a card for each age counter on it") and Hangarback
+#: Walker's registry-row twin ("create a token ... for each +1/+1 counter on
+#: this creature") are the identical CR 122.1/122.2 read: the count is the
+#: *source's* own counters, not anything the controller boards, so this
+#: reads `source_id` off `game.find_by_id` rather than the `controller`
+#: parameter `_for_each_qualifier_count`'s board scan uses. CR 603.10a's
+#: "look back in time" for a dies trigger is what makes `last_known_counters`
+#: the right half of the ternary once the source is gone from the
+#: battlefield - `Counter`-keyed removal on a zone change (CR 122.2) empties
+#: `.counters` itself by the time this ever runs, the same reason
+#: `hangarback_dies` reads the identical ternary rather than `.counters`
+#: alone.
+_COUNTER_ON_IT_RE = re.compile(
+    r"^(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|this \w+)$", re.IGNORECASE
+)
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -6185,12 +6286,28 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     Tries, in order: Kaito, Bane of Nightmares' own "opponent who lost life
     this turn" (folded in here rather than pinned to its exact whole
     sentence, as `_DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE` used to);
+    `_COUNTER_ON_IT_RE`'s own source-relative counter count;
     `_for_each_qualifier_count`'s "(other) `<qualifier>` you control[ with
     ...]"; and `count_expression`'s own "the number of `<qualifier>` you
     control" / "... cards in your graveyard/hand" shapes, for a card that
     spells the count out that way instead.
     """
     stripped = phrase.strip().rstrip(".")
+    if match := _COUNTER_ON_IT_RE.fullmatch(stripped):
+        kind = _counter_kind(match.group("kind"))
+
+        def count_counters_on_it(game: "Game", _controller: str, source_id: str | None) -> int:
+            if source_id is None:
+                return 0
+            source = game.find_by_id(UUID(source_id))
+            if source is None:
+                return 0
+            counters = (
+                source.counters if source.zone is Zone.BATTLEFIELD else source.last_known_counters
+            )
+            return counters[kind]
+
+        return count_counters_on_it
     if match := _COLOR_AMONG_OTHER_QUALITY_RE.fullmatch(stripped):
         qualifier = match.group("qualifier").strip().lower()
         # CR 110.4a's own "permanent" umbrella (Chromatic Orrery's own
@@ -8770,6 +8887,59 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Put `<self>` into its owner's library `<ordinal>` from the top." -
+#: Borborygmos and Fblthp's own `{1}{U}` ability, self-referential the way
+#: `_COUNTER_ON_SELF_RE` is: `<self>` is whatever `_self_normalized_effect_
+#: text` has already turned the card's own printed name into ("this
+#: permanent"/"this creature") for an ability read off the battlefield, or
+#: the literal printed "this card" for one read off the graveyard - Bookwurm
+#: and Screaming Swarm both activate their identical library-placement
+#: ability from there, where CR 110.4a's "permanent" is not even true of the
+#: source yet. "Its owner's"/"your" library are the same library either way
+#: (CR 108.3, CR 400.1) - Borborygmos prints the first, Bookwurm and
+#: Screaming Swarm the second. CR 401.2 keeps the rest of the library's own
+#: order; nothing else in it moves.
+_PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE = re.compile(
+    rf"^put this (?:permanent|creature|card)(?: from your graveyard)? into "
+    rf"(?:its owner'?s|your) library (?P<ordinal>{ORDINAL}) from the top\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_self_into_library_nth_from_top_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE`'s shape.
+
+    CR 113.7a lets the ability find its own source by id in whatever zone it
+    now occupies, on or off the battlefield (Bookwurm's own ability works
+    from the graveyard). `Game.put_cards_into_library` already puts a
+    single-card instruction on top (CR 401.2's single face-down pile); the
+    card is then slid down to its printed depth by direct list surgery -
+    still a hidden-zone reposition nobody's knowledge distinguishes from the
+    "everything about this library is now unknown" `put_cards_into_library`
+    itself already declares by putting something on top at all.
+    """
+    match = _PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    depth = parse_ordinal(match.group("ordinal"))
+    if depth is None or depth < 1:
+        return None
+    index = depth - 1
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.owner is None:
+            return
+        game.put_cards_into_library([source], to_bottom=False)
+        if index > 0:
+            library = game.player(source.owner).library
+            if source in library:
+                library.remove(source)
+                library.insert(min(index, len(library)), source)
+
+    return effect
+
+
 #: "Put a +1/+1 counter on it. Then if it has exactly four +1/+1 counters on
 #: it, `<instruction>`" - Ayara's Oathsworn's whole trigger effect, behind its
 #: own intervening *if* (which `machines/triggers.py` reads separately, CR
@@ -10355,8 +10525,22 @@ _RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE = re.compile(
 #: first, against the *whole* unsplit ability text, so a card whose sentence
 #: continues past "to the battlefield." with "It gains ..." never reaches
 #: this fullmatch at all.
+#: Celestine, the Living Saint's own "... with mana value X or less from
+#: your graveyard to the battlefield, where X is the amount of life you
+#: gained this turn." widens this further: CR 107.3c's own "where X is
+#: <expression>" definition sits *after* "to the battlefield" in the printed
+#: sentence, past where the un-widened regex's own `\.?$` anchor used to end
+#: the match outright. `machines/targeting.profile_for_text` already reads
+#: "with mana value X or less, where X is ..." into `comparison_x_definition`
+#: regardless of what comes between the two ("from your graveyard to the
+#: battlefield" here) - proven directly against `profile_for_text` before
+#: this regex was touched - so the fix is only to let the *outer* fullmatch
+#: reach that far, and to fold the "where X is ..." tail into `phrase` before
+#: `_targets_understood` reads it, the same window `profile_for_text` itself
+#: already scans.
 _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
-    r"return (?P<phrase>.*target.+from your graveyard) to the battlefield(?P<tapped> tapped)?\.?$",
+    r"return (?P<phrase>.*target.+from your graveyard) to the battlefield(?P<tapped> tapped)?"
+    r"(?P<where_x>, where [xX] is [^.]+)?\.?$",
     re.IGNORECASE,
 )
 #: "Return target `<X>` from your graveyard to the battlefield[ tapped] with
@@ -12228,9 +12412,8 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         )
 
     if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(clause):
-        if not _targets_understood(
-            match.group("phrase"), count_agnostic=True, battlefield_only=False
-        ):
+        phrase = match.group("phrase") + (match.group("where_x") or "")
+        if not _targets_understood(phrase, count_agnostic=True, battlefield_only=False):
             return None
         if match.group("tapped"):
             return _return_ability_targets_to_battlefield_with_counter(True)
@@ -16135,6 +16318,62 @@ def _parse_until_your_next_turn_attack_pump_clause(text: str) -> AbilityEffect |
     return effect
 
 
+#: "Whenever a creature you control attacks alone this turn, put `<n>`
+#: `<kind>` counter(s) on it. It gains `<keywords>` until end of turn." - The
+#: Last Ronin's own Saga chapter III (CR 714.4): a delayed trigger created as
+#: that chapter's own effect, the identical "watch this turn, act on
+#: whichever creature the event actually names" shape `_UNTIL_YOUR_NEXT_
+#: TURN_ATTACK_PUMP_RE` already reads for Jace, Reality Sculptor's own `-3`,
+#: with `attacking_alone_only` (CR 506.5) in place of `defending_controller_
+#: only`, `remaining=None`/`expires_end_of_turn=True` for the shorter "this
+#: turn" watch (CR 603.7b, Dalkovan Encampment's own "whenever you attack
+#: this turn" already uses the identical pair), and `CountersAndKeywords
+#: EventSubject`'s permanent counter plus temporary keyword grant in place
+#: of `PumpEventSubject`'s own single power/toughness change.
+_ATTACKS_ALONE_THIS_TURN_COUNTERS_AND_KEYWORDS_RE = re.compile(
+    r"^whenever a creature you control attacks alone this turn, "
+    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on it\. "
+    r"it gains (?P<keywords>[^.]+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_attacks_alone_this_turn_counters_and_keywords_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_ATTACKS_ALONE_THIS_TURN_COUNTERS_AND_KEYWORDS_RE`'s shape."""
+    whole = " ".join(text.strip().split())
+    match = _ATTACKS_ALONE_THIS_TURN_COUNTERS_AND_KEYWORDS_RE.fullmatch(whole)
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    keywords = split_and_validate_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=whole,
+                event=TriggerEvent.ATTACKS,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                remaining=None,
+                expires_end_of_turn=True,
+                attacking_alone_only=True,
+                effect=CountersAndKeywordsEventSubject(
+                    counter_kind=kind, counter_amount=amount, keywords=tuple(keywords)
+                ),
+            )
+        )
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -16226,6 +16465,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     until_your_next_turn_attack_pump = _parse_until_your_next_turn_attack_pump_clause(effect_text)
     if until_your_next_turn_attack_pump is not None:
         return until_your_next_turn_attack_pump
+    attacks_alone_this_turn_counters_and_keywords = (
+        _parse_attacks_alone_this_turn_counters_and_keywords_clause(effect_text)
+    )
+    if attacks_alone_this_turn_counters_and_keywords is not None:
+        return attacks_alone_this_turn_counters_and_keywords
     ante_self = _parse_ante_self_if_you_do_clause(effect_text)
     if ante_self is not None:
         return ante_self
@@ -28581,6 +28825,223 @@ def _parse_target_player_shuffles_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "Target player sacrifices `<n>` `<description>`[ of their choice]." - the
+#: edict template (CR 701.21a), aimed at a chosen player instead of "each
+#: opponent"/"each player" (`_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`) or the
+#: specific player whose own step just triggered ("that player",
+#: `_THAT_PLAYER_SACRIFICES_OF_THEIR_CHOICE_RE`) - a genuinely different
+#: subject each time, CR 115.1's own "target [something]" grammar rather
+#: than either of those two's anaphora. "Of their choice" is optional:
+#: sacrifice is always the controller's own choice among what they control
+#: whether or not a card bothers to say so (CR 701.21a) - Liliana of the
+#: Veil's own "-2" omits the phrase, Diabolic Edict prints it, and both mean
+#: the identical thing, so the same reader takes either. The description is
+#: `machines/targeting.permanent_description`, the same target grammar
+#: `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE` already reuses.
+_TARGET_PLAYER_SACRIFICES_RE = re.compile(
+    rf"^target player sacrifices (?P<n>{COUNT}) (?P<description>.+?)"
+    r"(?: of their choice)?(?P<tail> with [^.]+?)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_sacrifices_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_SACRIFICES_RE`'s shape - CR 701.21a's edict, aimed at
+    one targeted player. A player with fewer matching permanents than `n`
+    sacrifices everything they have (CR 608.2d: no impossible choice), and
+    one with exactly `n` is never asked either - the same floor
+    `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE` already applies.
+    """
+    match = _TARGET_PLAYER_SACRIFICES_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    count = parse_count(match.group("n"))
+    description = match.group("description").strip()
+    if match.group("tail") is not None:
+        description = f"{description}{match.group('tail')}"
+    requirement = permanent_description(description)
+    if requirement is None or count is None or count < 1:
+        return None
+    wanted_words = with_indefinite_article(description) if count == 1 else f"{count} {description}"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(target.username)
+                if requirement.rejects(permanent, target.username, game) is None
+            ]
+            if not candidates:
+                continue
+            if len(candidates) <= count:
+                chosen = candidates
+            else:
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=target.username,
+                        prompt=f"sacrifice {wanted_words}",
+                        source=source,
+                        amount=count,
+                        cards=tuple(permanent.id for permanent in candidates),
+                        source_id=source_id_of(stack_object),
+                    )
+                )
+                by_id = {permanent.id: permanent for permanent in candidates}
+                chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+            for permanent in chosen:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.sacrifice(permanent)
+
+    return effect
+
+
+#: "Separate all `<quality>` target player controls into two piles.
+#: `<consequence>` all `<quality>` in the pile of that player's choice." -
+#: CR 700.3's pile primitive, read whole across both sentences the way
+#: every other "this way"/anaphoric rider in this module already is: the
+#: second sentence's "the pile of their choice" names an object the first
+#: sentence's own division created, not something readable on its own.
+#:
+#: **Two different players, two different questions** - confirmed against
+#: Liliana of the Veil's own official ruling ("When Liliana's third ability
+#: resolves, **you** put each permanent the player controls into one of the
+#: two piles"): the first sentence's unattributed "Separate ..." is CR
+#: 608.2c's own default - the resolving ability's *controller* - not the
+#: named "target player" the second sentence goes on to single out. That
+#: division is read the identical `CHOOSE_CARDS` way `SCRY`/`SURVEIL`
+#: already read "which of these move" (`exact=False`, CR 700.3d's "a pile
+#: can contain zero or more objects"): the controller names what goes in
+#: pile one, and the complement among the same qualifying set is pile two.
+#: The *target* player then picks a whole pile - `DecisionKind.CHOOSE_PILE`,
+#: the plain-boolean shape `PUT_ON_TOP_OR_BOTTOM` already is for "exactly
+#: two answers, neither a color/name/type" - and the named consequence
+#: applies to every permanent in the pile they picked.
+#:
+#: Liliana of the Veil's own `-6` is the reported ability ("... That player
+#: sacrifices all permanents in the pile of their choice."). Do or Die (real,
+#: non-FRA, non-pool) is the off-set proof: the identical two-sentence shape,
+#: narrowed to "creatures" rather than "permanents" and "Destroy" rather than
+#: "sacrifices" - the consequence verb genuinely varies, which is why it is
+#: its own captured alternative rather than folded into the shared regex.
+#: Do or Die's own trailing "They can't be regenerated." is accepted and
+#: read as reinforcing "destroy" (CR 701.16a already refuses regeneration on
+#: a permanent this instruction already destroys outright with no separate
+#: replacement effect asked about) rather than as a third, independent
+#: instruction.
+_SEPARATE_INTO_TWO_PILES_RE = re.compile(
+    r"^separate all (?P<quality>.+?) target player controls into two piles\.?$",
+    re.IGNORECASE,
+)
+_THAT_PLAYER_SACRIFICES_PILE_OF_CHOICE_RE = re.compile(
+    r"^that player sacrifices all (?P<quality>.+?) in the pile of their choice\.?$",
+    re.IGNORECASE,
+)
+_DESTROY_PILE_OF_CHOICE_RE = re.compile(
+    r"^destroy all (?P<quality>.+?) in the pile of that player'?s choice\.?"
+    r"(?:\s*they can'?t be regenerated\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_separate_into_two_piles_then_consequence_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SEPARATE_INTO_TWO_PILES_RE`'s shape, paired with either
+    `_THAT_PLAYER_SACRIFICES_PILE_OF_CHOICE_RE` or
+    `_DESTROY_PILE_OF_CHOICE_RE` - see the banner above."""
+    sentences = _plain_resolution_sentences(text)
+    if len(sentences) < 2:
+        return None
+    separate_match = _SEPARATE_INTO_TWO_PILES_RE.fullmatch(sentences[0].strip())
+    if separate_match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    rest = " ".join(sentence.strip() for sentence in sentences[1:] if sentence.strip())
+    sacrifice_match = _THAT_PLAYER_SACRIFICES_PILE_OF_CHOICE_RE.fullmatch(rest)
+    destroy_match = (
+        None if sacrifice_match is not None else _DESTROY_PILE_OF_CHOICE_RE.fullmatch(rest)
+    )
+    consequence_match = sacrifice_match or destroy_match
+    if consequence_match is None:
+        return None
+    quality = separate_match.group("quality").strip()
+    requirement = permanent_description(quality)
+    if requirement is None:
+        return None
+    verb = "sacrifice" if sacrifice_match is not None else "destroy"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        divider = game.controller_of(stack_object)
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(target.username)
+                if requirement.rejects(permanent, target.username, game) is None
+            ]
+            if not candidates:
+                continue
+            # Step 1 (CR 700.3a/700.3d): the ability's own controller - not
+            # the target - divides every qualifying permanent into exactly
+            # one of two piles. "Pile one" is whatever they name here; the
+            # complement among `candidates` is pile two.
+            pile_one_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=divider.username,
+                    prompt=f"separate {target.username}'s {quality} into pile one",
+                    source=source,
+                    amount=len(candidates),
+                    cards=tuple(permanent.id for permanent in candidates),
+                    source_id=source_id_of(stack_object),
+                    exact=False,
+                )
+            )
+            pile_one_id_set = set(pile_one_ids)
+            pile_one = [permanent for permanent in candidates if permanent.id in pile_one_id_set]
+            pile_two = [
+                permanent for permanent in candidates if permanent.id not in pile_one_id_set
+            ]
+            # Step 2: the target player - the one the card actually names for
+            # this choice - picks a whole pile.
+            wants_pile_one = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_PILE,
+                    player=target.username,
+                    prompt=f"choose a pile to {verb}",
+                    source=source,
+                    cards=tuple(permanent.id for permanent in pile_one),
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            assert isinstance(wants_pile_one, bool)
+            chosen = pile_one if wants_pile_one else pile_two
+            for permanent in chosen:
+                if permanent.zone is not Zone.BATTLEFIELD:
+                    continue
+                if verb == "sacrifice":
+                    game.sacrifice(permanent)
+                else:
+                    game.destroy(permanent)
+
+    return effect
+
+
 #: "Target player draws `<n>` cards and loses `<m>` life." - Ancestral
 #: Craving's and Blood Pact's own whole shape: one compound predicate, one
 #: subject, not two independent instructions. `_CLAUSE_SEPARATOR`'s bare
@@ -31166,11 +31627,19 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counters_on_self = _parse_put_counters_on_self_clause(clause)
         if counters_on_self is not None:
             return counters_on_self  # type: ignore[return-value]
+        put_self_into_library = _parse_put_self_into_library_nth_from_top_clause(clause)
+        if put_self_into_library is not None:
+            return put_self_into_library  # type: ignore[return-value]
         search_that_many_battlefield = _parse_search_that_many_battlefield_clause(
             clause, for_spell=for_spell
         )
         if search_that_many_battlefield is not None:
             return search_that_many_battlefield
+        search_mv_less_than_self_power = _parse_search_mv_less_than_self_power_clause(
+            clause, for_spell=for_spell
+        )
+        if search_mv_less_than_self_power is not None:
+            return search_mv_less_than_self_power
         # "Put N counters on each `<group>` you control." was reachable only
         # as a *whole* ability's effect, the same gap `counters_on_self` just
         # above was closed for: Voja, Jaws of the Conclave's "put X +1/+1
@@ -31344,6 +31813,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     target_player_shuffles = _parse_target_player_shuffles_clause(clause, for_spell=for_spell)
     if target_player_shuffles is not None:
         return target_player_shuffles
+    target_player_sacrifices = _parse_target_player_sacrifices_clause(clause, for_spell=for_spell)
+    if target_player_sacrifices is not None:
+        return target_player_sacrifices
     if _EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
         return exile_target_players_graveyard
     # -- end Wave W1 single-clause additions -------------------------------
@@ -31526,6 +31998,11 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if each_sacrifices_then_if_you_did is not None:
         return [each_sacrifices_then_if_you_did]
+    separate_into_two_piles = _parse_separate_into_two_piles_then_consequence_whole_text(
+        text, for_spell=for_spell
+    )
+    if separate_into_two_piles is not None:
+        return [separate_into_two_piles]
     each_discards_then_draw_per_shortfall = (
         _parse_each_opponent_discards_then_draw_per_shortfall_whole_text(text, for_spell=for_spell)
     )

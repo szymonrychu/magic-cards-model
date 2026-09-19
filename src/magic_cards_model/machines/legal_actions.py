@@ -144,6 +144,7 @@ _BOOLEAN_DECISION_KINDS = frozenset(
         DecisionKind.PAY_ENERGY,
         DecisionKind.PAY_MANA,
         DecisionKind.PUT_ON_TOP_OR_BOTTOM,
+        DecisionKind.CHOOSE_PILE,
         DecisionKind.MULLIGAN,
         DecisionKind.OPENING_HAND_ACTION,
     }

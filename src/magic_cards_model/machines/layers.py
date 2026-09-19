@@ -7124,13 +7124,25 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
     result: list[str] = []
     remaining = raw.strip()
     while remaining:
+        # An Oxford-comma list ("trample, lifelink, and indestructible") ends
+        # a middle item on its own comma (`,\s*`, not `\s+and\s+`), leaving
+        # "and " dangling in front of the *next* item rather than consumed as
+        # part of the item that just matched. Stripped here, once per item,
+        # so the following match always starts on the bare word - otherwise
+        # `_BARE_KEYWORD_ITEM_RE`'s own optional second-word group happily
+        # captures "and indestructible" as one two-word candidate (its tail
+        # alternation is satisfied by end-of-string), which is not a keyword
+        # `_KNOWN_KEYWORDS` has ever heard of, and the whole list failed
+        # closed instead of reading its own last item.
+        remaining = re.sub(r"^(?:,\s*|and\s+)", "", remaining, flags=re.IGNORECASE).strip()
+        if not remaining:
+            break
         qualified = _QUALIFIED_KEYWORD_RE.match(remaining)
         if qualified is not None:
             keyword = qualified.group("keyword").capitalize()
             for quality in _split_protection_qualities(qualified.group("qualities")):
                 result.append(f"{keyword} from {quality}")
             remaining = remaining[qualified.end() :].strip()
-            remaining = re.sub(r"^(?:,\s*|and\s+)", "", remaining, flags=re.IGNORECASE).strip()
             continue
         bare = _BARE_KEYWORD_ITEM_RE.match(remaining)
         if bare is None:
