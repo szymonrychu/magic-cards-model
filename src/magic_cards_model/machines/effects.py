@@ -199,6 +199,7 @@ from .targeting import (
 )
 from .triggers import (
     AbilityOnStack,
+    batched_attackers,
     event_subject_power,
     is_ability,
     resolution_key,
@@ -1092,6 +1093,17 @@ _COUNT_CARDS_IN_YOUR_HAND_RE = re.compile(r"^(?:the )?number of cards in your ha
 _AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE = re.compile(
     r"^(?:the )?amount of life you(?:'ve| have)? gained this turn$", re.IGNORECASE
 )
+#: "the number of cards you've discarded this turn" - Jiang Yanggu, Alone's
+#: own "for each card you've discarded this turn" and Misty Knight, Hero for
+#: Hire's identically worded "draw a card for each card you've discarded
+#: this turn" (off-set: an activated ability rather than an attack trigger).
+#: `Game.cards_discarded_this_turn` is the same per-player running total
+#: `Game.static_cost_modifiers_for`'s own "costs `<n>` less to cast for each
+#: card you've discarded this turn" (Hollow One) already reads for a cost
+#: reduction - the identical fact, read here for a count instead.
+_COUNT_CARDS_DISCARDED_THIS_TURN_RE = re.compile(
+    r"^(?:the number of )?cards? you(?:'ve| have)? discarded this turn$", re.IGNORECASE
+)
 #: "the number of cards in your graveyard" - Yuriko, Hope from the Shadows's
 #: own X. The unfiltered twin of `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`: CR
 #: 500.2's graveyard has no type restriction of its own either, so every
@@ -1314,6 +1326,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return game.life_gained_amount_this_turn.get(controller, 0)
 
         return life_gained_amount
+
+    if _COUNT_CARDS_DISCARDED_THIS_TURN_RE.fullmatch(stripped):
+
+        def cards_discarded_this_turn(game: "Game", controller: str) -> int:
+            return game.cards_discarded_this_turn.get(controller, 0)
+
+        return cards_discarded_this_turn
 
     if _COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE.fullmatch(stripped):
 
@@ -9356,6 +9375,62 @@ def _parse_untap_trigger_subject_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "put `<n>` `<kind>` counter(s) on that `<noun>`[ for each `<expr>`]." -
+#: CR 400.7 anaphora back to the trigger's own condition subject
+#: (`GameEvent.subject_id`), the identical referent `_parse_untap_trigger_
+#: subject_clause` already reads for "untap it" - Jiang Yanggu, Alone's own
+#: "... put a +1/+1 counter on that creature for each card you've discarded
+#: this turn." Not a "target" clause (CR 115.1 has nothing to check here:
+#: the ability's own printed text never says "target") and not the source's
+#: own "this `<noun>`" (CR 700.7) either - `that <noun>` is always whichever
+#: object the trigger's condition already named.
+_COUNTER_ON_TRIGGER_SUBJECT_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on that [a-z]+"
+    rf"(?: for each (?P<each>.+))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counter_on_trigger_subject_clause(clause: str) -> TargetedClause | None:
+    """`_COUNTER_ON_TRIGGER_SUBJECT_RE`'s shape - see the banner above.
+
+    The "for each `<expr>`" multiplier is `_for_each_multiplier`'s own
+    reader, the same one `parse_clause_effect`'s "draw"/"gain life"/"lose
+    life" clauses already share (CR 608.2h: the count is taken once, when
+    the effect applies). A magnitude of zero (an empty count, or a fixed
+    amount times a multiplier that reads zero) places no counters at all
+    rather than calling `Game.add_counters` with nothing to add.
+    """
+    match = _COUNTER_ON_TRIGGER_SUBJECT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    base = parse_count(match.group("n"))
+    if base is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    each = match.group("each")
+    multiplier = _for_each_multiplier(each) if each is not None else None
+    if each is not None and multiplier is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        event = stack_object.event
+        if event is None or event.subject_id is None:
+            return
+        subject = game.find_by_id(event.subject_id)
+        if subject is None or subject.zone is not Zone.BATTLEFIELD:
+            return
+        amount = base
+        if multiplier is not None:
+            amount *= multiplier(game, stack_object.controller, source_id_of(stack_object))
+        if amount > 0:
+            game.add_counters(subject, kind, amount)
+
+    return effect
+
+
 #: "If that land is a `<basic land type>`, add `<mana>`." - Koth, the
 #: Geomancer's own rider on its own landfall trigger, CR 400.7's "that land"
 #: pointing at whichever permanent this ability's own `TriggerEvent.subject_
@@ -16337,6 +16412,28 @@ _ATTACKS_ALONE_THIS_TURN_COUNTERS_AND_KEYWORDS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Until your next turn, whenever one or more creatures attack one of your
+#: opponents, those creatures get `<power>`/`<toughness>`[ and gain
+#: `<keywords>`] until end of turn." - Garruk, Curse Breaker's own `-4`. The
+#: group-attack twin of `_UNTIL_YOUR_NEXT_TURN_ATTACK_PUMP_RE` just above:
+#: CR 603.2c's "one or more `<description>` attack" (`machines/triggers.
+#: is_batched_attack_condition`) in place of that shape's singular "a
+#: creature attacks", and `DelayedTrigger.defending_opponent_only` - the
+#: opposite half of `defending_controller_only`'s own compound defender -
+#: in place of "you or a planeswalker you control". Built as a per-creature
+#: watch (`PumpEventSubject`, one `ATTACKS` firing per attacker CR 508.3c
+#: already gives), not the printed-ability `batched_attackers` count path
+#: `_parse_batched_attack_group_pump_clause` reads: a delayed trigger has no
+#: printed condition text of its own to hand that reader, only the fixed
+#: fields `DelayedTrigger.matches` already checks.
+_UNTIL_YOUR_NEXT_TURN_GROUP_ATTACK_PUMP_RE = re.compile(
+    r"^until your next turn, whenever one or more creatures attack one of your opponents, "
+    r"those creatures get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?:\s+and\s+gains?\s+(?P<keywords>[a-z][a-z ,]*?))?"
+    r"\s+until end of turn\.?$",
+    re.IGNORECASE,
+)
+
 
 def _parse_attacks_alone_this_turn_counters_and_keywords_clause(
     text: str,
@@ -16370,6 +16467,134 @@ def _parse_attacks_alone_this_turn_counters_and_keywords_clause(
                 ),
             )
         )
+
+    return effect
+
+
+def _parse_until_your_next_turn_group_attack_pump_clause(text: str) -> AbilityEffect | None:
+    """`_UNTIL_YOUR_NEXT_TURN_GROUP_ATTACK_PUMP_RE`'s shape - see the banner
+    above. The same two-tier duration split (CR 603.7b's stated-duration
+    delayed watch, each firing's own separate CR 611.2a "until end of turn")
+    `_parse_until_your_next_turn_attack_pump_clause` already uses."""
+    whole = " ".join(text.strip().split())
+    match = _UNTIL_YOUR_NEXT_TURN_GROUP_ATTACK_PUMP_RE.fullmatch(whole)
+    if match is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+    keyword_text = match.group("keywords")
+    keywords: tuple[str, ...] = ()
+    if keyword_text is not None:
+        validated = _split_and_validate_keywords(keyword_text.strip())
+        if validated is None:
+            return None
+        keywords = tuple(validated)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=whole,
+                event=TriggerEvent.ATTACKS,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                remaining=None,
+                expires_end_of_next_turn=True,
+                defending_opponent_only=True,
+                effect=PumpEventSubject(power=power, toughness=toughness, keywords=keywords),
+            )
+        )
+
+    return effect
+
+
+#: "those creatures get `<P>`/`<T>`[ and gain `<keywords>`] until end of
+#: turn." / "those creatures gain `<keywords>` until end of turn." - CR 400.7
+#: anaphora back to whichever attackers a "one or more `<description>`
+#: attack[ `<defender>`]" condition just counted
+#: (`machines/triggers.batched_attackers`) - Frenzied Gorespawn's own "...
+#: gain menace ..." (no P/T change at all) and The Earth King family's
+#: shared "... get +N/+N ..." shape. No "target" word anywhere in the
+#: sentence, so `parse_mixed_effect`'s per-clause dispatcher has nothing to
+#: split it on - read off the whole, unsplit effect text instead, the same
+#: tier `_parse_until_your_next_turn_attack_pump_clause` above already
+#: occupies for the identical family's delayed-trigger cousin.
+_BATCHED_ATTACK_GROUP_PUMP_RE = re.compile(
+    r"^those creatures"
+    r"(?:\s+get\s+(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+))?"
+    r"(?:\s+and)?(?:\s+gains?\s+(?P<keywords>[a-z][a-z ,]*?))?"
+    r"\s+until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_batched_attack_group_pump_clause(text: str) -> AbilityEffect | None:
+    """`_BATCHED_ATTACK_GROUP_PUMP_RE`'s shape.
+
+    Reads `ability.ability.condition` - the ability's own printed "one or
+    more ... attack ..." condition, not this clause's own `text` - through
+    `batched_attackers` at resolution time (CR 611.2c fixes membership then,
+    not when the ability triggered), the same "count taken once, when the
+    effect applies" discipline every other "for each"/"that many" reader in
+    this file already holds to. `None` batch (an unreadable condition, or a
+    condition this is not even attached to) or an empty one is not an error -
+    CR 107.1a: nothing to grant.
+    """
+    match = _BATCHED_ATTACK_GROUP_PUMP_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    power = int(match.group("power")) if match.group("power") else 0
+    toughness = int(match.group("toughness")) if match.group("toughness") else 0
+    keyword_text = match.group("keywords")
+    keywords: list[str] = []
+    if keyword_text is not None:
+        validated = _split_and_validate_keywords(keyword_text.strip())
+        if validated is None:
+            return None
+        keywords = validated
+    if power == 0 and toughness == 0 and not keywords:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if not isinstance(ability.ability, TriggeredAbility):
+            return
+        batch = batched_attackers(game, ability.ability.condition, ability.controller)
+        if not batch:
+            return
+        store = continuous_effects(game)
+        for creature in batch:
+            selector = only_this_incarnation(creature, creature.zone_change_stamp)
+            if power != 0 or toughness != 0:
+                store.add(
+                    ContinuousEffect(
+                        description=(
+                            f"{ability.source_name}: {creature.name} gets "
+                            f"{power:+d}/{toughness:+d} until end of turn"
+                        ),
+                        layer=Layer.POWER_TOUGHNESS,
+                        sublayer=Sublayer.MODIFY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        source_id=ability.source_id,
+                        selector=selector,
+                        modification=modify_power_toughness(power, toughness),
+                    )
+                )
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=(
+                            f"{ability.source_name}: {creature.name} gains "
+                            f"{keyword} until end of turn"
+                        ),
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        source_id=ability.source_id,
+                        selector=selector,
+                        modification=grant_ability(keyword),
+                    )
+                )
 
     return effect
 
@@ -16470,6 +16695,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if attacks_alone_this_turn_counters_and_keywords is not None:
         return attacks_alone_this_turn_counters_and_keywords
+    until_your_next_turn_group_attack_pump = _parse_until_your_next_turn_group_attack_pump_clause(
+        effect_text
+    )
+    if until_your_next_turn_group_attack_pump is not None:
+        return until_your_next_turn_group_attack_pump
+    batched_attack_group_pump = _parse_batched_attack_group_pump_clause(effect_text)
+    if batched_attack_group_pump is not None:
+        return batched_attack_group_pump
     ante_self = _parse_ante_self_if_you_do_clause(effect_text)
     if ante_self is not None:
         return ante_self
@@ -18780,6 +19013,50 @@ def _parse_create_tokens_then_counter_other_subtype_clause(text: str) -> Effect 
     return effect
 
 
+#: "Draw X cards, where X is the number of cards that were put into target
+#: player's graveyard from their library this turn." - Cruel Calculations,
+#: whole. CR 608.2h's X is fixed once, at resolution, against whichever
+#: player the spell's own single target names - not the caster
+#: `count_expression`'s ordinary "you"/`controller` readers always mean -
+#: which is why this is its own reader rather than a `count_expression`
+#: term: no other card in the pool defines a magnitude against a *target*
+#: player's own history (verified against Scryfall full-text search in the
+#: session that wrote this; recorded here rather than asserted, the same
+#: "no off-set second printing found" precedent `_parse_untap_trigger_
+#: subject_clause`'s own sibling `_parse_landfall_type_then_add_mana_
+#: clause_pair` already sets in `machines/triggers.py`). `Game.cards_put_
+#: into_graveyard_this_turn`'s own `from_zone=Zone.LIBRARY` filter is what
+#: a mill's own "cards put into a graveyard from a library" already reads
+#: (CR 700.11's Descend uses the same ledger's `permanent_only` filter);
+#: this is the first caller to read the `from_zone` half of it.
+_DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE = re.compile(
+    r"^draw x cards?, where x is the number of cards (?:that )?were put into "
+    r"target player'?s graveyard from (?:their|its) library this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_draw_x_from_target_graveyard_from_library_clause(text: str) -> Effect | None:
+    """`_DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE`'s shape - see the
+    banner above."""
+    whole = " ".join(text.strip().split())
+    if _DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE.fullmatch(whole) is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        target = next((t for t in game.resolve_targets(spell) if isinstance(t, Player)), None)
+        if target is None:
+            return
+        amount = game.cards_put_into_graveyard_this_turn(target.username, from_zone=Zone.LIBRARY)
+        if amount > 0:
+            game.draw_cards(controller.username, amount)
+
+    return effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -18794,6 +19071,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    draw_x_from_target_graveyard_from_library = (
+        _parse_draw_x_from_target_graveyard_from_library_clause(whole)
+    )
+    if draw_x_from_target_graveyard_from_library is not None:
+        return draw_x_from_target_graveyard_from_library
     copy_next_instant_or_sorcery_you_cast = (
         _parse_copy_next_instant_or_sorcery_you_cast_spell_clause(whole)
     )
@@ -31925,6 +32207,10 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if casting_rule is not None:
         return casting_rule
     # -- end Wave W5 single-clause addition ---------------------------------
+    if not for_spell:
+        counter_on_trigger_subject = _parse_counter_on_trigger_subject_clause(clause)
+        if counter_on_trigger_subject is not None:
+            return counter_on_trigger_subject
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         # Last resort: a "you may" over a board instruction rather than over

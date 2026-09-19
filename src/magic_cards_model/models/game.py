@@ -2627,7 +2627,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 33
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 34
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3129,6 +3129,21 @@ class Game(EngineModel):
     would not have forced this bump on its own; bumped together with the
     two `DelayedTrigger`/`DelayedEffectSpec` additions above as one merge-
     wide note rather than two.
+
+    Bumped 33 -> 34: FRA batch E's own merge, renumbered from its own
+    branch's stale "32 -> 33" (already spent by FRA S8b's merge just above,
+    landed first) - `machines/delayed.DelayedTrigger` gained `defending_
+    opponent_only` (Garruk, Curse Breaker's own `-4`, "whenever one or more
+    creatures attack one of your opponents" - the opposite half of the
+    existing `defending_controller_only`'s compound-defender check), and
+    `machines/delayed.PumpEventSubject` (a `DelayedEffectSpec` variant a
+    live `DelayedTrigger.effect` can already be pointing at, Jace, Reality
+    Sculptor's own `-3` among them) gained `keywords`, so the same delayed
+    pump can also grant an ability (trample) alongside the power/toughness
+    change - two new fields per the bump rule above, both with a default an
+    older snapshot's decode fills in unchanged (`False`/`()`), which is
+    exactly the "same shape, different meaning if left undetected" case
+    this field exists to catch rather than trust to a silent default.
     """
 
     @model_validator(mode="before")
