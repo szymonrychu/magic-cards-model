@@ -20505,22 +20505,35 @@ def _merge_reveal_hand_choose_discard_clauses(
 #: "`<base>`. [`<ability word>` - ]If `<condition>`, instead `<alternative>`."
 #: - Gruesome Discovery: "Target player discards two cards. / Morbid - If a
 #: creature died this turn, instead that player reveals their hand, you
-#: choose two cards from it, then that player discards those cards." CR
-#: 614.1a: "Effects that use the word 'instead' are replacement effects" -
-#: here the alternative replaces the base instruction whole. The ability word
-#: (CR 207.2c) has no rules meaning and is only skipped.
+#: choose two cards from it, then that player discards those cards." - or,
+#: the trailing order Twinned Vision prints instead of the leading one:
+#: "Draw a card. If this spell wasn't cast from your hand, draw two cards
+#: instead." CR 614.1a: "Effects that use the word 'instead' are replacement
+#: effects" - here the alternative replaces the base instruction whole,
+#: whichever end of the sentence "instead" sits at. The ability word (CR
+#: 207.2c) has no rules meaning and is only skipped.
 _CONDITION_INSTEAD_RE = re.compile(
     r"^(?P<base>[^.]+)\.\s*(?:[a-z][a-z' ]*?\s+[\u2014-]\s+)?"
-    r"if (?P<condition>[^,]+), instead (?P<alternative>.+?)\.?$",
+    r"if (?P<condition>[^,]+), "
+    r"(?:instead (?P<alternative_leading>.+?)|(?P<alternative_trailing>.+?) instead)\.?$",
     re.IGNORECASE,
 )
 
-#: The conditions `_CONDITION_INSTEAD_RE` reads, each asked of the game and the
-#: resolving spell's controller as it resolves. Morbid's "a creature died this
-#: turn" (CR 700.4) reads `Game.creatures_died_this_turn`. A condition not
-#: listed leaves the whole card unread.
-_INSTEAD_CONDITIONS: dict[str, Callable[["Game", str], bool]] = {
-    "a creature died this turn": lambda game, controller: game.creatures_died_this_turn > 0,
+#: The conditions `_CONDITION_INSTEAD_RE` reads, each asked of the game and
+#: the resolving spell itself as it resolves. Morbid's "a creature died this
+#: turn" (CR 700.4) reads `Game.creatures_died_this_turn`; Twinned Vision's
+#: own "this spell wasn't cast from your hand" (CR 601.2b's own "wherever
+#: it is") reads `Game.cast_record(spell).origin_zone` (`Casting.origin_
+#: zone`'s own value, carried onto the `CastRecord` as the spell goes on
+#: the stack). A condition not listed leaves the whole card unread.
+_INSTEAD_CONDITIONS: dict[str, Callable[["Game", "CardState"], bool]] = {
+    "a creature died this turn": lambda game, spell: game.creatures_died_this_turn > 0,
+    "this spell wasn't cast from your hand": (
+        lambda game, spell: game.cast_record(spell).origin_zone is not Zone.HAND
+    ),
+    "this spell wasn't cast from hand": (
+        lambda game, spell: game.cast_record(spell).origin_zone is not Zone.HAND
+    ),
 }
 
 
@@ -20543,7 +20556,8 @@ def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     base = parse_mixed_effect_for_spell(match.group("base"))
     if base is None:
         return None
-    alternative_text = match.group("alternative")
+    alternative_text = match.group("alternative_leading") or match.group("alternative_trailing")
+    assert alternative_text is not None
     alternative: Effect | None = parse_mixed_effect_for_spell(alternative_text)
     if alternative is None:
         # "that player reveals their hand, you choose two cards from it, then
@@ -20561,8 +20575,7 @@ def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     assert alternative is not None
 
     def effect(game: "Game", spell: CardState) -> None:
-        controller = game.controller_of(spell).username
-        chosen = alternative if condition(game, controller) else base
+        chosen = alternative if condition(game, spell) else base
         chosen(game, spell)
 
     return effect

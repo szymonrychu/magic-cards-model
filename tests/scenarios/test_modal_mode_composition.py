@@ -483,3 +483,56 @@ def test_aerid_konstraris_activated_ability_pumps_and_notices_the_still_unread_t
 
     assert scenario.game.characteristics_of(beast).power_toughness == (before[0] + 1, before[1])
     assert [n.text for n in scenario.game.layer_remainder_notices] == ["Create a Heartwood token."]
+
+
+def test_twinned_vision_draws_one_card_cast_normally_from_hand():
+    """ "Draw a card. If this spell wasn't cast from your hand, draw two
+    cards instead." - cast from hand, the base instruction runs.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Twinned Vision"], battlefield=["Island", "Island"], library=["Opt"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.game.player("alice")
+    hand_before = len(alice.hand)
+
+    scenario.cast_and_resolve("Twinned Vision", *scenario.untapped_sources("Island", "Island"))
+
+    assert len(alice.hand) == hand_before - 1 + 1
+
+
+def test_twinned_vision_draws_two_cards_cast_with_flashback():
+    """The same card, cast from the graveyard with flashback (CR 702.34a) -
+    `Game.cast_record(spell).origin_zone` is not `Zone.HAND`, so the
+    "instead" alternative replaces the base draw.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Opt"],
+            graveyard=["Twinned Vision"],
+            battlefield=["Island", "Island", "Island"],
+            library=["Opt", "Opt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.game.player("alice")
+    hand_before = len(alice.hand)
+    opt_in_hand = alice.hand[0]
+
+    casting = scenario.cast("Twinned Vision", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback", choosing=[opt_in_hand])
+    scenario.pay_with(
+        casting.begin_paying(), *scenario.untapped_sources("Island", "Island", "Island")
+    )
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    # The discarded Opt leaves the hand, and two are drawn in its place.
+    assert len(alice.hand) == hand_before - 1 + 2
