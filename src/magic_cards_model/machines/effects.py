@@ -8528,6 +8528,59 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Put `<self>` into its owner's library `<ordinal>` from the top." -
+#: Borborygmos and Fblthp's own `{1}{U}` ability, self-referential the way
+#: `_COUNTER_ON_SELF_RE` is: `<self>` is whatever `_self_normalized_effect_
+#: text` has already turned the card's own printed name into ("this
+#: permanent"/"this creature") for an ability read off the battlefield, or
+#: the literal printed "this card" for one read off the graveyard - Bookwurm
+#: and Screaming Swarm both activate their identical library-placement
+#: ability from there, where CR 110.4a's "permanent" is not even true of the
+#: source yet. "Its owner's"/"your" library are the same library either way
+#: (CR 108.3, CR 400.1) - Borborygmos prints the first, Bookwurm and
+#: Screaming Swarm the second. CR 401.2 keeps the rest of the library's own
+#: order; nothing else in it moves.
+_PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE = re.compile(
+    rf"^put this (?:permanent|creature|card)(?: from your graveyard)? into "
+    rf"(?:its owner'?s|your) library (?P<ordinal>{ORDINAL}) from the top\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_self_into_library_nth_from_top_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE`'s shape.
+
+    CR 113.7a lets the ability find its own source by id in whatever zone it
+    now occupies, on or off the battlefield (Bookwurm's own ability works
+    from the graveyard). `Game.put_cards_into_library` already puts a
+    single-card instruction on top (CR 401.2's single face-down pile); the
+    card is then slid down to its printed depth by direct list surgery -
+    still a hidden-zone reposition nobody's knowledge distinguishes from the
+    "everything about this library is now unknown" `put_cards_into_library`
+    itself already declares by putting something on top at all.
+    """
+    match = _PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    depth = parse_ordinal(match.group("ordinal"))
+    if depth is None or depth < 1:
+        return None
+    index = depth - 1
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.owner is None:
+            return
+        game.put_cards_into_library([source], to_bottom=False)
+        if index > 0:
+            library = game.player(source.owner).library
+            if source in library:
+                library.remove(source)
+                library.insert(min(index, len(library)), source)
+
+    return effect
+
+
 #: "Put a +1/+1 counter on it. Then if it has exactly four +1/+1 counters on
 #: it, `<instruction>`" - Ayara's Oathsworn's whole trigger effect, behind its
 #: own intervening *if* (which `machines/triggers.py` reads separately, CR
@@ -29531,6 +29584,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counters_on_self = _parse_put_counters_on_self_clause(clause)
         if counters_on_self is not None:
             return counters_on_self  # type: ignore[return-value]
+        put_self_into_library = _parse_put_self_into_library_nth_from_top_clause(clause)
+        if put_self_into_library is not None:
+            return put_self_into_library  # type: ignore[return-value]
         search_that_many_battlefield = _parse_search_that_many_battlefield_clause(
             clause, for_spell=for_spell
         )
