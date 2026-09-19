@@ -66,6 +66,7 @@ from magic_cards_model.phrases import with_indefinite_article
 from ..data.subtypes import subtype_vocabulary
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import (
+    PERMANENT_TYPES,
     CardState,
     ChoiceKind,
     Counter,
@@ -5388,6 +5389,17 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
     return count
 
 
+#: "color among [other] `<quality>` you control" - Karn, Gilded Guardian's
+#: own "draw a card for each color among other artifacts you control"
+#: (CR 105.1's five colors, counted once each no matter how many qualifying
+#: permanents share one), and Chromatic Orrery's own "color among permanents
+#: you control" with no "other" at all - the ability's own source counts
+#: toward the total there, unlike Karn's "other" excluding it.
+_COLOR_AMONG_OTHER_QUALITY_RE = re.compile(
+    r"^colors? among (?:(?P<other>other) )?(?P<qualifier>.+?) you control$", re.IGNORECASE
+)
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -5402,6 +5414,48 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     spells the count out that way instead.
     """
     stripped = phrase.strip().rstrip(".")
+    if match := _COLOR_AMONG_OTHER_QUALITY_RE.fullmatch(stripped):
+        qualifier = match.group("qualifier").strip().lower()
+        # CR 110.4a's own "permanent" umbrella (Chromatic Orrery's own
+        # "permanents you control") is not one of CR 205.2a's fifteen card
+        # types `_singular_card_type` reads - `is_permanent` is the same
+        # check `_named_type_matcher`'s own bare "permanent" word already
+        # uses elsewhere in this file.
+        if qualifier in ("permanent", "permanents"):
+
+            def qualifies(chars: Characteristics) -> bool:
+                return bool(set(chars.types) & PERMANENT_TYPES)
+        else:
+            card_type = _singular_card_type(qualifier)
+            if card_type is None:
+                return None
+
+            def qualifies(chars: Characteristics) -> bool:
+                return card_type in chars.types
+
+        excludes_source = match.group("other") is not None
+
+        def count_colors_among_other(game: "Game", controller: str, source_id: str | None) -> int:
+            # CR 105.2: the *number of colors* represented at least once
+            # among the qualifying permanents, not a per-permanent count -
+            # two artifacts sharing a color are one colour toward the
+            # total, not two. "Other" (CR 601.2c's own reading elsewhere)
+            # excludes this ability's own source, read off `source_id`
+            # rather than the card's own name, so a token or an unnamed
+            # source reads correctly too - Chromatic Orrery's own printing
+            # has no "other" at all, so its own source counts.
+            board = game.computed_board()
+            colors: set[Color] = set()
+            for permanent in game.battlefield:
+                chars = board.of(permanent)
+                if chars.controller != controller or not qualifies(chars):
+                    continue
+                if excludes_source and source_id is not None and str(permanent.id) == source_id:
+                    continue
+                colors.update(chars.colors)
+            return len(colors)
+
+        return count_colors_among_other
     if stripped.lower() == "opponent who lost life this turn":
 
         def count_opponents_who_lost_life(
