@@ -14361,6 +14361,46 @@ def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
     return layer_effect_with_remainder_notice
 
 
+#: "If `<condition>`, put `<n>` `<kind>` counter(s) on it/that creature/this
+#: creature instead." - Desperate Futurescribe's own combat trigger ("...
+#: gets +1/+1 until end of turn. If you've scried or surveilled this turn,
+#: put a +1/+1 counter on that creature instead") and Power Plant Worker's
+#: real, off-set activated ability ("... gets +2/+2 until end of turn. If
+#: you control creatures named Mine Worker and Tower Worker, put two +1/+1
+#: counters on this creature instead"). CR 614.1a: "instead" replaces the
+#: whole preceding sentence's effect rather than adding to it, so this is an
+#: exclusive swap - at resolution either the layer pump runs (CR 611.2) or
+#: the counter(s) land on the same object(s) the pump would have affected,
+#: never both and never neither. `Game.condition_holds` already answers the
+#: condition itself (it is what reads "you've scried or surveilled this
+#: turn" for every other card printing it); this only adds the swap on top.
+_LAYER_COUNTER_INSTEAD_UPGRADE_RE = re.compile(
+    rf"^if (?P<condition>.+?),\s*put {count_pattern('n')} "
+    r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?:it|that creature|that permanent|that artifact|that enchantment|that land|that token|"
+    r"that card|this creature|this permanent) instead$",
+    re.IGNORECASE,
+)
+
+
+def _parse_layer_counter_instead_upgrade(
+    remainder_text: str,
+) -> tuple[str, int, "Counter | str"] | None:
+    """`_LAYER_COUNTER_INSTEAD_UPGRADE_RE`'s shape, or `None` when the
+    remainder is not that shape at all (a genuinely unreadable condition
+    still reaches this - it is answered at resolution by `Game.condition_
+    holds` returning `None`, not refused here, so an unread condition still
+    fails closed with a `LayerRemainderNotice` the same way it always has)."""
+    match = _LAYER_COUNTER_INSTEAD_UPGRADE_RE.fullmatch(remainder_text.strip().rstrip(".").strip())
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    return match.group("condition").strip(), amount, kind
+
+
 def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> AbilityEffect | None:
     """The ability-side twin of `_compose_layer_effect_with_remainder`, for
     `_ability_effect_or_notice`'s own `_is_layer_effect_text` fallback."""
@@ -14377,6 +14417,48 @@ def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> Abilit
     if not remainder:
         return create_continuous_effect_of_ability
     remainder_text = " ".join(remainder)
+
+    instead_upgrade = _parse_layer_counter_instead_upgrade(remainder_text)
+    if instead_upgrade is not None:
+        condition_text, upgrade_amount, upgrade_kind = instead_upgrade
+
+        def layer_or_counter_instead(game: "Game", ability: AbilityOnStack) -> None:
+            source = ability.source(game)
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                return
+            controller = game.controller_of(ability)
+            holds = game.condition_holds(controller.username, condition_text, source)
+            if holds is None:
+                # Unreadable condition: fail closed exactly as an ordinary
+                # unreadable remainder always has - run the pump and record
+                # the untried swap rather than guess which branch applies.
+                create_continuous_effect_of_ability(game, ability)
+                game.layer_remainder_notices.append(
+                    LayerRemainderNotice(
+                        source_id=ability.source_id,
+                        source_name=ability.source_name,
+                        text=remainder_text,
+                    )
+                )
+                return
+            if not holds:
+                create_continuous_effect_of_ability(game, ability)
+                return
+            ability_text = (
+                substitute_x(ability.ability.text, ability.x_value)
+                if isinstance(ability.ability, ActivatedAbility)
+                and cost_announces_x(ability.ability.cost)
+                else ability.ability.text
+            )
+            profile = profile_for_text(ability_text)
+            requires_target = profile.understood and bool(profile.requirements)
+            targets = game.resolve_card_targets(ability) if requires_target else [source]
+            for target in targets:
+                if target.zone is Zone.BATTLEFIELD:
+                    game.add_counters(target, upgrade_kind, upgrade_amount)
+
+        return layer_or_counter_instead
+
     remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=False)
     if remainder_effect is not None:
 

@@ -659,6 +659,13 @@ _CONDITION_POWER = re.compile(
 _CONDITION_CONTROLS_A = re.compile(r"you control (?P<qualities>an? .+)", re.IGNORECASE)
 _AND_AN = re.compile(r"\s+and\s+(?=an?\s)", re.IGNORECASE)
 _A_QUALITY = re.compile(r"an? (?P<quality>.+)", re.IGNORECASE)
+#: Power Plant Worker / Mine Worker / Tower Worker's own shared "you control
+#: creatures named `<name>` and `<name>`" - two specific printed names
+#: (CR 201.4), not `_CONDITION_CONTROLS_A`'s quality phrase, so it is its own
+#: pattern rather than a widening of that one.
+_CONDITION_CONTROLS_NAMED_PAIR = re.compile(
+    r"you control creatures named (?P<first>.+?) and (?P<second>.+)", re.IGNORECASE
+)
 #: Diamond City: "two or more creatures entered the battlefield under your
 #: control this turn."
 _CONDITION_ENTERED_THIS_TURN = re.compile(
@@ -15471,6 +15478,12 @@ class Game(EngineModel):
             return all(
                 any(quality(board.of(state)) for state in controlled) for quality in qualities
             )
+
+        if match := _CONDITION_CONTROLS_NAMED_PAIR.fullmatch(text):
+            first = match.group("first").strip().lower()
+            second = match.group("second").strip().lower()
+            names = {state.name.lower() for state in controlled}
+            return first in names and second in names
 
         if match := _CONDITION_ENTERED_THIS_TURN.fullmatch(text):
             needed = parse_count(match.group("count"))
