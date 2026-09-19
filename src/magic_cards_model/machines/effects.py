@@ -130,6 +130,7 @@ from .delayed import (
     GrantExtraTurn,
     NextSpellCannotBeCountered,
     PayOrLoseTheGame,
+    PumpEventSubject,
     ReflexiveConsequence,
     ReflexiveCounterCountConsequence,
     ReflexiveMandatoryTokenDamageConsequence,
@@ -8634,9 +8635,15 @@ def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
     you control gain haste until end of turn.") lets the "name" backtrack
     straight through the interior period and swallow the second sentence
     whole, rather than failing the way "one instruction among several"
-    promises. A period anywhere in the stripped text other than a trailing
-    one it is about to remove is exactly that second sentence, so this
-    refuses before ever calling `_parse_token_clause` at all.
+    promises. A period anywhere in the stripped text *outside of the
+    token's own quoted ability* is exactly that second sentence, so this
+    refuses before ever calling `_parse_token_clause` at all - a period
+    *inside* the quoted ability itself (CR 113.10a: a token's granted
+    ability is free to be as many sentences as it needs, Wrenn and Seven's
+    own "reach and \"This token's power and toughness are each equal to
+    the number of lands you control.\"" among them) is never one of those,
+    the same distinction `machines/abilities._split_top_level_sentences`
+    draws for a permanent's own printed lines.
     """
     # `split_effect_clauses` always strips one trailing "." before a clause
     # ever reaches `_parse_token_clause`; going around that splitter (see the
@@ -8644,9 +8651,27 @@ def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
     # own trailing `\.?` never gets the chance to, since its greedy DOTALL
     # `tail` group is satisfied first and simply absorbs the period instead.
     stripped = _strip_non_effect_preamble(text).strip().rstrip(".")
-    if "." in stripped:
+    if _has_period_outside_quotes(stripped):
         return None
     return _parse_token_clause(stripped, for_spell=False)
+
+
+def _has_period_outside_quotes(text: str) -> bool:
+    """Whether `text` has a "." sitting outside of any double-quoted span.
+
+    The same quote-depth toggle `machines/abilities._split_top_level_
+    sentences` uses to split a permanent's own printed lines - needed here
+    too, for the identical reason: a quoted grant (CR 113.10a) can carry a
+    period of its own without that period ending the *outer* instruction
+    around it.
+    """
+    in_quotes = False
+    for char in text:
+        if char == '"':
+            in_quotes = not in_quotes
+        elif char == "." and not in_quotes:
+            return True
+    return False
 
 
 #: `phrase` always captures from the word "target" itself (or "any target")
@@ -14757,6 +14782,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     copy_next_spell_you_cast = _parse_copy_next_spell_you_cast_clause(effect_text)
     if copy_next_spell_you_cast is not None:
         return copy_next_spell_you_cast
+    copy_next_instant_or_sorcery_you_cast = _parse_copy_next_instant_or_sorcery_you_cast_clause(
+        effect_text
+    )
+    if copy_next_instant_or_sorcery_you_cast is not None:
+        return copy_next_instant_or_sorcery_you_cast
     its_controller_may_pay_life_then_draw = _parse_its_controller_may_pay_life_then_draw_clause(
         effect_text
     )
@@ -16704,6 +16734,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    copy_next_instant_or_sorcery_you_cast = (
+        _parse_copy_next_instant_or_sorcery_you_cast_spell_clause(whole)
+    )
+    if copy_next_instant_or_sorcery_you_cast is not None:
+        return copy_next_instant_or_sorcery_you_cast
     switch_power_toughness_then_draw = _parse_switch_power_toughness_then_draw_clause(whole)
     if switch_power_toughness_then_draw is not None:
         return switch_power_toughness_then_draw
@@ -28304,6 +28339,90 @@ def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
                 only_when_active=ability.controller,
                 remaining=1,
                 expires_end_of_turn=True,
+                effect=CopyNextSpellYouCast(may_retarget=may_retarget),
+            )
+        )
+
+    return effect
+
+
+#: "When you next cast an instant or sorcery spell this turn, copy that
+#: spell. You may choose new targets for the copy." - Doublecast, off-set,
+#: and Way of the Cryomancer's own granted `[-3]`, Chandra, the Firebrand's
+#: `-2`, Ral, Storm Conduit's `-2` among many others. `_COPY_NEXT_SPELL_YOU_
+#: CAST_RE`'s own sibling shape: the same CR 603.7a delayed trigger and the
+#: same `CopyNextSpellYouCast` effect, restricted to CR 300.1's instant and
+#: sorcery card types (`DelayedTrigger.required_any_types`) rather than
+#: "the next spell" unrestricted, and phrased as "when you next cast ...,
+#: copy that spell" instead of "copy the next spell ... when you cast it" -
+#: a different sentence for the identical CR 603.7 mechanism, not a
+#: different one.
+_COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE = re.compile(
+    r"^when you next cast an instant or sorcery spell this turn, copy that spell\."
+    r"(?P<new_targets>\s*you may choose new targets for the copy\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_next_instant_or_sorcery_you_cast_clause(text: str) -> AbilityEffect | None:
+    """`_COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE`'s shape."""
+    match = _COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    may_retarget = match.group("new_targets") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=("When you next cast an instant or sorcery spell this turn, copy that spell."),
+                event=TriggerEvent.CAST_SPELL,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                only_when_active=ability.controller,
+                remaining=1,
+                expires_end_of_turn=True,
+                required_any_types=(Type.INSTANT, Type.SORCERY),
+                effect=CopyNextSpellYouCast(may_retarget=may_retarget),
+            )
+        )
+
+    return effect
+
+
+def _parse_copy_next_instant_or_sorcery_you_cast_spell_clause(text: str) -> Effect | None:
+    """`_COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE`'s shape, for a resolving
+    *spell* rather than an ability - Doublecast, Galvanic Iteration, Howl of
+    the Horde (all off-set) print this exact sentence as their whole card.
+    `_parse_copy_next_instant_or_sorcery_you_cast_clause`'s own ability
+    callback reads `ability.controller`/`source_id`/`source_name` off an
+    `AbilityOnStack`; a spell's own resolving callback gets a bare
+    `CardState` instead, so this is that same match and delayed-trigger
+    construction with the other of the two callback shapes `effect_for`
+    and `_ability_effect_or_notice` each expect.
+    """
+    match = _COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    may_retarget = match.group("new_targets") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=("When you next cast an instant or sorcery spell this turn, copy that spell."),
+                event=TriggerEvent.CAST_SPELL,
+                controller=controller.username,
+                source_id=spell.id,
+                source_name=spell.name,
+                only_when_active=controller.username,
+                remaining=1,
+                expires_end_of_turn=True,
+                required_any_types=(Type.INSTANT, Type.SORCERY),
                 effect=CopyNextSpellYouCast(may_retarget=may_retarget),
             )
         )

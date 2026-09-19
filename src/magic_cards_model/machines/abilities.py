@@ -2250,12 +2250,53 @@ def _layer_readable_sentences_uncached(
                 body = ability.effect
             if not body:
                 continue
-            for sentence in re.split(r"(?<=\.)\s+", body.strip()):
+            for sentence in _split_top_level_sentences(body.strip()):
                 sentence = sentence.strip()
                 if sentence:
                     if card_name:
                         sentence = self_normalized_effect_text(card_name, sentence)
                     sentences.append(sentence)
+    return sentences
+
+
+def _split_top_level_sentences(body: str) -> list[str]:
+    """Split `body` on its own top-level ". " boundaries - "top-level" now
+    actually meaning it, rather than a bare `re.split(r"(?<=\\.)\\s+", ...)`
+    that could not tell a sentence-ending period from one sitting inside a
+    quoted granted ability (CR 113.10a).
+
+    Way of the Deathbringer's own "Planeswalkers you control have '[-2]: You
+    may sacrifice a creature. If you do, create a 4/4 green Beast creature
+    token with trample.'" is *one* granted ability, not two: CR 608.2c's own
+    instruction is one paragraph, but the quoted text it grants is free to
+    contain as many sentences of its own as the granted ability needs, and
+    those inner periods must never end the outer sentence around them - the
+    bare regex split used to cut this exact line in half, at "creature.",
+    leaving `_parse_static_layer_sentence` two unreadable fragments instead
+    of the one whole grant it can actually read. Tracked with a simple quote-
+    depth toggle rather than a full grammar, since CR 113.10a's own quoting
+    is never nested (a granted ability's text cannot itself contain a further
+    quoted ability grant in this pool).
+    """
+    sentences: list[str] = []
+    start = 0
+    in_quotes = False
+    length = len(body)
+    index = 0
+    while index < length:
+        char = body[index]
+        if char == '"':
+            in_quotes = not in_quotes
+        elif char == "." and not in_quotes and (index + 1 >= length or body[index + 1].isspace()):
+            sentences.append(body[start : index + 1])
+            index += 1
+            while index < length and body[index].isspace():
+                index += 1
+            start = index
+            continue
+        index += 1
+    if start < length:
+        sentences.append(body[start:])
     return sentences
 
 

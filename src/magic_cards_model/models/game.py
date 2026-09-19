@@ -705,6 +705,33 @@ _CONDITION_SELF_COUNTERS = re.compile(
     r"on this \w+)",
     re.IGNORECASE,
 )
+#: "there are twenty-five or more loyalty counters among Jaces you control"
+#: - Jace, Reality Sculptor's own `0`. CR 306.5c: loyalty is the number of
+#: loyalty counters on a planeswalker, summed here across every permanent
+#: `controller` controls that shares the printed name (CR 201.4's own "this
+#: spell/permanent" is never how a card names *other* permanents sharing its
+#: type - "Jaces" is CR 201.5's plural of the legendary type Jace itself
+#: carries, the same way Empower Jace's own "a Jace token you control"
+#: reads the name, not a hardcoded lookup).
+_CONDITION_LOYALTY_AMONG_NAMED = re.compile(
+    rf"there (?:is|are) {count_pattern('count')} or more loyalty counters? among "
+    r"(?P<name>[A-Za-z][a-zA-Z' -]*?)s you control",
+    re.IGNORECASE,
+)
+#: Sanctum Lurker's own "Planeswalkers you control aren't put into their
+#: owners' graveyards for having 0 loyalty." - a real, printed CR 704.5i
+#: exemption, read off a permanent's own printed text the same way
+#: `_CONDITION_SUSPENDED` and every other bare board-fact regex here is
+#: (`class_ability_text`, not the computed board - CR 101.2's "the card
+#: overrides the rule" needs the card to still be one that overrides it,
+#: which a permanent that lost its own ability in layer 6 would not be, but
+#: nothing in the pool ever grants *this* ability to something else, so the
+#: simpler printed-text read is what the pool actually needs).
+_ZERO_LOYALTY_EXEMPTION_RE = re.compile(
+    r"planeswalkers you control aren'?t put into (?:their|his or her) owners'? graveyards? "
+    r"for having 0 loyalty",
+    re.IGNORECASE,
+)
 #: CR 702.62b: "A card is 'suspended' if it's in the exile zone, has suspend,
 #: and has a time counter on it." Greater Gargadon's own restriction.
 _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IGNORECASE)
@@ -3783,6 +3810,10 @@ class Game(EngineModel):
         for permanent in self.permanents_controlled_by(username):
             permanent.summoning_sick = False
         self.continuous_effects.end_for_next_turn(username)
+        # Jace, Reality Sculptor's own `-3`: a delayed trigger's own "until
+        # your next turn" ends the same instant the continuous-effect and
+        # casting-rule stores above do (CR 800.4m).
+        self.delayed_triggers.expire_end_of_next_turn_for(username)
         # Teferi, Time Raveler's +1: "Until your next turn" ends the moment
         # this player's next turn would begin (CR 800.4m), the same instant
         # `end_for_next_turn` clears its own layer effects for this player.
@@ -10160,9 +10191,29 @@ class Game(EngineModel):
             # unreadable one, and a re-check that used the literal "X" would
             # judge every legal target illegal (`comparison_value=None`
             # matches nothing) rather than treat the restriction as read.
+            #
+            # `cost_announces_x`, not a bare `"{X}" in spell.ability.cost`:
+            # CR 107.3a's X is announced by "a mana cost, alternative cost,
+            # additional cost, and/or activation cost with an {X}, [-X], or X
+            # in it" - a loyalty ability's own variable cost (CR 606.4's
+            # printed `"−X"`/`"+X"` loyalty symbol, `LoyaltyCost.variable`)
+            # carries no `{X}` mana symbol at all, so the old literal check
+            # left every variable-loyalty-cost ability's own targets re-
+            # checked against the unsubstituted, literal "X" - which,
+            # exactly as the comment above already says, matches nothing and
+            # silently drops every legal target. Sorin, Vengeful Bloodlord's
+            # own "−X: Return target creature card with mana value X from
+            # your graveyard to the battlefield." is the shape this fixes:
+            # the ability resolved, paid its loyalty, and then reanimated
+            # nothing, because `resolve_targets` filtered its own already-
+            # legal target out from under it. `_effect_of` (this same file)
+            # already reads the identical `cost_announces_x(ability.ability.
+            # cost)` for the same reason on the resolution side; this is that
+            # check's own re-legality twin, now reading it the same way.
             ability_text = (
                 substitute_x(spell.ability.text, spell.x_value)
-                if isinstance(spell.ability, ActivatedAbility) and "{X}" in spell.ability.cost
+                if isinstance(spell.ability, ActivatedAbility)
+                and cost_announces_x(spell.ability.cost)
                 else spell.ability.text
             )
             profile = profile_for_text(ability_text)
@@ -12347,6 +12398,17 @@ class Game(EngineModel):
         self._put_state_based_action_losers(leaving, board)
         return leaving + gone_tokens + gone_copies
 
+    def _zero_loyalty_exemption_controllers(self) -> set[str]:
+        """Every controller who controls a permanent granting CR 704.5i's own
+        exemption ("Planeswalkers you control aren't put into their owners'
+        graveyards for having 0 loyalty.", Sanctum Lurker) - see
+        `_ZERO_LOYALTY_EXEMPTION_RE`."""
+        return {
+            self.controller_of(permanent).username
+            for permanent in self.battlefield
+            if _ZERO_LOYALTY_EXEMPTION_RE.search(permanent.class_ability_text)
+        }
+
     def _state_based_action_losers(self) -> tuple[ComputedBoard, list[CardState]]:
         """The permanents one round of `_state_based_actions_once` removes, and
         the board they were judged on. Reads only."""
@@ -12369,11 +12431,17 @@ class Game(EngineModel):
         leaving += [state for state in self._roles_beyond_the_newest(board) if state not in leaving]
         # CR 704.5i: "If a planeswalker has loyalty 0, it's put into its owner's
         # graveyard." Loyalty is the counter count (CR 306.5c), which is what
-        # `planeswalkers_with_zero_loyalty` reads.
+        # `planeswalkers_with_zero_loyalty` reads. Sanctum Lurker's own
+        # "Planeswalkers you control aren't put into their owners' graveyards
+        # for having 0 loyalty." is a real, printed exemption from this exact
+        # SBA (CR 704.5i names no exception of its own; a card creating one is
+        # ordinary CR 101.2 "the card overrides the rule"), scoped per
+        # controller - `_zero_loyalty_exemption_controllers` below.
+        exempt_controllers = self._zero_loyalty_exemption_controllers()
         leaving += [
             state
             for state in planeswalkers_with_zero_loyalty(self.battlefield)
-            if state not in leaving
+            if state not in leaving and self.controller_of(state).username not in exempt_controllers
         ]
         # CR 704.5s, CR 714.4: a Saga whose lore counters reached its final
         # chapter number, once nothing left to run off it is still triggered.
@@ -12774,6 +12842,11 @@ class Game(EngineModel):
             other.defender != attack.defender or other.attacker_id == creature.id
             for other in self.combat.attacks
         )
+        defender_controller = attack.defender.username
+        if not attack.defender.is_player and attack.defender.card_id is not None:
+            defending_permanent = self.find_by_id(attack.defender.card_id)
+            if isinstance(defending_permanent, CardState):
+                defender_controller = self.controller_of(defending_permanent).username
         self.emit(
             GameEvent(
                 event=TriggerEvent.ATTACKS,
@@ -12784,6 +12857,7 @@ class Game(EngineModel):
                 subject_types=chars.types,
                 subject_subtypes=chars.subtypes,
                 defender=attack.defender,
+                defender_controller=defender_controller,
                 player=self.controller_of(creature).username,
                 attacking_alone=alone,
                 attacking_player_alone=player_alone,
@@ -12806,6 +12880,43 @@ class Game(EngineModel):
                 f"{skipped.name} attacks each combat if able and can attack, so a "
                 "declaration without it obeys fewer requirements than it could (CR 508.1d)"
             )
+
+    def _refuse_illegal_attacker_caps(
+        self, attacks: "Sequence[tuple[CardState, Targetable | str]]"
+    ) -> None:
+        """CR 508.1c: a defending planeswalker (or battle) carrying "no more
+        than one creature can attack this `<subject>` each combat" - Tomik,
+        Orzhov Lawmage's own granted restriction, and The Eternal Wanderer's
+        identically-shaped self-printed one - refuses the whole declaration
+        the moment a second attacker is aimed at it.
+
+        Per defender, not per creature: `attack_refusal` judges each attacker
+        against restrictions on *itself*, but this restriction is a fact
+        about who it is attacking, so it can only be judged once the whole
+        party's defenders are known - the same reason `_refuse_unobeyed_
+        attack_requirements` reads the whole declaration rather than one
+        attacker at a time.
+        """
+        by_defender: dict[UUID, list[CardState]] = {}
+        for creature, defender in attacks:
+            ref = self.attack_target(defender)
+            if ref.card_id is None:
+                continue
+            by_defender.setdefault(ref.card_id, []).append(creature)
+        for card_id, attackers in by_defender.items():
+            if len(attackers) < 2:
+                continue
+            permanent = self.find_by_id(card_id)
+            if not isinstance(permanent, CardState):
+                continue
+            restriction = combat_rules.attacker_cap_restriction(permanent, self)
+            if restriction is not None:
+                names = ", ".join(creature.name for creature in attackers)
+                raise ValueError(
+                    f"{permanent.name} allows no more than one creature to attack it each "
+                    f'combat (CR 508.1c: "{restriction}"), but {names} were all declared '
+                    "against it"
+                )
 
     def _required_attack_declaration(self, active: str) -> list[tuple[UUID, str]]:
         """The fewest attackers that obey every requirement that can be obeyed
@@ -12837,6 +12948,7 @@ class Game(EngineModel):
         self._refuse_if_over()
         with self._id_allocator_scope():
             self._refuse_unobeyed_attack_requirements(attacks)
+            self._refuse_illegal_attacker_caps(attacks)
             registered = [
                 (
                     creature,
@@ -14880,6 +14992,16 @@ class Game(EngineModel):
             if needed is None or source is None or counter is None:
                 return None
             return source.counter_count(counter) >= needed
+
+        if match := _CONDITION_LOYALTY_AMONG_NAMED.fullmatch(text):
+            needed = parse_count(match.group("count"))
+            name = match.group("name").strip()
+            if needed is None or not name:
+                return None
+            total = sum(
+                state.loyalty or 0 for state in controlled if state.name.lower() == name.lower()
+            )
+            return total >= needed
 
         if match := _CONDITION_SPELLS_CAST_THIS_TURN.fullmatch(text):
             needed = parse_count(match.group("count"))

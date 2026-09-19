@@ -260,6 +260,16 @@ class GameEvent(EngineModel):
     defender: TargetRef | None = None
     """What an attacking creature is attacking (CR 508.1a)."""
 
+    defender_controller: str | None = None
+    """Who `defender` belongs to right now - the defending player themselves
+    when `defender` is a player, or that permanent's own controller when it
+    is a planeswalker or battle - resolved once, at emission, and carried on
+    the event rather than re-derived later. `DelayedTrigger.matches` (see
+    `machines/delayed.py`) has no `Game` to ask "who controls this id" of; a
+    delayed trigger watching "whenever a creature attacks you or a
+    planeswalker you control" (Jace, Reality Sculptor's own `-3`) needs this
+    answered as the attack is declared, not at match time."""
+
     player: str | None = None
     """The player the event is "yours" for: who cast the spell, whose step
     began, who drew the card, gained or lost the life, or took the damage."""

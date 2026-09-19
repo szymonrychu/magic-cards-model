@@ -592,6 +592,35 @@ def _evasion_restriction_sentences(attacker: CardState, game: "Game | None" = No
     return [sentence for sentence in sentences if subject.search(sentence)]
 
 
+def attacker_cap_restriction(defender: CardState, game: "Game | None" = None) -> str | None:
+    """The sentence granting `defender` (a planeswalker or battle being
+    attacked) a "no more than one creature can attack this `<subject>` each
+    combat" restriction (CR 508.1c), off the computed board - or `None`.
+
+    Read the same self-referential way `_evasion_restriction_sentences`
+    already reads "can't be blocked": "this planeswalker"/"this battle" (a
+    granted line - Tomik, Orzhov Lawmage's own "Planeswalkers you control
+    have '...'", `machines.layers._group_quoted_ability_grant_builder`), or
+    the card's own short name (a self-printed line - The Eternal Wanderer's
+    own "No more than one creature can attack The Eternal Wanderer each
+    combat.", off-set). Unlike CR 508.1c's *per-creature* restrictions
+    (`attack_refusal`), this one is a fact about the *defender*, checked once
+    per declared attack against it rather than once per attacking creature -
+    which is why it lives here, read by `Game.declare_attackers` over the
+    whole declaration, rather than inside `attack_refusal`.
+    """
+    short_name = defender.name.split(",")[0].strip()
+    subject = re.compile(
+        rf"no more than one creature can attack (?:this planeswalker|this battle|"
+        rf"{re.escape(short_name)})\b.*each combat",
+        re.IGNORECASE,
+    )
+    for sentence in _computed_ability_sentences(defender, game):
+        if subject.search(sentence):
+            return sentence
+    return None
+
+
 def _computed_ability_sentences(state: CardState, game: "Game | None") -> list[str]:
     """The permanent's abilities as sentences, off the computed board (CR 613.5).
 
