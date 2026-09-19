@@ -718,3 +718,63 @@ def test_sphinx_of_false_conclusions_dies_trigger_copies_itself_when_its_not_alr
     assert copy.token
     assert copy is not sphinx
     assert (copy.power, copy.toughness) == (sphinx.power, sphinx.toughness)
+
+
+# --------------------------------------------------------------------------
+# "For each creature target player controls, create a token copy of it"
+# --------------------------------------------------------------------------
+
+
+def test_clone_legion_copies_every_creature_target_player_controls():
+    """Off-set: Clone Legion: "For each creature target player controls,
+    create a token that's a copy of that creature." No "except" tail at all -
+    the plain shape, targeting an opponent's whole board.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Clone Legion"], battlefield=["Island"] * 9)
+        .player("bob", battlefield=["Grizzly Bears", "Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Island"] * 9, username="alice")
+    scenario.cast_and_resolve("Clone Legion", *sources, username="alice", targets=["bob"])
+
+    alice_creatures = scenario.game.permanents_controlled_by("alice")
+    bears_copy = next(state for state in alice_creatures if state.name == "Grizzly Bears")
+    giant_copy = next(state for state in alice_creatures if state.name == "Hill Giant")
+    assert bears_copy.token and giant_copy.token
+    assert (bears_copy.power, bears_copy.toughness) == (2, 2)
+    assert (giant_copy.power, giant_copy.toughness) == (3, 3)
+
+
+def test_face_yourself_copies_with_haste_and_a_granted_sacrifice_trigger():
+    """On-set: Face Yourself: "For each creature target player controls,
+    create a token that's a copy of that creature, except it has haste and
+    'At the beginning of the end step, if you don't control a planeswalker,
+    sacrifice this creature.'" Differently worded from Clone Legion (a mixed
+    keyword-then-quoted-ability tail neither existing copy-tail reader
+    handles alone) - proof `_parse_copy_added_ability_lines` reads both
+    halves of the mix.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Face Yourself"], battlefield=["Mountain"] * 7)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Mountain"] * 7, username="alice")
+    scenario.cast_and_resolve("Face Yourself", *sources, username="alice", targets=["bob"])
+
+    copy = next(
+        state
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.name == "Grizzly Bears"
+    )
+    assert copy.token
+    assert has_keyword(copy, Keyword.HASTE, scenario.game)
+    assert (
+        "At the beginning of the end step, if you don't control a planeswalker, "
+        "sacrifice this creature." in (copy.card.oracle_text or "")
+    )

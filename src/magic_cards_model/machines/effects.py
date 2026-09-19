@@ -11520,6 +11520,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     token_copies_except = _parse_create_token_copies_except_clause(effect_text, for_spell=False)
     if token_copies_except is not None:
         return token_copies_except
+    for_each_creature_target_player_copy = _parse_for_each_creature_target_player_copy_clause(
+        effect_text, for_spell=False
+    )
+    if for_each_creature_target_player_copy is not None:
+        return for_each_creature_target_player_copy
     modal_triggered = _resolve_modal_triggered_ability_clause(effect_text)
     if modal_triggered is not None:
         return modal_triggered
@@ -13243,6 +13248,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     token_copies_except = _parse_create_token_copies_except_clause(whole, for_spell=True)
     if token_copies_except is not None:
         return token_copies_except
+    for_each_creature_target_player_copy = _parse_for_each_creature_target_player_copy_clause(
+        whole, for_spell=True
+    )
+    if for_each_creature_target_player_copy is not None:
+        return for_each_creature_target_player_copy
     untap_and_gain_control = _parse_untap_and_gain_control_clause(whole)
     if untap_and_gain_control is not None:
         return untap_and_gain_control
@@ -19124,6 +19134,97 @@ def _parse_create_token_copy_of_target_clause(
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState):
                 token_copy_of(game, target, controller.username)
+
+    return effect
+
+
+#: "For each creature target player controls, create a token that's a copy of
+#: that creature[, except it has `<keyword>`[ and "`<ability>`"]]." - Clone
+#: Legion (no "except" tail) and Face Yourself's own "except it has haste and
+#: '...'" - a mixed keyword-then-quoted-ability tail neither
+#: `_parse_token_tail` (a single quoted string *or* bare keywords, never
+#: both) nor `_CREATE_TOKEN_COPIES_EXCEPT_RE`'s own tail (quoted only) reads,
+#: so `_parse_copy_added_ability_lines` below reads it directly.
+_FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE = re.compile(
+    r"^for each creature target player controls,\s*"
+    r"create a token that'?s a copy of that creature"
+    r"(?:,\s*except (?:it has|they have)\s+(?P<except_tail>.+?))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_copy_added_ability_lines(tail: str) -> tuple[str, ...] | None:
+    """ "`<keyword>`[, `<keyword>`][ and] ["`<ability>`"]" - CR 707.9a's added
+    abilities, as lines ready for `copiable_card_with_added_abilities`: a bare
+    keyword from `_TOKEN_KEYWORDS` is title-cased the way a real printing
+    lists one, and a trailing quoted sentence is copied through exactly as
+    printed. Any other part - a shape this wave does not read - fails the
+    whole tail rather than dropping it silently.
+
+    The quoted sentence is peeled off *first*, by its own closing quote mark
+    at the end of the whole tail, rather than folded into the same comma/
+    "and" split the bare keywords go through - Face Yourself's own quoted
+    ability ("if you don't control a planeswalker, **sacrifice this
+    creature**") has a comma of its own inside the quotes, which a naive
+    split would cut the sentence in half at.
+    """
+    tail = tail.strip()
+    quoted_text: str | None = None
+    if quote := re.search(r"""["“'‘](?P<text>.+)["”'’]\s*$""", tail, re.DOTALL):
+        quoted_text = quote.group("text")
+        tail = re.sub(r"\s+and\s*$", "", tail[: quote.start()]).strip()
+    added: list[str] = []
+    if tail:
+        parts = [part.strip() for part in re.split(r",\s*|\s+and\s+", tail) if part.strip()]
+        for part in parts:
+            if part.lower() not in _TOKEN_KEYWORDS:
+                return None
+            added.append(part.title())
+    if quoted_text is not None:
+        added.append(quoted_text)
+    if not added:
+        return None
+    return tuple(added)
+
+
+def _parse_for_each_creature_target_player_copy_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE`'s shape, or `None`.
+
+    The creatures target player controls are read once, off the computed
+    board (CR 613.5), at the moment this instruction resolves (CR 611.2c) -
+    the same fixed-set-now convention `_mass_creature_group_targets` already
+    uses for an untargeted "creatures you control", applied here to a
+    targeted player's own instead.
+    """
+    match = _FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    added: tuple[str, ...] = ()
+    except_tail = match.group("except_tail")
+    if except_tail is not None:
+        read = _parse_copy_added_ability_lines(except_tail)
+        if read is None:
+            return None
+        added = read
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            board = game.computed_board()
+            creatures = [
+                permanent
+                for permanent in game.battlefield
+                if board.of(permanent).controller == target.username
+                and Type.CREATURE in board.of(permanent).types
+            ]
+            for creature in creatures:
+                token_copy_of(game, creature, controller, added_abilities=added)
 
     return effect
 
