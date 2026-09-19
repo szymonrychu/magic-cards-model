@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "55a3153e-4259-4e03-bf79-8979d3c0db36",
+  "oracle_id": "946675f5-8998-4f1b-934b-85ffe6e2f002",
+  "multiverse_ids": [
+    489497
+  ],
+  "arena_id": 72369,
+  "tcgplayer_id": 216615,
+  "cardmarket_id": 474569,
+  "name": "Doublecast",
+  "lang": "en",
+  "released_at": "2020-07-17",
+  "uri": "https://api.scryfall.com/cards/55a3153e-4259-4e03-bf79-8979d3c0db36",
+  "scryfall_uri": "https://scryfall.com/card/jmp/307/doublecast?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:13:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.jpg?1783930397",
+    "normal": "https://cards.scryfall.io/normal/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.jpg?1783930397",
+    "large": "https://cards.scryfall.io/large/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.jpg?1783930397",
+    "png": "https://cards.scryfall.io/png/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.png?1783930397",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.jpg?1783930397",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.jpg?1783930397",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.webp?1783930397",
+    "grid": "https://cards.scryfall.io/grid/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.webp?1783930397",
+    "display": "https://cards.scryfall.io/display/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.webp?1783930397",
+    "art": "https://cards.scryfall.io/art/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.webp?1783930397",
+    "crop": "https://cards.scryfall.io/crop/front/5/5/55a3153e-4259-4e03-bf79-8979d3c0db36.webp?1783930397"
+  },
+  "mana_cost": "{R}{R}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "0f6ccf25-a627-4263-86df-5757137f1696",
+  "set": "jmp",
+  "set_name": "Jumpstart",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/0f6ccf25-a627-4263-86df-5757137f1696",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ajmp&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/jmp?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/55a3153e-4259-4e03-bf79-8979d3c0db36/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A946675f5-8998-4f1b-934b-85ffe6e2f002&unique=prints",
+  "collector_number": "307",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "First the insult, then the encore.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Even Amundsen",
+  "artist_ids": [
+    "127faa6a-6c02-49a0-beba-ae76d06dd153"
+  ],
+  "illustration_id": "f5207166-5407-4087-bec1-dba6b714a0dd",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 11418,
+  "penny_rank": 9564,
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.24",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489497&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDoublecast",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDoublecast",
+    "edhrec": "https://edhrec.com/route/?cc=Doublecast"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216615%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=474569&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Doublecast&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

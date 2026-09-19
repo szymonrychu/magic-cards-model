@@ -870,6 +870,18 @@ class CardState(EngineModel):
     target's own share is dropped rather than handed to whoever is left
     (CR 608.2b already reads targets that way; this mirrors it for shares).
     """
+    target_amounts: list[int] | None = None
+    """One entry per entry of `targets`, in the same order, for a "`<source>`
+    deals `<n>` damage to `<phrase1>` and `<m>` damage to `<phrase2>`"
+    instruction whose two halves name *different* amounts
+    (`machines/effects._merge_split_damage_clauses`) -
+    `AbilityOnStack.target_amounts`'s own twin mirrored here for the
+    identical CR 602.2b reason `division` already is. Unlike `division`, this
+    is never a player announcement: the amounts are fixed on the printed
+    card, so it is computed and stamped on as resolution begins rather than
+    carried from CR 601.2c/d announcement. `None` for the ordinary
+    single-amount case and for the equal-amount case, which never needed a
+    per-target answer."""
     summoning_sick: bool = True
     """True until its controller's turn begins with it already there.
 

@@ -1508,7 +1508,20 @@ class Cost(EngineModel):
 #: "a minus sign followed by a number or an X" is the `−X` form. Scryfall prints
 #: the minus as U+2212; the ASCII hyphen is accepted too. Brace-wrapped `{0}` is
 #: a mana symbol and never matches - the classification checks it first.
-_LOYALTY_SYMBOL = re.compile(r"^\+(?P<plus>\d+)$|^[−-](?P<minus>\d+|[Xx])$|^0$")
+#:
+#: The brackets are optional. A planeswalker's own printed ability line never
+#: carries them (Jace, Reality Sculptor's own oracle text reads "+1: Empower
+#: Jace X, ..."), but CR 107.7's symbol *is* bracketed, and Scryfall's own
+#: oracle text keeps the brackets whenever the identical ability is quoted
+#: inside another card's granted-ability text - Sanctum Lurker's own
+#: "Planeswalkers you control have '[+2]: This planeswalker deals ...'",
+#: Ichormoon Gauntlet's off-set "'[0]: Proliferate' and '[−12]: Take an extra
+#: turn ...'". Without this, `_classify_cost` read every granted loyalty
+#: ability's own bracketed cost as `CostKind.OTHER`, and `Game.activation_
+#: cost` raised trying to build a cost for the literal text "[+2]" - every
+#: quoted grant in the pool broke the moment its own ability was activated,
+#: not just Sanctum Lurker's.
+_LOYALTY_SYMBOL = re.compile(r"^\[?(?:\+(?P<plus>\d+)|[−-](?P<minus>\d+|[Xx])|0)\]?$")
 
 
 class LoyaltyCost(EngineModel):
@@ -2250,12 +2263,53 @@ def _layer_readable_sentences_uncached(
                 body = ability.effect
             if not body:
                 continue
-            for sentence in re.split(r"(?<=\.)\s+", body.strip()):
+            for sentence in _split_top_level_sentences(body.strip()):
                 sentence = sentence.strip()
                 if sentence:
                     if card_name:
                         sentence = self_normalized_effect_text(card_name, sentence)
                     sentences.append(sentence)
+    return sentences
+
+
+def _split_top_level_sentences(body: str) -> list[str]:
+    """Split `body` on its own top-level ". " boundaries - "top-level" now
+    actually meaning it, rather than a bare `re.split(r"(?<=\\.)\\s+", ...)`
+    that could not tell a sentence-ending period from one sitting inside a
+    quoted granted ability (CR 113.10a).
+
+    Way of the Deathbringer's own "Planeswalkers you control have '[-2]: You
+    may sacrifice a creature. If you do, create a 4/4 green Beast creature
+    token with trample.'" is *one* granted ability, not two: CR 608.2c's own
+    instruction is one paragraph, but the quoted text it grants is free to
+    contain as many sentences of its own as the granted ability needs, and
+    those inner periods must never end the outer sentence around them - the
+    bare regex split used to cut this exact line in half, at "creature.",
+    leaving `_parse_static_layer_sentence` two unreadable fragments instead
+    of the one whole grant it can actually read. Tracked with a simple quote-
+    depth toggle rather than a full grammar, since CR 113.10a's own quoting
+    is never nested (a granted ability's text cannot itself contain a further
+    quoted ability grant in this pool).
+    """
+    sentences: list[str] = []
+    start = 0
+    in_quotes = False
+    length = len(body)
+    index = 0
+    while index < length:
+        char = body[index]
+        if char == '"':
+            in_quotes = not in_quotes
+        elif char == "." and not in_quotes and (index + 1 >= length or body[index + 1].isspace()):
+            sentences.append(body[start : index + 1])
+            index += 1
+            while index < length and body[index].isspace():
+                index += 1
+            start = index
+            continue
+        index += 1
+    if start < length:
+        sentences.append(body[start:])
     return sentences
 
 

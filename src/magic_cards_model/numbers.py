@@ -118,13 +118,40 @@ def _alternation(words: Iterable[str]) -> str:
     return "|".join(sorted(words, key=len, reverse=True))
 
 
-_COUNT_NO_ARTICLE = rf"(?:{_DIGITS}|{_alternation(_WORDS)})"
+#: A compound number word above twenty - "twenty-five" (Jace, Reality
+#: Sculptor's own "twenty-five or more loyalty counters"), "thirty-one" -
+#: read the ordinary English way, tens plus ones, with either a hyphen or a
+#: bare space between them (both are printed in Magic text; Wizards' own
+#: style guide favours the hyphen, but oracle text is not always styled
+#: consistently). `_TENS` is every multiple of ten `_WORDS` already names
+#: ("twenty" through "fifty"); `_ONES` is "one" through "nine" - "twenty-
+#: zero"/"twenty-ten" are not real compounds and are excluded by construction
+#: rather than checked for.
+_TENS = {word: value for word, value in _WORDS.items() if value >= 20 and value % 10 == 0}
+_ONES = {word: value for word, value in _WORDS.items() if 1 <= value <= 9}
+_COMPOUND_TENS_RE = re.compile(rf"(?:{_alternation(_TENS)})[\s-]+(?:{_alternation(_ONES)})")
+
+
+def _parse_compound_tens(text: str) -> int | None:
+    """ "twenty-five" -> 25, or `None` when `text` is not this shape."""
+    if not _COMPOUND_TENS_RE.fullmatch(text):
+        return None
+    tens_word, ones_word = re.split(r"[\s-]+", text, maxsplit=1)
+    tens = _TENS.get(tens_word)
+    ones = _ONES.get(ones_word)
+    if tens is None or ones is None:
+        return None
+    return tens + ones
+
+
+_COUNT_NO_ARTICLE = rf"(?:{_DIGITS}|{_COMPOUND_TENS_RE.pattern}|{_alternation(_WORDS)})"
 
 #: Every count a card prints: "a", "an", "zero" through "twenty", the tens to
-#: "fifty", and digits. No X - a parser that embeds this cannot match an X it
-#: has no way to evaluate. Case is the embedding pattern's business
-#: (`re.IGNORECASE`), as it was for every table this replaced.
-COUNT = rf"(?:{_DIGITS}|{_alternation({**_WORDS, **_ARTICLES})})"
+#: "fifty", a compound of the two ("twenty-five"), and digits. No X - a
+#: parser that embeds this cannot match an X it has no way to evaluate. Case
+#: is the embedding pattern's business (`re.IGNORECASE`), as it was for
+#: every table this replaced.
+COUNT = rf"(?:{_DIGITS}|{_COMPOUND_TENS_RE.pattern}|{_alternation({**_WORDS, **_ARTICLES})})"
 
 #: `COUNT` or CR 107.3's X.
 AMOUNT = rf"(?:{COUNT}|[xX])"
@@ -168,15 +195,18 @@ def quantity_pattern(name: str) -> str:
 def parse_count(word: str, *, article: bool = True) -> int | None:
     """The integer a printed count means, or `None` when `word` is not one.
 
-    Digits ("7", "1,000"), "zero" through "twenty", the tens to "fifty", and
-    "a"/"an" as one unless `article=False`. Never raises.
+    Digits ("7", "1,000"), "zero" through "twenty", the tens to "fifty", a
+    compound of the two ("twenty-five"), and "a"/"an" as one unless
+    `article=False`. Never raises.
     """
     text = word.strip().lower()
     if re.fullmatch(_DIGITS, text):
         return int(text.replace(",", ""))
     if article and text in _ARTICLES:
         return _ARTICLES[text]
-    return _WORDS.get(text)
+    if text in _WORDS:
+        return _WORDS[text]
+    return _parse_compound_tens(text)
 
 
 @dataclass(frozen=True)

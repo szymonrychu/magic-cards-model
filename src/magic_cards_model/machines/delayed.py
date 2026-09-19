@@ -90,6 +90,14 @@ from ..models.zone import Zone
 from ..snapshot import EngineModel
 from .abilities import AbilityKind, TriggeredAbility, TriggerEvent, TriggerWord
 from .decisions import Decision, DecisionKind, source_id_of
+from .layers import (
+    ContinuousEffect,
+    Duration,
+    Layer,
+    Sublayer,
+    modify_power_toughness,
+    only_this_incarnation,
+)
 from .triggers import AbilityOnStack, GameEvent
 from .turn import Step
 
@@ -1109,6 +1117,63 @@ class AddManaWhenLandTapped(DelayedEffectSpecBase):
             pool.add(color)
 
 
+class PumpEventSubject(DelayedEffectSpecBase):
+    """ "Until your next turn, whenever a creature attacks you or a
+    planeswalker you control, it gets `<power>`/`<toughness>` until end of
+    turn." - Jace, Reality Sculptor's own `-3`. Unlike `TapSubject`'s fixed
+    `trigger.subject_id` (CR 603.7c: an object this ability was created
+    already knowing about), this trigger names no object at creation time at
+    all - "a creature" is answered fresh by whichever creature the `ATTACKS`
+    event that fired it was actually about, read off `AbilityOnStack.event`
+    the same way `AddManaWhenLandTapped` reads its own tapped land.
+
+    Sublayer 7c (CR 613.4c), `Duration.UNTIL_END_OF_TURN` - this pump has its
+    own, shorter duration, independent of the delayed trigger's own longer
+    "until your next turn" watch: the trigger can fire again tomorrow, on a
+    fresh attacker, but each pump it grants ends at the ordinary cleanup.
+    """
+
+    kind: Literal["pump_event_subject"] = "pump_event_subject"
+
+    power: int
+    toughness: int
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        target = game.find_by_id(event.subject_id)
+        if not isinstance(target, CardState) or target.zone != Zone.BATTLEFIELD:
+            return
+        game.continuous_effects.add(
+            ContinuousEffect(
+                description=(
+                    f"{trigger.source_name}: {target.name} gets {self.power:+d}/{self.toughness:+d}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=game.continuous_effects.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                source_id=trigger.source_id,
+                # No `source_ability`, deliberately: CR 611.2c's one-time
+                # resolved effect does not depend on the source still
+                # *having* this ability once it has fired - unlike a static
+                # grant's own `_source_line_for`-matched `source_ability`
+                # (CR 613.6), there is no "for as long as" here for a source
+                # leaving, or having its text rewritten, to end early. Setting
+                # this to `trigger.text` used to fail CR 613.6's `has_ability`
+                # check on every board computation - `trigger.text` is only
+                # the parsed *effect* clause, with the printed cost/chapter
+                # prefix ("−3: ", "I — ") already stripped off by the parser
+                # that built it, so it could never equal the permanent's own
+                # verbatim printed line and the pump silently never applied.
+                selector=only_this_incarnation(target, target.zone_change_stamp),
+                modification=modify_power_toughness(self.power, self.toughness),
+            ),
+            game,
+        )
+
+
 #: What a delayed (or reflexive) triggered ability does when it resolves -
 #: `DelayedTrigger.effect`'s own type. Every string this task's requirement 2
 #: names (`"warp:exile"`, `"grant_extra_turn"`, `"sacrifice"`) is a member's
@@ -1146,7 +1211,8 @@ DelayedEffectSpec = Annotated[
     | ReflexiveCounterCountConsequence
     | ReflexiveExileCopiedCard
     | RevokeGrantedAbility
-    | AddManaWhenLandTapped,
+    | AddManaWhenLandTapped
+    | PumpEventSubject,
     Field(discriminator="kind"),
 ]
 
@@ -1272,6 +1338,37 @@ class DelayedTrigger(EngineModel):
     from `Game.cleanup_step`, alongside `ContinuousEffects.end_the_turn`) is
     what actually drops it - matching does not check the calendar itself."""
 
+    expires_end_of_next_turn: bool = False
+    """CR 800.4m's longer "until your next turn" duration - Jace, Reality
+    Sculptor's own `-3`, "Until your next turn, whenever a creature attacks
+    you or a planeswalker you control, it gets -5/-0 until end of turn." -
+    the delayed-trigger twin of `machines.layers.Duration.UNTIL_YOUR_NEXT_
+    TURN` and of `PlayPermission.expires_end_of_next_turn`. Unlike either of
+    those two, a delayed trigger this stream ends outright rather than only
+    marking: CR 800.4m says the duration "will last until that turn would
+    have begun", the same instant `Game.begin_turn_for` already reads for
+    the other two, and there is no reason for a spent trigger to survive its
+    own controller's next turn beginning - it has nothing left to watch
+    for. `DelayedTriggers.expire_end_of_next_turn_for`, called from `Game.
+    begin_turn_for` the same moment `ContinuousEffects.end_for_next_turn`
+    and the `casting_rule_effects`/`play_permissions` sweeps already run,
+    drops it there.
+
+    `remaining=None` for a trigger carrying this, the same reason `expires_
+    end_of_turn` needs it: the ability fires on every matching event for the
+    rest of its stated duration, not once."""
+
+    defending_controller_only: bool = False
+    """"whenever a creature attacks you or a planeswalker you control" -
+    CR 508.3d/CR 306.6's compound defender: an `ATTACKS` event's own
+    `GameEvent.defender_controller` (resolved once, at emission, since this
+    model has no `Game` to ask "who controls this id" of) must be this
+    trigger's own `controller` for either half - a player defending
+    themselves, or a planeswalker they control - to count. Not folded into
+    `subject_id`: the subject of an `ATTACKS` event is the *attacking*
+    creature (CR 508.3c), which this trigger does not know in advance,
+    while the defender is what the trigger's own printed text names."""
+
     forbidden_types: tuple[Type, ...] = ()
     """The types the watched event's own subject must *not* have - CR 205.2a's
     "a noncreature spell" (Summon: Good King Mog XII's own Saga chapters II
@@ -1280,6 +1377,16 @@ class DelayedTrigger(EngineModel):
     half, which the *ordinary*, printed form of "a noncreature spell" already
     reads off `GameEvent.subject_types` the same way. Empty matches any
     event regardless of type, the same as no clause naming a type at all."""
+
+    required_any_types: tuple[Type, ...] = ()
+    """The types the watched event's own subject must have *at least one*
+    of - CR 300.1's own card types, `forbidden_types`' positive twin. Way of
+    the Cryomancer's own granted "[-3]: When you next cast an instant or
+    sorcery spell this turn, copy that spell." needs "instant or sorcery"
+    read this way rather than as two sibling triggers, since CR 603.7a
+    creates one delayed ability per printed sentence, not one per type
+    named in it. Empty matches any event regardless of type, the same as
+    `forbidden_types`' own empty default."""
 
     sibling_ids: tuple[UUID, ...] = ()
     """Other `DelayedTrigger`s created alongside this one that watch for a
@@ -1340,12 +1447,19 @@ class DelayedTrigger(EngineModel):
             return False
         if self.combat_only and not event.combat:
             return False
+        if self.defending_controller_only and event.defender_controller != self.controller:
+            return False
         if self.to_player_only and event.player is None:
             return False
         if (
             self.forbidden_types
             and event.subject_types is not None
             and any(t in event.subject_types for t in self.forbidden_types)
+        ):
+            return False
+        if self.required_any_types and (
+            event.subject_types is None
+            or not any(t in event.subject_types for t in self.required_any_types)
         ):
             return False
         return self.only_when_active is None or event.player == self.only_when_active
@@ -1882,6 +1996,28 @@ class DelayedTriggers(EngineModel):
         effect with no "until end of turn" survives `end_the_turn`.
         """
         ending = [trigger for trigger in self.triggers if trigger.expires_end_of_turn]
+        ending_ids = {trigger.id for trigger in ending}
+        self.triggers = [trigger for trigger in self.triggers if trigger.id not in ending_ids]
+        return ending
+
+    def expire_end_of_next_turn_for(self, username: str) -> list[DelayedTrigger]:
+        """CR 800.4m: end every `username`-owned "until your next turn"
+        delayed trigger the moment `username`'s next turn would begin.
+
+        `Game.begin_turn_for` calls this at the identical instant it already
+        ends `Duration.UNTIL_YOUR_NEXT_TURN` continuous effects
+        (`ContinuousEffects.end_for_next_turn`) and marks `expires_end_of_
+        next_turn` play permissions for this same player - the three
+        `UNTIL_YOUR_NEXT_TURN`-shaped stores this engine carries, ended the
+        same way for the same reason. Scoped to `controller`, not every
+        trigger with the flag set: two players' own "until your next turn"
+        grants end on two different turns.
+        """
+        ending = [
+            trigger
+            for trigger in self.triggers
+            if trigger.expires_end_of_next_turn and trigger.controller == username
+        ]
         ending_ids = {trigger.id for trigger in ending}
         self.triggers = [trigger for trigger in self.triggers if trigger.id not in ending_ids]
         return ending

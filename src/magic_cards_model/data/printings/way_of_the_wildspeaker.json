@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "a252cb01-537b-4afe-9abc-81a98c4a1439",
+  "oracle_id": "501580b9-692c-4804-be34-012a25ba8adf",
+  "multiverse_ids": [],
+  "cardmarket_id": 908845,
+  "name": "Way of the Wildspeaker",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/a252cb01-537b-4afe-9abc-81a98c4a1439",
+  "scryfall_uri": "https://scryfall.com/card/fra/268/way-of-the-wildspeaker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-18T11:06:42Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.jpg?1789729602",
+    "normal": "https://cards.scryfall.io/normal/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.jpg?1789729602",
+    "large": "https://cards.scryfall.io/large/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.jpg?1789729602",
+    "png": "https://cards.scryfall.io/png/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.png?1789729602",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.jpg?1789729602",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.jpg?1789729602",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.webp?1789729602",
+    "grid": "https://cards.scryfall.io/grid/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.webp?1789729602",
+    "display": "https://cards.scryfall.io/display/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.webp?1789729602",
+    "art": "https://cards.scryfall.io/art/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.webp?1789729602",
+    "crop": "https://cards.scryfall.io/crop/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.webp?1789729602"
+  },
+  "mana_cost": "{4}{G}",
+  "cmc": 5.0,
+  "type_line": "Legendary Enchantment",
+  "oracle_text": "When Way of the Wildspeaker enters, empower Jace 7. (Put seven loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\u22121]: Surveil 1\" and \"[\u22123]: Draw a card.\")\nPlaneswalkers you control have \"[\u22124]: Create a 4/4 green Beast creature token with trample.\"",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a252cb01-537b-4afe-9abc-81a98c4a1439/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A501580b9-692c-4804-be34-012a25ba8adf&unique=prints",
+  "collector_number": "268",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Joshua Raphael",
+  "artist_ids": [
+    "553b2a73-780f-414b-b2d7-3b7888821082"
+  ],
+  "illustration_id": "652c235b-20d7-412b-8970-10eb0f07b4ca",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment",
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 31254,
+  "preview": {
+    "source": "Joshua Raphael",
+    "source_uri": "https://www.instagram.com/p/DdJEGNMEbnu/?img_index=1",
+    "previewed_at": "2026-09-11"
+  },
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BWildspeaker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BWildspeaker",
+    "edhrec": "https://edhrec.com/route/?cc=Way+of+the+Wildspeaker"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BWildspeaker%26view%3Dgrid",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908845&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Way+of+the+Wildspeaker&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
