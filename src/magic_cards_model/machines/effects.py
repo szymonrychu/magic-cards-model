@@ -4552,7 +4552,11 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
     qualifier_word = match.group("qualifier")
     universal = qualifier_word.lower() in ("permanent", "permanents")
     card_type = None if universal else _singular_card_type(qualifier_word)
-    subtype = None if universal or card_type is not None else _singular_subtype(qualifier_word)
+    subtype = (
+        None
+        if universal or card_type is not None
+        else _singular_subtype_for_count_expression(qualifier_word)
+    )
     if not universal and card_type is None and subtype is None:
         return None
     other = match.group("other") is not None
