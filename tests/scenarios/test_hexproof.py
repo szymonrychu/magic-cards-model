@@ -29,9 +29,10 @@ session that wrote it.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import Zone
 from tests.cards import card
-from tests.scenarios.harness import Scenario
+from tests.scenarios.harness import Scenario, mana_from
 
 
 def board(bolt_owner: str = "alice") -> Scenario:
@@ -217,3 +218,117 @@ def test_plain_hexproof_still_refuses_a_spell_of_any_quality():
     casting = scenario.cast("Lightning Bolt", username="bob")
     with pytest.raises(ValueError, match="has hexproof"):
         casting.choose_targets([riverwinder])
+
+
+# -- CR 702.11d via a *granted* static ability (Dragonfire Blade) ----------
+#
+# Everything above reads hexproof-from-quality off a permanent's own printed
+# text (Nevinyrral). Dragonfire Blade grants the identical CR 702.11d
+# variant from an Equipment instead: "Equipped creature gets +2/+2 and has
+# hexproof from monocolored." (CR 613.1f, layer 6). `_hexproof_abilities`
+# already read a *granted* ability off the computed board before this file
+# was written - the gap was one layer earlier, in `machines/layers.py`'s own
+# equip/aura static-ability parser, which never produced the grant in the
+# first place, and in `Casting._spell_has_quality`, which had no notion of a
+# colour-*count* quality ("monocolored"/"multicolored", CR 105.2a/CR 105.2b)
+# at all, only a colour, a card type, a subtype, or a supertype.
+
+
+def dragonfire_board(bolt_owner: str = "bob") -> Scenario:
+    hands = {"alice": [], "bob": []}
+    hands[bolt_owner] = ["Lightning Bolt"]
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=hands["alice"],
+            battlefield=[
+                "Dragonfire Blade",
+                "Grizzly Bears",
+                "Forest",
+                "Forest",
+                "Forest",
+                "Mountain",
+            ],
+        )
+        .player("bob", hand=hands["bob"], battlefield=["Mountain"])
+    )
+
+
+def equip_dragonfire_blade(scenario: Scenario, bears):
+    blade = scenario.find("Dragonfire Blade", Zone.BATTLEFIELD, "alice")
+    activation = equip_activation(scenario.game, blade, bears, "alice")
+    payment = activation.begin_paying()
+    for source in scenario.untapped_sources("Forest", "Forest", "Forest", username="alice"):
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    activation.activate()
+    activation.resolve()
+    return blade
+
+
+def test_dragonfire_blade_grants_hexproof_from_monocolored_once_equipped():
+    """Grizzly Bears is monocolored green (CR 105.2a), so the granted line
+    shows up on the computed board the moment the equip resolves - and the
+    pump lands beside it, CR 613.6's "one ability spanning multiple layers"."""
+    scenario = dragonfire_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    equip_dragonfire_blade(scenario, bears)
+
+    board = scenario.game.continuous_effects.board(scenario.game.battlefield)
+    assert board.of(bears).has_ability("Hexproof from monocolored")
+    assert bears.power == 4 and bears.toughness == 4
+
+
+def test_an_opponents_monocolored_spell_cannot_target_the_equipped_creature():
+    """CR 702.11d: Lightning Bolt is red alone, one color - monocolored."""
+    scenario = dragonfire_board(bolt_owner="bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    equip_dragonfire_blade(scenario, bears)
+
+    casting = scenario.cast("Lightning Bolt", username="bob")
+    with pytest.raises(ValueError, match="hexproof from monocolored"):
+        casting.choose_targets([bears])
+
+
+def test_an_opponents_multicolored_spell_can_target_the_equipped_creature():
+    """The defect this pins: Lightning Helix is red *and* white - CR 105.2b's
+    multicolored, so "hexproof from monocolored" says nothing about it."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Dragonfire Blade", "Grizzly Bears", "Forest", "Forest", "Forest"],
+        )
+        .player("bob", hand=["Lightning Helix"], battlefield=["Mountain", "Plains"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    equip_dragonfire_blade(scenario, bears)
+    scenario.pass_priority("alice")
+
+    scenario.cast_and_resolve(
+        "Lightning Helix",
+        *scenario.untapped_sources("Mountain", "Plains", username="bob"),
+        username="bob",
+        targets=[bears],
+    )
+    assert bears.damage == 3
+
+
+def test_its_own_controller_can_still_target_it_with_a_monocolored_spell():
+    """CR 702.11d names "your opponents control" the same way CR 702.11b
+    does - alice's own Lightning Bolt is unaffected by her Blade's grant."""
+    scenario = dragonfire_board(bolt_owner="alice").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    equip_dragonfire_blade(scenario, bears)
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    scenario.cast_and_resolve("Lightning Bolt", mountain, targets=[bears])
+    assert bears.damage == 3

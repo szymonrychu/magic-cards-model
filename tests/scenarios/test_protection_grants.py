@@ -40,9 +40,10 @@ the session that wrote this file.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import Zone
 
-from .harness import Scenario
+from .harness import Scenario, mana_from
 
 
 def computed(scenario: Scenario):
@@ -190,3 +191,78 @@ def test_granted_color_protection_still_stops_a_same_colored_spell_from_targetin
 
     with pytest.raises(ValueError, match="protection"):
         scenario.cast("Lightning Bolt", username="alice", targets=[bears])
+
+
+# -- The equipped/enchanted-creature shape (Sword of Fire and Ice) ---------
+#
+# Everything above is the *anthem* shape ("Creatures you control have ...").
+# Sword of Fire and Ice's own static is the other real shape that grants
+# protection: "Equipped creature gets +2/+2 and has protection from red and
+# from blue." - `_ATTACHED_CREATURE_STATIC_RE` (Cori-Steel Cutter's "gets
+# +1/+1 and has trample and haste"), not the anthem regex. This is the
+# off-set genericity proof for the widening that also closed Dragonfire
+# Blade's "hexproof from monocolored" (fra-s10b): the same
+# `_split_and_validate_keywords` tokenizer now reads a qualified "<keyword>
+# from <quality>[ and from <quality>]*" item in *either* shape, rather than
+# each shape carrying its own copy of that grammar.
+
+
+def test_sword_of_fire_and_ice_grants_both_protection_qualities_once_equipped():
+    """CR 702.16g: "protection from A and from B" is two abilities, and the
+    equipped-creature shape splits them exactly the way the anthem shape
+    above already does (`_split_protection_qualities`, shared by both)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Sword of Fire and Ice", "Grizzly Bears", "Forest", "Forest"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    sword = scenario.find("Sword of Fire and Ice", Zone.BATTLEFIELD, "alice")
+
+    activation = equip_activation(scenario.game, sword, bears, "alice")
+    payment = activation.begin_paying()
+    for source in scenario.untapped_sources("Forest", "Forest", username="alice"):
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    activation.activate()
+    activation.resolve()
+
+    board = computed(scenario)
+    assert board.of(bears).has_ability("Protection from red")
+    assert board.of(bears).has_ability("Protection from blue")
+    assert bears.power == 4 and bears.toughness == 4
+
+
+def test_the_granted_protection_from_the_equipped_shape_stops_a_matching_spell_from_targeting():
+    """CR 702.16b again, off the equipped-creature shape rather than the
+    anthem one - the same targeting enforcement, a different static ability
+    producing the grant."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Sword of Fire and Ice", "Grizzly Bears", "Forest", "Forest"],
+        )
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    sword = scenario.find("Sword of Fire and Ice", Zone.BATTLEFIELD, "alice")
+
+    activation = equip_activation(scenario.game, sword, bears, "alice")
+    payment = activation.begin_paying()
+    for source in scenario.untapped_sources("Forest", "Forest", username="alice"):
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    activation.activate()
+    activation.resolve()
+
+    with pytest.raises(ValueError, match="protection"):
+        scenario.cast("Lightning Bolt", username="bob", targets=[bears])

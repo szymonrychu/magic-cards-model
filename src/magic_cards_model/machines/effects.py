@@ -305,8 +305,9 @@ def gain_life(amount: int) -> Effect:
     return effect
 
 
-def deal_divided_damage(total: int) -> Effect:
-    """Damage "divided as you choose among one or two targets" (CR 601.2d).
+def deal_divided_damage(total: int, *, even_split: bool = False) -> Effect:
+    """Damage "divided as you choose among one or two targets" (CR 601.2d),
+    or Fireball's own "divided evenly, rounded down" when `even_split`.
 
     "The player announces the division. Each of these targets must receive at
     least one of whatever is being divided." W13 gives that announcement
@@ -317,18 +318,26 @@ def deal_divided_damage(total: int) -> Effect:
     remainder on the first target, which for Electrolyze's 2 damage is the
     whole of it on one target, or 1 each on two either way.
 
+    `even_split` is a different card entirely dictating the split, not the
+    caster (CR 601.2d only applies "if the spell requires the player to
+    divide" the effect, and this one does not) - floor division with the
+    remainder simply dropped, never handed to any target, so a target can
+    receive zero of a total spread thinner than the target count.
+
     Only targets that are still legal on resolution are paid out (CR 608.2b),
     and the share the illegal ones would have had is simply not dealt: the
     division is locked in at announcement and cannot be re-divided.
     """
 
     def effect(game: "Game", spell: CardState) -> None:
-        _deal_divided_damage_shares(game, spell, total)
+        _deal_divided_damage_shares(game, spell, total, even_split=even_split)
 
     return effect
 
 
-def _divided_damage_shares(total: int, chosen: int, announced: list[int] | None) -> list[int]:
+def _divided_damage_shares(
+    total: int, chosen: int, announced: list[int] | None, *, even_split: bool = False
+) -> list[int]:
     """The per-target shares a divided-damage effect pays out (CR 601.2d).
 
     `announced` is `spell.division` - the caster's real CR 601.2c/d
@@ -338,7 +347,14 @@ def _divided_damage_shares(total: int, chosen: int, announced: list[int] | None)
     scenario that predates this mechanism, and any that still does not use
     it), the total is split as evenly as it goes with the remainder on the
     first target, exactly `deal_divided_damage`'s original behaviour.
+
+    `even_split` skips `announced` altogether - there is never anything to
+    announce for this shape (`TargetingProfile.division` is never populated
+    for it, see `_DIVIDED_DAMAGE_RE`'s own docstring) - and floor-divides
+    with the remainder dropped rather than assigned to the first targets.
     """
+    if even_split:
+        return [total // chosen] * chosen
     if announced is not None and len(announced) == chosen:
         return list(announced)
     shares = [total // chosen] * chosen
@@ -347,7 +363,9 @@ def _divided_damage_shares(total: int, chosen: int, announced: list[int] | None)
     return shares
 
 
-def _deal_divided_damage_shares(game: "Game", spell: "StackObject", total: int) -> None:
+def _deal_divided_damage_shares(
+    game: "Game", spell: "StackObject", total: int, *, even_split: bool = False
+) -> None:
     """Pay out `total` damage divided among `spell.targets` (CR 601.2d, CR
     608.2b). Shared by `deal_divided_damage` (a fixed printed amount) and
     Shatterskull Smashing's own X-based, conditionally doubled version.
@@ -364,7 +382,7 @@ def _deal_divided_damage_shares(game: "Game", spell: "StackObject", total: int) 
     if chosen == 0 or total <= 0:
         return
     source = spell if isinstance(spell, CardState) else spell.source(game)
-    shares = _divided_damage_shares(total, chosen, spell.division)
+    shares = _divided_damage_shares(total, chosen, spell.division, even_split=even_split)
     for reference, share in zip(spell.targets, shares, strict=True):
         target = game.legal_target(spell, reference)
         if target is not None and share > 0:
@@ -6241,6 +6259,24 @@ _PER_COUNT_COST_REDUCTION_LINE_RE = re.compile(
     r"^This spell costs \{\d+\} less to cast for each [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
 )
 
+#: The increase twin of the line above - "This spell costs {1} more to cast
+#: for each target beyond the first." (Fireball, and Launch the Fleet's
+#: identically-worded "Strive — ..." clause; CR 207.2c gives the "Strive"
+#: ability word no rules meaning of its own, so the optional em-dash prefix
+#: is stripped along with the sentence rather than treated as a separate
+#: instruction). `machines/casting.py`'s own `_COST_INCREASE_PER_TARGET_RE`
+#: is what actually prices it (CR 601.2f); this is only the same preamble-
+#: poisoning fix `_SELF_COST_REDUCTION_LINE_RE` documents - left unstripped,
+#: "Fireball deals X damage divided evenly, rounded down, among any number
+#: of targets." would be read as the card's *second* clause rather than its
+#: only resolving one, and `_parse_mixed_clauses`'s fail-closed-per-clause
+#: rule would take it down too.
+_COST_INCREASE_PER_TARGET_LINE_RE = re.compile(
+    r"^(?:Strive\s*—\s*)?This spell costs \{[^}]+\} more to cast for each target beyond "
+    r"the first\.\s*",
+    re.IGNORECASE | re.MULTILINE,
+)
+
 
 #: A keyword-ability line, recognised by its *shape* rather than by its
 #: keyword. CR 702.1: "Most abilities describe exactly what they do in the
@@ -6323,6 +6359,7 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _FREE_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _SELF_COST_REDUCTION_LINE_RE.sub("", text)
     text = _PER_COUNT_COST_REDUCTION_LINE_RE.sub("", text)
+    text = _COST_INCREASE_PER_TARGET_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
     text = _INLINE_REMINDER_RE.sub("", text)
     # Last, so the shape rule sees each line with its CR 207.2a reminder text
@@ -9614,8 +9651,101 @@ def _parse_counter_on_additional_cost_card_clause(clause: str) -> TargetedClause
 #: announcement, are still read off `spell.targets`/`spell.division` at
 #: resolution - `_deal_divided_damage_shares` below never re-reads this
 #: phrase.
+#:
+#: "<Name> deals X damage divided evenly, rounded down, among all creatures
+#: target opponent controls." (Dwarven Catapult) - not a target *list* at
+#: all despite superficially fitting "divided ... among <phrase>": CR 115.4's
+#: only real target here is the single player named by "target opponent"/
+#: "target player", and "all creatures ... controls" is CR 611.2c's
+#: ordinary computed-at-resolution recipient set, the identical "all
+#: <description> target player controls" grammar `_ALL_OF_TARGET_PLAYERS_RE`
+#: already reads for Settle the Wreckage's "Exile all attacking creatures
+#: target player controls." - not something the caster ever chooses or
+#: announces a share for, per creature. Tried *before* `_DIVIDED_DAMAGE_RE`
+#: below for exactly that reason: left to fall through to it,
+#: `_targets_understood`'s own "target opponent" substring inside the
+#: phrase reads as "understood" on its own, and the whole total would be
+#: dealt once to the single targeted *player* instead of divided among the
+#: creatures they control.
+_DIVIDED_DAMAGE_AMONG_TARGET_PLAYERS_CREATURES_RE = re.compile(
+    rf"^.*\bdeals? (?P<n>{AMOUNT}) damage divided "
+    rf"(?:as you choose|(?P<evenly>evenly, rounded down)),? among all creatures "
+    rf"target (?P<whose>opponent|player) controls{where_x_pattern()}\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_divided_damage_among_target_players_creatures_clause(clause: str) -> Effect | None:
+    """`_DIVIDED_DAMAGE_AMONG_TARGET_PLAYERS_CREATURES_RE`'s shape.
+
+    The recipients are read off the computed board (CR 613.5) at resolution,
+    the same "fixed set now" convention `_parse_all_of_target_player_then_
+    referent_pair` already uses for Settle the Wreckage's identical
+    "all ... target player controls" grammar - `permanent_description`
+    reused rather than a bare `.is_creature` check so an animated land
+    counts here exactly the way it already does there.
+    """
+    match = _DIVIDED_DAMAGE_AMONG_TARGET_PLAYERS_CREATURES_RE.fullmatch(clause)
+    if match is None:
+        return None
+    if not _targets_understood(f"target {match.group('whose')}", allow_player_targets=True):
+        return None
+    requirement = permanent_description("creatures")
+    if requirement is None:
+        return None
+    where_x = match.group("where_x")
+    n = match.group("n")
+    even_split = match.group("evenly") is not None
+    multiplier = count_expression(where_x) if where_x is not None else None
+    if where_x is not None and multiplier is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        players = [target for target in game.resolve_targets(spell) if isinstance(target, Player)]
+        if not players:
+            return
+        player = players[0]
+        creatures = [
+            permanent
+            for permanent in game.permanents_controlled_by(player.username)
+            if requirement.rejects(permanent, player.username, game) is None
+        ]
+        if not creatures:
+            return
+        if n.lower() == "x":
+            total = (
+                multiplier(game, game.controller_of(spell).username)
+                if multiplier is not None
+                else game.cast_record(spell).x_value
+            )
+        else:
+            total = parse_count(n) or 0
+        if total <= 0:
+            return
+        shares = _divided_damage_shares(total, len(creatures), None, even_split=even_split)
+        for creature, share in zip(creatures, shares, strict=True):
+            if share > 0:
+                game.deal_damage(creature, share, source=spell)
+
+    return effect
+
+
+#: "divided evenly, rounded down" (Fireball: "Fireball deals X damage
+#: divided evenly, rounded down, among any number of targets.") is a second,
+#: mutually exclusive splitting method beside "as you choose" - the card
+#: dictates the whole division itself, so there is nothing for CR 601.2d to
+#: have the caster announce (`Casting.announce_division` is never reachable
+#: for this shape: `machines/targeting.py`'s own `Division`/`_read_division`
+#: only ever reads the "as you choose" template, so `TargetingProfile.
+#: division` stays `None` here and `announce_division` correctly refuses
+#: "does not divide anything to announce"). `evenly` records which template
+#: matched, so the resolution-time payout (`_deal_divided_damage_shares`)
+#: knows to floor-divide with the remainder simply dropped rather than
+#: dumped on the first target(s) the way an un-announced "as you choose"
+#: falls back.
 _DIVIDED_DAMAGE_RE = re.compile(
-    rf".*\bdeals? (?P<n>{AMOUNT}) damage divided as you choose among "
+    rf".*\bdeals? (?P<n>{AMOUNT}) damage divided "
+    rf"(?:as you choose|(?P<evenly>evenly, rounded down)),? among "
     rf"(?P<phrase>[^.]+?){where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
@@ -10210,7 +10340,9 @@ def _deal_damage_for_each(
     return effect
 
 
-def _deal_divided_damage_for_expression(multiplier: Callable[["Game", str], int]) -> Effect:
+def _deal_divided_damage_for_expression(
+    multiplier: Callable[["Game", str], int], *, even_split: bool = False
+) -> Effect:
     """`deal_divided_damage`'s twin for a "where X is <expr>" total - Ureni's
     "X damage divided as you choose ..., where X is the number of lands you
     control" and Rolling Thunder's identical shape. `_deal_divided_damage_
@@ -10221,7 +10353,23 @@ def _deal_divided_damage_for_expression(multiplier: Callable[["Game", str], int]
     def effect(game: "Game", spell: "StackObject") -> None:
         controller = game.controller_of(spell)
         total = multiplier(game, controller.username)
-        _deal_divided_damage_shares(game, spell, total)
+        _deal_divided_damage_shares(game, spell, total, even_split=even_split)
+
+    return effect
+
+
+def _deal_x_divided_damage(*, even_split: bool = False) -> Effect:
+    """`deal_divided_damage`'s twin for CR 107.3's plain X - no "where X is
+    <expr>" definition anywhere in the sentence, so X is the caster's own
+    announced {X} in the mana cost (CR 601.2b), read the same way
+    `_parse_x_damage_divided_and_doubled_clause` already reads Shatterskull
+    Smashing's X rather than through `where_x_pattern`'s expression group,
+    which stays empty for this shape.
+    """
+
+    def effect(game: "Game", spell: CardState) -> None:
+        x_value = game.cast_record(spell).x_value
+        _deal_divided_damage_shares(game, spell, x_value, even_split=even_split)
 
     return effect
 
@@ -10563,6 +10711,15 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         return _deal_damage_for_each(amount_fn, for_spell=for_spell)
 
+    if for_spell and _DIVIDED_DAMAGE_AMONG_TARGET_PLAYERS_CREATURES_RE.fullmatch(clause):
+        # `game.cast_record` (the plain-X reading below) is a spell-only
+        # concept, and no ability in the pool prints this shape - narrowed
+        # to `for_spell` rather than promising support this has no card to
+        # prove. Tried before the generic `_DIVIDED_DAMAGE_RE` below - see
+        # `_DIVIDED_DAMAGE_AMONG_TARGET_PLAYERS_CREATURES_RE`'s own
+        # docstring for why the order matters.
+        return _parse_divided_damage_among_target_players_creatures_clause(clause)
+
     if match := _DIVIDED_DAMAGE_RE.fullmatch(clause):
         # Unlike `_DAMAGE_TARGET_RE`, this phrase genuinely can carry a
         # printed restriction (Ureni's "target creatures and/or
@@ -10576,15 +10733,23 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         where_x = match.group("where_x")
         n = match.group("n")
+        even_split = match.group("evenly") is not None
         if n.lower() == "x":
-            if where_x is None:
-                return None
-            multiplier = count_expression(where_x)
-            if multiplier is None:
-                return None
-            return _deal_divided_damage_for_expression(multiplier)  # type: ignore[return-value]
+            if where_x is not None:
+                multiplier = count_expression(where_x)
+                if multiplier is None:
+                    return None
+                return _deal_divided_damage_for_expression(  # type: ignore[return-value]
+                    multiplier, even_split=even_split
+                )
+            # No "where X is ..." definition at all: CR 107.3's plain,
+            # caster-announced X (Fireball) - the same shape Shatterskull
+            # Smashing's own separate parser already reads off `x_value`,
+            # generalised into this dispatch rather than left a one-card
+            # special case now that a second real printing needs it too.
+            return _deal_x_divided_damage(even_split=even_split)  # type: ignore[return-value]
         amount = parse_count(n)
-        return deal_divided_damage(amount)  # type: ignore[return-value]
+        return deal_divided_damage(amount, even_split=even_split)  # type: ignore[return-value]
 
     if match := _DAMAGE_EACH_OPPONENT_RE.fullmatch(clause):
         # No target at all (CR 102.2's "each opponent"), so nothing to check

@@ -5217,7 +5217,13 @@ _ATTACHED_CREATURE_PUMP_AND_QUOTED_RE = re.compile(
 _ATTACHED_CREATURE_STATIC_RE = re.compile(
     r"^(?P<attachment>equipped|enchanted) creature "
     r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
-    r"(?: and has (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))?"
+    # Non-greedy: a greedy `.+` swallows the sentence's own trailing period
+    # into the captured keyword list itself ("hexproof from monocolored."),
+    # which then fails `_split_and_validate_keywords`'s tokenizer outright -
+    # not just on the new "from <quality>" shape but on the plain
+    # "trample and haste." case too. Non-greedy backtracks down to the
+    # shortest match that still lets the trailing `\.?$` consume the period.
+    r"(?: and has (?P<keywords>[a-z].+?))?"
     r'|has "(?P<granted>.+)"'
     # CR 111.10j's Cursed Role: "Enchanted creature has base power and
     # toughness 1/1." - a *set* (sublayer 7b, CR 613.4b), not the `gets`
@@ -5225,7 +5231,7 @@ _ATTACHED_CREATURE_STATIC_RE = re.compile(
     # static ability with no stated duration, unlike `_BASE_PT_SET_RE`'s
     # temporary shape above.
     r"|has base power and toughness (?P<base_power>\d+)/(?P<base_toughness>\d+)"
-    r"|has (?P<only_keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))\.?$",
+    r"|has (?P<only_keywords>[a-z].+?))\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -6933,16 +6939,79 @@ _KNOWN_KEYWORDS = frozenset(keyword.value for keyword in Keyword) | KEYWORDS_OUT
 KNOWN_KEYWORDS = _KNOWN_KEYWORDS
 
 
+#: CR 702.11d / CR 702.16a: "hexproof from [quality]" and "protection from
+#: [quality]" are their own variants of an already-known keyword, not a
+#: keyword of their own on `_KNOWN_KEYWORDS`'s bare whitelist - the whole
+#: reason `Dragonfire Blade` ("Equipped creature gets +2/+2 and has hexproof
+#: from monocolored.") and the Sword cycle ("Equipped creature gets +2/+2
+#: and has protection from red and from blue.", Sword of Fire and Ice) went
+#: unread: neither "hexproof from monocolored" nor "protection from red and
+#: from blue" is ever going to equal a bare keyword string.
+#:
+#: CR 702.16g: "'Protection from [quality A] and from [quality B]' is
+#: shorthand for 'protection from [quality A]' and 'protection from
+#: [quality B]'; it behaves as two separate protection abilities." CR
+#: 702.11f says the identical thing for hexproof. So a multi-quality list is
+#: split into that many separate result entries here, the same way
+#: `_INDEFINITE_KEYWORD_AND_PROTECTION_GRANT_RE`'s own builder already
+#: splits Akroma's Memorial's "protection from black and from red" into two
+#: granted ability strings via `_split_protection_qualities` rather than
+#: granting one combined line - this reuses that same split so both grant
+#: shapes agree on what "two separate abilities" produces.
+#:
+#: The quality word itself (a colour here, but CR 702.16a/CR 702.11d both
+#: allow "any characteristic value or information") is read only at
+#: enforcement time (`Game._effective_protection_qualities`,
+#: `casting._hexproof_abilities`) and is not validated here - the same
+#: fail-open choice this project already makes for a printed protection/
+#: hexproof line whose quality it cannot read, rather than refusing the
+#: whole grant over one word neither of those functions will recognise
+#: anyway.
+_QUALIFIED_KEYWORD_RE = re.compile(
+    r"^(?P<keyword>hexproof|protection) from (?P<qualities>[a-z]+(?:\s+and\s+from\s+[a-z]+)*)",
+    re.IGNORECASE,
+)
+#: A bare keyword item, one or two words (CR 700.7's "first strike", "double
+#: strike") - `_split_and_validate_keywords`'s own tokenizer tries
+#: `_QUALIFIED_KEYWORD_RE` first at each position, so an "and" inside a
+#: qualified keyword's own "[quality A] and from [quality B]" list is never
+#: mistaken for the separator between two different keywords the way a
+#: single upfront `re.split` on "and" already was.
+_BARE_KEYWORD_ITEM_RE = re.compile(r"^([a-z]+(?: [a-z]+)?)(?:,\s*|\s+and\s+|$)", re.IGNORECASE)
+
+
 def _split_and_validate_keywords(raw: str) -> list[str] | None:
-    """ "double strike and lifelink" / "menace, deathtouch and first strike" ->
-    each keyword, capitalised - or `None` if any of them is not on
-    `_KNOWN_KEYWORDS`'s whitelist, the same fail-closed rule the single-keyword
-    shapes already enforce.
+    """ "double strike and lifelink" / "menace, deathtouch and first strike" /
+    "hexproof from monocolored" / "protection from red and from blue" -> each
+    keyword, capitalised, with a multi-quality "from A and from B" item split
+    into that many separate "<Keyword> from <quality>" entries (CR 702.16g/
+    CR 702.11f) - or `None` if a bare item is not on `_KNOWN_KEYWORDS`'s
+    whitelist, the same fail-closed rule the single-keyword shapes already
+    enforce. A left-to-right tokenizer rather than one upfront split, since a
+    qualified keyword's own "and from" would otherwise be cut apart by the
+    same comma/"and" separator that splits two different keywords from each
+    other.
     """
-    parts = [part.strip() for part in re.split(r",\s*|\s+and\s+", raw) if part.strip()]
-    if not parts or any(part.lower() not in _KNOWN_KEYWORDS for part in parts):
-        return None
-    return [part.capitalize() for part in parts]
+    result: list[str] = []
+    remaining = raw.strip()
+    while remaining:
+        qualified = _QUALIFIED_KEYWORD_RE.match(remaining)
+        if qualified is not None:
+            keyword = qualified.group("keyword").capitalize()
+            for quality in _split_protection_qualities(qualified.group("qualities")):
+                result.append(f"{keyword} from {quality}")
+            remaining = remaining[qualified.end() :].strip()
+            remaining = re.sub(r"^(?:,\s*|and\s+)", "", remaining, flags=re.IGNORECASE).strip()
+            continue
+        bare = _BARE_KEYWORD_ITEM_RE.match(remaining)
+        if bare is None:
+            return None
+        word = bare.group(1).strip()
+        if word.lower() not in _KNOWN_KEYWORDS:
+            return None
+        result.append(word.capitalize())
+        remaining = remaining[bare.end() :].strip()
+    return result or None
 
 
 #: The public name for the same reader, for `machines/effects.py`'s own
