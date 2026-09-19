@@ -4777,6 +4777,40 @@ _SURVEIL_RE = re.compile(rf"surveils? (?P<n>{AMOUNT}){where_x_pattern()}", re.IG
 #: Command's third-person mode) - `scr(?:y|ies)` reads both conjugations.
 #: "Scry X, where X is `<expr>`" (Oath of Jace) reads the same way.
 _SCRY_RE = re.compile(rf"scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
+
+#: "Untap all tokens you control." (Jiang Yanggu, Never Alone's end step
+#: trigger); "Untap all nonland permanents you control." (Dramatic
+#: Reversal) - CR 701.26b's untap over a filtered group rather than one
+#: named object, and player-owned rather than source-owned, which is why
+#: this lives in the shared per-clause reader (both a spell's own
+#: resolution and a triggered ability's reach it) rather than only the
+#: ability-only fallback `_UNTAP_TRIGGER_SUBJECT_RE` is read from. Only the
+#: qualifiers the pool prints are read; a filter this cannot name leaves the
+#: clause unread rather than guessing.
+_UNTAP_ALL_QUALIFIER_RE = re.compile(
+    r"^untap all (?P<nonland>nonland )?(?P<noun>permanents|creatures|artifacts|tokens|lands) "
+    r"you control$",
+    re.IGNORECASE,
+)
+
+
+def _untap_all_qualifier_matches(game: "Game", state: CardState, noun: str, nonland: bool) -> bool:
+    chars = game.characteristics_of(state)
+    if nonland and Type.LAND in chars.types:
+        return False
+    if noun == "permanents":
+        return True
+    if noun == "lands":
+        return Type.LAND in chars.types
+    if noun == "artifacts":
+        return Type.ARTIFACT in chars.types
+    if noun == "creatures":
+        return Type.CREATURE in chars.types
+    if noun == "tokens":
+        return chars.is_token
+    return False
+
+
 #: "You gain life equal to the life you've lost this turn." - Children of
 #: Korlis. The amount is read off `Player.life_lost_this_turn`, the gross
 #: per-turn ledger, not the net change in the life total: every route down
@@ -5125,6 +5159,19 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         return lambda game, player, source, source_id: game.scry(
             player, reader(game, player.username), source=source, source_id=source_id
         )
+
+    if match := _UNTAP_ALL_QUALIFIER_RE.fullmatch(clause):
+        nonland = match.group("nonland") is not None
+        noun = match.group("noun").lower()
+
+        def untap_all(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            for state in list(game.battlefield):
+                if state.controller == player.username and _untap_all_qualifier_matches(
+                    game, state, noun, nonland
+                ):
+                    state.untap(exert_applies=False)
+
+        return untap_all
 
     return None
 
