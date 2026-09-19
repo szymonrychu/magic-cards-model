@@ -1740,10 +1740,17 @@ def condition_matches(
         )
 
     if ability.event is TriggerEvent.TURNED_FACE_UP:
-        # CR 702.37e/708.8. Brine Elemental's own printing is the only one
-        # in the pool ("When this creature is turned face up, ..."), always
-        # self-referential.
-        return mine and event.subject_id == source.id
+        # CR 702.37e/708.8. Brine Elemental's own "When this creature is
+        # turned face up, ..." is self-referential (`mine`); Mastery of the
+        # Unseen's "Whenever a permanent you control is turned face up, ..."
+        # is not - it watches every permanent its controller turns face up,
+        # not only itself, the same self-vs-general split every other event
+        # branch in this function reads off `mine` rather than hardcoding.
+        if mine:
+            return event.subject_id == source.id
+        return _controller_clause_holds(
+            condition, controller, event.subject_controller
+        ) and _types_match(event.subject_types, condition)
 
     if ability.event is TriggerEvent.DISCARDS_A_CARD:
         # CR 701.9a. "Whenever you discard one or more cards" (Captain
