@@ -1457,6 +1457,19 @@ _COLOR_WORDS: dict[str, Color] = {
     "green": Color.GREEN,
 }
 
+#: CR 105.2a "A monocolored object is exactly one of the five colors." and
+#: CR 105.2b "A multicolored object is two or more of the five colors." - a
+#: colour *count*, not a colour word, so a Dragonfire Blade-equipped creature
+#: ("hexproof from monocolored") is checked against the spell's own colour
+#: count rather than `_COLOR_WORDS`. Kept as its own small copy here, the same
+#: way `_split_protection_qualities` in `machines/layers.py` keeps its own
+#: rather than importing `machines/effects.py`'s `_COLOR_COUNT_WORDS`: that
+#: module imports from this one, so a reverse import would cycle.
+_COLOR_COUNT_WORDS: dict[str, Callable[[int], bool]] = {
+    "monocolored": lambda count: count == 1,
+    "multicolored": lambda count: count >= 2,
+}
+
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
 ADDITIONAL_COST_KEYWORDS = frozenset(
@@ -4167,6 +4180,9 @@ class Casting(EngineModel):
         color = _COLOR_WORDS.get(word)
         if color is not None:
             return color in self.spell.colors
+        color_count = _COLOR_COUNT_WORDS.get(word)
+        if color_count is not None:
+            return color_count(len(self.spell.colors))
         if any(word == subtype.lower() for subtype in self.spell.subtypes):
             return True
         return any(word == supertype.lower() for supertype in self.spell.supertypes)
