@@ -437,15 +437,13 @@ def test_enroot_mills_a_land_from_library_to_graveyard():
     scenario.put_on_stack(casting)
     scenario.resolve_top()
 
+    scenario.state_based_actions()  # CR 704.5e: Enroot's own copy ceases to exist
+
     graveyard = scenario.player("alice").graveyard
-    # The searched land, plus the spell itself (an instant/sorcery copy with
-    # no card of its own reaches its own graveyard step same as any other -
-    # CR 704.5e's "a copy of a card in a zone other than the stack or the
-    # battlefield ceases to exist" is not yet a state-based action this
-    # engine dispatches at all; a pre-existing, documented gap
-    # (`docs/engine-coverage.md`'s "A copy of a spell: X, modes, and CR
-    # 704.5e" row), not this stream's to fix.
-    assert len(graveyard) == graveyard_before + 2
+    # Only the searched land - Enroot's own copy ceased to exist instead of
+    # also reaching the graveyard (CR 704.5e; see test_copies_cease_to_exist.py
+    # for the state-based action itself).
+    assert len(graveyard) == graveyard_before + 1
     lands = [state for state in graveyard if state.card.is_land]
     assert len(lands) == 1
     assert lands[0].name == "Forest"

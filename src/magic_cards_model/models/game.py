@@ -3950,6 +3950,14 @@ class Game(EngineModel):
                 # sets the flag directly instead of routing through
                 # `models/token.create_tokens`.
                 spell.token = True
+                # "It ceases being a copy of a spell" - CR 707.10f's own
+                # words, taken literally: `is_copy` comes off in the same
+                # breath `token` goes on, or `Game._copies_that_cease_to_
+                # exist`'s CR 704.5e sweep (a copy of a *spell* in a zone
+                # other than the stack) would destroy this permanent the very
+                # next state-based-action check, the instant after it landed
+                # on the battlefield.
+                spell.is_copy = False
             if "Aura" in spell.subtypes:
                 attachment = self._aura_attachment(spell)
                 if attachment is None:
@@ -11187,6 +11195,75 @@ class Game(EngineModel):
             if other.id != permanent.id and other.attached_to == permanent.id:
                 other.unattach()
 
+    def _copies_that_cease_to_exist(self) -> list[CardState]:
+        """CR 704.5e's first sentence, as a state-based action: "If a copy of
+        a spell is in a zone other than the stack, it ceases to exist."
+
+        `CardState.is_copy` is the flag (CR 112.1a's "a copy of a spell is
+        also a spell"; see that field's own docstring, which already named
+        this exact state-based action as its "one other place ... read").
+        A copy of an instant or sorcery has nowhere but a graveyard to go as
+        it finishes resolving (CR 608.2h), and one that gets countered has
+        nowhere but a graveyard or exile to go (CR 701.6a/701.13a) - this is
+        what stops either from getting there. Proven on two unrelated
+        mechanisms: a CR 722.3c prepare-spell copy that was cast and resolved
+        (`scenarios/test_copies_cease_to_exist.py`'s Enroot case - CR 722.3d
+        keeps `is_copy` true on it even after casting, unlike an ordinary
+        card), and a plain `Game.copy_spell` copy of an instant (the same
+        file's Alania, Divergent Storm case).
+
+        **Never a copy of a *permanent* spell that already resolved.**
+        CR 707.10f/111.13: "As that copy resolves, it ceases being a copy of
+        a spell and becomes a token permanent" - `Game._resolve_top_impl`
+        clears `is_copy` there, in the same branch that sets `token = True`,
+        for exactly that reason (a copy of Solitude sitting on the
+        battlefield is not swept the instant it lands). This is why that
+        clearing is part of the same fix as this method: without it, this
+        state-based action would have destroyed every copied permanent one
+        round after it resolved.
+
+        **CR 722.3c's own exile copy is this rule's one written exception**
+        ("This is an exception to rule 704.5e"), read here rather than on
+        `CardState` itself: a copy in `Zone.EXILE` is spared for as long as
+        some battlefield permanent's `prepared_copy_id` still names it -
+        `Game.become_prepared`/`become_unprepared` are what maintain that
+        link, and once nothing names it any more (it was cast, or the
+        permanent lost the designation or left the battlefield), the
+        exemption ends and the very next check this method makes is what
+        actually removes it.
+
+        Mirrors `models/token.tokens_that_cease_to_exist`'s own shape: every
+        shared zone but the stack, then every player's own zones (none of
+        which is ever the stack).
+        """
+        linked_exile_copy_ids = {
+            permanent.prepared_copy_id
+            for permanent in self.battlefield
+            if permanent.prepared_copy_id is not None
+        }
+
+        def sweep(zone: Zone, cards: list[Any]) -> list[CardState]:
+            doomed = [
+                state
+                for state in cards
+                if isinstance(state, CardState)
+                and state.is_copy
+                and not (zone is Zone.EXILE and state.id in linked_exile_copy_ids)
+            ]
+            for state in doomed:
+                cards.remove(state)
+            return doomed
+
+        gone: list[CardState] = []
+        for zone, cards in self.shared_zones.items():
+            if zone is Zone.STACK:
+                continue
+            gone.extend(sweep(zone, cards))
+        for player in self.players:
+            for zone, cards in player.zones.items():
+                gone.extend(sweep(zone, cards))
+        return gone
+
     def _remember_sources_that_ceased_to_exist(self, gone: list[CardState]) -> None:
         """Keep each vanished token as the last known information of every
         ability on the stack or waiting to go there that it is the source of.
@@ -11431,21 +11508,28 @@ class Game(EngineModel):
         uncomputable - falls back to the printed value rather than being spared
         on a technicality.
 
-        CR 704.5d runs first, against the board as the check found it: "If a
-        token is in a zone other than the battlefield, it ceases to exist." A
-        token that one of the actions below kills in *this* round was still on
-        the battlefield when the conditions were checked, so it ceases to exist
-        on the repeat check CR 704.3 guarantees, not in the same event.
+        CR 704.5d and CR 704.5e's first sentence both run first, against the
+        board as the check found it: "If a token is in a zone other than the
+        battlefield, it ceases to exist" and "If a copy of a spell is in a
+        zone other than the stack, it ceases to exist." A token or a copy
+        that one of the actions below sends off in *this* round was still
+        where it started when the conditions were checked, so either ceases
+        to exist on the repeat check CR 704.3 guarantees, not in the same
+        event. See `_copies_that_cease_to_exist` for CR 704.5e's own scope -
+        only the first sentence, about a copy of a *spell*; CR 722.3c's exile
+        copy is that rule's one written exception, and this method is not
+        where the exception lives.
         """
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
-        self._remember_sources_that_ceased_to_exist(gone_tokens)
+        gone_copies = self._copies_that_cease_to_exist()  # CR 704.5e (first sentence)
+        self._remember_sources_that_ceased_to_exist(gone_tokens + gone_copies)
 
         # Every check below reads the battlefield and moves nothing, so they
         # share one layered board (`snapshot.scan_pin`); the moves come after.
         with scan_pin(self):
             board, leaving = self._state_based_action_losers()
         self._put_state_based_action_losers(leaving, board)
-        return leaving + gone_tokens
+        return leaving + gone_tokens + gone_copies
 
     def _state_based_action_losers(self) -> tuple[ComputedBoard, list[CardState]]:
         """The permanents one round of `_state_based_actions_once` removes, and
