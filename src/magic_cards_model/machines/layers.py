@@ -645,6 +645,7 @@ class QualifiedCreatures(SelectorBase):
     opponents: bool = False
     without_color: Color | None = None
     land: bool = False
+    also_artifact: bool = False
     tokens: bool = False
     gate_card_type: Type | None = None
     gate_threshold: int = 0
@@ -662,6 +663,8 @@ class QualifiedCreatures(SelectorBase):
         if self.without_color is not None and self.without_color in chars.colors:
             return False
         if self.land and not chars.is_land:
+            return False
+        if self.also_artifact and Type.ARTIFACT not in chars.types:
             return False
         if self.tokens and not chars.is_token:
             return False
@@ -731,15 +734,35 @@ class CreaturesControlledByWithColor(SelectorBase):
 
 
 class PermanentsControlledByWithCounters(SelectorBase):
+    """ "[Each other] [creature] you control with [a/an <counter kind>] counter
+    on it/them" (Innkeeper's Talent's bare "permanents ... with counters", and
+    Gallia the Merrymaker / Vigorbloom Vanguard's "each other creature you
+    control with a +1/+1 counter on it").
+
+    `counter_kind` narrows the plain "has any counter" test to one named kind
+    (CR 122.1's counter kinds are compared by name); `creatures_only`/
+    `other_than` narrow the subject to a creature clause the way `other`/
+    `source_id` narrow `QualifiedCreatures`.
+    """
+
     kind: Literal["permanents_controlled_by_with_counters"] = (
         "permanents_controlled_by_with_counters"
     )
     username: str | None = None
+    counter_kind: str | None = None
+    creatures_only: bool = False
+    other_than: UUID | None = None
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
-        return chars.controller == self.username and any(
-            count > 0 for count in chars.counters.values()
-        )
+        if chars.controller != self.username:
+            return False
+        if self.creatures_only and not chars.is_creature:
+            return False
+        if self.other_than is not None and chars.card_id == self.other_than:
+            return False
+        if self.counter_kind is not None:
+            return chars.counters.get(self.counter_kind, 0) > 0
+        return any(count > 0 for count in chars.counters.values())
 
 
 #: Does this effect apply to that object? Judged against characteristics as
@@ -1968,11 +1991,12 @@ def qualified_creatures(
     opponents: bool = False,
     without_color: Color | None = None,
     land: bool = False,
+    also_artifact: bool = False,
     tokens: bool = False,
     gate_card_type: Type | None = None,
     gate_threshold: int = 0,
 ) -> Selector:
-    """ "[Other] [non<colour>] [land] creature[ token]s [you control|your
+    """ "[Other] [non<colour>] [land|artifact] creature[ token]s [you control|your
     opponents control]" - the anthem subject with the qualifiers the pool
     actually prints, composed one predicate at a time.
 
@@ -2012,6 +2036,7 @@ def qualified_creatures(
         opponents=opponents,
         without_color=without_color,
         land=land,
+        also_artifact=also_artifact,
         tokens=tokens,
         gate_card_type=gate_card_type,
         gate_threshold=gate_threshold,
@@ -2075,6 +2100,25 @@ def permanents_controlled_by_with_counters(username: str | None) -> Selector:
     recorded with a count of zero is no counter at all.
     """
     return PermanentsControlledByWithCounters(username=username)
+
+
+def creatures_controlled_by_with_counter(
+    username: str | None,
+    counter_kind: str,
+    *,
+    other_than: UUID | None = None,
+) -> Selector:
+    """ "Each [other] creature you control with a[n] <counter kind> counter on
+    it" (Gallia, the Merrymaker; Vigorbloom Vanguard) - the counter-gated twin
+    of `creatures_controlled_by_with_subtype`, narrowed to one named counter
+    kind and to creatures only.
+    """
+    return PermanentsControlledByWithCounters(
+        username=username,
+        counter_kind=counter_kind,
+        creatures_only=True,
+        other_than=other_than,
+    )
 
 
 #: Layer 6 removal (CR 613.1f).
@@ -2721,7 +2765,7 @@ _KEYWORD_GRANT_RE = re.compile(
 _QUALIFIED_CREATURE_SUBJECT = (
     r"(?P<other>other )?"
     r"(?:non(?P<noncolor>white|blue|black|red|green) )?"
-    r"(?P<land>land )?"
+    r"(?:(?P<land>land )|(?P<artifact>artifact ))?"
     r"(?P<noun>creature tokens|creatures) "
     r"(?P<whose>you control|your opponents control)"
 )
@@ -2740,6 +2784,18 @@ _BOARD_COUNT_GATE_RE = re.compile(
 _ANTHEM_RE = re.compile(
     rf"^{_QUALIFIED_CREATURE_SUBJECT} get "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
+    re.IGNORECASE,
+)
+
+#: "Creature tokens you control get +1/+0 and have vigilance." (Gideon's
+#: Memorial) - `_ANTHEM_RE` and `_INDEFINITE_KEYWORD_GRANT_RE`'s two
+#: predicates on the same qualified subject in one sentence, tried as its own
+#: shape rather than splitting the sentence in two, since either half missing
+#: means the "and" join was something else entirely.
+_ANTHEM_AND_KEYWORD_GRANT_RE = re.compile(
+    rf"^{_QUALIFIED_CREATURE_SUBJECT} get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and "
+    r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
     re.IGNORECASE,
 )
 
@@ -2808,6 +2864,26 @@ _INDEFINITE_KEYWORD_AND_PROTECTION_GRANT_RE = re.compile(
     r"(?:have|has) (?:(?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*)"
     r"(?:,)?\s+and\s+)?protection from (?P<qualities>[a-z]+(?: [a-z]+)?(?:\s+and from\s+"
     r"[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+#: "Each [other] creature you control with a[n] <counter kind> counter on it
+#: has/have <keyword(s)>." (Gallia, the Merrymaker; Vigorbloom Vanguard) - the
+#: `permanents_controlled_by_with_counters` gate named for one counter kind
+#: rather than "any counter" (Innkeeper's Talent's own shape).
+_CREATURE_WITH_COUNTER_KEYWORD_GRANT_RE = re.compile(
+    r"^each (?P<other>other )?creature you control with (?:an? )?"
+    r"(?P<counter>[+-]1/[+-]1|[a-z]+) counter on it "
+    r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+#: "Lands you control have <keyword(s)>." (Marwyn, the Preserver's hexproof) -
+#: the land-subject twin of `_INDEFINITE_KEYWORD_GRANT_RE`, which only ever
+#: matches a creature subject.
+_LANDS_KEYWORD_GRANT_RE = re.compile(
+    r"^lands you control (?:have|has) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
     re.IGNORECASE,
 )
 
@@ -3846,6 +3922,59 @@ def _anthem_builder(
     return builder
 
 
+def _anthem_and_keyword_grant_builder(
+    power: int,
+    toughness: int,
+    keywords: list[str],
+    *,
+    other: bool,
+    whose: str,
+    line: str,
+    qualifiers: CreatureQualifiers | None = None,
+) -> EffectBuilder:
+    """ "[Qualified subject] get +N/+N and have <keyword(s)>." - `_anthem_
+    builder`'s pump plus `_indefinite_keyword_grant_builder`'s keywords, one
+    ability landing in both sublayer 7c (CR 613.4c) and layer 6 (CR 613.1f)
+    over the same live selector (CR 611.3a).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector, subject = _creature_group(source, other=other, whose=whose, qualifiers=qualifiers)
+        gate = qualifiers.gate_words if qualifiers is not None else ""
+        effects = [
+            ContinuousEffect(
+                description=f"{source.name}: {gate}{subject} get {power:+d}/{toughness:+d}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=selector,
+                modification=modify_power_toughness(power, toughness),
+            )
+        ]
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: {gate}{subject} have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        )
+        return effects
+
+    return builder
+
+
 def _mass_pump_until_eot_builder(power: int, toughness: int, keywords: list[str]) -> EffectBuilder:
     """ "[Other] creatures [you control|your opponents control] [gain <keyword(s)>
     and ]get +N/+N until end of turn." (CR 611.2).
@@ -3937,6 +4066,7 @@ def _creature_group(
             opponents=opponents,
             without_color=qualifiers.without_color,
             land=qualifiers.land,
+            also_artifact=qualifiers.also_artifact,
             tokens=qualifiers.tokens,
             gate_card_type=qualifiers.gate_card_type,
             gate_threshold=qualifiers.gate_threshold,
@@ -3971,6 +4101,7 @@ class CreatureQualifiers(EngineModel):
     without_color: Color | None = None
     color_word: str | None = None
     land: bool = False
+    also_artifact: bool = False
     tokens: bool = False
     gate_card_type: Type | None = None
     gate_threshold: int = 0
@@ -3981,6 +4112,7 @@ class CreatureQualifiers(EngineModel):
         return (
             self.without_color is None
             and not self.land
+            and not self.also_artifact
             and not self.tokens
             and self.gate_card_type is None
         )
@@ -3992,6 +4124,8 @@ class CreatureQualifiers(EngineModel):
             prefix += f"non{self.color_word} "
         if self.land:
             prefix += "land "
+        if self.also_artifact:
+            prefix += "artifact "
         return prefix
 
 
@@ -4010,6 +4144,7 @@ def qualifiers_from_subject(
             "without_color": _COLOR_WORDS[color_word.lower()] if color_word else None,
             "color_word": color_word.lower() if color_word else None,
             "land": match.group("land") is not None,
+            "also_artifact": match.group("artifact") is not None,
             "tokens": match.group("noun").lower() == "creature tokens",
         }
     )
@@ -4060,6 +4195,75 @@ def _indefinite_keyword_grant_builder(
                 modification=grant_ability(ability),
             )
             for ability in abilities
+        ]
+
+    return builder
+
+
+def _counter_gated_keyword_grant_builder(
+    counter_kind: str, keywords: list[str], *, other: bool, line: str
+) -> EffectBuilder:
+    """ "Each [other] creature you control with a[n] <counter kind> counter on
+    it has <keyword(s)>." (Gallia, the Merrymaker's haste; Vigorbloom
+    Vanguard's vigilance) - `_indefinite_keyword_grant_builder`'s twin over
+    `creatures_controlled_by_with_counter` instead of the plain team, since
+    CR 611.3a's "isn't 'locked in'" applies here too: a creature that loses
+    its last counter of that kind drops out of the grant immediately.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = creatures_controlled_by_with_counter(
+            source.controller, counter_kind, other_than=source.id if other else None
+        )
+        subject = (
+            f"each {'other ' if other else ''}creature you control with a "
+            f"{counter_kind} counter on it"
+        )
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} has {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+
+    return builder
+
+
+def _lands_keyword_grant_builder(keywords: list[str], *, line: str) -> EffectBuilder:
+    """ "Lands you control have <keyword(s)>." (Marwyn, the Preserver's
+    hexproof) - the land-subject twin of `_indefinite_keyword_grant_builder`,
+    over `lands_controlled_by` instead of a creature selector.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = lands_controlled_by(source.controller)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: lands you control have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
         ]
 
     return builder
@@ -4300,6 +4504,17 @@ def _becomes_creature_with_mana_value_pt_builder(extra_type: Type) -> EffectBuil
 _SUBTYPE_ANTHEM_RE = re.compile(
     r"^(?P<other>[Oo]ther )?(?P<subtype>[A-Z][a-z]+)s you control get "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$"
+)
+
+#: "Thopters you control have haste." (Saheeli, Jewel of Avishkar) - the same
+#: bare creature-type subject as `_SUBTYPE_ANTHEM_RE`, granting a keyword
+#: instead of (or, "Vigorbloom Vanguard" style, this shape stays keyword-only;
+#: the pump-and-keyword combination has no printed example yet) modifying
+#: power/toughness. Case-sensitive on the subtype for the same reason
+#: `_SUBTYPE_ANTHEM_RE` is: Oracle text only ever capitalizes a creature type.
+_SUBTYPE_KEYWORD_GRANT_RE = re.compile(
+    r"^(?P<other>[Oo]ther )?(?P<subtype>[A-Z][a-z]+)s you control "
+    r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$"
 )
 
 #: "Each other creature you control that's a Cat, Elemental, Nightmare,
@@ -4548,18 +4763,20 @@ def _filtered_anthem_builder(
             source.controller, subtypes, other_than=source.id if other else None
         )
         subject = f"{'other ' if other else ''}{'/'.join(subtypes)}s you control"
-        effects = [
-            ContinuousEffect(
-                description=f"{source.name}: {subject} get {power:+d}/{toughness:+d}",
-                layer=Layer.POWER_TOUGHNESS,
-                sublayer=Sublayer.MODIFY,
-                timestamp=timestamp,
-                source_id=source.id,
-                source_ability=_source_line_for(source, line),
-                selector=selector,
-                modification=modify_power_toughness(power, toughness),
+        effects: list[ContinuousEffect] = []
+        if power != 0 or toughness != 0:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {subject} get {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=selector,
+                    modification=modify_power_toughness(power, toughness),
+                )
             )
-        ]
         effects.extend(
             ContinuousEffect(
                 description=f"{source.name}: {subject} have {keyword}",
@@ -5382,6 +5599,19 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         if keyword.lower() not in _KNOWN_KEYWORDS:
             return None
         return _keyword_grant_builder(keyword.capitalize())
+    if match := _ANTHEM_AND_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _anthem_and_keyword_grant_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            keywords,
+            other=match.group("other") is not None,
+            whose=match.group("whose").lower(),
+            line=sentence,
+            qualifiers=qualifiers_from_subject(match),
+        )
     if match := _ANTHEM_RE.fullmatch(sentence):
         return _anthem_builder(
             int(match.group("power")),
@@ -5526,6 +5756,21 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             nontoken=match.group("nontoken") is not None,
             line=sentence,
         )
+    if match := _CREATURE_WITH_COUNTER_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _counter_gated_keyword_grant_builder(
+            match.group("counter"),
+            keywords,
+            other=match.group("other") is not None,
+            line=sentence,
+        )
+    if match := _LANDS_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _lands_keyword_grant_builder(keywords, line=sentence)
     if match := _SUBTYPE_ANTHEM_RE.fullmatch(sentence):
         subtype = _subtype_word(match.group("subtype"))
         if subtype is None:
@@ -5535,6 +5780,19 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("power")),
             int(match.group("toughness")),
             [],
+            other=match.group("other") is not None,
+            line=sentence,
+        )
+    if match := _SUBTYPE_KEYWORD_GRANT_RE.fullmatch(sentence):
+        subtype = _subtype_word(match.group("subtype"))
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if subtype is None or keywords is None:
+            return None
+        return _filtered_anthem_builder(
+            [subtype],
+            0,
+            0,
+            keywords,
             other=match.group("other") is not None,
             line=sentence,
         )

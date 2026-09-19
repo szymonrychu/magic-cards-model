@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884",
+  "oracle_id": "8b972819-507a-40a9-ab1f-1a674ea56083",
+  "multiverse_ids": [
+    612413
+  ],
+  "mtgo_id": 110778,
+  "tcgplayer_id": 491575,
+  "cardmarket_id": 705553,
+  "name": "Abzan Falconer",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884",
+  "scryfall_uri": "https://scryfall.com/card/moc/165/abzan-falconer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:33:16Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.jpg?1783917196",
+    "normal": "https://cards.scryfall.io/normal/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.jpg?1783917196",
+    "large": "https://cards.scryfall.io/large/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.jpg?1783917196",
+    "png": "https://cards.scryfall.io/png/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.png?1783917196",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.jpg?1783917196",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.jpg?1783917196",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.webp?1783917196",
+    "grid": "https://cards.scryfall.io/grid/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.webp?1783917196",
+    "display": "https://cards.scryfall.io/display/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.webp?1783917196",
+    "art": "https://cards.scryfall.io/art/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.webp?1783917196",
+    "crop": "https://cards.scryfall.io/crop/front/f/7/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884.webp?1783917196"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Human Soldier",
+  "oracle_text": "Outlast {W} ({W}, {T}: Put a +1/+1 counter on this creature. Outlast only as a sorcery.)\nEach creature you control with a +1/+1 counter on it has flying.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Outlast"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "6bba5de9-5afb-42af-a7eb-24ac854bf671",
+  "set": "moc",
+  "set_name": "March of the Machine Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/6bba5de9-5afb-42af-a7eb-24ac854bf671",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amoc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/moc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f7e2b0e1-c9ea-4f91-b19e-73b1bd6a0884/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8b972819-507a-40a9-ab1f-1a674ea56083&unique=prints",
+  "collector_number": "165",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "The fastest way across the dunes is above.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Steven Belledin",
+  "artist_ids": [
+    "f07d73b9-52a0-4fe5-858b-61f7b42174a5"
+  ],
+  "illustration_id": "3ef04134-5c97-48d1-b6fb-13273c091ddc",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1417,
+  "penny_rank": 6694,
+  "prices": {
+    "usd": "0.78",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.29",
+    "eur_foil": null,
+    "tix": "0.14"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=612413&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAbzan%2BFalconer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAbzan%2BFalconer",
+    "edhrec": "https://edhrec.com/route/?cc=Abzan+Falconer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491575%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=705553&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/110778?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
