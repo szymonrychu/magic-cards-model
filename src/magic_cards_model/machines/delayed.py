@@ -95,6 +95,7 @@ from .layers import (
     Duration,
     Layer,
     Sublayer,
+    grant_ability,
     modify_power_toughness,
     only_this_incarnation,
 )
@@ -1131,12 +1132,22 @@ class PumpEventSubject(DelayedEffectSpecBase):
     own, shorter duration, independent of the delayed trigger's own longer
     "until your next turn" watch: the trigger can fire again tomorrow, on a
     fresh attacker, but each pump it grants ends at the ordinary cleanup.
+
+    `keywords` is the same sentence's own trailing "and gain[s] `<keyword-
+    list>`" - Garruk, Curse Breaker's own `-4`, "... those creatures get
+    +2/+2 and gain trample until end of turn." One `ContinuousEffect` per
+    keyword, layer 6 (CR 613.1f), alongside the layer 7c pump - the same two-
+    layer split `_SELF_KEYWORD_GRANT_UNTIL_EOT_RE`'s own effect in
+    `machines/effects.py` already makes for a plain "gets `<P>`/`<T>` and
+    gains `<keyword>`" clause. Empty (the default) for Jace's own printing,
+    which grants no keyword at all.
     """
 
     kind: Literal["pump_event_subject"] = "pump_event_subject"
 
     power: int
     toughness: int
+    keywords: tuple[str, ...] = ()
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         event = ability.event
@@ -1145,33 +1156,49 @@ class PumpEventSubject(DelayedEffectSpecBase):
         target = game.find_by_id(event.subject_id)
         if not isinstance(target, CardState) or target.zone != Zone.BATTLEFIELD:
             return
-        game.continuous_effects.add(
-            ContinuousEffect(
-                description=(
-                    f"{trigger.source_name}: {target.name} gets {self.power:+d}/{self.toughness:+d}"
+        selector = only_this_incarnation(target, target.zone_change_stamp)
+        if self.power != 0 or self.toughness != 0:
+            game.continuous_effects.add(
+                ContinuousEffect(
+                    description=(
+                        f"{trigger.source_name}: {target.name} gets "
+                        f"{self.power:+d}/{self.toughness:+d}"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=game.continuous_effects.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=trigger.source_id,
+                    # No `source_ability`, deliberately: CR 611.2c's one-time
+                    # resolved effect does not depend on the source still
+                    # *having* this ability once it has fired - unlike a static
+                    # grant's own `_source_line_for`-matched `source_ability`
+                    # (CR 613.6), there is no "for as long as" here for a source
+                    # leaving, or having its text rewritten, to end early. Setting
+                    # this to `trigger.text` used to fail CR 613.6's `has_ability`
+                    # check on every board computation - `trigger.text` is only
+                    # the parsed *effect* clause, with the printed cost/chapter
+                    # prefix ("−3: ", "I — ") already stripped off by the parser
+                    # that built it, so it could never equal the permanent's own
+                    # verbatim printed line and the pump silently never applied.
+                    selector=selector,
+                    modification=modify_power_toughness(self.power, self.toughness),
                 ),
-                layer=Layer.POWER_TOUGHNESS,
-                sublayer=Sublayer.MODIFY,
-                timestamp=game.continuous_effects.tick(),
-                duration=Duration.UNTIL_END_OF_TURN,
-                source_id=trigger.source_id,
-                # No `source_ability`, deliberately: CR 611.2c's one-time
-                # resolved effect does not depend on the source still
-                # *having* this ability once it has fired - unlike a static
-                # grant's own `_source_line_for`-matched `source_ability`
-                # (CR 613.6), there is no "for as long as" here for a source
-                # leaving, or having its text rewritten, to end early. Setting
-                # this to `trigger.text` used to fail CR 613.6's `has_ability`
-                # check on every board computation - `trigger.text` is only
-                # the parsed *effect* clause, with the printed cost/chapter
-                # prefix ("−3: ", "I — ") already stripped off by the parser
-                # that built it, so it could never equal the permanent's own
-                # verbatim printed line and the pump silently never applied.
-                selector=only_this_incarnation(target, target.zone_change_stamp),
-                modification=modify_power_toughness(self.power, self.toughness),
-            ),
-            game,
-        )
+                game,
+            )
+        for keyword in self.keywords:
+            game.continuous_effects.add(
+                ContinuousEffect(
+                    description=f"{trigger.source_name}: {target.name} gains {keyword}",
+                    layer=Layer.ABILITY,
+                    timestamp=game.continuous_effects.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=trigger.source_id,
+                    selector=selector,
+                    modification=grant_ability(keyword),
+                ),
+                game,
+            )
 
 
 #: What a delayed (or reflexive) triggered ability does when it resolves -
@@ -1369,6 +1396,16 @@ class DelayedTrigger(EngineModel):
     creature (CR 508.3c), which this trigger does not know in advance,
     while the defender is what the trigger's own printed text names."""
 
+    defending_opponent_only: bool = False
+    """"whenever one or more creatures attack one of your opponents" -
+    Garruk, Curse Breaker's own `-4`. The opposite half of `defending_
+    controller_only`'s compound defender: an `ATTACKS` event's own
+    `GameEvent.defender_controller` must be someone *other than* this
+    trigger's own `controller` (CR 508.3a's "a player, planeswalker, or
+    battle", restricted to an opponent) rather than equal to it. A `None`
+    defender (an attack this delayed trigger somehow never learns a
+    defender for) does not count as "an opponent" either."""
+
     forbidden_types: tuple[Type, ...] = ()
     """The types the watched event's own subject must *not* have - CR 205.2a's
     "a noncreature spell" (Summon: Good King Mog XII's own Saga chapters II
@@ -1448,6 +1485,10 @@ class DelayedTrigger(EngineModel):
         if self.combat_only and not event.combat:
             return False
         if self.defending_controller_only and event.defender_controller != self.controller:
+            return False
+        if self.defending_opponent_only and (
+            event.defender_controller is None or event.defender_controller == self.controller
+        ):
             return False
         if self.to_player_only and event.player is None:
             return False

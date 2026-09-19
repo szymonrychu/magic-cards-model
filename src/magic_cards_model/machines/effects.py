@@ -16136,6 +16136,66 @@ def _parse_until_your_next_turn_attack_pump_clause(text: str) -> AbilityEffect |
     return effect
 
 
+#: "Until your next turn, whenever one or more creatures attack one of your
+#: opponents, those creatures get `<power>`/`<toughness>`[ and gain
+#: `<keywords>`] until end of turn." - Garruk, Curse Breaker's own `-4`. The
+#: group-attack twin of `_UNTIL_YOUR_NEXT_TURN_ATTACK_PUMP_RE` just above:
+#: CR 603.2c's "one or more `<description>` attack" (`machines/triggers.
+#: is_batched_attack_condition`) in place of that shape's singular "a
+#: creature attacks", and `DelayedTrigger.defending_opponent_only` - the
+#: opposite half of `defending_controller_only`'s own compound defender -
+#: in place of "you or a planeswalker you control". Built as a per-creature
+#: watch (`PumpEventSubject`, one `ATTACKS` firing per attacker CR 508.3c
+#: already gives), not the printed-ability `batched_attackers` count path
+#: `_parse_batched_attack_group_pump_clause` reads: a delayed trigger has no
+#: printed condition text of its own to hand that reader, only the fixed
+#: fields `DelayedTrigger.matches` already checks.
+_UNTIL_YOUR_NEXT_TURN_GROUP_ATTACK_PUMP_RE = re.compile(
+    r"^until your next turn, whenever one or more creatures attack one of your opponents, "
+    r"those creatures get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?:\s+and\s+gains?\s+(?P<keywords>[a-z][a-z ,]*?))?"
+    r"\s+until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_until_your_next_turn_group_attack_pump_clause(text: str) -> AbilityEffect | None:
+    """`_UNTIL_YOUR_NEXT_TURN_GROUP_ATTACK_PUMP_RE`'s shape - see the banner
+    above. The same two-tier duration split (CR 603.7b's stated-duration
+    delayed watch, each firing's own separate CR 611.2a "until end of turn")
+    `_parse_until_your_next_turn_attack_pump_clause` already uses."""
+    whole = " ".join(text.strip().split())
+    match = _UNTIL_YOUR_NEXT_TURN_GROUP_ATTACK_PUMP_RE.fullmatch(whole)
+    if match is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+    keyword_text = match.group("keywords")
+    keywords: tuple[str, ...] = ()
+    if keyword_text is not None:
+        validated = _split_and_validate_keywords(keyword_text.strip())
+        if validated is None:
+            return None
+        keywords = tuple(validated)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=whole,
+                event=TriggerEvent.ATTACKS,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                remaining=None,
+                expires_end_of_next_turn=True,
+                defending_opponent_only=True,
+                effect=PumpEventSubject(power=power, toughness=toughness, keywords=keywords),
+            )
+        )
+
+    return effect
+
+
 #: "those creatures get `<P>`/`<T>`[ and gain `<keywords>`] until end of
 #: turn." / "those creatures gain `<keywords>` until end of turn." - CR 400.7
 #: anaphora back to whichever attackers a "one or more `<description>`
@@ -16318,6 +16378,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     until_your_next_turn_attack_pump = _parse_until_your_next_turn_attack_pump_clause(effect_text)
     if until_your_next_turn_attack_pump is not None:
         return until_your_next_turn_attack_pump
+    until_your_next_turn_group_attack_pump = _parse_until_your_next_turn_group_attack_pump_clause(
+        effect_text
+    )
+    if until_your_next_turn_group_attack_pump is not None:
+        return until_your_next_turn_group_attack_pump
     batched_attack_group_pump = _parse_batched_attack_group_pump_clause(effect_text)
     if batched_attack_group_pump is not None:
         return batched_attack_group_pump
