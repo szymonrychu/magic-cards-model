@@ -225,6 +225,15 @@ def executes(keyword: str) -> bool:
         # performs it, reached through `_parse_investigate_clause` from
         # inside another ability's effect text.
         "investigate",
+        # CR 701.71a, Reality Fracture's own keyword action, the same shape
+        # once more: `machines/effects.empower_jace` performs it, reached
+        # through `_parse_empower_jace_clause`. Scryfall does not tag any
+        # fra printing's `keywords` with "Empower" (its own reminder-text
+        # scan picks up "Surveil"/"Behold" from the token's own quoted
+        # abilities instead), so nothing in the pool actually needs this
+        # entry to stop a false "no execution path" - listed anyway so a
+        # future printing that *is* tagged reads the sweeper correctly.
+        "empower",
         # CR 701.48a, the same shape once more: `machines/effects.learn`
         # performs both halves, discard-to-draw and the Lesson reveal from
         # outside the game, reached through `_parse_learn_clause`.

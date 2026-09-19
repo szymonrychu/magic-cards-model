@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "35000e93-85d3-44f8-976a-5918ee4c71e0",
+  "oracle_id": "b775a404-ec0a-47ff-bb9d-eae2273d945b",
+  "multiverse_ids": [],
+  "tcgplayer_id": 715865,
+  "cardmarket_id": 907286,
+  "name": "Repurposed Enforcer",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/35000e93-85d3-44f8-976a-5918ee4c71e0",
+  "scryfall_uri": "https://scryfall.com/card/fra/19/repurposed-enforcer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-08T14:35:08Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.jpg?1788878108",
+    "normal": "https://cards.scryfall.io/normal/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.jpg?1788878108",
+    "large": "https://cards.scryfall.io/large/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.jpg?1788878108",
+    "png": "https://cards.scryfall.io/png/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.png?1788878108",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.jpg?1788878108",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.jpg?1788878108",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.webp?1788878108",
+    "grid": "https://cards.scryfall.io/grid/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.webp?1788878108",
+    "display": "https://cards.scryfall.io/display/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.webp?1788878108",
+    "art": "https://cards.scryfall.io/art/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.webp?1788878108",
+    "crop": "https://cards.scryfall.io/crop/front/3/5/35000e93-85d3-44f8-976a-5918ee4c71e0.webp?1788878108"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Soldier",
+  "oracle_text": "Whenever this creature attacks, empower Jace X, where X is the number of creatures you control. (Put that many loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\u22121]: Surveil 1\" and \"[\u22123]: Draw a card.\")",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/35000e93-85d3-44f8-976a-5918ee4c71e0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab775a404-ec0a-47ff-bb9d-eae2273d945b&unique=prints",
+  "collector_number": "19",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "A face half remembered, a form fit to serve.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rallis",
+  "artist_ids": [
+    "a8e7b854-b15a-421a-b66d-6e68187ae285"
+  ],
+  "illustration_id": "83f7fef6-b01e-44ff-8866-e4a9ff6b1665",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 30503,
+  "prices": {
+    "usd": "3.29",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "2.95",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRepurposed%2BEnforcer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRepurposed%2BEnforcer",
+    "edhrec": "https://edhrec.com/route/?cc=Repurposed+Enforcer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715865%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907286&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Repurposed+Enforcer&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

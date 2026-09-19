@@ -8570,6 +8570,76 @@ def _parse_damage_target_kicked_instead_clause(effect_text: str) -> Effect | Non
     return effect
 
 
+def _lethal_amount_before_damage(game: "Game", target: CardState) -> int | None:
+    """CR 120.10's per-type threshold for `target`, read *before* the damage
+    that will be checked against it: a creature's remaining toughness (its
+    toughness minus damage already marked), a planeswalker's loyalty. `None`
+    for a permanent that is neither - CR 120.10 defines excess damage only
+    for a creature, a planeswalker, or a battle (the third not modelled; see
+    `docs/engine-coverage.md`) - and, per its closing sentence, "the greatest
+    of the calculated amounts for each of the card types it has" when a
+    permanent is more than one of them at once.
+    """
+    board = game.computed_board()
+    chars = board.of(target)
+    amounts: list[int] = []
+    if Type.CREATURE in chars.types:
+        amounts.append(max(chars.numeric_toughness - target.damage, 0))
+    if Type.PLANESWALKER in chars.types:
+        amounts.append(target.counter_count(Counter.LOYALTY))
+    return max(amounts) if amounts else None
+
+
+#: Violent Echoes: "<Source> deals N damage to target creature or
+#: planeswalker. If excess damage was dealt to that permanent this way,
+#: empower Jace X, where X is that excess damage." Read whole, the same
+#: reason `_DAMAGE_TARGET_KICKED_INSTEAD_RE` just above is: the second
+#: sentence refers back to how much the first one actually dealt
+#: (CR 120.10), which `_parse_mixed_clauses`'s per-clause dispatch has no way
+#: to carry from one clause to the next on its own.
+_DAMAGE_THEN_EMPOWER_IF_EXCESS_RE = re.compile(
+    r"^.*\bdeals? (?P<n>\d+) damage to (?P<phrase>any target|.*?target.+?)\.\s*"
+    r"if excess damage was dealt to that permanent this way,\s*"
+    r"empower jace [xX],\s*where\s+[xX]\s+is that excess damage\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_damage_then_empower_if_excess_clause(effect_text: str) -> Effect | None:
+    """`_DAMAGE_THEN_EMPOWER_IF_EXCESS_RE`'s shape, or `None` if this is not
+    it.
+
+    `target`'s pre-damage threshold (`_lethal_amount_before_damage`) has to
+    be read *before* `Game.deal_damage` runs, since that call is what marks
+    the damage or removes the loyalty counters CR 120.10 measures against.
+    `deal_damage`'s own return is the amount actually dealt - CR 609.7b's
+    prevention and replacement effects already applied - which is what CR
+    120.10's excess is measured against, not the printed N.
+    """
+    whole = _strip_non_effect_preamble(effect_text).strip()
+    match = _DAMAGE_THEN_EMPOWER_IF_EXCESS_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    amount = int(match.group("n"))
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        for target in game.resolve_targets(spell):
+            if not isinstance(target, CardState):
+                continue
+            pre_lethal = _lethal_amount_before_damage(game, target)
+            dealt = game.deal_damage(target, amount, source=spell)
+            if pre_lethal is None:
+                continue
+            excess = dealt - pre_lethal
+            if excess > 0:
+                empower_jace(game, excess, controller, spell.id, spell.name)
+
+    return effect
+
+
 #: Orim's Chant: "Target player can't cast spells this turn. If this spell
 #: was kicked, creatures can't attack this turn." Read whole (ahead of
 #: `_parse_mixed_clauses`, which has no shape for either sentence on its
@@ -14013,6 +14083,64 @@ def _parse_destroy_each_clause(sentence: str) -> TargetedClause | None:
     return effect
 
 
+#: "Exile each/all <qualifier>." - the exile-side twin of `_DESTROY_EACH_RE`,
+#: sharing its qualifier grammar (`_parse_mass_destroy_predicate`) since
+#: CR 205.2a's card-type-and-restriction reading does not care which verb
+#: sweeps the battlefield. Overwrite the Multiverse's "Exile all creatures."
+#: is the pool's only printing of the shape, but the qualifier grammar reads
+#: any of Wrath of the Skies's own type lists the same way `_DESTROY_EACH_RE`
+#: already does, so a future "exile all artifacts and creatures" reads too.
+_EXILE_EACH_RE = re.compile(r"^exile (?:each|all) (?P<rest>.+?)\.?$", re.IGNORECASE | re.DOTALL)
+
+
+def _exile_matching(
+    game: "Game",
+    predicate: Callable[["Game", CardState, CardState | None], bool],
+    source: CardState | None,
+) -> int:
+    """Exile every permanent on the battlefield right now that `predicate`
+    holds for, as one CR 608.2f/603.2c instruction (`Game.exile_cards`, the
+    same batch door `airbend` uses), and answer how many actually left - the
+    exile-side twin of `_destroy_matching`.
+
+    The candidate set is snapshotted from `game.battlefield` once, before
+    anything moves, for the same reason `_destroy_matching` snapshots its own:
+    an earlier exile in this same sweep (and whatever it triggers) must not
+    change what the rest of the sweep still sees.
+    """
+    candidates = [
+        permanent for permanent in list(game.battlefield) if predicate(game, permanent, source)
+    ]
+    exiled = game.exile_cards(candidates)
+    return sum(1 for card in exiled if card.zone is Zone.EXILE)
+
+
+def _parse_exile_each_clause(sentence: str) -> TargetedClause | None:
+    """ "Exile each/all <qualifier>." on its own - `_EXILE_EACH_RE`'s shape.
+
+    `Game.record_count` records how many actually left (CR 608.2c: "later
+    text on the card may modify the meaning of earlier text"), which is what
+    lets a later "the number of `<type>` exiled this way" clause -
+    `count_expression`'s `_COUNT_THIS_WAY_RE` branch, read through
+    `counted_this_way` - answer Overwrite the Multiverse's own "Empower Jace
+    X, where X is the number of creatures exiled this way" correctly, whether
+    every creature on the battlefield was exiled or none were.
+    """
+    match = _EXILE_EACH_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    predicate = _parse_mass_destroy_predicate(match.group("rest"))
+    if predicate is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        count = _exile_matching(game, predicate, source)
+        game.record_count(count)
+
+    return effect
+
+
 #: "<Source> deals N damage to each <type>[ and each <type>]*." -
 #: Brotherhood's End's own first mode: "Brotherhood's End deals 3 damage to
 #: each creature and each planeswalker." Unlike `_DAMAGE_EACH_OPPONENT_RE`'s
@@ -15241,6 +15369,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     damage_target_kicked_instead = _parse_damage_target_kicked_instead_clause(effect_text)
     if damage_target_kicked_instead is not None:
         return damage_target_kicked_instead
+    damage_then_empower_if_excess = _parse_damage_then_empower_if_excess_clause(effect_text)
+    if damage_then_empower_if_excess is not None:
+        return damage_then_empower_if_excess
     cant_cast_kicked_attack = _parse_target_player_cant_cast_kicked_attack_clause(effect_text)
     if cant_cast_kicked_attack is not None:
         return cant_cast_kicked_attack
@@ -19847,6 +19978,145 @@ def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
             source,
             source_id=source_id_of(stack_object),
         )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Empower Jace (CR 701.71) - Reality Fracture's own keyword action, the same
+# shape as earthbend and amass just above: embedded in another ability's or
+# spell's effect text rather than a keyword ability of its own, so it lives
+# here and not in `machines/keywords.py` (which is still told the word, see
+# that module, so the pool sweeper does not report it as executed nowhere).
+#
+# CR 701.71a: "To empower Jace N means 'If you don't control a Jace
+# planeswalker token, create a blue Jace planeswalker token with 0 loyalty,
+# "[-1]: Surveil 1," and "[-3]: Draw a card." Choose a Jace planeswalker
+# token you control. Put N loyalty counters on it.'"
+#
+# Three steps, all CR 608.2c instructions of one keyword action:
+#
+# - **the token, conditionally** - `models/token.py`'s `JACE` predefined
+#   definition, created only when the controller controls none. The token is
+#   never legendary (CR 306.4 retired the planeswalker uniqueness rule, and
+#   the real `tfra` printing carries no Legendary supertype), so nothing
+#   about creating it needs the legend rule; the "if you don't control one"
+#   gate is the whole of what keeps a second one from appearing in ordinary
+#   play.
+# - **the choice** - "a Jace planeswalker token you control", never a Jace
+#   planeswalker *card* (Jace, Reality Sculptor is a Jace but not a token,
+#   and does not qualify either as the zero-token check or as a choice).
+#   Not a target (CR 601.2c's word never appears), so it is a resolution-time
+#   choice (CR 608.2d): the ordinary case is exactly one candidate (the token
+#   this same instruction just made, or the sole one already there) and needs
+#   no question at all; more than one - reachable only through some other
+#   effect copying the token - asks `DecisionKind.CHOOSE_CARDS`, the same
+#   question `_knowledge_pool_free_cast_effect` already asks for "choose one
+#   of several cards".
+# - **the counters** - `Game.add_counters`, which is also what lets Inspired
+#   Tethermage's own "whenever you put one or more loyalty counters on a
+#   planeswalker" trigger see them arrive.
+# --------------------------------------------------------------------------
+
+#: "Empower Jace N." or "Empower Jace X, where X is `<expr>`." - never
+#: printed with the word "target" (CR 701.71a names no target at all), so
+#: unlike earthbend this clause reads no targeting phrase, only the count.
+_EMPOWER_JACE_RE = re.compile(
+    rf"^empower jace {count_pattern('n', x=True)}{where_x_pattern()}$", re.IGNORECASE
+)
+
+
+def empower_jace(
+    game: "Game",
+    amount: int,
+    controller: str,
+    source_id: "UUID | None",
+    source_name: str,
+) -> None:
+    """CR 701.71a's whole instruction - see the section note above for the
+    three steps.
+
+    `amount <= 0` (a "where X is ..." expression that evaluates to 0, or
+    lower) still runs the first two steps - CR 701.71a's "if you don't
+    control one, first create" is unconditional on N - but `Game.add_counters`
+    already treats a non-positive amount as a no-op (CR 107.1b), so nothing
+    further is needed to make "empower Jace 0" legal and inert.
+    """
+    board = game.computed_board()
+
+    def jace_tokens() -> list[CardState]:
+        return [
+            permanent
+            for permanent in game.battlefield
+            if is_token(permanent)
+            and board.of(permanent).controller == controller
+            and Type.PLANESWALKER in board.of(permanent).types
+            and any(subtype.lower() == "jace" for subtype in board.of(permanent).subtypes)
+        ]
+
+    candidates = jace_tokens()
+    if not candidates:
+        candidates = create_tokens(game, PREDEFINED["Jace"], controller)
+    if len(candidates) == 1:
+        chosen = candidates[0]
+    else:
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt="choose a Jace planeswalker token to put loyalty counters on",
+                source=source_name,
+                source_id=source_id_of(source_id),
+                amount=1,
+                cards=tuple(candidate.id for candidate in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {candidate.id: candidate for candidate in candidates}
+        chosen = by_id[chosen_ids[0]]
+    game.add_counters(chosen, Counter.LOYALTY, amount)
+
+
+def _parse_empower_jace_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Empower Jace N." or "Empower Jace X, where X is `<expr>`." - the
+    whole of a spell's or an ability's effect text once any trigger
+    condition has been split off, and one mode's own text once
+    `parse_mode_effect` has substituted X and stripped its bullet.
+
+    No target to resolve (unlike `_parse_earthbend_clause` just above), so
+    this only has to read the stack object's controller, source and X for
+    the "where X is ..." tail - through `_fixed_or_where_x_amount`, the same
+    reader earthbend and amass use, so "the number of Islands you control"
+    (Jace, Reality Sculptor's own `+1`), "the number of creatures you
+    control" (Repurposed Enforcer) and "the number of creatures exiled this
+    way" (Overwrite the Multiverse, through `count_expression`'s own
+    "`<verb>` this way" reader) all already work with no code of their own.
+    An "X" this cannot evaluate leaves the whole instruction unread
+    (CR 608.2c) rather than empowering for zero.
+    """
+    match = _EMPOWER_JACE_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    reader = _fixed_or_where_x_amount(match.group("n"), match.group("where_x"))
+    if reader is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if isinstance(stack_object, AbilityOnStack):
+            controller = stack_object.controller
+            source_id = stack_object.source_id
+            source_name = stack_object.source_name
+            x_value = stack_object.x_value
+        else:
+            controller = game.controller_of(stack_object).username
+            source_id = stack_object.id
+            source_name = stack_object.name
+            x_value = 0
+        source_state = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        )
+        amount = reader(game, controller, source_state, x_value)
+        empower_jace(game, amount, controller, source_id, source_name)
 
     return effect
 
@@ -25047,6 +25317,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     amass_clause = _parse_amass_clause(clause, for_spell=for_spell)
     if amass_clause is not None:
         return amass_clause
+    empower_jace_clause = _parse_empower_jace_clause(clause, for_spell=for_spell)
+    if empower_jace_clause is not None:
+        return empower_jace_clause
     investigate_clause = _parse_investigate_clause(clause, for_spell=for_spell)
     if investigate_clause is not None:
         return investigate_clause
@@ -25180,6 +25453,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     destroy_each = _parse_destroy_each_clause(clause)
     if destroy_each is not None:
         return destroy_each
+    exile_each = _parse_exile_each_clause(clause)
+    if exile_each is not None:
+        return exile_each
     damage_each_group = _parse_damage_each_group_clause(clause)
     if damage_each_group is not None:
         return damage_each_group

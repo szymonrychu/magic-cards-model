@@ -184,6 +184,13 @@ class TokenDefinition(EngineModel):
     power: int | None = None
     toughness: int | None = None
 
+    loyalty: str | None = None
+    """The printed loyalty a planeswalker token enters with (CR 306.5b), read
+    by `CardState._enter_with_loyalty` exactly as a printed card's own
+    `Card.loyalty` is - a string because `Card.loyalty` is one (Scryfall
+    leaves room for a `*` characteristic-defining loyalty no token definition
+    here actually uses). `None` for a token that is not a planeswalker."""
+
     name: str | None = None
     """Set only when the card names the token - "create Boo, a legendary 1/1 red
     Hamster creature token" (CR 111.9). Left None, CR 111.4 derives the name."""
@@ -282,6 +289,7 @@ class TokenDefinition(EngineModel):
             keywords=list(self.keywords),
             power=None if self.power is None else str(self.power),
             toughness=None if self.toughness is None else str(self.toughness),
+            loyalty=self.loyalty,
             layout=Layout.TOKEN,
             legalities=_NO_LEGALITY,
             rarity=Rarity.COMMON,
@@ -528,6 +536,30 @@ HEARTWOOD = TokenDefinition(
     rules_text="{T}: Add {R} or {G}.",
 )
 
+#: CR 701.71a's own token, minted by the "empower Jace N" keyword action
+#: (`machines/effects.empower_jace`) rather than by any printed "create a
+#: token" sentence a card carries on its own: "If you don't control a Jace
+#: planeswalker token, create a blue Jace planeswalker token with 0 loyalty,
+#: '[−1]: Surveil 1,' and '[−3]: Draw a card.'" Scryfall's own `tfra` printing
+#: of the token confirms both the name (bare "Jace", not CR 111.4's fallback
+#: "Jace Token" - the ability's own wording names it the way CR 111.9 names
+#: Boo) and the exact ability wording, minus sign and all, which is what lets
+#: `machines/abilities.py`'s ordinary loyalty-cost reader
+#: (`_LOYALTY_SYMBOL`) parse the two lines with no code of their own. Not
+#: legendary: CR 306.4 retired the planeswalker uniqueness rule, and this
+#: printing carries no Legendary supertype, so nothing here needs the legend
+#: rule to keep a second one off the battlefield - "if you don't control a
+#: Jace planeswalker token" already stops `empower_jace` from creating a
+#: second one under ordinary play.
+JACE = TokenDefinition(
+    types=(Type.PLANESWALKER,),
+    subtypes=("Jace",),
+    colors=(Color.BLUE,),
+    name="Jace",
+    loyalty="0",
+    rules_text="−1: Surveil 1.\n−3: Draw a card.",
+)
+
 #: The predefined tokens this engine knows, by the name a card calls them
 #: (CR 111.10). The list in the rules is much longer; these are the ones the
 #: card pool reaches for.
@@ -537,6 +569,7 @@ PREDEFINED: dict[str, TokenDefinition] = {
     "Clue": CLUE,
     "Powerstone": POWERSTONE,
     "Heartwood": HEARTWOOD,
+    "Jace": JACE,
     "Monster": MONSTER_ROLE,
     "Cursed": CURSED_ROLE,
     "Royal": ROYAL_ROLE,

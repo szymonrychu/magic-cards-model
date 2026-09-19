@@ -268,7 +268,7 @@ test you write should be `xfail` with a reason, not a test bent until it passes.
 | Who owns a card | CR 108.3, 108.3b | `Player.add` stamps `CardState.owner`, so `load_deck` and a scenario board agree | `scenarios/test_starting_a_game.py` |
 | Equipment unattaching from an illegal permanent | CR 704.5n | `keywords.equipment_state_based_actions`, dispatched by `Game.check_state_based_actions` | `scenarios/test_equip.py` |
 | "Activate only as a sorcery" | CR 602.5d, 307.5 | `Game.why_cannot_activate` | `scenarios/test_activated_abilities.py` |
-| The zone an activated ability functions in, enforced on the battlefield path too | CR 113.6, 113.6b, 113.6j, 113.6m | **Fixed defect (DDR#970)**: `ActivatedAbility.zone`/`zone_rule` were read off the printed text and enforced only by `machines/keywords.off_battlefield_activation`, so `Game.activate_ability` - the door `Scenario.activate` and the API use - let Gollum, Patient Plotter sacrifice itself on the battlefield to its own graveyard-only ability. `Game.why_cannot_activate` now compares `ability.zone` against `permanent.zone` before the flat battlefield rule, and quotes the sub-rule the parser tagged. | `scenarios/judge/test_judge_ability_zones.py` |
+| The zone an activated ability functions in, enforced on the battlefield path too | CR 113.6, 113.6b, 113.6j, 113.6m | **Fixed defect (DDR#970)**: `ActivatedAbility.zone`/`zone_rule` were read off the printed text and enforced only by `machines/keywords.off_battlefield_activation`, so `Game.activate_ability` - the door `Scenario.activate` and the API use - let Gollum, Patient Plotter sacrifice itself on the battlefield to its own graveyard-only ability. `Game.why_cannot_activate` now compares `ability.zone` against `permanent.zone` before the flat battlefield rule, and quotes the sub-rule the parser tagged. **Follow-up fix (FRA S1)**: that comparison used to fall through to the flat battlefield rule even on a *match* - refusing an ability correctly sitting in its own named zone - so `Game.activate_ability` still could not reach a single CR 113.6j/113.6m ability anywhere until now; see the FRA S1 section below for the fix and the second, downstream `ManaSpend`/`NotOnBoard` bug it uncovered. | `scenarios/judge/test_judge_ability_zones.py`, `scenarios/test_self_referential_costs.py`, `scenarios/test_empower_jace.py` |
 | A life payment in an activation cost, refused before the activation begins | CR 119.4, 119.4b, 118.3, 704.5a | **Fixed defect**: `Game.why_cannot_activate` ignored `CostKind.PAY_LIFE`, so Nurturing Peatland's `{T}, Pay 1 life: Add {B} or {G}.` was offered at a life total that could not pay it and only `CostPayment.pay` refused, after `{T}` had been announced. The check sums the ability's life pieces and refuses when the payer's life is below the total; CR 119.4b's 0 is never refused, and paying down to exactly 0 is allowed (CR 704.5a is a state-based action, not a payment restriction). | `scenarios/judge/test_judge_paying_life.py` |
 | Ordering two effects on one event | CR 616.1, 616.1f, 616.1g, 616.2 | `order_effects`, `apply_replacements` | `scenarios/test_replacement_effects.py`, `scenarios/judge/test_judge_replacement_effects.py` |
 | A permanent entering tapped or with counters | CR 614.1c, 614.12, 122.6 | `Game.enter_the_battlefield`, `_self_enters_modifiers` | `scenarios/test_replacement_effects.py` |
@@ -2650,9 +2650,208 @@ silent of 1000 (`c3f154c`, before this merge) to 133 of 1026. The rise is
 the 25 real fixture printings this stream's own `scripts/add_card.py` calls
 add to the pool (CR-mandated proof cards, `CLAUDE.md`'s no-mocks rule) - 14
 of them are themselves silent, for clauses this stream never owned (Empower
-Jace on Ajani Unrelenting/Gideon the Oathless/Way of the Necromancer, static
-grants on Roiling Canopy/Tetsuko Umezawa Pursuer, and similar S1/S2/S6/S9
-territory), which accounts for the entire delta (133 - 119 = 14) exactly.
+Jace on Way of the Necromancer, static grants on Roiling Canopy/Tetsuko
+Umezawa Pursuer, and similar S1/S2/S6/S9 territory), which accounts for the
+entire delta (133 - 119 = 14) exactly. *Correction, FRA S1:* this line
+originally also named Ajani Unrelenting and Gideon the Oathless as carrying
+an Empower Jace clause - they do not (verified against Scryfall and this
+pool's own fixtures: neither printing's oracle text contains the word
+"empower" anywhere). Their own clause this stream (S5) actually closed is
+"whenever you activate a loyalty ability"/"an opponent activates a loyalty
+ability" (`LOYALTY_ABILITY_ACTIVATED`, the table above), which is what put
+their names in this stream's own pool additions in the first place.
 No pre-existing card regressed. Registry rows (`EFFECTS`/`TRIGGER_EFFECTS`/
 `ACTIVATED_EFFECTS`) stay at 7, unchanged - every fix in this section is a
 parser or a matcher, never a name-keyed row.
+
+## FRA S1: Empower Jace (CR 701.71)
+
+Reality Fracture's own keyword action, and the Jace planeswalker token it
+creates. 35 `set:fra` printings carry the word "empower" in their oracle text
+(`cards/search?q=set%3Afra+oracle%3Aempower`, verified this session) - not 37
+as this stream's own assignment first said, and not the 37-minus-Ajani-and-
+Gideon reading either: see the correction just above this section, which this
+stream's own investigation is what prompted.
+
+**CR 701.71a**: "To empower Jace N means 'If you don't control a Jace
+planeswalker token, create a blue Jace planeswalker token with 0 loyalty,
+"[-1]: Surveil 1," and "[-3]: Draw a card." Choose a Jace planeswalker token
+you control. Put N loyalty counters on it.'" Three CR 608.2c instructions,
+read as a single keyword action embedded in other abilities' and spells'
+effect text - the same shape earthbend/amass/airbend/investigate already are,
+so `machines/keywords.executes("empower")` is told the word for the same
+reason theirs are, even though no `fra` printing's own Scryfall `keywords`
+list actually carries "Empower" (its reminder-text scan picks up "Surveil"
+and "Behold" off the token's own quoted abilities and Countersculpt's own
+cost instead - `empower` would only ever matter for a future printing that
+is tagged).
+
+**The token** - `models/token.JACE`, registered in `PREDEFINED["Jace"]`
+alongside the S3 wave's own table. Built to match the real `tfra` printing
+exactly rather than CR 111.4's generic fallback: `name="Jace"` (not "Jace
+Token" - the creating text specifies the name the same way CR 111.9's Boo
+does), not legendary (CR 306.4 retired the planeswalker uniqueness rule and
+the real printing carries no Legendary supertype, so "if you don't control
+one" alone is what keeps ordinary play from making a second), and
+`loyalty="0"` - a new `TokenDefinition` field, threaded into `to_card()`,
+that lets the existing `CardState._enter_with_loyalty` (CR 306.5b) do the
+"enters with 0 loyalty" half with no code of its own, the same way every
+printed planeswalker's own entry already works. Its two granted abilities are
+printed with the real minus sign (`−`), matching the ordinary loyalty-cost
+reader (`machines/abilities._LOYALTY_SYMBOL`) with no changes there either -
+"Surveil 1." and "Draw a card." are both already-general effect shapes, so
+the token's own loyalty abilities activate and resolve with no card-specific
+code anywhere.
+
+**The clause parser** - `machines/effects._parse_empower_jace_clause`/
+`empower_jace`, registered once in the shared per-clause dispatcher
+(`_parse_mixed_clause`, right after amass) so it is reachable from spell
+text, a triggered ability's body, an activated ability's body, and a modal
+spell's own chosen-mode text alike, with no rewrite of `_parse_mixed_clause`/
+`parse_mixed_effect(_for_spell)` itself - S6 was mid-flight on those same
+functions' fallback and mode-composition behaviour when this stream forked,
+and the instruction was to stay a self-contained addition so the eventual
+merge order does not matter. "Empower Jace N" and "Empower Jace X, where X is
+`<expr>`" both read through `_fixed_or_where_x_amount`, the same CR 107.3f
+reader earthbend and amass already share - "the number of Islands you
+control" (Jace, Reality Sculptor's own `+1`), "the number of creatures you
+control" (Repurposed Enforcer) and "the number of creatures exiled this way"
+(Overwrite the Multiverse) all read correctly with no code of their own.
+
+The choice of *which* Jace token ("choose a Jace planeswalker token you
+control") is CR 608.2d, not a target (CR 601.2c's word is never printed): the
+ordinary case is exactly one candidate and needs no question; the
+`DecisionKind.CHOOSE_CARDS` question (the same kind `_knowledge_pool_free_
+cast_effect` already asks for "choose one of several cards") is only asked
+when a copy effect or similar has produced more than one, which nothing in
+this stream's own scope does but a future one might.
+
+**Overwrite the Multiverse's own X** - "the number of creatures exiled this
+way" - needed a second, small addition: `_parse_exile_each_clause`/
+`_exile_matching`, the exile-side twin of `_parse_destroy_each_clause`/
+`_destroy_matching` (same qualifier grammar, `_parse_mass_destroy_predicate`,
+reused verbatim), which records its count with `Game.record_count` so
+`count_expression`'s already-general "`<verb>` this way" reader
+(`_COUNT_THIS_WAY_RE`, `counted_this_way`) answers correctly for "Exile all
+creatures." + "... where X is the number of creatures exiled this way."
+without either sentence needing to know about the other.
+
+**Violent Echoes' own X** - "that excess damage" - is CR 120.10: "Some
+triggered abilities check whether a permanent has been dealt excess damage
+... If [sources] dealt an amount of damage to a creature greater than lethal
+damage, excess damage equal to the difference was dealt ... If [sources]
+dealt an amount of damage to a planeswalker greater than that planeswalker's
+loyalty before the damage was dealt, excess damage equal to the difference
+was dealt ... the greatest of the calculated amounts for each of the card
+types it has." Read as one whole-text parser,
+`_parse_damage_then_empower_if_excess_clause` (the same "read the whole
+two-sentence shape, ahead of `parse_mixed_effect_for_spell`'s per-clause
+split" idiom `_DAMAGE_TARGET_KICKED_INSTEAD_RE` already uses for Burst
+Lightning's kicker), since the second sentence refers back to how much the
+first one actually dealt - no per-clause dispatcher can carry that on its
+own. `_lethal_amount_before_damage` reads the target's remaining toughness or
+loyalty *before* `Game.deal_damage` runs (the call itself is what marks
+damage or removes loyalty counters), and excess is `deal_damage`'s own
+returned amount minus that - CR 609.7b's prevention/replacement already
+applied, not the printed N. Kept as its own named helper so a future card
+checking "excess damage" for a different follow-up reuses the same CR 120.10
+reading rather than a second copy of it.
+
+**Two general bugs this stream's own proof cards found, both fixed at their
+real cause rather than worked around:**
+
+- `machines/abilities.self_normalized_effect_text` rewrote *any* whole-word
+  match of a card's own short name to "this permanent" (CR 201.5), with no
+  exception for a fixed keyword-action phrase that happens to share the word:
+  Jace, Reality Sculptor's own `+1: Empower Jace X, where X is the number of
+  Islands you control.` was silently corrupted to `+1: Empower this permanent
+  X, ...` before `_parse_empower_jace_clause` ever saw it, because the
+  source's own short name is "Jace" and CR 701.71a's keyword phrase also
+  always says "Jace" - coincidentally, and never as a self-reference. Fixed
+  with a lookbehind (`_EMPOWER_KEYWORD_LOOKBEHIND`) that exempts "Jace"
+  immediately after "empower ", not a Jace-specific special case - a future
+  "empower `<name>`" keyword sharing a different planeswalker's own short
+  name would hit the identical collision and reads correctly the same way.
+  Proven by `test_jace_reality_sculptor_plus_one_empowers_x_islands_and_the_
+  token_works`, which also activates the created token's own `-3: Draw a
+  card.` to prove the token's granted abilities work at all.
+- **Fixed, on coordinator review** (originally left as a documented,
+  out-of-scope gap - see the correction below): `Game.why_cannot_activate`
+  checked "on the battlefield" unconditionally after its own CR 113.6j/113.6m
+  zone-rule branch, rather than only when that branch found no zone rule at
+  all - so *no* ability CR 113.6j ever legitimately moves off the battlefield
+  (Campus Crier's own "{1}, Exile this card from your graveyard: Empower Jace
+  2.", the same shape Seasoned Pyromancer's own graveyard ability and
+  Boseiju's Channel are) could ever actually be activated, even once
+  `machines/abilities._activated_ability_zone` correctly read its zone. Now
+  `elif`, not two independent `if`s: once `ability.zone` names a zone, CR
+  113.6's flat "usually only on the battlefield" default has already been
+  displaced by the sub-rule that put the ability somewhere else, so a
+  permanent correctly sitting in that zone no longer also fails the flat rule
+  a moment later. `Game.begin_activating` had the same battlefield
+  assumption one call downstream: its `ManaSpend.activating(self.
+  characteristics_of(permanent))` call raised `NotOnBoard`, because `Game.
+  computed_board` only ever covers the battlefield (CR 613.1's layers apply
+  to permanents) - fixed by passing the permanent itself (already a
+  `HasCharacteristics`, reading its own printed face) when it is not on the
+  battlefield, the same split `ManaSpend.casting` already draws for a spell
+  on the stack. `test_self_referential_costs.py`'s own Seasoned Pyromancer
+  and Boseiju tests, and `test_empower_jace.py`'s own Campus Crier test, now
+  go through `Scenario.activate`/`Game.activate_ability` for real rather than
+  building and paying the `TotalCost` by hand. Full suite re-verified green
+  afterward, `test_off_battlefield_activation.py`, `judge/test_judge_ability_
+  zones.py`, `test_cycling.py`, `test_unearth.py` and `test_suspend_
+  sacrifice_activation.py` included - none of those go through this same
+  gate (`machines/keywords.off_battlefield_activation`/`off_zone_activation`
+  is its own, separate door that never called `why_cannot_activate`), so
+  fixing the gate they had already worked around could not regress them, and
+  did not.
+- `machines/abilities._activated_ability_zone` gained one more CR 113.6j
+  shape alongside `_DISCARDS_ITSELF`: `_EXILES_ITSELF_FROM_ZONE`, "exile this
+  card from your `<zone>`" read the same general way, off the words alone -
+  Campus Crier's `ActivatedAbility.zone` now correctly reads `graveyard`, and
+  (with the fix just above) actually activates through the ordinary door.
+
+**Cards (35), classified with `scripts/survey_cards.py --file ... --json`
+after this stream's own changes, `classify_clauses`-level detail where the
+top-level bucket does not already say so:** 20 `handled` outright (Academic
+Ascent, Arcane Amphisbaena, Campus Crier, Countersculpt, Fatehold Charm,
+Hexhaven Battalion, Inspired Tethermage, Keeper of the Quiet Hour, Mindseeker
+Oculus, No Admittance, Overwrite the Multiverse, Protege's Awakening,
+Repurposed Enforcer, Rewrite Regrets, Tam's Resistance, Violent Echoes,
+Vraska's Final Mercy, Way of the Mentor, Way of the Mind Sculptor, Way of the
+Necromancer); 9 `static_unaudited` because a sibling "Planeswalkers you
+control have '...'" grant (S4's own scope) sits on the same card, empower
+clause itself independently confirmed `handled` by `classify_clauses` for
+every one (Avatar of Burgeoning Echoes, Sanctum Lurker, Theorist's Sanctum,
+Way of the Cryomancer/Deathbringer/Healer/Pyromancer/Warlord/Wildspeaker); 6
+`silent` at the card level only because a *different* clause on the same card
+has no reader yet (S4's loyalty-ability-permission/life-gain grants on Jace's
+Machinations and Way of the Paradox, S10's own "the next spell you cast this
+turn can't be countered" on Theorist's Proxy, S7/S8's reveal-hand-choose-
+discard on Solve for Disappointment and the ETB permanent-bounce on Plan for
+All Outcomes, and Jace, Reality Sculptor's own other two loyalty abilities) -
+`classify_clauses` independently confirms this
+stream's own empower clause `handled` on every one of the six once each
+card's text is read clause-by-clause rather than by its single worst bucket.
+Every one of these six will read fully once the sibling clause lands; nothing
+about that landing touches this stream's own parser, by construction (shared
+dispatcher, no ordering dependency).
+
+**Sweep, this stream:** `scripts/sweep_pool.py --effects` stays at 129 silent
+of 1039 (baseline: 129 of 1028 - the 11-card growth is this stream's own
+`scripts/add_card.py` proof cards, none of them left silent) and registry
+rows stay at 7 (`EFFECTS` 1, `TRIGGER_EFFECTS` 6, `ACTIVATED_EFFECTS` 0,
+unchanged) - every fix in this section is a parser, a table row keyed on
+"Jace"/predicate text, or a general zone/self-reference reader, never a
+card-name-keyed row.
+
+Scenario tests: `tests/scenarios/test_empower_jace.py` - 13 tests covering a
+spell's second sentence composed with an existing pump clause, a creature's
+own ETB trigger, reuse of an already-created token rather than a second one,
+an attack trigger's own X ("creatures you control"), a loyalty ability's own
+X ("Islands you control", plus the token's own granted ability actually
+activating), a modal spell's own chosen mode, the new exile-each clause's X
+("creatures exiled this way"), CR 120.10's excess damage on both a creature
+and a planeswalker (plus the "exactly lethal is not excess" negative case),
+and CR 608.2d's choice among two pre-existing tokens.
