@@ -116,10 +116,10 @@ def test_arcane_amphisbaena_empowers_from_its_own_etb_trigger():
 
 def test_a_second_empower_reuses_the_existing_token_rather_than_making_another():
     """CR 701.71a's "if you don't control a Jace planeswalker token" only
-    fires once a player already has none - Campus Crier's graveyard-cost
-    ability ("{6}: Empower Jace 2.") finds the token Arcane Amphisbaena's
-    trigger already made and simply adds to its loyalty rather than making a
-    second one."""
+    fires once a player already has none - Inspired Tethermage's own
+    battlefield ability ("{6}: Empower Jace 2.") finds the token Arcane
+    Amphisbaena's trigger already made and simply adds to its loyalty rather
+    than making a second one."""
     scenario = (
         Scenario()
         .player(
@@ -143,6 +143,35 @@ def test_a_second_empower_reuses_the_existing_token_rather_than_making_another()
     tokens = _jace_tokens(scenario)
     assert len(tokens) == 1, "CR 701.71a creates one only when none is controlled"
     assert tokens[0].loyalty == 4
+
+
+def test_campus_criers_graveyard_ability_empowers_through_the_ordinary_door():
+    """Campus Crier: "{1}, Exile this card from your graveyard: Empower Jace
+    2." - CR 113.6j, the same shape Seasoned Pyromancer's own exile-from-
+    graveyard ability is. `Game.why_cannot_activate` used to refuse every
+    off-battlefield activation unconditionally, even once
+    `machines/abilities._activated_ability_zone` had already read this
+    ability's own zone as the graveyard correctly - fixed alongside this
+    stream's own empower work (`docs/engine-coverage.md`'s FRA S1 section),
+    so this now goes through `Scenario.activate`/`Game.activate_ability` for
+    real, the same door the API uses, rather than building and paying the
+    `TotalCost` by hand."""
+    scenario = (
+        Scenario()
+        .player("alice", graveyard=["Campus Crier"], battlefield=["Plains"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    crier = scenario.find("Campus Crier", Zone.GRAVEYARD, "alice")
+    (plains,) = scenario.untapped_sources("Plains")
+
+    scenario.activate(crier, plains, exiling=[crier])
+
+    assert crier.zone is Zone.EXILE
+    scenario.pass_until_resolved()
+
+    assert _jace_token(scenario).loyalty == 2
 
 
 def test_repurposed_enforcer_empowers_x_equal_to_creatures_you_control_on_attack():

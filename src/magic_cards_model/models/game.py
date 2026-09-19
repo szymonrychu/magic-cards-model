@@ -13667,20 +13667,36 @@ class Game(EngineModel):
         ability = abilities[index]
         controller = controller or self.controller_of(permanent).username
 
-        if ability.zone is not None and permanent.zone is not ability.zone:
+        if ability.zone is not None:
             # CR 113.6b/113.6j/113.6m, whichever `machines/abilities.py` read
             # off the printed text: an ability that functions in one named zone
-            # does not exist to be activated from any other. Checked before the
-            # flat battlefield rule below so the refusal names the real reason
-            # - "functions in the graveyard" rather than "not on the
-            # battlefield" - and so the battlefield itself is refused too,
+            # does not exist to be activated from any other - checked before
+            # the flat battlefield rule below so the refusal names the real
+            # reason, "functions in the graveyard" rather than "not on the
+            # battlefield", and so the battlefield itself is refused too,
             # which is DDR#970's Gollum sacrificing itself to its own
-            # graveyard-only ability.
-            return (
-                f"{permanent.name}'s ability functions in the {ability.zone.value}, "
-                f"but it is in the {permanent.zone.value} ({ability.zone_rule})"
-            )
-        if permanent.zone is not Zone.BATTLEFIELD:
+            # graveyard-only ability. The two are `elif`, not two independent
+            # `if`s: once `ability.zone` names a zone, CR 113.6's flat
+            # "usually only on the battlefield" default has already been
+            # displaced by the sub-rule that put it somewhere else (CR
+            # 113.6j/113.6m are each phrased as "functions from"/"functions
+            # only in", not as an addition to the battlefield case) - so a
+            # permanent correctly sitting in that zone must not *also* fail
+            # the flat rule a moment later. That double gate is what made
+            # Campus Crier's own "{1}, Exile this card from your graveyard:
+            # Empower Jace 2." (and Seasoned Pyromancer's identically-shaped
+            # ability, and Boseiju's Channel) refuse to activate through this
+            # door even once `machines/abilities._activated_ability_zone`
+            # correctly read their zone as the graveyard or the hand -
+            # `test_self_referential_costs.py`'s own Seasoned Pyromancer and
+            # Boseiju tests used to route around this gate by building and
+            # paying the `TotalCost` directly instead; they no longer need to.
+            if permanent.zone is not ability.zone:
+                return (
+                    f"{permanent.name}'s ability functions in the {ability.zone.value}, "
+                    f"but it is in the {permanent.zone.value} ({ability.zone_rule})"
+                )
+        elif permanent.zone is not Zone.BATTLEFIELD:
             return f"{permanent.name} is in {permanent.zone.value}, not on the battlefield"
         if self.controller_of(permanent).username != controller:
             return f"{controller} does not control {permanent.name}"
@@ -14870,11 +14886,25 @@ class Game(EngineModel):
         # front face, wrong for a transformed permanent even before layers.
         # `machines/legal_actions.py` asks the identical question when it
         # enumerates the same activation, and the two must not disagree.
+        #
+        # `Game.computed_board` only ever covers the battlefield (CR 613.1's
+        # layers apply to permanents), so a CR 113.6j/113.6m ability
+        # activating from a hand or a graveyard has no computed board entry
+        # to ask - `characteristics_of` would raise `NotOnBoard`. `CardState`
+        # itself already answers `name`/`types`/`subtypes`/`supertypes`/
+        # `colors` off its own printed face (`up_face`-aware), which is the
+        # right read off the battlefield: CR 613.5 only starts substituting
+        # computed values once the card actually is a permanent. The same
+        # split `ManaSpend.casting` already draws for a spell on the stack
+        # (`Game.computed_board` does not cover that zone either).
+        source_characteristics = (
+            self.characteristics_of(permanent) if permanent.zone is Zone.BATTLEFIELD else permanent
+        )
         payment = CostPayment.for_total(
             total,
             game=self,
             payer=controller,
-            spend=ManaSpend.activating(self.characteristics_of(permanent)),
+            spend=ManaSpend.activating(source_characteristics),
         )
         if announced is not None:
             self._announced_targets[key] = (announced, payment)

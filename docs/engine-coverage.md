@@ -266,7 +266,7 @@ test you write should be `xfail` with a reason, not a test bent until it passes.
 | Who owns a card | CR 108.3, 108.3b | `Player.add` stamps `CardState.owner`, so `load_deck` and a scenario board agree | `scenarios/test_starting_a_game.py` |
 | Equipment unattaching from an illegal permanent | CR 704.5n | `keywords.equipment_state_based_actions`, dispatched by `Game.check_state_based_actions` | `scenarios/test_equip.py` |
 | "Activate only as a sorcery" | CR 602.5d, 307.5 | `Game.why_cannot_activate` | `scenarios/test_activated_abilities.py` |
-| The zone an activated ability functions in, enforced on the battlefield path too | CR 113.6, 113.6b, 113.6j, 113.6m | **Fixed defect (DDR#970)**: `ActivatedAbility.zone`/`zone_rule` were read off the printed text and enforced only by `machines/keywords.off_battlefield_activation`, so `Game.activate_ability` - the door `Scenario.activate` and the API use - let Gollum, Patient Plotter sacrifice itself on the battlefield to its own graveyard-only ability. `Game.why_cannot_activate` now compares `ability.zone` against `permanent.zone` before the flat battlefield rule, and quotes the sub-rule the parser tagged. | `scenarios/judge/test_judge_ability_zones.py` |
+| The zone an activated ability functions in, enforced on the battlefield path too | CR 113.6, 113.6b, 113.6j, 113.6m | **Fixed defect (DDR#970)**: `ActivatedAbility.zone`/`zone_rule` were read off the printed text and enforced only by `machines/keywords.off_battlefield_activation`, so `Game.activate_ability` - the door `Scenario.activate` and the API use - let Gollum, Patient Plotter sacrifice itself on the battlefield to its own graveyard-only ability. `Game.why_cannot_activate` now compares `ability.zone` against `permanent.zone` before the flat battlefield rule, and quotes the sub-rule the parser tagged. **Follow-up fix (FRA S1)**: that comparison used to fall through to the flat battlefield rule even on a *match* - refusing an ability correctly sitting in its own named zone - so `Game.activate_ability` still could not reach a single CR 113.6j/113.6m ability anywhere until now; see the FRA S1 section below for the fix and the second, downstream `ManaSpend`/`NotOnBoard` bug it uncovered. | `scenarios/judge/test_judge_ability_zones.py`, `scenarios/test_self_referential_costs.py`, `scenarios/test_empower_jace.py` |
 | A life payment in an activation cost, refused before the activation begins | CR 119.4, 119.4b, 118.3, 704.5a | **Fixed defect**: `Game.why_cannot_activate` ignored `CostKind.PAY_LIFE`, so Nurturing Peatland's `{T}, Pay 1 life: Add {B} or {G}.` was offered at a life total that could not pay it and only `CostPayment.pay` refused, after `{T}` had been announced. The check sums the ability's life pieces and refuses when the payer's life is below the total; CR 119.4b's 0 is never refused, and paying down to exactly 0 is allowed (CR 704.5a is a state-based action, not a payment restriction). | `scenarios/judge/test_judge_paying_life.py` |
 | Ordering two effects on one event | CR 616.1, 616.1f, 616.1g, 616.2 | `order_effects`, `apply_replacements` | `scenarios/test_replacement_effects.py`, `scenarios/judge/test_judge_replacement_effects.py` |
 | A permanent entering tapped or with counters | CR 614.1c, 614.12, 122.6 | `Game.enter_the_battlefield`, `_self_enters_modifiers` | `scenarios/test_replacement_effects.py` |
@@ -2772,32 +2772,42 @@ real cause rather than worked around:**
   Proven by `test_jace_reality_sculptor_plus_one_empowers_x_islands_and_the_
   token_works`, which also activates the created token's own `-3: Draw a
   card.` to prove the token's granted abilities work at all.
-- `Game.why_cannot_activate` checked "on the battlefield" unconditionally
-  after its own CR 113.6j/113.6m zone-rule branch, rather than only when that
-  branch found no zone rule at all - so *no* ability CR 113.6j ever
-  legitimately moves off the battlefield (Campus Crier's own "{1}, Exile this
-  card from your graveyard: Empower Jace 2.", the same shape Seasoned
-  Pyromancer's own pre-existing, separately-documented gap already named)
-  could ever actually be activated, even once `machines/abilities.
-  _activated_ability_zone` correctly read its zone as the graveyard. This is
-  the *same*, previously-documented gap `test_self_referential_costs.py`'s
-  own Seasoned Pyromancer and Boseiju tests already route around by building
-  and paying the cost directly rather than through `Game.activate_ability` -
-  not reopened or widened here, only given one more input it had never been
-  asked before (the *zone-matching* branch, not the *zone-mismatch* one). Not
-  fixed by this stream, since it is a `why_cannot_activate` gate wider than
-  any one keyword; the scenario proof for Campus Crier's own activation
-  routes around it the same way those two existing tests already do, and
-  `test_a_second_empower_reuses_the_existing_token_rather_than_making_
-  another` proves the same "reuse, don't recreate" behaviour on Inspired
-  Tethermage's `{6}:` ability instead, which is not gated by this.
+- **Fixed, on coordinator review** (originally left as a documented,
+  out-of-scope gap - see the correction below): `Game.why_cannot_activate`
+  checked "on the battlefield" unconditionally after its own CR 113.6j/113.6m
+  zone-rule branch, rather than only when that branch found no zone rule at
+  all - so *no* ability CR 113.6j ever legitimately moves off the battlefield
+  (Campus Crier's own "{1}, Exile this card from your graveyard: Empower Jace
+  2.", the same shape Seasoned Pyromancer's own graveyard ability and
+  Boseiju's Channel are) could ever actually be activated, even once
+  `machines/abilities._activated_ability_zone` correctly read its zone. Now
+  `elif`, not two independent `if`s: once `ability.zone` names a zone, CR
+  113.6's flat "usually only on the battlefield" default has already been
+  displaced by the sub-rule that put the ability somewhere else, so a
+  permanent correctly sitting in that zone no longer also fails the flat rule
+  a moment later. `Game.begin_activating` had the same battlefield
+  assumption one call downstream: its `ManaSpend.activating(self.
+  characteristics_of(permanent))` call raised `NotOnBoard`, because `Game.
+  computed_board` only ever covers the battlefield (CR 613.1's layers apply
+  to permanents) - fixed by passing the permanent itself (already a
+  `HasCharacteristics`, reading its own printed face) when it is not on the
+  battlefield, the same split `ManaSpend.casting` already draws for a spell
+  on the stack. `test_self_referential_costs.py`'s own Seasoned Pyromancer
+  and Boseiju tests, and `test_empower_jace.py`'s own Campus Crier test, now
+  go through `Scenario.activate`/`Game.activate_ability` for real rather than
+  building and paying the `TotalCost` by hand. Full suite re-verified green
+  afterward, `test_off_battlefield_activation.py`, `judge/test_judge_ability_
+  zones.py`, `test_cycling.py`, `test_unearth.py` and `test_suspend_
+  sacrifice_activation.py` included - none of those go through this same
+  gate (`machines/keywords.off_battlefield_activation`/`off_zone_activation`
+  is its own, separate door that never called `why_cannot_activate`), so
+  fixing the gate they had already worked around could not regress them, and
+  did not.
 - `machines/abilities._activated_ability_zone` gained one more CR 113.6j
   shape alongside `_DISCARDS_ITSELF`: `_EXILES_ITSELF_FROM_ZONE`, "exile this
   card from your `<zone>`" read the same general way, off the words alone -
-  Campus Crier's `ActivatedAbility.zone` now correctly reads `graveyard`
-  (verified directly; `Game.why_cannot_activate`'s own pre-existing gate
-  above still separately refuses the *activation* itself, unrelated to this
-  read being correct).
+  Campus Crier's `ActivatedAbility.zone` now correctly reads `graveyard`, and
+  (with the fix just above) actually activates through the ordinary door.
 
 **Cards (35), classified with `scripts/survey_cards.py --file ... --json`
 after this stream's own changes, `classify_clauses`-level detail where the
