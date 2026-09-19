@@ -20764,6 +20764,130 @@ def _parse_exile_then_play_permission_pair(
     return effect
 
 
+#: "You may cast/play that card[ this turn]." with no *leading* duration -
+#: Chandra, Torch of Defiance's own bare "You may cast that card." (no
+#: duration at all - `Game.grant_play_permission`'s own `until_end_of_turn=
+#: True` default is what this reads as, the engine's own sensible default
+#: for an unqualified permission, not a CR citation for an implicit
+#: duration CR 601.3 itself does not name) and Synth Eradicator's own
+#: trailing "you may play that card this turn" (already `_PLAY_PERMISSION_
+#: RE`'s own shape). Tried second, after that stricter reader, so a
+#: printing carrying a real duration still reads through it unchanged.
+_MAY_CAST_OR_PLAY_THAT_CARD_BARE_RE = re.compile(
+    r"^you may (?P<action>cast|play) that card\.?$", re.IGNORECASE
+)
+
+#: "If you don't, `<consequence>`." - the CR 608.2d branch taken when the
+#: "may" just above was declined, as opposed to `_IF_YOU_DO_RE`'s own "if
+#: you do" branch for CR 118.12's optional-cost shape.
+_IF_YOU_DONT_RE = re.compile(r"^if you don'?t,\s*(?P<consequence>.+)$", re.IGNORECASE | re.DOTALL)
+
+#: "you may `<action>`" - the bare instruction a CR 608.2d "may" gates,
+#: stripped of its own "you may" so the action can be read once, whichever
+#: side of an "if you [do/don't]" pair it sits on - `_parse_mixed_clause`
+#: already reads its own bare shape (Synth Eradicator's own "get {E}{E}"),
+#: unlike the whole "you may ..." sentence, which would pose a *second*,
+#: redundant CR 608.2d question on top of the one this merge already asked
+#: to choose which branch to take.
+_YOU_MAY_ACTION_RE = re.compile(r"^you may (?P<action>.+)$", re.IGNORECASE | re.DOTALL)
+
+
+def _play_permission_action(text: str) -> PlayAction | None:
+    """`PlayAction.CAST`/`.PLAY` if `text` is a play-permission grant for
+    "that card" (either `_PLAY_PERMISSION_RE`'s own durationed shape or
+    `_MAY_CAST_OR_PLAY_THAT_CARD_BARE_RE`'s bare one), or `None`."""
+    match = _PLAY_PERMISSION_RE.fullmatch(text)
+    if match is not None and match.group("subject").lower() == "that card":
+        return PlayAction.PLAY if match.group("action").lower() == "play" else PlayAction.CAST
+    match = _MAY_CAST_OR_PLAY_THAT_CARD_BARE_RE.fullmatch(text)
+    if match is not None:
+        return PlayAction.PLAY if match.group("action").lower() == "play" else PlayAction.CAST
+    return None
+
+
+def _merge_exile_top_may_x_if_you_dont_y_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "Exile the top card of your library. You may `<X>`. If you don't,
+    `<Y>`." where exactly one of `<X>`/`<Y>` is "cast/play that card[ this
+    turn]" and the other is an ordinary effect - Chandra, Torch of
+    Defiance's own `+1` (the permission on the "you may" side, a damage
+    consequence on the "if you don't" side) and Synth Eradicator's own
+    attack trigger (the identical shape reversed: an energy gain on the
+    "you may" side, the permission on the "if you don't" side).
+
+    A three-clause merge, not independent readings: "that card" is CR 607.1
+    anaphora onto the first sentence's own exile, and whichever consequence
+    is not the permission is conditioned on the CR 608.2d "may" the second
+    sentence poses - a fact only this merge, resolving the whole paragraph
+    as one instruction, can read back.
+
+    Ability-only (`for_spell=False`): nothing in the pool prints this shape
+    on a spell, and the source read below (`ability.source_name`) is an
+    `AbilityOnStack`'s own attribute, not a resolving `CardState`'s.
+    """
+    if for_spell or index + 2 >= len(clauses):
+        return None
+    if _EXILE_TOP_OF_YOUR_LIBRARY_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    may_match = _YOU_MAY_ACTION_RE.fullmatch(clauses[index + 1].strip())
+    if may_match is None:
+        return None
+    if_match = _IF_YOU_DONT_RE.fullmatch(clauses[index + 2].strip())
+    if if_match is None:
+        return None
+    may_action_text = may_match.group("action").strip().rstrip(".")
+    dont_text = if_match.group("consequence").strip().rstrip(".")
+
+    yes_permission = _play_permission_action(clauses[index + 1].strip())
+    no_permission = _play_permission_action(if_match.group("consequence").strip())
+    if (yes_permission is None) == (no_permission is None):
+        # Neither side, or both, grants the permission - not this shape.
+        return None
+
+    if yes_permission is not None:
+        permission_on_yes = True
+        action = yes_permission
+        other_effect = _parse_mixed_clause(dont_text, for_spell=False)
+    else:
+        permission_on_yes = False
+        action = no_permission
+        other_effect = _parse_mixed_clause(may_action_text, for_spell=False)
+    if other_effect is None or action is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        ability = stack_object
+        player = game.controller_of(ability)
+        if not player.library:
+            return
+        card = game.exile_permanent(player.library[0])
+        taken = game.may(
+            player,
+            f"{'cast' if action is PlayAction.CAST else 'play'} {card.name}"
+            if permission_on_yes
+            else may_action_text,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        )
+        if taken == permission_on_yes:
+            game.grant_play_permission(
+                card,
+                player.username,
+                action=action,
+                pays_mana_cost=True,
+                source_name=ability.source_name,
+                rule="CR 601.3",
+                zone=card.zone,
+            )
+        else:
+            other_effect(game, ability)
+
+    return 3, effect
+
+
 #: "Add <mana>." as a *resolving* effect rather than a mana ability's fast
 #: path - Ugin, Eye of the Storms' "0: Add {C}{C}{C}." CR 605.1a's third
 #: criterion is "it's not a loyalty ability", and CR 606.2 makes any ability
@@ -23687,6 +23811,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_surveil_then_if_quality_to_hand_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_exile_top_may_x_if_you_dont_y_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
