@@ -1878,6 +1878,60 @@ _REFLEXIVE_CLAUSE_TAIL = re.compile(
     r"\bwhen you do,.*$|\bwhen [^,]+ this way,.*$", re.IGNORECASE | re.DOTALL
 )
 
+#: "For each opponent, `<verb phrase>` up to one target `<description>` that
+#: player controls[, ...]." - Hapatra, the Desert Frost's, Hapatra, the
+#: Desert Fang's, and Lich's Relic's own reflexive consequence, all sharing
+#: this one grammar. CR 601.2c/603.3d target *every* instance of the word
+#: "target" a spell or ability's text prints, and "for each opponent" prints
+#: one such instance per opponent (CR 102.2's "each other player in the
+#: game" - not fixed at two), which the ordinary word-scan below cannot
+#: express: it reads one `TargetRequirement` per literal "target" word in
+#: the text, and this sentence prints only one such word regardless of how
+#: many opponents there are. Special-cased ahead of that scan the same way
+#: `_EARTHBEND` already is, for the identical reason - the rule itself,
+#: not the sentence's own count words, is what says how many targets this
+#: asks for.
+_FOR_EACH_OPPONENT_TARGET_RE = re.compile(
+    r"for each opponent,.*?\bup to one target (?P<desc>.+?) that player controls\b",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _for_each_opponent_profile(text: str) -> TargetingProfile | None:
+    """`_FOR_EACH_OPPONENT_TARGET_RE`'s shape, or `None` if this is not it.
+
+    One target per opponent, each independently optional (CR 115.6's "up to
+    one") - not a fixed count `TargetRequirement.count` can hold, since the
+    number of opponents is game state `profile_for_text` cannot see (it
+    reads text alone). `unbounded=True` (CR 107.1c's own "no stated
+    maximum" shape) covers any player count without needing to know it in
+    advance, and `distinct_controllers=True` is what stops two of those
+    unbounded slots from being filled by the same opponent's own two
+    permanents instead of two different opponents' one each - the
+    per-target legality check (`controller=OPPONENT`) and the cross-target
+    one already exist for Run Away Together's "controlled by different
+    players"; this reuses both rather than inventing a per-opponent-count
+    mechanism of its own.
+    """
+    match = _FOR_EACH_OPPONENT_TARGET_RE.search(text)
+    if match is None:
+        return None
+    description = match.group("desc").strip()
+    base = permanent_description(description)
+    if base is None:
+        return None
+    requirement = base.model_copy(
+        update={
+            "phrase": f"target {description} an opponent controls",
+            "count": 0,
+            "minimum": 0,
+            "unbounded": True,
+            "distinct_controllers": True,
+            "controller": ControllerRestriction.OPPONENT,
+        }
+    )
+    return TargetingProfile(requirements=(requirement,))
+
 
 def profile_for_text(text: str) -> TargetingProfile:
     """What one piece of rules text may target, read on its own (CR 115.1).
@@ -1914,6 +1968,9 @@ def profile_for_text(text: str) -> TargetingProfile:
     text = _REFLEXIVE_CLAUSE_TAIL.sub("", text)
     if _EARTHBEND.search(text):
         return _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
+    for_each_opponent = _for_each_opponent_profile(text)
+    if for_each_opponent is not None:
+        return for_each_opponent
     return _parse(_REMINDER.sub("", text), spell_only=False)
 
 

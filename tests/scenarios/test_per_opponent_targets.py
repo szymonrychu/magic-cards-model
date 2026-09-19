@@ -137,3 +137,63 @@ def test_lichs_relic_does_nothing_when_the_payment_is_declined() -> None:
 
     assert bears.zone is Zone.BATTLEFIELD
     assert not scenario.game.stack
+
+
+def test_hapatra_frost_taps_one_creature_per_opponent_with_three_players() -> None:
+    """The genuine CR 601.2c/603.3d reading, proven with **three** players,
+    not the two the earlier single-opponent test cannot tell apart from a
+    hardcoded single target: alice's own "for each opponent" trigger reaches
+    both bob's and charlie's creature in the same resolution, each
+    independently tapped and stunned, and nothing about the shared
+    `TargetRequirement` lets either one be chosen twice for the other's own
+    slot (`distinct_controllers`, CR 115.3's own "the same target can't be
+    chosen multiple times").
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Hapatra, the Desert Frost"], battlefield=["Island"] * 4)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .player("charlie", battlefield=["Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    angel = scenario.creature("Serra Angel", "charlie")
+    scenario.choose_trigger_targets("Hapatra, the Desert Frost", [bears, angel])
+
+    scenario.cast_and_resolve(
+        "Hapatra, the Desert Frost",
+        *scenario.untapped_sources("Island", "Island", "Island", "Island"),
+    )
+    scenario.resolve_top()  # the enters trigger
+
+    assert bears.tapped
+    assert bears.counters["stun"] == 1
+    assert angel.tapped
+    assert angel.counters["stun"] == 1
+
+
+def test_hapatra_frost_may_tap_fewer_than_every_opponent() -> None:
+    """ "Up to one" is independently optional per opponent (CR 115.6) - alice
+    may choose only bob's creature and leave charlie's untouched.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Hapatra, the Desert Frost"], battlefield=["Island"] * 4)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .player("charlie", battlefield=["Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    angel = scenario.creature("Serra Angel", "charlie")
+    scenario.choose_trigger_targets("Hapatra, the Desert Frost", [bears])
+
+    scenario.cast_and_resolve(
+        "Hapatra, the Desert Frost",
+        *scenario.untapped_sources("Island", "Island", "Island", "Island"),
+    )
+    scenario.resolve_top()  # the enters trigger
+
+    assert bears.tapped
+    assert not angel.tapped
