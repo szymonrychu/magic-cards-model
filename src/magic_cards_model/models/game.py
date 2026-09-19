@@ -4580,14 +4580,34 @@ class Game(EngineModel):
         # CR 702.131a: ascend on an instant or sorcery is a spell ability,
         # followed as the spell resolves and ahead of the text printed after it.
         ascend_as_a_spell_resolves(self, spell)
+        # CR 608.3: a resolving *permanent* spell's steps are 608.3a-g -
+        # become a permanent and enter the battlefield, check its target,
+        # attach/merge/go to the graveyard, become a token if it was a copy,
+        # create a static-ability-on-the-stack's delayed trigger (dash,
+        # blitz, warp). None of those steps runs the permanent's own printed
+        # text: CR 112.6a/113.6 make a triggered, activated, or static
+        # ability function only once the permanent is on the battlefield.
+        # `effect_for`/`_spell_effect_or_notice` exist to read CR 608.2c's
+        # "follow the instructions" for an instant/sorcery/ability on the
+        # stack, and must never see a permanent's oracle text at all - the
+        # bug this guards against ran a permanent's whole printed text as if
+        # it were a resolving instant's, so casting Screeching Soulbreaker
+        # (a triggered ability's body) drained life immediately, and Ghalta
+        # the Immovable's two static lines (a CR 611.3 ability that already
+        # reapplies from the battlefield every time the board is computed)
+        # were also created a second time here as spurious, indefinite-
+        # duration `ContinuousEffect`s that outlived it.
         effects = []
         unread_faces: list[tuple[str, str]] = []
-        for face_name, face_text in faces_to_resolve:
-            effect = effect_for(face_name, face_text, x_value=x_value)
-            if effect is not None:
-                effects.append(effect)
-            elif face_text.strip():
-                unread_faces.append((face_name, face_text))
+        left_replacement = False
+        if not spell.is_permanent:
+            for face_name, face_text in faces_to_resolve:
+                effect = effect_for(face_name, face_text, x_value=x_value)
+                if effect is not None:
+                    effects.append(effect)
+                elif face_text.strip():
+                    unread_faces.append((face_name, face_text))
+            left_replacement = self._create_resolution_replacements(spell)
         if effects:
             try:
                 for effect in effects:
@@ -4642,7 +4662,6 @@ class Game(EngineModel):
                 self._before_priority()
                 raise
 
-        left_replacement = self._create_resolution_replacements(spell)
         if unread_faces and not left_replacement and not spell.is_permanent:
             # Fail closed: an instant or sorcery whose printed text no parser
             # reads used to resolve as nothing with no trace (Stock Up, live
