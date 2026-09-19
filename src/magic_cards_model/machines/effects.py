@@ -192,9 +192,11 @@ from .modes import (
 from .replacement import DrawReplacementKind, NextTimeDrawReplacement
 from .targeting import (
     COMPARISON_CLAUSE_PATTERN,
+    ControllerRestriction,
     TargetRequirement,
     permanent_description,
     profile_for_text,
+    spell_profile_for_text,
 )
 from .triggers import (
     AbilityOnStack,
@@ -6954,6 +6956,20 @@ _PER_COUNT_COST_REDUCTION_LINE_RE = re.compile(
     r"^This spell costs \{\d+\} less to cast for each [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
 )
 
+#: A third self-discount template, tied to a phase or step rather than a
+#: condition or a count - Closing Statement's "This spell costs {2} less to
+#: cast during your end step." Left unstripped, this poisoned
+#: `_parse_mixed_clauses`'s per-clause fallback exactly the way the two
+#: shapes above already document: "Destroy target creature or planeswalker
+#: you don't control. Put a +1/+1 counter on up to one target creature you
+#: control." reads fine clause by clause, but the whole card came back
+#: unparsed because the preamble sentence ahead of it did not. The discount
+#: itself is not computed here either, for the identical reason the "if"
+#: shape above is not: CR 601.2f's reduction is about paying, not resolving.
+_TIMING_COST_REDUCTION_LINE_RE = re.compile(
+    r"^This spell costs \{\d+\} less to cast during [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
+)
+
 #: The increase twin of the line above - "This spell costs {1} more to cast
 #: for each target beyond the first." (Fireball, and Launch the Fleet's
 #: identically-worded "Strive — ..." clause; CR 207.2c gives the "Strive"
@@ -7054,6 +7070,7 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _FREE_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _SELF_COST_REDUCTION_LINE_RE.sub("", text)
     text = _PER_COUNT_COST_REDUCTION_LINE_RE.sub("", text)
+    text = _TIMING_COST_REDUCTION_LINE_RE.sub("", text)
     text = _COST_INCREASE_PER_TARGET_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
     text = _INLINE_REMINDER_RE.sub("", text)
@@ -18748,7 +18765,21 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
             )
 
         return damage_then_group_grant_notice_only
-    parsed = parse_mixed_effect_for_spell(effect_text)
+    # A narrow, local strip - not the full `whole` (`_strip_non_effect_
+    # preamble` also drops reminder text and keyword-ability lines this
+    # fallback needs untouched, and this dispatcher also runs on a
+    # *permanent* spell's own printed text at resolution, where a keyword
+    # line stripped here would be a batch-A-shaped regression, not this
+    # one's to make). Only the self cost-reduction preambles: an unstripped
+    # one ahead of a real effect (Closing Statement's own "This spell costs
+    # {2} less to cast during your end step.") is not a clause any
+    # per-clause parser reads, so `_parse_mixed_clauses`' own fail-closed-
+    # per-clause rule took the whole card down with it even though every
+    # clause that actually resolves the spell read fine on its own.
+    cost_reduction_stripped = _SELF_COST_REDUCTION_LINE_RE.sub("", effect_text)
+    cost_reduction_stripped = _PER_COUNT_COST_REDUCTION_LINE_RE.sub("", cost_reduction_stripped)
+    cost_reduction_stripped = _TIMING_COST_REDUCTION_LINE_RE.sub("", cost_reduction_stripped)
+    parsed = parse_mixed_effect_for_spell(cost_reduction_stripped)
     if parsed is not None:
         return parsed
     composed = _compose_layer_effect_with_remainder(effect_text)
@@ -20344,6 +20375,82 @@ def _parse_pump_then_fight_clause_pair(
         if not game.characteristics_of(opponent).is_creature:
             return  # CR 701.14b
         _fight(game, fighter, opponent)
+
+    return effect
+
+
+def _parse_controller_split_target_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Two independently targeted clauses, told apart by controller - Awaken
+    the Inferno's own "deals 6 damage to target creature or planeswalker an
+    opponent controls. Put a +1/+1 counter on up to one target creature you
+    control."
+
+    `_parse_mixed_clauses`' own per-clause fallback parses each sentence on
+    its own and hands every one of them the *whole* `stack_object.targets`
+    list (`Game.resolve_targets` has no notion of "this clause's own
+    target") - so the damage clause landed on both of CR 601.2c's targets
+    instead of only the one named by its own restriction, and the counter
+    clause raced it for the same list. `_parse_pump_then_fight_clause_pair`'s
+    own docstring already rules out reading the two apart positionally: CR
+    608.2b can remove either target before resolution, so `targets[0]`/
+    `targets[1]` is not a stable way to tell them apart even when the
+    ordering was right to begin with.
+
+    Read the same way that fight pair is: each clause's own restriction -
+    "an opponent controls"/"you don't control" vs "you control" - already
+    told the two targets apart at announcement (`machines/targeting.py`'s
+    `ControllerRestriction`), so resolution reads it off the same way, by
+    asking who controls each *resolved* target right now (CR 608.2b's own
+    recheck) rather than by where in the list it happens to sit. `OPPONENT`
+    and `NOT_YOU` both read into the same "theirs" bucket below - "not
+    mine", which is exactly the check either restriction already enforced at
+    announcement - so Closing Statement's "you don't control" reads
+    identically to Awaken the Inferno's own "an opponent controls". Only
+    matches when each clause names exactly one target requirement and the
+    two requirements' controllers are `YOU` paired with one of those two -
+    anything else (both `YOU`, an `ANY` restriction on either side, more
+    than one requirement in a clause) is left for the ordinary per-clause
+    fallback exactly as before.
+    """
+    first_effect = _parse_mixed_clause(first, for_spell=for_spell)
+    if first_effect is None:
+        return None
+    second_effect = _parse_mixed_clause(second, for_spell=for_spell)
+    if second_effect is None:
+        return None
+    profile_reader = spell_profile_for_text if for_spell else profile_for_text
+    first_requirements = profile_reader(first).requirements
+    second_requirements = profile_reader(second).requirements
+    if len(first_requirements) != 1 or len(second_requirements) != 1:
+        return None
+    first_controller = first_requirements[0].controller
+    second_controller = second_requirements[0].controller
+    theirs_restrictions = {ControllerRestriction.OPPONENT, ControllerRestriction.NOT_YOU}
+    controllers = {first_controller, second_controller}
+    wants_you = ControllerRestriction.YOU in controllers
+    wants_theirs = bool(controllers & theirs_restrictions)
+    if not (wants_you and wants_theirs and len(controllers) == 2):
+        return None
+    first_wants_mine = first_controller is ControllerRestriction.YOU
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        mine: list[TargetRef] = []
+        theirs: list[TargetRef] = []
+        for ref in stack_object.targets:
+            resolved = game.legal_target(stack_object, ref)
+            if not isinstance(resolved, CardState) or resolved.zone is not Zone.BATTLEFIELD:
+                continue
+            bucket = (
+                mine if game.controller_of(resolved).username == controller.username else theirs
+            )
+            bucket.append(ref)
+        first_bucket = mine if first_wants_mine else theirs
+        second_bucket = theirs if first_wants_mine else mine
+        first_effect(game, stack_object.model_copy(update={"targets": first_bucket}))
+        second_effect(game, stack_object.model_copy(update={"targets": second_bucket}))
 
     return effect
 
@@ -31974,6 +32081,21 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 continue
             # Same reason: the bite rider names its own biter target.
             paired = _parse_bite_damage_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            # Two clauses that each name their own target, told apart by
+            # controller rather than by an antecedent/rider relationship at
+            # all - Awaken the Inferno's own "deals damage to target ... an
+            # opponent controls. Put a +1/+1 counter on ... target ... you
+            # control." Tried ahead of the general object anaphor for the
+            # identical reason the two pairs just above are: the second
+            # clause names a target of its own, which the anaphor reader has
+            # no way to tell apart from the first clause's.
+            paired = _parse_controller_split_target_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:
