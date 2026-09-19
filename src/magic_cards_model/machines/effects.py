@@ -4881,6 +4881,12 @@ _DISCARD_A_CARD_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Discard your hand." - Ajani Unrelenting's own `−2`, CR 701.9a's whole-hand
+#: shape rather than a printed count. No choice to ask (CR 608.2d has nothing
+#: left to pick among once every card in hand goes), unlike `_DISCARD_A_CARD_
+#: RE`'s "any number of" arm, which still lets the player keep some.
+_DISCARD_YOUR_HAND_RE = re.compile(r"^discards? (?:your|their) hand\.?$", re.IGNORECASE)
+
 #: "Each `<player|opponent>` discards `<n>` card(s)." - Rank Rat's and
 #: Tinybones, Pocket Nuisance's shared ETB ("each opponent"), and Liliana of
 #: the Veil's `+1` naming "each player" instead (CR 102.2: "each opponent" is
@@ -5256,6 +5262,11 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         exact = match.group("upto") is None
         return lambda game, player, source, source_id: _discard_cards(
             game, player, amount, source, source_id=source_id, exact=exact
+        )
+
+    if _DISCARD_YOUR_HAND_RE.fullmatch(clause):
+        return lambda game, player, source, source_id: _discard_cards(
+            game, player, len(player.hand), source, source_id=source_id, exact=True
         )
 
     each_group_discards = _parse_each_group_discards_clause(clause)
