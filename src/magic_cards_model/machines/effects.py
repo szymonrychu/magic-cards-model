@@ -6267,6 +6267,70 @@ def _counter_kind(word: str) -> Counter | str:
         return lowered
 
 
+#: "Distribute seven +1/+1 counters among any number of target creatures you
+#: control." (Vorinclex // The Grand Evolution's own Saga chapter II) -
+#: CR 601.2d's "divide or distribute an effect (such as damage or counters)
+#: among one or more targets", read the same way `_DIVIDED_DAMAGE_RE` reads
+#: its damage twin. `machines/targeting._read_division`'s own `_DIVIDED`
+#: regex already reads this exact shape at announcement time into
+#: `Division(amount=7, what="+1/+1 counters")` - this is the resolution
+#: half, paying out `AbilityOnStack.division`/`CardState.division`'s
+#: announced shares (or the same even-split fallback `_deal_divided_damage_
+#: shares` already gives an un-announced spell) through `Game.add_counters`
+#: rather than `Game.deal_damage`.
+_DISTRIBUTE_COUNTERS_AMONG_TARGETS_RE = re.compile(
+    rf"^distributes? (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? among "
+    r"(?P<phrase>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_distribute_counters_among_targets_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_DISTRIBUTE_COUNTERS_AMONG_TARGETS_RE`'s shape.
+
+    Not `for_spell`-gated: the same CR 601.2d division reads off either kind
+    of stack object (`_deal_divided_damage_shares`'s own docstring explains
+    why - CR 602.2b makes an ability's announcement identical to a spell's).
+    """
+    match = _DISTRIBUTE_COUNTERS_AMONG_TARGETS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None or amount <= 0:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        _distribute_counters_shares(game, stack_object, kind, amount)
+
+    return effect
+
+
+def _distribute_counters_shares(
+    game: "Game", stack_object: "StackObject", kind: Counter | str, total: int
+) -> None:
+    """Pay out `total` counters of `kind` divided among `stack_object.targets`
+    (CR 601.2d, CR 608.2b) - the counter twin of `_deal_divided_damage_
+    shares`, sharing its `_divided_damage_shares` split (the real
+    announcement when there is one, otherwise as even a split as it goes
+    with the remainder on the first target). Only targets still legal on
+    resolution (CR 608.2b) are paid; an illegal one's share is simply not
+    placed, the division stays locked in as announced.
+    """
+    chosen = len(stack_object.targets)
+    if chosen == 0 or total <= 0:
+        return
+    shares = _divided_damage_shares(total, chosen, stack_object.division)
+    for reference, share in zip(stack_object.targets, shares, strict=True):
+        target = game.legal_target(stack_object, reference)
+        if isinstance(target, CardState) and share > 0:
+            game.add_counters(target, kind, share)
+
+
 # --------------------------------------------------------------------------
 # W7a: put N counters on *this* permanent, or untap it - CR 602.2's activated
 # ability naming no target at all, only itself (CR 113.7a's own object).
@@ -21524,6 +21588,94 @@ def _parse_surgical_extraction_clause(text: str, *, for_spell: bool) -> Targeted
     return effect
 
 
+#: "Until end of turn, creatures you control gain "{1}: This creature fights
+#: target creature you don't control." Exile this Saga, then return it to
+#: the battlefield (front face up)." (Vorinclex // The Grand Evolution's own
+#: Saga chapter III) - two CR 608.2c instructions read as one whole-text
+#: match, the same reason `_CREATE_TOKEN_COPIES_EXCEPT_RE`'s own quoted
+#: ability reads whole: the quoted ability ends in a full stop of its own
+#: ("... you don't control.""), which `split_effect_clauses` would cut the
+#: paragraph at, leaving neither half a readable clause.
+#:
+#: The grant is CR 613.1f's layer 6 addition to a *group* - `creatures you
+#: control`, a `machines/layers.Selector` (`creatures_controlled_by`), not a
+#: target or the ability's own source - built by hand the same way `_parse_
+#: pump_and_becomes_chosen_color_clause`/`_parse_protection_from_chosen_
+#: color_clause` already build a `ContinuousEffect` directly rather than
+#: routing back through `parsed_layer_effects`'s single-subject text reader,
+#: which has no group selector shape to offer this. The ability text itself
+#: is read generically (whatever is quoted), not pinned to this one fight
+#: ability, so a future card granting a different quoted ability the same
+#: way reads here too.
+#:
+#: "(front face up)" never reaches this regex at all: `machines/abilities.
+#: _strip_reminder` (CR 207.2a) removes every parenthetical before any
+#: effect text is parsed, and confirmed by `parse_abilities` in this
+#: session, so this pattern's own tail is the plain "return it to the
+#: battlefield[, optionally under its owner's/your control]" every other
+#: "exile self, then return" shape already reads. That is also the
+#: rules-correct reading, not merely what the parser happens to see: CR
+#: 712.8a - "While a double-faced card is ... in a zone other than the
+#: battlefield or stack, it has only the characteristics of its front face"
+#: - means an object with no "transformed" instruction already re-enters
+#: front-face-up by default, exactly what the (reminder) parenthetical
+#: restates. No "under its owner's control" clause is printed at all -
+#: unlike `_EXILE_SELF_THEN_RETURN_RE`, which requires one - so the returned
+#: permanent's controller is read off the exiled object's own `owner`, the
+#: same fallback `_parse_exile_self_then_return_clause` already uses when
+#: nothing overrides it.
+_GRANT_QUOTED_ABILITY_THEN_RETURN_FRONT_FACE_RE = re.compile(
+    r"^until end of turn, creatures you control gain "
+    r"[\"“](?P<ability>.+?)[\"”]\s*"
+    r"exile (?P<name>this [a-z]+|[^,]+), then return (?:it|him|her|them) "
+    r"to the battlefield(?: under (?:its owner'?s|your) control)?\s*\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_grant_quoted_ability_then_return_front_face_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_GRANT_QUOTED_ABILITY_THEN_RETURN_FRONT_FACE_RE`'s shape."""
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _GRANT_QUOTED_ABILITY_THEN_RETURN_FRONT_FACE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    ability_text = match.group("ability").strip()
+    if not ability_text:
+        return None
+    name_text = match.group("name").strip()
+    named = None if name_text.lower().startswith("this ") else name_text
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if named is not None and named.lower() not in (source.name or "").lower():
+            return
+        controller = game.controller_of(ability).username
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name}: creatures you control gain {ability_text!r}",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=creatures_controlled_by(controller),
+                modification=grant_ability(ability_text),
+            )
+        )
+        exiled = game.exile_permanent(source)
+        if exiled.zone is not Zone.EXILE:
+            return  # CR 111.8: a token refused the move; nothing to return.
+        owner = exiled.owner or controller
+        game.put_onto_battlefield(exiled, owner, transformed=False)
+
+    return effect
+
+
 def _parse_choose_name_search_and_exile_whole_text(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -21784,6 +21936,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     that_permanent_no_untap = _parse_that_permanent_no_untap_clause(clause, for_spell=for_spell)
     if that_permanent_no_untap is not None:
         return that_permanent_no_untap
+    distribute_counters = _parse_distribute_counters_among_targets_clause(
+        clause, for_spell=for_spell
+    )
+    if distribute_counters is not None:
+        return distribute_counters
     copy_that_spell = _parse_copy_that_spell_clause(clause, for_spell=for_spell)
     if copy_that_spell is not None:
         return copy_that_spell
@@ -21950,6 +22107,11 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if draw_and_gain_off_sacrificed is not None:
         return [draw_and_gain_off_sacrificed]
+    grant_then_return_front_face = _parse_grant_quoted_ability_then_return_front_face_whole_text(
+        text, for_spell=for_spell
+    )
+    if grant_then_return_front_face is not None:
+        return [grant_then_return_front_face]
     if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(" ".join(text.strip().split())):
         # Read whole for the same reason the two above are: Echoing Courage's
         # subject, "Target creature and all other creatures with the same name
