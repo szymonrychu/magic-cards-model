@@ -32,6 +32,7 @@ from scripts.sweep_pool import (
     _condition_can_fire,
     _effect_matched_inside_quotes,
     _intended_token_requirement,
+    _modal_category,
     _spell_faces,
     _worse,
     _x_candidates,
@@ -752,3 +753,24 @@ def test_watcher_for_tomorrows_leaves_the_battlefield_clause_is_not_silent():
     clause = "When this creature leaves the battlefield, put the exiled card into its owner's hand."
     assert outcomes[clause] == HANDLED
     assert classify_card(watcher)[0] != SILENT
+
+
+def test_modal_category_is_worst_mode_not_best_mode():
+    """`_modal_category` used to score `HANDLED` the moment *any* chosen
+    mode's text parsed, on the reading that a card with at least one working
+    mode is not dead - but that scores a card `HANDLED` when a real, chosen
+    mode of it does nothing (CR 700.2a lets a player choose *any* mode with
+    no minimum-usefulness rule), which is exactly the "best clause wins" bug
+    `classify_card`'s own docstring already rejects for an ordinary card
+    (Territorial Kavu, Obsidian Charmaw, Engineered Explosives).
+
+    Cryptic Command (off-set, not Reality Fracture and not the reported
+    card): four modes, the third ("Return target permanent to its owner's
+    hand" is fine, but the counter-then-draw combination and the tap-all
+    mode are what actually leaves one mode dark) reads False. Vraska's
+    Final Mercy is the reported shape: mode 1 (destroy) reads; mode 2 (lose
+    life, Empower Jace 6) does not, since Empower Jace (CR 701.71) belongs
+    to a different wave.
+    """
+    assert _modal_category(card("Cryptic Command")) == NOTICE
+    assert _modal_category(card("Vraska's Final Mercy")) == NOTICE

@@ -696,17 +696,27 @@ def _static_ability_category(printing: Card, text: str) -> str:
 def _modal_category(printing: Card) -> str:
     """Handled/notice/silent for a modal spell, mirroring `resolve_modal_spell`
     mode by mode: it runs whichever chosen mode's text `parse_mode_effect`
-    reads and appends a `ModeNotice` for one it cannot, per mode - so a card
-    with at least one readable mode is "handled" (some chosen mode really does
-    something), and one where every mode is unreadable is "notice" rather than
-    "silent", because choosing *any* mode of it always leaves a `ModeNotice`
-    behind. An unrecognised modal structure (`understood=False`) never reaches
-    `resolve_modal_spell`'s per-mode loop at all and is silent with no notice.
+    reads and appends a `ModeNotice` for one it cannot, per mode.
+
+    **The worst mode wins**, the identical rule `classify_card` already
+    applies across a whole card's clauses (see its own docstring): CR 700.2a
+    lets a player choose *any* mode, with no rule that the chosen one has to
+    be the readable one, so a card is only genuinely `HANDLED` when *every*
+    one of its modes would actually do something if chosen - Vraska's Final
+    Mercy's own mode 2 ("lose 2 life. Empower Jace 6.") is a legal choice
+    that currently does nothing, and scoring the card `HANDLED` on the
+    strength of mode 1 alone hid that the same way Territorial Kavu's
+    working attack trigger used to hide its own dead characteristic-defining
+    ability. A card where *no* mode reads is still `NOTICE` rather than
+    `SILENT`, because choosing any mode of it leaves a `ModeNotice` behind.
+    An unrecognised modal structure (`understood=False`) never reaches
+    `resolve_modal_spell`'s per-mode loop at all and is silent with no
+    notice.
     """
     modal = modal_profile(printing)
     if modal is None or not modal.understood or not modal.modes:
         return SILENT
-    if any(parse_mode_effect(mode, 0) is not None for mode in modal.modes):
+    if all(parse_mode_effect(mode, 0) is not None for mode in modal.modes):
         return HANDLED
     return NOTICE
 
