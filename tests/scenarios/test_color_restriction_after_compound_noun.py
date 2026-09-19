@@ -42,14 +42,14 @@ def test_refute_destiny_cannot_exile_a_red_creature():
     scenario = (
         Scenario()
         .player("alice", hand=["Refute Destiny"], battlefield=["Plains"] * 2)
-        .player("bob", battlefield=["Ghitu Lavarunner"])
+        .player("bob", battlefield=["Raging Goblin"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    lavarunner = scenario.creature("Ghitu Lavarunner", "bob")
+    goblin = scenario.creature("Raging Goblin", "bob")
 
     with pytest.raises(ValueError, match="needs"):
-        scenario.cast("Refute Destiny", username="alice", targets=[lavarunner])
+        scenario.cast("Refute Destiny", username="alice", targets=[goblin])
 
 
 def test_refute_destiny_exiles_a_legal_blue_creature():
@@ -89,29 +89,30 @@ def test_terminal_criticism_destroys_a_legal_red_creature():
     scenario = (
         Scenario()
         .player("alice", hand=["Terminal Criticism"], battlefield=["Swamp"] * 2)
-        .player("bob", battlefield=["Ghitu Lavarunner"])
+        .player("bob", battlefield=["Raging Goblin"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    lavarunner = scenario.creature("Ghitu Lavarunner", "bob")
+    goblin = scenario.creature("Raging Goblin", "bob")
     sources = scenario.untapped_sources("Swamp", "Swamp")
 
-    scenario.cast_and_resolve("Terminal Criticism", *sources, targets=[lavarunner])
+    scenario.cast_and_resolve("Terminal Criticism", *sources, targets=[goblin])
 
-    assert lavarunner.zone is Zone.GRAVEYARD
-
-
-# -- off-set proof: a different card, a different noun pair, a different --
-# -- resolving verb (choose/move-to-library rather than exile/destroy),   --
-# -- and combined with the `or_any_spell` fix in the same sentence        --
+    assert goblin.zone is Zone.GRAVEYARD
 
 
-def test_aether_gust_profile_reads_both_the_spell_and_the_trailing_colors():
+# -- a parser-level proof that the color-disjunction fix and the         --
+# -- `or_any_spell` fix (`test_spell_or_permanent_mixed_target.py`) do    --
+# -- not step on each other in the same sentence -------------------------
+
+
+def test_aether_gusts_profile_reads_both_the_spell_and_the_trailing_colors():
     """Aether Gust: "Choose target spell or permanent that's red or green."
-    Proves the color-disjunction reader generalises past Refute Destiny's own
-    "creature or planeswalker" noun pair, and does so at the same time as
-    `or_any_spell` (see `test_spell_or_permanent_mixed_target.py`) without
-    either fix stepping on the other."""
+    A profile-only check (this card's own resolution - "its owner puts it on
+    their choice of the top or bottom of their library" - is a separate,
+    unmodelled effect shape, out of this fix's scope) that both fixes read
+    correctly at once: `or_any_spell` for the "spell or permanent" noun pair,
+    and the trailing color disjunction for "that's red or green"."""
     profile = spell_profile_for_text(
         "Choose target spell or permanent that's red or green. Its owner puts "
         "it on their choice of the top or bottom of their library."
@@ -122,29 +123,38 @@ def test_aether_gust_profile_reads_both_the_spell_and_the_trailing_colors():
     assert requirement.required_colors == {Color.RED, Color.GREEN}
 
 
-def test_aether_gust_cannot_target_a_permanent_of_the_wrong_color():
+# -- off-set proof: a different card, a different color pair, a real -----
+# -- cast-and-resolve rather than a profile-only check --------------------
+
+
+def test_devout_decree_cannot_exile_a_green_creature():
+    """Devout Decree: "Exile target creature or planeswalker that's black or
+    red. Scry 1." - the same exile-and-look-at-the-top shape Refute Destiny
+    itself uses, on a different color pair."""
     scenario = (
         Scenario()
-        .player("alice", hand=["Aether Gust"], battlefield=["Island"] * 2)
-        .player("bob", battlefield=["Merfolk Looter"])
+        .player("alice", hand=["Devout Decree"], battlefield=["Plains"] * 2)
+        .player("bob", battlefield=["Watchwolf"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    looter = scenario.creature("Merfolk Looter", "bob")
+    watchwolf = scenario.creature("Watchwolf", "bob")
 
     with pytest.raises(ValueError, match="needs"):
-        scenario.cast("Aether Gust", username="alice", targets=[looter])
+        scenario.cast("Devout Decree", username="alice", targets=[watchwolf])
 
 
-def test_aether_gust_targets_a_legal_red_permanent():
+def test_devout_decree_exiles_a_legal_red_creature():
     scenario = (
         Scenario()
-        .player("alice", hand=["Aether Gust"], battlefield=["Island"] * 2)
-        .player("bob", battlefield=["Ghitu Lavarunner"])
+        .player("alice", hand=["Devout Decree"], battlefield=["Plains"] * 2)
+        .player("bob", battlefield=["Raging Goblin"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    lavarunner = scenario.creature("Ghitu Lavarunner", "bob")
-    sources = scenario.untapped_sources("Island", "Island")
+    goblin = scenario.creature("Raging Goblin", "bob")
+    sources = scenario.untapped_sources("Plains", "Plains")
 
-    scenario.cast_and_resolve("Aether Gust", *sources, targets=[lavarunner])
+    scenario.cast_and_resolve("Devout Decree", *sources, targets=[goblin])
+
+    assert goblin.zone is Zone.EXILE
