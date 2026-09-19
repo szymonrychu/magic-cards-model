@@ -2264,7 +2264,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 24
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2506,6 +2506,13 @@ class Game(EngineModel):
     `CardState`, per the bump rule's first bullet, and one whose absence
     would silently drop a granted rebound for a spell mid-resolution on the
     stack.
+
+    Bumped 23 -> 24: `machines/layers.py`'s `Selector` discriminated union
+    gained `PermanentsOfTypesControlledBy` (Sorin, Vengeful Bloodlord's own
+    "creatures and planeswalkers you control have lifelink" - a compound
+    subject `PermanentsControlledBy` cannot name) - a new tag reachable from
+    `Game.continuous_effects`, which is itself reachable from `Game.
+    model_dump()`, per the bump rule's first bullet.
     """
 
     @model_validator(mode="before")
@@ -11276,6 +11283,7 @@ class Game(EngineModel):
                 player.username: dict(self.unspent_mana_of(player).floating)
                 for player in self.players_in_game
             },
+            active_player=self.turn.active_player if self.turn is not None else None,
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a

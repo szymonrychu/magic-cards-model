@@ -716,6 +716,23 @@ class CreaturesControlledByWithColor(SelectorBase):
         )
 
 
+class PermanentsOfTypesControlledBy(SelectorBase):
+    """ "<type> and <type> you control" (CR 205.2a) - `PermanentsControlledBy`'s
+    own multi-type sibling, for a compound subject naming more than one card
+    type at once (Sorin, Vengeful Bloodlord's own "creatures and
+    planeswalkers you control"): any permanent whose computed types
+    intersect the named set, not only one specific type."""
+
+    kind: Literal["permanents_of_types_controlled_by"] = "permanents_of_types_controlled_by"
+    username: str | None = None
+    card_types: tuple[Type, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.controller == self.username and any(
+            card_type in chars.types for card_type in self.card_types
+        )
+
+
 class PermanentsControlledByWithCounters(SelectorBase):
     kind: Literal["permanents_controlled_by_with_counters"] = (
         "permanents_controlled_by_with_counters"
@@ -747,6 +764,7 @@ Selector = Annotated[
     | QualifiedCreatures
     | AllPermanentsControlledBy
     | PermanentsControlledBy
+    | PermanentsOfTypesControlledBy
     | CreaturesControlledByWithSubtype
     | CreaturesControlledByWithColor
     | PermanentsControlledByWithCounters,
@@ -2721,6 +2739,19 @@ _INDEFINITE_KEYWORD_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "During your turn, `<type> and <type>` you control have `<keyword(s)>`."
+#: (Sorin, Vengeful Bloodlord: "During your turn, creatures and planeswalkers
+#: you control have lifelink.") - `_QUALIFIED_CREATURE_SUBJECT`'s own noun
+#: slot only ever reads "creatures"/"creature tokens", never a compound of
+#: two different card types, so this is a separate shape rather than a
+#: widening of it - the same reasoning that already keeps `_INDEFINITE_
+#: KEYWORD_AND_PROTECTION_GRANT_RE` apart from the plain keyword grant.
+_DURING_YOUR_TURN_MULTI_TYPE_KEYWORD_GRANT_RE = re.compile(
+    r"^during your turn, (?P<type1>[a-z]+) and (?P<type2>[a-z]+) you control "
+    r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
 #: The same indefinite grant, with the list's last item being "protection from
 #: <quality>[ and from <quality>]" instead of another bare keyword (Akroma's
 #: Memorial: "Creatures you control have flying, first strike, vigilance,
@@ -3986,6 +4017,50 @@ def _indefinite_keyword_grant_builder(
         return [
             ContinuousEffect(
                 description=f"{source.name}: {gate}{subject} have {ability}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=selector,
+                modification=grant_ability(ability),
+            )
+            for ability in abilities
+        ]
+
+    return builder
+
+
+def _during_your_turn_multi_type_keyword_grant_builder(
+    card_types: tuple[Type, ...], abilities: list[str], *, line: str
+) -> EffectBuilder:
+    """ "During your turn, `<type> and <type>` you control have `<keyword(s)>`."
+    - Sorin, Vengeful Bloodlord's own "During your turn, creatures and
+    planeswalkers you control have lifelink." Two things set this apart from
+    the plain `_indefinite_keyword_grant_builder` above: the subject names
+    more than one card type at once (`PermanentsOfTypesControlledBy`, not
+    `CreaturesControlledBy`), and the whole grant only applies during the
+    source's own controller's turn (`LayerContext.active_player`), checked
+    once at build time the same way `_graveyard_count_gated_self_static_
+    builder`'s graveyard count is - `effects_for` reruns on every `computed_
+    board()` (CR 613.5), so the grant disappears the instant the turn passes
+    with nothing to store or clear.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if context.active_player != source.controller:
+            return []
+        selector = PermanentsOfTypesControlledBy(username=source.controller, card_types=card_types)
+        types_text = " and ".join(f"{card_type.value}s" for card_type in card_types)
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {types_text} you control have {ability} during your turn"
+                ),
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
@@ -5377,6 +5452,15 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _mass_pump_until_eot_builder(
             int(match.group("power")), int(match.group("toughness")), keywords
         )
+    if match := _DURING_YOUR_TURN_MULTI_TYPE_KEYWORD_GRANT_RE.fullmatch(sentence):
+        card_type1 = _card_type_word(match.group("type1"))
+        card_type2 = _card_type_word(match.group("type2"))
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if card_type1 is None or card_type2 is None or keywords is None:
+            return None
+        return _during_your_turn_multi_type_keyword_grant_builder(
+            (card_type1, card_type2), keywords, line=sentence
+        )
     if match := _INDEFINITE_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
@@ -5889,6 +5973,16 @@ class LayerContext(EngineModel):
     #: own controller - so the per-source answer has to be looked up rather
     #: than handed in directly the way `your_graveyard` is.
     graveyard_by_controller: Mapping[str, tuple[CardState, ...]] = Field(default_factory=dict)
+
+    #: CR 500.1's active player - the third thing the layer engine never sees
+    #: standing on the battlefield. Sorin, Vengeful Bloodlord's own "During
+    #: your turn, creatures and planeswalkers you control have lifelink." is
+    #: the only reader: a condition checked once, at build time, the same way
+    #: `_graveyard_count_gated_self_static_builder`'s graveyard count is -
+    #: `effects_for` is rebuilt on every `computed_board()` call (CR 613.5),
+    #: so an effect gated on this stops applying the instant the turn passes,
+    #: with nothing to store or clear.
+    active_player: str | None = None
 
     #: The unspent mana in each player's mana pool, keyed by the username
     #: whose pool it is. A second thing the layer engine never sees, and for
