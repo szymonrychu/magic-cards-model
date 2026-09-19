@@ -18770,6 +18770,50 @@ def _parse_create_tokens_then_counter_other_subtype_clause(text: str) -> Effect 
     return effect
 
 
+#: "Draw X cards, where X is the number of cards that were put into target
+#: player's graveyard from their library this turn." - Cruel Calculations,
+#: whole. CR 608.2h's X is fixed once, at resolution, against whichever
+#: player the spell's own single target names - not the caster
+#: `count_expression`'s ordinary "you"/`controller` readers always mean -
+#: which is why this is its own reader rather than a `count_expression`
+#: term: no other card in the pool defines a magnitude against a *target*
+#: player's own history (verified against Scryfall full-text search in the
+#: session that wrote this; recorded here rather than asserted, the same
+#: "no off-set second printing found" precedent `_parse_untap_trigger_
+#: subject_clause`'s own sibling `_parse_landfall_type_then_add_mana_
+#: clause_pair` already sets in `machines/triggers.py`). `Game.cards_put_
+#: into_graveyard_this_turn`'s own `from_zone=Zone.LIBRARY` filter is what
+#: a mill's own "cards put into a graveyard from a library" already reads
+#: (CR 700.11's Descend uses the same ledger's `permanent_only` filter);
+#: this is the first caller to read the `from_zone` half of it.
+_DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE = re.compile(
+    r"^draw x cards?, where x is the number of cards (?:that )?were put into "
+    r"target player'?s graveyard from (?:their|its) library this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_draw_x_from_target_graveyard_from_library_clause(text: str) -> Effect | None:
+    """`_DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE`'s shape - see the
+    banner above."""
+    whole = " ".join(text.strip().split())
+    if _DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE.fullmatch(whole) is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        target = next((t for t in game.resolve_targets(spell) if isinstance(t, Player)), None)
+        if target is None:
+            return
+        amount = game.cards_put_into_graveyard_this_turn(target.username, from_zone=Zone.LIBRARY)
+        if amount > 0:
+            game.draw_cards(controller.username, amount)
+
+    return effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -18784,6 +18828,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    draw_x_from_target_graveyard_from_library = (
+        _parse_draw_x_from_target_graveyard_from_library_clause(whole)
+    )
+    if draw_x_from_target_graveyard_from_library is not None:
+        return draw_x_from_target_graveyard_from_library
     copy_next_instant_or_sorcery_you_cast = (
         _parse_copy_next_instant_or_sorcery_you_cast_spell_clause(whole)
     )
