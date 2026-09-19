@@ -10804,6 +10804,69 @@ def _parse_may_exile_self_then_return_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Exile `<this object's name>`, then return it to the battlefield[
+#: tapped][ transformed] under its owner's/your control." - the mandatory
+#: twin of `_MAY_EXILE_SELF_THEN_RETURN_RE`, with no "you may": Vorinclex //
+#: The Grand Evolution's own activated ability ("{6}{G}{G}: Exile Vorinclex,
+#: then return it to the battlefield transformed under its owner's
+#: control."), and the same sentence on any Saga's own chapter III ("Exile
+#: this Saga, then return it to the battlefield transformed under your
+#: control.") - creatures and planeswalkers print "its owner's control"
+#: while a Saga prints "your control" (its controller and owner necessarily
+#: match, being an enchantment nobody else can put on the battlefield), so
+#: both are read here rather than pinning the parser to one phrasing.
+_EXILE_SELF_THEN_RETURN_RE = re.compile(
+    r"^exile (?P<name>this [a-z]+|[^,]+), then return (?:it|him|her|them)"
+    r" to the battlefield"
+    r"(?P<tapped> tapped)?"
+    r"(?P<transformed> transformed)?"
+    r" under (?:(?:its|his|her|their) owner'?s|your) control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_self_then_return_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_SELF_THEN_RETURN_RE`'s shape - see
+    `_parse_may_exile_self_then_return_clause`'s docstring for the two rules
+    (CR 201.5, CR 712.14a) that make this one CR 608.2c instruction. This one
+    is unconditional: no `DecisionKind.MAY` is asked, both halves simply run.
+
+    An *activated* ability's `effect_text` reaches this already run through
+    `self_normalized_effect_text` (`activated_effect_for` always normalizes,
+    unlike `trigger_effect_for`'s try-unnormalized-first order) - Vorinclex's
+    own literal "Exile Vorinclex" arrives here as "Exile this permanent".
+    "This `<noun>`" is CR 700.7's own self-reference regardless of which
+    generic noun the normalizer or the printed card used ("this saga", "this
+    creature", "this permanent", ...), so it is read as `named = None` (the
+    object needs no name check at all) rather than compared against the
+    source's own name, which is what let this shape fall through silently:
+    "this permanent" is never a substring of "Vorinclex".
+    """
+    match = _EXILE_SELF_THEN_RETURN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    name_text = match.group("name").strip()
+    named = None if name_text.lower().startswith("this ") else name_text
+    tapped = match.group("tapped") is not None
+    transformed = match.group("transformed") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        # CR 201.5: the name means *this* object - refused for anything else,
+        # the same guard `_parse_may_exile_self_then_return_clause` uses.
+        if named is not None and named.lower() not in (source.name or "").lower():
+            return
+        exiled = game.exile_permanent(source)
+        if exiled.zone is not Zone.EXILE:
+            return  # CR 111.8: a token refused the move; nothing to return.
+        owner = exiled.owner or ability.controller
+        game.put_onto_battlefield(exiled, owner, tapped=tapped, transformed=transformed)
+
+    return effect
+
+
 #: "Transform all Humans." (Moonmist) - a board sweep rather than the
 #: self-reference `_TRANSFORM_SELF_RE` reads. The subtype is a CR 205.3m
 #: creature type, written the way Oracle text always writes one: capitalized,
@@ -11383,6 +11446,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     exile_self_then_return = _parse_may_exile_self_then_return_clause(effect_text)
     if exile_self_then_return is not None:
         return exile_self_then_return
+    mandatory_exile_self_then_return = _parse_exile_self_then_return_clause(effect_text)
+    if mandatory_exile_self_then_return is not None:
+        return mandatory_exile_self_then_return
     sacrifice_unless_energy = _parse_sacrifice_unless_pay_energy(effect_text)
     if sacrifice_unless_energy is not None:
         return sacrifice_unless_energy
