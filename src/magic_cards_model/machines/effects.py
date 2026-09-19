@@ -100,9 +100,11 @@ from ..numbers import (
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
+    AbilityKind,
     ActivatedAbility,
     TriggerEvent,
     keyword_abilities,
+    parse_abilities,
     parse_triggered_mana,
     self_normalized_effect_text,
 )
@@ -19348,6 +19350,70 @@ _EXILE_THAT_CARD_RE = re.compile(r"^(?:then )?exile (?:that card|those cards)$",
 #: "you lose N life" - Thoughtseize's own optional fourth sentence.
 _YOU_LOSE_LIFE_RE = re.compile(r"^you lose (?P<life>\d+) life$", re.IGNORECASE)
 
+#: Null Summoner's own second, entirely separate ability: "Threshold — As
+#: long as there are seven or more cards in your graveyard, you may cast the
+#: exiled card, and mana of any type can be spent to cast that spell." CR
+#: 604.1: a static ability "written as a statement", true whenever its
+#: condition holds - not a clause of the triggered ability that did the
+#: exiling (CR 607.2h: two abilities can share one printed paragraph, or here
+#: one printed card, while staying distinct). `.search` rather than
+#: `.fullmatch`/an anchored `^`: an ability-word prefix ("Threshold — ") is
+#: still attached to `BaseAbility.text` when the underlying line was matched
+#: as a bare `StaticAbility` rather than split off by `_parse_activated`, so
+#: this reads for the sentence wherever it starts in the line instead of
+#: assuming any one prefix.
+_CAST_EXILED_CARD_STATIC_RE = re.compile(
+    r"as long as (?P<condition>.+?), you may cast the exiled cards?"
+    r"(?P<any_type_mana>, and mana of any type can be spent to cast (?:it|that spell|them))?"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+def _grant_cast_exiled_card_permission_from_sibling_static(
+    game: "Game", stack_object: "StackObject", card: CardState
+) -> None:
+    """Grant CR 601.3's permission to cast `card` (just exiled by
+    `stack_object`'s own resolving ability) if the permanent that ability
+    belongs to also prints a separate "As long as <condition>, you may cast
+    the exiled card[, and mana of any type can be spent to cast that
+    spell]." static ability - Null Summoner's own Threshold line.
+
+    A no-op for every other card sharing this exiling machinery (Thoughtseize,
+    Grief, Thought-Knot Seer, ...), none of which print that second sentence
+    at all: the scan finds nothing and grants nothing, so nothing about their
+    own behaviour changes.
+
+    `condition`/`any_type_mana` are carried straight onto the grant
+    (`PlayPermission.condition`/`.any_type_mana`) rather than resolved here,
+    so the permission's usability is re-checked live every time it is asked
+    about (`PlayPermission.why_not`, via `Game.condition_holds`) instead of
+    being fixed at the moment of exile - a graveyard that later drops below
+    Threshold makes the grant unusable again without it ever being revoked.
+    """
+    source_id = getattr(stack_object, "source_id", None)
+    found = game.find_by_id(source_id) if source_id is not None else None
+    if not isinstance(found, CardState):
+        return
+    controller = game.controller_of(stack_object).username
+    for line in parse_abilities(found.card):
+        if line.kind is not AbilityKind.STATIC:
+            continue
+        match = _CAST_EXILED_CARD_STATIC_RE.search((line.text or "").strip())
+        if match is None:
+            continue
+        game.grant_play_permission(
+            card,
+            controller,
+            action=PlayAction.CAST,
+            source_name=found.name,
+            rule="CR 601.3",
+            zone=card.zone,
+            until_end_of_turn=False,
+            any_type_mana=bool(match.group("any_type_mana")),
+            condition=match.group("condition").strip(),
+        )
+
 
 def _nonland_or_typed_card_matcher(quality: str) -> Callable[[CardState], bool] | None:
     """A predicate for "a `<quality>` card", where `<quality>` is either a
@@ -19698,7 +19764,10 @@ def _merge_reveal_hand_choose_discard_clauses(
                 chosen = [by_id[card_id] for card_id in chosen_ids]
                 if to_exile:
                     for card in chosen:
-                        game.exile_permanent(card)
+                        exiled = game.exile_permanent(card)
+                        _grant_cast_exiled_card_permission_from_sibling_static(
+                            game, stack_object, exiled
+                        )
                 elif chosen:
                     game.discard_cards(revealer.username, chosen, source=source)
         if life_loss:
