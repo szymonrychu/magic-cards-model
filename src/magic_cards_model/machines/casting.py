@@ -58,6 +58,7 @@ from .cost import (
     announce_reveal,
     apply_modifications,
     cost_component_for_phrase,
+    mana_value_cap_for,
     place_counters_cost,
     static_free_cast_grant,
     tap_cost,
@@ -3200,6 +3201,19 @@ class Casting(EngineModel):
                     f"{source_name} only applies to {grant.type_word} spells, and "
                     f"{self.spell.name} is not one"
                 )
+            elif grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
+                cap = mana_value_cap_for(grant, self.game, self.caster)
+                if cap is None:
+                    unavailable = (
+                        f"{source_name}'s mana value cap "
+                        f"({grant.max_mana_value_quality!r}) is not read by this engine "
+                        "(CR 118.9)"
+                    )
+                elif self.spell.mana_value > cap:
+                    unavailable = (
+                        f"{source_name} only applies to spells with mana value {cap} or "
+                        f"less, and {self.spell.name} is {self.spell.mana_value}"
+                    )
             options.append(
                 AlternativeCostOption(
                     index=len(options),

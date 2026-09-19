@@ -46,6 +46,7 @@ from ..machines.casting import (
     grant_suspend_haste,
     granted_cast_options,
     keyword_cast_options,
+    mana_value_cap_for,
     marker_cast_options,
     play_permissions_on,
     spell_has_type_word,
@@ -12074,6 +12075,19 @@ class Game(EngineModel):
                     f"{source_name} only applies to {grant.type_word} spells, and "
                     f"{card.name} is not one"
                 )
+            elif grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
+                cap = mana_value_cap_for(grant, self, caster)
+                if cap is None:
+                    unavailable = (
+                        f"{source_name}'s mana value cap "
+                        f"({grant.max_mana_value_quality!r}) is not read by this engine "
+                        "(CR 118.9)"
+                    )
+                elif card.mana_value > cap:
+                    unavailable = (
+                        f"{source_name} only applies to spells with mana value {cap} or "
+                        f"less, and {card.name} is {card.mana_value}"
+                    )
             options.append(
                 AlternativeCostOption(
                     index=len(options),

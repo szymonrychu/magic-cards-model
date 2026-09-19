@@ -3925,11 +3925,28 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
 #: applied to it from another effect**" - so this is read off a permanent on
 #: the battlefield rather than off the spell being cast, and the spell it
 #: applies to prints nothing about it at all.
+#:
+#: Omnipresence's own sibling narrows by mana value instead of by type:
+#: "You may cast spells with mana value less than or equal to the number of
+#: creatures you control from your hand without paying their mana costs." -
+#: the optional clause between "spells" and "from your hand" reads either a
+#: literal number ("mana value 3 or less", not printed on any pool card but
+#: the same CR 107.3a-free shape) or a live count phrased "the number of
+#: [quality] you control", read again at CR 601.2f by `mana_value_cap_for`.
 _STATIC_FREE_CAST = re.compile(
-    r"^You may cast (?P<what>[\w' -]*?spells?) from your (?P<zone>hand|graveyard) "
+    r"^You may cast (?P<what>[\w' -]*?spells?)"
+    r"(?: with mana value (?:(?P<mv_number>\d+) or less"
+    r"|less than or equal to (?P<mv_quality>.+?)))?"
+    r" from your (?P<zone>hand|graveyard) "
     r"without paying (?:its|their) mana costs?\.$",
     re.IGNORECASE,
 )
+
+#: "the number of creatures you control" - `mana_value_cap_for`'s own reading
+#: of `StaticFreeCastGrant.max_mana_value_quality`, sharing `_requirement`
+#: with every other quality this module already counts (`_PHRASE_SACRIFICE`
+#: and friends), rather than a new vocabulary just for this one card.
+_THE_NUMBER_OF_YOU_CONTROL = re.compile(r"^the number of (?P<quality>.+?) you control$")
 
 
 class StaticFreeCastGrant(EngineModel):
@@ -3952,6 +3969,16 @@ class StaticFreeCastGrant(EngineModel):
     type_word: str | None = None
     """The card type the grant is narrowed to, lowercased ("creature spells
     from your hand"), or None for every spell."""
+    max_mana_value: int | None = None
+    """A printed literal cap ("mana value 3 or less"), or None when the grant
+    prints no fixed number - either no cap at all, or `max_mana_value_quality`'s
+    live one. Exactly one of the two is ever set."""
+    max_mana_value_quality: str | None = None
+    """Omnipresence's own live cap, as the printed quality phrase ("the
+    number of creatures you control") rather than a precomputed count - this
+    is a live board read at CR 601.2f, not a fact fixed when the permanent
+    entered, so nothing here may cache a number. `mana_value_cap_for` counts
+    it against the board when the grant is actually checked."""
 
 
 def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
@@ -3968,7 +3995,44 @@ def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
         return None
     what = match.group("what").strip().lower()
     qualifier = re.sub(r"spells?$", "", what).strip()
-    return StaticFreeCastGrant(zone=zone, type_word=qualifier or None)
+    mv_number = match.group("mv_number")
+    mv_quality = match.group("mv_quality")
+    return StaticFreeCastGrant(
+        zone=zone,
+        type_word=qualifier or None,
+        max_mana_value=int(mv_number) if mv_number is not None else None,
+        max_mana_value_quality=mv_quality.strip() if mv_quality is not None else None,
+    )
+
+
+def mana_value_cap_for(
+    grant: StaticFreeCastGrant, game: Any = None, controller: str | None = None
+) -> int | None:
+    """The live mana-value cap `grant` puts on what it makes free.
+
+    `None` either when the grant carries no cap at all (an ordinary
+    Omniscience-shaped grant, `grant.max_mana_value_quality` unset - the
+    caller tells this apart from the case below by checking that field
+    itself, a printed fact rather than a computed one) or when a printed
+    quality this cannot read leaves a *live* cap unreadable - CR 118.3's
+    "cannot use what was not read", not "nothing to cap", which is why the
+    caller has to distinguish the two rather than treating both as free.
+    """
+    if grant.max_mana_value is not None:
+        return grant.max_mana_value
+    if grant.max_mana_value_quality is None:
+        return None
+    match = _THE_NUMBER_OF_YOU_CONTROL.fullmatch(grant.max_mana_value_quality.strip().lower())
+    if match is None or game is None or controller is None:
+        return None
+    requirement = _requirement(match.group("quality"))
+    if requirement is None:
+        return None
+    return sum(
+        1
+        for state in game.permanents_controlled_by(controller)
+        if requirement.why_not(state, game, controller) is None
+    )
 
 
 # --------------------------------------------------------------------------
