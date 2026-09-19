@@ -1561,6 +1561,51 @@ def why_cannot_cast_now(
     )
 
 
+#: A spell's own printed casting gate - "Threshold — You can't cast this
+#: spell unless there are seven or more cards in your graveyard." (Proft,
+#: Sinister Mastermind). The ability word ("Threshold") carries no rules
+#: meaning of its own (CR 207.2c) and is not part of the match; the
+#: restriction is the sentence after it. No other printed card uses this
+#: exact sentence (checked via full-text Scryfall search this session), so
+#: the shape's generality rests on `condition_holds`, the shared reader
+#: "Activate only if <condition>" (CR 602.5b) already uses across many
+#: unrelated cards, rather than on a second card proving this exact gate.
+_CANNOT_CAST_UNLESS_RE = re.compile(
+    r"you can'?t cast this spell unless (?P<condition>[^.]+)\.", re.IGNORECASE
+)
+
+
+def why_cannot_cast_self_restriction(spell: CardState, caster: str, game: Any = None) -> str | None:
+    """CR 601.2e: "The game checks to see if the proposed spell can legally
+    be cast. If the proposed spell is illegal, the game returns to the
+    moment before the casting of that spell was proposed" - a spell's own
+    printed "You can't cast this spell unless <condition>." is exactly such
+    an illegality, checked the moment the cast is proposed rather than left
+    to be discovered on resolution.
+
+    The condition is handed to `Game.condition_holds`, unread there is
+    refused rather than allowed unchecked - the same fail-closed default
+    `Game.why_cannot_activate`'s own "Activate only if" gives an unread
+    condition (CR 602.5b), not "no rule to check" treated as "no
+    restriction"."""
+    if game is None:
+        return None
+    match = _CANNOT_CAST_UNLESS_RE.search(spell.oracle_text or "")
+    if match is None:
+        return None
+    condition = match.group("condition").strip()
+    held = game.condition_holds(caster, condition, source=spell)
+    if held is None:
+        return (
+            f"{spell.name}'s casting restriction \"you can't cast this spell unless "
+            f'{condition}" is not read by this engine, so the cast is refused rather '
+            "than allowed unchecked (CR 601.2e)"
+        )
+    if not held:
+        return f"{spell.name} can't be cast: {condition} is not true right now (CR 601.2e)"
+    return None
+
+
 def why_cannot_cast_restriction(
     spell: CardState, caster: str, game: Any = None, *, face: str | None = None
 ) -> str | None:
@@ -2203,9 +2248,11 @@ class Casting(EngineModel):
         options = castable_faces(self.spell.card) if self.face is None else (self.face,)
         refusals: dict[str, str] = {}
         for option in options:
-            reason = why_cannot_cast_now(
-                self.spell, self.caster, self.game, face=option
-            ) or why_cannot_cast_restriction(self.spell, self.caster, self.game, face=option)
+            reason = (
+                why_cannot_cast_now(self.spell, self.caster, self.game, face=option)
+                or why_cannot_cast_restriction(self.spell, self.caster, self.game, face=option)
+                or why_cannot_cast_self_restriction(self.spell, self.caster, self.game)
+            )
             if reason is not None:
                 refusals[option or ""] = reason
         if len(refusals) == len(options):
