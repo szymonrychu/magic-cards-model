@@ -1697,6 +1697,15 @@ def condition_matches(
             return False
         if not _origin_zone_matches(event.origin_zone, condition):
             return False
+        if "prepared spell" in lowered:
+            # CR 722.3c/722.3d, Codie, Ravenous Codex's own "Whenever you
+            # cast a prepared spell, ...": a spell cast as a prepare spell -
+            # the CR 722.3c exile copy itself, or (722.3d) any further copy
+            # of one - is `CardState.prepare_spell_face`, the same flag its
+            # own characteristics are read off.
+            spell = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+            if spell is None or not spell.prepare_spell_face:
+                return False
         if "during your turn" in lowered or "during their turn" in lowered:
             # Ral, Monsoon Mage's own condition: the cast has to have
             # happened during *this ability's controller's* own turn, not
@@ -2881,6 +2890,10 @@ def intervening_if_holds(
     if self_tapped is not None:
         return self_tapped
 
+    self_prepared = _source_prepared_holds(clause, source)
+    if self_prepared is not None:
+        return self_prepared
+
     counter_count = _counter_count_holds(clause, source)
     if counter_count is not None:
         return counter_count
@@ -3143,6 +3156,30 @@ def _source_tapped_holds(clause: str, source: CardState) -> bool | None:
     if not is_self:
         return None
     return source.tapped if match.group("state") == "tapped" else not source.tapped
+
+
+#: CR 722.3a's own condition guard, printed on most upkeep-triggered prepare
+#: creatures: "if this creature isn't prepared". `_SOURCE_TAP_STATE`'s own
+#: subject-reading shape, for "prepared"/"unprepared" instead of "tapped"/
+#: "untapped" - both polarities read the same way that pair does, though the
+#: pool only ever prints the negative ("isn't prepared", Woodwork Prodigy).
+_SOURCE_PREPARED_STATE = re.compile(r"^(?P<subject>.+?) (?:is(?P<negated>n'?t)? )?prepared$")
+
+
+def _source_prepared_holds(clause: str, source: CardState) -> bool | None:
+    """`_SOURCE_PREPARED_STATE`'s shape - see its own docstring."""
+    match = _SOURCE_PREPARED_STATE.match(clause)
+    if match is None:
+        return None
+    subject = match.group("subject").strip().lower()
+    name = source.name.lower()
+    is_self = re.fullmatch(r"this \w+", subject) is not None or (
+        subject
+        and (name == subject or name.startswith(f"{subject},") or name.startswith(f"{subject} "))
+    )
+    if not is_self:
+        return None
+    return (not source.prepared) if match.group("negated") else source.prepared
 
 
 #: "you've cast three or more instant and sorcery spells this turn" - Arclight

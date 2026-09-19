@@ -8390,7 +8390,8 @@ class Game(EngineModel):
         source_id: str | None = None,
     ) -> list[CardState]:
         """Search a library for a stated quality, reveal the finds if the text
-        says so, put them into the hand or onto the battlefield, then shuffle.
+        says so, put them into the hand, onto the battlefield, or into the
+        graveyard, then shuffle.
 
         The funnel every printed "search your library for ..., [reveal it,]
         put it ..., then shuffle" goes through, in the order it is printed.
@@ -8402,14 +8403,20 @@ class Game(EngineModel):
         library's object (CR 701.20b), and the put comes before the CR 701.24a
         shuffle so a find put into its owner's hand carries the public record
         (`Player.add`, `carry_knowledge_into_hand`).
+
+        `Zone.GRAVEYARD` (Enroot's own "search your library for a land card,
+        put it into your graveyard, then shuffle") is the same `Player.add`
+        path `Zone.HAND` already takes - CR 701.23 puts no restriction on
+        which zone a search may name, and `player.add` already stamps a
+        card's owner correctly for any of the seven rules zones.
         """
         with self._id_allocator_scope():
             if isinstance(player, str):
                 player = self.player(player)
-            if destination not in (Zone.HAND, Zone.BATTLEFIELD):
+            if destination not in (Zone.HAND, Zone.BATTLEFIELD, Zone.GRAVEYARD):
                 raise ValueError(
-                    "a search puts its finds into a hand or onto the battlefield, "
-                    f"not {destination.value}"
+                    "a search puts its finds into a hand, onto the battlefield, or "
+                    f"into a graveyard, not {destination.value}"
                 )
             found = self.search_library(
                 player,
@@ -8424,10 +8431,10 @@ class Game(EngineModel):
                 for state in found:
                     self.reveal(state, source=source)
             for state in found:
-                if destination is Zone.HAND:
-                    player.add(state, Zone.HAND)
-                else:
+                if destination is Zone.BATTLEFIELD:
                     self.put_onto_battlefield(state, player.username, tapped=tapped)
+                else:
+                    player.add(state, destination)
             self.shuffle_library(player)
             return found
 
