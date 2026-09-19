@@ -4526,8 +4526,9 @@ _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
 #: or greater/less]" - Keruga, the Macrosage's "for each other permanent you
 #: control with mana value 3 or greater" and Blessing of Frost's "for each
 #: creature you control with power 4 or greater". `<qualifier>` is a card
-#: type (`_singular_card_type`) or subtype (`_singular_subtype`) the same way
-#: `count_expression`'s own "number of `<qualifier>` you control" reads it,
+#: type (`_singular_card_type`) or subtype
+#: (`_singular_subtype_for_count_expression`) the same way `count_expression`'s
+#: own "number of `<qualifier>` you control" reads it,
 #: plus the bare word "permanent(s)" for no type filter at all (CR 110.1).
 _QUALIFIER_YOU_CONTROL_RE = re.compile(
     rf"^(?P<other>other )?(?P<qualifier>[a-z]+) you control"
@@ -4552,7 +4553,11 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
     qualifier_word = match.group("qualifier")
     universal = qualifier_word.lower() in ("permanent", "permanents")
     card_type = None if universal else _singular_card_type(qualifier_word)
-    subtype = None if universal or card_type is not None else _singular_subtype(qualifier_word)
+    subtype = (
+        None
+        if universal or card_type is not None
+        else _singular_subtype_for_count_expression(qualifier_word)
+    )
     if not universal and card_type is None and subtype is None:
         return None
     other = match.group("other") is not None
