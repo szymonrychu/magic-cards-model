@@ -1,0 +1,164 @@
+{
+  "object": "card",
+  "id": "72405607-a60e-42af-b523-64008d3f89b9",
+  "oracle_id": "2cd10c6c-f946-457e-9175-92501322f7a5",
+  "multiverse_ids": [
+    527514
+  ],
+  "mtgo_id": 91956,
+  "arena_id": 77332,
+  "tcgplayer_id": 243355,
+  "cardmarket_id": 571521,
+  "name": "Minsc, Beloved Ranger",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/72405607-a60e-42af-b523-64008d3f89b9",
+  "scryfall_uri": "https://scryfall.com/card/afr/227/minsc-beloved-ranger?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:07:26Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.jpg?1783926446",
+    "normal": "https://cards.scryfall.io/normal/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.jpg?1783926446",
+    "large": "https://cards.scryfall.io/large/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.jpg?1783926446",
+    "png": "https://cards.scryfall.io/png/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.png?1783926446",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.jpg?1783926446",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.jpg?1783926446",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.webp?1783926446",
+    "grid": "https://cards.scryfall.io/grid/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.webp?1783926446",
+    "display": "https://cards.scryfall.io/display/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.webp?1783926446",
+    "art": "https://cards.scryfall.io/art/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.webp?1783926446",
+    "crop": "https://cards.scryfall.io/crop/front/7/2/72405607-a60e-42af-b523-64008d3f89b9.webp?1783926446"
+  },
+  "mana_cost": "{R}{G}{W}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Ranger",
+  "oracle_text": "When Minsc enters, create Boo, a legendary 1/1 red Hamster creature token with trample and haste.\n{X}: Until end of turn, target creature you control has base power and toughness X/X and becomes a Giant in addition to its other types. Activate only as a sorcery.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "R",
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "034f75c7-bb57-426a-8e3f-4b7f0110f02b",
+      "component": "combo_piece",
+      "name": "Minsc, Beloved Ranger",
+      "type_line": "Legendary Creature \u2014 Human Ranger",
+      "uri": "https://api.scryfall.com/cards/034f75c7-bb57-426a-8e3f-4b7f0110f02b"
+    },
+    {
+      "object": "related_card",
+      "id": "c49e8e79-8673-41c2-a1ad-273c37e27aca",
+      "component": "token",
+      "name": "Boo",
+      "type_line": "Token Legendary Creature \u2014 Hamster",
+      "uri": "https://api.scryfall.com/cards/c49e8e79-8673-41c2-a1ad-273c37e27aca"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set": "afr",
+  "set_name": "Adventures in the Forgotten Realms",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aafr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/afr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/72405607-a60e-42af-b523-64008d3f89b9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2cd10c6c-f946-457e-9175-92501322f7a5&unique=prints",
+  "collector_number": "227",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Howard Lyon",
+  "artist_ids": [
+    "6dd06426-59fe-4b9c-aad5-6da8446a5c3d"
+  ],
+  "illustration_id": "02db4c22-f5c6-422f-81f0-234c03024b98",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16635,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/magic-digital/mtg-arena-state-game-adventures-forgotten-realms-2021-07-02",
+    "previewed_at": "2021-07-02"
+  },
+  "prices": {
+    "usd": "0.43",
+    "usd_foil": "0.71",
+    "usd_etched": null,
+    "eur": "0.47",
+    "eur_foil": "1.38",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=527514&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMinsc%252C%2BBeloved%2BRanger",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMinsc%252C%2BBeloved%2BRanger",
+    "edhrec": "https://edhrec.com/route/?cc=Minsc%2C+Beloved+Ranger"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243355%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=571521&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/91956?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

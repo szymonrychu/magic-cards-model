@@ -469,6 +469,31 @@ class TargetRequirement(EngineModel):
     modelled" table) - this field exists so the data is not lost the day it
     is."""
 
+    alternatives: "tuple[TargetRequirement, ...]" = ()
+    """Full independent requirements this one is OR'd with - Nissa's Defeat's
+    own "target Forest, green enchantment, or green planeswalker": a
+    compound noun list whose items do not all carry the same adjectives (a
+    bare land subtype next to two color-qualified card types). `card_types`/
+    `required_subtypes`/`required_colors` alone cannot express that: each is
+    itself only a disjunction *within* one axis (CR 205.2a's card types, CR
+    205.3's subtypes, CR 105.1's colors), so unioning "green" from the
+    second and third items into one shared `required_colors` would wrongly
+    demand it of the colorless Forest the first item names too - the same
+    kind of cross-axis disjunction `historic`'s own docstring already
+    describes for a different three-characteristic case, and the reason it
+    gets its own field rather than trying to fold into the existing ones.
+
+    A target satisfies the whole requirement when it satisfies the base
+    fields on this object *or* any one alternative's own complete `rejects`
+    check (`rejects` tries each in turn); every other field - `zones`,
+    `controller`, `comparison_*`, and the rest of the shared context that
+    is not itself part of the divergent noun list - is read only off this
+    outer object, since English prints a trailing restriction like "you
+    control" once, after the whole list, not once per item. Recursive the
+    same way `if_gift_promised` already is; an alternative's own
+    `alternatives` is always empty, so there is no deeper nesting and no
+    risk of unbounded recursion."""
+
     @property
     def optional(self) -> bool:
         """True when none of these targets has to be chosen (CR 115.6)."""
@@ -497,7 +522,24 @@ class TargetRequirement(EngineModel):
         spell is on - needed for `excludes_source` ("target *other* creature").
         Without it, that restriction is not checked, the same way any other
         restriction fails open when the caller cannot supply what it needs.
+
+        `alternatives` (CR 115.1's single target satisfying any one of a
+        mixed compound noun list's own independent shapes) is tried after
+        the base fields fail: this object's own reading is the first, most
+        specific candidate, and the alternatives are only extra chances,
+        never a narrowing of it.
         """
+        reason = self._rejects_without_alternatives(target, caster, game, source_id)
+        if reason is None or not self.alternatives:
+            return reason
+        for alternative in self.alternatives:
+            if alternative.rejects(target, caster, game, source_id) is None:
+                return None
+        return reason
+
+    def _rejects_without_alternatives(
+        self, target: Any, caster: str, game: Any = None, source_id: UUID | None = None
+    ) -> str | None:
         if getattr(target, "is_ability", False):
             return self._rejects_ability(target, caster)
         if isinstance(target, CardState):
@@ -1189,11 +1231,19 @@ class TargetingProfile(EngineModel):
                 f"{self.min_targets}"
             )
 
-        if self.division is not None and len(targets) > self.division.amount:
+        if (
+            self.division is not None
+            and self.division.amount is not None
+            and len(targets) > self.division.amount
+        ):
             raise ValueError(
                 f"too many targets to divide {self.division.amount} {self.division.what} among: "
                 f"each target must receive at least one (CR 601.2d)"
             )
+        # A variable ("X") division's own amount is `None` here - CR 107.3a's
+        # X is not yet a number to check against at announcement/target-
+        # selection time - so this bound is skipped and left to
+        # `check_division`'s own resolved-amount call once X is known.
 
         self._fill_slots(targets, caster, game, source_id)
 
@@ -1959,6 +2009,24 @@ _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
+#: "For each opponent, `<verb phrase>` up to one target `<description>` that
+#: player controls[, ...]." - Hapatra, the Desert Frost's, Hapatra, the
+#: Desert Fang's, and Lich's Relic's own reflexive consequence, all sharing
+#: this one grammar. CR 601.2c/603.3d target *every* instance of the word
+#: "target" a spell or ability's text prints, and "for each opponent" prints
+#: one such instance per opponent (CR 102.2's "each other player in the
+#: game" - not fixed at two), which the ordinary word-scan below cannot
+#: express: it reads one `TargetRequirement` per literal "target" word in
+#: the text, and this sentence prints only one such word regardless of how
+#: many opponents there are. Special-cased ahead of that scan the same way
+#: `_EARTHBEND` already is, for the identical reason - the rule itself,
+#: not the sentence's own count words, is what says how many targets this
+#: asks for.
+_FOR_EACH_OPPONENT_TARGET_RE = re.compile(
+    r"for each opponent,.*?\bup to one target (?P<desc>.+?) that player controls\b",
+    re.IGNORECASE | re.DOTALL,
+)
+
 
 def reflexive_consequence_text(text: str) -> str | None:
     """CR 603.12's "`<action>`. When you do, `<consequence>`." (or "... this
@@ -1984,6 +2052,42 @@ def reflexive_consequence_text(text: str) -> str | None:
         return None
     consequence = match.group("consequence") or match.group("consequence2") or ""
     return consequence.strip()
+
+
+def _for_each_opponent_profile(text: str) -> TargetingProfile | None:
+    """`_FOR_EACH_OPPONENT_TARGET_RE`'s shape, or `None` if this is not it.
+
+    One target per opponent, each independently optional (CR 115.6's "up to
+    one") - not a fixed count `TargetRequirement.count` can hold, since the
+    number of opponents is game state `profile_for_text` cannot see (it
+    reads text alone). `unbounded=True` (CR 107.1c's own "no stated
+    maximum" shape) covers any player count without needing to know it in
+    advance, and `distinct_controllers=True` is what stops two of those
+    unbounded slots from being filled by the same opponent's own two
+    permanents instead of two different opponents' one each - the
+    per-target legality check (`controller=OPPONENT`) and the cross-target
+    one already exist for Run Away Together's "controlled by different
+    players"; this reuses both rather than inventing a per-opponent-count
+    mechanism of its own.
+    """
+    match = _FOR_EACH_OPPONENT_TARGET_RE.search(text)
+    if match is None:
+        return None
+    description = match.group("desc").strip()
+    base = permanent_description(description)
+    if base is None:
+        return None
+    requirement = base.model_copy(
+        update={
+            "phrase": f"target {description} an opponent controls",
+            "count": 0,
+            "minimum": 0,
+            "unbounded": True,
+            "distinct_controllers": True,
+            "controller": ControllerRestriction.OPPONENT,
+        }
+    )
+    return TargetingProfile(requirements=(requirement,))
 
 
 def profile_for_text(text: str) -> TargetingProfile:
@@ -2023,6 +2127,9 @@ def profile_for_text(text: str) -> TargetingProfile:
         return _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
     if _UP_TO_ONE_OF_EACH_CARD_TYPE_RE.search(text):
         return _up_to_one_of_each_card_type_profile()
+    for_each_opponent = _for_each_opponent_profile(text)
+    if for_each_opponent is not None:
+        return for_each_opponent
     return _parse(_REMINDER.sub("", text), spell_only=False)
 
 
@@ -2449,6 +2556,102 @@ def _read_subtype_list(noun_phrase: str) -> tuple[list[str], str] | None:
     return [item.lower() for item in raw_items], display
 
 
+def _read_one_compound_item(raw_item: list[str], lower_item: list[str]) -> dict[str, object] | None:
+    """One item of a mixed compound noun list - "Forest", "green
+    enchantment", "green planeswalker" - as its own fully independent
+    card-type/subtype/color reading, or `None` when this item's own shape is
+    not one of the ones `_read_compound_target_alternatives` reads.
+
+    Deliberately narrow: a leading run of color words, then exactly one
+    trailing noun that is a CR 300.1 card type, a CR 305.6 basic land type
+    standing alone (the elided "land" the same way a bare creature type
+    elides "creature"), or a bare CR 205.3m creature type. Nothing this
+    parser does not already know how to read elsewhere is guessed at here;
+    an item with more than that (its own adjectives, a further noun, a
+    supertype) returns `None` and the whole compound reading is abandoned in
+    favor of the ordinary merge below.
+    """
+    index = 0
+    colors: set[Color] = set()
+    while index < len(lower_item) and lower_item[index] in _COLOR_WORDS:
+        colors.add(_COLOR_WORDS[lower_item[index]])
+        index += 1
+    remaining_raw = raw_item[index:]
+    remaining_lower = lower_item[index:]
+    if len(remaining_lower) != 1:
+        return None
+    word = remaining_lower[0]
+    singular = word[:-1] if word.endswith("s") and word[:-1] in _ALL_NOUNS else word
+    if singular in _TYPE_NOUNS:
+        return {
+            "card_types": frozenset({_TYPE_NOUNS[singular]}),
+            "required_subtypes": frozenset(),
+            "required_colors": frozenset(colors),
+        }
+    if remaining_raw[0] in BASIC_LAND_TYPES:
+        # CR 305.6's five basic land types, standing in for the elided noun
+        # "land" - Nissa's Defeat's own "target Forest" among its own
+        # compound list, the land-subtype twin of the creature-type elision
+        # `_is_bare_subtype_word` reads below.
+        return {
+            "card_types": frozenset({Type.LAND}),
+            "required_subtypes": frozenset({word}),
+            "required_colors": frozenset(colors),
+        }
+    if _is_bare_subtype_word(remaining_raw[0], word):
+        return {
+            "card_types": frozenset({Type.CREATURE}),
+            "required_subtypes": frozenset({word}),
+            "required_colors": frozenset(colors),
+        }
+    return None
+
+
+def _read_compound_target_alternatives(
+    words: list[str], raw_words: list[str]
+) -> list[dict[str, object]] | None:
+    """A comma/"or"/"and"-joined noun list whose items do not all carry the
+    same adjectives - Nissa's Defeat's own "target Forest, green
+    enchantment, or green planeswalker": one bare land subtype beside two
+    color-qualified card types. The ordinary noun-list loop in `_read_phrase`
+    merges every item's own adjectives into one shared set, which is correct
+    only when every item actually shares them (Liliana's Defeat's "target
+    black creature or black planeswalker" does; this does not) - seeing
+    `TargetRequirement.alternatives`'s own docstring for why that is wrong
+    here specifically.
+
+    `words`/`raw_words` are the *whole* tokenized noun phrase, exactly as
+    `_read_phrase`'s own loop receives them - this is tried only when nothing
+    trails the noun list at all (checked by the caller, since a trailing
+    "you control"/comparison clause is read once for the whole compound, not
+    per item, and this reader has no way to tell such a tail apart from a
+    fourth list item). Returns one dict per item (each shaped like
+    `_read_one_compound_item`'s own return), or `None` when any item is not
+    that shape, or there are fewer than two - the caller falls back to the
+    ordinary merge exactly as before this reader existed.
+    """
+    raw_items: list[list[str]] = [[]]
+    lower_items: list[list[str]] = [[]]
+    for raw, lowered in zip(raw_words, words, strict=True):
+        if lowered in {"or", "and", ","}:
+            raw_items.append([])
+            lower_items.append([])
+            continue
+        raw_items[-1].append(raw)
+        lower_items[-1].append(lowered)
+    raw_items = [item for item in raw_items if item]
+    lower_items = [item for item in lower_items if item]
+    if len(raw_items) < 2:
+        return None
+    specs: list[dict[str, object]] = []
+    for raw_item, lower_item in zip(raw_items, lower_items, strict=True):
+        spec = _read_one_compound_item(raw_item, lower_item)
+        if spec is None:
+            return None
+        specs.append(spec)
+    return specs
+
+
 def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetRequirement | None:
     """Turn one "target ..." phrase into a requirement, or None if unreadable.
 
@@ -2646,6 +2849,27 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
                 excludes_source = True
             index += 1
             continue
+        elif raw_words[index] in BASIC_LAND_TYPES and (
+            index + 1 >= len(words) or words[index + 1] in {"or", "and", ","}
+        ):
+            # CR 305.6's five basic land types, standing in for the elided
+            # noun "land" - Nissa's Defeat's own "target Forest, green
+            # enchantment, or green planeswalker": "Forest" prints no
+            # following noun at all, the same elision `_is_bare_subtype_word`
+            # reads for a creature type, but explicitly excluded from that
+            # branch (see its own docstring) since a land subtype is not an
+            # elided *creature*. Read at any position in a noun list, not
+            # only the first, since the five basic land types are a small,
+            # fully enumerable, unambiguous set - unlike CR 205.3m's
+            # hundreds of creature types, there is no real English word this
+            # could be confused with. The lookahead (end of words, or
+            # another list item) keeps "target Forest you control" and
+            # "target Forest card in your graveyard" from swallowing a real
+            # following noun the way `_is_bare_subtype_word`'s own docstring
+            # already guards against for creature types.
+            required_subtypes.add(word)
+            card_types.add(Type.LAND)
+            allows_cards = True
         elif nouns_read == 0 and _is_bare_subtype_word(raw_words[index], word):
             # Aeronaut Cavalry's "another target Soldier you control" - CR
             # 205.3m's creature-type word standing alone as the target noun,
@@ -2792,18 +3016,59 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     ):
         return None
 
+    # A mixed compound noun list - Nissa's Defeat's own "target Forest, green
+    # enchantment, or green planeswalker" - whose items do not all carry the
+    # same color. Read only when there genuinely is a per-item divergence:
+    # a uniform list ("target black creature or black planeswalker",
+    # "target artifact or enchantment") is left to the ordinary merge above
+    # exactly as before this reader existed, so nothing already passing
+    # changes representation for no reason. See `_read_compound_target_
+    # alternatives` and `TargetRequirement.alternatives`.
+    compound_card_types = frozenset(card_types)
+    compound_required_subtypes = frozenset(required_subtypes)
+    compound_alternatives: tuple[TargetRequirement, ...] = ()
+    if nouns_read >= 2:
+        compound_items = _read_compound_target_alternatives(words[:noun_end], raw_words[:noun_end])
+        if (
+            compound_items is not None
+            and len({item["required_colors"] for item in compound_items}) > 1
+        ):
+            first, *rest_items = compound_items
+            compound_card_types = first["card_types"]  # type: ignore[assignment]
+            compound_required_subtypes = first["required_subtypes"]  # type: ignore[assignment]
+            compound_required_colors = first["required_colors"]
+            compound_alternatives = tuple(
+                TargetRequirement(
+                    phrase="target "
+                    + " or ".join(
+                        sorted(kind.value for kind in item["card_types"])  # type: ignore[arg-type]
+                    ),
+                    card_types=item["card_types"],  # type: ignore[arg-type]
+                    required_subtypes=item["required_subtypes"],  # type: ignore[arg-type]
+                    required_colors=item["required_colors"],  # type: ignore[arg-type]
+                    allows_cards=allows_cards,
+                    zones=frozenset(zones),
+                    controller=controller,
+                )
+                for item in rest_items
+            )
+        else:
+            compound_required_colors = frozenset(adjectives.required_colors)
+    else:
+        compound_required_colors = frozenset(adjectives.required_colors)
+
     return TargetRequirement(
         phrase=" ".join(["target", *(word for word in words[:noun_end] if word != ",")]),
         count=count,
         minimum=minimum,
         unbounded=unbounded,
         variable_count=variable,
-        card_types=frozenset(card_types),
-        required_subtypes=frozenset(required_subtypes),
+        card_types=compound_card_types,
+        required_subtypes=compound_required_subtypes,
         excluded_card_types=frozenset(adjectives.excluded_types) | extra_excluded_types,
         required_supertypes=frozenset(adjectives.required_supertypes),
         excluded_supertypes=frozenset(adjectives.excluded_supertypes) | extra_excluded_supertypes,
-        required_colors=frozenset(adjectives.required_colors),
+        required_colors=compound_required_colors,
         allows_cards=allows_cards,
         allows_players=allows_players,
         opponent_only=opponent_only and not allows_cards,
@@ -2818,6 +3083,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         historic=adjectives.historic,
         combat_states=frozenset(adjectives.combat_states),
         must_have_attacked_this_turn=attacked_this_turn,
+        alternatives=compound_alternatives,
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,
         comparison_value=comparison_value,

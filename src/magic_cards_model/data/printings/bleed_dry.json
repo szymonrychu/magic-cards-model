@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "3db65755-f104-4de9-bcc9-0a4a7bc66b51",
+  "oracle_id": "6c3faf4f-83c1-4098-98b8-bae15d59b0de",
+  "multiverse_ids": [
+    540938
+  ],
+  "mtgo_id": 94504,
+  "arena_id": 78886,
+  "tcgplayer_id": 253716,
+  "cardmarket_id": 583549,
+  "name": "Bleed Dry",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/3db65755-f104-4de9-bcc9-0a4a7bc66b51",
+  "scryfall_uri": "https://scryfall.com/card/vow/94/bleed-dry?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:41:16Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.jpg?1783924876",
+    "normal": "https://cards.scryfall.io/normal/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.jpg?1783924876",
+    "large": "https://cards.scryfall.io/large/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.jpg?1783924876",
+    "png": "https://cards.scryfall.io/png/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.png?1783924876",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.jpg?1783924876",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.jpg?1783924876",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.webp?1783924876",
+    "grid": "https://cards.scryfall.io/grid/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.webp?1783924876",
+    "display": "https://cards.scryfall.io/display/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.webp?1783924876",
+    "art": "https://cards.scryfall.io/art/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.webp?1783924876",
+    "crop": "https://cards.scryfall.io/crop/front/3/d/3db65755-f104-4de9-bcc9-0a4a7bc66b51.webp?1783924876"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Instant",
+  "oracle_text": "Target creature gets -13/-13 until end of turn. If that creature would die this turn, exile it instead.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3db65755-f104-4de9-bcc9-0a4a7bc66b51/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6c3faf4f-83c1-4098-98b8-bae15d59b0de&unique=prints",
+  "collector_number": "94",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"Wipe your chin, child. We can't have Olivia thinking we're uncivilized.\"\n\u2014Anje Falkenrath",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jodie Muir",
+  "artist_ids": [
+    "b09e6cd1-0257-425a-9bbb-5cac3f803443"
+  ],
+  "illustration_id": "5f96f6f6-2960-4682-8694-6d62c99990a2",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12919,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/card-image-gallery/innistrad-crimson-vow",
+    "previewed_at": "2021-11-05"
+  },
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.25",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.12",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=540938&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBleed%2BDry",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBleed%2BDry",
+    "edhrec": "https://edhrec.com/route/?cc=Bleed+Dry"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253716%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=583549&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94504?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

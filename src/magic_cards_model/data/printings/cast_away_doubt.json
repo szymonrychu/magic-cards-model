@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d",
+  "oracle_id": "bcf29dd7-6d5a-4139-958e-7c59434c0770",
+  "multiverse_ids": [],
+  "cardmarket_id": 907278,
+  "name": "Cast Away Doubt",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d",
+  "scryfall_uri": "https://scryfall.com/card/fra/51/cast-away-doubt?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-02T12:46:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.jpg?1788353191",
+    "normal": "https://cards.scryfall.io/normal/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.jpg?1788353191",
+    "large": "https://cards.scryfall.io/large/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.jpg?1788353191",
+    "png": "https://cards.scryfall.io/png/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.png?1788353191",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.jpg?1788353191",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.jpg?1788353191",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.webp?1788353191",
+    "grid": "https://cards.scryfall.io/grid/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.webp?1788353191",
+    "display": "https://cards.scryfall.io/display/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.webp?1788353191",
+    "art": "https://cards.scryfall.io/art/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.webp?1788353191",
+    "crop": "https://cards.scryfall.io/crop/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.webp?1788353191"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Draw two cards. Cast Away Doubt deals 2 damage to each player.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abcf29dd7-6d5a-4139-958e-7c59434c0770&unique=prints",
+  "collector_number": "51",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Every part of Jace's mind that objected to his plan had been cut away. The Theorist was all that remained.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zara Alfonso",
+  "artist_ids": [
+    "329a7971-c37e-47f7-9143-58dc929420a7"
+  ],
+  "illustration_id": "3fe042f9-2465-4a5d-a895-c9fc78d079b1",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": true,
+  "edhrec_rank": 28783,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/news/magic-story/reality-fracture-episode-3-i-can-be-both",
+    "previewed_at": "2026-09-02"
+  },
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.28",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCast%2BAway%2BDoubt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCast%2BAway%2BDoubt",
+    "edhrec": "https://edhrec.com/route/?cc=Cast+Away+Doubt"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DCast%2BAway%2BDoubt%26view%3Dgrid",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907278&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Cast+Away+Doubt&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -5324,6 +5324,33 @@ def _exile_instead_of_graveyard(
     event.destination = Zone.EXILE
 
 
+def _die_to_exile_this_turn_effects(
+    game: "Game", event: ReplaceableEvent
+) -> list[ApplicableEffect]:
+    """Essence Burn's own rider (CR 614.1a): "If that permanent would die this
+    turn, exile it instead" - one specific permanent, named by a resolved
+    spell that is long gone by the time the replacement ever fires, so the
+    marker is kept on `Game.die_to_exile_this_turn` the same way `Game.draw_
+    redirections` keeps Plagiarize's own sourceless redirection alive.
+    """
+    if event.kind is not EventKind.ZONE_CHANGE or event.destination is not Zone.GRAVEYARD:
+        return []
+    if event.origin is not Zone.BATTLEFIELD:
+        return []
+    permanent = event.card
+    if permanent is None or permanent.id not in game.die_to_exile_this_turn:
+        return []
+    return [
+        ApplicableEffect(
+            key=f"die_to_exile_this_turn:{permanent.id}",
+            source=None,
+            label="if it would die this turn, exile it instead",
+            apply=_exile_instead_of_graveyard,
+            controller_username=permanent.controller,
+        )
+    ]
+
+
 def _draw_redirection_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """The draw redirections waiting on this draw event (CR 614.1a).
 
@@ -5436,6 +5463,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     found.extend(_shield_effects(game, event))
     found.extend(_regeneration_effects(game, event))
     found.extend(_finality_counter_effects(event))
+    found.extend(_die_to_exile_this_turn_effects(game, event))
     found.extend(_draw_redirection_effects(game, event))
     found.extend(_next_time_draw_replacement_effects(game, event))
 

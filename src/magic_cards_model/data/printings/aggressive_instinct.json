@@ -1,0 +1,127 @@
+{
+  "object": "card",
+  "id": "40ab4bcf-e6b9-4368-97d5-56862713a66a",
+  "oracle_id": "d1c8f14b-7977-488a-8bd9-cefd6687f017",
+  "multiverse_ids": [
+    447082
+  ],
+  "tcgplayer_id": 168327,
+  "cardmarket_id": 359409,
+  "name": "Aggressive Instinct",
+  "lang": "en",
+  "released_at": "2018-06-22",
+  "uri": "https://api.scryfall.com/cards/40ab4bcf-e6b9-4368-97d5-56862713a66a",
+  "scryfall_uri": "https://scryfall.com/card/gs1/34/aggressive-instinct?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:23:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.jpg?1783934625",
+    "normal": "https://cards.scryfall.io/normal/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.jpg?1783934625",
+    "large": "https://cards.scryfall.io/large/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.jpg?1783934625",
+    "png": "https://cards.scryfall.io/png/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.png?1783934625",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.jpg?1783934625",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.jpg?1783934625",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.webp?1783934625",
+    "grid": "https://cards.scryfall.io/grid/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.webp?1783934625",
+    "display": "https://cards.scryfall.io/display/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.webp?1783934625",
+    "art": "https://cards.scryfall.io/art/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.webp?1783934625",
+    "crop": "https://cards.scryfall.io/crop/front/4/0/40ab4bcf-e6b9-4368-97d5-56862713a66a.webp?1783934625"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Target creature you control deals damage equal to its power to target creature you don't control.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "19c285e9-68e0-45e1-b82b-ac6051eb43be",
+  "set": "gs1",
+  "set_name": "Global Series Jiang Yanggu & Mu Yanling",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/19c285e9-68e0-45e1-b82b-ac6051eb43be",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ags1&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/gs1?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/40ab4bcf-e6b9-4368-97d5-56862713a66a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad1c8f14b-7977-488a-8bd9-cefd6687f017&unique=prints",
+  "collector_number": "34",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"Mowu was wary that day, as though he sensed the danger ahead.\"\n\u2014Jiang Yanggu's travelogue",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wolk Sheep",
+  "artist_ids": [
+    "e6a61f54-9e34-4285-9817-90793a343ca9"
+  ],
+  "illustration_id": "25e405f9-76c7-4db5-8740-b4fdce31321a",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 16969,
+  "prices": {
+    "usd": "0.15",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=447082&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAggressive%2BInstinct",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAggressive%2BInstinct",
+    "edhrec": "https://edhrec.com/route/?cc=Aggressive+Instinct"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F168327%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=359409&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Aggressive+Instinct&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

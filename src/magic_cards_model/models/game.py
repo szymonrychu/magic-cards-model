@@ -2627,7 +2627,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 31
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 32
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3097,6 +3097,17 @@ class Game(EngineModel):
     `CLAUDE.md`'s own rule already forbids elsewhere in this history, not
     reachable at all rather than merely unreachable *the way* a bumped-and-
     then-superseded field is. No schema change either way.
+
+    Bumped 31 -> 32: FRA S7's own two fields, merged onto this line together
+    as one combined bump rather than the two separate ones ("21 -> 22" and
+    "22 -> 23") its own branch history recorded before it caught up to this
+    merge - `Game` gained `die_to_exile_this_turn` (Essence Burn's own "if
+    it would die this turn, exile it instead", a new required-shape field
+    with no default an older snapshot could supply) and `TurnMachine`
+    (reachable from `Game.turn`) gained `extra_phase_queue`/`resume_index`
+    (CR 500.8's queued extra-phase steps, Aggravated Assault's "After this
+    main phase, there is an additional combat phase followed by an
+    additional main phase.") - both new fields per the bump rule above.
     """
 
     @model_validator(mode="before")
@@ -3192,6 +3203,17 @@ class Game(EngineModel):
     triggered ability installs one of these here when it resolves; a future
     draw event for the named player consumes it at most once (CR 614.5) and
     the cleanup step drops whatever is left unused (CR 514.2)."""
+
+    die_to_exile_this_turn: list[UUID] = Field(default_factory=list)
+    """CR 614.1a replacement effects a resolved spell left behind, each
+    naming one permanent: "If [it] would die this turn, exile it instead" -
+    Essence Burn's own rider (Combustion Technique's identical shape is the
+    real, off-set printing). Stored the same way `draw_redirections` is,
+    for the identical reason: the creating spell is long gone in a graveyard
+    by the time the replacement ever fires, and CR 514.2's cleanup step ends
+    every "this turn" effect, so the whole list is simply cleared there
+    rather than tracked per-entry the way a shield's own `until_end_of_turn`
+    flag is (nothing here ever outlives its own turn)."""
 
     prevention_shields: list["PreventionShield"] = Field(default_factory=list)
     """Prevention effects created by a resolving spell or ability (CR 615.1).
@@ -3964,6 +3986,9 @@ class Game(EngineModel):
                 for replacement in self.next_time_draw_replacements
                 if not replacement.spent and not replacement.until_end_of_turn
             ]
+            # CR 514.2's same sentence again, for Essence Burn's/Combustion
+            # Technique's own this-turn die-to-exile replacements.
+            self.die_to_exile_this_turn = []
             # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
             # A card exiled by Ugin's −11 stays exiled and stops being castable.
             # A Wrenn's Resolve/Reckless Impulse grant (`expires_end_of_next_turn`)
@@ -6135,27 +6160,38 @@ class Game(EngineModel):
             # `TriggerEvent | None` and keys such a row on the condition text,
             # so gating on the event here was refusing to look the effect up
             # at all.
-            # CR 107.3a's X, carried from the source permanent's own cast
-            # record (CR 400.7d) rather than `ability.x_value` - a triggered
-            # ability is never itself announced with an X the way an
-            # activated ability's cost is; only the permanent it fires off
-            # of was. Read only when that permanent's mana cost actually
-            # carries `{X}`, the same "only if {X} is in the cost" gate the
-            # activated-ability branch below already applies, so an ordinary
-            # bare "X" in a trigger's own rules text (CR 107.3f, not this
-            # one) is left untouched.
-            trigger_source = ability.source(self)
-            trigger_x_value = (
-                self.cast_record(trigger_source).x_value
-                if trigger_source is not None and "{X}" in (trigger_source.mana_cost or "")
-                else None
-            )
-            return trigger_effect_for(
-                ability.source_name,
-                ability.ability.event,
-                ability.ability.effect,
-                x_value=trigger_x_value,
-            )
+            # CR 107.3m is scoped explicitly to "an object's enters-the-
+            # battlefield triggered ability" (verified whole this merge,
+            # `mise run rules:find 107.3`, rather than trusted from either
+            # side's own paraphrase) - gated to `ENTERS_THE_BATTLEFIELD`
+            # rather than applied to every triggered event, so a cast
+            # spell's own X never bleeds into an unrelated attack/dies
+            # trigger's bare "X" (CR 107.3f territory, not this rule).
+            effect_text = ability.ability.effect
+            if (
+                ability.ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+                and effect_text
+                and re.search(r"\bX\b", effect_text)
+            ):
+                # Ajani's Anguish's own "it deals X damage to any target."
+                # `cast_record_of` is already CR 400.7d's bridge (its own
+                # docstring), keyed by `zone_change_stamp`, which a spell
+                # resolving into a permanent carries across that exact zone
+                # change.
+                #
+                # Scoped to a spell whose *own* mana cost carried {X}
+                # (CR 107.3a): Craterhoof Behemoth's and Yuriko's own ETB
+                # triggers define X in their own text instead ("where X is
+                # the number of creatures you control", CR 107.3f), which
+                # CR 107.3m does not touch at all - substituting the cast
+                # record's own default `x_value=0` into that text would
+                # silently overwrite the real, ability-defined X with zero.
+                source = ability.source(self)
+                if source is not None and "{X}" in (source.mana_cost or ""):
+                    record = self.cast_record_of(source)
+                    if record is not None:
+                        effect_text = substitute_x(effect_text, record.x_value)
+            return trigger_effect_for(ability.source_name, ability.ability.event, effect_text)
         if isinstance(ability.ability, ActivatedAbility):
             if ability.ability.class_level_target is not None:
                 # CR 716.2a's own mechanical half - "This Class's level
@@ -6939,10 +6975,24 @@ class Game(EngineModel):
     def why_cannot_target_with_trigger(self, card_name: str, targets: list[object]) -> str | None:
         """Why this card's trigger could not target those, or None (CR 601.2c, 603.3d).
 
-        The source is found by name among the objects that can carry a trigger -
-        the battlefield and the stack - because `trigger_targets` is keyed by
-        name and there is no ability object yet at the time a scenario says what
-        it will aim at.
+        The source is found by name, first among the objects that can
+        actually carry a trigger right now - the battlefield and the stack -
+        and, failing that, anywhere else in the game (`_find_card_named_
+        anywhere`): a scenario very often scripts a trigger's targets ahead
+        of casting the card that will fire it (`trigger_targets` is keyed by
+        name precisely so this can be done before there is an ability
+        object to aim it at), and the ability's own printed text - what this
+        method actually validates against - is identical wherever the card
+        currently sits. Only when the card cannot be found *anywhere* is the
+        choice genuinely left unchecked, the same way an unreadable spell's
+        targets are (see `docs/engine-coverage.md`) - not merely because it
+        has not been cast yet, which used to let an impossible target sail
+        through untouched: real play never asks for this trigger's targets
+        until the card *is* on the battlefield or the stack, at which point
+        `_ask_trigger_targets` runs this identical `profile_for_text`/
+        `TargetingProfile.check` pair for real, so scripting a target this
+        method would already refuse was scripting something real play could
+        never have accepted either.
 
         A card may print more than one targeting trigger. The announcement names
         the card, not the ability, so the targets are legal if *any* of its
@@ -6968,10 +7018,20 @@ class Game(EngineModel):
         arguments), so a target recorded here under `card_name` is exactly
         what `_targets_for_trigger` reads back for it.
         """
-        source = self._trigger_source_named(card_name)
+        source = self._trigger_source_named(card_name) or self._find_card_named_anywhere(card_name)
         if source is None:
             return None
-        controller = self.controller_of(source).username
+        # `controller_or_owner` (CR 108.4a), not `Game.controller_of`: a card
+        # found only by `_find_card_named_anywhere` may not be on the
+        # battlefield or the stack at all (CR 109.4 gives a card in a hand,
+        # library, or graveyard no controller), and `controller_of` silently
+        # answers `active_player` for one of those instead of raising - which
+        # was this exact card's own bug: Badgermole Cub scripted from bob's
+        # hand read back as alice's (the active player, always seat 0),
+        # because "target land you control" was checked against whoever
+        # `controller_of` defaults to rather than whoever actually owns the
+        # ability being scripted.
+        controller = source.controller_or_owner or self.active_player.username
 
         # `parse_abilities` rather than `triggers_for`'s `triggered_abilities_of`,
         # which keeps only the six trigger conditions the matcher recognises. A
@@ -7060,6 +7120,36 @@ class Game(EngineModel):
         for state in [*self.battlefield, *self.spells_on_stack]:
             if state.name in (card_name, front) or state.name.split("//")[0].strip() == front:
                 return state
+        return None
+
+    def _find_card_named_anywhere(self, card_name: str) -> CardState | None:
+        """The first card by this name in *any* zone this game can see.
+
+        `_trigger_source_named`'s own battlefield-and-stack search answers
+        "where would this trigger actually fire from right now" (CR 603.6a,
+        603.2g) - the right, narrow question for the engine's own use of it.
+        `why_cannot_target_with_trigger` asks a different question when that
+        search comes up empty: "is this card's own printed ability even
+        capable of legally targeting this" - answerable from the card's text
+        alone, wherever the card currently sits, since a hand card about to
+        be cast prints the identical ability a battlefield one would. This
+        is what lets a scenario script a trigger's targets before casting
+        the card without silently skipping validation for it.
+        """
+        front = card_name.split("//")[0].strip()
+
+        def matches(state: CardState) -> bool:
+            return state.name in (card_name, front) or state.name.split("//")[0].strip() == front
+
+        for zone_cards in self.shared_zones.values():
+            for state in zone_cards:
+                if isinstance(state, CardState) and matches(state):
+                    return state
+        for player in self.players:
+            for zone_cards in player.zones.values():
+                for state in zone_cards:
+                    if matches(state):
+                        return state
         return None
 
     def _turn_order_from_active(self) -> list[str]:
