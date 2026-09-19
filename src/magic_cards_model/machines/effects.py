@@ -4457,6 +4457,21 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
             return rest(state) and Supertype.SNOW in state.supertypes
 
         return snow_matches
+    # CR 205.4a's legendary supertype, stacked on the rest of the phrase the
+    # identical way "basic "/"snow " already do - Sisay, Weatherlight
+    # Captain's own "a legendary permanent card" needs both halves at once
+    # ("permanent" alone is CR 110.4a's six-type umbrella `_named_type_
+    # matcher` already reads for a bare "permanent card"; "legendary" alone
+    # was already readable as one word, but "legendary permanent" is two
+    # words with no comma/"or" between them to split on, so it never reached
+    # `_named_type_matcher` as either word on its own).
+    if lowered.startswith("legendary "):
+        rest = _quality_matcher(lowered.removeprefix("legendary "))
+
+        def legendary_matches(state: CardState) -> bool:
+            return rest(state) and Supertype.LEGENDARY in state.supertypes
+
+        return legendary_matches
     if lowered == "historic":
         return _historic
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
@@ -5138,6 +5153,66 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
             reveal=True,
             source=source,
             source_id=source_id_of(stack_object),
+        )
+
+    return effect
+
+
+#: Sisay, Weatherlight Captain's own shape: "Search your library for a
+#: `<quality>` card with mana value less than this permanent's power, put
+#: that card onto the battlefield, then shuffle." `_SEARCH_MV_LTE_COUNT_RE`'s
+#: own `<expr>` is a board count (`count_expression`, `(game, controller) ->
+#: int`); this bound is a *source's own* characteristic (CR 613's computed
+#: power) instead, which needs the source object itself, not just its
+#: controller - `_self_normalized_effect_text` has already turned Sisay's own
+#: printed name into "this permanent" by the time this ever runs, the same
+#: normalisation `_COUNTER_ON_SELF_RE` relies on. No printed reveal
+#: instruction (CR 701.23e), so the find goes straight to the battlefield
+#: unrevealed - genuinely different from `_SEARCH_MV_LTE_COUNT_RE`'s reveal-
+#: to-hand destination, which is why this is its own regex rather than a
+#: widened `expr` on that one.
+_SEARCH_MV_LESS_THAN_SELF_POWER_RE = re.compile(
+    r"^search (?:your|their) library for a (?P<quality>.+?) card with mana value less than "
+    r"this (?:permanent|creature)'s power, put that card onto the battlefield, "
+    r"then shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_search_mv_less_than_self_power_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SEARCH_MV_LESS_THAN_SELF_POWER_RE`'s shape - ability-only, the same
+    reason `_parse_put_counters_on_self_clause` is: a spell has no permanent
+    self to read a power off (CR 613 layers apply to objects on the
+    battlefield)."""
+    if for_spell:
+        return None
+    match = _SEARCH_MV_LESS_THAN_SELF_POWER_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    quality_matches = _quality_matcher(match.group("quality"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        ability = stack_object
+        source = ability.source(game)
+        if source is None:
+            return
+        power = game.power_of(source)
+        if power is None:
+            return
+
+        def matches(state: CardState) -> bool:
+            return state.mana_value < power and quality_matches(state)
+
+        game.search_and_put(
+            game.controller_of(ability),
+            matches,
+            destination=Zone.BATTLEFIELD,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
         )
 
     return effect
@@ -29592,6 +29667,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         )
         if search_that_many_battlefield is not None:
             return search_that_many_battlefield
+        search_mv_less_than_self_power = _parse_search_mv_less_than_self_power_clause(
+            clause, for_spell=for_spell
+        )
+        if search_mv_less_than_self_power is not None:
+            return search_mv_less_than_self_power
         # "Put N counters on each `<group>` you control." was reachable only
         # as a *whole* ability's effect, the same gap `counters_on_self` just
         # above was closed for: Voja, Jaws of the Conclave's "put X +1/+1
