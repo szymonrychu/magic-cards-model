@@ -1092,6 +1092,17 @@ _COUNT_CARDS_IN_YOUR_HAND_RE = re.compile(r"^(?:the )?number of cards in your ha
 _AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE = re.compile(
     r"^(?:the )?amount of life you(?:'ve| have)? gained this turn$", re.IGNORECASE
 )
+#: "the number of cards you've discarded this turn" - Jiang Yanggu, Alone's
+#: own "for each card you've discarded this turn" and Misty Knight, Hero for
+#: Hire's identically worded "draw a card for each card you've discarded
+#: this turn" (off-set: an activated ability rather than an attack trigger).
+#: `Game.cards_discarded_this_turn` is the same per-player running total
+#: `Game.static_cost_modifiers_for`'s own "costs `<n>` less to cast for each
+#: card you've discarded this turn" (Hollow One) already reads for a cost
+#: reduction - the identical fact, read here for a count instead.
+_COUNT_CARDS_DISCARDED_THIS_TURN_RE = re.compile(
+    r"^(?:the number of )?cards? you(?:'ve| have)? discarded this turn$", re.IGNORECASE
+)
 #: "the number of cards in your graveyard" - Yuriko, Hope from the Shadows's
 #: own X. The unfiltered twin of `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`: CR
 #: 500.2's graveyard has no type restriction of its own either, so every
@@ -1314,6 +1325,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return game.life_gained_amount_this_turn.get(controller, 0)
 
         return life_gained_amount
+
+    if _COUNT_CARDS_DISCARDED_THIS_TURN_RE.fullmatch(stripped):
+
+        def cards_discarded_this_turn(game: "Game", controller: str) -> int:
+            return game.cards_discarded_this_turn.get(controller, 0)
+
+        return cards_discarded_this_turn
 
     if _COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE.fullmatch(stripped):
 
@@ -9183,6 +9201,62 @@ def _parse_untap_trigger_subject_clause(text: str) -> AbilityEffect | None:
         subject = game.find_by_id(event.subject_id)
         if subject is not None and subject.zone is Zone.BATTLEFIELD:
             subject.untap(exert_applies=False)
+
+    return effect
+
+
+#: "put `<n>` `<kind>` counter(s) on that `<noun>`[ for each `<expr>`]." -
+#: CR 400.7 anaphora back to the trigger's own condition subject
+#: (`GameEvent.subject_id`), the identical referent `_parse_untap_trigger_
+#: subject_clause` already reads for "untap it" - Jiang Yanggu, Alone's own
+#: "... put a +1/+1 counter on that creature for each card you've discarded
+#: this turn." Not a "target" clause (CR 115.1 has nothing to check here:
+#: the ability's own printed text never says "target") and not the source's
+#: own "this `<noun>`" (CR 700.7) either - `that <noun>` is always whichever
+#: object the trigger's condition already named.
+_COUNTER_ON_TRIGGER_SUBJECT_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on that [a-z]+"
+    rf"(?: for each (?P<each>.+))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counter_on_trigger_subject_clause(clause: str) -> TargetedClause | None:
+    """`_COUNTER_ON_TRIGGER_SUBJECT_RE`'s shape - see the banner above.
+
+    The "for each `<expr>`" multiplier is `_for_each_multiplier`'s own
+    reader, the same one `parse_clause_effect`'s "draw"/"gain life"/"lose
+    life" clauses already share (CR 608.2h: the count is taken once, when
+    the effect applies). A magnitude of zero (an empty count, or a fixed
+    amount times a multiplier that reads zero) places no counters at all
+    rather than calling `Game.add_counters` with nothing to add.
+    """
+    match = _COUNTER_ON_TRIGGER_SUBJECT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    base = parse_count(match.group("n"))
+    if base is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    each = match.group("each")
+    multiplier = _for_each_multiplier(each) if each is not None else None
+    if each is not None and multiplier is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        event = stack_object.event
+        if event is None or event.subject_id is None:
+            return
+        subject = game.find_by_id(event.subject_id)
+        if subject is None or subject.zone is not Zone.BATTLEFIELD:
+            return
+        amount = base
+        if multiplier is not None:
+            amount *= multiplier(game, stack_object.controller, source_id_of(stack_object))
+        if amount > 0:
+            game.add_counters(subject, kind, amount)
 
     return effect
 
@@ -31613,6 +31687,10 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if casting_rule is not None:
         return casting_rule
     # -- end Wave W5 single-clause addition ---------------------------------
+    if not for_spell:
+        counter_on_trigger_subject = _parse_counter_on_trigger_subject_clause(clause)
+        if counter_on_trigger_subject is not None:
+            return counter_on_trigger_subject
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         # Last resort: a "you may" over a board instruction rather than over
