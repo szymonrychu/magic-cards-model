@@ -59,7 +59,7 @@ type="rules")` in the session that wrote this file:
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.abilities import TriggerEvent, parse_abilities
+from magic_cards_model.machines.abilities import TriggerEvent, parse_abilities, parse_mana_abilities
 from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.machines.effects import (
     EFFECTS,
@@ -409,3 +409,88 @@ def test_tenured_tethermage_creates_two_tapped_heartwood_tokens():
     assert len(heartwoods) == 2
     assert all(token.tapped for token in heartwoods)
     assert forest.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# "Land creature" tokens (CR 205.1a's two-type shape) - not a new mechanic,
+# but a two-type combination `_parse_generic_token_descriptor` never read:
+# the artifact/creature branch had no land-creature twin.
+# --------------------------------------------------------------------------
+
+
+def test_awaken_the_woods_creates_x_land_creature_tokens():
+    """Awaken the Woods (off-set, not in the fra pool): "Create X 1/1 green
+    Forest Dryad land creature tokens." X here is CR 107.3a's announced X -
+    already substituted by `effect_for` before this clause is ever read - so
+    this exercises only the "land creature" shape itself: two card types
+    read off one noun phrase the same way "artifact creature" already is,
+    and CR 305.6's basic-land mana ability granted intrinsically by the
+    "Forest" subtype rather than a quoted ability on the token.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Awaken the Woods"], battlefield=["Forest"] * 4)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Forest"] * 4, username="alice")
+    casting = scenario.cast("Awaken the Woods")
+    casting.determine_cost(x_value=2)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    dryads = [state for state in scenario.game.battlefield if state.name == "Forest Dryad Token"]
+    assert len(dryads) == 2
+    dryad = dryads[0]
+    assert dryad.card.types == [Type.CREATURE, Type.LAND]
+    assert dryad.card.subtypes == ["Forest", "Dryad"]
+    assert (dryad.power, dryad.toughness) == (1, 1)
+    assert set(dryad.card.colors) == {Color.GREEN}
+    # CR 305.6: the basic land type Forest carries its mana ability
+    # intrinsically - nothing was printed on the token for it.
+    assert dryad.card.oracle_text is None
+    mana_abilities = parse_mana_abilities(dryad.card)
+    assert len(mana_abilities) == 1
+    assert mana_abilities[0].options == [[Color.GREEN]]
+
+
+def test_verdant_krakens_upkeep_trigger_creates_a_forest_tentacle_land_creature_token():
+    """Verdant Kraken (on-set): "At the beginning of each player's upkeep, you
+    create a 3/3 green Forest Tentacle land creature token." Differently
+    worded from Awaken the Woods (a leading "you", a fixed count instead of
+    X, a different subtype pair) - proof the same "land creature" reader
+    handles both without being fitted to either card's own sentence.
+    """
+    text = _triggered_effect_text("Verdant Kraken", TriggerEvent.BEGINNING_OF_STEP)
+    effect = parse_mixed_effect(text)
+    assert effect is not None
+
+    scenario = Scenario().player("alice").player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    from magic_cards_model.machines.triggers import AbilityKind, AbilityOnStack
+
+    triggered_ability = next(
+        a
+        for a in parse_abilities(card("Verdant Kraken"))
+        if hasattr(a, "event") and a.event is TriggerEvent.BEGINNING_OF_STEP
+    )
+    ability = AbilityOnStack(
+        kind=AbilityKind.TRIGGERED,
+        ability=triggered_ability,
+        source_name="Verdant Kraken",
+        controller="alice",
+    )
+    effect(scenario.game, ability)
+
+    tentacle = scenario.find("Forest Tentacle Token", Zone.BATTLEFIELD)
+    assert tentacle.card.types == [Type.CREATURE, Type.LAND]
+    assert tentacle.card.subtypes == ["Forest", "Tentacle"]
+    assert (tentacle.power, tentacle.toughness) == (3, 3)
+    assert set(tentacle.card.colors) == {Color.GREEN}
+    mana_abilities = parse_mana_abilities(tentacle.card)
+    assert len(mana_abilities) == 1
+    assert mana_abilities[0].options == [[Color.GREEN]]

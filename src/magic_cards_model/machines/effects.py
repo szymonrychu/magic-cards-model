@@ -8832,12 +8832,15 @@ def parse_targeted_effect(text: str) -> AbilityEffect | None:
 #: token **named Munitions** with ..." - between the noun phrase and the
 #: tail, since that is where Oracle text always prints it (CR 111.9's
 #: "create [name], a ..." appositive is a different shape this regex does not
-#: read; nothing in the pool needs it). `tail` is whatever follows "with",
-#: read by `_parse_token_tail`. `\btokens?\b` a whole word so a subtype that
-#: merely contains the letters "token" could never match it - none in the
-#: pool do, but the boundary costs nothing.
+#: read; `_parse_named_appositive_token_clause` below reads that one). `tail`
+#: is whatever follows "with", read by `_parse_token_tail`. `\btokens?\b` a
+#: whole word so a subtype that merely contains the letters "token" could
+#: never match it - none in the pool do, but the boundary costs nothing. A
+#: leading "you " (Verdant Kraken's "you create a ... token") is optional and
+#: read the same as no subject at all - a spell or ability's own clauses are
+#: always the resolving object's controller's actions either way.
 _TOKEN_CLAUSE_RE = re.compile(
-    rf"^(?:create )?(?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b"
+    rf"^(?:you )?(?:create )?(?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b"
     r"(?:\s+named (?P<name>.+?))?"
     r"(?:\s+with\s+(?P<tail>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -8983,6 +8986,13 @@ def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> Token
         types = (Type.CREATURE,)
         if words and words[-1].lower() == "artifact":
             types = (Type.ARTIFACT, Type.CREATURE)
+            words = words[:-1]
+        elif words and words[-1].lower() == "land":
+            # "land creature" - Verdant Kraken's Forest Tentacle, Awaken the
+            # Woods' Forest Dryad. CR 305.6 grants the basic-land mana ability
+            # intrinsically off the token's own "Forest" subtype below, so no
+            # quoted tail is needed for that half of it to work.
+            types = (Type.LAND, Type.CREATURE)
             words = words[:-1]
     elif words[-1].lower() in _BARE_TOKEN_TYPE_WORDS:
         types = (_BARE_TOKEN_TYPE_WORDS[words[-1].lower()],)
