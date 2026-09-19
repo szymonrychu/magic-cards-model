@@ -1368,6 +1368,35 @@ def has_flash(card: Card) -> bool:
     return any(keyword.lower() == "flash" for keyword in card.keywords)
 
 
+def has_split_second(card: Card) -> bool:
+    """Whether this printing has split second (CR 702.61a), read the same
+    way `has_flash` reads its own keyword - off the printing's own Scryfall
+    `keywords`, never granted or removed by a layer."""
+    return any(keyword.lower() == "split second" for keyword in card.keywords)
+
+
+def split_second_restriction_source(game: Any) -> str | None:
+    """The name of a spell on the stack with split second, or None.
+
+    CR 702.61a: "Split second is a static ability that functions only while
+    the spell with split second is on the stack. 'Split second' means 'As
+    long as this spell is on the stack, players can't cast other spells or
+    activate abilities that aren't mana abilities.'" CR 604.5 is the general
+    permission a static ability has to apply while its own spell sits on the
+    stack - the same permission `cannot_be_countered` reads for "This spell
+    can't be countered." Every object on the stack is checked, not only the
+    top one: nothing in CR 702.61a privileges the top of a LIFO stack for a
+    condition about being "on the stack" at all.
+    """
+    if game is None:
+        return None
+    for obj in getattr(game, "stack", []):
+        obj_card = getattr(obj, "card", None)
+        if obj_card is not None and has_split_second(obj_card):
+            return getattr(obj, "name", None) or obj_card.name
+    return None
+
+
 def face_being_cast(card: Card, face_name: str | None) -> Any:
     """The `CardFace` a cast has named, or None when it named none (CR 709.3,
     CR 715.3).
@@ -1634,6 +1663,17 @@ def why_cannot_cast_restriction(
     """
     if game is None:
         return None
+    # CR 702.61a: checked before `spell` has moved to the stack (CR 601.2a
+    # runs after every refusal in this chain), so a split-second spell
+    # already on the stack always counts as an "other" spell here - even one
+    # sharing this one's name, which is the correct read: nothing in
+    # CR 702.61a exempts a second copy of the same card.
+    split_second_source = split_second_restriction_source(game)
+    if split_second_source is not None:
+        return (
+            f"{split_second_source} has split second: as long as it is on the stack, "
+            f"players can't cast other spells (CR 702.61a)"
+        )
     types = types_being_cast(spell.card, face)
     restriction = restricted_from_noncreature_casting(game, caster)
     if restriction is not None and Type.CREATURE not in types:

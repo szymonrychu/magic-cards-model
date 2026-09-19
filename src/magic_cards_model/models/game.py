@@ -50,6 +50,7 @@ from ..machines.casting import (
     marker_cast_options,
     play_permissions_on,
     spell_has_type_word,
+    split_second_restriction_source,
     static_free_cast_grants,
     usable_play_permission,
     why_cannot_cast_restriction,
@@ -13371,6 +13372,20 @@ class Game(EngineModel):
 
         if ability.exhaust and self._activation_key(permanent, index) in self.exhausted:
             return f"{permanent.name}'s exhaust ability has already been activated (CR 702.177a)"
+
+        if ability.mana is None:
+            # CR 702.61a: "As long as this spell is on the stack, players
+            # can't cast other spells or activate abilities that aren't mana
+            # abilities." CR 605.1a: a mana ability's own activation is never
+            # caught by this - `ability.mana` is set exactly when
+            # `machines/abilities.py` read this line as one (`_ADD.match`).
+            split_second_source = split_second_restriction_source(self)
+            if split_second_source is not None:
+                return (
+                    f"{split_second_source} has split second: as long as it is on the "
+                    f"stack, players can't activate abilities that aren't mana abilities "
+                    "(CR 702.61a)"
+                )
 
         instructions = (ability.instructions or "").lower()
         limit = _ACTIVATION_LIMIT.search(instructions)
