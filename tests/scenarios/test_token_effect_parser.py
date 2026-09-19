@@ -68,7 +68,7 @@ from magic_cards_model.machines.effects import (
     parse_mixed_effect_for_spell,
 )
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card import Type
+from magic_cards_model.models.card import Color, Type
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
@@ -349,3 +349,63 @@ def test_wurmcoil_engines_own_dies_trigger_creates_both_wurms_with_their_own_key
             if has_keyword(wurm, keyword):
                 keyworded[keyword] += 1
     assert keyworded == {Keyword.DEATHTOUCH: 1, Keyword.LIFELINK: 1}
+
+
+# --------------------------------------------------------------------------
+# Heartwood: a new CR 111.10 predefined token (CR 111.10x, Reality Fracture)
+# --------------------------------------------------------------------------
+
+
+def test_hungering_puppetbeast_creates_a_heartwood_token_off_its_own_text():
+    """Hungering Puppetbeast: "When this creature enters, create a Heartwood
+    token." CR 111.10x: "A Heartwood token is a red and green Heartwood
+    artifact token with '{T}: Add {R} or {G}.'" - a new row in `PREDEFINED`,
+    reached through the same `predefined_name in PREDEFINED` branch of
+    `_parse_token_clause` that Treasure and Food already use, so no new
+    parser code is needed to read it.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Hungering Puppetbeast"], battlefield=["Forest"] * 5)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Forest"] * 5, username="alice")
+    scenario.cast_and_resolve("Hungering Puppetbeast", *sources, username="alice")
+    scenario.resolve_top()  # the enters trigger
+
+    heartwood = scenario.find("Heartwood Token", Zone.BATTLEFIELD)
+    assert heartwood.card.types == [Type.ARTIFACT]
+    assert heartwood.card.subtypes == ["Heartwood"]
+    assert set(heartwood.card.colors) == {Color.RED, Color.GREEN}
+    assert heartwood.card.oracle_text == "{T}: Add {R} or {G}."
+    assert not heartwood.tapped
+
+
+def test_tenured_tethermage_creates_two_tapped_heartwood_tokens():
+    """Tenured Tethermage: "When this creature enters, you may sacrifice a
+    land. If you do, create two tapped Heartwood tokens." Differently worded
+    from Hungering Puppetbeast's own trigger (a reflexive "if you do", a
+    count of two, and "tapped") - proof the predefined-token row is read
+    generically and not fitted to one card's exact sentence, composed here
+    with `_parse_conditional_sacrifice_clause`'s existing CR 118.12 machinery.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Tenured Tethermage"], battlefield=["Mountain", "Forest", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Forest", "Forest", username="alice")
+    scenario.will_take_the_may(True)
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, username="alice")
+    scenario.will_choose_cards(forest)
+    scenario.cast_and_resolve("Tenured Tethermage", *sources, username="alice")
+    scenario.resolve_top()  # the enters trigger, with its reflexive sacrifice
+
+    heartwoods = [state for state in scenario.game.battlefield if state.name == "Heartwood Token"]
+    assert len(heartwoods) == 2
+    assert all(token.tapped for token in heartwoods)
+    assert forest.zone is Zone.GRAVEYARD
