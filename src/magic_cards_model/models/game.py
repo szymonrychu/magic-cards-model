@@ -2236,7 +2236,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 21
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2464,6 +2464,15 @@ class Game(EngineModel):
     `Game.model_dump()` and the bump rule's first bullet does not carve out
     an exception for a field whose default happens to match every existing
     use - refused rather than trusted on that observation holding forever.
+
+    Bumped 21 -> 22: `machines/triggers.GameEvent` gained `recipient_id` -
+    the permanent a damage event's damage actually landed on (CR 120.3e), as
+    opposed to `subject_id`'s own dealer - needed to read a passive
+    "Whenever this creature is dealt damage" condition (Hexhaven Invigorator,
+    FRA stream S8) at all. `GameEvent` sits on `AbilityOnStack.event`, which
+    is reachable from `Game.model_dump()`, so the field is in scope for the
+    bump rule even though it defaults to `None` and no version-21 dump's
+    trigger reads it back for anything.
     """
 
     @model_validator(mode="before")
@@ -9857,6 +9866,7 @@ class Game(EngineModel):
                     subject_card=source.card if source is not None else None,
                     subject_types=source_types,
                     subject_subtypes=source_subtypes,
+                    recipient_id=target.id if isinstance(target, CardState) else None,
                     player=target.username if isinstance(target, Player) else None,
                     combat=event.combat,
                     amount=event.amount,

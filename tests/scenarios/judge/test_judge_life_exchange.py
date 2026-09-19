@@ -98,18 +98,26 @@ def test_both_printings_carry_the_triggered_abilities_the_ruling_needs():
     assert "can't gain life for the rest of the game" in nemesis.effect
 
 
-def test_only_mister_negatives_half_reaches_the_trigger_matcher():
-    """The narrower gap under the one above, worth naming separately.
+def test_both_triggers_now_reach_the_matcher():
+    """Both halves reach `triggered_abilities_of` (CR 603.2's own condition
+    match), which is as far as either gets without a scripted effect.
 
     Mister Negative's "When Mister Negative enters" resolves to
-    `TriggerEvent.ENTERS_THE_BATTLEFIELD`, so `triggered_abilities_of` hands it
-    to the matcher. Screaming Nemesis's "Whenever this creature is dealt
-    damage" resolves to no `TriggerEvent` at all, so it is dropped before any
-    event could match it - the clause that makes Amy unable to gain life never
-    fires in the first place.
+    `TriggerEvent.ENTERS_THE_BATTLEFIELD`. Screaming Nemesis's "Whenever
+    this creature **is dealt** damage" is the passive voice of the identical
+    CR 120 damage event `TriggerEvent.DEALS_DAMAGE` already names for the
+    active "deals damage" phrasing (FRA stream S8's own fix, needed for
+    Hexhaven Invigorator's own "Whenever this creature is dealt damage, you
+    may search ..." trigger) - `machines/abilities._trigger_event` now reads
+    "is dealt"/"are dealt" the same way, so this ability is no longer
+    dropped before any event could match it. The clause that makes Amy
+    unable to gain life still never fires, the same "narrower gap" this test
+    used to document - just for the next reason down, `test_neither_ability_
+    has_a_scripted_effect`'s own: nothing in `machines/effects.py` reads
+    "it deals that much damage to any other target" yet.
     """
     assert len(triggered_abilities_of(card("Mister Negative"))) == 1
-    assert triggered_abilities_of(card("Screaming Nemesis")) == []
+    assert len(triggered_abilities_of(card("Screaming Nemesis"))) == 1
 
 
 def test_neither_ability_has_a_scripted_effect():

@@ -2765,8 +2765,14 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
         return TriggerEvent.GAINS_LIFE
     # "Whenever Ragavan deals combat damage to a player" - one event kind for
     # combat and noncombat; the matcher reads the "combat" word off the
-    # condition and `GameEvent.combat` off the event.
-    if re.search(r"\bdeals (?:combat )?damage\b", lowered):
+    # condition and `GameEvent.combat` off the event. "Whenever this creature
+    # **is dealt** damage" (Hexhaven Invigorator) is the passive voice of the
+    # identical CR 120 event - the same object the active phrasing names as
+    # the one dealing it is here the one receiving it instead, which
+    # `machines/triggers.condition_matches`'s own DEALS_DAMAGE branch reads
+    # off the words ("is dealt" vs "deals") to pick `GameEvent.recipient_id`
+    # over `subject_id`.
+    if re.search(r"\b(?:deals (?:combat )?damage|(?:is|are) dealt (?:combat )?damage)\b", lowered):
         return TriggerEvent.DEALS_DAMAGE
     # Aerie Worshippers prints "Whenever this creature becomes untapped".
     if "becomes untapped" in lowered:

@@ -7045,6 +7045,72 @@ def _triggering_event_amount(ability: AbilityOnStack) -> int | None:
     return None if event is None else event.amount
 
 
+#: "You may search your library for up to that many land cards, put them
+#: onto the battlefield tapped, then shuffle." - Hexhaven Invigorator's own
+#: "Whenever this creature is dealt damage" trigger. "That many" here is
+#: CR 607.1's anaphora onto the very event that triggered this ability - the
+#: damage just dealt to it - read by `_triggering_event_amount`, the same
+#: per-trigger-event count family Marauding Mako's and The Millennium
+#: Calendar's own "that many" clauses already use. Never a spell's own shape
+#: (this "that many" is an *event's* own count, not a count carried from an
+#: earlier sentence in the same text - `_read_search_count`'s own "up to
+#: that many" refusal is that different, still-unbuilt channel), so
+#: `for_spell` refuses outright.
+_SEARCH_THAT_MANY_BATTLEFIELD_RE = re.compile(
+    r"^you may search (?:your|their) library for up to that many land cards?, "
+    r"put them onto the battlefield(?P<tapped> tapped)?, then shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_search_that_many_battlefield_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SEARCH_THAT_MANY_BATTLEFIELD_RE`'s shape, or `None`."""
+    if for_spell:
+        return None
+    match = _SEARCH_THAT_MANY_BATTLEFIELD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    tapped = bool(match.group("tapped"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        ability = stack_object
+        count = _triggering_event_amount(ability)
+        if count is None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=clause.strip(),
+                )
+            )
+            return
+        if count <= 0:
+            return
+        player = game.controller_of(ability)
+        if not game.may(
+            player,
+            f"search your library for up to {count} land card(s)",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        game.search_and_put(
+            player,
+            lambda state: Type.LAND in state.types,
+            destination=Zone.BATTLEFIELD,
+            count=count,
+            tapped=tapped,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        )
+
+    return effect
+
+
 def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     """`_COUNTER_ON_SELF_RE`'s shape - Walking Ballista's `{4}` ability and
     The Filigree Sylex's `{T}` ability (CR 122.1), Heroes' Bane's own
@@ -22859,6 +22925,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counters_on_self = _parse_put_counters_on_self_clause(clause)
         if counters_on_self is not None:
             return counters_on_self  # type: ignore[return-value]
+        search_that_many_battlefield = _parse_search_that_many_battlefield_clause(
+            clause, for_spell=for_spell
+        )
+        if search_that_many_battlefield is not None:
+            return search_that_many_battlefield
         # "Put N counters on each `<group>` you control." was reachable only
         # as a *whole* ability's effect, the same gap `counters_on_self` just
         # above was closed for: Voja, Jaws of the Conclave's "put X +1/+1

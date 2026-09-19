@@ -183,6 +183,18 @@ class GameEvent(EngineModel):
     attacked, blocked or was sacrificed, the card that was drawn, the spell
     that was cast or countered, or the source that dealt damage."""
 
+    recipient_id: UUID | None = None
+    """For a damage event only: the *permanent* that took the damage
+    (CR 120.3e), as opposed to `subject_id`'s source that dealt it. CR
+    120.1's "an object that deals damage is the source" is why `subject_id`
+    already means the dealer and not the recipient - a passive "Whenever
+    this creature **is dealt** damage" condition (Hexhaven Invigorator) asks
+    about the *other* end of the same event, which nothing before this field
+    carried at all: a player recipient already had `player`, but a permanent
+    one had no field to read. `None` when the damage went to a player
+    instead (`player` carries that case) or had no permanent recipient to
+    speak of."""
+
     subject_name: str | None = None
     subject_controller: str | None = None
     subject_card: Card | None = None
@@ -1682,11 +1694,25 @@ def condition_matches(
 
     if ability.event is TriggerEvent.DEALS_DAMAGE:
         # CR 120.1: "An object that deals damage is the source of that
-        # damage" - the subject is the source, so the self-referential form
-        # checks the source and the general form checks the controller clause
-        # and types of whatever dealt it. Damage with no known source carries
-        # neither an id nor a controller and matches nothing here.
-        if mine:
+        # damage" - the subject is the source, so the self-referential *active*
+        # form ("this creature deals damage") checks the source and the
+        # general form checks the controller clause and types of whatever
+        # dealt it. Damage with no known source carries neither an id nor a
+        # controller and matches nothing here.
+        #
+        # The *passive* form ("this creature is dealt damage", Hexhaven
+        # Invigorator) asks about the other end of the same event -
+        # `GameEvent.recipient_id` rather than `subject_id` - and is read
+        # only for the self-referential shape: nothing carries a recipient's
+        # own controller or types the way `subject_controller`/`subject_
+        # types` already does for the dealer, so a card naming some other
+        # permanent's own passive "is dealt damage" condition is left
+        # unread rather than checked against the wrong object's fields.
+        passive = re.search(r"\bis dealt\b|\bare dealt\b", lowered) is not None
+        if passive:
+            if not mine or event.recipient_id != source.id:
+                return False
+        elif mine:
             if event.subject_id != source.id:
                 return False
         elif not (
