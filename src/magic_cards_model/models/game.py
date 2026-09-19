@@ -201,6 +201,7 @@ from ..machines.targeting import (
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
+    reflexive_consequence_text,
     targeting_profile,
 )
 from ..machines.triggers import (
@@ -5915,6 +5916,26 @@ class Game(EngineModel):
         A card may print more than one targeting trigger. The announcement names
         the card, not the ability, so the targets are legal if *any* of its
         triggers would accept them; the first reason is reported when none do.
+
+        Also tried, for each printed trigger: `reflexive_consequence_text`'s
+        own reading of a CR 603.12 "`<action>`. When you do, `<consequence>`."
+        shape - `profile_for_text(ability.text)` deliberately excludes that
+        tail (it belongs to a *different*, reflexively created ability, not
+        this one), so without this a card whose only targeted clause is its
+        own reflexive consequence - Earthbender Ascension's Landfall trigger,
+        "... put a quest counter on this enchantment. When you do, if it has
+        four or more quest counters on it, put a +1/+1 counter on target
+        creature you control." - had no profile anywhere in this function
+        that would ever accept the target `Game.create_reflexive_trigger`
+        goes on to ask for once the reflexive ability actually reaches the
+        stack, `choose_trigger_targets(card_name, ...)` refuses to record any
+        answer for it, and the shortcut cannot be used at all - only a live
+        `DecisionKind.CHOOSE_TARGETS` question at resolution can supply it.
+        The key `create_reflexive_trigger` puts the reflexive `AbilityOnStack`
+        on the stack under is this same `source_name`
+        (`Game.create_reflexive_trigger`'s own controller/source_id/source_name
+        arguments), so a target recorded here under `card_name` is exactly
+        what `_targets_for_trigger` reads back for it.
         """
         source = self._trigger_source_named(card_name)
         if source is None:
@@ -5930,9 +5951,62 @@ class Game(EngineModel):
             for ability in parse_abilities(source.card)
             if isinstance(ability, TriggeredAbility)
         ]
+        # CR 603.12's reflexive ability is a plain triggered ability once
+        # created (`Game.create_reflexive_trigger`), whatever *kind* of
+        # ability's text it was carved out of - Agatha's Soul Cauldron's own
+        # "{T}: Exile target card from a graveyard. When a creature card is
+        # exiled this way, put a +1/+1 counter on target creature you
+        # control." is activated, not triggered, so it never reaches
+        # `printed` above, and its own outer target (the graveyard card) is
+        # addressed through `Game.activate_ability`'s `targets`, not this
+        # method - only the reflexive "target creature you control" the
+        # `when ... this way,` tail names is this method's business here.
+        printed_activated = [
+            ability
+            for ability in parse_abilities(source.card)
+            if isinstance(ability, ActivatedAbility)
+        ]
         reasons: list[str] = []
         for ability in printed:
             profile = profile_for_text(ability.text)
+            if profile.understood and profile.requirements:
+                try:
+                    profile.check(list(targets), controller, self, source_id=source.id)
+                except ValueError as refusal:
+                    reasons.append(str(refusal))
+                else:
+                    return None
+            # The reflexive tail, tried as an *additional* way to accept -
+            # never to refuse. `profile_for_text(ability.text)` above already
+            # cut this tail away because CR 603.3d has the reflexive ability
+            # choose its own target once *it* exists, a separate
+            # announcement from this (outer) one's; Guide of Souls' "Whenever
+            # you attack, you may pay {E}{E}{E}. When you do, put ... on
+            # target attacking creature" prints no target on the outer
+            # trigger at all, and `test_the_outer_attack_trigger_has_no_
+            # target_of_its_own` pins that a target named for it is accepted
+            # unchecked regardless of what the *reflexive* half would want -
+            # the "when you do" may never even be reached. So a target this
+            # reflexive profile likes is accepted early; one it dislikes adds
+            # no reason, and falls through exactly as if there were no
+            # reflexive clause to read at all.
+            reflexive_text = reflexive_consequence_text(ability.text)
+            if not reflexive_text:
+                continue
+            reflexive_profile = profile_for_text(reflexive_text)
+            if not reflexive_profile.understood or not reflexive_profile.requirements:
+                continue
+            try:
+                reflexive_profile.check(list(targets), controller, self, source_id=source.id)
+            except ValueError:
+                pass
+            else:
+                return None
+        for ability in printed_activated:
+            reflexive_text = reflexive_consequence_text(ability.text)
+            if not reflexive_text:
+                continue
+            profile = profile_for_text(reflexive_text)
             if not profile.understood or not profile.requirements:
                 continue
             try:

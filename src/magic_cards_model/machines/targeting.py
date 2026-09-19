@@ -1804,6 +1804,40 @@ _REFLEXIVE_CLAUSE_TAIL = re.compile(
     r"\bwhen you do,.*$|\bwhen [^,]+ this way,.*$", re.IGNORECASE | re.DOTALL
 )
 
+#: The same two CR 603.12 templates as `_REFLEXIVE_CLAUSE_TAIL`, but capturing
+#: what comes *after* the comma instead of cutting it - the reflexively
+#: created ability's own words, read by `reflexive_consequence_text` below.
+_REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
+    r"\bwhen you do,\s*(?P<consequence>.*)$|\bwhen [^,]+ this way,\s*(?P<consequence2>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def reflexive_consequence_text(text: str) -> str | None:
+    """CR 603.12's "`<action>`. When you do, `<consequence>`." (or "... this
+    way, `<consequence>`.") - the reflexive ability's own words, or `None`
+    when `text` prints neither shape.
+
+    `profile_for_text` deliberately cuts this tail away, because CR 603.3d
+    has the *reflexive* ability - not the one whose text this is - choose its
+    own target once it is created and put on the stack, a separate CR 601.2c
+    announcement from the outer trigger's. That correctly keeps the outer
+    trigger's own `TargetingProfile` from claiming a target that belongs to
+    an ability which does not exist yet. It also means a caller that wants
+    the reflexive ability's *own* targeting shape - `Game.
+    why_cannot_target_with_trigger`, so a scenario can pre-declare what CR
+    603.12 reflexively creates for Earthbender Ascension's own Landfall
+    ("... put a quest counter on this enchantment. When you do, if it has
+    four or more quest counters on it, put a +1/+1 counter on target creature
+    you control.") - needs the tail `profile_for_text` throws away, read back
+    out here instead of re-deriving the same cut twice.
+    """
+    match = _REFLEXIVE_CLAUSE_CONSEQUENCE_RE.search(text)
+    if match is None:
+        return None
+    consequence = match.group("consequence") or match.group("consequence2") or ""
+    return consequence.strip()
+
 
 def profile_for_text(text: str) -> TargetingProfile:
     """What one piece of rules text may target, read on its own (CR 115.1).
