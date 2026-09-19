@@ -15164,6 +15164,128 @@ def _parse_draw_equal_to_then_lose_life_clause_pair(
     return effect
 
 
+#: "Each `<player|opponent>` discards `<n>` cards." - Garruk, Veiled
+#: Butcher's own `−3` first sentence, and Strongarm Tactics' own "each player
+#: discards a card" (`who` covers both CR 102.2 groups).
+_EACH_GROUP_DISCARDS_N_RE = re.compile(
+    rf"^each (?P<who>player|opponent) discards (?P<n>{COUNT}) cards?\.?$", re.IGNORECASE
+)
+
+#: "For each `<player|opponent>` who didn't discard `<n>` `<quality>` cards
+#: this way, you draw `<m>` card(s)." - Garruk, Veiled Butcher's own second
+#: sentence: a count of the *failing* members, applied once to this ability's
+#: own controller. CR 608.2c anaphora ("this way") onto the discard the first
+#: sentence just performed.
+_FOR_EACH_WHO_DIDNT_DISCARD_QUALITY_YOU_DRAW_RE = re.compile(
+    rf"^for each (?P<who>player|opponent) who didn'?t discard (?P<n>{COUNT}) (?P<quality>[a-z]+) "
+    rf"cards? this way, you draw (?:a card|(?P<draw_n>{COUNT}) cards?)\.?$",
+    re.IGNORECASE,
+)
+
+#: "Then each `<player|opponent>` who didn't discard `<n>` `<quality>` card(s)
+#: this way loses `<m>` life." - Strongarm Tactics' own second sentence: the
+#: consequence lands on each *failing member themselves*, not on this
+#: ability's controller, the shape Garruk's own "you draw" is not (CR 119.3).
+_THEN_EACH_WHO_DIDNT_DISCARD_QUALITY_LOSES_LIFE_RE = re.compile(
+    rf"^then each (?P<who>player|opponent) who didn'?t discard (?P<n>{COUNT}) (?P<quality>[a-z]+) "
+    rf"cards? this way loses (?P<life>{COUNT}) life\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_group_discards_then_consequence_per_failure_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Garruk, Veiled Butcher's own `−3`: "Each opponent discards two cards.
+    For each opponent who didn't discard two nonland cards this way, you
+    draw a card." Strongarm Tactics prints the same shape with "each player",
+    a different quality, and a per-failing-member life loss in place of
+    Garruk's own controller-side draw.
+
+    Each discarding member still makes their own CR 701.9b choice of which
+    cards to discard; whether that choice actually reached `<quality>` `<n>`
+    times is read back off `_discard_cards`'s own return value and compared
+    per member - "this way" is CR 608.2c anaphora onto exactly the discard
+    the first sentence just performed, not a fresh discard of the resolving
+    ability's own controller's choosing, so the two sentences have to run as
+    one merge rather than as two independent clauses.
+    """
+    discard_match = _EACH_GROUP_DISCARDS_N_RE.fullmatch(first.strip())
+    if discard_match is None:
+        return None
+    discard_who = discard_match.group("who").lower()
+    discard_count = parse_count(discard_match.group("n"))
+    if discard_count is None:
+        return None
+
+    draw_match = _FOR_EACH_WHO_DIDNT_DISCARD_QUALITY_YOU_DRAW_RE.fullmatch(second.strip())
+    if draw_match is not None and draw_match.group("who").lower() == discard_who:
+        threshold = parse_count(draw_match.group("n"))
+        quality_matches = _nonland_or_typed_card_matcher(draw_match.group("quality"))
+        draw_each = parse_count(draw_match.group("draw_n")) if draw_match.group("draw_n") else 1
+        if threshold is None or quality_matches is None or draw_each is None:
+            return None
+
+        def draw_consequence(
+            game: "Game",
+            controller: Player,
+            group: list[Player],
+            source: str,
+            source_id: str | None,
+        ) -> None:
+            failures = 0
+            for member in group:
+                discarded = _discard_cards(
+                    game, member, discard_count, source, source_id=source_id, exact=True
+                )
+                matched = sum(1 for state in discarded if quality_matches(state))
+                if matched < threshold:
+                    failures += 1
+            if failures:
+                game.draw_cards(controller.username, failures * draw_each)
+
+        consequence = draw_consequence
+    else:
+        life_match = _THEN_EACH_WHO_DIDNT_DISCARD_QUALITY_LOSES_LIFE_RE.fullmatch(second.strip())
+        if life_match is None or life_match.group("who").lower() != discard_who:
+            return None
+        threshold = parse_count(life_match.group("n"))
+        quality_matches = _nonland_or_typed_card_matcher(life_match.group("quality"))
+        life_loss = parse_count(life_match.group("life"))
+        if threshold is None or quality_matches is None or life_loss is None:
+            return None
+
+        def life_consequence(
+            game: "Game",
+            controller: Player,
+            group: list[Player],
+            source: str,
+            source_id: str | None,
+        ) -> None:
+            for member in group:
+                discarded = _discard_cards(
+                    game, member, discard_count, source, source_id=source_id, exact=True
+                )
+                matched = sum(1 for state in discarded if quality_matches(state))
+                if matched < threshold:
+                    member.lose_life(life_loss)
+
+        consequence = life_consequence
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        group = (
+            game.players_in_game
+            if discard_who == "player"
+            else _opponents(game, controller.username)
+        )
+        consequence(game, controller, group, source, source_id)
+
+    return effect
+
+
 #: "Target creature you control gets +N/+N until end of turn." followed by
 #: "It fights up to one target creature you don't control." - Bridgeworks
 #: Battle's whole front face.
@@ -22786,6 +22908,9 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 sentences[0], sentences[1], for_spell=for_spell
             )
             or _parse_draw_equal_to_then_lose_life_clause_pair(
+                sentences[0], sentences[1], for_spell=for_spell
+            )
+            or _parse_each_group_discards_then_consequence_per_failure_clause_pair(
                 sentences[0], sentences[1], for_spell=for_spell
             )
         )
