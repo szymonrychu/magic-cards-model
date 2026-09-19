@@ -8828,6 +8828,34 @@ class Game(EngineModel):
             self._emit_counters_put(permanent, str(kind), event.amount)
             return new_total
 
+    def add_player_counters(self, player: "Player | str", kind: str, amount: int = 1) -> int:
+        """Give a player counters, replacement effects included (CR 122.1,
+        122.6).
+
+        The player twin of `add_counters` above: Winding Constrictor's own
+        two-line static ability doubles+1 both halves of CR 122.6's "counters
+        being put on an object" - "an artifact or creature you control" and
+        "you [get counters]", CR 122.1's "some kinds of counters are normally
+        placed on players rather than on objects" (poison, energy, experience
+        chief among them). Before this, `Player.add_counters` was called
+        directly with no `ReplaceableEvent` in between, so a replacement
+        effect written "If you would get one or more counters, ..." had
+        nothing to apply to and silently never ran.
+        """
+        with self._id_allocator_scope():
+            if isinstance(player, str):
+                player = self.player(player)
+            if amount <= 0:
+                return player.counter_count(kind)
+
+            event = ReplaceableEvent(
+                kind=EventKind.ADD_COUNTERS, player=player, counter_kind=kind, amount=amount
+            )
+            apply_replacements(self, event)
+            if event.amount <= 0:
+                return player.counter_count(kind)
+            return player.add_counters(kind, event.amount)
+
     def _emit_counters_put(self, permanent: CardState, kind: str, amount: int) -> None:
         """CR 122.6's generic "counters are put on this object" event.
 

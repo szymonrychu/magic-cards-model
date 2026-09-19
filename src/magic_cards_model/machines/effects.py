@@ -4798,7 +4798,9 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
     if match := _ENERGY_RE.fullmatch(clause):
         amount = len(re.findall(r"\{e\}", match.group("e"), re.IGNORECASE))
-        return lambda game, player, source, source_id: player.add_counters(Counter.ENERGY, amount)
+        return lambda game, player, source, source_id: game.add_player_counters(
+            player, Counter.ENERGY, amount
+        )
 
     if match := _DRAW_RE.fullmatch(clause):
         amount = parse_count(match.group("n")) if match.group("n") else 1
@@ -11906,7 +11908,7 @@ def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
     def effect(game: "Game", spell: CardState) -> None:
         player = game.controller_of(spell)
         if energy_amount:
-            player.add_counters(Counter.ENERGY, energy_amount)
+            game.add_player_counters(player, Counter.ENERGY, energy_amount)
         paid = game.pay_any_amount_of_energy(
             player, source=spell.card.name, source_id=source_id_of(spell)
         )
@@ -11974,7 +11976,7 @@ def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
         player = game.controller_of(spell)
         x_value = game.cast_record(spell).x_value
         if x_value > 0:
-            player.add_counters(Counter.ENERGY, x_value)
+            game.add_player_counters(player, Counter.ENERGY, x_value)
         paid = game.pay_any_amount_of_energy(
             player, source=spell.card.name, source_id=source_id_of(spell)
         )

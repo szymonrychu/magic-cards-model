@@ -1744,6 +1744,32 @@ def _counter_amount_applies(
     return applies
 
 
+def _counter_amount_applies_to_player(kind: str | None) -> Applies:
+    """ "If you would get one or more [kind] counters, ..." - the player twin
+    of `_counter_amount_applies`. "You" is CR 201.5's own reference to
+    whoever controls the source printing the ability (its controller, not
+    necessarily the player the counters land on in general - every printing
+    of this shape in the pool is self-referential, "you" meaning the
+    ability's own controller, so that is the only shape read here).
+
+    `kind` `None` is "one or more counters" of any kind (Winding
+    Constrictor's own "you get" line); a named kind (Aether Refinery's "{E}")
+    is read the same way `_counter_amount_applies` reads a card-counter
+    replacement's own kind.
+    """
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
+            return False
+        if event.card is not None or event.player is None:
+            return False
+        if event.player.username != source.controller:
+            return False
+        return kind is None or (event.counter_kind or "").strip().lower() == kind
+
+    return applies
+
+
 def _fog_bank_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
     """ "Prevent all combat damage that would be dealt to and dealt by this creature."
 
@@ -2585,17 +2611,28 @@ def _compile_extra_token(effect: ReplacementEffect) -> CardReplacement | None:
 # effect") - so this compiler and `Game.add_counters` together are what make
 # Vizier stop Devoted Druid's own activation cost, not only a spell's.
 
+#: A counter kind word, as either shape oracle text prints one: a bare word
+#: ("+1/+1", "charge", "loyalty") or a mana-symbol kind written the way
+#: energy always is ("{E}").
+_COUNTER_KIND_WORD = r"(?:\{[^}]+\}|[+/\w-]+)"
+
 _COUNTER_AMOUNT_EVENT_RE = re.compile(
     r"^(?:an effect would put one or more counters on (?P<effect_subject>.+?)"
-    r"|one or more (?:(?P<kind>[+/\w-]+) )?counters would be put on (?P<subject>.+?))$",
+    rf"|one or more (?:(?P<kind>{_COUNTER_KIND_WORD}) )?counters would be put on (?P<subject>.+?)"
+    rf"|(?P<player_event>you would get one or more"
+    rf" (?:counters?|(?P<player_kind>{_COUNTER_KIND_WORD}))))$",
     re.IGNORECASE,
 )
 _COUNTER_AMOUNT_REPLACEMENT_RE = re.compile(
     rf"^(?:it puts (?P<it_mult>{MULTIPLIER}) that many of those counters on that permanent"
     rf"|(?:(?P<mult>{MULTIPLIER}) that many|that many(?: plus (?P<plus>{COUNT}))?)"
     r"(?: of each of those kinds of counters"
-    rf"| (?P<kind>[+/\w-]+) counters(?: (?P<op>plus|minus) (?P<n>{COUNT}))?)"
-    r" are put on (?:it|that creature|that permanent))$",
+    rf"| (?P<kind>{_COUNTER_KIND_WORD}) counters(?: (?P<op>plus|minus) (?P<n>{COUNT}))?)"
+    r" are put on (?:it|that creature|that permanent)"
+    rf"|you get (?:(?P<pmult>{MULTIPLIER}) that many|that many(?: plus (?P<pplus>{COUNT}))?)"
+    r"(?: of each of those kinds of counters"
+    rf"| (?P<pkind>{_COUNTER_KIND_WORD})(?: counters?)?"
+    rf"(?: (?P<pop>plus|minus) (?P<pn>{COUNT}))?)?)$",
     re.IGNORECASE,
 )
 #: "a creature you control", "an artifact or creature you control", "a permanent".
@@ -2616,18 +2653,47 @@ def _counter_subject_types(types_text: str) -> frozenset[Type] | None | bool:
 
 
 def _counter_amount(match: re.Match[str]) -> Apply | None:
-    """The multiplier or addend a counter replacement prints, or None."""
-    multiplier_text = match.group("it_mult") or match.group("mult")
+    """The multiplier or addend a counter replacement prints, or None.
+
+    `p`-prefixed groups are `_COUNTER_AMOUNT_REPLACEMENT_RE`'s player-counter
+    branch ("you get twice that many ..."); the rest are its card-counter
+    branch ("... are put on it") - exactly one set is ever populated for a
+    given match, so reading both costs nothing.
+    """
+    multiplier_text = match.group("it_mult") or match.group("mult") or match.group("pmult")
     if multiplier_text is not None:
         multiplier = parse_multiplier(multiplier_text)
         return None if multiplier is None else _scale_amount(multiplier=multiplier)
-    addend_text = match.group("plus") or match.group("n")
+    addend_text = (
+        match.group("plus") or match.group("n") or match.group("pplus") or match.group("pn")
+    )
     if addend_text is None:
         return None  # a bare "that many" replaces nothing
     addend = parse_count(addend_text)
     if addend is None:
         return None
-    return _scale_amount(addend=-addend if match.group("op") == "minus" else addend)
+    op = match.group("op") or match.group("pop")
+    return _scale_amount(addend=-addend if op == "minus" else addend)
+
+
+def _normalized_counter_kind(raw: str | None) -> str | None:
+    """A matched kind group, lower-cased, or `None` for "no kind at all" -
+    which is both an empty match and the bare word "counters"/"counter"
+    itself (`_COUNTER_KIND_WORD` matches that word too, since it is not
+    distinguishable from a kind name by shape alone; "you get twice that many
+    counters instead" names no kind, the same as "... of each of those kinds
+    of counters").
+
+    CR 107.14: "The energy symbol is {E}. It represents one energy counter" -
+    `{e}` is normalised to `"energy"`, `Counter.ENERGY`'s own value and what
+    `Game.add_player_counters` actually stamps `ReplaceableEvent.counter_kind`
+    with, so Aether Refinery's own "one or more {E} (energy counters)" reads
+    the same kind a caller passing `Counter.ENERGY` produces.
+    """
+    lowered = (raw or "").strip().lower()
+    if lowered == "{e}":
+        return "energy"
+    return None if lowered in ("", "counter", "counters") else lowered
 
 
 def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | None:
@@ -2641,6 +2707,33 @@ def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | Non
     )
     if replacement_match is None:
         return None
+
+    if event_match.group("player_event") is not None:
+        # "If you would get one or more [kind] counters, ..." - CR 201.5's
+        # "you" is the ability's own controller (see
+        # `_counter_amount_applies_to_player`'s docstring); there is no card
+        # subject or type filter to read at all.
+        event_kind = _normalized_counter_kind(event_match.group("player_kind"))
+        is_player_replacement = (
+            replacement_match.group("pmult") is not None
+            or replacement_match.group("pplus") is not None
+            or replacement_match.group("pkind") is not None
+            or "you get" in (effect.replacement or "").strip().lower()
+        )
+        if not is_player_replacement:
+            return None  # the card-counter branch matched instead - wrong shape
+        pkind = _normalized_counter_kind(replacement_match.group("pkind"))
+        if pkind != event_kind:
+            return None
+        apply = _counter_amount(replacement_match)
+        if apply is None:
+            return None
+        return CardReplacement(
+            label=effect.text,
+            applies=_counter_amount_applies_to_player(event_kind),
+            apply=apply,
+        )
+
     subject_match = _COUNTER_SUBJECT_RE.match(
         (event_match.group("effect_subject") or event_match.group("subject")).lower()
     )
