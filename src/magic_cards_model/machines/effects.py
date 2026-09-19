@@ -12334,6 +12334,43 @@ def _parse_destroy_each_clause(sentence: str) -> TargetedClause | None:
     return effect
 
 
+#: "Untap all <qualifier> you control." - Emrakul, the Exigent Doom's own cast
+#: trigger ("untap all lands you control"), Aggravated Assault's activated
+#: ability ("untap all creatures you control"). The same "all <type
+#: qualifier> you control" shape `_parse_mass_destroy_predicate`'s qualifier
+#: half already reads for a mass destruction, minus that function's
+#: mana-value/counter riders neither printing carries and plus an explicit
+#: "you control" restriction destroy-all effects never have (Wrath of God
+#: hits every player's creatures; this hits only the controller's).
+_UNTAP_ALL_YOU_CONTROL_RE = re.compile(
+    r"^untap all (?P<qualifier>.+?) you control\.?$", re.IGNORECASE
+)
+
+
+def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
+    """`_UNTAP_ALL_YOU_CONTROL_RE`'s shape - CR 701.26b: untapping is not
+    targeted, so every matching permanent the controller has right now is
+    untapped simultaneously (CR 608.2f), with no legality recheck to make."""
+    match = _UNTAP_ALL_YOU_CONTROL_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    type_matches = _parse_mass_type_qualifier(match.group("qualifier"))
+    if type_matches is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        for permanent in list(game.battlefield):
+            if permanent.zone is not Zone.BATTLEFIELD:
+                continue
+            if game.controller_of(permanent).username != controller.username:
+                continue
+            if type_matches(game.characteristics_of(permanent)):
+                permanent.untap()
+
+    return effect
+
+
 #: "<Source> deals N damage to each <type>[ and each <type>]*." -
 #: Brotherhood's End's own first mode: "Brotherhood's End deals 3 damage to
 #: each creature and each planeswalker." Unlike `_DAMAGE_EACH_OPPONENT_RE`'s
@@ -21677,6 +21714,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     destroy_each = _parse_destroy_each_clause(clause)
     if destroy_each is not None:
         return destroy_each
+    untap_all_you_control = _parse_untap_all_you_control_clause(clause)
+    if untap_all_you_control is not None:
+        return untap_all_you_control
     damage_each_group = _parse_damage_each_group_clause(clause)
     if damage_each_group is not None:
         return damage_each_group

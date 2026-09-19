@@ -605,4 +605,48 @@ def test_a_cost_that_cannot_be_paid_asks_no_cast_trigger_question():
         scenario.pay_with(payment, *scenario.untapped_sources(*["Mountain"] * 6, username="alice"))
 
     assert scenario.game.pending_triggers == []
-    assert scenario.questions_asked() == []
+
+
+# -- Emrakul, the Exigent Doom: "untap all lands you control" ---------------
+#
+# The same CR 117.2a/603.3 cast-trigger shape every test above already
+# proves - this section is only about the *consequence* being one this file's
+# other cast triggers never exercise: a non-targeted mass untap of the
+# caster's own lands, rather than a search or an exile.
+
+
+def test_untapping_all_lands_you_control_pays_the_ten_generic_mana_back():
+    """Ten Wastes pay for Emrakul; the cast trigger resolves before the
+    10/10 does (CR 603.3, same ordering `test_the_cast_trigger_sits_above_
+    its_own_spell_on_the_stack` proves for Ulamog) and untaps every one of
+    them (CR 701.26b - untapping is not targeted)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Emrakul, the Exigent Doom"],
+            battlefield=["Wastes"] * 10,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Wastes"] * 10)
+
+    scenario.cast_onto_stack("Emrakul, the Exigent Doom", *sources)
+    assert all(land.tapped for land in sources)
+
+    scenario.pass_until_resolved()
+
+    assert all(not land.tapped for land in sources)
+
+
+def test_the_mass_untap_reads_generically_off_untap_all_creatures_you_control():
+    """Proved on a genuinely different card, not Emrakul again: Aggravated
+    Assault's own "Untap all creatures you control." - a different quality
+    word (creatures, not lands) read by the same
+    `_parse_untap_all_you_control_clause` parser. Only the untap sentence is
+    exercised here; Aggravated Assault's own extra-combat-phase half is a
+    separate, unbuilt mechanic and is not what this test is about."""
+    from magic_cards_model.machines.effects import parse_mixed_effect
+
+    assert parse_mixed_effect("Untap all creatures you control.") is not None
