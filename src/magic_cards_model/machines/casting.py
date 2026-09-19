@@ -2059,6 +2059,10 @@ class Casting(EngineModel):
     tapping: list[CardState] = Field(default_factory=list)
     """The permanents chosen to pay a printed "tap ..." additional cost -
     Swallow Whole's "tap an untapped creature you control"."""
+    beholding: list[CardState] = Field(default_factory=list)
+    """The card or permanent chosen to pay a printed "behold ..." additional
+    cost (CR 701.4a) - a hand card to reveal or a battlefield permanent to
+    choose, told apart at payment time by `component.cards[0].zone`."""
     revealing: list[CardState] | None = None
     """The cards chosen to pay a printed "reveal ... from your hand" additional
     cost (CR 118.8a, CR 701.20a) - Living Destiny's "reveal a creature card
@@ -4146,6 +4150,7 @@ class Casting(EngineModel):
             ComponentKind.DISCARD: list(self.discarding),
             ComponentKind.EXILE: list(self.exiling),
             ComponentKind.TAP: list(self.tapping),
+            ComponentKind.BEHOLD: list(self.beholding),
         }
         for cost in mandatory_additional_costs(
             self.spell,

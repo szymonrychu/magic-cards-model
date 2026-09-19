@@ -2105,6 +2105,13 @@ class ComponentKind(StrEnum):
     #: records the reveal on the game, and `variable_count` marks CR 107.3a's
     #: X, where `required` is the number the payer chose to reveal.
     REVEAL = "reveal"
+    #: CR 701.4a's own keyword action, "to behold a [quality]": "Reveal a
+    #: [quality] card from your hand or choose a [quality] permanent you
+    #: control on the battlefield." Two zones satisfy one component - the
+    #: chosen card is a `REVEAL` if it came from hand (CR 701.20a-b: shown,
+    #: nothing moves) and untouched if it came from the battlefield (CR
+    #: 701.4b: it is simply noted, not tapped, sacrificed, or exiled).
+    BEHOLD = "behold"
 
 
 _OBJECT_KINDS = frozenset(
@@ -2119,6 +2126,7 @@ _OBJECT_KINDS = frozenset(
         ComponentKind.EXERT,
         ComponentKind.RETURN_TO_HAND,
         ComponentKind.REVEAL,
+        ComponentKind.BEHOLD,
     }
 )
 
@@ -2400,8 +2408,40 @@ class CostComponent(EngineModel):
             ComponentKind.COLLECT_EVIDENCE: self._why_not_collect_evidence,
             ComponentKind.RETURN_TO_HAND: self._why_not_return_to_hand,
             ComponentKind.REVEAL: self._why_not_reveal,
+            ComponentKind.BEHOLD: self._why_not_behold,
         }
         return checks[self.kind](game)
+
+    def _why_not_behold(self, _game: Any) -> str | None:
+        """CR 701.4a: "Reveal a [quality] card from your hand or choose a
+        [quality] permanent you control on the battlefield." Each chosen
+        object has to be in one of those two places - owned in hand, or
+        controlled on the battlefield - the same ownership/control check
+        `_why_not_reveal`/`_why_not_controlled` already make for each half."""
+        seen: set[UUID] = set()
+        for card in self.cards:
+            if card.id in seen:
+                return (
+                    f"{card.name} is named more than once, but one object is beheld only "
+                    "once to pay a cost (CR 109.1, CR 118.3)"
+                )
+            seen.add(card.id)
+            if card.zone is Zone.HAND:
+                if self.payer is not None and card.owner is not None and card.owner != self.payer:
+                    return f"{card.name} is not in {self.payer}'s hand"
+            elif card.zone is Zone.BATTLEFIELD:
+                if (
+                    self.payer is not None
+                    and card.controller is not None
+                    and card.controller != self.payer
+                ):
+                    return f"{self.payer} does not control {card.name}"
+            else:
+                return (
+                    f"{card.name} is neither in {self.payer or 'the payer'}'s hand nor a "
+                    "permanent they control, so it cannot be beheld (CR 701.4a)"
+                )
+        return None
 
     def _why_not_reveal(self, _game: Any) -> str | None:
         """CR 118.3 for a reveal cost: every card named has to be in the
@@ -2757,6 +2797,17 @@ class CostComponent(EngineModel):
                     before = len(game.reveals)
                     game.reveal(card, source=self.source)
                     self._reveals_recorded.extend(game.reveals[before:])
+        elif self.kind is ComponentKind.BEHOLD:
+            # CR 701.4a's two halves: a hand card is revealed exactly like
+            # `REVEAL` (nothing moves, CR 701.20b); a battlefield permanent is
+            # simply chosen (CR 701.4b) and nothing happens to it at all -
+            # not tapped, not sacrificed, not exiled.
+            for card in self.cards:
+                self._remember(card)
+                if game is not None and card.zone is Zone.HAND:
+                    before = len(game.reveals)
+                    game.reveal(card, source=self.source)
+                    self._reveals_recorded.extend(game.reveals[before:])
         elif self.kind is ComponentKind.RETURN_TO_HAND:
             # CR 702.49a's own cost: the creature leaves combat as it leaves
             # the battlefield (the zone change is what ends its being an
@@ -2907,6 +2958,15 @@ class CostComponent(EngineModel):
             # Revealing moved nothing (CR 701.20b), so neither does the
             # rewind; it takes back the records the payment wrote, so an
             # attempt rewound under CR 733.1 leaves nobody knowing the cards.
+            if game is not None:
+                for record in self._reveals_recorded:
+                    if record in game.reveals:
+                        game.reveals.remove(record)
+            self._reveals_recorded = []
+        elif self.kind is ComponentKind.BEHOLD:
+            # Neither half moved anything (CR 701.4a/b), so the rewind is the
+            # same as REVEAL's: only the reveal record a hand-half payment
+            # wrote needs taking back.
             if game is not None:
                 for record in self._reveals_recorded:
                     if record in game.reveals:
@@ -3133,6 +3193,24 @@ def reveal_cost(
         payer=payer,
         description=description,
         variable_count=variable_count,
+    )
+
+
+def behold_cost(
+    *cards: CardState,
+    payer: str | None = None,
+    required: int | None = None,
+    description: str = "",
+) -> CostComponent:
+    """Behold a quality as a cost (CR 701.4a, CR 118.1): reveal a card from
+    the payer's hand, or choose a permanent they control on the battlefield.
+    `CostComponent._why_not_behold` is the check."""
+    return CostComponent(
+        kind=ComponentKind.BEHOLD,
+        cards=list(cards),
+        required=len(cards) if required is None else required,
+        payer=payer,
+        description=description,
     )
 
 
@@ -3909,6 +3987,13 @@ _PHRASE_REVEAL = re.compile(
     r"^reveal (?P<count>x|\w+) (?P<quality>[\w ,]*?)cards? from your hand$",
     re.IGNORECASE,
 )
+#: CR 701.4a's keyword action as a cost: "behold a Jace" (Countersculpt,
+#: Theorist's Sanctum), "behold a Kithkin" (Kinsbaile Aspirant, off-set).
+#: "Reveal a [quality] card from your hand or choose a [quality] permanent
+#: you control on the battlefield" - one component, `ComponentKind.BEHOLD`,
+#: since CR 701.4a is a single keyword action with two ways to satisfy it,
+#: not two separate costs the way sacrifice-or-discard would be.
+_PHRASE_BEHOLD = re.compile(r"^behold (?:a|an) (?P<quality>[\w' ]+)$", re.IGNORECASE)
 _ZONE_WORDS: dict[str, Zone] = {
     "hand": Zone.HAND,
     "graveyard": Zone.GRAVEYARD,
@@ -4265,6 +4350,15 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
                 return None
             component = reveal_cost(payer=payer, required=reveal_count, description=text)
         component.requirement = reveal_requirement
+        return component
+
+    behold = _PHRASE_BEHOLD.match(text)
+    if behold is not None:
+        behold_requirement = _requirement(behold.group("quality"))
+        if behold_requirement is None:
+            return None
+        component = behold_cost(payer=payer, required=1, description=text)
+        component.requirement = behold_requirement
         return component
 
     exile_and_pay = _PHRASE_EXILE_AND_PAY_MANA_COST.match(text)

@@ -4275,6 +4275,12 @@ class Game(EngineModel):
                 if component.zone in (Zone.HAND, Zone.GRAVEYARD, Zone.LIBRARY)
                 else []
             )
+        elif component.kind is ComponentKind.BEHOLD:
+            # CR 701.4a: a hand card to reveal, or a battlefield permanent to
+            # choose - the same "either zone" pool `_behold_or_tapped`
+            # (`machines/replacement.py`) builds for the ETB shape of the
+            # same choice.
+            pool = list(player.hand) + list(self.permanents_controlled_by(caster))
         else:
             return None
         if component.requirement is not None:
@@ -4713,6 +4719,7 @@ class Game(EngineModel):
             ComponentKind.DISCARD: casting.discarding,
             ComponentKind.EXILE: casting.exiling,
             ComponentKind.TAP: casting.tapping,
+            ComponentKind.BEHOLD: casting.beholding,
         }
         for cost in casting._printed_additional_costs():  # noqa: SLF001
             chosen = self._choose_cost_objects(cost, caster, card, taken)
