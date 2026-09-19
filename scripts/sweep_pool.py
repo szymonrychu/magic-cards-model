@@ -123,7 +123,7 @@ from magic_cards_model.machines.layers import (  # noqa: E402
     looks_like_unparsed_layer_effect,
     parsed_layer_effects,
 )
-from magic_cards_model.machines.modes import modal_profile  # noqa: E402
+from magic_cards_model.machines.modes import modal_profile, substitute_x  # noqa: E402
 from magic_cards_model.machines.objects_as_costs import has_improvise  # noqa: E402
 from magic_cards_model.machines.targeting import profile_for_text  # noqa: E402
 from magic_cards_model.machines.triggers import (  # noqa: E402
@@ -526,7 +526,7 @@ def _worse(a: str, b: str) -> str:
     return min((a, b), key=lambda category: _SEVERITY[category])
 
 
-def _layer_category(printing: Card) -> str | None:
+def _layer_category(printing: Card, ability_text: str | None = None) -> str | None:
     """Handled/notice for this card's own continuous-effect text (CR 611.2,
     CR 611.3), read exactly the way the battlefield sweep
     (`machines/layers.effects_for`) reads it: `LAYER_EFFECTS` first, then
@@ -538,7 +538,27 @@ def _layer_category(printing: Card) -> str | None:
     sweep's business at all, the same way a combat restriction or a cost
     modifier is not `machines/layers.py`'s. Only a genuine near-miss on one of
     those four shapes counts as a gap here.
+
+    `ability_text` is the resolving ability's own, already X-substituted text
+    - `machines/effects.create_continuous_effect_of_ability` passes exactly
+    this to `ContinuousEffects.create` at real resolution now (Chatterfang,
+    Squirrel General's "Sacrifice X Squirrels: Target creature gets +X/-X
+    until end of turn", X announced in plain English rather than as a bare
+    `{X}` mana symbol). Reading the card's own raw, unsubstituted text instead
+    - the fallback below - cannot ever match a bare, non-numeric "X" the way
+    `parsed_layer_effects` reads a pump's magnitude, so an activated ability
+    with this shape scored SILENT here even once the real engine read it
+    correctly; passing the same substituted text this sweep already computes
+    for `activated_effect_for` keeps the two readings in step.
     """
+    if ability_text is not None:
+        if parsed_layer_effects(ability_text, card_name=printing.name):
+            return HANDLED
+        if looks_like_unparsed_layer_effect(
+            ability_text, static_only=False, card_name=printing.name
+        ):
+            return NOTICE
+        return None
     # `front_oracle_text`, not the top-level field: a `transform` or
     # `modal_dfc` printing leaves `oracle_text` null and puts each face's text
     # on `card_faces`, so reading the top-level field scored eleven
@@ -710,13 +730,17 @@ def _modal_category(printing: Card) -> str:
     return NOTICE
 
 
-def _dispatch_category(effect: object, printing: Card) -> str:
+def _dispatch_category(effect: object, printing: Card, ability_text: str | None = None) -> str:
     """What actually happens if `effect` - what a real dispatcher just
     returned for this card - runs: a real effect, a fail-closed notice, or
     nothing at all. `effect` is always the literal object `effect_for`,
     `trigger_effect_for` or `activated_effect_for` returned, so this never
     re-derives what those functions already decided - it only reads the
     shape of their answer.
+
+    `ability_text` is forwarded to `_layer_category` unchanged - see that
+    function's own docstring for why an activated ability's X-substituted
+    text, not the card's raw printed one, is what the real engine reads.
     """
     if effect is None:
         return SILENT
@@ -725,7 +749,7 @@ def _dispatch_category(effect: object, printing: Card) -> str:
         # path - `looks_like_unparsed_layer_effect`'s own regex is a superset
         # of the one that routed here in the first place - but SILENT is the
         # right default if it ever did, not an optimistic HANDLED.
-        return _layer_category(printing) or SILENT
+        return _layer_category(printing, ability_text) or SILENT
     if effect is resolve_modal_spell:
         return _modal_category(printing)
     if getattr(effect, "__name__", "") in _NOTICE_STAND_IN_NAMES:
@@ -1295,7 +1319,19 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 activated_effect_for(printing.name, index, ability.effect, x_value=x_value)
                 for x_value in x_candidates
             ]
-            categories = [_dispatch_category(effect, printing) for effect in activated_effects]
+            # The same substituted text `create_continuous_effect_of_ability`
+            # itself now passes to `ContinuousEffects.create` at a real
+            # resolution (see `_layer_category`'s own docstring) - computed
+            # per X candidate so a pump/keyword-grant judged here is judged
+            # on the number that would actually be on the stack.
+            ability_texts = [
+                substitute_x(ability.text, x_value) if x_value is not None else None
+                for x_value in x_candidates
+            ]
+            categories = [
+                _dispatch_category(effect, printing, text)
+                for effect, text in zip(activated_effects, ability_texts, strict=True)
+            ]
             category = _best(categories)
             if (
                 x_candidates == (None,)

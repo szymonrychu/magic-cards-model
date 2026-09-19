@@ -109,7 +109,7 @@ from .abilities import (
 from .casting import PlayAction, annotate_exile, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
-from .cost import is_snow_source, spend_restriction
+from .cost import cost_announces_x, is_snow_source, spend_restriction
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
@@ -525,15 +525,27 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
     if source is None or source.zone is not Zone.BATTLEFIELD:
         return
     # `x_value` substituted in first when the ability's own printed cost
-    # carries an {X} (CR 107.3a, announced before targets are chosen -
+    # announces one (CR 107.3a, announced before targets are chosen -
     # CR 601.2b/602.2b then CR 601.2c) - The Mycosynth Gardens' own "target
     # nontoken artifact you control with mana value X" is unreadable by
     # `profile_for_text` with a literal "X" left in it, which without this
     # would make `requires_target` false and silently fall back to `[source]`
     # (the Gardens targeting itself) instead of the real, paid X.
+    #
+    # `cost_announces_x` (not a bare `"{X}" in ...cost`) is CR 107.3a's own
+    # wider reading: X is announced whenever the *cost's own text* names it,
+    # never only when it is spelled as the `{X}` mana symbol - Chatterfang,
+    # Squirrel General's "Sacrifice X Squirrels" announces X in plain English,
+    # with no `{X}` anywhere in the cost, and the narrower check used to leave
+    # this function reading the *unsubstituted* "Target creature gets +X/-X
+    # until end of turn" - a magnitude no continuous-effect parser can read a
+    # bare, non-numeric X out of - so the ability's cost paid but its pump did
+    # nothing. `Game.activate_ability`'s own `x_value` gating and
+    # `scripts/sweep_pool.py`'s own X-probe already read a cost's X this same
+    # general way; this is the one caller that had not caught up.
     ability_text = (
         substitute_x(ability.ability.text, ability.x_value)
-        if isinstance(ability.ability, ActivatedAbility) and "{X}" in ability.ability.cost
+        if isinstance(ability.ability, ActivatedAbility) and cost_announces_x(ability.ability.cost)
         else ability.ability.text
     )
     profile = profile_for_text(ability_text)
@@ -545,6 +557,7 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
         source,
         targets=targets,
         context=layer_context_for(game, game.controller_of(ability)),
+        ability_text=ability_text if isinstance(ability.ability, ActivatedAbility) else None,
         game=game,
     )
 
