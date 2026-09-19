@@ -1455,6 +1455,40 @@ def _x_candidates(cost_or_mana_cost: str | None, *additional: str) -> tuple[int 
     return (None,)
 
 
+def _etb_x_candidates(printing: Card, ability: TriggeredAbility) -> tuple[int | None, ...]:
+    """Every X value `classify_clauses` should try for one enters-the-
+    battlefield trigger's own effect text - CR 107.3m's gate, mirrored from
+    `Game._effect_of` exactly: the ability's event is `ENTERS_THE_
+    BATTLEFIELD`, its effect text carries a bare "X", and the permanent's
+    own mana cost carries `{X}` (CR 107.3a).
+
+    Fblthp, Knows the Way's own "search your library for up to X basic land
+    cards" is unreadable to `trigger_effect_for` with a literal "X" left in
+    it - the identical gap `_x_candidates` already closes for a spell face's
+    own resolution text and `activated_effect_for` closes for an activated
+    ability's announced X, but nothing here asked the same question of a
+    triggered ability before this.
+
+    Narrower than `_x_candidates`'s own `cost_announces_x` gate on purpose:
+    a card that defines X in its own text instead (CR 107.3f - Craterhoof
+    Behemoth's "where X is the number of creatures you control", Yuriko,
+    Hope from the Shadows' identical shape) has no `{X}` in its own mana
+    cost at all, so this never substitutes into it. `Game._effect_of`'s own
+    gate is `"{X}" in (source.mana_cost or "")`, not the broader `cost_
+    announces_x` an additional-cost phrase can also satisfy, because CR
+    107.3m is scoped to "a value of X chosen for any of its costs" -
+    exactly what a bare `{X}` in the mana cost already answers.
+    """
+    if (
+        ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+        and ability.effect
+        and re.search(r"\bX\b", ability.effect)
+        and "{X}" in (printing.mana_cost or "")
+    ):
+        return _X_PROBE_VALUES
+    return (None,)
+
+
 class SpellFace(NamedTuple):
     """One face a real cast could put on the stack, with the characteristics
     that face brings with it (CR 712.8a/712.8d/712.8f).
@@ -1765,15 +1799,24 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             ):
                 clauses.append(ClauseOutcome(SILENT, ability.text, "triggered (unread condition)"))
                 continue
-            effect = trigger_effect_for(printing.name, ability.event, ability.effect)
+            x_candidates = _etb_x_candidates(printing, ability)
+            trigger_effects = [
+                trigger_effect_for(printing.name, ability.event, ability.effect, x_value=x_value)
+                for x_value in x_candidates
+            ]
+            effect = trigger_effects[0]
             modal_category = _modal_trigger_category(ability.effect)
-            category = (
-                modal_category
-                if modal_category is not None
-                else _dispatch_category(effect, printing)
-            )
+            if modal_category is not None:
+                category = modal_category
+            else:
+                categories = [_dispatch_category(e, printing) for e in trigger_effects]
+                category = _best(categories)
+            # As with the spell face above: a trigger carrying both CR
+            # 107.3m's substitution and a quoted span is not in this pool,
+            # so that combination is left untested rather than guessed at.
             if (
-                category == HANDLED
+                x_candidates == (None,)
+                and category == HANDLED
                 and not _is_sentinel_effect(effect)
                 and _effect_matched_inside_quotes(
                     lambda text, event=ability.event: trigger_effect_for(

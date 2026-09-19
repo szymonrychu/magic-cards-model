@@ -206,13 +206,14 @@ class Duration(StrEnum):
       it would be created is never stored at all.
     - `UNTIL_YOUR_NEXT_TURN` - Karn, the Great Creator's +1: "Until your next
       turn, up to one target noncreature artifact becomes an artifact creature
-      ...". CR 800.4m confirms this is a real named duration category distinct
-      from "until end of turn" ("continuous effects with durations that last
-      until that player's next turn ... will last until that turn would have
-      begun"), so the effect outlives the turn it was created in and the
-      opponent's turn(s) after it, ending only when its own controller's next
-      turn begins. `Game.begin_turn_for` - already the hook CR 302.6 uses to
-      clear summoning sickness at the start of a player's turn - calls
+      ...". CR 611.2a is what makes this a real, distinct duration rather than
+      a synonym for "until end of turn": a continuous effect "lasts as long as
+      stated by the spell or ability creating it", and this one is stated as
+      "your next turn", not "end of turn" - so the effect outlives the turn it
+      was created in and the opponent's turn(s) after it, ending only when its
+      own controller's next turn begins, plainly what the printed duration
+      says. `Game.begin_turn_for` - already the hook CR 302.6 uses to clear
+      summoning sickness at the start of a player's turn - calls
       `ContinuousEffects.end_for_next_turn` for exactly this reason. The
       `until_next_turn_of` field carries whose turn ends it.
     - `INDEFINITE` - the default. A static ability's effect (CR 611.3) has no
@@ -1580,7 +1581,7 @@ class ContinuousEffect(EngineModel):
     duration: Duration = Duration.INDEFINITE
     #: Only for `FOR_AS_LONG_AS`: whether the duration is still running.
     condition: Condition | None = None
-    #: Only for `UNTIL_YOUR_NEXT_TURN`: whose next turn ends it (CR 800.4m).
+    #: Only for `UNTIL_YOUR_NEXT_TURN`: whose next turn ends it (CR 611.2a).
     until_next_turn_of: str | None = None
     selector: Selector
     modification: Modification
@@ -1618,7 +1619,7 @@ class ContinuousEffect(EngineModel):
                 f"{with_indefinite_article(str(self.duration))} effect has no condition to check"
             )
         if self.duration is Duration.UNTIL_YOUR_NEXT_TURN and self.until_next_turn_of is None:
-            raise ValueError('an "until your next turn" effect needs to say whose (CR 800.4m)')
+            raise ValueError('an "until your next turn" effect needs to say whose (CR 611.2a)')
         not_next_turn = self.duration is not Duration.UNTIL_YOUR_NEXT_TURN
         if not_next_turn and self.until_next_turn_of is not None:
             raise ValueError(
@@ -2625,10 +2626,11 @@ _PUMP_RE = re.compile(
     rf"(?: and gains? (?P<keyword>[a-z ,]+?))?"
     rf"|gains (?P<keyword2>[a-z ]+) and gets? "
     rf"(?P<power2>[+-](?:{COUNT}|x))/(?P<toughness2>[+-](?:{COUNT}|x))"
-    # CR 800.4m's "until your next turn" alongside CR 611.2a's ordinary
-    # "until end of turn" - Liliana, the Last Hope's own "Up to one target
-    # creature gets -2/-1 until your next turn." is the identical pump
-    # shape with the longer duration, not a different sentence.
+    # "until your next turn" is CR 611.2a's same "lasts as long as stated"
+    # duration as the ordinary "until end of turn", just a longer stated
+    # span - Liliana, the Last Hope's own "Up to one target creature gets
+    # -2/-1 until your next turn." is the identical pump shape with the
+    # longer duration, not a different sentence.
     rf") (?P<duration>until end of turn|until your next turn){where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
@@ -3453,8 +3455,8 @@ _SELF_ANIMATION_RE = re.compile(
 #: "Until your next turn, he becomes a land and gains "{T}: Add {U}"."
 #: (Hydro-Man, Fluid Felon's end step trigger, confirmed with `resolve_cards`).
 #: Layer 4 for the type (CR 613.1d) and layer 6 for the granted ability
-#: (CR 613.1f), one ability in two layers (CR 613.6), lasting CR 800.4m's
-#: "until that player's next turn".
+#: (CR 613.1f), one ability in two layers (CR 613.6), lasting the "until
+#: that player's next turn" duration CR 611.2a names.
 #:
 #: CR 205.1a - "the new card type(s) replaces any existing card types" - is
 #: what the card's own reminder text spells out as "He's not a creature during
@@ -3483,8 +3485,8 @@ def _self_becomes_type_until_next_turn_builder(
     to).
 
     `until_next_turn_of` is the source's controller - the "your" of "until your
-    next turn" (CR 800.4m: continuous effects with that duration "will last
-    until that turn would have begun").
+    next turn" (CR 611.2a: the continuous effect "lasts as long as stated by
+    the spell or ability creating it").
     """
 
     def builder(
@@ -4223,12 +4225,12 @@ def _pump_and_keyword_builder(
     every permanent - correctly produces nothing: this is never a static
     ability's own effect.
 
-    `until_next_turn` is CR 800.4m's longer duration - Liliana, the Last
+    `until_next_turn` is CR 611.2a's longer duration - Liliana, the Last
     Hope's own "Up to one target creature gets -2/-1 until your next turn."
     and Garruk, Veiled Butcher's identically shaped "+2" - which needs
     `until_next_turn_of` naming whose turn (the resolving source's own
-    controller, the only player CR 800.4m ever lets a printed "your" mean
-    here), not just the longer `Duration` member on its own.
+    controller, the only player a printed "your" here means), not just the
+    longer `Duration` member on its own.
     """
 
     def builder(
@@ -9225,8 +9227,9 @@ class ContinuousEffects(EngineModel):
     def end_for_next_turn(self, username: str) -> list[ContinuousEffect]:
         """End every "until [username]'s next turn" effect as that turn begins.
 
-        CR 800.4m treats "until that player's next turn" as ending when that
-        turn "would have begun", so this is called from `Game.begin_turn_for`
+        CR 611.2a: the effect "lasts as long as stated by the spell or
+        ability creating it", and "until [a player's] next turn" ends the
+        moment that turn begins, so this is called from `Game.begin_turn_for`
         - the same moment CR 302.6 clears summoning sickness for the player
         whose turn it now is. Unlike `end_the_turn`, this does not fire for
         every player's cleanup step: only the one named in

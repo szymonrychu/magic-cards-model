@@ -930,3 +930,47 @@ def test_modal_trigger_category_follows_the_same_fallback_chain_as_resolution():
         if isinstance(ability, TriggeredAbility)
     )
     assert _modal_trigger_category(yuriko_trigger.effect) == HANDLED
+
+
+# -- CR 107.3m: an ETB trigger reading the announced X --------------------
+
+
+def test_fblthp_knows_the_ways_etb_trigger_reads_the_announced_x():
+    """Fblthp, Knows the Way is `{X}{G}{G}`, and its ETB trigger - "search
+    your library for up to X basic land cards with different names" - is
+    unreadable with a literal "X" left in it, the same gap `trigger_effect_
+    for`'s own `x_value` parameter exists to close (its docstring names this
+    exact card). `Game._effect_of` substitutes the cast record's own X
+    before calling `trigger_effect_for`, gated on CR 107.3m (verified this
+    session with `mise run rules:find 107.3`): the ability's event is CR
+    603.6a's `ENTERS_THE_BATTLEFIELD`, its effect text carries a bare "X",
+    and the permanent's own mana cost carries "{X}" (CR 107.3a) - never a
+    card that defines X in its own text instead (CR 107.3f, Craterhoof
+    Behemoth's and Yuriko's shape, which CR 107.3m does not touch).
+    `classify_clauses` never simulated that substitution before calling
+    `trigger_effect_for`, so this genuinely-handled trigger
+    (`tests/scenarios/test_fra_s8_search_distinct_names.py` proves it live)
+    read `SILENT`.
+    """
+    by_source = {
+        outcome.source: outcome.category
+        for outcome in classify_clauses(card("Fblthp, Knows the Way"))
+    }
+    assert by_source["triggered"] == HANDLED, by_source
+
+
+def test_ajanis_anguish_is_not_a_second_misreport_of_the_same_shape():
+    """Ajani's Anguish is the other `{X}` mana cost / bare-"X" ETB trigger
+    in the pool (a full scan of every printing with `{X}` in its own mana
+    cost found exactly these two) - and it was never actually misreported:
+    its damage clause already classifies `HANDLED` with no X plumbing at
+    all, because the targeted-damage parser reads a literal "X" as CR
+    107.3a's own deferred amount directly (the real value is read at
+    resolution time off the ability's source, not substituted into the text
+    first). Pinned here so a future change to the CR 107.3m fix cannot
+    silently stop asking about this card too.
+    """
+    by_source = {
+        outcome.source: outcome.category for outcome in classify_clauses(card("Ajani's Anguish"))
+    }
+    assert by_source["triggered"] == HANDLED, by_source
