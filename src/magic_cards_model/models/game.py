@@ -13752,6 +13752,7 @@ class Game(EngineModel):
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
         x_value: int = 0,
     ) -> TotalCost:
         """The total cost of one activation (CR 602.1a, 601.2f).
@@ -13765,6 +13766,18 @@ class Game(EngineModel):
         or `exiling`; leaving it empty builds a cost that correctly refuses to
         be paid (CR 118.3) rather than one that cannot be built.
 
+        `tapping` is the same idea for "Tap `<count>` untapped `<quality>` you
+        control" (Persistent Petitioners' "Tap four untapped Advisors you
+        control", Merchant's Dockhand's "Tap X untapped artifacts you
+        control") - CR 601.2b's own choice of *which* permanents pay a named-
+        quality tap cost, as distinct from the bare `{T}` symbol (CR 107.5's
+        fixed "tap this permanent", no choice at all, already built with its
+        own card filled in below). `machines/casting.py`'s own
+        `Casting._printed_additional_costs` already fills a spell's matching
+        `TAP` component this way (Swallow Whole's own additional cost); this
+        is that same fill, for an activated ability's cost instead of a
+        spell's.
+
         `x_value` is CR 107.3a's X, announced as this activation begins
         (CR 602.2b), the same moment `Casting.determine_cost` fixes X for a
         spell. `ManaCost.with_x` folds it in when the printed cost has one -
@@ -13776,6 +13789,7 @@ class Game(EngineModel):
         sacrifices = list(sacrificing or [])
         discards = list(discarding or [])
         exiles = list(exiling or [])
+        taps = list(tapping or [])
 
         mana = ManaCost()
         components = []
@@ -13908,6 +13922,18 @@ class Game(EngineModel):
                     while exiles and len(chosen) < component.required:
                         chosen.append(exiles.pop(0))
                     component = component.model_copy(update={"cards": chosen})
+                if not component.cards and taps and component.kind is ComponentKind.TAP:
+                    # "Tap `<count>` untapped `<quality>` you control"
+                    # (Persistent Petitioners, Merchant's Dockhand): the same
+                    # fill as the `EXILE` branch immediately above, from
+                    # `tapping` rather than `exiling`. This component's own
+                    # `CostKind` is `OTHER` too - the bare `{T}` symbol is
+                    # what the `CostKind.TAP` branch above already built with
+                    # `[permanent]` filled in, so this never double-fills it.
+                    chosen_taps: list[CardState] = []
+                    while taps and len(chosen_taps) < component.required:
+                        chosen_taps.append(taps.pop(0))
+                    component = component.model_copy(update={"cards": chosen_taps})
                 if component.kind is ComponentKind.REVEAL:
                     # CR 701.20a's reveal from hand: the cards named in
                     # `revealing` pay it, and for CR 107.3a's X their number
@@ -14224,6 +14250,7 @@ class Game(EngineModel):
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
         x_value: int = 0,
         targets: list[object] | None = None,
     ) -> CostPayment:
@@ -14257,6 +14284,7 @@ class Game(EngineModel):
             discarding=discarding,
             exiling=exiling,
             revealing=revealing,
+            tapping=tapping,
             x_value=x_value,
         )
         # CR 601.2h pays the cost the player chose, so a reveal cost nobody

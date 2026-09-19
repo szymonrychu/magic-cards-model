@@ -1128,6 +1128,7 @@ class PlayedScenario:
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
+        tapping_for_cost: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
         targets: list[Target] | None = None,
         color: Color | Sequence[Color] | str | None = None,
@@ -1157,6 +1158,15 @@ class PlayedScenario:
         only after the total cost has been determined, so it lands on the open
         `CostPayment` rather than on the cost - which is why it is applied here
         and not passed to `begin_activating`.
+
+        `tapping_for_cost` is a different thing with an unavoidably similar
+        name: the permanents chosen to pay a printed "Tap `<count>` untapped
+        `<quality>` you control" additional cost (Persistent Petitioners'
+        "Tap four untapped Advisors you control", Merchant's Dockhand's "Tap
+        X untapped artifacts you control") - CR 601.2b's own choice, made as
+        the activation is announced, the same moment `sacrificing`/
+        `discarding`/`exiling` are. Passed straight to `begin_activating`,
+        never to an open `CostPayment` the way `tapping` is.
         """
         controller = username or self.game.controller_of(source).username
         payment = self.game.begin_activating(
@@ -1167,6 +1177,7 @@ class PlayedScenario:
             discarding=discarding,
             exiling=exiling,
             revealing=revealing,
+            tapping=tapping_for_cost,
             x_value=x_value,
             targets=targets,
         )
