@@ -561,6 +561,14 @@ class AbilityOnStack(EngineModel):
     `targets`, this was never a target at all (CR 115.1 - Back from the
     Brink's own sentence never says "target")."""
 
+    cost_exiled_card_ids: tuple[UUID, ...] = ()
+    """Every card exiled to pay this ability's own cost - Corpseweft's
+    "Exile one or more creature cards from your graveyard", whose effect
+    counts them: "where X is twice the number of cards exiled this way". The
+    plural twin of `cost_exiled_card_id` (which names the one card an
+    effect acts on), filled by `Game.activate_ability` from the paid
+    payment (CR 602.2b)."""
+
     cost_sacrificed_card_ids: tuple[UUID, ...] = ()
     """The ids of the permanents sacrificed to pay this ability's own cost,
     when the ability's *effect* asks a question about them - Witch's Oven's
@@ -1503,6 +1511,16 @@ def condition_matches(
         return mine and event.subject_id == source.id
 
     if ability.event is TriggerEvent.ATTACKS:
+        batch = batched_attackers(game, condition, controller)
+        if batch is not None:
+            # CR 603.2c: "one or more <description> attack" is one trigger
+            # event for the whole declaration, read off `Game.declare_
+            # attackers`' own subject-less event, not once per attacker.
+            return (
+                event.subject_id is None
+                and bool(batch)
+                and (event.player == controller or not _ONE_OR_MORE_ATTACK_YOURS.search(condition))
+            )
         # CR 508.3d: "Whenever [a player] attacks, ..." triggers once when one
         # or more creatures that player controls are declared as attackers -
         # not once per attacker. `Game.declare_attackers` emits that as its
@@ -3450,6 +3468,62 @@ def abilities_triggered_by(
     return found
 
 
+#: "one or more `<description>` attack" - The Earth King's "one or more
+#: creatures you control with power 4 or greater attack". CR 603.2c: "An
+#: ability triggers only once each time its trigger event occurs. However, it
+#: can trigger repeatedly if one event contains multiple occurrences" - the
+#: plural "one or more" is one trigger for the declaration, and how many of
+#: the attackers fit the description is the event's count, which a later
+#: "that many" reads (`machines/effects.that_many`).
+_ONE_OR_MORE_ATTACK_RE = re.compile(r"^one or more (?P<description>.+?) attack$", re.IGNORECASE)
+_ONE_OR_MORE_ATTACK_YOURS = re.compile(r"\byou control\b", re.IGNORECASE)
+
+
+def is_batched_attack_condition(condition: str) -> bool:
+    """Whether `condition` is "one or more `<description>` attack" - one
+    trigger for a whole declaration (`batched_attackers`)."""
+    return _ONE_OR_MORE_ATTACK_RE.fullmatch(condition.strip()) is not None
+
+
+def batched_attackers(game: "Game", condition: str, controller: str) -> list[CardState] | None:
+    """The attacking creatures a "one or more `<description>` attack"
+    condition counts, or `None` when `condition` is not that shape or its
+    description does not read (`machines/targeting.permanent_description`,
+    the grammar a "target" phrase uses, with "you control" read here as the
+    attackers' own controller)."""
+    match = _ONE_OR_MORE_ATTACK_RE.fullmatch(condition.strip())
+    if match is None:
+        return None
+    from .targeting import permanent_description
+
+    description = match.group("description")
+    yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
+    requirement = permanent_description(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip())
+    if requirement is None:
+        return None
+    return [
+        attacker
+        for attacker in game.attacking_creatures()
+        if (not yours or game.controller_of(attacker).username == controller)
+        and requirement.rejects(attacker, controller, game) is None
+    ]
+
+
+def _event_for(
+    game: "Game", ability: TriggeredAbility, controller: str, event: GameEvent
+) -> GameEvent:
+    """The event this ability carries onto the stack: `event` itself, or -
+    for a batched "one or more `<description>` attack" trigger - a copy
+    whose `amount` is how many attackers fit the description, the count
+    this ability's own "that many" reads (CR 603.2c)."""
+    if ability.event is not TriggerEvent.ATTACKS or event.subject_id is not None:
+        return event
+    batch = batched_attackers(game, ability.condition, controller)
+    if batch is None:
+        return event
+    return event.model_copy(update={"amount": len(batch)})
+
+
 def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> list[AbilityOnStack]:
     """Every ability `sources` have that this event triggers (CR 603.2).
 
@@ -3479,7 +3553,7 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             source_name=source.name,
             controller=controller,
             source_stamp=source.zone_change_stamp,
-            event=event,
+            event=_event_for(game, ability, controller, event),
         )
         triggered.append(on_stack)
         # CR 603.2d: "determine how many times it should trigger, then

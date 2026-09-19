@@ -141,6 +141,7 @@ from magic_cards_model.machines.triggers import (  # noqa: E402
     TriggerEvent,
     _unread_trigger_events,
     condition_matches,
+    is_batched_attack_condition,
 )
 from magic_cards_model.machines.triggers import (  # noqa: E402
     _required_entering_subtype as _condition_required_entering_subtype,
@@ -924,6 +925,10 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     happened to fail.
     """
     if ability.event not in _SYNTHESIZABLE_EVENTS:
+        return None
+    if ability.event is TriggerEvent.ATTACKS and is_batched_attack_condition(ability.condition):
+        # "one or more <description> attack" counts a declared attack, which
+        # this closure's synthetic board has none of - no occurrence to try.
         return None
     entering = ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
     probes = _probe_cards(printing, ability.condition, entering=entering)

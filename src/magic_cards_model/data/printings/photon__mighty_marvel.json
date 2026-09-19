@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "2b164aca-2bda-49a6-81ce-16ef4721ec63",
+  "oracle_id": "c46d6f42-5e50-4c0d-8908-360337285f83",
+  "multiverse_ids": [],
+  "resource_id": "807F0206CBF1D4E3CC81BE30D87A838E4C90D19F93159C5F5E53C45C6BFCF037",
+  "mtgo_id": 150555,
+  "arena_id": 105440,
+  "tcgplayer_id": 697291,
+  "cardmarket_id": 891672,
+  "name": "Photon, Mighty Marvel",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/2b164aca-2bda-49a6-81ce-16ef4721ec63",
+  "scryfall_uri": "https://scryfall.com/card/msc/58/photon-mighty-marvel?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:41:21Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.jpg?1783903281",
+    "normal": "https://cards.scryfall.io/normal/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.jpg?1783903281",
+    "large": "https://cards.scryfall.io/large/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.jpg?1783903281",
+    "png": "https://cards.scryfall.io/png/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.png?1783903281",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.jpg?1783903281",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.jpg?1783903281",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.webp?1783903281",
+    "grid": "https://cards.scryfall.io/grid/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.webp?1783903281",
+    "display": "https://cards.scryfall.io/display/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.webp?1783903281",
+    "art": "https://cards.scryfall.io/art/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.webp?1783903281",
+    "crop": "https://cards.scryfall.io/crop/front/2/b/2b164aca-2bda-49a6-81ce-16ef4721ec63.webp?1783903281"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Human Hero",
+  "oracle_text": "Flying\nWhenever Photon deals combat damage to a player, add that much mana of any one color. Until end of turn, you don't lose this mana as steps and phases end.",
+  "power": "2",
+  "toughness": "4",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set": "msc",
+  "set_name": "Marvel Super Heroes Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2b164aca-2bda-49a6-81ce-16ef4721ec63/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac46d6f42-5e50-4c0d-8908-360337285f83&unique=prints",
+  "collector_number": "58",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"I believe I can shed some light on this situation.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tran Nguyen",
+  "artist_ids": [
+    "fcd05833-d82b-4d3b-b7a7-8fddb3ed2485"
+  ],
+  "illustration_id": "94d7dbf9-aeac-47d7-92f6-1d95fdb47bce",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "surgefoil",
+    "universesbeyond"
+  ],
+  "edhrec_rank": 14406,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.26",
+    "eur_foil": null,
+    "tix": "2.46"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPhoton%252C%2BMighty%2BMarvel",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPhoton%252C%2BMighty%2BMarvel",
+    "edhrec": "https://edhrec.com/route/?cc=Photon%2C+Mighty+Marvel"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697291%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891672&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/150555?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

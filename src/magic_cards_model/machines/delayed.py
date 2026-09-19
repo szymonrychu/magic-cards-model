@@ -823,9 +823,9 @@ class ReflexiveConsequence(DelayedEffectSpecBase):
     kind: Literal["reflexive_consequence"] = "reflexive_consequence"
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
-        from .effects import parse_mixed_effect
+        from .effects import reflexive_consequence_effect
 
-        consequence_effect = parse_mixed_effect(trigger.text)
+        consequence_effect = reflexive_consequence_effect(trigger.text)
         if consequence_effect is not None:
             consequence_effect(game, ability)
 

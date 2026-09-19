@@ -337,6 +337,18 @@ def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
     return any(name and re.search(rf"\b{re.escape(name)}\b", text) for name in names)
 
 
+def _cost_moved(payment: CostPayment, kind: ComponentKind) -> tuple[UUID, ...]:
+    """The ids of the objects a paid `payment`'s `kind` components moved -
+    Corpseweft's exiled creature cards, Radiant Lotus's sacrificed
+    artifacts - in payment order."""
+    return tuple(
+        state.id
+        for component in payment.components
+        if component.kind is kind
+        for state in component.cards
+    )
+
+
 def _exiles_itself_by_name(text: str, permanent: "CardState") -> bool:
     """Whether `text` is "Exile `<permanent's own printed name>`" - CR 201.5's
     other self-reference form: "If an object's text uses the object's own
@@ -1822,6 +1834,12 @@ class Game(EngineModel):
     _announced_targets: dict[str, tuple[list[TargetRef], CostPayment]] = PrivateAttr(
         default_factory=dict
     )
+    _opened_payments: dict[str, CostPayment] = PrivateAttr(default_factory=dict)
+    """The payment `begin_activating` opened, keyed like `activations`, for
+    `activate_ability` to read back which objects the cost actually moved
+    once it is paid (CR 602.2b) - "`<verb>` this way" on the resolving
+    ability counts them. Not persisted, for the same reason as
+    `_announced_targets`: both calls run inside one command."""
     """The targets `begin_activating` announced (CR 601.2c), keyed like
     `activations`, with the payment it opened for them. `activate_ability`
     takes them back only once that payment is paid (CR 601.2h): a payment
@@ -2012,6 +2030,16 @@ class Game(EngineModel):
     object that's resolving" needs to be able to name it, and this is the only
     place that can. Excluded from serialisation: it is live only for the length
     of one resolution and means nothing in a stored board."""
+
+    _linked_count: int | None = PrivateAttr(default=None)
+    """How many objects the latest counted instruction of the resolving
+    object actually moved - discarded, sacrificed, exiled, milled, life paid
+    - for a later "that many" of the same object to read (CR 608.2c: its
+    instructions are followed in the order written, and later text refers
+    back to earlier text). Written by `record_count`, read by
+    `recorded_count`, cleared by `resolve_top` around every resolution so it
+    never outlives the object that wrote it. Not persisted: a command that
+    pauses is replayed from its start, and the same clauses write it again."""
 
     turn_ended_exiled_ids: SortedSet[UUID] = Field(default_factory=set, exclude=True, repr=False)
     """Spells CR 724.1b exiled while they were resolving.
@@ -2227,7 +2255,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 21
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2455,6 +2483,13 @@ class Game(EngineModel):
     `Game.model_dump()` and the bump rule's first bullet does not carve out
     an exception for a field whose default happens to match every existing
     use - refused rather than trusted on that observation holding forever.
+
+    Bumped 21 -> 22: number sweep G0b, the "that many" count channel.
+    `AbilityOnStack` gained `cost_exiled_card_ids`, and a batched "one or
+    more ... attack" trigger's `event` now carries its own `amount`. A
+    version-21 stack holding a "that many"/"this way" ability (Fable of the
+    Mirror-Breaker II, The Earth King, Corpseweft) resolved as a notice or
+    nothing and now moves cards. Refused instead.
     """
 
     @model_validator(mode="before")
@@ -3604,11 +3639,25 @@ class Game(EngineModel):
         if self.stack_is_empty:
             raise ValueError("the stack is empty")
         self.resolving = self.stack[-1]
+        self._linked_count = None
         try:
             with self._id_allocator_scope():
                 return self._resolve_top()
         finally:
             self.resolving = None
+            self._linked_count = None
+
+    def record_count(self, count: int | None) -> None:
+        """Record how many objects the resolving object's current instruction
+        actually moved, for a later "that many" to read (`_linked_count`) -
+        or `None` to clear it ahead of an instruction whose count a later
+        "if you do" asks about."""
+        self._linked_count = count
+
+    def recorded_count(self) -> int | None:
+        """The count `record_count` last wrote during this resolution, or
+        None when no counted instruction has run yet."""
+        return self._linked_count
 
     def _resolve_top(self) -> StackObject:
         """Resolve the top of the stack (CR 608).
@@ -14314,6 +14363,7 @@ class Game(EngineModel):
         )
         if announced is not None:
             self._announced_targets[key] = (announced, payment)
+        self._opened_payments[key] = payment
         return payment
 
     def apply_mana_ability_rider(
@@ -14412,6 +14462,8 @@ class Game(EngineModel):
             # nothing rechecks that here; CR 608.2b does, on resolution.
             key = self._activation_key(permanent, index)
             entry = self._announced_targets.pop(key, None)
+            opened = self._opened_payments.pop(key, None)
+            paid = opened if opened is not None and opened.step is CostStep.PAID else None
             # Only the announcement whose payment was paid belongs to this
             # activation; one whose payment was rewound or abandoned is stale.
             recorded = entry[0] if entry is not None and entry[1].step is CostStep.PAID else None
@@ -14612,7 +14664,20 @@ class Game(EngineModel):
                 targets=[TargetRef.coerce(target) for target in targets or []],
                 x_value=x_value,
                 cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,
-                cost_sacrificed_card_ids=tuple(state.id for state in (sacrificed_for_cost or [])),
+                # CR 602.2b: the objects the paid cost moved, read off the
+                # payment itself when `begin_activating` opened one, so a
+                # "`<verb>` this way" count never depends on what the caller
+                # chose to repeat here.
+                cost_sacrificed_card_ids=(
+                    _cost_moved(paid, ComponentKind.SACRIFICE)
+                    if paid is not None
+                    else tuple(state.id for state in (sacrificed_for_cost or []))
+                ),
+                cost_exiled_card_ids=(
+                    _cost_moved(paid, ComponentKind.EXILE)
+                    if paid is not None
+                    else ((exiled_for_cost.id,) if exiled_for_cost is not None else ())
+                ),
             )
             self.stack.append(on_stack)
             # CR 602.2b's target announcement has settled (CR 601.2c, imported

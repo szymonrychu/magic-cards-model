@@ -265,21 +265,17 @@ def test_behold_the_beyond_finds_fewer_than_three_when_the_library_runs_short():
     assert alice.library == []
 
 
-# -- The Earth King: "up to that many" carries a count from an earlier
-# instruction (here, how many qualifying creatures attacked) rather than
-# printing one - Group 0b's own channel, not built yet. `_SEARCH_AND_PUT_RE`
-# recognises the shape (so the clause is not treated as unreadable
-# altogether) but `_read_search_count` refuses to guess the number, and
-# `_unreadable_search_count` turns that refusal into a recorded notice
-# instead of the trigger silently doing nothing.
+# -- The Earth King: "up to that many" carries a count from the trigger
+# event (how many qualifying creatures attacked) rather than printing one -
+# read through the count channel (`machines/effects.that_many`); the full
+# corner cases live in `test_that_many_count_channel.py`.
 
 
-def test_the_earth_king_records_a_notice_instead_of_guessing_that_many():
+def test_the_earth_king_searches_for_up_to_one_land_for_one_qualifying_attacker():
     """ "Whenever one or more creatures you control with power 4 or greater
     attack, search your library for up to that many basic land cards, put
-    them onto the battlefield tapped, then shuffle." Anafenza (4/4) attacking
-    fires the trigger; the search itself is left to Group 0b and is recorded
-    here rather than run - the library is untouched."""
+    them onto the battlefield tapped, then shuffle." Anafenza (4/4) alone
+    attacking is a count of one: one basic, tapped."""
     scenario = (
         Scenario()
         .player(
@@ -295,10 +291,8 @@ def test_the_earth_king_records_a_notice_instead_of_guessing_that_many():
     scenario.attack_with(anafenza)
     scenario.pass_until_resolved()
 
-    assert scenario.player("alice").library == [
-        scenario.find("Forest", Zone.LIBRARY, "alice"),
-        scenario.find("Mountain", Zone.LIBRARY, "alice"),
-    ], "the search was not run - Group 0b's own carried-count channel"
-    (notice,) = scenario.game.search_description_notices
-    assert notice.source_name == "The Earth King"
-    assert "that many" in notice.text
+    assert len(scenario.player("alice").library) == 1
+    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.card.is_land]
+    assert len(lands) == 1
+    assert lands[0].tapped
+    assert scenario.game.search_description_notices == []

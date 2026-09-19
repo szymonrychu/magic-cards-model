@@ -91,7 +91,7 @@ from ..ids import new_id
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
-from ..numbers import parse_count
+from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
 from .abilities import layer_readable_sentences, self_normalized_effect_text
 from .combat import KEYWORDS_OUTSIDE_COMBAT, Keyword
@@ -2327,9 +2327,17 @@ _SUBJECT = (
     r"|another target(?: [a-z]+)? creature(?: you control)?)"
 )
 
+#: A plural target subject - "up to two target creatures", "up to 2 target
+#: attacking creatures" (a reflexive ability's count written in as a digit,
+#: Swashbuckler Extraordinaire, Campsite Cuisine) - read with the plural verb
+#: ("get", "each get", "gain"). CR 601.2c/603.3d already fixed how many and
+#: which were targeted; the builders below apply to every resolved target.
+_PLURAL_TARGET_SUBJECT = rf"(?:up to )?(?:\d+|{COUNT}) target(?: [a-z]+)? creatures"
+
 _PUMP_RE = re.compile(
-    rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
-    rf"(?: and gains (?P<keyword>[a-z ]+))? until end of turn\.?$",
+    rf"^(?:{_SUBJECT} gets|{_PLURAL_TARGET_SUBJECT} (?:each )?get) "
+    rf"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    rf"(?: and gains? (?P<keyword>[a-z ,]+?))? until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -2609,7 +2617,8 @@ def _become_a_copy_builder(
 
 
 _KEYWORD_GRANT_RE = re.compile(
-    rf"^{_SUBJECT} gains (?P<keyword>[a-z ]+) until end of turn\.?$",
+    rf"^(?:{_SUBJECT} gains|{_PLURAL_TARGET_SUBJECT} gain) "
+    r"(?P<keyword>[a-z ,]+?) until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -3379,7 +3388,8 @@ def _board_wide_type_grant_builder(
 #: answering yes. `machines/effects.py`'s routing needs exactly that
 #: distinction: see `is_resolution_layer_effect_text`.
 _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE = re.compile(
-    rf"^{_SUBJECT} (?:gets?|gains?|has|have)\b|^Until your next turn, up to \S+ target\b"
+    rf"^(?:{_SUBJECT}|{_PLURAL_TARGET_SUBJECT}) (?:(?:each )?gets?|gains?|has|have)\b"
+    r"|^Until your next turn, up to \S+ target\b"
     r"|^target permanent becomes\b",
     re.IGNORECASE,
 )
@@ -3526,8 +3536,11 @@ def _effect_sentences_uncached(
     )
 
 
-def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -> EffectBuilder:
-    """ "[Subject] gets +N/+N [and gains <keyword>] until end of turn."
+def _pump_and_keyword_builder(
+    power: int, toughness: int, keywords: Sequence[str] = ()
+) -> EffectBuilder:
+    """ "[Subject] gets +N/+N [and gains <keyword>[ and <keyword>]] until end
+    of turn."
 
     Sublayer 7c for the pump (CR 613.4c: "modify power and/or toughness ...
     don't set"), layer 6 for the keyword (CR 613.1f, CR 113.10). Applies to
@@ -3558,7 +3571,7 @@ def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -
                     modification=modify_power_toughness(power, toughness),
                 )
             )
-            if keyword is not None:
+            for keyword in keywords:
                 effects.append(
                     ContinuousEffect(
                         description=f"{source.name}: {target.name} gains {keyword}",
@@ -3680,8 +3693,9 @@ def spend_effect_effects(text: str, permanent: CardState, timestamp: int) -> lis
     ]
 
 
-def _keyword_grant_builder(keyword: str) -> EffectBuilder:
-    """ ""[Subject] gains <keyword> until end of turn." (CR 613.1f, CR 113.10)."""
+def _keyword_grant_builder(keywords: Sequence[str]) -> EffectBuilder:
+    """ "[Subject] gains <keyword>[ and <keyword>] until end of turn."
+    (CR 613.1f, CR 113.10)."""
 
     def builder(
         source: CardState,
@@ -3699,6 +3713,7 @@ def _keyword_grant_builder(keyword: str) -> EffectBuilder:
                 modification=grant_ability(keyword),
             )
             for target in targets
+            for keyword in keywords
         ]
 
     return builder
@@ -5130,15 +5145,15 @@ def _permanents_with_counters_ward_builder(cost: str, *, line: str) -> EffectBui
     return builder
 
 
-#: The keyword grant shapes only ever grant one bare keyword - `machines/
-#: combat.py`'s own vocabulary, since that is what a grant needs to be able to
-#: do anything (`combat.has_keyword` is the only reader). Aerial Maneuver's
-#: "gains flying **and first strike**" is exactly why this is a whitelist and
-#: not `[a-z ]+` on its own: without it, "flying and first strike" would be
-#: accepted and granted as one bogus ability instead of two real ones. A
-#: keyword outside this set - or a conjunction the pool does not use single
-#: keywords with - fails the match and falls to `looks_like_unparsed_layer_effect`
-#: instead of silently granting the wrong thing.
+#: The keyword grant shapes grant bare keywords from `machines/combat.py`'s
+#: own vocabulary, since that is what a grant needs to be able to do anything
+#: (`combat.has_keyword` is the only reader). Aerial Maneuver's "gains flying
+#: **and first strike**" is why this is a whitelist and not `[a-z ]+` on its
+#: own: "flying and first strike" is split into its keywords
+#: (`_split_and_validate_keywords`) and granted as two real ones, never one
+#: bogus ability. A keyword outside this set fails the match and falls to
+#: `looks_like_unparsed_layer_effect` instead of silently granting the wrong
+#: thing.
 # Keywords no combat rule reads, and so absent from `machines/combat.py`'s own
 # `Keyword` vocabulary, that a grant still has to be able to name -
 # CR 702.12a's indestructible ("Indestructible is a static ability"; before it
@@ -5254,12 +5269,13 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if match := _PUMP_RE.fullmatch(sentence):
         power, toughness = int(match.group("power")), int(match.group("toughness"))
-        keyword = match.group("keyword")
-        if keyword is not None:
-            if keyword.strip().lower() not in _KNOWN_KEYWORDS:
+        granted: list[str] = []
+        if match.group("keyword") is not None:
+            validated = _split_and_validate_keywords(match.group("keyword"))
+            if validated is None:
                 return None
-            keyword = keyword.strip().capitalize()
-        return _pump_and_keyword_builder(power, toughness, keyword)
+            granted = validated
+        return _pump_and_keyword_builder(power, toughness, granted)
     if match := _SELF_PUMP_PER_GRAVEYARD_CARD_RE.fullmatch(sentence):
         card_type = _card_type_word(match.group("qualifier"))
         if card_type is None:
@@ -5277,10 +5293,10 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _BECOME_A_COPY_RE.fullmatch(sentence):
         return _become_a_copy_builder(until_eot=bool(match.group("until_eot")))
     if match := _KEYWORD_GRANT_RE.fullmatch(sentence):
-        keyword = match.group("keyword").strip()
-        if keyword.lower() not in _KNOWN_KEYWORDS:
+        granted_keywords = _split_and_validate_keywords(match.group("keyword"))
+        if granted_keywords is None:
             return None
-        return _keyword_grant_builder(keyword.capitalize())
+        return _keyword_grant_builder(granted_keywords)
     if match := _ANTHEM_RE.fullmatch(sentence):
         return _anthem_builder(
             int(match.group("power")),
@@ -6312,7 +6328,7 @@ def _violent_urge(
     exactly this reason - the row is not dead weight, it does one thing the
     parser cannot.
     """
-    effects = _pump_and_keyword_builder(1, 0, "First strike")(source, timestamp, targets, context)
+    effects = _pump_and_keyword_builder(1, 0, ["First strike"])(source, timestamp, targets, context)
     if count_card_types(context.your_graveyard) >= 4:
         effects.extend(
             ContinuousEffect(
