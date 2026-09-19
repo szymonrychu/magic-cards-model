@@ -1543,7 +1543,18 @@ def condition_matches(
             return mana_value == threshold
         if mine and "this spell" in lowered:
             return event.subject_id == source.id
-        if not _controller_clause_holds(condition, controller, event.player):
+        if "an opponent" in lowered:
+            # Jin-Gitaxias, Progress Tyrant's own "Whenever an opponent
+            # casts ..." - `_controller_clause_holds` only ever recognises
+            # "an opponent **controls**"/"your opponents **control**"
+            # (CR 613.5's board-control question), never "casts", so a
+            # condition worded this way fell through its default "nothing
+            # named, nothing required" branch and matched *any* caster,
+            # controller included - the same "an opponent" fallback
+            # `TriggerEvent.DRAWS_A_CARD`/`GAINS_LIFE` already use just below.
+            if event.player is None or event.player == controller:
+                return False
+        elif not _controller_clause_holds(condition, controller, event.player):
             return False
         if not _origin_zone_matches(event.origin_zone, condition):
             return False
@@ -2031,6 +2042,13 @@ def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
         return False
     if "your" in lowered:
         return event.player == controller
+    if "opponent" in lowered:
+        # "At the beginning of each opponent's upkeep" (Sheoldred, Whispering
+        # One; Urabrask, Heretic Praetor) - CR 102.2's opponent, not "whoever's
+        # step it is": without this, the bare "each upkeep" default just below
+        # matched the ability's own controller's step too, firing the trigger
+        # on the wrong player's turn as well as the right one.
+        return event.player is not None and event.player != controller
     # "each upkeep", "the end step" - whoever's step it is.
     return True
 

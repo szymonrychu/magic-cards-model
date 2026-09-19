@@ -11607,6 +11607,16 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     endure = _parse_endure_clause(effect_text)
     if endure is not None:
         return endure
+    # Tried against the whole, unsplit text - "copy that spell. You may
+    # choose new targets for the copy." has a bare period joining its two
+    # sentences, which `_prepare_effect_clauses` cuts into two separate
+    # clauses before either ever reaches `_parse_mixed_clause`'s per-clause
+    # dispatch, the same precedent already documented above for `parse_
+    # casting_rule_clause` and `_parse_return_self_to_battlefield_
+    # transformed_clause`.
+    copy_that_spell_whole = _parse_copy_that_spell_clause(effect_text, for_spell=False)
+    if copy_that_spell_whole is not None:
+        return copy_that_spell_whole
     create_x_tokens_where_x_is = _parse_create_x_tokens_where_x_is_clause(effect_text)
     if create_x_tokens_where_x_is is not None:
         return create_x_tokens_where_x_is
@@ -18582,6 +18592,48 @@ def _parse_defending_player_reveals_top_conditional_land_clause(
     return effect
 
 
+#: "They gain/lose N life." - Sheoldred, the Apocalypse's own "Whenever an
+#: opponent draws a card, they lose 2 life." "They" is CR 607.1's own
+#: anaphora back to the player the trigger's condition named ("an opponent"),
+#: read off `GameEvent.player` - the same event field `TriggerEvent.
+#: DRAWS_A_CARD`/`GAINS_LIFE`'s own condition matcher already reads for "an
+#: opponent" (`machines/triggers.py`) - never the resolving ability's
+#: controller, which is why this cannot go through `parse_clause_effect`'s
+#: ordinary "you gain/lose life" reading (`_GAIN_LIFE_RE`/`_LOSE_LIFE_RE`):
+#: that family always means the controller.
+_THEY_GAIN_OR_LOSE_LIFE_RE = re.compile(
+    rf"^they (?P<verb>gains?|loses?) (?P<n>{COUNT}) life$", re.IGNORECASE
+)
+
+
+def _parse_they_gain_or_lose_life_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_THEY_GAIN_OR_LOSE_LIFE_RE`'s shape. Ability-only: a spell has no
+    `ability.event` to read "they" against."""
+    if for_spell:
+        return None
+    match = _THEY_GAIN_OR_LOSE_LIFE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    gains = match.group("verb").lower().startswith("gain")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.player is None:
+            return
+        player = game.player(event.player)
+        if gains:
+            game.gain_life(player, amount)
+        else:
+            player.lose_life(amount)
+
+    return effect
+
+
 #: "Counter that spell." - Vexing Bauble's and Chalice of the Void's own
 #: templated effect clause, both times following a `TriggerEvent.CAST_SPELL`
 #: condition. "That spell" is **CR 607.1** linked-ability anaphora back to the
@@ -18623,6 +18675,54 @@ def _parse_counter_that_spell_clause(clause: str, *, for_spell: bool) -> Targete
         # outcome, even though this was never a target to begin with.
         if spell is not None and spell in game.stack:
             game.counter(spell)
+
+    return effect
+
+
+#: "Copy that spell[. You may choose new targets for the copy.]" - Jin-
+#: Gitaxias, Progress Tyrant's own "Whenever you cast an artifact, instant,
+#: or sorcery spell" trigger, the bare form of the same CR 607.1 "that
+#: spell" anaphora `_parse_counter_that_spell_clause` reads, plus CR 707.10's
+#: copy (`Game.copy_spell`) and CR 707.10c's own retargeting offer (`Game.
+#: offer_new_targets_for_copy`) - the same two primitives `_parse_target_
+#: opponent_draw_then_copy_that_spell_clause` already uses for Alania,
+#: Divergent Storm's richer two-clause chain, here with nothing in front of
+#: the copy at all.
+_COPY_THAT_SPELL_RE = re.compile(
+    r"^copy that spell\.?(?P<new_targets>\s*you may choose new targets for the copy\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_that_spell_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """Ability-only (`for_spell=False`), the same restriction `_parse_
+    counter_that_spell_clause` holds itself to: "that spell" only resolves
+    against `ability.event`, which a spell being cast does not have.
+    """
+    if for_spell:
+        return None
+    match = _COPY_THAT_SPELL_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    offer_new_targets = match.group("new_targets") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if spell is None or spell not in game.stack:
+            return
+        copy = game.copy_spell(spell, controller=ability.controller)
+        if offer_new_targets:
+            game.offer_new_targets_for_copy(
+                copy,
+                ability.controller,
+                source_name=ability.source_name,
+                source_id=source_id_of(ability),
+            )
 
     return effect
 
@@ -21514,6 +21614,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if exile_that_players_library is not None:
         return exile_that_players_library
+    they_gain_or_lose_life = _parse_they_gain_or_lose_life_clause(clause, for_spell=for_spell)
+    if they_gain_or_lose_life is not None:
+        return they_gain_or_lose_life
+    copy_that_spell = _parse_copy_that_spell_clause(clause, for_spell=for_spell)
+    if copy_that_spell is not None:
+        return copy_that_spell
     counter_that_spell = _parse_counter_that_spell_clause(clause, for_spell=for_spell)
     if counter_that_spell is not None:
         return counter_that_spell
@@ -21567,6 +21673,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     sacrifice_group = _parse_sacrifice_n_of_a_group_clause(clause, for_spell=for_spell)
     if sacrifice_group is not None:
         return sacrifice_group
+    that_player_sacrifices = _parse_that_player_sacrifices_of_their_choice_clause(
+        clause, for_spell=for_spell
+    )
+    if that_player_sacrifices is not None:
+        return that_player_sacrifices
     sacrifice_of_their_choice = _parse_each_sacrifices_of_their_choice_clause(clause)
     if sacrifice_of_their_choice is not None:
         return sacrifice_of_their_choice
@@ -23471,6 +23582,77 @@ def _parse_each_sacrifices_of_their_choice_clause(clause: str) -> TargetedClause
             )
             by_id = {permanent.id: permanent for permanent in candidates}
             chosen.extend(by_id[card_id] for card_id in chosen_ids if card_id in by_id)
+        for permanent in chosen:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.sacrifice(permanent)
+
+    return effect
+
+
+#: "That player sacrifices `<n>` `<description>` of their choice." -
+#: Sheoldred, Whispering One's own "At the beginning of each opponent's
+#: upkeep, that player sacrifices a creature of their choice." "That player"
+#: (CR 607.1 anaphora) is whichever specific opponent's upkeep just began -
+#: `GameEvent.player` - not "each opponent" all at once
+#: (`_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`'s own shape, a genuinely different
+#: sentence): the trigger already fires once per opponent, at the start of
+#: *their* step, so only that one player ever chooses here.
+_THAT_PLAYER_SACRIFICES_OF_THEIR_CHOICE_RE = re.compile(
+    rf"^that player sacrifices (?P<n>{COUNT}) (?P<description>.+?) "
+    r"of their choice(?P<tail> with [^.]+?)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_that_player_sacrifices_of_their_choice_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_THAT_PLAYER_SACRIFICES_OF_THEIR_CHOICE_RE`'s shape. Ability-only: a
+    spell has no `ability.event` to read "that player" against."""
+    if for_spell:
+        return None
+    match = _THAT_PLAYER_SACRIFICES_OF_THEIR_CHOICE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    description = match.group("description").strip()
+    if match.group("tail") is not None:
+        description = f"{description}{match.group('tail')}"
+    requirement = permanent_description(description)
+    if requirement is None or count is None or count < 1:
+        return None
+    wanted_words = with_indefinite_article(description) if count == 1 else f"{count} {description}"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.player is None:
+            return
+        username = event.player
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(username)
+            if requirement.rejects(permanent, username, game) is None
+        ]
+        if not candidates:
+            return
+        if len(candidates) <= count:
+            chosen = candidates
+        else:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=username,
+                    prompt=f"sacrifice {wanted_words}",
+                    source=ability.source_name,
+                    amount=count,
+                    cards=tuple(permanent.id for permanent in candidates),
+                    source_id=source_id_of(ability),
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in candidates}
+            chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
         for permanent in chosen:
             if permanent.zone is Zone.BATTLEFIELD:
                 game.sacrifice(permanent)

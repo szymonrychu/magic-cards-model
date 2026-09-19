@@ -2614,6 +2614,24 @@ _INTERVENING_IF_CAST_THIS_TURN_BOUNDARY = re.compile(
     r"if\s(?P<clause>.+?\byou(?:'ve| have) cast this turn)\s*,\s*", re.IGNORECASE
 )
 
+#: "Whenever you cast an artifact, instant, or sorcery spell, `<effect>`."
+#: (Jin-Gitaxias, Progress Tyrant) - a comma-separated type list *inside* the
+#: trigger condition itself, ahead of the comma that actually separates the
+#: condition from the effect (CR 603.1's own "[trigger condition], [effect]"
+#: template). `_split_top_level`'s naive first-top-level-comma cut has no way
+#: to tell "artifact," (mid-list) from the real boundary, and sliced this
+#: condition down to "you cast an artifact", leaving "instant, or sorcery
+#: spell" sitting in front of the effect text instead - the same class of
+#: defect `_INTERVENING_IF_CAST_THIS_TURN_BOUNDARY` above already exists to
+#: fix on the intervening-*if* side. Captured whole, including the trailing
+#: comma, so `_parse_triggered` can cut there directly instead of re-running
+#: the naive split over ground this regex has already covered.
+_CAST_TYPE_LIST_CONDITION_BOUNDARY = re.compile(
+    r"^(?P<condition>(?:you|target player|each player|an? opponent|a player) "
+    r"casts? an? [a-z]+(?:,\s*[a-z]+)*(?:,)?\s+or\s+[a-z]+ spells?)\s*,\s*",
+    re.IGNORECASE,
+)
+
 #: CR 603.2h's own trailing restriction, in either the rule's own wording
 #: ("Do this only once each turn") or Caretaker's Talent's paraphrase ("This
 #: ability triggers only once each turn") - both always the ability's last
@@ -2646,12 +2664,19 @@ def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
     word = TriggerWord(match.group(1).lower())
     body = text[match.end() :]
 
-    parts = _split_top_level(body)
-    if len(parts) < 2:
-        # `[Trigger condition], [effect]` needs a comma to separate them.
-        return None
+    type_list_boundary = _CAST_TYPE_LIST_CONDITION_BOUNDARY.match(body)
+    if type_list_boundary is not None:
+        condition = type_list_boundary.group("condition")
+        rest = body[type_list_boundary.end() :].strip()
+        if not rest:
+            return None
+    else:
+        parts = _split_top_level(body)
+        if len(parts) < 2:
+            # `[Trigger condition], [effect]` needs a comma to separate them.
+            return None
 
-    condition, rest = parts[0], ", ".join(parts[1:])
+        condition, rest = parts[0], ", ".join(parts[1:])
 
     intervening_if: str | None = None
     while_match = _CONDITION_WHILE_CLAUSE.search(condition)
