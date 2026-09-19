@@ -218,3 +218,100 @@ def test_yuriko_mode_one_shrinks_by_the_graveyard_count():
     scenario.resolve_top()
 
     assert scenario.game.characteristics_of(bears).power_toughness == (2 - 3, 2)
+
+
+def test_vigorbloom_charm_mode_one_grants_hexproof_and_indestructible():
+    """ "Target permanent you control gains hexproof and indestructible
+    until end of turn." - `_SUBJECT` (`machines/layers.py`) only read "this
+    permanent", never "target permanent" at all (with or without "you
+    control"), so no permanent-subject grant reached a builder.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Vigorbloom Charm"], battlefield=["Forest", "Plains", "Sol Ring"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+
+    casting = scenario.cast("Vigorbloom Charm", username="alice")
+    casting.choose_modes([1])
+    casting.choose_targets([sol_ring])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Forest", "Plains"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert has_keyword(sol_ring, "hexproof", scenario.game)
+    assert is_indestructible(sol_ring, scenario.game)
+
+
+def test_vigorbloom_charm_mode_three_counters_then_fights():
+    """ "Put a +1/+1 counter on target creature you control. Then it fights
+    target creature an opponent controls." - the counter-placing twin of
+    Bridgeworks Battle's pump-then-fight pair.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Vigorbloom Charm"],
+            battlefield=["Forest", "Plains", "Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice_bears = scenario.creature("Grizzly Bears", "alice")
+    bobs_bear = scenario.creature("Grizzly Bears", "bob")
+
+    casting = scenario.cast("Vigorbloom Charm", username="alice")
+    casting.choose_modes([3])
+    casting.choose_targets([alice_bears, bobs_bear])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Forest", "Plains"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert alice_bears.counters[Counter.PLUS_ONE] == 1
+    # 3/3 (pumped) fights 2/2: alice's bear takes 2, bob's takes 3 and dies.
+    assert alice_bears.damage == 2
+    assert bobs_bear.zone is Zone.GRAVEYARD
+
+
+def test_rise_of_the_deathbringer_mode_one_draws_by_greatest_power_and_loses_that_much_life():
+    """ "Draw cards equal to the greatest power among creatures you control.
+    You lose life equal to the number of cards drawn this way." - an
+    anaphoric numeric reference back to a count the first sentence itself
+    computed, fixed once (CR 608.2h) rather than recomputed for the life
+    loss.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Rise of the Deathbringer"],
+            battlefield=["Swamp", "Swamp", "Swamp", "Swamp", "Swamp", "Craterhoof Behemoth"],
+            library=["Opt", "Opt", "Opt", "Opt", "Opt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.game.player("alice")
+    hand_before = len(alice.hand)
+    life_before = alice.life
+
+    casting = scenario.cast("Rise of the Deathbringer", username="alice")
+    casting.choose_modes([1])
+    payment = casting.begin_paying()
+    scenario.pay_with(
+        payment, *scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp", "Swamp")
+    )
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    # Craterhoof Behemoth is the only creature alice controls: power 5.
+    assert len(alice.hand) == hand_before - 1 + 5
+    assert alice.life == life_before - 5

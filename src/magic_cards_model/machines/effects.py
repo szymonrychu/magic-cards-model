@@ -14653,6 +14653,50 @@ def _parse_token_then_object_anaphor_clause_pair(
     return effect
 
 
+#: "Draw cards equal to `<expr>`." - Rise of the Deathbringer's own mode 1.
+_DRAW_CARDS_EQUAL_TO_RE = re.compile(r"^draw cards? equal to (?P<expr>.+?)$", re.IGNORECASE)
+#: "You lose life equal to the number of cards drawn this way." - the CR
+#: 607.1 anaphora back to whatever the first sentence just drew, resolved
+#: through the *actual* number of cards drawn (CR 121.4: drawing from an
+#: empty library draws as many as are left, never more), not the requested
+#: magnitude.
+_LOSE_LIFE_EQUAL_TO_DRAWN_RE = re.compile(
+    r"^you lose life equal to the number of cards drawn this way$", re.IGNORECASE
+)
+
+
+def _parse_draw_equal_to_then_lose_life_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Draw cards equal to `<expr>`. You lose life equal to the number of
+    cards drawn this way." - Rise of the Deathbringer's own mode 1.
+
+    Read as a pair, not two independent clauses, for the identical CR 607.1
+    reason `_parse_object_anaphor_clause_pair` reads its own antecedent/rider
+    pairs together: the life loss has no meaning apart from what the draw
+    just did.
+    """
+    draw_match = _DRAW_CARDS_EQUAL_TO_RE.fullmatch(first.strip().rstrip(".").strip())
+    if draw_match is None:
+        return None
+    if not _LOSE_LIFE_EQUAL_TO_DRAWN_RE.fullmatch(second.strip().rstrip(".").strip()):
+        return None
+    counter = count_expression(draw_match.group("expr"))
+    if counter is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        amount = counter(game, controller.username)
+        if amount <= 0:
+            return
+        drawn = game.draw_cards(controller.username, amount)
+        if drawn:
+            controller.lose_life(len(drawn))
+
+    return effect
+
+
 #: "Target creature you control gets +N/+N until end of turn." followed by
 #: "It fights up to one target creature you don't control." - Bridgeworks
 #: Battle's whole front face.
@@ -14674,6 +14718,16 @@ _PUMP_TARGET_YOU_CONTROL_RE = re.compile(
     r"until end of turn$",
     re.IGNORECASE,
 )
+#: "Put a `<n>` `<kind>` counter[s] on target creature you control." -
+#: Vigorbloom Charm's "Put a +1/+1 counter on target creature you control.
+#: Then it fights target creature an opponent controls." - the counter-
+#: placing twin of the pump antecedent above, sharing the same fight rider
+#: and the same controller-based target split.
+_COUNTER_TARGET_YOU_CONTROL_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on target creature "
+    r"you control$",
+    re.IGNORECASE,
+)
 _RIDER_FIGHTS_TARGET_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} fights (?P<phrase>(?:up to \S+ )?target .+)$", re.IGNORECASE
 )
@@ -14682,7 +14736,10 @@ _RIDER_FIGHTS_TARGET_RE = re.compile(
 def _parse_pump_then_fight_clause_pair(
     first: str, second: str, *, for_spell: bool
 ) -> TargetedClause | None:
-    """Bridgeworks Battle's two sentences as one CR 608.2c instruction.
+    """Bridgeworks Battle's two sentences as one CR 608.2c instruction - "Target
+    creature you control gets +N/+N until end of turn. It fights ..." - or
+    Vigorbloom Charm's counter-placing twin, "Put a `<n>` `<kind>` counter[s]
+    on target creature you control. Then it fights ..."
 
     CR 701.14a: "Each of those creatures deals damage equal to its power to
     the other creature", and CR 701.14b: "If one or both creatures instructed
@@ -14691,27 +14748,41 @@ def _parse_pump_then_fight_clause_pair(
     `_fight` is called, the same division of labour every other caller draws.
 
     CR 115.6's "up to one" is why an absent second target is not a failure:
-    the pump still happened, and nothing fights.
+    the pump or counter still happened, and nothing fights.
 
-    The pump is created before the fight, in the printed order (CR 608.2c),
-    which is the whole point of the sequencing - a +2/+2 creature deals 2 more
-    damage in the fight than the printed body would.
+    The pump/counter is applied before the fight, in the printed order (CR
+    608.2c), which is the whole point of the sequencing - a bigger creature
+    deals more damage in the fight than the printed body would.
     """
-    pump = _PUMP_TARGET_YOU_CONTROL_RE.fullmatch(first.strip().rstrip(".").strip())
-    if pump is None:
+    stripped_first = first.strip().rstrip(".").strip()
+    stripped_second = second.strip().rstrip(".").strip()
+    pump = _PUMP_TARGET_YOU_CONTROL_RE.fullmatch(stripped_first)
+    counter = None if pump is not None else _COUNTER_TARGET_YOU_CONTROL_RE.fullmatch(stripped_first)
+    if pump is None and counter is None:
         return None
-    fight = _RIDER_FIGHTS_TARGET_RE.fullmatch(second.strip().rstrip(".").strip())
+    fight = _RIDER_FIGHTS_TARGET_RE.fullmatch(stripped_second)
     if fight is None:
         return None
     if not _targets_understood("target creature you control", count_agnostic=True):
         return None
     if not _targets_understood(fight.group("phrase"), count_agnostic=True):
         return None
-    builder = parsed_layer_effects(
-        f"Target creature gets {pump.group('power')}/{pump.group('toughness')} until end of turn."
-    )
-    if builder is None:
-        return None
+    builder = None
+    counter_amount = None
+    counter_kind = None
+    if pump is not None:
+        power, toughness = pump.group("power"), pump.group("toughness")
+        builder = parsed_layer_effects(
+            f"Target creature gets {power}/{toughness} until end of turn."
+        )
+        if builder is None:
+            return None
+    else:
+        assert counter is not None
+        counter_amount = parse_count(counter.group("n"))
+        if counter_amount is None:
+            return None
+        counter_kind = _counter_kind(counter.group("kind"))
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -14729,9 +14800,15 @@ def _parse_pump_then_fight_clause_pair(
         )
         if source is None:
             return
-        effects = game.continuous_effects
-        for built in builder(source, effects.tick(), mine[:1], layer_context_for(game, controller)):
-            effects.add(built, game)
+        if builder is not None:
+            effects = game.continuous_effects
+            for built in builder(
+                source, effects.tick(), mine[:1], layer_context_for(game, controller)
+            ):
+                effects.add(built, game)
+        else:
+            assert counter_amount is not None
+            game.add_counters(mine[0], counter_kind, counter_amount)
         if not theirs:
             return  # CR 115.6: "up to one" chose none, so nothing fights.
         fighter, opponent = mine[0], theirs[0]
@@ -22207,10 +22284,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # two sentences with no internal "and" to begin with, so reading the
         # sentences whole here changes nothing for them - it only reaches
         # the compound-antecedent shape the finer split could never recover.
-        anaphor_pair = _parse_object_anaphor_clause_pair(
-            sentences[0], sentences[1], for_spell=for_spell
-        ) or _parse_token_then_object_anaphor_clause_pair(
-            sentences[0], sentences[1], for_spell=for_spell
+        anaphor_pair = (
+            _parse_object_anaphor_clause_pair(sentences[0], sentences[1], for_spell=for_spell)
+            or _parse_token_then_object_anaphor_clause_pair(
+                sentences[0], sentences[1], for_spell=for_spell
+            )
+            or _parse_draw_equal_to_then_lose_life_clause_pair(
+                sentences[0], sentences[1], for_spell=for_spell
+            )
         )
         if anaphor_pair is not None:
             return [anaphor_pair]
@@ -22409,6 +22490,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_token_then_object_anaphor_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_draw_equal_to_then_lose_life_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

@@ -2341,8 +2341,8 @@ switch_power_toughness: Modification = SwitchPowerToughness()
 #: is why it is read here interchangeably with "this creature" rather than as
 #: a separate, narrower case.
 _SUBJECT = (
-    r"(?:target(?: [a-z]+)? creature|this creature|this permanent"
-    r"|another target(?: [a-z]+)? creature(?: you control)?)"
+    r"(?:target(?: [a-z]+)? (?:creature|permanent)(?: you control)?|this creature|this permanent"
+    r"|another target(?: [a-z]+)? (?:creature|permanent)(?: you control)?)"
 )
 
 _PUMP_RE = re.compile(
