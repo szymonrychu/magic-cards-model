@@ -563,3 +563,78 @@ def test_jiang_yanggu_never_alones_appositive_names_and_tokens_mowu():
     assert mowu.card.subtypes == ["Dog"]
     assert (mowu.power, mowu.toughness) == (3, 3)
     assert set(mowu.card.colors) == {Color.GREEN}
+
+
+# --------------------------------------------------------------------------
+# A named artifact token with a quoted mana ability - already generic
+# --------------------------------------------------------------------------
+
+
+def test_goblin_kaboomists_named_artifact_token_reads_its_quoted_ability():
+    """Off-set: Goblin Kaboomist's upkeep trigger opens "create a colorless
+    artifact token named Land Mine with '{R}, Sacrifice this token: ...'." -
+    the same "named `<Name>` with `<quoted ability>`" shape Kwia Vigorbloom's
+    own Lotus token uses below, read here off only the real card's first
+    printed sentence (the coin flip after it is a separate, unmodelled
+    mechanic - out of scope here, and irrelevant to whether the token itself
+    reads).
+    """
+    triggered_ability = next(
+        a
+        for a in parse_abilities(card("Goblin Kaboomist"))
+        if hasattr(a, "event") and a.event is TriggerEvent.BEGINNING_OF_STEP
+    )
+    # The token clause only - the coin flip after it is a separate,
+    # unmodelled mechanic (out of scope here), split off at the closing
+    # quote so the quoted ability's own internal "." is not mistaken for the
+    # sentence boundary.
+    first_sentence = triggered_ability.effect.split('." ', 1)[0] + '."'
+    assert "Land Mine" in first_sentence
+    effect = parse_mixed_effect(first_sentence)
+    assert effect is not None
+
+    scenario = Scenario().player("alice").player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    from magic_cards_model.machines.triggers import AbilityKind, AbilityOnStack
+
+    ability = AbilityOnStack(
+        kind=AbilityKind.TRIGGERED,
+        ability=triggered_ability,
+        source_name="Goblin Kaboomist",
+        controller="alice",
+    )
+    effect(scenario.game, ability)
+
+    land_mine = scenario.find("Land Mine", Zone.BATTLEFIELD)
+    assert land_mine.card.types == [Type.ARTIFACT]
+    assert land_mine.card.subtypes == []
+    assert land_mine.card.colors == []
+    assert land_mine.card.oracle_text == (
+        "{R}, Sacrifice this token: This token deals 2 damage to target "
+        "attacking creature without flying."
+    )
+
+
+def test_kwia_vigorblooms_lotus_token_reads_its_quoted_ability():
+    """Kwia Vigorbloom (on-set): "Whenever you gain life, create a colorless
+    artifact token named Lotus with '{T}, Sacrifice this token: Add three
+    mana of any one color.' This ability triggers only once each turn."
+    Differently worded from Goblin Kaboomist's own token (no "tapped", a
+    different quoted ability, a "gains life" trigger rather than an upkeep
+    one, and the once-per-turn restriction `abilities.py` already strips into
+    its own field) - proof the same reader handles both.
+    """
+    scenario = Scenario().player("alice", battlefield=["Kwia Vigorbloom"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 3)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    lotus = scenario.find("Lotus", Zone.BATTLEFIELD)
+    assert lotus.card.name == "Lotus"
+    assert lotus.card.types == [Type.ARTIFACT]
+    assert lotus.card.subtypes == []
+    assert lotus.card.colors == []
+    assert lotus.card.oracle_text == "{T}, Sacrifice this token: Add three mana of any one color."
