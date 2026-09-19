@@ -774,3 +774,21 @@ def test_modal_category_is_worst_mode_not_best_mode():
     """
     assert _modal_category(card("Cryptic Command")) == NOTICE
     assert _modal_category(card("Vraska's Final Mercy")) == NOTICE
+
+
+def test_ingris_stingerquills_permanent_spell_records_no_phantom_notice():
+    """Ingris Stingerquill: "{4}: Create a 2/2 ... Cadet. Then creatures you
+    control gain haste until end of turn." is its *activated* ability's own
+    line, read correctly through `activated_effect_for`. `effect_for` is
+    still called on the whole permanent's raw printed text for its own
+    (nonexistent, CR 608.3a) spell resolution, and the group-haste sentence
+    embedded in that text is now genuinely readable
+    (`_MASS_PUMP_UNTIL_EOT_RE`'s own keyword-only widening) - which used to
+    make `_compose_layer_effect_with_remainder` treat the activated
+    ability's own cost line as an unread sibling instruction of the spell's
+    resolution and record a `LayerRemainderNotice` for a permanent spell
+    that has no resolution text to run at all.
+    """
+    outcomes = classify_clauses(card("Ingris Stingerquill"))
+    assert all(outcome.source != "spell" for outcome in outcomes)
+    assert {outcome.category for outcome in outcomes} == {HANDLED}

@@ -5572,6 +5572,33 @@ def _plain_resolution_sentences(text: str) -> list[str]:
     return folded
 
 
+#: A mana/tap symbol run (or a bare word cost like "Sacrifice this
+#: creature") followed by a colon - CR 602.1's own activated-ability
+#: template ("[Cost]: [Effect]") - or a triggered ability's own leading
+#: condition (CR 603.1's "When", "Whenever", or "At"). A spell's own
+#: resolution text (CR 608.3) never legitimately opens a sentence either
+#: way; either is only ever seen here because `effect_text` is actually a
+#: *permanent's* whole raw printed text (CR 608.3a: a permanent spell has no
+#: resolution to run in the first place) with a different, already
+#: separately-read ability's own line embedded in it.
+_EMBEDDED_ABILITY_LINE_RE = re.compile(
+    r"(?:\{[^{}]*\}(?:,\s*\{[^{}]*\})*\s*:|^(?:when|whenever|at)\b)", re.IGNORECASE
+)
+
+
+def _looks_like_embedded_ability_line(sentence: str) -> bool:
+    """Whether `sentence` reads like a different permanent ability's own
+    line (`_EMBEDDED_ABILITY_LINE_RE`) rather than a genuine fragment of a
+    spell's own resolution text - `_compose_layer_effect_with_remainder`'s
+    guard against Ingris Stingerquill's own permanent-spell false positive
+    (Kraul Harpooner's twin, one step further: there the *whole* text failed
+    to parse into anything at all; here a genuine layer sentence from the
+    activated ability sitting beside the spell's own printed lines is
+    genuinely readable, just not this spell's).
+    """
+    return bool(_EMBEDDED_ABILITY_LINE_RE.search(sentence))
+
+
 #: A bare "shuffle" left over once `split_effect_clauses` has cut across the
 #: "then" inside a search's own "..., then shuffle." - CR 608.2c's clause
 #: split has no notion that this particular "then" is the tail of the
@@ -10262,6 +10289,20 @@ def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
     remainder = [
         sentence for sentence in sentences if not is_genuine_resolution_layer_sentence(sentence)
     ]
+    if remainder and any(_looks_like_embedded_ability_line(sentence) for sentence in remainder):
+        # `effect_text` is not one clean resolution paragraph at all - it is
+        # a *permanent's* whole raw printed text (CR 608.3a: there is no
+        # spell resolution to run for one in the first place), with a
+        # genuine layer sentence from a *different*, already-separately-read
+        # ability (an activated ability's own cost-and-effect line, a
+        # triggered ability's own condition) embedded beside it. Ingris
+        # Stingerquill's own "{4}: Create a Cadet. Then creatures you
+        # control gain haste until end of turn." is read correctly through
+        # `activated_effect_for`; reaching the identical group-haste
+        # sentence again from here, with its own cost line as the
+        # "remainder", would both double the credit and misreport this
+        # permanent spell's own (nonexistent) resolution as an unread gap.
+        return None
     if not remainder:
         # Every sentence is a layer shape (or the text could not be split
         # into sentences at all - `_plain_resolution_sentences` then comes
