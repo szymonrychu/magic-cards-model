@@ -32345,6 +32345,16 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if return_event_subject is not None:
         return return_event_subject
+    self_owner_shuffles_self = _parse_self_owner_shuffles_self_into_library_clause(
+        clause, for_spell=for_spell
+    )
+    if self_owner_shuffles_self is not None:
+        return self_owner_shuffles_self
+    if_condition_you_win_the_game = _parse_if_condition_you_win_the_game_clause(
+        clause, for_spell=for_spell
+    )
+    if if_condition_you_win_the_game is not None:
+        return if_condition_you_win_the_game
     mass_return_from_graveyard = _parse_mass_return_from_graveyard_to_battlefield_clause(
         clause, for_spell=for_spell
     )
@@ -34781,6 +34791,98 @@ def _parse_return_event_subject_to_battlefield_clause(
         returned = game.put_onto_battlefield(card, controller, tapped=tapped)
         if returned.zone is Zone.BATTLEFIELD and counter_kind is not None and counter_amount:
             game.add_counters(returned, counter_kind, counter_amount)
+
+    return effect
+
+
+#: "This creature's/artifact's/permanent's owner shuffles it/him/her/them
+#: into their library." - Fblthp, Impossibly Lost's own "Fblthp's owner
+#: shuffles him into their library." (CR 201.5's short-name self-reference,
+#: already rewritten to "this permanent" ahead of every parser by `self_
+#: normalized_effect_text`), and the real, off-set printing Cerulean
+#: Sphinx's own "{U}: This creature's owner shuffles it into their
+#: library." - printed directly as CR 700.7's own "this creature", never
+#: rewritten at all since it names no card by name to begin with. The
+#: self-referential twin of `_CHOOSE_TARGET_OWNER_SHUFFLES_IT_RE`'s
+#: *targeted* "[Choose ]target `<X>`. Its owner shuffles it into their
+#: library." - the ability's own source, not something it targets.
+_SELF_OWNER_SHUFFLES_SELF_INTO_LIBRARY_RE = re.compile(
+    r"^this (?:creature|artifact|enchantment|land|planeswalker|permanent|token)'?s "
+    r"owner shuffles (?:it|him|her|them) into (?:their|his or her) library\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_owner_shuffles_self_into_library_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SELF_OWNER_SHUFFLES_SELF_INTO_LIBRARY_RE`'s shape - never a spell's
+    own shape (an instant or sorcery card resolving and vanishing off the
+    stack has no "owner shuffles it in" sentence printed on it anywhere in
+    the pool; every printing of this sentence is a permanent's own triggered
+    ability).
+
+    Shuffled in, not placed, the same "position does not matter, the very
+    next step randomises the whole library" (CR 701.20a) reading
+    `_parse_choose_target_owner_shuffles_it_clause` already gives its own
+    targeted twin.
+    """
+    if for_spell:
+        return None
+    if _SELF_OWNER_SHUFFLES_SELF_INTO_LIBRARY_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        source = stack_object.source(game)
+        if source is None or source.zone not in (
+            Zone.BATTLEFIELD,
+            Zone.HAND,
+            Zone.GRAVEYARD,
+            Zone.EXILE,
+        ):
+            return  # CR 608.2b: no longer a legal object to move.
+        owner = game.player(source.owner)
+        game.put_cards_into_library([source])
+        game.shuffle_library(owner)
+
+    return effect
+
+
+#: "If `<condition>`, you win the game." (CR 104.2b) - Fblthp, Impossibly
+#: Lost's own "If your library has no cards in it, you win the game."
+#: `<condition>` is read the same general way `Game.condition_holds` already
+#: reads an activated ability's "Activate only if ..." restriction and a
+#: modal "If ..., choose N instead" - a new `_CONDITION_LIBRARY_EMPTY_RE`
+#: branch was added there alongside this parser rather than duplicating a
+#: second copy of empty-library reading here, so a future card stating the
+#: identical win off a different, already-read condition reads for free too.
+_IF_CONDITION_YOU_WIN_THE_GAME_RE = re.compile(
+    r"^if (?P<condition>.+?),\s*you win the game\.?$", re.IGNORECASE
+)
+
+
+def _parse_if_condition_you_win_the_game_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_IF_CONDITION_YOU_WIN_THE_GAME_RE`'s shape - see the banner above.
+
+    An unreadable condition (`Game.condition_holds` answering `None`) simply
+    does not win the game - the same conservative fallback a modal "if"
+    already applies when it cannot read one - since nothing in the pool
+    prints this shape with a condition this wave does not also read.
+    """
+    match = _IF_CONDITION_YOU_WIN_THE_GAME_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    condition_text = match.group("condition").strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.source(game) if is_ability(stack_object) else stack_object
+        if game.condition_holds(controller.username, condition_text, source):
+            game.player_wins_the_game(controller.username)
 
     return effect
 
