@@ -6494,6 +6494,70 @@ def _parse_adapt_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: CR 701.63a: "Certain abilities instruct a permanent to endure N. To do so,
+#: that permanent's controller creates an N/N white Spirit creature token
+#: unless they put N +1/+1 counters on that permanent." A keyword action
+#: (CR 701), read the same way `_ADAPT_RE` is - off the ability's own printed
+#: sentence, whether it names itself ("this creature") or reads back the
+#: trigger's own subject ("it", Fortress Kin-Guard's own ETB). `\d+` rather
+#: than a bare `X` is deliberate: `activated_effect_for` already substitutes
+#: an announced `X` (CR 107.3a) into the text before trying this, the same
+#: convention `_ADAPT_RE` and every other keyword-action regex in this module
+#: hold themselves to, so Krumar Initiate's "This creature endures X." is
+#: read as a real number by the time this ever sees it.
+_ENDURE_RE = re.compile(
+    r"^(?:this (?:creature|permanent)|it) endures? (?P<n>\d+)\.?$", re.IGNORECASE
+)
+
+
+def _parse_endure_clause(text: str) -> AbilityEffect | None:
+    """CR 701.63a's "endure N" - see `_ENDURE_RE`.
+
+    CR 701.63b: "If a permanent is instructed to endure 0, nothing happens.
+    No counters are put on that permanent and no tokens are created" - read
+    first, before any decision is asked, so declining nothing is not offered
+    as a choice at all.
+
+    The choice between the token and the counters is the controller's own
+    ("unless they put N counters", CR 701.63a) - `DecisionKind.MAY` (CR
+    608.2d), the same primitive `_parse_conditional_sacrifice_clause` and
+    every other "unless"/"you may instead" clause in this module already use.
+    Declining creates the token (the sentence's own default action); taking
+    the "may" puts the counters on instead. The token is built through
+    `_parse_token_clause`, the same general "create an N/N `<color>`
+    `<subtype>` creature token" reader every other token-creating clause in
+    the module goes through, rather than a bespoke `TokenDefinition` here.
+    """
+    match = _ENDURE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    amount = int(match.group("n"))
+    token_clause = _parse_token_clause(
+        f"a {amount}/{amount} white Spirit creature token", for_spell=False
+    )
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if amount <= 0:
+            return  # CR 701.63b
+        decision = Decision(
+            kind=DecisionKind.MAY,
+            player=ability.controller,
+            prompt=f"put {amount} +1/+1 counters on {source.name} instead of creating a Spirit",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            affirmative_is_legal=True,
+        )
+        if game.ask(decision):
+            game.add_counters(source, Counter.PLUS_ONE, amount)
+        elif token_clause is not None:
+            token_clause(game, ability)
+
+    return effect
+
+
 #: "Untap this creature." (Devoted Druid) - CR 701.26b's untap with no target
 #: at all, the source's own cost-side counter placement having already been
 #: paid by `cost.py`'s `PLACE_COUNTERS` component by the time this runs.
@@ -11473,6 +11537,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     adapt = _parse_adapt_clause(effect_text)
     if adapt is not None:
         return adapt
+    endure = _parse_endure_clause(effect_text)
+    if endure is not None:
+        return endure
     double_counters_on_group = _parse_double_counters_on_group_clause(effect_text)
     if double_counters_on_group is not None:
         return double_counters_on_group
