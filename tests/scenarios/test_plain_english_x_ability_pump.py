@@ -36,6 +36,14 @@ session that wrote this file:
   the battlefield to its owner's graveyard.
 - **CR 611.2c** - a continuous effect's own magnitude is fixed once, as it
   is created, not re-read from the board afterward.
+
+Necropolis Fiend's own "{X}, {T}, Exile X cards from your graveyard: Target
+creature gets -X/-X until end of turn." already carries a literal `{X}`
+mana symbol, so the *engine* already substituted correctly before this fix -
+only `scripts/sweep_pool.py`'s own `_layer_category` mis-measured it
+(re-reading the card's raw, unsubstituted "-X/-X" the same way it mis-read
+Chatterfang's, scoring a working ability SILENT). Its own scenario test below
+is a regression lock for that already-correct behaviour, not a fix.
 """
 
 from magic_cards_model.machines import Step
@@ -100,3 +108,36 @@ def test_chatterfang_sacrificing_none_pumps_by_zero():
 
     board = computed(scenario)
     assert board.of(serra).power_toughness == (4, 4)
+
+
+def test_necropolis_fiend_shrinks_the_target_by_cards_exiled():
+    """Necropolis Fiend: "{X}, {T}, Exile X cards from your graveyard:
+    Target creature gets -X/-X until end of turn." Exiling two graveyard
+    cards pays X=2, shrinking Serra Angel from 4/4 to 2/2 - a regression
+    lock for the sweep-measurement fix above, not an engine change (this
+    ability's own literal `{X}` mana symbol already substituted correctly).
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Necropolis Fiend"] + ["Swamp"] * 3,
+            graveyard=["Grizzly Bears", "Lightning Bolt"],
+        )
+        .player("bob", battlefield=["Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    fiend = scenario.find("Necropolis Fiend", Zone.BATTLEFIELD, "alice")
+    serra = scenario.find("Serra Angel", Zone.BATTLEFIELD, "bob")
+    swamps = scenario.untapped_sources("Swamp", "Swamp", "Swamp")
+    graveyard = list(scenario.player("alice").graveyard)
+
+    ability = scenario.activate(fiend, *swamps, exiling=graveyard, x_value=2, targets=[serra])
+    assert isinstance(ability, AbilityOnStack)
+    assert scenario.player("alice").graveyard == [], "both cards paid the exile cost"
+
+    scenario.pass_until_resolved()
+
+    board = computed(scenario)
+    assert board.of(serra).power_toughness == (2, 2)
