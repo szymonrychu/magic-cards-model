@@ -2236,7 +2236,11 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
+    #: 23: `TurnMachine.extra_phase_queue` (CR 500.8's queued extra-phase
+    #: steps, `machines/turn.py`) is a new field reachable from `Game.turn`'s
+    #: own dump - Aggravated Assault's "After this main phase, there is an
+    #: additional combat phase followed by an additional main phase."
     """Bumped 21 -> 22: `Game` gained `die_to_exile_this_turn` (FRA S7,
     Essence Burn's own "if it would die this turn, exile it instead") - a new
     required-shape field with no default a version-21 snapshot could supply,

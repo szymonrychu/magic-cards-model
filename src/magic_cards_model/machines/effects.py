@@ -187,7 +187,7 @@ from .triggers import (
     triggered_mana_count,
     triggered_mana_recipient,
 )
-from .turn import Step
+from .turn import COMBAT_PHASE_STEPS, Step
 
 if TYPE_CHECKING:
     from ..models.game import Game, StackObject
@@ -7369,6 +7369,44 @@ def _parse_untap_all_group_clause(clause: str, *, for_spell: bool) -> TargetedCl
             if group_type is not None and group_type not in board.of(permanent).types:
                 continue
             permanent.untap()
+
+    return effect
+
+
+#: "After this main phase, there is an additional combat phase followed by
+#: an additional main phase." - Aggravated Assault's own second instruction,
+#: and every other printing of the same reminder-free "extra combat" shape
+#: (World at War, Savage Beating's own mode, Seize the Day's descendants).
+#: CR 500.8: "Some effects can add phases to a turn. They do this by adding
+#: the phases directly after the specified phase." - "this main phase" is
+#: always the one the ability/spell resolves during, so nothing here has to
+#: read which main phase that was; `TurnMachine.insert_extra_phase` (CR
+#: 505.1a: an additional main phase is a postcombat one regardless) is where
+#: the actual insertion happens. Read generically by shape, not by card
+#: name - any future card printing this identical sentence is read the same
+#: way with no new row.
+_ADDITIONAL_COMBAT_AND_MAIN_PHASE_RE = re.compile(
+    r"^after this main phase,\s*there is an additional combat phase "
+    r"followed by an additional main phase\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_additional_combat_and_main_phase_clause(clause: str) -> AbilityEffect | None:
+    """`_ADDITIONAL_COMBAT_AND_MAIN_PHASE_RE`'s shape; see the banner above."""
+    if _ADDITIONAL_COMBAT_AND_MAIN_PHASE_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert game.turn is not None
+        # One call, the whole combat-then-main run: `insert_extra_phase`
+        # prepends each call's own steps ahead of whatever is already
+        # queued (CR 500.8's "most recently created phase ... first"), so
+        # two separate calls here would need to run in the *reverse* of
+        # their printed order to land correctly - a single call with both
+        # phases' steps already concatenated is the plain, unambiguous way
+        # to queue "combat, then main".
+        game.turn.insert_extra_phase(COMBAT_PHASE_STEPS + (Step.POSTCOMBAT_MAIN,))
 
     return effect
 
@@ -24140,6 +24178,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     untap_all_group = _parse_untap_all_group_clause(clause, for_spell=for_spell)
     if untap_all_group is not None:
         return untap_all_group
+    additional_combat_and_main_phase = _parse_additional_combat_and_main_phase_clause(clause)
+    if additional_combat_and_main_phase is not None:
+        return additional_combat_and_main_phase  # type: ignore[return-value]
     for_each_opponent_tap_then_stun = _parse_for_each_opponent_tap_then_stun_clause(
         clause, for_spell=for_spell
     )
