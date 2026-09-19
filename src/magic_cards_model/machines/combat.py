@@ -118,6 +118,8 @@ KEYWORDS_OUTSIDE_COMBAT: frozenset[str] = frozenset(
         "indestructible",
         # CR 702.11a: "Hexproof is a static ability."
         "hexproof",
+        # CR 702.18a: "Shroud is a static ability."
+        "shroud",
     }
 )
 

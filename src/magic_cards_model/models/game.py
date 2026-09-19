@@ -9444,6 +9444,11 @@ class Game(EngineModel):
             # CR 702.16b, checked again here because protection can be gained
             # after a spell was legally announced.
             return None
+        if self.shroud_refusal(thing) is not None:
+            # CR 702.18a, the same "gained after announcement" recheck as
+            # protection just above - a granted shroud makes an already-legal
+            # target illegal by the time it would resolve.
+            return None
 
         if isinstance(spell, AbilityOnStack):
             # `x_value` substituted first, the same reason `activate_ability`
@@ -9788,6 +9793,42 @@ class Game(EngineModel):
                     f"cannot target it (CR 702.16b)"
                 )
         return None
+
+    def shroud_refusal(self, target: "Targetable | AbilityOnStack") -> str | None:
+        """Why shroud stops this target being targeted at all, or None (CR 702.18).
+
+        CR 702.18a: "Shroud is a static ability. 'Shroud' means 'This
+        permanent or player can't be the target of spells or abilities.'"
+        Unlike hexproof (CR 702.11b's "your opponents control"), there is no
+        controller exception at all: a shrouded permanent's own controller
+        cannot target it either, so this needs no `source` to compare
+        against - CR 702.18b's redundancy rule is the only thing that varies
+        with *how many* instances there are, never with who is asking.
+
+        Read off `has_keyword`, the same computed-board reader every other
+        keyword check in this module already uses (`Game._untap_step_impl`'s
+        haste check, `combat.py`'s evasion checks): a permanent's printed
+        "Shroud" line and one granted in layer 6 (CR 613.1f) are the same
+        keyword to that reader, so a spell-granted shroud is refused exactly
+        like a printed one with no separate code path.
+
+        A **player** target is not modelled - `Player` carries no ability
+        text to read CR 702.18a's "or player" off, the same documented gap
+        `protection_refusal`'s hexproof-on-player sibling leaves for CR
+        702.11c; see `docs/engine-coverage.md`.
+        """
+        if not isinstance(target, CardState):
+            return None
+        if target.zone is not Zone.BATTLEFIELD:
+            # CR 702.18a speaks of a permanent, and a permanent is on the
+            # battlefield (CR 110.1).
+            return None
+        if not has_keyword(target, "shroud", self):
+            return None
+        return (
+            f"{target.name} has shroud, so it can't be the target of spells or "
+            f"abilities (CR 702.18a)"
+        )
 
     def _player_protection_refusal(self, target: Player, source: "Card") -> str | None:
         """Why a *player's* protection stops `source` targeting them (CR 702.16b).

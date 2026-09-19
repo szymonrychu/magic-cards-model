@@ -1117,6 +1117,7 @@ class TargetingProfile(EngineModel):
         read the spell's own targeting text.
         """
         self._check_protection(targets, game)
+        self._check_shroud(targets, game)
 
         if not self.understood:
             return
@@ -1161,6 +1162,31 @@ class TargetingProfile(EngineModel):
             return
         for target in targets:
             refusal = refusal_of(target, self.source_card)
+            if refusal is not None:
+                raise ValueError(refusal)
+
+    def _check_shroud(self, targets: list[Any], game: Any) -> None:
+        """CR 702.18a, at announcement (CR 601.2c) rather than only at the
+        CR 608.2b recheck - `_check_protection`'s sibling, one call below it.
+
+        Needs only a `game`, unlike `_check_protection`: shroud names no
+        quality to compare a source against (CR 702.18a is unconditional -
+        "can't be the target of spells or abilities", full stop), so there is
+        nothing here a missing `source_card` would leave unchecked. This is
+        also why one shared call covers both a spell's targets
+        (`Casting.choose_targets`) and an activated or triggered ability's
+        (`Game.activate_ability`, `Game.put_triggers_on_stack`, both of which
+        already call `TargetingProfile.check`): shroud refuses the
+        controller's own ability exactly as it refuses an opponent's spell,
+        so there is no caster-specific case for a spell-only hook to carry.
+        """
+        if game is None:
+            return
+        refusal_of = getattr(game, "shroud_refusal", None)
+        if refusal_of is None:
+            return
+        for target in targets:
+            refusal = refusal_of(target)
             if refusal is not None:
                 raise ValueError(refusal)
 
