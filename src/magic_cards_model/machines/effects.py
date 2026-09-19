@@ -32330,6 +32330,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if return_self_transformed is not None:
         return return_self_transformed
+    return_event_subject = _parse_return_event_subject_to_battlefield_clause(
+        clause, for_spell=for_spell
+    )
+    if return_event_subject is not None:
+        return return_event_subject
     mass_return_from_graveyard = _parse_mass_return_from_graveyard_to_battlefield_clause(
         clause, for_spell=for_spell
     )
@@ -34697,6 +34702,73 @@ def _parse_return_self_to_battlefield_transformed_clause(
         returned = game.put_onto_battlefield(
             source, controller, tapped=tapped, transformed=transformed
         )
+        if returned.zone is Zone.BATTLEFIELD and counter_kind is not None and counter_amount:
+            game.add_counters(returned, counter_kind, counter_amount)
+
+    return effect
+
+
+#: "return that card to the battlefield[ tapped] under `<its owner's|your>`
+#: control[ with `<n>` `<kind>` counters on it]." - Ferocity of the Hunt's
+#: own "When enchanted creature dies, return that card to the battlefield
+#: tapped under its owner's control.", and Unhallowed Pact's real, off-set
+#: "When enchanted creature dies, return that card to the battlefield under
+#: your control." "That card" is CR 400.7's anaphor for the *triggering
+#: event's own subject* - the creature that just died - not the ability's
+#: own source (`ability.source_id` names the Aura itself, a different
+#: object): the sibling regex just above reads "it" as the ability's own
+#: source (Ojer Taq's own death trigger, self-referential), but an Aura's
+#: "enchanted creature dies" trigger fires on a *different* permanent's
+#: death, so this reads `AbilityOnStack.event.subject_id` instead - the same
+#: field `event_subject_power` already reads for a dying creature's power.
+_RETURN_EVENT_SUBJECT_TO_BATTLEFIELD_RE = re.compile(
+    r"^return that card to the battlefield"
+    r"(?P<tapped> tapped)?"
+    r" under (?P<control>its owner'?s|your) control"
+    rf"(?: with (?P<amount>{COUNT}) (?P<kind>[+/\w-]+) counters? on it)?"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_return_event_subject_to_battlefield_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_RETURN_EVENT_SUBJECT_TO_BATTLEFIELD_RE`'s shape - see its own
+    docstring for why this reads the triggering event's subject rather than
+    the ability's own source.
+
+    Never a spell's own shape (no resolving instant or sorcery has a
+    triggering event to read "that card" off of), and the return only
+    happens if the dead permanent is genuinely still sitting in a graveyard
+    (CR 608.2's ordinary "the object is gone" case) - the same recheck every
+    sibling in this section already applies.
+    """
+    if for_spell:
+        return None
+    match = _RETURN_EVENT_SUBJECT_TO_BATTLEFIELD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    tapped = match.group("tapped") is not None
+    under_owner = match.group("control").lower().startswith("its")
+    counter_kind = _counter_kind(match.group("kind")) if match.group("kind") else None
+    counter_amount = parse_count(match.group("amount")) if match.group("amount") else None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        event = stack_object.event
+        if event is None or event.subject_id is None:
+            return
+        card = game.find_by_id(event.subject_id)
+        if card is None or card.zone is not Zone.GRAVEYARD:
+            return
+        controller = (
+            (card.owner or game.controller_of(stack_object).username)
+            if under_owner
+            else game.controller_of(stack_object).username
+        )
+        returned = game.put_onto_battlefield(card, controller, tapped=tapped)
         if returned.zone is Zone.BATTLEFIELD and counter_kind is not None and counter_amount:
             game.add_counters(returned, counter_kind, counter_amount)
 
