@@ -14411,6 +14411,71 @@ def _parse_layer_counter_instead_upgrade(
     return match.group("condition").strip(), amount, kind
 
 
+#: "That creature/permanent gets +N/+N[ and gains `<keyword>`] until end of
+#: turn." (or "it", CR 400.7's bare pronoun) with no "target" anywhere in the
+#: ability's own text - the plain anaphor back to the *triggering event's own
+#: subject*, not the ability's own source: Ardoz, Cobbler of War's "Whenever
+#: Ardoz or another creature you control enters, that creature gets +2/+0
+#: until end of turn." fires on *any* qualifying creature entering, not only
+#: Ardoz himself, so `create_continuous_effect_of_ability`'s own "names no
+#: target -> the source" fallback (Basking Rootwalla's own shape) is the
+#: wrong default here. Rewritten to "target `<noun>`" before reaching
+#: `machines/layers.py`, the same "textual stand-in only, the real object is
+#: supplied separately" contract `_RIDER_LAYER_SUBJECT_RE`'s own "It gets
+#: +N/+N ..." rider already relies on - `parsed_layer_effects` never
+#: re-derives who is affected from the sentence's own wording, only which
+#: shape of sentence this is - so `targets` is supplied straight from
+#: `AbilityOnStack.event.subject_id` (the same field `event_subject_power`
+#: already reads for a dying creature's power) instead of from `Game.
+#: resolve_card_targets`.
+_EVENT_SUBJECT_PUMP_RE = re.compile(
+    r"^(?:that (?P<noun>creature|permanent)|it)\b(?P<rest>.*)$", re.IGNORECASE | re.DOTALL
+)
+
+
+def _parse_event_subject_pump_clause(effect_text: str) -> AbilityEffect | None:
+    """`_EVENT_SUBJECT_PUMP_RE`'s shape - see the banner above.
+
+    Refused (never claimed) when the ability's own text mentions "target"
+    anywhere: that shape is `create_continuous_effect_of_ability`'s own
+    ordinary target-resolution path, already correct.
+    """
+    stripped = effect_text.strip()
+    if "target" in stripped.lower():
+        return None
+    match = _EVENT_SUBJECT_PUMP_RE.match(stripped)
+    if match is None:
+        return None
+    noun = match.group("noun") or "creature"
+    rewritten = f"target {noun}{match.group('rest')}"
+    if not is_genuine_resolution_layer_sentence(rewritten):
+        return None
+    builder = parsed_layer_effects(rewritten)
+    if builder is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        subject = game.find_by_id(event.subject_id)
+        if subject is None or subject.zone is not Zone.BATTLEFIELD:
+            return
+        effects = continuous_effects(game)
+        for built in builder(
+            source,
+            effects.tick(),
+            [subject],
+            layer_context_for(game, game.controller_of(ability)),
+        ):
+            effects.add(built, game)
+
+    return effect
+
+
 def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> AbilityEffect | None:
     """The ability-side twin of `_compose_layer_effect_with_remainder`, for
     `_ability_effect_or_notice`'s own `_is_layer_effect_text` fallback."""
@@ -17236,6 +17301,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     exiled_card_owner_token = _parse_exiled_card_owner_creates_x_token_clause(effect_text)
     if exiled_card_owner_token is not None:
         return exiled_card_owner_token
+    event_subject_pump = _parse_event_subject_pump_clause(effect_text)
+    if event_subject_pump is not None:
+        return event_subject_pump
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
