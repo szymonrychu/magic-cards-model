@@ -245,7 +245,7 @@ from .card_state import (
     planeswalkers_with_zero_loyalty,
 )
 from .mana import ManaCost, ManaPool, ManaSpend, ManaSpendEffect
-from .player import Player
+from .player import Emblem, Player
 from .token import TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
 
@@ -2232,7 +2232,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 21
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2460,6 +2460,17 @@ class Game(EngineModel):
     `Game.model_dump()` and the bump rule's first bullet does not carve out
     an exception for a field whose default happens to match every existing
     use - refused rather than trusted on that observation holding forever.
+
+    Bumped 21 -> 22: `Player` gained `emblems` (CR 114.2, a new `Emblem`
+    model - Wrenn and Seven's -8, Tamiyo, Inquisitive Student's -7).
+    Defaults to an empty list, which is every version-21 player's only
+    possible value, but the bump rule's first bullet carves out no
+    exception for that either - a field added to `Player`, reachable from
+    `Game.model_dump()`, is exactly the case it names. `has_no_maximum_
+    hand_size` reads the new field too, changing what `cards_over_
+    maximum_hand_size` (and so the cleanup step's own discard) computes
+    for a player any such emblem reaches - a behavioural change on top of
+    the shape one.
     """
 
     @model_validator(mode="before")
@@ -3679,11 +3690,26 @@ class Game(EngineModel):
         # Awakening, Sink into Stupor, Turntimber Symbiosis) resolve to
         # nothing, since `effect_text` came back empty.
         # CR 107.3a: X is fixed for the whole spell once announced, but only
-        # for a spell that actually has `{X}` in its own mana cost - a spell
-        # whose text defines its own X some other way (CR 107.3f) gets no
-        # substitution at all, which is `effect_for`'s own `x_value=None`
+        # for a spell whose own *cost* actually carries an X to announce - a
+        # spell whose text defines its own X some other way (CR 107.3f) gets
+        # no substitution at all, which is `effect_for`'s own `x_value=None`
         # default. `spell.mana_cost` already reads the up face of a DFC.
-        x_value = self.cast_record(spell).x_value if "{X}" in (spell.mana_cost or "") else None
+        #
+        # Not only `"{X}" in mana_cost`: CR 107.3a's X is announced whenever
+        # the cost's own text names it, and a printed cost is not only the
+        # mana symbols - Soul Immolation's "As an additional cost to cast
+        # this spell, blight X" announces X inside an additional cost with
+        # no `{X}` anywhere in its `{3}{R}{R}` mana cost, which used to leave
+        # its own "deals X damage to each opponent" sentence unsubstituted
+        # even though `blight`'s own X was announced and paid correctly.
+        # `cost_announces_x` on each additional-cost sentence is the same
+        # general "does this cost's own text carry a bare X" reader
+        # `create_continuous_effect_of_ability` now uses for an activated
+        # ability's own cost.
+        cost_has_x = "{X}" in (spell.mana_cost or "") or any(
+            cost_announces_x(phrase) for phrase in additional_cost_phrases(spell.card)
+        )
+        x_value = self.cast_record(spell).x_value if cost_has_x else None
         # CR 702.102d: a fused split spell resolves the left half's
         # instructions and then the right half's - two independent texts,
         # neither of which is `spell.oracle_text` (that property reads
@@ -8922,6 +8948,20 @@ class Game(EngineModel):
             )
         )
 
+    def create_emblem(self, player: Player, text: str, *, source_name: str | None = None) -> Emblem:
+        """CR 114.2: "[Player] gets an emblem with [ability]" - puts an
+        emblem with `text` into the command zone, owned and controlled by
+        `player` (CR 109.4c).
+
+        No replacement effect touches this in the pool (nothing in CR 114
+        gives one a hook the way CR 122.1's counter-placement event has),
+        so this is a plain append, the same directness `add_counters` only
+        skips because a replacement effect really can intercept it.
+        """
+        emblem = Emblem(text=text, source_name=source_name)
+        player.emblems.append(emblem)
+        return emblem
+
     def return_to_hand(self, permanent: CardState) -> CardState:
         """Return a permanent to its owner's hand (CR 701.19a is "return").
 
@@ -13800,6 +13840,7 @@ class Game(EngineModel):
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
         x_value: int = 0,
     ) -> TotalCost:
         """The total cost of one activation (CR 602.1a, 601.2f).
@@ -13813,6 +13854,18 @@ class Game(EngineModel):
         or `exiling`; leaving it empty builds a cost that correctly refuses to
         be paid (CR 118.3) rather than one that cannot be built.
 
+        `tapping` is the same idea for "Tap `<count>` untapped `<quality>` you
+        control" (Persistent Petitioners' "Tap four untapped Advisors you
+        control", Merchant's Dockhand's "Tap X untapped artifacts you
+        control") - CR 601.2b's own choice of *which* permanents pay a named-
+        quality tap cost, as distinct from the bare `{T}` symbol (CR 107.5's
+        fixed "tap this permanent", no choice at all, already built with its
+        own card filled in below). `machines/casting.py`'s own
+        `Casting._printed_additional_costs` already fills a spell's matching
+        `TAP` component this way (Swallow Whole's own additional cost); this
+        is that same fill, for an activated ability's cost instead of a
+        spell's.
+
         `x_value` is CR 107.3a's X, announced as this activation begins
         (CR 602.2b), the same moment `Casting.determine_cost` fixes X for a
         spell. `ManaCost.with_x` folds it in when the printed cost has one -
@@ -13824,6 +13877,7 @@ class Game(EngineModel):
         sacrifices = list(sacrificing or [])
         discards = list(discarding or [])
         exiles = list(exiling or [])
+        taps = list(tapping or [])
 
         mana = ManaCost()
         components = []
@@ -13956,6 +14010,18 @@ class Game(EngineModel):
                     while exiles and len(chosen) < component.required:
                         chosen.append(exiles.pop(0))
                     component = component.model_copy(update={"cards": chosen})
+                if not component.cards and taps and component.kind is ComponentKind.TAP:
+                    # "Tap `<count>` untapped `<quality>` you control"
+                    # (Persistent Petitioners, Merchant's Dockhand): the same
+                    # fill as the `EXILE` branch immediately above, from
+                    # `tapping` rather than `exiling`. This component's own
+                    # `CostKind` is `OTHER` too - the bare `{T}` symbol is
+                    # what the `CostKind.TAP` branch above already built with
+                    # `[permanent]` filled in, so this never double-fills it.
+                    chosen_taps: list[CardState] = []
+                    while taps and len(chosen_taps) < component.required:
+                        chosen_taps.append(taps.pop(0))
+                    component = component.model_copy(update={"cards": chosen_taps})
                 if component.kind is ComponentKind.REVEAL:
                     # CR 701.20a's reveal from hand: the cards named in
                     # `revealing` pay it, and for CR 107.3a's X their number
@@ -14272,6 +14338,7 @@ class Game(EngineModel):
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
         x_value: int = 0,
         targets: list[object] | None = None,
     ) -> CostPayment:
@@ -14305,6 +14372,7 @@ class Game(EngineModel):
             discarding=discarding,
             exiling=exiling,
             revealing=revealing,
+            tapping=tapping,
             x_value=x_value,
         )
         # CR 601.2h pays the cost the player chose, so a reveal cost nobody

@@ -105,6 +105,7 @@ from magic_cards_model.machines.casting import (  # noqa: E402
 )
 from magic_cards_model.machines.combat import Keyword, is_attack_requirement_line  # noqa: E402
 from magic_cards_model.machines.cost import (  # noqa: E402
+    additional_cost_phrases,
     cost_announces_x,
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
@@ -123,7 +124,7 @@ from magic_cards_model.machines.layers import (  # noqa: E402
     looks_like_unparsed_layer_effect,
     parsed_layer_effects,
 )
-from magic_cards_model.machines.modes import modal_profile  # noqa: E402
+from magic_cards_model.machines.modes import modal_profile, substitute_x  # noqa: E402
 from magic_cards_model.machines.objects_as_costs import has_improvise  # noqa: E402
 from magic_cards_model.machines.targeting import profile_for_text  # noqa: E402
 from magic_cards_model.machines.triggers import (  # noqa: E402
@@ -526,7 +527,7 @@ def _worse(a: str, b: str) -> str:
     return min((a, b), key=lambda category: _SEVERITY[category])
 
 
-def _layer_category(printing: Card) -> str | None:
+def _layer_category(printing: Card, ability_text: str | None = None) -> str | None:
     """Handled/notice for this card's own continuous-effect text (CR 611.2,
     CR 611.3), read exactly the way the battlefield sweep
     (`machines/layers.effects_for`) reads it: `LAYER_EFFECTS` first, then
@@ -538,7 +539,27 @@ def _layer_category(printing: Card) -> str | None:
     sweep's business at all, the same way a combat restriction or a cost
     modifier is not `machines/layers.py`'s. Only a genuine near-miss on one of
     those four shapes counts as a gap here.
+
+    `ability_text` is the resolving ability's own, already X-substituted text
+    - `machines/effects.create_continuous_effect_of_ability` passes exactly
+    this to `ContinuousEffects.create` at real resolution now (Chatterfang,
+    Squirrel General's "Sacrifice X Squirrels: Target creature gets +X/-X
+    until end of turn", X announced in plain English rather than as a bare
+    `{X}` mana symbol). Reading the card's own raw, unsubstituted text instead
+    - the fallback below - cannot ever match a bare, non-numeric "X" the way
+    `parsed_layer_effects` reads a pump's magnitude, so an activated ability
+    with this shape scored SILENT here even once the real engine read it
+    correctly; passing the same substituted text this sweep already computes
+    for `activated_effect_for` keeps the two readings in step.
     """
+    if ability_text is not None:
+        if parsed_layer_effects(ability_text, card_name=printing.name):
+            return HANDLED
+        if looks_like_unparsed_layer_effect(
+            ability_text, static_only=False, card_name=printing.name
+        ):
+            return NOTICE
+        return None
     # `front_oracle_text`, not the top-level field: a `transform` or
     # `modal_dfc` printing leaves `oracle_text` null and puts each face's text
     # on `card_faces`, so reading the top-level field scored eleven
@@ -710,13 +731,17 @@ def _modal_category(printing: Card) -> str:
     return NOTICE
 
 
-def _dispatch_category(effect: object, printing: Card) -> str:
+def _dispatch_category(effect: object, printing: Card, ability_text: str | None = None) -> str:
     """What actually happens if `effect` - what a real dispatcher just
     returned for this card - runs: a real effect, a fail-closed notice, or
     nothing at all. `effect` is always the literal object `effect_for`,
     `trigger_effect_for` or `activated_effect_for` returned, so this never
     re-derives what those functions already decided - it only reads the
     shape of their answer.
+
+    `ability_text` is forwarded to `_layer_category` unchanged - see that
+    function's own docstring for why an activated ability's X-substituted
+    text, not the card's raw printed one, is what the real engine reads.
     """
     if effect is None:
         return SILENT
@@ -725,7 +750,7 @@ def _dispatch_category(effect: object, printing: Card) -> str:
         # path - `looks_like_unparsed_layer_effect`'s own regex is a superset
         # of the one that routed here in the first place - but SILENT is the
         # right default if it ever did, not an optimistic HANDLED.
-        return _layer_category(printing) or SILENT
+        return _layer_category(printing, ability_text) or SILENT
     if effect is resolve_modal_spell:
         return _modal_category(printing)
     if getattr(effect, "__name__", "") in _NOTICE_STAND_IN_NAMES:
@@ -1082,7 +1107,7 @@ def _effect_matched_inside_quotes(dispatch: Callable[[str], object], text: str) 
 _X_PROBE_VALUES: tuple[int, ...] = (0, 3)
 
 
-def _x_candidates(cost_or_mana_cost: str | None) -> tuple[int | None, ...]:
+def _x_candidates(cost_or_mana_cost: str | None, *additional: str) -> tuple[int | None, ...]:
     """Every X value `classify_card` should try for one clause.
 
     Mirrors `models/game.py`'s own gate for a real resolution
@@ -1092,8 +1117,17 @@ def _x_candidates(cost_or_mana_cost: str | None) -> tuple[int | None, ...]:
     (CR 107.3a) - unless that cost has an X in it, `{X}` or Martyr of Sands's
     bare "Reveal X white cards", in which case every value in
     `_X_PROBE_VALUES` is tried.
+
+    `additional` is zero or more further cost phrases to check the same way -
+    a spell's own printed additional cost (CR 118.8a), which is not part of
+    `mana_cost` at all. Soul Immolation's "As an additional cost to cast this
+    spell, blight X" announces X with no `{X}` anywhere in its `{3}{R}{R}`
+    mana cost; checking `mana_cost` alone scored its own damage sentence
+    SILENT even once `Game.resolve_top` read the real engine's X correctly
+    (`models/game.py`'s own matching widened check, right beside this one).
     """
-    if cost_or_mana_cost and cost_announces_x(cost_or_mana_cost):
+    texts = (cost_or_mana_cost, *additional)
+    if any(text and cost_announces_x(text) for text in texts):
         return _X_PROBE_VALUES
     return (None,)
 
@@ -1243,7 +1277,7 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
 
     if not printing.is_land:
         for face in _spell_faces(printing):
-            x_candidates = _x_candidates(face.mana_cost)
+            x_candidates = _x_candidates(face.mana_cost, *additional_cost_phrases(printing))
             effects = [
                 effect_for(face.name, face.text, x_value=x_value) for x_value in x_candidates
             ]
@@ -1295,7 +1329,19 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 activated_effect_for(printing.name, index, ability.effect, x_value=x_value)
                 for x_value in x_candidates
             ]
-            categories = [_dispatch_category(effect, printing) for effect in activated_effects]
+            # The same substituted text `create_continuous_effect_of_ability`
+            # itself now passes to `ContinuousEffects.create` at a real
+            # resolution (see `_layer_category`'s own docstring) - computed
+            # per X candidate so a pump/keyword-grant judged here is judged
+            # on the number that would actually be on the stack.
+            ability_texts = [
+                substitute_x(ability.text, x_value) if x_value is not None else None
+                for x_value in x_candidates
+            ]
+            categories = [
+                _dispatch_category(effect, printing, text)
+                for effect, text in zip(activated_effects, ability_texts, strict=True)
+            ]
             category = _best(categories)
             if (
                 x_candidates == (None,)

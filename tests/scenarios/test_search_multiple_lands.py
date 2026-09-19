@@ -180,17 +180,18 @@ def test_scapeshift_cannot_sacrifice_more_lands_than_are_there():
 # `_SEARCH_AND_PUT_RE` used to accept only the literal article "a"/"an", so
 # this shape never matched at all; the count slot now reads any `{COUNT}`.
 #
-# Behold the Beyond's own first sentence, "Discard your hand.", is a
-# separate, pre-existing gap this wave does not own (no parser anywhere reads
-# a bare "discard your hand" - as opposed to a counted "discard N cards" -
-# and it was not part of any family this sweep assigned; found here and
-# reported, not fixed). Casting the whole card through the ordinary path
-# would exercise that unrelated gap and fail closed on it before ever
-# reaching the search sentence this file is actually about, so this drives
-# the search clause directly - `effect_for` on the real printed sentence,
-# run against a real board and the real `StackObject` casting the real card
-# produces - rather than through the two-clause `cast_and_resolve` that gap
-# currently blocks.
+# Behold the Beyond's own first sentence, "Discard your hand.", used to be a
+# separate, pre-existing gap this file's own family did not own (no parser
+# anywhere read a bare "discard your hand"/"discards their hand", as opposed
+# to a counted "discard N cards") - closed generally in `_DISCARD_HAND_RE`
+# (`machines/effects.py`), proved end to end through the ordinary two-clause
+# `cast_and_resolve` path in
+# `tests/scenarios/test_whole_hand_discard.py::test_behold_the_beyond_
+# discards_the_whole_hand_then_searches`. This file keeps driving the search
+# clause directly - `effect_for` on the real printed sentence, run against a
+# real board and the real `StackObject` casting the real card produces -
+# because that is still the more targeted way to exercise the search-count
+# shape these tests are actually about.
 _BEHOLD_THE_BEYOND_SEARCH = (
     "Search your library for three cards, put them into your hand, then shuffle."
 )
