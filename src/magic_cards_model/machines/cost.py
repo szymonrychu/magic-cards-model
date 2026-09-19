@@ -346,10 +346,17 @@ def _activation_refused(
 # mana", so the ability is still there and still `{T}`-activatable; it just
 # has no legal type to add.
 
-#: `among legendary creatures and planeswalkers you control` (Mox Amber). The
-#: quality is left as words for `_among_colors` to read, since the same
-#: sentence is printed with other qualities on cards outside this pool.
-_ANY_COLOR_AMONG = re.compile(r"\bamong (?P<quality>[a-z ,]+?) you control\b", re.IGNORECASE)
+#: `color among legendary creatures and planeswalkers you control` (Mox
+#: Amber). The quality is left as words for `_among_colors` to read, since
+#: the same sentence is printed with other qualities on cards outside this
+#: pool. Anchored on the word directly before "among" being "color" - not a
+#: bare search anywhere in the effect - because "among ... you control" is
+#: not always this survey: Loot, the Nexus's "one mana of that color for
+#: each different power among creatures you control" also contains the
+#: phrase, modifying the *count* rather than which colors are legal, and a
+#: bare search wrongly refused its own unrelated color as undefined by
+#: CR 106.5's restriction, which is not what that sentence is about at all.
+_ANY_COLOR_AMONG = re.compile(r"\bcolor among (?P<quality>[a-z ,]+?) you control\b", re.IGNORECASE)
 
 
 def _among_colors(

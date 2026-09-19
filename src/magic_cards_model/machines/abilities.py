@@ -166,6 +166,17 @@ _ANY_COLOR_COMBINATION = re.compile(
 _DEVOTION_AMOUNT = re.compile(
     r"^an amount of mana of that color equal to your devotion to that color$", re.IGNORECASE
 )
+#: Loot, the Nexus: "Choose a color. Add one mana of that color for each
+#: different power among creatures you control." The same "Choose a color"
+#: preamble and "that color" reference `_DEVOTION_AMOUNT` already reads for
+#: Nykthos, with a board count in place of devotion - "for each
+#: <count-expression>" rather than "where X is <count-expression>", read
+#: through the identical `_mana_count_expression_readable`/`resolve_mana_
+#: count_expression` pair so any future "... of that color for each ..."
+#: printing is answered the same way, not only this one card's own count.
+_CHOSEN_COLOR_FOR_EACH_RE = re.compile(
+    r"^one mana of that color for each (?P<expression>.+)$", re.IGNORECASE
+)
 #: The sentence that precedes it. CR 605.1a says nothing about a mana
 #: ability having only one sentence, and this one is simply where the colour
 #: `Game.activate_ability` already takes for any `any_color` ability is
@@ -945,6 +956,17 @@ def _parse_effect(effect: str) -> ManaAbility | None:
             any_color=True,
             any_color_count=1,
             amount_from_devotion=True,
+        )
+    chosen_color_for_each = _CHOSEN_COLOR_FOR_EACH_RE.fullmatch(effect.strip().rstrip("."))
+    if chosen_color_for_each:
+        expression = chosen_color_for_each.group("expression").strip()
+        if not _mana_count_expression_readable(expression):
+            return None
+        return ManaAbility(
+            options=[[color] for color in _COLORS],
+            any_color=True,
+            any_color_count=1,
+            any_color_count_expression=expression,
         )
     # Before `_ANY_COLOR`: "one mana of any color that a land an opponent
     # controls could produce" opens with `_ANY_COLOR`'s own words, and reading

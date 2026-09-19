@@ -790,6 +790,15 @@ _GREATEST_CHARACTERISTIC_AMONG_RE = re.compile(
     r"(?P<qualifier>[a-z]+) you control$",
     re.IGNORECASE,
 )
+#: "different power among creatures you control" - Loot, the Nexus's own
+#: mana ability count. Not the extremum `_GREATEST_CHARACTERISTIC_AMONG_RE`
+#: reads: this is the number of *distinct* values the characteristic takes
+#: (a 1/1, a 1/1, and a 3/3 is two different powers, not three), so it needs
+#: its own reader rather than reusing that one's max.
+_DIFFERENT_CHARACTERISTIC_AMONG_RE = re.compile(
+    r"^different (?P<characteristic>power|toughness) among (?P<qualifier>[a-z]+) you control$",
+    re.IGNORECASE,
+)
 
 
 def _singular_card_type(word: str) -> Type | None:
@@ -936,6 +945,26 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return max(values) if values else 0
 
         return greatest_among
+
+    if match := _DIFFERENT_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
+        card_type = _singular_card_type(match.group("qualifier"))
+        if card_type is None:
+            return None
+        wants_power = match.group("characteristic").lower() == "power"
+
+        def different_among(game: "Game", controller: str) -> int:
+            board = game.computed_board()
+            values: set[int] = set()
+            for permanent in game.battlefield:
+                chars = board.of(permanent)
+                if chars.controller != controller or card_type not in chars.types:
+                    continue
+                # CR 208.5: no value for power/toughness reads as 0, the same
+                # `greatest_among` above already relies on.
+                values.add(chars.numeric_power if wants_power else chars.numeric_toughness)
+            return len(values)
+
+        return different_among
 
     return None
 
