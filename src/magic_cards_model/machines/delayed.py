@@ -962,6 +962,41 @@ class ReflexiveExileCopiedCard(DelayedEffectSpecBase):
         game.exile_permanent(card)
 
 
+class RevokeGrantedAbility(DelayedEffectSpecBase):
+    """Strip a granted activation text off a permanent once this delayed
+    trigger's own watched event fires - Emrakul, the Exigent Doom: "Target
+    land gains "{T}: Add {C}{C}" until this card is cast from exile." The
+    grant itself (CR 113.10) is made immediately, by the ability that reads
+    this sentence; this is only the "until" half, watching `TriggerEvent.
+    CAST_SPELL` with `DelayedTrigger.subject_id` set to the *exiled card*, not
+    the land - the same "two different objects" split `StaticPrisonReturn`'s
+    own docstring explains, since the event this waits for and the permanent
+    this changes are never the same object here either.
+
+    CR 603.7c's own guard: `land_id`/`land_stamp` are the land's identity at
+    the moment it was granted the ability, so a land that has since left the
+    battlefield, or been replaced by a new incarnation of the same id, is
+    left alone rather than having some other object's granted text stripped.
+    """
+
+    kind: Literal["revoke_granted_ability"] = "revoke_granted_ability"
+
+    land_id: UUID
+    land_stamp: UUID
+    granted_text: str
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        land = game.find_by_id(self.land_id)
+        if not isinstance(land, CardState):
+            return
+        if land.zone is not Zone.BATTLEFIELD or land.zone_change_stamp != self.land_stamp:
+            return
+        if self.granted_text in land.granted_ability_texts:
+            land.granted_ability_texts = tuple(
+                text for text in land.granted_ability_texts if text != self.granted_text
+            )
+
+
 #: What a delayed (or reflexive) triggered ability does when it resolves -
 #: `DelayedTrigger.effect`'s own type. Every string this task's requirement 2
 #: names (`"warp:exile"`, `"grant_extra_turn"`, `"sacrifice"`) is a member's
@@ -996,7 +1031,8 @@ DelayedEffectSpec = Annotated[
     | ReflexivePayEnergyConsequence
     | ReflexiveMandatoryTokenDamageConsequence
     | ReflexiveCounterCountConsequence
-    | ReflexiveExileCopiedCard,
+    | ReflexiveExileCopiedCard
+    | RevokeGrantedAbility,
     Field(discriminator="kind"),
 ]
 

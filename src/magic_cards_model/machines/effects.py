@@ -130,6 +130,7 @@ from .delayed import (
     ReflexivePayEnergyConsequence,
     ReturnExiledCardAndAddCounters,
     ReturnRiderCounter,
+    RevokeGrantedAbility,
     SacrificeSubject,
     StaticPrisonReturn,
     anaphoric_delayed_trigger,
@@ -6848,6 +6849,122 @@ def _parse_gains_ability_clause(text: str) -> AbilityEffect | None:
             return
         if granted_text not in source.granted_ability_texts:
             source.granted_ability_texts = (*source.granted_ability_texts, granted_text)
+
+    return effect
+
+
+#: "Target land gains "{T}: Add {C}{C}" until this card is cast from
+#: exile." - Emrakul, the Exigent Doom's own exile-activated ability. CR
+#: 113.10's grant is the same one `_GAINS_ABILITY_RE` already reads for a
+#: self-referential "This <noun> gains", widened here to a *targeted*
+#: permanent, with an expiry tied to a game event ("this card is cast from
+#: exile") instead of the ordinary "until end of turn". The `[a-z]+` type
+#: word after "target" is unconstrained the same way `_GAINS_ABILITY_RE`'s
+#: own subject is, so any future "Target <type> gains "<ability>" until this
+#: card is cast from exile." printing reads through this same parser.
+_TARGET_GAINS_ABILITY_UNTIL_CAST_FROM_EXILE_RE = re.compile(
+    r'^(?P<phrase>target [a-z]+) gains "(?P<ability>.+)" until this '
+    r"(?:card|permanent) is cast from exile\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_target_gains_ability_until_cast_from_exile_clause(text: str) -> AbilityEffect | None:
+    """`_TARGET_GAINS_ABILITY_UNTIL_CAST_FROM_EXILE_RE`'s shape.
+
+    The grant itself (CR 113.10a) happens immediately, exactly as
+    `_parse_gains_ability_clause` does it. The expiry is a `DelayedTrigger`
+    watching `TriggerEvent.CAST_SPELL` with its own `subject_id` set to the
+    *exiled card* (`ability.source_id` - CR 113.7a's source is still findable
+    by id across its own hand-to-exile move, confirmed the same way
+    `_grant_cast_exiled_card_permission_from_sibling_static` already relies
+    on it), not the land: the event this waits for and the permanent this
+    changes are two different objects, the same split `StaticPrisonReturn`'s
+    own docstring explains for its own delayed trigger.
+    """
+    match = _TARGET_GAINS_ABILITY_UNTIL_CAST_FROM_EXILE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), battlefield_only=True):
+        return None
+    granted_text = match.group("ability").strip()
+    if not granted_text:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            if granted_text not in target.granted_ability_texts:
+                target.granted_ability_texts = (*target.granted_ability_texts, granted_text)
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=(
+                        f'{target.name} gains "{granted_text}" until '
+                        f"{source.name} is cast from exile."
+                    ),
+                    event=TriggerEvent.CAST_SPELL,
+                    controller=ability.controller,
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    subject_id=source.id,
+                    remaining=1,
+                    expires_end_of_turn=False,
+                    effect=RevokeGrantedAbility(
+                        land_id=target.id,
+                        land_stamp=target.zone_change_stamp,
+                        granted_text=granted_text,
+                    ),
+                )
+            )
+
+    return effect
+
+
+#: "You may cast this card for as long as it remains exiled." - Emrakul, the
+#: Exigent Doom's own second sentence of the same ability, self-referential
+#: ("this card") rather than `_PLAY_PERMISSION_RE`'s "it"/"that card" aimed
+#: at something the effect just exiled: here the exiling already happened as
+#: the activation's own *cost* ("Exile this card from your hand:"), so there
+#: is no antecedent exile clause in the effect text to pair it with - only
+#: CR 601.3's grant, on the source itself.
+_SELF_CAST_WHILE_EXILED_RE = re.compile(
+    r"^you may cast this (?:card|permanent) for as long as it remains exiled\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_cast_while_exiled_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_CAST_WHILE_EXILED_RE`'s shape.
+
+    No `until_end_of_turn` and no `condition`: CR 601.3's "as long as it
+    remains exiled" is not a turn-boxed duration and names no board
+    condition to recheck, unlike Null Summoner's Threshold-gated sibling
+    static (`_grant_cast_exiled_card_permission_from_sibling_static`) - the
+    permission is simply live for as long as this exact exiled object (CR
+    400.7) exists, which `PlayPermission.names` already keys on.
+    """
+    if _SELF_CAST_WHILE_EXILED_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        controller = game.controller_of(ability)
+        game.grant_play_permission(
+            source,
+            controller.username,
+            action=PlayAction.CAST,
+            pays_mana_cost=True,
+            source_name=source.name,
+            rule="CR 601.3",
+            zone=source.zone,
+            until_end_of_turn=False,
+        )
 
     return effect
 
@@ -21717,6 +21834,14 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     untap_all_you_control = _parse_untap_all_you_control_clause(clause)
     if untap_all_you_control is not None:
         return untap_all_you_control
+    target_gains_ability_until_cast = _parse_target_gains_ability_until_cast_from_exile_clause(
+        clause
+    )
+    if target_gains_ability_until_cast is not None:
+        return target_gains_ability_until_cast
+    self_cast_while_exiled = _parse_self_cast_while_exiled_clause(clause)
+    if self_cast_while_exiled is not None:
+        return self_cast_while_exiled
     damage_each_group = _parse_damage_each_group_clause(clause)
     if damage_each_group is not None:
         return damage_each_group

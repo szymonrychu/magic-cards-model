@@ -2899,6 +2899,17 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
 #: all; neither name appears here, only the cost's own words.
 _DISCARDS_ITSELF = re.compile(r"^discard this (?:card|permanent)$", re.IGNORECASE)
 
+#: The same CR 113.6j shape `_DISCARDS_ITSELF` reads, with exile in place of
+#: discard: Emrakul, the Exigent Doom's "{3}, Exile this card from your hand:
+#: ...". Discarding is CR 701.9a's own hand-to-graveyard move, so "discard
+#: this card" already implies the hand without saying so; exiling has no such
+#: built-in zone, so this cost spells "from your hand" out, and the pattern
+#: has to read that explicitly rather than assuming it the way `_DISCARDS_
+#: ITSELF` can.
+_EXILES_ITSELF_FROM_HAND = re.compile(
+    r"^exile this (?:card|permanent) from your hand$", re.IGNORECASE
+)
+
 #: CR 113.6m: "An ability whose cost or effect specifies that it moves the
 #: object it's on out of a particular zone functions only in that zone, unless
 #: its trigger condition or a previous part of its cost or effect already
@@ -2940,6 +2951,11 @@ def _activated_ability_zone(
     """
     if any(
         piece.kind is CostKind.DISCARD and _DISCARDS_ITSELF.match(piece.text) for piece in costs
+    ):
+        return Zone.HAND, "CR 113.6j"
+    if any(
+        piece.kind is CostKind.OTHER and _EXILES_ITSELF_FROM_HAND.match(piece.text)
+        for piece in costs
     ):
         return Zone.HAND, "CR 113.6j"
     if _RETURNS_ITSELF_FROM_GRAVEYARD.search(effect):
