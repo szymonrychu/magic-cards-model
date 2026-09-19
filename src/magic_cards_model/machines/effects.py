@@ -158,6 +158,7 @@ from .layers import (
     LayerNotice,
     Sublayer,
     _only,
+    _split_and_validate_keywords,
     add_subtype,
     add_type,
     count_card_types,
@@ -778,6 +779,111 @@ def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | No
         )
 
     return effect
+
+
+#: "It gains trample until end of turn." (Primaris Chaplain: "Whenever this
+#: creature attacks, it gains indestructible until end of turn.", the effect
+#: clause split off its own trigger condition) - CR 601.2c's pronoun reaching
+#: back to the ability's own subject. A no-target triggered or activated
+#: ability's *own* effect clause never reaches `parsed_layer_effects`' "this
+#: creature"/named-self shapes (`create_continuous_effect_of_ability` derives
+#: what to parse from the source's full printed text, not from this already
+#: trigger-condition-stripped clause), so this is built by hand instead, one
+#: keyword-grant `ContinuousEffect` per keyword, the same escape hatch
+#: `_parse_pump_and_becomes_chosen_color_clause` uses above.
+_SELF_KEYWORD_GRANT_UNTIL_EOT_RE = re.compile(
+    r"^it gains (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: "It gains your choice of trample or deathtouch until end of turn."
+#: (Hunter's Axe's granted attack trigger) - the shape above with CR 608.2d's
+#: "of your choice" ahead of a fixed, enumerated list rather than a single
+#: named keyword, read the same `DecisionKind.CHOOSE_A_QUALITY` way
+#: `_choose_a_color` reads a colour choice, narrowed to the two-or-more
+#: keywords the sentence itself names instead of the five colours.
+_SELF_CHOICE_KEYWORD_GRANT_UNTIL_EOT_RE = re.compile(
+    r"^it gains your choice of (?P<options>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
+    r"(?:,)?\s*or\s+[a-z]+(?: [a-z]+)?) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_keyword_grant_until_eot_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_KEYWORD_GRANT_UNTIL_EOT_RE`/`_SELF_CHOICE_KEYWORD_GRANT_UNTIL_
+    EOT_RE`'s two shapes - see either regex's own docstring. Tried as one
+    function, the choice shape first, since a plain "it gains X" text never
+    contains "your choice of" and the two can never both match the same
+    sentence.
+    """
+    stripped = text.strip()
+    if match := _SELF_CHOICE_KEYWORD_GRANT_UNTIL_EOT_RE.fullmatch(stripped):
+        raw_options = [
+            option.strip()
+            for option in re.split(r",\s*|\s+or\s+", match.group("options"))
+            if option.strip()
+        ]
+        options: list[str] = []
+        for option in raw_options:
+            validated = _split_and_validate_keywords(option)
+            if validated is None or len(validated) != 1:
+                return None
+            options.append(validated[0])
+
+        def choice_effect(game: "Game", ability: AbilityOnStack) -> None:
+            source = ability.source(game)
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                return
+            controller = game.controller_of(ability)
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=controller.username,
+                prompt=f"choose which keyword {source.name} gains until end of turn",
+                source=source.name,
+                options=tuple(options),
+                source_id=source_id_of(ability),
+            )
+            answer = game.ask(decision)
+            assert isinstance(answer, str)
+            store = continuous_effects(game)
+            store.add(
+                ContinuousEffect(
+                    description=f"{source.name}: gains {answer} until end of turn",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=_only(source.id),
+                    modification=grant_ability(answer),
+                )
+            )
+
+        return choice_effect
+    if match := _SELF_KEYWORD_GRANT_UNTIL_EOT_RE.fullmatch(stripped):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+
+        def plain_effect(game: "Game", ability: AbilityOnStack) -> None:
+            source = ability.source(game)
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                return
+            store = continuous_effects(game)
+            timestamp = store.tick()
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{source.name}: gains {keyword} until end of turn",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=_only(source.id),
+                        modification=grant_ability(keyword),
+                    )
+                )
+
+        return plain_effect
+    return None
 
 
 #: "Target creature you control gains protection from the color of your
@@ -1823,6 +1929,16 @@ def _run_mass_pump(
         if subtype_match is not None
         else literal
     )
+    # `parsed_layer_effects` reads `_effect_sentences`, which needs a real
+    # sentence terminator to recognise anything at all - fine for a whole,
+    # unsplit ability effect (still carries its own printed period), but
+    # `literal` can also arrive here already trimmed of one: `_parse_mass_
+    # pump_group_clause` calls this on a single clause `split_effect_
+    # clauses` has already cut apart (and that splitter always strips a
+    # trailing "."), Ingris Stingerquill's "Then creatures you control gain
+    # haste until end of turn." among them.
+    if not parseable.rstrip().endswith("."):
+        parseable = parseable.rstrip() + "."
     builder = parsed_layer_effects(parseable)
     if builder is None:
         # A keyword outside `_KNOWN_KEYWORDS`'s whitelist, or some other shape
@@ -5313,6 +5429,40 @@ _REMOVE_A_COUNTER_FROM_EACH_OF_ANY_NUMBER_RE = re.compile(
     re.IGNORECASE,
 )
 _PAY_ANY_AMOUNT_OF_LIFE_RE = re.compile(r"^(?:you may )?pay any amount of life$", re.IGNORECASE)
+
+#: "Untap all tokens you control." (Jiang Yanggu, Never Alone's end step
+#: trigger); "Untap all nonland permanents you control." (Dramatic
+#: Reversal) - CR 701.26b's untap over a filtered group rather than one
+#: named object, and player-owned rather than source-owned, which is why
+#: this lives in the shared per-clause reader (both a spell's own
+#: resolution and a triggered ability's reach it) rather than only the
+#: ability-only fallback `_UNTAP_TRIGGER_SUBJECT_RE` is read from. Only the
+#: qualifiers the pool prints are read; a filter this cannot name leaves the
+#: clause unread rather than guessing.
+_UNTAP_ALL_QUALIFIER_RE = re.compile(
+    r"^untap all (?P<nonland>nonland )?(?P<noun>permanents|creatures|artifacts|tokens|lands) "
+    r"you control$",
+    re.IGNORECASE,
+)
+
+
+def _untap_all_qualifier_matches(game: "Game", state: CardState, noun: str, nonland: bool) -> bool:
+    chars = game.characteristics_of(state)
+    if nonland and Type.LAND in chars.types:
+        return False
+    if noun == "permanents":
+        return True
+    if noun == "lands":
+        return Type.LAND in chars.types
+    if noun == "artifacts":
+        return Type.ARTIFACT in chars.types
+    if noun == "creatures":
+        return Type.CREATURE in chars.types
+    if noun == "tokens":
+        return chars.is_token
+    return False
+
+
 #: "You gain life equal to the life you've lost this turn." - Children of
 #: Korlis. The amount is read off `Player.life_lost_this_turn`, the gross
 #: per-turn ledger, not the net change in the life total: every route down
@@ -5769,6 +5919,19 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         return lambda game, player, source, source_id: game.scry(
             player, reader(game, player.username), source=source, source_id=source_id
         )
+
+    if match := _UNTAP_ALL_QUALIFIER_RE.fullmatch(clause):
+        nonland = match.group("nonland") is not None
+        noun = match.group("noun").lower()
+
+        def untap_all(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            for state in list(game.battlefield):
+                if state.controller == player.username and _untap_all_qualifier_matches(
+                    game, state, noun, nonland
+                ):
+                    state.untap(exert_applies=False)
+
+        return untap_all
 
     return None
 
@@ -8462,16 +8625,40 @@ def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
     `_parse_token_clause` is tried directly against the untouched text
     instead; its own regex only ever fullmatches a *complete* token-creation
     sentence, so a card whose token clause is one instruction among several
-    still falls through to the ordinary per-clause path unaffected.
+    is meant to fall through to the ordinary per-clause path unaffected -
+    which needs an explicit guard, not just leaving it to `_TOKEN_CLAUSE_RE`
+    to fail: that regex's own "named <name>" and "with <tail>" groups are
+    both a bare `.+?` with only a final `$` to anchor against, so hunting
+    for a match against a genuinely multi-sentence text (Ingris
+    Stingerquill's own "Create a 2/2 ... token named Cadet. Then creatures
+    you control gain haste until end of turn.") lets the "name" backtrack
+    straight through the interior period and swallow the second sentence
+    whole, rather than failing the way "one instruction among several"
+    promises. A period anywhere in the stripped text *outside a quoted
+    span* is exactly that second sentence, so this refuses before ever
+    calling `_parse_token_clause` at all - Wrenn and Seven's own "-3", whose
+    quoted granted ability ("This token's power and toughness are each
+    equal to the number of lands you control.") ends on its *own* period
+    nested inside the outer sentence's quotes, is the shape that guard has
+    to let through rather than mistake for a second top-level instruction.
     """
     # `split_effect_clauses` always strips one trailing "." before a clause
     # ever reaches `_parse_token_clause`; going around that splitter (see the
     # docstring above) means doing the same trim here - `_TOKEN_CLAUSE_RE`'s
     # own trailing `\.?` never gets the chance to, since its greedy DOTALL
     # `tail` group is satisfied first and simply absorbs the period instead.
-    return _parse_token_clause(
-        _strip_non_effect_preamble(text).strip().rstrip("."), for_spell=False
-    )
+    stripped = _strip_non_effect_preamble(text).strip().rstrip(".")
+    # Quoted spans (CR 207.2's exact-templated granted ability, Ingris
+    # Stingerquill's own name, Wrenn and Seven's CDA) can carry a period of
+    # their own without that being a second sentence of *this* ability -
+    # stripped whole before the stray-period check, the same move
+    # `machines/targeting.py`'s `_QUOTED_SPAN` already makes before scanning
+    # a card's own text for "target" so a granted ability's own targeting
+    # word is never read as this ability's.
+    outside_quotes = re.sub(r'["“].*?["”]', "", stripped, flags=re.DOTALL)
+    if "." in outside_quotes:
+        return None
+    return _parse_token_clause(stripped, for_spell=False)
 
 
 #: `phrase` always captures from the word "target" itself (or "any target")
@@ -14467,6 +14654,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     pump_and_becomes_chosen_color = _parse_pump_and_becomes_chosen_color_clause(effect_text)
     if pump_and_becomes_chosen_color is not None:
         return pump_and_becomes_chosen_color
+    self_keyword_grant_until_eot = _parse_self_keyword_grant_until_eot_clause(effect_text)
+    if self_keyword_grant_until_eot is not None:
+        return self_keyword_grant_until_eot
     protection_from_chosen_color = _parse_protection_from_chosen_color_clause(effect_text)
     if protection_from_chosen_color is not None:
         return protection_from_chosen_color
@@ -26869,6 +27059,42 @@ def _parse_optional_mixed_clause(clause: str, *, for_spell: bool) -> TargetedCla
     return effect
 
 
+def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """A CR 611.2 mass pump/keyword-grant clause ("creatures you control
+    gain <keyword(s)>[ and get +N/+N] until end of turn") as *one* clause of
+    a multi-clause effect, not only as the whole effect text.
+
+    `_mass_pump_ability_effect`/`_mass_pump_spell_effect` already read this
+    shape, but only against the *whole*, unsplit effect text - which is why
+    Ingris Stingerquill's own "Create a 2/2 ... token named Cadet. Then
+    creatures you control gain haste until end of turn." used to lose the
+    second sentence entirely: `split_effect_clauses` cuts the two apart
+    correctly (CR 608.2c's instruction order), but nothing in `_parse_mixed_
+    clause`'s per-clause dispatch below tried this shape on the resulting
+    piece, so a clause that could not be read as a targeted/token/search/
+    player instruction fell all the way through as unreadable. Reusing the
+    same two whole-text readers here, one clause at a time, is what lets a
+    mass pump compose with whatever clause precedes or follows it.
+    """
+    if for_spell:
+        spell_effect = _mass_pump_spell_effect(clause)
+        if spell_effect is None:
+            return None
+
+        def spell_clause(game: "Game", stack_object: "StackObject") -> None:
+            spell_effect(game, stack_object)  # type: ignore[arg-type]
+
+        return spell_clause
+    ability_effect = _mass_pump_ability_effect(clause)
+    if ability_effect is None:
+        return None
+
+    def ability_clause(game: "Game", stack_object: "StackObject") -> None:
+        ability_effect(game, stack_object)  # type: ignore[arg-type]
+
+    return ability_clause
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -26888,6 +27114,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     variable_count_token = _parse_variable_count_token_clause(clause, for_spell=for_spell)
     if variable_count_token is not None:
         return variable_count_token
+    mass_pump = _parse_mass_pump_group_clause(clause, for_spell=for_spell)
+    if mass_pump is not None:
+        return mass_pump
     role_token = _parse_create_role_token_clause(clause, for_spell=for_spell)
     if role_token is not None:
         return role_token

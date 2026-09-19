@@ -166,7 +166,12 @@ from ..machines.keywords import (
     why_cannot_turn_face_up,
 )
 from ..machines.layers import (
+    ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT,
     BASIC_LAND_TYPES,
+    CREATURES_DONT_CAUSE_TRIGGERS_TEXT,
+    DOESNT_UNTAP_TEXT,
+    LEGEND_RULE_EXEMPT_TEXT,
+    SPELLS_HAVE_SPLIT_SECOND_TEXT,
     Characteristics,
     ComputedBoard,
     ContinuousEffect,
@@ -2206,6 +2211,16 @@ class Game(EngineModel):
     Stage's own "if an opponent was dealt noncombat damage **last turn**"
     (CR 603.4), the same snapshot `spells_cast_last_turn` already takes."""
 
+    combat_damage_dealt_this_turn_by: SortedSet[UUID] = Field(default_factory=set)
+    """The ids of every creature that has dealt combat damage this turn
+    (CR 510.2) - a per-object "this turn" fact rather than a per-player one,
+    which is why it is its own field instead of a `turn_facts` key.
+    `machines/combat.py`'s `_deal_combat_damage` is the single writer, the
+    same way `Player.gain_life` is `life_gained_this_turn`'s. Ruric Thar's
+    "hexproof as long as they haven't dealt combat damage yet" is the reader,
+    through `LayerContext.combat_damage_dealt_this_turn`. Cleared when a new
+    turn begins."""
+
     graveyard_arrivals_this_turn: list[GraveyardArrival] = Field(default_factory=list)
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
     per arrival - see `GraveyardArrival`'s own docstring for why this is one
@@ -2500,7 +2515,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 29
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 30
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2888,6 +2903,35 @@ class Game(EngineModel):
     any-type-mana grant belonged to) and no way to decode a pending
     `RevokeGrantedAbility`/`AddManaWhenLandTapped` delayed trigger's own
     `kind` at all. Refused instead.
+
+    Bumped 29 -> 30: the FRA S9 line of development (static abilities,
+    layers, replacement statics - reconciled at the same merge as this
+    note), branched from FRA S5's tip before the S2/S3b/fu-events/S10
+    reconciliations above landed, so its own independent history (which
+    re-numbered the same ground those cover, from Lyra's `combat_only`/
+    `to_player_only` at its local 22 -> 23 onward) carries no field this
+    line does not already have except the two below. `Game` gained
+    `combat_damage_dealt_this_turn_by` (Ruric Thar, Magecrusher's "hexproof
+    as long as they haven't dealt combat damage yet"), and
+    `machines/layers.py`'s `LayerContext` gained `turn_facts`/
+    `combat_damage_dealt_this_turn` (`active_player` above already covers
+    the same "whose turn it is" reader Skilled Battlecarver's own
+    during-your-turn grant needed) plus `has_turn_fact`/
+    `has_turn_fact_for_opponent`, read by newly-parsed static shapes
+    (scried-or-surveilled-this-turn, opponent-noncombat-damage-this-turn,
+    and Ruric Thar's own combat-damage-yet condition). A version-29
+    snapshot mid-combat has no record of which creatures already dealt
+    combat damage this turn, and a default of "none" would wrongly grant
+    Ruric Thar hexproof back after it has already fought - refused rather
+    than silently mis-answering. The same merge also builds the shroud
+    subsystem (CR 702.18a): `machines/combat.py`'s `KEYWORDS_OUTSIDE_COMBAT`
+    gains "shroud" and `Game.shroud_refusal`/`TargetingProfile._check_shroud`
+    now enforce it. No field changed, but this is the bump rule's second
+    bullet by name: a permanent printing "Shroud" that a version-29 decode
+    could legally target (the ability was inert - recognised by no
+    vocabulary, enforced nowhere) becomes untargetable the instant this
+    build reads the same snapshot, for a spell or ability already recorded
+    against it. Refused instead.
     """
 
     @model_validator(mode="before")
@@ -3315,8 +3359,19 @@ class Game(EngineModel):
                 del self.players_skipping_next_untap[active.username]
             return
         controlled = self.permanents_controlled_by(active.username)
-        tapped = [state for state in controlled if state.tapped]
-        active.untap_all(controlled)
+        # CR 122.1d's stun counter is `CardState.untap`'s own business (every
+        # route to untapping passes through it); a static "doesn't untap"
+        # grant (Traxos, Scourge Eternal; Infinite Coursework) is CR 613.5's
+        # instead - read off the computed board, which `untap_all` has no
+        # access to - so it is filtered out here, before the batch untap
+        # rather than inside it.
+        untappable = [
+            state
+            for state in controlled
+            if not self.characteristics_of(state).has_ability(DOESNT_UNTAP_TEXT)
+        ]
+        tapped = [state for state in untappable if state.tapped]
+        active.untap_all(untappable)
         for state in tapped:
             self.emit(
                 GameEvent(
@@ -5995,6 +6050,58 @@ class Game(EngineModel):
             )
         )
 
+    def controls_split_second_grant(self, controller: str) -> bool:
+        """Samut, Tyrant of Naktamun's "Instant and sorcery spells you
+        control have split second." - whether `controller` has a permanent
+        on the battlefield granting it right now (CR 613.5).
+
+        CR 702.61a's split second is a property of a spell on the stack, not
+        of a battlefield permanent, so nothing in `machines/layers.py`'s
+        board ever carries it directly - `SPELLS_HAVE_SPLIT_SECOND_TEXT` is
+        the fixed marker that grant leaves on its own source, and this is
+        the one place that asks for it. A caller checking whether a
+        particular instant or sorcery *spell* has split second combines this
+        (does its controller have the grant) with the spell's own card type
+        - this function alone answers only "is the group grant active for
+        this player", the same way `has_ability`/`has_keyword` never assume
+        who the caller means by "it".
+        """
+        board = self.computed_board()
+        return any(
+            board.of(permanent).controller == controller
+            and board.of(permanent).has_ability(SPELLS_HAVE_SPLIT_SECOND_TEXT)
+            for permanent in self.battlefield
+        )
+
+    def _etb_triggers_suppressed(self, event: "GameEvent") -> bool:
+        """Torpor Orb's "Creatures entering don't cause abilities to
+        trigger."; Karn, Argent Defender's "Artifacts and creatures entering
+        the battlefield don't cause abilities to trigger." - CR 603.2's
+        automatic trigger check is what this refuses, for every ability that
+        would otherwise fire off this one `ENTERS_THE_BATTLEFIELD` event, not
+        only the entering permanent's own: a suppression grant reads no
+        controller, the same way Torpor Orb's own printed sentence names
+        none.
+        """
+        if event.subject_id is None:
+            return False
+        entering = self.find_by_id(event.subject_id)
+        if not isinstance(entering, CardState):
+            return False
+        chars = self.characteristics_of(entering)
+        watched: list[str] = []
+        if Type.CREATURE in chars.types:
+            watched.append(CREATURES_DONT_CAUSE_TRIGGERS_TEXT)
+        if Type.ARTIFACT in chars.types:
+            watched.append(ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT)
+        if not watched:
+            return False
+        board = self.computed_board()
+        return any(
+            any(board.of(permanent).has_ability(text) for text in watched)
+            for permanent in self.battlefield
+        )
+
     def emit(self, event: GameEvent) -> list[AbilityOnStack]:
         """Something happened; work out what it triggered (CR 603.2).
 
@@ -6080,6 +6187,14 @@ class Game(EngineModel):
                     sources = [*sources, gone]
 
             triggered = triggers_for(self, event, sources)
+            if event.event is TriggerEvent.ENTERS_THE_BATTLEFIELD and self._etb_triggers_suppressed(
+                event
+            ):
+                # Torpor Orb / Karn, Argent Defender: CR 603.2's automatic
+                # trigger check never fires at all for this entrance, so
+                # nothing watching for it - not even on another permanent -
+                # goes onto `pending_triggers`.
+                triggered = []
             # CR 603.7: a delayed triggered ability is not printed on any card, so
             # no source can be asked for it. It watches the event directly, and once
             # it has triggered it is an ordinary trigger in every other respect -
@@ -10051,6 +10166,11 @@ class Game(EngineModel):
             # CR 702.16b, checked again here because protection can be gained
             # after a spell was legally announced.
             return None
+        if self.shroud_refusal(thing) is not None:
+            # CR 702.18a, the same "gained after announcement" recheck as
+            # protection just above - a granted shroud makes an already-legal
+            # target illegal by the time it would resolve.
+            return None
 
         if isinstance(spell, AbilityOnStack):
             # `x_value` substituted first, the same reason `activate_ability`
@@ -10395,6 +10515,42 @@ class Game(EngineModel):
                     f"cannot target it (CR 702.16b)"
                 )
         return None
+
+    def shroud_refusal(self, target: "Targetable | AbilityOnStack") -> str | None:
+        """Why shroud stops this target being targeted at all, or None (CR 702.18).
+
+        CR 702.18a: "Shroud is a static ability. 'Shroud' means 'This
+        permanent or player can't be the target of spells or abilities.'"
+        Unlike hexproof (CR 702.11b's "your opponents control"), there is no
+        controller exception at all: a shrouded permanent's own controller
+        cannot target it either, so this needs no `source` to compare
+        against - CR 702.18b's redundancy rule is the only thing that varies
+        with *how many* instances there are, never with who is asking.
+
+        Read off `has_keyword`, the same computed-board reader every other
+        keyword check in this module already uses (`Game._untap_step_impl`'s
+        haste check, `combat.py`'s evasion checks): a permanent's printed
+        "Shroud" line and one granted in layer 6 (CR 613.1f) are the same
+        keyword to that reader, so a spell-granted shroud is refused exactly
+        like a printed one with no separate code path.
+
+        A **player** target is not modelled - `Player` carries no ability
+        text to read CR 702.18a's "or player" off, the same documented gap
+        `protection_refusal`'s hexproof-on-player sibling leaves for CR
+        702.11c; see `docs/engine-coverage.md`.
+        """
+        if not isinstance(target, CardState):
+            return None
+        if target.zone is not Zone.BATTLEFIELD:
+            # CR 702.18a speaks of a permanent, and a permanent is on the
+            # battlefield (CR 110.1).
+            return None
+        if not has_keyword(target, "shroud", self):
+            return None
+        return (
+            f"{target.name} has shroud, so it can't be the target of spells or "
+            f"abilities (CR 702.18a)"
+        )
 
     def _player_protection_refusal(self, target: Player, source: "Card") -> str | None:
         """Why a *player's* protection stops `source` targeting them (CR 702.16b).
@@ -12154,6 +12310,8 @@ class Game(EngineModel):
                 for player in self.players_in_game
             },
             active_player=self.turn.active_player if self.turn is not None else None,
+            turn_facts={fact: frozenset(players) for fact, players in self.turn_facts.items()},
+            combat_damage_dealt_this_turn=frozenset(self.combat_damage_dealt_this_turn_by),
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a
@@ -12498,8 +12656,22 @@ class Game(EngineModel):
             controller = self.controller_of(state).username
             groups.setdefault(controller, {}).setdefault(chars.name, []).append(state)
 
+        # Mirror Box / Sakashima of a Thousand Faces' own permanent static,
+        # and Hall of Echoes' "... this turn" one-shot version: CR 604.2/
+        # CR 611.2a either way, so the same computed-board question answers
+        # both - a permanent controlled by `username` carrying the grant
+        # exempts every legendary permanent that player controls, not only
+        # the one granting it.
+        exempt_players = {
+            board.of(state).controller
+            for state in self.battlefield
+            if board.of(state).has_ability(LEGEND_RULE_EXEMPT_TEXT)
+        }
+
         losers: list[CardState] = []
         for username in self._turn_order_from_active():
+            if username in exempt_players:
+                continue
             for name, copies in groups.get(username, {}).items():
                 if len(copies) < 2:
                     continue
@@ -16587,6 +16759,7 @@ class Game(EngineModel):
             # the Stage's own "dealt noncombat damage last turn" needs it.
             self.turn_facts_last_turn = self.turn_facts
             self.turn_facts = {}
+            self.combat_damage_dealt_this_turn_by = set()
             self.graveyard_arrivals_this_turn = []
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and

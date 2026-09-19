@@ -679,7 +679,14 @@ def create_tokens(
         if count <= 0 and not extra_definitions:
             return []
 
-        card = definition.to_card()
+        # A replacement effect may also replace *what* is created, not just
+        # how many - Draconic Visitor's "that many 5/5 red Dragon creature
+        # tokens ... are created instead" writes a new `TokenDefinition` onto
+        # the event itself (CR 614.6: the modified event is what happens)
+        # rather than appending to `extra` the way an additive effect does,
+        # so the definition actually built from has to be read back off the
+        # event rather than the original parameter.
+        card = (creation.definition or definition).to_card()
         created: list[TokenState] = []
         for _ in range(count):
             token = TokenState(card=card, zone=Zone.STACK, controller=controller, owner=controller)

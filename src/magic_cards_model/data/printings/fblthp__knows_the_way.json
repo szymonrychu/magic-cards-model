@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "28fbb55a-5c9d-45ee-bf42-a84b1048f5d2",
+  "oracle_id": "48b891b6-3175-4864-bb98-af131098c557",
+  "multiverse_ids": [],
+  "tcgplayer_id": 716687,
+  "cardmarket_id": 908844,
+  "name": "Fblthp, Knows the Way",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2",
+  "scryfall_uri": "https://scryfall.com/card/fra/258/fblthp-knows-the-way?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-11T11:59:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.jpg?1789127976",
+    "normal": "https://cards.scryfall.io/normal/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.jpg?1789127976",
+    "large": "https://cards.scryfall.io/large/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.jpg?1789127976",
+    "png": "https://cards.scryfall.io/png/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.png?1789127976",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.jpg?1789127976",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.jpg?1789127976",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.webp?1789127976",
+    "grid": "https://cards.scryfall.io/grid/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.webp?1789127976",
+    "display": "https://cards.scryfall.io/display/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.webp?1789127976",
+    "art": "https://cards.scryfall.io/art/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.webp?1789127976",
+    "crop": "https://cards.scryfall.io/crop/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.webp?1789127976"
+  },
+  "mana_cost": "{X}{G}{G}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Homunculus Scout",
+  "oracle_text": "Domain \u2014 Fblthp's power is equal to the number of basic land types among lands you control.\nWhen Fblthp enters, search your library for up to X basic land cards with different names, reveal them, put them into your hand, then shuffle.",
+  "power": "*",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Domain"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A48b891b6-3175-4864-bb98-af131098c557&unique=prints",
+  "collector_number": "258",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "echoverse",
+  "flavor_text": "Fblthp had always loved to travel.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Simon Dominic",
+  "artist_ids": [
+    "b0e80135-db5a-4b88-a0bc-815a0e94faa1"
+  ],
+  "illustration_id": "1d12a761-a8e3-4146-854d-447559bae48b",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 31784,
+  "prices": {
+    "usd": "1.99",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.25",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFblthp%252C%2BKnows%2Bthe%2BWay",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFblthp%252C%2BKnows%2Bthe%2BWay",
+    "edhrec": "https://edhrec.com/route/?cc=Fblthp%2C+Knows+the+Way"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716687%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908844&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Fblthp%2C+Knows+the+Way&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

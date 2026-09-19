@@ -2110,6 +2110,62 @@ def _compile_graveyard_exile(effect: ReplacementEffect) -> CardReplacement | Non
     return _graveyard_replacer(effect.text, whose)
 
 
+# -- "if a creature [an opponent controls] would die, exile it instead" --
+#
+# CR 700.4: "dies" means "is put into a graveyard from the battlefield" - a
+# narrower event than `_GRAVEYARD_EVENT_RE`'s "would be put into a graveyard
+# [from anywhere]", so this is its own shape rather than a third alternative
+# folded into that regex: a card milled from a library, or discarded, would
+# wrongly match "would die" if the origin were not checked.
+_DIES_EVENT_RE = re.compile(
+    r"^a creature (?P<whose>an opponent controls|you control) would die$", re.IGNORECASE
+)
+_SELF_DIES_EVENT_RE = re.compile(r"^this creature would die$", re.IGNORECASE)
+
+
+def _compile_dies_exile(effect: ReplacementEffect) -> CardReplacement | None:
+    """Garruk, Veiled Butcher's "If a creature an opponent controls would
+    die, exile it instead."; Gisa, Glorious Resurrector's and Corpseweaver
+    Prodigy's identical real printing; Gloomshrieker's self-only "If this
+    creature would die, exile it instead."
+
+    The "whose" question here is who *controls* the dying creature
+    (CR 108.4), not whose graveyard it would land in - CR 400.3 does not
+    require the two to be the same player, so this reads `CardState.
+    controller` directly rather than routing through `_graveyard_replacer`'s
+    owner-of-the-graveyard matchers.
+    """
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    if (effect.replacement or "").strip().rstrip(".").lower() != "exile it":
+        return None
+    event_text = (effect.event or "").strip()
+    if match := _DIES_EVENT_RE.match(event_text):
+        wants_opponent = match.group("whose") == "an opponent controls"
+
+        def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+            if not _to_graveyard(event) or event.origin is not Zone.BATTLEFIELD:
+                return False
+            if event.card is None or event.card.controller is None:
+                return False
+            is_opponent = _is_opponent(game, event.card.controller, source.controller)
+            return is_opponent if wants_opponent else not is_opponent
+
+        return CardReplacement(label=effect.text, applies=applies, apply=_exile_instead)
+    if _SELF_DIES_EVENT_RE.match(event_text):
+
+        def self_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+            return (
+                _to_graveyard(event)
+                and event.origin is Zone.BATTLEFIELD
+                and event.card is not None
+                and event.card.id == source.id
+            )
+
+        return CardReplacement(label=effect.text, applies=self_applies, apply=_exile_instead)
+    return None
+
+
 # -- "if a nontoken creature would enter and it wasn't cast, exile it instead" --
 
 _ENTERS_UNCAST_EVENT_RE = re.compile(
@@ -2502,6 +2558,7 @@ _CARD_TYPE_WORDS: dict[str, Type] = {
     "creature": Type.CREATURE,
     "enchantment": Type.ENCHANTMENT,
     "land": Type.LAND,
+    "planeswalker": Type.PLANESWALKER,
 }
 
 #: Colour words a token descriptor may use (CR 105.1), plus CR 105.2's
@@ -2682,6 +2739,47 @@ def _compile_extra_token(effect: ReplacementEffect) -> CardReplacement | None:
         label=effect.text,
         applies=_extra_token_applies(wanted),
         apply=_create_additional_tokens(extra, count),
+    )
+
+
+#: Draconic Visitor's "...that many 5/5 red Dragon creature tokens with
+#: flying are created instead" - unlike `_EXTRA_TOKEN_REPLACEMENT_RE`'s
+#: "those tokens **plus** ...", there is no "those tokens" here at all: the
+#: whole batch becomes a different kind, not an addition alongside it.
+_TOKEN_SUBSTITUTION_RE = re.compile(r"^that many (?P<descriptor>.+?) are created$", re.IGNORECASE)
+
+
+def _substitute_tokens(new_definition: TokenDefinition) -> Apply:
+    """ "...that many <descriptor> are created instead" - the same count
+    (CR 614.6's modified event), a different `TokenDefinition` entirely.
+    `event.card` is cleared too: it is the token-*copy* alternative to
+    `definition` (CR 707.2), and this effect always states real
+    characteristics of its own, never "copy the original".
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        event.definition = new_definition
+        event.card = None
+
+    return apply
+
+
+def _compile_token_substitution(effect: ReplacementEffect) -> CardReplacement | None:
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    wanted = _token_creation_filter(effect)
+    if wanted is None:
+        return None
+    match = _TOKEN_SUBSTITUTION_RE.match((effect.replacement or "").strip().rstrip("."))
+    if match is None:
+        return None
+    new_definition = _read_token_descriptor(match.group("descriptor"))
+    if new_definition is None:
+        return None
+    return CardReplacement(
+        label=effect.text,
+        applies=_extra_token_applies(wanted),
+        apply=_substitute_tokens(new_definition),
     )
 
 
@@ -3142,6 +3240,7 @@ def _cant_enter_replacements(card: Card) -> list[CardReplacement]:
 #: specific enough that at most one ever claims a given `ReplacementEffect`.
 _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = (
     _compile_graveyard_exile,
+    _compile_dies_exile,
     _compile_enters_uncast_exile,
     _compile_damage_multiplier,
     _compile_damage_plus_amount,
@@ -3153,6 +3252,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_draw_plus,
     _compile_token_doubler,
     _compile_extra_token,
+    _compile_token_substitution,
     _compile_counter_doubler,
     _compile_lands_you_control_enter_untapped,
 )
@@ -3607,6 +3707,16 @@ EntersCondition = Callable[["Game", CardState], bool]
 _YOU_CONTROL_SUBTYPES_RE = re.compile(r"^you control (an? [A-Z][\w'-]*(?: or an? [A-Z][\w'-]*)*)$")
 _A_SUBTYPE_RE = re.compile(r"an? ([A-Z][\w'-]*)")
 
+#: "unless you control a planeswalker" (the fra "Annex"/"Commons" land
+#: cycle's own shape) - CR 300.1's bare card type, told apart from
+#: `_YOU_CONTROL_SUBTYPES_RE`'s subtype by the capital: Oracle text never
+#: capitalises a card type the way it always capitalises a subtype
+#: (CR 205.3), so the two shapes never collide.
+_YOU_CONTROL_CARD_TYPE_RE = re.compile(
+    r"^you control an? (?P<type>artifact|creature|enchantment|land|planeswalker)$",
+    re.IGNORECASE,
+)
+
 #: "you control two or more other lands", "you control two or fewer other lands",
 #: the battle lands' "you control two or more basic lands" (CR 205.4c), and
 #: "you control three or more other Mountains" (Dwarven Mine). A land subtype
@@ -3648,6 +3758,26 @@ def _controls_a_subtype(subtypes: frozenset[str]) -> EntersCondition:
             for permanent in game.battlefield
             if permanent.controller == controller
             for subtype in board.of(permanent).subtypes
+        )
+
+    return holds
+
+
+def _controls_a_card_type(card_type: Type) -> EntersCondition:
+    """`_controls_a_subtype`'s twin over CR 300.1's card types instead of
+    CR 205.3's subtypes - "you control a planeswalker", not "you control a
+    Mountain".
+    """
+
+    def holds(game: "Game", entering: CardState) -> bool:
+        controller = entering.controller
+        if controller is None:
+            return False
+        board = game.computed_board()
+        return any(
+            card_type in board.of(permanent).types
+            for permanent in game.battlefield
+            if permanent.controller == controller
         )
 
     return holds
@@ -3794,6 +3924,11 @@ def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
 
 
 def _read_enters_condition(condition: str) -> EntersCondition | None:
+    match = _YOU_CONTROL_CARD_TYPE_RE.match(condition)
+    if match is not None:
+        card_type = _CARD_TYPE_WORDS.get(match.group("type").lower())
+        return _controls_a_card_type(card_type) if card_type is not None else None
+
     match = _YOU_CONTROL_SUBTYPES_RE.match(condition)
     if match is not None:
         subtypes = frozenset(_A_SUBTYPE_RE.findall(match.group(1)))

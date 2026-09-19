@@ -1497,12 +1497,33 @@ def split_second_restriction_source(game: Any) -> str | None:
     can't be countered." Every object on the stack is checked, not only the
     top one: nothing in CR 702.61a privileges the top of a LIFO stack for a
     condition about being "on the stack" at all.
+
+    Two ways a spell on the stack ends up with split second, one keyword
+    vocabulary: `has_split_second` reads the printing's own keyword line
+    (Ricochet Trap and friends), and `Game.controls_split_second_grant`
+    reads Samut, Tyrant of Naktamun's own "Instant and sorcery spells you
+    control have split second." group grant off the computed board
+    (CR 613.5) for the spell's controller - its own docstring names this
+    exact combination as the caller it was built for. A granted instance is
+    still an instant or sorcery spell's own split second the moment it is
+    on the stack (CR 613.1f puts a layer 6 grant on the same footing as a
+    printed line), so both are checked here rather than the printed-only
+    half alone.
     """
     if game is None:
         return None
     for obj in getattr(game, "stack", []):
         obj_card = getattr(obj, "card", None)
         if obj_card is not None and has_split_second(obj_card):
+            return getattr(obj, "name", None) or obj_card.name
+        if (
+            isinstance(obj, CardState)
+            and obj_card is not None
+            and {Type.INSTANT, Type.SORCERY} & set(obj_card.types)
+            and obj.controller is not None
+            and getattr(game, "controls_split_second_grant", None) is not None
+            and game.controls_split_second_grant(obj.controller)
+        ):
             return getattr(obj, "name", None) or obj_card.name
     return None
 

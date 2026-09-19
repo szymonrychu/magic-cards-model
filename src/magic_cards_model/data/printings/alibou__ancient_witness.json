@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "10ff4bac-1f93-4dd3-987a-523a6f733a1e",
+  "oracle_id": "e5e8e116-10fe-48b0-b3d8-6edb39bd5f90",
+  "multiverse_ids": [],
+  "resource_id": "E3D79C6CA60CC46F74D0F155F6CCC780FE786EA6C169302F7F42A7E3B15E8F02",
+  "mtgo_id": 142363,
+  "tcgplayer_id": 642815,
+  "cardmarket_id": 834266,
+  "name": "Alibou, Ancient Witness",
+  "lang": "en",
+  "released_at": "2025-08-01",
+  "uri": "https://api.scryfall.com/cards/10ff4bac-1f93-4dd3-987a-523a6f733a1e",
+  "scryfall_uri": "https://scryfall.com/card/eoc/113/alibou-ancient-witness?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:27:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.jpg?1783906029",
+    "normal": "https://cards.scryfall.io/normal/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.jpg?1783906029",
+    "large": "https://cards.scryfall.io/large/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.jpg?1783906029",
+    "png": "https://cards.scryfall.io/png/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.png?1783906029",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.jpg?1783906029",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.jpg?1783906029",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.webp?1783906029",
+    "grid": "https://cards.scryfall.io/grid/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.webp?1783906029",
+    "display": "https://cards.scryfall.io/display/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.webp?1783906029",
+    "art": "https://cards.scryfall.io/art/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.webp?1783906029",
+    "crop": "https://cards.scryfall.io/crop/front/1/0/10ff4bac-1f93-4dd3-987a-523a6f733a1e.webp?1783906029"
+  },
+  "mana_cost": "{3}{R}{W}",
+  "cmc": 5.0,
+  "type_line": "Legendary Artifact Creature \u2014 Golem",
+  "oracle_text": "Other artifact creatures you control have haste.\nWhenever one or more artifact creatures you control attack, Alibou deals X damage to any target and you scry X, where X is the number of tapped artifacts you control.",
+  "power": "4",
+  "toughness": "5",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [
+    "Scry"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b6ec8c6b-b4e6-4cb4-84d6-06234ace3b44",
+  "set": "eoc",
+  "set_name": "Edge of Eternities Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/b6ec8c6b-b4e6-4cb4-84d6-06234ace3b44",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aeoc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/eoc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/10ff4bac-1f93-4dd3-987a-523a6f733a1e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae5e8e116-10fe-48b0-b3d8-6edb39bd5f90&unique=prints",
+  "collector_number": "113",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Matt Stewart",
+  "artist_ids": [
+    "20871267-2d8a-41d5-b03a-be3d557c5734"
+  ],
+  "illustration_id": "c8096d5e-187a-4498-8a2f-c22531185805",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 2478,
+  "preview": {
+    "source": "EDHijinks",
+    "source_uri": "https://www.youtube.com/watch?v=Swjj0JGhFco",
+    "previewed_at": "2025-07-10"
+  },
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.52",
+    "eur_foil": null,
+    "tix": "0.74"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAlibou%252C%2BAncient%2BWitness",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAlibou%252C%2BAncient%2BWitness",
+    "edhrec": "https://edhrec.com/route/?cc=Alibou%2C+Ancient+Witness"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642815%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=834266&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/142363?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
