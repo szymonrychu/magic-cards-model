@@ -161,6 +161,7 @@ from ..machines.keywords import (
 )
 from ..machines.layers import (
     BASIC_LAND_TYPES,
+    DOESNT_UNTAP_TEXT,
     Characteristics,
     ComputedBoard,
     ContinuousEffect,
@@ -2993,8 +2994,19 @@ class Game(EngineModel):
                 del self.players_skipping_next_untap[active.username]
             return
         controlled = self.permanents_controlled_by(active.username)
-        tapped = [state for state in controlled if state.tapped]
-        active.untap_all(controlled)
+        # CR 122.1d's stun counter is `CardState.untap`'s own business (every
+        # route to untapping passes through it); a static "doesn't untap"
+        # grant (Traxos, Scourge Eternal; Infinite Coursework) is CR 613.5's
+        # instead - read off the computed board, which `untap_all` has no
+        # access to - so it is filtered out here, before the batch untap
+        # rather than inside it.
+        untappable = [
+            state
+            for state in controlled
+            if not self.characteristics_of(state).has_ability(DOESNT_UNTAP_TEXT)
+        ]
+        tapped = [state for state in untappable if state.tapped]
+        active.untap_all(untappable)
         for state in tapped:
             self.emit(
                 GameEvent(

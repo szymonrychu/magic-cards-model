@@ -4844,6 +4844,42 @@ _ATTACHED_CREATURE_LOSES_AND_BECOMES_RE = re.compile(
     r"(?P<power>\d+)/(?P<toughness>\d+) in addition to its other types\.?$"
 )
 
+#: "Enchanted permanent is a Construct creature with base power and
+#: toughness 5/5 in addition to its other types." (Puppet Crafting);
+#: "Enchanted artifact is a creature with base power and toughness 5/5 in
+#: addition to its other types." (Ensoul Artifact, no subtype at all);
+#: "Enchanted artifact is a Golem creature with base power and toughness
+#: 5/4 in addition to its other types." (Zoetic Glyph) - one shape, an
+#: optional subtype. `_ATTACHED_CREATURE_LOSES_AND_BECOMES_RE`'s twin with no
+#: "loses all abilities" and a bare "permanent"/"artifact" subject rather
+#: than "creature", since the whole point is animating something that was
+#: not a creature yet.
+_ATTACHED_PERMANENT_BECOMES_CREATURE_RE = re.compile(
+    r"^(?P<attachment>[Ee]quipped|[Ee]nchanted) (?P<subject>permanent|artifact|enchantment) is "
+    r"an? (?:(?P<subtype>[A-Z][a-z]+) )?creature with base power and toughness "
+    r"(?P<power>\d+)/(?P<toughness>\d+) in addition to its other types\.?$"
+)
+
+#: "Traxos, Scourge Eternal doesn't untap during your untap step." - the
+#: card's own name is already rewritten to "this permanent" by `self_
+#: normalized_effect_text`. Basalt Monolith's identical shape on an artifact
+#: proves this is the mechanic, not the creature type.
+_SELF_DOESNT_UNTAP_RE = re.compile(
+    r"^this (?:creature|artifact|permanent|token) doesn'?t untap during your "
+    r"untap step\.?$",
+    re.IGNORECASE,
+)
+
+#: "Enchanted creature [loses all abilities and ]doesn't untap during its
+#: controller's untap step." (Infinite Coursework and Enchanted River's Grasp
+#: share the combined form; Apathy and Bind the Monster print the plain one).
+_ATTACHED_DOESNT_UNTAP_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) (?P<subject>creature|permanent|artifact) "
+    r"(?:(?P<loses>loses all abilities) and )?doesn'?t untap during its "
+    r"controller'?s untap step\.?$",
+    re.IGNORECASE,
+)
+
 #: "Other creatures are Food artifacts in addition to their other types and
 #: have "{2}, {T}, Sacrifice this permanent: You gain 3 life."" (Ygra, Eater of
 #: All, read out of the pool fixture) - a board-wide type grant that reaches
@@ -5273,6 +5309,94 @@ def _attached_creature_static_builder(
     return builder
 
 
+#: Canonical granted-ability text for "doesn't untap during its controller's
+#: untap step" - Traxos, Scourge Eternal's self grant ("during your untap
+#: step", the printed first-person form) and Infinite Coursework's attached
+#: one ("during its controller's untap step") both normalise to this one
+#: string, so `Game._untap_step_impl` checks a single literal rather than
+#: pattern-matching either printed pronoun.
+DOESNT_UNTAP_TEXT = "Doesn't untap during its controller's untap step."
+
+
+def _self_doesnt_untap_builder(*, line: str) -> EffectBuilder:
+    """Traxos, Scourge Eternal: "Traxos doesn't untap during your untap
+    step." (self-normalised to "This permanent doesn't untap during your
+    untap step." before this is reached) - Basalt Monolith's identical shape,
+    read the same way any other self static grant here is.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: doesn't untap during its controller's untap step",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(DOESNT_UNTAP_TEXT),
+            )
+        ]
+
+    return builder
+
+
+def _attached_doesnt_untap_builder(
+    *, subject: str, loses_abilities: bool, line: str
+) -> EffectBuilder:
+    """ "Enchanted creature [loses all abilities and ]doesn't untap during
+    its controller's untap step." (Infinite Coursework; Enchanted River's
+    Grasp's identical combined shape; Apathy's/Bind the Monster's plain one
+    with no ability loss) - CR 613.1f for the removal (when printed) and for
+    the grant, both landing on whatever `attached_to` points at.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        effects: list[ContinuousEffect] = []
+        if loses_abilities:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {subject} creature loses all abilities",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=_only(attached),
+                    modification=lose_all_abilities,
+                )
+            )
+        effects.append(
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} creature doesn't untap during its "
+                    "controller's untap step"
+                ),
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(attached),
+                modification=grant_ability(DOESNT_UNTAP_TEXT),
+            )
+        )
+        return effects
+
+    return builder
+
+
 def quoted_ability_grants(
     source: CardState, permanents: Sequence[CardState]
 ) -> tuple[set[str], dict[UUID, set[str]]]:
@@ -5512,6 +5636,64 @@ def _attached_creature_loses_and_becomes_builder(
             ),
             ContinuousEffect(
                 description=(f"{source.name}: {subject} creature has base P/T {power}/{toughness}"),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=ability,
+                selector=selector,
+                modification=set_power_toughness(power, toughness),
+            ),
+        ]
+        return effects
+
+    return builder
+
+
+def _attached_permanent_becomes_creature_builder(
+    subtype: str | None, power: int, toughness: int, *, subject: str, line: str
+) -> EffectBuilder:
+    """ "Enchanted [permanent/artifact] is a[n ][<Subtype> ]creature with base
+    power and toughness N/N in addition to its other types." (Puppet
+    Crafting's Construct; Ensoul Artifact's bare "a creature", no subtype at
+    all; Zoetic Glyph's Golem) - Unable to Scream's shape
+    (`_attached_creature_loses_and_becomes_builder`) minus the ability
+    removal, since none of these prints "loses all abilities": the enchanted
+    permanent keeps whatever it could already do and gains a body on top.
+
+    Layer 4 (CR 613.1d) for the creature type and the optional subtype, "in
+    addition to" (CR 205.1b) so nothing printed is lost; sublayer 7b
+    (CR 613.4b) sets the base power and toughness.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        selector = _only(attached)
+        ability = _source_line_for(source, line)
+        named = f"{with_indefinite_article(subtype)} " if subtype else "a "
+        effects = [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} is {named}creature",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=ability,
+                selector=selector,
+                modification=(
+                    _add_types_and_subtype([Type.CREATURE], subtype)
+                    if subtype
+                    else add_type(Type.CREATURE)
+                ),
+            ),
+            ContinuousEffect(
+                description=(f"{source.name}: {subject} has base P/T {power}/{toughness}"),
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.SET,
                 timestamp=timestamp,
@@ -6436,6 +6618,22 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("power")),
             int(match.group("toughness")),
             subject=match.group("attachment").lower(),
+            line=sentence,
+        )
+    if match := _ATTACHED_PERMANENT_BECOMES_CREATURE_RE.fullmatch(sentence):
+        return _attached_permanent_becomes_creature_builder(
+            match.group("subtype"),
+            int(match.group("power")),
+            int(match.group("toughness")),
+            subject=match.group("subject").lower(),
+            line=sentence,
+        )
+    if _SELF_DOESNT_UNTAP_RE.fullmatch(sentence):
+        return _self_doesnt_untap_builder(line=sentence)
+    if match := _ATTACHED_DOESNT_UNTAP_RE.fullmatch(sentence):
+        return _attached_doesnt_untap_builder(
+            subject=match.group("attachment").lower(),
+            loses_abilities=match.group("loses") is not None,
             line=sentence,
         )
     if match := _OTHER_CREATURES_ARE_TYPE_RE.fullmatch(sentence):
