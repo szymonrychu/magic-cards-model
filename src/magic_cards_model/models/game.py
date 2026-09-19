@@ -164,6 +164,7 @@ from ..machines.layers import (
     BASIC_LAND_TYPES,
     CREATURES_DONT_CAUSE_TRIGGERS_TEXT,
     DOESNT_UNTAP_TEXT,
+    LEGEND_RULE_EXEMPT_TEXT,
     SPELLS_HAVE_SPLIT_SECOND_TEXT,
     Characteristics,
     ComputedBoard,
@@ -11717,8 +11718,22 @@ class Game(EngineModel):
             controller = self.controller_of(state).username
             groups.setdefault(controller, {}).setdefault(chars.name, []).append(state)
 
+        # Mirror Box / Sakashima of a Thousand Faces' own permanent static,
+        # and Hall of Echoes' "... this turn" one-shot version: CR 604.2/
+        # CR 611.2a either way, so the same computed-board question answers
+        # both - a permanent controlled by `username` carrying the grant
+        # exempts every legendary permanent that player controls, not only
+        # the one granting it.
+        exempt_players = {
+            board.of(state).controller
+            for state in self.battlefield
+            if board.of(state).has_ability(LEGEND_RULE_EXEMPT_TEXT)
+        }
+
         losers: list[CardState] = []
         for username in self._turn_order_from_active():
+            if username in exempt_players:
+                continue
             for name, copies in groups.get(username, {}).items():
                 if len(copies) < 2:
                     continue

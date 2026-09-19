@@ -5386,6 +5386,67 @@ def _self_suppresses_etb_triggers_builder(card_types: list[Type], *, line: str) 
     return builder
 
 
+#: Canonical granted-ability text for "the legend rule doesn't apply to
+#: permanents you control" (Mirror Box, Sakashima of a Thousand Faces' own
+#: permanent static; Hall of Echoes' "... this turn" one-shot temporal
+#: version). `Game._legend_rule_losers` is the reader: CR 704.5j's legend
+#: rule is a state-based action over the whole battlefield, not a
+#: characteristic a `Selector`/`Modification` changes, so a permanent that
+#: carries this text exempts *its own controller* rather than itself.
+LEGEND_RULE_EXEMPT_TEXT = "The legend rule doesn't apply to permanents you control."
+
+#: "The 'legend rule' doesn't apply to permanents you control." (Mirror Box;
+#: Sakashima of a Thousand Faces) - CR 611.3's ordinary static ability, no
+#: duration: exempt for as long as the permanent has the ability (CR 604.2).
+_LEGEND_RULE_EXEMPT_RE = re.compile(
+    r"^the [\"“]legend rule[\"”] doesn'?t apply to permanents you control\.?$",
+    re.IGNORECASE,
+)
+
+#: "The 'legend rule' doesn't apply to permanents you control this turn."
+#: (Hall of Echoes' own `{5}` ability, riding alongside its "becomes a copy"
+#: sentence) - CR 611.2's one-shot temporal version instead: `Duration.
+#: UNTIL_END_OF_TURN` on the same grant, landing on the resolving ability's
+#: own source the same way any other self-only "until end of turn" grant
+#: here does.
+_LEGEND_RULE_EXEMPT_THIS_TURN_RE = re.compile(
+    r"^the [\"“]legend rule[\"”] doesn'?t apply to permanents you control this "
+    r"turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_legend_rule_exempt_builder(*, until_end_of_turn: bool, line: str) -> EffectBuilder:
+    """Both `_LEGEND_RULE_EXEMPT_RE`'s and `_LEGEND_RULE_EXEMPT_THIS_TURN_RE`'s
+    shapes - see either regex's own docstring for the card each reads.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        kwargs: dict[str, object] = {}
+        if until_end_of_turn:
+            kwargs["duration"] = Duration.UNTIL_END_OF_TURN
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: the legend rule doesn't apply to its "
+                "controller's permanents",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(LEGEND_RULE_EXEMPT_TEXT),
+                **kwargs,
+            )
+        ]
+
+    return builder
+
+
 #: Canonical granted-ability text for "instant and sorcery spells you
 #: control have split second" (Samut, Tyrant of Naktamun) - CR 702.61a's
 #: split second is a property of a *spell*, not a battlefield permanent, so
@@ -6766,6 +6827,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if _SPELLS_HAVE_SPLIT_SECOND_RE.fullmatch(sentence):
         return _self_grants_split_second_builder(line=sentence)
+    if _LEGEND_RULE_EXEMPT_THIS_TURN_RE.fullmatch(sentence):
+        return _self_legend_rule_exempt_builder(until_end_of_turn=True, line=sentence)
+    if _LEGEND_RULE_EXEMPT_RE.fullmatch(sentence):
+        return _self_legend_rule_exempt_builder(until_end_of_turn=False, line=sentence)
     if _SELF_DOESNT_UNTAP_RE.fullmatch(sentence):
         return _self_doesnt_untap_builder(line=sentence)
     if match := _ATTACHED_DOESNT_UNTAP_RE.fullmatch(sentence):
@@ -6981,6 +7046,36 @@ def parsed_layer_effects(
         result: list[ContinuousEffect] = []
         for builder in builders:
             result.extend(builder(source, timestamp, targets, context))
+        # CR 613.6's "already started applying" tracking (`_still_exists`) is
+        # keyed by `(source_id, source_ability)` - right for a permanent's own
+        # *ongoing* static ability, whose printed line a later effect can
+        # genuinely remove out from under it, but wrong here: a "becomes a
+        # copy" sentence (Hall of Echoes' own `{5}` ability) overwrites the
+        # source's abilities in layer 1, which erases the *other* sentence's
+        # printed line before layer 6 ever asks whether it is still there -
+        # even though both sentences are one CR 608.2c instruction, resolved
+        # together, at the same moment (CR 611.2c). Once any part of a
+        # multi-sentence one-shot effect on the same source starts applying,
+        # every part of it is "started" together, so every other effect this
+        # sweep just built for the same source is re-keyed onto the copy
+        # effect's own `source_ability` - the one whose text layer 1 is about
+        # to erase.
+        has_copy_effect = any(
+            effect.source_id == source.id and effect.modification.kind == "become_a_copy"
+            for effect in result
+        )
+        if has_copy_effect:
+            copy_ability = next(
+                effect.source_ability
+                for effect in result
+                if effect.source_id == source.id and effect.modification.kind == "become_a_copy"
+            )
+            result = [
+                effect.model_copy(update={"source_ability": copy_ability})
+                if effect.source_id == source.id
+                else effect
+                for effect in result
+            ]
         return result
 
     return combined
