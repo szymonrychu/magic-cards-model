@@ -2298,7 +2298,25 @@ def _read_count(prefix: str) -> tuple[int, int | None, bool] | None:
     list and silently drop the leading "one", pinning the floor at two
     instead of one (Arc Lightning could not legally be cast at a single
     target even though the card's own text lists "one" first).
+
+    `prefix` is everything before this "target", which for an activated or
+    loyalty ability still carries its own printed cost - Liliana of the
+    Veil's own "-2: Target player sacrifices a creature." (CR 118 costs
+    never contain the word "target", so nothing is lost by cutting them
+    off). A cost's number is not a target count: CR 601.2b pays or
+    announces the cost, CR 601.2c chooses targets, two different questions
+    that happen to share one sentence purely by how the card is printed.
+    Trimmed to the text after the last cost-terminating colon (or the last
+    sentence break) before tokenizing, so "-3: Target creature ..." and
+    "{3}: Target creature ..." both read the plain, unmarked "target
+    creature" as CR 115.1's own default of exactly one, the same as a "{T}:"
+    or "{1}{U}:" cost already did by accident (a non-numeric trailing token
+    such as "t" used to push the cost's own digit out of the scan's last
+    three words) - this makes that safe by construction instead of by luck.
     """
+    boundary = max(prefix.rfind(":"), prefix.rfind("."), prefix.rfind(";"))
+    if boundary != -1:
+        prefix = prefix[boundary + 1 :]
     all_words = [w for w in re.findall(r"[\w'-]+", prefix.lower()) if w not in _SOURCE_EXCLUDING]
     words = all_words[-3:]
     if words[-3:] == ["any", "number", "of"]:

@@ -26884,6 +26884,86 @@ def _parse_target_player_shuffles_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "Target player sacrifices `<n>` `<description>`[ of their choice]." - the
+#: edict template (CR 701.21a), aimed at a chosen player instead of "each
+#: opponent"/"each player" (`_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`) or the
+#: specific player whose own step just triggered ("that player",
+#: `_THAT_PLAYER_SACRIFICES_OF_THEIR_CHOICE_RE`) - a genuinely different
+#: subject each time, CR 115.1's own "target [something]" grammar rather
+#: than either of those two's anaphora. "Of their choice" is optional:
+#: sacrifice is always the controller's own choice among what they control
+#: whether or not a card bothers to say so (CR 701.21a) - Liliana of the
+#: Veil's own "-2" omits the phrase, Diabolic Edict prints it, and both mean
+#: the identical thing, so the same reader takes either. The description is
+#: `machines/targeting.permanent_description`, the same target grammar
+#: `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE` already reuses.
+_TARGET_PLAYER_SACRIFICES_RE = re.compile(
+    rf"^target player sacrifices (?P<n>{COUNT}) (?P<description>.+?)"
+    r"(?: of their choice)?(?P<tail> with [^.]+?)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_sacrifices_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_SACRIFICES_RE`'s shape - CR 701.21a's edict, aimed at
+    one targeted player. A player with fewer matching permanents than `n`
+    sacrifices everything they have (CR 608.2d: no impossible choice), and
+    one with exactly `n` is never asked either - the same floor
+    `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE` already applies.
+    """
+    match = _TARGET_PLAYER_SACRIFICES_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    count = parse_count(match.group("n"))
+    description = match.group("description").strip()
+    if match.group("tail") is not None:
+        description = f"{description}{match.group('tail')}"
+    requirement = permanent_description(description)
+    if requirement is None or count is None or count < 1:
+        return None
+    wanted_words = with_indefinite_article(description) if count == 1 else f"{count} {description}"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(target.username)
+                if requirement.rejects(permanent, target.username, game) is None
+            ]
+            if not candidates:
+                continue
+            if len(candidates) <= count:
+                chosen = candidates
+            else:
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=target.username,
+                        prompt=f"sacrifice {wanted_words}",
+                        source=source,
+                        amount=count,
+                        cards=tuple(permanent.id for permanent in candidates),
+                        source_id=source_id_of(stack_object),
+                    )
+                )
+                by_id = {permanent.id: permanent for permanent in candidates}
+                chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+            for permanent in chosen:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.sacrifice(permanent)
+
+    return effect
+
+
 #: "Target player draws `<n>` cards and loses `<m>` life." - Ancestral
 #: Craving's and Blood Pact's own whole shape: one compound predicate, one
 #: subject, not two independent instructions. `_CLAUSE_SEPARATOR`'s bare
@@ -29595,6 +29675,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     target_player_shuffles = _parse_target_player_shuffles_clause(clause, for_spell=for_spell)
     if target_player_shuffles is not None:
         return target_player_shuffles
+    target_player_sacrifices = _parse_target_player_sacrifices_clause(clause, for_spell=for_spell)
+    if target_player_sacrifices is not None:
+        return target_player_sacrifices
     if _EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
         return exile_target_players_graveyard
     # -- end Wave W1 single-clause additions -------------------------------
