@@ -1744,8 +1744,25 @@ def condition_matches(
         # type - and "you tap a Swamp for mana" (Nirkana Revenant), "a Forest is
         # tapped for mana" (Vernal Bloom), naming a land subtype instead.
         # Nothing in the pool prints the self-referential form.
+        if "an opponent" in lowered:
+            # Vorinclex, Voice of Hunger's own "Whenever an opponent taps a
+            # land for mana, ..." - `_controller_clause_holds` only ever
+            # recognises "an opponent **controls**"/"your opponents
+            # **control**" (CR 613.5's board-control question), never
+            # "taps", so this fell through its default "nothing named,
+            # nothing required" branch and matched *any* tap, controller
+            # included - the same "an opponent" fallback `TriggerEvent.
+            # CAST_SPELL`/`DRAWS_A_CARD`/`GAINS_LIFE` already use for their
+            # own branches.
+            controller_ok = event.subject_controller is not None and (
+                event.subject_controller != controller
+            )
+        else:
+            controller_ok = _controller_clause_holds(
+                condition, controller, event.subject_controller
+            )
         return (
-            _controller_clause_holds(condition, controller, event.subject_controller)
+            controller_ok
             and _types_match(event.subject_types, condition)
             and _subtype_matches(event.subject_subtypes, _required_tapped_subtype(condition))
         )

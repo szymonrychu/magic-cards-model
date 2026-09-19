@@ -18635,6 +18635,49 @@ def _parse_they_gain_or_lose_life_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "That land doesn't untap during its controller's next untap step."
+#: (Vorinclex, Voice of Hunger's own "Whenever an opponent taps a land for
+#: mana, ..."). "That `<noun>`" is CR 607.1's own anaphora back to whatever
+#: the trigger's own condition just named - here `TriggerEvent.
+#: TAPPED_FOR_MANA`'s own subject (`GameEvent.subject_id`, CR 106.12a) -
+#: never a target: there is no "target" word in the sentence, and CR 601.2c
+#: is not asked. The noun itself is not revalidated against the condition's
+#: own type word; whatever `intervening_if_holds`'s `TAPPED_FOR_MANA` branch
+#: already matched is what `event.subject_id` names.
+_THAT_PERMANENT_NO_UNTAP_RE = re.compile(
+    r"^that [a-z]+ doesn'?t untap during its controller'?s next untap step\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_that_permanent_no_untap_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_THAT_PERMANENT_NO_UNTAP_RE`'s shape. Ability-only, like `_parse_
+    they_gain_or_lose_life_clause`: a spell has no `ability.event` to read
+    "that `<noun>`" against.
+
+    Reuses `CardState.exerted`/`.untap` (CR 701.43a-b), the same primitive
+    `_parse_tap_target_then_no_untap_clause` already gives Tamiyo, Compleated
+    Sage's targeted "It doesn't untap ..." - here imposed on the trigger's
+    own anaphoric subject instead of a target.
+    """
+    if for_spell:
+        return None
+    if _THAT_PERMANENT_NO_UNTAP_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        permanent = game.find_by_id(event.subject_id)
+        if permanent is not None and permanent.zone is Zone.BATTLEFIELD:
+            permanent.exerted = True
+
+    return effect
+
+
 #: "It gains rebound." - Ojer Pakpatiq, Deepest Epoch's own "Whenever you
 #: cast an instant spell from your hand, it gains rebound." CR 702.88a's
 #: rebound is normally printed on the spell itself; here it is granted for
@@ -21738,6 +21781,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     they_gain_or_lose_life = _parse_they_gain_or_lose_life_clause(clause, for_spell=for_spell)
     if they_gain_or_lose_life is not None:
         return they_gain_or_lose_life
+    that_permanent_no_untap = _parse_that_permanent_no_untap_clause(clause, for_spell=for_spell)
+    if that_permanent_no_untap is not None:
+        return that_permanent_no_untap
     copy_that_spell = _parse_copy_that_spell_clause(clause, for_spell=for_spell)
     if copy_that_spell is not None:
         return copy_that_spell
