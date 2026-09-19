@@ -1616,12 +1616,12 @@ class Game(EngineModel):
 
     cost_modifier_notices: list[CostModifierNotice] = Field(default_factory=list)
     """One entry per permanent whose static cost-modifying text
-    (`static_cost_modifiers_for`) could not be read - Grand Arbiter Augustin
-    IV's controller-relative "Spells your opponents cast cost {1} more to
-    cast" is the example neither `cost_modifier_effect`'s shapes cover. A
-    cost increase that silently fails to apply looks identical to ordinary
-    play, which is the DDR#978 defect this is written against; recording it
-    here keeps the gap visible instead."""
+    (`static_cost_modifiers_for`) could not be read into one of
+    `cost_modifier_effect`'s recognised shapes - a card whose text
+    `looks_like_unparsed_cost_modifier` flags as a cost sentence this cannot
+    yet classify. A cost increase that silently fails to apply looks
+    identical to ordinary play, which is the DDR#978 defect this is written
+    against; recording it here keeps the gap visible instead."""
 
     anaphoric_clause_notices: list[AnaphoricClauseNotice] = Field(default_factory=list)
     """One entry per "<verb> target X. Its/that X's controller ..." effect
@@ -12839,12 +12839,11 @@ class Game(EngineModel):
         counted when the permanent's controller is `caster`.
 
         Text that reads like a cost modifier but does not match one of
-        `cost_modifier_effect`'s recognised shapes - Grand Arbiter Augustin
-        IV's controller-relative "Spells your opponents cast cost {1} more to
-        cast" - is neither applied nor silently skipped: a `CostModifierNotice`
-        is appended to `cost_modifier_notices` instead (DDR#978 - an increase
-        that fails to apply looks identical to ordinary play). Deduplicated by
-        source, since this runs every time a cost is priced.
+        `cost_modifier_effect`'s recognised shapes is neither applied nor
+        silently skipped: a `CostModifierNotice` is appended to
+        `cost_modifier_notices` instead (DDR#978 - an increase that fails to
+        apply looks identical to ordinary play). Deduplicated by source,
+        since this runs every time a cost is priced.
 
         A loyalty-ability-granted, time-boxed discount - Ral, Monsoon Mage's
         own "+1: Until your next turn, instant and sorcery spells you cast
@@ -12870,8 +12869,8 @@ class Game(EngineModel):
             #
             # Read line by line, not as one blob: CR 604.1 makes each
             # sentence-per-line its own static ability (Grand Arbiter
-            # Augustin IV prints three - two readable color discounts and one
-            # controller-relative tax this wave still cannot read), and
+            # Augustin IV prints three - two color discounts and an
+            # opponent-scoped tax, all three readable), and
             # `cost_modifier_effect` only ever answers for the *first* shape
             # it recognises in whatever text it is given. Reading the whole
             # card at once would either apply only the first ability and
@@ -12944,6 +12943,19 @@ class Game(EngineModel):
                     if floor is None or effect.amount > floor:
                         floor = effect.amount
                 elif effect.kind is CostModifierKind.FLAT_INCREASE:
+                    if (
+                        effect.excludes_type is not None
+                        and effect.excludes_type in spell.card.types
+                    ):
+                        continue
+                    increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.OPPONENT_TYPE_INCREASE:
+                    # Thalia, the Survivor: "your opponents cast" - only when
+                    # the permanent's controller is not the caster, the exact
+                    # mirror of COLOR_DECREASE/TYPE_DECREASE's own "you cast"
+                    # scoping below.
+                    if permanent.controller == caster:
+                        continue
                     if (
                         effect.excludes_type is not None
                         and effect.excludes_type in spell.card.types

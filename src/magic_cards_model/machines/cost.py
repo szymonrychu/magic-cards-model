@@ -3606,6 +3606,16 @@ class CostModifierKind(StrEnum):
     `COLOR_DECREASE`. Exactly one of `applies_to_types`/`excludes_type` is
     set, matching which of the two shapes was printed."""
 
+    OPPONENT_TYPE_INCREASE = "opponent_type_increase"
+    """"[<Qualifier> s]pells your opponents cast cost `{N}` more to cast." -
+    Thalia, the Survivor's own "Noncreature spells your opponents cast cost
+    {1} more to cast.", and the unqualified "Spells your opponents cast cost
+    {1} more to cast." this same shape covers with `excludes_type` left
+    `None`. `FLAT_INCREASE`'s own mirror, scoped the other way round from
+    `COLOR_DECREASE`/`TYPE_DECREASE`: those apply only when the permanent's
+    controller *is* the caster, this only when they are not
+    (`Game.static_cost_modifiers_for`)."""
+
 
 class CostModifierEffect(EngineModel):
     """One static cost-modifying ability, read off a permanent's oracle text."""
@@ -3661,6 +3671,18 @@ _FLAT_COST_INCREASE = re.compile(
 #: notice and applied to nothing.
 _NAMED_COST_INCREASE = re.compile(
     r"[Ss]pells with the chosen name cost \{(?P<amount>\d+)\} more to cast\."
+)
+#: Thalia, the Survivor's tax, and Grand Arbiter Augustin IV's own
+#: unqualified "Spells your opponents cast cost {1} more to cast." - the
+#: opponent-scoped mirror of `_FLAT_COST_INCREASE`. Matched ahead of it for
+#: the same reason `_NAMED_COST_INCREASE` is: "spells ... your opponents
+#: cast cost {N} more" is not contiguous "spells cost {N} more", so the
+#: qualifier and the tax would otherwise be silently dropped rather than
+#: read, the exact DDR#978 shape this permanent's own docstring names.
+_OPPONENT_COST_INCREASE = re.compile(
+    r"(?:(?P<qualifier>Noncreature|Nonartifact|Nonland|Noninstant|Nonsorcery|"
+    r"Nonenchantment|Nonplaneswalker) )?[Ss]pells your opponents cast cost "
+    r"\{(?P<amount>\d+)\} more to cast\."
 )
 _PER_SPELL_COST_INCREASE = re.compile(
     r"Each spell a player casts costs \{(?P<amount>\d+)\} more to cast for each "
@@ -3746,6 +3768,14 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
     if match is not None:
         return CostModifierEffect(
             kind=CostModifierKind.NAMED_INCREASE, amount=int(match.group("amount"))
+        )
+    match = _OPPONENT_COST_INCREASE.search(text)
+    if match is not None:
+        qualifier = match.group("qualifier")
+        return CostModifierEffect(
+            kind=CostModifierKind.OPPONENT_TYPE_INCREASE,
+            amount=int(match.group("amount")),
+            excludes_type=_QUALIFIER_EXCLUDES.get(qualifier) if qualifier else None,
         )
     match = _FLAT_COST_INCREASE.search(text)
     if match is not None:

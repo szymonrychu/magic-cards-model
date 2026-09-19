@@ -79,32 +79,33 @@ def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
     would be a control that controls nothing.)
 
     (Grand Arbiter Augustin IV used to be this control, on the reading that
-    its cost-modifier statics reached no notice at all. Measured today, two of
-    its three lines are read by `machines/cost.cost_modifier_effect` and the
-    third records a `CostModifierNotice` - see
-    `test_a_cost_modifier_static_that_fails_closed_is_a_notice`, which now
-    pins that card instead. Three earlier examples of the identical kind had
-    already been closed the same way: March of Otherworldly Light's
-    two-sentence additional-cost preamble, Blood Artist's back-to-back
-    "target player loses 1 life and you gain 1 life" clauses, and History of
-    Benalia's Saga chapters.)
+    its cost-modifier statics reached no notice at all. All three of its
+    lines are now read by `machines/cost.cost_modifier_effect` - see
+    `test_grand_arbiters_three_cost_modifier_statics_are_all_handled` - so it
+    would be a control that controls nothing. Four earlier examples of the
+    identical kind had already been closed the same way: March of
+    Otherworldly Light's two-sentence additional-cost preamble, Blood
+    Artist's back-to-back "target player loses 1 life and you gain 1 life"
+    clauses, History of Benalia's Saga chapters, and Rancor's "Enchanted
+    creature ..." static above.)
     """
     category, _ = classify_card(card("Keen-Eyed Curator"))
     assert category == SILENT
 
 
-def test_a_cost_modifier_static_that_fails_closed_is_a_notice():
+def test_grand_arbiters_three_cost_modifier_statics_are_all_handled():
     """Grand Arbiter Augustin IV: "White/Blue spells you cast cost {1} less to
-    cast" is read by `machines/cost.cost_modifier_effect`, and "Spells your
-    opponents cast cost {1} more to cast" is controller-relative in a way its
-    shapes do not cover - `looks_like_unparsed_cost_modifier` catches it and
-    `Game.total_cost_for` records a `CostModifierNotice`. That is fail-closed
-    behaviour, not silence, and the sweep must read a permanent's static line
+    cast" was already read by `machines/cost.cost_modifier_effect`; "Spells
+    your opponents cast cost {1} more to cast" - controller-relative the
+    other way round - is now too (`CostModifierKind.OPPONENT_TYPE_INCREASE`,
+    S10 survey 2026-09-19, read for Thalia, the Survivor's qualified sibling
+    "Noncreature spells your opponents cast cost {1} more to cast"). All
+    three lines are HANDLED; the sweep must read a permanent's static line
     through the same two functions the engine reads it with.
     """
     clauses = classify_clauses(card("Grand Arbiter Augustin IV"))
-    assert [clause.category for clause in clauses] == [HANDLED, HANDLED, NOTICE]
-    assert classify_card(card("Grand Arbiter Augustin IV"))[0] == NOTICE
+    assert [clause.category for clause in clauses] == [HANDLED, HANDLED, HANDLED]
+    assert classify_card(card("Grand Arbiter Augustin IV"))[0] == HANDLED
 
 
 # -- Defect 1: a permanent's static line is not "no rules text" -------------
