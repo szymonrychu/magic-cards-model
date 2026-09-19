@@ -947,23 +947,49 @@ def _self_referential(condition: str, source_name: str) -> bool:
     return bool(short) and short in lowered
 
 
+def _plural_type_word_pattern(word: str) -> str:
+    """`word`'s own singular-or-plural regex fragment (CR 205.2a's card
+    types, pluralized the ordinary English way Scryfall's own oracle text
+    already uses: "creature" -> "creatures", "sorcery" -> "sorceries").
+
+    Gardenize's and Scavenger's Talent's own "Whenever a/one or more
+    creature**s** you control di**e**" both name the type in the plural -
+    `\bcreature\b`'s trailing word boundary refuses to match inside
+    "creatures" at all (the 's' is a word character, not a boundary), so a
+    condition naming a type only in its plural form was read as naming no
+    type, which `_types_match` then reads as "no restriction" rather than
+    "the source doesn't have to be a creature to match" - the wrong kind of
+    permissive for a noncreature source to widen past CR 603.10a's
+    "another"/"other" requirement on. `-y` words (only "sorcery" in this
+    pool's `_TYPE_WORDS`) pluralize by swapping the 'y' for '-ies', same as
+    English; everything else just takes a trailing 's'.
+    """
+    if word.endswith("y"):
+        return f"{word[:-1]}(?:y|ies)"
+    return f"{word}s?"
+
+
 def _required_types(condition: str) -> tuple[set[Type], set[Type]]:
     """The types a condition asks the subject to have, and the ones it forbids.
 
     `"an instant or sorcery spell"` requires one of instant or sorcery;
     `"a noncreature spell"` forbids creature. A condition naming no type at all
-    requires nothing, which is what "whenever you cast a spell" means.
+    requires nothing, which is what "whenever you cast a spell" means. Reads
+    either the singular or the plural form of each type word (`_plural_type_
+    word_pattern`) - "one or more creatures die" is exactly as much a
+    creature-type restriction as "a creature dies" is.
     """
     lowered = condition.lower()
     forbidden = {
         card_type
         for word, card_type in _TYPE_WORDS.items()
-        if re.search(rf"\bnon-?{word}\b", lowered)
+        if re.search(rf"\bnon-?{_plural_type_word_pattern(word)}\b", lowered)
     }
     required = {
         card_type
         for word, card_type in _TYPE_WORDS.items()
-        if card_type not in forbidden and re.search(rf"\b{word}\b", lowered)
+        if card_type not in forbidden
+        and re.search(rf"\b{_plural_type_word_pattern(word)}\b", lowered)
     }
     return required, forbidden
 
