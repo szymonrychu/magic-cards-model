@@ -109,26 +109,57 @@ def test_primal_witchstalker_returns_nothing_with_no_land_in_the_mill():
 
 
 def test_the_last_ronin_chapter_reads_a_hand_destination_with_no_tapped_rider():
-    """The Last Ronin's own chapter II ("Mill four cards. When you do,
-    return target creature card from your graveyard to your hand.") is read
-    at the clause level rather than played through a full Saga cast: casting
-    a Saga whose printed text contains a *later* chapter's "target" phrase
-    trips this engine's own spell-level targeting announcement (CR 601.2c)
-    before the chapter that owns that target has even triggered - a
-    pre-existing Saga-casting gap this stream's own mill/return work does not
-    touch. The clause parser itself has no notion of "chapter" at all: it
-    reads chapter II's text exactly as it would read the same sentence
-    printed as an ETB, which is what this probes - a different quality
-    (creature card, not land) and a different destination (hand, not the
-    battlefield, and so no "tapped" rider), proving the merge and the
-    return-side regex both read the general shape rather than Primal
-    Witchstalker's own exact sentence.
-    """
-    from magic_cards_model.machines.effects import _ability_effect_or_notice
+    """The Last Ronin's own chapter II: "Mill four cards. When you do,
+    return target creature card from your graveyard to your hand." - a
+    different quality (creature card, not land) and a different destination
+    (hand, not the battlefield, and so no "tapped" rider), proving the
+    merge and the return-side regex both read the general shape rather than
+    Primal Witchstalker's own exact sentence.
 
-    effect = _ability_effect_or_notice(
-        "Mill four cards. When you do, return target creature card from your graveyard "
-        "to your hand."
+    Cast end to end, once `_spell_text`'s own chapter-line strip (see
+    `test_saga_chapter_targets_do_not_reach_spell_level_announcement.py`)
+    stops a later chapter's own "target" phrase from being read as the
+    casting Saga spell's own target.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["The Last Ronin"],
+            battlefield=[
+                "Grizzly Bears",
+                "Swamp",
+                "Forest",
+                "Plains",
+                "Plains",
+                "Plains",
+                "Plains",
+            ],
+            library=["Forest", "Mountain", "Swamp", "Island"],
+        )
+        .player("bob")
+        .build()
     )
-    assert effect is not None
-    assert effect.__qualname__.startswith("_parse_reflexive_mandatory_mill_clause")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Swamp", "Forest", "Plains", "Plains", "Plains", "Plains")
+    alice = scenario.player("alice")
+
+    # Chapter I ("Destroy all creatures") fires the instant the Saga enters
+    # (CR 714.3a, CR 122.6) - Grizzly Bears dies into the graveyard, giving
+    # chapter II's own return a real creature card to target.
+    scenario.cast_and_resolve("The Last Ronin", *sources)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    assert bears.zone is Zone.GRAVEYARD
+
+    hand_before = len(alice.hand)
+    scenario.will_choose_targets(bears, username="alice")
+    scenario.game.saga_lore_step()
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.HAND, "the general merge reads a hand destination too"
+    assert len(alice.hand) == hand_before + 1

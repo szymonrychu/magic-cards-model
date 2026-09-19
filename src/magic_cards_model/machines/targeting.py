@@ -1932,6 +1932,23 @@ def profile_for_text(text: str) -> TargetingProfile:
 #: dash is left alone.
 _ABILITY_WORD_PREFIX = re.compile(r"^[A-Z][^—\n]{0,40}?\s+—\s+")
 
+#: CR 714.2's own chapter symbol: "{rN1}, {rN2}—[Effect]" (CR 714.2c),
+#: written out by Scryfall as one or more Roman numerals (CR 714.2a: "the
+#: numeral I represents 1, II represents 2, III represents 3, and so on"),
+#: comma-joined when a Saga shares one chapter ability across several
+#: numbers, then an em dash. "A chapter symbol is a keyword ability that
+#: represents a triggered ability" (CR 714.2), so an entire chapter line is
+#: excluded the same way a printed "When ..."/"Whenever ..."/"At ..." line
+#: already is below - unlike `_ABILITY_WORD_PREFIX`, which only strips its
+#: own prefix off a line the rest of which stays in the spell's own text,
+#: since an ability word never turns the sentence after it into a separate
+#: object with its own targets the way a chapter ability does (CR 603.3d: a
+#: chapter ability, like any triggered ability, chooses its own targets
+#: when it goes on the stack, not when the Saga is cast). Bounded to four
+#: Roman-numeral characters per number so an ordinary capitalised word
+#: before a real em dash is never mistaken for one.
+_CHAPTER_SYMBOL_LINE = re.compile(r"^[IVX]{1,4}(?:,\s*[IVX]{1,4})*\s*—")
+
 
 def _spell_text(oracle_text: str) -> str:
     """The lines that are part of casting the spell, not of an ability.
@@ -1943,6 +1960,8 @@ def _spell_text(oracle_text: str) -> str:
     lines: list[str] = []
     for line in oracle_text.splitlines():
         stripped = _REMINDER.sub("", line).strip()
+        if _CHAPTER_SYMBOL_LINE.match(stripped):
+            continue
         # CR 207.2c: "An ability word appears in italics at the beginning of
         # some abilities ... they have no special rules meaning", and CR 207.2d
         # says the same of a flavor word. Scryfall prints both as "<Word> — "
