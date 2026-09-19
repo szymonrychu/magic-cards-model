@@ -8245,6 +8245,11 @@ class Game(EngineModel):
                 raise ValueError(f"{decision.prompt}: needs a top-or-bottom bool answer")
             return value
 
+        if decision.kind is DecisionKind.CHOOSE_PILE:
+            if not isinstance(value, bool):
+                raise ValueError(f"{decision.prompt}: needs a which-pile bool answer")
+            return value
+
         if decision.kind is DecisionKind.OPENING_HAND_ACTION:
             # CR 103.6's "may take any such actions": a yes-or-no, both branches
             # always legal - a restriction the card prints (Gemstone Caverns'

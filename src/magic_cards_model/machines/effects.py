@@ -27210,12 +27210,25 @@ def _parse_target_player_sacrifices_clause(
 
 #: "Separate all `<quality>` target player controls into two piles.
 #: `<consequence>` all `<quality>` in the pile of that player's choice." -
-#: CR 700.3's pile primitive (CR 700.3a: every qualifying permanent goes
-#: into exactly one pile; CR 700.3d: a pile may be empty), read whole across
-#: both sentences the way every other "this way"/anaphoric rider in this
-#: module already is: the second sentence's "the pile of their choice" names
-#: an object the first sentence's own division created, not something
-#: readable on its own.
+#: CR 700.3's pile primitive, read whole across both sentences the way
+#: every other "this way"/anaphoric rider in this module already is: the
+#: second sentence's "the pile of their choice" names an object the first
+#: sentence's own division created, not something readable on its own.
+#:
+#: **Two different players, two different questions** - confirmed against
+#: Liliana of the Veil's own official ruling ("When Liliana's third ability
+#: resolves, **you** put each permanent the player controls into one of the
+#: two piles"): the first sentence's unattributed "Separate ..." is CR
+#: 608.2c's own default - the resolving ability's *controller* - not the
+#: named "target player" the second sentence goes on to single out. That
+#: division is read the identical `CHOOSE_CARDS` way `SCRY`/`SURVEIL`
+#: already read "which of these move" (`exact=False`, CR 700.3d's "a pile
+#: can contain zero or more objects"): the controller names what goes in
+#: pile one, and the complement among the same qualifying set is pile two.
+#: The *target* player then picks a whole pile - `DecisionKind.CHOOSE_PILE`,
+#: the plain-boolean shape `PUT_ON_TOP_OR_BOTTOM` already is for "exactly
+#: two answers, neither a color/name/type" - and the named consequence
+#: applies to every permanent in the pile they picked.
 #:
 #: Liliana of the Veil's own `-6` is the reported ability ("... That player
 #: sacrifices all permanents in the pile of their choice."). Do or Die (real,
@@ -27228,18 +27241,6 @@ def _parse_target_player_sacrifices_clause(
 #: a permanent this instruction already destroys outright with no separate
 #: replacement effect asked about) rather than as a third, independent
 #: instruction.
-#:
-#: **Both cards give the *same* player both choices** - dividing into piles
-#: and then picking one - which CR 700.3's own "every object in exactly one
-#: pile, any pile may be empty" makes rules-equivalent to that one player
-#: freely choosing any subset, zero up to all, of their own qualifying
-#: permanents to end up in the consequence pile: nothing about *how* they
-#: arrived at that subset (naming it as "the other pile" first) is
-#: observable or game-relevant once only one player ever makes both
-#: decisions. Modelled directly as that free "any number" choice
-#: (`exact=False`, the same floor `_discard_cards`'s own "any number of land
-#: cards" shape already uses) rather than building a second, general
-#: pile-division primitive no other card in the pool needs yet.
 _SEPARATE_INTO_TWO_PILES_RE = re.compile(
     r"^separate all (?P<quality>.+?) target player controls into two piles\.?$",
     re.IGNORECASE,
@@ -27287,6 +27288,7 @@ def _parse_separate_into_two_piles_then_consequence_whole_text(
         source = (
             stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
         )
+        divider = game.controller_of(stack_object)
         for target in game.resolve_targets(stack_object):
             if not isinstance(target, Player):
                 continue
@@ -27297,11 +27299,15 @@ def _parse_separate_into_two_piles_then_consequence_whole_text(
             ]
             if not candidates:
                 continue
-            chosen_ids = game.ask(
+            # Step 1 (CR 700.3a/700.3d): the ability's own controller - not
+            # the target - divides every qualifying permanent into exactly
+            # one of two piles. "Pile one" is whatever they name here; the
+            # complement among `candidates` is pile two.
+            pile_one_ids = game.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
-                    player=target.username,
-                    prompt=f"choose which of these to {verb}",
+                    player=divider.username,
+                    prompt=f"separate {target.username}'s {quality} into pile one",
                     source=source,
                     amount=len(candidates),
                     cards=tuple(permanent.id for permanent in candidates),
@@ -27309,8 +27315,25 @@ def _parse_separate_into_two_piles_then_consequence_whole_text(
                     exact=False,
                 )
             )
-            by_id = {permanent.id: permanent for permanent in candidates}
-            chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+            pile_one_id_set = set(pile_one_ids)
+            pile_one = [permanent for permanent in candidates if permanent.id in pile_one_id_set]
+            pile_two = [
+                permanent for permanent in candidates if permanent.id not in pile_one_id_set
+            ]
+            # Step 2: the target player - the one the card actually names for
+            # this choice - picks a whole pile.
+            wants_pile_one = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_PILE,
+                    player=target.username,
+                    prompt=f"choose a pile to {verb}",
+                    source=source,
+                    cards=tuple(permanent.id for permanent in pile_one),
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            assert isinstance(wants_pile_one, bool)
+            chosen = pile_one if wants_pile_one else pile_two
             for permanent in chosen:
                 if permanent.zone is not Zone.BATTLEFIELD:
                     continue

@@ -703,6 +703,24 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.PUT_ON_TOP_OR_BOTTOM, top, username, source, times)
 
+    def will_choose_pile(
+        self,
+        pile_one: bool = True,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next CR 700.3 pile choice (Liliana of the Veil's own
+        `-6`, Do or Die) - the *second* of the mechanic's two questions, put
+        to whichever player the card names for it (the ability's own
+        target), not to the ability's controller who divided the piles.
+        `pile_one` names the answer: `True` for pile one
+        (`Decision.cards`, the dividing player's own choice of what to put
+        there), `False` for its complement.
+        """
+        self._queue(DecisionKind.CHOOSE_PILE, pile_one, username, source, times)
+
     def will_pay_the_energy(
         self,
         paid: bool = True,

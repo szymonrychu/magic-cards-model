@@ -359,6 +359,26 @@ def _top_or_bottom() -> tuple[list[Decision], CardState]:
     return _asked(scenario.questions_asked(), DecisionKind.PUT_ON_TOP_OR_BOTTOM), subtlety
 
 
+def _choose_pile() -> tuple[list[Decision], CardState]:
+    """Liliana of the Veil's own `-6`: bob, the target, picks a whole pile."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Liliana of the Veil"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    liliana = scenario.find("Liliana of the Veil", Zone.BATTLEFIELD, "alice")
+    liliana.add_counters(Counter.LOYALTY, 3)
+    scenario.will_choose_cards(username="alice", source="Liliana of the Veil")
+    scenario.will_choose_pile(True, username="bob", source="Liliana of the Veil")
+
+    scenario.activate(liliana, index=2, targets=["bob"])
+    scenario.pass_until_resolved()
+
+    return _asked(scenario.questions_asked(), DecisionKind.CHOOSE_PILE), liliana
+
+
 SOURCED: dict[DecisionKind, Probe] = {
     DecisionKind.MAY: _may_trigger,
     DecisionKind.PAY_LIFE: _shockland_pay_life,
@@ -375,6 +395,7 @@ SOURCED: dict[DecisionKind, Probe] = {
     DecisionKind.CHOOSE_A_QUALITY: _choose_a_color,
     DecisionKind.CHOOSE_A_MODE: _modal_trigger_mode,
     DecisionKind.PUT_ON_TOP_OR_BOTTOM: _top_or_bottom,
+    DecisionKind.CHOOSE_PILE: _choose_pile,
 }
 
 
