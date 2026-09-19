@@ -5438,8 +5438,11 @@ def _targets_understood(
     and CR 701.26a/701.26b define tap and untap only for "a permanent", which
     CR 110.1 puts on the battlefield. `exile_ability_targets` and
     `return_ability_targets_to_hand` pass `False` - CR 406.2/701.13a exile
-    "from whatever zone it's currently in" and CR 701.19a's "return" names no
-    particular origin zone either, so Faerie Macabre's "target cards from
+    "from whatever zone it's currently in", and "return" carries no CR-
+    numbered keyword-action definition at all (CR 701 lists destroy, exile,
+    and tap/untap but no "Return") - nothing in the rules restricts it to the
+    battlefield the way CR 701.8a restricts destroy, so it reaches whichever
+    zone the printed card names, and Faerie Macabre's "target cards from
     graveyards" and Raise Dead's "target creature card from your graveyard"
     are exactly what those two verbs are supposed to reach. Whichever zones
     the printed text names, `Game.legal_target` rechecks them again on
@@ -5494,7 +5497,9 @@ def return_ability_targets_to_hand(game: "Game", stack_object: "StackObject") ->
     """Return each permanent this still legally targets to its owner's hand.
 
     Not battlefield-only, for the same reason `exile_ability_targets` is not:
-    CR 701.19a's "return" names no particular origin zone, and Raise Dead's
+    "return" carries no CR-numbered keyword-action definition (CR 701's own
+    list has no "Return" entry, unlike destroy, exile, or tap/untap), so
+    nothing in the rules restricts its origin zone, and Raise Dead's
     "target creature card in your graveyard" is exactly this shape.
     `game.resolve_targets` already rechecks each target against the printed
     restriction's own zones (CR 608.2b), and `Game.return_to_hand` is
@@ -5512,9 +5517,10 @@ def return_ability_targets_to_battlefield(game: "Game", stack_object: "StackObje
     under the resolving spell or ability's own controller.
 
     The battlefield twin of `return_ability_targets_to_hand` immediately
-    above, for the same reason: CR 701.19a's "return" names no origin zone,
-    and `game.resolve_targets` has already rechecked each target against the
-    printed restriction's own zones (CR 608.2b), so a card that has already
+    above, for the same reason: "return" has no CR-numbered keyword-action
+    definition to name an origin zone with, and `game.resolve_targets` has
+    already rechecked each target against the printed restriction's own
+    zones (CR 608.2b), so a card that has already
     left the graveyard by the time this runs was already filtered out.
     CR 110.2a: "If an effect instructs a player to put an object onto the
     battlefield, that object enters the battlefield under that player's
@@ -7279,9 +7285,11 @@ _COUNTER_TARGET_ABILITY_RE = re.compile(
 )
 #: The plural half - "to their owners' hands" - is the same verb on a clause
 #: naming more than one target (Marang River Regent's "return up to two other
-#: target nonland permanents to their owners' hands"). CR 701.19a's "return"
-#: is defined per object, and `return_ability_targets_to_hand` already loops
-#: over every target `Game.resolve_targets` still finds legal (CR 608.2b), so
+#: target nonland permanents to their owners' hands"). "Return" has no CR-
+#: numbered keyword-action definition (unlike destroy, exile, or tap/untap)
+#: to make it anything but per-object, and `return_ability_targets_to_hand`
+#: already loops over every target `Game.resolve_targets` still finds legal
+#: (CR 608.2b), so
 #: the only thing the singular pattern was missing was the printed plural.
 _RETURN_TARGET_RE = re.compile(
     r"return (?P<phrase>.*target.+?) to (?:its owner'?s hand|their owners'? hands)",
