@@ -231,6 +231,14 @@ class TargetRequirement(EngineModel):
     or enchantment". Empty means color is not restricted at all - not "target
     colorless permanent", which this wave's cards never need and which would
     mean something different (CR 105.2c: no color, not any color)."""
+    excluded_colors: SortedFrozenSet[Color] = frozenset()
+    """Colors the target must *not* have: the "non-" of "target nonblack
+    creature" (Cradle to Grave), read the identical way `excluded_card_types`/
+    `excluded_supertypes` already read their own "non-" prefix. CR 105.2's "An
+    object can be one or more of the five colors, or it can be no color at
+    all" is what makes a colorless target satisfy this for free - it has none
+    of the excluded color either, the same way it has none of a *required*
+    one and so never satisfies `required_colors` on its own."""
     must_be_token: bool | None = None
     """True for "target token", False for "target nontoken ..." (CR 111.1)."""
     color_count: str | None = None
@@ -681,6 +689,14 @@ class TargetRequirement(EngineModel):
             return (
                 f"{self.phrase} needs {with_indefinite_article(wanted)} permanent, "
                 f"and {target.name} is not one"
+            )
+        if self.excluded_colors and (
+            set(self._current_colors(target, game)) & self.excluded_colors
+        ):
+            unwanted = " or ".join(sorted(color.name.lower() for color in self.excluded_colors))
+            return (
+                f"{self.phrase} cannot target {with_indefinite_article(unwanted)} permanent, "
+                f"and {target.name} is one"
             )
         if self.color_count is not None:
             count = len(set(self._current_colors(target, game)))
@@ -3191,6 +3207,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         required_supertypes=frozenset(adjectives.required_supertypes),
         excluded_supertypes=frozenset(adjectives.excluded_supertypes) | extra_excluded_supertypes,
         required_colors=compound_required_colors,
+        excluded_colors=frozenset(adjectives.excluded_colors),
         allows_cards=allows_cards,
         allows_players=allows_players,
         opponent_only=opponent_only and not allows_cards,
@@ -3276,6 +3293,7 @@ class _Adjectives:
         self.required_supertypes: set[Supertype] = set()
         self.excluded_supertypes: set[Supertype] = set()
         self.required_colors: set[Color] = set()
+        self.excluded_colors: set[Color] = set()
         self.combat_states: set[CombatState] = set()
         self.must_be_tapped: bool | None = None
         self.must_be_token: bool | None = None
@@ -3308,6 +3326,8 @@ class _Adjectives:
             self.excluded_types.add(excluded)
         elif (excluded_super := _negated_supertype(word)) is not None:
             self.excluded_supertypes.add(excluded_super)
+        elif (excluded_color := _negated_color(word)) is not None:
+            self.excluded_colors.add(excluded_color)
         else:
             return False
         self.read += 1
@@ -3337,6 +3357,28 @@ def _negated_supertype(word: str) -> Supertype | None:
     if not word.startswith("non") or len(word) <= 3:
         return None
     return _SUPERTYPE_NOUNS.get(word[3:].lstrip("-"))
+
+
+def _negated_color(word: str) -> Color | None:
+    """The color a "non-" adjective rules out, if it is one - "target
+    nonblack creature" (Cradle to Grave), "target nonwhite creature"
+    (Sunlance). Read the identical way `_negated_type`/`_negated_supertype`
+    already are, against `_COLOR_WORDS` (CR 105.1's five colors) rather than
+    `_TYPE_NOUNS`/`_SUPERTYPE_NOUNS`.
+
+    CR 105.2's "An object can be one or more of the five colors, or it can be
+    no color at all" is why this is a genuinely different check from
+    `required_colors`' own membership test, not merely its logical opposite
+    spelled differently: a colorless object satisfies *neither* a required
+    color nor an excluded one, since it has none of any color to begin with.
+    `TargetRequirement.rejects`' own set-intersection checks for both fields
+    already get this right without special-casing colorless at all - an
+    empty `_current_colors(target, game)` set intersects nothing, so the
+    excluded-color check never rejects it.
+    """
+    if not word.startswith("non") or len(word) <= 3:
+        return None
+    return _COLOR_WORDS.get(word[3:].lstrip("-"))
 
 
 def _read_adjectives(words: list[str]) -> tuple[_Adjectives, int]:
@@ -3376,6 +3418,7 @@ def _is_adjective(word: str) -> bool:
         or word in {"multicolored", "monocolored", "colorless"}
         or _negated_type(word) is not None
         or _negated_supertype(word) is not None
+        or _negated_color(word) is not None
     )
 
 
