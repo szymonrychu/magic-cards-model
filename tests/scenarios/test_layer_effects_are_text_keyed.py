@@ -305,6 +305,41 @@ def test_the_domain_count_reads_the_board_after_layer_4():
     assert board.of(kavu).power_toughness == (5, 5)
 
 
+def test_fblthp_knows_the_way_has_power_only_equal_to_its_domain():
+    """Fblthp, Knows the Way (Reality Fracture): "Domain — Fblthp's power is
+    equal to the number of basic land types among lands you control." -
+    `_BASIC_LAND_TYPE_COUNT_CDA_RE` above only ever matched "power **and
+    toughness** are each equal to ..."; a power-only domain CDA (Fblthp's
+    printed toughness is a plain `2`, CR 208.1 - only the power box is `*`,
+    CR 208.2a) fell through it entirely and generated nothing, the same gap
+    this file's other pairs pin. **Nishoba Brawler** (off-set, a different
+    creature with a different printed toughness, `resolve_cards`-confirmed
+    identical "Domain — [Name]'s power is equal to the number of basic land
+    types among lands you control." wording) proves the reader is not fitted
+    to Fblthp's own name.
+    """
+    fblthp = permanent("Fblthp, Knows the Way")
+    lands = [permanent("Mountain"), permanent("Plains"), permanent("Blood Crypt")]
+
+    board = board_of(fblthp, *lands)
+
+    # Mountain, Plains, and Blood Crypt's Swamp/Mountain: three basic land types.
+    assert board.of(fblthp).power == 3
+    assert board.of(fblthp).toughness == 2, "the printed toughness is untouched"
+
+
+def test_nishoba_brawler_has_power_only_equal_to_its_domain_off_set():
+    """Off-set proof: a different card, different printed toughness (3, not
+    2), same power-only domain wording."""
+    brawler = permanent("Nishoba Brawler")
+    lands = [permanent("Mountain"), permanent("Plains")]
+
+    board = board_of(brawler, *lands)
+
+    assert board.of(brawler).power == 2
+    assert board.of(brawler).toughness == 3, "the printed toughness is untouched"
+
+
 # --------------------------------------------------------------------------
 # Per-object conditions, the equipped creature, and a gated self-static
 # --------------------------------------------------------------------------

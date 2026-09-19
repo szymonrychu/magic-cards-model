@@ -4785,6 +4785,19 @@ _BASIC_LAND_TYPE_COUNT_CDA_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This permanent's power is equal to the number of basic land types among
+#: lands you control." (Fblthp, Knows the Way; Nishoba Brawler,
+#: `resolve_cards`-confirmed identical wording) - *domain*'s power-only twin:
+#: only the power box is `*` (CR 208.2a), the printed toughness is an ordinary
+#: number (CR 208.1) that no ability names, so `define_power` is used in place
+#: of `_basic_land_type_count_cda_builder`'s `define_power_toughness`, the same
+#: split Nighthawk Scavenger's own power-only CDA already draws.
+_BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s power is equal to the "
+    r"number of basic land types among lands you control\.?$",
+    re.IGNORECASE,
+)
+
 #: "Equipped creature gets +1/+1 and has trample and haste." (Cori-Steel
 #: Cutter); "Enchanted creature gets +2/+0 and has trample." (Rancor);
 #: `Equipped creature has "{3}, {Q}: This creature gets +2/+2 until end of
@@ -5212,6 +5225,42 @@ def _basic_land_type_count_cda_builder(line: str) -> EffectBuilder:
                 characteristic_defining=True,
                 selector=_only(source.id),
                 modification=define_power_toughness(
+                    count_basic_land_types_among_lands_controlled_by(source.controller)
+                ),
+            )
+        ]
+
+    return builder
+
+
+def _basic_land_type_count_power_only_cda_builder(line: str) -> EffectBuilder:
+    """`_BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE`'s shape - Fblthp, Knows the
+    Way's and Nishoba Brawler's power-only *domain* characteristic-defining
+    ability.
+
+    Still sublayer 7a (CR 613.4a), still `characteristic_defining=True`, but
+    `define_power` rather than `define_power_toughness`: the printed
+    toughness box is an ordinary number (CR 208.1), not a `*`, so nothing here
+    should ever touch it (CR 208.2a names power alone).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: power equal to its controller's domain",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                characteristic_defining=True,
+                selector=_only(source.id),
+                modification=define_power(
                     count_basic_land_types_among_lands_controlled_by(source.controller)
                 ),
             )
@@ -6759,6 +6808,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if _BASIC_LAND_TYPE_COUNT_CDA_RE.fullmatch(sentence):
         return _basic_land_type_count_cda_builder(sentence)
+    if _BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE.fullmatch(sentence):
+        return _basic_land_type_count_power_only_cda_builder(sentence)
     if match := _ATTACHED_CREATURE_PUMP_AND_QUOTED_RE.fullmatch(sentence):
         keywords = []
         if match.group("keywords") is not None:
