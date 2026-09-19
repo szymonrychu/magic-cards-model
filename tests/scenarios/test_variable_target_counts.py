@@ -292,3 +292,100 @@ def test_a_player_who_is_still_here_is_still_a_legal_target():
     scenario.pass_until_resolved()
 
     assert charm.id not in scenario.game.fizzled
+
+
+# --------------------------------------------------------------------------
+# Damage "to up to one target" / "to each of up to two targets": CR 601.2d's
+# division never applies here (the card never says "divided as you choose"),
+# so this is CR 115.6's ordinary "up to N" ceiling and each target chosen
+# takes the *whole* printed amount, not a share of it.
+#
+# - Mjolnir, Hammer of Thor (pool, verified with `resolve_cards`): "When
+#   Mjolnir enters, it deals 4 damage to up to one target creature."
+# - Dual Shot (off-pool, verified with `resolve_cards`): "Dual Shot deals 1
+#   damage to each of up to two target creatures."
+#
+# CR 601.2d was looked up with `knowledge_search(type="rules")`: "If the
+# spell requires the player to divide or distribute an effect ... among one
+# or more targets" - neither card's text triggers this, so `deal_damage`'s
+# ordinary per-target loop is the correct reading, not `deal_divided_damage`.
+# --------------------------------------------------------------------------
+
+
+def test_mjolnir_can_choose_zero_targets_and_deal_no_damage():
+    """CR 115.6: "up to one" allows zero, and a trigger with no target still
+    resolves cleanly rather than fizzling (CR 608.2b only counters/fizzles a
+    spell or ability that specifies targets and has none left)."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Mjölnir, Hammer of Thor"], battlefield=["Mountain"] * 4)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.choose_trigger_targets("Mjölnir, Hammer of Thor", [])
+
+    sources = scenario.untapped_sources(*(["Mountain"] * 4), username="alice")
+    scenario.cast_onto_stack("Mjölnir, Hammer of Thor", *sources, username="alice")
+    scenario.pass_until_resolved()  # Mjolnir resolves and enters
+    scenario.pass_until_resolved()  # its own ETB trigger, at no target
+
+    assert bears.damage == 0
+    assert bears.zone is Zone.BATTLEFIELD
+
+
+def test_mjolnir_deals_its_whole_four_damage_to_the_one_target_chosen():
+    """The single chosen target takes the full printed amount - not a share,
+    since the card never says "divided"."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Mjölnir, Hammer of Thor"], battlefield=["Mountain"] * 4)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.choose_trigger_targets("Mjölnir, Hammer of Thor", [bears])
+
+    sources = scenario.untapped_sources(*(["Mountain"] * 4), username="alice")
+    scenario.cast_onto_stack("Mjölnir, Hammer of Thor", *sources, username="alice")
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.GRAVEYARD  # 4 damage kills a 2/2
+
+
+def test_dual_shot_deals_the_whole_amount_to_each_of_two_targets():
+    """ "each of up to two target creatures" is not division: both targets
+    take the full 1 damage, not a divided half each."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Dual Shot"], battlefield=["Mountain"])
+        .player("bob", battlefield=["Memnite", "Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    first, second = scenario.creatures("Memnite", "Memnite", username="bob")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    scenario.cast_and_resolve("Dual Shot", mountain, username="alice", targets=[first, second])
+
+    assert first.zone is Zone.GRAVEYARD
+    assert second.zone is Zone.GRAVEYARD
+
+
+def test_dual_shot_can_choose_only_one_of_its_up_to_two_targets():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Dual Shot"], battlefield=["Mountain"])
+        .player("bob", battlefield=["Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    memnite = scenario.creature("Memnite", "bob")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    scenario.cast_and_resolve("Dual Shot", mountain, username="alice", targets=[memnite])
+
+    assert memnite.zone is Zone.GRAVEYARD

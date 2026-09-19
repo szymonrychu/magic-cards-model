@@ -506,3 +506,156 @@ def test_all_three_among_three_targets_is_one_each():
     assert bears.damage == 1
     assert memnite.zone is Zone.GRAVEYARD, "a 1/1 dies to its share (CR 704.5g)"
     assert scenario.player("bob").life == 19
+
+
+def test_one_target_is_enough_for_one_two_or_three():
+    """ "one, two, or three targets" has a floor of *one*, not two.
+
+    A word-list reader that only looked at the last three words of the
+    prefix ("two, or three") used to drop "one" on the floor and read a
+    minimum of two - Arc Lightning could not legally be cast at a single
+    target even though CR 601.2d lists "one" first. All three damage lands
+    on the lone target, exactly as an undivided 3-damage spell would.
+    """
+    scenario = arc_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    cast_arc_lightning(scenario, [bears], [3])
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def inferno_titan_board() -> Scenario:
+    """Alice with Inferno Titan and its six mana; Bob with one creature."""
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Inferno Titan"], battlefield=["Mountain"] * 6)
+        .player("bob", battlefield=["Grizzly Bears"])
+    )
+
+
+def test_inferno_titans_etb_trigger_also_allows_a_single_target():
+    """Inferno Titan (off-pool, verified with `resolve_cards`): "Whenever
+    this creature enters or attacks, it deals 3 damage divided as you choose
+    among one, two, or three targets." The identical "one, two, or three"
+    shape as Arc Lightning, but off a *triggered ability* rather than a
+    spell - proving the fix is the shared `targeting._read_count` reader,
+    not something special-cased to Arc Lightning's own card.
+    """
+    scenario = inferno_titan_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.choose_trigger_targets("Inferno Titan", [bears])
+
+    sources = scenario.untapped_sources(*(["Mountain"] * 6), username="alice")
+    scenario.cast_onto_stack("Inferno Titan", *sources, username="alice")
+    scenario.pass_until_resolved()  # Inferno Titan resolves and enters
+    scenario.pass_until_resolved()  # its own ETB trigger, at one target
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# "any number of targets" (CR 107.1c): the old regex only ever read a fixed
+# list ("one or two", "one, two, or three") and was silent on this shape
+# outright - Pyrotechnics, Rolling Thunder, and Ureni all print it.
+# --------------------------------------------------------------------------
+
+
+def test_pyrotechnics_divides_among_three_of_any_number_of_targets():
+    """Pyrotechnics (off-pool, verified with `resolve_cards`): "deals 4
+    damage divided as you choose among any number of targets." No printed
+    ceiling at all (CR 107.1c), so three targets - more than any fixed-list
+    card in the pool ever allows - is still a legal announcement.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Pyrotechnics"], battlefield=["Mountain"] * 5)
+        .player("bob", battlefield=["Grizzly Bears", "Watchwolf", "Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears, wolf, memnite = (
+        scenario.creature("Grizzly Bears", "bob"),
+        scenario.creature("Watchwolf", "bob"),
+        scenario.creature("Memnite", "bob"),
+    )
+    sources = scenario.untapped_sources(*(["Mountain"] * 5), username="alice")
+    scenario.cast_onto_stack(
+        "Pyrotechnics",
+        *sources,
+        username="alice",
+        targets=[bears, wolf, memnite],
+        division=[2, 1, 1],
+    )
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.GRAVEYARD  # 2 damage kills the 2/2
+    assert (wolf.damage, wolf.zone) == (1, Zone.BATTLEFIELD)
+    assert memnite.zone is Zone.GRAVEYARD  # 1 damage kills the 1/1
+
+
+def test_pyrotechnics_can_also_choose_zero_targets():
+    """CR 107.1c: "any positive number or zero" - nothing to divide among
+    nobody, and the spell still resolves without fizzling (CR 608.2b only
+    fizzles a spell whose targets have all become illegal, not one that
+    never had any)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Pyrotechnics"], battlefield=["Mountain"] * 5)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    sources = scenario.untapped_sources(*(["Mountain"] * 5), username="alice")
+    spell = scenario.cast_onto_stack("Pyrotechnics", *sources, username="alice", targets=[])
+    scenario.pass_until_resolved()
+
+    assert bears.damage == 0
+    assert spell.zone is Zone.GRAVEYARD
+
+
+def ureni_board(*, opponent_battlefield: list[str]) -> Scenario:
+    """Alice with Ureni and its {5}{G}{U}{R} - eight lands total, all of
+    which also feed its own "number of lands you control" X; Bob with
+    whatever creatures the test wants shot at."""
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Ureni, the Song Unending"],
+            battlefield=["Forest"] * 6 + ["Island", "Mountain"],
+        )
+        .player("bob", battlefield=opponent_battlefield)
+    )
+
+
+def test_urenis_etb_divides_x_damage_among_any_number_of_opponents_creatures():
+    """Ureni, the Song Unending (pool): "When Ureni enters, it deals X damage
+    divided as you choose among any number of target creatures and/or
+    planeswalkers your opponents control, where X is the number of lands you
+    control." Both widenings at once - "any number of", a restricted target
+    phrase rather than bare "targets", and X read off a "where X is" count
+    expression rather than a fixed digit.
+    """
+    scenario = ureni_board(opponent_battlefield=["Grizzly Bears", "Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    first, second = scenario.creatures("Grizzly Bears", "Grizzly Bears", username="bob")
+    scenario.choose_trigger_targets("Ureni, the Song Unending", [first, second])
+
+    sources = scenario.untapped_sources(
+        *(["Forest"] * 6 + ["Island", "Mountain"]), username="alice"
+    )
+    scenario.cast_onto_stack("Ureni, the Song Unending", *sources, username="alice")
+    scenario.pass_until_resolved()  # Ureni resolves and enters
+    scenario.pass_until_resolved()  # its own ETB trigger: X = 8 lands, split 4/4
+
+    assert first.zone is Zone.GRAVEYARD
+    assert second.zone is Zone.GRAVEYARD
