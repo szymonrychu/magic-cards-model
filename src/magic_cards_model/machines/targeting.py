@@ -1816,6 +1816,54 @@ def profile_for_modes_with_owners(
 _EARTHBEND = re.compile(r"\bearthbend\b", re.IGNORECASE)
 _EARTHBEND_TARGET_TEXT = "target land you control"
 
+#: "up to one target nonland card of each card type from your graveyard" -
+#: Uldaros Theorix's own ETB. CR 601.2c's "an appropriate object ... for each
+#: target the spell requires" reads "of each card type" as one independent
+#: "up to one" requirement *per* CR 300.1 nonland card type, not a single
+#: requirement the ordinary word-scan below could express: the scan reads one
+#: "target ..." noun phrase into one `TargetRequirement`, and there is no
+#: single set of restrictions ("card_types={...}") that would enforce "no two
+#: chosen targets share a type" the way eight separate up-to-one slots do for
+#: free (CR 115.3 only ever compares targets *within* one requirement).
+#: Special-cased the same way Earthbend is, just above, rather than widening
+#: the scan to a shape nothing else in the pool needs.
+_UP_TO_ONE_OF_EACH_CARD_TYPE_RE = re.compile(
+    r"up to one target nonland card of each card type from your graveyard", re.IGNORECASE
+)
+#: CR 300.1's card types, minus land (the clause's own "nonland") and the
+#: substitute-deck-only types (Conspiracy, Dungeon, Phenomenon, Plane,
+#: Scheme, Vanguard) that never occupy an ordinary graveyard slot - the same
+#: restriction to real, `Type`-modelled card types every other "nonland
+#: card" reader in this engine already applies.
+_NONLAND_CARD_TYPES: tuple[Type, ...] = tuple(t for t in Type if t is not Type.LAND)
+
+
+def _up_to_one_of_each_card_type_profile() -> TargetingProfile:
+    """`_UP_TO_ONE_OF_EACH_CARD_TYPE_RE`'s shape, built directly rather than
+    through `_parse`'s own text scan: one "up to one" requirement per
+    `_NONLAND_CARD_TYPES` member, each restricted to a card in the caster's
+    own graveyard (CR 109.4/CR 108.4a's owner fallback, via `ControllerRestriction.YOU`)
+    of that one type. A type with no candidate card at announcement offers no
+    legal target for its own requirement and simply goes unfilled (CR 115.6's
+    "up to one" already allows zero), which is what lets this profile stay
+    fixed rather than depending on the graveyard's live contents.
+    """
+    requirements = tuple(
+        TargetRequirement(
+            phrase=f"up to one target nonland {card_type.value} card from your graveyard",
+            count=1,
+            minimum=0,
+            card_types=frozenset({card_type}),
+            allows_cards=True,
+            allows_players=False,
+            zones=frozenset({Zone.GRAVEYARD}),
+            controller=ControllerRestriction.YOU,
+        )
+        for card_type in _NONLAND_CARD_TYPES
+    )
+    return TargetingProfile(requirements=requirements, understood=True)
+
+
 #: CR 603.12's own wording - "checked immediately after being created" - is
 #: what draws the line: everything from "when you do" onward is a *second*
 #: triggered ability's text, not the one being profiled. Cut before the
@@ -1872,6 +1920,8 @@ def profile_for_text(text: str) -> TargetingProfile:
     text = _REFLEXIVE_CLAUSE_TAIL.sub("", text)
     if _EARTHBEND.search(text):
         return _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
+    if _UP_TO_ONE_OF_EACH_CARD_TYPE_RE.search(text):
+        return _up_to_one_of_each_card_type_profile()
     return _parse(_REMINDER.sub("", text), spell_only=False)
 
 

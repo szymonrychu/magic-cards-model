@@ -13022,6 +13022,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     copy_exiled_and_cast = _parse_copy_exiled_card_and_cast(effect_text)
     if copy_exiled_and_cast is not None:
         return copy_exiled_and_cast
+    exile_one_of_each_type_copy_cast = _parse_exile_one_of_each_type_copy_cast_clause(effect_text)
+    if exile_one_of_each_type_copy_cast is not None:
+        return exile_one_of_each_type_copy_cast
     mana_adding = _parse_mana_adding_trigger(effect_text)
     if mana_adding is not None:
         return mana_adding
@@ -18535,6 +18538,113 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
             return
         if copy in game.exile:
             game.exile.remove(copy)  # CR 707.10a
+
+    return effect
+
+
+#: "Exile up to one target nonland card of each card type from your
+#: graveyard. Copy those cards. You may cast any number of spells with total
+#: mana value `<n>` or less from among the copies without paying their mana
+#: costs." - Uldaros Theorix's own ETB. The targeting itself is not read
+#: here at all: `machines/targeting.py`'s own `_up_to_one_of_each_card_type_
+#: profile` special-case builds the eight independent "up to one" per-type
+#: requirements this whole-text shape needs (CR 601.2c), the same way
+#: Earthbend's own target is special-cased there rather than in this file -
+#: this parser only has to read what happens once those targets are chosen.
+_EXILE_ONE_OF_EACH_TYPE_COPY_CAST_RE = re.compile(
+    r"^exile up to one target nonland card of each card type from your graveyard\.\s*"
+    r"copy those cards\.\s*"
+    r"you may cast any number of spells with total mana value (?P<total>\d+) or less "
+    r"from among the copies without paying their mana costs\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_exile_one_of_each_type_copy_cast_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_ONE_OF_EACH_TYPE_COPY_CAST_RE`'s shape, or `None`.
+
+    CR 707.2/CR 707.12: each exiled card is copied into a fresh, uncast
+    `CardState` in exile (`is_copy=True`), the identical "copy created in the
+    zone the object is in" `_parse_copy_exiled_card_and_cast` already builds
+    for Isochron Scepter, just once per exiled original instead of once for
+    an imprinted card.
+
+    CR 707.12a: "An effect that creates multiple copies and says a player
+    'may cast' those objects allows that player to choose individually, for
+    each of those objects, whether or not to cast it" - read here as one
+    `Game.may_cast_during_resolution` per copy, asked in the fixed order the
+    copies were made (itself the order the targets were resolved in, CR
+    601.2c), each one narrowed by whatever is left of the total budget
+    (`mana_value_below`, strict, so `remaining + 1` keeps a copy exactly
+    `remaining` costly legal - CR 702.85a's identical "less than" bound).
+    Unaffordable copies are skipped without a question - the same "an option
+    CR 608.2d can't legally choose is never offered" `can_cast_during_
+    resolution` already enforces for every other resolution-time cast.
+    Permanent copies become tokens the moment they resolve (CR 111.13,
+    CR 707.10f) entirely through the engine's own general spell-resolution
+    path (`Game.resolve_top`'s `spell.is_copy` check) - nothing here has to
+    ask for that reminder-text behaviour by name.
+    """
+    match = _EXILE_ONE_OF_EACH_TYPE_COPY_CAST_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    total_bound = int(match.group("total"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        targets = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD
+        ]
+        if not targets:
+            return
+        exiled = game.exile_cards(targets)
+        copies: list[CardState] = []
+        for original in exiled:
+            if original.zone is not Zone.EXILE:
+                continue
+            copy = CardState(
+                card=original.card,
+                zone=Zone.EXILE,
+                controller=controller.username,
+                owner=controller.username,  # CR 112.2a
+                is_copy=True,
+            )
+            game.exile.append(copy)
+            copies.append(copy)
+        if not copies:
+            return
+
+        remaining_budget = total_bound
+        for copy in copies:
+            if copy.zone is not Zone.EXILE:
+                continue
+            if (copy.card.cmc or 0) >= remaining_budget + 1:
+                continue
+            cast = game.may_cast_during_resolution(
+                copy,
+                controller.username,
+                prompt=(
+                    f"cast the copy of {copy.name} without paying its mana cost "
+                    f"(total mana value {remaining_budget} or less remaining)"
+                ),
+                source=source_name,
+                source_id=source_id_of(ability),
+                source_name=source_name,
+                rule="CR 707.12",
+                mana_value_below=remaining_budget + 1,
+            )
+            if cast is not None:
+                remaining_budget -= copy.card.cmc or 0
+
+        # CR 707.10a: any copy never cast (declined, or priced out of the
+        # remaining budget) does not linger in exile once this ability is
+        # done offering it.
+        for copy in copies:
+            if copy.zone is Zone.EXILE and copy in game.exile:
+                game.exile.remove(copy)
 
     return effect
 
