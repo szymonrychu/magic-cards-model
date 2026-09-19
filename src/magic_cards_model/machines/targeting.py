@@ -1660,6 +1660,23 @@ def targeting_profile(card: Card) -> TargetingProfile:
     if profile is None:
         if modal_profile(card):
             profile = TargetingProfile(understood=False)
+        elif text and _EARTHBEND.search(_spell_text(text)):
+            # Rockalanche prints "Earthbend X, ..." directly as a sorcery's
+            # own effect, not as a permanent's triggered ability - the same
+            # CR 701.66a keyword `profile_for_text` already special-cases for
+            # an ability, needed here too so the spell announces its target
+            # at all (CR 601.2c): the word "target" is in the keyword's own
+            # rules meaning, never printed on the card, and the ordinary
+            # scan below finds nothing to read unless told. Checked against
+            # `_spell_text(text)`, not the raw text: Badgermole Cub's own
+            # "When this creature enters, earthbend 1." is a *triggered
+            # ability's* line (CR 113.1c chooses its target when the ability
+            # goes on the stack, not when the creature is cast), and
+            # `_spell_text` already strips exactly that kind of line - the
+            # bug this line guards against is the *creature spell itself*
+            # wrongly demanding a target because the word "earthbend"
+            # appears somewhere in its printed text.
+            profile = _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
         else:
             profile = _parse(text)
             profile = _with_aura_target(card, profile)

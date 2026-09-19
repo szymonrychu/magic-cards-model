@@ -893,7 +893,22 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     if match := _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
         if card_type is None:
-            return None
+            # Not one of CR 205.2a's card types - Calamitous Cave-In's own
+            # "the number of Cave cards in your graveyard" names a land
+            # subtype (CR 205.3i) instead, the same fallback the "you
+            # control" branch just above already takes.
+            subtype = _singular_subtype_for_count_expression(match.group("qualifier"))
+            if subtype is None:
+                return None
+
+            def count_subtype_in_graveyard(game: "Game", controller: str) -> int:
+                return sum(
+                    1
+                    for state in game.player(controller).graveyard
+                    if any(word.lower() == subtype for word in state.subtypes)
+                )
+
+            return count_subtype_in_graveyard
 
         def count_in_graveyard(game: "Game", controller: str) -> int:
             return sum(1 for state in game.player(controller).graveyard if card_type in state.types)
@@ -1060,6 +1075,33 @@ def amount_expression(phrase: str) -> AmountReader | None:
         return max(total, 0)  # CR 107.1b
 
     return evaluate
+
+
+def _fixed_or_where_x_amount(raw: str, where_x: str | None) -> AmountReader | None:
+    """One `numbers.count_pattern(x=True)` capture plus an optional
+    `numbers.where_x_pattern()` tail, read into a uniform `AmountReader` -
+    shared by the CR 701 keyword actions embedded in ability/effect text
+    (earthbend, amass) and the mass-damage "N damage to each ..." shape,
+    none of which carry a spell's own announced X (CR 107.3a) to substitute
+    against: their X, when they print one, is always the printed "where X is
+    `<expr>`" of CR 107.3f, evaluated through `amount_expression` the same
+    way `_parse_put_counters_equal_to_clause` reads its own "equal to
+    `<expr>`" tail.
+
+    `None` when `raw` is "x"/"X" but the clause names no definition, or names
+    one `amount_expression` cannot read - CR 107.3a's self-announced X is a
+    spell-cast concept these keyword actions have no channel to ask a player
+    about, so an undefined X here fails closed rather than being treated as
+    zero or guessed at.
+    """
+    if raw.strip().lower() == "x":
+        if where_x is None:
+            return None
+        return amount_expression(where_x)
+    amount = parse_count(raw)
+    if amount is None:
+        return None
+    return lambda _game, _controller, _obj, _x: amount
 
 
 class UnreadableCounterAmountNotice(EngineModel):
@@ -11008,6 +11050,10 @@ _TRANSFORM_ALL_SUBTYPE_RE = re.compile(
 #: way of `count_expression("number of Elf you control")` always coming back
 #: 0: the shadowing amass version neither lowercases nor checks
 #: `subtype_vocabulary()`, so "Elf" never matched a board's lowercase "elf".
+#: Keeps the printed capitalisation rather than lowercasing, unlike its two
+#: siblings: `_TRANSFORM_ALL_SUBTYPE_RE`'s own subtype capture is
+#: case-sensitive, matched straight against `Characteristics.subtypes`'s own
+#: capitalised storage.
 def _singular_subtype_for_transform_all(plural: str) -> str | None:
     if plural.endswith("ves"):
         return f"{plural[:-3]}f"
@@ -12324,7 +12370,8 @@ def _parse_destroy_each_clause(sentence: str) -> TargetedClause | None:
 #: named types. The leading `.*` reads past the card naming itself, the same
 #: way `_DAMAGE_EACH_OPPONENT_RE` does.
 _DAMAGE_EACH_GROUP_RE = re.compile(
-    r"^.*\bdeals? (?P<n>\d+) damage to each (?P<groups>[a-z]+(?:\s+and\s+each\s+[a-z]+)*)\.?$",
+    rf"^.*\bdeals? {count_pattern('n', x=True)} damage to each "
+    rf"(?P<groups>[a-z]+(?:\s+and\s+each\s+[a-z]+)*){where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
 
@@ -12334,11 +12381,20 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
     (CR 120.1) to every permanent presently on the battlefield matching one of
     the named card types - no target at all, so CR 608.2b's legality recheck
     never applies, only the board as it stands when this runs.
+
+    Calamitous Cave-In's own "X damage to each creature and each
+    planeswalker, where X is the number of Caves you control plus the number
+    of Cave cards in your graveyard" is CR 107.3f's X, read through
+    `_fixed_or_where_x_amount` the same way earthbend's and amass's own X are
+    just above - an "X" this clause cannot evaluate leaves the whole
+    instruction unread (CR 608.2c) rather than dealing zero.
     """
     match = _DAMAGE_EACH_GROUP_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    amount = int(match.group("n"))
+    reader = _fixed_or_where_x_amount(match.group("n"), match.group("where_x"))
+    if reader is None:
+        return None
     words = re.split(r"\s+and\s+each\s+", match.group("groups"))
     types: set[Type] = set()
     for word in words:
@@ -12349,6 +12405,9 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        controller = game.controller_of(stack_object).username
+        x_value = stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0
+        amount = reader(game, controller, source, x_value)
         board = game.computed_board()
         for permanent in list(game.battlefield):
             if types & set(board.of(permanent).types):
@@ -12566,8 +12625,12 @@ def _merge_damage_each_filtered_clauses(
 #: A bare "each `<type>`[, each `<type>`]*" continuation, split off from
 #: `_DAMAGE_EACH_GROUP_RE`'s own sentence by the generic "and" clause
 #: splitter - "deals 3 damage to each creature" / "each planeswalker" is
-#: exactly this shape once cut in two.
-_BARE_EACH_GROUP_RE = re.compile(r"^each ([a-z]+)$", re.IGNORECASE)
+#: exactly this shape once cut in two. The optional `where_x_pattern` tail is
+#: for Calamitous Cave-In's own split: its ", where X is ..." definition
+#: rides on the *last* "each `<type>`" fragment ("each planeswalker, where X
+#: is the number of Caves you control plus the number of Cave cards in your
+#: graveyard"), since nothing in `_CLAUSE_SEPARATOR` breaks on a plain comma.
+_BARE_EACH_GROUP_RE = re.compile(rf"^each ([a-z]+){where_x_pattern()}$", re.IGNORECASE)
 
 
 def _merge_damage_each_group_clauses(
@@ -13123,6 +13186,67 @@ def _parse_choose_targets_then_return_to_hand_pair(text: str) -> Effect | None:
     return effect
 
 
+#: "Choose target `<type>`. Create N tokens that are copies of it[, except
+#: ...]." - Rebuild the City's own whole text: "Choose target land. Create
+#: three tokens that are copies of it, except they're 3/3 creatures in
+#: addition to their other types and they have vigilance and menace." Two
+#: sentences, one CR 608.2c instruction pair, the same shape
+#: `_CHOOSE_TARGETS_THEN_RETURN_TO_HAND_RE` just above reads for "those
+#: creatures" - except here the second sentence's pronoun is singular ("it"),
+#: because the first sentence names exactly one target and the effect that
+#: follows never moves or destroys it, only reads it as the thing to copy.
+_CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE = re.compile(
+    rf"^choose (?P<phrase>target .+?)\.\s*"
+    rf"create {count_pattern('count')} tokens? that (?:are copies|'?s a copy|is a copy) of it"
+    r"(?:, except (?P<except>.+))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_choose_target_then_create_token_copies_pair(text: str) -> Effect | None:
+    """`_CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE`'s shape - Rebuild the
+    City.
+
+    "It" is CR 607.1 anaphora back to the first sentence's own chosen target,
+    not a second "target" word of its own: the whole text carries exactly one
+    "target" (in "choose target land"), and `machines/targeting.py` builds its
+    CR 601.2c requirement off the *printed* text as a whole, not per split
+    clause - so by the time this effect runs, `game.resolve_targets` already
+    has the very land the first sentence named, with nothing left for this
+    sentence to announce. The exception tail is CR 707.9's own channel, read
+    exactly as `_parse_create_token_copies_except_clause` reads it.
+    """
+    match = _CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+    exception = _read_token_copy_except(match.group("except"))
+    if exception is None:
+        return None
+    added, power, toughness, added_type = exception
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        for target in game.resolve_targets(spell):
+            if isinstance(target, CardState):
+                token_copy_of(
+                    game,
+                    target,
+                    controller.username,
+                    count=count,
+                    added_abilities=added,
+                    power=power,
+                    toughness=toughness,
+                    added_creature_type=added_type,
+                )
+
+    return effect
+
+
 #: "<instruction>. If you have the city's blessing, <instruction> instead." -
 #: Secrets of the Golden City's "Draw two cards. If you have the city's
 #: blessing, draw three cards instead." The city's blessing (CR 702.131c) is a
@@ -13183,6 +13307,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     choose_then_return = _parse_choose_targets_then_return_to_hand_pair(whole)
     if choose_then_return is not None:
         return choose_then_return
+    choose_then_token_copies = _parse_choose_target_then_create_token_copies_pair(whole)
+    if choose_then_token_copies is not None:
+        return choose_then_token_copies
     token_copies_except = _parse_create_token_copies_except_clause(whole, for_spell=True)
     if token_copies_except is not None:
         return token_copies_except
@@ -17141,7 +17268,9 @@ def _parse_airbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
 #: "Earthbend N." - never printed with the word "target" (that is CR 701.66a's
 #: own wording, not the card's); `targeting.profile_for_text` is taught the
 #: keyword's implied target so this only has to read the number.
-_EARTHBEND_RE = re.compile(r"^earthbend (?P<n>\d+)$", re.IGNORECASE)
+_EARTHBEND_RE = re.compile(
+    rf"^earthbend {count_pattern('n', x=True)}{where_x_pattern()}$", re.IGNORECASE
+)
 
 
 def earthbend(
@@ -17270,33 +17399,51 @@ def earthbend(
 
 
 def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Earthbend N." - the whole of an ability's effect text once its
-    trigger condition ("When this creature enters, ") has been split off.
+    """ "Earthbend N." or "Earthbend X, where X is `<expr>`." - the whole of
+    a spell's or an ability's effect text once any trigger condition ("When
+    this creature enters, ") has been split off.
 
-    Reads only the target the *ability* chose (CR 601.2c/603.3d already ran
-    by the time this resolves, using the restriction `targeting.profile_for_
-    text` supplies for any text containing the word "earthbend") - there is
-    nothing left for this clause to parse out of the card's own words beyond
-    the number.
+    Reads only the target the *stack object* chose (CR 601.2c/603.3d already
+    ran by the time this resolves, using the restriction `targeting.profile_
+    for_text` supplies for any text containing the word "earthbend") - there
+    is nothing left for this clause to parse out of the card's own words
+    beyond the number. Rockalanche's own "Earthbend X, where X is the number
+    of Forests you control" - printed directly on a sorcery, unlike
+    Badgermole Cub's ability - is why this reads both `for_spell=True` and
+    `for_spell=False` alike: CR 701.66a names no difference between the two,
+    and `earthbend` itself only wants a controller, a source id and a source
+    name, all of which a resolving `CardState` spell carries exactly as an
+    `AbilityOnStack` does. X is CR 107.3f's, read through `_fixed_or_where_x_
+    amount` exactly as `_parse_put_counters_equal_to_clause`'s "equal to
+    `<expr>`" tail is; an "X" this clause cannot evaluate is refused rather
+    than treated as zero, so the whole instruction goes unread instead of
+    earthbending for nothing (CR 608.2c).
     """
-    if for_spell:
-        return None  # no card in the pool prints earthbend on a spell.
     match = _EARTHBEND_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
-    amount = int(match.group("n"))
+    reader = _fixed_or_where_x_amount(match.group("n"), match.group("where_x"))
+    if reader is None:
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        ability = stack_object
-        assert isinstance(ability, AbilityOnStack)
         targets = [
-            target for target in game.resolve_targets(ability) if isinstance(target, CardState)
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
         ]
         if not targets:
             return  # CR 608.2b: no legal target left, earthbend does nothing.
-        earthbend(
-            game, targets[0], amount, ability.controller, ability.source_id, ability.source_name
-        )
+        if isinstance(stack_object, AbilityOnStack):
+            controller = stack_object.controller
+            source_id = stack_object.source_id
+            source_name = stack_object.source_name
+            x_value = stack_object.x_value
+        else:
+            controller = game.controller_of(stack_object).username
+            source_id = stack_object.id
+            source_name = stack_object.name
+            x_value = 0
+        amount = reader(game, controller, targets[0], x_value)
+        earthbend(game, targets[0], amount, controller, source_id, source_name)
 
     return effect
 
@@ -17320,7 +17467,10 @@ def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause |
 #:
 #: The subtype is printed **plural** ("amass Orcs 1") and the token it names
 #: is singular ("Orc Army"), which `_singular_subtype_for_amass` undoes.
-_AMASS_RE = re.compile(r"^amass (?P<subtype>[A-Za-z][a-z]*) (?P<n>\d+)$", re.IGNORECASE)
+_AMASS_RE = re.compile(
+    rf"^amass (?P<subtype>[A-Za-z][a-z]*) {count_pattern('n', x=True)}{where_x_pattern()}$",
+    re.IGNORECASE,
+)
 
 
 def _singular_subtype_for_amass(word: str) -> str:
@@ -17337,6 +17487,18 @@ def _singular_subtype_for_amass(word: str) -> str:
 
     Named for its one caller, `amass` below - see `_singular_subtype_for_
     transform_all`'s own docstring for why this plain name changed at all.
+    A distinct name from `count_expression`'s own `_singular_subtype_for_
+    count_expression` on purpose: this one keeps the printed capitalisation
+    (the token subtype `create_tokens` builds wants "Orc", not "orc") where
+    that one lowercases against a vocabulary. The two used to share the bare
+    name `_singular_subtype`, which meant whichever of the module-level
+    definitions came *last* in the file silently won for every caller of
+    any of them - `count_expression`'s own "the number of Forests you
+    control" was quietly reading this function's un-lowercased "Forest" and
+    comparing it against a lowercased board subtype, never matching. Never
+    reuse a name already defined elsewhere in this module for a function
+    with different behaviour: Python has no error for it, only a wrong
+    answer with no traceback.
     """
     return word[:-1] if word.endswith(("s", "S")) and len(word) > 1 else word
 
@@ -17446,26 +17608,39 @@ def amass(
 
 
 def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Amass `<subtype>` N." - `_AMASS_RE`'s shape, as one clause among
-    however many the card prints around it.
+    """ "Amass `<subtype>` N." or "Amass `<subtype>` X, where X is `<expr>`." -
+    `_AMASS_RE`'s shape, as one clause among however many the card prints
+    around it.
 
     Amass targets nothing (CR 701.47a's "Choose an Army creature you control"
     is CR 608.2d's choice, not CR 115.1's target), so this reads nothing off
     the stack object but its controller and its name for the prompt - which
     means the same clause works identically for a spell and for an ability,
-    unlike earthbend just above.
+    unlike earthbend just above. Invade the City's "Amass Zombies X, where X
+    is the number of instant and sorcery cards in your graveyard" is CR
+    107.3f's X, read the same way earthbend's own X is: through
+    `_fixed_or_where_x_amount`, refusing the clause rather than amassing for
+    zero when the definition is not one this engine can evaluate.
     """
     match = _AMASS_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
     subtype = match.group("subtype")
-    amount = int(match.group("n"))
+    reader = _fixed_or_where_x_amount(match.group("n"), match.group("where_x"))
+    if reader is None:
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        controller = game.controller_of(stack_object).username
+        source_state = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        )  # type: ignore[union-attr]
+        x_value = stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0
+        amount = reader(game, controller, source_state, x_value)
         amass(
             game,
-            game.controller_of(stack_object).username,
+            controller,
             subtype,
             amount,
             source,
@@ -17601,7 +17776,9 @@ def _parse_learn_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
 #: card of your library." (Mastery of the Unseen, Arashin War Beast) is the
 #: shape read here; CR 701.62a's "manifest dread" below reuses this function
 #: rather than re-implementing CR 701.40a a second time.
-_MANIFEST_TOP_CARD_RE = re.compile(r"^manifest the top card of your library$", re.IGNORECASE)
+_MANIFEST_TOP_CARD_RE = re.compile(
+    rf"^manifest the top (?:card|{count_pattern('n')} cards) of your library$", re.IGNORECASE
+)
 
 
 def manifest(game: "Game", controller: str, card_state: CardState) -> CardState:
@@ -17621,15 +17798,28 @@ def manifest(game: "Game", controller: str, card_state: CardState) -> CardState:
 
 
 def _parse_manifest_top_card_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Manifest the top card of your library." - `_MANIFEST_TOP_CARD_RE`'s
+    """ "Manifest the top card of your library." or "Manifest the top N
+    cards of your library." (Ethereal Ambush) - `_MANIFEST_TOP_CARD_RE`'s
     shape, as one clause among however many the card prints around it.
+
+    N manifests, one card at a time, top card first - CR 701.40a says nothing
+    about looking before manifesting (unlike CR 701.62a's "manifest dread"
+    just below, which looks at two and manifests one), so this is simply
+    `manifest` run N times, exiling nothing and asking no question. A
+    library with fewer than N cards left manifests what it can rather than
+    raising, the same "even if some or all of those actions were impossible"
+    reading `amass`'s own docstring argues for CR 701.47b.
     """
-    if _MANIFEST_TOP_CARD_RE.fullmatch(clause.strip().rstrip(".")) is None:
+    match = _MANIFEST_TOP_CARD_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
         return None
+    n = parse_count(match.group("n")) if match.group("n") else 1
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
-        if player.library:
+        for _ in range(n):
+            if not player.library:
+                break
             top = player.library[0]
             player.zones[Zone.LIBRARY].remove(top)
             manifest(game, player.username, top)
@@ -18768,7 +18958,9 @@ ExileAntecedent = Callable[["Game", AbilityOnStack], list[CardState]]
 #: "exile the top card of your library" - the controller's own library, the
 #: antecedent Experimental Synthesizer prints in front of "Until end of turn,
 #: you may play that card."
-_EXILE_TOP_OF_YOUR_LIBRARY_RE = re.compile(r"^exile the top card of your library$", re.IGNORECASE)
+_EXILE_TOP_OF_YOUR_LIBRARY_RE = re.compile(
+    rf"^exile the top (?:card|{count_pattern('n')} cards) of your library$", re.IGNORECASE
+)
 
 
 def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
@@ -18793,17 +18985,27 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
     """
     stripped = clause.strip()
 
-    if _EXILE_TOP_OF_YOUR_LIBRARY_RE.fullmatch(stripped):
-        # Experimental Synthesizer: the controller's own top card (CR 108.3:
-        # its owner, and the player the permission goes to, are the same).
+    if match := _EXILE_TOP_OF_YOUR_LIBRARY_RE.fullmatch(stripped):
+        # Experimental Synthesizer's "top card" (Bonehoard Dracosaur's own
+        # "top two cards" is the same shape, generalized on the count): the
+        # controller's own top N (CR 108.3: its owner, and the player the
+        # permission goes to, are the same). `exiles_many` (the pair's own
+        # plural-pronoun check) is whether more than one card is named, not
+        # whether the library actually held that many - CR 107.1b/608.2b have
+        # nothing to say about a search or exile running short, it just
+        # exiles what is there.
+        n = parse_count(match.group("n")) if match.group("n") else 1
 
         def exile_own_top(game: "Game", ability: AbilityOnStack) -> list[CardState]:
             player = game.controller_of(ability)
-            if not player.library:
-                return []
-            return [game.exile_permanent(player.library[0])]
+            exiled: list[CardState] = []
+            for _ in range(n):
+                if not player.library:
+                    break
+                exiled.append(game.exile_permanent(player.library[0]))
+            return exiled
 
-        return exile_own_top, False
+        return exile_own_top, n > 1
 
     if _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE.fullmatch(stripped):
 
@@ -19032,25 +19234,100 @@ def _parse_create_token_copy_of_target_clause(
 
 #: "Create X tokens that are copies of target creature you control, except
 #: they have "<ability>"." - Aggressive Biomancy. The plural, counted twin of
-#: `_CREATE_TOKEN_COPY_OF_TARGET_RE` above, with CR 707.9a's exception:
-#: "Some copy effects cause the copy to gain an ability as part of the
-#: copying process. This ability becomes part of the copiable values for the
-#: copy, along with any other abilities that were copied."
+#: `_CREATE_TOKEN_COPY_OF_TARGET_RE` above, with CR 707.9's two exception
+#: channels: CR 707.9a's granted ability ("except they have '<ability>'",
+#: Aggressive Biomancy) and CR 707.9b's characteristic override, unquoted -
+#: "except they're `<P>`/`<T>` [`<subtype>`] creatures in addition to their
+#: other types[, and they have `<ability list>`]" (Astral Dragon, Rebuild the
+#: City). `_read_token_copy_except` reads either shape.
 #:
-#: The count is a literal by the time this runs - CR 107.3a's announced X is
-#: substituted by `effect_for` before the second parse attempt - and the
-#: "except" tail is optional, so the singular "create a token that's a copy
-#: of target creature you control" reads here too.
+#: The count reads any `numbers.COUNT` word, not only digits/a/an - Orthion,
+#: Hero of Lavabrink's own "Create five tokens that are copies of another
+#: target creature you control" is the reason - and the target phrase is any
+#: "target ..."/"another target ..." descriptor `machines/targeting.py`
+#: understands, not only "target creature you control": Astral Dragon's own
+#: "target noncreature permanent" is a different restriction on the same
+#: shape. CR 107.3a's announced X is substituted by `effect_for` before the
+#: second parse attempt, same as before.
 #:
-#: Matched against the *whole*, unsplit text: the quoted ability ends in a
-#: full stop of its own, which `split_effect_clauses` would cut the sentence
-#: at, leaving two fragments neither of which is a clause at all.
+#: Matched against the *whole*, unsplit text: an "except" tail ends in a full
+#: stop of its own (the quoted-ability shape) or contains its own "and"
+#: (the type/P-T shape), either of which `split_effect_clauses` would cut the
+#: sentence at, leaving fragments neither of which is a clause at all.
 _CREATE_TOKEN_COPIES_EXCEPT_RE = re.compile(
-    r"^create (?P<count>\d+|a|an) tokens? that (?:are copies|'?s a copy|is a copy) of "
-    r"(?P<phrase>target creature you control)"
-    r"(?:, except (?:they have|it has) [\"“](?P<ability>.+?)[\"”])?\.?$",
+    rf"^create {count_pattern('count')} tokens? that (?:are copies|'?s a copy|is a copy) of "
+    r"(?P<phrase>(?:another )?target .+?)"
+    r"(?:, except (?P<except>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+
+#: CR 707.9a's granted-ability exception, quoted - Aggressive Biomancy's own
+#: "except they have 'When this token enters, it fights up to one target
+#: creature you don't control.'"
+_TOKEN_COPY_EXCEPT_QUOTED_RE = re.compile(
+    r'^(?:they have|it has) ["“](?P<ability>.+?)["”]$', re.IGNORECASE | re.DOTALL
+)
+
+#: CR 707.9b's characteristic-override exception, unquoted - "except they're
+#: `<P>`/`<T>` [`<subtype>`] creatures in addition to their other types[, and
+#: they have `<ability list>`]". The subtype is optional: Astral Dragon names
+#: one ("3/3 Dragon creatures"), Rebuild the City does not ("3/3 creatures" -
+#: CR 205.1b's "in addition to" already keeps whatever types and subtypes the
+#: copied permanent had).
+_TOKEN_COPY_EXCEPT_TYPE_PT_RE = re.compile(
+    r"^(?:they'?re|it'?s) (?P<power>\d+)/(?P<toughness>\d+) "
+    r"(?:(?P<subtype>[A-Za-z]+) )?creatures? in addition to (?:their|its) other types"
+    r"(?:,? and (?:they|it) (?:have|has) (?P<abilities>.+))?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _normalize_keyword_list(text: str) -> str:
+    """ "vigilance and menace" -> "Vigilance, Menace": an "except they have"
+    ability list, joined by "and" and/or commas in the printed sentence, put
+    back into the comma-separated capitalised-first-word shape an ordinary
+    printed keyword line uses ("Flying, first strike") so the same keyword
+    reader that already handles a real card's own line handles an added one.
+    """
+    words = [word for word in re.split(r",\s*|\s+and\s+", text.strip()) if word]
+    return ", ".join(word[:1].upper() + word[1:] for word in words)
+
+
+def _read_token_copy_except(
+    except_text: str | None,
+) -> tuple[tuple[str, ...], int | None, int | None, str | None] | None:
+    """A token-copy clause's optional ", except `<tail>`" (CR 707.9a/707.9b),
+    read into `token_copy_of`'s own `(added_abilities, power, toughness,
+    added_creature_type)`. `None` only when a tail is present and neither
+    `_TOKEN_COPY_EXCEPT_QUOTED_RE` nor `_TOKEN_COPY_EXCEPT_TYPE_PT_RE` reads
+    it; an absent tail (`except_text` is `None`) is the plain CR 707.2 copy,
+    no exception at all.
+    """
+    if except_text is None:
+        return (), None, None, None
+    # `_CREATE_TOKEN_COPIES_EXCEPT_RE`'s own trailing `\.?` is outside this
+    # group, so a greedy `.+` swallows the clause's closing full stop along
+    # with everything else rather than leaving it there to be matched
+    # separately - stripped here once, rather than taught to both readers
+    # below, so an added keyword line never carries a stray "Flying." period.
+    stripped = " ".join(except_text.strip().split()).rstrip(".")
+    if quoted := _TOKEN_COPY_EXCEPT_QUOTED_RE.fullmatch(stripped):
+        return (quoted.group("ability").strip(),), None, None, None
+    if type_pt := _TOKEN_COPY_EXCEPT_TYPE_PT_RE.fullmatch(stripped):
+        abilities_text = type_pt.group("abilities")
+        added = (_normalize_keyword_list(abilities_text),) if abilities_text else ()
+        # "" (never `None`) when the clause names no subtype at all - Rebuild
+        # the City's own "3/3 creatures", not "3/3 `<subtype>` creatures" -
+        # so `token_copy_of` still adds CR 707.9b's Creature type; `None` is
+        # reserved for "no type change at all" (the quoted-ability shape, or
+        # no exception clause whatsoever).
+        return (
+            added,
+            int(type_pt.group("power")),
+            int(type_pt.group("toughness")),
+            type_pt.group("subtype") or "",
+        )
+    return None
 
 
 def _parse_create_token_copies_except_clause(
@@ -19062,9 +19339,10 @@ def _parse_create_token_copies_except_clause(
     work here: "the copy acquires the copiable values of the original
     object's characteristics", and an until-end-of-turn animation is not one
     of them - so copying an animated land copies the land. `token_copy_of`
-    already shares the original's printed `Card`; `added_abilities` is the
-    CR 707.9a channel that puts the excepted ability into those copiable
-    values rather than granting it on top of them.
+    already shares the original's printed `Card`; the exception this reads
+    off `_read_token_copy_except` is CR 707.9's own channel for putting an
+    "except" into those copiable values rather than granting it on top of
+    them.
     """
     match = _CREATE_TOKEN_COPIES_EXCEPT_RE.fullmatch(text.strip())
     if match is None:
@@ -19072,14 +19350,27 @@ def _parse_create_token_copies_except_clause(
     if not _targets_understood(match.group("phrase")):
         return None
     count = parse_count(match.group("count"))
-    ability_text = match.group("ability")
-    added = (ability_text.strip(),) if ability_text else ()
+    if count is None:
+        return None
+    exception = _read_token_copy_except(match.group("except"))
+    if exception is None:
+        return None
+    added, power, toughness, added_type = exception
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState):
-                token_copy_of(game, target, controller.username, count=count, added_abilities=added)
+                token_copy_of(
+                    game,
+                    target,
+                    controller.username,
+                    count=count,
+                    added_abilities=added,
+                    power=power,
+                    toughness=toughness,
+                    added_creature_type=added_type,
+                )
 
     return effect
 
@@ -21275,6 +21566,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if create_token_copy_of_target is not None:
         return create_token_copy_of_target
+    create_token_copies_except = _parse_create_token_copies_except_clause(
+        clause, for_spell=for_spell
+    )
+    if create_token_copies_except is not None:
+        return create_token_copies_except
     counter_on_additional_cost_card = _parse_counter_on_additional_cost_card_clause(clause)
     if counter_on_additional_cost_card is not None:
         return counter_on_additional_cost_card
