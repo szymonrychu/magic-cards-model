@@ -20526,7 +20526,7 @@ _FOR_EACH_CARD_TYPE_MAY_TAKE_RE = re.compile(
 #: how many cards the pick above actually exiled.
 _MAY_CAST_FROM_AMONG_EXILED_IF_N_OR_MORE_RE = re.compile(
     r"^you may cast a spell from among the exiled cards without paying its mana cost "
-    rf"if you exiled (?P<n>{_COUNT}) or more cards this way$",
+    rf"if you exiled (?P<n>{COUNT}) or more cards this way$",
     re.IGNORECASE,
 )
 #: "(then) put the rest of the exiled cards into your hand"
@@ -20581,9 +20581,9 @@ def _merge_reveal_top_one_card_per_type_clauses(
     if reveal_match is None:
         return None
     count_text = reveal_match.group("count")
-    if not count_text.isdigit() and count_text.lower() not in _NUMBER_WORDS:
+    count = parse_count(count_text)
+    if count is None:
         return None
-    count = _count(count_text)
     pick_match = _FOR_EACH_CARD_TYPE_MAY_TAKE_RE.fullmatch(clauses[index + 1].strip())
     if pick_match is None:
         return None
@@ -20611,7 +20611,7 @@ def _merge_reveal_top_one_card_per_type_clauses(
             is None
         ):
             return None
-        threshold = _count(cast_match.group("n"))
+        threshold = parse_count(cast_match.group("n")) or 0
         consumed = 5
     verb, destination = ("exile", "") if exiling else ("put", " into your hand")
 
