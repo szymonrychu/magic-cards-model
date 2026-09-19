@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "bd38d922-cfc1-43a8-82d8-5de441c71076",
+  "oracle_id": "69c8e690-c0a2-4c4e-910d-123c9c5b922f",
+  "multiverse_ids": [
+    654998
+  ],
+  "mtgo_id": 124025,
+  "arena_id": 90403,
+  "tcgplayer_id": 544665,
+  "cardmarket_id": 764002,
+  "name": "Metamorphic Blast",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/bd38d922-cfc1-43a8-82d8-5de441c71076",
+  "scryfall_uri": "https://scryfall.com/card/otj/57/metamorphic-blast?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:04:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.jpg?1783911842",
+    "normal": "https://cards.scryfall.io/normal/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.jpg?1783911842",
+    "large": "https://cards.scryfall.io/large/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.jpg?1783911842",
+    "png": "https://cards.scryfall.io/png/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.png?1783911842",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.jpg?1783911842",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.jpg?1783911842",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.webp?1783911842",
+    "grid": "https://cards.scryfall.io/grid/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.webp?1783911842",
+    "display": "https://cards.scryfall.io/display/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.webp?1783911842",
+    "art": "https://cards.scryfall.io/art/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.webp?1783911842",
+    "crop": "https://cards.scryfall.io/crop/front/b/d/bd38d922-cfc1-43a8-82d8-5de441c71076.webp?1783911842"
+  },
+  "mana_cost": "{U}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "Spree (Choose one or more additional costs.)\n+ {1} \u2014 Until end of turn, target creature becomes a white Rabbit with base power and toughness 0/1.\n+ {3} \u2014 Target player draws two cards.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Spree"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bd38d922-cfc1-43a8-82d8-5de441c71076/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A69c8e690-c0a2-4c4e-910d-123c9c5b922f&unique=prints",
+  "collector_number": "57",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Rundo's craving for revenge was replaced by a craving for vegetables.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Michal Ivan",
+  "artist_ids": [
+    "89ba58cb-84a6-480b-a86c-d8ae57df2834"
+  ],
+  "illustration_id": "4a663e20-f977-4415-8265-2245aefd6907",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "spree"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13986,
+  "penny_rank": 8709,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.instagram.com/wizards_magic/p/C5JV-3bPh2w/",
+    "previewed_at": "2024-03-30"
+  },
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.30",
+    "usd_etched": null,
+    "eur": "0.11",
+    "eur_foil": "0.18",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=654998&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMetamorphic%2BBlast",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMetamorphic%2BBlast",
+    "edhrec": "https://edhrec.com/route/?cc=Metamorphic+Blast"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544665%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764002&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124025?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
