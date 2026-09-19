@@ -638,3 +638,83 @@ def test_kwia_vigorblooms_lotus_token_reads_its_quoted_ability():
     assert lotus.card.subtypes == []
     assert lotus.card.colors == []
     assert lotus.card.oracle_text == "{T}, Sacrifice this token: Add three mana of any one color."
+
+
+# --------------------------------------------------------------------------
+# "If it isn't a token, create N tokens that are copies of it" (CR 707.2)
+# --------------------------------------------------------------------------
+
+
+def test_gruff_triplets_enters_trigger_copies_itself_when_its_not_already_a_token():
+    """Off-set: Gruff Triplets: "When this creature enters, if it isn't a
+    token, create two tokens that are copies of it." `intervening_if_holds`'s
+    new "it isn't a token" clause and `_parse_self_copy_token_clause`'s "N
+    tokens that are copies of it", proven together end to end.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Gruff Triplets"], battlefield=["Forest"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Forest"] * 6, username="alice")
+    scenario.cast_and_resolve("Gruff Triplets", *sources, username="alice")
+    scenario.resolve_top()  # the enters trigger
+
+    triplets = [state for state in scenario.game.battlefield if state.name == "Gruff Triplets"]
+    assert len(triplets) == 3
+    assert sum(1 for t in triplets if t.token) == 2
+    assert sum(1 for t in triplets if not t.token) == 1
+
+
+def test_gruff_triplets_token_copy_does_not_copy_itself_again():
+    """The copies Gruff Triplets makes are themselves tokens, so their own
+    "if it isn't a token" intervening *if* is false and neither one makes two
+    more - `intervening_if_holds`'s "it isn't a token" reads `CardState.token`
+    directly rather than checking only the original printing's own name.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Gruff Triplets"], battlefield=["Forest"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Forest"] * 6, username="alice")
+    scenario.cast_and_resolve("Gruff Triplets", *sources, username="alice")
+    scenario.resolve_top()  # the enters trigger fires only for the nontoken original
+
+    assert not scenario.game.stack
+    triplets = [state for state in scenario.game.battlefield if state.name == "Gruff Triplets"]
+    assert len(triplets) == 3
+
+
+def test_sphinx_of_false_conclusions_dies_trigger_copies_itself_when_its_not_already_a_token():
+    """On-set: Sphinx of False Conclusions: "When this creature dies, if it
+    isn't a token, create a token that's a copy of it." Differently worded
+    from Gruff Triplets (a dies trigger instead of an enters one, a count of
+    one instead of two, "a copy" instead of "copies") - proof the reader is
+    not fitted to either card's own sentence. The dies trigger's own "it"
+    needs CR 113.7a/608.2h's look-back, which the ETB version above never
+    exercises.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Sphinx of False Conclusions"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sphinx = scenario.creature("Sphinx of False Conclusions", "alice")
+
+    scenario.game.destroy(sphinx)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    copy = next(
+        state for state in scenario.game.battlefield if state.name == "Sphinx of False Conclusions"
+    )
+    assert copy.token
+    assert copy is not sphinx
+    assert (copy.power, copy.toughness) == (sphinx.power, sphinx.toughness)

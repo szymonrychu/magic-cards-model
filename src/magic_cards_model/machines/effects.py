@@ -19052,6 +19052,47 @@ def _parse_add_any_combination_mana_clause(
     return effect
 
 
+#: "Create `<n>` token(s) that('s a copy|are copies) of it." - Gruff Triplets'
+#: ETB ("if it isn't a token, create two tokens that are copies of it") and
+#: Sphinx of False Conclusions' dies trigger ("if it isn't a token, create a
+#: token that's a copy of it"). "It" is the ability's own source (CR 109.2,
+#: `intervening_if_holds`'s "it isn't a token" clause above already checked
+#: the same referent) - not a target, so no `_targets_understood` gate is
+#: needed the way `_parse_create_token_copy_of_target_clause` below needs one.
+_SELF_COPY_TOKEN_RE = re.compile(
+    rf"^create (?P<n>{COUNT}) "
+    r"(?:tokens that are copies|token that(?:'s| is) a copy) of it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SELF_COPY_TOKEN_RE`'s shape, or `None` if this is not it.
+
+    Ability-only: both pool cards printing this shape are permanents'
+    triggered abilities copying themselves, and `source_or_last_known` is
+    what makes a *dies* trigger's own "it" answerable at all (CR 113.7a,
+    CR 608.2h) once the source has already left the battlefield - a spell has
+    no comparable look-back object to fall back to.
+    """
+    if for_spell:
+        return None
+    match = _SELF_COPY_TOKEN_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        controller = game.controller_of(stack_object).username
+        source = stack_object.source_or_last_known(game)
+        if source is None:
+            return
+        token_copy_of(game, source, controller, count=count)
+
+    return effect  # type: ignore[return-value]
+
+
 #: Replicate (the sorcery half of Repudiate // Replicate): "Create a token
 #: that's a copy of target creature you control." (CR 707.2, CR 111.13's
 #: "created" token, not CR 111.13's exempt copy-of-a-spell). Deliberately not
@@ -21330,6 +21371,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     city_blessing_copy = _parse_city_blessing_token_copy_clause(clause, for_spell=for_spell)
     if city_blessing_copy is not None:
         return city_blessing_copy
+    self_copy_token = _parse_self_copy_token_clause(clause, for_spell=for_spell)
+    if self_copy_token is not None:
+        return self_copy_token
     create_token_copy_of_target = _parse_create_token_copy_of_target_clause(
         clause, for_spell=for_spell
     )
