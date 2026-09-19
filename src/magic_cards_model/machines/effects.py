@@ -4464,8 +4464,15 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
     # matcher` already reads for a bare "permanent card"; "legendary" alone
     # was already readable as one word, but "legendary permanent" is two
     # words with no comma/"or" between them to split on, so it never reached
-    # `_named_type_matcher` as either word on its own).
-    if lowered.startswith("legendary "):
+    # `_named_type_matcher` as either word on its own). Gated on there being
+    # no comma/" or " anywhere in the phrase: Nashi, Searcher in the Dark's
+    # own "legendary or enchantment" is a genuine two-word *disjunction*
+    # ("legendary" is already one whole alternative on its own, CR 205.4a) -
+    # `lowered.startswith("legendary ")` is true for that phrase too, and
+    # stacking it onto "or enchantment" as though "or" were a noun instead of
+    # letting the split below read "legendary" and "enchantment" as the two
+    # separate alternatives they are broke that card's own reading.
+    if lowered.startswith("legendary ") and not re.search(r",|\bor\b", lowered):
         rest = _quality_matcher(lowered.removeprefix("legendary "))
 
         def legendary_matches(state: CardState) -> bool:
