@@ -2403,6 +2403,15 @@ class Casting(EngineModel):
         face = self.chosen_face
         if face is not None:
             return ManaCost.parse(face.mana_cost or "")
+        if self.spell.prepare_spell_face:
+            # CR 722.3c: this object's own normal characteristics are its
+            # prepare spell's - `card_faces[1]`, the inset frame - never the
+            # front permanent's cost the two-face fallback below would
+            # otherwise read (`CardState.mana_cost` already reads the same
+            # face; this mirrors it for the announcement's own base cost).
+            back_face = self.spell.card.back_face
+            if back_face is not None:
+                return ManaCost.parse(back_face.mana_cost or "")
         printed = self.spell.card.mana_cost or ""
         if "//" in printed and self.spell.card.card_faces:
             return ManaCost.parse(self.spell.card.card_faces[0].mana_cost or "")
@@ -2605,6 +2614,16 @@ class Casting(EngineModel):
                     return self._with_bestowed_target(
                         profile_for_text(substitute_x(face.oracle_text or "", self.x_value or None))
                     )
+            if self.spell.prepare_spell_face:
+                # CR 722.3c again: `self.spell.oracle_text` already reads
+                # `CardState.up_face` - the prepare spell's own text, Seed
+                # Suture's "Put a +1/+1 counter on target creature" rather
+                # than Emergency Phytomedic's targetless "This creature
+                # enters prepared" the plain `targeting_profile(self.spell.
+                # card)` fallback below would read instead.
+                return self._with_bestowed_target(
+                    profile_for_text(substitute_x(self.spell.oracle_text, self.x_value or None))
+                )
             # `self.modal is None` matters as much as the `{X}`: a MODAL card
             # with an X in its cost (Kozilek's Command, `{X}{C}{C}`) reaches
             # here whenever its modes have not been announced yet, and reading

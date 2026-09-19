@@ -3568,6 +3568,23 @@ def damage_ability_targets(amount: int) -> AbilityEffect:
     return effect
 
 
+def become_prepared_ability_targets(game: "Game", ability: AbilityOnStack) -> None:
+    """CR 722.3a: give the prepared designation to each permanent this
+    ability still legally targets - Hexhaven Dueling Arena's own "Target
+    creature becomes prepared" and "Target creature that attacked this turn
+    becomes prepared." (the second half read entirely by `machines/
+    targeting.py`'s `must_have_attacked_this_turn`, not here).
+
+    `Game.become_prepared` is CR 722.3a's own two refusals already: a
+    creature with no prepare spell, or one already prepared, is a silent
+    no-op rather than an error - exactly right for a target restriction that
+    names no such requirement at all.
+    """
+    for target in game.resolve_targets(ability):
+        if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+            game.become_prepared(target)
+
+
 def destroy_ability_targets(game: "Game", ability: AbilityOnStack) -> None:
     """Destroy each permanent this ability still legally targets (CR 701.8a).
 
@@ -3741,7 +3758,7 @@ _SEARCH_AND_PUT_RE = re.compile(
     # plural.
     r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
     r", put (?:it|them|that card|those cards) "
-    r"(?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
+    r"(?P<dest>into your hand|into your graveyard|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?",
     re.IGNORECASE,
 )
@@ -4264,7 +4281,14 @@ def _search_and_place_for(
         return None
     matches, description = described
     tapped = bool(match.group("tapped"))
-    to_hand = match.group("dest").startswith("into your hand")
+    dest_text = match.group("dest")
+    destination = (
+        Zone.HAND
+        if dest_text.startswith("into your hand")
+        else Zone.GRAVEYARD
+        if dest_text.startswith("into your graveyard")
+        else Zone.BATTLEFIELD
+    )
     reveal = bool(match.groupdict().get("reveal"))
 
     def run(game: "Game", player: Player, source: str, source_id: str | None) -> None:
@@ -4282,7 +4306,7 @@ def _search_and_place_for(
         game.search_and_put(
             player,
             matches,
-            destination=Zone.HAND if to_hand else Zone.BATTLEFIELD,
+            destination=destination,
             count=count,
             reveal=reveal,
             tapped=tapped,
@@ -6237,6 +6261,80 @@ def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: CR 722.3b, Infinite Coursework's own Aura shape: "When this Aura enters,
+#: tap enchanted creature. It becomes unprepared." CR 400.7/603.10's
+#: anaphoric "it" points back at "enchanted creature" - the object this Aura
+#: is attached to (`CardState.attached_to`), not a second target of its
+#: own: CR 303.4b's whole reason an Aura's continuous "enchant" ability
+#: names an object at all is so its other abilities can refer back to it
+#: without targeting it a second time.
+_TAP_ENCHANTED_THEN_UNPREPARED_RE = re.compile(
+    r"^tap enchanted (?:creature|permanent)\.\s*it becomes unprepared\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_tap_enchanted_then_unprepared_clause(text: str) -> AbilityEffect | None:
+    """`_TAP_ENCHANTED_THEN_UNPREPARED_RE`'s shape - see its own docstring."""
+    whole = _strip_non_effect_preamble(text).strip()
+    if _TAP_ENCHANTED_THEN_UNPREPARED_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        aura = ability.source(game)
+        if aura is None:
+            return
+        enchanted_id = aura.attached_to
+        if enchanted_id is None:
+            return
+        enchanted = game.find_by_id(enchanted_id)
+        if enchanted is None or enchanted.zone is not Zone.BATTLEFIELD:
+            return
+        enchanted.tap()
+        game.become_unprepared(enchanted)
+
+    return effect
+
+
+#: "Whenever you cast a [restriction] spell, copy it. You may choose new
+#: targets for the copy." - Codie, Ravenous Codex's own "cast a prepared
+#: spell" trigger (`machines/triggers.py`'s `CAST_SPELL` condition reads the
+#: restriction itself; this only ever reads the *effect* half, so it is
+#: general across any card printing the identical CAST_SPELL-copy template,
+#: prepared spells included but not assumed). CR 603.10's "it" is the spell
+#: whose cast just triggered this ability - `Game._resolve_top` pops the
+#: ability off `self.stack` before calling its effect (CR 608.2n), and
+#: `Game.put_triggers_on_stack` put this ability directly above the spell
+#: that caused it (CR 603.3) with nothing yet given a chance to resolve in
+#: between, so the new top of the stack at that moment is that same spell.
+_COPY_CAST_SPELL_RE = re.compile(
+    r"^copy it\.(?:\s*you may choose new targets for the copy\.)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_cast_spell_clause(text: str) -> AbilityEffect | None:
+    """`_COPY_CAST_SPELL_RE`'s shape - see its own docstring."""
+    if _COPY_CAST_SPELL_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if not game.stack:
+            return
+        spell = game.stack[-1]
+        if not isinstance(spell, CardState):
+            return
+        copy = game.copy_spell(spell, ability.controller)
+        game.offer_new_targets_for_copy(
+            copy,
+            ability.controller,
+            source_name=ability.source_name,
+            source_id=str(ability.source_id) if ability.source_id is not None else None,
+        )
+
+    return effect
+
+
 def _merge_tap_target_then_no_untap_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -7436,6 +7534,70 @@ def _parse_untap_self_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: CR 722.3a/722.3b, the self-referential shape most prepare creatures print:
+#: "At the beginning of your upkeep, if this creature isn't prepared, **it
+#: becomes prepared**." (Woodwork Prodigy, Stingerquill Voxmancer, Paradox
+#: Shaper) and "... this creature becomes prepared." (Bloodline Recollector,
+#: no anaphora at all). "It" here is CR 603.10's ordinary read-back to the
+#: ability's own subject - the ability's source, since every printing in the
+#: pool triggers off its own creature - not a second target to announce.
+_BECOMES_PREPARED_SELF_RE = re.compile(r"^(?:it|this \w+) becomes prepared\.?$", re.IGNORECASE)
+_BECOMES_UNPREPARED_SELF_RE = re.compile(r"^(?:it|this \w+) becomes unprepared\.?$", re.IGNORECASE)
+
+
+def _parse_becomes_prepared_self_clause(text: str) -> AbilityEffect | None:
+    """`_BECOMES_PREPARED_SELF_RE`'s shape - see its own docstring."""
+    if _BECOMES_PREPARED_SELF_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.become_prepared(source)
+
+    return effect
+
+
+def _parse_becomes_unprepared_self_clause(text: str) -> AbilityEffect | None:
+    """`_BECOMES_UNPREPARED_SELF_RE`'s shape (CR 722.3b)."""
+    if _BECOMES_UNPREPARED_SELF_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.become_unprepared(source)
+
+    return effect
+
+
+#: "Each creature you control becomes prepared" (Codie, Ravenous Codex).
+#: CR 722.3a's own "can't gain this designation unless it has a prepare
+#: spell" is why this needs no filter of its own: most creatures swept up by
+#: "each creature you control" have no prepare spell at all, and `Game.
+#: become_prepared` already refuses them silently, one at a time.
+_BECOMES_PREPARED_GROUP_RE = re.compile(
+    r"^each creature you control becomes prepared\.?$", re.IGNORECASE
+)
+
+
+def _parse_becomes_prepared_group_clause(text: str) -> AbilityEffect | None:
+    """`_BECOMES_PREPARED_GROUP_RE`'s shape, read off the *computed* board
+    (CR 613.5) the same way `_parse_double_counters_on_group_clause` already
+    reads "each creature you control" - a permanent turned into a creature
+    this turn is swept up, one that stopped being one is not."""
+    if _BECOMES_PREPARED_GROUP_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        board = game.computed_board()
+        for permanent in game.permanents_controlled_by(ability.controller):
+            if Type.CREATURE in board.of(permanent).types:
+                game.become_prepared(permanent)
+
+    return effect
+
+
 #: "Whenever a permanent you control enters tapped, untap it." (Amulet of
 #: Vigor). CR 603.10's "it" points back at whatever the trigger's own
 #: condition named - the permanent `TriggerEvent.ENTERS_THE_BATTLEFIELD`
@@ -7783,6 +7945,14 @@ def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
 #: to the end of the clause, count words and all - `_targets_understood`
 #: needs the count word, if any, to see "up to two" and refuse it.
 _DESTROY_TARGET_RE = re.compile(r"destroy (?P<phrase>(?:any target|.*target.+))", re.IGNORECASE)
+#: CR 722.3a - "Target creature becomes prepared" (Hexhaven Dueling Arena).
+#: `phrase` captures the whole "target ..." noun phrase, "that attacked this
+#: turn" qualifier included, the same way `_DESTROY_TARGET_RE.phrase` does -
+#: `_targets_understood` reads the qualifier off it via `machines/targeting.
+#: py`'s own `must_have_attacked_this_turn`, not this regex.
+_BECOMES_PREPARED_TARGET_RE = re.compile(
+    r"^(?P<phrase>target .+?) becomes prepared\.?$", re.IGNORECASE
+)
 #: "Destroy target X and target Y." (Fumarole's "Destroy target creature and
 #: target land.") - two independent, simultaneously-chosen targets in one
 #: sentence, not two clauses. `_CLAUSE_SEPARATOR`'s bare-"and" split cuts this
@@ -9371,6 +9541,11 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
         return destroy_ability_targets
+
+    if match := _BECOMES_PREPARED_TARGET_RE.fullmatch(clause):
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+        return become_prepared_ability_targets  # type: ignore[return-value]
 
     if match := _EXILE_TARGET_PLAYERS_GRAVEYARD_RE.fullmatch(clause):
         # Ahead of `_EXILE_TARGET_RE`: that pattern's phrase is a superset of
@@ -13227,6 +13402,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     tap_then_no_untap = _parse_tap_target_then_no_untap_clause(effect_text)
     if tap_then_no_untap is not None:
         return tap_then_no_untap
+    tap_enchanted_then_unprepared = _parse_tap_enchanted_then_unprepared_clause(effect_text)
+    if tap_enchanted_then_unprepared is not None:
+        return tap_enchanted_then_unprepared
+    copy_cast_spell = _parse_copy_cast_spell_clause(effect_text)
+    if copy_cast_spell is not None:
+        return copy_cast_spell
     move_counter = _parse_move_counter_clause(effect_text)
     if move_counter is not None:
         return move_counter
@@ -22452,6 +22633,117 @@ def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> Target
     return effect
 
 
+#: "Target player draws N cards and loses N life." (Ancestral Craving) - one
+#: CR 608.2c instruction naming one target twice, not two independent
+#: clauses: `split_effect_clauses`'s bare-"and" cut severs "loses 3 life"
+#: from its own subject, which is why this is read whole through a merge
+#: function (`_MERGE_TARGET_PLAYER_DRAWS_...` below) the same way `_merge_
+#: tap_target_then_no_untap_clauses` rejoins Tamiyo's own two-sentence pair.
+#: General across any card sharing this exact template - real cards this
+#: shape covers include Blood Bairn's own activated ability half and Debt to
+#: the Deathless's smaller siblings - not keyed to Ancestral Craving's name.
+_TARGET_PLAYER_DRAWS_AND_LOSES_LIFE_RE = re.compile(
+    rf"^target player draws (?P<draw_count>{COUNT}) cards? and "
+    rf"loses (?P<life_count>{COUNT}) life\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_draws_and_loses_life_clause(text: str) -> TargetedClause | None:
+    """`_TARGET_PLAYER_DRAWS_AND_LOSES_LIFE_RE`'s shape - see its own docstring."""
+    match = _TARGET_PLAYER_DRAWS_AND_LOSES_LIFE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    draw_count = parse_count(match.group("draw_count"))
+    life_count = parse_count(match.group("life_count"))
+    if draw_count is None or life_count is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player):
+                game.draw_cards(target.username, draw_count)
+                target.lose_life(life_count)
+
+    return effect
+
+
+#: "Each player may discard their hand and draw seven cards." (Arc of
+#: Fortune) - CR 601.2/608.2d's per-player `MAY` question, asked of every
+#: player still in the game, in APNAP order (`Game.players`'s own order,
+#: turn order starting with the active player - the same order every other
+#: "each player" effect in this module already iterates).
+_EACH_PLAYER_MAY_DISCARD_HAND_DRAW_RE = re.compile(
+    rf"^each player may discard (?:their|his or her) hand and draw (?P<count>{COUNT}) cards?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_player_may_discard_hand_and_draw_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_PLAYER_MAY_DISCARD_HAND_DRAW_RE`'s shape - see its own
+    docstring. General across any printed count, not fixed at seven."""
+    match = _EACH_PLAYER_MAY_DISCARD_HAND_DRAW_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        for player in list(game.players):
+            if not game.is_in_game(player.username):
+                continue
+            if game.may(
+                player,
+                f"discard your hand and draw {count} cards",
+                source=source,
+                source_id=source_id_of(stack_object),
+            ):
+                hand = list(player.hand)
+                if hand:
+                    game.discard_cards(player.username, hand, source=source)
+                game.draw_cards(player.username, count)
+
+    return effect  # type: ignore[return-value]
+
+
+def _merge_each_player_may_discard_hand_and_draw_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Rejoins `split_effect_clauses`'s bare-"and" cut of `_EACH_PLAYER_MAY_
+    DISCARD_HAND_DRAW_RE`'s shape - "discard their hand" / "draw seven
+    cards." are one CR 608.2c instruction, not two, the same reason `_merge_
+    target_player_draws_and_loses_life_clauses` exists."""
+    if index + 1 >= len(clauses):
+        return None
+    pair = f"{clauses[index].strip()} and {clauses[index + 1].strip()}."
+    effect = _parse_each_player_may_discard_hand_and_draw_clause(pair, for_spell=for_spell)
+    if effect is None:
+        return None
+    return 2, effect  # type: ignore[return-value]
+
+
+def _merge_target_player_draws_and_loses_life_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Rejoins `split_effect_clauses`'s bare-"and" cut of `_TARGET_PLAYER_
+    DRAWS_AND_LOSES_LIFE_RE`'s shape - see that regex's own docstring.
+    Unused `for_spell` kept only for the same signature every merge function
+    in this chain has."""
+    if index + 1 >= len(clauses):
+        return None
+    pair = f"{clauses[index].strip()} and {clauses[index + 1].strip()}."
+    effect = _parse_target_player_draws_and_loses_life_clause(pair)
+    if effect is None:
+        return None
+    return 2, effect  # type: ignore[return-value]
+
+
 #: "Then exile that player's graveyard" - Go Blank's own second clause,
 #: anaphoric to the same target its first clause (`_TARGET_PLAYER_DISCARDS_RE`)
 #: already discarded into that graveyard. Reuses `exile_target_players_
@@ -24648,6 +24940,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if gain_life_equal_to_cost_card is not None:
         return gain_life_equal_to_cost_card
+    each_player_may_discard_hand_draw = _parse_each_player_may_discard_hand_and_draw_clause(
+        clause, for_spell=for_spell
+    )
+    if each_player_may_discard_hand_draw is not None:
+        return each_player_may_discard_hand_draw
     if not for_spell:
         # "Put a +1/+1 counter on this creature." was reachable only as a
         # *whole* ability's effect (`_ability_effect_or_notice`), never as one
@@ -24689,6 +24986,15 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         untap_self = _parse_untap_self_clause(clause)
         if untap_self is not None:
             return untap_self  # type: ignore[return-value]
+        becomes_prepared_self = _parse_becomes_prepared_self_clause(clause)
+        if becomes_prepared_self is not None:
+            return becomes_prepared_self  # type: ignore[return-value]
+        becomes_unprepared_self = _parse_becomes_unprepared_self_clause(clause)
+        if becomes_unprepared_self is not None:
+            return becomes_unprepared_self  # type: ignore[return-value]
+        becomes_prepared_group = _parse_becomes_prepared_group_clause(clause)
+        if becomes_prepared_group is not None:
+            return becomes_prepared_group  # type: ignore[return-value]
     return_from_your_graveyard = _parse_return_cards_from_your_graveyard_clause(
         clause, for_spell=for_spell
     )
@@ -25113,6 +25419,22 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_tap_target_then_no_untap_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_target_player_draws_and_loses_life_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_each_player_may_discard_hand_and_draw_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

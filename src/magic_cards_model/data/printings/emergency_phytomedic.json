@@ -1,0 +1,159 @@
+{
+  "object": "card",
+  "id": "de94d388-919d-44ff-baef-8c90a417ac6d",
+  "oracle_id": "7737ccdc-49f2-463e-8ffd-43ab98d11f45",
+  "multiverse_ids": [],
+  "tcgplayer_id": 716694,
+  "cardmarket_id": 908429,
+  "name": "Emergency Phytomedic // Seed Suture",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/de94d388-919d-44ff-baef-8c90a417ac6d",
+  "scryfall_uri": "https://scryfall.com/card/fra/130/emergency-phytomedic-seed-suture?utm_source=api",
+  "layout": "prepare",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-17T09:36:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.jpg?1789637792",
+    "normal": "https://cards.scryfall.io/normal/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.jpg?1789637792",
+    "large": "https://cards.scryfall.io/large/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.jpg?1789637792",
+    "png": "https://cards.scryfall.io/png/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.png?1789637792",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.jpg?1789637792",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.jpg?1789637792",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.webp?1789637792",
+    "grid": "https://cards.scryfall.io/grid/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.webp?1789637792",
+    "display": "https://cards.scryfall.io/display/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.webp?1789637792",
+    "art": "https://cards.scryfall.io/art/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.webp?1789637792",
+    "crop": "https://cards.scryfall.io/crop/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.webp?1789637792"
+  },
+  "mana_cost": "{G/W} // {G/W}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Dryad Cleric // Sorcery",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [
+    "Prepared"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Emergency Phytomedic",
+      "mana_cost": "{G/W}",
+      "type_line": "Creature \u2014 Dryad Cleric",
+      "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+      "power": "1",
+      "toughness": "1",
+      "artist": "Dmitry Burmak",
+      "artist_id": "9872f5c0-274a-48ce-a9ad-6f0d5654e29c",
+      "illustration_id": "4892fe64-f8ce-46f1-a3e7-67787c5942ac"
+    },
+    {
+      "object": "card_face",
+      "name": "Seed Suture",
+      "mana_cost": "{G/W}",
+      "type_line": "Sorcery",
+      "oracle_text": "Put a +1/+1 counter on target creature. You gain 1 life.",
+      "artist": "Dmitry Burmak",
+      "artist_id": "9872f5c0-274a-48ce-a9ad-6f0d5654e29c"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/de94d388-919d-44ff-baef-8c90a417ac6d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7737ccdc-49f2-463e-8ffd-43ab98d11f45&unique=prints",
+  "collector_number": "130",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Dmitry Burmak",
+  "artist_ids": [
+    "9872f5c0-274a-48ce-a9ad-6f0d5654e29c"
+  ],
+  "illustration_id": "4892fe64-f8ce-46f1-a3e7-67787c5942ac",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 32122,
+  "preview": {
+    "source": "Quest Daily",
+    "source_uri": "https://questdaily.com.au/news/magic-the-gathering-card-reveal-reality-fracture-emergency-phytomedic/",
+    "previewed_at": "2026-09-10"
+  },
+  "prices": {
+    "usd": "1.99",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmergency%2BPhytomedic%2B%252F%252F%2BSeed%2BSuture",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmergency%2BPhytomedic%2B%252F%252F%2BSeed%2BSuture",
+    "edhrec": "https://edhrec.com/route/?cc=Emergency+Phytomedic"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716694%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908429&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Emergency+Phytomedic&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

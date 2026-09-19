@@ -2035,6 +2035,14 @@ class Game(EngineModel):
     "at least one" is ever asked. Cleared when a new turn begins, the same
     reset `spells_cast_this_turn` already gets."""
 
+    attacked_this_turn: SortedSet[UUID] = Field(default_factory=set)
+    """Which creatures (by id) have attacked this turn (CR 508.1), for
+    Hexhaven Dueling Arena's own "target creature that attacked this turn" -
+    a historical fact CR 511.3/514's end of combat/cleanup does not answer,
+    unlike `machines/combat.Combat`'s live attacking status. Recorded by
+    `Game.declare_attackers`. Cleared when a new turn begins, the same reset
+    `spells_cast_this_turn` already gets."""
+
     spells_cast_last_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """What `spells_cast_this_turn` held during the turn before this one.
 
@@ -2094,6 +2102,19 @@ class Game(EngineModel):
     this one, since Germinate Recruits' own effect (`machines/effects.py`)
     already reads it - `Player.gain_life` keeps only one recorder, not two,
     per `CLAUDE.md`'s "keep one mechanism" rule."""
+
+    attacked_this_turn: SortedSet[UUID] = Field(default_factory=set)
+    """Which creatures (by id) have attacked this turn (CR 508.1), for
+    Hexhaven Dueling Arena's own "target creature that attacked this turn" -
+    a historical fact CR 511.3/514's end of combat/cleanup does not answer,
+    unlike `machines/combat.Combat`'s live attacking status. Recorded by
+    `Game.declare_attackers`. Cleared when a new turn begins, the same reset
+    `spells_cast_this_turn` already gets.
+
+    Deliberately per-object (`UUID`, not `turn_facts`' per-player `str`):
+    `turn_facts` answers "did this *player's* creatures do X this turn",
+    which is not enough to judge *which* creature a target names - FRA
+    stream S2's own field, not folded into `turn_facts` for that reason."""
 
     turn_facts: dict[str, SortedSet[str]] = Field(default_factory=dict)
     """A general per-turn, per-player fact ledger: `turn_facts[fact]` is the
@@ -2400,7 +2421,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 27
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 28
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2746,6 +2767,25 @@ class Game(EngineModel):
     version-26 dump from either line is refused either way, since every one
     of the four surviving fields is a field added to something reachable
     from `Game.model_dump()`, per the bump rule's first bullet.
+
+    Bumped 27 -> 28: the FRA S2 line of development (Prepare / preparation
+    cards, CR 722), reconciled at the same merge as this note. `CardState`
+    gained `prepared`/`prepared_copy_id`/`prepare_spell_face` and `Game`
+    gained `attacked_this_turn` (Hexhaven Dueling Arena's own "target
+    creature that attacked this turn" - deliberately not folded into
+    `turn_facts` above, since that ledger answers "did this player's
+    creatures do X" and this needs *which* creature). A version-27 dump has
+    no record of which permanents were prepared, what their exile copies
+    were, or which creatures attacked this turn - a default of "none of the
+    above" would silently un-prepare every prepared permanent (dropping its
+    castable exile copy from the decode entirely) and refuse every "attacked
+    this turn" target that should be legal. Refused instead. (The stream's
+    own independent `Player._record_life_gained`/`life_gained_tally` field,
+    for the identical fact `life_gained_amount_this_turn` above already
+    covers - inherited from an earlier merge with fra-s3 on the FRA S2
+    branch itself - was dropped at this same merge rather than carried
+    forward, the same "one mechanism, not two" call this file already made
+    once for the same pair of fields.)
     """
 
     @model_validator(mode="before")
@@ -3891,6 +3931,26 @@ class Game(EngineModel):
             self.stack.append(card_state)
         self.spells_cast_this_turn.setdefault(controller, []).append(card_state)
 
+        if card_state.prepare_spell_face:
+            # CR 601.2i: "That permanent loses the prepared designation at
+            # the time the spell becomes cast" (CR 722.3c) - this is that
+            # instant, now that CR 601.2a's move above has actually happened.
+            # `id` survives the zone move (CR 400.7's own exception for this
+            # engine - see `CardState.move_to`), so the permanent that minted
+            # this exact copy is still found by it. `become_unprepared`'s own
+            # "remove the copy from exile" half is a no-op here: this copy
+            # has already left `self.exile` for the stack.
+            source = next(
+                (
+                    permanent
+                    for permanent in self.battlefield
+                    if permanent.prepared_copy_id == card_state.id
+                ),
+                None,
+            )
+            if source is not None:
+                self.become_unprepared(source)
+
         # CR 601.2a: the card is now a spell on the stack, so the casting event
         # has happened and anything watching for it triggers (CR 603.2).
         # CR 202.3e: while this spell is on the stack, an {X} in its cost is
@@ -4221,6 +4281,14 @@ class Game(EngineModel):
                 # sets the flag directly instead of routing through
                 # `models/token.create_tokens`.
                 spell.token = True
+                # "It ceases being a copy of a spell" - CR 707.10f's own
+                # words, taken literally: `is_copy` comes off in the same
+                # breath `token` goes on, or `Game._copies_that_cease_to_
+                # exist`'s CR 704.5e sweep (a copy of a *spell* in a zone
+                # other than the stack) would destroy this permanent the very
+                # next state-based-action check, the instant after it landed
+                # on the battlefield.
+                spell.is_copy = False
             if "Aura" in spell.subtypes:
                 attachment = self._aura_attachment(spell)
                 if attachment is None:
@@ -5333,6 +5401,13 @@ class Game(EngineModel):
                 face_played=spell.face_played,
                 land_face_played=spell.land_face_played,
                 division=spell.division,
+                # CR 722.3d: "If a prepare spell is copied, the copy is also
+                # a prepare spell" - carried onto any further copy of a
+                # CR 722.3c exile copy, so it keeps reading its inset face's
+                # characteristics and still counts as "a prepared spell" for
+                # `machines/triggers.py`'s CAST_SPELL condition, though a
+                # copy made here is never itself cast (CR 707.10).
+                prepare_spell_face=spell.prepare_spell_face,
             )
             self.stack.append(copy)
             return copy
@@ -6630,6 +6705,13 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        if permanent.prepared:
+            # CR 722.3c: the exile copy persists "for as long as the prepared
+            # permanent remains on the battlefield and has the prepared
+            # designation" - both halves of that end together the moment the
+            # permanent itself leaves, so this is the one choke point every
+            # route off the battlefield already reaches.
+            self.become_unprepared(permanent)
         controller = permanent.controller
         if controller is None:
             return
@@ -6839,6 +6921,12 @@ class Game(EngineModel):
                 record = self.cast_record_of(card_state)
                 card_state.cast_with_keyword = record.keyword if record is not None else None
             card_state.tapped = event.tapped
+            if event.prepared:
+                # CR 722.3a: "This creature enters prepared" (`ENTERS_PREPARED`
+                # in `machines/replacement.py`). Applied after the move onto
+                # the battlefield, same as counters below, since `become_
+                # prepared` requires `permanent.zone is Zone.BATTLEFIELD`.
+                self.become_prepared(card_state)
             # CR 702.131 (ascend): "entered this turn" needs a turn-number stamp,
             # not just a boolean, the same way `ExileAnnotation.turn_exiled` is -
             # see `CardState.turn_entered`. Stamped here, the one choke point
@@ -8763,7 +8851,8 @@ class Game(EngineModel):
         source_id: str | None = None,
     ) -> list[CardState]:
         """Search a library for a stated quality, reveal the finds if the text
-        says so, put them into the hand or onto the battlefield, then shuffle.
+        says so, put them into the hand, onto the battlefield, or into the
+        graveyard, then shuffle.
 
         The funnel every printed "search your library for ..., [reveal it,]
         put it ..., then shuffle" goes through, in the order it is printed.
@@ -8775,14 +8864,20 @@ class Game(EngineModel):
         library's object (CR 701.20b), and the put comes before the CR 701.24a
         shuffle so a find put into its owner's hand carries the public record
         (`Player.add`, `carry_knowledge_into_hand`).
+
+        `Zone.GRAVEYARD` (Enroot's own "search your library for a land card,
+        put it into your graveyard, then shuffle") is the same `Player.add`
+        path `Zone.HAND` already takes - CR 701.23 puts no restriction on
+        which zone a search may name, and `player.add` already stamps a
+        card's owner correctly for any of the seven rules zones.
         """
         with self._id_allocator_scope():
             if isinstance(player, str):
                 player = self.player(player)
-            if destination not in (Zone.HAND, Zone.BATTLEFIELD):
+            if destination not in (Zone.HAND, Zone.BATTLEFIELD, Zone.GRAVEYARD):
                 raise ValueError(
-                    "a search puts its finds into a hand or onto the battlefield, "
-                    f"not {destination.value}"
+                    "a search puts its finds into a hand, onto the battlefield, or "
+                    f"into a graveyard, not {destination.value}"
                 )
             found = self.search_library(
                 player,
@@ -8797,10 +8892,10 @@ class Game(EngineModel):
                 for state in found:
                     self.reveal(state, source=source)
             for state in found:
-                if destination is Zone.HAND:
-                    player.add(state, Zone.HAND)
-                else:
+                if destination is Zone.BATTLEFIELD:
                     self.put_onto_battlefield(state, player.username, tapped=tapped)
+                else:
+                    player.add(state, destination)
             self.shuffle_library(player)
             return found
 
@@ -11657,6 +11752,98 @@ class Game(EngineModel):
             if other.id != permanent.id and other.attached_to == permanent.id:
                 other.unattach()
 
+    def _copies_that_cease_to_exist(self) -> list[CardState]:
+        """CR 704.5e / 707.10a, both sentences, as one state-based action:
+        "If a copy of a spell is in a zone other than the stack, it ceases
+        to exist. If a copy of a card is in any zone other than the stack or
+        the battlefield, it ceases to exist."
+
+        `CardState.is_copy` is the one flag both sentences read (CR 112.1a's
+        "a copy of a spell is also a spell", CR 112.1b's "some effects allow
+        a player to cast a copy of a card; if the player does, that copy is
+        a spell as well" - the *same* copy is "a copy of a card" before it is
+        ever cast and "a copy of a spell" once it is, which is why one flag
+        and one sweep covers both sentences rather than needing two). The
+        two sentences differ only in which zones they exempt - the stack
+        alone for a spell-copy, the stack *and* the battlefield for a
+        card-copy - which is exactly `_EXEMPT_ZONES` below.
+
+        Proven on three unrelated mechanisms, none sharing a card or a
+        mechanism with either of the others
+        (`scenarios/test_copies_cease_to_exist.py`):
+        - **First sentence**, a copy that reached the stack and resolved: a
+          CR 722.3c prepare-spell copy (Enroot, `is_copy` still true after
+          casting per CR 722.3d) and a plain `Game.copy_spell` copy of an
+          instant (Alania, Divergent Storm's copy of Lightning Bolt).
+        - **Second sentence**, a copy that was never cast at all - purely "a
+          copy of a card", never "a copy of a spell": Isochron Scepter's own
+          copy of its imprinted card, abandoned mid-resolution with the
+          "cast the copy?" question left unanswered (`DecisionPending`) so
+          none of the ability's own hand-written cleanup for a *declined*
+          cast (`_parse_copy_exiled_card_and_cast`'s `if copy in game.exile:
+          game.exile.remove(copy)`) ever runs - this state-based action is
+          the only thing that removes it.
+
+        **Never a copy of a *permanent* spell that already resolved.**
+        CR 707.10f/111.13: "As that copy resolves, it ceases being a copy of
+        a spell and becomes a token permanent" - `Game._resolve_top_impl`
+        clears `is_copy` there, in the same branch that sets `token = True`,
+        for exactly that reason (a copy of Solitude sitting on the
+        battlefield is not swept the instant it lands, and the second
+        sentence's own battlefield exemption is for exactly this case too,
+        belt and braces: nothing in this engine currently reaches the
+        battlefield still carrying `is_copy`, since everything that resolves
+        into a permanent already has it cleared here, but the exemption is
+        read from the rule's own words rather than relied on staying moot).
+        This is why that clearing is part of the same fix as this method:
+        without it, this state-based action would have destroyed every
+        copied permanent one round after it resolved.
+
+        **CR 722.3c's own exile copy is this rule's one written exception**
+        ("This is an exception to rule 704.5e"), read here rather than on
+        `CardState` itself: a copy in `Zone.EXILE` is spared for as long as
+        some battlefield permanent's `prepared_copy_id` still names it -
+        `Game.become_prepared`/`become_unprepared` are what maintain that
+        link, and once nothing names it any more (it was cast, or the
+        permanent lost the designation or left the battlefield), the
+        exemption ends and the very next check this method makes is what
+        actually removes it.
+
+        Mirrors `models/token.tokens_that_cease_to_exist`'s own shape: every
+        shared zone but the exempt ones, then every player's own zones (none
+        of which is ever the stack or the battlefield).
+        """
+        exempt_zones = (Zone.STACK, Zone.BATTLEFIELD)
+        linked_exile_copy_ids = {
+            permanent.prepared_copy_id
+            for permanent in self.battlefield
+            if permanent.prepared_copy_id is not None
+        }
+
+        def sweep(zone: Zone, cards: list[Any]) -> list[CardState]:
+            doomed = [
+                state
+                for state in cards
+                if isinstance(state, CardState)
+                and state.is_copy
+                and not (zone is Zone.EXILE and state.id in linked_exile_copy_ids)
+            ]
+            for state in doomed:
+                cards.remove(state)
+            return doomed
+
+        gone: list[CardState] = []
+        for zone, cards in self.shared_zones.items():
+            if zone in exempt_zones:
+                continue
+            gone.extend(sweep(zone, cards))
+        for player in self.players:
+            for zone, cards in player.zones.items():
+                if zone in exempt_zones:
+                    continue
+                gone.extend(sweep(zone, cards))
+        return gone
+
     def _remember_sources_that_ceased_to_exist(self, gone: list[CardState]) -> None:
         """Keep each vanished token as the last known information of every
         ability on the stack or waiting to go there that it is the source of.
@@ -11902,21 +12089,28 @@ class Game(EngineModel):
         uncomputable - falls back to the printed value rather than being spared
         on a technicality.
 
-        CR 704.5d runs first, against the board as the check found it: "If a
-        token is in a zone other than the battlefield, it ceases to exist." A
-        token that one of the actions below kills in *this* round was still on
-        the battlefield when the conditions were checked, so it ceases to exist
-        on the repeat check CR 704.3 guarantees, not in the same event.
+        CR 704.5d and CR 704.5e (both sentences) all run first, against the
+        board as the check found it: "If a token is in a zone other than the
+        battlefield, it ceases to exist", "If a copy of a spell is in a zone
+        other than the stack, it ceases to exist", and "If a copy of a card
+        is in any zone other than the stack or the battlefield, it ceases to
+        exist." A token or a copy that one of the actions below sends off in
+        *this* round was still where it started when the conditions were
+        checked, so it ceases to exist on the repeat check CR 704.3
+        guarantees, not in the same event. See `_copies_that_cease_to_exist`
+        for CR 704.5e's own scope; CR 722.3c's exile copy is that rule's one
+        written exception, and this method is not where the exception lives.
         """
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
-        self._remember_sources_that_ceased_to_exist(gone_tokens)
+        gone_copies = self._copies_that_cease_to_exist()  # CR 704.5e/707.10a
+        self._remember_sources_that_ceased_to_exist(gone_tokens + gone_copies)
 
         # Every check below reads the battlefield and moves nothing, so they
         # share one layered board (`snapshot.scan_pin`); the moves come after.
         with scan_pin(self):
             board, leaving = self._state_based_action_losers()
         self._put_state_based_action_losers(leaving, board)
-        return leaving + gone_tokens
+        return leaving + gone_tokens + gone_copies
 
     def _state_based_action_losers(self) -> tuple[ComputedBoard, list[CardState]]:
         """The permanents one round of `_state_based_actions_once` removes, and
@@ -12403,6 +12597,13 @@ class Game(EngineModel):
             ]
             for creature, attack in registered:
                 self._emit_attacks(creature, attack)
+                # A per-turn historical fact, not `machines.combat.Combat`'s
+                # live attacking status - Hexhaven Dueling Arena's "target
+                # creature that attacked this turn" still needs an answer
+                # after this combat (and this turn's whole combat phase) is
+                # over. Cleared at the same new-turn reset as the rest of
+                # `Game`'s "this turn" fields.
+                self.attacked_this_turn.add(creature.id)
             if attacks:
                 # CR 508.3d: "An ability that reads 'Whenever [a player]
                 # attacks, . . .' triggers if one or more creatures that
@@ -12602,6 +12803,106 @@ class Game(EngineModel):
                 f"this turn already used (CR 305.2a, 305.2b)"
             )
         return None
+
+    # -- CR 722: preparation cards -----------------------------------------
+
+    def become_prepared(self, permanent: CardState) -> CardState | None:
+        """CR 722.3a: give `permanent` the prepared designation.
+
+        "Some spells and abilities cause a permanent with a prepare spell to
+        become prepared or state that a permanent enters prepared. If that
+        permanent has the alternative characteristics of a prepare spell,
+        this gives the permanent the 'prepared' designation. ... A permanent
+        can't gain this designation unless it has a prepare spell.
+        Additionally, a permanent can't gain this designation if the
+        permanent already has it." Both refusals are silent no-ops, not
+        errors: Codie's "each creature you control becomes prepared" and
+        Hexhaven Dueling Arena's "target creature becomes prepared" are
+        printed to apply to any creature, most of which have no prepare
+        spell at all, and CR 722.3a's own second sentence is what makes an
+        already-prepared permanent's own upkeep trigger a no-op rather than a
+        second copy.
+
+        CR 722.3c: "its controller creates a copy of that object in exile,
+        except that copy has only the characteristics of that permanent's
+        prepare spell ... Those characteristics become the copy's normal
+        characteristics. This copy remains in exile for as long as the
+        prepared permanent remains on the battlefield and has the prepared
+        designation. This is an exception to rule 704.5e. For as long as the
+        copy remains in exile, the prepared permanent's controller may cast
+        the copy." The copy is minted here, `prepare_spell_face=True` (read
+        by `CardState.up_face`), and a standing `PlayPermission` is granted
+        for it with no time limit - `become_unprepared` below, called
+        whenever the designation or the permanent itself goes away, is what
+        actually enforces the "for as long as" half, since nothing in this
+        engine yet dispatches the general CR 704.5e state-based action (see
+        `docs/engine-coverage.md`).
+
+        Returns the exile copy, or `None` if the permanent could not gain the
+        designation.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return None
+        if permanent.card.prepare_spell is None:
+            return None
+        if permanent.prepared:
+            return None
+        controller = permanent.controller or permanent.owner
+        if controller is None:
+            return None
+        with self._id_allocator_scope():
+            copy = CardState(
+                card=permanent.card,
+                zone=Zone.EXILE,
+                controller=controller,
+                owner=permanent.owner,
+                is_copy=True,
+                prepare_spell_face=True,
+            )
+            self.exile.append(copy)
+            permanent.prepared = True
+            permanent.prepared_copy_id = copy.id
+            self.grant_play_permission(
+                copy,
+                controller,
+                source_name=permanent.name,
+                rule="CR 722.3c",
+                zone=Zone.EXILE,
+                until_end_of_turn=False,
+            )
+        return copy
+
+    def become_unprepared(self, permanent: CardState) -> None:
+        """CR 722.3b: remove the prepared designation from `permanent`.
+
+        "A rule or effect may cause a permanent to become 'unprepared.' This
+        removes the prepared designation from that permanent." A no-op if it
+        was never prepared. The linked CR 722.3c exile copy is removed along
+        with the designation - unless it has already moved to the stack
+        (`Game.put_on_stack`'s own CR 601.2i hook clears the designation
+        there without touching the copy, which by then is no longer in
+        `self.exile` for this to find): the copy's "remains in exile for as
+        long as ... the prepared designation" holds is exactly this call's
+        other half.
+
+        Called by `Game.enter_the_battlefield`'s "enters prepared" hook (which
+        never finds an existing designation to remove), by the "becomes
+        unprepared" clause parser, and by `Game._note_left_battlefield` for
+        every route a permanent takes off the battlefield.
+        """
+        if not permanent.prepared:
+            return
+        permanent.prepared = False
+        copy_id = permanent.prepared_copy_id
+        permanent.prepared_copy_id = None
+        if copy_id is None:
+            return
+        copy = next((state for state in self.exile if state.id == copy_id), None)
+        if copy is not None:
+            self.exile.remove(copy)
+        self.play_permissions = [
+            permission for permission in self.play_permissions if permission.card_id != copy_id
+        ]
 
     # -- permission to play a card from somewhere else (CR 601.3) ----------
 
@@ -16026,6 +16327,7 @@ class Game(EngineModel):
             self.spells_cast_last_turn = self.spells_cast_this_turn
             self.spells_cast_this_turn = {}
             self.permanents_left_battlefield_this_turn = {}
+            self.attacked_this_turn = set()
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
             self.ability_resolutions_this_turn = {}

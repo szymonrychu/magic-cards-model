@@ -724,6 +724,37 @@ class CardState(EngineModel):
     ignored by every reader once the card leaves the stack (CR 709.2: "only
     one card" everywhere else), since nothing reads either field there.
     """
+    prepared: bool = False
+    """CR 722.3a's "prepared" designation on a permanent with a prepare spell.
+
+    "Prepared is a designation that acts as a marker which rules and effects
+    can identify. A permanent can't gain this designation unless it has a
+    prepare spell. Additionally, a permanent can't gain this designation if
+    the permanent already has it." `Game.become_prepared`/`become_unprepared`
+    are the only writers, and both are idempotent for exactly that second
+    sentence's reason. Meaningless off the battlefield - nothing here clears
+    it on its own when a permanent leaves, since `Game.become_unprepared` is
+    what a permanent leaving the battlefield calls, alongside removing the
+    linked exile copy `prepared_copy_id` names (CR 722.3c: the copy persists
+    "for as long as the prepared permanent remains on the battlefield and has
+    the prepared designation").
+    """
+    prepared_copy_id: UUID | None = None
+    """The id of this permanent's own CR 722.3c exile copy, while `prepared`
+    is set - `None` otherwise. Sits on the *permanent*, not on the copy: the
+    copy is a `CardState` of its own in `Game.exile`, found by this id, whose
+    `prepare_spell_face` (below) is what gives it the prepare spell's own
+    characteristics rather than the permanent's."""
+    prepare_spell_face: bool = False
+    """True only on a CR 722.3c exile copy: its `up_face` (and therefore
+    `name`/`types`/`oracle_text`/`mana_cost`/`power`/`toughness`) reads
+    `Card.back_face` - the inset "prepare spell" - rather than the front
+    face's own characteristics, matching 722.3c's "Those characteristics
+    become the copy's normal characteristics." Also the flag `TriggerEvent`
+    reading checks for CR 722.3d's "cast a prepared spell": "If a prepare
+    spell is copied, the copy is also a prepare spell" is why `Game.copy_spell`
+    carries this flag onto any further copy of one of these, rather than
+    only setting it where the exile copy is first minted."""
     meld_result: Card | None = None
     """The combined back face's printed characteristics (CR 712.8g), while
     this `CardState` is one half of a melded permanent - the surviving,
@@ -1312,6 +1343,16 @@ class CardState(EngineModel):
             # `CardFace`'s own fields (see `meld_result`'s docstring), so it
             # is handed back exactly as a real face would be.
             return self.meld_result
+        if self.prepare_spell_face:
+            # CR 722.3c: "Those characteristics become the copy's normal
+            # characteristics" - this copy's own `Card.back_face` (the inset
+            # "prepare spell") is read the same as any other face everywhere
+            # off it, not only on the battlefield or stack, since the copy has
+            # no other object to fall back to the way a transformed permanent
+            # falls back to its front face off the battlefield.
+            back_face = self.card.back_face
+            if back_face is not None:
+                return back_face
         land_face = self._land_face
         if land_face is not None:
             return land_face
@@ -1573,6 +1614,17 @@ class CardState(EngineModel):
             from .mana import ManaCost
 
             return float(ManaCost.parse(land_face.mana_cost or "").converted)
+        if self.prepare_spell_face:
+            # Unlike a transformed back face (CR 202.3b's stated exception),
+            # CR 722.3c gives this copy the prepare spell's characteristics as
+            # its *normal* characteristics outright, with no "calculated as
+            # though" carve-back to the front face's cost - so this reads the
+            # inset face's own mana cost, the same as `mana_cost` above does.
+            back_face = self.card.back_face
+            if back_face is not None:
+                from .mana import ManaCost
+
+                return float(ManaCost.parse(back_face.mana_cost or "").converted)
         return self.card.cmc
 
     @property

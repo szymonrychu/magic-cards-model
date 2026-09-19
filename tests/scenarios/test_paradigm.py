@@ -210,10 +210,21 @@ def test_restoration_seminar_a_differently_bodied_paradigm_card_recasts_and_repl
 
     assert second_bear.zone is Zone.BATTLEFIELD
     assert second_bear not in alice.graveyard
+    # CR 704.5e's first sentence, now a dispatched state-based action
+    # (`Game._copies_that_cease_to_exist`): the recast copy is a copy of a
+    # spell, and once it finishes resolving it is in a zone other than the
+    # stack, so it ceases to exist rather than lingering in exile - only the
+    # *original* exiled Restoration Seminar (Paradigm's own "exile this
+    # spell", not a copy) is still there.
     recast_copies = [
         state
         for state in scenario.game.exile
         if state.name == "Restoration Seminar" and state.is_copy
     ]
-    assert len(recast_copies) == 1
-    assert recast_copies[0].zone is Zone.EXILE
+    assert recast_copies == []
+    originals = [
+        state
+        for state in scenario.game.exile
+        if state.name == "Restoration Seminar" and not state.is_copy
+    ]
+    assert len(originals) == 1

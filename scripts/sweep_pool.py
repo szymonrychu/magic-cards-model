@@ -1339,6 +1339,18 @@ def _spell_faces(printing: Card) -> list[SpellFace]:
     - **Layout.MODAL_DFC** (CR 712.12): a land face is played as a CR 305.1
       special action, never cast, so it is dropped here; the remaining
       face(s) are returned by their own name/text/cost the same way.
+    - **Layout.PREPARE** (CR 722): the front face is an ordinary permanent
+      and is cast normally, but the inset "prepare spell" (CR 722.2a,
+      `card_faces[1]`) is never directly cast either - CR 722.3c's exile
+      copy is what actually gets cast. Both are still returned here as
+      probeable faces, the same as SPLIT's two castable halves: a classifier
+      artifact this stream's survey flagged - reading the printing's blank
+      top-level fields left the inset spell's own clause misfiled as a
+      *static ability of the creature front*, so it was never dispatched as
+      a spell at all and every prepare card's inset spell text read
+      `static_unaudited` regardless of whether a real parser existed for it.
+      The front is still an ordinary permanent (`is_permanent=True`); the
+      inset spell reads its own type line, same as every other face here.
     - **everything else** (a single-faced card, or a `transform` card whose
       only directly castable face is the front, CR 712.8a): one face, using
       `front_oracle_text` (already the right fallback for a blank top-level
@@ -1367,6 +1379,16 @@ def _spell_faces(printing: Card) -> list[SpellFace]:
             )
             for face in faces
             if Type.LAND not in types_of(face.type_line or "")
+        ]
+    if printing.layout is Layout.PREPARE and faces:
+        return [
+            SpellFace(
+                face.name,
+                face.oracle_text or "",
+                face.mana_cost,
+                bool(set(types_of(face.type_line or "")) & _PERMANENT_TYPES),
+            )
+            for face in faces
         ]
     front = printing.front_face
     name = front.name if front is not None else printing.name
@@ -1443,6 +1465,21 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
     """
     clauses: list[ClauseOutcome] = []
     is_permanent = bool(set(printing.types) & _PERMANENT_TYPES)
+    # CR 722.4: "In every zone, a preparation card has only its normal
+    # characteristics" - the inset prepare spell (CR 722.2a) is never one of
+    # the front permanent's own abilities. `parse_abilities(printing)` below
+    # still returns a `TriggeredAbility`/`StaticAbility` for the inset face's
+    # printed text (an instant or sorcery's own resolution text parses as a
+    # bare `AbilityKind.STATIC` line when nothing marks it triggered or
+    # activated, `machines/abilities.py`'s own default) - the other classifier
+    # artifact the FRA S2 survey flagged: the inset spell's already-`handled`
+    # `[spell]` clause above was being scored again here as an unaudited
+    # static ability of the creature, so the card's worst-clause verdict
+    # (`classify_card`) read `static_unaudited` even when every real clause
+    # was `handled`.
+    prepare_spell_face_name = (
+        printing.prepare_spell.name if printing.prepare_spell is not None else None
+    )
 
     if not printing.is_land:
         for face in _spell_faces(printing):
@@ -1524,6 +1561,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 category = QUOTED_EFFECT
             clauses.append(ClauseOutcome(category, ability.text, "activated"))
         elif isinstance(ability, TriggeredAbility) and is_permanent:
+            if prepare_spell_face_name is not None and ability.face == prepare_spell_face_name:
+                continue  # CR 722.4 - see this function's own docstring above.
             # Gated on `is_permanent` the same way the static branch below
             # already is, and for the identical reason: `trigger_effect_for`
             # is called from exactly one place in the real engine,
@@ -1578,6 +1617,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 category = UNMATCHABLE_CONDITION
             clauses.append(ClauseOutcome(category, ability.text, "triggered"))
         elif ability.kind is AbilityKind.STATIC and is_permanent:
+            if prepare_spell_face_name is not None and ability.face == prepare_spell_face_name:
+                continue  # CR 722.4 - see this function's own docstring above.
             clauses.append(
                 ClauseOutcome(
                     _static_ability_category(printing, ability.text), ability.text, "static"

@@ -24,6 +24,7 @@ WOTC templates these effects tightly, which is what makes them readable:
 | `... rather than ...` | CR 614.1a shape | `RATHER_THAN` |
 | `Skip ...` | CR 614.1b, 614.10 | `SKIP` |
 | `[This] enters tapped.` | CR 614.1d | `ENTERS_TAPPED` |
+| `[This] enters prepared.` | CR 722.3a | `ENTERS_PREPARED` |
 | `[This] enters with N counters on it.` | CR 614.1c | `ENTERS_WITH` |
 | `... enter as a copy of ...` | CR 614.1c, 616.1c | `ENTERS_AS_COPY` |
 | `As [this] enters, ...` | CR 614.1c | `AS_ENTERS` |
@@ -179,6 +180,12 @@ class ReplacementKind(StrEnum):
     AS_ENTERS = "as_enters"
     #: CR 614.1e - "As [this permanent] is turned face up, ...".
     AS_TURNED_FACE_UP = "as_turned_face_up"
+    #: CR 614.1d's bare form, Reality Fracture's own addition: "[This
+    #: creature] enters prepared" (CR 722.3a - "Some spells and abilities
+    #: cause a permanent with a prepare spell to become prepared or state
+    #: that a permanent enters prepared."). Verified this session: CR 722.3a
+    #: is the rule that names this exact phrasing.
+    ENTERS_PREPARED = "enters_prepared"
     #: CR 615.1a - "Prevent the next N damage that would be dealt to X this turn."
     PREVENT_NEXT = "prevent_next"
     #: CR 615.1a - "Prevent all [combat] damage that would be dealt ...".
@@ -211,6 +218,7 @@ ENTERS_KINDS = frozenset(
         ReplacementKind.ENTERS_WITH,
         ReplacementKind.ENTERS_AS_COPY,
         ReplacementKind.AS_ENTERS,
+        ReplacementKind.ENTERS_PREPARED,
     }
 )
 
@@ -487,6 +495,15 @@ _PLAYER_SKIPS = re.compile(r"^(?P<who>[^,]{1,40}?) skips (?P<skipped>.+?)\.?$", 
 _ENTERS_TAPPED = re.compile(
     rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} tapped"
     r"(?:\s+(?P<unless>unless .+?))?\.?$",
+    re.IGNORECASE,
+)
+# CR 722.3a's bare form: "This creature enters prepared." Every printing in
+# the pool states it unconditionally - no "unless"/"If" polarity to read -
+# but the leading `If (...)` group is kept anyway for the same reason
+# `_ENTERS_TAPPED` keeps one: a future conditional printing should be read by
+# this shape rather than falling to `UNPARSED`.
+_ENTERS_PREPARED = re.compile(
+    rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} prepared\.?$",
     re.IGNORECASE,
 )
 # CR 614.1d - "[Objects] enter [the battlefield] untapped." Spelunking's own
@@ -816,6 +833,7 @@ def _parse_sentence(sentence: str, names: tuple[str, ...]) -> list[ReplacementEf
         _try_as_turned_face_up,
         _try_enters_as_copy,
         _try_enters_tapped,
+        _try_enters_prepared,
         _try_enters_untapped,
         _try_enters_with,
         _try_skip,
@@ -1060,6 +1078,23 @@ def _try_enters_tapped(sentence: str, names: tuple[str, ...]) -> list[Replacemen
             sentence,
             subject=subject,
             tapped=True,
+            condition=(condition or "").strip() or None,
+            self_replacement=_refers_to_self(subject, names),
+        )
+    ]
+
+
+def _try_enters_prepared(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    match = _ENTERS_PREPARED.match(sentence)
+    if not match:
+        return []
+    subject = match.group("subject").strip()
+    condition = match.group("condition")
+    return [
+        _make(
+            ReplacementKind.ENTERS_PREPARED,
+            sentence,
+            subject=subject,
             condition=(condition or "").strip() or None,
             self_replacement=_refers_to_self(subject, names),
         )
@@ -1402,6 +1437,8 @@ class ReplaceableEvent:
     counters: dict[str, int] = field(default_factory=dict)
     #: Whether the permanent arrives tapped (CR 614.1c).
     tapped: bool = False
+    #: Whether the permanent arrives with the prepared designation (CR 722.3a).
+    prepared: bool = False
 
     #: The object dealing the damage (CR 120.1, CR 120.7). `None` when the
     #: caller did not say - CR 609.7b, CR 615.8 and CR 702.16e all ask about the
@@ -4468,7 +4505,10 @@ def _self_enters_modifiers(
             and effect.counter_kind is not None
             and amount is not None
         )
-        if effect.kind is ReplacementKind.ENTERS_TAPPED or readable_counters:
+        if (
+            effect.kind in (ReplacementKind.ENTERS_TAPPED, ReplacementKind.ENTERS_PREPARED)
+            or readable_counters
+        ):
             performable.append(
                 (f"self:{index}", _apply_self_enters(effect, amount), effect.text, False)
             )
@@ -4706,6 +4746,8 @@ def _apply_self_enters(effect: ReplacementEffect, amount: int | None) -> Apply:
     def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
         if effect.kind is ReplacementKind.ENTERS_TAPPED:
             event.tapped = True
+        elif effect.kind is ReplacementKind.ENTERS_PREPARED:
+            event.prepared = True
         else:
             assert effect.counter_kind is not None and amount is not None
             event.counters[effect.counter_kind] = (
