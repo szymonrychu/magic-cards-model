@@ -15,11 +15,16 @@ The cards (texts from their Scryfall printings, added with
   mill, read by a different parser from Army of the Damned's token clause.
 - **Shimatsu the Bloodcloaked** - "Shimatsu enters with that many +1/+1
   counters on it." and **Devouring Hellion** - "it enters with twice that many
-  +1/+1 counters on it." The replacement reader split "that many" into an
-  unknown count word "that" (and "twice" on the Hellion) and treated the word
+  +1/+1 counters on it." The replacement reader used to split "that many" into
+  an unknown count word "that" (and "twice" on the Hellion) and treat the word
   as the spell's X (CR 107.3m), so the count was taken from an announcement
-  neither card has. Neither count is readable yet, so the sentence is now
-  reported `UNPARSED` instead of being given the wrong amount.
+  neither card has - reported `UNPARSED` rather than given the wrong amount.
+  It now reads "[`<multiplier>`] that many" on its own
+  (`ReplacementEffect.that_many_multiplier`), and
+  `scenarios/test_as_enters_sacrifice_that_many.py` is where the count itself
+  - carried from the paired "As [this] enters, [you may] sacrifice any number
+  of ..." clause (CR 614.12a) - is proven end to end. This file's own two
+  cases below stay only to prove the *parse*, not the mechanic.
 
 Every CR number here was looked up with `mise run rules:find` in the session
 that wrote this file:
@@ -91,27 +96,38 @@ def test_archive_trap_mills_thirteen():
     assert len(scenario.player("bob").library) == 1
 
 
-def _enters_with_lines(name: str) -> list[str]:
-    return [
-        effect.text
-        for effect in parse_replacement_effects(card(name))
+def test_shimatsus_that_many_counters_is_read_not_x():
+    """ "that many" is the number of permanents sacrificed as Shimatsu enters
+    (CR 614.12a's own choice), not an X (CR 107.3m refers only to an X) -
+    `ReplacementEffect.that_many_multiplier` reads it as 1 (a bare "that
+    many"), and `variable_amount` stays True since the actual count is not
+    knowable from this sentence alone. Nothing here is `UNPARSED` any more,
+    and `amount`/`amount_expression` stay unset - the count is carried from
+    the sibling `AS_ENTERS` sacrifice clause, proven end to end in
+    `scenarios/test_as_enters_sacrifice_that_many.py`."""
+    unparsed = [effect.text for effect in unparsed_effects(card(SHIMATSU))]
+    (enters_with,) = [
+        effect
+        for effect in parse_replacement_effects(card(SHIMATSU))
         if effect.kind is ReplacementKind.ENTERS_WITH
     ]
 
-
-def test_shimatsus_that_many_counters_is_unparsed_not_read_as_x():
-    """ "that many" is the number of permanents sacrificed as Shimatsu enters,
-    not an X (CR 107.3m refers only to an X). Until that count is carried from
-    the sacrifice, the sentence is reported unparsed rather than recorded as an
-    enters-with effect of an unknown kind of counter taking the cast's X."""
-    unparsed = [effect.text for effect in unparsed_effects(card(SHIMATSU))]
-
-    assert any("that many +1/+1 counters" in text for text in unparsed)
-    assert not any("that many" in text for text in _enters_with_lines(SHIMATSU))
+    assert not any("that many +1/+1 counters" in text for text in unparsed)
+    assert enters_with.that_many_multiplier == 1
+    assert enters_with.variable_amount is True
+    assert enters_with.amount is None
+    assert enters_with.amount_expression is None
 
 
-def test_devouring_hellions_twice_that_many_counters_is_unparsed_not_read_as_x():
+def test_devouring_hellions_twice_that_many_counters_is_read_with_a_multiplier_of_two():
     unparsed = [effect.text for effect in unparsed_effects(card(HELLION))]
+    (enters_with,) = [
+        effect
+        for effect in parse_replacement_effects(card(HELLION))
+        if effect.kind is ReplacementKind.ENTERS_WITH
+    ]
 
-    assert any("twice that many +1/+1 counters" in text for text in unparsed)
-    assert not any("that many" in text for text in _enters_with_lines(HELLION))
+    assert not any("twice that many +1/+1 counters" in text for text in unparsed)
+    assert enters_with.that_many_multiplier == 2
+    assert enters_with.variable_amount is True
+    assert enters_with.amount is None
