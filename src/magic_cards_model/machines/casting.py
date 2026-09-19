@@ -57,6 +57,7 @@ from .cost import (
     alternative_cost_offers,
     announce_reveal,
     apply_modifications,
+    cost_component_for_phrase,
     place_counters_cost,
     static_free_cast_grant,
     tap_cost,
@@ -1829,9 +1830,22 @@ _GREATEST_AMONG_CREATURES = re.compile(
 #: announcement (CR 601.2b), so it is skipped rather than charged or refused.
 _OPTIONAL_ADDITIONAL_COST = re.compile(r"^you may\b", re.IGNORECASE)
 
+#: CR 601.2b's general "[cost] or pay [mana]" additional-cost shape - Silence
+#: the Echo's "sacrifice a creature or planeswalker or pay {3}", Bayou
+#: Groff's "sacrifice a creature or pay {3}", Countersculpt's "behold a Jace
+#: or pay {1}". Blight's own copy of the same tail (`_BLIGHT_PHRASE`) is
+#: tried first and this is only reached for a phrase that is not blight, so
+#: the two never disagree about a blight sentence.
+_OR_PAY_TAIL = re.compile(r"^(?P<primary>.+?) or pay (?P<mana>(?:\{[^{}]+\})+)$", re.IGNORECASE)
+
 
 def mandatory_additional_costs(
-    spell: CardState, caster: str, x_value: int | None, *, blighted: bool = False
+    spell: CardState,
+    caster: str,
+    x_value: int | None,
+    *,
+    blighted: bool = False,
+    primary_alternatives: frozenset[int] = frozenset(),
 ) -> list[TotalCost]:
     """The spell's own printed "As an additional cost to cast this spell, ..."
     sentences as fresh, unfilled `TotalCost`s (CR 118.8a, 601.2f), X
@@ -1842,9 +1856,17 @@ def mandatory_additional_costs(
     exist) use, so the two cannot disagree about what the cost is. A
     mandatory sentence that cannot be read raises, because CR 118.3 does not
     let the spell be cast without paying it.
+
+    `primary_alternatives` is which of CR 601.2b's "[cost] or pay [mana]"
+    sentences (by position among `additional_cost_phrases`) are being paid
+    with their non-mana half; every other one defaults to the mana half, the
+    same default blight's own copy of this shape already uses when
+    `blighted` is left false - a caller judging affordability with no
+    objects chosen yet (`legal_actions`) always gets a single, cheap-to-
+    compute answer rather than a set of alternatives to choose between.
     """
     built: list[TotalCost] = []
-    for printed in additional_cost_phrases(spell.card):
+    for index, printed in enumerate(additional_cost_phrases(spell.card)):
         phrase = substitute_x(printed, x_value)
         if _OPTIONAL_ADDITIONAL_COST.match(phrase):
             continue
@@ -1855,6 +1877,14 @@ def mandatory_additional_costs(
         if blight is not None and blight.group("instead"):
             # CR 601.2b: "blight 2 or pay {1}" not blighted is the mana.
             phrase = blight.group("instead")
+        elif blight is None:
+            or_pay = _OR_PAY_TAIL.match(phrase)
+            if or_pay is not None:
+                phrase = (
+                    or_pay.group("primary")
+                    if index in primary_alternatives
+                    else or_pay.group("mana")
+                )
         cost = total_cost_for_phrase(phrase, caster)
         if cost is None:
             raise ValueError(
@@ -4075,6 +4105,32 @@ class Casting(EngineModel):
         for component in variable:
             component.amount = self.x_value
 
+    def _additional_cost_primary_alternatives(
+        self, pools: dict[ComponentKind, list[CardState]]
+    ) -> frozenset[int]:
+        """Which of CR 601.2b's "[cost] or pay [mana]" additional-cost
+        sentences (`_OR_PAY_TAIL`) the caster is paying with their non-mana
+        half, inferred from whether objects were nominated for it - the same
+        way `sacrificing=[...]` already says "pay Fling's plain sacrifice
+        cost" without a separate flag. A phrase with no matching objects in
+        its pool defaults to the mana half, exactly like an unblighted
+        "blight N or pay {M}" already defaults to the mana (`blighted`).
+
+        Blight's own "or pay" sentences are excluded: they are resolved by
+        `blight_paid`/`pay_blight`, never by this.
+        """
+        chosen: set[int] = set()
+        for index, printed in enumerate(additional_cost_phrases(self.spell.card)):
+            if _BLIGHT_PHRASE.match(printed) is not None:
+                continue
+            or_pay = _OR_PAY_TAIL.match(substitute_x(printed, self.x_value))
+            if or_pay is None:
+                continue
+            component = cost_component_for_phrase(or_pay.group("primary"), self.caster)
+            if component is not None and pools.get(component.kind):
+                chosen.add(index)
+        return frozenset(chosen)
+
     def _printed_additional_costs(self) -> list[TotalCost]:
         """The card's own additional costs as payable `TotalCost`s, built fresh
         and charged to nothing - see `_charge_printed_additional_costs`, which
@@ -4092,7 +4148,11 @@ class Casting(EngineModel):
             ComponentKind.TAP: list(self.tapping),
         }
         for cost in mandatory_additional_costs(
-            self.spell, self.caster, self.x_value, blighted=self.blight_paid
+            self.spell,
+            self.caster,
+            self.x_value,
+            blighted=self.blight_paid,
+            primary_alternatives=self._additional_cost_primary_alternatives(pools),
         ):
             for component in cost.components:
                 if component.kind is ComponentKind.REVEAL:
