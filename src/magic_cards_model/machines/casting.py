@@ -1059,6 +1059,32 @@ class PlayPermission(EngineModel):
     source_name: str = ""
     """The card whose ability handed this out, for the error message."""
     rule: str = "CR 601.3"
+    any_type_mana: bool = False
+    """"... and mana of any type can be spent to cast it/that spell/them" -
+    Null Summoner's, Hostage Taker's, Gonti, Lord of Luxury's, and roughly
+    three dozen other real printings' own trailing rider on this exact grant
+    shape. Read by `Casting._determine_cost`, which - only when this is set -
+    prices the payment against the total's own *mana value* (CR 202.3, every
+    colored/generic symbol collapsed to one count) rather than the printed
+    colors, so any color in the pool can pay any symbol; the spell's own
+    printed mana cost is untouched everywhere else (CR 202.3b: what a card
+    "would cost" is still what is printed)."""
+    exile_instead_of_graveyard: bool = False
+    """"If that spell would be put into a graveyard, exile it instead." -
+    Dire Fleet Daredevil's, Nita, Forum Conciliator's own rider on this exact
+    grant shape (CR 604.5). Read by `machines/replacement._stack_
+    replacements` off `CastRecord.exile_instead_of_graveyard`, which
+    `Casting.cast()` copies from here the same way it already copies
+    `flashback` onto `CastRecord.keyword`."""
+    condition: str | None = None
+    """A live board condition this permission is only usable while true -
+    Null Summoner's own "Threshold — As long as there are seven or more
+    cards in your graveyard, you may cast the exiled card". `None` for an
+    unconditional grant (every other printing this project already reads).
+    Checked by `why_not` through `Game.condition_holds`, the same reader
+    "Activate only if <condition>" (CR 602.5b) already shares - an
+    unrecognised condition refuses the cast rather than allowing it
+    unchecked, the same fail-closed default that reader already gives."""
     until_end_of_turn: bool = True
     """CR 514.2: "all 'until end of turn' and 'this turn' effects end" in the
     cleanup step. `Game.cleanup_step` drops these there."""
@@ -1199,6 +1225,22 @@ class PlayPermission(EngineModel):
                 f"{self.source_name}'s permission to {self.action.value} {card.name} lasted "
                 f"until end of turn and that turn is over (CR 514.2)"
             )
+        if self.condition is not None:
+            held = (
+                None if game is None else game.condition_holds(player, self.condition, source=card)
+            )
+            if held is None:
+                return (
+                    f'{self.source_name}\'s condition "as long as {self.condition}" is not '
+                    f"read by this engine, so the permission is refused rather than allowed "
+                    f"unchecked ({self.rule})"
+                )
+            if not held:
+                return (
+                    f"{self.source_name}'s permission to {self.action.value} {card.name} "
+                    f"only applies as long as {self.condition}, which is not true right now "
+                    f"({self.rule})"
+                )
         if action is PlayAction.PLAY and self.action is PlayAction.CAST:
             # CR 701.5b's "cast it as a spell" is narrower than CR 701.18b's
             # "play that card as a land or cast that card as a spell": a
@@ -4334,8 +4376,26 @@ class Casting(EngineModel):
         self._refuse_unless_mana_cost_payable()
         self._lock_in_own_reduction()
 
+        payable_total = self.total_cost.assign_payer(self.caster)
+        if (
+            self.permission_used is not None
+            and self.permission_used.any_type_mana
+            and payable_total.mana.symbols
+        ):
+            # "... and mana of any type can be spent to cast it/that spell."
+            # CR 202.3b: the spell's own printed/reduced mana cost is
+            # unchanged everywhere else (`self.total_cost` itself, `Action.
+            # cost`, mana value) - this only changes what the *payment* is
+            # judged against, collapsing every colored and generic symbol
+            # into one count (`ManaCost.converted`, CR 202.3) so any color in
+            # the pool satisfies it.
+            payable_total = TotalCost(
+                mana=ManaCost.parse(f"{{{payable_total.mana.converted}}}"),
+                components=payable_total.components,
+            ).assign_payer(self.caster)
+
         self.payment = CostPayment.for_total(
-            self.total_cost.assign_payer(self.caster),
+            payable_total,
             game=self.game,
             payer=self.caster,
             # CR 106.6: the payment has to know what it is paying for, or mana
@@ -4712,6 +4772,9 @@ class Casting(EngineModel):
                 if self.keyword_used is not None
                 else self._granted_flashback_keyword(),
                 keyword_cost_paid=self.keyword_cost_paid,
+                exile_instead_of_graveyard=bool(
+                    self.permission_used and self.permission_used.exile_instead_of_graveyard
+                ),
                 origin_zone=self.origin_zone,
                 face=self.face,
                 modes=list(self.chosen_mode_numbers),

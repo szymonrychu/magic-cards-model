@@ -18660,11 +18660,24 @@ def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect
 #: that card" (Ragavan) or "You may cast that card this turn" (Emry, Lurker of
 #: the Loch) - and CR 514.2 ends both in the same cleanup step: "all 'until end
 #: of turn' and 'this turn' effects end". Exactly one of the two is required.
+#: A third shape carries no turn-bounded duration at all - "You may play that
+#: card for as long as it remains exiled" (Court of Locthwain, Thought-String
+#: Analyst) - and needs none: `PlayPermission.names` already refuses once the
+#: card's own `zone_change_stamp` changes (CR 400.7), which is exactly what
+#: leaving exile does, so `until_end_of_turn=False` is what this shape grants.
+#: A trailing "... and mana of any type can be spent to cast it" rider -
+#: Hostage Taker's, Gonti, Lord of Luxury's, and roughly three dozen other
+#: real printings' own shared sentence tail on this exact permission shape
+#: (`PlayPermission.any_type_mana`) - is read separately, by
+#: `_ANY_TYPE_MANA_STANDALONE_RE` below: `split_effect_clauses` cuts it off
+#: this sentence as its own clause (the same mid-sentence ", and" boundary
+#: it already splits everywhere else), so this pattern never actually sees
+#: it and does not try to match it inline.
 _PLAY_PERMISSION_RE = re.compile(
     r"^(?P<leading>until end of turn, )?you may (?P<action>cast|play) "
     r"(?P<subject>it|that card|those cards|them)"
     r"(?P<free> without paying (?:its|their) mana costs?)?"
-    r"(?P<trailing> this turn)?$",
+    r"(?P<trailing> this turn| for as long as it remains exiled)?$",
     re.IGNORECASE,
 )
 
@@ -18847,36 +18860,108 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
     return None
 
 
-def _parse_exile_then_play_permission_pair(
-    first: str, second: str, *, for_spell: bool
-) -> TargetedClause | None:
-    """ "[exile or choose some cards]. Until end of turn, you may cast/play them."
-    (or "... You may cast that card this turn.") as one CR 608.2c instruction.
+#: "exile target instant or sorcery card from an opponent's graveyard" (Dire
+#: Fleet Daredevil) - the exiling clause's own verb performs the move, unlike
+#: `_parse_chosen_target_card_antecedent`'s "choose target ... card", which
+#: only picks the object out without moving it. A common enough template
+#: (Magic's own general "exile target [quality] card [from zone]" shape,
+#: never fully read before this) that no card name is worth pinning to it.
+_EXILE_TARGET_CARD_RE = re.compile(
+    r"^exile target (?P<quality>[\w' -]*?)cards?"
+    r"(?: from (?:an? opponent's|your|their) (?P<zone>graveyard|hand|library))?$",
+    re.IGNORECASE,
+)
 
-    Read as a *pair* rather than two independent clauses because the second
-    sentence has no meaning without the first: its pronoun is CR 607.1's
-    within-one-ability anaphora back to whatever the first sentence just
-    exiled. Splitting them would either grant a permission over nothing or -
-    worse - run the exile and drop the permission, leaving cards in exile their
-    controller could never legally use. CR 608.2c has no notion of running half
-    an instruction, and this project's paragraph-atomic rule says the same.
 
-    Ability-only (`for_spell=False`): both printings are triggered or loyalty
-    abilities, `_parse_exile_antecedent`'s Ragavan shape needs an
-    `AbilityOnStack.event` to resolve "that player" against, and a resolving
-    spell has no `source_name` to name the granting effect by.
+def _parse_exile_target_card_antecedent(
+    clause: str,
+) -> "tuple[ExileAntecedent, bool] | None":
+    """`_EXILE_TARGET_CARD_RE`'s shape: the object is the ability's own
+    target (CR 601.2c, CR 603.3d), already validated by `machines/targeting`
+    and rechecked on resolution (CR 608.2b) - `game.resolve_card_targets`
+    finds it, exactly as `_parse_chosen_target_card_antecedent` already does
+    for a "choose target" clause - but this clause's own verb is "exile", so
+    the effect below actually performs that move rather than merely reading
+    where the target already sat.
     """
-    permission = _PLAY_PERMISSION_RE.fullmatch(second.strip())
+    if _EXILE_TARGET_CARD_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def exile_target(game: "Game", stack_object: "StackObject") -> list[CardState]:
+        return [
+            game.exile_permanent(card)
+            for card in game.resolve_card_targets(stack_object)
+            if card.zone is not Zone.EXILE
+        ]
+
+    return exile_target, False
+
+
+#: "... and mana of any type can be spent to cast it/that spell/them." -
+#: `split_effect_clauses` cuts this off the permission sentence as its own
+#: clause (a mid-sentence ", and" join, the same boundary it already splits
+#: on everywhere else), so it is matched as its own optional clause rather
+#: than folded into `_PLAY_PERMISSION_RE`, which only ever sees the sentence
+#: up to that comma.
+_ANY_TYPE_MANA_STANDALONE_RE = re.compile(
+    r"^mana of any type can be spent to cast (?:it|that spell|them)\.?$", re.IGNORECASE
+)
+
+#: "If that spell would be put into a graveyard, exile it instead." - Dire
+#: Fleet Daredevil's and Nita, Forum Conciliator's own further rider on
+#: exactly this permission shape (CR 604.5's "some static abilities apply
+#: while a spell is on the stack", the identical mechanism flashback's own
+#: second static already uses - see `machines/replacement._stack_replacements`).
+_EXILE_INSTEAD_OF_GRAVEYARD_RE = re.compile(
+    r"^if (?:it|that spell|those spells) would be put into a graveyard,? "
+    r"exile (?:it|them) instead\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_then_play_permission_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> "tuple[int, TargetedClause] | None":
+    """ "[exile or choose some cards]. Until end of turn, you may cast/play
+    them[, and mana of any type can be spent to cast it][. If that spell
+    would be put into a graveyard, exile it instead.]" - however many
+    clauses `split_effect_clauses` cut the whole instruction into (2 to 4),
+    read here as one CR 608.2c instruction rather than as independent
+    clauses, matching `_merge_each_player_clauses`'s own `(consumed, effect)`
+    return shape for a merge wider than a fixed pair.
+
+    Read as one instruction because none of the trailing sentences has a
+    meaning of its own: CR 607.1's within-one-ability anaphora - "it"/"that
+    card"/"that spell" - points back at whatever the first clause exiled,
+    and the any-type-mana and graveyard-redirect riders both modify *this
+    exact grant*, not some independent effect. Splitting any of them off
+    would either grant a permission over nothing, or grant the permission
+    without the rider that makes it worth granting at all. CR 608.2c has no
+    notion of running half an instruction, and this project's paragraph-
+    atomic rule says the same.
+
+    Ability-only (`for_spell=False`): every printing carrying this shape is a
+    triggered or loyalty ability, `_parse_exile_antecedent`'s Ragavan shape
+    needs an `AbilityOnStack.event` to resolve "that player" against, and a
+    resolving spell has no `source_name` to name the granting effect by.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    permission = _PLAY_PERMISSION_RE.fullmatch(clauses[index + 1].strip().rstrip(","))
     if permission is None:
         return None
     if bool(permission.group("leading")) == bool(permission.group("trailing")):
         # No duration, or both: not the sentence this reads.
         return None
-    antecedent = _parse_chosen_target_card_antecedent(first)
+    antecedent = _parse_chosen_target_card_antecedent(clauses[index])
     if antecedent is None:
         if for_spell:
             return None
-        antecedent = _parse_exile_antecedent(first)
+        antecedent = _parse_exile_target_card_antecedent(clauses[index])
+    if antecedent is None:
+        if for_spell:
+            return None
+        antecedent = _parse_exile_antecedent(clauses[index])
     if antecedent is None:
         return None
     exile, exiles_many = antecedent
@@ -18887,6 +18972,26 @@ def _parse_exile_then_play_permission_pair(
         return None
     action = PlayAction.PLAY if permission.group("action").lower() == "play" else PlayAction.CAST
     free = permission.group("free") is not None
+    # "for as long as it remains exiled" carries no turn-bounded duration -
+    # `PlayPermission.names` already refuses once the card's own
+    # `zone_change_stamp` changes (CR 400.7), which is exactly what leaving
+    # exile does.
+    remains_exiled = "exiled" in (permission.group("trailing") or "").lower()
+
+    consumed = 2
+    any_type_mana = False
+    if index + consumed < len(clauses) and _ANY_TYPE_MANA_STANDALONE_RE.fullmatch(
+        clauses[index + consumed].strip()
+    ):
+        any_type_mana = True
+        consumed += 1
+
+    exile_instead = False
+    if index + consumed < len(clauses) and _EXILE_INSTEAD_OF_GRAVEYARD_RE.fullmatch(
+        clauses[index + consumed].strip()
+    ):
+        exile_instead = True
+        consumed += 1
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
@@ -18904,9 +19009,22 @@ def _parse_exile_then_play_permission_pair(
                 source_name=source_name,
                 rule="CR 601.3",
                 zone=card.zone,
+                any_type_mana=any_type_mana,
+                until_end_of_turn=not remains_exiled,
+                exile_instead_of_graveyard=exile_instead,
             )
 
-    return effect
+    return consumed, effect
+
+
+def _parse_exile_then_play_permission_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """The plain two-clause case, for callers that only ever hand this a
+    fixed pair - see `_parse_exile_then_play_permission_clauses`, which this
+    delegates to with no rider clauses available to find."""
+    merged = _parse_exile_then_play_permission_clauses([first, second], 0, for_spell=for_spell)
+    return None if merged is None else merged[1]
 
 
 #: "Add <mana>." as a *resolving* effect rather than a mana ability's fast
@@ -21784,12 +21902,11 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 parsed.append(paired)
                 index += 2
                 continue
-            paired = _parse_exile_then_play_permission_pair(
-                clauses[index], clauses[index + 1], for_spell=for_spell
-            )
-            if paired is not None:
-                parsed.append(paired)
-                index += 2
+            merged = _parse_exile_then_play_permission_clauses(clauses, index, for_spell=for_spell)
+            if merged is not None:
+                consumed, effect = merged
+                parsed.append(effect)
+                index += consumed
                 continue
         effect = _parse_mixed_clause(clauses[index], for_spell=for_spell)
         if effect is None:

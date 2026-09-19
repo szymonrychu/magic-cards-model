@@ -4363,6 +4363,21 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
+    if record.exile_instead_of_graveyard:
+        # Dire Fleet Daredevil's/Nita, Forum Conciliator's own rider on the
+        # "exile target ... you may cast it ..." grant (CR 604.5) - the same
+        # unconditional "any time it would leave the stack" shape flashback's
+        # own second static already gets, just recorded through a plain
+        # boolean instead of `record.keyword` since the grant names no
+        # keyword at all.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:exile_instead_of_graveyard",
+                source=card,
+                label="if that spell would be put into a graveyard, exile it instead",
+                apply=_exile_instead,
+            )
+        )
     if record.keyword is not None and record.keyword.lower() == "harmonize":
         # CR 702.180a's third static ability: "If the harmonize cost was
         # paid, exile this card instead of putting it anywhere else any

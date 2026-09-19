@@ -1177,6 +1177,15 @@ class CastRecord(EngineModel):
 
     keyword: str | None = None
     """The keyword the spell was cast with, as printed: `Flashback`, `Warp`."""
+    exile_instead_of_graveyard: bool = False
+    """Cast under a `PlayPermission` whose own "If that spell would be put
+    into a graveyard, exile it instead." rider was printed alongside its
+    grant (Dire Fleet Daredevil, Nita, Forum Conciliator) - the same CR 604.5
+    "static ability applies while a spell is on the stack" shape flashback's
+    own second half already reaches through `keyword`, folded straight onto
+    this record instead of a second `keyword` value because the grant here
+    names no keyword at all. Read by `machines/replacement._stack_
+    replacements`."""
     keyword_cost_paid: bool = False
     """Whether the cost that keyword names was paid (`Casting.keyword_cost_paid`).
 
@@ -3438,6 +3447,7 @@ class Game(EngineModel):
         *,
         keyword: str | None = None,
         keyword_cost_paid: bool = False,
+        exile_instead_of_graveyard: bool = False,
         origin_zone: Zone = Zone.HAND,
         face: str | None = None,
         exile_annotation: "ExileAnnotation | None" = None,
@@ -3484,6 +3494,7 @@ class Game(EngineModel):
         record = CastRecord(
             keyword=keyword,
             keyword_cost_paid=keyword_cost_paid,
+            exile_instead_of_graveyard=exile_instead_of_graveyard,
             origin_zone=origin_zone,
             face=face,
             exile_annotation=exile_annotation,
@@ -11883,6 +11894,9 @@ class Game(EngineModel):
         until_next_turn_of: str | None = None,
         expires_end_of_next_turn: bool = False,
         flashback: bool = False,
+        any_type_mana: bool = False,
+        condition: str | None = None,
+        exile_instead_of_graveyard: bool = False,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -11948,6 +11962,9 @@ class Game(EngineModel):
                 granted_step=None if turn is None else turn.step,
                 until_next_turn_of=until_next_turn_of,
                 expires_end_of_next_turn=expires_end_of_next_turn,
+                any_type_mana=any_type_mana,
+                condition=condition,
+                exile_instead_of_graveyard=exile_instead_of_graveyard,
             )
             self.play_permissions.append(permission)
             return permission
