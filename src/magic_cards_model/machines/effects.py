@@ -11741,6 +11741,58 @@ def _get_emblem(game: "Game", player: Player, text: str, source: str) -> None:
     game.create_emblem(player.username, text, source)
 
 
+#: "Put a +1/+1 counter on `<object>`. If `<it>` is a[n] `<Subtype>`, put N
+#: +1/+1 counters on it instead." - Blade of the Bloodchief's "equipped
+#: creature ... a Vampire", Elder Cathar's "target creature you control ...
+#: that creature is a Human". CR 614.1a: "instead" replaces the first
+#: placement, so a creature of that subtype gets N, never one plus N. The
+#: subtype is read off the computed object (CR 613.5); "equipped"/"enchanted
+#: creature" is the permanent the source is attached to (CR 301.5a, CR
+#: 303.4b).
+_COUNTERS_MORE_IF_SUBTYPE_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?P<subject>equipped creature|enchanted creature|target [^.]+?)\.\s*"
+    r"if (?:equipped creature|enchanted creature|that creature|it) is an? "
+    rf"(?P<subtype>[a-z]+), put (?P<m>{COUNT}) (?:(?:\+1/\+1|-1/-1|[a-z]+) )?counters? "
+    r"on it instead\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counters_more_if_subtype_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTERS_MORE_IF_SUBTYPE_RE`'s shape, ability-side."""
+    match = _COUNTERS_MORE_IF_SUBTYPE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    base, more = parse_count(match.group("n")), parse_count(match.group("m"))
+    subtype = _bare_subtype_word(match.group("subtype"))
+    subject = match.group("subject").lower()
+    attached = subject in ("equipped creature", "enchanted creature")
+    if base is None or more is None or subtype is None:
+        return None
+    if not attached and not _targets_understood(match.group("subject")):
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if attached:
+            source = ability.source(game)
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                return
+            holder_id = source.attached_to
+            creature = game.find_by_id(holder_id) if holder_id is not None else None
+        else:
+            creature = next(
+                (t for t in game.resolve_targets(ability) if isinstance(t, CardState)), None
+            )
+        if creature is None or creature.zone is not Zone.BATTLEFIELD:
+            return
+        subtypes = {word.lower() for word in game.characteristics_of(creature).subtypes}
+        game.add_counters(creature, kind, more if subtype in subtypes else base)
+
+    return effect
+
+
 def _parse_get_an_emblem_clause(text: str) -> AbilityEffect | None:
     """Jaya Ballard's -8, read whole (the quoted abilities contain full stops
     the clause splitter would cut at)."""
@@ -12153,6 +12205,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     emblem = _parse_get_an_emblem_clause(effect_text)
     if emblem is not None:
         return emblem
+    counters_by_subtype = _parse_counters_more_if_subtype_clause(effect_text)
+    if counters_by_subtype is not None:
+        return counters_by_subtype
     nth_resolution = _parse_nth_resolution_clause(effect_text)
     if nth_resolution is not None:
         return nth_resolution
