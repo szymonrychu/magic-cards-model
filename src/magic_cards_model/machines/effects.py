@@ -8206,6 +8206,36 @@ _RETURN_TARGET_RE = re.compile(
     r"return (?P<phrase>.*target.+?) to (?:its owner'?s hand|their owners'? hands)",
     re.IGNORECASE,
 )
+#: "Put target card from your graveyard on the bottom of your library."
+#: (Paradox Shaper's own printed `{2}` ability) and "Put target card from a
+#: graveyard on the bottom of its owner's library." (Cogwork Archivist's own
+#: shape, targeting any graveyard rather than only the controller's own) -
+#: the same verb and destination, printed both ways. CR 401.2: a library
+#: stays face down and in whatever order it arrives in, so this is a plain
+#: move, never CR 701.24's shuffle. `Game.put_cards_into_library` already
+#: moves each card into *its own* owner's library regardless of which
+#: printing's wording is read, so "your library" and "its owner's library"
+#: need no different code - only the target phrase's own "your graveyard"
+#: vs "a graveyard" actually changes what may be targeted (CR 404.1: a
+#: graveyard is per player).
+_PUT_TARGET_FROM_GRAVEYARD_BOTTOM_OF_LIBRARY_RE = re.compile(
+    r"put (?P<phrase>.*target.+(?:in|from) (?:a|your|their|any) graveyard) "
+    r"on the bottom of (?:its owner'?s|your|their) library\.?$",
+    re.IGNORECASE,
+)
+
+
+def put_ability_targets_on_bottom_of_owners_library(
+    game: "Game", stack_object: "StackObject"
+) -> None:
+    """`_PUT_TARGET_FROM_GRAVEYARD_BOTTOM_OF_LIBRARY_RE`'s effect."""
+    targets = [
+        target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
+    ]
+    if targets:
+        game.put_cards_into_library(targets, to_bottom=True)
+
+
 #: "Return target card from your graveyard to your hand." (Eternal Witness,
 #: wrapped in "you may") and "Return target creature card from your graveyard
 #: to your hand." (Raise Dead) - the same verb as `_RETURN_TARGET_RE` but "to
@@ -9483,6 +9513,13 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         ):
             return None
         return exile_ability_targets
+
+    if match := _PUT_TARGET_FROM_GRAVEYARD_BOTTOM_OF_LIBRARY_RE.fullmatch(clause):
+        if not _targets_understood(
+            match.group("phrase"), count_agnostic=True, battlefield_only=False
+        ):
+            return None
+        return put_ability_targets_on_bottom_of_owners_library
 
     if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE.fullmatch(clause):
         if not _targets_understood(
