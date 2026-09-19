@@ -1978,6 +1978,14 @@ class Game(EngineModel):
     "at least one" is ever asked. Cleared when a new turn begins, the same
     reset `spells_cast_this_turn` already gets."""
 
+    attacked_this_turn: SortedSet[UUID] = Field(default_factory=set)
+    """Which creatures (by id) have attacked this turn (CR 508.1), for
+    Hexhaven Dueling Arena's own "target creature that attacked this turn" -
+    a historical fact CR 511.3/514's end of combat/cleanup does not answer,
+    unlike `machines/combat.Combat`'s live attacking status. Recorded by
+    `Game.declare_attackers`. Cleared when a new turn begins, the same reset
+    `spells_cast_this_turn` already gets."""
+
     spells_cast_last_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """What `spells_cast_this_turn` held during the turn before this one.
 
@@ -2306,7 +2314,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 24
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 25
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2569,6 +2577,16 @@ class Game(EngineModel):
     gained this turn, and a default of zero would silently answer "none" for
     a turn where life was in fact already gained before the snapshot -
     refused instead of trusted on that gap being harmless.
+
+    Bumped 24 -> 25: `CardState` gained `prepared`/`prepared_copy_id`/
+    `prepare_spell_face` (CR 722, FRA stream S2's own commit) and `Game`
+    gained `attacked_this_turn` (Hexhaven Dueling Arena's own "target
+    creature that attacked this turn"). A version-24 dump has no record of
+    which permanents were prepared, what their exile copies were, or which
+    creatures attacked this turn - a default of "none of the above" would
+    silently un-prepare every prepared permanent (dropping its castable
+    exile copy from the decode entirely) and refuse every "attacked this
+    turn" target that should be legal. Refused instead.
     """
 
     @model_validator(mode="before")
@@ -3665,6 +3683,26 @@ class Game(EngineModel):
         if card_state not in self.stack:
             self.stack.append(card_state)
         self.spells_cast_this_turn.setdefault(controller, []).append(card_state)
+
+        if card_state.prepare_spell_face:
+            # CR 601.2i: "That permanent loses the prepared designation at
+            # the time the spell becomes cast" (CR 722.3c) - this is that
+            # instant, now that CR 601.2a's move above has actually happened.
+            # `id` survives the zone move (CR 400.7's own exception for this
+            # engine - see `CardState.move_to`), so the permanent that minted
+            # this exact copy is still found by it. `become_unprepared`'s own
+            # "remove the copy from exile" half is a no-op here: this copy
+            # has already left `self.exile` for the stack.
+            source = next(
+                (
+                    permanent
+                    for permanent in self.battlefield
+                    if permanent.prepared_copy_id == card_state.id
+                ),
+                None,
+            )
+            if source is not None:
+                self.become_unprepared(source)
 
         # CR 601.2a: the card is now a spell on the stack, so the casting event
         # has happened and anything watching for it triggers (CR 603.2).
@@ -5019,6 +5057,13 @@ class Game(EngineModel):
                 face_played=spell.face_played,
                 land_face_played=spell.land_face_played,
                 division=spell.division,
+                # CR 722.3d: "If a prepare spell is copied, the copy is also
+                # a prepare spell" - carried onto any further copy of a
+                # CR 722.3c exile copy, so it keeps reading its inset face's
+                # characteristics and still counts as "a prepared spell" for
+                # `machines/triggers.py`'s CAST_SPELL condition, though a
+                # copy made here is never itself cast (CR 707.10).
+                prepare_spell_face=spell.prepare_spell_face,
             )
             self.stack.append(copy)
             return copy
@@ -6209,6 +6254,13 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        if permanent.prepared:
+            # CR 722.3c: the exile copy persists "for as long as the prepared
+            # permanent remains on the battlefield and has the prepared
+            # designation" - both halves of that end together the moment the
+            # permanent itself leaves, so this is the one choke point every
+            # route off the battlefield already reaches.
+            self.become_unprepared(permanent)
         controller = permanent.controller
         if controller is None:
             return
@@ -6408,6 +6460,12 @@ class Game(EngineModel):
                 record = self.cast_record_of(card_state)
                 card_state.cast_with_keyword = record.keyword if record is not None else None
             card_state.tapped = event.tapped
+            if event.prepared:
+                # CR 722.3a: "This creature enters prepared" (`ENTERS_PREPARED`
+                # in `machines/replacement.py`). Applied after the move onto
+                # the battlefield, same as counters below, since `become_
+                # prepared` requires `permanent.zone is Zone.BATTLEFIELD`.
+                self.become_prepared(card_state)
             # CR 702.131 (ascend): "entered this turn" needs a turn-number stamp,
             # not just a boolean, the same way `ExileAnnotation.turn_exiled` is -
             # see `CardState.turn_entered`. Stamped here, the one choke point
@@ -11867,6 +11925,13 @@ class Game(EngineModel):
             ]
             for creature, attack in registered:
                 self._emit_attacks(creature, attack)
+                # A per-turn historical fact, not `machines.combat.Combat`'s
+                # live attacking status - Hexhaven Dueling Arena's "target
+                # creature that attacked this turn" still needs an answer
+                # after this combat (and this turn's whole combat phase) is
+                # over. Cleared at the same new-turn reset as the rest of
+                # `Game`'s "this turn" fields.
+                self.attacked_this_turn.add(creature.id)
             if attacks:
                 # CR 508.3d: "An ability that reads 'Whenever [a player]
                 # attacks, . . .' triggers if one or more creatures that
@@ -12066,6 +12131,106 @@ class Game(EngineModel):
                 f"this turn already used (CR 305.2a, 305.2b)"
             )
         return None
+
+    # -- CR 722: preparation cards -----------------------------------------
+
+    def become_prepared(self, permanent: CardState) -> CardState | None:
+        """CR 722.3a: give `permanent` the prepared designation.
+
+        "Some spells and abilities cause a permanent with a prepare spell to
+        become prepared or state that a permanent enters prepared. If that
+        permanent has the alternative characteristics of a prepare spell,
+        this gives the permanent the 'prepared' designation. ... A permanent
+        can't gain this designation unless it has a prepare spell.
+        Additionally, a permanent can't gain this designation if the
+        permanent already has it." Both refusals are silent no-ops, not
+        errors: Codie's "each creature you control becomes prepared" and
+        Hexhaven Dueling Arena's "target creature becomes prepared" are
+        printed to apply to any creature, most of which have no prepare
+        spell at all, and CR 722.3a's own second sentence is what makes an
+        already-prepared permanent's own upkeep trigger a no-op rather than a
+        second copy.
+
+        CR 722.3c: "its controller creates a copy of that object in exile,
+        except that copy has only the characteristics of that permanent's
+        prepare spell ... Those characteristics become the copy's normal
+        characteristics. This copy remains in exile for as long as the
+        prepared permanent remains on the battlefield and has the prepared
+        designation. This is an exception to rule 704.5e. For as long as the
+        copy remains in exile, the prepared permanent's controller may cast
+        the copy." The copy is minted here, `prepare_spell_face=True` (read
+        by `CardState.up_face`), and a standing `PlayPermission` is granted
+        for it with no time limit - `become_unprepared` below, called
+        whenever the designation or the permanent itself goes away, is what
+        actually enforces the "for as long as" half, since nothing in this
+        engine yet dispatches the general CR 704.5e state-based action (see
+        `docs/engine-coverage.md`).
+
+        Returns the exile copy, or `None` if the permanent could not gain the
+        designation.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return None
+        if permanent.card.prepare_spell is None:
+            return None
+        if permanent.prepared:
+            return None
+        controller = permanent.controller or permanent.owner
+        if controller is None:
+            return None
+        with self._id_allocator_scope():
+            copy = CardState(
+                card=permanent.card,
+                zone=Zone.EXILE,
+                controller=controller,
+                owner=permanent.owner,
+                is_copy=True,
+                prepare_spell_face=True,
+            )
+            self.exile.append(copy)
+            permanent.prepared = True
+            permanent.prepared_copy_id = copy.id
+            self.grant_play_permission(
+                copy,
+                controller,
+                source_name=permanent.name,
+                rule="CR 722.3c",
+                zone=Zone.EXILE,
+                until_end_of_turn=False,
+            )
+        return copy
+
+    def become_unprepared(self, permanent: CardState) -> None:
+        """CR 722.3b: remove the prepared designation from `permanent`.
+
+        "A rule or effect may cause a permanent to become 'unprepared.' This
+        removes the prepared designation from that permanent." A no-op if it
+        was never prepared. The linked CR 722.3c exile copy is removed along
+        with the designation - unless it has already moved to the stack
+        (`Game.put_on_stack`'s own CR 601.2i hook clears the designation
+        there without touching the copy, which by then is no longer in
+        `self.exile` for this to find): the copy's "remains in exile for as
+        long as ... the prepared designation" holds is exactly this call's
+        other half.
+
+        Called by `Game.enter_the_battlefield`'s "enters prepared" hook (which
+        never finds an existing designation to remove), by the "becomes
+        unprepared" clause parser, and by `Game._note_left_battlefield` for
+        every route a permanent takes off the battlefield.
+        """
+        if not permanent.prepared:
+            return
+        permanent.prepared = False
+        copy_id = permanent.prepared_copy_id
+        permanent.prepared_copy_id = None
+        if copy_id is None:
+            return
+        copy = next((state for state in self.exile if state.id == copy_id), None)
+        if copy is not None:
+            self.exile.remove(copy)
+        self.play_permissions = [
+            permission for permission in self.play_permissions if permission.card_id != copy_id
+        ]
 
     # -- permission to play a card from somewhere else (CR 601.3) ----------
 
@@ -15404,6 +15569,7 @@ class Game(EngineModel):
             self.spells_cast_last_turn = self.spells_cast_this_turn
             self.spells_cast_this_turn = {}
             self.permanents_left_battlefield_this_turn = {}
+            self.attacked_this_turn = set()
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
             self.cards_drawn_this_turn = {}

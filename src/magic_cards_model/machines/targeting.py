@@ -271,6 +271,13 @@ class TargetRequirement(EngineModel):
     Empty means the text asked for neither. More than one is a disjunction:
     "target attacking or blocking creature" takes either.
     """
+    must_have_attacked_this_turn: bool = False
+    """"target creature that attacked this turn" (Hexhaven Dueling Arena).
+    Unlike `combat_states`' live "is this creature currently attacking",
+    CR 508.1k's attacking status ends when combat does (CR 511.3, 514) -
+    this is a per-turn historical fact instead, tracked on `Game.
+    attacked_this_turn` (populated by `Game.declare_attackers`, cleared each
+    new turn the same way `permanents_left_battlefield_this_turn` is)."""
     required_subtypes: SortedFrozenSet[str] = frozenset()
     """A bare CR 205.3m creature-type list used as the target noun itself -
     "target Vampire, Werewolf, or Zombie" (Slayer of the Wicked) - rather than
@@ -639,6 +646,9 @@ class TargetRequirement(EngineModel):
         combat = self._rejects_combat_state(target, game)
         if combat is not None:
             return combat
+        attacked = self._rejects_attacked_this_turn(target, game)
+        if attacked is not None:
+            return attacked
         comparison = self._rejects_comparison(target, game, caster)
         if comparison is not None:
             return comparison
@@ -758,6 +768,19 @@ class TargetRequirement(EngineModel):
             return None
         wanted = " or ".join(sorted(state.value for state in self.combat_states))
         return f"{self.phrase} needs a creature that is {wanted}, and {target.name} is not"
+
+    def _rejects_attacked_this_turn(self, target: CardState, game: Any) -> str | None:
+        """ "target creature that attacked this turn" - a per-turn historical
+        fact, not `combat_states`' live one. No game, no per-turn record to
+        read: fails open the same way `_rejects_combat_state` does."""
+        if not self.must_have_attacked_this_turn:
+            return None
+        attacked = getattr(game, "attacked_this_turn", None)
+        if attacked is None:
+            return None
+        if target.id in attacked:
+            return None
+        return f"{self.phrase} needs a creature that attacked this turn, and {target.name} did not"
 
     def _current_types(self, target: CardState, game: Any) -> tuple[Type, ...]:
         """This target's card types right now, layers included (CR 613.5, 613.1d).
@@ -2464,6 +2487,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     required_keyword, rest = _extract_required_keyword(rest)
 
+    attacked_this_turn, rest = _extract_attacked_this_turn(rest)
+
     color_presence, rest = _extract_color_presence(rest)
     color_count = adjectives.color_count
     if color_presence:
@@ -2552,6 +2577,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         color_count=color_count,
         historic=adjectives.historic,
         combat_states=frozenset(adjectives.combat_states),
+        must_have_attacked_this_turn=attacked_this_turn,
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,
         comparison_value=comparison_value,
@@ -2964,6 +2990,22 @@ def _extract_color_presence(rest: str) -> tuple[bool, str]:
     """Read a trailing "that's one or more colors" clause out of `rest`
     (CR 105.2), or leave it untouched when there is none."""
     match = _COLOR_PRESENCE_RE.search(rest)
+    if match is None:
+        return False, rest
+    return True, (rest[: match.start()] + rest[match.end() :]).strip()
+
+
+#: "target creature that attacked this turn" (Hexhaven Dueling Arena) - a
+#: trailing relative clause read the same way `_COLOR_PRESENCE_RE` reads
+#: "that's one or more colors": stripped out, and remembered as a flag rather
+#: than left for the rest of the parser to choke on.
+_ATTACKED_THIS_TURN_RE = re.compile(r"\bthat attacked this turn\b", re.IGNORECASE)
+
+
+def _extract_attacked_this_turn(rest: str) -> tuple[bool, str]:
+    """Read a trailing "that attacked this turn" clause out of `rest`, or
+    leave it untouched when there is none."""
+    match = _ATTACKED_THIS_TURN_RE.search(rest)
     if match is None:
         return False, rest
     return True, (rest[: match.start()] + rest[match.end() :]).strip()
