@@ -732,6 +732,18 @@ _ZERO_LOYALTY_EXEMPTION_RE = re.compile(
     r"for having 0 loyalty",
     re.IGNORECASE,
 )
+#: "You may activate loyalty abilities of `<subject>` on any player's turn
+#: any time you could cast an instant." printed as a permanent's own static
+#: ability (CR 604.2) - Teferi, Master of Time's own self-reference. The
+#: identical sentence `machines.effects._LOYALTY_INSTANT_SPEED_RE` reads for
+#: a *resolving* grant (Jace's Machinations); this is that same wording read
+#: directly off the battlefield instead, since a static ability needs no
+#: resolution record at all.
+_LOYALTY_INSTANT_SPEED_STATIC_RE = re.compile(
+    r"you may activate loyalty abilities of (?P<subject>.+?) on any player'?s turn any time "
+    r"you could cast an instant",
+    re.IGNORECASE,
+)
 #: CR 702.62b: "A card is 'suspended' if it's in the exile zone, has suspend,
 #: and has a time counter on it." Greater Gargadon's own restriction.
 _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IGNORECASE)
@@ -1593,6 +1605,48 @@ class SchemaVersionMismatch(RuntimeError):
     """
 
 
+class LoyaltyInstantSpeedPermission(EngineModel):
+    """CR 606.3's own "any time you have priority and the stack is empty
+    during a main phase of your turn" loosened to instant speed on any
+    player's turn - "You may activate loyalty abilities of `<subject>` on
+    any player's turn any time you could cast an instant."
+
+    Three real shapes share this one record: Teferi, Master of Time's own
+    self-reference ("... of Teferi ..."), permanent and scoped to himself
+    (`self_source_id`); Teferi's Talent's and Teferi, Temporal Archmage's
+    emblem ("... of planeswalkers you control ..."), permanent and
+    unscoped; and Jace's Machinations' own "Until end of turn, you may
+    activate loyalty abilities of Jace planeswalkers you control ...",
+    scoped by subtype (`subtype="Jace"`) and bounded
+    (`until_end_of_turn=True`). CR 606.3's *other* half - "only if no
+    player has previously activated a loyalty ability of that permanent
+    that turn" - is untouched: this loosens only the timing, never the
+    once-per-turn-per-permanent rule.
+
+    Nothing here checks priority itself, the same posture `why_cannot_
+    activate`'s own docstring already takes for the ordinary CR 606.3
+    timing: this engine has no notion of a priority possession that
+    persists between moves, so a caller granted this permission is trusted
+    to hold priority when it uses it.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    player: str
+    """Whose "you"/"your" the printed grant means (CR 608.2h)."""
+    subtype: str | None = None
+    """A planeswalker subtype filter ("Jace"), or `None` for every
+    planeswalker `player` controls."""
+    self_source_id: UUID | None = None
+    """Scoped to one specific planeswalker by id (Teferi, Master of Time's
+    own self-reference) rather than by subtype or by "you control" at
+    large. Takes priority over `subtype` when set."""
+    until_end_of_turn: bool = False
+    """`False` is a permanent grant (an emblem's own "always"); `True` is
+    Jace's Machinations' own bounded one, dropped by `Game.cleanup_step`
+    the same way `play_permissions`' own "until end of turn" entries are."""
+
+
 class Game(EngineModel):
     """One game of Magic, from the first untap step to somebody winning.
 
@@ -1616,6 +1670,16 @@ class Game(EngineModel):
     priority: PriorityMachine | None = None
     combat: CombatMachine = Field(default_factory=CombatMachine)
     lands_played: dict[str, int] = Field(default_factory=dict)
+    extra_land_plays: dict[str, int] = Field(default_factory=dict)
+    """CR 305.2's allowance increase, granted for one turn by a *resolving*
+    effect rather than a permanent's own static ability - Way of the
+    Paradox's own "You may play an additional land this turn.", read fresh
+    each turn alongside `lands_played` (`Game.begin_turn`'s own reset).
+    `land_allowance` adds this to `additional_land_plays`'s static-ability
+    count rather than replacing it, so a player with both a static grant and
+    a resolved one gets the sum, the same way CR 305.2's "however, continuous
+    effects may increase this number" stacks any number of independent
+    grants."""
     casting_rule_effects: list[CastingRuleEffect] = Field(default_factory=list)
     """CR 611.1's third kind of continuous effect - one that "affects players
     or the rules of the game" rather than any object's characteristics, so
@@ -1631,6 +1695,14 @@ class Game(EngineModel):
     "until end of turn" entries and `begin_turn_for` drops the "until your
     next turn" ones, exactly as `play_permissions` already does for its own
     two durations."""
+    loyalty_instant_speed_permissions: list[LoyaltyInstantSpeedPermission] = Field(
+        default_factory=list
+    )
+    """CR 606.3's timing loosened for particular planeswalkers - see
+    `LoyaltyInstantSpeedPermission`. Checked by `why_cannot_activate`,
+    dropped in the cleanup step for the "until end of turn" entries
+    (`until_end_of_turn=True`), the same way `play_permissions`' own
+    "until end of turn" grants are."""
     play_permissions: list[PlayPermission] = Field(default_factory=list)
     """CR 601.3's dynamic half: permissions a resolving effect handed out to
     specific cards - Ugin, Eye of the Storms' −11, Ragavan, Nimble Pilferer's
@@ -3294,6 +3366,58 @@ class Game(EngineModel):
         assert self.turn is not None
         return self.turn.can_cast_sorcery(self.stack_is_empty, username)
 
+    def _loyalty_instant_speed_permitted(self, permanent: CardState, controller: str) -> bool:
+        """Whether something lets `controller` activate one of `permanent`'s
+        loyalty abilities outside CR 606.3's ordinary sorcery-speed timing
+        right now - either a resolved, possibly-bounded
+        `LoyaltyInstantSpeedPermission` (Jace's Machinations' own "until end
+        of turn" grant), or a permanent static ability printing the same
+        sentence (Teferi, Master of Time's own self-reference - CR 604.2's
+        static grant needs no resolution record at all, read straight off
+        the controller's own battlefield the same way `attacker_cap_
+        restriction`/`_zero_loyalty_exemption_controllers` already read
+        their own static text)."""
+        for permission in self.loyalty_instant_speed_permissions:
+            if permission.player != controller:
+                continue
+            if permission.self_source_id is not None:
+                if permission.self_source_id == permanent.id:
+                    return True
+                continue
+            if permission.subtype is None:
+                return True
+            if permission.subtype.lower() in {subtype.lower() for subtype in permanent.subtypes}:
+                return True
+        short_name = permanent.name.split(",")[0].strip().lower()
+        # CR 114.2: an emblem's own quoted ability "applies as though it
+        # were printed on a permanent" (Teferi's Talent's/Teferi, Temporal
+        # Archmage's own "-10/-12: You get an emblem with 'You may activate
+        # loyalty abilities of planeswalkers you control ...'"). Read the
+        # same way a battlefield permanent's own static text already is -
+        # `Game.emblems_of` alongside `permanents_controlled_by`, not a
+        # separate mechanism.
+        for source in (*self.permanents_controlled_by(controller), *self.emblems_of(controller)):
+            for sentence in re.findall(
+                r"you may activate loyalty abilities of [^.]+?\.",
+                source.class_ability_text,
+                re.IGNORECASE,
+            ):
+                match = _LOYALTY_INSTANT_SPEED_STATIC_RE.search(sentence)
+                if match is None:
+                    continue
+                if match.group("subject").strip().lower() == "planeswalkers you control":
+                    return True
+                subtype = match.group("subject").strip().lower()
+                if subtype.endswith(" planeswalkers you control"):
+                    if subtype[: -len(" planeswalkers you control")] in {
+                        each.lower() for each in permanent.subtypes
+                    }:
+                        return True
+                    continue
+                if subtype == short_name and source.id == permanent.id:
+                    return True
+        return False
+
     def permanents_controlled_by(self, username: str) -> list[CardState]:
         """Battlefield permanents this player controls.
 
@@ -3774,6 +3898,13 @@ class Game(EngineModel):
                     and permission.owner_next_turn_started
                     and self.turn.active_player == permission.player
                 )
+            ]
+            # CR 514.2's same sentence, for Jace's Machinations' own "until
+            # end of turn" instant-speed loyalty-activation grant.
+            self.loyalty_instant_speed_permissions = [
+                permission
+                for permission in self.loyalty_instant_speed_permissions
+                if not permission.until_end_of_turn
             ]
             # CR 514.2's same sentence, for CR 611.1's "affects the rules of the
             # game" effects: Ranger-Captain of Eos's "this turn" noncreature ban.
@@ -9787,6 +9918,32 @@ class Game(EngineModel):
             self._emit_counters_put(permanent, str(kind), event.amount)
             return new_total
 
+    def proliferate(self, chosen: Sequence[CardState]) -> None:
+        """CR 701.34a: "choose any number of permanents ... that have a
+        counter, then give each one additional counter of each kind that
+        permanent ... already has." `chosen` is the controller's own choice
+        (CR 608.2d - `_parse_proliferate_clause`, `machines/effects.py`, asks
+        it as a `CHOOSE_CARDS` question over every permanent on the
+        battlefield carrying at least one counter, `amount=None`/no
+        `exact` so "any number" including zero is legal).
+
+        Permanents only. CR 701.34a's "and/or players" half - proliferating
+        a player's own poison or experience counters - is a documented gap:
+        it needs its own player-choice decision shape this store has no
+        vocabulary for yet (every existing `DecisionKind` here answers in
+        card ids), and building one under-tested for a mechanic no handed
+        card in this stream's own scope needs is a worse trade than shipping
+        the permanent half, which every printed "proliferate" in the pool so
+        far only ever needs. See `docs/engine-coverage.md`.
+        """
+        with self._id_allocator_scope():
+            for permanent in chosen:
+                if permanent.zone is not Zone.BATTLEFIELD:
+                    continue
+                for kind, count in list(permanent.counters.counts.items()):
+                    if count > 0:
+                        self.add_counters(permanent, kind, 1)
+
     def add_player_counters(self, player: "Player | str", kind: str, amount: int = 1) -> int:
         """Give a player counters, replacement effects included (CR 122.1,
         122.6).
@@ -13118,7 +13275,19 @@ class Game(EngineModel):
         fetchland's find, CR 305.4) counts in neither number, because
         `put_onto_battlefield` never reaches `play_land`.
         """
-        return 1 + additional_land_plays(self.permanents_controlled_by(username))
+        return (
+            1
+            + additional_land_plays(self.permanents_controlled_by(username))
+            + self.extra_land_plays.get(username, 0)
+        )
+
+    def grant_extra_land_play(self, username: str, amount: int = 1) -> None:
+        """CR 305.2's allowance increase for the rest of this turn only -
+        Way of the Paradox's own "You may play an additional land this
+        turn.", one instruction resolving once rather than a permanent's own
+        ongoing static ability. Reset with `lands_played` at the start of
+        each turn (`Game.begin_turn`)."""
+        self.extra_land_plays[username] = self.extra_land_plays.get(username, 0) + amount
 
     def why_cannot_play_land(self, username: str) -> str | None:
         """Why `username` cannot play a land right now, or None (CR 305.1-305.3).
@@ -14752,7 +14921,18 @@ class Game(EngineModel):
             # turn." The timing half is CR 307.5's sorcery machinery; the
             # once-per-turn half is per permanent, so it is keyed by the
             # permanent alone, not by which ability was activated.
-            if not self.can_cast_sorcery(controller):
+            #
+            # Jace's Machinations' own "you may activate loyalty abilities of
+            # Jace planeswalkers you control on any player's turn any time
+            # you could cast an instant" (and Teferi, Master of Time's own
+            # self-referential twin) loosens exactly this timing half, never
+            # the once-per-turn one below - `_loyalty_instant_speed_permitted`
+            # checked first, so a matching grant skips `can_cast_sorcery`
+            # entirely rather than pretending the stack is empty when it may
+            # not be.
+            if not self._loyalty_instant_speed_permitted(
+                permanent, controller
+            ) and not self.can_cast_sorcery(controller):
                 return (
                     f"{permanent.name}'s loyalty ability can only be activated during "
                     f"{controller}'s main phase, with the stack empty (CR 606.3)"
@@ -16803,6 +16983,7 @@ class Game(EngineModel):
             # or the turn number, because an extra turn (CR 500.7) moves
             # neither: the same player can take two turns in a row.
             self.lands_played = {}
+            self.extra_land_plays = {}  # Way of the Paradox's own "this turn" grant
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
             self.once_per_turn_triggers = {}  # CR 603.2h restrictions are per turn too

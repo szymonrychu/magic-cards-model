@@ -2855,3 +2855,321 @@ activating), a modal spell's own chosen mode, the new exile-each clause's X
 ("creatures exiled this way"), CR 120.10's excess damage on both a creature
 and a planeswalker (plus the "exactly lethal is not excess" negative case),
 and CR 608.2d's choice among two pre-existing tokens.
+
+## FRA S4: the planeswalker and loyalty subsystem
+
+Every "loyalty counters", "planeswalker" and "you may activate loyalty
+abilities" mechanic this set's own Jaces, Tomik, Sorin, Garruk, Sanctum
+Lurker and the six "Way of the `<name>`" enchantments needed, built as
+general parsers and one new group-grant selector rather than card-name rows.
+Registry rows unchanged from the FRA S1 baseline this stream inherited
+(`EFFECTS` 1, `TRIGGER_EFFECTS` 6, `ACTIVATED_EFFECTS` 0).
+
+**"Planeswalkers you control have "`<ability>`"." group ability grants**
+(CR 611.3, CR 613.1f, CR 113.10a) - `machines/layers.py`'s `_GROUP_QUOTED_
+ABILITY_GRANT_RE`/`_group_quoted_ability_grant_builder`, over the identical
+`permanents_controlled_by(source.controller, Type.PLANESWALKER)` selector
+every other "`<card type>`s you control" static already reads with - a
+planeswalker is CR 300.1's own card type, not a new kind of subject.
+Registered a second time in `quoted_ability_grants` (the function `sync_
+granted_ability_texts` reads every battlefield sweep) so the granted line
+is not merely present on the computed board but actually reaches
+`CardState.granted_ability_texts` and is genuinely activatable through the
+ordinary door - the same two-registration split `_ATTACHED_CREATURE_
+STATIC_RE`'s own Equipment-quoted-ability shape already needs. Proven on
+seven differently-shaped granted bodies: Tomik, Orzhov Lawmage's attack
+restriction (below), Sanctum Lurker's damage-and-lifegain `[+2]`, Avatar of
+Burgeoning Echoes' per-land `+1/+1` counter `[-10]`, and the six Way of the
+`<name>` enchantments' own grants - a spell-copy, a sacrifice-for-token, a
+token-plus-surveil, a plain mana ability, a two-target damage split, and a
+bare token creation - none of which needed a parser of its own beyond what
+already existed for the identical clause shape printed directly on a card.
+
+**A general splitting bug this stream's own multi-sentence grants exposed**,
+fixed at its real cause: `machines/abilities.py`'s `_layer_readable_
+sentences_uncached` (feeding `machines/layers._effect_sentences`, which
+`parsed_layer_effects` reads) split a static ability's own body on every
+`". "` boundary with no notion of a quoted span - so Way of the
+Deathbringer's own "Planeswalkers you control have '[-2]: You may
+sacrifice a creature. If you do, create a 4/4 green Beast creature token
+with trample.'" was cut in half at the period inside the quote, and
+`parsed_layer_effects` read two unreadable fragments instead of the one
+whole grant. Fixed with `_split_top_level_sentences`, a quote-depth toggle
+that only treats a period as a sentence boundary outside an open `"`. The
+identical bug, in a second, independent splitter, made a token's own quoted
+CDA ability unreadable whenever it followed a keyword list -
+`effects.py`'s `_parse_whole_text_token_clause` refused *any* period
+outside a single trailing one, which caught Wrenn and Seven's own `-3`
+("Create a green Treefolk creature token with reach and 'This token's power
+and toughness are each equal to the number of lands you control.'" - the
+period inside the quote) even before this stream ever touched a Way of the
+`<name>` card. Fixed the same way, with its own `_has_period_outside_
+quotes` (kept local to `effects.py` rather than shared, since the two
+splitters' own surrounding logic differs too much to unify safely under
+this stream's own time budget).
+
+**A second general bug in the same territory, found writing scenario tests
+for the grant mechanism**: CR 107.7's loyalty symbol is bracketed - `[+N]`,
+`[0]`, `[-N]` - and every one of this pool's *quoted* granted loyalty
+lines is templated with the brackets (Sanctum Lurker's own oracle text
+reads `"[+2]: This planeswalker deals ..."`), while a planeswalker's own
+*printed* card never carries them (Jace, Reality Sculptor's `+1:`, `−3:`,
+`0:` have none). `machines/abilities._LOYALTY_SYMBOL` - the regex
+`_classify_cost` matches a cost piece against to recognise a loyalty
+ability at all (CR 606.2) - was only ever written for the bracket-free
+shape, so every quoted grant's own cost classified as `CostKind.OTHER` and
+`Game.activation_cost` refused it outright the moment anyone actually tried
+to activate it (`ValueError: cannot build a cost for '[+2]'`) - reproduced
+for Sanctum Lurker, Avatar of Burgeoning Echoes, and all six Way-of cards.
+The grant mechanism above was never broken; every one of these abilities
+was correctly granted and correctly *listed* - only activating one raised.
+Fixed by making the brackets optional in `_LOYALTY_SYMBOL` itself (both
+capture groups unchanged, so the one existing consumer, `_loyalty_symbol`,
+needed no change of its own).
+
+**A third general bug the same pass found**: Way of the Warlord's own
+granted `[-4]` ("This planeswalker deals 2 damage to up to one target
+creature or planeswalker **and** 2 damage to target player.") - CR 608.2c's
+one instruction, cut in half by `_CLAUSE_SEPARATOR`'s bare "and" split, left
+the second half ("2 damage to target player") with no subject or verb of
+its own, and nothing recombined the pair. `_merge_split_damage_clauses`
+(`machines/effects.py`) reunites this shape whenever both halves print the
+identical amount - CR 601.2c already keeps the two target requirements
+separate at announcement, so resolution only needs "how much", and with
+both halves equal that answer does not depend on which requirement a
+resolved target came from, so every target `Game.resolve_targets` returns
+takes the one shared amount (the same loop a single-phrase multi-target
+clause already runs). An *unequal* split is deliberately left unmerged -
+nothing on `AbilityOnStack` records which resolved target belongs to which
+requirement, so building that would need new state this pass's own two
+real printings never needed. Proven off-set on Lunge's identically-shaped
+"Lunge deals 2 damage to target creature and 2 damage to target player or
+planeswalker."
+
+**CR 704.5i's 0-loyalty state-based action, exempted per controller** -
+Sanctum Lurker's own "Planeswalkers you control aren't put into their
+owners' graveyards for having 0 loyalty." `Game._zero_loyalty_exemption_
+controllers` (`_ZERO_LOYALTY_EXEMPTION_RE`, read off `class_ability_text`
+directly - a controller-scoped exemption from a state-based action, not a
+grantable quoted ability, so it does not go through the group-grant
+mechanism above) filters `Game._state_based_action_losers`'s own CR 704.5i
+sweep. Reads printed text directly rather than the computed board, the
+same posture `attacker_cap_restriction` below takes and for the identical
+reason: CR 101.2's "the card overrides the rule" needs the card to still
+carry the ability, and nothing in the pool grants this one to a second
+source to make the computed-board distinction matter yet.
+
+**"No more than one creature can attack this planeswalker each combat."**
+(CR 508.1c) - `machines/combat.attacker_cap_restriction`, read off a
+defender's own computed ability text the same self-referential way
+`_evasion_restriction_sentences` already reads "can't be blocked" ("this
+planeswalker"/"this battle", or the card's own short name for a
+self-printed line). Enforced once per whole attack declaration, not once
+per attacker, by `Game._refuse_illegal_attacker_caps` (called from `Game.
+declare_attackers` alongside the existing CR 508.1d requirement check) -
+grouping the declared attacks by defender and refusing the whole
+declaration the moment two or more land on the same capped defender.
+Proven on Tomik, Orzhov Lawmage's own grant and, off-set, on The Eternal
+Wanderer's identically-shaped *self-printed* line ("No more than one
+creature can attack The Eternal Wanderer each combat.") - the same reader,
+two different sources for the sentence.
+
+**"Up to one target creature gets `<P>`/`<T>` until your next turn."**
+(CR 800.4m) - `machines/layers.py`'s `_PUMP_RE` now reads `until end of
+turn`/`until your next turn` as alternatives (was a fixed literal), and its
+`_SUBJECT` fragment now admits an optional "up to one " prefix (CR 115.6a -
+was `_PLURAL_TARGET_SUBJECT`'s own "up to N target creature**s**" shape
+only, never the singular). `_pump_and_keyword_builder` takes `until_next_
+turn: bool`, setting `Duration.UNTIL_YOUR_NEXT_TURN`/`until_next_turn_of`
+in place of the ordinary end-of-turn duration. Proven on Garruk, Veiled
+Butcher's own `+2` and, off-set, Liliana, the Last Hope's `+1` (identical
+sentence shape, different numbers).
+
+**"Until your next turn, whenever a creature attacks you or a planeswalker
+you control, it gets `<P>`/`<T>` until end of turn."** - a delayed
+triggered ability (CR 603.7) with two independent durations at once: the
+watch itself lasts until the creating ability's controller's own next turn
+(`DelayedTrigger.expires_end_of_next_turn`, CR 800.4m's delayed-trigger
+twin of `Duration.UNTIL_YOUR_NEXT_TURN`, dropped by the new `DelayedTriggers.
+expire_end_of_next_turn_for`, called from `Game.begin_turn_for` alongside
+the continuous-effect and play-permission stores that already end there),
+firing on every matching attack until then (`remaining=None`); each pump it
+grants, once fired, lasts only until that turn's own ordinary cleanup
+(`PumpEventSubject`, a new `DelayedEffectSpec` that reads which creature the
+firing `ATTACKS` event was actually about off `AbilityOnStack.event`, since
+this trigger names no object at creation time the way `TapSubject`'s own
+fixed `subject_id` does). The compound defender ("you" the player, or a
+planeswalker you control) is `DelayedTrigger.defending_controller_only`,
+checked against the new `GameEvent.defender_controller` field - resolved
+once, at attack declaration (`Game._emit_attacks`), because `DelayedTrigger.
+matches` has no `Game` to ask "who controls this id" of. Parser: `_parse_
+until_your_next_turn_attack_pump_clause`, tried ahead of the ordinary
+per-clause dispatcher in `_ability_effect_or_notice` (the identical "read
+the compound sentence whole" treatment `parse_casting_rule_clause`'s own
+call already gets there). Proven on Jace, Reality Sculptor's own `-3` and,
+off-set, Tamiyo Meets the Story Circle's chapter I (the identical sentence
+on a Saga chapter trigger rather than a loyalty ability - proof this is
+CR 603.7's general delayed-trigger mechanism, not something tied to a
+planeswalker's own cost).
+
+**A real target-legality bug this stream's own -X reanimation exposed**:
+`Game.legal_target`'s own CR 608.2b re-check substituted a loyalty
+ability's announced X back into its printed text only when the printed
+*cost* literally contained the mana symbol `{X}` - never true of a loyalty
+cost, whose own X is spelled `"−X"`/`"+X"` with no braces at all. So
+`resolve_targets` re-checked every variable-loyalty-cost ability's own
+target against the *literal, unsubstituted* "X" ("target creature card
+with mana value X"), which - as the surrounding comment already said, for
+the wrong reason - matches nothing, and silently dropped every legal
+target. Sorin, Vengeful Bloodlord's own "−X: Return target creature
+card with mana value X from your graveyard to the battlefield." was the
+symptom: the ability resolved, paid its loyalty, and reanimated nothing.
+Fixed by reading the identical `cost_announces_x(ability.cost)` helper
+`Game._effect_of`'s own resolution-side dispatch already uses for the same
+reason, rather than the narrower literal check. Sorin's own second sentence,
+"That creature is a Vampire in addition to its other types.", is a plain
+anaphoric rider (`_RIDER_BECOMES_TYPE_IN_ADDITION_RE`, in `_parse_referent_
+object_clause`) - CR 205.1b's "in addition to its other types" as a one-shot
+layer-4 `add_subtype` grant on whatever the antecedent's own reanimation
+actually returned, the identical shape `_amass`'s own name-becomes-subtype
+line already reads.
+
+**"Twenty-five or more loyalty counters among `<name>`s you control"** -
+Jace, Reality Sculptor's own `0` activation restriction. `_CONDITION_
+LOYALTY_AMONG_NAMED` (`models/game.py`), summing `CardState.loyalty`
+(CR 306.5c) across every battlefield permanent sharing the named printed
+name, read by the existing `Game.condition_holds`/`_activation_condition_
+holds` CR 602.5b machinery with no new call site. Needed a real numbers.py
+gap fixed first: no compound number word above the tens existed at all
+("twenty-five" parsed to `None`), so `count_pattern`/`parse_count` gained
+`_parse_compound_tens` (tens-plus-ones, hyphen or bare space) - a general
+fix, not scoped to loyalty counts, since every parser in the codebase reads
+counts through this one module.
+
+**"Exile all but the bottom card of `<each opponent's|target player's>`
+library."** - the other half of Jace's own `0`. `_parse_exile_all_but_
+bottom_of_library_clause` (`_EXILE_ALL_BUT_BOTTOM_OF_LIBRARY_RE`), reading
+both the unscoped group subject ("each opponent's") and CR 115.1's ordinary
+player target ("target player's") as one shape, moved through `Game.
+exile_cards` as a single CR 603.2c batch. Proven on Jace's own group form
+and, off-set, on Nicol Bolas, the Arisen's identically-worded but *targeted*
+`-12` - the same effect clause, a different subject shape entirely.
+
+**"Each opponent discards `<n>` cards. For each opponent who didn't discard
+`<n>` nonland cards this way, `<consequence>`."** - Garruk, Veiled Butcher's
+own `-3` ("... you draw a card.") and, sharing the identical antecedent
+(`_each_opponent_discards_and_count_shortfalls`, the new shared helper both
+read), Kroxa, Titan of Death's Hunger's own enters-or-attacks trigger
+("... loses 3 life.", off-set, joined with "then" rather than a new
+sentence, and landing its consequence on each shortfall *opponent*
+themselves rather than the controller) - two wrappers
+(`_parse_each_opponent_discards_then_draw_per_shortfall_whole_text`,
+`_parse_each_opponent_discards_then_shortfall_loses_life_whole_text`) over
+one antecedent, since only the consequence and its subject differ between
+real printings, never the discard-and-count half.
+
+**"Each `<player|opponent>` sacrifices `<n>` `<description>` of their
+choice. If you sacrificed `<description>` this way, `<consequence>`."** -
+Garruk, Veiled Butcher's own `-2` ("... create a 4/4 green Beast creature
+token with trample.") and, off-set, Rise of the Witch-king's identical
+antecedent with a different consequence ("... you may return another
+permanent card from your graveyard to the battlefield."). `_parse_each_
+sacrifices_then_conditional_whole_text` (`_EACH_SACRIFICES_THEN_
+CONDITIONAL_RE`) reuses `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`'s own
+sacrifice machinery for the antecedent and tracks only whether the
+resolving ability's own controller personally sacrificed a matching
+permanent - CR 608.2c's "this way" ties the rider to the antecedent's own
+outcome, and with several players sacrificing, only the controller's own
+share of it is what "you" ever means here. Rise of the Witch-king's own
+consequence needed one more small, general fix: `_RETURN_CARDS_FROM_YOUR_
+GRAVEYARD_RE` (the no-target, choose-based reanimation shape) now reads an
+optional leading "you may" as a real CR 608.2d choice and "another" as
+`{COUNT}`'s own missing synonym for one (CR 400.7's "an other" object, not
+a `numbers.parse_count` quantity word).
+
+**"[Until end of turn, ]you may activate loyalty abilities of `<subject>`
+on any player's turn any time you could cast an instant."** (CR 606.3's own
+timing, loosened) - a new `LoyaltyInstantSpeedPermission` record
+(`models/game.py`), checked first in `Game.why_cannot_activate`'s CR 606.3
+branch (`Game._loyalty_instant_speed_permitted`) ahead of the ordinary
+`can_cast_sorcery` refusal - never touching CR 606.3's *other* half, the
+once-per-turn-per-permanent rule, which stays enforced regardless. Three
+real subject shapes share one reader (`_parse_loyalty_instant_speed_
+clause`, `_LOYALTY_INSTANT_SPEED_RE`): a bare "planeswalkers you control"
+(unscoped), a "`<Subtype>` planeswalkers you control" (subtype-filtered -
+Jace's Machinations' own "... loyalty abilities of Jace planeswalkers you
+control ... Until end of turn ...", a temporary, resolved grant), and a
+proper name (self-referential to the granting source's own short name -
+Teferi, Master of Time's off-set "... loyalty abilities of Teferi ...",
+which is not a resolving grant at all but a *permanent static ability*, so
+`_loyalty_instant_speed_permitted` also reads a source's own printed text
+directly for the identical sentence, the same "static ability, no
+resolution record" posture `attacker_cap_restriction` and the 0-loyalty
+exemption above both already take, and `Game.emblems_of` alongside
+`permanents_controlled_by` for the source list - CR 114.2's emblem
+"applies as though it were printed on a permanent", so the identical
+sentence read off a command-zone emblem is the same read, not a separate
+mechanism). Proven off-set on Teferi's Talent's/Teferi, Temporal Archmage's
+own emblem text ("You get an emblem with '... loyalty abilities of
+planeswalkers you control ...'"), minted directly through `Game.
+create_emblem` and checked the same way.
+
+**"Whenever you activate a loyalty ability, you gain 1 life. You may play
+an additional land this turn."** - Way of the Paradox's own granted
+trigger. The life-gain half needed nothing new (a plain "you gain N life"
+player clause, and CR 606's own "activate a loyalty ability" trigger event
+S5 already built); the land half is new: `Game.extra_land_plays`/`Game.
+grant_extra_land_play`, a resolving-instruction twin of `machines.layers.
+additional_land_plays`'s existing *static*-ability reader, summed together
+in `Game.land_allowance`, reset with `lands_played` at the start of each
+turn. `_ADDITIONAL_LAND_PLAY_RE` reads with or without a leading "you may"
+and is checked ahead of `_parse_optional_player_clause`'s own generic
+"you may" strip, since the grant itself is unconditional CR 305.2 - the
+printed "may" belongs to the ordinary land play it makes legal, never to a
+CR 608.2d choice about accepting the grant.
+
+**Proliferate (CR 701.34a)**, entirely new - the keyword action did not
+exist anywhere in the engine before this stream. `Game.proliferate`
+(chosen permanents only) adds one more counter of each kind a chosen
+permanent already has; `_parse_proliferate_clause` (`_PROLIFERATE_RE`)
+reads the bare keyword and CR 107.3f's own "`<n>` times[, where X is
+`<expr>`]" repeat count through the same `_fixed_or_where_x_amount` reader
+Empower Jace's own "N, where X is ..." shape already uses, asking a fresh
+CHOOSE_CARDS question (`exact=False`, "any number", CR 608.2d) before each
+repetition, over whatever the battlefield looks like at that moment - a
+counter a repetition just added can make a permanent newly eligible for
+the next one. **Documented gap**: CR 701.34a's own "and/or players" half
+(a player's poison/experience counters) is not modelled - it needs a
+player-choice decision shape this store's `DecisionKind` vocabulary does
+not carry yet, and no printing in this stream's own scope needs it; every
+permanent-only "proliferate" in the pool reads correctly as printed. Proven
+off-set on Fuel for the Cause's own bare "Counter target spell, then
+proliferate."
+
+Tam, the Possibility's own "Proliferate X times, where X is the number of
+planeswalker types among planeswalkers you control." needed two more
+fixes, both found writing this stream's own scenario tests. First,
+`count_expression` had no reader for "the number of planeswalker types
+among planeswalkers you control" at all - `_COUNT_PLANESWALKER_TYPES_RE`
+counts distinct subtypes among the controller's own `Type.PLANESWALKER`
+permanents, needing no closed word list the way `BASIC_LAND_TYPES` does:
+CR 205.3j's own planeswalker types (verified whole this session,
+`mise run rules:find 205.3j`) are exactly whatever subtypes a planeswalker
+permanent carries, nothing narrower. Second, `_parse_proliferate_clause`'s
+own `effect()` silently fell back to `times = 1` whenever the "N times"
+tail printed an X this wave could not read, rather than failing the whole
+clause closed at parse time the way every sibling CR 701 keyword-action
+reader in this file already does (`_parse_damage_each_group_clause` among
+them) - so an unreadable X would have quietly proliferated once instead of
+recording that it went unread. Fixed by moving the `_fixed_or_where_x_
+amount` check to parse time and returning `None` for the whole clause on a
+miss.
+
+**Sweep, this stream:** `scripts/sweep_pool.py --effects` - 134 of 1250
+silent (up from the 129-of-1039 baseline the FRA S1 section above already
+reports; the growth is this stream's own proof cards, none of them left
+silent, against a larger card count from every merged stream's own
+`scripts/add_card.py` fixtures). Registry rows unchanged (`EFFECTS` 1,
+`TRIGGER_EFFECTS` 6, `ACTIVATED_EFFECTS` 0) - every fix above is a parser,
+a selector, or a general condition/duration/count reader, never a
+card-name-keyed row.

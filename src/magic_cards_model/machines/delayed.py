@@ -1155,7 +1155,18 @@ class PumpEventSubject(DelayedEffectSpecBase):
                 timestamp=game.continuous_effects.tick(),
                 duration=Duration.UNTIL_END_OF_TURN,
                 source_id=trigger.source_id,
-                source_ability=trigger.text,
+                # No `source_ability`, deliberately: CR 611.2c's one-time
+                # resolved effect does not depend on the source still
+                # *having* this ability once it has fired - unlike a static
+                # grant's own `_source_line_for`-matched `source_ability`
+                # (CR 613.6), there is no "for as long as" here for a source
+                # leaving, or having its text rewritten, to end early. Setting
+                # this to `trigger.text` used to fail CR 613.6's `has_ability`
+                # check on every board computation - `trigger.text` is only
+                # the parsed *effect* clause, with the printed cost/chapter
+                # prefix ("−3: ", "I — ") already stripped off by the parser
+                # that built it, so it could never equal the permanent's own
+                # verbatim printed line and the pump silently never applied.
                 selector=only_this_incarnation(target, target.zone_change_stamp),
                 modification=modify_power_toughness(self.power, self.toughness),
             ),

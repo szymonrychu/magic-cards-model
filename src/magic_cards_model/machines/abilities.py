@@ -1508,7 +1508,20 @@ class Cost(EngineModel):
 #: "a minus sign followed by a number or an X" is the `−X` form. Scryfall prints
 #: the minus as U+2212; the ASCII hyphen is accepted too. Brace-wrapped `{0}` is
 #: a mana symbol and never matches - the classification checks it first.
-_LOYALTY_SYMBOL = re.compile(r"^\+(?P<plus>\d+)$|^[−-](?P<minus>\d+|[Xx])$|^0$")
+#:
+#: The brackets are optional. A planeswalker's own printed ability line never
+#: carries them (Jace, Reality Sculptor's own oracle text reads "+1: Empower
+#: Jace X, ..."), but CR 107.7's symbol *is* bracketed, and Scryfall's own
+#: oracle text keeps the brackets whenever the identical ability is quoted
+#: inside another card's granted-ability text - Sanctum Lurker's own
+#: "Planeswalkers you control have '[+2]: This planeswalker deals ...'",
+#: Ichormoon Gauntlet's off-set "'[0]: Proliferate' and '[−12]: Take an extra
+#: turn ...'". Without this, `_classify_cost` read every granted loyalty
+#: ability's own bracketed cost as `CostKind.OTHER`, and `Game.activation_
+#: cost` raised trying to build a cost for the literal text "[+2]" - every
+#: quoted grant in the pool broke the moment its own ability was activated,
+#: not just Sanctum Lurker's.
+_LOYALTY_SYMBOL = re.compile(r"^\[?(?:\+(?P<plus>\d+)|[−-](?P<minus>\d+|[Xx])|0)\]?$")
 
 
 class LoyaltyCost(EngineModel):

@@ -1014,6 +1014,18 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
 _COUNT_BASIC_LAND_TYPES_RE = re.compile(
     r"^(?:the )?number of basic land types among lands you control$", re.IGNORECASE
 )
+#: Tam, the Possibility's own X definition: "the number of planeswalker
+#: types among planeswalkers you control." CR 205.3j: "Planeswalkers have
+#: their own unique set of subtypes; these subtypes are called planeswalker
+#: types" - an open-but-named-in-full list (verified this session with
+#: `mise run rules:find 205.3j`), but every one of them is a subtype a
+#: permanent can carry only while it also has the planeswalker card type, so
+#: counting distinct subtypes among the controller's own planeswalkers needs
+#: no closed word list the way `BASIC_LAND_TYPES` (a five-item CR 305.6
+#: subset of every land subtype) does.
+_COUNT_PLANESWALKER_TYPES_RE = re.compile(
+    r"^(?:the )?number of planeswalker types among planeswalkers you control$", re.IGNORECASE
+)
 #: "the number of cards exiled this way" (Corpseweft), "each artifact
 #: sacrificed this way" (Radiant Lotus, through `_for_each_multiplier`) - a
 #: count of what this object's own cost or earlier instruction moved,
@@ -1154,6 +1166,23 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return len(found)
 
         return count_basic_land_types
+
+    if _COUNT_PLANESWALKER_TYPES_RE.fullmatch(stripped):
+        # Tam, the Possibility's own X definition (CR 205.3j) - see
+        # `_COUNT_PLANESWALKER_TYPES_RE`'s own docstring for why no closed
+        # word list is needed.
+        def count_planeswalker_types(game: "Game", controller: str) -> int:
+            board = game.computed_board()
+            found = {
+                subtype
+                for permanent in game.battlefield
+                if board.of(permanent).controller == controller
+                and Type.PLANESWALKER in board.of(permanent).types
+                for subtype in board.of(permanent).subtypes
+            }
+            return len(found)
+
+        return count_planeswalker_types
 
     if match := _COUNT_YOU_CONTROL_RE.fullmatch(stripped):
         # CR 110.5: status (tapped/untapped) is a permanent's physical state,
@@ -5317,6 +5346,24 @@ ClauseEffect = Callable[["Game", Player, str, str | None], None]
 # phrasing is deliberately left to the targeted-effects wave.
 #: "you gain N life", and "you gain three times X life" (Martyr of Sands) once
 #: CR 107.3a's X is substituted - a multiplier on the count, read the same way.
+#: "[You may ]play `<n>` additional land(s) this turn." - Way of the
+#: Paradox's own granted trigger ("... you gain 1 life. You may play an
+#: additional land this turn."). CR 305.2's allowance increase, granted by
+#: a *resolving* instruction rather than a permanent's own static ability
+#: (`Game.grant_extra_land_play`, the resolved twin of `machines.layers.
+#: additional_land_plays`'s static-ability reader) - unconditionally: the
+#: printed "may" belongs to the *later* land play (CR 305.1's own ordinary
+#: optionality) this grant makes legal, not to a CR 608.2d choice about
+#: accepting the grant itself, so the leading "you may " is only ever
+#: `_parse_optional_player_clause`'s own generic strip (which this shape
+#: also matches with no prefix at all, for a card that ever prints the
+#: grant as a plain "You get an additional land drop this turn"-shaped
+#: mandatory instruction instead).
+_ADDITIONAL_LAND_PLAY_RE = re.compile(
+    rf"(?:you may )?play {count_pattern('n', article=True)} additional lands? this turn",
+    re.IGNORECASE,
+)
+
 #: The optional "for each `<expr>`" tail - Mastery of the Unseen's "gain 1
 #: life for each creature you control" - is read by `_for_each_multiplier`
 #: below, once, at the moment CR 608.2h fixes the count.
@@ -5732,6 +5779,18 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
         return gain_life
 
+    if match := _ADDITIONAL_LAND_PLAY_RE.fullmatch(clause):
+        amount = parse_count(match.group("n"))
+        if amount is None or amount < 1:
+            return None
+
+        def extra_land_play(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            game.grant_extra_land_play(player.username, amount)
+
+        return extra_land_play
+
     if match := _REMOVE_A_COUNTER_FROM_EACH_OF_ANY_NUMBER_RE.fullmatch(clause):
         kind = _counter_kind(match.group("kind"))
         description = match.group("description")
@@ -5972,6 +6031,12 @@ def _parse_optional_player_clause(clause: str) -> ClauseEffect | None:
     could not carry out.
     """
     if _PAY_ANY_AMOUNT_OF_LIFE_RE.fullmatch(clause.strip().rstrip(".")):
+        return parse_clause_effect(clause)
+    if _ADDITIONAL_LAND_PLAY_RE.fullmatch(clause.strip().rstrip(".")):
+        # The grant is unconditional (see `_ADDITIONAL_LAND_PLAY_RE`'s own
+        # docstring): a "you may" here is never a CR 608.2d question this
+        # engine has to ask, so this is read before the generic "you may"
+        # strip below would otherwise wrap it in one.
         return parse_clause_effect(clause)
     if match := _YOU_MAY_RE.match(clause):
         inner_text = match.group("clause").strip()
@@ -10193,6 +10258,83 @@ def _merge_continuous_pump_keyword_clauses(
     ):
         return 2, create_continuous_effect  # type: ignore[return-value]
     return None
+
+
+#: "`<n>` damage to `<phrase>`" with no subject or verb of its own - the
+#: second half of "`<source>` deals `<n>` damage to `<phrase1>` and `<n>`
+#: damage to `<phrase2>`" once `_CLAUSE_SEPARATOR`'s bare "and" split has
+#: cut the shared "`<source>` deals" off the front of it. Way of the
+#: Warlord's own granted "[-4]" ("This planeswalker deals 2 damage to up to
+#: one target creature or planeswalker and 2 damage to target player.") and
+#: Lunge's off-set "Lunge deals 2 damage to target creature and 2 damage to
+#: target player or planeswalker." are the identical shape, one a loyalty
+#: ability's own source, one a spell's.
+_BARE_DAMAGE_CONTINUATION_RE = re.compile(
+    rf"^(?P<n>{AMOUNT}) damage to (?P<phrase>any target|.*?target.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_split_damage_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "`<source>` deals `<n>` damage to `<phrase1>` and `<n>` damage to
+    `<phrase2>`." - one CR 608.2c instruction, cut into two clauses by
+    `_CLAUSE_SEPARATOR`'s bare "and" split, which leaves the second half
+    with no subject of its own (`_BARE_DAMAGE_CONTINUATION_RE`).
+
+    Deliberately narrower than a fully general multi-phrase damage split:
+    fires only when both halves print the identical amount. CR 601.2c
+    already keeps `phrase1`'s and `phrase2`'s own targets as two separate
+    target requirements at announcement (`machines/targeting.py`'s own
+    per-clause target reading handles that; this function is resolution-only
+    and never re-derives it) - what this merge needs from *resolution* is
+    only "how much damage", and with both halves printing the same number
+    that answer does not depend on which requirement a resolved target came
+    from, so `game.resolve_targets(stack_object)` (CR 608.2b's own re-check,
+    already returning every surviving target in announced order) is enough:
+    every one of them takes the one shared amount, the same loop `damage_
+    ability_targets` already runs for a single-phrase multi-target clause.
+    An unequal split (`<n>` != `<n2>`) would need to know *which* resolved
+    target belongs to which requirement, which nothing on `AbilityOnStack`
+    records - so an unequal pair is refused here and falls through to the
+    ordinary per-clause path, which fails closed on the subjectless second
+    clause exactly as it did before this merge existed.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    first = clauses[index]
+    second = clauses[index + 1]
+    first_match = _DAMAGE_TARGET_RE.fullmatch(first)
+    if first_match is None or first_match.group("each") or first_match.group("where_x"):
+        return None
+    if _DAMAGE_TARGET_RE.fullmatch(second) is not None:
+        return None
+    second_match = _BARE_DAMAGE_CONTINUATION_RE.fullmatch(second)
+    if second_match is None:
+        return None
+    if first_match.group("n").strip().lower() != second_match.group("n").strip().lower():
+        return None
+    amount = parse_count(first_match.group("n"))
+    if amount is None:
+        return None
+    if not _targets_understood(
+        first_match.group("phrase"), count_agnostic=True, allow_player_targets=True
+    ):
+        return None
+    if not _targets_understood(
+        second_match.group("phrase"), count_agnostic=True, allow_player_targets=True
+    ):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object if for_spell else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        for target in game.resolve_targets(stack_object):
+            game.deal_damage(target, amount, source=source)
+
+    return 2, effect
 
 
 def _merge_prevent_damage_from_target_clauses(
@@ -27313,6 +27455,133 @@ def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return ability_clause
 
 
+#: "[Until end of turn, ]you may activate loyalty abilities of `<subject>`
+#: on any player's turn any time you could cast an instant." - Jace's
+#: Machinations' own first sentence ("Jace planeswalkers you control",
+#: bounded), Teferi's Talent's and Teferi, Temporal Archmage's shared
+#: emblem text ("planeswalkers you control", permanent), and Teferi,
+#: Master of Time's own self-reference ("Teferi", permanent, off-set - CR
+#: 201.5's own planeswalker self-reference is by name, not "this
+#: permanent", so the subject is read against the resolving ability's own
+#: source name rather than a fixed pronoun).
+_LOYALTY_INSTANT_SPEED_RE = re.compile(
+    r"^(?P<until_eot>until end of turn, )?you may activate loyalty abilities of "
+    r"(?P<subject>planeswalkers you control|(?P<subtype>[a-z]+) planeswalkers you control"
+    r"|(?P<self_name>[a-z][a-z' ]*?)) on any player'?s turn any time you could cast "
+    r"an instant\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_loyalty_instant_speed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_LOYALTY_INSTANT_SPEED_RE`'s shape."""
+    match = _LOYALTY_INSTANT_SPEED_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    until_end_of_turn = match.group("until_eot") is not None
+    subtype = match.group("subtype")
+    self_name = match.group("self_name")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from ..models.game import LoyaltyInstantSpeedPermission
+
+        controller = game.controller_of(stack_object).username
+        self_source_id = None
+        if self_name is not None:
+            source = (
+                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+            )
+            if source is None or source.name.split(",")[0].strip().lower() != self_name.lower():
+                return
+            self_source_id = source.id
+        game.loyalty_instant_speed_permissions.append(
+            LoyaltyInstantSpeedPermission(
+                player=controller,
+                subtype=subtype,
+                self_source_id=self_source_id,
+                until_end_of_turn=until_end_of_turn,
+            )
+        )
+
+    return effect
+
+
+#: "Proliferate[ `<n>` times][, where X is `<expr>`]." - CR 701.34's keyword
+#: action, bare (Tribute to Horobi's own kicker mode) or repeated (Tam, the
+#: Possibility's own "Proliferate X times, where X is the number of
+#: planeswalker types among planeswalkers you control."). `_fixed_or_where_x_
+#: amount` is the same CR 107.3f reader Empower Jace's own "N, where X is
+#: ..." shape already uses, so a fixed repeat count and an X-defined one read
+#: through the identical path.
+_PROLIFERATE_RE = re.compile(
+    rf"^proliferate(?: {count_pattern('times', x=True)} times)?{where_x_pattern()}\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
+    """`_PROLIFERATE_RE`'s shape.
+
+    CR 701.34a's own choice - "any number of permanents ... that have a
+    counter" - is asked fresh each repetition (`game.proliferate` itself
+    only ever applies to what it is handed, never re-derives candidates),
+    since a counter proliferate just added can make a permanent that had
+    none a legal choice for the *next* repetition. Permanents only - see
+    `Game.proliferate`'s own docstring for the documented player-counter gap.
+    """
+    match = _PROLIFERATE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    times_raw = match.group("times")
+    where_x = match.group("where_x")
+    times_reader = None
+    if times_raw is not None:
+        # A printed "N times" that this wave cannot read (an unfamiliar
+        # "where X is ..." expression, or a literal "X" with no definition
+        # at all) fails the whole clause closed here, at parse time - not a
+        # silent `times = 1` fallback at resolution, which would quietly run
+        # Tam, the Possibility's own "Proliferate X times" once regardless
+        # of what X actually was.
+        times_reader = _fixed_or_where_x_amount(times_raw, where_x)
+        if times_reader is None:
+            return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        x_value = stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0
+        times = times_reader(game, controller.username, None, x_value or 0) if times_reader else 1
+        for _ in range(max(times, 0)):
+            candidates = [
+                state
+                for state in game.battlefield
+                if any(count > 0 for count in state.counters.counts.values())
+            ]
+            if not candidates:
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="choose any number of permanents to proliferate",
+                    source=source_name,
+                    source_id=source_id_of(stack_object),
+                    amount=len(candidates),
+                    cards=tuple(state.id for state in candidates),
+                    exact=False,
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+            game.proliferate(chosen)
+
+    return effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -27323,6 +27592,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     targeted = _parse_targeted_clause(clause, for_spell=for_spell)
     if targeted is not None:
         return targeted
+    loyalty_instant_speed = _parse_loyalty_instant_speed_clause(clause, for_spell=for_spell)
+    if loyalty_instant_speed is not None:
+        return loyalty_instant_speed
+    proliferate = _parse_proliferate_clause(clause)
+    if proliferate is not None:
+        return proliferate
     token = _parse_token_clause(clause, for_spell=for_spell)
     if token is not None:
         return token
@@ -27791,6 +28066,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_prevent_damage_from_target_clauses(clauses, index)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_split_damage_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
