@@ -1617,6 +1617,16 @@ def _run_mass_pump(
         if subtype_match is not None
         else literal
     )
+    # `parsed_layer_effects` reads `_effect_sentences`, which needs a real
+    # sentence terminator to recognise anything at all - fine for a whole,
+    # unsplit ability effect (still carries its own printed period), but
+    # `literal` can also arrive here already trimmed of one: `_parse_mass_
+    # pump_group_clause` calls this on a single clause `split_effect_
+    # clauses` has already cut apart (and that splitter always strips a
+    # trailing "."), Ingris Stingerquill's "Then creatures you control gain
+    # haste until end of turn." among them.
+    if not parseable.rstrip().endswith("."):
+        parseable = parseable.rstrip() + "."
     builder = parsed_layer_effects(parseable)
     if builder is None:
         # A keyword outside `_KNOWN_KEYWORDS`'s whitelist, or some other shape
@@ -7169,16 +7179,28 @@ def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
     `_parse_token_clause` is tried directly against the untouched text
     instead; its own regex only ever fullmatches a *complete* token-creation
     sentence, so a card whose token clause is one instruction among several
-    still falls through to the ordinary per-clause path unaffected.
+    is meant to fall through to the ordinary per-clause path unaffected -
+    which needs an explicit guard, not just leaving it to `_TOKEN_CLAUSE_RE`
+    to fail: that regex's own "named <name>" and "with <tail>" groups are
+    both a bare `.+?` with only a final `$` to anchor against, so hunting
+    for a match against a genuinely multi-sentence text (Ingris
+    Stingerquill's own "Create a 2/2 ... token named Cadet. Then creatures
+    you control gain haste until end of turn.") lets the "name" backtrack
+    straight through the interior period and swallow the second sentence
+    whole, rather than failing the way "one instruction among several"
+    promises. A period anywhere in the stripped text other than a trailing
+    one it is about to remove is exactly that second sentence, so this
+    refuses before ever calling `_parse_token_clause` at all.
     """
     # `split_effect_clauses` always strips one trailing "." before a clause
     # ever reaches `_parse_token_clause`; going around that splitter (see the
     # docstring above) means doing the same trim here - `_TOKEN_CLAUSE_RE`'s
     # own trailing `\.?` never gets the chance to, since its greedy DOTALL
     # `tail` group is satisfied first and simply absorbs the period instead.
-    return _parse_token_clause(
-        _strip_non_effect_preamble(text).strip().rstrip("."), for_spell=False
-    )
+    stripped = _strip_non_effect_preamble(text).strip().rstrip(".")
+    if "." in stripped:
+        return None
+    return _parse_token_clause(stripped, for_spell=False)
 
 
 #: `phrase` always captures from the word "target" itself (or "any target")
@@ -21475,6 +21497,42 @@ def _parse_optional_mixed_clause(clause: str, *, for_spell: bool) -> TargetedCla
     return effect
 
 
+def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """A CR 611.2 mass pump/keyword-grant clause ("creatures you control
+    gain <keyword(s)>[ and get +N/+N] until end of turn") as *one* clause of
+    a multi-clause effect, not only as the whole effect text.
+
+    `_mass_pump_ability_effect`/`_mass_pump_spell_effect` already read this
+    shape, but only against the *whole*, unsplit effect text - which is why
+    Ingris Stingerquill's own "Create a 2/2 ... token named Cadet. Then
+    creatures you control gain haste until end of turn." used to lose the
+    second sentence entirely: `split_effect_clauses` cuts the two apart
+    correctly (CR 608.2c's instruction order), but nothing in `_parse_mixed_
+    clause`'s per-clause dispatch below tried this shape on the resulting
+    piece, so a clause that could not be read as a targeted/token/search/
+    player instruction fell all the way through as unreadable. Reusing the
+    same two whole-text readers here, one clause at a time, is what lets a
+    mass pump compose with whatever clause precedes or follows it.
+    """
+    if for_spell:
+        spell_effect = _mass_pump_spell_effect(clause)
+        if spell_effect is None:
+            return None
+
+        def spell_clause(game: "Game", stack_object: "StackObject") -> None:
+            spell_effect(game, stack_object)  # type: ignore[arg-type]
+
+        return spell_clause
+    ability_effect = _mass_pump_ability_effect(clause)
+    if ability_effect is None:
+        return None
+
+    def ability_clause(game: "Game", stack_object: "StackObject") -> None:
+        ability_effect(game, stack_object)  # type: ignore[arg-type]
+
+    return ability_clause
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -21488,6 +21546,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     token = _parse_token_clause(clause, for_spell=for_spell)
     if token is not None:
         return token
+    mass_pump = _parse_mass_pump_group_clause(clause, for_spell=for_spell)
+    if mass_pump is not None:
+        return mass_pump
     role_token = _parse_create_role_token_clause(clause, for_spell=for_spell)
     if role_token is not None:
         return role_token

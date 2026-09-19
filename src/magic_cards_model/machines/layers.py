@@ -3008,9 +3008,17 @@ _ANTHEM_AND_KEYWORD_GRANT_RE = re.compile(
 _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     r"^(?:(?P<other>other )?creatures (?P<whose>you control|your opponents control)|"
     r"all creatures) "
-    r"(?:gain (?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
-    r"(?:\s+and\s+[a-z]+(?: [a-z]+)?)?) and )?"
-    r"get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn\.?$",
+    r"(?:"
+    r"gain (?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
+    r"(?:\s+and\s+[a-z]+(?: [a-z]+)?)?)"
+    r"(?: and get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+))?"
+    # Aerie Mystics: "Creatures you control gain shroud until end of turn." -
+    # the keyword-only shape, with no "get +N/+N" at all (CR 611.2's mass
+    # grant is not required to carry a pump). Ingris Stingerquill's own
+    # "Then creatures you control gain haste until end of turn." is the same
+    # shape, one clause among several rather than the whole effect.
+    r"|get (?P<power_only>[+-]\d+)/(?P<toughness_only>[+-]\d+)"
+    r") until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -4230,17 +4238,18 @@ def _mass_pump_until_eot_builder(power: int, toughness: int, keywords: list[str]
     ) -> list[ContinuousEffect]:
         effects: list[ContinuousEffect] = []
         for target in targets:
-            effects.append(
-                ContinuousEffect(
-                    description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
-                    layer=Layer.POWER_TOUGHNESS,
-                    sublayer=Sublayer.MODIFY,
-                    timestamp=timestamp,
-                    duration=Duration.UNTIL_END_OF_TURN,
-                    selector=only_this_incarnation(target, target.zone_change_stamp),
-                    modification=modify_power_toughness(power, toughness),
+            if power or toughness:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
+                        layer=Layer.POWER_TOUGHNESS,
+                        sublayer=Sublayer.MODIFY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=modify_power_toughness(power, toughness),
+                    )
                 )
-            )
             for keyword in keywords:
                 effects.append(
                     ContinuousEffect(
@@ -6487,8 +6496,14 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             if validated is None:
                 return None
             keywords = validated
+        power = match.group("power") or match.group("power_only")
+        toughness = match.group("toughness") or match.group("toughness_only")
+        if power is None and not keywords:
+            return None
         return _mass_pump_until_eot_builder(
-            int(match.group("power")), int(match.group("toughness")), keywords
+            int(power) if power is not None else 0,
+            int(toughness) if toughness is not None else 0,
+            keywords,
         )
     if match := _INDEFINITE_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
