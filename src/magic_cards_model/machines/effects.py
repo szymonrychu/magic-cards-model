@@ -115,6 +115,7 @@ from .cost import is_snow_source, spend_restriction
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
+    AddManaWhenLandTapped,
     CombatDamageToPlayerDraw,
     CopyNextSpellYouCast,
     CreateAttackingTokens,
@@ -10103,6 +10104,65 @@ def _is_layer_effect_text(text: str) -> bool:
 #: `machines/abilities.parse_triggered_mana`.
 _MANA_SYMBOL_RE = re.compile(r"\{([WUBRGC])\}", re.IGNORECASE)
 
+#: "Until end of turn, whenever you tap a Mountain for mana, add an
+#: additional {R}." (Molten Tide) and "Until end of turn, whenever a player
+#: taps an Island for mana, that player adds an additional {U}." (High
+#: Tide, off-set - fetched as a genericity precedent, not itself in the
+#: pool). CR 603.7: a resolving spell creating a delayed triggered ability
+#: with a stated duration ("until end of turn"). The subject word decides
+#: the recipient without a separate group to keep in sync with it: "you
+#: tap" pairs with a bare "add" (CR 608.2h's default subject, the ability's
+#: own controller) and restricts to the controller's own taps; "a player
+#: taps" pairs with an explicit "that player adds" and is unrestricted.
+_UNTIL_END_OF_TURN_TAP_LAND_ADDITIONAL_MANA_RE = re.compile(
+    r"^until end of turn, whenever (?:"
+    r"you taps? an? (?P<your_land>[a-z]+) for mana, add"
+    r"|a player taps an? (?P<any_land>[a-z]+) for mana, that player adds"
+    r") an additional (?P<mana>(?:\{[wubrgc]\})+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_until_end_of_turn_tap_land_additional_mana_clause(text: str) -> AbilityEffect | None:
+    """`_UNTIL_END_OF_TURN_TAP_LAND_ADDITIONAL_MANA_RE`'s shape - a whole,
+    single-clause spell effect (Molten Tide and High Tide each print nothing
+    else), so this is tried against the full text rather than split first.
+    """
+    match = _UNTIL_END_OF_TURN_TAP_LAND_ADDITIONAL_MANA_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    land = match.group("your_land") or match.group("any_land")
+    mana = tuple(Color(letter.upper()) for letter in _MANA_SYMBOL_RE.findall(match.group("mana")))
+    if not mana:
+        return None
+    only_creators_own_taps = match.group("your_land") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=(
+                    f"Until end of turn, whenever "
+                    f"{'you tap' if only_creators_own_taps else 'a player taps'} "
+                    f"{with_indefinite_article(land)} for mana, add an additional "
+                    f"{''.join(f'{{{color.value}}}' for color in mana)}."
+                ),
+                event=TriggerEvent.TAPPED_FOR_MANA,
+                controller=controller.username,
+                source_id=spell.id,
+                source_name=spell.name,
+                remaining=None,
+                expires_end_of_turn=True,
+                effect=AddManaWhenLandTapped(
+                    land_subtype=land,
+                    mana=mana,
+                    only_creators_own_taps=only_creators_own_taps,
+                ),
+            )
+        )
+
+    return effect
+
 
 def _choose_mana_color(
     game: "Game",
@@ -13480,6 +13540,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     flashback_grant = _parse_grant_flashback_clause(whole)
     if flashback_grant is not None:
         return flashback_grant
+    tap_land_additional_mana = _parse_until_end_of_turn_tap_land_additional_mana_clause(whole)
+    if tap_land_additional_mana is not None:
+        return tap_land_additional_mana
     each_graveyard_flashback_grant = _parse_each_graveyard_instant_sorcery_gains_flashback_clause(
         whole
     )

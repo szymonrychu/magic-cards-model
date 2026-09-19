@@ -82,7 +82,7 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 
 from ..ids import new_id
-from ..models.card import Type
+from ..models.card import Color, Type
 from ..models.card_state import PERMANENT_TYPES, CardState, Counter
 from ..models.mana import ManaCost
 from ..models.token import TokenDefinition, create_tokens
@@ -997,6 +997,48 @@ class RevokeGrantedAbility(DelayedEffectSpecBase):
             )
 
 
+class AddManaWhenLandTapped(DelayedEffectSpecBase):
+    """Molten Tide's and High Tide's shared shape: "Until end of turn,
+    whenever [you tap|a player taps] a[n] <land subtype> for mana, [add|that
+    player adds] an additional <mana>." (Molten Tide: "you tap a Mountain
+    ... add"; High Tide: "a player taps an Island ... that player adds".)
+
+    CR 605.1b: the created ability is itself a mana ability - it triggers
+    from another mana ability's own activation and could add mana - so
+    CR 605.3b would have it resolve with no stack at all. This engine's own
+    CR 605.3b fast path (`machines/cost.py`'s `mana_trigger_sources`/
+    `triggered_mana_bonus`, run during `tap_for_mana` itself) only ever
+    scans a permanent's *printed* triggered mana abilities; a delayed one is
+    not attached to any permanent to scan there. This resolves the ordinary
+    way instead - CR 603.3 puts it on the stack like any other trigger, and
+    the mana still lands in the right pool once it does. Only the "no stack
+    at all" half of CR 605.3b is not reached for a delayed mana trigger
+    specifically; a documented simplification, not a silent gap.
+    """
+
+    kind: Literal["add_mana_when_land_tapped"] = "add_mana_when_land_tapped"
+
+    land_subtype: str
+    mana: tuple[Color, ...]
+    only_creators_own_taps: bool
+    """True for "you tap" (Molten Tide - only the ability's own controller's
+    taps count, and the mana goes to them). False for "a player taps ...
+    that player adds" (High Tide - any player's tap counts, and the mana
+    goes to whoever tapped, not necessarily this ability's own controller)."""
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or event.subject_controller is None:
+            return
+        if self.only_creators_own_taps and event.subject_controller != trigger.controller:
+            return
+        if not any(word.lower() == self.land_subtype.lower() for word in event.subject_subtypes):
+            return
+        pool = game.mana_pool_receiving(event.subject_controller)
+        for color in self.mana:
+            pool.add(color)
+
+
 #: What a delayed (or reflexive) triggered ability does when it resolves -
 #: `DelayedTrigger.effect`'s own type. Every string this task's requirement 2
 #: names (`"warp:exile"`, `"grant_extra_turn"`, `"sacrifice"`) is a member's
@@ -1032,7 +1074,8 @@ DelayedEffectSpec = Annotated[
     | ReflexiveMandatoryTokenDamageConsequence
     | ReflexiveCounterCountConsequence
     | ReflexiveExileCopiedCard
-    | RevokeGrantedAbility,
+    | RevokeGrantedAbility
+    | AddManaWhenLandTapped,
     Field(discriminator="kind"),
 ]
 
