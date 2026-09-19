@@ -2441,6 +2441,7 @@ _CARD_TYPE_WORDS: dict[str, Type] = {
     "creature": Type.CREATURE,
     "enchantment": Type.ENCHANTMENT,
     "land": Type.LAND,
+    "planeswalker": Type.PLANESWALKER,
 }
 
 #: Colour words a token descriptor may use (CR 105.1), plus CR 105.2's
@@ -3330,6 +3331,16 @@ EntersCondition = Callable[["Game", CardState], bool]
 _YOU_CONTROL_SUBTYPES_RE = re.compile(r"^you control (an? [A-Z][\w'-]*(?: or an? [A-Z][\w'-]*)*)$")
 _A_SUBTYPE_RE = re.compile(r"an? ([A-Z][\w'-]*)")
 
+#: "unless you control a planeswalker" (the fra "Annex"/"Commons" land
+#: cycle's own shape) - CR 300.1's bare card type, told apart from
+#: `_YOU_CONTROL_SUBTYPES_RE`'s subtype by the capital: Oracle text never
+#: capitalises a card type the way it always capitalises a subtype
+#: (CR 205.3), so the two shapes never collide.
+_YOU_CONTROL_CARD_TYPE_RE = re.compile(
+    r"^you control an? (?P<type>artifact|creature|enchantment|land|planeswalker)$",
+    re.IGNORECASE,
+)
+
 #: "you control two or more other lands", "you control two or fewer other lands",
 #: the battle lands' "you control two or more basic lands" (CR 205.4c), and
 #: "you control three or more other Mountains" (Dwarven Mine). A land subtype
@@ -3371,6 +3382,26 @@ def _controls_a_subtype(subtypes: frozenset[str]) -> EntersCondition:
             for permanent in game.battlefield
             if permanent.controller == controller
             for subtype in board.of(permanent).subtypes
+        )
+
+    return holds
+
+
+def _controls_a_card_type(card_type: Type) -> EntersCondition:
+    """`_controls_a_subtype`'s twin over CR 300.1's card types instead of
+    CR 205.3's subtypes - "you control a planeswalker", not "you control a
+    Mountain".
+    """
+
+    def holds(game: "Game", entering: CardState) -> bool:
+        controller = entering.controller
+        if controller is None:
+            return False
+        board = game.computed_board()
+        return any(
+            card_type in board.of(permanent).types
+            for permanent in game.battlefield
+            if permanent.controller == controller
         )
 
     return holds
@@ -3517,6 +3548,11 @@ def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
 
 
 def _read_enters_condition(condition: str) -> EntersCondition | None:
+    match = _YOU_CONTROL_CARD_TYPE_RE.match(condition)
+    if match is not None:
+        card_type = _CARD_TYPE_WORDS.get(match.group("type").lower())
+        return _controls_a_card_type(card_type) if card_type is not None else None
+
     match = _YOU_CONTROL_SUBTYPES_RE.match(condition)
     if match is not None:
         subtypes = frozenset(_A_SUBTYPE_RE.findall(match.group(1)))
