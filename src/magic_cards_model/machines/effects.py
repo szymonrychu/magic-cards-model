@@ -17758,7 +17758,9 @@ def _parse_reflexive_pay_mana_clause(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.controller_of(ability)
         source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
-        paid = game.may_pay_mana_cost(player, cost, source=source_name, source_id=source_id)
+        paid = game.may_pay_mana_cost(
+            player, cost, source=source_name, source_id=source_id_of(source_id)
+        )
         if not paid:
             return
         game.create_reflexive_trigger(
