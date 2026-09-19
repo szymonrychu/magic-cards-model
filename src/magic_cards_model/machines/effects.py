@@ -16879,6 +16879,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reflexive_pay_mana = _parse_reflexive_pay_mana_clause(effect_text)
     if reflexive_pay_mana is not None:
         return reflexive_pay_mana
+    may_pay_mana_if_you_do = _parse_may_pay_mana_if_you_do_clause(effect_text)
+    if may_pay_mana_if_you_do is not None:
+        return may_pay_mana_if_you_do
     reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
     if reflexive_mandatory_token is not None:
         return reflexive_mandatory_token
@@ -22941,6 +22944,45 @@ def _parse_reflexive_pay_mana_clause(text: str) -> AbilityEffect | None:
             source_name=source_name,
             callback=ReflexiveConsequence(),
         )
+
+    return effect
+
+
+#: "you may pay `<N>`. If you do, `<consequence>`." - Proft, Consulting
+#: Detective's own "Whenever you scry or surveil, you may pay {2}. If you do,
+#: put a +1/+1 counter on Proft and draw a card." - the ordinary-mana twin of
+#: `_MAY_PAY_ENERGY_IF_YOU_DO_RE`'s energy symbols. CR 118.12, not CR 603.12
+#: (see that regex's own docstring for why "if you do" and "when you do" are
+#: never folded into one pattern): the consequence runs right here, on the
+#: same `AbilityOnStack`, with no new triggered ability and nothing that
+#: needs a target announced later.
+_MAY_PAY_MANA_IF_YOU_DO_RE = re.compile(
+    r"^you may pay (?P<mana>(?:\{[^}]+\})+)\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_pay_mana_if_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_PAY_MANA_IF_YOU_DO_RE`'s shape - see its own docstring for why
+    this is CR 118.12, not CR 603.12."""
+    match = _MAY_PAY_MANA_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    cost = ManaCost.parse(match.group("mana"))
+    consequence_text = match.group("consequence").strip()
+    consequence = parse_mixed_effect(consequence_text)
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        paid = game.may_pay_mana_cost(
+            player, cost, source=source_name, source_id=source_id_of(ability)
+        )
+        if not paid:
+            return
+        consequence(game, ability)
 
     return effect
 
