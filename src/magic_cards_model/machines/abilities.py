@@ -111,7 +111,7 @@ import functools
 import re
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import Field
@@ -165,6 +165,17 @@ _ANY_COLOR_COMBINATION = re.compile(
 #: until the ability is actually activated.
 _DEVOTION_AMOUNT = re.compile(
     r"^an amount of mana of that color equal to your devotion to that color$", re.IGNORECASE
+)
+#: Loot, the Nexus: "Choose a color. Add one mana of that color for each
+#: different power among creatures you control." The same "Choose a color"
+#: preamble and "that color" reference `_DEVOTION_AMOUNT` already reads for
+#: Nykthos, with a board count in place of devotion - "for each
+#: <count-expression>" rather than "where X is <count-expression>", read
+#: through the identical `_mana_count_expression_readable`/`resolve_mana_
+#: count_expression` pair so any future "... of that color for each ..."
+#: printing is answered the same way, not only this one card's own count.
+_CHOSEN_COLOR_FOR_EACH_RE = re.compile(
+    r"^one mana of that color for each (?P<expression>.+)$", re.IGNORECASE
 )
 #: The sentence that precedes it. CR 605.1a says nothing about a mana
 #: ability having only one sentence, and this one is simply where the colour
@@ -946,6 +957,17 @@ def _parse_effect(effect: str) -> ManaAbility | None:
             any_color_count=1,
             amount_from_devotion=True,
         )
+    chosen_color_for_each = _CHOSEN_COLOR_FOR_EACH_RE.fullmatch(effect.strip().rstrip("."))
+    if chosen_color_for_each:
+        expression = chosen_color_for_each.group("expression").strip()
+        if not _mana_count_expression_readable(expression):
+            return None
+        return ManaAbility(
+            options=[[color] for color in _COLORS],
+            any_color=True,
+            any_color_count=1,
+            any_color_count_expression=expression,
+        )
     # Before `_ANY_COLOR`: "one mana of any color that a land an opponent
     # controls could produce" opens with `_ANY_COLOR`'s own words, and reading
     # it as a plain any-colour ability is what made Exotic Orchard tap for red
@@ -1578,8 +1600,19 @@ class ActivationCostReduction(EngineModel):
     amount: int
     #: The quality's own words, as printed - "legendary creature". Read
     #: generically off a CR 205.4a supertype and/or CR 205.2a card type by
-    #: `Game.activation_cost_reduction_for`; no card name involved.
-    quality: str
+    #: `Game.activation_cost_reduction_for`; no card name involved. `None`
+    #: when `target_quality` is set instead - exactly one of the two is ever
+    #: set, matching which of the two printed shapes this sentence is.
+    quality: str | None = None
+    #: Dragonfire Blade's own shape: "This ability costs {1} less to
+    #: activate for each color of the creature it targets." and Warrior's
+    #: Blades' "... for each +1/+1 counter on the creature it targets." -
+    #: what is counted on the ability's own *target* rather than among
+    #: permanents its controller controls. Kept as the printed words ("color",
+    #: "+1/+1 counter") and read generically by
+    #: `machines/keywords.target_cost_reduction_amount`, the same "read the
+    #: phrase, don't guess a table" approach `quality` above already takes.
+    target_quality: str | None = None
 
 
 #: "This ability costs {N} less to activate for each <quality> you control."
@@ -1590,6 +1623,51 @@ _TRAILING_ACTIVATION_COST_REDUCTION_RE = re.compile(
     r"(?P<quality>.+?) you control\.?$",
     re.IGNORECASE,
 )
+
+#: The target-scoped sibling: "... for each color of the creature it
+#: targets." (Dragonfire Blade) and "... for each +1/+1 counter on the
+#: creature it targets." (Warrior's Blades) - "of" for a characteristic
+#: count, "on" for a counter count, and the object word itself left open
+#: ("creature" is the only one printed in the pool, but nothing here assumes
+#: it - `permanent`/`artifact` would read the same way).
+_TRAILING_TARGET_COST_REDUCTION_RE = re.compile(
+    r"^this ability costs \{(?P<amount>\d+)\} less to activate for each "
+    r"(?P<what>.+?) (?:on|of) the \w+ it targets\.?$",
+    re.IGNORECASE,
+)
+
+#: `target_cost_reduction_amount`'s own reading of a "<kind> counter[s]"
+#: phrase - the counter half of `ActivationCostReduction.target_quality`.
+_TARGET_COUNTER_PHRASE_RE = re.compile(r"^(?P<kind>[\w+/−-]+) counters?$", re.IGNORECASE)
+
+
+def target_cost_reduction_amount(
+    reduction: ActivationCostReduction, target: Any, game: Any = None
+) -> int | None:
+    """How many of `reduction.target_quality` are on `target` right now, or
+    `None` when the printed phrase is not one this reads (CR 601.2f via CR
+    602.2b, counted at the ability's own target rather than among permanents
+    its controller controls - `Game.activation_cost_reduction_for`'s sibling).
+
+    Two shapes read: a bare "color"/"colors" (Dragonfire Blade), counted off
+    the target's *computed* colours (CR 613.5) when a live `game` is given -
+    a static ability could still be changing them - and a plain-English
+    "<kind> counters?" (Warrior's Blades' "+1/+1 counter"), counted directly
+    off the target `CardState`'s own counters (CR 122.1; a counter kind is
+    never itself a layer-6 characteristic, so there is no computed board to
+    prefer here). Anything else returns `None` rather than a guess, the same
+    fail-closed default `Game.activation_cost_reduction_for` already gives an
+    unread "you control" quality.
+    """
+    phrase = (reduction.target_quality or "").strip().lower()
+    if phrase in ("color", "colors"):
+        colors = game.characteristics_of(target).colors if game is not None else target.colors
+        return len(colors)
+    match = _TARGET_COUNTER_PHRASE_RE.fullmatch(phrase)
+    if match is not None:
+        kind = match.group("kind").replace("−", "-")
+        return target.counter_count(kind)
+    return None
 
 
 def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCostReduction | None]:
@@ -1606,13 +1684,21 @@ def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCost
     sentences = [s for s in re.split(r"(?<=\.)\s+", effect.strip()) if s]
     if not sentences:
         return effect, None
-    match = _TRAILING_ACTIVATION_COST_REDUCTION_RE.match(sentences[-1].strip())
-    if match is None:
-        return effect, None
-    reduction = ActivationCostReduction(
-        amount=int(match.group("amount")), quality=match.group("quality").strip()
-    )
-    return " ".join(sentences[:-1]).strip(), reduction
+    last = sentences[-1].strip()
+    match = _TRAILING_ACTIVATION_COST_REDUCTION_RE.match(last)
+    if match is not None:
+        reduction = ActivationCostReduction(
+            amount=int(match.group("amount")), quality=match.group("quality").strip()
+        )
+        return " ".join(sentences[:-1]).strip(), reduction
+    target_match = _TRAILING_TARGET_COST_REDUCTION_RE.match(last)
+    if target_match is not None:
+        reduction = ActivationCostReduction(
+            amount=int(target_match.group("amount")),
+            target_quality=target_match.group("what").strip(),
+        )
+        return " ".join(sentences[:-1]).strip(), reduction
+    return effect, None
 
 
 class ActivatedAbility(BaseAbility):
@@ -1664,6 +1750,17 @@ class ActivatedAbility(BaseAbility):
     #: clause parser in `machines/effects.py` was ever meant to read. `None`
     #: for every ordinary activated ability, Class or not.
     class_level_target: int | None = None
+    #: CR 702.177a: "Exhaust — [Cost]: [Effect]" means "[Cost]: [Effect].
+    #: Activate only once." Set when the CR 207.2c-shaped prefix this line
+    #: was stripped of (`ability_word`, `_ABILITY_WORD`'s own em-dash form -
+    #: the same shape Channel's "Channel — {1}{G}, ..." uses) is literally
+    #: the word "Exhaust", the actual CR 702 keyword, read the same way
+    #: `_parse_keyword_cost`/`_parse_keyword_parameter` already recognise a
+    #: keyword by its printed name rather than by a lookup table.
+    #: `Game.activate_ability` reads this to record the permanent, never-
+    #: cleared-per-turn activation (`Game.exhausted`) CR 602.5b's "Activate
+    #: only once each turn" cannot express.
+    exhaust: bool = False
 
 
 class TriggeredAbility(BaseAbility):
@@ -1741,6 +1838,16 @@ class KeywordAbility(BaseAbility):
     #: mana - `Evoke—Exile a black card from your hand.` - and the two are
     #: worth telling apart, because only the em-dash form needs a sentence read.
     em_dash: bool = False
+    #: A trailing "This ability costs [N] less to activate for each
+    #: [quality] ..." sentence sharing this keyword's own paragraph (CR
+    #: 607.2h: two abilities can share one printed paragraph) - Warrior's
+    #: Blades' and Dragonfire Blade's own "Equip [N]. This ability costs
+    #: [M] less ..." lines. Split off by `_parse_line` before keyword
+    #: matching runs, the same way `ActivatedAbility.cost_reduction` is
+    #: split off an activated ability's own effect text, so the trailing
+    #: sentence's full stop cannot disqualify the line from
+    #: `_parse_keywords`'s "no full stop" rule.
+    cost_reduction: ActivationCostReduction | None = None
 
 
 class UnparsedAbility(BaseAbility):
@@ -1990,8 +2097,29 @@ def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
     candidates = {card_name, front}
     if "," in front:
         candidates.add(front.split(",", 1)[0].strip())
+    # "`<Name>` the `<Epithet>`" - a legendary printed with no comma before
+    # its own epithet (Liliana the Repentant's own "Put a +1/+1 counter on
+    # Liliana."), the same shape "Ghalta, Primal Hunger"'s comma already
+    # covers - still gets called by its first word alone (CR 201.5c: "Text
+    # printed on some cards refers to that card by a shortened version of
+    # its name"). Narrowed to *this* exact "the" pattern rather than any
+    # first word at all: "Hanweir Battlements"'s own text names two *other*
+    # cards sharing its first word ("a creature named Hanweir Garrison",
+    # "meld them into Hanweir, the Writhing Township") - substituting bare
+    # "Hanweir" there would rewrite both into nonsense, since neither is
+    # this card naming itself. "the" as the second word is a safe, narrow
+    # signal no ordinary card-name word ever collides with.
+    words = front.split(" ")
+    if len(words) >= 3 and words[1].lower() == "the":
+        candidates.add(words[0].strip())
     normalized = effect_text
-    for name in candidates:
+    # Longest candidate first: "Aerid Konstrari" has to replace the whole
+    # two-word name before its own shorter "Aerid" candidate ever gets a
+    # turn, or "When Aerid Konstrari enters" becomes "When this permanent
+    # Konstrari enters" instead of "When this permanent enters" - a shorter
+    # candidate winning the race corrupts the very phrase the longer one was
+    # about to match whole.
+    for name in sorted(candidates, key=len, reverse=True):
         if name:
             normalized = re.sub(
                 rf"{_EMPOWER_KEYWORD_LOOKBEHIND}\b{re.escape(name)}\b", "this permanent", normalized
@@ -2398,6 +2526,34 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
         return list(chapter_abilities)
 
     keyword_abilities = _parse_keywords(text, keywords, common)
+    if not keyword_abilities:
+        # A keyword-cost line sharing its paragraph with a trailing "This
+        # ability costs [N] less ..." sentence (CR 607.2h: two abilities, one
+        # paragraph) fails `_parse_keywords`'s own "no full stop in the line"
+        # rule on the *first* try, because the reduction sentence's full stop
+        # is still in `text` - Warrior's Blades' and Dragonfire Blade's own
+        # "Equip [N]. This ability costs [M] less ..." lines. Retried once
+        # with that sentence split off; a retry that still finds no keyword
+        # changes nothing; a retry with more than one line does not happen at
+        # all, since `_parse_keywords` never yields more than one entry for a
+        # single em-dash/parameter keyword-cost line to begin with.
+        stripped, reduction = _split_off_trailing_cost_reduction(text)
+        if reduction is not None:
+            # `_split_off_trailing_cost_reduction` only ever removes a full
+            # *sentence*, so the sentence before it keeps its own full stop -
+            # "Equip {3}." - which `_parse_keywords` reads as disqualifying
+            # all over again (a period anywhere bars a keyword line). The
+            # bare param/cost form ("Equip {1}") never carries one to begin
+            # with, so this strip only ever removes the one this split left.
+            stripped = stripped.rstrip(".")
+            retried = _parse_keywords(stripped, keywords, {**common, "text": stripped})
+            if retried:
+                keyword_abilities = [
+                    ability.model_copy(update={"cost_reduction": reduction})
+                    if isinstance(ability, KeywordAbility)
+                    else ability
+                    for ability in retried
+                ]
     if keyword_abilities:
         return keyword_abilities
 
@@ -2881,7 +3037,10 @@ _DISCARDS_ITSELF = re.compile(r"^discard this (?:card|permanent)$", re.IGNORECAS
 #: paid. `machines/cost.cost_component_for_phrase` already reads the same
 #: sentence for *payment* (its own `_PHRASE_EXILE`); this is the zone-
 #: permission half CR 113.6j asks for, read off the identical words rather
-#: than a card-specific row.
+#: than a card-specific row. Generalises `_DISCARDS_ITSELF`'s own shape past
+#: the hand: Emrakul, the Exigent Doom's "{3}, Exile this card from your
+#: hand: ..." reaches the same `Zone.HAND` answer through this one regex too
+#: (the "hand" branch), rather than a second, hand-only pattern.
 _EXILES_ITSELF_FROM_ZONE = re.compile(
     r"^exile this (?:card|permanent) from (?:your|their) (?P<zone>hand|graveyard|library)$",
     re.IGNORECASE,
@@ -3014,6 +3173,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
             )
 
     zone, zone_rule = _activated_ability_zone(costs, effect_text, instructions)
+    exhaust = (common.get("ability_word") or "").lower() == "exhaust"
 
     return ActivatedAbility(
         **common,
@@ -3026,6 +3186,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         zone=zone,
         zone_rule=zone_rule,
         cost_reduction=cost_reduction,
+        exhaust=exhaust,
     )
 
 
@@ -3107,6 +3268,24 @@ _TRIGGERED_MANA_SPEND_ONLY_RE = re.compile(r"^spend this mana only\b.*$", re.IGN
 _MANA_COUNT_PHRASE_RE = re.compile(
     r"^(?P<word>[A-Za-z]+) (?P<scope>on the battlefield|you control)$", re.IGNORECASE
 )
+#: "charge counter on this enchantment" (Gardenize) - CR 122.1's counters on
+#: the triggered mana ability's own source, the self-referential sibling
+#: `parse_mana_count`'s two board-scan scopes do not cover: this counts
+#: nothing on the battlefield at all, only what is already on the permanent
+#: whose ability this is. Kept separate from `parse_mana_count`'s own
+#: `(scope, card_type, subtype)` return shape rather than folded into it,
+#: since there is no board scan to describe - `triggered_mana_count` checks
+#: this first and only falls through to `parse_mana_count` when it misses.
+_SELF_COUNTER_MANA_COUNT_RE = re.compile(
+    r"^(?P<kind>[a-z][a-z '/+-]*?) counters? on this [a-z]+$", re.IGNORECASE
+)
+
+
+def self_counter_mana_count(phrase: str) -> str | None:
+    """The counter kind `_SELF_COUNTER_MANA_COUNT_RE` reads off a "for each"
+    phrase, lowercased (`CardState.counter_count`'s own key), or `None`."""
+    match = _SELF_COUNTER_MANA_COUNT_RE.fullmatch(phrase.strip().rstrip("."))
+    return match.group("kind").lower() if match else None
 
 
 def parse_mana_count(phrase: str) -> tuple[str, Type | None, str] | None:
@@ -3170,7 +3349,7 @@ def _parse_add_mana_sentence(sentence: str) -> TriggeredManaShape | None:
     for_each = _TRIGGERED_MANA_FOR_EACH_RE.fullmatch(mana)
     if for_each is not None:
         count = for_each.group("phrase").strip()
-        if parse_mana_count(count) is None:
+        if parse_mana_count(count) is None and self_counter_mana_count(count) is None:
             return None
         mana = for_each.group("mana").strip()
     common = {"recipient": recipient, "optional": optional, "count": count}

@@ -224,6 +224,61 @@ def test_a_mixed_ward_without_the_mana_cannot_be_paid_and_takes_no_life():
     assert scenario.player("alice").life == 20
 
 
+def test_ward_sacrifice_three_permanents_is_paid_with_three_chosen_permanents():
+    """Emrakul, the Exigent Doom: "Ward-Sacrifice three permanents." CR
+    701.21a, with no type restriction at all - CR 110.1 already makes
+    everything on the battlefield a permanent, so unlike Vein Ripper's
+    creature-restricted single sacrifice above, "permanents" names no card
+    type and a land pays exactly as well as a creature does."""
+    scenario, _emrakul, bolt = _bolt_at(
+        "Emrakul, the Exigent Doom",
+        battlefield=["Grizzly Bears", "Llanowar Elves", "Forest"],
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    scenario.will_take_the_may(True, username="alice", source="Emrakul, the Exigent Doom")
+    scenario.will_choose_cards(
+        bears, elves, forest, username="alice", source="Emrakul, the Exigent Doom"
+    )
+
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert elves.zone is Zone.GRAVEYARD
+    assert forest.zone is Zone.GRAVEYARD
+    assert bolt.zone is Zone.STACK
+
+
+def test_ward_sacrifice_three_permanents_with_only_two_cannot_be_paid():
+    """CR 118.3: two permanents cannot pay a cost of three - built with a
+    single Mountain rather than `_bolt_at`'s usual three, since "sacrifice
+    three permanents" has no type restriction and the lands paying for the
+    Bolt would themselves be enough to pay it otherwise."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain", "Llanowar Elves"])
+        .player("bob", battlefield=["Emrakul, the Exigent Doom"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the Exigent Doom", "bob")
+    (mountain,) = scenario.untapped_sources("Mountain")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[emrakul])
+    assert scenario.stack_names() == [
+        "Lightning Bolt",
+        "Emrakul, the Exigent Doom's triggered ability",
+    ]
+
+    scenario.resolve_top()
+
+    (question,) = _asked(scenario, DecisionKind.MAY)
+    assert question.source == "Emrakul, the Exigent Doom"
+    assert not question.affirmative_is_legal
+    assert bolt.zone is Zone.GRAVEYARD
+
+
 def test_a_mana_ward_is_still_paid_from_floating_mana():
     """Archive Dragon's "Ward {2}", asked as the trigger resolves (CR 608.2g)."""
     scenario, _dragon, bolt = _bolt_at("Archive Dragon")

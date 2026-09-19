@@ -488,18 +488,23 @@ def test_arc_of_fortune_lets_each_player_loot_their_hand():
     assert all(c.name not in bob_hand_before for c in scenario.player("bob").hand)
 
 
-def test_molten_tide_is_wired_but_its_effect_is_a_cross_stream_dependency():
-    """Pyre Rhymer enters prepared and its copy (Molten Tide) is castable
-    for the right cost; the mana-doubling effect itself is FRA stream
-    S10's own work, not yet merged onto this branch, so resolving it fails
-    closed with a notice rather than silently doing nothing or crashing."""
+def test_molten_tide_cast_from_the_prepared_copy_doubles_a_mountain_tap():
+    """Pyre Rhymer enters prepared; its copy (Molten Tide) is cast for real
+    through the CR 722.3c permission, and resolving it - "Until end of
+    turn, whenever you tap a Mountain for mana, add an additional {R}." -
+    creates the CR 603.7 delayed trigger FRA S10 built. CR 605.1b/605.4a:
+    that delayed trigger is itself a mana ability, so the very next Mountain
+    tap adds the extra {R} immediately, with no stack and no
+    `put_triggers_on_stack`/`resolve_top` step in between - the two streams'
+    own work meeting at the one place both had to agree on.
+    """
     scenario = (
         Scenario()
         .player(
             "alice",
             hand=["Pyre Rhymer"],
             library=["Forest"] * 5,
-            battlefield=["Mountain"] * 4,
+            battlefield=["Mountain"] * 5,
         )
         .build()
     )
@@ -523,10 +528,16 @@ def test_molten_tide_is_wired_but_its_effect_is_a_cross_stream_dependency():
     scenario.pass_until_resolved()
     scenario.pass_until_resolved()
 
-    assert any(
-        notice.source_name == "Molten Tide"
-        for notice in scenario.game.unmodeled_trigger_effect_notices
-    ), "the mana-doubling body is S10's own work - fails closed, not silently"
+    (trigger,) = scenario.game.delayed_triggers.triggers
+    assert trigger.expires_end_of_turn
+    assert trigger.remaining is None, "fires on every tap this turn, not only the next one"
+
+    (second_mountain,) = scenario.untapped_sources("Mountain")
+    scenario.activate(second_mountain, color=Color.RED)
+
+    assert scenario.player("alice").mana_pool.floating == {Color.RED: 2}
+    assert scenario.game.pending_triggers == []
+    assert scenario.game.stack_is_empty
 
 
 # -- CR 722.3d/Codie: "cast a prepared spell" ------------------------------

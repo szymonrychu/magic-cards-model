@@ -1605,7 +1605,8 @@ _CONTROL_CLAUSE = re.compile(
     re.IGNORECASE,
 )
 _ZONE_CLAUSE = re.compile(
-    r"\b(?:from|in)\s+(?:(?P<whose>your|a|an|any)\s+)?"
+    r"\b(?:from|in)\s+"
+    r"(?:(?P<whose>your|their|an? opponent'?s?|a|an|any)\s+)?"
     r"(?P<zone>graveyards|graveyard|hands|hand|libraries|library|exile)\b",
     re.IGNORECASE,
 )
@@ -2668,6 +2669,14 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             whose = zone_match.group("whose")
             if whose is not None and whose.lower() == "your":
                 controller = ControllerRestriction.YOU
+            elif whose is not None and ("opponent" in whose.lower() or whose.lower() == "their"):
+                # "from an opponent's graveyard" (Dire Fleet Daredevil),
+                # "in their graveyard" - CR 109.5's "you"/"your" is the
+                # default the bare "a"/"an"/"any" forms already read as no
+                # restriction at all; this is the other side of that same
+                # distinction, read the same way `_CONDITION_CONTROLS_N`'s
+                # own "an opponent controls" already is.
+                controller = ControllerRestriction.OPPONENT
             # "... other than a basic land card" (Surgical Extraction) - a
             # compound-noun exclusion on the bare "target card" itself, past
             # the zone clause. Read here rather than by `_Adjectives`, which

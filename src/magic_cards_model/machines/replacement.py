@@ -3301,25 +3301,43 @@ def _pay_life_or_tapped(amount: int, card_name: str) -> Apply:
 #: "Reveal X white cards from your hand" is.
 _REVEAL_CHOICE = re.compile(r"^you may (?P<cost>reveal .+ from your hand)\.?$", re.IGNORECASE)
 
+#: "you may behold a Jace" (Theorist's Sanctum) - CR 701.4a's keyword action
+#: as the optional half of the same CR 614.12a choice, read the same way
+#: `_REVEAL_CHOICE` reads a reveal land's own offer.
+_BEHOLD_CHOICE = re.compile(r"^you may (?P<cost>behold (?:a|an) .+)\.?$", re.IGNORECASE)
+
 
 def _optional_enters_payment(effect: ReplacementEffect, card_name: str) -> Apply | None:
     """What an optional "As this enters, you may ..." (CR 614.1c) does as the
     permanent enters, or `None` when no reader claims its payment.
 
     Its caller pairs it with the "If you don't, it enters tapped" that
-    follows, because the two sentences are one CR 614.12a choice. Two payments
-    are read: paying life (the shocklands) and revealing a card of a stated
-    quality from hand (the reveal lands, whatever quality they print).
+    follows, because the two sentences are one CR 614.12a choice. Three
+    payments are read: paying life (the shocklands), revealing a card of a
+    stated quality from hand (the reveal lands, whatever quality they print),
+    and beholding a quality (Theorist's Sanctum, CR 701.4a).
     """
     replacement = (effect.replacement or "").strip()
     payment = _PAY_LIFE_CHOICE.search(replacement)
     if payment:
         return _pay_life_or_tapped(int(payment.group(1)), card_name)
+    from .cost import ComponentKind, total_cost_for_phrase
+
+    behold = _BEHOLD_CHOICE.match(replacement)
+    if behold is not None:
+        phrase = behold.group("cost")
+        cost = total_cost_for_phrase(phrase)
+        if (
+            cost is None
+            or cost.mana.symbols
+            or len(cost.components) != 1
+            or cost.components[0].kind is not ComponentKind.BEHOLD
+        ):
+            return None
+        return _behold_or_tapped(phrase, card_name)
     reveal = _REVEAL_CHOICE.match(replacement)
     if reveal is None:
         return None
-    from .cost import ComponentKind, total_cost_for_phrase
-
     phrase = reveal.group("cost")
     cost = total_cost_for_phrase(phrase)
     if (
@@ -3371,6 +3389,65 @@ def _reveal_or_tapped(phrase: str, card_name: str) -> Apply:
             event.tapped = True
             return
         game.choose_cards_to_reveal(component, who, source=card_name, source_id=source_id)
+        if component.why_not(game) is not None:
+            event.tapped = True
+            return
+        component.pay(game)
+
+    return apply
+
+
+def _behold_or_tapped(phrase: str, card_name: str) -> Apply:
+    """Theorist's Sanctum's own branch, as one CR 614.12a choice made before
+    it enters: "As this land enters, you may behold a Jace. If you don't,
+    this land enters tapped."
+
+    CR 701.4a's two halves both count as eligible objects here - a hand card
+    to reveal, or a battlefield permanent already controlled - and the
+    controller is asked which, if either, once at least one exists; no
+    eligible object at all enters the land tapped with nobody asked
+    (CR 118.3), the same as `_reveal_or_tapped`'s hand-only version.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        from .cost import total_cost_for_phrase
+
+        who = event.card.controller if event.card is not None else None
+        cost = total_cost_for_phrase(phrase, who) if who is not None else None
+        if who is None or cost is None:
+            event.tapped = True
+            return
+        (component,) = cost.components
+        component.source = card_name
+        entering_id = event.card.id if event.card is not None else None
+        eligible = [
+            card
+            for card in list(game.player(who).hand) + list(game.permanents_controlled_by(who))
+            if card.id != entering_id
+            and (
+                component.requirement is None
+                or component.requirement.why_not(card, game, who) is None
+            )
+        ]
+        source_id = source_id_of(source)
+        if not eligible or not game.may(
+            who, phrase, source=card_name, source_id=source_id, cards=eligible
+        ):
+            event.tapped = True
+            return
+        answer = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=who,
+                prompt=f"choose what to behold for {card_name} (CR 701.4a)",
+                source=card_name,
+                source_id=source_id,
+                amount=1,
+                cards=tuple(card.id for card in eligible),
+            )
+        )
+        by_id = {card.id: card for card in eligible}
+        component.cards = [by_id[chosen_id] for chosen_id in answer]
         if component.why_not(game) is not None:
             event.tapped = True
             return
@@ -4646,6 +4723,21 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 key=f"{card.id}:cast-permission",
                 source=card,
                 label="a spell cast this way is exiled instead of put into the graveyard",
+                apply=_exile_instead,
+            )
+        )
+    if record.exile_instead_of_graveyard:
+        # Dire Fleet Daredevil's/Nita, Forum Conciliator's own rider on the
+        # "exile target ... you may cast it ..." grant (CR 604.5) - the same
+        # unconditional "any time it would leave the stack" shape flashback's
+        # own second static already gets, just recorded through a plain
+        # boolean instead of `record.keyword` since the grant names no
+        # keyword at all.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:exile_instead_of_graveyard",
+                source=card,
+                label="if that spell would be put into a graveyard, exile it instead",
                 apply=_exile_instead,
             )
         )

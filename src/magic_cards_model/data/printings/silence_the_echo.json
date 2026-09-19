@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "f1d274db-751b-4414-a38d-762198168e91",
+  "oracle_id": "43654381-c55c-4d6d-abfd-12932ceb5a4a",
+  "multiverse_ids": [],
+  "tcgplayer_id": 716966,
+  "cardmarket_id": 908796,
+  "name": "Silence the Echo",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/f1d274db-751b-4414-a38d-762198168e91",
+  "scryfall_uri": "https://scryfall.com/card/fra/66/silence-the-echo?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-14T11:34:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/1/f1d274db-751b-4414-a38d-762198168e91.jpg?1789385640",
+    "normal": "https://cards.scryfall.io/normal/front/f/1/f1d274db-751b-4414-a38d-762198168e91.jpg?1789385640",
+    "large": "https://cards.scryfall.io/large/front/f/1/f1d274db-751b-4414-a38d-762198168e91.jpg?1789385640",
+    "png": "https://cards.scryfall.io/png/front/f/1/f1d274db-751b-4414-a38d-762198168e91.png?1789385640",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/1/f1d274db-751b-4414-a38d-762198168e91.jpg?1789385640",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/1/f1d274db-751b-4414-a38d-762198168e91.jpg?1789385640",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/1/f1d274db-751b-4414-a38d-762198168e91.webp?1789385640",
+    "grid": "https://cards.scryfall.io/grid/front/f/1/f1d274db-751b-4414-a38d-762198168e91.webp?1789385640",
+    "display": "https://cards.scryfall.io/display/front/f/1/f1d274db-751b-4414-a38d-762198168e91.webp?1789385640",
+    "art": "https://cards.scryfall.io/art/front/f/1/f1d274db-751b-4414-a38d-762198168e91.webp?1789385640",
+    "crop": "https://cards.scryfall.io/crop/front/f/1/f1d274db-751b-4414-a38d-762198168e91.webp?1789385640"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "As an additional cost to cast this spell, sacrifice a creature or planeswalker or pay {3}.\nDestroy target creature or planeswalker.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f1d274db-751b-4414-a38d-762198168e91/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A43654381-c55c-4d6d-abfd-12932ceb5a4a&unique=prints",
+  "collector_number": "66",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "The Vraska who had never known pain could not comprehend the unyielding will of the Vraska who had known too much.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Pavel Kolomeyets",
+  "artist_ids": [
+    "13435e52-d47a-4143-adfa-2ae0a6858292"
+  ],
+  "illustration_id": "d464040c-4a24-48e7-b00d-985f4418b26b",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 32199,
+  "preview": {
+    "source": "GameSpot",
+    "source_uri": "https://www.gamespot.com/articles/magic-the-gatherings-jace-has-turned-into-a-flock-camera-in-this-new-card/",
+    "previewed_at": "2026-09-13"
+  },
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSilence%2Bthe%2BEcho",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSilence%2Bthe%2BEcho",
+    "edhrec": "https://edhrec.com/route/?cc=Silence+the+Echo"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716966%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908796&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Silence+the+Echo&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

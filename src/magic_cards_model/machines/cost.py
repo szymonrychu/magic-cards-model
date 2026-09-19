@@ -347,10 +347,17 @@ def _activation_refused(
 # mana", so the ability is still there and still `{T}`-activatable; it just
 # has no legal type to add.
 
-#: `among legendary creatures and planeswalkers you control` (Mox Amber). The
-#: quality is left as words for `_among_colors` to read, since the same
-#: sentence is printed with other qualities on cards outside this pool.
-_ANY_COLOR_AMONG = re.compile(r"\bamong (?P<quality>[a-z ,]+?) you control\b", re.IGNORECASE)
+#: `color among legendary creatures and planeswalkers you control` (Mox
+#: Amber). The quality is left as words for `_among_colors` to read, since
+#: the same sentence is printed with other qualities on cards outside this
+#: pool. Anchored on the word directly before "among" being "color" - not a
+#: bare search anywhere in the effect - because "among ... you control" is
+#: not always this survey: Loot, the Nexus's "one mana of that color for
+#: each different power among creatures you control" also contains the
+#: phrase, modifying the *count* rather than which colors are legal, and a
+#: bare search wrongly refused its own unrelated color as undefined by
+#: CR 106.5's restriction, which is not what that sentence is about at all.
+_ANY_COLOR_AMONG = re.compile(r"\bcolor among (?P<quality>[a-z ,]+?) you control\b", re.IGNORECASE)
 
 
 def _among_colors(
@@ -1099,7 +1106,7 @@ def triggered_mana_bonus(
             if triggered_mana_recipient(shape.recipient, controller, event) != context.payer:
                 continue
             times = (
-                triggered_mana_count(game, shape.count, controller)
+                triggered_mana_count(game, shape.count, controller, source=trigger_source)
                 if shape.count is not None
                 else 1
             )
@@ -2110,6 +2117,13 @@ class ComponentKind(StrEnum):
     #: records the reveal on the game, and `variable_count` marks CR 107.3a's
     #: X, where `required` is the number the payer chose to reveal.
     REVEAL = "reveal"
+    #: CR 701.4a's own keyword action, "to behold a [quality]": "Reveal a
+    #: [quality] card from your hand or choose a [quality] permanent you
+    #: control on the battlefield." Two zones satisfy one component - the
+    #: chosen card is a `REVEAL` if it came from hand (CR 701.20a-b: shown,
+    #: nothing moves) and untouched if it came from the battlefield (CR
+    #: 701.4b: it is simply noted, not tapped, sacrificed, or exiled).
+    BEHOLD = "behold"
 
 
 _OBJECT_KINDS = frozenset(
@@ -2124,6 +2138,7 @@ _OBJECT_KINDS = frozenset(
         ComponentKind.EXERT,
         ComponentKind.RETURN_TO_HAND,
         ComponentKind.REVEAL,
+        ComponentKind.BEHOLD,
     }
 )
 
@@ -2405,8 +2420,40 @@ class CostComponent(EngineModel):
             ComponentKind.COLLECT_EVIDENCE: self._why_not_collect_evidence,
             ComponentKind.RETURN_TO_HAND: self._why_not_return_to_hand,
             ComponentKind.REVEAL: self._why_not_reveal,
+            ComponentKind.BEHOLD: self._why_not_behold,
         }
         return checks[self.kind](game)
+
+    def _why_not_behold(self, _game: Any) -> str | None:
+        """CR 701.4a: "Reveal a [quality] card from your hand or choose a
+        [quality] permanent you control on the battlefield." Each chosen
+        object has to be in one of those two places - owned in hand, or
+        controlled on the battlefield - the same ownership/control check
+        `_why_not_reveal`/`_why_not_controlled` already make for each half."""
+        seen: set[UUID] = set()
+        for card in self.cards:
+            if card.id in seen:
+                return (
+                    f"{card.name} is named more than once, but one object is beheld only "
+                    "once to pay a cost (CR 109.1, CR 118.3)"
+                )
+            seen.add(card.id)
+            if card.zone is Zone.HAND:
+                if self.payer is not None and card.owner is not None and card.owner != self.payer:
+                    return f"{card.name} is not in {self.payer}'s hand"
+            elif card.zone is Zone.BATTLEFIELD:
+                if (
+                    self.payer is not None
+                    and card.controller is not None
+                    and card.controller != self.payer
+                ):
+                    return f"{self.payer} does not control {card.name}"
+            else:
+                return (
+                    f"{card.name} is neither in {self.payer or 'the payer'}'s hand nor a "
+                    "permanent they control, so it cannot be beheld (CR 701.4a)"
+                )
+        return None
 
     def _why_not_reveal(self, _game: Any) -> str | None:
         """CR 118.3 for a reveal cost: every card named has to be in the
@@ -2762,6 +2809,17 @@ class CostComponent(EngineModel):
                     before = len(game.reveals)
                     game.reveal(card, source=self.source)
                     self._reveals_recorded.extend(game.reveals[before:])
+        elif self.kind is ComponentKind.BEHOLD:
+            # CR 701.4a's two halves: a hand card is revealed exactly like
+            # `REVEAL` (nothing moves, CR 701.20b); a battlefield permanent is
+            # simply chosen (CR 701.4b) and nothing happens to it at all -
+            # not tapped, not sacrificed, not exiled.
+            for card in self.cards:
+                self._remember(card)
+                if game is not None and card.zone is Zone.HAND:
+                    before = len(game.reveals)
+                    game.reveal(card, source=self.source)
+                    self._reveals_recorded.extend(game.reveals[before:])
         elif self.kind is ComponentKind.RETURN_TO_HAND:
             # CR 702.49a's own cost: the creature leaves combat as it leaves
             # the battlefield (the zone change is what ends its being an
@@ -2912,6 +2970,15 @@ class CostComponent(EngineModel):
             # Revealing moved nothing (CR 701.20b), so neither does the
             # rewind; it takes back the records the payment wrote, so an
             # attempt rewound under CR 733.1 leaves nobody knowing the cards.
+            if game is not None:
+                for record in self._reveals_recorded:
+                    if record in game.reveals:
+                        game.reveals.remove(record)
+            self._reveals_recorded = []
+        elif self.kind is ComponentKind.BEHOLD:
+            # Neither half moved anything (CR 701.4a/b), so the rewind is the
+            # same as REVEAL's: only the reveal record a hand-half payment
+            # wrote needs taking back.
             if game is not None:
                 for record in self._reveals_recorded:
                     if record in game.reveals:
@@ -3138,6 +3205,24 @@ def reveal_cost(
         payer=payer,
         description=description,
         variable_count=variable_count,
+    )
+
+
+def behold_cost(
+    *cards: CardState,
+    payer: str | None = None,
+    required: int | None = None,
+    description: str = "",
+) -> CostComponent:
+    """Behold a quality as a cost (CR 701.4a, CR 118.1): reveal a card from
+    the payer's hand, or choose a permanent they control on the battlefield.
+    `CostComponent._why_not_behold` is the check."""
+    return CostComponent(
+        kind=ComponentKind.BEHOLD,
+        cards=list(cards),
+        required=len(cards) if required is None else required,
+        payer=payer,
+        description=description,
     )
 
 
@@ -3533,6 +3618,16 @@ class CostModifierKind(StrEnum):
     `COLOR_DECREASE`. Exactly one of `applies_to_types`/`excludes_type` is
     set, matching which of the two shapes was printed."""
 
+    OPPONENT_TYPE_INCREASE = "opponent_type_increase"
+    """"[<Qualifier> s]pells your opponents cast cost `{N}` more to cast." -
+    Thalia, the Survivor's own "Noncreature spells your opponents cast cost
+    {1} more to cast.", and the unqualified "Spells your opponents cast cost
+    {1} more to cast." this same shape covers with `excludes_type` left
+    `None`. `FLAT_INCREASE`'s own mirror, scoped the other way round from
+    `COLOR_DECREASE`/`TYPE_DECREASE`: those apply only when the permanent's
+    controller *is* the caster, this only when they are not
+    (`Game.static_cost_modifiers_for`)."""
+
 
 class CostModifierEffect(EngineModel):
     """One static cost-modifying ability, read off a permanent's oracle text."""
@@ -3588,6 +3683,18 @@ _FLAT_COST_INCREASE = re.compile(
 #: notice and applied to nothing.
 _NAMED_COST_INCREASE = re.compile(
     r"[Ss]pells with the chosen name cost \{(?P<amount>\d+)\} more to cast\."
+)
+#: Thalia, the Survivor's tax, and Grand Arbiter Augustin IV's own
+#: unqualified "Spells your opponents cast cost {1} more to cast." - the
+#: opponent-scoped mirror of `_FLAT_COST_INCREASE`. Matched ahead of it for
+#: the same reason `_NAMED_COST_INCREASE` is: "spells ... your opponents
+#: cast cost {N} more" is not contiguous "spells cost {N} more", so the
+#: qualifier and the tax would otherwise be silently dropped rather than
+#: read, the exact DDR#978 shape this permanent's own docstring names.
+_OPPONENT_COST_INCREASE = re.compile(
+    r"(?:(?P<qualifier>Noncreature|Nonartifact|Nonland|Noninstant|Nonsorcery|"
+    r"Nonenchantment|Nonplaneswalker) )?[Ss]pells your opponents cast cost "
+    r"\{(?P<amount>\d+)\} more to cast\."
 )
 _PER_SPELL_COST_INCREASE = re.compile(
     r"Each spell a player casts costs \{(?P<amount>\d+)\} more to cast for each "
@@ -3673,6 +3780,14 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
     if match is not None:
         return CostModifierEffect(
             kind=CostModifierKind.NAMED_INCREASE, amount=int(match.group("amount"))
+        )
+    match = _OPPONENT_COST_INCREASE.search(text)
+    if match is not None:
+        qualifier = match.group("qualifier")
+        return CostModifierEffect(
+            kind=CostModifierKind.OPPONENT_TYPE_INCREASE,
+            amount=int(match.group("amount")),
+            excludes_type=_QUALIFIER_EXCLUDES.get(qualifier) if qualifier else None,
         )
     match = _FLAT_COST_INCREASE.search(text)
     if match is not None:
@@ -3822,11 +3937,28 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
 #: applied to it from another effect**" - so this is read off a permanent on
 #: the battlefield rather than off the spell being cast, and the spell it
 #: applies to prints nothing about it at all.
+#:
+#: Omnipresence's own sibling narrows by mana value instead of by type:
+#: "You may cast spells with mana value less than or equal to the number of
+#: creatures you control from your hand without paying their mana costs." -
+#: the optional clause between "spells" and "from your hand" reads either a
+#: literal number ("mana value 3 or less", not printed on any pool card but
+#: the same CR 107.3a-free shape) or a live count phrased "the number of
+#: [quality] you control", read again at CR 601.2f by `mana_value_cap_for`.
 _STATIC_FREE_CAST = re.compile(
-    r"^You may cast (?P<what>[\w' -]*?spells?) from your (?P<zone>hand|graveyard) "
+    r"^You may cast (?P<what>[\w' -]*?spells?)"
+    r"(?: with mana value (?:(?P<mv_number>\d+) or less"
+    r"|less than or equal to (?P<mv_quality>.+?)))?"
+    r" from your (?P<zone>hand|graveyard) "
     r"without paying (?:its|their) mana costs?\.$",
     re.IGNORECASE,
 )
+
+#: "the number of creatures you control" - `mana_value_cap_for`'s own reading
+#: of `StaticFreeCastGrant.max_mana_value_quality`, sharing `_requirement`
+#: with every other quality this module already counts (`_PHRASE_SACRIFICE`
+#: and friends), rather than a new vocabulary just for this one card.
+_THE_NUMBER_OF_YOU_CONTROL = re.compile(r"^the number of (?P<quality>.+?) you control$")
 
 
 class StaticFreeCastGrant(EngineModel):
@@ -3849,6 +3981,16 @@ class StaticFreeCastGrant(EngineModel):
     type_word: str | None = None
     """The card type the grant is narrowed to, lowercased ("creature spells
     from your hand"), or None for every spell."""
+    max_mana_value: int | None = None
+    """A printed literal cap ("mana value 3 or less"), or None when the grant
+    prints no fixed number - either no cap at all, or `max_mana_value_quality`'s
+    live one. Exactly one of the two is ever set."""
+    max_mana_value_quality: str | None = None
+    """Omnipresence's own live cap, as the printed quality phrase ("the
+    number of creatures you control") rather than a precomputed count - this
+    is a live board read at CR 601.2f, not a fact fixed when the permanent
+    entered, so nothing here may cache a number. `mana_value_cap_for` counts
+    it against the board when the grant is actually checked."""
 
 
 def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
@@ -3865,7 +4007,44 @@ def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
         return None
     what = match.group("what").strip().lower()
     qualifier = re.sub(r"spells?$", "", what).strip()
-    return StaticFreeCastGrant(zone=zone, type_word=qualifier or None)
+    mv_number = match.group("mv_number")
+    mv_quality = match.group("mv_quality")
+    return StaticFreeCastGrant(
+        zone=zone,
+        type_word=qualifier or None,
+        max_mana_value=int(mv_number) if mv_number is not None else None,
+        max_mana_value_quality=mv_quality.strip() if mv_quality is not None else None,
+    )
+
+
+def mana_value_cap_for(
+    grant: StaticFreeCastGrant, game: Any = None, controller: str | None = None
+) -> int | None:
+    """The live mana-value cap `grant` puts on what it makes free.
+
+    `None` either when the grant carries no cap at all (an ordinary
+    Omniscience-shaped grant, `grant.max_mana_value_quality` unset - the
+    caller tells this apart from the case below by checking that field
+    itself, a printed fact rather than a computed one) or when a printed
+    quality this cannot read leaves a *live* cap unreadable - CR 118.3's
+    "cannot use what was not read", not "nothing to cap", which is why the
+    caller has to distinguish the two rather than treating both as free.
+    """
+    if grant.max_mana_value is not None:
+        return grant.max_mana_value
+    if grant.max_mana_value_quality is None:
+        return None
+    match = _THE_NUMBER_OF_YOU_CONTROL.fullmatch(grant.max_mana_value_quality.strip().lower())
+    if match is None or game is None or controller is None:
+        return None
+    requirement = _requirement(match.group("quality"))
+    if requirement is None:
+        return None
+    return sum(
+        1
+        for state in game.permanents_controlled_by(controller)
+        if requirement.why_not(state, game, controller) is None
+    )
 
 
 # --------------------------------------------------------------------------
@@ -3914,6 +4093,13 @@ _PHRASE_REVEAL = re.compile(
     r"^reveal (?P<count>x|\w+) (?P<quality>[\w ,]*?)cards? from your hand$",
     re.IGNORECASE,
 )
+#: CR 701.4a's keyword action as a cost: "behold a Jace" (Countersculpt,
+#: Theorist's Sanctum), "behold a Kithkin" (Kinsbaile Aspirant, off-set).
+#: "Reveal a [quality] card from your hand or choose a [quality] permanent
+#: you control on the battlefield" - one component, `ComponentKind.BEHOLD`,
+#: since CR 701.4a is a single keyword action with two ways to satisfy it,
+#: not two separate costs the way sacrifice-or-discard would be.
+_PHRASE_BEHOLD = re.compile(r"^behold (?:a|an) (?P<quality>[\w' ]+)$", re.IGNORECASE)
 _ZONE_WORDS: dict[str, Zone] = {
     "hand": Zone.HAND,
     "graveyard": Zone.GRAVEYARD,
@@ -4108,6 +4294,16 @@ def _requirement(quality: str) -> CardRequirement | None:
         lowered = word.lower().rstrip("s")
         if lowered in _QUALITY_CONNECTORS:
             continue
+        if lowered == "permanent":
+            # CR 110.1 makes everything on the battlefield a permanent
+            # already, so "permanent"/"permanents" names no card type at all
+            # - the same "no restriction" reading `_controlled_requirement`
+            # already gives it on same-name comparisons, needed here too for
+            # a sacrifice cost with no type demand (Ward - Sacrifice three
+            # permanents, CR 702.21a) rather than one word away from a
+            # subtype (Greater Gargadon's "artifact, creature, or land" is
+            # the demand-bearing shape; bare "permanents" is not).
+            continue
         if lowered in _COLOR_WORDS:
             colors.append(_COLOR_WORDS[lowered])
         elif lowered in {supertype.value for supertype in Supertype}:
@@ -4270,6 +4466,15 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
                 return None
             component = reveal_cost(payer=payer, required=reveal_count, description=text)
         component.requirement = reveal_requirement
+        return component
+
+    behold = _PHRASE_BEHOLD.match(text)
+    if behold is not None:
+        behold_requirement = _requirement(behold.group("quality"))
+        if behold_requirement is None:
+            return None
+        component = behold_cost(payer=payer, required=1, description=text)
+        component.requirement = behold_requirement
         return component
 
     exile_and_pay = _PHRASE_EXILE_AND_PAY_MANA_COST.match(text)

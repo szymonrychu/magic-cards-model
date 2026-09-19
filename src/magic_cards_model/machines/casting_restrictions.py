@@ -74,9 +74,10 @@ from ..models.card_state import TargetKind
 from ..models.zone import Zone
 from ..numbers import count_pattern, parse_count
 from ..snapshot import EngineModel
-from .abilities import AbilityKind, parse_abilities
+from .abilities import AbilityKind, parse_abilities, parse_granted_ability_lines
 from .layers import Duration
 from .triggers import AbilityOnStack
+from .turn import Step
 
 
 class CastingRuleKind:
@@ -729,6 +730,51 @@ def zone_cast_prohibition_source(
     return None
 
 
+#: Yuriko, Blade of the Mighty: "During combat, players can't cast spells or
+#: activate abilities that aren't mana abilities." A board-wide lockdown
+#: with a time window instead of split second's "while this spell is on the
+#: stack" one.
+_DURING_COMBAT_LOCKDOWN_RE = re.compile(
+    r"^during combat, players can'?t cast spells or activate abilities that "
+    r"aren'?t mana abilities\.?$",
+    re.IGNORECASE,
+)
+
+#: CR 506.1: "The combat phase has five steps, which proceed in order:
+#: beginning of combat, declare attackers, declare blockers, combat damage,
+#: and end of combat." "During combat" is this window, not the whole turn.
+_COMBAT_STEPS = frozenset(
+    {
+        Step.BEGINNING_OF_COMBAT,
+        Step.DECLARE_ATTACKERS,
+        Step.DECLARE_BLOCKERS,
+        Step.COMBAT_DAMAGE,
+        Step.END_OF_COMBAT,
+    }
+)
+
+
+def combat_lockdown_restriction_source(game: Any) -> str | None:
+    """The name of a live permanent whose static text locks down casting and
+    non-mana activation for as long as combat lasts, or None (CR 506.1).
+
+    Read the same way `zone_cast_prohibition_source` reads Grafdigger's
+    Cage's board-wide "Players can't cast spells from ..." - a battlefield
+    scan for the matching static line - gated on `game.turn.step` being one
+    of CR 506.1's five combat steps rather than on a zone.
+    """
+    step = getattr(getattr(game, "turn", None), "step", None)
+    if step not in _COMBAT_STEPS:
+        return None
+    for source in list(getattr(game, "battlefield", [])):
+        for line in parse_abilities(source.card):
+            if line.kind is AbilityKind.STATIC and _DURING_COMBAT_LOCKDOWN_RE.match(
+                (line.text or "").strip()
+            ):
+                return source.name
+    return None
+
+
 def cannot_be_countered(spell: Any) -> bool:
     """Whether this object on the stack says it can't be countered
     (CR 113.6g).
@@ -756,7 +802,19 @@ def cannot_be_countered(spell: Any) -> bool:
     card = getattr(spell, "card", None)
     if card is None:
         return False
-    return any(
+    if any(
         line.kind is AbilityKind.STATIC and _CANT_BE_COUNTERED_RE.match((line.text or "").strip())
         for line in parse_abilities(card)
+    ):
+        return True
+    # A *granted* "This spell can't be countered.", the same way a permanent's
+    # layer-6 "gains an ability" grant lands on `CardState.granted_ability_
+    # texts` rather than on the printed card - Theorist's Proxy's own "The
+    # next spell you cast this turn can't be countered." resolves before the
+    # spell exists, so `NextSpellCannotBeCountered` records the grant here
+    # once that spell is actually cast (`machines/delayed.py`).
+    granted = getattr(spell, "granted_ability_texts", ())
+    return any(
+        line.kind is AbilityKind.STATIC and _CANT_BE_COUNTERED_RE.match((line.text or "").strip())
+        for line in parse_granted_ability_lines(granted)
     )

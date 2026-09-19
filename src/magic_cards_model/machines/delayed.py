@@ -76,13 +76,13 @@ with them (see `memory/delayed-trigger-serialization-game-py-isolation.md`).
 
 import re
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
 
 from ..ids import new_id
-from ..models.card import Type
+from ..models.card import Color, Type
 from ..models.card_state import PERMANENT_TYPES, CardState, Counter
 from ..models.mana import ManaCost
 from ..models.token import TokenDefinition, create_tokens, is_token, token_copy_of
@@ -124,6 +124,20 @@ class DelayedEffectSpecBase(EngineModel):
     """
 
     model_config = ConfigDict(frozen=True)
+
+    is_mana_ability: ClassVar[bool] = False
+    """CR 605.1b's third criterion, self-described rather than inferred from
+    `kind`: `models.game.Game._resolve_triggered_mana_abilities` reads this
+    (alongside the ordinary "no target" check every delayed trigger already
+    gets) to decide whether this delayed triggered ability resolves inline,
+    with no stack, the moment its own mana-ability event fires (CR 605.4a) -
+    the same immediate treatment a *printed* triggered mana ability's
+    `parse_triggered_mana`-readable effect text already gets. `False` for
+    every ordinary delayed effect; a mana-adding one (`AddManaWhenLandTapped`)
+    overrides it to `True`. A `ClassVar`, not a field: it describes the whole
+    *kind* of effect, the same way `kind` itself does, not one instance's
+    own data - so it never needs a value at construction and never appears
+    in a decode."""
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         raise NotImplementedError
@@ -781,6 +795,41 @@ class CopyNextSpellYouCast(DelayedEffectSpecBase):
             )
 
 
+class NextSpellCannotBeCountered(DelayedEffectSpecBase):
+    """ "The next spell you cast this turn can't be countered." - Theorist's
+    Sanctum's own Theorist's Proxy, and Mistrise Village (Tarkir:
+    Dragonstorm), the off-set card proving the shape is general.
+
+    The same CR 603.7 delayed-trigger shape `CopyNextSpellYouCast` already
+    uses for an identical "the next spell you cast this turn" template, down
+    to the same last-known-information fetch: if the spell was already
+    countered by the time this resolves (someone responded to the delayed
+    trigger itself rather than to the grant it was too late to give), there
+    is nothing left to mark and this is a no-op, not an error.
+
+    What "can't be countered" *means* is `machines/casting_restrictions.
+    cannot_be_countered`'s job, not this one's - this only records the grant,
+    the same way a permanent's layer-6 "gains an ability" grant is recorded
+    on `CardState.granted_ability_texts` rather than mutating some separate
+    uncounterable flag, so `cannot_be_countered` reads one place for both a
+    printed and a granted "This spell can't be countered."
+    """
+
+    kind: Literal["next_spell_cannot_be_countered"] = "next_spell_cannot_be_countered"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if not isinstance(spell, CardState) or spell.zone is not Zone.STACK:
+            return
+        spell.granted_ability_texts = (
+            *spell.granted_ability_texts,
+            "This spell can't be countered.",
+        )
+
+
 class ReturnRiderCounter(EngineModel):
     """Phelia, Exuberant Shepherd's third sentence: "If it entered under your
     control, put a +1/+1 counter on Phelia."
@@ -985,6 +1034,81 @@ class ReflexiveExileCopiedCard(DelayedEffectSpecBase):
         game.exile_permanent(card)
 
 
+class RevokeGrantedAbility(DelayedEffectSpecBase):
+    """Strip a granted activation text off a permanent once this delayed
+    trigger's own watched event fires - Emrakul, the Exigent Doom: "Target
+    land gains "{T}: Add {C}{C}" until this card is cast from exile." The
+    grant itself (CR 113.10) is made immediately, by the ability that reads
+    this sentence; this is only the "until" half, watching `TriggerEvent.
+    CAST_SPELL` with `DelayedTrigger.subject_id` set to the *exiled card*, not
+    the land - the same "two different objects" split `StaticPrisonReturn`'s
+    own docstring explains, since the event this waits for and the permanent
+    this changes are never the same object here either.
+
+    CR 603.7c's own guard: `land_id`/`land_stamp` are the land's identity at
+    the moment it was granted the ability, so a land that has since left the
+    battlefield, or been replaced by a new incarnation of the same id, is
+    left alone rather than having some other object's granted text stripped.
+    """
+
+    kind: Literal["revoke_granted_ability"] = "revoke_granted_ability"
+
+    land_id: UUID
+    land_stamp: UUID
+    granted_text: str
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        land = game.find_by_id(self.land_id)
+        if not isinstance(land, CardState):
+            return
+        if land.zone is not Zone.BATTLEFIELD or land.zone_change_stamp != self.land_stamp:
+            return
+        if self.granted_text in land.granted_ability_texts:
+            land.granted_ability_texts = tuple(
+                text for text in land.granted_ability_texts if text != self.granted_text
+            )
+
+
+class AddManaWhenLandTapped(DelayedEffectSpecBase):
+    """Molten Tide's and High Tide's shared shape: "Until end of turn,
+    whenever [you tap|a player taps] a[n] <land subtype> for mana, [add|that
+    player adds] an additional <mana>." (Molten Tide: "you tap a Mountain
+    ... add"; High Tide: "a player taps an Island ... that player adds".)
+
+    CR 605.1b: the created ability is itself a mana ability - it doesn't
+    require a target, it triggers from the activation of an activated mana
+    ability (CR 106.12a's tap), and it could add mana to a player's mana
+    pool when it resolves - so `is_mana_ability = True` here, and CR 605.4a
+    resolves it inline the instant it fires (`models.game.Game._resolve_
+    triggered_mana_abilities`, which reads this flag), with no stack and no
+    waiting for priority, exactly as a printed triggered mana ability
+    already does.
+    """
+
+    kind: Literal["add_mana_when_land_tapped"] = "add_mana_when_land_tapped"
+    is_mana_ability: ClassVar[bool] = True
+
+    land_subtype: str
+    mana: tuple[Color, ...]
+    only_creators_own_taps: bool
+    """True for "you tap" (Molten Tide - only the ability's own controller's
+    taps count, and the mana goes to them). False for "a player taps ...
+    that player adds" (High Tide - any player's tap counts, and the mana
+    goes to whoever tapped, not necessarily this ability's own controller)."""
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or event.subject_controller is None:
+            return
+        if self.only_creators_own_taps and event.subject_controller != trigger.controller:
+            return
+        if not any(word.lower() == self.land_subtype.lower() for word in event.subject_subtypes):
+            return
+        pool = game.mana_pool_receiving(event.subject_controller)
+        for color in self.mana:
+            pool.add(color)
+
+
 #: What a delayed (or reflexive) triggered ability does when it resolves -
 #: `DelayedTrigger.effect`'s own type. Every string this task's requirement 2
 #: names (`"warp:exile"`, `"grant_extra_turn"`, `"sacrifice"`) is a member's
@@ -1014,12 +1138,15 @@ DelayedEffectSpec = Annotated[
     | PayOrLoseTheGame
     | CombatDamageToPlayerDraw
     | CopyNextSpellYouCast
+    | NextSpellCannotBeCountered
     | DelayedBlinkReturnWithRider
     | ReflexiveConsequence
     | ReflexivePayEnergyConsequence
     | ReflexiveMandatoryTokenDamageConsequence
     | ReflexiveCounterCountConsequence
-    | ReflexiveExileCopiedCard,
+    | ReflexiveExileCopiedCard
+    | RevokeGrantedAbility
+    | AddManaWhenLandTapped,
     Field(discriminator="kind"),
 ]
 

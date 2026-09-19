@@ -73,6 +73,7 @@ from .abilities import (
     parse_abilities,
     parse_granted_ability_lines,
     parse_mana_count,
+    self_counter_mana_count,
 )
 from .turn import Step
 
@@ -788,11 +789,26 @@ def tapped_for_mana_event(
     )
 
 
-def triggered_mana_count(game: "Game", phrase: str, controller: str) -> int:
+def triggered_mana_count(
+    game: "Game", phrase: str, controller: str, source: "CardState | None" = None
+) -> int:
     """How many times a triggered mana ability's "for each <phrase>" adds its
     mana, counted now (CR 608.2h: "the answer is determined only once, when
     the effect is applied"), off the computed board (CR 613.5). An unread
-    phrase counts 0, adding nothing."""
+    phrase counts 0, adding nothing.
+
+    `source` is the ability's own permanent (CR 113.7a: found by id,
+    whatever zone it is in now) - Gardenize's own "charge counter on this
+    enchantment" (CR 122.1) counts nothing on the board at all, only what is
+    already on that one object, so it is checked first and short-circuits
+    the board scan entirely when it matches. `None` for a caller with no
+    source to hand (there is none in the pool that both needs one and is
+    reached without a live `AbilityOnStack`/`CardState` in scope), which
+    reads as 0 rather than guessing.
+    """
+    self_counter_kind = self_counter_mana_count(phrase)
+    if self_counter_kind is not None:
+        return max(source.counter_count(self_counter_kind), 0) if source is not None else 0
     parsed = parse_mana_count(phrase)
     if parsed is None:
         return 0
@@ -1656,7 +1672,7 @@ def condition_matches(
             # the creature that just died rather than nothing.
             return event.subject_id is not None and event.subject_id == source.attached_to
         if event.subject_id == source.id:
-            # Covers both "When this creature dies" and the self half of
+            # Covers "When this creature dies" and the self half of
             # "Whenever this creature or another creature dies" (Blood
             # Artist) - either way the source's own death matches only if
             # the condition names itself at all.

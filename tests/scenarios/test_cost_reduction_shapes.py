@@ -625,3 +625,150 @@ def test_an_unrecognised_reduction_sentence_reduces_nothing():
     bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
 
     assert scenario.game.cost_reduction_for(bears, "alice") == ManaCost()
+
+
+# -- "if <board condition>" (S10 survey, 2026-09-19) -------------------------
+#
+# CR 601.2f's general self-reduction gated on a plain board condition, handed
+# straight to `Game.condition_holds` - the same reader "Activate only if
+# <condition>" (CR 602.5b) already uses - rather than its own copy of
+# "you control a legendary creature". Wrath of the Bloodmane is the reported
+# card; Traxos, Academy Guardian proves the same reader against a *different*
+# condition shape ("you've cast a noncreature spell this turn").
+
+
+def test_wrath_of_the_bloodmane_costs_its_printed_amount_with_no_legendary_creature():
+    """ "This spell costs {1} less to cast if you control a legendary
+    creature." No legendary creature: full price."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Wrath of the Bloodmane"], battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Wrath of the Bloodmane")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{2}{R}"
+
+
+def test_wrath_of_the_bloodmane_costs_one_less_controlling_a_legendary_creature():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Wrath of the Bloodmane"], battlefield=["Liliana the Repentant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Wrath of the Bloodmane")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{1}{R}"
+
+
+def test_traxos_costs_its_printed_amount_with_no_noncreature_spell_cast():
+    """ "This spell costs {2} less to cast if you've cast a noncreature spell
+    this turn." Proves `condition_holds` reading the same "if <condition>"
+    reduction against a history condition, not just a board-count one."""
+    scenario = Scenario().player("alice", hand=["Traxos, Academy Guardian"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Traxos, Academy Guardian")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{3}{U}"
+
+
+def test_traxos_costs_two_less_after_casting_a_noncreature_spell_this_turn():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Traxos, Academy Guardian", "Lightning Bolt"],
+            battlefield=["Mountain", "Island", "Island", "Island"],
+        )
+        .player("bob", battlefield=["Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    memnite = scenario.creature("Memnite", "bob")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    scenario.cast_and_resolve("Lightning Bolt", mountain, targets=[memnite])
+
+    casting = scenario.cast("Traxos, Academy Guardian")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{1}{U}"
+
+
+# -- "{X} less, where X is the greatest power/toughness among creatures you
+# control" (Ghalta the Immovable/Unstoppable, S10 survey) -------------------
+
+
+def test_ghalta_the_immovable_is_reduced_by_the_greatest_toughness_you_control():
+    """Ghalta the Immovable: "This spell costs {X} less to cast, where X is
+    the greatest toughness among creatures you control." Grizzly Bears (2/2)
+    and Hill Giant (3/3) control: the greatest toughness is 3, taking {8}{W}
+    to {5}{W}."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ghalta the Immovable"],
+            battlefield=["Grizzly Bears", "Hill Giant"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Ghalta the Immovable")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{5}{W}"
+
+
+def test_ghalta_the_immovable_is_full_price_with_no_creatures():
+    scenario = Scenario().player("alice", hand=["Ghalta the Immovable"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Ghalta the Immovable")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{8}{W}"
+
+
+def test_ghalta_the_unstoppable_is_reduced_by_the_greatest_power_you_control():
+    """The power sibling: Grizzly Bears (2/2) and Hill Giant (3/3), greatest
+    power 3, taking {8}{G} to {5}{G}."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ghalta the Unstoppable"],
+            battlefield=["Grizzly Bears", "Hill Giant"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Ghalta the Unstoppable")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{5}{G}"
+
+
+def test_an_oversized_greatest_stat_reduction_does_not_go_below_the_colored_pip():
+    """CR 118.7a again: the reduction can eat every generic mana but never the
+    printed {W}, however large the greatest toughness gets."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Ghalta the Immovable"], battlefield=["Blightsteel Colossus"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Ghalta the Immovable")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{W}"

@@ -61,9 +61,11 @@ from .abilities import (
     TriggerEvent,
     TriggerWord,
     keyword_abilities,
+    target_cost_reduction_amount,
 )
 from .combat import has_keyword
 from .cost import (
+    CostModifierNotice,
     CostPayment,
     CostStep,
     TotalCost,
@@ -1700,12 +1702,42 @@ def equip_activation(
     way `off_battlefield_activation` checks its own: an opponent's creature or
     a noncreature is refused before anything is paid. `_equip_effect` still
     rechecks on resolution (CR 608.2b) for a target that became illegal since.
+
+    **CR 602.2b's own order is targets (CR 601.2c) before cost (CR 601.2f)**,
+    which is why the target is announced and checked *before* the reduction
+    below is computed: Warrior's Blades' and Dragonfire Blade's own "This
+    ability costs [N] less to activate for each [quality] ... it targets"
+    (`ActivationCostReduction.target_quality`) needs to know the target to
+    price the activation at all, and could not be read correctly if this
+    method priced the cost first the way `unannounced_equip_activation`
+    (asked with no target yet, for `legal_actions`) necessarily still does.
     """
     from .targeting import profile_for_text
 
     activation = unannounced_equip_activation(game, equipment, player)
     profile_for_text(EQUIP_EFFECT).check([target], player, game, source_id=equipment.id)
     activation.targets = [TargetRef.to_card(target)]
+    ability = _keyword(equipment.card, "equip")
+    reduction = ability.cost_reduction if ability is not None else None
+    if reduction is not None and reduction.target_quality is not None:
+        amount = target_cost_reduction_amount(reduction, target, game)
+        if amount is None:
+            already_noticed = any(
+                notice.source_id == equipment.id for notice in game.cost_modifier_notices
+            )
+            if not already_noticed:
+                game.cost_modifier_notices.append(
+                    CostModifierNotice(
+                        source_id=equipment.id, source_name=equipment.name, text=ability.raw
+                    )
+                )
+        else:
+            reduced_by = reduction.amount * amount
+            if reduced_by:
+                activation.cost = TotalCost(
+                    mana=activation.cost.mana.minus(ManaCost.parse(f"{{{reduced_by}}}")),
+                    components=activation.cost.components,
+                )
     return activation
 
 

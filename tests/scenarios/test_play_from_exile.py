@@ -67,7 +67,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import PlayAction, why_cannot_cast_from
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Color, Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
@@ -517,3 +517,86 @@ def test_bard_class_level_3_exiles_the_top_two_cards_with_play_permission():
 
     # Bob has no permission of his own over either card.
     assert scenario.game.play_permission_for(bolt, "bob") is None
+
+
+# -- Dire Fleet Daredevil: "mana of any type can be spent to cast that spell" -
+
+
+def _daredevil_board() -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Dire Fleet Daredevil"],
+            battlefield=["Mountain", "Mountain", "Forest"],
+        )
+        .player("bob", graveyard=["Lightning Bolt"])
+    )
+
+
+def _cast_daredevil(scenario, target) -> None:
+    """Cast the creature (no targets of its own), then answer its ETB
+    trigger's own "exile target instant or sorcery card ..." target."""
+    sources = scenario.untapped_sources("Mountain", "Mountain", username="alice")
+    scenario.will_choose_targets(target, username="alice", source="Dire Fleet Daredevil")
+    scenario.cast_and_resolve("Dire Fleet Daredevil", *sources, username="alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+
+def test_dire_fleet_daredevil_exiles_the_targeted_card_and_grants_the_permission():
+    scenario = _daredevil_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "bob")
+
+    _cast_daredevil(scenario, bolt)
+
+    assert bolt.zone is Zone.EXILE
+    permission = scenario.game.play_permission_for(bolt, "alice")
+    assert permission is not None
+    assert permission.any_type_mana is True
+
+
+def test_dire_fleet_daredevils_permission_lets_any_color_of_mana_pay_it():
+    """ "... and mana of any type can be spent to cast that spell." Lightning
+    Bolt's printed cost is still {R} (CR 202.3b - what a card costs never
+    changes), but a green source pays it under this permission."""
+    scenario = _daredevil_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "bob")
+    _cast_daredevil(scenario, bolt)
+
+    casting = scenario.cast("Lightning Bolt", username="alice", from_zone=Zone.EXILE)
+    casting.use_permission()
+    casting.choose_targets(["bob"])
+    assert str(casting.total_cost.mana) == "{R}"
+
+    (forest,) = scenario.untapped_sources("Forest", username="alice")
+    payment = casting.begin_paying()
+    payment.tap_for_mana(forest, [Color.GREEN])
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.player("bob").life == 17
+
+
+def test_without_the_permission_lightning_bolt_still_needs_red_mana():
+    """The override belongs to the permission, not to the card - cast
+    normally (from bob's own hand, say), green mana still cannot pay {R}."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Forest"])
+        .player("alice")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Lightning Bolt", username="bob", targets=["alice"])
+    (forest,) = scenario.untapped_sources("Forest", username="bob")
+    payment = casting.begin_paying()
+
+    with pytest.raises(ValueError, match="cannot pay"):
+        payment.tap_for_mana(forest, [Color.GREEN])
+        payment.pay()

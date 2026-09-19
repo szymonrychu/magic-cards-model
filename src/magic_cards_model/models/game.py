@@ -46,9 +46,11 @@ from ..machines.casting import (
     grant_suspend_haste,
     granted_cast_options,
     keyword_cast_options,
+    mana_value_cap_for,
     marker_cast_options,
     play_permissions_on,
     spell_has_type_word,
+    split_second_restriction_source,
     static_free_cast_grants,
     types_being_cast,
     usable_play_permission,
@@ -58,6 +60,7 @@ from ..machines.casting_restrictions import (
     CastingRuleEffect,
     CastingRuleKind,
     cannot_be_countered,
+    combat_lockdown_restriction_source,
 )
 from ..machines.combat import (
     Attack,
@@ -116,6 +119,7 @@ from ..machines.decisions import (
 )
 from ..machines.delayed import (
     DelayedEffectSpec,
+    DelayedEffectSpecBase,
     DelayedTrigger,
     DelayedTriggers,
     ExileWarped,
@@ -393,6 +397,37 @@ _COSTS_LESS_PER_CARD_TYPE = re.compile(
 _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
     r"costs \{(\d+)\} less to cast if it targets a "
     r"(?P<color>white|blue|black|red|green) spell",
+    re.IGNORECASE,
+)
+
+#: CR 601.2f's general "if <board condition>" self reduction: "This spell
+#: costs {1} less to cast if you control a legendary creature." (Wrath of the
+#: Bloodmane) and "This spell costs {2} less to cast if you've cast a
+#: noncreature spell this turn." (Traxos, Academy Guardian). Unlike the two
+#: rows above - Emrakul's own per-card-type count and Mystical Dispute's own
+#: announced-target reading - this is not a shape of its own: it hands the
+#: condition straight to `condition_holds`, the same reader "Activate only if
+#: <condition>" (CR 602.5b) and a modal "If <condition>, choose N instead"
+#: (CR 700.2) already use, so every board condition that reader can already
+#: answer works here too rather than needing its own copy. A condition
+#: `condition_holds` does not recognise is read as false, the same fail-
+#: closed default an activation restriction gets, rather than a reduction
+#: applied on a guess.
+_COSTS_LESS_IF_CONDITION_RE = re.compile(
+    r"this spell costs \{(?P<amount>\d+)\} less to cast if (?P<condition>[^.]+)\.",
+    re.IGNORECASE,
+)
+
+#: "This spell costs {X} less to cast, where X is the greatest toughness
+#: among creatures you control." (Ghalta the Immovable), the power sibling
+#: (Ghalta the Unstoppable). Unlike every other row here, the amount is
+#: itself CR 601.2f's counted quantity rather than a printed multiplier on
+#: one - the same "greatest power/toughness among creatures you control"
+#: bound `machines/casting._GREATEST_AMONG_CREATURES` already reads for
+#: Soul Immolation's blight-X cap, read again here for the reduction itself.
+_COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE = re.compile(
+    r"this spell costs \{x\} less to cast,? where x is the greatest "
+    r"(?P<stat>power|toughness) among creatures you control",
     re.IGNORECASE,
 )
 
@@ -685,6 +720,15 @@ _CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
 _CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN = re.compile(
     r"an opponent has been dealt noncombat damage this turn", re.IGNORECASE
 )
+#: Traxos, Academy Guardian: "you've cast a noncreature spell this turn" - the
+#: singular "at least one" sibling of `_CONDITION_SPELLS_CAST_THIS_TURN`,
+#: qualified by card type/subtype the same way `_CONDITION_GRAVEYARD_CARDS`
+#: already is. Bare "you've cast a spell this turn" (no quality) is the same
+#: shape with nothing to qualify - `_card_quality(None)` reads that as every
+#: spell.
+_CONDITION_CAST_A_SPELL_THIS_TURN = re.compile(
+    r"you(?:'ve| have) cast an? (?:(?P<quality>[\w-]+) )?spell this turn", re.IGNORECASE
+)
 #: CR 110.4a: "Specifically, it means an artifact, battle, creature,
 #: enchantment, land, or planeswalker card."
 _PERMANENT_TYPES = frozenset(
@@ -791,10 +835,17 @@ def _permanent_quality(phrase: str) -> Callable[[Characteristics], bool] | None:
 def _card_quality(word: str | None) -> Callable[[CardState], bool] | None:
     """A graveyard card's one-word quality - "creature", "permanent" (CR
     110.4a), a card type or subtype - or every card when the text prints
-    none. None when the word is not read."""
+    none. A "non" prefix negates it ("noncreature"), the same recursive
+    reading `_characteristic_word` gives a permanent's computed
+    characteristics. None when the word is not read."""
     if word is None:
         return lambda state: True
     lowered = word.lower()
+    if lowered.startswith("non") and len(lowered) > 4:
+        inner = _card_quality(lowered.removeprefix("non").lstrip("-"))
+        if inner is None:
+            return None
+        return lambda state: not inner(state)
     if lowered == "permanent":
         return lambda state: bool(_PERMANENT_TYPES.intersection(state.types))
     card_type = _card_type_named(lowered)
@@ -1156,6 +1207,15 @@ class CastRecord(EngineModel):
 
     keyword: str | None = None
     """The keyword the spell was cast with, as printed: `Flashback`, `Warp`."""
+    exile_instead_of_graveyard: bool = False
+    """Cast under a `PlayPermission` whose own "If that spell would be put
+    into a graveyard, exile it instead." rider was printed alongside its
+    grant (Dire Fleet Daredevil, Nita, Forum Conciliator) - the same CR 604.5
+    "static ability applies while a spell is on the stack" shape flashback's
+    own second half already reaches through `keyword`, folded straight onto
+    this record instead of a second `keyword` value because the grant here
+    names no keyword at all. Read by `machines/replacement._stack_
+    replacements`."""
     keyword_cost_paid: bool = False
     """Whether the cost that keyword names was paid (`Casting.keyword_cost_paid`).
 
@@ -1653,12 +1713,12 @@ class Game(EngineModel):
 
     cost_modifier_notices: list[CostModifierNotice] = Field(default_factory=list)
     """One entry per permanent whose static cost-modifying text
-    (`static_cost_modifiers_for`) could not be read - Grand Arbiter Augustin
-    IV's controller-relative "Spells your opponents cast cost {1} more to
-    cast" is the example neither `cost_modifier_effect`'s shapes cover. A
-    cost increase that silently fails to apply looks identical to ordinary
-    play, which is the DDR#978 defect this is written against; recording it
-    here keeps the gap visible instead."""
+    (`static_cost_modifiers_for`) could not be read into one of
+    `cost_modifier_effect`'s recognised shapes - a card whose text
+    `looks_like_unparsed_cost_modifier` flags as a cost sentence this cannot
+    yet classify. A cost increase that silently fails to apply looks
+    identical to ordinary play, which is the DDR#978 defect this is written
+    against; recording it here keeps the gap visible instead."""
 
     anaphoric_clause_notices: list[AnaphoricClauseNotice] = Field(default_factory=list)
     """One entry per "<verb> target X. Its/that X's controller ..." effect
@@ -2169,6 +2229,16 @@ class Game(EngineModel):
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
     "Activate only once each turn". Cleared when a new turn begins."""
 
+    exhausted: set[str] = Field(default_factory=set)
+    """Which abilities have been activated at all, ever, keyed the same way
+    as `activations` - CR 702.177a's Exhaust: "'[Cost]: [Effect]' means
+    '[Cost]: [Effect]. Activate only once.'" Never cleared on a new turn,
+    unlike `activations` - the whole point of the keyword is that it is not a
+    per-turn limit. A key is naturally never reused by a different object:
+    `permanent.id` is minted fresh whenever an object enters the battlefield
+    (CR 400.7), so a card that leaves and returns is not exhausted by what
+    its earlier self did."""
+
     loyalty_activations: dict[str, int] = Field(default_factory=dict)
     """How often a loyalty ability of each permanent has been activated this
     turn, keyed by permanent id, for CR 606.3's once-per-turn rule - which is
@@ -2430,7 +2500,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 28
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 29
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2795,6 +2865,29 @@ class Game(EngineModel):
     branch itself - was dropped at this same merge rather than carried
     forward, the same "one mechanism, not two" call this file already made
     once for the same pair of fields.)
+
+    Bumped 28 -> 29: the FRA S10 line of development (costs, casting rules,
+    mana - CR 601.3/604.5/605.1b/605.4a work), reconciled at the same merge
+    as this note. `CastRecord` gained `exile_instead_of_graveyard` and
+    `PlayPermission` gained `any_type_mana`/`condition`/`exile_instead_of_
+    graveyard` (Dire Fleet Daredevil's "mana of any type can be spent to
+    cast that spell" and "exile it instead of graveyard" riders on a CR
+    601.3 grant; Null Summoner's Threshold-conditioned grant). `DelayedEffectSpec`
+    gained two variants: `RevokeGrantedAbility` (Emrakul, the Exigent Doom's
+    own land-mana-grant, revoked when the exiled card is cast) and
+    `AddManaWhenLandTapped` (Molten Tide's/High Tide's "until end of turn,
+    whenever you tap a Mountain for mana, add an additional {R}" delayed
+    trigger). The last also changed how `Game._resolve_triggered_mana_
+    abilities` runs: a delayed triggered mana ability now resolves inline,
+    with no stack, per CR 605.4a - `DelayedEffectSpecBase.is_mana_ability`
+    is a new `ClassVar` read there, not a persisted field, but the
+    resolution behaviour itself is exactly the "a `DelayedEffectSpec`'s
+    resolution" case the bump rule's second bullet already names. A
+    version-28 dump has none of the new fields (all default `False`/`None`,
+    silently dropping which spell an exile-instead redirect or an
+    any-type-mana grant belonged to) and no way to decode a pending
+    `RevokeGrantedAbility`/`AddManaWhenLandTapped` delayed trigger's own
+    `kind` at all. Refused instead.
     """
 
     @model_validator(mode="before")
@@ -3766,6 +3859,7 @@ class Game(EngineModel):
         *,
         keyword: str | None = None,
         keyword_cost_paid: bool = False,
+        exile_instead_of_graveyard: bool = False,
         origin_zone: Zone = Zone.HAND,
         face: str | None = None,
         exile_annotation: "ExileAnnotation | None" = None,
@@ -3812,6 +3906,7 @@ class Game(EngineModel):
         record = CastRecord(
             keyword=keyword,
             keyword_cost_paid=keyword_cost_paid,
+            exile_instead_of_graveyard=exile_instead_of_graveyard,
             origin_zone=origin_zone,
             face=face,
             exile_annotation=exile_annotation,
@@ -4780,6 +4875,12 @@ class Game(EngineModel):
                 if component.zone in (Zone.HAND, Zone.GRAVEYARD, Zone.LIBRARY)
                 else []
             )
+        elif component.kind is ComponentKind.BEHOLD:
+            # CR 701.4a: a hand card to reveal, or a battlefield permanent to
+            # choose - the same "either zone" pool `_behold_or_tapped`
+            # (`machines/replacement.py`) builds for the ETB shape of the
+            # same choice.
+            pool = list(player.hand) + list(self.permanents_controlled_by(caster))
         else:
             return None
         if component.requirement is not None:
@@ -5218,6 +5319,7 @@ class Game(EngineModel):
             ComponentKind.DISCARD: casting.discarding,
             ComponentKind.EXILE: casting.exiling,
             ComponentKind.TAP: casting.tapping,
+            ComponentKind.BEHOLD: casting.beholding,
         }
         for cost in casting._printed_additional_costs():  # noqa: SLF001
             chosen = self._choose_cost_objects(cost, caster, card, taken)
@@ -5570,14 +5672,33 @@ class Game(EngineModel):
             ability = pending.pop(0)
             if ability not in self.pending_triggers:
                 continue
-            printed = ability.ability
-            if not isinstance(printed, TriggeredAbility):
-                continue
-            effect = printed.effect.lower().strip()
-            if ability.targets or (
-                parse_triggered_mana(printed.effect) is None and not effect.startswith("add ")
-            ):
+            if ability.targets:
                 continue  # CR 605.5a: not a mana ability.
+            # CR 603.7: a delayed triggered ability's own effect is not
+            # printed on any card (Molten Tide's, High Tide's own "until end
+            # of turn, whenever you tap ..." grant), so whether it is a mana
+            # ability at all is read off `DelayedEffectSpecBase.is_mana_
+            # ability` - the same self-description `_resolve_ability` already
+            # reaches for through `DelayedTriggers.effect_for` - rather than
+            # off printed text `parse_triggered_mana` was never going to
+            # find, since `ability.ability.effect` here is the *whole*
+            # "until end of turn, whenever ..." sentence, not a resolution
+            # instruction to re-read as one.
+            delayed = self.delayed_triggers.trigger_for(ability)
+            run_delayed: DelayedEffectSpecBase | None = None
+            if delayed is not None:
+                run_delayed = self.delayed_triggers.effect_for(ability)
+                if run_delayed is None or not run_delayed.is_mana_ability:
+                    continue
+            else:
+                printed = ability.ability
+                if not isinstance(printed, TriggeredAbility):
+                    continue
+                effect_text = printed.effect.lower().strip()
+                if parse_triggered_mana(printed.effect) is None and not effect_text.startswith(
+                    "add "
+                ):
+                    continue  # CR 605.5a: not a mana ability.
             if resolved >= self.TRIGGERED_MANA_ABILITY_LOOP_BOUND:
                 # CR 104.4b. See `Game.drawn`'s own docstring for what this
                 # detection does and does not cover.
@@ -5594,11 +5715,15 @@ class Game(EngineModel):
             # triggers on the stack) happens between one mana ability and the
             # next - only the CR 603.4 recheck and the effect itself.
             if self._intervening_if_still_true(ability):
-                effect = self._effect_of(ability)
-                if effect is not None:
-                    effect(self, ability)
+                if delayed is not None:
+                    if run_delayed is not None:
+                        run_delayed(self, ability, delayed)
                 else:
-                    self._note_unread_trigger(ability)
+                    run_printed = self._effect_of(ability)
+                    if run_printed is not None:
+                        run_printed(self, ability)
+                    else:
+                        self._note_unread_trigger(ability)
             resolved += 1
             added: list[Color] = []
             for username, was in before.items():
@@ -12930,6 +13055,9 @@ class Game(EngineModel):
         until_next_turn_of: str | None = None,
         expires_end_of_next_turn: bool = False,
         flashback: bool = False,
+        any_type_mana: bool = False,
+        condition: str | None = None,
+        exile_instead_of_graveyard: bool = False,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -12995,6 +13123,9 @@ class Game(EngineModel):
                 granted_step=None if turn is None else turn.step,
                 until_next_turn_of=until_next_turn_of,
                 expires_end_of_next_turn=expires_end_of_next_turn,
+                any_type_mana=any_type_mana,
+                condition=condition,
+                exile_instead_of_graveyard=exile_instead_of_graveyard,
             )
             self.play_permissions.append(permission)
             return permission
@@ -13124,6 +13255,19 @@ class Game(EngineModel):
                     f"{source_name} only applies to {grant.type_word} spells, and "
                     f"{card.name} is not one"
                 )
+            elif grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
+                cap = mana_value_cap_for(grant, self, caster)
+                if cap is None:
+                    unavailable = (
+                        f"{source_name}'s mana value cap "
+                        f"({grant.max_mana_value_quality!r}) is not read by this engine "
+                        "(CR 118.9)"
+                    )
+                elif card.mana_value > cap:
+                    unavailable = (
+                        f"{source_name} only applies to spells with mana value {cap} or "
+                        f"less, and {card.name} is {card.mana_value}"
+                    )
             options.append(
                 AlternativeCostOption(
                     index=len(options),
@@ -13662,6 +13806,22 @@ class Game(EngineModel):
                     amount += int(target_match.group(1))
                     break
 
+        condition_match = _COSTS_LESS_IF_CONDITION_RE.search(text)
+        if condition_match is not None:
+            held = self.condition_holds(owner, condition_match.group("condition"), source=spell)
+            if held:
+                amount += int(condition_match.group("amount"))
+
+        greatest_stat = _COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE.search(text)
+        if greatest_stat is not None:
+            stat = greatest_stat.group("stat").lower()
+            values = [
+                getattr(self.characteristics_of(state), stat) or 0
+                for state in self.permanents_controlled_by(owner)
+                if self.characteristics_of(state).is_creature
+            ]
+            amount += max(values, default=0)
+
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
     def basic_land_types_controlled(self, controller: str) -> frozenset[str]:
@@ -13873,12 +14033,11 @@ class Game(EngineModel):
         counted when the permanent's controller is `caster`.
 
         Text that reads like a cost modifier but does not match one of
-        `cost_modifier_effect`'s recognised shapes - Grand Arbiter Augustin
-        IV's controller-relative "Spells your opponents cast cost {1} more to
-        cast" - is neither applied nor silently skipped: a `CostModifierNotice`
-        is appended to `cost_modifier_notices` instead (DDR#978 - an increase
-        that fails to apply looks identical to ordinary play). Deduplicated by
-        source, since this runs every time a cost is priced.
+        `cost_modifier_effect`'s recognised shapes is neither applied nor
+        silently skipped: a `CostModifierNotice` is appended to
+        `cost_modifier_notices` instead (DDR#978 - an increase that fails to
+        apply looks identical to ordinary play). Deduplicated by source,
+        since this runs every time a cost is priced.
 
         A loyalty-ability-granted, time-boxed discount - Ral, Monsoon Mage's
         own "+1: Until your next turn, instant and sorcery spells you cast
@@ -13904,8 +14063,8 @@ class Game(EngineModel):
             #
             # Read line by line, not as one blob: CR 604.1 makes each
             # sentence-per-line its own static ability (Grand Arbiter
-            # Augustin IV prints three - two readable color discounts and one
-            # controller-relative tax this wave still cannot read), and
+            # Augustin IV prints three - two color discounts and an
+            # opponent-scoped tax, all three readable), and
             # `cost_modifier_effect` only ever answers for the *first* shape
             # it recognises in whatever text it is given. Reading the whole
             # card at once would either apply only the first ability and
@@ -13978,6 +14137,19 @@ class Game(EngineModel):
                     if floor is None or effect.amount > floor:
                         floor = effect.amount
                 elif effect.kind is CostModifierKind.FLAT_INCREASE:
+                    if (
+                        effect.excludes_type is not None
+                        and effect.excludes_type in spell.card.types
+                    ):
+                        continue
+                    increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.OPPONENT_TYPE_INCREASE:
+                    # Thalia, the Survivor: "your opponents cast" - only when
+                    # the permanent's controller is not the caster, the exact
+                    # mirror of COLOR_DECREASE/TYPE_DECREASE's own "you cast"
+                    # scoping below.
+                    if permanent.controller == caster:
+                        continue
                     if (
                         effect.excludes_type is not None
                         and effect.excludes_type in spell.card.types
@@ -14393,6 +14565,29 @@ class Game(EngineModel):
                     "(CR 716.2a)"
                 )
 
+        if ability.exhaust and self._activation_key(permanent, index) in self.exhausted:
+            return f"{permanent.name}'s exhaust ability has already been activated (CR 702.177a)"
+
+        if ability.mana is None:
+            # CR 702.61a: "As long as this spell is on the stack, players
+            # can't cast other spells or activate abilities that aren't mana
+            # abilities." CR 605.1a: a mana ability's own activation is never
+            # caught by this - `ability.mana` is set exactly when
+            # `machines/abilities.py` read this line as one (`_ADD.match`).
+            split_second_source = split_second_restriction_source(self)
+            if split_second_source is not None:
+                return (
+                    f"{split_second_source} has split second: as long as it is on the "
+                    f"stack, players can't activate abilities that aren't mana abilities "
+                    "(CR 702.61a)"
+                )
+            combat_lockdown_source = combat_lockdown_restriction_source(self)
+            if combat_lockdown_source is not None:
+                return (
+                    f"{combat_lockdown_source} says players can't activate abilities "
+                    f"that aren't mana abilities during combat (CR 506.1)"
+                )
+
         instructions = (ability.instructions or "").lower()
         limit = _ACTIVATION_LIMIT.search(instructions)
         if limit is not None:
@@ -14582,6 +14777,12 @@ class Game(EngineModel):
                 self.turn_fact_holds("dealt_noncombat_damage", opponent.username)
                 for opponent in opponents
             )
+
+        if match := _CONDITION_CAST_A_SPELL_THIS_TURN.fullmatch(text):
+            quality = _card_quality(match.group("quality"))
+            if quality is None:
+                return None
+            return any(quality(state) for state in self.spells_cast_this_turn.get(controller, []))
 
         if _CONDITION_SUSPENDED.fullmatch(text):
             if source is None:
@@ -15643,6 +15844,14 @@ class Game(EngineModel):
                 if announced_targets is not None:
                     targets = list(announced_targets)
             self.activations[key] = self.activations.get(key, 0) + 1
+            if ability.exhaust:
+                # CR 702.177a: "Activate only once" - unlike `activations`
+                # above, this is never cleared on a new turn (`exhausted`
+                # persists for the object's whole existence on the
+                # battlefield). `key` is already `permanent.id`-scoped, so an
+                # object that leaves and returns (CR 400.7's new object) gets
+                # a fresh id and is not exhausted by its own past self.
+                self.exhausted.add(key)
             if ability.loyalty is not None:
                 # CR 606.3's once-per-turn rule is per permanent: having activated
                 # any loyalty ability of this planeswalker this turn, the next one
