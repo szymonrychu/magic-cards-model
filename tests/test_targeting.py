@@ -169,10 +169,18 @@ def test_a_spell_with_no_targets_refuses_one():
 
 
 def test_text_the_parser_cannot_read_is_not_checked():
-    """Fail open: an unreadable restriction must not become a false rejection."""
+    """Fail open: an unreadable restriction must not become a false rejection.
+
+    "Nonblack" used to be this test's own example - `_negated_color` now
+    reads it (see `tests/scenarios/test_excluded_color_adjectives.py`), so
+    this needs an example that is still genuinely unread: a comparison
+    attempted against something other than a plain number or X (CR 107.1a),
+    which `_COMPARISON_CLAUSE` cannot finish reading and
+    `_extract_comparison` returns `_COMPARISON_UNREADABLE` for.
+    """
     from magic_cards_model.machines.targeting import _parse
 
-    unreadable = _parse("Destroy target nonblack creature.")
+    unreadable = _parse("Destroy target creature with power greater than its toughness.")
 
     assert not unreadable.understood
     unreadable.check(["bob"], caster="alice")  # no exception
