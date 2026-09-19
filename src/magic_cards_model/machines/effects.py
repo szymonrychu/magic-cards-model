@@ -198,6 +198,7 @@ from .targeting import (
 )
 from .triggers import (
     AbilityOnStack,
+    batched_attackers,
     event_subject_power,
     is_ability,
     resolution_key,
@@ -16135,6 +16136,97 @@ def _parse_until_your_next_turn_attack_pump_clause(text: str) -> AbilityEffect |
     return effect
 
 
+#: "those creatures get `<P>`/`<T>`[ and gain `<keywords>`] until end of
+#: turn." / "those creatures gain `<keywords>` until end of turn." - CR 400.7
+#: anaphora back to whichever attackers a "one or more `<description>`
+#: attack[ `<defender>`]" condition just counted
+#: (`machines/triggers.batched_attackers`) - Frenzied Gorespawn's own "...
+#: gain menace ..." (no P/T change at all) and The Earth King family's
+#: shared "... get +N/+N ..." shape. No "target" word anywhere in the
+#: sentence, so `parse_mixed_effect`'s per-clause dispatcher has nothing to
+#: split it on - read off the whole, unsplit effect text instead, the same
+#: tier `_parse_until_your_next_turn_attack_pump_clause` above already
+#: occupies for the identical family's delayed-trigger cousin.
+_BATCHED_ATTACK_GROUP_PUMP_RE = re.compile(
+    r"^those creatures"
+    r"(?:\s+get\s+(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+))?"
+    r"(?:\s+and)?(?:\s+gains?\s+(?P<keywords>[a-z][a-z ,]*?))?"
+    r"\s+until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_batched_attack_group_pump_clause(text: str) -> AbilityEffect | None:
+    """`_BATCHED_ATTACK_GROUP_PUMP_RE`'s shape.
+
+    Reads `ability.ability.condition` - the ability's own printed "one or
+    more ... attack ..." condition, not this clause's own `text` - through
+    `batched_attackers` at resolution time (CR 611.2c fixes membership then,
+    not when the ability triggered), the same "count taken once, when the
+    effect applies" discipline every other "for each"/"that many" reader in
+    this file already holds to. `None` batch (an unreadable condition, or a
+    condition this is not even attached to) or an empty one is not an error -
+    CR 107.1a: nothing to grant.
+    """
+    match = _BATCHED_ATTACK_GROUP_PUMP_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    power = int(match.group("power")) if match.group("power") else 0
+    toughness = int(match.group("toughness")) if match.group("toughness") else 0
+    keyword_text = match.group("keywords")
+    keywords: list[str] = []
+    if keyword_text is not None:
+        validated = _split_and_validate_keywords(keyword_text.strip())
+        if validated is None:
+            return None
+        keywords = validated
+    if power == 0 and toughness == 0 and not keywords:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if not isinstance(ability.ability, TriggeredAbility):
+            return
+        batch = batched_attackers(game, ability.ability.condition, ability.controller)
+        if not batch:
+            return
+        store = continuous_effects(game)
+        for creature in batch:
+            selector = only_this_incarnation(creature, creature.zone_change_stamp)
+            if power != 0 or toughness != 0:
+                store.add(
+                    ContinuousEffect(
+                        description=(
+                            f"{ability.source_name}: {creature.name} gets "
+                            f"{power:+d}/{toughness:+d} until end of turn"
+                        ),
+                        layer=Layer.POWER_TOUGHNESS,
+                        sublayer=Sublayer.MODIFY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        source_id=ability.source_id,
+                        selector=selector,
+                        modification=modify_power_toughness(power, toughness),
+                    )
+                )
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=(
+                            f"{ability.source_name}: {creature.name} gains "
+                            f"{keyword} until end of turn"
+                        ),
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        source_id=ability.source_id,
+                        selector=selector,
+                        modification=grant_ability(keyword),
+                    )
+                )
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -16226,6 +16318,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     until_your_next_turn_attack_pump = _parse_until_your_next_turn_attack_pump_clause(effect_text)
     if until_your_next_turn_attack_pump is not None:
         return until_your_next_turn_attack_pump
+    batched_attack_group_pump = _parse_batched_attack_group_pump_clause(effect_text)
+    if batched_attack_group_pump is not None:
+        return batched_attack_group_pump
     ante_self = _parse_ante_self_if_you_do_clause(effect_text)
     if ante_self is not None:
         return ante_self

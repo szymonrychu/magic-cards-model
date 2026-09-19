@@ -4138,29 +4138,69 @@ def abilities_triggered_by(
     return found
 
 
-#: "one or more `<description>` attack" - The Earth King's "one or more
-#: creatures you control with power 4 or greater attack". CR 603.2c: "An
-#: ability triggers only once each time its trigger event occurs. However, it
-#: can trigger repeatedly if one event contains multiple occurrences" - the
-#: plural "one or more" is one trigger for the declaration, and how many of
-#: the attackers fit the description is the event's count, which a later
-#: "that many" reads (`machines/effects.that_many`).
-_ONE_OR_MORE_ATTACK_RE = re.compile(r"^one or more (?P<description>.+?) attack$", re.IGNORECASE)
+#: "one or more `<description>` attack[ `<defender>`]" - The Earth King's
+#: "one or more creatures you control with power 4 or greater attack" (no
+#: defender named) and Frenzied Gorespawn's/Garruk, Curse Breaker's own
+#: "one or more creatures attack one of your opponents" (CR 508.3a: "attacks
+#: [a player, planeswalker, or battle]" - the defender is part of the same
+#: printed condition, not a separate clause). CR 603.2c: "An ability triggers
+#: only once each time its trigger event occurs. However, it can trigger
+#: repeatedly if one event contains multiple occurrences" - the plural "one
+#: or more" is one trigger for the declaration, and how many of the
+#: attackers fit the description is the event's count, which a later "that
+#: many" reads (`machines/effects.that_many`).
+_ONE_OR_MORE_ATTACK_RE = re.compile(
+    r"^one or more (?P<description>.+?) attack(?:\s+(?P<defender>.+))?$", re.IGNORECASE
+)
 _ONE_OR_MORE_ATTACK_YOURS = re.compile(r"\byou control\b", re.IGNORECASE)
+
+#: "one of your opponents[ or a planeswalker they control]" - Frenzied
+#: Gorespawn's own defender phrase and Frontier Warmonger's widened compound
+#: form (CR 508.3a's "a player, planeswalker, or battle", restricted to an
+#: opponent of the ability's controller). Both reduce to the identical
+#: runtime question - is the attack's defender controlled by anyone but this
+#: ability's own controller - since `GameEvent.defender_controller`/
+#: `_defender_controller_of` already resolve a planeswalker's defender down
+#: to its controller before either reader ever sees it.
+_DEFENDER_OPPONENT_RE = re.compile(
+    r"^one of your opponents(?:\s+or\s+a\s+planeswalker\s+they\s+control)?\.?$", re.IGNORECASE
+)
 
 
 def is_batched_attack_condition(condition: str) -> bool:
-    """Whether `condition` is "one or more `<description>` attack" - one
-    trigger for a whole declaration (`batched_attackers`)."""
+    """Whether `condition` is "one or more `<description>` attack[
+    `<defender>`]" - one trigger for a whole declaration
+    (`batched_attackers`)."""
     return _ONE_OR_MORE_ATTACK_RE.fullmatch(condition.strip()) is not None
 
 
+def _defender_controller_of(game: "Game", attacker: CardState) -> str | None:
+    """Whoever controls what `attacker` is attacking - a player directly, or
+    a planeswalker's controller (CR 506.4a) - the same resolution
+    `Game._emit_attack_event` already does for `GameEvent.defender_
+    controller`, read here off `Game.combat` directly since a delayed or
+    printed group condition is checked before any one attacker's own event
+    exists yet."""
+    attack = game.combat.attack_by(attacker.id)
+    if attack is None:
+        return None
+    if attack.defender.is_player:
+        return attack.defender.username
+    if attack.defender.card_id is not None:
+        defending_permanent = game.find_by_id(attack.defender.card_id)
+        if isinstance(defending_permanent, CardState):
+            return game.controller_of(defending_permanent).username
+    return None
+
+
 def batched_attackers(game: "Game", condition: str, controller: str) -> list[CardState] | None:
-    """The attacking creatures a "one or more `<description>` attack"
-    condition counts, or `None` when `condition` is not that shape or its
-    description does not read (`machines/targeting.permanent_description`,
-    the grammar a "target" phrase uses, with "you control" read here as the
-    attackers' own controller)."""
+    """The attacking creatures a "one or more `<description>` attack[
+    `<defender>`]" condition counts, or `None` when `condition` is not that
+    shape, its description does not read (`machines/targeting.
+    permanent_description`, the grammar a "target" phrase uses, with "you
+    control" read here as the attackers' own controller), or it names a
+    defender phrase this reader does not recognise (`_DEFENDER_OPPONENT_RE`)
+    - fail closed rather than ignore an unread qualifier."""
     match = _ONE_OR_MORE_ATTACK_RE.fullmatch(condition.strip())
     if match is None:
         return None
@@ -4171,11 +4211,24 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
     requirement = permanent_description(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip())
     if requirement is None:
         return None
+    defender = match.group("defender")
+    opponent_only = False
+    if defender is not None:
+        if _DEFENDER_OPPONENT_RE.fullmatch(defender.strip()) is None:
+            return None
+        opponent_only = True
     return [
         attacker
         for attacker in game.attacking_creatures()
         if (not yours or game.controller_of(attacker).username == controller)
         and requirement.rejects(attacker, controller, game) is None
+        and (
+            not opponent_only
+            or (
+                (defender_controller := _defender_controller_of(game, attacker)) is not None
+                and defender_controller != controller
+            )
+        )
     ]
 
 
