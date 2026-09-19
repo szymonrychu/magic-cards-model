@@ -2614,7 +2614,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 30
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 31
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3015,6 +3015,22 @@ class Game(EngineModel):
     combat damage this turn, and a default of "none" would wrongly grant
     Ruric Thar hexproof back after it has already fought; refused rather
     than silently mis-answering.
+
+    Bumped 30 -> 31: FRA S4's own planeswalker/loyalty subsystem work.
+    `Game` gained `loyalty_instant_speed_permissions` (a new
+    `LoyaltyInstantSpeedPermission` model, CR 606.3's timing loosened for
+    Jace's Machinations' own resolved grant) and `extra_land_plays` (Way of
+    the Paradox's own resolved land-drop grant, CR 305.2). `machines/
+    delayed.DelayedTrigger` gained `expires_end_of_next_turn`,
+    `defending_controller_only`, and `required_any_types`; `machines/
+    triggers.GameEvent` gained `defender_controller`; `machines/delayed`'s
+    `DelayedEffectSpec` union gained a new variant, `PumpEventSubject`
+    (Jace, Reality Sculptor's own `-3`'s delayed attack pump). A version-30
+    snapshot mid-watch (an active "until your next turn" attack-pump
+    trigger, an unspent instant-speed loyalty grant, or an unspent extra
+    land drop) has no record of any of these and a default of "none" would
+    silently drop the still-active grant; refused rather than
+    mis-answering.
     """
 
     @model_validator(mode="before")
