@@ -164,6 +164,7 @@ from ..machines.layers import (
     BASIC_LAND_TYPES,
     CREATURES_DONT_CAUSE_TRIGGERS_TEXT,
     DOESNT_UNTAP_TEXT,
+    SPELLS_HAVE_SPLIT_SECOND_TEXT,
     Characteristics,
     ComputedBoard,
     ContinuousEffect,
@@ -5461,6 +5462,29 @@ class Game(EngineModel):
                 player=card_state.controller,
                 amount=added,
             )
+        )
+
+    def controls_split_second_grant(self, controller: str) -> bool:
+        """Samut, Tyrant of Naktamun's "Instant and sorcery spells you
+        control have split second." - whether `controller` has a permanent
+        on the battlefield granting it right now (CR 613.5).
+
+        CR 702.61a's split second is a property of a spell on the stack, not
+        of a battlefield permanent, so nothing in `machines/layers.py`'s
+        board ever carries it directly - `SPELLS_HAVE_SPLIT_SECOND_TEXT` is
+        the fixed marker that grant leaves on its own source, and this is
+        the one place that asks for it. A caller checking whether a
+        particular instant or sorcery *spell* has split second combines this
+        (does its controller have the grant) with the spell's own card type
+        - this function alone answers only "is the group grant active for
+        this player", the same way `has_ability`/`has_keyword` never assume
+        who the caller means by "it".
+        """
+        board = self.computed_board()
+        return any(
+            board.of(permanent).controller == controller
+            and board.of(permanent).has_ability(SPELLS_HAVE_SPLIT_SECOND_TEXT)
+            for permanent in self.battlefield
         )
 
     def _etb_triggers_suppressed(self, event: "GameEvent") -> bool:

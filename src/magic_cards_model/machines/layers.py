@@ -5377,6 +5377,57 @@ def _self_suppresses_etb_triggers_builder(card_types: list[Type], *, line: str) 
     return builder
 
 
+#: Canonical granted-ability text for "instant and sorcery spells you
+#: control have split second" (Samut, Tyrant of Naktamun) - CR 702.61a's
+#: split second is a property of a *spell*, not a battlefield permanent, so
+#: nothing in this module's board ever carries it directly; this is the
+#: group-grant half only (see `_self_grants_split_second_builder`'s own
+#: docstring for the reader this hands off to).
+SPELLS_HAVE_SPLIT_SECOND_TEXT = "Instant and sorcery spells you control have split second."
+
+#: "Instant and sorcery spells you control have split second." (Samut,
+#: Tyrant of Naktamun).
+_SPELLS_HAVE_SPLIT_SECOND_RE = re.compile(
+    r"^instant and sorcery spells you control have split second\.?$", re.IGNORECASE
+)
+
+
+def _self_grants_split_second_builder(*, line: str) -> EffectBuilder:
+    """Samut, Tyrant of Naktamun's static grant - the *reader* is
+    `Game.controls_split_second_grant`, since CR 702.61a's split second only
+    ever matters while a spell is on the stack, which this module's board
+    never sees (`Selector`/`ContinuousEffect` are battlefield-only). The
+    grant itself still lands on Samut's own characteristics, the same
+    self-only pattern `_self_suppresses_etb_triggers_builder` and `_self_
+    doesnt_untap_builder` already use for a board-wide question with one
+    watcher: whoever checks a spell for split second asks the battlefield
+    for this text rather than the spell for a keyword it was never printed
+    with. The base split second keyword itself - what it *does* while the
+    spell is on the stack - is FRA stream S10's own build.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: instant and sorcery spells you control have "
+                "split second",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(SPELLS_HAVE_SPLIT_SECOND_TEXT),
+            )
+        ]
+
+    return builder
+
+
 def _self_doesnt_untap_builder(*, line: str) -> EffectBuilder:
     """Traxos, Scourge Eternal: "Traxos doesn't untap during your untap
     step." (self-normalised to "This permanent doesn't untap during your
@@ -6698,6 +6749,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _self_suppresses_etb_triggers_builder(
             [card_type for card_type in card_types if card_type is not None], line=sentence
         )
+    if _SPELLS_HAVE_SPLIT_SECOND_RE.fullmatch(sentence):
+        return _self_grants_split_second_builder(line=sentence)
     if _SELF_DOESNT_UNTAP_RE.fullmatch(sentence):
         return _self_doesnt_untap_builder(line=sentence)
     if match := _ATTACHED_DOESNT_UNTAP_RE.fullmatch(sentence):
