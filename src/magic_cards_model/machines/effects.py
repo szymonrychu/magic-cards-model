@@ -776,11 +776,11 @@ def _singular_subtype_for_count_expression(word: str) -> str | None:
     singular), or None when the word is no printed subtype in any of those
     spellings.
 
-    Named for its one caller (`count_expression`) rather than plainly
-    `_singular_subtype`, because this file already defines two other
+    Named for `count_expression` (its original caller) rather than plainly
+    `_singular_subtype`, because this file used to define two other
     functions under that exact name for two other mechanics (amass token
     creation, and a mass-transform clause) - three module-level `def`s
-    sharing one name silently overwrite each other as the module loads, so
+    sharing one name silently overwrote each other as the module loaded, so
     by the time any of the three actually ran, all three callers got
     whichever definition was written last in the file, never their own.
     That is how "the number of Shrines you control" (Sanctum of Fruitful
@@ -789,13 +789,15 @@ def _singular_subtype_for_count_expression(word: str) -> str | None:
     unreachable, silently replaced by a same-named helper elsewhere in the
     file that only drops a trailing "s" and keeps the printed case ("Shrine",
     not "shrine" - `Counters`-style case-sensitive comparison then never
-    matched). Renaming this one - the only shadowed definition this fix's own
-    dependency chain reaches - repairs `count_expression`'s subtype branch
-    without touching the other two definitions or their own callers, which
-    was out of this fix's own scope; the number-sweep integration merge
-    later renamed the amass one to `_singular_subtype_for_amass` too, so the
-    remaining `_singular_subtype` (the transform-all "vocabulary" one) is no
-    longer shadowed by anything."""
+    matched). The number-sweep integration merge renamed the other two
+    (`_singular_subtype_for_transform_all`, `_singular_subtype_for_amass`),
+    which left no bare `_singular_subtype` defined anywhere - a third caller,
+    `_for_each_qualifier_count`'s "for each `<subtype>` you control" branch,
+    still called that now-undefined name and raised `NameError` on every
+    subtype qualifier (Honden of Cleansing Fire's "for each Shrine you
+    control") until it was pointed at this function too, its natural home
+    since it is the general vocabulary-checked singulariser, not one scoped
+    to amass or transform-all."""
     lowered = word.lower()
     vocabulary = subtype_vocabulary()
     candidates = [lowered, lowered.removesuffix("s")]
@@ -4526,8 +4528,9 @@ _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
 #: or greater/less]" - Keruga, the Macrosage's "for each other permanent you
 #: control with mana value 3 or greater" and Blessing of Frost's "for each
 #: creature you control with power 4 or greater". `<qualifier>` is a card
-#: type (`_singular_card_type`) or subtype (`_singular_subtype`) the same way
-#: `count_expression`'s own "number of `<qualifier>` you control" reads it,
+#: type (`_singular_card_type`) or subtype
+#: (`_singular_subtype_for_count_expression`) the same way `count_expression`'s
+#: own "number of `<qualifier>` you control" reads it,
 #: plus the bare word "permanent(s)" for no type filter at all (CR 110.1).
 _QUALIFIER_YOU_CONTROL_RE = re.compile(
     rf"^(?P<other>other )?(?P<qualifier>[a-z]+) you control"
@@ -4552,7 +4555,11 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
     qualifier_word = match.group("qualifier")
     universal = qualifier_word.lower() in ("permanent", "permanents")
     card_type = None if universal else _singular_card_type(qualifier_word)
-    subtype = None if universal or card_type is not None else _singular_subtype(qualifier_word)
+    subtype = (
+        None
+        if universal or card_type is not None
+        else _singular_subtype_for_count_expression(qualifier_word)
+    )
     if not universal and card_type is None and subtype is None:
         return None
     other = match.group("other") is not None
