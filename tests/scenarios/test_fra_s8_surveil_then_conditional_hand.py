@@ -12,17 +12,31 @@ session that wrote this file.
 - **CR 202.3** - mana value, for Enlightened Confidant's own dynamic
   ceiling.
 
-Chandra, Chill of Compliance's own `+1` is the reported card - a plain,
-static quality ("noncreature, nonland"). Enlightened Confidant (real,
-non-FRA, non-pool, a Modern staple) is the off-set proof: the identical
-surveil-then-conditional-hand shape with a genuinely different, *dynamic*
-quality bound (a mana value ceiling read off `Game.life_gained_amount_
-this_turn`, a new per-turn-history field this session added since nothing
-before it recorded the actual life-gained amount, only whether any was
-gained at all).
+Chandra, Chill of Compliance's own `+1` is one reported card - a plain,
+static quality ("noncreature, nonland"). **Enlightened Confidant is not an
+off-set proof - it is a second FRA S8 card in this same stream's own
+assignment** (`fra-names.txt` lists it; Scryfall has no printing of this
+name outside `fra`, so the "real Modern staple" this docstring used to
+claim is a different card that merely shares a name with a card this set
+also prints). Both are built here as themselves, not as generality proof
+for one another.
+
+The genuine off-set proof for the *new* capability Enlightened Confidant
+needed - `Game.life_gained_amount_this_turn`, a per-turn-history field
+nothing before this stream recorded the actual life-gained amount for,
+only whether any was gained at all - is Celestine, the Living Saint (real,
+non-FRA, non-pool, Warhammer 40,000): "return target creature card with
+mana value X or less from your graveyard to the battlefield, where X is
+the amount of life you gained this turn." A different clause family
+entirely (a *targeted* reanimation's own comparison bound, read through
+`machines/targeting.py`'s `TargetRequirement.comparison_x_definition`,
+not the surveil-then-hand player clause `count_expression`'s own
+`_COUNT_LIFE_GAINED_THIS_TURN_RE` branch feeds), proving the expression
+reader itself - not this one clause shape - is what generalizes.
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.targeting import profile_for_text
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -125,3 +139,25 @@ def test_enlightened_confidant_leaves_a_too_expensive_card_in_the_graveyard():
     scenario.pass_until_resolved()
 
     assert bears.zone is Zone.GRAVEYARD, "mana value 2 exceeds the 1 life gained"
+
+
+def test_celestines_own_dynamic_mana_value_target_bound_reads_the_same_expression():
+    """Celestine, the Living Saint's own reanimation trigger targets a
+    graveyard creature card "with mana value X or less ... where X is the
+    amount of life you gained this turn" - a `TargetRequirement.comparison_
+    x_definition`, not the surveil clause's own `count_expression` call, so
+    this is a genuinely different code path reading the identical phrase.
+    Read at the targeting level (clause-level probe): the reanimation
+    clause this bound sits inside is its own, separate "return target X
+    with mana value X or less ... where X is ..." shape that no card in
+    this stream's own assignment needs, so building it is out of scope
+    here - only the expression reader itself is this stream's own new
+    capability, and this is what proves it general.
+    """
+    profile = profile_for_text(
+        "return target creature card with mana value X or less from your graveyard "
+        "to the battlefield, where X is the amount of life you gained this turn."
+    )
+    assert profile.understood
+    (requirement,) = profile.requirements
+    assert requirement.comparison_x_definition == "the amount of life you gained this turn"
