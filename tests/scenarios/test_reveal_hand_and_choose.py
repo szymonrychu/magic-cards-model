@@ -359,3 +359,39 @@ def test_a_creature_that_died_last_turn_does_not_turn_on_morbid():
 
     (choose,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS]
     assert choose.player == "bob"
+
+
+# -- Solve for Disappointment: a compound "nonland permanent card" quality --
+
+
+def test_a_compound_nonland_permanent_quality_excludes_lands_and_instants_alike():
+    """Solve for Disappointment: "Target opponent reveals their hand. You
+    choose a nonland permanent card from it. That player discards that
+    card." CR 110.4a's "permanent card" - artifact, battle, creature,
+    enchantment, land, or planeswalker - combined with `_nonland_or_typed_
+    card_matcher`'s own negation reads as "a permanent card that is not a
+    land": Forest is excluded for being a land, Lightning Bolt (an instant,
+    never a permanent card at all per CR 110.4a) is excluded too, and
+    Grizzly Bears (a nonland permanent card) is the only legal choice.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Solve for Disappointment"], battlefield=["Swamp", "Swamp"])
+        .player("bob", hand=["Lightning Bolt", "Forest", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "bob")
+
+    scenario.will_discard(bears, username="alice")
+
+    scenario.cast_and_resolve(
+        "Solve for Disappointment", *scenario.untapped_sources("Swamp", "Swamp"), targets=["bob"]
+    )
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert len(bob.hand) == 2
+    (choose,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS]
+    assert choose.player == "alice"
+    assert choose.amount == 1

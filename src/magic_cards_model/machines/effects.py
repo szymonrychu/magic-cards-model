@@ -24799,13 +24799,29 @@ def _grant_cast_exiled_card_permission_from_sibling_static(
 
 def _nonland_or_typed_card_matcher(quality: str) -> Callable[[CardState], bool] | None:
     """A predicate for "a `<quality>` card", where `<quality>` is either a
-    bare type `_quality_matcher` already reads, or that type's negation,
-    spelled "non`<type>`" (Thoughtseize's own "nonland"). `_quality_matcher`
-    has no notion of "non" - every caller before this one only ever named
-    what to *include* - so this reads the negation itself and delegates
-    everything else.
+    bare type `_quality_matcher` already reads, that type's negation,
+    spelled "non`<type>`" (Thoughtseize's own "nonland"), or CR 110.4a's
+    "permanent" noun with an optional "non`<type>`" qualifier in front of it
+    (Solve for Disappointment's own "nonland permanent"). `_quality_matcher`
+    has no notion of "non", and no notion of "permanent" as a card-type
+    group rather than a single `Type` either - every caller before this one
+    only ever named what to *include*, and only ever a single printed type -
+    so this reads both the negation and the compound noun itself and
+    delegates everything else.
     """
     quality = quality.strip().lower()
+    if quality.endswith(" permanent"):
+        prefix = quality.removesuffix(" permanent").strip()
+        prefix_matches = _nonland_or_typed_card_matcher(prefix) if prefix else None
+        if prefix and prefix_matches is None:
+            return None
+
+        def is_permanent_card(state: CardState) -> bool:
+            if not (_PERMANENT_CARD_TYPES & set(state.types)):
+                return False
+            return prefix_matches is None or prefix_matches(state)
+
+        return is_permanent_card
     if quality.startswith("non"):
         try:
             excluded = Type(quality.removeprefix("non").strip())
@@ -24839,6 +24855,67 @@ _OWNER_PUTS_ON_TOP_OR_BOTTOM_RE = re.compile(
     r"^its owner puts it on their choice of the top or bottom of their library$",
     re.IGNORECASE,
 )
+
+#: "The owner of `<target phrase>` puts it on their choice of the top or
+#: bottom of their library." - Plan for All Outcomes' own enters trigger:
+#: "The owner of up to one other target nonland permanent puts it on their
+#: choice of the top or bottom of their library." One CR 608.2c sentence,
+#: not `_OWNER_PUTS_ON_TOP_OR_BOTTOM_RE`'s own two-clause shape (Subtlety's
+#: "choose ...spell.  Its owner puts it..." across a period) - the target
+#: phrase and the owner's own choice are both inside this single sentence,
+#: over a *permanent* (CR 110.4a's `_targets_understood` already reads
+#: "nonland permanent" the ordinary way, count-agnostic's "up to one"
+#: included) rather than Subtlety's spell on the stack.
+_OWNER_OF_TARGET_PUTS_ON_TOP_OR_BOTTOM_RE = re.compile(
+    r"^the owner of (?P<phrase>.+?target.+?) puts it on their choice of the top or bottom "
+    r"of their library\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_owner_of_target_puts_on_top_or_bottom_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_OWNER_OF_TARGET_PUTS_ON_TOP_OR_BOTTOM_RE`'s shape - see the banner
+    above. CR 108.3: the choice and the destination both belong to the
+    target's own *owner*, never to this ability's controller - the same
+    split `_parse_choose_up_to_one_target_spell_clauses` already proves for
+    a targeted spell, read here for a targeted permanent instead.
+    """
+    match = _OWNER_OF_TARGET_PUTS_ON_TOP_OR_BOTTOM_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    phrase = match.group("phrase")
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targets = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
+        ]
+        if not targets:
+            return
+        permanent = targets[0]
+        if permanent.zone is not Zone.BATTLEFIELD or permanent.owner is None:
+            return
+        source = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        top = game.ask(
+            Decision(
+                kind=DecisionKind.PUT_ON_TOP_OR_BOTTOM,
+                player=permanent.owner,
+                prompt=(
+                    f"put {permanent.name} on the top or bottom of {permanent.owner}'s library"
+                ),
+                source=source,
+                source_id=source_id_of(stack_object),
+            )
+        )
+        assert isinstance(top, bool)
+        game.put_cards_into_library([permanent], to_bottom=not top)
+
+    return effect
 
 
 def _spell_target_requirement(phrase: str) -> TargetRequirement | None:
@@ -25290,6 +25367,67 @@ def _parse_target_player_discards_clause(clause: str, *, for_spell: bool) -> Tar
             by_id = {state.id: state for state in target.hand}
             game.discard_cards(
                 target.username, [by_id[card_id] for card_id in chosen_ids], source=source
+            )
+
+    return effect
+
+
+#: "Each opponent discards N cards." with nothing after it - CR 102.2's
+#: "each opponent", CR 701.9a's plain discard, CR 701.9b's default chooser
+#: (the discarding player themselves) left untouched, exactly
+#: `_TARGET_PLAYER_DISCARDS_RE`'s own shape over "each opponent" instead of
+#: one chosen target. The shortfall-consequence siblings just above
+#: (`_EACH_OPPONENT_DISCARDS_THEN_DRAW_PER_SHORTFALL_RE` and its "loses
+#: life" twin) only ever match a *two*-sentence instruction naming a
+#: shortfall - Nicol Bolas, the Ravager's own "When Nicol Bolas enters,
+#: each opponent discards a card." has no second sentence at all, so it
+#: fell through every one of them silently until this shape was added.
+_EACH_OPPONENT_DISCARDS_RE = re.compile(
+    rf"^each opponent discards {count_pattern('count')} cards?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_opponent_discards_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_EACH_OPPONENT_DISCARDS_RE`'s shape - CR 701.9a/701.9b/CR 102.2, no
+    target at all (an opponent is not a target, CR 115.1) and no shortfall
+    consequence, so each opponent (CR 101.4 APNAP order,
+    `_players_in_apnap_order`) simply discards their own choice of `count`
+    cards, CR 609.3's "as much as possible" for a shorter hand.
+    """
+    match = _EACH_OPPONENT_DISCARDS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("count"))
+    if count is None or count < 1:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        controller_username = game.controller_of(stack_object).username
+        for player in _players_in_apnap_order(game):
+            if player.username == controller_username:
+                continue
+            needed = min(count, len(player.hand))
+            if needed <= 0:
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"discard {needed} card(s)",
+                    source=source,
+                    amount=needed,
+                    cards=tuple(state.id for state in player.hand),
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {state.id: state for state in player.hand}
+            game.discard_cards(
+                player.username, [by_id[card_id] for card_id in chosen_ids], source=source
             )
 
     return effect
@@ -28034,6 +28172,14 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     target_player_discards = _parse_target_player_discards_clause(clause, for_spell=for_spell)
     if target_player_discards is not None:
         return target_player_discards
+    each_opponent_discards = _parse_each_opponent_discards_clause(clause, for_spell=for_spell)
+    if each_opponent_discards is not None:
+        return each_opponent_discards
+    owner_puts_on_top_or_bottom = _parse_owner_of_target_puts_on_top_or_bottom_clause(
+        clause, for_spell=for_spell
+    )
+    if owner_puts_on_top_or_bottom is not None:
+        return owner_puts_on_top_or_bottom
     target_player_draws = _parse_target_player_draws_clause(clause, for_spell=for_spell)
     if target_player_draws is not None:
         return target_player_draws
@@ -28229,6 +28375,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if each_discards_then_shortfall_loses_life is not None:
         return [each_discards_then_shortfall_loses_life]
+    each_chooses_creature_then_sacrifices_rest = (
+        _parse_each_player_chooses_creature_then_sacrifices_rest_whole_text(
+            text, for_spell=for_spell
+        )
+    )
+    if each_chooses_creature_then_sacrifices_rest is not None:
+        return [each_chooses_creature_then_sacrifices_rest]
     if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(" ".join(text.strip().split())):
         # Read whole for the same reason the two above are: Echoing Courage's
         # subject, "Target creature and all other creatures with the same name
@@ -30353,6 +30506,83 @@ def _parse_each_sacrifices_of_their_choice_clause(clause: str) -> TargetedClause
         for permanent in chosen:
             if permanent.zone is Zone.BATTLEFIELD:
                 game.sacrifice(permanent)
+
+    return effect
+
+
+#: "For each player, choose a creature that player controls. Each player
+#: sacrifices all creatures they control not chosen this way." -
+#: The Eternal Wanderer's own `-4`. Two CR 608.2c instructions in order: the
+#: first is every player's own protective choice (CR 608.2d), all made
+#: before either sacrifice happens (CR 101.4 APNAP order, the same
+#: all-choices-before-any-consequence shape `_EACH_SACRIFICES_OF_THEIR_
+#: CHOICE_RE` already reads); the second sweeps each player's *other*
+#: creatures to the graveyard (CR 701.21a). A player with no creature is
+#: never asked (CR 608.2d offers no impossible choice) and loses nothing; a
+#: player with exactly one has no real choice either, and it is simply the
+#: one kept.
+_EACH_PLAYER_CHOOSES_CREATURE_THEN_SACRIFICES_REST_RE = re.compile(
+    r"^for each player, choose a creature that player controls\.\s*"
+    r"each player sacrifices all creatures they control not chosen this way\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_player_chooses_creature_then_sacrifices_rest_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_PLAYER_CHOOSES_CREATURE_THEN_SACRIFICES_REST_RE`'s shape - see
+    the banner above. Read whole for the same "this way" reason every other
+    two-sentence rider in this module is: the second sentence's "not chosen
+    this way" counts a fact about the first sentence's own per-player
+    choice, not an independent instruction.
+    """
+    match = _EACH_PLAYER_CHOOSES_CREATURE_THEN_SACRIFICES_REST_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        kept: dict[str, CardState] = {}
+        for player in _players_in_apnap_order(game):
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if Type.CREATURE in game.characteristics_of(permanent).types
+            ]
+            if not candidates:
+                continue
+            if len(candidates) == 1:
+                kept[player.username] = candidates[0]
+                continue
+            (chosen_id,) = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt="choose a creature you control",
+                    source=source_name,
+                    amount=1,
+                    cards=tuple(permanent.id for permanent in candidates),
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in candidates}
+            kept[player.username] = by_id[chosen_id]
+        for player in _players_in_apnap_order(game):
+            keep = kept.get(player.username)
+            for permanent in game.permanents_controlled_by(player.username):
+                if (
+                    permanent is not keep
+                    and permanent.zone is Zone.BATTLEFIELD
+                    and Type.CREATURE in game.characteristics_of(permanent).types
+                ):
+                    game.sacrifice(permanent)
 
     return effect
 

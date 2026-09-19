@@ -3190,3 +3190,68 @@ silent, against a larger card count from every merged stream's own
 `TRIGGER_EFFECTS` 6, `ACTIVATED_EFFECTS` 0) - every fix above is a parser,
 a selector, or a general condition/duration/count reader, never a
 card-name-keyed row.
+
+**FRA S4 merged into `int-engine-dsl` (this note).** Merging fra-s4's own
+proof-card fixtures (`scripts/add_card.py`) into a pool `fra-s10b` had
+already grown raised silent from 130-of-1233 to 133-of-1255 - six real
+clauses across six cards nothing in either branch had closed yet, found by
+diffing the sweep's own card list across the merge rather than assumed
+harmless. Four were closed test-first as part of landing this merge:
+
+- **"Each opponent discards N cards." with no shortfall consequence**
+  (Nicol Bolas, the Ravager's own enters trigger) - the existing shortfall
+  antecedent (`_EACH_OPPONENT_DISCARDS_THEN_DRAW_PER_SHORTFALL_RE` and its
+  "loses life" twin) only ever matched a *two*-sentence instruction naming
+  a shortfall; a bare instruction with nothing after the period fell
+  through both. `_parse_each_opponent_discards_clause` reads the bare
+  shape directly (`tests/scenarios/test_each_opponent_discards_plain.py`).
+- **A compound "nonland permanent card" quality** (Solve for
+  Disappointment's own "you choose a nonland permanent card from it") -
+  `_nonland_or_typed_card_matcher` only ever read a bare type or that
+  type's negation, never CR 110.4a's "permanent" noun grouping six types
+  at once with an optional negated type in front of it. Fixed generally: a
+  quality ending in " permanent" now composes CR 110.4a's own permanent-
+  card-type set with whatever negation (if any) precedes it, so any future
+  "non`<type>` permanent card" phrasing reads for free
+  (`tests/scenarios/test_reveal_hand_and_choose.py`).
+- **"The owner of `<target>` puts it on their choice of the top or bottom
+  of their library"** as one sentence over a targeted *permanent* (Plan for
+  All Outcomes' own enters trigger) - `_OWNER_PUTS_ON_TOP_OR_BOTTOM_RE`
+  only ever matched Subtlety's own two-clause shape ("choose ...spell." /
+  "Its owner puts it..." naming a spell on the stack).
+  `_parse_owner_of_target_puts_on_top_or_bottom_clause` is the single-
+  sentence, permanent-targeting sibling, same CR 108.3 owner/controller
+  split (`tests/scenarios/test_owner_puts_permanent_on_top_or_bottom.py`).
+- **"For each player, choose a creature that player controls. Each player
+  sacrifices all creatures they control not chosen this way."** (The
+  Eternal Wanderer's own `-4`) - a wholly new shape, every player's own
+  CR 608.2d protective choice made in CR 101.4 APNAP order before either
+  player's own sacrifice sweep runs
+  (`tests/scenarios/test_each_player_chooses_creature_then_sacrifices_rest.py`).
+
+**Two clauses from that same six-card list are left open, documented
+rather than hardcoded around:**
+
+- **Teferi, Master of Time's own `-3`, "Target creature you don't control
+  phases out."** CR 702.26 (phasing) has no vocabulary anywhere in this
+  engine at all - no `phased_out` state on `CardState`, no untap-step
+  phase-in, no "treated as though it doesn't exist" read by combat,
+  targeting, or the layer system. This is a whole subsystem, not a narrow
+  parser gap, and building it correctly (untap-step timing, attachments
+  phasing with their permanent, the target-and-combat-invisibility rule)
+  is out of proportion to a merge-verification pass. `-10`'s own "Take two
+  extra turns after this one" is a smaller gap in the same silent clause
+  bucket (the existing `take_an_extra_turn`/`grant_extra_turn` machinery
+  only ever grants *one* extra turn) but is left alongside it, since the
+  card as a whole stays silent either way until phasing exists.
+- **Tamiyo Meets the Story Circle's own chapter II, "Discard any number of
+  cards, then investigate twice for each card discarded this way."** and
+  **chapter III, "Shuffle up to three target cards from your graveyard
+  into your library."** Neither a "discard any number, then investigate a
+  count scaled by how many were discarded" reader nor a "shuffle a chosen
+  subset of target graveyard cards into a library" reader exists yet.
+
+Sweep after the four closed clauses: 128 of 1255 silent (comfortably under
+the 130 ceiling the reviewing coordinator set), 0 unmatchable trigger
+conditions, registry rows unchanged (`EFFECTS` 1, `TRIGGER_EFFECTS` 6,
+`ACTIVATED_EFFECTS` 0).
