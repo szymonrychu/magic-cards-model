@@ -11511,6 +11511,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reflexive_pay_energy = _parse_reflexive_pay_energy_clause(effect_text)
     if reflexive_pay_energy is not None:
         return reflexive_pay_energy
+    may_pay_energy_if_you_do = _parse_may_pay_energy_if_you_do_clause(effect_text)
+    if may_pay_energy_if_you_do is not None:
+        return may_pay_energy_if_you_do
+    get_energy_then_pay_create_x_token = _parse_get_energy_then_pay_create_x_token_clause(
+        effect_text
+    )
+    if get_energy_then_pay_create_x_token is not None:
+        return get_energy_then_pay_create_x_token
     reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
     if reflexive_mandatory_token is not None:
         return reflexive_mandatory_token
@@ -15758,6 +15766,96 @@ def _parse_reflexive_pay_energy_clause(text: str) -> AbilityEffect | None:
             source_name=source_name,
             callback=ReflexivePayEnergyConsequence(),
         )
+
+    return effect
+
+
+#: "you may pay `<energy>`. If you do, `<consequence>`." (CR 118.12, CR
+#: 107.14) - Aether Chaser's own attack trigger. **Not** CR 603.12's
+#: reflexive-ability creation (`_parse_reflexive_pay_energy_clause`'s own
+#: "When you do," shape, `_REFLEXIVE_MAY_PAY_ENERGY_RE`): CR 118.12's "[Do
+#: something]. If [a player] does, [effect]" reads the payment as a cost paid
+#: *within* this same resolution, so `<consequence>` runs right here, on the
+#: same `AbilityOnStack` - no new ability is created and nothing needs a
+#: target announced for it later. The distinction is Oracle's own choice of
+#: connector, not a synonym one regex can fold into the other: "When you do"
+#: cards genuinely want CR 603.12's separate reflexive trigger (Guide of
+#: Souls' own consequence needs its own CR 608.2b recheck at a later
+#: priority), while "If you do" cards do not.
+_MAY_PAY_ENERGY_IF_YOU_DO_RE = re.compile(
+    r"^you may pay (?P<energy>(?:\{e\})+)\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_pay_energy_if_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_PAY_ENERGY_IF_YOU_DO_RE`'s shape - see its own docstring for why
+    this is CR 118.12, not CR 603.12."""
+    match = _MAY_PAY_ENERGY_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    amount = len(re.findall(r"\{e\}", match.group("energy"), re.IGNORECASE))
+    consequence_text = match.group("consequence").strip()
+    consequence = parse_mixed_effect(consequence_text)
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        paid = game.may_pay_energy(
+            player, amount, source=source_name, source_id=source_id_of(ability)
+        )
+        if not paid:
+            return
+        consequence(game, ability)
+
+    return effect
+
+
+#: "You get `<energy>`, then you may pay one or more `<energy>`. If you do,
+#: create an X/X `<desc>` token, where X is the amount of `<energy>` paid
+#: this way." (Aether Refinery) - the same CR 118.12 "If you do" shape as
+#: `_MAY_PAY_ENERGY_IF_YOU_DO_RE` just above, with a variable payment
+#: (`Game.pay_any_amount_of_energy`, CR 608.2d) standing in for the fixed one,
+#: and a token count taken from what was actually paid rather than a printed
+#: number - the same "X is the amount ... paid this way" shape `_TARGET_GET_
+#: ENERGY_PAY_DAMAGE_RE` already reads for damage instead of a token.
+_GET_ENERGY_THEN_PAY_CREATE_X_TOKEN_RE = re.compile(
+    r"^you get (?P<granted>(?:\{e\})+),?\s*then you may pay one or more (?:\{e\})\.\s*"
+    r"if you do,\s*create an? x/x (?P<desc>.+?) tokens?,\s*where x is the amount of "
+    r"(?:\{e\}) paid this way\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_get_energy_then_pay_create_x_token_clause(text: str) -> AbilityEffect | None:
+    """`_GET_ENERGY_THEN_PAY_CREATE_X_TOKEN_RE`'s shape."""
+    match = _GET_ENERGY_THEN_PAY_CREATE_X_TOKEN_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    granted = len(re.findall(r"\{e\}", match.group("granted"), re.IGNORECASE))
+    words = match.group("desc").strip().split()
+    if not words:
+        return None
+    definition = _parse_generic_token_descriptor(words, None)
+    if definition is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        if granted:
+            game.add_player_counters(player, Counter.ENERGY, granted)
+        paid = game.pay_any_amount_of_energy(
+            player, source=source_name, source_id=source_id_of(ability)
+        )
+        if paid <= 0:
+            return
+        sized = definition.model_copy(update={"power": paid, "toughness": paid})
+        create_tokens(game, sized, player.username, 1)
 
     return effect
 
