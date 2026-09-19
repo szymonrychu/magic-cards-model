@@ -1507,10 +1507,12 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
       never called for one in a real game either.
     - a **permanent spell's resolution** (CR 608.3a: "it becomes a permanent
       and enters the battlefield under the control of the spell's
-      controller"). There is no resolution text to run, so a `None` from
-      `effect_for` is correct and is dropped rather than recorded as a dead
-      clause - the permanent's own abilities are judged below, one by one. A
-      permanent face that *does* get an effect keeps it: the credit is real.
+      controller"). There is no resolution text to run, and
+      `models/game.py::_resolve_top` never calls `effect_for` for one
+      (fra-final-audit batch A item 1) - so `effect_for` is never even
+      *asked* about a permanent face here, and nothing it might have parsed
+      is ever credited. A permanent's own abilities are judged below, one by
+      one, from the battlefield.
     - a **mana ability** (CR 605.1a) never goes on the stack at all
       (`Game.activate_ability`), so it is skipped rather than misreported as
       silent - the keyword/mana report already covers it.
@@ -1544,6 +1546,22 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
 
     if not printing.is_land:
         for face in _spell_faces(printing):
+            if face.is_permanent:
+                # CR 608.3a - a resolving permanent spell only becomes a
+                # permanent and enters the battlefield; there is no
+                # resolution text to run, and `models/game.py::_resolve_top`
+                # never calls `effect_for` for one (fra-final-audit batch A
+                # item 1). `effect_for` is a pure text parser with no idea
+                # whether the object it is reading is a permanent - it can
+                # and does parse *something* out of a permanent's raw
+                # printed text (a triggered ability's own body, a static
+                # line) purely by shape, and crediting that parse used to
+                # read as "the credit is real". It never was: the engine
+                # does not run this dispatch for a permanent face at all, so
+                # whatever it returns is not a clause and is always dropped.
+                # The permanent's own triggered/activated/static abilities
+                # are judged on their own below, from the battlefield.
+                continue
             x_candidates = _x_candidates(face.mana_cost, *additional_cost_phrases(printing))
             effects = [
                 effect_for(face.name, face.text, x_value=x_value) for x_value in x_candidates
@@ -1563,13 +1581,6 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 )
             ):
                 category = QUOTED_EFFECT
-            if face.is_permanent and category not in (HANDLED, NOTICE):
-                # CR 608.3a - a permanent spell's resolution has no text to
-                # run, so "no effect" is the correct answer for one and is not
-                # a clause at all. Its own abilities are judged below. A
-                # permanent face that *does* produce an effect or a notice
-                # keeps the credit: that part is real.
-                continue
             clauses.append(ClauseOutcome(category, face.text, "spell"))
 
     activated_index = 0

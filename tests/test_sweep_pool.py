@@ -799,3 +799,40 @@ def test_ingris_stingerquills_permanent_spell_records_no_phantom_notice():
     outcomes = classify_clauses(card("Ingris Stingerquill"))
     assert all(outcome.source != "spell" for outcome in outcomes)
     assert {outcome.category for outcome in outcomes} == {HANDLED}
+
+
+# -- fra-final-audit batch A item 2: classify_clauses stopped crediting a --
+# -- permanent face just because effect_for happened to parse something ----
+
+
+def test_a_permanent_faces_spell_clause_is_never_credited_even_when_effect_for_parses_it():
+    """Screeching Soulbreaker, Ghalta the Immovable, Garruk, Veiled Butcher
+    and Proft, Sinister Mastermind are the fra-final-audit's own proof: each
+    used to keep a "spell" `ClauseOutcome` (`HANDLED` for Soulbreaker,
+    `NOTICE` for the other three) purely because `effect_for` could parse
+    *something* out of the permanent's raw printed text - the sweeper's own
+    "a permanent face that does get an effect keeps it: the credit is real"
+    exception. `models/game.py::_resolve_top` never calls `effect_for` for a
+    permanent spell any more (CR 608.3a; see
+    `tests/scenarios/test_permanent_spell_resolution.py`), so that exception
+    now credits a code path the engine literally never runs - every one of
+    these must drop the "spell" clause entirely and be judged only on its
+    real, battlefield-facing abilities below.
+    """
+    for name in (
+        "Screeching Soulbreaker",
+        "Ghalta the Immovable",
+        "Garruk, Veiled Butcher",
+        "Proft, Sinister Mastermind",
+    ):
+        outcomes = classify_clauses(card(name))
+        assert all(outcome.source != "spell" for outcome in outcomes), (
+            f"{name} still carries a phantom spell-resolution clause: {outcomes}"
+        )
+
+    # And the real abilities underneath are still judged, and still handled -
+    # dropping the phantom "spell" clause must not also drop real coverage.
+    soulbreaker_categories = {
+        outcome.category for outcome in classify_clauses(card("Screeching Soulbreaker"))
+    }
+    assert soulbreaker_categories == {HANDLED}
