@@ -7310,18 +7310,19 @@ def _looks_like_embedded_ability_line(sentence: str) -> bool:
     return bool(_EMBEDDED_ABILITY_LINE_RE.search(sentence))
 
 
-#: A bare "shuffle"/"shuffles" left over once `split_effect_clauses` has cut
-#: across the "then" inside a search's own "..., then shuffle(s)." - CR
-#: 608.2c's clause split has no notion that this particular "then" is the
-#: tail of the sentence before it (CR 701.24a) rather than a separate
-#: instruction, the same way it does not know "scry 2, then draw a card"
-#: (Preordain) *is* two real instructions. `_rejoin_search_clauses` (defined
-#: here) and `_parse_each_player_step` (defined lower in this file, the
-#: other user of this same module-level pattern) each tell the two apart the
-#: only way available here: a bare shuffle clause is reattached to, or run
-#: alongside, whatever precedes it if and only if that clause is itself a
-#: search. The pattern itself is defined once, below `_EACH_PLAYER_EXILES_
-#: TOP_RE`, so it reads the same for both call sites rather than drifting.
+#: A bare "shuffle" left over once `split_effect_clauses` has cut across the
+#: "then" inside a search's own "..., then shuffle." - CR 608.2c's clause
+#: split has no notion that this particular "then" is the tail of the
+#: sentence before it (CR 701.24a) rather than a separate instruction, the
+#: same way it does not know "scry 2, then draw a card" (Preordain) *is* two
+#: real instructions. `_rejoin_search_clauses` tells the two apart the only
+#: way available here: a bare "shuffle" clause is reattached to whatever
+#: clause precedes it if and only if that clause is itself a search. Named
+#: distinctly from `_parse_each_player_step`'s own `_BARE_SHUFFLES_RE`
+#: further down - a different clause, read in a different context - after
+#: the two collided under the same name and the second silently shadowed
+#: the first at module load.
+_BARE_SHUFFLE_RE = re.compile(r"shuffle", re.IGNORECASE)
 _MENTIONS_SEARCH_RE = re.compile(r"\bsearch(?:es)?\b", re.IGNORECASE)
 
 
