@@ -218,7 +218,7 @@ def test_generous_pup_off_set_pumps_every_other_creature_too() -> None:
     scenario.resolve_top()  # the trigger from that counter landing
 
     assert bears.counters["+1/+1"] == 1
-    assert pup.counters["+1/+1"] == 1, "the effect excludes the pup itself - \"other\""
+    assert pup.counters["+1/+1"] == 1, 'the effect excludes the pup itself - "other"'
 
 
 def test_edgar_activated_ability_pumps_only_creatures_already_countered() -> None:

@@ -63,7 +63,7 @@ from pydantic import ConfigDict
 
 from magic_cards_model.phrases import with_indefinite_article
 
-from ..data.subtypes import subtype_vocabulary
+from ..data.subtypes import creature_type_vocabulary, subtype_vocabulary
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import (
     CardState,
@@ -14482,6 +14482,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     )
     if choose_creature_type_destroy_except is not None:
         return choose_creature_type_destroy_except
+    each_sacrifices_then_if_you_did = _parse_each_sacrifices_then_if_you_did_clause(
+        whole, for_spell=True
+    )
+    if each_sacrifices_then_if_you_did is not None:
+        return each_sacrifices_then_if_you_did
     exile_if_mv_return_then_re_exile = _parse_exile_if_mv_return_then_re_exile_clause(
         whole, for_spell=True
     )
@@ -24321,6 +24326,16 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # reaches exactly the same `create_continuous_effect` one step earlier
         # than it used to, for the identical effect.
         return [create_continuous_effect]  # type: ignore[list-item]
+    # Riveteers Charm's own mode one ("... with the greatest mana value
+    # among creatures and planeswalkers they control.") is a single sentence
+    # whose own internal "and" the ordinary clause split would still cut
+    # through - tried whole here for the identical reason, ahead of any
+    # sentence-count branch.
+    greatest_mv_sacrifice_whole = _parse_target_opponent_sacrifice_greatest_mv_clause(
+        text, for_spell=for_spell
+    )
+    if greatest_mv_sacrifice_whole is not None:
+        return [greatest_mv_sacrifice_whole]
     sentences = _plain_resolution_sentences(text)
     if len(sentences) == 2:
         # Tried whole, ahead of the comma/and clause split, for the same
