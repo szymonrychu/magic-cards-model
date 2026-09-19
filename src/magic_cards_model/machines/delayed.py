@@ -1395,14 +1395,14 @@ class DelayedTrigger(EngineModel):
     what actually drops it - matching does not check the calendar itself."""
 
     expires_end_of_next_turn: bool = False
-    """CR 800.4m's longer "until your next turn" duration - Jace, Reality
-    Sculptor's own `-3`, "Until your next turn, whenever a creature attacks
-    you or a planeswalker you control, it gets -5/-0 until end of turn." -
-    the delayed-trigger twin of `machines.layers.Duration.UNTIL_YOUR_NEXT_
-    TURN` and of `PlayPermission.expires_end_of_next_turn`. Unlike either of
-    those two, a delayed trigger this stream ends outright rather than only
-    marking: CR 800.4m says the duration "will last until that turn would
-    have begun", the same instant `Game.begin_turn_for` already reads for
+    """CR 603.7b's own longer "stated duration" - Jace, Reality Sculptor's
+    own `-3`, "Until your next turn, whenever a creature attacks you or a
+    planeswalker you control, it gets -5/-0 until end of turn." - the
+    delayed-trigger twin of `machines.layers.Duration.UNTIL_YOUR_NEXT_TURN`
+    (CR 611.2a) and of `PlayPermission.expires_end_of_next_turn`. Unlike
+    either of those two, a delayed trigger this stream ends outright rather
+    than only marking: the stated duration ends the moment that turn would
+    have begun, the same instant `Game.begin_turn_for` already reads for
     the other two, and there is no reason for a spent trigger to survive its
     own controller's next turn beginning - it has nothing left to watch
     for. `DelayedTriggers.expire_end_of_next_turn_for`, called from `Game.
@@ -2070,8 +2070,9 @@ class DelayedTriggers(EngineModel):
         return ending
 
     def expire_end_of_next_turn_for(self, username: str) -> list[DelayedTrigger]:
-        """CR 800.4m: end every `username`-owned "until your next turn"
-        delayed trigger the moment `username`'s next turn would begin.
+        """CR 603.7b's stated duration: end every `username`-owned "until
+        your next turn" delayed trigger the moment `username`'s next turn
+        would begin.
 
         `Game.begin_turn_for` calls this at the identical instant it already
         ends `Duration.UNTIL_YOUR_NEXT_TURN` continuous effects

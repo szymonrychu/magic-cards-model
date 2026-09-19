@@ -1209,7 +1209,7 @@ class PlayPermission(EngineModel):
     """The `TurnMachine.step` `immediate` is scoped to - meaningless unless
     `immediate` is set."""
     until_next_turn_of: str | None = None
-    """Set for CR 800.4m's "until the end of your next turn" duration (Hex
+    """Set for CR 611.2a's "until the end of your next turn" duration (Hex
     Magic) rather than a plain "until end of turn" - names whose next turn
     ends the grant, mirroring `machines.layers.ContinuousEffect.
     until_next_turn_of` and `machines.casting_restrictions.CastingRuleEffect.
@@ -1217,10 +1217,11 @@ class PlayPermission(EngineModel):
     UNTIL_YOUR_NEXT_TURN` for the identical wording elsewhere.
 
     Dropped by `Game.begin_turn_for` the instant that player's next turn
-    would begin (CR 800.4m), the same moment those other two stores drop
-    theirs - not by `expired()`'s own `granted_turns_taken` comparison, which
-    only ever measures "the turn it was granted on is over" (CR 514.2) and
-    has no notion of *whose* turn is next. A permission with this set also
+    would begin (CR 611.2a, its own stated duration), the same moment those
+    other two stores drop theirs - not by `expired()`'s own `granted_turns_
+    taken` comparison, which only ever measures "the turn it was granted on
+    is over" (CR 514.2) and has no notion of *whose* turn is next. A
+    permission with this set also
     carries `until_end_of_turn=False`, so `Game.cleanup_step`'s own "until
     end of turn" sweep leaves it alone on the turn it was granted."""
 

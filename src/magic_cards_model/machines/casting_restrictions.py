@@ -30,7 +30,7 @@ Two shapes, told apart by whether they can be re-read off a live permanent:
       to the activating player rather than to one card - `machines.casting.
       PlayPermission` names one specific object (CR 400.7) and is the wrong
       shape for a blanket "any sorcery you cast", so this reuses
-      `Duration.UNTIL_YOUR_NEXT_TURN` (CR 800.4m) the same way
+      `Duration.UNTIL_YOUR_NEXT_TURN` (CR 611.2a) the same way
       `machines.layers.ContinuousEffect` already does for Karn's identically
       worded duration, and is dropped by `Game.begin_turn_for` the same way.
 
@@ -148,9 +148,10 @@ class CastingRuleEffect(EngineModel):
     duration: Duration = Duration.UNTIL_END_OF_TURN
     until_next_turn_of: str | None = None
     """Set for `Duration.UNTIL_YOUR_NEXT_TURN`, mirroring `machines.layers.
-    ContinuousEffect.until_next_turn_of`: CR 800.4m ends the effect the
-    moment this player's next turn would begin, which `Game.begin_turn_for`
-    already calls for every player, every turn."""
+    ContinuousEffect.until_next_turn_of`: CR 611.2a ends the effect the
+    moment this player's next turn would begin (its own stated duration),
+    which `Game.begin_turn_for` already calls for every player, every
+    turn."""
     restricted_player: str | None = None
     """Set only for `CastingRuleKind.TARGETED_CANT_CAST`: the one player a
     spell *targeted* (CR 115.1), as opposed to `controller`'s own "your

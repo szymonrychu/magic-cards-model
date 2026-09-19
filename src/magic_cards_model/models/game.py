@@ -4062,19 +4062,20 @@ class Game(EngineModel):
         one-way door per turn: everything they control right now has been here
         since the turn began, by definition.
 
-        CR 800.4m: an "until [a player's] next turn" effect "will last until
-        that turn would have begun" - the same moment, so any effect keyed to
-        this player's next turn ends here too (Karn, the Great Creator's +1).
+        CR 611.2a: an "until [a player's] next turn" effect "lasts as long as
+        stated by the spell or ability creating it", and that stated point is
+        this same moment, so any effect keyed to this player's next turn ends
+        here too (Karn, the Great Creator's +1).
         """
         for permanent in self.permanents_controlled_by(username):
             permanent.summoning_sick = False
         self.continuous_effects.end_for_next_turn(username)
         # Jace, Reality Sculptor's own `-3`: a delayed trigger's own "until
         # your next turn" ends the same instant the continuous-effect and
-        # casting-rule stores above do (CR 800.4m).
+        # casting-rule stores above do (CR 603.7b's own "stated duration").
         self.delayed_triggers.expire_end_of_next_turn_for(username)
         # Teferi, Time Raveler's +1: "Until your next turn" ends the moment
-        # this player's next turn would begin (CR 800.4m), the same instant
+        # this player's next turn would begin (CR 611.2a), the same instant
         # `end_for_next_turn` clears its own layer effects for this player.
         self.casting_rule_effects = [
             effect
@@ -4086,7 +4087,7 @@ class Game(EngineModel):
         ]
         # Two different "next turn" permissions expire off this same hook, and
         # they are not the same shape. Hex Magic's own "Until the end of your
-        # next turn, you may play cards exiled this way" (CR 800.4m again) is
+        # next turn, you may play cards exiled this way" (CR 611.2a again) is
         # carried by `PlayPermission.until_next_turn_of` and is dropped here,
         # the same moment as the two stores above. Wrenn's Resolve / Reckless
         # Impulse's own "until the end of your next turn" is carried by
@@ -13826,7 +13827,7 @@ class Game(EngineModel):
         `action=PlayAction.PLAY` is CR 601.1a's wider word, which reaches the
         land drop; `PlayAction.CAST` never does.
 
-        `until_next_turn_of` is CR 800.4m's "until the end of your next turn"
+        `until_next_turn_of` is CR 611.2a's "until the end of your next turn"
         duration (Hex Magic) rather than a plain "until end of turn" - see
         `PlayPermission.until_next_turn_of`'s own docstring. Passing it forces
         `until_end_of_turn=False` regardless of the argument given, since the

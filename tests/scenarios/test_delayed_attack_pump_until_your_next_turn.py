@@ -1,19 +1,21 @@
 """ "Until your next turn, whenever a creature attacks you or a planeswalker
 you control, it gets -N/-0 until end of turn." - CR 603.7's delayed triggered
-ability mechanism carrying two independent durations at once (CR 800.4m): the
+ability mechanism carrying two independent durations at once (CR 603.7b): the
 *watch* itself lasts until the creating ability's own controller's next turn,
 firing on every matching attack until then; each individual pump it grants,
 once fired, lasts only until that attack's own ordinary end of turn.
 
-Every rule below was looked up with `knowledge_search(q="...", type="rules")`
-in the session that wrote this file:
+Every rule below was looked up with `mise run rules:find` in the session that
+wrote this file:
 
 - **CR 603.7** - an effect may create a delayed triggered ability.
 - **CR 603.7b** - "A delayed triggered ability will trigger only once ... unless
-  it has a stated duration" - the stated duration here is what keeps this one
-  firing on every attack, not just the first.
-- **CR 800.4m** - "will last until that turn would have begun" - the watch's
-  own end is the *start* of the granting player's next turn.
+  it has a stated duration, such as 'this turn'" - the stated duration here
+  ("until your next turn") is what keeps this one firing on every attack, not
+  just the first, and its own end is the *start* of the granting player's
+  next turn - exactly what the printed words say, not CR 800.4m, which reads
+  similarly but is scoped to what happens to such a duration when the player
+  it names has left the game entirely (this file never has a player leave).
 - **CR 508.3d** - a triggered ability of a permanent that isn't attacking can
   trigger on a creature attacking, among other events.
 - **CR 306.6 / CR 508.5** - "a planeswalker you control" among the things a
@@ -206,7 +208,8 @@ def test_each_pump_expires_at_the_ordinary_end_of_turn_even_though_the_watch_per
     characteristics = scenario.game.characteristics_of(bears)
     assert (characteristics.power, characteristics.toughness) == (2, 2)
     # The watch itself is untouched by an ordinary cleanup - only alice's own
-    # next turn beginning ends it (CR 800.4m), and that has not happened yet.
+    # next turn beginning ends it (CR 603.7b's stated duration), and that has
+    # not happened yet.
     assert len(scenario.game.delayed_triggers.triggers) == 1
 
 
@@ -226,8 +229,8 @@ def test_the_watch_stops_firing_once_the_granting_players_own_next_turn_has_begu
     _resolve_the_stack(scenario)
     assert scenario.game.characteristics_of(bears).power == 2 - 5
 
-    # Walk into alice's own next turn - CR 800.4m's boundary, `Game.begin_
-    # turn_for`, drops the watch outright.
+    # Walk into alice's own next turn - CR 603.7b's stated-duration boundary,
+    # `Game.begin_turn_for`, drops the watch outright.
     _advance_until(
         scenario,
         lambda s: s.turn.turns_taken > turns_taken and s.turn.active_player == "alice",

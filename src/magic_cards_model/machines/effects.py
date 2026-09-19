@@ -16285,13 +16285,13 @@ def _parse_until_your_next_turn_attack_pump_clause(text: str) -> AbilityEffect |
 
     A delayed triggered ability (CR 603.7) with two independent durations at
     once: the *watch* itself lasts until the creating ability's own
-    controller's next turn (CR 800.4m, `expires_end_of_next_turn`), firing on
-    every matching attack until then (`remaining=None`); each pump it grants,
-    once fired, lasts only until the ordinary end of that turn
-    (`PumpEventSubject`'s own `Duration.UNTIL_END_OF_TURN`) - the same two-
-    tier duration CR 800.4m itself describes ("that turn" bounding when the
-    ability can still trigger, not how long any one firing's own effect
-    lasts).
+    controller's next turn (CR 603.7b's own "stated duration",
+    `expires_end_of_next_turn`), firing on every matching attack until then
+    (`remaining=None`); each pump it grants, once fired, lasts only until the
+    ordinary end of that turn (`PumpEventSubject`'s own `Duration.UNTIL_
+    END_OF_TURN`) - the same two-tier duration the card's own printed text
+    describes ("that turn" bounding when the ability can still trigger, not
+    how long any one firing's own effect lasts).
     """
     whole = " ".join(text.strip().split())
     match = _UNTIL_YOUR_NEXT_TURN_ATTACK_PUMP_RE.fullmatch(whole)
@@ -33896,7 +33896,7 @@ def _parse_outside_the_game_play_clause(effect_text: str) -> Effect | None:
 #: together.
 #:
 #: The grant is `PlayPermission` again, one per card actually exiled, with
-#: `until_next_turn_of` set for CR 800.4m's "until the end of your next
+#: `until_next_turn_of` set for CR 611.2a's "until the end of your next
 #: turn" - the same field `Wish`'s own grant leaves at its default
 #: `until_end_of_turn=True` because Wish's own window is only "this turn".
 _EXILE_HAND_DRAW_THEN_PLAY_UNTIL_NEXT_TURN_RE = re.compile(

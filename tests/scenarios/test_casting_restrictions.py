@@ -257,7 +257,7 @@ def test_the_static_restriction_stops_the_moment_teferi_leaves():
 
 # --------------------------------------------------------------------------
 # Teferi, Time Raveler's +1: "Until your next turn, you may cast sorcery
-# spells as though they had flash." (a temporary grant, CR 800.4m)
+# spells as though they had flash." (a temporary grant, CR 611.2a)
 # --------------------------------------------------------------------------
 
 
@@ -336,7 +336,7 @@ def test_the_plus_one_grant_survives_teferi_leaving_the_battlefield():
 
 
 def test_the_plus_one_grant_lasts_through_an_intervening_opponents_turn():
-    """CR 800.4m: "until your next turn" outlasts the rest of this turn and
+    """CR 611.2a: "until your next turn" outlasts the rest of this turn and
     bob's turn in between - it ends only when alice's own next turn begins."""
     scenario = _board(
         alice_battlefield=["Teferi, Time Raveler"],
@@ -356,7 +356,7 @@ def test_the_plus_one_grant_lasts_through_an_intervening_opponents_turn():
 
 def test_the_plus_one_grant_ends_at_the_controllers_own_next_turn():
     """The other edge: once alice's own next turn actually begins, the grant
-    is gone (CR 800.4m) and ordinary sorcery timing applies again - which, in
+    is gone (CR 611.2a) and ordinary sorcery timing applies again - which, in
     alice's own main phase with an empty stack, is legal anyway, so the
     boundary is checked earlier, in the same turn's combat phase where it
     would otherwise still be needed."""
