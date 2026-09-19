@@ -122,6 +122,7 @@ from .delayed import (
     CombatDamageToPlayerDraw,
     CopyNextSpellYouCast,
     CreateAttackingTokens,
+    CreateTokenCopyOfControlledToken,
     DelayedBlinkReturnWithRider,
     DelayedTrigger,
     DrawACardForController,
@@ -12722,6 +12723,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     dalkovan_attack_tokens = _parse_attack_this_turn_create_tapped_attacking_tokens(effect_text)
     if dalkovan_attack_tokens is not None:
         return dalkovan_attack_tokens
+    cast_noncreature_this_turn_copy_token = (
+        _parse_cast_noncreature_spell_this_turn_copy_token_clause(effect_text)
+    )
+    if cast_noncreature_this_turn_copy_token is not None:
+        return cast_noncreature_this_turn_copy_token
     attacking_tokens_then_sacrifice = _parse_create_tapped_attacking_tokens_then_sacrifice(
         effect_text
     )
@@ -17848,6 +17854,67 @@ def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> Ability
                 remaining=None,
                 expires_end_of_turn=True,
                 effect=CreateAttackingTokens(count=count, definition=definition),
+            )
+        )
+
+    return effect
+
+
+#: "Whenever you cast a noncreature spell this turn, create a token that's a
+#: copy of a non-`<Subtype>` token you control." - Summon: Good King Mog
+#: XII's own Saga chapters II and III. CR 603.7a's own delayed trigger for
+#: the rest of the turn - the same shape Dalkovan Encampment's "whenever you
+#: attack this turn" builds above, just watching `CAST_SPELL` instead of
+#: `ATTACKS` and filtered by CR 205.2a's own type negation
+#: (`DelayedTrigger.forbidden_types`) rather than firing unconditionally.
+#: `excluded` is optional so a bare "a token you control" (no printing in
+#: the pool needs it yet) still reads.
+_CAST_NONCREATURE_SPELL_THIS_TURN_COPY_TOKEN_RE = re.compile(
+    r"^whenever you cast a noncreature spell this turn,\s*"
+    r"create a tokens? that'?s a copy of a "
+    r"(?:non-(?P<excluded>[A-Za-z]+) )?tokens? you control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_cast_noncreature_spell_this_turn_copy_token_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_CAST_NONCREATURE_SPELL_THIS_TURN_COPY_TOKEN_RE`'s shape, or `None`.
+
+    The chosen token to copy is read by `CreateTokenCopyOfControlledToken`
+    itself at resolution, not here - CR 608.2c fixes *what* to copy only
+    when the delayed trigger actually fires, which may be any later moment
+    this turn, never at the point this ability is created.
+    """
+    match = _CAST_NONCREATURE_SPELL_THIS_TURN_COPY_TOKEN_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    excluded = match.group("excluded")
+    excluded_subtypes = (excluded,) if excluded else ()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=match.group(0),
+                event=TriggerEvent.CAST_SPELL,
+                controller=controller.username,
+                source_id=source_id,
+                source_name=source_name,
+                # See `_parse_attack_this_turn_create_tapped_attacking_tokens`
+                # above for why `only_when_active` is the right field for
+                # "the event's own player must be this one" even off the
+                # controller's own turn (flash) - `CAST_SPELL` is never
+                # subjectless, so `subjectless_only` is left at its default.
+                only_when_active=controller.username,
+                forbidden_types=(Type.CREATURE,),
+                remaining=None,
+                expires_end_of_turn=True,
+                effect=CreateTokenCopyOfControlledToken(excluded_subtypes=excluded_subtypes),
             )
         )
 
