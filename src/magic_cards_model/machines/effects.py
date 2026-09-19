@@ -19293,15 +19293,16 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
         return damage_then_group_grant_notice_only
     # A narrow, local strip - not the full `whole` (`_strip_non_effect_
     # preamble` also drops reminder text and keyword-ability lines this
-    # fallback needs untouched, and this dispatcher also runs on a
-    # *permanent* spell's own printed text at resolution, where a keyword
-    # line stripped here would be a batch-A-shaped regression, not this
-    # one's to make). Only the self cost-reduction preambles: an unstripped
-    # one ahead of a real effect (Closing Statement's own "This spell costs
-    # {2} less to cast during your end step.") is not a clause any
-    # per-clause parser reads, so `_parse_mixed_clauses`' own fail-closed-
-    # per-clause rule took the whole card down with it even though every
-    # clause that actually resolves the spell read fine on its own.
+    # fallback needs untouched). Only the self cost-reduction preambles: an
+    # unstripped one ahead of a real effect (Closing Statement's own "This
+    # spell costs {2} less to cast during your end step.") is not a clause
+    # any per-clause parser reads, so `_parse_mixed_clauses`' own fail-
+    # closed-per-clause rule took the whole card down with it even though
+    # every clause that actually resolves the spell read fine on its own.
+    # (`_spell_effect_or_notice` is only ever reached for a non-permanent
+    # spell now - CR 608.3's own resolving-permanent steps never call
+    # `effect_for` at all - so the keyword-line caution the *fuller* strip
+    # would need does not apply here regardless.)
     cost_reduction_stripped = _SELF_COST_REDUCTION_LINE_RE.sub("", effect_text)
     cost_reduction_stripped = _PER_COUNT_COST_REDUCTION_LINE_RE.sub("", cost_reduction_stripped)
     cost_reduction_stripped = _TIMING_COST_REDUCTION_LINE_RE.sub("", cost_reduction_stripped)
