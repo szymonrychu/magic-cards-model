@@ -2083,70 +2083,133 @@ def keyword_ability(card: Card, keyword: str) -> KeywordAbility | None:
     return None
 
 
-#: Some printings template a self-reference as the card's own name rather
-#: than CR 700.7's "this [something]" - The Filigree Sylex's "Put an oil
-#: counter on The Filigree Sylex.", Grist, the Hunger Tide's own "put a
-#: loyalty counter on Grist" (the short form before the comma), and Ruby,
-#: Daring Tracker's "Ruby gets +2/+2 until end of turn." CR 201.5: "Text that
-#: refers to the object it's on by name means just that particular object" -
-#: the same reference CR 700.7's "this [something]" makes, just spelled
-#: differently, so this rewrites either wording to "this permanent" once,
-#: ahead of every shape-specific parser in `machines/effects.py` and
-#: `machines/layers.py`, letting both read a self-named sentence the same way
-#: they already read "this creature"/"this permanent" rather than needing a
-#: second copy of every shape keyed on a literal name.
-#: "Empower Jace N" (CR 701.71a) names a fixed keyword-action target, never
-#: the source's own identity, even when the source's own short name happens
-#: to collide with it - Jace, Reality Sculptor's own "+1: Empower Jace X,
-#: where X is the number of Islands you control." is not "+1: Empower this
-#: permanent X, ..." (CR 201.5 self-reference is about the object using its
-#: own name to mean itself; the empower token is never the object the
-#: ability is printed on). A future "empower `<name>`" keyword sharing a
-#: planeswalker's own short name would hit the identical collision, so the
-#: guard is on the keyword phrase, not on the literal word "Jace".
+#: The lookbehind `self_normalized_effect_text` guards every substitution
+#: with - see that function's own docstring for why "Empower Jace X" must
+#: never be misread as a self-reference to a planeswalker named Jace.
 _EMPOWER_KEYWORD_LOOKBEHIND = r"(?<!(?i:empower ))"
 
+#: A candidate self-name is never a match when what follows it in the text is
+#: the start of a *different*, longer capitalized name - "Hanweir" inside "a
+#: creature named Hanweir Garrison" (another card's own full name, `\s+[A-Z]`)
+#: or "meld them into Hanweir, the Writhing Township" (a third card's, its
+#: own comma-epithet shape - `,\s*(?:the\s+)?[A-Z]`, skipping the lowercase
+#: epithet word the way `self_reference_names`' own epithet candidates read
+#: past it for *this* card). The comma branch only refuses a comma directly
+#: followed by a capitalized continuation (with an optional "the" between
+#: them) - never a bare trailing comma on its own, which is ordinary English
+#: punctuation an in-sentence self-reference is free to sit in front of (The
+#: Millennium Calendar's own "... on The Millennium Calendar, sacrifice
+#: it ..." must still normalize). Applied to every candidate uniformly, not
+#: only a bare-short one: by the time a shorter candidate's turn comes
+#: (`self_reference_names`' longest-first order), every occurrence that
+#: really was this card naming itself has already been consumed by a longer
+#: candidate, so anything this lookahead still refuses was never this card
+#: to begin with.
+_LONGER_NAME_CONTINUATION_LOOKAHEAD = r"(?!,\s*(?:the\s+)?[A-Z]|\s+[A-Z])"
 
-def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
+
+def self_reference_pattern(name: str) -> str:
+    """The regex `self_normalized_effect_text` and
+    `machines/triggers._self_referential` both match a self-reference
+    candidate with - one word-bounded, empower-guarded
+    (`_EMPOWER_KEYWORD_LOOKBEHIND`), longer-name-guarded
+    (`_LONGER_NAME_CONTINUATION_LOOKAHEAD`) pattern shared so the two never
+    drift into reading CR 201.5/201.5c self-reference differently."""
+    return (
+        rf"{_EMPOWER_KEYWORD_LOOKBEHIND}\b{re.escape(name)}\b{_LONGER_NAME_CONTINUATION_LOOKAHEAD}"
+    )
+
+
+#: Epithet-boundary words CR 201.5c's shortened names split on: "`<Name>` the
+#: `<Epithet>`" (Liliana the Repentant) and "`<Name>` of `<Epithet>`" (Kiora of
+#: Fire and Ashes, Koth of the Homestead) both call themselves by their first
+#: word alone. Never itself a candidate (`self_reference_names`'s own "never
+#: shorten to a bare article" guard) - a name that *starts* with one of these
+#: words (`The Millennium Calendar`) must never contribute its own leading
+#: "The"/"Of" as though it were a short form of itself.
+_EPITHET_BOUNDARY_WORDS = ("the", "of")
+
+
+def self_reference_names(card_name: str) -> tuple[str, ...]:
+    """Every string CR 201.5/201.5c lets `card_name`'s own printed text use to
+    mean itself, longest first: the full name, the face before a `//`, the
+    short form before a comma (Grist, the Hunger Tide -> Grist), an epithet
+    short form for a no-comma legend (`<Name> the/of <Epithet>` -> `<Name>`),
+    and a bare short form for a plain two-word name with no comma or epithet
+    word at all (`Ajani Resolute` -> `Ajani`, CR 201.5c).
+
+    Longest first is what lets a caller building a find-and-replace out of
+    this win the race a shorter candidate would otherwise lose: "Aerid
+    Konstrari" has to replace the whole two-word name before its own shorter
+    "Aerid" candidate ever gets a turn, or "When Aerid Konstrari enters"
+    becomes "When this permanent Konstrari enters" instead of "When this
+    permanent enters" (`self_normalized_effect_text`). `_self_referential`
+    (`machines/triggers.py`) only needs membership, where order does not
+    matter, but reuses the same ordered tuple rather than keeping a second
+    copy of this logic.
+
+    The epithet and bare-short forms are both narrowed on purpose, the same
+    way and for the same reason: "Hanweir Battlements"'s own text names two
+    *other* cards sharing its first word ("a creature named Hanweir
+    Garrison", "meld them into Hanweir, the Writhing Township") - treating
+    "Hanweir" as *this* card's own short name would rewrite both into
+    nonsense, since neither reference is this card naming itself. Requiring a
+    genuine CR 201.5c shape - an epithet word right after the first word, or
+    *no* second name segment at all (a bare two-word name) - is what tells
+    "Liliana the Repentant"/"Kiora of Fire and Ashes"/"Ajani Resolute" apart
+    from "Search for Azcanta" and "Hanweir Battlements", whose own second
+    words are an ordinary noun, not an epithet boundary and not the whole of
+    a two-word name search would ever need to shorten. The bare-short form
+    also refuses to shorten to a bare article, preposition, or conjunction on
+    its own (`_EPITHET_BOUNDARY_WORDS` plus `a`/`an`) - a name that itself
+    *starts* with one of those words ("The Millennium Calendar") must never
+    contribute its own leading word as though it meant the whole card.
+    """
     front = card_name.split("//")[0].strip()
     candidates = {card_name, front}
     if "," in front:
         candidates.add(front.split(",", 1)[0].strip())
-    # "`<Name>` the `<Epithet>`" - a legendary printed with no comma before
-    # its own epithet (Liliana the Repentant's own "Put a +1/+1 counter on
-    # Liliana."), the same shape "Ghalta, Primal Hunger"'s comma already
-    # covers - still gets called by its first word alone (CR 201.5c: "Text
-    # printed on some cards refers to that card by a shortened version of
-    # its name"). Narrowed to *this* exact "the" pattern rather than any
-    # first word at all: "Hanweir Battlements"'s own text names two *other*
-    # cards sharing its first word ("a creature named Hanweir Garrison",
-    # "meld them into Hanweir, the Writhing Township") - substituting bare
-    # "Hanweir" there would rewrite both into nonsense, since neither is
-    # this card naming itself. "the" as the second word is a safe, narrow
-    # signal no ordinary card-name word ever collides with - anchored on
-    # "the" specifically (not any lowercase word), since a name that is
-    # itself an ordinary phrase (Search for Azcanta) has lowercase
-    # prepositions of its own that are not an epithet boundary, and reading
-    # every one as a candidate self-reference once corrupted an unrelated
-    # "Search" inside Search for Azcanta's own printed name mid-sentence.
     words = front.split(" ")
-    if len(words) >= 3 and words[1].lower() == "the":
+    if (
+        len(words) >= 3
+        and words[1].lower() in _EPITHET_BOUNDARY_WORDS
+        or (
+            len(words) == 2
+            and "," not in front
+            and words[0].lower() not in (*_EPITHET_BOUNDARY_WORDS, "a", "an")
+        )
+    ):
         candidates.add(words[0].strip())
+    return tuple(sorted((name for name in candidates if name), key=len, reverse=True))
+
+
+def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
+    """`effect_text` with every CR 201.5/201.5c self-reference to `card_name`
+    rewritten to CR 700.7's own "this permanent" - The Filigree Sylex's "Put
+    an oil counter on The Filigree Sylex.", Grist, the Hunger Tide's own "put
+    a loyalty counter on Grist" (the short form before the comma), Ruby,
+    Daring Tracker's "Ruby gets +2/+2 until end of turn.", and Ajani
+    Resolute's own bare "put a loyalty counter on Ajani." are all the same
+    reference CR 700.7's "this [something]" makes, just spelled differently -
+    rewritten once here, ahead of every shape-specific parser in
+    `machines/effects.py` and `machines/layers.py`, so both read a
+    self-named sentence the same way they already read "this creature"/"this
+    permanent" rather than needing a second copy of every shape keyed on a
+    literal name.
+
+    "Empower Jace N" (CR 701.71a) names a fixed keyword-action target, never
+    the source's own identity, even when the source's own short name happens
+    to collide with it - Jace, Reality Sculptor's own "+1: Empower Jace X,
+    where X is the number of Islands you control." is not "+1: Empower this
+    permanent X, ..." (CR 201.5 self-reference is about the object using its
+    own name to mean itself; the empower token is never the object the
+    ability is printed on). A future "empower `<name>`" keyword sharing a
+    planeswalker's own short name would hit the identical collision, so the
+    guard is on the keyword phrase, not on the literal word "Jace".
+    """
     normalized = effect_text
-    # Longest candidate first: "Aerid Konstrari" has to replace the whole
-    # two-word name before its own shorter "Aerid" candidate ever gets a
-    # turn, or "When Aerid Konstrari enters" becomes "When this permanent
-    # Konstrari enters" instead of "When this permanent enters" - a shorter
-    # candidate winning the race corrupts the very phrase the longer one was
-    # about to match whole. The identical risk sits between "Liliana the
-    # Repentant" and its own short "Liliana" candidate (Azcanta's own front
-    # face prints its whole name a second time, verbatim, inside its own
-    # effect) - a set's own iteration order cannot be trusted to avoid it.
-    for name in sorted(candidates, key=len, reverse=True):
-        if name:
-            normalized = re.sub(
-                rf"{_EMPOWER_KEYWORD_LOOKBEHIND}\b{re.escape(name)}\b", "this permanent", normalized
-            )
+    for name in self_reference_names(card_name):
+        normalized = re.sub(self_reference_pattern(name), "this permanent", normalized)
     return normalized
 
 

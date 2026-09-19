@@ -74,6 +74,8 @@ from .abilities import (
     parse_granted_ability_lines,
     parse_mana_count,
     self_counter_mana_count,
+    self_reference_names,
+    self_reference_pattern,
 )
 from .turn import Step
 
@@ -993,15 +995,35 @@ _MANA_VALUE_EQUALS_COUNTERS = re.compile(
 
 
 def _self_referential(condition: str, source_name: str) -> bool:
+    """Whether `condition` refers to its own source (CR 700.7, 201.5, 201.5c) -
+    "this creature"/"this permanent" and friends, or the source's own name in
+    any of the shortened forms `machines/abilities.self_reference_names`
+    reads: the short form before a comma ("Whenever Ragavan deals..."), a
+    no-comma legend's own epithet short form (Kiora of Fire and Ashes' own
+    "When Kiora enters" - CR 201.5's short name of a no-comma "of" legend, not
+    read as self before this), and a bare two-word name's own short form
+    (Ajani Resolute's own "Ajani").
+
+    Reads through `self_reference_pattern`'s shared, word-bounded,
+    longer-name-guarded regex rather than a plain substring test, so a
+    shortened candidate that happens to be the start of a *different*,
+    longer capitalized name mentioned in the same condition is never
+    mistaken for this source naming itself.
+    """
     lowered = condition.lower()
     if any(phrase in lowered for phrase in _SELF_PHRASES):
         return True
-    front = source_name.split("//")[0].strip().lower()
-    if front and front in lowered:
-        return True
-    # "Whenever Ragavan deals..." uses the short name before the comma.
-    short = front.split(",")[0].strip()
-    return bool(short) and short in lowered
+    # Case-sensitive, like `self_normalized_effect_text`'s own substitution:
+    # Oracle templating always spells a card's own name (and its shortened
+    # forms) with the same capitalization it prints on the card, which is
+    # also what `_LONGER_NAME_CONTINUATION_LOOKAHEAD`'s capital-letter check
+    # needs to tell a genuine continuation apart from an ordinary lowercase
+    # word - folding the whole search case-insensitive would blind that
+    # lookahead to the difference.
+    return any(
+        re.search(self_reference_pattern(name), condition) is not None
+        for name in self_reference_names(source_name)
+    )
 
 
 def _plural_type_word_pattern(word: str) -> str:
@@ -1078,6 +1100,110 @@ _TARGETS_ONLY_SINGLE_CREATURE_CLAUSE = re.compile(
     r"that targets only a single creature you control", re.IGNORECASE
 )
 
+#: Danitha, Spear of Agony's own "a spell that targets an opponent or a
+#: creature an opponent controls" and Danitha, Sword of Hope's own "a spell
+#: that targets a creature you control" (CR 601.2c) - a general "that
+#: targets `<restriction>`" tail on a CAST_SPELL condition, read *after*
+#: `_TARGETS_ONLY_SINGLE_CREATURE_CLAUSE` has already taken Frontline
+#: Heroism's own narrower "that targets only a single creature you control"
+#: out of the text, so the two clauses can never both match the same
+#: condition - Frontline Heroism's own count-and-controller reading of its
+#: target (CR 115.3) stays exactly as it was; this is the general shape for
+#: every other restriction a "spell that targets ..." condition can name.
+_SPELL_THAT_TARGETS_RE = re.compile(r"\bthat targets (?P<target>.+)$", re.IGNORECASE)
+
+#: Where a CAST_SPELL condition names more than one kind of qualifying spell
+#: (Danitha, Sword of Hope's own "an Equipment spell or a spell that targets
+#: a creature you control") splits: an " or " immediately followed by
+#: another complete "[a/an] ... spell" or "a spell that targets ..." clause,
+#: never an " or " sitting *inside* one description's own noun list (a
+#: colour list, a target restriction's own "an opponent or a creature an
+#: opponent controls") - the lookahead only fires when a fresh clause
+#: actually starts at that exact position, which a bare colour or noun
+#: alternative never does.
+_CAST_CLAUSE_BOUNDARY = re.compile(r"\s+or\s+(?=an?\s+.*?\bspell\b)", re.IGNORECASE)
+
+#: The shared lead-in every CAST_SPELL condition in this pool begins with
+#: (CR 601.2) - `_cast_spell_alternatives` re-prefixes it onto every
+#: alternative clause it splits off, so `_controller_clause_holds` still
+#: sees who has to have done the casting in each one.
+_CAST_LEAD = re.compile(r"^(?P<lead>(?:you|an opponent) casts?)\s+", re.IGNORECASE)
+
+
+def _cast_spell_alternatives(condition: str) -> list[str]:
+    """`condition` split into its alternative spell-description clauses when
+    it names more than one kind of qualifying spell, each carrying its own
+    copy of the shared "you cast"/"an opponent casts" lead-in - or `[condition]`
+    unchanged, its own one and only alternative, when there is no such split
+    (every CAST_SPELL condition in the pool but Danitha, Sword of Hope's)."""
+    lead_match = _CAST_LEAD.match(condition)
+    if lead_match is None:
+        return [condition]
+    lead, body = lead_match.group("lead"), condition[lead_match.end() :]
+    parts = [part.strip() for part in _CAST_CLAUSE_BOUNDARY.split(body) if part.strip()]
+    if len(parts) < 2:
+        return [condition]
+    return [f"{lead} {part}" for part in parts]
+
+
+#: A leading "a"/"an" - at the very start of the restriction, or right after
+#: an "or" that opens a fresh item of a noun list (Danitha, Spear of Agony's
+#: own "an opponent or **a** creature an opponent controls") - is stripped
+#: everywhere it introduces a noun, not only the first: `machines/targeting.
+#: _read_phrase`'s own grammar reads a "target ..." phrase, or one item of
+#: its own noun list, with no article at all (CR 601.2c's own templating
+#: never prints one), and a lone leading strip used to leave the *second*
+#: item's own article behind, which that grammar could not read either.
+_LEADING_ARTICLE = re.compile(r"(^|\bor\s+)(?:a|an)\s+", re.IGNORECASE)
+
+
+def _strip_leading_article(text: str) -> str:
+    """`text` with every list-item-introducing "a"/"an" removed - see
+    `_LEADING_ARTICLE`."""
+    return _LEADING_ARTICLE.sub(r"\1", text.strip())
+
+
+def _cast_spell_targets_condition_holds(
+    game: "Game", target_text: str, controller: str, event: GameEvent
+) -> bool | None:
+    """Whether a CAST_SPELL condition's own "... that targets
+    `<restriction>`" clause (CR 601.2c) is satisfied by the spell `event`
+    names - true when at least one of the spell's own announced targets fits
+    the restriction. `None` when the restriction cannot be read at all, so
+    the caller can record a `CastConditionNotice` the same way an unreadable
+    mana-value comparison already does, rather than silently treat an
+    unreadable restriction as satisfied.
+
+    Reuses `machines/targeting._read_phrase` - the identical grammar a
+    "target `<description>`" phrase on the spell itself is read with - so a
+    restriction here and an ordinary targeting requirement can never disagree
+    about what "a creature you control" means. Imported at call time: `.
+    targeting` imports `.combat`, which imports this module for `GameEvent`,
+    so the two cannot import each other at module scope.
+    """
+    from .targeting import _read_phrase
+
+    requirement = _read_phrase("", _strip_leading_article(target_text), strict=True)
+    if requirement is None:
+        return None
+    if event.subject_id is None:
+        return False
+    spell = game.find_by_id(event.subject_id)
+    if spell is None:
+        return False
+    for target_ref in spell.targets:
+        candidate: Any
+        if target_ref.is_player:
+            candidate = target_ref.username
+        else:
+            found = game.find_by_id(target_ref.card_id)
+            if found is None:
+                continue
+            candidate = found
+        if requirement.rejects(candidate, controller, game, source_id=spell.id) is None:
+            return True
+    return False
+
 
 def _required_subtype(condition: str) -> str | None:
     match = _OTHER_SUBTYPE.search(condition)
@@ -1106,7 +1232,7 @@ def _required_subtype(condition: str) -> str | None:
 #: not "a Dragon" but "another **nontoken** Dragon", and without skipping it
 #: the capture would land on "nontoken" itself and fail the `[A-Z]` class.
 _ENTERING_SUBTYPE = re.compile(
-    r"^(?:an?|one or more|another) (?:nontoken )?(?P<subtype>[A-Z][A-Za-z]*?)s? "
+    r"^(?:an?|one or more|another) (?:nontoken )?(?P<subtype>[A-Z][A-Za-z]*?)(?P<plural_s>s?) "
     r"(?:you control |an opponent controls )?enters?\b"
 )
 
@@ -1132,9 +1258,31 @@ def _required_entering_subtype(condition: str) -> str | None:
     Split from `_required_subtype` because that one reads only the "other ...
     you control" shape CR 603.10a's death triggers print, which never matches
     an entry condition's plain "a Mountain you control enters".
+
+    `_ENTERING_SUBTYPE`'s own optional trailing `s?` is there to turn a
+    plural subject - "one or more Cats you control enter" - back into the
+    singular subtype name `_subtype_matches` compares against. CR 305.5's
+    "Plains" is the one basic land type this stripping corrupts: it is
+    spelled with a trailing s in both its singular and plural form, so
+    Koth of the Homestead's own singular "a Plains you control enters"
+    used to have its captured subtype trimmed to "Plain" - a name the game
+    has never printed - and its own trigger could never match a real Plains
+    entering. `BASIC_LAND_TYPES` (CR 305.6) is what tells "Plains" apart
+    from an ordinary pluralizable subtype rather than a hardcoded name.
     """
     match = _ENTERING_SUBTYPE.match(condition.strip())
-    return match.group("subtype") if match else None
+    if match is None:
+        return None
+    subtype, plural_s = match.group("subtype"), match.group("plural_s")
+    whole = subtype + plural_s
+    # Imported here, not at module scope: `machines/combat.py` imports this
+    # module for `GameEvent`, and `machines/layers.py` (where
+    # `BASIC_LAND_TYPES` lives) imports `machines/combat.py` in turn - the
+    # same real, call-time-only cycle `triggered_abilities_of` already routes
+    # its own `from .keywords import keyword_triggered_abilities` around.
+    from .layers import BASIC_LAND_TYPES
+
+    return whole if whole in BASIC_LAND_TYPES else subtype
 
 
 def _subtype_matches(subtypes: tuple[str, ...] | None, subtype: str | None) -> bool:
@@ -1496,9 +1644,24 @@ _TOKEN_WORD = re.compile(r"\btokens?\b")
 
 #: "this `<noun>` or `<other subject>` enters" - a self-or-other entry
 #: condition; `other` is read like any other "`<subject>` enters" condition.
-_SELF_OR_OTHER_ENTERS_RE = re.compile(
-    r"^this [a-z]+ or (?P<other>(?:an?|another) .+ enters?)$", re.IGNORECASE
-)
+#: The self half is either CR 700.7's "this `<noun>`" or the source's own
+#: name in any shortened form `self_reference_names` reads (Mabel, Valley
+#: Hero's own "Whenever Mabel or another creature you control enters" -
+#: CR 201.5c's short name before the comma, not "this planeswalker").
+_SELF_OR_OTHER_ENTERS_TAIL = r" or (?P<other>(?:an?|another) .+ enters?)$"
+
+
+def _self_or_other_enters_match(condition: str, source_name: str) -> re.Match[str] | None:
+    generic = re.match(rf"^this [a-z]+{_SELF_OR_OTHER_ENTERS_TAIL}", condition, re.IGNORECASE)
+    if generic is not None:
+        return generic
+    for name in self_reference_names(source_name):
+        named = re.match(rf"^{self_reference_pattern(name)}{_SELF_OR_OTHER_ENTERS_TAIL}", condition)
+        if named is not None:
+            return named
+    return None
+
+
 _LEGENDARY_WORD = re.compile(r"\blegendary\b")
 
 
@@ -1606,6 +1769,32 @@ def condition_matches(
     a trigger, which is the safe direction to be wrong in.
     """
     condition = ability.condition
+
+    if ability.event is TriggerEvent.CAST_SPELL:
+        # Danitha, Sword of Hope's own "you cast an Equipment spell or a
+        # spell that targets a creature you control" (CR 601.2, two
+        # independent descriptions of the cast spell joined by an ordinary
+        # English "or", not a single description's own internal
+        # disjunction the way "a red or green creature spell"'s colour list
+        # is). `_cast_spell_alternatives` finds the boundary only where the
+        # text after "or" itself starts a new "[a/an] ... spell"/"a spell
+        # that targets ..." clause, so an ordinary condition with no such
+        # boundary returns unchanged and falls straight through to the
+        # single-clause reading below - every other CAST_SPELL card in the
+        # pool is unaffected.
+        alternatives = _cast_spell_alternatives(condition)
+        if len(alternatives) > 1:
+            return any(
+                condition_matches(
+                    game,
+                    ability.model_copy(update={"condition": clause}),
+                    source,
+                    controller,
+                    event,
+                )
+                for clause in alternatives
+            )
+
     lowered = condition.lower()
     mine = _self_referential(condition, source.name)
 
@@ -1623,7 +1812,7 @@ def condition_matches(
     if ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD:
         if not _entry_qualifier_matches(game, condition, event):
             return False
-        either = _SELF_OR_OTHER_ENTERS_RE.match(condition)
+        either = _self_or_other_enters_match(condition, source.name)
         if mine and either is None:
             return event.subject_id == source.id
         if either is not None:
@@ -1682,7 +1871,15 @@ def condition_matches(
             subject = game.find_by_id(event.subject_id) if event.subject_id else None
             if not (subject is not None and getattr(subject, "token", False)):
                 return False
-        return True
+        # "a creature you control with power 4 or greater enters" (Garruk,
+        # Curse Breaker, CR 208.1) - the same "with power [or toughness] N
+        # or less/greater" qualifier `BLOCKS` already reads for Tetsuko
+        # Umezawa, Pursuer's non-self form, wired in here too rather than
+        # kept BLOCKS-only: nothing about the qualifier's own grammar is
+        # specific to blocking, and leaving it unread here silently dropped
+        # Garruk's own filter, firing his draw on any creature at all.
+        power_or_toughness = _power_or_toughness_qualifier_holds(game, condition, event.subject_id)
+        return power_or_toughness is None or power_or_toughness
 
     if ability.event is TriggerEvent.DIES:
         if "enchanted" in lowered:
@@ -1714,11 +1911,14 @@ def condition_matches(
         if mine and "another" not in lowered and "other" not in lowered:
             return False
         subtype = _required_subtype(condition)
-        return (
+        if not (
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)
             and _subtype_matches(event.subject_subtypes, subtype)
-        )
+        ):
+            return False
+        power_or_toughness = _power_or_toughness_qualifier_holds(game, condition, event.subject_id)
+        return power_or_toughness is None or power_or_toughness
 
     if ability.event is TriggerEvent.LEAVES_THE_BATTLEFIELD:
         # CR 603.6c: only the self-referential form prints in this pool
@@ -1814,7 +2014,27 @@ def condition_matches(
             return mana_value == threshold
         if mine and "this spell" in lowered:
             return event.subject_id == source.id
-        if "an opponent" in lowered:
+        # Frontline Heroism's own "that targets only a single creature you
+        # control" clause is stripped first (CR 115.3/109.4's own vocabulary,
+        # read directly by the dedicated block near the end of this branch,
+        # which still asks the *original*, unstripped `lowered` whether it is
+        # present at all), so Danitha, Spear of Agony's/Danitha, Sword of
+        # Hope's own general "that targets `<restriction>`" reader just below
+        # never mistakes Frontline's narrower clause for a *different*
+        # restriction it would have to fail closed on trying to read.
+        without_frontline_clause = _TARGETS_ONLY_SINGLE_CREATURE_CLAUSE.sub("", condition)
+        target_match = _SPELL_THAT_TARGETS_RE.search(without_frontline_clause)
+        target_clause = target_match.group("target").strip() if target_match is not None else None
+        # `caster_condition` also serves as the type/colour/subtype checks'
+        # own `type_condition` below - both need the identical text with
+        # Frontline's clause and this restriction's own tail gone, so one
+        # strip does for both rather than two copies of the same substitution.
+        caster_condition = (
+            without_frontline_clause
+            if target_clause is None
+            else _SPELL_THAT_TARGETS_RE.sub("", without_frontline_clause)
+        )
+        if "an opponent" in caster_condition.lower():
             # Jin-Gitaxias, Progress Tyrant's own "Whenever an opponent
             # casts ..." - `_controller_clause_holds` only ever recognises
             # "an opponent **controls**"/"your opponents **control**"
@@ -1823,6 +2043,12 @@ def condition_matches(
             # named, nothing required" branch and matched *any* caster,
             # controller included - the same "an opponent" fallback
             # `TriggerEvent.DRAWS_A_CARD`/`GAINS_LIFE` already use just below.
+            # Read off `caster_condition`, not `lowered`: Danitha, Spear of
+            # Agony's own "an opponent" names her *target*, not who cast the
+            # spell, and the raw text used to collide with this check the
+            # identical way Frontline Heroism's own "creature" once collided
+            # with the type-word scan below - refusing the caster's own cast
+            # outright for a restriction that was never about the caster.
             if event.player is None or event.player == controller:
                 return False
         elif not _controller_clause_holds(condition, controller, event.player):
@@ -1851,16 +2077,16 @@ def condition_matches(
         ordinal_match = _ordinal_spell_this_turn_matches(game, condition, controller, event)
         if ordinal_match is not None:
             return ordinal_match
-        # Frontline Heroism's own "that targets only a single creature you
-        # control" clause names a type word ("creature") that describes the
-        # *target*, not the cast spell itself - `_required_types`/
-        # `_types_match` cannot tell the two apart on sight (it just scans
-        # the whole condition for a known type word) and used to misread the
-        # clause as "cast a creature spell", which Lightning Bolt aimed at
-        # your own creature is not, wrongly refusing to fire at all. Stripped
-        # out of the copy handed to the type/colour/subtype checks below,
-        # which have nothing to do with what the spell targets.
-        type_condition = _TARGETS_ONLY_SINGLE_CREATURE_CLAUSE.sub("", condition)
+        # Frontline Heroism's own clause names a type word ("creature") that
+        # describes the *target*, not the cast spell itself - `_required_
+        # types`/`_types_match` cannot tell the two apart on sight (it just
+        # scans the whole condition for a known type word) and used to
+        # misread the clause as "cast a creature spell", which Lightning
+        # Bolt aimed at your own creature is not, wrongly refusing to fire
+        # at all. Danitha's own "that targets ..." tail has the identical
+        # problem with "opponent"/"creature you control" - both are already
+        # gone from `caster_condition`, computed above.
+        type_condition = caster_condition
         if not _types_match(event.subject_types, type_condition):
             return False
         if not _color_matches(event.subject_colors, type_condition):
@@ -1868,6 +2094,17 @@ def condition_matches(
         subtype = _required_cast_subtype(type_condition)
         if not _subtype_matches(event.subject_subtypes, subtype):
             return False
+        if target_clause is not None:
+            holds = _cast_spell_targets_condition_holds(game, target_clause, controller, event)
+            if holds is None:
+                game.cast_condition_notices.append(
+                    CastConditionNotice(
+                        source_id=source.id, source_name=source.name, condition=condition
+                    )
+                )
+                return False
+            if not holds:
+                return False
         if "targets only a single creature you control" in lowered:
             # Frontline Heroism's own condition - not a fact about the cast
             # spell's own printed characteristics at all (CR 105, CR 202.3),
@@ -3702,7 +3939,8 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
     for ability in printed:
         for split in _expand_attacks_or_blocks(ability):
             for enters_split in _expand_enters_or_attacks(split):
-                expanded.extend(_expand_enters_or_leaves(enters_split))
+                for leaves_split in _expand_enters_or_leaves(enters_split):
+                    expanded.extend(_expand_enters_or_dies(leaves_split, card.name))
     return expanded + keyword_triggered_abilities(card)
 
 
@@ -3815,6 +4053,52 @@ def _expand_enters_or_leaves(ability: TriggeredAbility) -> list[TriggeredAbility
                 "event": TriggerEvent.LEAVES_THE_BATTLEFIELD,
             }
         ),
+    ]
+
+
+#: "When `<self>` enters or dies, ..." - Apex Witchstalker's own "When this
+#: creature enters or dies, you gain 2 life." (CR 700.7) and Aerid
+#: Konstrari's identically-shaped "When Aerid Konstrari enters or dies,
+#: create a Heartwood token." (CR 201.5c's own short/full-name self-
+#: reference, same as `_expand_enters_or_leaves` already reads for "this
+#: `<kind>`"). `_trigger_event` (`machines/abilities.py`) reads "enters"
+#: first and stops, so this compound condition parsed as
+#: `TriggerEvent.ENTERS_THE_BATTLEFIELD` alone and the "or dies" half - CR
+#: 603.10a's death trigger, which is the half that matters whenever either
+#: card actually dies rather than merely entering - was silently dropped.
+_ENTERS_OR_DIES_RE = re.compile(r"^(?P<subject>.+?) enters or dies$", re.IGNORECASE)
+
+
+def _expand_enters_or_dies(ability: TriggeredAbility, card_name: str) -> list[TriggeredAbility]:
+    """One ability whose condition is `_ENTERS_OR_DIES_RE`'s shape becomes
+    two: CR 603.6a's enters-the-battlefield ability and CR 700.4/603.10a's
+    dies one, each self-referential and each a `TriggeredAbility` in its own
+    right - the same split `_expand_attacks_or_blocks`, `_expand_enters_or_
+    attacks` and `_expand_enters_or_leaves` already perform for their own
+    compound conditions.
+
+    The subject has to be a genuine self-reference - CR 700.7's "this
+    `<noun>`" or one of `card_name`'s own CR 201.5/201.5c short forms
+    (`self_reference_names`) - not just any condition that happens to end in
+    "enters or dies"; nothing in this pool prints the compound any other
+    way, and requiring it keeps this from ever misreading two unrelated
+    clauses that merely share those two words.
+
+    Every other printed ability passes through unchanged, singleton-wrapped.
+    """
+    match = _ENTERS_OR_DIES_RE.match(ability.condition.strip())
+    if match is None:
+        return [ability]
+    subject = match.group("subject")
+    if not re.fullmatch(r"this [a-z]+", subject, re.IGNORECASE) and subject not in (
+        self_reference_names(card_name)
+    ):
+        return [ability]
+    return [
+        ability.model_copy(
+            update={"condition": f"{subject} enters", "event": TriggerEvent.ENTERS_THE_BATTLEFIELD}
+        ),
+        ability.model_copy(update={"condition": f"{subject} dies", "event": TriggerEvent.DIES}),
     ]
 
 

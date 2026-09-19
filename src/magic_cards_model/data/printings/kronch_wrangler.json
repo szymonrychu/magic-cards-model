@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "6536320d-79c3-4406-96eb-b44a9f4a0686",
+  "oracle_id": "635dda8c-3761-4c87-8723-8cd09878516b",
+  "multiverse_ids": [
+    651904
+  ],
+  "mtgo_id": 123122,
+  "tcgplayer_id": 535088,
+  "cardmarket_id": 753093,
+  "name": "Kronch Wrangler",
+  "lang": "en",
+  "released_at": "2024-02-23",
+  "uri": "https://api.scryfall.com/cards/6536320d-79c3-4406-96eb-b44a9f4a0686",
+  "scryfall_uri": "https://scryfall.com/card/clu/169/kronch-wrangler?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:15:28Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.jpg?1783912528",
+    "normal": "https://cards.scryfall.io/normal/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.jpg?1783912528",
+    "large": "https://cards.scryfall.io/large/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.jpg?1783912528",
+    "png": "https://cards.scryfall.io/png/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.png?1783912528",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.jpg?1783912528",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.jpg?1783912528",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.webp?1783912528",
+    "grid": "https://cards.scryfall.io/grid/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.webp?1783912528",
+    "display": "https://cards.scryfall.io/display/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.webp?1783912528",
+    "art": "https://cards.scryfall.io/art/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.webp?1783912528",
+    "crop": "https://cards.scryfall.io/crop/front/6/5/6536320d-79c3-4406-96eb-b44a9f4a0686.webp?1783912528"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Warrior",
+  "oracle_text": "Trample\nWhenever a creature you control with power 4 or greater enters, put a +1/+1 counter on this creature.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d4bfabcf-a859-43a4-9d8a-665533c8b174",
+  "set": "clu",
+  "set_name": "Ravnica: Clue Edition",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/d4bfabcf-a859-43a4-9d8a-665533c8b174",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aclu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/clu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6536320d-79c3-4406-96eb-b44a9f4a0686/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A635dda8c-3761-4c87-8723-8cd09878516b&unique=prints",
+  "collector_number": "169",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Looking over two city blocks of destruction, he could only cackle with pride.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Steve Prescott",
+  "artist_ids": [
+    "a1139fb8-41f5-4a9e-9a74-f662e1a23b35"
+  ],
+  "illustration_id": "f4025573-bb74-4f69-9d59-23b128e92d76",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 24536,
+  "penny_rank": 17237,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": null,
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=651904&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKronch%2BWrangler",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKronch%2BWrangler",
+    "edhrec": "https://edhrec.com/route/?cc=Kronch+Wrangler"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535088%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=753093&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/123122?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

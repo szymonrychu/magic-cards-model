@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "a5e1a7dd-8c49-4435-935c-bcc78704082b",
+  "oracle_id": "0d60c095-4c6c-4618-8ef3-508f3d454efa",
+  "multiverse_ids": [],
+  "tcgplayer_id": 706969,
+  "cardmarket_id": 905774,
+  "name": "Ajani Resolute",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/a5e1a7dd-8c49-4435-935c-bcc78704082b",
+  "scryfall_uri": "https://scryfall.com/card/fra/195/ajani-resolute?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-02T06:06:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.jpg?1788329189",
+    "normal": "https://cards.scryfall.io/normal/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.jpg?1788329189",
+    "large": "https://cards.scryfall.io/large/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.jpg?1788329189",
+    "png": "https://cards.scryfall.io/png/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.png?1788329189",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.jpg?1788329189",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.jpg?1788329189",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.webp?1788329189",
+    "grid": "https://cards.scryfall.io/grid/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.webp?1788329189",
+    "display": "https://cards.scryfall.io/display/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.webp?1788329189",
+    "art": "https://cards.scryfall.io/art/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.webp?1788329189",
+    "crop": "https://cards.scryfall.io/crop/front/a/5/a5e1a7dd-8c49-4435-935c-bcc78704082b.webp?1788329189"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Legendary Planeswalker \u2014 Ajani",
+  "oracle_text": "Whenever you gain life, put a loyalty counter on Ajani.\n0: You gain 1 life.\n\u22124: Create a 2/2 white Cat Soldier creature token named Ajani's Pridemate with \"Whenever you gain life, put a +1/+1 counter on this token.\"\n\u221210: You get an emblem with \"Creatures you control get +2/+2.\"",
+  "loyalty": "2",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "96aec358-5f18-44c7-8223-a41c9d583961",
+      "component": "combo_piece",
+      "name": "Ajani Resolute",
+      "type_line": "Legendary Planeswalker \u2014 Ajani",
+      "uri": "https://api.scryfall.com/cards/96aec358-5f18-44c7-8223-a41c9d583961"
+    },
+    {
+      "object": "related_card",
+      "id": "595a628e-218b-4df2-8bd2-d84ad22d302f",
+      "component": "combo_piece",
+      "name": "Ajani Resolute Emblem",
+      "type_line": "Emblem",
+      "uri": "https://api.scryfall.com/cards/595a628e-218b-4df2-8bd2-d84ad22d302f"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a5e1a7dd-8c49-4435-935c-bcc78704082b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0d60c095-4c6c-4618-8ef3-508f3d454efa&unique=prints",
+  "collector_number": "195",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tyler Jacobson",
+  "artist_ids": [
+    "522af130-8db4-4b4b-950c-6e2b246339cf"
+  ],
+  "illustration_id": "00a86aa2-9423-4919-a2d1-dc61dd4b2d3a",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 18640,
+  "prices": {
+    "usd": "33.34",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "14.66",
+    "eur_foil": "24.99",
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAjani%2BResolute",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAjani%2BResolute",
+    "edhrec": "https://edhrec.com/route/?cc=Ajani+Resolute"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F706969%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=905774&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Ajani+Resolute&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
