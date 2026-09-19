@@ -8400,7 +8400,8 @@ _RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE = re.compile(
 #: continues past "to the battlefield." with "It gains ..." never reaches
 #: this fullmatch at all.
 _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
-    r"return (?P<phrase>.*target.+from your graveyard) to the battlefield\.?$", re.IGNORECASE
+    r"return (?P<phrase>.*target.+from your graveyard) to the battlefield(?P<tapped> tapped)?\.?$",
+    re.IGNORECASE,
 )
 #: "Return target `<X>` from your graveyard to the battlefield[ tapped] with
 #: an additional `<n>` `<kind>` counter(s) on it." - Generous Revival's own
@@ -8418,13 +8419,16 @@ _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_WITH_COUNTER_RE = re.compile(
 
 
 def _return_ability_targets_to_battlefield_with_counter(
-    tapped: bool, counter_kind: str, counter_amount: int
+    tapped: bool, counter_kind: str | None = None, counter_amount: int = 0
 ) -> TargetedClause:
-    """`return_ability_targets_to_battlefield`'s own counter-and-tapped rider,
-    built once per match rather than read off a stored regex group at
-    resolution time.
+    """`return_ability_targets_to_battlefield`'s own tapped rider, with an
+    optional counter on top - Generous Revival's own "with an additional
+    `<n>` `<kind>` counter(s) on it" when `counter_kind` is given, and Primal
+    Witchstalker's own bare "to the battlefield tapped" (no counter at all)
+    when it is not. Built once per match rather than read off a stored regex
+    group at resolution time.
     """
-    kind = _counter_kind(counter_kind)
+    kind = _counter_kind(counter_kind) if counter_kind else None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -8432,7 +8436,7 @@ def _return_ability_targets_to_battlefield_with_counter(
             if not isinstance(target, CardState):
                 continue
             permanent = game.put_onto_battlefield(target, controller.username, tapped=tapped)
-            if permanent.zone is Zone.BATTLEFIELD:
+            if kind is not None and permanent.zone is Zone.BATTLEFIELD:
                 game.add_counters(permanent, kind, counter_amount)
 
     return effect
@@ -9686,6 +9690,8 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             match.group("phrase"), count_agnostic=True, battlefield_only=False
         ):
             return None
+        if match.group("tapped"):
+            return _return_ability_targets_to_battlefield_with_counter(True)
         return return_ability_targets_to_battlefield
 
     if match := _RETURN_TARGET_RE.fullmatch(clause):
@@ -12843,6 +12849,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
     if reflexive_mandatory_token is not None:
         return reflexive_mandatory_token
+    reflexive_mandatory_mill = _parse_reflexive_mandatory_mill_clause(effect_text)
+    if reflexive_mandatory_mill is not None:
+        return reflexive_mandatory_mill
     reflexive_self_counter_if = _parse_reflexive_self_counter_if_clause(effect_text)
     if reflexive_self_counter_if is not None:
         return reflexive_self_counter_if
@@ -17597,6 +17606,57 @@ def _parse_reflexive_pay_energy_clause(text: str) -> AbilityEffect | None:
             source_id=ability.source_id,
             source_name=source_name,
             callback=ReflexivePayEnergyConsequence(),
+        )
+
+    return effect
+
+
+#: "Mill `<n>` cards. When you do, `<consequence>`." - CR 603.12's mandatory
+#: ("instruct") action read the same general way `_parse_reflexive_sacrifice_
+#: clause`'s own "you may" version is, with no decision to ask at all: the
+#: mill simply happens, and the reflexive ability is created right after -
+#: Primal Witchstalker's own ETB.
+_REFLEXIVE_MANDATORY_MILL_RE = re.compile(
+    rf"^mill (?P<n>{COUNT}) cards?\.\s*when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_reflexive_mandatory_mill_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_MANDATORY_MILL_RE`'s shape, or `None`.
+
+    CR 603.12: the reflexive ability is created after the mill actually
+    happened, its own consequence read whole and stored as text
+    (`ReflexiveConsequence`, the same general callback `_parse_reflexive_
+    sacrifice_clause` uses) - a card in the pool prints no intervening *if*
+    on this shape, so none is read here, unlike the token/energy versions'
+    own condition-carrying variants.
+    """
+    match = _REFLEXIVE_MANDATORY_MILL_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+    consequence_text = match.group("consequence").strip()
+    consequence_effect = parse_mixed_effect(consequence_text)
+    if consequence_effect is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        milled = _mill(game, controller, count)
+        if not milled:
+            # CR 701.17c: nothing moved (an empty library), so the mill
+            # instruction had nothing to reflect either.
+            return
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=controller.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexiveConsequence(),
         )
 
     return effect
