@@ -4880,6 +4880,49 @@ _DISCARD_A_CARD_RE = re.compile(
     rf"^discards? (?:(?P<any>any number of)|(?:(?P<upto>up to )?(?P<n>{AMOUNT})))\s+cards?$",
     re.IGNORECASE,
 )
+
+#: "Each `<player|opponent>` discards `<n>` card(s)." - Rank Rat's and
+#: Tinybones, Pocket Nuisance's shared ETB ("each opponent"), and Liliana of
+#: the Veil's `+1` naming "each player" instead (CR 102.2: "each opponent" is
+#: every player but this clause's own controller; "each player" is every
+#: player, including them). Each discarding player still makes CR 701.9b's
+#: own choice of which card - `_discard_cards` is called once per member of
+#: the group, not once for the group as a whole, since CR 608.2c gives no
+#: shared choice here the way `_merge_reveal_hand_choose_discard_clauses`'s
+#: single-target "you choose" override does.
+_EACH_GROUP_DISCARDS_RE = re.compile(
+    rf"^each (?P<who>player|opponent) discards? "
+    rf"(?:(?P<any>any number of)|(?:(?P<upto>up to )?(?P<n>{AMOUNT})))\s+cards?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_group_discards_clause(clause: str) -> "ClauseEffect | None":
+    """`_EACH_GROUP_DISCARDS_RE`'s shape, or `None`."""
+    match = _EACH_GROUP_DISCARDS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    who = match.group("who").lower()
+    any_number = match.group("any") is not None
+    exact = match.group("upto") is None
+    amount = None if any_number else parse_count(match.group("n"))
+    if not any_number and amount is None:
+        return None
+
+    def effect(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        group = game.players_in_game if who == "player" else _opponents(game, player.username)
+        for member in group:
+            if any_number:
+                _discard_cards(
+                    game, member, len(member.hand), source, source_id=source_id, exact=False
+                )
+            else:
+                assert amount is not None
+                _discard_cards(game, member, amount, source, source_id=source_id, exact=exact)
+
+    return effect
+
+
 # CR 701.17a: "puts that many cards from the top of their library into their
 # graveyard." The optional "for each `<expr>`" tail is the same reader as
 # `_DRAW_RE`'s own.
@@ -5214,6 +5257,10 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         return lambda game, player, source, source_id: _discard_cards(
             game, player, amount, source, source_id=source_id, exact=exact
         )
+
+    each_group_discards = _parse_each_group_discards_clause(clause)
+    if each_group_discards is not None:
+        return each_group_discards
 
     if match := _MILL_RE.fullmatch(clause):
         amount = parse_count(match.group("n")) if match.group("n") else 1

@@ -13159,7 +13159,17 @@ class Game(EngineModel):
                 f"{permanent.name}'s ability functions in the {ability.zone.value}, "
                 f"but it is in the {permanent.zone.value} ({ability.zone_rule})"
             )
-        if permanent.zone is not Zone.BATTLEFIELD:
+        if ability.zone is None and permanent.zone is not Zone.BATTLEFIELD:
+            # CR 113.6's flat battlefield default only applies when the check
+            # above found no explicit zone rule at all. Before this guard, a
+            # correctly-zoned ability (the branch above having already
+            # confirmed `permanent.zone is ability.zone`, e.g. `Zone.GRAVEYARD`
+            # for a CR 113.6m self-reanimation ability) still fell through to
+            # this flat check and was refused for "not on the battlefield" -
+            # the object it names is in the very zone its own ability reads
+            # from. See `docs/engine-coverage.md`'s FRA S1 note (Campus
+            # Crier) - this is the general fix that gap named but did not
+            # make; the fix belongs here, not in one more keyword.
             return f"{permanent.name} is in {permanent.zone.value}, not on the battlefield"
         if self.controller_of(permanent).username != controller:
             return f"{controller} does not control {permanent.name}"
