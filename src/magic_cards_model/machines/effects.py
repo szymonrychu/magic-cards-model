@@ -3626,7 +3626,7 @@ _SEARCH_AND_PUT_RE = re.compile(
     # plural.
     r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
     r", put (?:it|them|that card|those cards) "
-    r"(?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
+    r"(?P<dest>into your hand|into your graveyard|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?",
     re.IGNORECASE,
 )
@@ -4143,7 +4143,13 @@ def _search_and_place_for(
         return None
     matches, description = described
     tapped = bool(match.group("tapped"))
-    to_hand = match.group("dest").startswith("into your hand")
+    dest_text = match.group("dest")
+    if dest_text.startswith("into your hand"):
+        destination = Zone.HAND
+    elif dest_text.startswith("into your graveyard"):
+        destination = Zone.GRAVEYARD
+    else:
+        destination = Zone.BATTLEFIELD
     reveal = bool(match.groupdict().get("reveal"))
 
     def run(game: "Game", player: Player, source: str, source_id: str | None) -> None:
@@ -4157,7 +4163,7 @@ def _search_and_place_for(
         game.search_and_put(
             player,
             matches,
-            destination=Zone.HAND if to_hand else Zone.BATTLEFIELD,
+            destination=destination,
             count=count_reader(game, player.username),
             reveal=reveal,
             tapped=tapped,
@@ -4267,6 +4273,95 @@ def _parse_search_reveal_shuffle_top_clause(
         for state in found:
             game.reveal(state, source=source)
         game.put_cards_into_library(found, to_bottom=False)
+
+    return effect
+
+
+#: "Search your library for up to `<n>` `<quality>` cards with different
+#: names, reveal them, put them into your hand, then shuffle." - Fblthp,
+#: Knows the Way's own ETB. CR 701.23a's "find a card that matches the given
+#: description" still names one card at a time, but "with different names"
+#: narrows the *candidate pool itself*, one pick at a time, to exclude any
+#: name already chosen this search - offering two Forests as simultaneous
+#: choices in one CR 701.23a decision would let both be "found" at once and
+#: break the printed restriction the instant they are both legal answers to
+#: the same question.
+_SEARCH_DISTINCT_NAMES_RE = re.compile(
+    r"(?P<subject>you may )?"
+    r"search (?:your|their) library for "
+    rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<that_many>that many)) "
+    r"(?:(?P<quality>.+?) )?cards?"
+    r"(?P<basic_land_type> with a basic land type)?"
+    r"(?: with mana value (?P<max_mv>\d+) or less)?"
+    r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?"
+    r" with different names"
+    r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
+    r", put (?:it|them|that card|those cards) "
+    r"(?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
+    r"(?:, then shuffle)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_search_distinct_names_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SEARCH_DISTINCT_NAMES_RE`'s shape, or `None`."""
+    match = _SEARCH_DISTINCT_NAMES_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    described = _search_descriptions(match)
+    if described is None:
+        return None
+    count_reader = _read_search_count(match)
+    if count_reader is None:
+        return None
+    base_matches, description = described
+    dest_text = match.group("dest")
+    to_hand = dest_text.startswith("into your hand")
+    tapped = bool(match.group("tapped"))
+    reveal = bool(match.groupdict().get("reveal"))
+    optional = bool((match.group("subject") or "").strip())
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        count = count_reader(game, player.username)
+        if optional and not game.may(
+            player,
+            f"search your library for up to {count} {description} with different names",
+            source=source,
+            source_id=source_id,
+        ):
+            return
+        found: list[CardState] = []
+        seen_names: set[str] = set()
+        for _ in range(max(count, 0)):
+
+            def not_yet_found(state: CardState) -> bool:
+                return base_matches(state) and (state.name or "") not in seen_names
+
+            picked = game.search_library(
+                player,
+                not_yet_found,
+                count=1,
+                optional=True,
+                shuffle=False,
+                source=source,
+                source_id=source_id,
+            )
+            if not picked:
+                break
+            found.extend(picked)
+            seen_names.add(picked[0].name or "")
+        if reveal:
+            for state in found:
+                game.reveal(state, source=source)
+        for state in found:
+            if to_hand:
+                player.add(state, Zone.HAND)
+            else:
+                game.put_onto_battlefield(state, player.username, tapped=tapped)
+        game.shuffle_library(player)
 
     return effect
 
@@ -4954,6 +5049,40 @@ _DISCARD_A_CARD_RE = re.compile(
 #: RE`'s "any number of" arm, which still lets the player keep some.
 _DISCARD_YOUR_HAND_RE = re.compile(r"^discards? (?:your|their) hand\.?$", re.IGNORECASE)
 
+#: "Each player may discard their hand and draw `<n>` cards." - Arc of
+#: Fortune's own whole effect. CR 608.2d's "you may" is each player's own,
+#: individual choice - a bundle of two instructions taken together or not at
+#: all, not two separately-optional halves - so each player is asked once,
+#: not twice, and the draw never runs for a player who declined the discard.
+_EACH_PLAYER_MAY_DISCARD_HAND_AND_DRAW_RE = re.compile(
+    rf"^each player may discard (?:their|your) hand and draw (?P<n>{COUNT}) cards?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_player_may_discard_hand_and_draw_clause(clause: str) -> "ClauseEffect | None":
+    """`_EACH_PLAYER_MAY_DISCARD_HAND_AND_DRAW_RE`'s shape, or `None`."""
+    match = _EACH_PLAYER_MAY_DISCARD_HAND_AND_DRAW_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    draw_count = parse_count(match.group("n"))
+    if draw_count is None:
+        return None
+
+    def effect(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        for member in game.players_in_game:
+            if game.may(
+                member,
+                f"discard your hand and draw {draw_count} card{'s' if draw_count != 1 else ''}",
+                source=source,
+                source_id=source_id,
+            ):
+                _discard_cards(game, member, len(member.hand), source, source_id=source_id)
+                game.draw_cards(member.username, draw_count)
+
+    return effect
+
+
 #: "Each `<player|opponent>` discards `<n>` card(s)." - Rank Rat's and
 #: Tinybones, Pocket Nuisance's shared ETB ("each opponent"), and Liliana of
 #: the Veil's `+1` naming "each player" instead (CR 102.2: "each opponent" is
@@ -5335,6 +5464,12 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         return lambda game, player, source, source_id: _discard_cards(
             game, player, len(player.hand), source, source_id=source_id, exact=True
         )
+
+    each_player_may_discard_hand_and_draw = _parse_each_player_may_discard_hand_and_draw_clause(
+        clause
+    )
+    if each_player_may_discard_hand_and_draw is not None:
+        return each_player_may_discard_hand_and_draw
 
     each_group_discards = _parse_each_group_discards_clause(clause)
     if each_group_discards is not None:
@@ -10064,7 +10199,7 @@ _REFERENT_SEARCH_RE = re.compile(
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
     r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
     r", put (?:it|them|that card|those cards) "
-    r"(?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
+    r"(?P<dest>into your hand|into your graveyard|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?$",
     re.IGNORECASE,
 )
@@ -21125,6 +21260,44 @@ def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> Target
     return effect
 
 
+#: "Target player draws `<n>` cards and loses `<m>` life." - Ancestral
+#: Craving's and Blood Pact's own whole shape: one compound predicate, one
+#: subject, not two independent instructions. `_CLAUSE_SEPARATOR`'s bare
+#: "and" splits this into "target player draws N cards" and a subject-less
+#: "loses M life" that `_parse_optional_player_clause`'s own fallback then
+#: applies to the resolving spell's *controller* rather than the target it
+#: was actually about (the caster, not the target, lost the life) - read
+#: whole, ahead of that split, for the identical reason `_parse_mixed_
+#: clauses`'s other whole-text entries are.
+_TARGET_PLAYER_DRAWS_AND_LOSES_LIFE_RE = re.compile(
+    rf"^target player draws (?P<draw_n>{COUNT}) cards? and loses (?P<life>{COUNT}) life\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_draws_and_loses_life_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_DRAWS_AND_LOSES_LIFE_RE`'s shape, or `None`."""
+    match = _TARGET_PLAYER_DRAWS_AND_LOSES_LIFE_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    draw_count = parse_count(match.group("draw_n"))
+    life_loss = parse_count(match.group("life"))
+    if draw_count is None or life_loss is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player):
+                game.draw_cards(target.username, draw_count)
+                target.lose_life(life_loss)
+
+    return effect
+
+
 #: "Then exile that player's graveyard" - Go Blank's own second clause,
 #: anaphoric to the same target its first clause (`_TARGET_PLAYER_DISCARDS_RE`)
 #: already discarded into that graveyard. Reuses `exile_target_players_
@@ -22729,6 +22902,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     search_reveal_shuffle_top = _parse_search_reveal_shuffle_top_clause(clause, for_spell=for_spell)
     if search_reveal_shuffle_top is not None:
         return search_reveal_shuffle_top
+    search_distinct_names = _parse_search_distinct_names_clause(clause, for_spell=for_spell)
+    if search_distinct_names is not None:
+        return search_distinct_names
     put_land_from_hand = _parse_put_land_from_hand_clause(clause, for_spell=for_spell)
     if put_land_from_hand is not None:
         return put_land_from_hand
@@ -22955,6 +23131,30 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # that card on top" as two fragments neither of which is a clause
         # `_parse_mixed_clause` can read alone.
         return [search_reveal_shuffle_top]
+    target_player_draws_and_loses_life = _parse_target_player_draws_and_loses_life_clause(
+        text, for_spell=for_spell
+    )
+    if target_player_draws_and_loses_life is not None:
+        # Read whole for the same bare-"and" reason: "draws N cards and
+        # loses N life" splits into a targeted clause and a subject-less
+        # "loses N life" fragment that would otherwise land on the wrong
+        # player.
+        return [target_player_draws_and_loses_life]
+    each_player_may_discard_hand_and_draw = _parse_each_player_may_discard_hand_and_draw_clause(
+        " ".join(text.strip().split())
+    )
+    if each_player_may_discard_hand_and_draw is not None:
+        # Read whole for the identical bare-"and" reason: "discard their
+        # hand and draw seven cards" splits into two clause fragments,
+        # neither of which `_parse_mixed_clause` can read alone.
+        player_clause = each_player_may_discard_hand_and_draw
+
+        def whole_text_effect(game: "Game", stack_object: "StackObject") -> None:
+            player = game.controller_of(stack_object)
+            source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+            player_clause(game, player, source, source_id_of(stack_object))
+
+        return [whole_text_effect]
     if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(" ".join(text.strip().split())):
         # Read whole for the same reason the two above are: Echoing Courage's
         # subject, "Target creature and all other creatures with the same name
@@ -23785,7 +23985,11 @@ ACTIVATED_EFFECTS: dict[tuple[str, int], AbilityEffect] = {
 
 
 def trigger_effect_for(
-    card_name: str, event: TriggerEvent | None, effect_text: str | None = None
+    card_name: str,
+    event: TriggerEvent | None,
+    effect_text: str | None = None,
+    *,
+    x_value: int | None = None,
 ) -> AbilityEffect | None:
     """The effect of a card's trigger on `event`, or None if it is not scripted.
 
@@ -23821,6 +24025,17 @@ def trigger_effect_for(
     table row, but does not fire yet in a real game - its condition never
     reaches this function at all, because `_trigger_event` does not recognise
     it (see `docs/engine-coverage.md`).
+
+    `x_value` is CR 107.3a's X, carried onto the permanent this trigger fires
+    off of by `Game.cast_record` (CR 400.7d's "an ability of a permanent can
+    reference information about the spell that became that permanent") -
+    Fblthp, Knows the Way's own "search your library for up to X basic land
+    cards" is unreadable with a literal "X" left in it, the identical gap
+    `activated_effect_for`'s own `x_value` already closes for an activated
+    ability's announced X. Substituted text is tried first, the same order
+    and for the same reason `activated_effect_for` tries it first: an
+    unsubstituted parse that happens to accept a bare "X" (CR 107.3f's own
+    self-defined kind) would otherwise win with no real value behind it.
     """
     front = card_name.split("//")[0].strip()
     entries = [
@@ -23831,6 +24046,10 @@ def trigger_effect_for(
     if not entries:
         if effect_text is None:
             return None
+        if x_value is not None:
+            substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))
+            if substituted is not None:
+                return substituted
         raw = _ability_effect_or_notice(effect_text)
         if raw is not None:
             # The literal printed name is what some parsers are *reading

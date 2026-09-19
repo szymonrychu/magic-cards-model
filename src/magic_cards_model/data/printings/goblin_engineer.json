@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "a55c4d47-5252-40af-961d-c08bc688028a",
+  "oracle_id": "c1d6cce8-085f-42cb-8b0c-b6fbbf88b16a",
+  "multiverse_ids": [
+    464077
+  ],
+  "mtgo_id": 72628,
+  "tcgplayer_id": 190867,
+  "cardmarket_id": 374571,
+  "name": "Goblin Engineer",
+  "lang": "en",
+  "released_at": "2019-06-14",
+  "uri": "https://api.scryfall.com/cards/a55c4d47-5252-40af-961d-c08bc688028a",
+  "scryfall_uri": "https://scryfall.com/card/mh1/128/goblin-engineer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:58:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.jpg?1783933112",
+    "normal": "https://cards.scryfall.io/normal/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.jpg?1783933112",
+    "large": "https://cards.scryfall.io/large/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.jpg?1783933112",
+    "png": "https://cards.scryfall.io/png/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.png?1783933112",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.jpg?1783933112",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.jpg?1783933112",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.webp?1783933112",
+    "grid": "https://cards.scryfall.io/grid/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.webp?1783933112",
+    "display": "https://cards.scryfall.io/display/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.webp?1783933112",
+    "art": "https://cards.scryfall.io/art/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.webp?1783933112",
+    "crop": "https://cards.scryfall.io/crop/front/a/5/a55c4d47-5252-40af-961d-c08bc688028a.webp?1783933112"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Goblin Artificer",
+  "oracle_text": "When this creature enters, you may search your library for an artifact card, put it into your graveyard, then shuffle.\n{R}, {T}, Sacrifice an artifact: Return target artifact card with mana value 3 or less from your graveyard to the battlefield.",
+  "power": "1",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7efccd6-55bc-4fb8-9138-e72577510a99",
+  "set": "mh1",
+  "set_name": "Modern Horizons",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/d7efccd6-55bc-4fb8-9138-e72577510a99",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh1&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh1?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a55c4d47-5252-40af-961d-c08bc688028a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac1d6cce8-085f-42cb-8b0c-b6fbbf88b16a&unique=prints",
+  "collector_number": "128",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jehan Choo",
+  "artist_ids": [
+    "515df9fe-9c29-4e75-9e49-6ce5be4ec8c8"
+  ],
+  "illustration_id": "62987f6a-94a6-4e6f-a5e1-8053ef60d61e",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1184,
+  "penny_rank": 662,
+  "preview": {
+    "source": "Kanister",
+    "source_uri": "https://www.twitch.tv/videos/428192992",
+    "previewed_at": "2019-05-22"
+  },
+  "prices": {
+    "usd": "9.78",
+    "usd_foil": "11.56",
+    "usd_etched": null,
+    "eur": "9.15",
+    "eur_foil": "11.60",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=464077&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGoblin%2BEngineer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGoblin%2BEngineer",
+    "edhrec": "https://edhrec.com/route/?cc=Goblin+Engineer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F190867%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=374571&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/72628?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

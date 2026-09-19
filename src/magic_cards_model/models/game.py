@@ -5196,8 +5196,26 @@ class Game(EngineModel):
             # `TriggerEvent | None` and keys such a row on the condition text,
             # so gating on the event here was refusing to look the effect up
             # at all.
+            # CR 107.3a's X, carried from the source permanent's own cast
+            # record (CR 400.7d) rather than `ability.x_value` - a triggered
+            # ability is never itself announced with an X the way an
+            # activated ability's cost is; only the permanent it fires off
+            # of was. Read only when that permanent's mana cost actually
+            # carries `{X}`, the same "only if {X} is in the cost" gate the
+            # activated-ability branch below already applies, so an ordinary
+            # bare "X" in a trigger's own rules text (CR 107.3f, not this
+            # one) is left untouched.
+            trigger_source = ability.source(self)
+            trigger_x_value = (
+                self.cast_record(trigger_source).x_value
+                if trigger_source is not None and "{X}" in (trigger_source.mana_cost or "")
+                else None
+            )
             return trigger_effect_for(
-                ability.source_name, ability.ability.event, ability.ability.effect
+                ability.source_name,
+                ability.ability.event,
+                ability.ability.effect,
+                x_value=trigger_x_value,
             )
         if isinstance(ability.ability, ActivatedAbility):
             if ability.ability.class_level_target is not None:
@@ -8188,10 +8206,10 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             if isinstance(player, str):
                 player = self.player(player)
-            if destination not in (Zone.HAND, Zone.BATTLEFIELD):
+            if destination not in (Zone.HAND, Zone.BATTLEFIELD, Zone.GRAVEYARD):
                 raise ValueError(
-                    "a search puts its finds into a hand or onto the battlefield, "
-                    f"not {destination.value}"
+                    "a search puts its finds into a hand, onto the battlefield, or "
+                    f"into a graveyard, not {destination.value}"
                 )
             found = self.search_library(
                 player,
@@ -8208,6 +8226,15 @@ class Game(EngineModel):
             for state in found:
                 if destination is Zone.HAND:
                     player.add(state, Zone.HAND)
+                elif destination is Zone.GRAVEYARD:
+                    # CR 400.6/614.1a: this is an ordinary "put into a
+                    # graveyard" - Enroot's own "search your library for a
+                    # land card, put it into your graveyard" - and every
+                    # replacement effect watching for one (Rest in Peace,
+                    # Leyline of the Void) applies to it exactly as it would
+                    # to any other, so this goes through the one shared
+                    # mover rather than a bespoke zone assignment.
+                    self.put_into_graveyard(state)
                 else:
                     self.put_onto_battlefield(state, player.username, tapped=tapped)
             self.shuffle_library(player)

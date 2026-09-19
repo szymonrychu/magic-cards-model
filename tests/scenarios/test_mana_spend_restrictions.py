@@ -496,6 +496,21 @@ KNOWN_UNREAD_RESTRICTIONS = {
     # published as `False` rather than filtered away, so making the grammar
     # read it means finding that test another card, not deleting the row.
     "Rosheen Meanderer": "Spend this mana only on costs that contain {X}.",
+    # `_spend_clause`'s own word-by-word vocabulary (an article, a list
+    # joiner, "colorless", a printed supertype, a printed card type, or a
+    # capitalised subtype) has no "non<type>" branch at all - unlike
+    # `machines/effects.py`'s own search/reveal quality reader
+    # (`_nonland_or_typed_card_matcher`, FRA stream S8's own fix), a mana
+    # spend restriction's `SpendClause` has no `excluded_types` field to put
+    # a negated type into even once the word itself is read, so making this
+    # readable is a schema change to `SpendClause` plus the matching this
+    # engine's `auto_tap`/`ManaRestriction` machinery already does with it -
+    # out of scope for a zone-movement-template stream (FRA S8) to make on a
+    # mana-cost restriction, which is stream S10's own territory. Added by
+    # S8 alongside its own new "Chandra, Chill of Compliance" fixture (a
+    # genuinely different card, discovered by this pool sweep rather than
+    # engineered around it).
+    "Chandra, Chill of Compliance": "Spend this mana only to cast a noncreature spell.",
 }
 
 
