@@ -6827,6 +6827,104 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Put `<n>`/a number of `<kind>` counters[ equal to `<expr>`] on each
+#: [other ]creature you control named `<Name>`." - Gruff Triplets' own dies
+#: trigger: "put a number of +1/+1 counters equal to its power on each
+#: creature you control named Gruff Triplets." CR 201.5's own name-based
+#: reference (CR 205.3's subtype grouping is `_COUNTER_EACH_GROUP_RE`'s own
+#: job above; this is a *name*, not a type or subtype) - a real, multi-card
+#: MTG template, not invented for this one card: off-set Baloth Packhunter's
+#: own "When this creature enters, put two +1/+1 counters on each other
+#: creature you control named Baloth Packhunter." prints the identical
+#: "each [other ]creature you control named `<Name>`" selector with a fixed
+#: literal count instead of an "equal to" expression, and an "other" (its
+#: own trigger fires while it is still alive and on the battlefield, unlike
+#: Gruff Triplets' dies trigger, where the dead source is never part of the
+#: scan to begin with).
+_COUNTERS_ON_NAMED_GROUP_RE = re.compile(
+    rf"^(?i:put )(?P<n>{COUNT}|a number of)(?i: )(?P<kind>\+1/\+1|-1/-1|[a-z]+)(?i: counters?)"
+    r"(?:(?i: equal to )(?P<expression>.+?))?"
+    r"(?i: on each )(?P<other>(?i:other ))?"
+    r"(?i:creatures? you control named )"
+    r"(?P<name>[A-Z][A-Za-z']*(?:\s[A-Z][A-Za-z']*)*)\.?$"
+)
+
+
+def _parse_counters_on_named_group_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTERS_ON_NAMED_GROUP_RE`'s shape, or `None`.
+
+    "Its power" is Gruff Triplets' own magnitude: CR 700.7's "this creature"
+    read on a *dies* trigger, so "its" means the ability's own source as it
+    last existed (CR 603.10a's look-back) - `event_subject_power` reads
+    that off `AbilityOnStack.event`, the same helper Drizzt Do'Urden's own
+    "the difference" uses, because a departed source is not part of any
+    battlefield the layer system (`Game.power_of`) computes over. Any other
+    "equal to" expression goes through the shared `amount_expression`,
+    evaluated against the ability's own source - one neither reads fails
+    closed with an `UnreadableCounterAmountNotice` rather than placing a
+    guessed number (CR 611.2c). A bare literal count (Baloth Packhunter's
+    "two") needs neither: `parse_count` already reads `numbers.COUNT`'s own
+    "a"/"an" as one, so "a number of" is the only count word this pattern's
+    `n` group does not hand straight to it.
+
+    The name match is exact and case-sensitive against `CardState.name` -
+    CR 707.2 already makes a token copy's name the same as the original's,
+    so Gruff Triplets' own token copies (`_parse_self_copy_token_clause`)
+    are "creatures you control named Gruff Triplets" too, with no special
+    case needed for the fact that they are tokens.
+    """
+    match = _COUNTERS_ON_NAMED_GROUP_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    n_text = match.group("n").lower()
+    expression = match.group("expression")
+    is_its_power = expression is not None and expression.strip().lower() == "its power"
+    fixed_amount = None if n_text == "a number of" else parse_count(n_text)
+    reader = (
+        None
+        if fixed_amount is not None or is_its_power
+        else amount_expression((expression or "").strip())
+    )
+    excludes_source = match.group("other") is not None
+    name = match.group("name").strip()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if fixed_amount is not None:
+            amount = fixed_amount
+        elif is_its_power:
+            dying = event_subject_power(game, ability.event)
+            amount = max(dying, 0) if dying is not None else 0
+        elif reader is None:
+            game.unreadable_counter_amount_notices.append(
+                UnreadableCounterAmountNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=text.strip(),
+                    expression=(expression or "").strip(),
+                )
+            )
+            return
+        else:
+            amount = max(reader(game, ability.controller, source, ability.x_value), 0)
+        if amount <= 0:
+            return
+        controller = ability.controller
+        board = game.computed_board()
+        for permanent in game.battlefield:
+            if excludes_source and source is not None and permanent.id == source.id:
+                continue
+            chars = board.of(permanent)
+            if chars.controller != controller or not chars.is_creature:
+                continue
+            if permanent.name != name:
+                continue
+            game.add_counters(permanent, kind, amount)
+
+    return effect
+
+
 def _counter_kind(word: str) -> Counter | str:
     """Normalise a printed counter-kind word into what `add_counters`/
     `remove_counters` key on - the two CR 122.1a power/toughness spellings as
@@ -12560,6 +12658,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     put_counters_on_group = _parse_put_counters_on_group_clause(effect_text)
     if put_counters_on_group is not None:
         return put_counters_on_group
+    counters_on_named_group = _parse_counters_on_named_group_clause(effect_text)
+    if counters_on_named_group is not None:
+        return counters_on_named_group
     counter_then_if_count = _parse_put_counter_on_self_then_if_count_clause(effect_text)
     if counter_then_if_count is not None:
         return counter_then_if_count
@@ -23592,6 +23693,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counters_on_group = _parse_put_counters_on_group_clause(clause)
         if counters_on_group is not None:
             return counters_on_group  # type: ignore[return-value]
+        counters_on_named_group = _parse_counters_on_named_group_clause(clause)
+        if counters_on_named_group is not None:
+            return counters_on_named_group  # type: ignore[return-value]
         counters_equal_to = _parse_put_counters_equal_to_clause(clause)
         if counters_equal_to is not None:
             return counters_equal_to  # type: ignore[return-value]
