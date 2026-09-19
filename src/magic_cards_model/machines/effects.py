@@ -831,6 +831,14 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
 #: zone with no type restriction to read ("the hand is where a player holds
 #: cards that have been drawn"), so every card in it counts, whatever it is.
 _COUNT_CARDS_IN_YOUR_HAND_RE = re.compile(r"^(?:the )?number of cards in your hand$", re.IGNORECASE)
+#: "the number of cards in your graveyard" - Yuriko, Hope from the Shadows's
+#: own X. The unfiltered twin of `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`: CR
+#: 500.2's graveyard has no type restriction of its own either, so every
+#: card in it counts, whatever it is - the identical reasoning
+#: `_COUNT_CARDS_IN_YOUR_HAND_RE` already applies to CR 402.1's hand.
+_COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE = re.compile(
+    r"^(?:the )?number of cards in your graveyard$", re.IGNORECASE
+)
 #: "the greatest power among creatures you control" - Tyvar, the Pummeler's
 #: own X. Not a count of anything: an extremum over a characteristic, which
 #: is why it needs its own reader rather than a wider qualifier on the two
@@ -960,6 +968,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return len(game.player(controller).hand)
 
         return count_in_hand
+
+    if _COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE.fullmatch(stripped):
+
+        def count_in_graveyard_unfiltered(game: "Game", controller: str) -> int:
+            return len(game.player(controller).graveyard)
+
+        return count_in_graveyard_unfiltered
 
     if match := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
@@ -1646,13 +1661,18 @@ _WHERE_X_IS_INLINE_RE = re.compile(r",\s*where x is (?P<expr>[^.]+)", re.IGNOREC
 #: is known. Substituted once, at resolution: CR 608.2h, "the answer is
 #: determined only once, when the effect is applied", and CR 611.2c fixes the
 #: set of objects the resulting continuous effect applies to at the same
-#: moment.
-_X_OVER_X_RE = re.compile(r"\bx/x\b", re.IGNORECASE)
+#: moment. Every standalone "X" in the sentence is the same variable (CR
+#: 107.3f), so a plain "-X/-0" (Yuriko, Hope from the Shadows) substitutes
+#: the identical way the symmetric "X/X" (Jolrael, Voice of Zhalfir) does -
+#: `_X_TOKEN_RE` is not anchored to the "X/X" shape at all.
+_X_TOKEN_RE = re.compile(r"(?<![\w])X(?![\w])")
 
 
 def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | None:
     """A continuous-effect sentence whose power and toughness are an X the
-    ability defines in its own words - Jolrael, Voice of Zhalfir's animation.
+    ability defines in its own words - Jolrael, Voice of Zhalfir's symmetric
+    "X/X" animation, and Yuriko, Hope from the Shadows's asymmetric "-X/-0"
+    pump.
 
     The mass-pump path (`_parse_mass_pump_clause`) has read a trailing "where
     X is ..." since it was written, but only for the "creatures you control
@@ -1675,9 +1695,9 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
     if magnitude_expr is None:
         return None
     template = (text[: match.start()] + text[match.end() :]).strip()
-    if not _X_OVER_X_RE.search(template):
+    if not _X_TOKEN_RE.search(template):
         return None
-    if parsed_layer_effects(_X_OVER_X_RE.sub("1/1", template)) is None:
+    if parsed_layer_effects(_X_TOKEN_RE.sub("1", template)) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -1685,7 +1705,7 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
         magnitude = magnitude_expr(game, ability.controller)
-        literal = _X_OVER_X_RE.sub(f"{magnitude}/{magnitude}", template)
+        literal = _X_TOKEN_RE.sub(str(magnitude), template)
         builder = parsed_layer_effects(literal)
         if builder is None:
             continuous_effects(game).layer_notices.append(
@@ -5168,7 +5188,15 @@ def _parse_optional_player_clause(clause: str) -> ClauseEffect | None:
         if inner is None:
             return None
         return _optional_clause(inner, inner_text)
-    return parse_clause_effect(clause) or _parse_comma_chained_player_clause(clause)
+    # "You draw a card and gain 2 life." (Surgical Precision, Vigorbloom
+    # Charm) - `split_effect_clauses`'s own bare-"and" cut leaves the second
+    # clause's subject implicit ("gain 2 life", not "you gain 2 life"), the
+    # identical trap the "you may" branch above already retries around.
+    return (
+        parse_clause_effect(clause)
+        or parse_clause_effect(f"you {clause}")
+        or _parse_comma_chained_player_clause(clause)
+    )
 
 
 def _parse_comma_chained_player_clause(clause: str) -> ClauseEffect | None:
@@ -7605,6 +7633,17 @@ _COUNTER_UNLESS_PAYS_RE = re.compile(
     r"unless its controller pays \{(?P<n>\d+)\}\.?$",
     re.IGNORECASE,
 )
+#: "Counter target creature or legendary spell unless its controller pays
+#: {3}." (Icy Reception) - a compound target whose printed noun is not
+#: literally "spell" (`_COUNTER_UNLESS_PAYS_RE`'s own shape), read through
+#: `_targets_understood` - `machines/targeting.py` already reads "or
+#: legendary spell"/"or `<type>` spell" as CR 601.2c's own compound
+#: restriction (`TargetRequirement.or_any_spell`) - rather than a second,
+#: narrower qualifier grammar hand-fitted to this one card's wording.
+_COUNTER_UNLESS_PAYS_PHRASE_RE = re.compile(
+    r"^counter (?P<phrase>target .+?) unless its controller pays \{(?P<n>\d+)\}\.?$",
+    re.IGNORECASE,
+)
 #: "Counter target triggered ability or colorless spell." (Consign to
 #: Memory) and the like - a compound target rather than a single qualified
 #: noun, so `_COUNTER_TARGET_SPELL_RE` does not reach it. `counter_targets`
@@ -8744,6 +8783,13 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     if match := _COUNTER_UNLESS_PAYS_RE.fullmatch(clause):
         return _counter_unless_pays_effect(int(match.group("n"))) if for_spell else None
 
+    if (
+        for_spell
+        and (phrase_match := _COUNTER_UNLESS_PAYS_PHRASE_RE.fullmatch(clause))
+        and _targets_understood(phrase_match.group("phrase"))
+    ):
+        return _counter_unless_pays_effect(int(phrase_match.group("n")))
+
     counter_if_mana_value = _parse_counter_if_mana_value_clause(clause, for_spell=for_spell)
     if counter_if_mana_value is not None:
         return counter_if_mana_value
@@ -9607,6 +9653,8 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                 clause = parse_mixed_effect(mode_text)
                 if clause is None:
                     clause = _compose_layer_effect_with_remainder_for_ability_mode(mode_text)
+                if clause is None:
+                    clause = _parse_where_x_is_continuous_effect(mode_text)
                 if clause is None:
                     game.mode_notices.append(
                         ModeNotice(
@@ -12806,6 +12854,20 @@ _DAMAGE_EACH_OPPONENT_AND_THEIRS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "<type list> you control" / "<type list> your opponents control" -
+#: Fulminous Forte's own "each creature and planeswalker your opponents
+#: control": the same bare CR 205.2a type list `_parse_mass_type_qualifier`
+#: already reads, with a controller restriction appended. Read as its own
+#: whole-clause shape rather than folded into `_parse_damage_group_filter`'s
+#: predicate, since a controller check needs the resolving object's own
+#: controller (CR 102.2's "you"/"opponent"), which that predicate's
+#: `(game, permanent)` signature has no way to reach.
+_DAMAGE_GROUP_TYPES_AND_CONTROLLER_RE = re.compile(
+    r"^(?P<types>[a-z]+(?:(?:,\s*| and | or )[a-z]+)*) "
+    r"(?P<whose>you control|your opponents control)$",
+    re.IGNORECASE,
+)
+
 #: "<type> with <keyword>" / "<type> without <keyword>" - CR 702's keyword
 #: abilities as a filter on an otherwise plain type group.
 _DAMAGE_GROUP_KEYWORD_RE = re.compile(
@@ -12930,6 +12992,38 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
 
         return opponents_effect
 
+    controller_match = _DAMAGE_GROUP_TYPES_AND_CONTROLLER_RE.fullmatch(phrase)
+    if controller_match is not None:
+        types = set()
+        for word in re.split(r",\s*|\s+and\s+|\s+or\s+", controller_match.group("types")):
+            card_type = _singular_card_type(word.strip())
+            if card_type is None:
+                return None
+            types.add(card_type)
+        opponents_only = controller_match.group("whose").lower() == "your opponents control"
+
+        def controller_scoped_effect(game: "Game", stack_object: "StackObject") -> None:
+            source = (
+                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+            )
+            controller = game.controller_of(stack_object).username
+            names = (
+                {opponent.username for opponent in _opponents(game, controller)}
+                if opponents_only
+                else {controller}
+            )
+            board = game.computed_board()
+            recipients = [
+                permanent
+                for permanent in list(game.battlefield)
+                if permanent.controller in names and types & set(board.of(permanent).types)
+            ]
+            for permanent in recipients:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.deal_damage(permanent, amount, source=source)
+
+        return controller_scoped_effect
+
     predicate = _parse_damage_group_filter(phrase)
     if predicate is None:
         return None
@@ -12968,10 +13062,18 @@ def _merge_damage_each_filtered_clauses(
     head = clauses[index].strip()
     if _DAMAGE_EACH_FILTERED_RE.fullmatch(head) is None:
         return None  # this clause is not a damage sentence; nothing to extend
-    if _parse_damage_each_filtered_clause(head) is not None:
-        return None  # the single-clause path already reads this one whole
-    best: tuple[int, TargetedClause] | None = None
     combined = head.rstrip(".")
+    best: tuple[int, TargetedClause] | None = None
+    head_effect = _parse_damage_each_filtered_clause(combined)
+    if head_effect is not None:
+        # The head alone already reads - as *some* effect, not necessarily
+        # the right one. Fulminous Forte's own "deals 1 damage to each
+        # creature" reads fine standing alone (an unfiltered type group),
+        # but the fragment after it ("planeswalker your opponents control")
+        # narrows what the sentence actually said - kept as a fallback, not
+        # returned immediately, so the loop below still gets to look for a
+        # longer, more specific reading before settling for this one.
+        best = (1, head_effect)
     for consumed in range(1, len(clauses) - index):
         fragment = clauses[index + consumed].strip().rstrip(".")
         # Only a *fragment* of the same sentence may be reattached. A clause
@@ -14509,6 +14611,44 @@ def _parse_object_anaphor_clause_pair(
             # own source, which is the bug Karn, the Great Creator's +1 had.
             return
         rider(game, referents, stack_object)
+
+    return effect
+
+
+def _parse_token_then_object_anaphor_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Create `<token(s)>`. It/They `<rider>`." - Stingerquill Charm's own
+    "Create a 2/2 colorless Wizard Soldier creature token named Cadet. It
+    gains haste until end of turn."
+
+    `_parse_object_anaphor_clause_pair`'s own `_referent_reader` cannot serve
+    this antecedent: it reads the referent *before* the antecedent runs
+    (that function's own docstring explains why, CR 608.2h), and a token
+    this clause is about to create does not exist yet to read. This instead
+    runs the token-creation clause first and keeps exactly what it put onto
+    the battlefield (CR 701.7a) - a before/after id diff on `game.
+    battlefield` rather than re-deriving "the token(s) just created" from any
+    printed description, so it works for every token shape `_parse_token_
+    clause` already reads (a full characteristics list, a predefined token,
+    a copy) with no new vocabulary of its own.
+    """
+    if not _OBJECT_ANAPHOR_RE.search(second):
+        return None
+    token_clause = _parse_token_clause(first, for_spell=for_spell)
+    if token_clause is None:
+        return None
+    rider = _parse_referent_object_clause(second)
+    if rider is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        before_ids = {existing.id for existing in game.battlefield}
+        token_clause(game, stack_object)
+        created = [state for state in game.battlefield if state.id not in before_ids]
+        if not created:
+            return
+        rider(game, created, stack_object)
 
     return effect
 
@@ -22069,6 +22209,8 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # the compound-antecedent shape the finer split could never recover.
         anaphor_pair = _parse_object_anaphor_clause_pair(
             sentences[0], sentences[1], for_spell=for_spell
+        ) or _parse_token_then_object_anaphor_clause_pair(
+            sentences[0], sentences[1], for_spell=for_spell
         )
         if anaphor_pair is not None:
             return [anaphor_pair]
@@ -22260,6 +22402,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_object_anaphor_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_token_then_object_anaphor_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

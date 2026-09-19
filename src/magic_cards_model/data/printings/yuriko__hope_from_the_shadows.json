@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "45e81487-8b8c-480b-922a-eaa9edc7201d",
+  "oracle_id": "983f4fde-ab04-44f0-a294-c3b472de0b19",
+  "multiverse_ids": [],
+  "tcgplayer_id": 716659,
+  "cardmarket_id": 908831,
+  "name": "Yuriko, Hope from the Shadows",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/45e81487-8b8c-480b-922a-eaa9edc7201d",
+  "scryfall_uri": "https://scryfall.com/card/fra/226/yuriko-hope-from-the-shadows?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-11T11:55:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.jpg?1789127717",
+    "normal": "https://cards.scryfall.io/normal/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.jpg?1789127717",
+    "large": "https://cards.scryfall.io/large/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.jpg?1789127717",
+    "png": "https://cards.scryfall.io/png/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.png?1789127717",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.jpg?1789127717",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.jpg?1789127717",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.webp?1789127717",
+    "grid": "https://cards.scryfall.io/grid/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.webp?1789127717",
+    "display": "https://cards.scryfall.io/display/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.webp?1789127717",
+    "art": "https://cards.scryfall.io/art/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.webp?1789127717",
+    "crop": "https://cards.scryfall.io/crop/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.webp?1789127717"
+  },
+  "mana_cost": "{U}",
+  "cmc": 1.0,
+  "type_line": "Legendary Creature \u2014 Human Ninja",
+  "oracle_text": "Flash\nWhen Yuriko enters, choose one \u2014\n\u2022 Target creature gets -X/-0 until end of turn, where X is the number of cards in your graveyard.\n\u2022 Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Surveil",
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/45e81487-8b8c-480b-922a-eaa9edc7201d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A983f4fde-ab04-44f0-a294-c3b472de0b19&unique=prints",
+  "collector_number": "226",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lie Setiawan",
+  "artist_ids": [
+    "6f771d3f-310e-4aa4-841f-5ba4ba9f025a"
+  ],
+  "illustration_id": "0a1fbfd5-8595-41a9-b4b9-8d7aacc0fba5",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 30415,
+  "prices": {
+    "usd": "2.98",
+    "usd_foil": "4.00",
+    "usd_etched": null,
+    "eur": "1.28",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DYuriko%252C%2BHope%2Bfrom%2Bthe%2BShadows",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DYuriko%252C%2BHope%2Bfrom%2Bthe%2BShadows",
+    "edhrec": "https://edhrec.com/route/?cc=Yuriko%2C+Hope+from+the+Shadows"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716659%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908831&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Yuriko%2C+Hope+from+the+Shadows&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

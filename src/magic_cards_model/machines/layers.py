@@ -2701,8 +2701,14 @@ def _become_a_copy_builder(
     return builder
 
 
+#: `keywords` reads one *or more* keyword names, comma/"and"-joined the same
+#: way `_INDEFINITE_KEYWORD_GRANT_RE`'s own list does (Fateshaper Aspirant's
+#: "It gains vigilance and indestructible until end of turn.") - each is
+#: validated separately against `_KNOWN_KEYWORDS` by `_split_and_validate_
+#: keywords`, not looked up as one compound string.
 _KEYWORD_GRANT_RE = re.compile(
-    rf"^{_SUBJECT} gains (?P<keyword>[a-z ]+) until end of turn\.?$",
+    rf"^{_SUBJECT} gains (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) "
+    r"until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -3823,8 +3829,10 @@ def spend_effect_effects(text: str, permanent: CardState, timestamp: int) -> lis
     ]
 
 
-def _keyword_grant_builder(keyword: str) -> EffectBuilder:
-    """ ""[Subject] gains <keyword> until end of turn." (CR 613.1f, CR 113.10)."""
+def _keyword_grant_builder(keywords: list[str]) -> EffectBuilder:
+    """ ""[Subject] gains <keyword>[, <keyword>, and <keyword>] until end of
+    turn." (CR 613.1f, CR 113.10) - one or more keywords, each its own layer
+    6 grant."""
 
     def builder(
         source: CardState,
@@ -3842,6 +3850,7 @@ def _keyword_grant_builder(keyword: str) -> EffectBuilder:
                 modification=grant_ability(keyword),
             )
             for target in targets
+            for keyword in keywords
         ]
 
     return builder
@@ -5435,10 +5444,10 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _BECOME_A_COPY_RE.fullmatch(sentence):
         return _become_a_copy_builder(until_eot=bool(match.group("until_eot")))
     if match := _KEYWORD_GRANT_RE.fullmatch(sentence):
-        keyword = match.group("keyword").strip()
-        if keyword.lower() not in _KNOWN_KEYWORDS:
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
             return None
-        return _keyword_grant_builder(keyword.capitalize())
+        return _keyword_grant_builder(keywords)
     if match := _ANTHEM_RE.fullmatch(sentence):
         return _anthem_builder(
             int(match.group("power")),

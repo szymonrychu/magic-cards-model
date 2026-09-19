@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "8d754b96-5e44-45af-9c7a-b0da59fbe4c3",
+  "oracle_id": "612c7807-be70-4e2f-afd2-3d3c03eddbbe",
+  "multiverse_ids": [],
+  "tcgplayer_id": 715901,
+  "cardmarket_id": 907291,
+  "name": "Icy Reception",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/8d754b96-5e44-45af-9c7a-b0da59fbe4c3",
+  "scryfall_uri": "https://scryfall.com/card/fra/30/icy-reception?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-07T11:12:20Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.jpg?1788779540",
+    "normal": "https://cards.scryfall.io/normal/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.jpg?1788779540",
+    "large": "https://cards.scryfall.io/large/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.jpg?1788779540",
+    "png": "https://cards.scryfall.io/png/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.png?1788779540",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.jpg?1788779540",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.jpg?1788779540",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.webp?1788779540",
+    "grid": "https://cards.scryfall.io/grid/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.webp?1788779540",
+    "display": "https://cards.scryfall.io/display/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.webp?1788779540",
+    "art": "https://cards.scryfall.io/art/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.webp?1788779540",
+    "crop": "https://cards.scryfall.io/crop/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.webp?1788779540"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Choose one \u2014\n\u2022 Counter target creature or legendary spell unless its controller pays {3}.\n\u2022 Target creature gets -5/-0 until end of turn.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8d754b96-5e44-45af-9c7a-b0da59fbe4c3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A612c7807-be70-4e2f-afd2-3d3c03eddbbe&unique=prints",
+  "collector_number": "30",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"Keep them distracted,\" instructed the Theorist. Chandra's doppelganger smiled, and a chill went through the air.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Borja Pindado",
+  "artist_ids": [
+    "1624a1a8-3492-4c0b-9abc-83dcf2653111"
+  ],
+  "illustration_id": "fbc90fdc-4d98-4f0a-b5f3-b2f20df00ce3",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": true,
+  "edhrec_rank": 32072,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/news/magic-story/reality-fracture-episode-6-the-man-who-kills-his-own-ambition",
+    "previewed_at": "2026-09-07"
+  },
+  "prices": {
+    "usd": "1.99",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.14",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIcy%2BReception",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIcy%2BReception",
+    "edhrec": "https://edhrec.com/route/?cc=Icy+Reception"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715901%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907291&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Icy+Reception&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

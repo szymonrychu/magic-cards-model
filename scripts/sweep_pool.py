@@ -114,6 +114,9 @@ from magic_cards_model.machines.effects import (  # noqa: E402
     create_continuous_effect,
     create_continuous_effect_of_ability,
     effect_for,
+    modal_trigger_profile,
+    mode_effect_body,
+    parse_mixed_effect,
     parse_mode_effect,
     resolve_modal_spell,
     trigger_effect_for,
@@ -717,6 +720,31 @@ def _modal_category(printing: Card) -> str:
     if modal is None or not modal.understood or not modal.modes:
         return SILENT
     if all(parse_mode_effect(mode, 0) is not None for mode in modal.modes):
+        return HANDLED
+    return NOTICE
+
+
+def _modal_trigger_category(effect_text: str) -> str | None:
+    """`_modal_category`'s own worst-mode rule, for a modal *triggered*
+    ability's "choose one/one or both -" tail (CR 700.2, CR 603.3c -
+    Fateshaper Aspirant, Yuriko, Hope from the Shadows) rather than a modal
+    spell's.
+
+    `None` when `effect_text` is not this shape at all - `_dispatch_
+    category`'s cue to fall through to its ordinary identity-based
+    dispatch. `_resolve_modal_triggered_ability_clause`'s own closure has no
+    fixed identity to compare against the way `resolve_modal_spell` does (a
+    fresh closure is built on every call), so without this a modal
+    triggered ability's *whole* ability fell to `_dispatch_category`'s
+    default `HANDLED` the moment `trigger_effect_for` returned any non-`None`
+    callable at all - true the instant *one* mode read, wrong for every
+    other mode beside it, the identical "best mode wins" defect
+    `_modal_category` itself was fixed for.
+    """
+    profile = modal_trigger_profile(effect_text)
+    if profile is None:
+        return None
+    if all(parse_mixed_effect(mode_effect_body(mode)) is not None for mode in profile.modes):
         return HANDLED
     return NOTICE
 
@@ -1380,7 +1408,12 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 clauses.append(ClauseOutcome(SILENT, ability.text, "triggered (unread condition)"))
                 continue
             effect = trigger_effect_for(printing.name, ability.event, ability.effect)
-            category = _dispatch_category(effect, printing)
+            modal_category = _modal_trigger_category(ability.effect)
+            category = (
+                modal_category
+                if modal_category is not None
+                else _dispatch_category(effect, printing)
+            )
             if (
                 category == HANDLED
                 and not _is_sentinel_effect(effect)
