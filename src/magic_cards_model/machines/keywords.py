@@ -3148,6 +3148,7 @@ def dredge(game: Any, card: CardState, player: str) -> list[CardState]:
         milled = list(owner.library[:count])
         for state in milled:
             owner.move(state, Zone.GRAVEYARD)  # CR 701.17a
+            game._record_descend(state)  # noqa: SLF001 - CR 700.11
         owner.cards_in(Zone.GRAVEYARD).remove(card)
         owner.add(card, Zone.HAND)
         card.move_to(Zone.HAND)
@@ -3291,6 +3292,7 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
 
         if not madness_replaces_discard(card):
             owner.move(card, Zone.GRAVEYARD)
+            game._record_descend(card)  # noqa: SLF001 - CR 700.11
             # CR 702.187b's "as long as you discarded this card this turn", recorded
             # on the card the far side of the move because that is the object the
             # clause is about. Not a count - `Game.cards_discarded_this_turn` is

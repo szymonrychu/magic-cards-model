@@ -1980,6 +1980,35 @@ class Game(EngineModel):
     "you gained life this turn" intervening *if*. Cleared when a new turn
     begins."""
 
+    permanent_cards_to_graveyard_this_turn: dict[str, int] = Field(default_factory=dict)
+    """CR 700.11: "the number of permanent cards put into [a player]'s
+    graveyard from anywhere this turn" - keyed by that player's own username
+    (a card is always put into its *owner's* graveyard, CR 400.3), the same
+    `dict[str, int]`-per-turn shape `cards_drawn_this_turn` already uses
+    rather than a new `Player` field, so no per-player identity is lost and
+    the count survives a card leaving the graveyard again afterwards: CR
+    700.11's own closing sentence - "no permanent cards put into the
+    player's graveyard that turn are required to still be in that
+    graveyard" - is exactly why this cannot be answered by scanning the
+    graveyard's current contents and has to be a running count instead.
+
+    "Permanent card" is CR 110.4a's set of types - artifact, battle,
+    creature, enchantment, land, planeswalker (`_PERMANENT_TYPES` above) -
+    read off
+    `CardState.types`, the front-face-safe read for a card that just left
+    the battlefield (or never was on it). "From anywhere" is why every route
+    that lands a card in a graveyard has to feed this, not only `Game.
+    put_into_graveyard`'s own destroy/mill/resolve/counter/fizzle paths:
+    `machines/keywords.discard`, `machines/keywords.dredge`, and the two
+    `enter_the_battlefield` branches where a replacement effect (CR 614.6)
+    redirects an entering permanent's destination to a graveyard instead all
+    call `Game._record_descend` too.
+
+    `Game.descended`/`Game.descend_count` are CR 700.11's own two questions
+    ("if you descended this turn" / "the number of times ... descended this
+    turn") read off this. Cleared when a new turn begins, the same reset
+    `cards_drawn_this_turn` already gets."""
+
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
@@ -2228,7 +2257,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 21
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2456,6 +2485,14 @@ class Game(EngineModel):
     `Game.model_dump()` and the bump rule's first bullet does not carve out
     an exception for a field whose default happens to match every existing
     use - refused rather than trusted on that observation holding forever.
+
+    Bumped 21 -> 22: `Game` gained `permanent_cards_to_graveyard_this_turn`
+    (CR 700.11, descend) - a field added to `Game` itself, per the bump
+    rule's first bullet, and the running count backing both "if you
+    descended this turn" (`intervening_if_holds`) and "the number of times
+    you descended this turn" (`_amount_term`) - a decoded mid-turn `Game`
+    with no record of it would silently read as "never descended" for the
+    rest of that turn.
     """
 
     @model_validator(mode="before")
@@ -6290,6 +6327,8 @@ class Game(EngineModel):
                     self.exile.append(card_state)
                 else:
                     self._owner_of(card_state).add(card_state, event.destination or Zone.GRAVEYARD)
+                    if (event.destination or Zone.GRAVEYARD) is Zone.GRAVEYARD:
+                        self._record_descend(card_state)
                 return card_state
 
             if (
@@ -6300,6 +6339,7 @@ class Game(EngineModel):
                 # CR 303.4d: an Aura can't enchant itself - see the docstring above.
                 self._take_out_of_every_zone(card_state)
                 self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
+                self._record_descend(card_state)
                 return card_state
 
             self._take_out_of_every_zone(card_state)
@@ -10577,6 +10617,7 @@ class Game(EngineModel):
 
             if event.destination is Zone.GRAVEYARD:
                 self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
+                self._record_descend(card_state)
             elif event.destination is Zone.EXILE:
                 card_state.move_to(Zone.EXILE)
                 self.exile.append(card_state)
@@ -10620,6 +10661,41 @@ class Game(EngineModel):
                     )
                 )
             return card_state
+
+    def _record_descend(self, card_state: CardState) -> None:
+        """CR 700.11: a permanent card was just put into its owner's
+        graveyard, from anywhere. Called from every route that lands a card
+        in a graveyard - see `permanent_cards_to_graveyard_this_turn`'s own
+        docstring for the full list.
+
+        `card_state.types` is the front-face-safe, off-battlefield read
+        (`CardState.types`'s own docstring) - the same one `Game.destroy`'s
+        sibling `DIES` handling above reads *computed* characteristics for
+        instead, because "permanent card" (CR 110.4a) is a fixed property of
+        the card itself, not of whatever it happened to be while animated on
+        the battlefield: a land earthbent into a creature (CR 701.66a) that
+        dies is already counted for being a land, and does not need to also
+        have been a creature at the time.
+        """
+        owner = card_state.owner
+        if owner is None or not _PERMANENT_TYPES.intersection(card_state.types):
+            return
+        self.permanent_cards_to_graveyard_this_turn[owner] = (
+            self.permanent_cards_to_graveyard_this_turn.get(owner, 0) + 1
+        )
+
+    def descended(self, username: str) -> bool:
+        """CR 700.11: whether `username` "has descended this turn" - a
+        permanent card was put into their graveyard from anywhere this turn.
+        """
+        return self.permanent_cards_to_graveyard_this_turn.get(username, 0) > 0
+
+    def descend_count(self, username: str) -> int:
+        """CR 700.11: "the number of times [`username`] descended this
+        turn" - the number of permanent cards put into their graveyard from
+        anywhere this turn (CR 700.11's own count question, The Mycotyrant's
+        "X is the number of times you descended this turn")."""
+        return self.permanent_cards_to_graveyard_this_turn.get(username, 0)
 
     def card_imprinted_on(self, permanent_id: UUID) -> CardState | None:
         """The card exiled *with* `permanent_id`, if any.
@@ -15220,6 +15296,7 @@ class Game(EngineModel):
             self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
+            self.permanent_cards_to_graveyard_this_turn = {}
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and
             # `cleanup_step` does exactly that; a game driven step by step may

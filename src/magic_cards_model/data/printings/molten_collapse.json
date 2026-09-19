@@ -111,19 +111,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 9441,
-  "penny_rank": 1119,
+  "edhrec_rank": 9473,
+  "penny_rank": 1118,
   "preview": {
     "source": "GGRecon",
     "source_uri": "https://www.ggrecon.com/articles/exclusive-magic-the-gathering-lost-caverns-of-ixalan-card-reveal/",
     "previewed_at": "2023-10-30"
   },
   "prices": {
-    "usd": "0.40",
+    "usd": "0.41",
     "usd_foil": "0.39",
     "usd_etched": null,
-    "eur": "0.38",
-    "eur_foil": "0.74",
+    "eur": "0.37",
+    "eur_foil": "0.79",
     "tix": "0.02"
   },
   "related_uris": {

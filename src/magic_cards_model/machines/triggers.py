@@ -2551,6 +2551,14 @@ def intervening_if_holds(
         controller = source.controller or game.active_player.username
         return controller in game.life_gained_this_turn
 
+    if clause == "you descended this turn":
+        # CR 700.11: "This means that a permanent card has been put into
+        # that player's graveyard from anywhere this turn." Broodrage
+        # Mycoid's own end-step trigger, and every other "if you descended
+        # this turn" printing - `Game.descended` is the one shared answer.
+        controller = source.controller or game.active_player.username
+        return game.descended(controller)
+
     if clause in _REVOLT_CLAUSES:
         # CR 207.2c: Revolt is an ability word, so no numbered rule spells out
         # the condition itself; the wording is the card's own. Renegade

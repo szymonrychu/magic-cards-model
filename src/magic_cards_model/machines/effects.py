@@ -975,6 +975,12 @@ def _amount_term(term: str) -> AmountReader | None:
         return lambda game, _controller, _object, _x: _greatest_mana_value_among_cards_in_exile(
             game
         )
+    if lowered == "the number of times you descended this turn":
+        # CR 700.11's own count question - The Mycotyrant's "create X ...
+        # tokens ..., where X is the number of times you descended this
+        # turn." `Game.descend_count` is the same running total
+        # `intervening_if_holds`'s "you descended this turn" reads.
+        return lambda game, controller, _object, _x: game.descend_count(controller)
     if match := _OBJECT_CHARACTERISTIC_RE.fullmatch(text):
         # CR 208.1's power/toughness, CR 208.5's zero default for a value
         # that can't be determined (the object has already left the
@@ -8913,6 +8919,57 @@ def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> Token
     )
 
 
+#: "Create X `<desc>` tokens[ with `<tail>`], where X is `<expr>`." - The
+#: Mycotyrant's own "create X 1/1 black Fungus creature tokens with 'This
+#: token can't block,' where X is the number of times you descended this
+#: turn." `<expr>` is read through the shared `amount_expression` (the same
+#: reader `_OBJECT_CHARACTERISTIC_RE`'s power/toughness terms and CR 700.11's
+#: descend count both feed `_amount_term` through), so this generalises to
+#: any magnitude that reader can already answer - devotion, a count of a type
+#: you control, twice X, and so on - not only a descend count. The narrower
+#: `_CREATE_TOKENS_WHERE_X_IS_THAT_SPELLS_MANA_VALUE_RE` above stays separate:
+#: "that spell's mana value" needs CR 400.7's anaphora back to a *specific*
+#: countered spell from a preceding clause, which `amount_expression` has no
+#: term for.
+_CREATE_X_TOKENS_WHERE_X_IS_RE = re.compile(
+    r"^create x (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+?))?"
+    r",?\s*where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_x_tokens_where_x_is_clause(text: str) -> AbilityEffect | None:
+    """`_CREATE_X_TOKENS_WHERE_X_IS_RE`'s shape.
+
+    CR 107.1b: a magnitude that reads negative is zero instead
+    (`amount_expression`'s own docstring), so no tokens are created rather
+    than a negative count reaching `create_tokens`.
+    """
+    match = _CREATE_X_TOKENS_WHERE_X_IS_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    words = match.group("desc").strip().split()
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
+    if not words:
+        return None
+    definition = _parse_generic_token_descriptor(words, match.group("tail"))
+    if definition is None:
+        return None
+    magnitude = amount_expression(match.group("expr"))
+    if magnitude is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        count = magnitude(game, ability.controller, source, ability.x_value)
+        if count > 0:
+            create_tokens(game, definition, ability.controller, count, tapped=tapped)
+
+    return effect
+
+
 def _token_creation_clause(
     definition: TokenDefinition, count: int, *, tapped: bool
 ) -> TargetedClause:
@@ -11542,6 +11599,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     endure = _parse_endure_clause(effect_text)
     if endure is not None:
         return endure
+    create_x_tokens_where_x_is = _parse_create_x_tokens_where_x_is_clause(effect_text)
+    if create_x_tokens_where_x_is is not None:
+        return create_x_tokens_where_x_is
     double_counters_on_group = _parse_double_counters_on_group_clause(effect_text)
     if double_counters_on_group is not None:
         return double_counters_on_group
@@ -20304,6 +20364,7 @@ def _merge_look_top_split_hand_graveyard_clauses(
         else:
             for state in rest:
                 player.add(state, Zone.GRAVEYARD)
+                game._record_descend(state)  # noqa: SLF001 - CR 700.11
 
     return 3, effect
 
