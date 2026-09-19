@@ -5113,6 +5113,26 @@ def split_effect_clauses(text: str) -> list[str]:
 _ADDITIONAL_COST_LINE_RE = re.compile(
     r"^As an additional cost to cast this spell, [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
 )
+#: "X can't be greater than <bound>." (Soul Immolation's own cap on its
+#: "blight X" additional cost) - a second sentence restricting *how* the
+#: additional cost's own X may be chosen (CR 601.2b), printed right after
+#: `_ADDITIONAL_COST_LINE_RE`'s own sentence and, like it, no part of what
+#: the spell does once it resolves. `machines/casting._X_CAP` reads this
+#: same sentence for the bound it actually enforces while X is announced;
+#: this only strips it, the same way `_ADDITIONAL_COST_LINE_RE` strips its
+#: own sentence, so the real effect sentence behind it - "Soul Immolation
+#: deals X damage to ..." - is what `_strip_non_effect_preamble` leaves
+#: for `parse_mixed_effect_for_spell` to read.
+#:
+#: `(?:X|\d+)`, not a bare "X": `effect_for`'s own substitution retry
+#: (`substitute_x`) runs on the *whole* unstripped text before this ever
+#: sees it, so a real X of 2 turns the printed "X can't be greater than
+#: ..." into "2 can't be greater than ..." first - a literal "X"-only
+#: pattern would stop matching on exactly the substituted pass that was
+#: supposed to make the rest of the text readable.
+_X_CAP_LINE_RE = re.compile(
+    r"^(?:X|\d+) can'?t be greater than [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
+)
 #: A static quality of the spell itself, not an instruction it carries out -
 #: Abrupt Decay prints this ahead of its "Destroy target nonland permanent
 #: with mana value 3 or less."
@@ -5311,6 +5331,7 @@ def _strip_keyword_ability_lines(text: str) -> str:
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it."""
     text = _ADDITIONAL_COST_LINE_RE.sub("", text)
+    text = _X_CAP_LINE_RE.sub("", text)
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
     text = _PITCH_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _FREE_ALTERNATIVE_COST_LINE_RE.sub("", text)

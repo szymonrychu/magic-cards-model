@@ -3660,11 +3660,26 @@ class Game(EngineModel):
         # Awakening, Sink into Stupor, Turntimber Symbiosis) resolve to
         # nothing, since `effect_text` came back empty.
         # CR 107.3a: X is fixed for the whole spell once announced, but only
-        # for a spell that actually has `{X}` in its own mana cost - a spell
-        # whose text defines its own X some other way (CR 107.3f) gets no
-        # substitution at all, which is `effect_for`'s own `x_value=None`
+        # for a spell whose own *cost* actually carries an X to announce - a
+        # spell whose text defines its own X some other way (CR 107.3f) gets
+        # no substitution at all, which is `effect_for`'s own `x_value=None`
         # default. `spell.mana_cost` already reads the up face of a DFC.
-        x_value = self.cast_record(spell).x_value if "{X}" in (spell.mana_cost or "") else None
+        #
+        # Not only `"{X}" in mana_cost`: CR 107.3a's X is announced whenever
+        # the cost's own text names it, and a printed cost is not only the
+        # mana symbols - Soul Immolation's "As an additional cost to cast
+        # this spell, blight X" announces X inside an additional cost with
+        # no `{X}` anywhere in its `{3}{R}{R}` mana cost, which used to leave
+        # its own "deals X damage to each opponent" sentence unsubstituted
+        # even though `blight`'s own X was announced and paid correctly.
+        # `cost_announces_x` on each additional-cost sentence is the same
+        # general "does this cost's own text carry a bare X" reader
+        # `create_continuous_effect_of_ability` now uses for an activated
+        # ability's own cost.
+        cost_has_x = "{X}" in (spell.mana_cost or "") or any(
+            cost_announces_x(phrase) for phrase in additional_cost_phrases(spell.card)
+        )
+        x_value = self.cast_record(spell).x_value if cost_has_x else None
         # CR 702.102d: a fused split spell resolves the left half's
         # instructions and then the right half's - two independent texts,
         # neither of which is `spell.oracle_text` (that property reads

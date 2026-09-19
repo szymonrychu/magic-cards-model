@@ -105,6 +105,7 @@ from magic_cards_model.machines.casting import (  # noqa: E402
 )
 from magic_cards_model.machines.combat import Keyword, is_attack_requirement_line  # noqa: E402
 from magic_cards_model.machines.cost import (  # noqa: E402
+    additional_cost_phrases,
     cost_announces_x,
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
@@ -1106,7 +1107,7 @@ def _effect_matched_inside_quotes(dispatch: Callable[[str], object], text: str) 
 _X_PROBE_VALUES: tuple[int, ...] = (0, 3)
 
 
-def _x_candidates(cost_or_mana_cost: str | None) -> tuple[int | None, ...]:
+def _x_candidates(cost_or_mana_cost: str | None, *additional: str) -> tuple[int | None, ...]:
     """Every X value `classify_card` should try for one clause.
 
     Mirrors `models/game.py`'s own gate for a real resolution
@@ -1116,8 +1117,17 @@ def _x_candidates(cost_or_mana_cost: str | None) -> tuple[int | None, ...]:
     (CR 107.3a) - unless that cost has an X in it, `{X}` or Martyr of Sands's
     bare "Reveal X white cards", in which case every value in
     `_X_PROBE_VALUES` is tried.
+
+    `additional` is zero or more further cost phrases to check the same way -
+    a spell's own printed additional cost (CR 118.8a), which is not part of
+    `mana_cost` at all. Soul Immolation's "As an additional cost to cast this
+    spell, blight X" announces X with no `{X}` anywhere in its `{3}{R}{R}`
+    mana cost; checking `mana_cost` alone scored its own damage sentence
+    SILENT even once `Game.resolve_top` read the real engine's X correctly
+    (`models/game.py`'s own matching widened check, right beside this one).
     """
-    if cost_or_mana_cost and cost_announces_x(cost_or_mana_cost):
+    texts = (cost_or_mana_cost, *additional)
+    if any(text and cost_announces_x(text) for text in texts):
         return _X_PROBE_VALUES
     return (None,)
 
@@ -1267,7 +1277,7 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
 
     if not printing.is_land:
         for face in _spell_faces(printing):
-            x_candidates = _x_candidates(face.mana_cost)
+            x_candidates = _x_candidates(face.mana_cost, *additional_cost_phrases(printing))
             effects = [
                 effect_for(face.name, face.text, x_value=x_value) for x_value in x_candidates
             ]
