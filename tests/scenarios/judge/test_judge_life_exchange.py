@@ -98,18 +98,19 @@ def test_both_printings_carry_the_triggered_abilities_the_ruling_needs():
     assert "can't gain life for the rest of the game" in nemesis.effect
 
 
-def test_only_mister_negatives_half_reaches_the_trigger_matcher():
-    """The narrower gap under the one above, worth naming separately.
-
-    Mister Negative's "When Mister Negative enters" resolves to
-    `TriggerEvent.ENTERS_THE_BATTLEFIELD`, so `triggered_abilities_of` hands it
-    to the matcher. Screaming Nemesis's "Whenever this creature is dealt
-    damage" resolves to no `TriggerEvent` at all, so it is dropped before any
-    event could match it - the clause that makes Amy unable to gain life never
-    fires in the first place.
+def test_both_halves_now_reach_the_trigger_matcher():
+    """Mister Negative's "When Mister Negative enters" resolves to
+    `TriggerEvent.ENTERS_THE_BATTLEFIELD`; Screaming Nemesis's "Whenever this
+    creature is dealt damage" now resolves to `TriggerEvent.DEALS_DAMAGE`
+    too (the FRA "trigger events and per-turn history" stream's own recipient-
+    side reading of CR 120.1's passive voice - Hexhaven Invigorator prints
+    the identical condition). Both reach `triggered_abilities_of`, so the
+    remaining gap that keeps Amy able to gain life is entirely the missing
+    effect body `test_neither_ability_has_a_scripted_effect` already covers,
+    not the condition going unmatched.
     """
     assert len(triggered_abilities_of(card("Mister Negative"))) == 1
-    assert triggered_abilities_of(card("Screaming Nemesis")) == []
+    assert len(triggered_abilities_of(card("Screaming Nemesis"))) == 1
 
 
 def test_neither_ability_has_a_scripted_effect():

@@ -153,7 +153,7 @@ from magic_cards_model.machines.triggers import (  # noqa: E402
 )
 from magic_cards_model.models import CardState, Game, Player, Zone  # noqa: E402
 from magic_cards_model.models.card import Card, Layout, Type, types_of  # noqa: E402
-from magic_cards_model.models.card_state import Counters  # noqa: E402
+from magic_cards_model.models.card_state import Counters, TargetRef  # noqa: E402
 
 #: Keywords that need no code because they change what a card *is*, not what the
 #: engine has to do. Each is inert in the sense that the rules attach no action
@@ -975,6 +975,17 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
             subject_subtypes=tuple(subject.subtypes) if subject is not None else None,
             related_id=subject.id if subject is not None else None,
             player=player,
+            # CR 506.5/506.6: a lone attacker (nothing else declared this
+            # combat, and so also nothing else attacking the same defending
+            # player) is an entirely ordinary board state, reachable in a
+            # real game every time only one creature attacks - which is
+            # exactly what every synthetic probe here already is, one
+            # subject at a time. Jiang Yanggu, Alone's and Agents of
+            # S.H.I.E.L.D.'s own "attacks [a player] alone" conditions would
+            # otherwise never be tried true at all, since nothing here
+            # simulates a whole combat to derive these two flags from.
+            attacking_alone=ability.event is TriggerEvent.ATTACKS,
+            attacking_player_alone=ability.event is TriggerEvent.ATTACKS,
         )
 
     for host in source_variants:
@@ -983,7 +994,18 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
         # against each tapped variant of the literal host object, not a twin.
         if condition_matches(game, ability, host, controller, event_for(host)):
             return True
+    # CR 303.4b/303.4m: "enchanted [object]" reads `source.attached_to`
+    # (Ferocity of the Hunt's own "When enchanted creature dies, ..."),
+    # which nothing above ever sets - bound here, one candidate at a time, so
+    # a DIES condition naming "enchanted" is tried the one way it can
+    # actually be satisfied: the dying subject really is what this Aura is
+    # attached to.
+    enchanted_dies = ability.event is TriggerEvent.DIES and "enchanted" in ability.condition.lower()
     for subject in states:
+        if enchanted_dies:
+            # `attached_to` is read off `attachment` (CR 301.5a) - not a
+            # plain field of its own.
+            source.attachment = TargetRef.to_card(subject)
         if condition_matches(game, ability, source, controller, event_for(subject)):
             return True
     # CR 508.3d's own playerwide "you attack" event - no subject at all.

@@ -223,6 +223,18 @@ class Player(EngineModel):
     `None` is the stamp of a player with no game around them, which never
     changes, so a `Player` built on its own accumulates and never clears."""
 
+    life_gained_tally: int = 0
+    """Bookkeeping behind `life_gained_this_turn_amount` - the amount twin
+    of `life_lost_tally`, same shape, same reason: Germinate Recruits' own
+    "X is the amount of life you gained this turn" and Enlightened
+    Confidant's "the amount of life you gained this turn" both need the
+    number, not just `Game.life_gained_this_turn`'s bare yes/no."""
+
+    life_gained_tally_turn: int | None = None
+    """Which turn `life_gained_tally` was counted during - see
+    `life_lost_tally_turn`'s own docstring for why this is a stamp rather
+    than a turn-boundary reset."""
+
     tried_to_draw_from_empty_library: bool = False
     """Set when a draw found no cards. The player loses the next time state-based
     actions are checked (CR 104.3c, 704.5b) - which the game does, not the player."""
@@ -659,7 +671,33 @@ class Player(EngineModel):
         self.life += amount
         if self.game is not None:
             self.game.life_gained_this_turn.add(self.username)
+        if amount:
+            self._record_life_gained(amount)
         return self.life
+
+    def _record_life_gained(self, amount: int) -> None:
+        stamp = self._current_turn_stamp
+        if self.life_gained_tally_turn != stamp:
+            self.life_gained_tally = 0
+            self.life_gained_tally_turn = stamp
+        self.life_gained_tally += amount
+
+    @property
+    def life_gained_this_turn_amount(self) -> int:
+        """How much life this player has gained so far this turn.
+
+        Germinate Recruits' own "create X ... tokens, where X is the amount
+        of life you gained this turn" and Enlightened Confidant's "a card
+        with mana value less than or equal to the amount of life you gained
+        this turn" both ask for the number `Game.life_gained_this_turn`
+        cannot give (that set only answers "did you, at all"). Deliberately
+        named apart from `Game.life_gained_this_turn` - the set of players
+        who gained any - rather than reusing that name on `Player`, so a
+        reader is never one dropped `.username` away from silently asking
+        the wrong object's question."""
+        return (
+            self.life_gained_tally if self.life_gained_tally_turn == self._current_turn_stamp else 0
+        )
 
     @property
     def _prohibited_from_gaining_life(self) -> bool:

@@ -440,14 +440,22 @@ def test_ygras_food_graveyard_condition_can_never_fire():
     assert _condition_can_fire(card("Ygra, Eater of All"), ability) is False
 
 
-def test_blade_of_the_bloodchiefs_creature_dies_condition_can_never_fire():
+def test_blade_of_the_bloodchiefs_creature_dies_condition_now_fires():
     """Blade of the Bloodchief's "a creature dies" (no "this", no
-    "another"/"other") hits the identical `DIES`-branch gap Ygra does, on a
-    plainer card - CR 603.10a's own escaping shape again, distinct from and
-    unrelated to the nontoken substring collision.
+    "another"/"other") used to hit the same `DIES`-branch gap Ygra's own
+    fixture still does - but the two are not actually the same bug. Ygra's
+    condition names no card *type* at all ("a Food is put into a graveyard",
+    Food being a subtype `_types_match` cannot see), so the guard's type
+    check never had anything to bite on and Ygra stays open on purpose (see
+    that test's own docstring). Blade of the Bloodchief's condition names
+    "creature" outright, and Blade of the Bloodchief is Equipment - never a
+    candidate for its own condition - which is exactly the FRA "trigger
+    events and per-turn history" stream's own fix (Gardenize, Way of the
+    Necromancer): the "another"/"other" requirement only applies when the
+    source could plausibly have been the subject.
     """
     ability = _triggered_ability("Blade of the Bloodchief", condition_contains="a creature dies")
-    assert _condition_can_fire(card("Blade of the Bloodchief"), ability) is False
+    assert _condition_can_fire(card("Blade of the Bloodchief"), ability) is not False
 
 
 def test_weapons_manufacturings_condition_now_fires_after_the_nontoken_fix():
@@ -518,13 +526,15 @@ def test_ygra_reports_unmatchable_condition_not_handled():
     assert classify_card(card("Ygra, Eater of All"))[0] == UNMATCHABLE_CONDITION
 
 
-def test_blade_of_the_bloodchief_reports_unmatchable_condition_not_silent():
-    """Blade of the Bloodchief used to be caught only as `silent` (no effect
-    reader) - the condition hole underneath it is a distinct, separately
-    tracked bug and must not stay hidden behind the effect one now that both
-    are checked.
+def test_blade_of_the_bloodchief_reports_silent_again_now_the_condition_fires():
+    """The condition hole is closed (see the `_condition_can_fire` test
+    above); the effect itself - "put a +1/+1 counter on equipped creature...
+    two if Vampire" - still has no `TRIGGER_EFFECTS` entry or clause parser,
+    so the card reports `SILENT` once more rather than `UNMATCHABLE_
+    CONDITION` - the same shape `test_miirym_still_reports_silent_for_its_
+    missing_effect` already pins for the nontoken fix's own sibling case.
     """
-    assert classify_card(card("Blade of the Bloodchief"))[0] == UNMATCHABLE_CONDITION
+    assert classify_card(card("Blade of the Bloodchief"))[0] == SILENT
 
 
 def test_miirym_still_reports_silent_for_its_missing_effect():
