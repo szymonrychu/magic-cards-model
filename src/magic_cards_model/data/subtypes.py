@@ -39,6 +39,17 @@ _VOWELS = frozenset("aeiou")
 
 
 @cache
+def creature_type_vocabulary() -> frozenset[str]:
+    """CR 205.3m's own creature types alone (a "creature type" in card text
+    - "choose a creature type", CR 701.6 - never means a land or artifact
+    type), title-cased the way a type line and a `CHOOSE_A_QUALITY` answer
+    both print one ("Elf", not "elf").
+    """
+    groups = json.loads(SUBTYPES_FILE.read_text())
+    return frozenset(word for word in groups["creature"])
+
+
+@cache
 def subtype_vocabulary() -> frozenset[str]:
     """Every printed subtype, lowercased - CR 205.3's artifact, battle,
     creature, enchantment, land, planeswalker and spell types together.

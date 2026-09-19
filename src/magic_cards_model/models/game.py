@@ -2236,8 +2236,13 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 21
-    """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
+    """Bumped 21 -> 22: `Game` gained `die_to_exile_this_turn` (FRA S7,
+    Essence Burn's own "if it would die this turn, exile it instead") - a new
+    required-shape field with no default a version-21 snapshot could supply,
+    per the bump rule above.
+
+    Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
     copy-of-a-permanent-spell mid-stack means (a plain `CardState` loses CR
@@ -2551,6 +2556,17 @@ class Game(EngineModel):
     graveyard card by the time the effect ever applies, and the effect has a
     duration of its own (CR 514.2 ends it in the cleanup step, which is where
     `discard_to_maximum_hand_size` clears the list)."""
+
+    die_to_exile_this_turn: list[UUID] = Field(default_factory=list)
+    """CR 614.1a replacement effects a resolved spell left behind, each
+    naming one permanent: "If [it] would die this turn, exile it instead" -
+    Essence Burn's own rider (Combustion Technique's identical shape is the
+    real, off-set printing). Stored the same way `draw_redirections` is,
+    for the identical reason: the creating spell is long gone in a graveyard
+    by the time the replacement ever fires, and CR 514.2's cleanup step ends
+    every "this turn" effect, so the whole list is simply cleared there
+    rather than tracked per-entry the way a shield's own `until_end_of_turn`
+    flag is (nothing here ever outlives its own turn)."""
 
     prevention_shields: list["PreventionShield"] = Field(default_factory=list)
     """Prevention effects created by a resolving spell or ability (CR 615.1).
@@ -3220,6 +3236,7 @@ class Game(EngineModel):
                 for redirection in self.draw_redirections
                 if not redirection.until_end_of_turn
             ]
+            self.die_to_exile_this_turn = []
             # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
             # A card exiled by Ugin's −11 stays exiled and stops being castable.
             # A Wrenn's Resolve/Reckless Impulse grant (`expires_end_of_next_turn`)
@@ -5196,9 +5213,34 @@ class Game(EngineModel):
             # `TriggerEvent | None` and keys such a row on the condition text,
             # so gating on the event here was refusing to look the effect up
             # at all.
-            return trigger_effect_for(
-                ability.source_name, ability.ability.event, ability.ability.effect
-            )
+            effect_text = ability.ability.effect
+            if (
+                ability.ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+                and effect_text
+                and re.search(r"\bX\b", effect_text)
+            ):
+                # CR 107.3m: "If an object's enters-the-battlefield triggered
+                # ability ... refers to X, and the spell that became that
+                # object as it resolved had a value of X chosen for any of
+                # its costs, the value of X for that ability is the same as
+                # the value of X for that spell" - Ajani's Anguish's own
+                # "it deals X damage to any target." `cast_record_of` is
+                # already CR 400.7d's bridge (its own docstring), keyed by
+                # `zone_change_stamp`, which a spell resolving into a
+                # permanent carries across that exact zone change.
+                # Scoped to a spell whose *own* mana cost carried {X}
+                # (CR 107.3a): Craterhoof Behemoth's and Yuriko's own ETB
+                # triggers define X in their own text instead ("where X is
+                # the number of creatures you control", CR 107.3f), which
+                # CR 107.3m does not touch at all - substituting the cast
+                # record's own default `x_value=0` into that text would
+                # silently overwrite the real, ability-defined X with zero.
+                source = ability.source(self)
+                if source is not None and "{X}" in (source.mana_cost or ""):
+                    record = self.cast_record_of(source)
+                    if record is not None:
+                        effect_text = substitute_x(effect_text, record.x_value)
+            return trigger_effect_for(ability.source_name, ability.ability.event, effect_text)
         if isinstance(ability.ability, ActivatedAbility):
             if ability.ability.class_level_target is not None:
                 # CR 716.2a's own mechanical half - "This Class's level
@@ -14446,6 +14488,19 @@ class Game(EngineModel):
                 # is refused until a new turn begins.
                 self.loyalty_activations[str(permanent.id)] = (
                     self.loyalty_activations.get(str(permanent.id), 0) + 1
+                )
+                # CR 606.3 is itself a triggerable event - Ajani Unrelenting's
+                # own "Whenever you activate a loyalty ability, ..." and
+                # Gideon the Oathless's "Whenever an opponent activates a
+                # loyalty ability, ...".
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.LOYALTY_ABILITY_ACTIVATED,
+                        subject_id=permanent.id,
+                        subject_name=permanent.name,
+                        subject_controller=controller,
+                        player=controller,
+                    )
                 )
 
             if (

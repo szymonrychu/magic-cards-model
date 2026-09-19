@@ -1527,6 +1527,18 @@ def condition_matches(
     if ability.event is TriggerEvent.BEGINNING_OF_STEP:
         return _step_matches(condition, controller, event)
 
+    if ability.event is TriggerEvent.LOYALTY_ABILITY_ACTIVATED:
+        # CR 606.3. "you activate ..." (Ajani Unrelenting) - the ability's
+        # own controller; "an opponent activates ..." (Gideon the Oathless)
+        # - anyone but them, the same bare-"an opponent" reading `DRAWS_A_
+        # CARD`/`GAINS_LIFE` already use rather than `_controller_clause_
+        # holds`'s own "an opponent controls" phrasing, which this condition
+        # never prints. `event.player` is whoever actually activated it
+        # (`Game.activate_ability`'s own emit).
+        if "an opponent" in lowered:
+            return event.player is not None and event.player != controller
+        return _controller_clause_holds(condition, controller, event.player)
+
     if ability.event is TriggerEvent.CAST_SPELL:
         mv_match = _MANA_VALUE_EQUALS_COUNTERS.search(lowered)
         if mv_match is not None:

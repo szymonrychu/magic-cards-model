@@ -2357,6 +2357,19 @@ _PUMP_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Target creature or planeswalker an opponent controls that's red or white
+#: loses all abilities until end of turn." (Flourishing Grapple) - CR 613.1f's
+#: ability-removing effect, targeted rather than the "Enchanted/Equipped
+#: creature" or "All creatures"/"Other creatures" shapes already read above.
+#: `_SUBJECT` itself is not reused: it admits only a single adjective in
+#: front of one noun, and this subject is a full "target ..." phrase (a type
+#: list, a controller clause, a colour clause) the same grammar a spell's own
+#: `_targets_understood` already vets independently - re-deriving that
+#: grammar here would only be able to disagree with it, never improve on it.
+_TARGETED_LOSES_ALL_ABILITIES_RE = re.compile(
+    r"^target .+? loses all abilities until end of turn\.?$", re.IGNORECASE
+)
+
 #: Echoing Courage: "Target creature and all other creatures with the same name
 #: as that creature get +2/+2 until end of turn." A sibling of `_PUMP_RE` and
 #: not a widening of it, because the *subject* is two groups joined by a bare
@@ -3679,6 +3692,35 @@ def _effect_sentences_uncached(
     return _fold_retention_clauses(
         layer_readable_sentences(oracle_text, static_only=static_only, card_name=card_name)
     )
+
+
+def _targeted_loses_all_abilities_builder() -> EffectBuilder:
+    """ "Target `<X>` loses all abilities until end of turn." - CR 613.1f,
+    layer 6, one `target`'s incarnation at a time (`only_this_incarnation`,
+    the same per-target selector `_pump_and_keyword_builder` uses just
+    below), timed to expire at CR 514.2's cleanup step like any other
+    "until end of turn" effect (`Duration.UNTIL_END_OF_TURN`).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {target.name} loses all abilities",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(target, target.zone_change_stamp),
+                modification=lose_all_abilities,
+            )
+            for target in targets
+        ]
+
+    return builder
 
 
 def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -> EffectBuilder:
@@ -5432,6 +5474,8 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _target_and_same_name_pump_builder(
             int(match.group("power")), int(match.group("toughness"))
         )
+    if _TARGETED_LOSES_ALL_ABILITIES_RE.fullmatch(sentence):
+        return _targeted_loses_all_abilities_builder()
     if match := _PUMP_RE.fullmatch(sentence):
         power, toughness = int(match.group("power")), int(match.group("toughness"))
         keyword = match.group("keyword")

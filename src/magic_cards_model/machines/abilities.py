@@ -1313,7 +1313,7 @@ class TriggerWord(StrEnum):
 class TriggerEvent(StrEnum):
     """The common trigger shapes, recognised off the condition text.
 
-    Only these twenty-two are recognised; every other condition leaves `event`
+    Only these twenty-three are recognised; every other condition leaves `event`
     None with `condition` still holding the printed text.
     """
 
@@ -1440,6 +1440,15 @@ class TriggerEvent(StrEnum):
     #: `TriggeredAbility.chapter`, the same way a keyword ability's expansion
     #: carries no printed condition either.
     LORE_COUNTERS_ADDED = "lore_counters_added"
+    #: CR 606.3: "A player may activate a loyalty ability of a permanent
+    #: they control any time they have priority and the stack is empty,
+    #: during a main phase of their turn." Ajani Unrelenting's own "Whenever
+    #: you activate a loyalty ability, ..." and Gideon the Oathless's
+    #: "Whenever an opponent activates a loyalty ability, ..." are the two
+    #: printings in the pool. Emitted by `Game.activate_ability`, the one
+    #: place CR 606.3's own activation happens, right where `loyalty_
+    #: activations` already records the once-per-turn count.
+    LOYALTY_ABILITY_ACTIVATED = "loyalty_ability_activated"
 
 
 class CostKind(StrEnum):
@@ -2749,6 +2758,12 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
         return TriggerEvent.TAPPED_FOR_MANA
     if re.search(r"\bblocks\b|\bbecomes blocked\b", lowered):
         return TriggerEvent.BLOCKS
+    # CR 606.3. "you activate a loyalty ability" (Ajani Unrelenting) / "an
+    # opponent activates a loyalty ability" (Gideon the Oathless) - checked
+    # ahead of no other verb here, since "activate" appears in no other
+    # condition shape this reads.
+    if re.search(r"\bactivates? a loyalty ability\b", lowered):
+        return TriggerEvent.LOYALTY_ABILITY_ACTIVATED
     if re.search(r"\bcasts?\b", lowered):
         return TriggerEvent.CAST_SPELL
     # "Whenever you draw a card" / "Whenever an opponent draws a card" - the
