@@ -243,7 +243,7 @@ from .card_state import (
     TargetRef,
     planeswalkers_with_zero_loyalty,
 )
-from .mana import ManaCost, ManaPool, ManaSpend, ManaSpendEffect
+from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect
 from .player import Player
 from .token import TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
@@ -2489,7 +2489,10 @@ class Game(EngineModel):
     more ... attack" trigger's `event` now carries its own `amount`. A
     version-21 stack holding a "that many"/"this way" ability (Fable of the
     Mirror-Breaker II, The Earth King, Corpseweft) resolved as a notice or
-    nothing and now moves cards. Refused instead.
+    nothing and now moves cards. Refused instead. `ManaPool` also gained
+    `retained` (CR 500.5a/500.5b mana that survives a step or phase ending -
+    firebending, Photon, Mighty Marvel); a version-21 pool has none, so a
+    decoded one never silently loses mana it never had a way to keep.
     """
 
     @model_validator(mode="before")
@@ -2925,17 +2928,28 @@ class Game(EngineModel):
 
     # -- turn-based actions (CR 703) ---------------------------------------
 
-    def empty_mana_pools(self) -> None:
+    def empty_mana_pools(self, *, expiring: "frozenset[ManaRetentionScope] | None" = None) -> None:
         """Empty every player's mana pool (CR 500.5, 703.4q).
 
         "As a step or phase ends ... any unspent mana left in a player's mana
         pool empties." A turn-based action: automatic, controlled by no player,
         and never on the stack. The player is said to lose this mana (CR 106.4).
-        Replacement effects that keep mana from being lost this way (Horizon
-        Stone and friends) are not modelled.
+
+        `expiring` is threaded straight through to `ManaPool.empty` - a
+        firebending or Photon, Mighty Marvel style "you don't lose this mana
+        as steps and phases end" tag keeps mana past this ordinary call and
+        only empties at its own named point (CR 500.5a's end of the combat
+        phase, passed here by `_advance_past_checks`/`advance_to`; CR
+        500.5b/514.2's cleanup step, passed by `cleanup_step`). Left out, no
+        scope expires and every retained tag survives, exactly as an ordinary
+        mid-phase boundary should leave it. Replacement effects shaped
+        differently from those two - Horizon Stone's "doesn't empty ... this
+        turn" - are not modelled: `machines/effects.py`'s parsers for those two
+        sentences are the only source of a `ManaRetentionScope` tag today.
         """
+        scopes = expiring or frozenset()
         for player in self.players:
-            player.mana_pool.empty()
+            player.mana_pool.empty(expiring=scopes)
 
     def turn_based_actions(self) -> None:
         """Perform the turn-based actions of the step that has just begun (CR 703.3).
@@ -3231,6 +3245,13 @@ class Game(EngineModel):
             self.remove_all_damage()
             self.continuous_effects.end_the_turn(self)  # CR 514.2, the other half
             self.delayed_triggers.expire_this_turn()  # CR 514.2, the delayed-trigger half
+            # CR 500.5b / 514.2, the same simultaneous action once more: Photon,
+            # Mighty Marvel's "until end of turn, you don't lose this mana as
+            # steps and phases end" mana (`ManaRetentionScope.END_OF_TURN`) has
+            # survived every ordinary CR 500.5 emptying since it was added -
+            # this is where it finally empties, alongside every other "until
+            # end of turn" effect this step ends.
+            self.empty_mana_pools(expiring=frozenset({ManaRetentionScope.END_OF_TURN}))
             self.prevention_shields = [
                 shield
                 for shield in self.prevention_shields
@@ -15161,7 +15182,18 @@ class Game(EngineModel):
         # The pointer may have crossed several boundaries (the skip loop above,
         # or a cleanup that rolled into the next turn); nothing between them
         # can add mana, so one emptying covers every boundary crossed.
-        self.empty_mana_pools()
+        #
+        # CR 500.5a: firebending's "until end of combat" mana (`ManaRetentionScope
+        # .END_OF_COMBAT`) expires "at the end of the combat phase, not at the
+        # beginning of the end of combat step" - the same instant CR 511.3's
+        # combat-clearing above fires, since both are keyed off leaving the
+        # combat phase behind, which `previous_step is Step.END_OF_COMBAT`
+        # already answers.
+        self.empty_mana_pools(
+            expiring=frozenset({ManaRetentionScope.END_OF_COMBAT})
+            if previous_step is Step.END_OF_COMBAT
+            else None
+        )
 
         if self.turn.turns_taken != previous_turns_taken:
             # A new turn: land drops reset and the new active player gets
@@ -15253,7 +15285,15 @@ class Game(EngineModel):
         if STEP_SEQUENCE.index(step) < STEP_SEQUENCE.index(self.turn.step):
             raise ValueError(f"{step} already passed this turn, currently at {self.turn.step}")
         while self.turn.step is not step:
+            previous_step = self.turn.step
             self.turn.advance()
-            self.empty_mana_pools()
+            # CR 500.5a, the same reading `_advance_past_checks` uses above:
+            # firebending's "until end of combat" mana expires exactly when
+            # the combat phase this boundary just left behind ends.
+            self.empty_mana_pools(
+                expiring=frozenset({ManaRetentionScope.END_OF_COMBAT})
+                if previous_step is Step.END_OF_COMBAT
+                else None
+            )
         self.sync_priority_with_step()  # CR 502.4, 514.3
         return self.turn.step
