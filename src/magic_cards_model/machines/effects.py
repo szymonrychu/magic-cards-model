@@ -164,6 +164,7 @@ from .layers import (
     parsed_layer_effects,
     set_colors,
     set_power_toughness,
+    split_and_validate_keywords,
 )
 from .modes import (
     ModalProfile,
@@ -8860,6 +8861,34 @@ def _optional_targeted_clause(
     return effect
 
 
+#: "`<target phrase>` can't be blocked this turn." (CR 509.1a) - Eardrum
+#: Rattler's own "Another target creature you control with power 2 or less
+#: can't be blocked this turn.": a direct grant with no antecedent, unlike
+#: `_RIDER_CANT_BE_BLOCKED_RE`'s anaphoric "It can't be blocked this turn."
+#: after a different sentence. `phrase` is read the same way every other
+#: targeted clause's own phrase is, through `_targets_understood` -
+#: `machines/targeting.py` already reads "with power N or less" as CR
+#: 115.1's own comparison restriction, so this never has to.
+_TARGET_CANT_BE_BLOCKED_RE = re.compile(
+    r"^(?P<phrase>(?:another )?target .+) can'?t be blocked this turn\.?$", re.IGNORECASE
+)
+
+#: "`<target phrase>` gains `<keyword>`[, `<keyword>`, and `<keyword>`] until
+#: end of turn." (CR 613.1f) - a direct grant over an arbitrary target
+#: phrase `machines/targeting.py` already reads in full (a comparison, a
+#: counter qualifier, a compound type list), rather than the much narrower
+#: `_SUBJECT` pattern `machines/layers.py`'s own generalised shapes are
+#: built on. Tomik, Orzhov Lawmage's own "Target creature with a +1/+1
+#: counter on it gains flying until end of turn." is the reported shape;
+#: `_SUBJECT` was never meant to grow a full comparison/counter grammar
+#: just to match it.
+_TARGET_GAINS_KEYWORDS_RE = re.compile(
+    r"^(?P<phrase>(?:another )?target .+?) gains? "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
 def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a targeted effect, or `None` if this wave does not cover
     its shape or cannot confidently read its restriction.
@@ -8888,6 +8917,69 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # `create_continuous_effect_of_ability` instead, keyed by ability
         # index rather than a clause shape.
         return create_continuous_effect  # type: ignore[return-value]
+
+    if match := _TARGET_CANT_BE_BLOCKED_RE.fullmatch(clause):
+        # CR 509.1a's evasion restriction, granted directly rather than as
+        # the anaphoric rider `_RIDER_CANT_BE_BLOCKED_RE` reads after a
+        # different antecedent - Eardrum Rattler's whole activated ability
+        # is this one sentence, with no antecedent in front of it at all.
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+
+        def cant_be_blocked_targets(game: "Game", stack_object: "StackObject") -> None:
+            effects = game.continuous_effects
+            for target in game.resolve_targets(stack_object):
+                if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                    continue
+                effects.add(
+                    ContinuousEffect(
+                        description=f"{target.name} can't be blocked this turn",
+                        layer=Layer.ABILITY,
+                        timestamp=effects.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=grant_ability("This creature can't be blocked."),
+                    )
+                )
+
+        return cant_be_blocked_targets
+
+    if match := _TARGET_GAINS_KEYWORDS_RE.fullmatch(clause):
+        phrase = match.group("phrase")
+        if re.search(r"\bgets?\b", phrase, re.IGNORECASE):
+            # `_targets_understood` tolerates a trailing tail it does not
+            # read (it is meant to, for an ordinary target scan) - which
+            # would otherwise let this shape's own non-greedy `phrase` steal
+            # "Target creature gets +2/+2 and gains reach until end of
+            # turn." away from the compound pump-and-keyword sentence it
+            # actually is, reading only the keyword half and silently
+            # dropping the pump. A genuine target phrase for this shape
+            # never itself contains a pump verb.
+            return None
+        if not _targets_understood(phrase, count_agnostic=True):
+            return None
+        keywords = split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+
+        def gains_keywords_targets(game: "Game", stack_object: "StackObject") -> None:
+            effects = game.continuous_effects
+            for target in game.resolve_targets(stack_object):
+                if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                    continue
+                for keyword in keywords:
+                    effects.add(
+                        ContinuousEffect(
+                            description=f"{target.name} gains {keyword}",
+                            layer=Layer.ABILITY,
+                            timestamp=effects.tick(),
+                            duration=Duration.UNTIL_END_OF_TURN,
+                            selector=only_this_incarnation(target, target.zone_change_stamp),
+                            modification=grant_ability(keyword),
+                        )
+                    )
+
+        return gains_keywords_targets
 
     if spell_counter := _COUNTER_TARGET_SPELL_RE.fullmatch(clause):
         # CR 701.6a on a targeted spell, from a spell or from an ability

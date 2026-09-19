@@ -2340,9 +2340,15 @@ switch_power_toughness: Modification = SwitchPowerToughness()
 #: name - Ruby, Daring Tracker's "Ruby gets +2/+2 until end of turn." - which
 #: is why it is read here interchangeably with "this creature" rather than as
 #: a separate, narrower case.
+#: The noun a "target"/"another target" subject may carry - a bare
+#: "creature"/"permanent", or the "creature or planeswalker" compound this
+#: pool's own post-War-of-the-Spark cards print as often as the bare noun
+#: (Liliana the Faultless's "another target creature or planeswalker you
+#: control gains hexproof until end of turn.").
+_SUBJECT_NOUN = r"(?:creature or planeswalker|creature|permanent)"
 _SUBJECT = (
-    r"(?:target(?: [a-z]+)? (?:creature|permanent)(?: you control)?|this creature|this permanent"
-    r"|another target(?: [a-z]+)? (?:creature|permanent)(?: you control)?)"
+    rf"(?:target(?: [a-z]+)? {_SUBJECT_NOUN}(?: you control)?|this creature|this permanent"
+    rf"|another target(?: [a-z]+)? {_SUBJECT_NOUN}(?: you control)?)"
 )
 
 _PUMP_RE = re.compile(
@@ -5333,6 +5339,15 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
     if not parts or any(part.lower() not in _KNOWN_KEYWORDS for part in parts):
         return None
     return [part.capitalize() for part in parts]
+
+
+#: The public name for the same reader, for `machines/effects.py`'s own
+#: direct (non-layer-shaped-subject) keyword-grant clauses - Tomik, Orzhov
+#: Lawmage's "Target creature with a +1/+1 counter on it gains flying until
+#: end of turn.", whose target phrase `machines/layers.py`'s own narrow
+#: `_SUBJECT` pattern was never meant to grow a comparison/counter grammar
+#: to match, when `machines/targeting.py` already reads it in full.
+split_and_validate_keywords = _split_and_validate_keywords
 
 
 def _split_protection_qualities(raw: str) -> list[str]:

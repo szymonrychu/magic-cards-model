@@ -20,6 +20,8 @@ effective 2026-09-25) in the session that wrote this file:
   resolution (CR 608.2h/611.2c).
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.machines.keywords import is_indestructible
@@ -536,3 +538,109 @@ def test_twinned_vision_draws_two_cards_cast_with_flashback():
 
     # The discarded Opt leaves the hand, and two are drawn in its place.
     assert len(alice.hand) == hand_before - 1 + 2
+
+
+def test_eardrum_rattler_grants_evasion_to_a_small_creature_you_control():
+    """ "Another target creature you control with power 2 or less can't be
+    blocked this turn." - a direct grant (no antecedent) with a comparison-
+    restricted target `machines/targeting.py` already reads in full.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Eardrum Rattler", "Mountain", "Elvish Mystic"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    rattler = scenario.creature("Eardrum Rattler", "alice")
+    mystic = scenario.creature("Elvish Mystic", "alice")
+    bobs_bear = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.activate(
+        rattler, *scenario.untapped_sources("Mountain"), index=0, targets=[mystic], username="alice"
+    )
+    scenario.resolve_top()
+
+    from magic_cards_model.machines.combat import evasion_restriction_refusal
+
+    assert evasion_restriction_refusal(scenario.game, mystic, bobs_bear) is not None
+
+
+def test_liliana_the_faultless_grants_hexproof_to_another_planeswalker():
+    """ "Another target creature or planeswalker you control gains hexproof
+    until end of turn." - a compound "creature or planeswalker" subject
+    `_SUBJECT` (`machines/layers.py`) did not read before.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mountain"],
+            battlefield=[
+                "Liliana the Faultless",
+                "Plains",
+                "Karn, the Great Creator",
+            ],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    liliana = scenario.creature("Liliana the Faultless", "alice")
+    karn = scenario.find("Karn, the Great Creator", Zone.BATTLEFIELD, "alice")
+    alice = scenario.game.player("alice")
+    discard_target = alice.hand[0]
+
+    scenario.activate(
+        liliana,
+        *scenario.untapped_sources("Plains"),
+        index=0,
+        targets=[karn],
+        discarding=[discard_target],
+        username="alice",
+    )
+    scenario.resolve_top()
+
+    assert has_keyword(karn, "hexproof", scenario.game)
+
+
+def test_tomik_grants_flying_to_a_creature_carrying_a_counter():
+    """ "Target creature with a +1/+1 counter on it gains flying until end
+    of turn." - `machines/targeting.py`'s own new `required_counter_kind`
+    restriction, and the direct (non-`_SUBJECT`-shaped) keyword grant that
+    reads its target.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tomik, Orzhov Lawmage", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    tomik = scenario.creature("Tomik, Orzhov Lawmage", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.game.add_counters(bears, Counter.PLUS_ONE, 1)
+
+    scenario.activate(tomik, index=0, targets=[bears], username="alice")
+    scenario.resolve_top()
+
+    assert has_keyword(bears, Keyword.FLYING, scenario.game)
+
+
+def test_tomik_refuses_a_target_with_no_counter_on_it():
+    """The same ability, legally refusing a creature carrying no counter."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tomik, Orzhov Lawmage", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    tomik = scenario.creature("Tomik, Orzhov Lawmage", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    with pytest.raises(ValueError):
+        scenario.activate(tomik, index=0, targets=[bears], username="alice")
