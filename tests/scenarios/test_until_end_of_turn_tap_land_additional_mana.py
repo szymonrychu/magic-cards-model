@@ -15,6 +15,16 @@ with the opposite subject - "a player taps ... that player adds", not "you
 tap ... add" - and *is* an ordinary instant, so it is the primary,
 fully-cast proof that the mechanic actually works end to end.
 
+CR 605.1b/605.4a: the delayed triggered ability this creates is itself a
+mana ability - it names no target, it triggers from the activation of an
+activated mana ability (CR 106.12a's tap), and it could add mana to a
+player's mana pool when it resolves - so it resolves *immediately*, with no
+stack and no waiting for priority, exactly the way a printed triggered mana
+ability already does (Leyline of Abundance's own "add an additional {G}").
+Every test below proves this directly: no `put_triggers_on_stack`/
+`resolve_top` step ever runs between a tap and the bonus mana landing, and
+`Game.pending_triggers` stays empty throughout.
+
 Every CR number below was looked up with `knowledge_search(q="...",
 type="rules")` in the session that wrote this file:
 
@@ -24,16 +34,16 @@ type="rules")` in the session that wrote this file:
 - **CR 106.12a** - tapping a permanent for mana is an event a triggered
   ability can watch.
 - **CR 514.2** - "until end of turn" effects end during cleanup.
-- **CR 605.1b** - the created ability is itself a mana ability by every one
-  of its own criteria; see `machines/delayed.AddManaWhenLandTapped`'s own
-  docstring for the one CR 605.3b half (resolving with no stack at all)
-  this build does not yet reach - a documented simplification, not a
-  silent gap.
+- **CR 605.1b** - the four criteria that make a *triggered* ability a mana
+  ability.
+- **CR 605.4a** - a triggered mana ability "doesn't go on the stack ...
+  Rather, it resolves immediately after the mana ability that triggered
+  it, without waiting for priority."
 """
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.effects import effect_for
-from magic_cards_model.models import Color
+from magic_cards_model.models import Color, Zone
 from tests.scenarios.harness import Scenario
 
 # -- High Tide: fully cast, the end-to-end proof ----------------------------
@@ -56,7 +66,9 @@ def test_casting_high_tide_creates_the_delayed_trigger():
     assert trigger.remaining is None, "fires on every tap this turn, not only the next one"
 
 
-def test_tapping_an_island_afterward_adds_the_extra_blue():
+def test_tapping_an_island_afterward_adds_the_extra_blue_with_no_stack():
+    """CR 605.4a: the bonus lands the instant the land is tapped - no
+    `put_triggers_on_stack`/`resolve_top` step runs between the two."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -69,11 +81,10 @@ def test_tapping_an_island_afterward_adds_the_extra_blue():
 
     (second,) = scenario.untapped_sources("Island", username="alice")
     scenario.activate(second, color=Color.BLUE)
-    scenario.game.put_triggers_on_stack()
-    while not scenario.game.stack_is_empty:
-        scenario.resolve_top()
 
     assert scenario.player("alice").mana_pool.floating == {Color.BLUE: 2}
+    assert scenario.game.pending_triggers == []
+    assert scenario.game.stack_is_empty
 
 
 def test_it_fires_again_on_a_second_tap_the_same_turn():
@@ -91,9 +102,6 @@ def test_it_fires_again_on_a_second_tap_the_same_turn():
 
     for island in scenario.untapped_sources("Island", "Island", username="alice"):
         scenario.activate(island, color=Color.BLUE)
-        scenario.game.put_triggers_on_stack()
-        while not scenario.game.stack_is_empty:
-            scenario.resolve_top()
 
     assert scenario.player("alice").mana_pool.floating == {Color.BLUE: 4}
 
@@ -111,9 +119,6 @@ def test_tapping_a_nonisland_land_adds_nothing_extra():
 
     (mountain,) = scenario.untapped_sources("Mountain", username="alice")
     scenario.activate(mountain, color=Color.RED)
-    scenario.game.put_triggers_on_stack()
-    while not scenario.game.stack_is_empty:
-        scenario.resolve_top()
 
     assert scenario.player("alice").mana_pool.floating == {Color.RED: 1}
 
@@ -136,9 +141,6 @@ def test_any_players_tap_counts_and_the_mana_goes_to_the_tapper():
 
     (bob_island,) = scenario.untapped_sources("Island", username="bob")
     scenario.activate(bob_island, color=Color.BLUE)
-    scenario.game.put_triggers_on_stack()
-    while not scenario.game.stack_is_empty:
-        scenario.resolve_top()
 
     assert scenario.player("bob").mana_pool.floating == {Color.BLUE: 2}
     assert scenario.player("alice").mana_pool.floating == {}
@@ -177,14 +179,19 @@ def test_the_parser_reads_molten_tides_own_you_tap_wording():
     _molten_tide_effect()  # the assert inside is the proof; see its own body
 
 
-def test_only_the_controllers_own_mountain_tap_adds_the_extra_red():
+def test_only_the_controllers_own_mountain_tap_adds_the_extra_red_with_no_stack():
     """Invoking the built effect directly against a real on-stack spell -
     Pyre Rhymer's own creature half, cast the ordinary way - since casting
-    "Molten Tide" itself needs the Prepare mechanic S2 still has to wire."""
+    "Molten Tide" itself needs the Prepare mechanic S2 still has to wire.
+
+    Both taps below resolve with no `put_triggers_on_stack`/`resolve_top`
+    step (CR 605.4a); Pyre Rhymer itself is left on the stack, unresolved,
+    throughout - proof that the immediate resolution is scoped to the mana
+    trigger alone and never touches the ordinary stack."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", hand=["Pyre Rhymer // Molten Tide"], battlefield=["Mountain"] * 3)
+        .player("alice", hand=["Pyre Rhymer // Molten Tide"], battlefield=["Mountain"] * 4)
         .player("bob", battlefield=["Mountain"])
         .build()
     )
@@ -200,11 +207,14 @@ def test_only_the_controllers_own_mountain_tap_adds_the_extra_red():
     (trigger,) = scenario.game.delayed_triggers.triggers
     assert trigger.controller == "alice"
 
+    (alice_mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    scenario.activate(alice_mountain, color=Color.RED)
+    assert scenario.player("alice").mana_pool.floating == {Color.RED: 2}, "her own tap gets it"
+    assert scenario.game.pending_triggers == []
+
     scenario.pass_priority("alice")
-    (bob_mountain,) = (m for m in scenario.game.battlefield if m.controller == "bob")
+    bob_mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "bob")
     scenario.activate(bob_mountain, color=Color.RED)
-    scenario.game.put_triggers_on_stack()
-    while not scenario.game.stack_is_empty:
-        scenario.resolve_top()
     assert scenario.player("bob").mana_pool.floating == {Color.RED: 1}, "not alice's own tap"
-    assert scenario.game.stack_is_empty, "Pyre Rhymer resolved along with the triggered ability"
+    assert scenario.game.pending_triggers == []
+    assert not scenario.game.stack_is_empty, "Pyre Rhymer is still there, untouched"

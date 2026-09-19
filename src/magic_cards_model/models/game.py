@@ -118,6 +118,7 @@ from ..machines.decisions import (
 )
 from ..machines.delayed import (
     DelayedEffectSpec,
+    DelayedEffectSpecBase,
     DelayedTrigger,
     DelayedTriggers,
     ExileWarped,
@@ -5136,14 +5137,33 @@ class Game(EngineModel):
             ability = pending.pop(0)
             if ability not in self.pending_triggers:
                 continue
-            printed = ability.ability
-            if not isinstance(printed, TriggeredAbility):
-                continue
-            effect = printed.effect.lower().strip()
-            if ability.targets or (
-                parse_triggered_mana(printed.effect) is None and not effect.startswith("add ")
-            ):
+            if ability.targets:
                 continue  # CR 605.5a: not a mana ability.
+            # CR 603.7: a delayed triggered ability's own effect is not
+            # printed on any card (Molten Tide's, High Tide's own "until end
+            # of turn, whenever you tap ..." grant), so whether it is a mana
+            # ability at all is read off `DelayedEffectSpecBase.is_mana_
+            # ability` - the same self-description `_resolve_ability` already
+            # reaches for through `DelayedTriggers.effect_for` - rather than
+            # off printed text `parse_triggered_mana` was never going to
+            # find, since `ability.ability.effect` here is the *whole*
+            # "until end of turn, whenever ..." sentence, not a resolution
+            # instruction to re-read as one.
+            delayed = self.delayed_triggers.trigger_for(ability)
+            run_delayed: DelayedEffectSpecBase | None = None
+            if delayed is not None:
+                run_delayed = self.delayed_triggers.effect_for(ability)
+                if run_delayed is None or not run_delayed.is_mana_ability:
+                    continue
+            else:
+                printed = ability.ability
+                if not isinstance(printed, TriggeredAbility):
+                    continue
+                effect_text = printed.effect.lower().strip()
+                if parse_triggered_mana(printed.effect) is None and not effect_text.startswith(
+                    "add "
+                ):
+                    continue  # CR 605.5a: not a mana ability.
             if resolved >= self.TRIGGERED_MANA_ABILITY_LOOP_BOUND:
                 # CR 104.4b. See `Game.drawn`'s own docstring for what this
                 # detection does and does not cover.
@@ -5160,9 +5180,13 @@ class Game(EngineModel):
             # triggers on the stack) happens between one mana ability and the
             # next - only the CR 603.4 recheck and the effect itself.
             if self._intervening_if_still_true(ability):
-                effect = self._effect_of(ability)
-                if effect is not None:
-                    effect(self, ability)
+                if delayed is not None:
+                    if run_delayed is not None:
+                        run_delayed(self, ability, delayed)
+                else:
+                    run_printed = self._effect_of(ability)
+                    if run_printed is not None:
+                        run_printed(self, ability)
             resolved += 1
             added: list[Color] = []
             for username, was in before.items():

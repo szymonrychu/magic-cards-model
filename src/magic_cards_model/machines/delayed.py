@@ -76,7 +76,7 @@ with them (see `memory/delayed-trigger-serialization-game-py-isolation.md`).
 
 import re
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
@@ -124,6 +124,20 @@ class DelayedEffectSpecBase(EngineModel):
     """
 
     model_config = ConfigDict(frozen=True)
+
+    is_mana_ability: ClassVar[bool] = False
+    """CR 605.1b's third criterion, self-described rather than inferred from
+    `kind`: `models.game.Game._resolve_triggered_mana_abilities` reads this
+    (alongside the ordinary "no target" check every delayed trigger already
+    gets) to decide whether this delayed triggered ability resolves inline,
+    with no stack, the moment its own mana-ability event fires (CR 605.4a) -
+    the same immediate treatment a *printed* triggered mana ability's
+    `parse_triggered_mana`-readable effect text already gets. `False` for
+    every ordinary delayed effect; a mana-adding one (`AddManaWhenLandTapped`)
+    overrides it to `True`. A `ClassVar`, not a field: it describes the whole
+    *kind* of effect, the same way `kind` itself does, not one instance's
+    own data - so it never needs a value at construction and never appears
+    in a decode."""
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         raise NotImplementedError
@@ -1003,20 +1017,18 @@ class AddManaWhenLandTapped(DelayedEffectSpecBase):
     player adds] an additional <mana>." (Molten Tide: "you tap a Mountain
     ... add"; High Tide: "a player taps an Island ... that player adds".)
 
-    CR 605.1b: the created ability is itself a mana ability - it triggers
-    from another mana ability's own activation and could add mana - so
-    CR 605.3b would have it resolve with no stack at all. This engine's own
-    CR 605.3b fast path (`machines/cost.py`'s `mana_trigger_sources`/
-    `triggered_mana_bonus`, run during `tap_for_mana` itself) only ever
-    scans a permanent's *printed* triggered mana abilities; a delayed one is
-    not attached to any permanent to scan there. This resolves the ordinary
-    way instead - CR 603.3 puts it on the stack like any other trigger, and
-    the mana still lands in the right pool once it does. Only the "no stack
-    at all" half of CR 605.3b is not reached for a delayed mana trigger
-    specifically; a documented simplification, not a silent gap.
+    CR 605.1b: the created ability is itself a mana ability - it doesn't
+    require a target, it triggers from the activation of an activated mana
+    ability (CR 106.12a's tap), and it could add mana to a player's mana
+    pool when it resolves - so `is_mana_ability = True` here, and CR 605.4a
+    resolves it inline the instant it fires (`models.game.Game._resolve_
+    triggered_mana_abilities`, which reads this flag), with no stack and no
+    waiting for priority, exactly as a printed triggered mana ability
+    already does.
     """
 
     kind: Literal["add_mana_when_land_tapped"] = "add_mana_when_land_tapped"
+    is_mana_ability: ClassVar[bool] = True
 
     land_subtype: str
     mana: tuple[Color, ...]
