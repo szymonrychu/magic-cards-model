@@ -111,7 +111,7 @@ import functools
 import re
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import Field
@@ -1564,8 +1564,19 @@ class ActivationCostReduction(EngineModel):
     amount: int
     #: The quality's own words, as printed - "legendary creature". Read
     #: generically off a CR 205.4a supertype and/or CR 205.2a card type by
-    #: `Game.activation_cost_reduction_for`; no card name involved.
-    quality: str
+    #: `Game.activation_cost_reduction_for`; no card name involved. `None`
+    #: when `target_quality` is set instead - exactly one of the two is ever
+    #: set, matching which of the two printed shapes this sentence is.
+    quality: str | None = None
+    #: Dragonfire Blade's own shape: "This ability costs {1} less to
+    #: activate for each color of the creature it targets." and Warrior's
+    #: Blades' "... for each +1/+1 counter on the creature it targets." -
+    #: what is counted on the ability's own *target* rather than among
+    #: permanents its controller controls. Kept as the printed words ("color",
+    #: "+1/+1 counter") and read generically by
+    #: `machines/keywords.target_cost_reduction_amount`, the same "read the
+    #: phrase, don't guess a table" approach `quality` above already takes.
+    target_quality: str | None = None
 
 
 #: "This ability costs {N} less to activate for each <quality> you control."
@@ -1576,6 +1587,51 @@ _TRAILING_ACTIVATION_COST_REDUCTION_RE = re.compile(
     r"(?P<quality>.+?) you control\.?$",
     re.IGNORECASE,
 )
+
+#: The target-scoped sibling: "... for each color of the creature it
+#: targets." (Dragonfire Blade) and "... for each +1/+1 counter on the
+#: creature it targets." (Warrior's Blades) - "of" for a characteristic
+#: count, "on" for a counter count, and the object word itself left open
+#: ("creature" is the only one printed in the pool, but nothing here assumes
+#: it - `permanent`/`artifact` would read the same way).
+_TRAILING_TARGET_COST_REDUCTION_RE = re.compile(
+    r"^this ability costs \{(?P<amount>\d+)\} less to activate for each "
+    r"(?P<what>.+?) (?:on|of) the \w+ it targets\.?$",
+    re.IGNORECASE,
+)
+
+#: `target_cost_reduction_amount`'s own reading of a "<kind> counter[s]"
+#: phrase - the counter half of `ActivationCostReduction.target_quality`.
+_TARGET_COUNTER_PHRASE_RE = re.compile(r"^(?P<kind>[\w+/−-]+) counters?$", re.IGNORECASE)
+
+
+def target_cost_reduction_amount(
+    reduction: ActivationCostReduction, target: Any, game: Any = None
+) -> int | None:
+    """How many of `reduction.target_quality` are on `target` right now, or
+    `None` when the printed phrase is not one this reads (CR 601.2f via CR
+    602.2b, counted at the ability's own target rather than among permanents
+    its controller controls - `Game.activation_cost_reduction_for`'s sibling).
+
+    Two shapes read: a bare "color"/"colors" (Dragonfire Blade), counted off
+    the target's *computed* colours (CR 613.5) when a live `game` is given -
+    a static ability could still be changing them - and a plain-English
+    "<kind> counters?" (Warrior's Blades' "+1/+1 counter"), counted directly
+    off the target `CardState`'s own counters (CR 122.1; a counter kind is
+    never itself a layer-6 characteristic, so there is no computed board to
+    prefer here). Anything else returns `None` rather than a guess, the same
+    fail-closed default `Game.activation_cost_reduction_for` already gives an
+    unread "you control" quality.
+    """
+    phrase = (reduction.target_quality or "").strip().lower()
+    if phrase in ("color", "colors"):
+        colors = game.characteristics_of(target).colors if game is not None else target.colors
+        return len(colors)
+    match = _TARGET_COUNTER_PHRASE_RE.fullmatch(phrase)
+    if match is not None:
+        kind = match.group("kind").replace("−", "-")
+        return target.counter_count(kind)
+    return None
 
 
 def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCostReduction | None]:
@@ -1592,13 +1648,21 @@ def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCost
     sentences = [s for s in re.split(r"(?<=\.)\s+", effect.strip()) if s]
     if not sentences:
         return effect, None
-    match = _TRAILING_ACTIVATION_COST_REDUCTION_RE.match(sentences[-1].strip())
-    if match is None:
-        return effect, None
-    reduction = ActivationCostReduction(
-        amount=int(match.group("amount")), quality=match.group("quality").strip()
-    )
-    return " ".join(sentences[:-1]).strip(), reduction
+    last = sentences[-1].strip()
+    match = _TRAILING_ACTIVATION_COST_REDUCTION_RE.match(last)
+    if match is not None:
+        reduction = ActivationCostReduction(
+            amount=int(match.group("amount")), quality=match.group("quality").strip()
+        )
+        return " ".join(sentences[:-1]).strip(), reduction
+    target_match = _TRAILING_TARGET_COST_REDUCTION_RE.match(last)
+    if target_match is not None:
+        reduction = ActivationCostReduction(
+            amount=int(target_match.group("amount")),
+            target_quality=target_match.group("what").strip(),
+        )
+        return " ".join(sentences[:-1]).strip(), reduction
+    return effect, None
 
 
 class ActivatedAbility(BaseAbility):
@@ -1738,6 +1802,16 @@ class KeywordAbility(BaseAbility):
     #: mana - `Evoke—Exile a black card from your hand.` - and the two are
     #: worth telling apart, because only the em-dash form needs a sentence read.
     em_dash: bool = False
+    #: A trailing "This ability costs [N] less to activate for each
+    #: [quality] ..." sentence sharing this keyword's own paragraph (CR
+    #: 607.2h: two abilities can share one printed paragraph) - Warrior's
+    #: Blades' and Dragonfire Blade's own "Equip [N]. This ability costs
+    #: [M] less ..." lines. Split off by `_parse_line` before keyword
+    #: matching runs, the same way `ActivatedAbility.cost_reduction` is
+    #: split off an activated ability's own effect text, so the trailing
+    #: sentence's full stop cannot disqualify the line from
+    #: `_parse_keywords`'s "no full stop" rule.
+    cost_reduction: ActivationCostReduction | None = None
 
 
 class UnparsedAbility(BaseAbility):
@@ -2381,6 +2455,34 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
         return list(chapter_abilities)
 
     keyword_abilities = _parse_keywords(text, keywords, common)
+    if not keyword_abilities:
+        # A keyword-cost line sharing its paragraph with a trailing "This
+        # ability costs [N] less ..." sentence (CR 607.2h: two abilities, one
+        # paragraph) fails `_parse_keywords`'s own "no full stop in the line"
+        # rule on the *first* try, because the reduction sentence's full stop
+        # is still in `text` - Warrior's Blades' and Dragonfire Blade's own
+        # "Equip [N]. This ability costs [M] less ..." lines. Retried once
+        # with that sentence split off; a retry that still finds no keyword
+        # changes nothing; a retry with more than one line does not happen at
+        # all, since `_parse_keywords` never yields more than one entry for a
+        # single em-dash/parameter keyword-cost line to begin with.
+        stripped, reduction = _split_off_trailing_cost_reduction(text)
+        if reduction is not None:
+            # `_split_off_trailing_cost_reduction` only ever removes a full
+            # *sentence*, so the sentence before it keeps its own full stop -
+            # "Equip {3}." - which `_parse_keywords` reads as disqualifying
+            # all over again (a period anywhere bars a keyword line). The
+            # bare param/cost form ("Equip {1}") never carries one to begin
+            # with, so this strip only ever removes the one this split left.
+            stripped = stripped.rstrip(".")
+            retried = _parse_keywords(stripped, keywords, {**common, "text": stripped})
+            if retried:
+                keyword_abilities = [
+                    ability.model_copy(update={"cost_reduction": reduction})
+                    if isinstance(ability, KeywordAbility)
+                    else ability
+                    for ability in retried
+                ]
     if keyword_abilities:
         return keyword_abilities
 
