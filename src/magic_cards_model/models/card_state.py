@@ -970,6 +970,23 @@ class CardState(EngineModel):
     changes once it leaves the stack for any reason."
     """
 
+    granted_rebound: bool = False
+    """Whether an effect gave *this spell* rebound (CR 702.88, CR 702.88a)
+    for this cast, printed on a different card than the one being cast -
+    Ojer Pakpatiq, Deepest Epoch's own "Whenever you cast an instant spell
+    from your hand, it gains rebound." Rebound is normally a static ability
+    printed on the spell itself, which `machines.keywords.has_rebound` reads
+    straight off `Card.keywords` - a spell it was never printed on has
+    nothing there for that to find, so `Game._has_rebound_now` reads this
+    flag as well, wherever `has_rebound` alone used to be asked about a
+    spell on the stack (CR 614.12: a granted static ability "functions" the
+    same as a printed one for as long as it applies).
+
+    Cleared by `move_to`, the same "a spell's own additions don't survive
+    leaving the stack" rule `spliced_text` already follows (CR 702.47e's
+    reasoning generalises: nothing keeps a one-shot grant once the object it
+    was granted to stops being this stack visit's object)."""
+
     granted_ability_texts: tuple[str, ...] = ()
     """Ability lines given to *this object specifically*, printed exactly as
     the granting effect's own quoted text - "This Saga gains '{T}: Add
@@ -2077,6 +2094,9 @@ class CardState(EngineModel):
             # the zone of a spell already on the stack; every move off it, to
             # any zone, takes the text away.
             self.spliced_text = ()
+            # CR 702.47e's own reasoning generalises to any one-shot grant a
+            # spell picked up only for this stack visit.
+            self.granted_rebound = False
         # CR 704.8 / CR 603.10a: an ability that looks back in time needs the
         # counters the object had as it left, and CR 122.2 has just taken them
         # away. Persist is the card in the pool that asks (CR 702.79a).

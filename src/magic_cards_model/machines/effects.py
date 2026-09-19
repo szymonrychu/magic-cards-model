@@ -18634,6 +18634,40 @@ def _parse_they_gain_or_lose_life_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "It gains rebound." - Ojer Pakpatiq, Deepest Epoch's own "Whenever you
+#: cast an instant spell from your hand, it gains rebound." CR 702.88a's
+#: rebound is normally printed on the spell itself; here it is granted for
+#: this one cast by a different card entirely, which `CardState.
+#: granted_rebound` (and `machines.keywords.has_rebound_now`, read wherever
+#: `has_rebound` alone used to be asked about a spell on the stack) exists
+#: for. "It" is CR 607.1 anaphora back to the very spell whose casting made
+#: this ability trigger - `ability.event.subject_id` - the same referent
+#: `_parse_copy_that_spell_clause`/`_parse_counter_that_spell_clause` already
+#: read "that spell" against.
+_IT_GAINS_REBOUND_RE = re.compile(r"^it gains rebound$", re.IGNORECASE)
+
+
+def _parse_it_gains_rebound_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_IT_GAINS_REBOUND_RE`'s shape. Ability-only: a spell has no
+    `ability.event` to read "it" against."""
+    if for_spell:
+        return None
+    if not _IT_GAINS_REBOUND_RE.fullmatch(clause.strip()):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if spell is not None and spell in game.stack:
+            spell.granted_rebound = True
+
+    return effect
+
+
 #: "Counter that spell." - Vexing Bauble's and Chalice of the Void's own
 #: templated effect clause, both times following a `TriggerEvent.CAST_SPELL`
 #: condition. "That spell" is **CR 607.1** linked-ability anaphora back to the
@@ -21614,6 +21648,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if exile_that_players_library is not None:
         return exile_that_players_library
+    it_gains_rebound = _parse_it_gains_rebound_clause(clause, for_spell=for_spell)
+    if it_gains_rebound is not None:
+        return it_gains_rebound
     they_gain_or_lose_life = _parse_they_gain_or_lose_life_clause(clause, for_spell=for_spell)
     if they_gain_or_lose_life is not None:
         return they_gain_or_lose_life

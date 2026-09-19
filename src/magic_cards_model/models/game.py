@@ -152,7 +152,7 @@ from ..machines.keywords import (
     equipment_state_based_actions,
     grant_the_citys_blessing,
     has_paradigm,
-    has_rebound,
+    has_rebound_now,
     has_suspend,
     is_indestructible,
     keyword_effect_for,
@@ -2264,7 +2264,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2500,6 +2500,12 @@ class Game(EngineModel):
     you descended this turn" (`_amount_term`) - a decoded mid-turn `Game`
     with no record of it would silently read as "never descended" for the
     rest of that turn.
+
+    Bumped 22 -> 23: `CardState` gained `granted_rebound` (CR 702.88, Ojer
+    Pakpatiq, Deepest Epoch's own "it gains rebound") - a field added to
+    `CardState`, per the bump rule's first bullet, and one whose absence
+    would silently drop a granted rebound for a spell mid-resolution on the
+    stack.
     """
 
     @model_validator(mode="before")
@@ -4109,7 +4115,7 @@ class Game(EngineModel):
         somewhere other than exile first (CR 616.1: only one effect can
         finally decide where an object goes).
         """
-        if not cast_from_hand or not has_rebound(spell.card) or spell.zone is not Zone.EXILE:
+        if not cast_from_hand or not has_rebound_now(spell) or spell.zone is not Zone.EXILE:
             return
         controller = spell.controller or self.active_player.username
         self.delayed_triggers.create(

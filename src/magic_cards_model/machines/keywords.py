@@ -3071,6 +3071,20 @@ def has_rebound(card: Card) -> bool:
     return any(keyword.lower() == "rebound" for keyword in card.keywords)
 
 
+def has_rebound_now(card_state: CardState) -> bool:
+    """Whether `card_state` has rebound *right now*, printed (`has_rebound`)
+    or granted by another card's effect (`CardState.granted_rebound`, CR
+    614.12: a granted static ability "functions" the same as a printed one
+    for as long as it applies) - Ojer Pakpatiq, Deepest Epoch's own "Whenever
+    you cast an instant spell from your hand, it gains rebound." The two
+    call sites that used to ask `has_rebound(spell.card)` alone
+    (`machines/replacement._stack_replacements`'s exile-instead-of-graveyard
+    swap, `Game._create_rebound_delayed_trigger`'s own guard) both ask this
+    instead, so a granted rebound reaches the same two effects a printed one
+    does."""
+    return has_rebound(card_state.card) or card_state.granted_rebound
+
+
 # --------------------------------------------------------------------------
 # Paradigm (CR 702.192)
 # --------------------------------------------------------------------------

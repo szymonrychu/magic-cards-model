@@ -4393,9 +4393,9 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
-    from .keywords import has_rebound  # imported here: casting imports this module's siblings
+    from .keywords import has_rebound_now  # imported here: casting imports this module's siblings
 
-    if has_rebound(card.card) and record.origin_zone is Zone.HAND and event.resolving:
+    if has_rebound_now(card) and record.origin_zone is Zone.HAND and event.resolving:
         # CR 702.88a: "If this spell was cast from your hand, instead of
         # putting it into your graveyard as it resolves, exile it." A spell
         # cast from anywhere else - most pointedly from exile by its own
