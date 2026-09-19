@@ -4366,6 +4366,76 @@ def _parse_search_distinct_names_clause(clause: str, *, for_spell: bool) -> Targ
     return effect
 
 
+#: "Search your library for `<quality>` card, put it into your hand,
+#: shuffle" - Curse-Marred Demon's own ETB, minus its trailing "then discard
+#: `<n>` card(s) at random" (`_DISCARD_AT_RANDOM_RE` already reads that half
+#: on its own, from `_parse_each_player_step`). CR 608.2c's own ordered
+#: series of instructions, where "then" marks only the *last* step rather
+#: than sitting right before "shuffle" the way `_SEARCH_AND_PUT_RE`'s own
+#: fixed tail (", then shuffle") always does - so the two clauses
+#: `_prepare_effect_clauses` already cuts here (the search+shuffle half, and
+#: the stranded "discard a card at random" with no antecedent of its own)
+#: are read as a merged pair rather than two independent clauses, the same
+#: way `_merge_reveal_hand_choose_discard_clauses` reads its own run.
+_SEARCH_HAND_SHUFFLE_RE = re.compile(
+    r"search (?:your|their) library for "
+    rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<that_many>that many)) "
+    r"(?:(?P<quality>.+?) )?cards?"
+    r"(?P<basic_land_type> with a basic land type)?"
+    r"(?: with mana value (?P<max_mv>\d+) or less)?"
+    r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?"
+    r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
+    r", put (?:it|them|that card|those cards) into your hand, shuffle$",
+    re.IGNORECASE,
+)
+
+
+def _merge_search_hand_shuffle_then_discard_random_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_SEARCH_HAND_SHUFFLE_RE` immediately followed by `_DISCARD_AT_RANDOM_
+    RE`'s own "discard `<n>` card(s) at random" - Curse-Marred Demon's own
+    two clauses, and Reckless Handling's own leading pair ahead of its own
+    "if an artifact card was discarded this way" third clause, which this
+    merge leaves alone for whatever else reads it."""
+    if index + 1 >= len(clauses):
+        return None
+    search_match = _SEARCH_HAND_SHUFFLE_RE.fullmatch(clauses[index].strip())
+    if search_match is None:
+        return None
+    discard_match = _DISCARD_AT_RANDOM_RE.fullmatch(clauses[index + 1].strip())
+    if discard_match is None:
+        return None
+    described = _search_descriptions(search_match)
+    if described is None:
+        return None
+    count_reader = _read_search_count(search_match)
+    if count_reader is None:
+        return None
+    matches, _description = described
+    reveal = bool(search_match.groupdict().get("reveal"))
+    discard_count = parse_count(discard_match.group("n")) if discard_match.group("n") else 1
+    if discard_count is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        game.search_and_put(
+            player,
+            matches,
+            destination=Zone.HAND,
+            count=count_reader(game, player.username),
+            reveal=reveal,
+            source=source,
+            source_id=source_id,
+        )
+        _discard_at_random(game, player, discard_count, source)
+
+    return 2, effect
+
+
 #: Beseech the Queen's own shape: "Search your library for a card with mana
 #: value less than or equal to <the number of lands you control>, reveal it,
 #: put it into your hand, then shuffle." `_SEARCH_AND_PUT_RE`'s own `max_mv`
@@ -23306,6 +23376,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             continue
         # -- Wave W1's own multi-clause merges, contiguous block -----------
         merged = _merge_reveal_hand_choose_discard_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_search_hand_shuffle_then_discard_random_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
