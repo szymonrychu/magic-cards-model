@@ -101,7 +101,9 @@ from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
     ActivatedAbility,
+    TriggeredAbility,
     TriggerEvent,
+    _parse_line,
     keyword_abilities,
     parse_triggered_mana,
     self_normalized_effect_text,
@@ -2497,6 +2499,69 @@ def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
     return pattern.sub("", text)
 
 
+#: "return this card from your graveyard to your hand" - a widely templated
+#: CR 112.6c ability shape ("some effects state that an ability of a card
+#: functions from a zone other than the zone the card is normally in") that
+#: real instants and sorceries print as a *second*, independent paragraph
+#: below their own effect - Command the Stage, Repeating Barrage, Rekindled
+#: Flame, Hammer of Bogardan, and dozens more, all genuine printings, not a
+#: shape invented for one card. Matched narrowly on this exact phrase, not on
+#: "any paragraph that happens to parse as a complete ability" - Summoner's
+#: Pact's own second paragraph ("At the beginning of the next upkeep, pay
+#: {2}{G}{G}. If you don't, you lose the game.") *also* parses as one
+#: complete triggered ability on its own, and is nonetheless genuinely part
+#: of the spell's own CR 608.2c resolution (the delayed trigger it creates,
+#: read by `_parse_delayed_pay_or_lose_clauses` elsewhere in this file) - a
+#: broader "strip anything ability-shaped" rule stripped that clause too and
+#: silently dropped the whole delayed-cost mechanic.
+_RETURNS_ITSELF_FROM_GRAVEYARD_RE = re.compile(
+    r"return this card from your graveyard to your hand", re.IGNORECASE
+)
+
+
+def _strip_trailing_standalone_triggered_ability(text: str) -> str:
+    """A printed paragraph after the first whose own effect is CR 112.6c's
+    "return this card from your graveyard to your hand" is never part of
+    this spell's own resolution - it is a different ability entirely, one
+    that functions while the card sits in the graveyard, merely printed on
+    the same card (Command the Stage's own second line is exactly this
+    shape).
+
+    Concatenating the two paragraphs into one effect text (as `Game.
+    resolve_top` does, reading `spell.oracle_text` whole) let that second
+    paragraph poison the first: `split_effect_clauses`'s own `\n+` separator
+    cut it off as its own "clause", which of course reads as nothing this
+    file's clause parsers understand, and CR 608.2c's no-half-effect
+    discipline then failed the *entire* card closed - including the token
+    creation the first paragraph alone would have read fine.
+
+    Read through `_parse_line` - the same per-line reader `parse_abilities`
+    itself uses - to confirm the trailing paragraph really is one complete
+    ability on its own before checking its shape, so a future card's
+    genuinely continued resolution text that happens to also start with a
+    capital "At" or "When" mid-sentence is never mistaken for one (a real
+    continuation line does not *parse* as a complete ability by itself). The
+    stripped ability's own execution - a triggered ability that functions
+    from a zone other than the battlefield or stack - is a mechanic this
+    wave does not build; `docs/engine-coverage.md` is where that gap is
+    recorded, not here.
+    """
+    lines = text.split("\n")
+    if len(lines) < 2:
+        return text
+    tail = lines[-1].strip()
+    if not tail:
+        return text
+    parsed = _parse_line(tail, [], lines[-1])
+    if (
+        len(parsed) == 1
+        and isinstance(parsed[0], TriggeredAbility)
+        and _RETURNS_ITSELF_FROM_GRAVEYARD_RE.search(parsed[0].effect)
+    ):
+        return "\n".join(lines[:-1])
+    return text
+
+
 def effect_for(
     card_name: str, effect_text: str | None = None, *, x_value: int | None = None
 ) -> Effect | None:
@@ -2541,6 +2606,7 @@ def effect_for(
     if effect_text is None:
         return None
     effect_text = _strip_self_shuffle_clause(card_name, effect_text)
+    effect_text = _strip_trailing_standalone_triggered_ability(effect_text)
     if is_modal_text(effect_text):
         return resolve_modal_spell
     effect = _spell_effect_or_notice(effect_text)
@@ -6339,7 +6405,7 @@ def put_counters_on_ability_targets(
 # characteristic read (CR 613.4, CR 613.5), not a count of anything.
 _COUNTER_EACH_GROUP_RE = re.compile(
     rf"^put (?P<n>{COUNT}|x) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
-    rf"(?P<group>[a-z]+) you control{where_x_pattern('expr')}\.?$",
+    rf"(?P<other>other )?(?P<group>[a-z]+) you control{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
 
@@ -6363,12 +6429,19 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     expression - an expression it cannot read fails closed with an
     `UnreadableCounterAmountNotice` instead of placing a guessed number
     (CR 611.2c: the magnitude is fixed once, at resolution).
+
+    An optional leading "other" - Summon: Good King Mog XII's own Saga
+    chapter IV, "Put two +1/+1 counters on each **other** Moogle you
+    control" - excludes the ability's own source (CR 109.2) from the group,
+    the same "other" every targeted clause in this file already reads for a
+    single target.
     """
     match = _COUNTER_EACH_GROUP_RE.fullmatch(text.strip())
     if match is None:
         return None
     kind = match.group("kind").lower()
     group = match.group("group")
+    excludes_source = match.group("other") is not None
     n_text = match.group("n").lower()
     expr = match.group("expr")
     reader: AmountReader | None = None
@@ -6405,6 +6478,8 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
         controller = ability.controller
         board = game.computed_board()
         for permanent in game.battlefield:
+            if excludes_source and permanent.id == source.id:
+                continue
             chars = board.of(permanent)
             if chars.controller != controller:
                 continue
@@ -13381,6 +13456,77 @@ def _parse_create_tokens_graveyard_cast_counters_clause(text: str) -> Effect | N
     return effect
 
 
+#: "Create `<n>` `<descriptor>` tokens[ named `<Name>`], then put `<base>`
+#: `<kind>` counters on each other `<subtype>`[ token(s)] you control." -
+#: Command the Stage's own "Create a 2/2 colorless Wizard Soldier creature
+#: token named Cadet, then put a +1/+1 counter on each other Wizard token you
+#: control." "Other" here means other than the token(s) this same sentence
+#: just created (CR 608.2c's own instructions in order) - a different
+#: referent from `_parse_put_counters_on_group_clause`'s own "other", which
+#: excludes an *ability's* source and has no created-tokens list to exclude
+#: instead. Read whole, ahead of the per-clause split: the ", then " join is
+#: exactly what `_CLAUSE_SEPARATOR` cuts on, which would otherwise strand the
+#: second half with no "it"/"they" left to say what was just made.
+_CREATE_TOKENS_THEN_COUNTER_OTHER_SUBTYPE_RE = re.compile(
+    rf"^create (?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+named (?P<name>.+?))?,\s*then\s+"
+    rf"put (?P<base>{COUNT}) (?P<kind>\+1/\+1|-1/-1) counters? on each other "
+    r"(?P<subtype>[A-Za-z]+)(?:\s+tokens?)? you control\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_tokens_then_counter_other_subtype_clause(text: str) -> Effect | None:
+    """`_CREATE_TOKENS_THEN_COUNTER_OTHER_SUBTYPE_RE`'s shape, or `None`.
+
+    `<subtype>` is read off the **computed** board (CR 613.5), the same
+    convention `_parse_put_counters_on_group_clause` already uses for its own
+    "each `<group>` you control".
+    """
+    match = _CREATE_TOKENS_THEN_COUNTER_OTHER_SUBTYPE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if "copy of" in text.lower():
+        return None
+    count = parse_count(match.group("n"))
+    words = match.group("desc").strip().split()
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
+    if not words:
+        return None
+    predefined_name = " ".join(words)
+    name = match.group("name")
+    if name is None and predefined_name in PREDEFINED:
+        definition = PREDEFINED[predefined_name]
+    else:
+        definition = _parse_generic_token_descriptor(words, None)
+        if definition is None:
+            return None
+        if name is not None:
+            definition = definition.model_copy(update={"name": name.strip()})
+
+    kind = _counter_kind(match.group("kind"))
+    base = parse_count(match.group("base"))
+    subtype = match.group("subtype").lower()
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        created = create_tokens(game, definition, controller, count, tapped=tapped)
+        created_ids = {token.id for token in created}
+        board = game.computed_board()
+        for permanent in game.battlefield:
+            if permanent.id in created_ids:
+                continue
+            chars = board.of(permanent)
+            if chars.controller != controller:
+                continue
+            if subtype not in (word.lower() for word in chars.subtypes):
+                continue
+            game.add_counters(permanent, kind, base)
+
+    return effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -13415,6 +13561,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     tokens_graveyard_cast_counters = _parse_create_tokens_graveyard_cast_counters_clause(whole)
     if tokens_graveyard_cast_counters is not None:
         return tokens_graveyard_cast_counters
+    tokens_then_counter_other_subtype = _parse_create_tokens_then_counter_other_subtype_clause(
+        whole
+    )
+    if tokens_then_counter_other_subtype is not None:
+        return tokens_then_counter_other_subtype
     untap_and_gain_control = _parse_untap_and_gain_control_clause(whole)
     if untap_and_gain_control is not None:
         return untap_and_gain_control

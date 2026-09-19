@@ -956,3 +956,130 @@ def test_recursive_recruitment_from_hand_puts_no_counters():
     cadets = [state for state in scenario.game.battlefield if state.name == "Cadet"]
     assert len(cadets) == 2
     assert all(cadet.counter_count("+1/+1") == 0 for cadet in cadets)
+
+
+# --------------------------------------------------------------------------
+# "Create ... token, then put counters on each other <subtype> you control"
+# --------------------------------------------------------------------------
+
+
+def test_good_king_mogs_chapter_iv_counters_each_other_moogle_not_itself():
+    """Off-set: Summon: Good King Mog XII's own Saga chapter IV: "Put two
+    +1/+1 counters on each other Moogle you control." `_parse_put_counters_
+    on_group_clause`'s own "other" now excludes the *ability's* source
+    (itself, a Moogle) from the group - the different "other" Command the
+    Stage's combined parser below needs, which excludes the tokens *this
+    same instruction* just created instead.
+    """
+    scenario = (
+        Scenario().player("alice", battlefield=["Summon: Good King Mog XII"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mog = scenario.creature("Summon: Good King Mog XII", "alice")
+
+    chapters = [
+        a for a in parse_abilities(card("Summon: Good King Mog XII")) if getattr(a, "chapter", None)
+    ]
+    chapter_one = next(a for a in chapters if a.chapter == 1)
+    chapter_four = next(a for a in chapters if a.chapter == 4)
+
+    from magic_cards_model.machines.triggers import AbilityKind, AbilityOnStack
+
+    effect_one = parse_mixed_effect(chapter_one.effect)
+    assert effect_one is not None
+    ability_one = AbilityOnStack(
+        kind=AbilityKind.TRIGGERED,
+        ability=chapter_one,
+        source_id=mog.id,
+        source_name=mog.name,
+        controller="alice",
+    )
+    effect_one(scenario.game, ability_one)
+
+    moogle_tokens = [state for state in scenario.game.battlefield if state.name == "Moogle Token"]
+    assert len(moogle_tokens) == 2
+
+    effect_four = parse_mixed_effect(chapter_four.effect)
+    assert effect_four is not None
+    ability_four = AbilityOnStack(
+        kind=AbilityKind.TRIGGERED,
+        ability=chapter_four,
+        source_id=mog.id,
+        source_name=mog.name,
+        controller="alice",
+    )
+    effect_four(scenario.game, ability_four)
+
+    assert mog.counter_count("+1/+1") == 0
+    assert all(token.counter_count("+1/+1") == 2 for token in moogle_tokens)
+
+
+def test_command_the_stage_counters_other_wizard_tokens_not_the_one_just_made():
+    """On-set: Command the Stage: "Create a 2/2 colorless Wizard Soldier
+    creature token named Cadet, then put a +1/+1 counter on each other
+    Wizard token you control." A different "other" from Good King Mog's
+    (excludes the token(s) this same spell just created, not an ability's
+    own source), and the sentence composes with a *second*, unrelated
+    triggered ability printed below it on the same card -
+    `_strip_trailing_standalone_triggered_ability` keeps that second
+    ability's own unread text from poisoning the first paragraph's own
+    resolution (CR 608.2c; CR 112.6c, an ability that functions from the
+    graveyard - not built here, S5's own scope).
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Command the Stage"],
+            battlefield=["Mountain", "Mountain", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="alice")
+    scenario.cast_and_resolve("Command the Stage", *sources, username="alice")
+
+    cadet = scenario.find("Cadet", Zone.BATTLEFIELD, username="alice")
+    assert cadet.counter_count("+1/+1") == 0
+
+
+def test_command_the_stage_boosts_a_pre_existing_wizard_token():
+    """A Wizard token already on the battlefield before Command the Stage
+    resolves is an *other* Wizard token and gets the counter; the new Cadet
+    (also a Wizard) does not, proving the exclusion is by the newly created
+    tokens' own identity and not by name or subtype alone.
+    """
+    from magic_cards_model.machines.effects import (
+        _parse_generic_token_descriptor,
+        create_tokens,
+    )
+
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Command the Stage"],
+            battlefield=["Mountain", "Mountain", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    definition = _parse_generic_token_descriptor(
+        ["2/2", "colorless", "Wizard", "Soldier", "creature"], None
+    )
+    assert definition is not None
+    (pre_existing_cadet,) = create_tokens(scenario.game, definition, "alice")
+
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="alice")
+    scenario.cast_and_resolve("Command the Stage", *sources, username="alice")
+
+    cadets = [
+        state for state in scenario.game.battlefield if state.card.subtypes == ["Wizard", "Soldier"]
+    ]
+    assert len(cadets) == 2
+    new_cadet = next(c for c in cadets if c.id != pre_existing_cadet.id)
+    assert pre_existing_cadet.counter_count("+1/+1") == 1
+    assert new_cadet.counter_count("+1/+1") == 0
