@@ -1470,6 +1470,15 @@ _COLOR_COUNT_WORDS: dict[str, Callable[[int], bool]] = {
     "multicolored": lambda count: count >= 2,
 }
 
+#: "This spell costs {1} more to cast for each target beyond the first."
+#: (Fireball, Launch the Fleet's identically-worded "Strive —" clause) -
+#: read generically off the amount rather than assuming {1}, though every
+#: real printing of this shape uses it.
+_COST_INCREASE_PER_TARGET_RE = re.compile(
+    r"costs (?P<amount>\{[^}]+\}(?:\{[^}]+\})*) more to cast for each target beyond the first",
+    re.IGNORECASE,
+)
+
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
 ADDITIONAL_COST_KEYWORDS = frozenset(
@@ -4245,7 +4254,11 @@ class Casting(EngineModel):
             *self.additional_costs,
             *([] if self.printed_additional_costs_charged else self._printed_additional_costs()),
         ]
-        increases = [*self.cost_increases, *(extra.mana for extra in extras)]
+        increases = [
+            *self.cost_increases,
+            *(extra.mana for extra in extras),
+            self._own_cost_increase_for_targets(),
+        ]
         reductions = list(self.cost_reductions)
         floor: int | None = None
         if self.game is not None:
@@ -4265,6 +4278,36 @@ class Casting(EngineModel):
         for extra in extras:
             components.extend(extra.components)
         return TotalCost(mana=mana, components=components)
+
+    def _own_cost_increase_for_targets(self) -> ManaCost:
+        """ "This spell costs [N] more to cast for each target beyond the
+        first." (CR 601.2f), Fireball's own printed shape - and, unnamed by
+        the card that first printed it but the same sentence word for word,
+        Launch the Fleet's "Strive — This spell costs {1} more to cast for
+        each target beyond the first." CR 207.2c: an ability word "has no
+        special rules meaning and no individual entries in the Comprehensive
+        Rules" - "strive" is one (CR 207.2c's own list), so the em-dash
+        prefix changes nothing about what the sentence after it means, and
+        the two cards' identical clauses are the same mechanic rather than
+        two.
+
+        CR 602.2b's targets-before-cost order (the same order Dragonfire
+        Blade's/Warrior's Blades' own per-target equip discount already
+        relies on, `machines/keywords.equip_activation`) is what makes this
+        askable at all: `self.targets` is already announced (CR 601.2c) by
+        the time CR 601.2f prices the spell, so "beyond the first" of
+        *however many targets were actually chosen* is simply
+        `len(self.targets) - 1`, floored at zero for a spell targeting one
+        thing or fewer.
+        """
+        match = _COST_INCREASE_PER_TARGET_RE.search(self.spell.oracle_text or "")
+        if match is None:
+            return ManaCost()
+        extra_targets = max(0, len(self.targets) - 1)
+        if extra_targets == 0:
+            return ManaCost()
+        per_target = ManaCost.parse(match.group("amount"))
+        return ManaCost(symbols=per_target.symbols * extra_targets)
 
     def _own_cost_reduction(self) -> ManaCost:
         """What this spell's own text takes off its own cost right now
