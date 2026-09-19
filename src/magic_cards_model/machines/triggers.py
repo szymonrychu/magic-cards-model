@@ -2872,9 +2872,16 @@ _SPELLS_CAST_LAST_TURN = re.compile(r"^a player cast (?P<count>\w+) or more spel
 #: card-type word ("creatures", "lands") is counted correctly by
 #: `_controlled_subtype_count_holds`'s own card-type branch rather than being
 #: mistaken for a subtype.
+#: Vraska, the Cutting Glare's own ETB clause: "if you control six or more
+#: lands" - the same count-a-card-type shape as Valakut's above, but printed
+#: with the count-word suffix rather than a leading comparison word, mirroring
+#: how `_COUNTER_COUNT_CLAUSE` reads both "fewer than four ... counters" and
+#: "five or more ... counters" as the same underlying comparison.
 _CONTROLLED_SUBTYPE_COUNT = re.compile(
-    r"^you control (?P<comparison>at least|more than|fewer than|exactly) "
-    r"(?P<count>[a-z]+) (?P<other>other )?(?P<subtype>[a-z]+?)s$"
+    r"^you control "
+    r"(?:(?P<comparison>at least|more than|fewer than|exactly) (?P<count>[a-z]+)"
+    r"|(?P<suffix_count>[a-z]+) or (?P<direction>more|fewer))"
+    r" (?P<other>other )?(?P<subtype>[a-z]+?)s$"
 )
 
 #: How each comparison word in `_CONTROLLED_SUBTYPE_COUNT` answers.
@@ -2883,6 +2890,8 @@ _SUBTYPE_COUNT_COMPARISONS = {
     "more than": operator.gt,
     "fewer than": operator.lt,
     "exactly": operator.eq,
+    "more": operator.ge,
+    "fewer": operator.le,
 }
 
 
@@ -2908,7 +2917,12 @@ def _controlled_subtype_count_holds(game: "Game", clause: str, source: CardState
     match = _CONTROLLED_SUBTYPE_COUNT.match(clause)
     if match is None:
         return None
-    wanted = parse_count(match.group("count"), article=False)
+    comparison_word = match.group("comparison")
+    if comparison_word is not None:
+        wanted = parse_count(match.group("count"), article=False)
+    else:
+        comparison_word = match.group("direction")
+        wanted = parse_count(match.group("suffix_count"), article=False)
     if wanted is None:
         return None
 
@@ -2927,7 +2941,7 @@ def _controlled_subtype_count_holds(game: "Game", clause: str, source: CardState
         elif any(word.lower() == subtype for word in characteristics.subtypes):
             count += 1
 
-    return _SUBTYPE_COUNT_COMPARISONS[match.group("comparison")](count, wanted)
+    return _SUBTYPE_COUNT_COMPARISONS[comparison_word](count, wanted)
 
 
 def _card_type_for_word(word: str) -> Type | None:

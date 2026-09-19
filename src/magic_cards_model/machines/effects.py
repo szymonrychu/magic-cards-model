@@ -1035,6 +1035,15 @@ _AMOUNT_OPERATOR_RE = re.compile(r"\s+(minus|plus)\s+", re.IGNORECASE)
 _AMOUNT_TWICE_RE = re.compile(r"^twice (?P<term>.+)$", re.IGNORECASE)
 
 
+def _greatest_mana_value_among(cards: "Sequence[CardState]") -> int:
+    """The shared arithmetic behind every "greatest mana value among `<pile>`"
+    reader: CR 107.2's rule that "the greatest/least/... among" an empty set
+    is 0, since there is no value to compare.
+    """
+    values = [state.mana_value for state in cards]
+    return int(max(values)) if values else 0
+
+
 def _greatest_mana_value_among_cards_in_exile(game: "Game", *_: object) -> int:
     """ "The greatest mana value among cards in exile" (Ulamog, the Defiler).
 
@@ -1046,8 +1055,17 @@ def _greatest_mana_value_among_cards_in_exile(game: "Game", *_: object) -> int:
     among" an empty set is a number that can't be determined, and CR 107.2
     uses 0 for it.
     """
-    values = [state.mana_value for state in game.exile]
-    return int(max(values)) if values else 0
+    return _greatest_mana_value_among(game.exile)
+
+
+def _greatest_mana_value_among_cards_in_your_graveyard(
+    game: "Game", controller: str, *_: object
+) -> int:
+    """ "The greatest mana value among cards in your graveyard" (Hapatra, the
+    Desert Fang's own ETB trigger) - "your" is the ability's controller
+    (CR 108.7), read live the same way the exile-wide reader above is.
+    """
+    return _greatest_mana_value_among(game.player(controller).graveyard)
 
 
 #: "its power"/"its toughness" or "this creature's power"/"this permanent's
@@ -1080,6 +1098,10 @@ def _amount_term(term: str) -> AmountReader | None:
     if lowered == "the greatest mana value among cards in exile":
         return lambda game, _controller, _object, _x: _greatest_mana_value_among_cards_in_exile(
             game
+        )
+    if lowered == "the greatest mana value among cards in your graveyard":
+        return lambda game, controller, _object, _x: (
+            _greatest_mana_value_among_cards_in_your_graveyard(game, controller)
         )
     if match := _OBJECT_CHARACTERISTIC_RE.fullmatch(text):
         # CR 208.1's power/toughness, CR 208.5's zero default for a value
@@ -1870,6 +1892,21 @@ _GAIN_CONTROL_THEN_UNTAP_RE = re.compile(
 #: part of the effect (CR 207.2a reminder text; CR 602.5d "Activate only as a
 #: sorcery").
 _REMINDER_OR_ACTIVATION_RULE_RE = re.compile(r"\([^)]*\)|\bactivate only [^.]*\.", re.IGNORECASE)
+
+#: The narrower half of the pattern above, on its own: CR 602.5d's "Activate
+#: only as a sorcery." / "Activate only once each turn." printed as a trailing
+#: sentence on an activated ability. Budding Insurgent's own "Sacrifice this
+#: creature: Destroy target artifact or enchantment. If that permanent was a
+#: legendary enchantment, draw a card. Activate only as a sorcery." is one
+#: CR 608.2c instruction sequence plus this timing rule tacked on at the end -
+#: not itself an instruction, so `_prepare_effect_clauses`/`_parse_mixed_
+#: clause` should never see it at all. Stripped once, generically, ahead of
+#: every activated ability's own dispatch, rather than case by case: this
+#: restriction is un-worded (CR 602.5d gives no other shape), so nothing here
+#: is a card-specific fit.
+_TRAILING_ACTIVATION_TIMING_RESTRICTION_RE = re.compile(
+    r"\s*\bactivate only [^.]*\.\s*$", re.IGNORECASE
+)
 
 
 def _gain_control_untap_grant(effect_text: str) -> tuple[str, str] | None:
@@ -2706,6 +2743,17 @@ def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
     return pattern.sub("", text)
 
 
+#: CR 601.3b's own timing restriction, printed on the card itself (distinct
+#: from `machines/casting_restrictions.py`'s "who may cast when" statics) -
+#: Reset's "Cast this spell only during an opponent's turn after their upkeep
+#: step." A restriction on *when* the spell may be cast is not one of CR
+#: 608.2c's resolution instructions, so left in the text it poisons the real
+#: instruction after it exactly the way `_strip_self_shuffle_clause` above
+#: describes for Green Sun's Zenith - stripped here, once, generically by its
+#: own un-worded shape, ahead of every spell's own dispatch.
+_CAST_TIMING_RESTRICTION_RE = re.compile(r"\s*\bcast this spell only [^.]*\.\s*", re.IGNORECASE)
+
+
 def effect_for(
     card_name: str, effect_text: str | None = None, *, x_value: int | None = None
 ) -> Effect | None:
@@ -2750,6 +2798,7 @@ def effect_for(
     if effect_text is None:
         return None
     effect_text = _strip_self_shuffle_clause(card_name, effect_text)
+    effect_text = _CAST_TIMING_RESTRICTION_RE.sub(" ", effect_text).strip()
     if is_modal_text(effect_text):
         return resolve_modal_spell
     effect = _spell_effect_or_notice(effect_text)
@@ -7753,7 +7802,10 @@ def _parse_double_counters_on_group_clause(text: str) -> AbilityEffect | None:
 def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
     """A "Create ... token ..." ability read as *one whole, unsplit clause* -
     The Legend of Roku's `{8}` ability, "Create a 4/4 red Dragon creature
-    token with flying and firebending 4."
+    token with flying and firebending 4.", and Minsc, Beloved Ranger's own
+    ETB, "create Boo, a legendary 1/1 red Hamster creature token with
+    trample and haste." (the CR 111.9 named-token shape of the identical
+    problem).
 
     `_ability_effect_or_notice`'s ordinary path is `parse_mixed_effect`, which
     runs `split_effect_clauses` first - and that splitter's `_CLAUSE_SEPARATOR`
@@ -7764,18 +7816,20 @@ def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
     `_parse_token_clause` ever saw the whole tail, and the leftover
     "firebending 4" clause matches no shape at all - the whole ability failed
     closed over one keyword list, not because the token itself was unreadable.
-    `_parse_token_clause` is tried directly against the untouched text
-    instead; its own regex only ever fullmatches a *complete* token-creation
-    sentence, so a card whose token clause is one instruction among several
-    still falls through to the ordinary per-clause path unaffected.
+    `_parse_token_clause` and `_parse_named_token_clause` are each tried
+    directly against the untouched text instead; their own regexes only ever
+    fullmatch a *complete* token-creation sentence, so a card whose token
+    clause is one instruction among several still falls through to the
+    ordinary per-clause path unaffected.
     """
     # `split_effect_clauses` always strips one trailing "." before a clause
     # ever reaches `_parse_token_clause`; going around that splitter (see the
     # docstring above) means doing the same trim here - `_TOKEN_CLAUSE_RE`'s
     # own trailing `\.?` never gets the chance to, since its greedy DOTALL
     # `tail` group is satisfied first and simply absorbs the period instead.
-    return _parse_token_clause(
-        _strip_non_effect_preamble(text).strip().rstrip("."), for_spell=False
+    stripped = _strip_non_effect_preamble(text).strip().rstrip(".")
+    return _parse_token_clause(stripped, for_spell=False) or _parse_named_token_clause(
+        stripped, for_spell=False
     )
 
 
@@ -25359,6 +25413,7 @@ def activated_effect_for(
         return explicit
     if effect_text is None:
         return None
+    effect_text = _TRAILING_ACTIVATION_TIMING_RESTRICTION_RE.sub("", effect_text).strip()
     effect_text = _self_normalized_effect_text(card_name, effect_text)
     if x_value is not None:
         substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))
