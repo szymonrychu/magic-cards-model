@@ -2298,7 +2298,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2545,6 +2545,14 @@ class Game(EngineModel):
     over the same turn boundary at the same time - `graveyard_arrivals_this_
     turn` is deliberately shaped to answer both, and whichever of the two
     branches lands second settles the final schema number.
+
+    Bumped 22 -> 23: `machines/delayed.DelayedTrigger` (reachable from
+    `Game.delayed_triggers`) gained `combat_only`/`to_player_only`, both
+    defaulting `False` - Lyra, Tolarian Archangel's own granted "Until end
+    of turn, whenever Lyra deals combat damage to a player, draw two cards."
+    A version-22 delayed trigger of this shape has neither flag set, so a
+    decoded one would match noncombat damage and damage to a creature too;
+    refused rather than silently over-firing. FRA stream S5's own commit.
     """
 
     @model_validator(mode="before")

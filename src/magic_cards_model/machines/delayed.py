@@ -1096,6 +1096,24 @@ class DelayedTrigger(EngineModel):
     one-shot ability does not sit around forever after it has already done its
     job."""
 
+    combat_only: bool = False
+    """Match only a `TriggerEvent.DEALS_DAMAGE` event with `GameEvent.combat`
+    true (CR 120.2a) - Lyra, Tolarian Archangel's own "Until end of turn,
+    whenever Lyra deals **combat** damage to a player, draw two cards."
+    Unlike the ordinary printed-ability `DEALS_DAMAGE` matcher in
+    `machines/triggers.condition_matches`, `DelayedTrigger.matches` has no
+    string condition to read "combat" off, so this is its own narrow filter
+    field in the same spirit `subjectless_only`/`only_when_active` already
+    are - one purpose-built flag per mechanic this model actually needs,
+    not a general clause parser. `False` (the default) matches damage of
+    either kind, which is every delayed trigger in the pool before this one."""
+
+    to_player_only: bool = False
+    """Match only a `TriggerEvent.DEALS_DAMAGE` event with a player as its
+    target (`GameEvent.player is not None`) - the other half of Lyra's own
+    "... deals combat damage **to a player** ...". `False` matches damage to
+    a permanent too."""
+
     def matches(self, event: GameEvent) -> bool:
         """Whether this event is the one being waited for (CR 603.2, 603.7b).
 
@@ -1124,6 +1142,10 @@ class DelayedTrigger(EngineModel):
             and event.subject_id is not None
             and event.subject_id != self.subject_id
         ):
+            return False
+        if self.combat_only and not event.combat:
+            return False
+        if self.to_player_only and event.player is None:
             return False
         return self.only_when_active is None or event.player == self.only_when_active
 

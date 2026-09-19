@@ -11518,6 +11518,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     dalkovan_attack_tokens = _parse_attack_this_turn_create_tapped_attacking_tokens(effect_text)
     if dalkovan_attack_tokens is not None:
         return dalkovan_attack_tokens
+    self_combat_damage_draw = _parse_until_end_of_turn_self_combat_damage_draw_clause(effect_text)
+    if self_combat_damage_draw is not None:
+        return self_combat_damage_draw
     attacking_tokens_then_sacrifice = _parse_create_tapped_attacking_tokens_then_sacrifice(
         effect_text
     )
@@ -16215,6 +16218,71 @@ def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> Ability
                 remaining=None,
                 expires_end_of_turn=True,
                 effect=CreateAttackingTokens(count=count, definition=definition),
+            )
+        )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Lyra, Tolarian Archangel's own "Until end of turn, whenever [self] deals
+# combat damage to a player, draw N cards" granted delayed trigger
+# --------------------------------------------------------------------------
+#
+# "{3}{U}{U}: Until end of turn, whenever Lyra deals combat damage to a
+# player, draw two cards." CR 603.7a: activating this creates a *delayed*
+# triggered ability watching `TriggerEvent.DEALS_DAMAGE` (the same event an
+# ordinary printed "Whenever this creature deals combat damage to a player"
+# trigger already watches, unchanged by this stream's own recipient-side
+# work on that same event) for the rest of the turn. `DelayedTrigger.matches`
+# has no string condition to read "combat"/"to a player" off the way the
+# printed-ability matcher does, so `combat_only`/`to_player_only` are the
+# purpose-built filter fields this pattern needs, alongside `subject_id`
+# pinning it to Lyra herself (CR 603.7c).
+#
+# The "who" is read loosely rather than checked against the card's own
+# name (`activated_effect_for`'s own dispatch chain never receives
+# `card_name`, only `effect_text`) - every printing of this exact template
+# names the granting permanent itself, the only sensible reading of a
+# self-granted delayed trigger, so `ability.source_id` is used directly
+# without re-deriving who was named. A negative lookahead rules out the
+# differently shaped, non-self "a/another creature you control deals combat
+# damage to a player" template (Subira, Tulzidi Caravanner's own printing)
+# so this parser does not silently mis-scope that one.
+
+_UNTIL_END_OF_TURN_SELF_COMBAT_DAMAGE_DRAW_RE = re.compile(
+    r"^Until end of turn, whenever (?!a |an |another |target |each |you )"
+    r"(?:this (?:creature|permanent)|[A-Z][\w'-]*(?: [A-Z][\w'-]*)*) "
+    r"deals combat damage to a player, draw (?P<count>[a-z]+|\d+) cards?\.?$"
+)
+
+
+def _parse_until_end_of_turn_self_combat_damage_draw_clause(text: str) -> AbilityEffect | None:
+    match = _UNTIL_END_OF_TURN_SELF_COMBAT_DAMAGE_DRAW_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=match.group(0),
+                event=TriggerEvent.DEALS_DAMAGE,
+                controller=controller.username,
+                source_id=source_id,
+                source_name=source_name,
+                subject_id=source_id,
+                combat_only=True,
+                to_player_only=True,
+                remaining=None,
+                expires_end_of_turn=True,
+                effect=DrawACardForController(count=count),
             )
         )
 
