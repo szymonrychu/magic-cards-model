@@ -9561,6 +9561,12 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         return puts_graveyard_on_bottom_of_library
 
+    owner_of_target_puts_top_or_bottom = _parse_owner_of_target_puts_on_top_or_bottom_clause(
+        clause, for_spell=for_spell
+    )
+    if owner_of_target_puts_top_or_bottom is not None:
+        return owner_of_target_puts_top_or_bottom
+
     if match := _TAP_UNTAP_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
@@ -21167,6 +21173,51 @@ def _parse_choose_up_to_one_target_spell_clauses(
         _put_spell_in_library(game, spell, top=top)
 
     return 2, effect
+
+
+#: "The owner of up to one other target nonland permanent puts it on their
+#: choice of the top or bottom of their library." - Plan for All Outcomes'
+#: own ETB: Subtlety's identical two-clause shape (just above), folded into
+#: one sentence and aimed at a *permanent* rather than a spell on the stack,
+#: so `game.resolve_targets` and CR 401.2's plain move through `Game.put_
+#: cards_into_library` are what actually differ - the CR 608.2d choice of
+#: top or bottom is `_put_spell_in_library`'s own `DecisionKind.PUT_ON_TOP_
+#: OR_BOTTOM` question, asked here instead of built as a second copy of it.
+_OWNER_OF_TARGET_PUTS_ON_TOP_OR_BOTTOM_RE = re.compile(
+    r"^the owner of (?P<phrase>.*target .+?) puts it on their choice of the "
+    r"top or bottom of (?:their|its owner'?s) library\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_owner_of_target_puts_on_top_or_bottom_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_OWNER_OF_TARGET_PUTS_ON_TOP_OR_BOTTOM_RE`'s shape, or `None`."""
+    match = _OWNER_OF_TARGET_PUTS_ON_TOP_OR_BOTTOM_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.owner is None:
+                continue
+            top = game.ask(
+                Decision(
+                    kind=DecisionKind.PUT_ON_TOP_OR_BOTTOM,
+                    player=target.owner,
+                    prompt=f"put {target.name} on the top or bottom of {target.owner}'s library",
+                    source=source,
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            assert isinstance(top, bool)
+            game.put_cards_into_library([target], to_bottom=not top)
+
+    return effect
 
 
 def _merge_reveal_hand_choose_discard_clauses(
