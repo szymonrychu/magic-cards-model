@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "6c45a5df-048e-4b73-89c6-5cdaa330319e",
+  "oracle_id": "9c6a6332-37f0-4d7d-a86f-478cf0eeec91",
+  "multiverse_ids": [],
+  "resource_id": "90CF6163CC6C2B092493940DFEA6DA00D4B36866DCCB9C03504FB2B01BD6E694",
+  "mtgo_id": 153361,
+  "arena_id": 97878,
+  "tcgplayer_id": 651997,
+  "cardmarket_id": 846645,
+  "name": "Prison Break",
+  "lang": "en",
+  "released_at": "2025-09-26",
+  "uri": "https://api.scryfall.com/cards/6c45a5df-048e-4b73-89c6-5cdaa330319e",
+  "scryfall_uri": "https://scryfall.com/card/spm/61/prison-break?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:15:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.jpg?1783905344",
+    "normal": "https://cards.scryfall.io/normal/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.jpg?1783905344",
+    "large": "https://cards.scryfall.io/large/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.jpg?1783905344",
+    "png": "https://cards.scryfall.io/png/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.png?1783905344",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.jpg?1783905344",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.jpg?1783905344",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.webp?1783905344",
+    "grid": "https://cards.scryfall.io/grid/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.webp?1783905344",
+    "display": "https://cards.scryfall.io/display/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.webp?1783905344",
+    "art": "https://cards.scryfall.io/art/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.webp?1783905344",
+    "crop": "https://cards.scryfall.io/crop/front/6/c/6c45a5df-048e-4b73-89c6-5cdaa330319e.webp?1783905344"
+  },
+  "mana_cost": "{4}{B}",
+  "cmc": 5.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Return target creature card from your graveyard to the battlefield with an additional +1/+1 counter on it.\nMayhem {3}{B} (You may cast this card from your graveyard for {3}{B} if you discarded it this turn. Timing rules still apply.)",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Mayhem"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set": "spm",
+  "set_name": "Marvel's Spider-Man",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aspm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/spm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6c45a5df-048e-4b73-89c6-5cdaa330319e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9c6a6332-37f0-4d7d-a86f-478cf0eeec91&unique=prints",
+  "collector_number": "61",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Anyone who's tired of the slammer, follow us!\"\n\u2014Electro, Max Dillon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "John Tyler Christopher",
+  "artist_ids": [
+    "b029218f-baba-45aa-8f5a-24353077dcc9"
+  ],
+  "illustration_id": "e4d92be7-824b-4dd5-8bd7-f3a9e2a24145",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 10866,
+  "preview": {
+    "source": "Dengeki Online",
+    "source_uri": "https://dengekionline.com/article/202509/51106",
+    "previewed_at": "2025-09-02"
+  },
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.17",
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPrison%2BBreak",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPrison%2BBreak",
+    "edhrec": "https://edhrec.com/route/?cc=Prison+Break"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F651997%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=846645&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153361?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

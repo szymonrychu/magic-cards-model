@@ -629,6 +629,15 @@ class SpendClause(EngineModel):
     types: SortedFrozenSet[Type] = frozenset()
     """The card types the sentence printed - "creature spell" style. Whether
     the object needs one of them or all of them is `joined`'s answer."""
+    excluded_types: SortedFrozenSet[Type] = frozenset()
+    """CR 109.2's negation of a printed card type - Chandra, Chill of
+    Compliance's own "a noncreature spell". Always a conjunction regardless
+    of `joined`: "a noncreature, nonland spell" (De Morgan on "a creature or
+    land spell", the same reading `machines/effects.py`'s own
+    `_nonland_or_typed_card_matcher` already gives a comma-joined negation
+    list) means the object may be neither, and there is no printed shape
+    where a mana-spend restriction offers "not a creature, or not a land" as
+    two independent ways to satisfy it - only ever "not either"."""
     subtypes: SortedFrozenSet[str] = frozenset()
     """The subtypes the sentence printed, lowercased and singular (the printed
     word is read back to the subtype it names by `data/subtypes.py`) - plus
@@ -678,6 +687,12 @@ class SpendClause(EngineModel):
         # wrong one does, which is the fail-closed direction: a clause that
         # names a zone is not satisfied by a caller who could not say.
         if self.zone is not None and spend.zone is not self.zone:
+            return False
+        # CR 109.2: every negated type must be absent, independently of
+        # `joined` and of whatever the positive qualities below ask - "not
+        # this" is never one alternative among several the way a positive
+        # type list can be.
+        if self.excluded_types & spend.types:
             return False
 
         printed: list[tuple[frozenset[Any], frozenset[Any]]] = [

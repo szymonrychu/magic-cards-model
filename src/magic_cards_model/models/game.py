@@ -184,6 +184,7 @@ from ..machines.layers import (
     count_card_types,
     grant_ability,
     only_this_incarnation,
+    printed_characteristics,
     spend_effect_effects,
 )
 from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
@@ -760,7 +761,9 @@ _CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
     rf"you(?:'ve| have) cast {count_pattern('count')} or more spells this turn", re.IGNORECASE
 )
 #: Grim Repriser's own "Activate only if an opponent has been dealt
-#: noncombat damage this turn" (CR 120.2a, CR 602.5b).
+#: noncombat damage this turn" (CR 120.2a, CR 602.5b) - read off
+#: `Game.turn_facts["dealt_noncombat_damage"]`, recorded per recipient in
+#: `deal_damage`.
 _CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN = re.compile(
     r"an opponent has been dealt noncombat damage this turn", re.IGNORECASE
 )
@@ -772,6 +775,13 @@ _CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN = re.compile(
 #: spell.
 _CONDITION_CAST_A_SPELL_THIS_TURN = re.compile(
     r"you(?:'ve| have) cast an? (?:(?P<quality>[\w-]+) )?spell this turn", re.IGNORECASE
+)
+#: Proctor of Potential: "you've scried or surveilled this turn" (CR
+#: 701.22a, 701.25a) - read off `Game.turn_facts["scried_or_surveilled"]`
+#: (`turn_fact_holds`), recorded in `scry` and `surveil` alike, since the
+#: printed condition treats either verb as satisfying it.
+_CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN = re.compile(
+    r"you(?:'ve| have) scried or surveilled this turn", re.IGNORECASE
 )
 #: CR 110.4a: "Specifically, it means an artifact, battle, creature,
 #: enchantment, land, or planeswalker card."
@@ -2267,7 +2277,10 @@ class Game(EngineModel):
     (`Player.gain_life`) for the same CR 119.9 reason, the same shape
     `cards_drawn_this_turn` already counts a per-player total in. Feeds
     Germinate Recruits' own "where X is the amount of life you gained this
-    turn" (CR 107.3f). Cleared when a new turn begins.
+    turn" (CR 107.3f) and Enlightened Confidant's own "a card with mana
+    value less than or equal to the amount of life you gained this turn" -
+    the printed amount itself, not merely whether any was gained. Cleared
+    when a new turn begins.
 
     The FRA "trigger events and per-turn history" stream (S5) independently
     built the identical fact as `Player.life_gained_tally`/`life_gained_
@@ -3064,6 +3077,26 @@ class Game(EngineModel):
     `<phrase2>`" - Hungry Flames), `None` by default and populated only as
     resolution of that specific shape begins, so a version-30 stack object
     mid-resolution simply has none yet, same as it always would have.
+
+    Still version 31 at the FRA S8 merge (zone-movement templates: hand/
+    library/graveyard/exile/outside-the-game) - reconciled with no bump at
+    all. Its own independent history (branched before the fra-s3/FRA S5/FRA
+    S9 reconciliations above landed) claimed 21 -> 24 for `life_gained_
+    amount_this_turn` (fra-s3, "Bumped 23 -> 24" above) and
+    `noncombat_damage_recipients_this_turn`/`scried_or_surveilled_this_turn`
+    (FRA S9, "Bumped 29 -> 30" above), which this line already has. It also
+    built `machines/triggers.GameEvent.recipient_id`, a *permanent* damage
+    recipient for the passive "is dealt damage" condition (Hexhaven
+    Invigorator) - the identical fact FRA S5's own `target_id`/`target_
+    controller`/`target_types` above already carries, just for a narrower
+    case (a permanent only, not a player too). Dropped in favour of the
+    existing fields rather than carried forward - `condition_matches`'s own
+    passive-voice branch already reads `target_id` before a self-referential
+    check on `recipient_id` could ever be reached, so the second field and
+    its own dead branch were both a redundant "two mechanisms" the way
+    `CLAUDE.md`'s own rule already forbids elsewhere in this history, not
+    reachable at all rather than merely unreachable *the way* a bumped-and-
+    then-superseded field is. No schema change either way.
     """
 
     @model_validator(mode="before")
@@ -6102,8 +6135,26 @@ class Game(EngineModel):
             # `TriggerEvent | None` and keys such a row on the condition text,
             # so gating on the event here was refusing to look the effect up
             # at all.
+            # CR 107.3a's X, carried from the source permanent's own cast
+            # record (CR 400.7d) rather than `ability.x_value` - a triggered
+            # ability is never itself announced with an X the way an
+            # activated ability's cost is; only the permanent it fires off
+            # of was. Read only when that permanent's mana cost actually
+            # carries `{X}`, the same "only if {X} is in the cost" gate the
+            # activated-ability branch below already applies, so an ordinary
+            # bare "X" in a trigger's own rules text (CR 107.3f, not this
+            # one) is left untouched.
+            trigger_source = ability.source(self)
+            trigger_x_value = (
+                self.cast_record(trigger_source).x_value
+                if trigger_source is not None and "{X}" in (trigger_source.mana_cost or "")
+                else None
+            )
             return trigger_effect_for(
-                ability.source_name, ability.ability.event, ability.ability.effect
+                ability.source_name,
+                ability.ability.event,
+                ability.ability.effect,
+                x_value=trigger_x_value,
             )
         if isinstance(ability.ability, ActivatedAbility):
             if ability.ability.class_level_target is not None:
@@ -8787,12 +8838,15 @@ class Game(EngineModel):
                 player = self.player(player)
             if count <= 0:
                 return CardSplit()
-
             # CR 701.22d has no rule number of its own to cite - the trigger
             # is a plain CR 603.2 "matches the event" question, and CR
             # 701.22b already draws the line this checks: scry 0 "is not a
             # scry event" at all. Denzilore Fatehold's and Matoya, Archon
             # Elder's own "Whenever you scry or surveil" is what reads this.
+            # CR 701.22b's own "no scry event occurs" is also why the turn
+            # fact below is recorded only past the count-0 refusal above
+            # (Proctor of Potential's own "Activate only if you've scried or
+            # surveilled this turn").
             self.emit(GameEvent(event=TriggerEvent.SCRY_OR_SURVEIL, player=player.username))
             self.record_turn_fact("scried_or_surveilled", player.username)
 
@@ -8870,9 +8924,10 @@ class Game(EngineModel):
                 player = self.player(player)
             if count <= 0:
                 return CardSplit()
-
             # CR 701.25c mirrors CR 701.22b: surveil 0 "is not a surveil
-            # event" either - see `scry`'s own emit for the rest.
+            # event" either - see `scry`'s own emit for the rest. The turn
+            # fact below is recorded only past this count-0 refusal, same
+            # as scry's own.
             self.emit(GameEvent(event=TriggerEvent.SCRY_OR_SURVEIL, player=player.username))
             self.record_turn_fact("scried_or_surveilled", player.username)
 
@@ -9363,6 +9418,15 @@ class Game(EngineModel):
             for state in found:
                 if destination is Zone.BATTLEFIELD:
                     self.put_onto_battlefield(state, player.username, tapped=tapped)
+                elif destination is Zone.GRAVEYARD:
+                    # CR 400.6/614.1a: this is an ordinary "put into a
+                    # graveyard" - Enroot's own "search your library for a
+                    # land card, put it into your graveyard" - and every
+                    # replacement effect watching for one (Rest in Peace,
+                    # Leyline of the Void) applies to it exactly as it would
+                    # to any other, so this goes through the one shared
+                    # mover rather than a bespoke zone assignment.
+                    self.put_into_graveyard(state)
                 else:
                     player.add(state, destination)
             self.shuffle_library(player)
@@ -12620,7 +12684,25 @@ class Game(EngineModel):
         return self.open_payment_pools.get(player.username, player.mana_pool)
 
     def characteristics_of(self, permanent: CardState) -> Characteristics:
-        """This permanent's characteristics right now, layers included (CR 613.5)."""
+        """This permanent's characteristics right now, layers included (CR 613.5).
+
+        CR 613's whole layer system is about the battlefield - "the game
+        applies each applicable effect in a series of layers" governs what
+        that object *currently is*, a question only a permanent has - so an
+        object anywhere else (a graveyard-zone CR 113.6m ability's own
+        source, an exiled card, one still in a library or hand) falls back
+        to `printed_characteristics`, the same layer-1 starting point every
+        computed board itself begins from, with no continuous effect able to
+        reach it there to begin with (CR 611.1, 613.1a: an effect that could
+        apply "as long as" or "for as long as" a permanent condition holds
+        needs a permanent to hold it). Grim Repriser's and Proctor of
+        Potential's own graveyard-zone activation is what first needed this:
+        `CostPayment.for_total`'s own `ManaSpend.activating` call asks for
+        this unconditionally, for every activation, not only a battlefield
+        one.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return printed_characteristics(permanent)
         return self.computed_board().of(permanent)
 
     def power_of(self, permanent: CardState) -> int | None:
@@ -14970,6 +15052,9 @@ class Game(EngineModel):
             # `test_self_referential_costs.py`'s own Seasoned Pyromancer and
             # Boseiju tests used to route around this gate by building and
             # paying the `TotalCost` directly instead; they no longer need to.
+            # See `docs/engine-coverage.md`'s FRA S1 note (Campus Crier) -
+            # this is the general fix that gap named but did not make; the
+            # fix belongs here, not in one more keyword.
             if permanent.zone is not ability.zone:
                 return (
                     f"{permanent.name}'s ability functions in the {ability.zone.value}, "
@@ -15355,6 +15440,9 @@ class Game(EngineModel):
             # you may choose both instead." - the same running count
             # `intervening_if_holds`'s "you descended this turn" reads.
             return self.descended(controller)
+
+        if _CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN.fullmatch(text):
+            return self.turn_fact_holds("scried_or_surveilled", controller)
 
         return None
 
@@ -15775,6 +15863,16 @@ class Game(EngineModel):
                 # turns the sentence into something payable - "Exert this land"
                 # (CR 701.43a), "Exile a black card from your hand" (CR 118.9).
                 component = cost_component_for_phrase(piece.text, payer=controller)
+                if (
+                    component is not None
+                    and component.requirement is not None
+                    and component.requirement.excludes_source
+                ):
+                    # "Exile another <quality> card": `cost_component_for_
+                    # phrase` reads the printed sentence alone and never sees
+                    # a live board, so it cannot know which permanent
+                    # "another" excludes - this is the one place that does.
+                    component.requirement.source_id = permanent.id
                 if component is None and _exiles_itself_by_name(piece.text, permanent):
                     # CR 201.5: "if an object's text uses its own name, it is
                     # referring to that particular object" - the same

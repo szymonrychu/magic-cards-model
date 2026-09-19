@@ -2121,7 +2121,12 @@ def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
     # "meld them into Hanweir, the Writhing Township") - substituting bare
     # "Hanweir" there would rewrite both into nonsense, since neither is
     # this card naming itself. "the" as the second word is a safe, narrow
-    # signal no ordinary card-name word ever collides with.
+    # signal no ordinary card-name word ever collides with - anchored on
+    # "the" specifically (not any lowercase word), since a name that is
+    # itself an ordinary phrase (Search for Azcanta) has lowercase
+    # prepositions of its own that are not an epithet boundary, and reading
+    # every one as a candidate self-reference once corrupted an unrelated
+    # "Search" inside Search for Azcanta's own printed name mid-sentence.
     words = front.split(" ")
     if len(words) >= 3 and words[1].lower() == "the":
         candidates.add(words[0].strip())
@@ -2131,7 +2136,10 @@ def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
     # turn, or "When Aerid Konstrari enters" becomes "When this permanent
     # Konstrari enters" instead of "When this permanent enters" - a shorter
     # candidate winning the race corrupts the very phrase the longer one was
-    # about to match whole.
+    # about to match whole. The identical risk sits between "Liliana the
+    # Repentant" and its own short "Liliana" candidate (Azcanta's own front
+    # face prints its whole name a second time, verbatim, inside its own
+    # effect) - a set's own iteration order cannot be trusted to avoid it.
     for name in sorted(candidates, key=len, reverse=True):
         if name:
             normalized = re.sub(
@@ -3061,7 +3069,10 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # dealt noncombat damage" (the recipient, CR 120.1's passive voice) are
     # both this one event - the matcher reads "combat"/"noncombat" and
     # active/passive voice off the condition, `GameEvent.combat` and
-    # `target_id` vs `subject_id` off the event.
+    # `target_id` vs `subject_id` off the event. `machines/triggers.
+    # condition_matches`'s own DEALS_DAMAGE branch reads the same words
+    # ("is dealt" vs "deals") to pick `GameEvent.target_id`/`player` over
+    # `subject_id`.
     if re.search(
         r"\bdeals (?:combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b", lowered
     ):

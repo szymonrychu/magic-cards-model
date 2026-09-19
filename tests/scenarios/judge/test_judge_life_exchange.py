@@ -100,14 +100,23 @@ def test_both_printings_carry_the_triggered_abilities_the_ruling_needs():
 
 def test_both_halves_now_reach_the_trigger_matcher():
     """Mister Negative's "When Mister Negative enters" resolves to
-    `TriggerEvent.ENTERS_THE_BATTLEFIELD`; Screaming Nemesis's "Whenever this
-    creature is dealt damage" now resolves to `TriggerEvent.DEALS_DAMAGE`
-    too (the FRA "trigger events and per-turn history" stream's own recipient-
-    side reading of CR 120.1's passive voice - Hexhaven Invigorator prints
-    the identical condition). Both reach `triggered_abilities_of`, so the
-    remaining gap that keeps Amy able to gain life is entirely the missing
-    effect body `test_neither_ability_has_a_scripted_effect` already covers,
-    not the condition going unmatched.
+    `TriggerEvent.ENTERS_THE_BATTLEFIELD`. Screaming Nemesis's "Whenever this
+    creature **is dealt** damage" is the passive voice of the identical CR 120
+    damage event `TriggerEvent.DEALS_DAMAGE` already names for the active
+    "deals damage" phrasing (FRA stream S8's own fix, needed for Hexhaven
+    Invigorator's own "Whenever this creature is dealt damage, you may
+    search ..." trigger) - `machines/abilities._trigger_event` now reads "is
+    dealt"/"are dealt" the same way, so this ability is no longer dropped
+    before any event could match it, and `machines/triggers.condition_matches`
+    reads the recipient side off `GameEvent.target_id`/`target_controller`/
+    `target_types` (a permanent) or `GameEvent.player` (a player) - FRA S5's
+    own fields, reconciled onto at the int-engine-dsl merge in place of this
+    stream's own narrower, permanent-only `recipient_id`.
+
+    Both reach `triggered_abilities_of`, so the remaining gap that keeps Amy
+    able to gain life is entirely the missing effect body
+    `test_neither_ability_has_a_scripted_effect` already covers, not the
+    condition going unmatched.
     """
     assert len(triggered_abilities_of(card("Mister Negative"))) == 1
     assert len(triggered_abilities_of(card("Screaming Nemesis"))) == 1

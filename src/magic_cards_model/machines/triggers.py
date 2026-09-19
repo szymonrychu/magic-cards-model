@@ -1989,10 +1989,13 @@ def condition_matches(
                     return False
             return True
         # CR 120.1: "An object that deals damage is the source of that
-        # damage" - the subject is the source, so the self-referential form
-        # checks the source and the general form checks the controller clause
-        # and types of whatever dealt it. Damage with no known source carries
-        # neither an id nor a controller and matches nothing here.
+        # damage" - the subject is the source, so the self-referential
+        # form ("this creature deals damage") checks the source and the
+        # general form checks the controller clause and types of whatever
+        # dealt it. Damage with no known source carries neither an id nor a
+        # controller and matches nothing here. The passive form ("this
+        # creature is dealt damage") is caught above, before this point is
+        # ever reached, through `target_id`/`player` instead.
         if mine:
             if event.subject_id != source.id:
                 return False
@@ -2872,7 +2875,7 @@ def intervening_if_holds(
         # shape.
         return meld_holds
 
-    if clause == "you cast it":
+    if clause in ("you cast it", "you cast him", "you cast her", "you cast them"):
         # CR 601.2's cast is a defined action distinct from every other way a
         # permanent can reach the battlefield (reanimation, a search-and-put
         # effect, ...); `Game.note_cast` (CR 601.2h) only ever records a
@@ -2883,6 +2886,12 @@ def intervening_if_holds(
         # shape to fail closed on - it is the legitimate, expected answer for
         # a creature that entered some other way, so this returns `False`
         # directly rather than through `_fail_closed`.
+        #
+        # "Him"/"her"/"them" are the identical CR 700.7 self-reference as
+        # "it", spelled with a legendary character's own established pronoun
+        # (`machines/abilities.self_normalized_effect_text`'s own gendered
+        # candidates read the same idiom for a printed name) - Uldaros
+        # Theorix's own "if you cast him" is the reported shape.
         record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         return record is not None
 
