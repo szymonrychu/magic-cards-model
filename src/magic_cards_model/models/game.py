@@ -2018,6 +2018,15 @@ class Game(EngineModel):
     Feeds Proctor of Potential's own "Activate only if you've scried or
     surveilled this turn" (CR 602.5b). Cleared when a new turn begins."""
 
+    life_gained_amount_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How much life each player has gained this turn (CR 119.3), as opposed
+    to `life_gained_this_turn`'s own plain yes/no. Written in `Player.
+    gain_life` alongside that set, the one place a life total actually goes
+    up. Feeds Enlightened Confidant's own "a card with mana value less than
+    or equal to the amount of life you gained this turn" - the printed
+    amount itself, not merely whether any was gained. Cleared when a new
+    turn begins, the same reset `life_gained_this_turn` already gets."""
+
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
@@ -2266,7 +2275,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 24
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2509,6 +2518,12 @@ class Game(EngineModel):
     per-turn-history shape `life_gained_this_turn` already is - needed for
     Grim Repriser's and Proctor of Potential's own "Activate only if"
     restrictions, which nothing before this recorded at all.
+
+    Bumped 23 -> 24: `Game` gained `life_gained_amount_this_turn` (FRA
+    stream S8) - `life_gained_this_turn`'s own plain yes/no was already
+    there, but nothing recorded the actual *amount*, which Enlightened
+    Confidant's own "mana value less than or equal to the amount of life
+    you gained this turn" needs read back as a real number.
     """
 
     @model_validator(mode="before")
@@ -15259,6 +15274,7 @@ class Game(EngineModel):
             self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
+            self.life_gained_amount_this_turn = {}
             self.noncombat_damage_recipients_this_turn = set()
             self.scried_or_surveilled_this_turn = set()
             # `play_permissions` is deliberately **not** cleared here. CR 514.2

@@ -833,6 +833,13 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
 #: zone with no type restriction to read ("the hand is where a player holds
 #: cards that have been drawn"), so every card in it counts, whatever it is.
 _COUNT_CARDS_IN_YOUR_HAND_RE = re.compile(r"^(?:the )?number of cards in your hand$", re.IGNORECASE)
+#: "the amount of life you gained this turn" - Enlightened Confidant's own
+#: mana-value ceiling. `Game.life_gained_amount_this_turn` (FRA stream S8)
+#: is the one place that count is recorded, the amount half of
+#: `life_gained_this_turn`'s own plain yes/no.
+_COUNT_LIFE_GAINED_THIS_TURN_RE = re.compile(
+    r"^(?:the )?amount of life you gained this turn$", re.IGNORECASE
+)
 #: "the number of cards in your graveyard" - Yuriko, Hope from the Shadows's
 #: own X. The unfiltered twin of `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`: CR
 #: 500.2's graveyard has no type restriction of its own either, so every
@@ -970,6 +977,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return len(game.player(controller).hand)
 
         return count_in_hand
+
+    if _COUNT_LIFE_GAINED_THIS_TURN_RE.fullmatch(stripped):
+
+        def count_life_gained(game: "Game", controller: str) -> int:
+            return game.life_gained_amount_this_turn.get(controller, 0)
+
+        return count_life_gained
 
     if _COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE.fullmatch(stripped):
 
@@ -5210,6 +5224,79 @@ _SURVEIL_RE = re.compile(rf"surveils? (?P<n>{AMOUNT}){where_x_pattern()}", re.IG
 #: Command's third-person mode) - `scr(?:y|ies)` reads both conjugations.
 #: "Scry X, where X is `<expr>`" (Oath of Jace) reads the same way.
 _SCRY_RE = re.compile(rf"scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
+#: "If you put a `<quality>` card into your graveyard this way, put that
+#: card into your hand." - Chandra, Chill of Compliance's own `+1` (a plain
+#: quality, "noncreature, nonland") and Enlightened Confidant's own trigger
+#: (a dynamic mana-value ceiling, "the amount of life you gained this
+#: turn"), following a surveil. "This way" is CR 608.2c anaphora onto
+#: exactly what the surveil itself just put into the graveyard - the
+#: `Game.surveil`/`Game.scry` `CardSplit.moved` return value, not a second,
+#: independent graveyard scan.
+_SURVEIL_THEN_IF_PUT_QUALITY_TO_HAND_RE = re.compile(
+    r"^if you put an? (?P<quality>.*?)card"
+    r"(?: with mana value less than or equal to (?P<mv_expr>.+?))?"
+    r" into your graveyard this way, put that card into your hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_surveil_then_if_quality_to_hand_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_SURVEIL_RE` immediately followed by `_SURVEIL_THEN_IF_PUT_QUALITY_
+    TO_HAND_RE` - Chandra, Chill of Compliance's own `+1` and Enlightened
+    Confidant's own end-step trigger. A merge, not two independent clauses:
+    the second sentence's "this way" needs to know exactly which card (if
+    any) the first sentence's surveil put into the graveyard, which only a
+    caller holding the live `CardSplit` the surveil itself returned can
+    answer - a fresh graveyard scan could not tell that card apart from one
+    already sitting there.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    surveil_match = _SURVEIL_RE.fullmatch(clauses[index].strip())
+    if surveil_match is None:
+        return None
+    reader = _amount_reader(surveil_match.group("n"), surveil_match.group("where_x"))
+    if reader is None:
+        return None
+    hand_match = _SURVEIL_THEN_IF_PUT_QUALITY_TO_HAND_RE.fullmatch(clauses[index + 1].strip())
+    if hand_match is None:
+        return None
+    quality_text = (hand_match.group("quality") or "").strip()
+    quality_matches = (
+        (lambda state: True) if not quality_text else _nonland_or_typed_card_matcher(quality_text)
+    )
+    if quality_matches is None:
+        return None
+    mv_expr = hand_match.group("mv_expr")
+    mv_counter = count_expression(mv_expr) if mv_expr else None
+    if mv_expr and mv_counter is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        split = game.surveil(
+            player, reader(game, player.username), source=source, source_id=source_id
+        )
+        if not split.moved:
+            return
+        ceiling = mv_counter(game, player.username) if mv_counter is not None else None
+        by_id = {state.id: state for state in player.graveyard}
+        for card_id in split.moved:
+            state = by_id.get(card_id)
+            if state is None or not quality_matches(state):
+                continue
+            if ceiling is not None and state.mana_value > ceiling:
+                continue
+            player.add(state, Zone.HAND)
+            break
+
+    return 2, effect
+
+
 #: "You gain life equal to the life you've lost this turn." - Children of
 #: Korlis. The amount is read off `Player.life_lost_this_turn`, the gross
 #: per-turn ledger, not the net change in the life total: every route down
@@ -20958,6 +21045,17 @@ def _nonland_or_typed_card_matcher(quality: str) -> Callable[[CardState], bool] 
     delegates everything else.
     """
     quality = quality.strip().lower()
+    # A comma or "or" joins several qualities - Chandra, Chill of
+    # Compliance's own "a noncreature, nonland card" among them -
+    # `_quality_matcher` already reads each word's own "non" prefix (via
+    # `_named_type_matcher`) and already combines an all-negation list as a
+    # conjunction (De Morgan) rather than a disjunction, so this delegates
+    # straight to it rather than reading `quality.split()` on whitespace,
+    # which would instead see "noncreature," (a stray comma still attached)
+    # and "nonland" as if they were the two words of the single-negation
+    # compound below - the wrong shape entirely.
+    if "," in quality or " or " in quality:
+        return _quality_matcher(quality)
     if quality.startswith("non"):
         words = quality.split()
         if len(words) == 2:
@@ -23529,6 +23627,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         merged = _merge_search_hand_shuffle_then_discard_random_clauses(
             clauses, index, for_spell=for_spell
         )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_surveil_then_if_quality_to_hand_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

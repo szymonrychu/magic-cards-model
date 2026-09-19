@@ -659,6 +659,9 @@ class Player(EngineModel):
         self.life += amount
         if self.game is not None:
             self.game.life_gained_this_turn.add(self.username)
+            self.game.life_gained_amount_this_turn[self.username] = (
+                self.game.life_gained_amount_this_turn.get(self.username, 0) + amount
+            )
         return self.life
 
     @property
