@@ -3323,8 +3323,18 @@ _SEARCH_AND_PUT_RE = re.compile(
     # many" (The Earth King) is a count carried from an earlier instruction -
     # Group 0b's own channel, not built yet - recognised here so the shape
     # reads, but `_read_search_count` refuses to guess a number for it.
+    #
+    # `n_x` is the one case a bare "X" *does* match at this level: CR 107.3f's
+    # own self-defined X, spelled out in a trailing "where X is <expr>"
+    # clause (`where_x_pattern()` below) rather than announced by the cost -
+    # Harvest Season's own "up to X basic land cards, where X is the number
+    # of tapped creatures you control". `_read_search_count` refuses this
+    # one too when `where_x` came back empty (a bare X with no definition
+    # anywhere is CR 107.3a's kind, which the substitution retry above still
+    # owns), so a card whose cost genuinely announces X is unaffected: the
+    # unsubstituted pass still reads nothing here and the retry still runs.
     r"search (?:your|their) library for "
-    rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<that_many>that many)) "
+    rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<n_x>[xX])|(?P<that_many>that many)) "
     # The quality is optional: CR 701.23d names "a card" as its own kind of
     # search - "If a player is searching a hidden zone simply for a quantity of
     # cards, such as 'a card' or 'three cards,' that player must find that many
@@ -3339,7 +3349,13 @@ _SEARCH_AND_PUT_RE = re.compile(
     # mana costs, not mana values: CR 202.1 makes a mana cost the mana
     # symbols, so {X} (mana value 0 in a library, CR 202.3e) is neither, and
     # CR 202.1b's "no mana cost" is not {0}. Read by `_exact_mana_cost_matcher`.
-    r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?"
+    r"(?: with mana cost (?P<mana_costs>"
+    + _MANA_COST_LIST
+    + r"))?"
+    # Harvest Season's own X-defining tail, read the same way `_SCRY_RE`/
+    # `_SURVEIL_RE` already read theirs, through `count_expression`.
+    + where_x_pattern()
+    +
     # CR 701.23e: a printed reveal is a real reveal. "reveal it"/"them"
     # (Expedition Map, Primeval Titan) and "reveal that card"/"those cards"
     # (Trinket Mage, Tooth and Nail) are the same instruction, singular or
@@ -3811,7 +3827,7 @@ def _read_search_count(match: re.Match[str]) -> Callable[["Game", str], int] | N
     701.23b's "up to N" or CR 701.23d's plain N - fixed once the clause
     parses, never re-read from the board (nothing in this family's shape
     varies by resolution the way `count_expression`'s "the number of ... you
-    control" does).
+    control" does) - unless the card itself says otherwise below.
 
     "up to that many" (`that_many`) is a count carried from an earlier
     instruction (The Earth King's "search ... for up to that many basic land
@@ -3819,10 +3835,27 @@ def _read_search_count(match: re.Match[str]) -> Callable[["Game", str], int] | N
     search, but there is no channel yet to carry that count in (Group 0b) -
     this refuses it (`None`) rather than guessing, and `_unreadable_search_
     count` turns that refusal into a recorded notice instead of silence.
+
+    A bare "X" (`n_x`) is CR 107.3a's own kind - announced as the spell is
+    cast - unless the sentence also prints CR 107.3f's own "where X is
+    <expr>" tail (`where_x`), which defines the X itself rather than leaving
+    it to be announced: Harvest Season's own "up to X basic land cards,
+    where X is the number of tapped creatures you control". That reads
+    through the shared `count_expression` (the same reader `_SCRY_RE`'s and
+    `_SURVEIL_RE`'s own "where X is" tails already use), evaluated once at
+    resolution (CR 611.2c) rather than fixed here at parse time, since it is
+    a live board count. A bare "X" with no such tail is left unread - the
+    caller's own `{X}`-substitution retry is what answers that shape,
+    exactly as it already did before this reader knew "X" at all.
     """
     groups = match.groupdict()
     if groups.get("that_many"):
         return None
+    if groups.get("n_x"):
+        where_x = groups.get("where_x")
+        if not where_x:
+            return None
+        return count_expression(where_x.strip())
     n = groups.get("n")
     amount = 1 if n is None else parse_count(n)
     if amount is None:
