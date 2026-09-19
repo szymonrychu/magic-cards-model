@@ -91,7 +91,7 @@ from ..ids import new_id
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
-from ..numbers import parse_count
+from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
 from .abilities import layer_readable_sentences, self_normalized_effect_text
 from .combat import KEYWORDS_OUTSIDE_COMBAT, Keyword
@@ -2345,11 +2345,39 @@ _SUBJECT = (
     r"|another target(?: [a-z]+)? creature(?: you control)?)"
 )
 
+#: Dauntless Onslaught's own plural CR 115.6 shape: "Up to two target
+#: creatures each get +2/+2 until end of turn." Scoped to `_PUMP_RE` alone
+#: rather than folded into `_SUBJECT` itself - several other shapes below
+#: (keyword grant, base P/T set, gain control, becomes-a-color) share
+#: `_SUBJECT` too, and none of them is this wave's territory; only the pump
+#: shape has a real pool/off-pool card printing a plural count here.
+_PLURAL_PUMP_SUBJECT = rf"(?:up to )?{COUNT} target(?: [a-z]+)? creatures(?: each)?"
+
+#: Xenagos, God of Revels' own reversed order: "another target creature you
+#: control **gains haste and gets** +X/+X until end of turn" - the keyword
+#: comes first, not last, so the two verb phrases need their own branch
+#: rather than the forward "gets ... and gains ..." shape's trailing
+#: optional keyword. Both branches feed the same builder either way.
+#: `power`/`toughness` (or the reversed order's own `power2`/`toughness2`)
+#: read `x` as well as a literal number - CR 107.3a's X, evaluated through
+#: `where_x_pattern`'s tail rather than a fixed digit, for Xenagos' own
+#: "where X is that creature's power".
 _PUMP_RE = re.compile(
-    rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
-    rf"(?: and gains (?P<keyword>[a-z ]+))? until end of turn\.?$",
+    rf"^(?:{_SUBJECT}|{_PLURAL_PUMP_SUBJECT}) (?:"
+    rf"gets? (?P<power>[+-](?:{COUNT}|x))/(?P<toughness>[+-](?:{COUNT}|x))"
+    rf"(?: and gains (?P<keyword>[a-z ]+))?"
+    rf"|gains (?P<keyword2>[a-z ]+) and gets? "
+    rf"(?P<power2>[+-](?:{COUNT}|x))/(?P<toughness2>[+-](?:{COUNT}|x))"
+    rf") until end of turn{where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
+
+#: "that creature's power" - Xenagos, God of Revels' own X definition, read
+#: per target off `CardState.power` (CR 613.5's computed value) at the
+#: moment this ability resolves (CR 611.2c fixes the magnitude then, so this
+#: is a one-time snapshot, not a live recompute that would let the pump
+#: retroactively inflate what defined it).
+_THAT_CREATURES_POWER_RE = re.compile(r"^that creature'?s power$", re.IGNORECASE)
 
 #: Echoing Courage: "Target creature and all other creatures with the same name
 #: as that creature get +2/+2 until end of turn." A sibling of `_PUMP_RE` and
@@ -3640,6 +3668,61 @@ def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -
     ) -> list[ContinuousEffect]:
         effects: list[ContinuousEffect] = []
         for target in targets:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+            if keyword is not None:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=grant_ability(keyword),
+                    )
+                )
+        return effects
+
+    return builder
+
+
+def _pump_and_keyword_per_target_power_builder(
+    power_sign: int, toughness_sign: int, keyword: str | None
+) -> EffectBuilder:
+    """Xenagos, God of Revels' own shape: "[Subject] gets +X/+X [and gains
+    <keyword>] until end of turn, where X is that creature's power."
+
+    `power_sign`/`toughness_sign` are `+1`/`-1` off the printed sign in front
+    of each X (both `+1` for Xenagos' own "+X/+X"; nothing in the pool prints
+    "-X/-X" here, but the mechanism is the same one `_PUMP_RE` already reads
+    generally rather than something special-cased to this one card). X is
+    read once **per target**, off that target's own `CardState.power` - the
+    CR 613.5 computed value, already what `power` gives - at the moment this
+    builder runs, which `ContinuousEffects.create` only ever calls once, as
+    the ability resolves (CR 611.2c fixes the magnitude then). A target
+    without a numeric power (`*`, or gone before this runs) contributes X = 0
+    rather than guessing (CR 107.2).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            x = target.power if target.power is not None else 0
+            power, toughness = power_sign * x, toughness_sign * x
             effects.append(
                 ContinuousEffect(
                     description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
@@ -5346,12 +5429,21 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("power")), int(match.group("toughness"))
         )
     if match := _PUMP_RE.fullmatch(sentence):
-        power, toughness = int(match.group("power")), int(match.group("toughness"))
-        keyword = match.group("keyword")
+        power_raw = match.group("power") or match.group("power2")
+        toughness_raw = match.group("toughness") or match.group("toughness2")
+        keyword = match.group("keyword") or match.group("keyword2")
         if keyword is not None:
             if keyword.strip().lower() not in _KNOWN_KEYWORDS:
                 return None
             keyword = keyword.strip().capitalize()
+        if power_raw.lstrip("+-").lower() == "x" or toughness_raw.lstrip("+-").lower() == "x":
+            where_x = match.group("where_x")
+            if where_x is None or not _THAT_CREATURES_POWER_RE.fullmatch(where_x.strip()):
+                return None
+            power_sign = -1 if power_raw.startswith("-") else 1
+            toughness_sign = -1 if toughness_raw.startswith("-") else 1
+            return _pump_and_keyword_per_target_power_builder(power_sign, toughness_sign, keyword)
+        power, toughness = int(power_raw), int(toughness_raw)
         return _pump_and_keyword_builder(power, toughness, keyword)
     if match := _SELF_PUMP_PER_GRAVEYARD_CARD_RE.fullmatch(sentence):
         card_type = _card_type_word(match.group("qualifier"))

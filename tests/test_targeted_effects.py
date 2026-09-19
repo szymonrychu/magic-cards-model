@@ -190,22 +190,31 @@ def test_tap_up_to_two_now_parses_count_agnostic():
     assert parse_targeted_effect("Tap up to two target creatures.") is not None
 
 
-def test_damage_to_more_than_one_mandatory_target_still_does_not_parse():
-    """Wave 2 deliberately excludes damage from the count-agnostic relaxation:
-    multiple damage targets divide a total at announcement (CR 601.2d,
-    Electrolyze), a different mechanism `deal_damage` does not model, so
-    "deals 3 damage to two targets" must still be refused rather than dealing
-    the full amount to each.
+def test_damage_to_more_than_one_mandatory_target_now_parses_count_agnostic():
+    """G2-3 correction: CR 601.2d's division is triggered only by the card's
+    own printed word "divided" (CR 601.2d: "if the spell requires the player
+    to divide or distribute an effect... the player announces the
+    division"). "Two targets" with no "divided" anywhere in the sentence is
+    just CR 115.4's own bare-count shape with no division at all, so each of
+    the two takes the whole printed amount - the same reading `deal_damage`'s
+    per-target loop already gives every other count-agnostic verb. An
+    earlier wave read "two targets" as implying CR 601.2d's division on its
+    own and refused the clause outright; nothing in the card's text actually
+    says so.
     """
-    assert parse_targeted_effect("This creature deals 3 damage to two targets.") is None
+    assert parse_targeted_effect("This creature deals 3 damage to two targets.") is not None
 
 
-def test_damage_up_to_one_target_still_does_not_parse():
-    """Even "up to one", which would resolve to at most a single target
-    anyway, stays refused for damage - the relaxation is verb-specific, not
-    count-specific, and damage never gets it."""
-    assert parse_targeted_effect("This creature deals 2 damage to up to one target creature.") is (
-        None
+def test_damage_up_to_one_target_now_parses_count_agnostic():
+    """Mjolnir, Hammer of Thor's own shape: "deals 4 damage to up to one
+    target creature." CR 115.6's "up to one" is nought or one target, never
+    a division (the card prints no "divided" anywhere), so the one target
+    chosen - if any - takes the whole printed amount, exactly like every
+    other count-agnostic verb `_targets_understood` already accepts.
+    """
+    assert (
+        parse_targeted_effect("This creature deals 2 damage to up to one target creature.")
+        is not None
     )
 
 
@@ -243,11 +252,19 @@ def test_an_unbounded_target_count_now_parses_for_a_count_agnostic_verb():
     assert parse_targeted_effect("Exile any number of target creatures.") is not None
 
 
-def test_an_unbounded_target_count_is_still_refused_for_a_count_sensitive_verb():
-    """Damage is the exception `_targets_understood`'s `count_agnostic` names:
-    multiple damage targets divide a total at announcement (CR 601.2d) rather
-    than repeating the verb, so an unbounded count stays unread there."""
-    assert parse_targeted_effect("Bolt deals 3 damage to any number of target creatures.") is None
+def test_an_unbounded_damage_target_count_now_parses_count_agnostic():
+    """G2-3/G2-4 correction: "any number of target creatures" with no
+    "divided" anywhere in the sentence names no CR 601.2d division at all -
+    it is CR 107.1c's ordinary "any positive number or zero", and every
+    target chosen takes the whole printed amount, the same as `deal_damage`
+    already gives Mjolnir's "up to one" and Dual Shot's "each of up to two".
+    An earlier wave read every unbounded damage count as implying division on
+    its own and refused the clause outright; the card's own text has to say
+    "divided" for that mechanism to apply (`_DIVIDED_DAMAGE_RE` is what reads
+    it when it does)."""
+    assert (
+        parse_targeted_effect("Bolt deals 3 damage to any number of target creatures.") is not None
+    )
 
 
 def test_a_graveyard_targeting_exile_now_parses():

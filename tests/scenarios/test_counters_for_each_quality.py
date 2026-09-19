@@ -11,12 +11,12 @@ with the rest of the counters-on-self/group family rather than the
 damage-target half of that shape (`_DAMAGE_TARGET_RE`'s own "for each",
 still silent, is that family's business).
 
-`_count_of_quality_you_control` is the new reader - "for each `<quality>`
-you control" read through `count_expression`'s own "the number of
-`<quality>` you control" vocabulary rather than a second copy of it, since a
-for-each multiplier is that same phrase minus its "number of" lead-in.
-Proven on Immaculate Magistrate (pool) and Go-Shintai of Boundless Vigor
-(off-pool, a different quality and a different real count).
+`count_expression` is the reader `_COUNTER_TARGET_RE`'s "each" group is
+handed to directly - its own "the number of `<quality>` you control" match
+already makes "number of" optional, since a for-each multiplier is that same
+phrase minus that lead-in. Proven on Immaculate Magistrate (pool) and
+Go-Shintai of Boundless Vigor (off-pool, a different quality and a different
+real count).
 
 Every CR number here was looked up with `mise run rules:find` in the session
 that wrote this file:
@@ -40,8 +40,8 @@ shadowed one - `count_expression`'s - was ever wrong.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.effects import (
-    _count_of_quality_you_control,
     _parse_targeted_clause,
+    count_expression,
 )
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
@@ -79,9 +79,9 @@ def test_immaculate_magistrates_counters_scale_with_elves_controlled():
 
 def test_go_shintais_for_each_shrine_is_a_different_quality_and_count():
     """Go-Shintai of Boundless Vigor (off-pool): "put a +1/+1 counter on
-    target Shrine for each Shrine you control." Proves `_count_of_quality_
-    you_control` generalises past "Elf" to a different subtype and a
-    different real count (three Shrines), not a card-name-fitted reader.
+    target Shrine for each Shrine you control." Proves `count_expression`
+    generalises past "Elf" to a different subtype and a different real count
+    (three Shrines), not a card-name-fitted reader.
 
     Driven directly against `_parse_targeted_clause` and the reader it wires
     up, rather than through a live activation: Go-Shintai's own trigger is
@@ -98,7 +98,7 @@ def test_go_shintais_for_each_shrine_is_a_different_quality_and_count():
     match_effect = _parse_targeted_clause(clause, for_spell=False)
     assert match_effect is not None
 
-    reader = _count_of_quality_you_control("Shrine you control")
+    reader = count_expression("Shrine you control")
     assert reader is not None
 
     scenario = (
