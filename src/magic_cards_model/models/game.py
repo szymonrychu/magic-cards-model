@@ -652,6 +652,13 @@ _CONDITION_SELF_COUNTERS = re.compile(
 #: CR 702.62b: "A card is 'suspended' if it's in the exile zone, has suspend,
 #: and has a time counter on it." Greater Gargadon's own restriction.
 _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IGNORECASE)
+#: CR 702.33d/601.4: Inscription of Abundance's own "If this spell was
+#: kicked, choose any number instead." - CR 601.4's worked example for this
+#: exact card.
+_CONDITION_KICKED = re.compile(r"this spell was kicked", re.IGNORECASE)
+#: CR 700.11: Molten Collapse's "If you descended this turn, you may choose
+#: both instead."
+_CONDITION_DESCENDED = re.compile(r"you descended this turn", re.IGNORECASE)
 #: Xerex Strobe-Knight: "you've cast two or more spells this turn" - counted
 #: off `Game.spells_cast_this_turn`, which already excludes copies (CR 707.10).
 _CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
@@ -13634,6 +13641,25 @@ class Game(EngineModel):
                 and source.counter_count(Counter.TIME) > 0
             )
 
+        if _CONDITION_KICKED.fullmatch(text):
+            # CR 702.33d: "this spell" is the ability's own source. Reads the
+            # finalized `CastRecord`, which only exists once `Casting.cast()`
+            # completes - the right answer for anything asking after the
+            # fact, but *not* for a modal choice made mid-announcement
+            # (CR 601.2b), which is exactly what `Casting._alternative_mode_
+            # count` special-cases with its own live `self.kicked` and this
+            # method's `condition_override` instead of reaching here at all.
+            if source is None:
+                return None
+            record = self.cast_record_of(source)
+            return record is not None and record.kicked > 0
+
+        if _CONDITION_DESCENDED.fullmatch(text):
+            # CR 700.11, Molten Collapse's own "If you descended this turn,
+            # you may choose both instead." - the same running count
+            # `intervening_if_holds`'s "you descended this turn" reads.
+            return self.descended(controller)
+
         return None
 
     def modal_alternative_applies(
@@ -13643,6 +13669,8 @@ class Game(EngineModel):
         source_id: UUID | None,
         source_name: str,
         source: CardState | None = None,
+        *,
+        condition_override: bool | None = None,
     ) -> bool:
         """Whether a modal instruction's "If <condition>, [you may] choose N
         instead" raises its mode count right now (CR 700.2).
@@ -13653,15 +13681,25 @@ class Game(EngineModel):
         `ConditionalClauseNotice`: the larger count is a permission nobody
         checked, and granting it unchecked would let a spell do more than its
         caster is entitled to.
+
+        `condition_override`, when not `None`, is used in place of asking
+        `condition_holds` at all - `Casting._alternative_mode_count`'s own
+        "this spell was kicked" (CR 601.4) reads its still-in-progress
+        `self.kicked` this way, because `condition_holds` can only ever read
+        the finalized `CastRecord` a completed `cast()` writes, which does
+        not exist yet while modes are still being chosen.
         """
         condition = modal.alternative_condition
         if condition is None:
             return False
-        held = (
-            None
-            if modal.alternative_minimum is None
-            else self.condition_holds(controller, condition, source)
-        )
+        if condition_override is not None:
+            held: bool | None = condition_override
+        else:
+            held = (
+                None
+                if modal.alternative_minimum is None
+                else self.condition_holds(controller, condition, source)
+            )
         if held is None:
             notice = ConditionalClauseNotice(
                 source_id=source_id,

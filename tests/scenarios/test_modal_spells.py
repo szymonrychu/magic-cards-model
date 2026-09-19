@@ -834,10 +834,12 @@ def test_prophetic_titan_without_delirium_chooses_one_mode():
     assert len(question.options) == 2
 
 
-def test_an_unread_mode_condition_keeps_the_printed_count_and_says_so():
-    """Molten Collapse's "If you descended this turn" (CR 700.11) is not a
-    condition this engine tracks. Both modes are refused - the printed
-    "Choose one" is what is known - and the unread clause is recorded."""
+def test_molten_collapse_without_descending_still_refuses_both_modes():
+    """Molten Collapse's "If you descended this turn, you may choose both
+    instead." (CR 700.11, `Game.descended`) reads as a real False when alice
+    has not descended this turn - "too many modes" is refused for the
+    genuine reason now, not because the condition is unread, so no
+    `ConditionalClauseNotice` is recorded for it either."""
     scenario = (
         Scenario()
         .player("alice", hand=["Molten Collapse"], battlefield=["Swamp", "Mountain"])
@@ -845,10 +847,75 @@ def test_an_unread_mode_condition_keeps_the_printed_count_and_says_so():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    assert not scenario.game.descended("alice")
 
     casting = scenario.cast("Molten Collapse")
     with pytest.raises(ValueError, match="too many modes"):
         casting.choose_modes([1, 2])
 
     notices = [notice.text for notice in scenario.game.conditional_clause_notices]
-    assert any("descended this turn" in text for text in notices)
+    assert not any("descended this turn" in text for text in notices)
+
+
+def test_molten_collapse_after_descending_may_choose_both_modes():
+    """ "You may choose both instead" is optional (CR 700.2), not mandatory -
+    the range widens from exactly one to one-or-two, the same way Flame of
+    Anor's own "you may choose two instead" already does."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Molten Collapse", "Grizzly Bears"],
+            battlefield=["Swamp", "Mountain"],
+        )
+        .player("bob", battlefield=["Grizzly Bears", "Sol Ring"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    scenario.game.discard_cards("alice", [bears])
+    assert scenario.game.descended("alice")
+
+    casting = scenario.cast("Molten Collapse")
+    casting.choose_modes([1, 2])  # no longer refused
+    assert casting.chosen_mode_numbers == [1, 2]
+
+
+def test_off_pool_inscription_of_abundance_unkicked_takes_exactly_one_mode():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Inscription of Abundance"],
+            battlefield=["Forest"] * 5,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Inscription of Abundance")
+    with pytest.raises(ValueError, match="too many modes"):
+        casting.choose_modes([1, 2])
+    casting.choose_modes([1])
+    assert casting.chosen_mode_numbers == [1]
+
+
+def test_off_pool_inscription_of_ruin_kicked_may_choose_any_number():
+    """ "If this spell was kicked, choose any number instead." (CR 601.4,
+    CR 702.33d) - zero to every mode, read from `Casting.kicked` live, before
+    the kicker cost itself is even paid onto the stack."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Inscription of Ruin"],
+            battlefield=["Swamp"] * 8,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Inscription of Ruin")
+    casting.pay_kicker()
+    casting.choose_modes([1, 2, 3])  # all three: refused before this fix
+    assert casting.chosen_mode_numbers == [1, 2, 3]

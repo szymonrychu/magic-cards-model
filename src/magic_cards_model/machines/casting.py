@@ -2653,11 +2653,30 @@ class Casting(EngineModel):
 
     def _alternative_mode_count(self, modal: ModalProfile) -> bool:
         """Whether `modal`'s "If ..., choose N instead" holds as this spell is
-        cast (CR 601.2b), read by `Game.modal_alternative_applies`."""
+        cast (CR 601.2b), read by `Game.modal_alternative_applies`.
+
+        "This spell was kicked" (Inscription of Abundance, CR 702.33d) is
+        answered from `self.kicked` directly rather than through `Game.
+        condition_holds`'s own reading of it: that reads the *finalized*
+        `CastRecord`, which `cast()` only writes once announcement is
+        complete, but CR 601.4's own worked example for this exact card is
+        that the modal choice may look ahead to a kicker payment "normally
+        made later in that rule's instructions" - `self.kicked` is exactly
+        that still-in-progress count, live while modes are being chosen.
+        """
         if self.game is None:
             return False
+        override = None
+        condition = (modal.alternative_condition or "").strip().rstrip(".").strip().lower()
+        if condition == "this spell was kicked":
+            override = self.kicked > 0
         return self.game.modal_alternative_applies(
-            modal, self.caster, self.spell.id, self.spell.name, self.spell
+            modal,
+            self.caster,
+            self.spell.id,
+            self.spell.name,
+            self.spell,
+            condition_override=override,
         )
 
     def _charge_entwine(self, modal: ModalProfile | None) -> None:

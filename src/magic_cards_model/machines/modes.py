@@ -470,10 +470,16 @@ def _read_alternative(
 
     The alternative count is read the way the printed one is (`_read_counts`),
     so "two", "one or more" and "up to three" all work; "both" and "all" are
-    every mode. "You may choose two instead" of "Choose one" leaves one legal
-    too, so the range is widened rather than replaced; a mandatory "choose
-    both instead" replaces it. An unread count keeps only the condition, which
-    `Game.modal_alternative_applies` turns into a notice.
+    every mode. "Any number" (CR 601.4's own Inscription of Abundance
+    example: "its controller may choose any number of modes") is zero to
+    every mode, the same "choose any number of ..." idiom CR 701.34a
+    (proliferate) and its siblings use elsewhere - zero is a legal choice,
+    unlike "both"/"all", which is why it is not folded into that branch.
+    "You may choose two instead" of "Choose one" leaves one legal too, so the
+    range is widened rather than replaced; a mandatory "choose both instead"
+    (or "choose any number instead") replaces it. An unread count keeps only
+    the condition, which `Game.modal_alternative_applies` turns into a
+    notice.
     """
     match = _ALTERNATIVE.search(instruction)
     if match is None:
@@ -485,6 +491,8 @@ def _read_alternative(
     }
     if text.lower() in ("both", "all"):
         alternative: tuple[int, int] | None = (mode_count, mode_count)
+    elif text.lower() == "any number":
+        alternative = (0, mode_count)
     else:
         alternative = _read_counts(f"Choose {text}", mode_count)
     if alternative is None or counted is None:
