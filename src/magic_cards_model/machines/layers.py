@@ -87,6 +87,7 @@ from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
 from magic_cards_model.phrases import with_indefinite_article
 
+from ..data.subtypes import subtype_vocabulary
 from ..ids import new_id
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
@@ -435,6 +436,28 @@ class CountPermanentsControlledBy(CountBase):
         )
 
 
+class CountCreaturesWithSubtypesControlledBy(CountBase):
+    """How many creatures a player controls that have *any* of a set of
+    subtypes (CR 205.3) - The Mycotyrant's own "the number of creatures you
+    control that are Fungi and/or Saprolings", a CR 604.3a characteristic-
+    defining ability's count, not `CreaturesControlledByWithSubtype`'s own
+    boolean `Selector` answer for one specific creature."""
+
+    kind: Literal["creatures_with_subtypes_controlled_by"] = "creatures_with_subtypes_controlled_by"
+    username: str | None = None
+    subtypes: tuple[str, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        wanted = {subtype.lower() for subtype in self.subtypes}
+        return sum(
+            1
+            for other in board.values()
+            if other.is_creature
+            and other.controller == self.username
+            and any(subtype.lower() in wanted for subtype in other.subtypes)
+        )
+
+
 class CountBasicLandTypesAmongLandsControlledBy(CountBase):
     """How many of the five basic land types (CR 305.6) are among the lands
     one player controls - *domain*'s number.
@@ -463,6 +486,7 @@ Count = Annotated[
     | CountOtherCreaturesNamed
     | CountLandsControlledBy
     | CountPermanentsControlledBy
+    | CountCreaturesWithSubtypesControlledBy
     | CountBasicLandTypesAmongLandsControlledBy,
     Field(discriminator="kind"),
 ]
@@ -2419,6 +2443,34 @@ def _card_type_word(word: str) -> Type | None:
         return None
 
 
+#: The one Latin-plural subtype irregularity in CR 205.3's creature-subtype
+#: list that no suffix rule covers - "Fungus" (singular) / "Fungi" (plural),
+#: the way it is genuinely printed (The Mycotyrant: "... Fungi and/or
+#: Saprolings"). Everything else in the subtype vocabulary pluralises with a
+#: bare trailing "s" ("Saproling" -> "Saprolings"), which `_singular_subtype_
+#: word` strips directly.
+_IRREGULAR_SUBTYPE_PLURALS = {"fungi": "fungus"}
+
+
+def _singular_subtype_word(word: str) -> str | None:
+    """A printed subtype word, singular and lower-cased, or `None` if it
+    names no subtype `subtype_vocabulary` recognises - the same fail-closed
+    shape `_card_type_word` holds itself to for card types.
+
+    `machines/effects.py::_singular_subtype_for_count_expression` reads the
+    identical phrase for a resolving effect's own "number of `<subtype>` you
+    control"; kept local rather than imported for the same reverse-import
+    reason `_card_type_word`'s own docstring gives.
+    """
+    lowered = word.lower()
+    vocabulary = subtype_vocabulary()
+    candidates = [
+        _IRREGULAR_SUBTYPE_PLURALS.get(lowered, lowered),
+        lowered.removesuffix("s"),
+    ]
+    return next((candidate for candidate in candidates if candidate in vocabulary), None)
+
+
 def _self_pump_per_graveyard_card_builder(
     power: int, toughness: int, card_type: Type
 ) -> EffectBuilder:
@@ -4340,6 +4392,72 @@ _BASIC_LAND_TYPE_COUNT_CDA_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This permanent's power and toughness are each equal to the number of
+#: creatures you control that are `<subtype>`[ and/or `<subtype>`...]." - The
+#: Mycotyrant's own CDA ("... Fungi and/or Saprolings"), read generally
+#: rather than as a `Boneyard Wurm`-shaped hardcoded row: any number of
+#: subtypes, joined by "and/or", plain "or", or a comma list, counts a
+#: creature that has *any* of them (CR 205.3's own "and/or" reads as an
+#: inclusive "or" - a Fungus Saproling counts once, not twice).
+_CREATURE_SUBTYPE_COUNT_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s power and toughness are each equal to the "
+    r"number of creatures you control that are "
+    r"(?P<subtypes>[a-z]+(?:(?:,\s*| and/or | and | or )[a-z]+)*)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _creature_subtype_count_cda_builder(subtypes: tuple[str, ...], *, line: str) -> EffectBuilder:
+    """`_CREATURE_SUBTYPE_COUNT_CDA_RE`'s shape - see its own docstring.
+
+    Sublayer 7a (CR 613.4a), the same choice `_basic_land_type_count_cda_
+    builder` makes - a CDA defines the value, it never modifies one
+    (CR 613.4a against CR 613.4c) - counted live off the board through
+    `CountCreaturesWithSubtypesControlledBy` rather than baked in at build
+    time, since (unlike Boneyard Wurm's graveyard count) the battlefield is
+    already the board the layer engine threads through every `Count` here.
+
+    `source_ability` is `_source_line_for(source, line)`, not `line` itself -
+    The Mycotyrant's own printed name is rewritten to "this permanent" by
+    `self_normalized_effect_text` on the way to `_parse_layer_sentence`
+    (Territorial Kavu's own defect, `_source_line_for`'s docstring), and
+    `_still_exists` matches `source_ability` against `Characteristics.
+    abilities`, which is the card's lines verbatim - the normalized sentence
+    is never one of them, so without this the effect would look, to CR
+    613.6's own "has this ability been removed" question, like it already had
+    been, and never apply at all.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: power/toughness equal to the number of creatures "
+                    f"you control that are {' and/or '.join(subtypes)}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                characteristic_defining=True,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=define_power_toughness(
+                    CountCreaturesWithSubtypesControlledBy(
+                        username=source.controller, subtypes=subtypes
+                    )
+                ),
+            )
+        ]
+
+    return builder
+
+
 #: "Equipped creature gets +1/+1 and has trample and haste." (Cori-Steel
 #: Cutter); "Enchanted creature gets +2/+0 and has trample." (Rancor);
 #: `Equipped creature has "{3}, {Q}: This creature gets +2/+2 until end of
@@ -5618,6 +5736,12 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if _BASIC_LAND_TYPE_COUNT_CDA_RE.fullmatch(sentence):
         return _basic_land_type_count_cda_builder(sentence)
+    if match := _CREATURE_SUBTYPE_COUNT_CDA_RE.fullmatch(sentence):
+        words = re.split(r",\s*|\s+and/or\s+|\s+and\s+|\s+or\s+", match.group("subtypes"))
+        subtypes = [_singular_subtype_word(word) for word in words if word]
+        if not subtypes or any(subtype is None for subtype in subtypes):
+            return None
+        return _creature_subtype_count_cda_builder(tuple(subtypes), line=sentence)
     if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(sentence):
         raw_keywords = match.group("keywords") or match.group("only_keywords")
         keywords = []
