@@ -281,6 +281,28 @@ def _deal_damage_equal_to_sacrificed_creature_power(game: "Game", spell: CardSta
         game.deal_damage(target, power, source=spell)
 
 
+def deal_damage_equal_to_expression(reader: "AmountReader") -> Effect:
+    """Combustion Technique's own "deals damage equal to `<expr>` to target
+    creature" - `reader` is `amount_expression`'s own general arithmetic
+    reader, evaluated fresh at resolution (CR 608.2c fixes the amount as the
+    ability resolves, not when it is announced) rather than once at parse
+    time, the same way `_deal_damage_equal_to_sacrificed_creature_power`
+    reads its own one specific expression live. `obj` is `None`: no term
+    this engine reads for a plain damage amount refers to a characteristic
+    of an object the spell is being evaluated *for* (Heroes' Bane's "where X
+    is its power" is a counters-placement shape, not a damage one), so
+    nothing here ever dereferences it.
+    """
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        amount = max(reader(game, controller, None, 0), 0)  # type: ignore[arg-type]
+        for target in game.resolve_targets(spell):
+            game.deal_damage(target, amount, source=spell)
+
+    return effect
+
+
 def gain_life(amount: int) -> Effect:
     """The spell's controller gains `amount` life (CR 118.3)."""
 
@@ -956,13 +978,32 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
     if match := _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
-        if card_type is None:
+        if card_type is not None:
+
+            def count_in_graveyard(game: "Game", controller: str) -> int:
+                return sum(
+                    1 for state in game.player(controller).graveyard if card_type in state.types
+                )
+
+            return count_in_graveyard
+
+        # "the number of Lesson cards in your graveyard" (Combustion
+        # Technique's own damage amount) - a subtype qualifier rather than a
+        # card type, the same fallback `count_on_board`'s own "you control"
+        # branch above already takes. CR 205.3 subtypes generally; Lesson
+        # itself is CR 715's own subtype for the Lesson sorceries/instants.
+        subtype = _singular_subtype_for_count_expression(match.group("qualifier"))
+        if subtype is None:
             return None
 
-        def count_in_graveyard(game: "Game", controller: str) -> int:
-            return sum(1 for state in game.player(controller).graveyard if card_type in state.types)
+        def count_subtype_in_graveyard(game: "Game", controller: str) -> int:
+            return sum(
+                1
+                for state in game.player(controller).graveyard
+                if any(word.lower() == subtype for word in state.subtypes)
+            )
 
-        return count_in_graveyard
+        return count_subtype_in_graveyard
 
     if _COUNT_CARDS_IN_YOUR_HAND_RE.fullmatch(stripped):
 
@@ -8409,6 +8450,18 @@ _DAMAGE_EQUAL_TO_SACRIFICED_CREATURE_POWER_RE = re.compile(
     r"(?P<phrase>any target|.*target.+)\.?$",
     re.IGNORECASE,
 )
+#: Combustion Technique: "<Source> deals damage equal to 2 plus the number of
+#: Lesson cards in your graveyard to target creature." A dynamic amount read
+#: through `amount_expression` (arithmetic over one or more `count_expression`
+#: terms, CR 107.1b's floor at zero already built in there) rather than a
+#: fixed `{COUNT}` - the general twin of `_DAMAGE_EQUAL_TO_SACRIFICED_
+#: CREATURE_POWER_RE`'s one specific expression, for any future card whose
+#: own damage amount is one `amount_expression` can read, not only this one.
+_DAMAGE_EQUAL_TO_EXPR_TARGET_RE = re.compile(
+    rf"^{_UNQUOTED_PREFIX}\bdeals? damage equal to (?P<expr>.+?) to "
+    r"(?P<phrase>any target|.*target.+)\.?$",
+    re.IGNORECASE,
+)
 #: Burst Lightning: "<Source> deals N damage to any target. If this spell was
 #: kicked, it deals M damage instead." CR 702.33a/d's kicker, read at
 #: resolution off `Game.cast_record(spell).kicked` the same way
@@ -9581,6 +9634,26 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         if not _targets_understood(match.group("phrase"), allow_player_targets=True):
             return None
         return _deal_damage_equal_to_sacrificed_creature_power
+
+    if (
+        for_spell
+        and (match := _DAMAGE_EQUAL_TO_EXPR_TARGET_RE.fullmatch(clause))
+        # "its power"/"its loyalty" is Compel Brutality's/Aggressive
+        # Instinct's own bite-family shape (`_parse_bite_damage_clause`),
+        # which threads the *referent's own* power through as the subject
+        # of the whole sentence, not the resolving spell's own X or a
+        # game-wide count - `amount_expression`'s object-characteristic term
+        # would silently read 0 for it here (no live object to ask), so this
+        # reader steps aside for that shape entirely rather than shadowing
+        # the one built for it.
+        and _OBJECT_CHARACTERISTIC_RE.fullmatch(match.group("expr").strip()) is None
+    ):
+        if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+            return None
+        reader = amount_expression(match.group("expr"))
+        if reader is None:
+            return None
+        return deal_damage_equal_to_expression(reader)
 
     if match := _DAMAGE_TARGET_RE.fullmatch(clause):
         # Damage never goes count-agnostic: multiple targets divide a damage
