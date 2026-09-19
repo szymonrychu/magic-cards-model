@@ -407,9 +407,31 @@ class PlayedScenario:
         return [state.name for state in self.game.battlefield]
 
     def find(self, name: str, zone: Zone, username: str | None = None) -> CardState:
-        """The first copy of `name` in `zone`. Raises if it is not there."""
+        """The first copy of `name` in `zone`, narrowed to `username` when
+        given. Raises if it is not there.
+
+        A shared zone (battlefield, stack, exile, ...) holds every player's
+        objects in one list (CR 110.1), so `username` has to filter it the
+        same way `player(username).cards_in(zone)` already does for a
+        per-player zone below - CR 108.4a's `controller_or_owner` fallback
+        (the controller where CR 109.4 gives an object one, the owner
+        otherwise) is what "whose" means there. Without this, `username` was
+        silently ignored for every shared zone: `find("Mountain", Zone.
+        BATTLEFIELD, username="bob")` on a board where alice also controls a
+        Mountain returned whichever of the two the shared list happened to
+        list first - alice's, tapped or not, never necessarily bob's own
+        untapped one - a wrong-object bug a caller had no way to see short of
+        checking identity by hand.
+        """
         if zone in self.game.shared_zones:
             candidates = self.game.shared_zones[zone]
+            if username is not None:
+                candidates = [
+                    state
+                    for state in candidates
+                    if getattr(state, "controller_or_owner", getattr(state, "controller", None))
+                    == username
+                ]
         else:
             candidates = self.player(username).cards_in(zone)
 
@@ -1288,7 +1310,14 @@ class PlayedScenario:
         an activated ability's object costs.
         """
         player = self.player(username)
-        spell = self.find(name, from_zone, player.username)
+        # A shared zone (exile chief among them) can hold a card the caster
+        # neither owns nor controls - Ragavan's own steal-and-cast, Dire
+        # Fleet Daredevil's, Null Summoner's Threshold grant - so `find`'s
+        # own owner/controller filter is the wrong question to ask it here;
+        # only a per-player zone (hand, graveyard, library) is scoped to the
+        # caster at all.
+        find_username = None if from_zone in self.game.shared_zones else player.username
+        spell = self.find(name, from_zone, find_username)
         casting = Casting(
             spell=spell,
             caster=player.username,
