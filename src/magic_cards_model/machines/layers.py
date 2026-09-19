@@ -2242,6 +2242,30 @@ def count_card_types(cards: Iterable[CardState]) -> int:
     return len(types)
 
 
+#: CR 110.4a: "The term 'permanent card' is used to refer to a card that could
+#: be put onto the battlefield. Specifically, it means an artifact, battle,
+#: creature, enchantment, land, or planeswalker card." Descend's own count
+#: (CR 700.11, and the "descend 4"/"descend 8" ability words, CR 207.2c).
+_PERMANENT_CARD_TYPES = frozenset(
+    {Type.ARTIFACT, Type.BATTLE, Type.CREATURE, Type.ENCHANTMENT, Type.LAND, Type.PLANESWALKER}
+)
+
+
+def count_permanent_cards(cards: Iterable[CardState]) -> int:
+    """How many of `cards` are permanent cards (CR 110.4a).
+
+    Descend's own count: "the number of permanent cards put into [a player's]
+    graveyard" (CR 700.11) is a *per-turn event* count (`Game.descend_count`),
+    but the "descend 4"/"descend 8" ability words (Basking Capybara, Akawalli,
+    the Seething Tower) ask a different, simpler question - "there are N or
+    more permanent cards in your graveyard" *right now* - a live count of the
+    graveyard's current contents, the same "no stored state, recomputed every
+    time the board is computed" shape `count_card_types` already answers for
+    delirium.
+    """
+    return sum(1 for state in cards if _PERMANENT_CARD_TYPES.intersection(state.types))
+
+
 #: Sublayer 7d (CR 613.4d).
 #:
 #: "Such effects take the value of power and apply it to the creature's
@@ -3448,8 +3472,11 @@ def _normalize_duration_first(sentence: str) -> str:
 #: keywords in that they tie together cards that have similar functionality,
 #: but they have no special rules meaning", so the words in front of the dash
 #: are decoration and the ability is everything after it. Capped at two words
-#: and required to start with a capital, which is how Oracle prints them.
-_ABILITY_WORD_RE = re.compile(r"^[A-Z][a-z']*(?: [A-Za-z][a-z']*)? — (?P<rest>.+)$")
+#: and required to start with a capital, which is how Oracle prints them -
+#: except CR 207.2c's own "descend 4"/"descend 8", whose second word is a
+#: bare number rather than another capitalised word, so the second slot
+#: accepts one too.
+_ABILITY_WORD_RE = re.compile(r"^[A-Z][a-z']*(?: (?:[A-Za-z][a-z']*|\d+))? — (?P<rest>.+)$")
 
 
 def _strip_ability_word(sentence: str) -> str:
@@ -4331,6 +4358,36 @@ _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "descend 4"/"descend 8" (CR 207.2c's own ability-word list) - the same
+#: gated-self-static shape as delirium above, printed both ways round in the
+#: pool: condition-leading (Akawalli, the Seething Tower's own "As long as
+#: there are four or more permanent cards in your graveyard, Akawalli gets
+#: +2/+2 and has trample.") and condition-trailing (Basking Capybara's "This
+#: creature gets +3/+0 as long as there are four or more permanent cards in
+#: your graveyard."). CR 700.11's own "permanent card" - artifact, battle,
+#: creature, enchantment, land, planeswalker (CR 110.4a) - is `count_
+#: permanent_cards`, not `count_card_types`: the two ability words happen to
+#: share delirium's gated-static template, not its count.
+#: Read after `self_normalized_effect_text` has already rewritten Akawalli's
+#: own literal name to "this permanent" (`_layer_readable_sentences_
+#: uncached`'s own call), the same normalisation every self-referential
+#: static sentence in this module already relies on - so no literal-name
+#: branch is needed here, only "this creature/permanent/token".
+_DESCEND_GATED_SELF_STATIC_LEADING_RE = re.compile(
+    r"^as long as there are (?P<count>[a-z]+) or more permanent cards in your "
+    r"graveyard, this (?:creature|permanent|token) "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
+    r"|(?P<grant_only>has .+?))\.?$",
+    re.IGNORECASE,
+)
+_DESCEND_GATED_SELF_STATIC_TRAILING_RE = re.compile(
+    r"^this (?:creature|permanent|token) "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
+    r"|(?P<grant_only>has .+?))"
+    r" as long as there are (?P<count>[a-z]+) or more permanent cards in your graveyard\.?$",
+    re.IGNORECASE,
+)
+
 #: "Each creature you control has vigilance if it's white, hexproof if it's
 #: blue, lifelink if it's black, first strike if it's red, and trample if it's
 #: green." (Scion of Draco, confirmed with `resolve_cards`) - one layer 6 grant
@@ -5003,15 +5060,35 @@ def _graveyard_card_types_gated_self_static_builder(
     threshold: int, power: int, toughness: int, granted: list[str], *, line: str
 ) -> EffectBuilder:
     """`_GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE`'s shape - Dragon's Rage
-    Channeler's *delirium* ability.
+    Channeler's *delirium* ability. A thin alias of `_graveyard_count_gated_
+    self_static_builder` over `count_card_types`, kept under its old name
+    since every existing call site already spells it out."""
+    return _graveyard_count_gated_self_static_builder(
+        threshold, power, toughness, granted, line=line, count_fn=count_card_types
+    )
+
+
+def _graveyard_count_gated_self_static_builder(
+    threshold: int,
+    power: int,
+    toughness: int,
+    granted: list[str],
+    *,
+    line: str,
+    count_fn: Callable[[Iterable[CardState]], int],
+) -> EffectBuilder:
+    """A static pump/grant whose condition is some count over the controller's
+    own graveyard - Dragon's Rage Channeler's *delirium* (`count_card_types`)
+    and the "descend 4"/"descend 8" ability words (`count_permanent_cards`,
+    CR 700.11, CR 207.2c) share this same shape and differ only in what they
+    count.
 
     The condition is counted over the controller's own graveyard through
-    `LayerContext.graveyard_of` (CR 300.1's card types, the same count
-    Tarmogoyf's row already uses), and it is checked here, at build time,
-    rather than stored: CR 604.2 has a static ability's effect active exactly
-    while the ability is there and its condition holds, and `effects_for` is
+    `LayerContext.graveyard_of`, and it is checked here, at build time, rather
+    than stored: CR 604.2 has a static ability's effect active exactly while
+    the ability is there and its condition holds, and `effects_for` is
     re-run every time the board is computed (CR 613.5), so a graveyard that
-    stops being delirious simply stops producing the effect on the next
+    stops meeting the threshold simply stops producing the effect on the next
     computation.
 
     Sublayer 7c for the pump (CR 613.4c) and layer 6 for everything granted
@@ -5026,7 +5103,7 @@ def _graveyard_card_types_gated_self_static_builder(
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        if count_card_types(context.graveyard_of(source.controller)) < threshold:
+        if count_fn(context.graveyard_of(source.controller)) < threshold:
             return []
         effects: list[ContinuousEffect] = []
         if power or toughness:
@@ -5517,6 +5594,32 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             granted,
             line=sentence,
         )
+    for descend_re in (
+        _DESCEND_GATED_SELF_STATIC_LEADING_RE,
+        _DESCEND_GATED_SELF_STATIC_TRAILING_RE,
+    ):
+        if match := descend_re.fullmatch(sentence):
+            threshold = parse_count(match.group("count"), article=False)
+            if threshold is None:
+                return None
+            grant_only = match.group("grant_only")
+            if grant_only is not None:
+                granted = _split_gated_grants(grant_only)
+                power = toughness = 0
+            else:
+                granted = _split_gated_grants(match.group("rest") or "")
+                power = int(match.group("power"))
+                toughness = int(match.group("toughness"))
+            if granted is None:
+                return None
+            return _graveyard_count_gated_self_static_builder(
+                threshold,
+                power,
+                toughness,
+                granted,
+                line=sentence,
+                count_fn=count_permanent_cards,
+            )
     if match := _PER_COLOR_KEYWORD_GRANT_RE.fullmatch(sentence):
         grants = _split_per_color_grants(match.group("clauses"))
         if grants is None:
@@ -5542,7 +5645,8 @@ def _split_subtype_list(raw: str) -> list[str] | None:
 
 def _split_gated_grants(rest: str) -> list[str] | None:
     """The tail of a gated self-static - ", has flying, and attacks each combat
-    if able" - as the ability lines it grants.
+    if able" or (Akawalli's own single-grant shape, no comma at all) " and has
+    trample" - as the ability lines it grants.
 
     A "has <keyword(s)>" clause is validated against `_KNOWN_KEYWORDS` the same
     way every other grant here is; any other clause is granted verbatim, since
@@ -5551,6 +5655,7 @@ def _split_gated_grants(rest: str) -> list[str] | None:
     nothing, which is a plain conditional pump.
     """
     tail = rest.strip().lstrip(",").strip()
+    tail = re.sub(r"^and\s+", "", tail, flags=re.IGNORECASE)
     if not tail:
         return []
     granted: list[str] = []
