@@ -2627,7 +2627,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 32
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 33
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3108,6 +3108,16 @@ class Game(EngineModel):
     (CR 500.8's queued extra-phase steps, Aggravated Assault's "After this
     main phase, there is an additional combat phase followed by an
     additional main phase.") - both new fields per the bump rule above.
+
+    Bumped 32 -> 33: FRA batch E's own delayed-trigger group-attack pump
+    (Garruk, Curse Breaker's `-4`) - `DelayedTrigger` (reachable from `Game.
+    delayed_triggers`) gained `defending_opponent_only`, and `PumpEventSubject`
+    (a `DelayedEffectSpec` variant a live `DelayedTrigger.effect` can already
+    be pointing at, Jace, Reality Sculptor's own `-3` among them) gained
+    `keywords` - two new fields per the bump rule above, both with a default
+    an older snapshot's decode fills in unchanged (`False`/`()`), which is
+    exactly the "same shape, different meaning if left undetected" case this
+    field exists to catch rather than trust to a silent default.
     """
 
     @model_validator(mode="before")
