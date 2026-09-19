@@ -146,6 +146,7 @@ from .layers import (
     LayerNotice,
     Sublayer,
     _only,
+    _split_and_validate_keywords,
     add_subtype,
     add_type,
     count_card_types,
@@ -670,6 +671,111 @@ def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | No
         )
 
     return effect
+
+
+#: "It gains trample until end of turn." (Primaris Chaplain: "Whenever this
+#: creature attacks, it gains indestructible until end of turn.", the effect
+#: clause split off its own trigger condition) - CR 601.2c's pronoun reaching
+#: back to the ability's own subject. A no-target triggered or activated
+#: ability's *own* effect clause never reaches `parsed_layer_effects`' "this
+#: creature"/named-self shapes (`create_continuous_effect_of_ability` derives
+#: what to parse from the source's full printed text, not from this already
+#: trigger-condition-stripped clause), so this is built by hand instead, one
+#: keyword-grant `ContinuousEffect` per keyword, the same escape hatch
+#: `_parse_pump_and_becomes_chosen_color_clause` uses above.
+_SELF_KEYWORD_GRANT_UNTIL_EOT_RE = re.compile(
+    r"^it gains (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: "It gains your choice of trample or deathtouch until end of turn."
+#: (Hunter's Axe's granted attack trigger) - the shape above with CR 608.2d's
+#: "of your choice" ahead of a fixed, enumerated list rather than a single
+#: named keyword, read the same `DecisionKind.CHOOSE_A_QUALITY` way
+#: `_choose_a_color` reads a colour choice, narrowed to the two-or-more
+#: keywords the sentence itself names instead of the five colours.
+_SELF_CHOICE_KEYWORD_GRANT_UNTIL_EOT_RE = re.compile(
+    r"^it gains your choice of (?P<options>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
+    r"(?:,)?\s*or\s+[a-z]+(?: [a-z]+)?) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_keyword_grant_until_eot_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_KEYWORD_GRANT_UNTIL_EOT_RE`/`_SELF_CHOICE_KEYWORD_GRANT_UNTIL_
+    EOT_RE`'s two shapes - see either regex's own docstring. Tried as one
+    function, the choice shape first, since a plain "it gains X" text never
+    contains "your choice of" and the two can never both match the same
+    sentence.
+    """
+    stripped = text.strip()
+    if match := _SELF_CHOICE_KEYWORD_GRANT_UNTIL_EOT_RE.fullmatch(stripped):
+        raw_options = [
+            option.strip()
+            for option in re.split(r",\s*|\s+or\s+", match.group("options"))
+            if option.strip()
+        ]
+        options: list[str] = []
+        for option in raw_options:
+            validated = _split_and_validate_keywords(option)
+            if validated is None or len(validated) != 1:
+                return None
+            options.append(validated[0])
+
+        def choice_effect(game: "Game", ability: AbilityOnStack) -> None:
+            source = ability.source(game)
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                return
+            controller = game.controller_of(ability)
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=controller.username,
+                prompt=f"choose which keyword {source.name} gains until end of turn",
+                source=source.name,
+                options=tuple(options),
+                source_id=source_id_of(ability),
+            )
+            answer = game.ask(decision)
+            assert isinstance(answer, str)
+            store = continuous_effects(game)
+            store.add(
+                ContinuousEffect(
+                    description=f"{source.name}: gains {answer} until end of turn",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=_only(source.id),
+                    modification=grant_ability(answer),
+                )
+            )
+
+        return choice_effect
+    if match := _SELF_KEYWORD_GRANT_UNTIL_EOT_RE.fullmatch(stripped):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+
+        def plain_effect(game: "Game", ability: AbilityOnStack) -> None:
+            source = ability.source(game)
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                return
+            store = continuous_effects(game)
+            timestamp = store.tick()
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{source.name}: gains {keyword} until end of turn",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=_only(source.id),
+                        modification=grant_ability(keyword),
+                    )
+                )
+
+        return plain_effect
+    return None
 
 
 #: "Target creature you control gains protection from the color of your
@@ -11720,6 +11826,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     pump_and_becomes_chosen_color = _parse_pump_and_becomes_chosen_color_clause(effect_text)
     if pump_and_becomes_chosen_color is not None:
         return pump_and_becomes_chosen_color
+    self_keyword_grant_until_eot = _parse_self_keyword_grant_until_eot_clause(effect_text)
+    if self_keyword_grant_until_eot is not None:
+        return self_keyword_grant_until_eot
     protection_from_chosen_color = _parse_protection_from_chosen_color_clause(effect_text)
     if protection_from_chosen_color is not None:
         return protection_from_chosen_color

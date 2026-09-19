@@ -2547,8 +2547,8 @@ _TARGET_AND_SAME_NAME_PUMP_RE = re.compile(
 #: current rather than freezing at whatever the graveyard held when the
 #: permanent entered.
 _SELF_PUMP_PER_GRAVEYARD_CARD_RE = re.compile(
-    r"^this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each "
-    r"(?P<qualifier>[a-z]+(?:(?:,\s*| and )[a-z]+)*) cards? in your graveyard\.?$",
+    r"^this (?:creature|permanent|token) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"for each (?P<qualifier>[a-z]+(?:(?:,\s*| and )[a-z]+)*) cards? in your graveyard\.?$",
     re.IGNORECASE,
 )
 
@@ -2557,8 +2557,8 @@ _SELF_PUMP_PER_GRAVEYARD_CARD_RE = re.compile(
 #: "every" instead of "each", no card-type qualifier, and a batch size
 #: instead of a 1:1 multiplier.
 _SELF_PUMP_PER_GRAVEYARD_CARD_BATCH_RE = re.compile(
-    r"^this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for every "
-    r"(?P<batch>[a-z]+) cards? in your graveyard\.?$",
+    r"^this (?:creature|permanent|token) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"for every (?P<batch>[a-z]+) cards? in your graveyard\.?$",
     re.IGNORECASE,
 )
 
@@ -4795,6 +4795,22 @@ _BASIC_LAND_TYPE_COUNT_CDA_RE = re.compile(
 #: part of the ability that's added to the object." It is tried before the bare
 #: keyword branch, because the quoted text is not a keyword list and must never
 #: be read as one.
+#: "Equipped creature gets +2/+0 and has "Whenever this creature attacks, it
+#: gains your choice of trample or deathtouch until end of turn."" (Hunter's
+#: Axe); "Equipped creature gets +1/+0 and has flying and "Whenever this
+#: creature attacks, you gain 1 life."" (Medic's Kitesail) -
+#: `_ATTACHED_CREATURE_STATIC_RE`'s "gets P/T[ and has <keywords>]" branch
+#: extended with an optional trailing quoted ability, tried first since it is
+#: the more specific shape. Both a bare keyword list and a quoted grant can
+#: ride the same "and has" the pool already prints separately for each.
+_ATTACHED_CREATURE_PUMP_AND_QUOTED_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature gets (?P<power>[+-]\d+)/"
+    r"(?P<toughness>[+-]\d+) and has "
+    r"(?:(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) and )?"
+    r'"(?P<granted>.+)"\.?$',
+    re.IGNORECASE | re.DOTALL,
+)
+
 _ATTACHED_CREATURE_STATIC_RE = re.compile(
     r"^(?P<attachment>equipped|enchanted) creature "
     r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
@@ -6375,6 +6391,21 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if _BASIC_LAND_TYPE_COUNT_CDA_RE.fullmatch(sentence):
         return _basic_land_type_count_cda_builder(sentence)
+    if match := _ATTACHED_CREATURE_PUMP_AND_QUOTED_RE.fullmatch(sentence):
+        keywords = []
+        if match.group("keywords") is not None:
+            validated = _split_and_validate_keywords(match.group("keywords"))
+            if validated is None:
+                return None
+            keywords = validated
+        return _attached_creature_static_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            keywords,
+            subject=match.group("attachment").lower(),
+            granted=match.group("granted").strip() or None,
+            line=sentence,
+        )
     if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(sentence):
         raw_keywords = match.group("keywords") or match.group("only_keywords")
         keywords = []
