@@ -3062,6 +3062,60 @@ def _parse_pay_any_life_then_draw_that_many_clause(text: str) -> AbilityEffect |
     return effect
 
 
+#: "Whenever a creature deals combat damage to one of your opponents, its
+#: controller may pay 1 life. If they do, they draw a card." (Gix, Yawgmoth
+#: Praetor) - CR 118.12's reflexive "may [cost]. If they do, [consequence]",
+#: read against the event's own subject's controller (`ability.event.
+#: subject_controller`) rather than the ability's own controller ("you") the
+#: way every other reflexive "may" clause in this file does. CR 120.1 makes
+#: the damaging creature the event's subject, so "its controller" is exactly
+#: that creature's controller - not necessarily the player who controls Gix,
+#: since the trigger's own condition (CR 603.2, read by `machines/triggers.
+#: condition_matches`) names "a creature", not "a creature you control".
+#:
+#: `_parse_exile_that_players_library_clause` right above is the same "read
+#: `ability.event`, not a target" move for "that player" (Ragavan's own
+#: anaphora); this is its "may ... if they do" cousin, generalised over the
+#: life paid and the cards drawn rather than pinned to Gix's own "1"/"a card"
+#: - a future printing of the same shape with a different count reads the
+#: same way. No other real printing shares this exact sentence (Tidal Flats
+#: and Winter's Chill are close but pay mana, not life, and read a "does not
+#: pay" branch this shape has none of), so this is proven on Gix alone.
+_ITS_CONTROLLER_MAY_PAY_LIFE_THEN_DRAW_RE = re.compile(
+    rf"^its controller may pay (?P<life>{COUNT}) life\.\s*"
+    rf"if (?:they do|it does), (?:they|it) draws? (?:(?P<cards>{COUNT}) cards|a card)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_its_controller_may_pay_life_then_draw_clause(text: str) -> AbilityEffect | None:
+    """`_ITS_CONTROLLER_MAY_PAY_LIFE_THEN_DRAW_RE`'s shape - Gix, Yawgmoth
+    Praetor's whole trigger. Ability-only: nothing in the pool prints this on
+    a spell, and a spell has no `ability.event` for "its controller" to read.
+    """
+    match = _ITS_CONTROLLER_MAY_PAY_LIFE_THEN_DRAW_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    life = parse_count(match.group("life"))
+    cards = 1 if match.group("cards") is None else parse_count(match.group("cards"))
+    if life is None or cards is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        username = event.subject_controller if event is not None else None
+        if username is None:
+            return
+        player = game.player(username)
+        paid = game.may_pay_life(
+            player, life, source=ability.source_name, source_id=source_id_of(ability)
+        )
+        if paid:
+            game.draw_cards(player.username, cards)
+
+    return effect
+
+
 def tishanas_tidebinder(game: "Game", ability: AbilityOnStack) -> None:
     """ "Counter up to one target activated or triggered ability."
 
@@ -11573,6 +11627,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     pay_any_life_then_draw = _parse_pay_any_life_then_draw_that_many_clause(effect_text)
     if pay_any_life_then_draw is not None:
         return pay_any_life_then_draw
+    its_controller_may_pay_life_then_draw = _parse_its_controller_may_pay_life_then_draw_clause(
+        effect_text
+    )
+    if its_controller_may_pay_life_then_draw is not None:
+        return its_controller_may_pay_life_then_draw
     each_opponent_loses_life = _parse_each_opponent_loses_life_equal_to(effect_text)
     if each_opponent_loses_life is not None:
         return each_opponent_loses_life
@@ -20516,6 +20575,123 @@ def _parse_exile_top_then_cast_types_free_this_turn_whole_text(
     return effect
 
 
+#: "Exile the top X cards of target opponent's library. You may play lands
+#: and cast spells from among cards exiled this way without paying their
+#: mana costs." (Gix, Yawgmoth Praetor). Unlike `_EXILE_TOP_THEN_CAST_TYPES_
+#: FREE_THIS_TURN_RE` right above (a lingering `PlayPermission` good for the
+#: rest of the turn), Gix's own ruling is explicit: "You must play the cards
+#: as you resolve the last ability. You can't wait and play them later" - a
+#: CR 608.2g mid-resolution offer, not CR 601.3's standing permission, and
+#: "lands and spells" both, not spells alone. `Game.may_cast_during_
+#: resolution`'s own `play=True` already reads either kind correctly
+#: (`_play_land_during_resolution` for a land, `cast_during_resolution`
+#: otherwise); this loops it once per exiled card until none are left or the
+#: player declines, matching "from among cards exiled this way" naming a
+#: whole batch rather than Ral, Monsoon Mage's single-cast grant.
+_EXILE_TOP_THEN_PLAY_DURING_RESOLUTION_RE = re.compile(
+    rf"^exile the top (?P<count>{COUNT}) cards? of target opponent'?s library\.\s*"
+    r"you may play lands and cast spells from among cards exiled this way "
+    r"without paying (?:its|their) mana costs?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_top_then_play_during_resolution_whole_text(
+    text: str, *, for_spell: bool
+) -> Effect | None:
+    """`_EXILE_TOP_THEN_PLAY_DURING_RESOLUTION_RE`'s shape - Gix, Yawgmoth
+    Praetor's whole activated ability, as one CR 608.2c instruction.
+
+    Ability-only: nothing in the pool prints this on a spell, and CR 601.2c
+    targeting (`target opponent`) is an ability's own announcement
+    (CR 602.2b), read off `game.resolve_targets(ability)` the same way every
+    other targeted activated-ability effect in this file already is.
+    """
+    if for_spell:
+        return None
+    match = _EXILE_TOP_THEN_PLAY_DURING_RESOLUTION_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+
+    def candidates(game: "Game", cards: list[CardState], exiler: str) -> list[CardState]:
+        # A land's own resolution-time legality (CR 305.2b/305.3) has no
+        # public reader outside `Game.may_cast_during_resolution` itself, so
+        # every land among the remaining cards is offered and the real
+        # legality is enforced there, per card, when it is actually chosen
+        # (CR 608.2d never lets an illegal "yes" through even so). A nonland
+        # card is pre-filtered by `can_cast_during_resolution` (CR 601.2c's
+        # targets, CR 700.2a's modes, CR 118.3's cost) the same way the
+        # imprint-cast family right above already does.
+        return [
+            card
+            for card in cards
+            if card.card.is_land or game.can_cast_during_resolution(card, exiler)
+        ]
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        exiler = ability.controller
+        opponent = next(
+            (target for target in game.resolve_targets(ability) if isinstance(target, Player)),
+            None,
+        )
+        if opponent is None:
+            return
+        top = list(opponent.library[:count])
+        if not top:
+            return
+        remaining = list(game.exile_cards(top))
+        while remaining:
+            legal = candidates(game, remaining, exiler)
+            if not legal:
+                break
+            decision = game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=exiler,
+                    prompt=(
+                        f"play a land or cast a spell from among the cards "
+                        f"{ability.source_name} exiled, without paying its mana cost"
+                    ),
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    affirmative_is_legal=True,
+                    cards=tuple(card.id for card in legal),
+                )
+            )
+            if not decision:
+                break
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=exiler,
+                    prompt="choose a card to play or cast without paying its mana cost",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(card.id for card in legal),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {card.id: card for card in legal}
+            chosen = by_id[chosen_ids[0]]
+            remaining.remove(chosen)
+            game.may_cast_during_resolution(
+                chosen,
+                exiler,
+                prompt=f"play or cast {chosen.name} without paying its mana cost",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                source_name=ability.source_name,
+                rule="CR 608.2g",
+                play=True,
+            )
+
+    return effect
+
+
 #: "Return this card from your graveyard to your hand." - World Breaker's
 #: whole graveyard-only ability (CR 113.6m, `machines/abilities.py`'s
 #: `zone`/`zone_rule` reads that half of it already). A self-reference, not a
@@ -21412,6 +21588,11 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if exile_then_cast_types_effect is not None:
         return [exile_then_cast_types_effect]
+    exile_then_play_during_resolution = _parse_exile_top_then_play_during_resolution_whole_text(
+        text, for_spell=for_spell
+    )
+    if exile_then_play_during_resolution is not None:
+        return [exile_then_play_during_resolution]
     draw_and_gain_off_sacrificed = _parse_draw_and_gain_off_sacrificed_clause(
         text, for_spell=for_spell
     )
