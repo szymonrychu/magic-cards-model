@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "17fb6538-493c-41aa-ad13-3e63d3ad3317",
+  "oracle_id": "1f47c869-f4a9-43b0-aec0-8da4e3a3fec5",
+  "multiverse_ids": [],
+  "tcgplayer_id": 718587,
+  "cardmarket_id": 909893,
+  "name": "Extrapolate the Impossible",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/17fb6538-493c-41aa-ad13-3e63d3ad3317",
+  "scryfall_uri": "https://scryfall.com/card/fra/55/extrapolate-the-impossible?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-18T11:07:04Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.jpg?1789729624",
+    "normal": "https://cards.scryfall.io/normal/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.jpg?1789729624",
+    "large": "https://cards.scryfall.io/large/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.jpg?1789729624",
+    "png": "https://cards.scryfall.io/png/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.png?1789729624",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.jpg?1789729624",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.jpg?1789729624",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.webp?1789729624",
+    "grid": "https://cards.scryfall.io/grid/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.webp?1789729624",
+    "display": "https://cards.scryfall.io/display/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.webp?1789729624",
+    "art": "https://cards.scryfall.io/art/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.webp?1789729624",
+    "crop": "https://cards.scryfall.io/crop/front/1/7/17fb6538-493c-41aa-ad13-3e63d3ad3317.webp?1789729624"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "You may reveal exactly two cards you own with different names from outside the game. An opponent chooses one of them. You put that card into your hand.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/17fb6538-493c-41aa-ad13-3e63d3ad3317/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1f47c869-f4a9-43b0-aec0-8da4e3a3fec5&unique=prints",
+  "collector_number": "55",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Jace believed that if he could successfully merge the two Multiverses, he would remove the suffering of so many.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Volkan Ba\u01f5a",
+  "artist_ids": [
+    "93bec3c0-0260-4d31-8064-5d01efb4153f"
+  ],
+  "illustration_id": "29643111-fe20-4cbd-b32f-013f373fe86e",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "preview": {
+    "source": "Hareruya",
+    "source_uri": "https://article.hareruyamtg.com/article/115296/",
+    "previewed_at": "2026-09-17"
+  },
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DExtrapolate%2Bthe%2BImpossible",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DExtrapolate%2Bthe%2BImpossible",
+    "edhrec": "https://edhrec.com/route/?cc=Extrapolate+the+Impossible"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F718587%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909893&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Extrapolate+the+Impossible&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
