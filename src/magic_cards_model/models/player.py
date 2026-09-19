@@ -635,7 +635,10 @@ class Player(EngineModel):
         than only at `Game.gain_life`'s call site. Recording it only there
         left the direct paths silently unrecorded: two Guide of Souls raising
         alice from 20 to 22 left `life_gained_this_turn` empty, and Ocelot
-        Pride's end step trigger never went on the stack.
+        Pride's end step trigger never went on the stack. Its amount twin,
+        `Game.life_gained_amount_this_turn`, is recorded in the same place
+        for the same reason - Germinate Recruits' own X (CR 107.3f) needs the
+        total, not just whether any gain happened.
 
         `cannot_gain_life` refuses the whole thing (CR 101.2): the life total
         is left alone *and* nothing is recorded, because a gain that can't
@@ -659,6 +662,9 @@ class Player(EngineModel):
         self.life += amount
         if self.game is not None:
             self.game.life_gained_this_turn.add(self.username)
+            self.game.life_gained_amount_this_turn[self.username] = (
+                self.game.life_gained_amount_this_turn.get(self.username, 0) + amount
+            )
         return self.life
 
     @property

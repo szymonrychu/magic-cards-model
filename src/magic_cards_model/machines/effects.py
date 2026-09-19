@@ -777,6 +777,14 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
 #: zone with no type restriction to read ("the hand is where a player holds
 #: cards that have been drawn"), so every card in it counts, whatever it is.
 _COUNT_CARDS_IN_YOUR_HAND_RE = re.compile(r"^(?:the )?number of cards in your hand$", re.IGNORECASE)
+#: "the amount of life you gained this turn" - Germinate Recruits' own X
+#: (CR 107.3f). `Game.life_gained_amount_this_turn` is the per-player running
+#: total `Player.gain_life` keeps for exactly this, the amount twin of
+#: `life_gained_this_turn`'s plain boolean Ocelot Pride's intervening *if*
+#: already reads.
+_AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE = re.compile(
+    r"^(?:the )?amount of life you(?:'ve| have)? gained this turn$", re.IGNORECASE
+)
 #: "the greatest power among creatures you control" - Tyvar, the Pummeler's
 #: own X. Not a count of anything: an extremum over a characteristic, which
 #: is why it needs its own reader rather than a wider qualifier on the two
@@ -906,6 +914,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return len(game.player(controller).hand)
 
         return count_in_hand
+
+    if _AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE.fullmatch(stripped):
+
+        def life_gained_amount(game: "Game", controller: str) -> int:
+            return game.life_gained_amount_this_turn.get(controller, 0)
+
+        return life_gained_amount
 
     if match := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
@@ -9140,6 +9155,66 @@ def _parse_named_appositive_token_clause(clause: str, *, for_spell: bool) -> Tar
         return None
     definition = definition.model_copy(update={"name": name})
     return _token_creation_clause(definition, 1, tapped=False)
+
+
+#: "Create X `<descriptor>` tokens[ named `<Name>`][ with `<tail>`], where X
+#: is `<expr>`." (CR 107.3f) - Germinate Recruits' own "where X is the amount
+#: of life you gained this turn" and off-set Charisma Bobblehead's "where X
+#: is the number of Bobbleheads you control". `_TOKEN_CLAUSE_RE`'s own `n`
+#: group only ever reads a fixed `COUNT` word, never "X" - CR 107.3a's
+#: announced X is substituted into that shape by `effect_for` before this
+#: parser is ever tried, so a bare literal "X" reaching here always means CR
+#: 107.3f's *other* X, one the card's own text defines and only `count_
+#: expression` (already shared with every other "the number of ..." reader)
+#: can evaluate - at resolution, not at parse time (CR 611.2c fixes the
+#: magnitude once, the moment the effect applies).
+_VARIABLE_COUNT_TOKEN_RE = re.compile(
+    r"^(?:you )?(?:create )?x (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+named (?P<name>.+?))?"
+    r"(?:\s+with\s+(?P<tail>.+?))?"
+    r",?\s*where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_VARIABLE_COUNT_TOKEN_RE`'s shape, or `None` if this is not it."""
+    match = _VARIABLE_COUNT_TOKEN_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if "copy of" in clause.lower():
+        return None  # CR 707.2 copying needs copiable values this wave does not read.
+    words = match.group("desc").strip().split()
+    tail = match.group("tail")
+    name = match.group("name")
+
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
+    if not words:
+        return None
+
+    predefined_name = " ".join(words)
+    if tail is None and name is None and predefined_name in PREDEFINED:
+        definition = PREDEFINED[predefined_name]
+    else:
+        definition = _parse_generic_token_descriptor(words, tail)
+        if definition is None:
+            return None
+        if name is not None:
+            definition = definition.model_copy(update={"name": name.strip()})
+
+    reader = count_expression(match.group("expr"))
+    if reader is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        count = reader(game, controller)
+        if count > 0:
+            create_tokens(game, definition, controller, count, tapped=tapped)
+
+    return effect
 
 
 # --------------------------------------------------------------------------
@@ -21466,6 +21541,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     named_appositive_token = _parse_named_appositive_token_clause(clause, for_spell=for_spell)
     if named_appositive_token is not None:
         return named_appositive_token
+    variable_count_token = _parse_variable_count_token_clause(clause, for_spell=for_spell)
+    if variable_count_token is not None:
+        return variable_count_token
     role_token = _parse_create_role_token_clause(clause, for_spell=for_spell)
     if role_token is not None:
         return role_token

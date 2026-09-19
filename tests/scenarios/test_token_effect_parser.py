@@ -778,3 +778,75 @@ def test_face_yourself_copies_with_haste_and_a_granted_sacrifice_trigger():
         "At the beginning of the end step, if you don't control a planeswalker, "
         "sacrifice this creature." in (copy.card.oracle_text or "")
     )
+
+
+# --------------------------------------------------------------------------
+# CR 107.3f's own X: "Create X ... tokens ..., where X is <expr>."
+# --------------------------------------------------------------------------
+
+
+def test_charisma_bobbleheads_activated_ability_creates_x_tokens_by_bobbleheads_controlled():
+    """Off-set: Charisma Bobblehead's own second ability: "{4}, {T}: Create X
+    1/1 white Soldier creature tokens, where X is the number of Bobbleheads
+    you control." No `{X}` in the card's own cost - this is CR 107.3f's *own-
+    text* X, read through the already-shared `count_expression`, not CR
+    107.3a's announced one.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Charisma Bobblehead"] + ["Plains"] * 4)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Plains"] * 4, username="alice")
+    bobblehead = scenario.find("Charisma Bobblehead", Zone.BATTLEFIELD, username="alice")
+    scenario.activate(bobblehead, *sources, index=1, username="alice")
+    scenario.resolve_top()
+
+    soldiers = [state for state in scenario.game.battlefield if state.name == "Soldier Token"]
+    assert len(soldiers) == 1
+    assert (soldiers[0].power, soldiers[0].toughness) == (1, 1)
+
+
+def test_germinate_recruits_creates_x_cadets_by_life_gained_this_turn():
+    """On-set: Germinate Recruits: "Create X 2/2 colorless Wizard Soldier
+    creature tokens named Cadet, where X is the amount of life you gained
+    this turn." Differently worded from Charisma Bobblehead (a named token, a
+    spell rather than an activated ability, and CR 107.3f's own new
+    "amount of life you gained this turn" magnitude rather than an already-
+    supported "number of ... you control") - proof the "where X is ..." token
+    reader composes with a brand new `count_expression` shape too.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Germinate Recruits"], battlefield=["Plains"] * 3)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.gain_life("alice", 5)
+    sources = scenario.untapped_sources(*["Plains"] * 3, username="alice")
+    scenario.cast_and_resolve("Germinate Recruits", *sources, username="alice")
+
+    cadets = [state for state in scenario.game.battlefield if state.name == "Cadet"]
+    assert len(cadets) == 5
+    assert all((c.power, c.toughness) == (2, 2) for c in cadets)
+    assert all(c.card.subtypes == ["Wizard", "Soldier"] for c in cadets)
+
+
+def test_germinate_recruits_creates_no_tokens_with_no_life_gained():
+    """No life gained this turn is X = 0 (CR 107.2's own "0 instead" for an
+    amount that can't be determined otherwise) - CR 111.5/701.7a both make
+    "create zero tokens" a legal no-op, not an error."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Germinate Recruits"], battlefield=["Plains"] * 3)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Plains"] * 3, username="alice")
+    scenario.cast_and_resolve("Germinate Recruits", *sources, username="alice")
+
+    assert not any(state.name == "Cadet" for state in scenario.game.battlefield)
