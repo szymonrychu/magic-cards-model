@@ -219,6 +219,7 @@ from ..machines.triggers import (
     granted_activated_abilities_of,
     intervening_if_holds,
     mana_added_event,
+    resolution_key,
     rewritten_ability_lines,
     state_triggers_for,
     tapped_for_mana_event,
@@ -244,9 +245,9 @@ from .card_state import (
     TargetRef,
     planeswalkers_with_zero_loyalty,
 )
-from .mana import ManaCost, ManaPool, ManaSpend, ManaSpendEffect
-from .player import Emblem, Player
-from .token import TokenState, move_refused, tokens_that_cease_to_exist
+from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect
+from .player import Player
+from .token import TokenDefinition, TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
 
 #: Anything a spell can point at and then affect (CR 115.1).
@@ -336,6 +337,18 @@ def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
     if "," in front:
         names.add(front.split(",", 1)[0].strip())
     return any(name and re.search(rf"\b{re.escape(name)}\b", text) for name in names)
+
+
+def _cost_moved(payment: CostPayment, kind: ComponentKind) -> tuple[UUID, ...]:
+    """The ids of the objects a paid `payment`'s `kind` components moved -
+    Corpseweft's exiled creature cards, Radiant Lotus's sacrificed
+    artifacts - in payment order."""
+    return tuple(
+        state.id
+        for component in payment.components
+        if component.kind is kind
+        for state in component.cards
+    )
 
 
 def _exiles_itself_by_name(text: str, permanent: "CardState") -> bool:
@@ -1827,6 +1840,12 @@ class Game(EngineModel):
     _announced_targets: dict[str, tuple[list[TargetRef], CostPayment]] = PrivateAttr(
         default_factory=dict
     )
+    _opened_payments: dict[str, CostPayment] = PrivateAttr(default_factory=dict)
+    """The payment `begin_activating` opened, keyed like `activations`, for
+    `activate_ability` to read back which objects the cost actually moved
+    once it is paid (CR 602.2b) - "`<verb>` this way" on the resolving
+    ability counts them. Not persisted, for the same reason as
+    `_announced_targets`: both calls run inside one command."""
     """The targets `begin_activating` announced (CR 601.2c), keyed like
     `activations`, with the payment it opened for them. `activate_ability`
     takes them back only once that payment is paid (CR 601.2h): a payment
@@ -1887,6 +1906,14 @@ class Game(EngineModel):
     the player CR 701.21a names as the one doing the sacrificing. A count
     rather than a flag, so a future card asking "two or more" has the number;
     today only "at least one" is ever asked. Cleared when a new turn begins."""
+
+    ability_resolutions_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many times each triggered or activated ability has resolved this
+    turn, keyed by `_resolution_key` (the source object, as that object, and
+    the ability's own text). "If this is the fourth time this ability has
+    resolved this turn" (Sephiroth, Fabled SOLDIER) reads it; the count
+    includes the resolution in progress. Counted in `_resolve_ability` and
+    cleared when a new turn begins."""
 
     creatures_died_this_turn: int = 0
     """How many creatures have died this turn, whoever controlled them.
@@ -2017,6 +2044,24 @@ class Game(EngineModel):
     object that's resolving" needs to be able to name it, and this is the only
     place that can. Excluded from serialisation: it is live only for the length
     of one resolution and means nothing in a stored board."""
+
+    _linked_count: int | None = PrivateAttr(default=None)
+    """How many objects the latest counted instruction of the resolving
+    object actually moved - discarded, sacrificed, exiled, milled, life paid
+    - for a later "that many" of the same object to read (CR 608.2c: its
+    instructions are followed in the order written, and later text refers
+    back to earlier text). Written by `record_count`, read by
+    `recorded_count`, cleared by `resolve_top` around every resolution so it
+    never outlives the object that wrote it. Not persisted: a command that
+    pauses is replayed from its start, and the same clauses write it again."""
+
+    _linked_counts_by_player: dict[str, int] = PrivateAttr(default_factory=dict)
+    """The same count, one per player, for an "each player ..." instruction
+    whose later "that many" is each player's own (Awaken the Erstwhile's
+    "Each player discards all the cards in their hand, then creates that many
+    ... tokens"). Written while `counting_for` names a player."""
+
+    _counting_player: str | None = PrivateAttr(default=None)
 
     turn_ended_exiled_ids: SortedSet[UUID] = Field(default_factory=set, exclude=True, repr=False)
     """Spells CR 724.1b exiled while they were resolving.
@@ -2232,7 +2277,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2461,16 +2506,30 @@ class Game(EngineModel):
     an exception for a field whose default happens to match every existing
     use - refused rather than trusted on that observation holding forever.
 
-    Bumped 21 -> 22: `Player` gained `emblems` (CR 114.2, a new `Emblem`
-    model - Wrenn and Seven's -8, Tamiyo, Inquisitive Student's -7).
-    Defaults to an empty list, which is every version-21 player's only
-    possible value, but the bump rule's first bullet carves out no
-    exception for that either - a field added to `Player`, reachable from
-    `Game.model_dump()`, is exactly the case it names. `has_no_maximum_
-    hand_size` reads the new field too, changing what `cards_over_
-    maximum_hand_size` (and so the cleanup step's own discard) computes
-    for a player any such emblem reaches - a behavioural change on top of
-    the shape one.
+    Bumped 21 -> 22: number sweep G0b, the "that many" count channel.
+    `AbilityOnStack` gained `cost_exiled_card_ids`, and a batched "one or
+    more ... attack" trigger's `event` now carries its own `amount`. A
+    version-21 stack holding a "that many"/"this way" ability (Fable of the
+    Mirror-Breaker II, The Earth King, Corpseweft) resolved as a notice or
+    nothing and now moves cards. Refused instead. `ManaPool` also gained
+    `retained` (CR 500.5a/500.5b mana that survives a step or phase ending -
+    firebending, Photon, Mighty Marvel); a version-21 pool has none, so a
+    decoded one never silently loses mana it never had a way to keep.
+
+    Also bumped 21 -> 22, independently, on the fu-costs line: `Player`
+    gained `emblems` (CR 114.2 - Wrenn and Seven's -8, Tamiyo, Inquisitive
+    Student's -7), and `has_no_maximum_hand_size` read it, changing what
+    `cards_over_maximum_hand_size` (and so the cleanup step's own discard)
+    computes for a player any such emblem reaches.
+
+    Bumped 22 -> 23: the number sweep G0b and fu-costs lines of development
+    each claimed 21 -> 22 on their own; merged, the number moves on once
+    more. Both halves carry over: G0b's (above) and fu-costs', which added
+    CR 114 emblems - now one subsystem, emblem objects in the shared command
+    zone (`Game.create_emblem`, `Game.emblems_of`; `Player.emblems` reads
+    them), which also changes what `cards_over_maximum_hand_size` computes
+    for a player an emblem reaches. `Game.ability_resolutions_this_turn` is
+    new too. Refused instead.
     """
 
     @model_validator(mode="before")
@@ -2920,17 +2979,28 @@ class Game(EngineModel):
 
     # -- turn-based actions (CR 703) ---------------------------------------
 
-    def empty_mana_pools(self) -> None:
+    def empty_mana_pools(self, *, expiring: "frozenset[ManaRetentionScope] | None" = None) -> None:
         """Empty every player's mana pool (CR 500.5, 703.4q).
 
         "As a step or phase ends ... any unspent mana left in a player's mana
         pool empties." A turn-based action: automatic, controlled by no player,
         and never on the stack. The player is said to lose this mana (CR 106.4).
-        Replacement effects that keep mana from being lost this way (Horizon
-        Stone and friends) are not modelled.
+
+        `expiring` is threaded straight through to `ManaPool.empty` - a
+        firebending or Photon, Mighty Marvel style "you don't lose this mana
+        as steps and phases end" tag keeps mana past this ordinary call and
+        only empties at its own named point (CR 500.5a's end of the combat
+        phase, passed here by `_advance_past_checks`/`advance_to`; CR
+        500.5b/514.2's cleanup step, passed by `cleanup_step`). Left out, no
+        scope expires and every retained tag survives, exactly as an ordinary
+        mid-phase boundary should leave it. Replacement effects shaped
+        differently from those two - Horizon Stone's "doesn't empty ... this
+        turn" - are not modelled: `machines/effects.py`'s parsers for those two
+        sentences are the only source of a `ManaRetentionScope` tag today.
         """
+        scopes = expiring or frozenset()
         for player in self.players:
-            player.mana_pool.empty()
+            player.mana_pool.empty(expiring=scopes)
 
     def turn_based_actions(self) -> None:
         """Perform the turn-based actions of the step that has just begun (CR 703.3).
@@ -3226,6 +3296,13 @@ class Game(EngineModel):
             self.remove_all_damage()
             self.continuous_effects.end_the_turn(self)  # CR 514.2, the other half
             self.delayed_triggers.expire_this_turn()  # CR 514.2, the delayed-trigger half
+            # CR 500.5b / 514.2, the same simultaneous action once more: Photon,
+            # Mighty Marvel's "until end of turn, you don't lose this mana as
+            # steps and phases end" mana (`ManaRetentionScope.END_OF_TURN`) has
+            # survived every ordinary CR 500.5 emptying since it was added -
+            # this is where it finally empties, alongside every other "until
+            # end of turn" effect this step ends.
+            self.empty_mana_pools(expiring=frozenset({ManaRetentionScope.END_OF_TURN}))
             self.prevention_shields = [
                 shield
                 for shield in self.prevention_shields
@@ -3634,11 +3711,80 @@ class Game(EngineModel):
         if self.stack_is_empty:
             raise ValueError("the stack is empty")
         self.resolving = self.stack[-1]
+        self._forget_counts()
         try:
             with self._id_allocator_scope():
                 return self._resolve_top()
         finally:
             self.resolving = None
+            self._forget_counts()
+
+    def create_emblem(self, owner: str, text: str, source_name: str) -> CardState:
+        """Put an emblem with `text`'s abilities into the command zone (CR
+        114.2): "[Player] gets an emblem with [ability]" - owned and controlled
+        by that player. CR 114.3: it has no characteristics but those
+        abilities, so its object carries only them (`Layout.EMBLEM`, no types,
+        no cost, no colour); its name is a label, "<source> emblem". CR 114.4:
+        its abilities function in the command zone - see `emit` and
+        `machines/triggers.zones_ability_functions_in`."""
+        with self._id_allocator_scope():
+            definition = TokenDefinition(
+                types=(), name=f"{source_name} emblem", rules_text=text.strip()
+            )
+            card = definition.to_card().model_copy(
+                update={"layout": Layout.EMBLEM, "type_line": "Emblem"}
+            )
+            emblem = CardState(card=card, zone=Zone.COMMAND, controller=owner, owner=owner)
+            emblem.bind_to_game(self)
+            self.shared_zones[Zone.COMMAND].append(emblem)
+            return emblem
+
+    def emblems_of(self, username: str) -> list[CardState]:
+        """The emblems `username` controls (CR 114.2)."""
+        return [
+            state
+            for state in self.shared_zones[Zone.COMMAND]
+            if isinstance(state, CardState)
+            and state.card.layout is Layout.EMBLEM
+            and state.controller == username
+        ]
+
+    def _forget_counts(self) -> None:
+        self._linked_count = None
+        self._linked_counts_by_player = {}
+        self._counting_player = None
+
+    @contextmanager
+    def counting_for(self, username: str) -> Iterator[None]:
+        """Scope `record_count`/`recorded_count` to one player's own count
+        while that player carries out their part of an "each player ..."
+        instruction (CR 608.2e)."""
+        previous = self._counting_player
+        self._counting_player = username
+        try:
+            yield
+        finally:
+            self._counting_player = previous
+
+    def record_count(self, count: int | None) -> None:
+        """Record how many objects the resolving object's current instruction
+        actually moved, for a later "that many" to read (`_linked_count`) -
+        or `None` to clear it ahead of an instruction whose count a later
+        "if you do" asks about."""
+        self._linked_count = count
+        if self._counting_player is not None:
+            if count is None:
+                self._linked_counts_by_player.pop(self._counting_player, None)
+            else:
+                self._linked_counts_by_player[self._counting_player] = count
+
+    def recorded_count(self) -> int | None:
+        """The count `record_count` last wrote during this resolution - the
+        player's own while `counting_for` names one - or None when no counted
+        instruction has run yet."""
+        if self._counting_player is not None:
+            return self._linked_counts_by_player.get(self._counting_player)
+        return self._linked_count
 
     def _resolve_top(self) -> StackObject:
         """Resolve the top of the stack (CR 608).
@@ -5195,6 +5341,10 @@ class Game(EngineModel):
                     if run is not None:
                         run(self, ability, delayed)
                 else:
+                    key = resolution_key(ability)
+                    self.ability_resolutions_this_turn[key] = (
+                        self.ability_resolutions_this_turn.get(key, 0) + 1
+                    )
                     effect = self._effect_of(ability)
                     if effect is not None:
                         effect(self, ability)
@@ -5455,6 +5605,12 @@ class Game(EngineModel):
             # `CardState.is_suspended` - is the filter, so the widening stays
             # the size of the rule that needed it.
             sources.extend(card for card in self.exile if card.is_suspended)
+            # CR 114.4: "Abilities of emblems function in the command zone."
+            sources.extend(
+                state
+                for state in self.shared_zones[Zone.COMMAND]
+                if isinstance(state, CardState) and state.card.layout is Layout.EMBLEM
+            )
             if event.event is TriggerEvent.CAST_SPELL:
                 sources = self.spells_on_stack + sources
             elif (
@@ -8947,20 +9103,6 @@ class Game(EngineModel):
                 player=permanent.controller,
             )
         )
-
-    def create_emblem(self, player: Player, text: str, *, source_name: str | None = None) -> Emblem:
-        """CR 114.2: "[Player] gets an emblem with [ability]" - puts an
-        emblem with `text` into the command zone, owned and controlled by
-        `player` (CR 109.4c).
-
-        No replacement effect touches this in the pool (nothing in CR 114
-        gives one a hook the way CR 122.1's counter-placement event has),
-        so this is a plain append, the same directness `add_counters` only
-        skips because a replacement effect really can intercept it.
-        """
-        emblem = Emblem(text=text, source_name=source_name)
-        player.emblems.append(emblem)
-        return emblem
 
     def return_to_hand(self, permanent: CardState) -> CardState:
         """Return a permanent to its owner's hand (CR 701.19a is "return").
@@ -14430,6 +14572,7 @@ class Game(EngineModel):
         )
         if announced is not None:
             self._announced_targets[key] = (announced, payment)
+        self._opened_payments[key] = payment
         return payment
 
     def apply_mana_ability_rider(
@@ -14528,6 +14671,8 @@ class Game(EngineModel):
             # nothing rechecks that here; CR 608.2b does, on resolution.
             key = self._activation_key(permanent, index)
             entry = self._announced_targets.pop(key, None)
+            opened = self._opened_payments.pop(key, None)
+            paid = opened if opened is not None and opened.step is CostStep.PAID else None
             # Only the announcement whose payment was paid belongs to this
             # activation; one whose payment was rewound or abandoned is stale.
             recorded = entry[0] if entry is not None and entry[1].step is CostStep.PAID else None
@@ -14728,7 +14873,20 @@ class Game(EngineModel):
                 targets=[TargetRef.coerce(target) for target in targets or []],
                 x_value=x_value,
                 cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,
-                cost_sacrificed_card_ids=tuple(state.id for state in (sacrificed_for_cost or [])),
+                # CR 602.2b: the objects the paid cost moved, read off the
+                # payment itself when `begin_activating` opened one, so a
+                # "`<verb>` this way" count never depends on what the caller
+                # chose to repeat here.
+                cost_sacrificed_card_ids=(
+                    _cost_moved(paid, ComponentKind.SACRIFICE)
+                    if paid is not None
+                    else tuple(state.id for state in (sacrificed_for_cost or []))
+                ),
+                cost_exiled_card_ids=(
+                    _cost_moved(paid, ComponentKind.EXILE)
+                    if paid is not None
+                    else ((exiled_for_cost.id,) if exiled_for_cost is not None else ())
+                ),
             )
             self.stack.append(on_stack)
             # CR 602.2b's target announcement has settled (CR 601.2c, imported
@@ -15212,7 +15370,18 @@ class Game(EngineModel):
         # The pointer may have crossed several boundaries (the skip loop above,
         # or a cleanup that rolled into the next turn); nothing between them
         # can add mana, so one emptying covers every boundary crossed.
-        self.empty_mana_pools()
+        #
+        # CR 500.5a: firebending's "until end of combat" mana (`ManaRetentionScope
+        # .END_OF_COMBAT`) expires "at the end of the combat phase, not at the
+        # beginning of the end of combat step" - the same instant CR 511.3's
+        # combat-clearing above fires, since both are keyed off leaving the
+        # combat phase behind, which `previous_step is Step.END_OF_COMBAT`
+        # already answers.
+        self.empty_mana_pools(
+            expiring=frozenset({ManaRetentionScope.END_OF_COMBAT})
+            if previous_step is Step.END_OF_COMBAT
+            else None
+        )
 
         if self.turn.turns_taken != previous_turns_taken:
             # A new turn: land drops reset and the new active player gets
@@ -15231,6 +15400,7 @@ class Game(EngineModel):
             self.permanents_left_battlefield_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
+            self.ability_resolutions_this_turn = {}
             self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
@@ -15304,7 +15474,15 @@ class Game(EngineModel):
         if STEP_SEQUENCE.index(step) < STEP_SEQUENCE.index(self.turn.step):
             raise ValueError(f"{step} already passed this turn, currently at {self.turn.step}")
         while self.turn.step is not step:
+            previous_step = self.turn.step
             self.turn.advance()
-            self.empty_mana_pools()
+            # CR 500.5a, the same reading `_advance_past_checks` uses above:
+            # firebending's "until end of combat" mana expires exactly when
+            # the combat phase this boundary just left behind ends.
+            self.empty_mana_pools(
+                expiring=frozenset({ManaRetentionScope.END_OF_COMBAT})
+                if previous_step is Step.END_OF_COMBAT
+                else None
+            )
         self.sync_priority_with_step()  # CR 502.4, 514.3
         return self.turn.step

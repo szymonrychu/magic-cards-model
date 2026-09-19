@@ -37,6 +37,7 @@ from .abilities import (
     KeywordAbility,
     TriggerEvent,
     keyword_abilities,
+    parse_abilities,
     parse_granted_ability_lines,
 )
 from .casting_restrictions import (
@@ -847,7 +848,73 @@ def granted_cast_options(
                 )
             if option is not None:
                 found.append(GrantedCastOption(source_name=permanent.name, option=option))
+    # CR 114.4: an emblem's abilities function in the command zone, so the
+    # caster's own emblems grant exactly as a permanent's statics do.
+    for emblem in game.emblems_of(caster):
+        for ability in parse_abilities(emblem.card):
+            if ability.kind is not AbilityKind.STATIC:
+                continue
+            option = _cast_spells_from_a_zone(
+                (ability.text or "").strip(), spell, origin_zone, game, caster
+            )
+            if option is not None:
+                found.append(GrantedCastOption(source_name=emblem.name, option=option))
     return found
+
+
+#: The label a "You may cast `<quality>` spells from your `<zone>`" grant is
+#: announced under (`Casting.use_keyword`) and recorded as (`CastRecord.
+#: keyword`) - the permission is not a keyword, so it is named for what it is.
+CAST_PERMISSION = "Cast permission"
+
+#: "You may cast instant and sorcery spells from your graveyard." (Jaya
+#: Ballard's emblem) - CR 601.3's "a rule or effect allows that player to cast
+#: it", for a quality of spell and one zone, at the spell's own normal cost
+#: and timing. The optional second sentence - "If a spell cast this way would
+#: be put into your graveyard, exile it instead." - is the replacement
+#: `machines/replacement.py` applies to a spell recorded as cast under this
+#: permission (`exiles_spells_cast_this_way`).
+_CAST_SPELLS_FROM_A_ZONE = re.compile(
+    r"^You may cast (?P<what>[\w' -]+?) spells from your (?P<zone>hand|graveyard)\."
+    r"(?P<tail>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_EXILE_SPELLS_CAST_THIS_WAY = re.compile(
+    r"if a spell cast this way would be put into your graveyard, exile it instead",
+    re.IGNORECASE,
+)
+
+
+def _cast_spells_from_a_zone(
+    text: str, spell: CardState, origin_zone: Zone, game: Any, caster: str
+) -> KeywordCastOption | None:
+    match = _CAST_SPELLS_FROM_A_ZONE.match(text)
+    if match is None:
+        return None
+    zone = _ZONE_WORDS_FOR_GRANTS.get(match.group("zone").lower())
+    if zone is None or zone is not origin_zone:
+        return None
+    if not _spell_matches_grant_filter(spell, match.group("what")):
+        return None
+    # The spell's own timing: a sorcery still waits for its controller's main
+    # phase with the stack empty (CR 307.1), an instant does not.
+    timing = CastTiming.SORCERY if Type.SORCERY in spell.types else CastTiming.ANY
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION, rule="CR 601.3", zone=zone, pays_mana_cost=True, timing=timing
+    )
+
+
+def exiles_spells_cast_this_way(game: Any, caster: str) -> bool:
+    """Whether a static ability `caster` has (an emblem's, CR 114.4) says a
+    spell cast under its permission is exiled instead of going to the
+    graveyard."""
+    for emblem in game.emblems_of(caster):
+        for ability in parse_abilities(emblem.card):
+            if ability.kind is AbilityKind.STATIC and _EXILE_SPELLS_CAST_THIS_WAY.search(
+                ability.text or ""
+            ):
+                return True
+    return False
 
 
 def _granted_option(

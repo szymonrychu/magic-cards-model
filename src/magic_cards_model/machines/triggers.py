@@ -57,7 +57,7 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 
 from ..ids import new_id
-from ..models.card import Card, Color, Type
+from ..models.card import Card, Color, Layout, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.token import TokenState
 from ..models.zone import Zone
@@ -570,6 +570,14 @@ class AbilityOnStack(EngineModel):
     unlike a target, which `machines/targeting.py` already tracks through
     `targets`, this was never a target at all (CR 115.1 - Back from the
     Brink's own sentence never says "target")."""
+
+    cost_exiled_card_ids: tuple[UUID, ...] = ()
+    """Every card exiled to pay this ability's own cost - Corpseweft's
+    "Exile one or more creature cards from your graveyard", whose effect
+    counts them: "where X is twice the number of cards exiled this way". The
+    plural twin of `cost_exiled_card_id` (which names the one card an
+    effect acts on), filled by `Game.activate_ability` from the paid
+    payment (CR 602.2b)."""
 
     cost_sacrificed_card_ids: tuple[UUID, ...] = ()
     """The ids of the permanents sacrificed to pay this ability's own cost,
@@ -1322,6 +1330,14 @@ _NONTOKEN_WORD = re.compile(r"\bnontoken\b")
 _TOKEN_WORD = re.compile(r"\btokens?\b")
 
 
+#: "this `<noun>` or `<other subject>` enters" - a self-or-other entry
+#: condition; `other` is read like any other "`<subject>` enters" condition.
+_SELF_OR_OTHER_ENTERS_RE = re.compile(
+    r"^this [a-z]+ or (?P<other>(?:an?|another) .+ enters?)$", re.IGNORECASE
+)
+_LEGENDARY_WORD = re.compile(r"\blegendary\b")
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -1443,10 +1459,28 @@ def condition_matches(
     if ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD:
         if not _entry_qualifier_matches(game, condition, event):
             return False
-        if mine:
+        either = _SELF_OR_OTHER_ENTERS_RE.match(condition)
+        if mine and either is None:
             return event.subject_id == source.id
+        if either is not None:
+            # "this enchantment or a legendary creature you control enters"
+            # (Campsite Cuisine): the source itself, or anything that fits
+            # the other half, read as its own condition below.
+            if event.subject_id == source.id:
+                return True
+            condition = either.group("other")
+            lowered = condition.lower()
         if "another" in lowered and event.subject_id == source.id:
             return False
+        if _LEGENDARY_WORD.search(lowered):
+            # CR 205.4a: "legendary" is a supertype, read off the computed
+            # object (CR 613.5) - not a card type `_types_match` knows.
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if (
+                subject is None
+                or Supertype.LEGENDARY not in game.characteristics_of(subject).supertypes
+            ):
+                return False
         if not _controller_clause_holds(
             condition, controller, event.subject_controller
         ) or not _types_match(event.subject_types, condition):
@@ -1495,8 +1529,10 @@ def condition_matches(
             return mine
         # Not the source's own death: only a condition that also names
         # something else - "another"/"other" - can still match (CR 700.4,
-        # 603.10a). A pure "When this creature dies" does not.
-        if "another" not in lowered and "other" not in lowered:
+        # 603.10a). A pure "When this creature dies" does not; a condition
+        # naming no object of its own at all ("Whenever a creature dies",
+        # an emblem's) is about any creature.
+        if mine and "another" not in lowered and "other" not in lowered:
             return False
         subtype = _required_subtype(condition)
         return (
@@ -1513,6 +1549,16 @@ def condition_matches(
         return mine and event.subject_id == source.id
 
     if ability.event is TriggerEvent.ATTACKS:
+        batch = batched_attackers(game, condition, controller)
+        if batch is not None:
+            # CR 603.2c: "one or more <description> attack" is one trigger
+            # event for the whole declaration, read off `Game.declare_
+            # attackers`' own subject-less event, not once per attacker.
+            return (
+                event.subject_id is None
+                and bool(batch)
+                and (event.player == controller or not _ONE_OR_MORE_ATTACK_YOURS.search(condition))
+            )
         # CR 508.3d: "Whenever [a player] attacks, ..." triggers once when one
         # or more creatures that player controls are declared as attackers -
         # not once per attacker. `Game.declare_attackers` emits that as its
@@ -2082,6 +2128,14 @@ _LOOK_BACK_EVENTS = (
 )
 
 
+def resolution_key(ability: "AbilityOnStack") -> str:
+    """The key `Game.ability_resolutions_this_turn` counts one ability's
+    resolutions under: its source as that object (CR 400.7 - a source that
+    changed zones is a new object, `source_stamp`) and its own text, so two
+    abilities of one permanent are counted apart."""
+    return f"{ability.source_id}:{ability.source_stamp}:{ability.ability.text}"
+
+
 def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> frozenset[Zone]:
     """Which zone(s) this printed ability functions from (CR 113.6).
 
@@ -2105,6 +2159,10 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     second one stack rights it does not have.
     """
     lowered = ability.condition.lower()
+
+    if source.card.layout is Layout.EMBLEM:
+        # CR 114.4: "Abilities of emblems function in the command zone."
+        return frozenset({Zone.COMMAND})
 
     # CR 113.6b: "An ability that states which zones it functions in functions
     # only from those zones."
@@ -3476,6 +3534,62 @@ def abilities_triggered_by(
     return found
 
 
+#: "one or more `<description>` attack" - The Earth King's "one or more
+#: creatures you control with power 4 or greater attack". CR 603.2c: "An
+#: ability triggers only once each time its trigger event occurs. However, it
+#: can trigger repeatedly if one event contains multiple occurrences" - the
+#: plural "one or more" is one trigger for the declaration, and how many of
+#: the attackers fit the description is the event's count, which a later
+#: "that many" reads (`machines/effects.that_many`).
+_ONE_OR_MORE_ATTACK_RE = re.compile(r"^one or more (?P<description>.+?) attack$", re.IGNORECASE)
+_ONE_OR_MORE_ATTACK_YOURS = re.compile(r"\byou control\b", re.IGNORECASE)
+
+
+def is_batched_attack_condition(condition: str) -> bool:
+    """Whether `condition` is "one or more `<description>` attack" - one
+    trigger for a whole declaration (`batched_attackers`)."""
+    return _ONE_OR_MORE_ATTACK_RE.fullmatch(condition.strip()) is not None
+
+
+def batched_attackers(game: "Game", condition: str, controller: str) -> list[CardState] | None:
+    """The attacking creatures a "one or more `<description>` attack"
+    condition counts, or `None` when `condition` is not that shape or its
+    description does not read (`machines/targeting.permanent_description`,
+    the grammar a "target" phrase uses, with "you control" read here as the
+    attackers' own controller)."""
+    match = _ONE_OR_MORE_ATTACK_RE.fullmatch(condition.strip())
+    if match is None:
+        return None
+    from .targeting import permanent_description
+
+    description = match.group("description")
+    yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
+    requirement = permanent_description(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip())
+    if requirement is None:
+        return None
+    return [
+        attacker
+        for attacker in game.attacking_creatures()
+        if (not yours or game.controller_of(attacker).username == controller)
+        and requirement.rejects(attacker, controller, game) is None
+    ]
+
+
+def _event_for(
+    game: "Game", ability: TriggeredAbility, controller: str, event: GameEvent
+) -> GameEvent:
+    """The event this ability carries onto the stack: `event` itself, or -
+    for a batched "one or more `<description>` attack" trigger - a copy
+    whose `amount` is how many attackers fit the description, the count
+    this ability's own "that many" reads (CR 603.2c)."""
+    if ability.event is not TriggerEvent.ATTACKS or event.subject_id is not None:
+        return event
+    batch = batched_attackers(game, ability.condition, controller)
+    if batch is None:
+        return event
+    return event.model_copy(update={"amount": len(batch)})
+
+
 def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> list[AbilityOnStack]:
     """Every ability `sources` have that this event triggers (CR 603.2).
 
@@ -3505,7 +3619,7 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             source_name=source.name,
             controller=controller,
             source_stamp=source.zone_change_stamp,
-            event=event,
+            event=_event_for(game, ability, controller, event),
         )
         triggered.append(on_stack)
         # CR 603.2d: "determine how many times it should trigger, then

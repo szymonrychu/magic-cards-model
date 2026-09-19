@@ -162,7 +162,7 @@ def test_wrenn_and_sevens_minus_eight_returns_graveyard_permanents_and_grants_no
     assert [c.name for c in alice.graveyard] == ["Lightning Bolt"]
     assert alice.has_no_maximum_hand_size
     assert len(alice.emblems) == 1
-    assert alice.emblems[0].text == "You have no maximum hand size."
+    assert alice.emblems[0].card.oracle_text == "You have no maximum hand size."
 
     # CR 514.1/402.2: nine cards in hand, no discard, because CR 613.11's
     # continuous effect on the game rule itself makes the maximum moot.

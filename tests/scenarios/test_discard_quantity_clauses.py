@@ -15,18 +15,15 @@ session that wrote this file:
   reads.
 - **CR 608.2d** - declining an optional cost is always legal.
 - **CR 608.2c** - "The controller of the spell or ability follows its
-  instructions in the order written" - the discard already ran by the time
-  Fable of the Mirror-Breaker II's own "draw that many cards" is found to be
-  a count this file cannot yet read (Group 0b's own channel), so the
-  ability still triggers and the discard still happens; only the unreadable
-  remainder is recorded rather than silently dropped.
+  instructions in the order written" - the discard runs first, and Fable of
+  the Mirror-Breaker II's own "draw that many cards" reads the count it
+  actually moved (Group 0b's channel, `that_many`).
 - **CR 714.2/714.3a/107.15a** - a Saga's chapter abilities and its own
   intrinsic first lore counter, which is what makes one `saga_lore_step()`
   call below enough to reach Fable's own chapter II.
 
 Fable of the Mirror-Breaker is the pool card a "discard up to N" clause left
-silent - its own "draw that many cards" still has no reader until Group 0b's
-channel lands, recorded as a notice instead of running unread. Thrilling
+silent; its "draw that many cards" reads the discard's own count. Thrilling
 Discovery is a real Modern printing of the same "you may discard N. If you
 do, `<consequence>`" shape with a fully readable (non-"that many")
 consequence, so the whole spell runs end to end.
@@ -101,14 +98,11 @@ def test_thrilling_discovery_declining_the_discard_draws_nothing():
     assert alice.hand == [bears]
 
 
-def test_fable_ii_discards_up_to_two_then_records_a_notice_for_the_unread_draw():
+def test_fable_ii_discards_up_to_two_then_draws_that_many():
     """Fable of the Mirror-Breaker's chapter II: "You may discard up to two
-    cards. If you do, draw that many cards." The discard itself now reads
-    (CR 107.1c's "up to two" is a non-exact `_discard_cards` choice); the
-    "draw that many cards" consequence still has no reader until Group 0b's
-    channel lands, so it is recorded as an `UnmodeledTriggerEffectNotice`
-    (CR 608.2c: the discard already ran, in order) instead of the whole
-    chapter silently doing nothing."""
+    cards. If you do, draw that many cards." The discard reads (CR 107.1c's
+    "up to two" is a non-exact `_discard_cards` choice), and "draw that many
+    cards" draws the two it moved (CR 608.2c)."""
     scenario = (
         Scenario()
         .player(
@@ -141,15 +135,13 @@ def test_fable_ii_discards_up_to_two_then_records_a_notice_for_the_unread_draw()
 
     assert bears.zone is Zone.GRAVEYARD
     assert bolt.zone is Zone.GRAVEYARD
-    assert alice.hand == []
-    notices = scenario.game.unmodeled_trigger_effect_notices
-    assert len(notices) == 1
-    assert "draw that many cards" in notices[0].text
+    assert [c.name for c in alice.hand] == ["Forest", "Forest"]
+    assert scenario.game.unmodeled_trigger_effect_notices == []
 
 
 def test_fable_ii_declining_the_discard_records_no_notice():
-    """CR 608.2d again: declining the discard never reaches the unreadable
-    consequence at all."""
+    """CR 608.2d again: declining the discard never reaches the consequence
+    at all - nothing is drawn."""
     scenario = (
         Scenario()
         .player(

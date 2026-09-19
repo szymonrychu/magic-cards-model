@@ -88,7 +88,7 @@ from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..ids import new_id
-from ..models.card import Color, Supertype, Type
+from ..models.card import Color, Layout, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count, where_x_pattern
@@ -2345,13 +2345,14 @@ _SUBJECT = (
     r"|another target(?: [a-z]+)? creature(?: you control)?)"
 )
 
-#: Dauntless Onslaught's own plural CR 115.6 shape: "Up to two target
-#: creatures each get +2/+2 until end of turn." Scoped to `_PUMP_RE` alone
-#: rather than folded into `_SUBJECT` itself - several other shapes below
-#: (keyword grant, base P/T set, gain control, becomes-a-color) share
-#: `_SUBJECT` too, and none of them is this wave's territory; only the pump
-#: shape has a real pool/off-pool card printing a plural count here.
-_PLURAL_PUMP_SUBJECT = rf"(?:up to )?{COUNT} target(?: [a-z]+)? creatures(?: each)?"
+#: A plural target subject - "up to two target creatures" (Dauntless
+#: Onslaught's own CR 115.6 shape), "up to 2 target attacking creatures" (a
+#: reflexive ability's count written in as a digit, Swashbuckler
+#: Extraordinaire, Campsite Cuisine) - read with the plural verb ("get",
+#: "each get", "gain"). CR 601.2c/603.3d already fixed how many and which
+#: were targeted; the builders below apply to every resolved target.
+_PLURAL_TARGET_SUBJECT = rf"(?:up to )?(?:\d+|{COUNT}) target(?: [a-z]+)? creatures"
+_PLURAL_PUMP_SUBJECT = rf"{_PLURAL_TARGET_SUBJECT}(?: each)?"
 
 #: Xenagos, God of Revels' own reversed order: "another target creature you
 #: control **gains haste and gets** +X/+X until end of turn" - the keyword
@@ -2361,11 +2362,13 @@ _PLURAL_PUMP_SUBJECT = rf"(?:up to )?{COUNT} target(?: [a-z]+)? creatures(?: eac
 #: `power`/`toughness` (or the reversed order's own `power2`/`toughness2`)
 #: read `x` as well as a literal number - CR 107.3a's X, evaluated through
 #: `where_x_pattern`'s tail rather than a fixed digit, for Xenagos' own
-#: "where X is that creature's power".
+#: "where X is that creature's power". The forward shape's keyword may be a
+#: list ("gains trample and indestructible"), split by
+#: `_split_and_validate_keywords`.
 _PUMP_RE = re.compile(
     rf"^(?:{_SUBJECT}|{_PLURAL_PUMP_SUBJECT}) (?:"
     rf"gets? (?P<power>[+-](?:{COUNT}|x))/(?P<toughness>[+-](?:{COUNT}|x))"
-    rf"(?: and gains (?P<keyword>[a-z ]+))?"
+    rf"(?: and gains? (?P<keyword>[a-z ,]+?))?"
     rf"|gains (?P<keyword2>[a-z ]+) and gets? "
     rf"(?P<power2>[+-](?:{COUNT}|x))/(?P<toughness2>[+-](?:{COUNT}|x))"
     rf") until end of turn{where_x_pattern()}\.?$",
@@ -2730,7 +2733,8 @@ def _become_a_copy_builder(
 
 
 _KEYWORD_GRANT_RE = re.compile(
-    rf"^{_SUBJECT} gains (?P<keyword>[a-z ]+) until end of turn\.?$",
+    rf"^(?:{_SUBJECT} gains|{_PLURAL_TARGET_SUBJECT} gain) "
+    r"(?P<keyword>[a-z ,]+?) until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -3500,7 +3504,8 @@ def _board_wide_type_grant_builder(
 #: answering yes. `machines/effects.py`'s routing needs exactly that
 #: distinction: see `is_resolution_layer_effect_text`.
 _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE = re.compile(
-    rf"^{_SUBJECT} (?:gets?|gains?|has|have)\b|^Until your next turn, up to \S+ target\b"
+    rf"^(?:{_SUBJECT}|{_PLURAL_TARGET_SUBJECT}) (?:(?:each )?gets?|gains?|has|have)\b"
+    r"|^Until your next turn, up to \S+ target\b"
     r"|^target permanent becomes\b",
     re.IGNORECASE,
 )
@@ -3647,8 +3652,11 @@ def _effect_sentences_uncached(
     )
 
 
-def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -> EffectBuilder:
-    """ "[Subject] gets +N/+N [and gains <keyword>] until end of turn."
+def _pump_and_keyword_builder(
+    power: int, toughness: int, keywords: Sequence[str] = ()
+) -> EffectBuilder:
+    """ "[Subject] gets +N/+N [and gains <keyword>[ and <keyword>]] until end
+    of turn."
 
     Sublayer 7c for the pump (CR 613.4c: "modify power and/or toughness ...
     don't set"), layer 6 for the keyword (CR 613.1f, CR 113.10). Applies to
@@ -3679,7 +3687,7 @@ def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -
                     modification=modify_power_toughness(power, toughness),
                 )
             )
-            if keyword is not None:
+            for keyword in keywords:
                 effects.append(
                     ContinuousEffect(
                         description=f"{source.name}: {target.name} gains {keyword}",
@@ -3696,7 +3704,7 @@ def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -
 
 
 def _pump_and_keyword_per_target_power_builder(
-    power_sign: int, toughness_sign: int, keyword: str | None
+    power_sign: int, toughness_sign: int, keywords: Sequence[str] = ()
 ) -> EffectBuilder:
     """Xenagos, God of Revels' own shape: "[Subject] gets +X/+X [and gains
     <keyword>] until end of turn, where X is that creature's power."
@@ -3734,7 +3742,7 @@ def _pump_and_keyword_per_target_power_builder(
                     modification=modify_power_toughness(power, toughness),
                 )
             )
-            if keyword is not None:
+            for keyword in keywords:
                 effects.append(
                     ContinuousEffect(
                         description=f"{source.name}: {target.name} gains {keyword}",
@@ -3856,8 +3864,9 @@ def spend_effect_effects(text: str, permanent: CardState, timestamp: int) -> lis
     ]
 
 
-def _keyword_grant_builder(keyword: str) -> EffectBuilder:
-    """ ""[Subject] gains <keyword> until end of turn." (CR 613.1f, CR 113.10)."""
+def _keyword_grant_builder(keywords: Sequence[str]) -> EffectBuilder:
+    """ "[Subject] gains <keyword>[ and <keyword>] until end of turn."
+    (CR 613.1f, CR 113.10)."""
 
     def builder(
         source: CardState,
@@ -3875,6 +3884,7 @@ def _keyword_grant_builder(keyword: str) -> EffectBuilder:
                 modification=grant_ability(keyword),
             )
             for target in targets
+            for keyword in keywords
         ]
 
     return builder
@@ -5366,15 +5376,15 @@ def _permanents_with_counters_ward_builder(cost: str, *, line: str) -> EffectBui
     return builder
 
 
-#: The keyword grant shapes only ever grant one bare keyword - `machines/
-#: combat.py`'s own vocabulary, since that is what a grant needs to be able to
-#: do anything (`combat.has_keyword` is the only reader). Aerial Maneuver's
-#: "gains flying **and first strike**" is exactly why this is a whitelist and
-#: not `[a-z ]+` on its own: without it, "flying and first strike" would be
-#: accepted and granted as one bogus ability instead of two real ones. A
-#: keyword outside this set - or a conjunction the pool does not use single
-#: keywords with - fails the match and falls to `looks_like_unparsed_layer_effect`
-#: instead of silently granting the wrong thing.
+#: The keyword grant shapes grant bare keywords from `machines/combat.py`'s
+#: own vocabulary, since that is what a grant needs to be able to do anything
+#: (`combat.has_keyword` is the only reader). Aerial Maneuver's "gains flying
+#: **and first strike**" is why this is a whitelist and not `[a-z ]+` on its
+#: own: "flying and first strike" is split into its keywords
+#: (`_split_and_validate_keywords`) and granted as two real ones, never one
+#: bogus ability. A keyword outside this set fails the match and falls to
+#: `looks_like_unparsed_layer_effect` instead of silently granting the wrong
+#: thing.
 # Keywords no combat rule reads, and so absent from `machines/combat.py`'s own
 # `Keyword` vocabulary, that a grant still has to be able to name -
 # CR 702.12a's indestructible ("Indestructible is a static ability"; before it
@@ -5491,20 +5501,22 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _PUMP_RE.fullmatch(sentence):
         power_raw = match.group("power") or match.group("power2")
         toughness_raw = match.group("toughness") or match.group("toughness2")
-        keyword = match.group("keyword") or match.group("keyword2")
-        if keyword is not None:
-            if keyword.strip().lower() not in _KNOWN_KEYWORDS:
+        keyword_text = match.group("keyword") or match.group("keyword2")
+        granted: list[str] = []
+        if keyword_text is not None:
+            validated = _split_and_validate_keywords(keyword_text)
+            if validated is None:
                 return None
-            keyword = keyword.strip().capitalize()
+            granted = validated
         if power_raw.lstrip("+-").lower() == "x" or toughness_raw.lstrip("+-").lower() == "x":
             where_x = match.group("where_x")
             if where_x is None or not _THAT_CREATURES_POWER_RE.fullmatch(where_x.strip()):
                 return None
             power_sign = -1 if power_raw.startswith("-") else 1
             toughness_sign = -1 if toughness_raw.startswith("-") else 1
-            return _pump_and_keyword_per_target_power_builder(power_sign, toughness_sign, keyword)
+            return _pump_and_keyword_per_target_power_builder(power_sign, toughness_sign, granted)
         power, toughness = int(power_raw), int(toughness_raw)
-        return _pump_and_keyword_builder(power, toughness, keyword)
+        return _pump_and_keyword_builder(power, toughness, granted)
     if match := _SELF_PUMP_PER_GRAVEYARD_CARD_RE.fullmatch(sentence):
         card_type = _card_type_word(match.group("qualifier"))
         if card_type is None:
@@ -5530,10 +5542,10 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _BECOME_A_COPY_RE.fullmatch(sentence):
         return _become_a_copy_builder(until_eot=bool(match.group("until_eot")))
     if match := _KEYWORD_GRANT_RE.fullmatch(sentence):
-        keyword = match.group("keyword").strip()
-        if keyword.lower() not in _KNOWN_KEYWORDS:
+        granted_keywords = _split_and_validate_keywords(match.group("keyword"))
+        if granted_keywords is None:
             return None
-        return _keyword_grant_builder(keyword.capitalize())
+        return _keyword_grant_builder(granted_keywords)
     if match := _ANTHEM_RE.fullmatch(sentence):
         return _anthem_builder(
             int(match.group("power")),
@@ -6537,7 +6549,7 @@ def _violent_urge(
     exactly this reason - the row is not dead weight, it does one thing the
     parser cannot.
     """
-    effects = _pump_and_keyword_builder(1, 0, "First strike")(source, timestamp, targets, context)
+    effects = _pump_and_keyword_builder(1, 0, ["First strike"])(source, timestamp, targets, context)
     if count_card_types(context.your_graveyard) >= 4:
         effects.extend(
             ContinuousEffect(
@@ -6809,6 +6821,17 @@ def _impending_not_a_creature(source: CardState, timestamp: int) -> list[Continu
             selector=_only(source.id),
             modification=RemoveType(card_type=Type.CREATURE),
         )
+    ]
+
+
+def _emblems_in(game: Game | None) -> list[CardState]:
+    """The emblems in the command zone (CR 114.1), in the order created."""
+    if game is None:
+        return []
+    return [
+        state
+        for state in game.shared_zones[Zone.COMMAND]
+        if isinstance(state, CardState) and state.card.layout is Layout.EMBLEM
     ]
 
 
@@ -7087,8 +7110,13 @@ class ContinuousEffects(EngineModel):
         self.note(permanents)
         shared = context or LayerContext()
         sync_granted_ability_texts(permanents, _every_card_state_in(game) if game else None)
+        # CR 114.4: an emblem's static abilities function in the command zone
+        # (Kaito, Bane of Nightmares' "Ninjas you control get +1/+1."), and
+        # CR 613.7d stamps it as it entered that zone.
+        emblems = _emblems_in(game)
+        self.note(emblems)
         effects: list[ContinuousEffect] = []
-        for permanent in permanents:
+        for permanent in [*permanents, *emblems]:
             effects.extend(
                 effects_for(
                     permanent,
@@ -7107,5 +7135,9 @@ class ContinuousEffects(EngineModel):
         context: LayerContext | None = None,
         game: Game | None = None,
     ) -> ComputedBoard:
-        """What the board is, with everything applied (CR 613.5)."""
-        return compute_board(permanents, self.all_effects(permanents, context, game))
+        """What the board is, with everything applied (CR 613.5). Emblems are
+        on it too - they have no types, so no permanent-reading question sees
+        them - because an effect's source must be on the board for CR 613.6's
+        "does its ability still exist" check (`_still_exists`)."""
+        effects = self.all_effects(permanents, context, game)
+        return compute_board([*permanents, *_emblems_in(game)], effects)

@@ -116,6 +116,7 @@ from magic_cards_model.machines.effects import (  # noqa: E402
     create_continuous_effect_of_ability,
     effect_for,
     parse_mode_effect,
+    reads_as_transforms_line,
     resolve_modal_spell,
     trigger_effect_for,
 )
@@ -126,6 +127,11 @@ from magic_cards_model.machines.layers import (  # noqa: E402
 )
 from magic_cards_model.machines.modes import modal_profile, substitute_x  # noqa: E402
 from magic_cards_model.machines.objects_as_costs import has_improvise  # noqa: E402
+from magic_cards_model.machines.replacement import (  # noqa: E402
+    ENTERS_KINDS,
+    _self_enters_modifiers,
+    parse_replacement_effects,
+)
 from magic_cards_model.machines.targeting import profile_for_text  # noqa: E402
 from magic_cards_model.machines.triggers import (  # noqa: E402
     _ENTERS_TAPPED_RE as _CONDITION_ENTERS_TAPPED_RE,
@@ -142,6 +148,7 @@ from magic_cards_model.machines.triggers import (  # noqa: E402
     TriggerEvent,
     _unread_trigger_events,
     condition_matches,
+    is_batched_attack_condition,
 )
 from magic_cards_model.machines.triggers import (  # noqa: E402
     _required_entering_subtype as _condition_required_entering_subtype,
@@ -669,6 +676,63 @@ def missed_layer_shape(text: str) -> str | None:
     return None
 
 
+def _self_enters_line_category(printing: Card, text: str) -> str | None:
+    """Whether one static-ability paragraph carrying a CR 614.12 "enters"
+    replacement shape (`ENTERS_KINDS` - "[this] enters with ...", "as [this]
+    enters, ...", "[this] enters tapped", "... enters as a copy of ...") is
+    one `machines/replacement.py`'s own `_self_enters_modifiers` really
+    performs - asked of the *production* function itself, the same
+    throwaway-real-permanent technique `_condition_can_fire` above already
+    uses for a triggered ability's condition, rather than re-deriving what
+    each shape means here and risking drifting from what the engine actually
+    does. Before this, every card whose only static line was this shape came
+    back `STATIC_UNAUDITED` regardless of whether the engine reads it at all
+    - Walking Ballista's "This creature enters with X +1/+1 counters on it."
+    and Steam Vents' "As this land enters, you may pay 2 life. If you don't,
+    it enters tapped." included, both fully handled and neither credited.
+
+    `None` when `text`'s own paragraph carries no self-referential
+    `ENTERS_KINDS` clause at all - the caller falls through to its next
+    check, same as every other row in `_static_ability_category`. Otherwise
+    `HANDLED` when `_self_enters_modifiers`, run against one throwaway
+    permanent as it enters, produces a performable entry whose own label text
+    covers every self-referential `ENTERS_KINDS` sentence this paragraph
+    parses into - `STATIC_UNAUDITED` (via `None`) for anything this cannot
+    confirm, a board-state condition this synthetic single-permanent board
+    cannot decide included, since guessing either way would not be honest.
+    """
+    effects = parse_replacement_effects(printing)
+    self_kinds = [
+        effect
+        for effect in effects
+        if effect.kind in ENTERS_KINDS
+        and effect.self_replacement
+        and effect.raw.strip() == text.strip()
+    ]
+    if not self_kinds:
+        return None
+    try:
+        game = Game(
+            players=[Player(username="sweep_you"), Player(username="sweep_opp")],
+            schema_version=Game.CURRENT_SCHEMA_VERSION,
+        )
+        state = _synthetic_permanent(
+            printing, controller="sweep_you", token=False, tapped=False, counter_kind=None
+        )
+        state.bind_to_game(game)
+        performable = _self_enters_modifiers(game, state)
+    except Exception:
+        # A printing this throwaway board cannot stage (a face this sweep's
+        # own synthesis does not model, say) is left unaudited rather than
+        # guessed at either way - the same fail-open-to-"don't know" posture
+        # `_probe_cards` already takes.
+        return None
+    labels = " ".join(label for _suffix, _apply, label, _copy in performable)
+    if all(effect.text.strip() in labels for effect in self_kinds):
+        return HANDLED
+    return None
+
+
 def _static_ability_category(printing: Card, text: str) -> str:
     """One static line of a permanent (CR 604.2, CR 113.3d), judged the way
     the battlefield sweep judges it - per line, not per card.
@@ -710,6 +774,12 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if is_attack_requirement_line(text, printing.name):
         # CR 508.1d: `Game.declare_attackers` enforces it.
         return HANDLED
+    if reads_as_transforms_line(text):
+        # CR 712.20: `effects.transform_permanent` applies it as it transforms.
+        return HANDLED
+    self_enters = _self_enters_line_category(printing, text)
+    if self_enters is not None:
+        return self_enters
     return STATIC_UNAUDITED
 
 
@@ -949,6 +1019,10 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     happened to fail.
     """
     if ability.event not in _SYNTHESIZABLE_EVENTS:
+        return None
+    if ability.event is TriggerEvent.ATTACKS and is_batched_attack_condition(ability.condition):
+        # "one or more <description> attack" counts a declared attack, which
+        # this closure's synthetic board has none of - no occurrence to try.
         return None
     entering = ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
     probes = _probe_cards(printing, ability.condition, entering=entering)

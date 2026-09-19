@@ -119,7 +119,7 @@ from pydantic import ConfigDict
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.creature_types import creature_types
-from ..models.card import Card, Color, Type
+from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, Choice, ChoiceKind, Counter, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
@@ -133,6 +133,7 @@ from .delayed import ReflexiveExileCopiedCard
 if TYPE_CHECKING:
     from ..models.game import Game
     from ..models.player import Player
+    from .effects import _SacrificeRestriction
     from .layers import ComputedBoard
 
 # --------------------------------------------------------------------------
@@ -359,6 +360,15 @@ class ReplacementEffect(EngineModel):
     combat_only: bool = False
     #: Who or what the damage would be dealt to, as printed.
     damage_target: str | None = None
+    #: The multiplier on an `ENTERS_WITH` "[`<multiplier>`] that many
+    #: `<counter_kind>` counters" clause, when the count is carried from a
+    #: sibling `AS_ENTERS` "[you may ]sacrifice any number of `<description>`"
+    #: choice rather than CR 107.3m's X - 1 for a bare "that many" (Shimatsu
+    #: the Bloodcloaked), 2 for "twice that many" (Devouring Hellion), and so
+    #: on through `numbers.parse_multiplier`. `None` when the clause carries
+    #: no such count at all - including CR 107.3m's own "X" shape, which is a
+    #: different channel entirely and stays on `variable_amount` alone.
+    that_many_multiplier: int | None = None
 
     @property
     def is_prevention(self) -> bool:
@@ -634,8 +644,14 @@ def _names_of(card: Card) -> tuple[str, ...]:
     """Every name the card may refer to itself by, longest first.
 
     Older templating spells the card's own name out ("Forsaken Crossroads enters
-    the battlefield tapped"), and legendary cards use their short name
-    ("Kalitas"), so both the full name and its first word count.
+    the battlefield tapped"), and legendary cards use their short name - the
+    part before a comma ("Kalitas, Bloodchief of Ghet" -> "Kalitas") or, when
+    there is no comma, the bare first word ("Shimatsu the Bloodcloaked" ->
+    "Shimatsu", whose own text reads "As Shimatsu enters, ...") - so the full
+    name, its comma-split head, and its first word all count. CR 201.5c:
+    "Text printed on some cards refers to that card by a shortened version of
+    its name. Instances of a card's shortened name used in this manner are
+    treated as though they used the card's full name."
     """
     names: list[str] = []
     for name in [card.name, *(face.name for face in card.card_faces or [])]:
@@ -645,6 +661,10 @@ def _names_of(card: Card) -> tuple[str, ...]:
                 continue
             names.append(part)
             names.append(part.split(",")[0].strip())
+            if Supertype.LEGENDARY in card.supertypes:
+                # CR 201.5c's shortened name is a legendary card's usage;
+                # a nonlegendary "Goblin Guide" is never "Goblin".
+                names.append(part.split()[0].strip())
     return tuple(sorted(set(names), key=len, reverse=True))
 
 
@@ -1072,7 +1092,7 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
         # A counter count this cannot read fails closed as UNPARSED rather
         # than as an enters-with effect with a made-up amount or kind.
         return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
-    amount, variable, counter_kind, expression = counters
+    amount, variable, counter_kind, expression, that_many_multiplier = counters
     return [
         _make(
             ReplacementKind.ENTERS_WITH,
@@ -1083,6 +1103,7 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
             variable_amount=variable,
             counter_kind=counter_kind,
             amount_expression=expression,
+            that_many_multiplier=that_many_multiplier,
             condition=(match.group("condition") or "").strip() or None,
             self_replacement=_refers_to_self(subject, names),
         )
@@ -1103,32 +1124,64 @@ _COUNTERS_EQUAL_TO = re.compile(
     re.IGNORECASE,
 )
 
+#: "[`<multiplier>`] that many `<kind>` counters" - Shimatsu the Bloodcloaked's
+#: bare "that many +1/+1 counters" and Devouring Hellion's "twice that many
+#: +1/+1 counters". Unlike `_amount_of`'s own refusal of "that many" as a
+#: guessed CR 107.3m X (that count is not knowable from the text alone), this
+#: count *is* knowable - it is carried from a sibling `AS_ENTERS` "[you may
+#: ]sacrifice any number of `<description>`" choice in the same paragraph, and
+#: `_self_enters_modifiers` is what pairs the two and fills it in from how
+#: many were actually sacrificed (CR 614.12a).
+_THAT_MANY_COUNTERS = re.compile(
+    rf"^(?:(?P<multiplier>{MULTIPLIER})\s+)?that many (?P<kind>.+?) counters?$",
+    re.IGNORECASE,
+)
 
-def _read_counters(what: str) -> tuple[int | None, bool, str | None, str | None] | None:
+
+def _read_counters(
+    what: str,
+) -> tuple[int | None, bool, str | None, str | None, int | None] | None:
     """Read "four +1/+1 counters", "X charge counters", "a shield counter",
-    and "a number of +1/+1 counters on it equal to [expression]".
+    "a number of +1/+1 counters on it equal to [expression]", and "[`<multiplier>`]
+    that many `<kind>` counters".
 
-    Returns `(amount, variable, kind, expression)`. Only the last shape fills
-    `expression`, and it always leaves `amount` unset and `variable` true - the
-    count is not knowable from the text alone.
+    Returns `(amount, variable, kind, expression, that_many_multiplier)`. The
+    "equal to" shape fills only `expression`, always leaving `amount` unset and
+    `variable` true - the count is not knowable from the text alone. The "that
+    many" shape fills only `that_many_multiplier` (1 for a bare "that many",
+    2 for "twice that many", and so on), also leaving `amount` unset and
+    `variable` true - the count is knowable, but only once a sibling clause's
+    own choice has been made (see `_THAT_MANY_COUNTERS`).
 
     Anything more elaborate - Agent's Toolkit enters with four different kinds
     at once - leaves the counter fields empty rather than picking one. A count
-    word that is not a count ("that many", "twice that many", "your choice
-    of") is None: unreadable, not a variable.
+    word that is neither of the above ("your choice of") is None: unreadable.
     """
     text = what.strip()
     equal_to = _COUNTERS_EQUAL_TO.match(text)
     if equal_to:
-        return None, True, equal_to.group("kind").strip(), equal_to.group("expression").strip()
+        return (
+            None,
+            True,
+            equal_to.group("kind").strip(),
+            equal_to.group("expression").strip(),
+            None,
+        )
+    that_many = _THAT_MANY_COUNTERS.match(text)
+    if that_many:
+        multiplier_text = that_many.group("multiplier")
+        multiplier = 1 if multiplier_text is None else parse_multiplier(multiplier_text)
+        if multiplier is None:
+            return None
+        return None, True, that_many.group("kind").strip(), None, multiplier
     match = _COUNTERS.match(text)
     if not match:
-        return None, False, None, None
+        return None, False, None, None, None
     read = _amount_of(match.group("amount"))
     if read is None:
         return None
     amount, variable = read
-    return amount, variable, match.group("kind").strip(), None
+    return amount, variable, match.group("kind").strip(), None, None
 
 
 # --------------------------------------------------------------------------
@@ -3196,6 +3249,121 @@ def _reveal_or_tapped(phrase: str, card_name: str) -> Apply:
 
 
 # --------------------------------------------------------------------------
+# "As [this] enters, [you may] sacrifice any number of <description>. [If you
+# do, ]it enters with [<multiplier>] that many <kind> counters on it."
+# --------------------------------------------------------------------------
+#
+# CR 614.12a's choice again, the same two-sentences-as-one-choice shape
+# `_pay_life_or_tapped` reads for the shockland - just paired with an
+# ENTERS_WITH follower instead of an ENTERS_TAPPED one, and the payment is a
+# count of sacrificed permanents rather than a fixed amount of life.
+#
+# Shimatsu the Bloodcloaked ("As Shimatsu enters, sacrifice any number of
+# permanents. Shimatsu enters with that many +1/+1 counters on it.") is
+# mandatory - the sacrifice is not itself a "you may" - and the follower
+# carries no back-reference condition at all. Devouring Hellion ("As this
+# creature enters, you may sacrifice any number of creatures and/or
+# planeswalkers. If you do, it enters with twice that many +1/+1 counters on
+# it.") is worded as a choice, and its follower's condition is the "you do"
+# back-reference `_IF_YOU_DO` reads, the same way `_IF_YOU_DONT` reads the
+# shockland's "you don't". Both are read the same way underneath: CR 107.1c's
+# "any number of" already permits choosing zero on its own, so neither needs a
+# separate yes/no question before the CHOOSE_CARDS one - see
+# `_sacrifice_any_number_then_enter_with_counters`.
+
+#: "If you do" - Devouring Hellion's back-reference to its own "you may
+#: sacrifice" half, the same role `_IF_YOU_DONT` plays for the shockland's
+#: "you don't".
+_IF_YOU_DO = re.compile(r"^(?:if )?you do$", re.IGNORECASE)
+
+#: "sacrifice any number of <description>" (Shimatsu, mandatory) or "you may
+#: sacrifice any number of <description>" (Devouring Hellion, optional) - read
+#: off an `AS_ENTERS` effect's own `replacement` text. `description` is handed
+#: to `machines/effects._sacrifice_restriction`, the same untargeted-
+#: permanent-description reader CR 118.12's "you may sacrifice <restriction>.
+#: If you do, ..." clause already uses, so "permanents" and "creatures and/or
+#: planeswalkers" both read through the one shared grammar rather than a
+#: second one built here.
+_SACRIFICE_ANY_NUMBER_RE = re.compile(
+    r"^(?P<optional>you may )?sacrifice (?P<restriction>any number of .+?)\.?$", re.IGNORECASE
+)
+
+
+def _sacrifice_any_number_choice(effect: ReplacementEffect) -> tuple[str, bool] | None:
+    """`(restriction, optional)` off an `AS_ENTERS` "[you may ]sacrifice any
+    number of <description>" replacement text, or `None` when it is not that
+    shape at all. `restriction` keeps the "any number of" quantity phrase on
+    the front - `machines.effects._sacrifice_restriction` reads the quantity
+    and the description together, the same text CR 118.12's own "you may
+    sacrifice <restriction>" clause hands it.
+    """
+    match = _SACRIFICE_ANY_NUMBER_RE.match((effect.replacement or "").strip())
+    if match is None:
+        return None
+    return match.group("restriction").strip(), match.group("optional") is not None
+
+
+def _sacrifice_any_number_then_enter_with_counters(
+    restriction: "_SacrificeRestriction", counter_kind: str, multiplier: int, card_name: str
+) -> Apply:
+    """The combined CR 614.12a choice: sacrifice, then carry the count into
+    the entering permanent's own counters.
+
+    `restriction` is a `machines.effects._SacrificeRestriction`, imported for
+    typing only: `effects` already imports this module.
+
+    Runs entirely before `Game.enter_the_battlefield` puts the permanent onto
+    the battlefield (CR 614.12a), against `restriction.candidates` - the
+    controller's other permanents fitting the printed description, off the
+    *computed* board (CR 613.5), which never includes the entering permanent
+    itself: it is not in `game.battlefield` yet at this point (CR 614.12a
+    again - the choice is made *before* it enters). One `CHOOSE_CARDS`
+    question, `exact=False` (CR 107.1c's "any number of" - zero is always a
+    legal answer, and an unscripted answer defaults to none per
+    `machines/decisions.default_answer`), so neither Shimatsu's mandatory
+    sacrifice nor Devouring Hellion's "you may" wording is asked a separate
+    yes/no first - the range itself already carries the option. Each chosen
+    permanent is sacrificed (`Game.sacrifice`, CR 701.21a), and the number
+    actually sacrificed - zero included - times `multiplier` is the count
+    `_apply_self_enters` elsewhere in this module would otherwise have needed
+    a literal number for.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = event.card.controller if event.card is not None else None
+        if who is None:
+            return
+        player = game.player(who)
+        source_id = source_id_of(source)
+        candidates = restriction.candidates(game, player, source.id if source is not None else None)
+        chosen_ids: tuple[UUID, ...] = ()
+        if candidates:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=who,
+                    prompt=f"choose permanents to sacrifice as {card_name} enters",
+                    source=card_name,
+                    source_id=source_id,
+                    amount=len(candidates),
+                    exact=False,
+                    cards=tuple(candidate.id for candidate in candidates),
+                )
+            )
+            assert isinstance(answer, tuple)
+            chosen_ids = answer
+        by_id = {candidate.id: candidate for candidate in candidates}
+        chosen = [by_id[card_id] for card_id in chosen_ids]
+        for permanent in chosen:
+            game.sacrifice(permanent)
+        event.counters[counter_kind] = (
+            event.counters.get(counter_kind, 0) + len(chosen) * multiplier
+        )
+
+    return apply
+
+
+# --------------------------------------------------------------------------
 # The condition on a self "enters tapped" line (CR 614.1d)
 # --------------------------------------------------------------------------
 #
@@ -4075,6 +4243,48 @@ def _self_enters_modifiers(
             continue
 
         if effect.kind is ReplacementKind.AS_ENTERS and effect.condition is None:
+            sacrifice_choice = _sacrifice_any_number_choice(effect)
+            if sacrifice_choice is not None:
+                restriction_text, optional = sacrifice_choice
+                from .effects import _sacrifice_restriction
+
+                restriction = _sacrifice_restriction(restriction_text)
+                if restriction is not None:
+                    follower = next(
+                        (
+                            other
+                            for other, candidate in enumerate(parsed)
+                            if other > index
+                            and candidate.kind is ReplacementKind.ENTERS_WITH
+                            and candidate.counter_kind is not None
+                            and candidate.that_many_multiplier is not None
+                            and (
+                                (not optional and candidate.condition is None)
+                                or (
+                                    optional
+                                    and _IF_YOU_DO.match((candidate.condition or "").strip())
+                                )
+                            )
+                        ),
+                        None,
+                    )
+                    if follower is not None:
+                        consumed.add(follower)
+                        performable.append(
+                            (
+                                f"self:{index}",
+                                _sacrifice_any_number_then_enter_with_counters(
+                                    restriction,
+                                    parsed[follower].counter_kind,
+                                    parsed[follower].that_many_multiplier,
+                                    card_state.card.name,
+                                ),
+                                f"{effect.text} {parsed[follower].text}",
+                                False,
+                            )
+                        )
+                        continue
+
             choice_kind = _classify_choice(effect.replacement or "")
             if choice_kind is not None:
                 performable.append(
@@ -4283,6 +4493,25 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 key=f"{card.id}:flashback",
                 source=card,
                 label="if the flashback cost was paid, exile this card instead (CR 702.34a)",
+                apply=_exile_instead,
+            )
+        )
+    from .casting import CAST_PERMISSION, exiles_spells_cast_this_way
+
+    if (
+        record.keyword == CAST_PERMISSION
+        and event.destination is Zone.GRAVEYARD
+        and card.controller is not None
+        and exiles_spells_cast_this_way(game, card.controller)
+    ):
+        # Jaya Ballard's emblem: "If a spell cast this way would be put into
+        # your graveyard, exile it instead." - a replacement (CR 614.1a) on a
+        # spell recorded as cast under that emblem's own permission.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:cast-permission",
+                source=card,
+                label="a spell cast this way is exiled instead of put into the graveyard",
                 apply=_exile_instead,
             )
         )

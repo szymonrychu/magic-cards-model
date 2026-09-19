@@ -49,6 +49,7 @@ from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, CounterKind
 from ..models.mana import (
     NO_SPEND_EFFECT,
+    NOT_RETAINED,
     UNRESTRICTED,
     ManaCost,
     ManaPayment,
@@ -1638,13 +1639,16 @@ def _bucket_map(
         option, restriction = alternatives[0] if alternatives else ([], None)
         slot = _slot_for(restriction, registry)
         counts = _MultiSet(option)
-        buckets = {(color, snow, slot, NO_SPEND_EFFECT): amount for color, amount in counts.items()}
+        buckets = {
+            (color, snow, slot, NO_SPEND_EFFECT, NOT_RETAINED): amount
+            for color, amount in counts.items()
+        }
         return buckets, sum(counts.values())
 
     buckets = {}
     for option, restriction in alternatives:
         slot = _slot_for(restriction, registry)
-        buckets[(option[0], snow, slot, NO_SPEND_EFFECT)] = 1
+        buckets[(option[0], snow, slot, NO_SPEND_EFFECT, NOT_RETAINED)] = 1
     return buckets, 1
 
 
@@ -1684,7 +1688,7 @@ def _chosen_alternative(
         return list(option), restriction
     for option, restriction in alternatives:
         slot = _slot_for(restriction, registry)
-        if used.get((option[0], snow, slot, NO_SPEND_EFFECT), 0) > 0:
+        if used.get((option[0], snow, slot, NO_SPEND_EFFECT, NOT_RETAINED), 0) > 0:
             return list(option), restriction
     return [], None
 
@@ -1757,6 +1761,7 @@ def _best_flow_plan(
             {bucket for buckets in sources_map.values() for bucket in buckets},
             key=lambda bucket: (
                 bucket[2] == UNRESTRICTED,
+                bucket[4] != NOT_RETAINED,
                 bucket[1],
                 bucket[0].value,
                 bucket[2],
@@ -4671,6 +4676,7 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
         snow=dict(pool.snow),
         restricted=[entry.model_copy(deep=True) for entry in pool.restricted],
         spend_effects=[tagged.model_copy(deep=True) for tagged in pool.spend_effects],
+        retained=[entry.model_copy(deep=True) for entry in pool.retained],
     )
 
 
@@ -5359,6 +5365,7 @@ class CostPayment(EngineModel):
         floating = dict(self.pool.floating)
         snow = dict(self.pool.snow)
         restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
+        retained = [entry.model_copy(deep=True) for entry in self.pool.retained]
 
         # CR 601.2h's two passes: everything else first, then the costs that
         # move objects from a library to a public zone (a mill cost).
@@ -5387,6 +5394,7 @@ class CostPayment(EngineModel):
                 self.pool.floating = floating
                 self.pool.snow = snow
                 self.pool.restricted = restricted
+                self.pool.retained = retained
             raise
 
         if life is not None:
@@ -5555,6 +5563,7 @@ class CostPayment(EngineModel):
         pool.floating = dict(self.pool.floating)
         pool.snow = dict(self.pool.snow)
         pool.restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
+        pool.retained = [entry.model_copy(deep=True) for entry in self.pool.retained]
 
     def _restore_payer_pool(self) -> None:
         """Put the payer's floating mana back the way it was before payment.
@@ -5590,6 +5599,7 @@ class CostPayment(EngineModel):
         pool.floating = dict(self._preexisting.floating)
         pool.snow = dict(self._preexisting.snow)
         pool.restricted = [entry.model_copy(deep=True) for entry in self._preexisting.restricted]
+        pool.retained = [entry.model_copy(deep=True) for entry in self._preexisting.retained]
 
     def _undo_everything(self) -> None:
         for component in reversed(self.components):
