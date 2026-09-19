@@ -5992,6 +5992,24 @@ _COLOR_AMONG_OTHER_QUALITY_RE = re.compile(
 )
 
 
+#: "for each `<kind>` counter on it"/"... on this `<noun>`" - Vexing Sphinx's
+#: own dies trigger ("draw a card for each age counter on it") and Hangarback
+#: Walker's registry-row twin ("create a token ... for each +1/+1 counter on
+#: this creature") are the identical CR 122.1/122.2 read: the count is the
+#: *source's* own counters, not anything the controller boards, so this
+#: reads `source_id` off `game.find_by_id` rather than the `controller`
+#: parameter `_for_each_qualifier_count`'s board scan uses. CR 603.10a's
+#: "look back in time" for a dies trigger is what makes `last_known_counters`
+#: the right half of the ternary once the source is gone from the
+#: battlefield - `Counter`-keyed removal on a zone change (CR 122.2) empties
+#: `.counters` itself by the time this ever runs, the same reason
+#: `hangarback_dies` reads the identical ternary rather than `.counters`
+#: alone.
+_COUNTER_ON_IT_RE = re.compile(
+    r"^(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|this \w+)$", re.IGNORECASE
+)
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -6000,12 +6018,28 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     Tries, in order: Kaito, Bane of Nightmares' own "opponent who lost life
     this turn" (folded in here rather than pinned to its exact whole
     sentence, as `_DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE` used to);
+    `_COUNTER_ON_IT_RE`'s own source-relative counter count;
     `_for_each_qualifier_count`'s "(other) `<qualifier>` you control[ with
     ...]"; and `count_expression`'s own "the number of `<qualifier>` you
     control" / "... cards in your graveyard/hand" shapes, for a card that
     spells the count out that way instead.
     """
     stripped = phrase.strip().rstrip(".")
+    if match := _COUNTER_ON_IT_RE.fullmatch(stripped):
+        kind = _counter_kind(match.group("kind"))
+
+        def count_counters_on_it(game: "Game", _controller: str, source_id: str | None) -> int:
+            if source_id is None:
+                return 0
+            source = game.find_by_id(UUID(source_id))
+            if source is None:
+                return 0
+            counters = (
+                source.counters if source.zone is Zone.BATTLEFIELD else source.last_known_counters
+            )
+            return counters[kind]
+
+        return count_counters_on_it
     if match := _COLOR_AMONG_OTHER_QUALITY_RE.fullmatch(stripped):
         qualifier = match.group("qualifier").strip().lower()
         # CR 110.4a's own "permanent" umbrella (Chromatic Orrery's own
