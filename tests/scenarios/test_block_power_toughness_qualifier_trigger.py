@@ -11,6 +11,16 @@ power/toughness comparison - matched nothing at all (`sweep_pool`'s
 proves the comparison reader itself is not hardcoded to "power or toughness 1
 or less" by exercising it against differently shaped clauses directly,
 against real battlefield creatures rather than a stand-in for one.
+
+The trigger firing was this stream's own claim; the resolved effect itself
+("deals 1 damage to that creature's controller") was a second gap, closed by
+widening `_DAMAGE_THAT_PLAYER_RE` (`machines/effects.py`) to also read "that
+creature's controller" as the identical CR 400.7 anaphor Gideon the
+Oathless's own "that player" already reads off `GameEvent.player`/
+`subject_controller` - two printed spellings of the same referent, not a
+second mechanism. Gimli, Counter of Kills is the off-pool generality proof:
+a *dies* trigger, not a *blocks* one, with no power/toughness qualifier at
+all, proving the widened regex is not fitted to Tetsuko's own sentence.
 """
 
 from magic_cards_model.machines import Step
@@ -33,10 +43,36 @@ def test_tetsuko_damages_the_controller_of_a_small_blocker():
     scenario.block(tetsuko, lynx)
 
     scenario.game.put_triggers_on_stack()
-    # Only the trigger firing is this stream's own claim - the resolved
-    # effect itself ("deals 1 damage to that creature's controller") is an
-    # anaphoric targeted-damage clause outside S5's scope.
     assert scenario.stack_names() == ["Tetsuko Umezawa, Pursuer's triggered ability"]
+    scenario.pass_until_resolved()
+
+    assert scenario.player("bob").life == 19, "the blocker's own controller, not the attacker"
+    assert scenario.player("alice").life == 20
+
+
+def test_gimli_damages_the_dead_creatures_controller_off_pool():
+    """Off-pool generality proof: Gimli, Counter of Kills' own dies trigger -
+    "Whenever a creature an opponent controls dies, Gimli deals 1 damage to
+    that creature's controller." A different trigger event (DIES, not
+    BLOCKS) and no power/toughness qualifier at all, reading the same widened
+    `_DAMAGE_THAT_PLAYER_RE`."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Gimli, Counter of Kills"], life=20)
+        .player("bob", battlefield=["Grizzly Bears"], life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.game.destroy(bears)
+    scenario.state_based_actions()
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Gimli, Counter of Kills's triggered ability"]
+    scenario.pass_until_resolved()
+
+    assert scenario.player("bob").life == 19
+    assert scenario.player("alice").life == 20
 
 
 def test_tetsuko_does_not_fire_for_a_big_blocker():

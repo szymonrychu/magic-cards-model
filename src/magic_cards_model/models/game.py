@@ -659,6 +659,13 @@ _CONDITION_POWER = re.compile(
 _CONDITION_CONTROLS_A = re.compile(r"you control (?P<qualities>an? .+)", re.IGNORECASE)
 _AND_AN = re.compile(r"\s+and\s+(?=an?\s)", re.IGNORECASE)
 _A_QUALITY = re.compile(r"an? (?P<quality>.+)", re.IGNORECASE)
+#: Power Plant Worker / Mine Worker / Tower Worker's own shared "you control
+#: creatures named `<name>` and `<name>`" - two specific printed names
+#: (CR 201.4), not `_CONDITION_CONTROLS_A`'s quality phrase, so it is its own
+#: pattern rather than a widening of that one.
+_CONDITION_CONTROLS_NAMED_PAIR = re.compile(
+    r"you control creatures named (?P<first>.+?) and (?P<second>.+)", re.IGNORECASE
+)
 #: Diamond City: "two or more creatures entered the battlefield under your
 #: control this turn."
 _CONDITION_ENTERED_THIS_TURN = re.compile(
@@ -783,6 +790,12 @@ _CONDITION_CAST_A_SPELL_THIS_TURN = re.compile(
 _CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN = re.compile(
     r"you(?:'ve| have) scried or surveilled this turn", re.IGNORECASE
 )
+#: Fblthp, Impossibly Lost's own "your library has no cards in it" (CR
+#: 401.1's zone, counted the plain way `_CONDITION_HAND_CARDS`/`_CONDITION_
+#: GRAVEYARD_CARDS` already count a player's own zone) - a board fact read
+#: fresh every time, not a turn fact, so a card drawn or milled since the
+#: library last emptied is read correctly.
+_CONDITION_LIBRARY_EMPTY_RE = re.compile(r"your library has no cards in it", re.IGNORECASE)
 #: CR 110.4a: "Specifically, it means an artifact, battle, creature,
 #: enchantment, land, or planeswalker card."
 _PERMANENT_TYPES = frozenset(
@@ -15473,6 +15486,12 @@ class Game(EngineModel):
                 any(quality(board.of(state)) for state in controlled) for quality in qualities
             )
 
+        if match := _CONDITION_CONTROLS_NAMED_PAIR.fullmatch(text):
+            first = match.group("first").strip().lower()
+            second = match.group("second").strip().lower()
+            names = {state.name.lower() for state in controlled}
+            return first in names and second in names
+
         if match := _CONDITION_ENTERED_THIS_TURN.fullmatch(text):
             needed = parse_count(match.group("count"))
             turn_number = getattr(self.turn, "turn_number", None)
@@ -15594,6 +15613,9 @@ class Game(EngineModel):
 
         if _CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN.fullmatch(text):
             return self.turn_fact_holds("scried_or_surveilled", controller)
+
+        if _CONDITION_LIBRARY_EMPTY_RE.fullmatch(text):
+            return len(self.player(controller).library) == 0
 
         return None
 
@@ -17228,6 +17250,26 @@ class Game(EngineModel):
             return
         self._lose_the_game(username)
         self._check_for_a_winner()
+
+    def player_wins_the_game(self, username: str) -> None:
+        """CR 104.2b: "An effect may state that a player wins the game."
+
+        Applied immediately as the stating effect resolves - Felidar
+        Sovereign's own worked example (CR 104.2b's rules-text comment):
+        "If that player has 40 or more life at this time, the ability
+        resolves and that player wins the game", no state-based check
+        deferred the way a losing effect's own CR 104.3b-d siblings are -
+        the win-side twin of `player_loses_the_game`, built on the same
+        `end_with_winner` a `Match` series already uses to record one.
+
+        A no-op once the game is already over (`end_with_winner` itself
+        raises there, CR 104.2a's own "this happens immediately" is not a
+        race this wave models - nothing in the pool states two different
+        winners from one resolution) or for a player who already left.
+        """
+        if not self.is_in_game(username) or self.is_over:
+            return
+        self.end_with_winner(username)
 
     def advance(self, username: str | None = None) -> Step:
         """Move to the next step (CR 500.1), as `username`'s own decision.

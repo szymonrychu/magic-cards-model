@@ -2099,13 +2099,28 @@ _EMPOWER_KEYWORD_LOOKBEHIND = r"(?<!(?i:empower ))"
 #: them) - never a bare trailing comma on its own, which is ordinary English
 #: punctuation an in-sentence self-reference is free to sit in front of (The
 #: Millennium Calendar's own "... on The Millennium Calendar, sacrifice
-#: it ..." must still normalize). Applied to every candidate uniformly, not
-#: only a bare-short one: by the time a shorter candidate's turn comes
-#: (`self_reference_names`' longest-first order), every occurrence that
-#: really was this card naming itself has already been consumed by a longer
-#: candidate, so anything this lookahead still refuses was never this card
-#: to begin with.
-_LONGER_NAME_CONTINUATION_LOOKAHEAD = r"(?!,\s*(?:the\s+)?[A-Z]|\s+[A-Z])"
+#: it ..." must still normalize).
+#:
+#: The third branch (`['’]s\s+[A-Z]`) is the identical guard applied to a
+#: *possessive* continuation: Ajani Resolute's own "-4" creates a token named
+#: "Ajani's Pridemate" (CR 111.3, the token's own fixed name - a different,
+#: longer proper noun that merely starts with this card's own short name),
+#: which used to normalize into "this permanent's Pridemate" with nothing to
+#: stop it. A capitalized word right after the apostrophe is what marks a
+#: longer name continuing, exactly as a capital right after a bare space
+#: already does for the first branch; a *lowercase* continuation is this
+#: card genuinely possessing something of its own and stays refused by
+#: nothing here - Fblthp, Impossibly Lost's own "Fblthp's owner shuffles him
+#: into their library" still normalizes to "this permanent's owner ...".
+#: Both the straight and the typographic apostrophe are read, matching every
+#: other possessive this module already reads either way.
+#:
+#: Applied to every candidate uniformly, not only a bare-short one: by the
+#: time a shorter candidate's turn comes (`self_reference_names`' longest-
+#: first order), every occurrence that really was this card naming itself
+#: has already been consumed by a longer candidate, so anything this
+#: lookahead still refuses was never this card to begin with.
+_LONGER_NAME_CONTINUATION_LOOKAHEAD = r"(?!,\s*(?:the\s+)?[A-Z]|\s+[A-Z]|['’]s\s+[A-Z])"
 
 
 def self_reference_pattern(name: str) -> str:
