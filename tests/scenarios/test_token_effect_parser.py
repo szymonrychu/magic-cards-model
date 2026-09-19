@@ -68,7 +68,7 @@ from magic_cards_model.machines.effects import (
     parse_mixed_effect_for_spell,
 )
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card import Color, Type
+from magic_cards_model.models.card import Color, Supertype, Type
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
@@ -494,3 +494,72 @@ def test_verdant_krakens_upkeep_trigger_creates_a_forest_tentacle_land_creature_
     mana_abilities = parse_mana_abilities(tentacle.card)
     assert len(mana_abilities) == 1
     assert mana_abilities[0].options == [[Color.GREEN]]
+
+
+# --------------------------------------------------------------------------
+# CR 111.9's named appositive: "create <Name>, a <descriptor> token."
+# --------------------------------------------------------------------------
+
+
+def test_drizzt_do_urdens_appositive_names_and_tokens_guenhwyvar():
+    """Drizzt Do'Urden (off-set, not in the fra pool): "When Drizzt enters,
+    create Guenhwyvar, a legendary 4/1 green Cat creature token with
+    trample." CR 111.9's own example shape - the token's name leads the
+    sentence as its own noun, not `_TOKEN_CLAUSE_RE`'s trailing "named
+    <Name>" - which `_TOKEN_CLAUSE_RE` itself explicitly does not read.
+    """
+    text = _triggered_effect_text("Drizzt Do'Urden", TriggerEvent.ENTERS_THE_BATTLEFIELD)
+    effect = parse_mixed_effect(text)
+    assert effect is not None
+
+    scenario = Scenario().player("alice").player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    from magic_cards_model.machines.triggers import AbilityKind, AbilityOnStack
+
+    triggered_ability = next(
+        a
+        for a in parse_abilities(card("Drizzt Do'Urden"))
+        if hasattr(a, "event") and a.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+    )
+    ability = AbilityOnStack(
+        kind=AbilityKind.TRIGGERED,
+        ability=triggered_ability,
+        source_name="Drizzt Do'Urden",
+        controller="alice",
+    )
+    effect(scenario.game, ability)
+
+    guenhwyvar = scenario.find("Guenhwyvar", Zone.BATTLEFIELD)
+    assert guenhwyvar.card.name == "Guenhwyvar"
+    assert Supertype.LEGENDARY in guenhwyvar.card.supertypes
+    assert guenhwyvar.card.subtypes == ["Cat"]
+    assert (guenhwyvar.power, guenhwyvar.toughness) == (4, 1)
+    assert set(guenhwyvar.card.colors) == {Color.GREEN}
+    assert has_keyword(guenhwyvar, Keyword.TRAMPLE)
+
+
+def test_jiang_yanggu_never_alones_appositive_names_and_tokens_mowu():
+    """Jiang Yanggu, Never Alone (on-set): "When Jiang Yanggu enters, create
+    Mowu, a legendary 3/3 green Dog creature token." Differently worded from
+    Drizzt's own trigger (no tail keyword at all, a different name, P/T,
+    color, and subtype) - proof the appositive reader is not fitted to
+    either card's own sentence.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Jiang Yanggu, Never Alone"], battlefield=["Forest"] * 4)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Forest"] * 4, username="alice")
+    scenario.cast_and_resolve("Jiang Yanggu, Never Alone", *sources, username="alice")
+    scenario.resolve_top()  # the enters trigger
+
+    mowu = scenario.find("Mowu", Zone.BATTLEFIELD)
+    assert mowu.card.name == "Mowu"
+    assert Supertype.LEGENDARY in mowu.card.supertypes
+    assert mowu.card.subtypes == ["Dog"]
+    assert (mowu.power, mowu.toughness) == (3, 3)
+    assert set(mowu.card.colors) == {Color.GREEN}

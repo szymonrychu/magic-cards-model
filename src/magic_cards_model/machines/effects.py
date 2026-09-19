@@ -8999,6 +8999,14 @@ def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> Token
         words = words[:-1]
     else:
         return None
+    supertypes: tuple[Supertype, ...] = ()
+    if words and words[0].lower() == "legendary":
+        # CR 205.4a's supertype, printed ahead of the P/T the same way it is
+        # on a real card's own type line - Jiang Yanggu, Never Alone's "a
+        # legendary 3/3 green Dog creature token" (Mowu), off-set Drizzt
+        # Do'Urden's "a legendary 4/1 green Cat creature token" (Guenhwyvar).
+        supertypes = (Supertype.LEGENDARY,)
+        words = words[1:]
     power = toughness = None
     if words and re.fullmatch(r"\d+/\d+", words[0]):
         power_text, toughness_text = words[0].split("/")
@@ -9022,6 +9030,7 @@ def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> Token
     return TokenDefinition(
         types=types,
         subtypes=tuple(words),
+        supertypes=supertypes,
         colors=tuple(colors),
         power=power,
         toughness=toughness,
@@ -9093,6 +9102,44 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         # whatever `card_name` would otherwise derive.
         definition = definition.model_copy(update={"name": name.strip()})
     return _token_creation_clause(definition, count, tapped=tapped)
+
+
+#: CR 111.9's appositive naming - "create `<Name>`, a `<descriptor>` token[
+#: with `<tail>`]." - Jiang Yanggu, Never Alone's "create Mowu, a legendary
+#: 3/3 green Dog creature token" (on-set), off-set Drizzt Do'Urden's "create
+#: Guenhwyvar, a legendary 4/1 green Cat creature token with trample". A
+#: different shape from `_TOKEN_CLAUSE_RE`'s own "named `<Name>`" tail - here
+#: the name leads the sentence as its own noun, immediately after "create",
+#: with no count word in front of it at all (CR 111.9's token is always one).
+_NAMED_APPOSITIVE_TOKEN_RE = re.compile(
+    r"^create (?P<name>[A-Z][^,]*), (?:a|an) (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+with\s+(?P<tail>.+))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_named_appositive_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_NAMED_APPOSITIVE_TOKEN_RE`'s shape, or `None` if this is not it.
+
+    `for_spell` is accepted only for symmetry with every other clause parser
+    in `_parse_mixed_clause`'s chain - CR 111.9 naming applies equally to a
+    spell and an ability, and nothing here reads the resolving object beyond
+    its controller.
+    """
+    match = _NAMED_APPOSITIVE_TOKEN_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if "copy of" in clause.lower():
+        return None  # CR 707.2 copying needs copiable values this wave does not read.
+    name = match.group("name").strip()
+    if not name or not name[0].isupper():
+        return None
+    words = match.group("desc").strip().split()
+    definition = _parse_generic_token_descriptor(words, match.group("tail"))
+    if definition is None:
+        return None
+    definition = definition.model_copy(update={"name": name})
+    return _token_creation_clause(definition, 1, tapped=False)
 
 
 # --------------------------------------------------------------------------
@@ -21274,6 +21321,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     token = _parse_token_clause(clause, for_spell=for_spell)
     if token is not None:
         return token
+    named_appositive_token = _parse_named_appositive_token_clause(clause, for_spell=for_spell)
+    if named_appositive_token is not None:
+        return named_appositive_token
     role_token = _parse_create_role_token_clause(clause, for_spell=for_spell)
     if role_token is not None:
         return role_token
