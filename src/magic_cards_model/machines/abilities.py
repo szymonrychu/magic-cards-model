@@ -1973,6 +1973,18 @@ def keyword_ability(card: Card, keyword: str) -> KeywordAbility | None:
 #: `machines/layers.py`, letting both read a self-named sentence the same way
 #: they already read "this creature"/"this permanent" rather than needing a
 #: second copy of every shape keyed on a literal name.
+#: "Empower Jace N" (CR 701.71a) names a fixed keyword-action target, never
+#: the source's own identity, even when the source's own short name happens
+#: to collide with it - Jace, Reality Sculptor's own "+1: Empower Jace X,
+#: where X is the number of Islands you control." is not "+1: Empower this
+#: permanent X, ..." (CR 201.5 self-reference is about the object using its
+#: own name to mean itself; the empower token is never the object the
+#: ability is printed on). A future "empower `<name>`" keyword sharing a
+#: planeswalker's own short name would hit the identical collision, so the
+#: guard is on the keyword phrase, not on the literal word "Jace".
+_EMPOWER_KEYWORD_LOOKBEHIND = r"(?<!(?i:empower ))"
+
+
 def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
     front = card_name.split("//")[0].strip()
     candidates = {card_name, front}
@@ -1981,7 +1993,9 @@ def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
     normalized = effect_text
     for name in candidates:
         if name:
-            normalized = re.sub(rf"\b{re.escape(name)}\b", "this permanent", normalized)
+            normalized = re.sub(
+                rf"{_EMPOWER_KEYWORD_LOOKBEHIND}\b{re.escape(name)}\b", "this permanent", normalized
+            )
     return normalized
 
 
@@ -2835,6 +2849,24 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
 #: all; neither name appears here, only the cost's own words.
 _DISCARDS_ITSELF = re.compile(r"^discard this (?:card|permanent)$", re.IGNORECASE)
 
+#: The same CR 113.6j shape, one zone over: "Exile this card from your
+#: graveyard" (Campus Crier's own "{1}, Exile this card from your graveyard:
+#: Empower Jace 2.", Seasoned Pyromancer) can never be paid on the
+#: battlefield either, so the ability functions only where the cost can be
+#: paid. `machines/cost.cost_component_for_phrase` already reads the same
+#: sentence for *payment* (its own `_PHRASE_EXILE`); this is the zone-
+#: permission half CR 113.6j asks for, read off the identical words rather
+#: than a card-specific row.
+_EXILES_ITSELF_FROM_ZONE = re.compile(
+    r"^exile this (?:card|permanent) from (?:your|their) (?P<zone>hand|graveyard|library)$",
+    re.IGNORECASE,
+)
+_EXILE_ZONE_WORDS: dict[str, Zone] = {
+    "hand": Zone.HAND,
+    "graveyard": Zone.GRAVEYARD,
+    "library": Zone.LIBRARY,
+}
+
 #: CR 113.6m: "An ability whose cost or effect specifies that it moves the
 #: object it's on out of a particular zone functions only in that zone, unless
 #: its trigger condition or a previous part of its cost or effect already
@@ -2878,6 +2910,12 @@ def _activated_ability_zone(
         piece.kind is CostKind.DISCARD and _DISCARDS_ITSELF.match(piece.text) for piece in costs
     ):
         return Zone.HAND, "CR 113.6j"
+    for piece in costs:
+        if piece.kind is not CostKind.OTHER:
+            continue
+        match = _EXILES_ITSELF_FROM_ZONE.match(piece.text)
+        if match is not None:
+            return _EXILE_ZONE_WORDS[match.group("zone").lower()], "CR 113.6j"
     if _RETURNS_ITSELF_FROM_GRAVEYARD.search(effect):
         return Zone.GRAVEYARD, "CR 113.6m"
     if instructions and _ACTIVATE_ONLY_IF_SUSPENDED.search(instructions):
