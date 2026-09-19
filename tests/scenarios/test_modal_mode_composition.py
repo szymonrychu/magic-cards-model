@@ -368,3 +368,118 @@ def test_the_keyword_choice_reader_generalises_past_puppetbeasts_own_three_keywo
         "Deathtouch",
         "Lifelink",
     ]
+
+
+def test_arnis_trigger_pumps_by_the_entering_creatures_own_power():
+    """ "Whenever another creature you control enters, Arni gets +X/+0 until
+    end of turn, where X is that creature's power." - CR 603.2's triggering
+    object, read off the ability's own event rather than counted across the
+    board the way every other X this wave reads is.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Craw Wurm"],
+            battlefield=["Arni, Renowned Champion", *["Forest"] * 6],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    arni = scenario.creature("Arni, Renowned Champion", "alice")
+    before = scenario.game.characteristics_of(arni).power_toughness
+
+    scenario.cast_and_resolve("Craw Wurm", *scenario.untapped_sources(*["Forest"] * 6))
+    scenario.resolve_top()  # Arni's own trigger
+
+    # Craw Wurm enters at printed power 6, with no ETB trigger of its own
+    # to compound the assertion.
+    assert scenario.game.characteristics_of(arni).power_toughness == (before[0] + 6, before[1])
+
+
+def test_craterclaw_colossus_pumps_and_grants_trample_to_the_whole_team():
+    """ "When this creature enters, creatures you control gain trample and
+    get +X/+0 until end of turn, where X is the number of artifacts you
+    control." - a *group* subject with no target at all
+    (`_mass_creature_group_targets`, the same resolver `_run_mass_pump`
+    already uses for the symmetric "+X/+X" shape).
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Craterclaw Colossus"],
+            battlefield=[*["Mountain"] * 7, "Grizzly Bears", "Sol Ring"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.cast_and_resolve("Craterclaw Colossus", *scenario.untapped_sources(*["Mountain"] * 7))
+    scenario.resolve_top()
+    colossus = scenario.creature("Craterclaw Colossus", "alice")
+
+    # Craterclaw Colossus is itself an artifact creature, plus Sol Ring: X = 2.
+    assert scenario.game.characteristics_of(colossus).power_toughness == (5 + 2, 5)
+    assert scenario.game.characteristics_of(bears).power_toughness == (2 + 2, 2)
+    assert has_keyword(bears, Keyword.TRAMPLE, scenario.game)
+
+
+def test_pias_activated_ability_pumps_by_artifacts_controlled():
+    """ "{5}{R}: Target creature gets +X/+0 until end of turn, where X is the
+    number of artifacts you control." - the single-target twin of Aerid
+    Konstrari's and Craterclaw Colossus's own X.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Pia, Determined Rebuilder", "Sol Ring", *["Mountain"] * 6],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    pia = scenario.creature("Pia, Determined Rebuilder", "alice")
+
+    scenario.activate(
+        pia, *scenario.untapped_sources(*["Mountain"] * 6), index=0, targets=[pia], username="alice"
+    )
+    scenario.resolve_top()
+
+    assert scenario.game.characteristics_of(pia).power_toughness == (2 + 1, 2)
+
+
+def test_aerid_konstraris_activated_ability_pumps_and_notices_the_still_unread_token():
+    """ "{6}: Create a Heartwood token. Then Aerid Konstrari gets +X/+0 until
+    end of turn, where X is the number of artifacts you control." - the
+    pump half composes around whatever the token-creation clause reads to
+    (a `LayerRemainderNotice` on this branch, since the Heartwood token
+    itself merges from fra-s3 later; a real created token once it does).
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Aerid Konstrari", "Sol Ring", *["Mountain"] * 5, "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    beast = scenario.creature("Aerid Konstrari", "alice")
+    before = scenario.game.characteristics_of(beast).power_toughness
+
+    scenario.activate(
+        beast,
+        *scenario.untapped_sources(*["Mountain"] * 5, "Forest"),
+        index=0,
+        username="alice",
+    )
+    scenario.resolve_top()
+
+    assert scenario.game.characteristics_of(beast).power_toughness == (before[0] + 1, before[1])
+    assert [n.text for n in scenario.game.layer_remainder_notices] == ["Create a Heartwood token."]

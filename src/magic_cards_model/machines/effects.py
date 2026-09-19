@@ -1668,6 +1668,49 @@ _WHERE_X_IS_INLINE_RE = re.compile(r",\s*where x is (?P<expr>[^.]+)", re.IGNOREC
 #: `_X_TOKEN_RE` is not anchored to the "X/X" shape at all.
 _X_TOKEN_RE = re.compile(r"(?<![\w])X(?![\w])")
 
+#: "that creature's power"/"that creature's toughness" - Arni, Renowned
+#: Champion's own X ("Whenever another creature you control enters, Arni
+#: gets +X/+0 until end of turn, where X is that creature's power."): CR
+#: 603.2's triggering object, read off the ability's own `GameEvent.
+#: subject_id` rather than anything counted across the board the way every
+#: `count_expression` shape is. `_is_referent_power_expression`'s own "that
+#: `<type>`'s power" is the narrower, sacrifice-consequence-only twin of
+#: this - a *different* mechanism (`_parse_sacrifice_consequence`) for a
+#: *different* antecedent (what an additional cost consumed), not reused
+#: here on purpose.
+_THAT_CREATURES_CHARACTERISTIC_RE = re.compile(
+    r"^that creature'?s (?P<characteristic>power|toughness)$", re.IGNORECASE
+)
+
+
+def _event_subject_characteristic_expr(
+    expr: str,
+) -> Callable[["Game", "AbilityOnStack"], int] | None:
+    """ "that creature's power"/"that creature's toughness", read off the
+    ability's own triggering event's subject (CR 603.2) at the moment the
+    ability resolves (CR 608.2h fixes the value once, here) - `Game.
+    power_of`/`toughness_of`, `None`-safe the same way `_OBJECT_
+    CHARACTERISTIC_RE`'s own reader already is for an object that has since
+    left the battlefield or whose `*` characteristic-defining ability has
+    nothing to compute from.
+    """
+    match = _THAT_CREATURES_CHARACTERISTIC_RE.fullmatch(expr.strip().rstrip("."))
+    if match is None:
+        return None
+    wants_power = match.group("characteristic").lower() == "power"
+
+    def read(game: "Game", ability: "AbilityOnStack") -> int:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return 0
+        subject = game.find_by_id(event.subject_id)
+        if subject is None:
+            return 0
+        value = game.power_of(subject) if wants_power else game.toughness_of(subject)
+        return max(value, 0) if value is not None else 0
+
+    return read
+
 
 def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | None:
     """A continuous-effect sentence whose power and toughness are an X the
@@ -1687,35 +1730,74 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
     Returns `None` unless the substituted sentence is one that parser can
     actually read, so an unreadable animation stays unread rather than being
     half-applied.
+
+    A sibling sentence beside the X-defined one - Aerid Konstrari's own "{6}:
+    Create a Heartwood token. Then this creature gets +X/+0 until end of
+    turn, where X is the number of artifacts you control." - is composed the
+    same way `_compose_layer_effect_with_remainder_for_ability` composes an
+    ordinary (non-X) layer sentence's own sibling, in the printed order (CR
+    608.2c): `parsed_layer_effects` itself already silently skips a sentence
+    outside its own territory (by design, for the battlefield sweep this
+    same builder also serves), which used to mean the token-creation
+    instruction never ran at all once this function's own gate started
+    passing for the pump half beside it.
     """
     text = effect_text.strip()
     match = _WHERE_X_IS_INLINE_RE.search(text)
     if match is None:
         return None
-    magnitude_expr = count_expression(match.group("expr"))
-    if magnitude_expr is None:
+    controller_magnitude_expr = count_expression(match.group("expr"))
+    event_magnitude_expr = (
+        None
+        if controller_magnitude_expr is not None
+        else _event_subject_characteristic_expr(match.group("expr"))
+    )
+    if controller_magnitude_expr is None and event_magnitude_expr is None:
         return None
     template = (text[: match.start()] + text[match.end() :]).strip()
     if not _X_TOKEN_RE.search(template):
         return None
     if parsed_layer_effects(_X_TOKEN_RE.sub("1", template)) is None:
         return None
+    sentences = _plain_resolution_sentences(template)
+    pump_index = next((i for i, s in enumerate(sentences) if _X_TOKEN_RE.search(s)), None)
+    if pump_index is None:
+        return None
+    pump_sentence = sentences[pump_index]
+    remainder_sentences = [s for i, s in enumerate(sentences) if i != pump_index]
+    pump_first = pump_index == 0 or not remainder_sentences
+    remainder_text = " ".join(remainder_sentences)
+    remainder_effect = parse_mixed_effect(remainder_text) if remainder_text else None
 
-    def effect(game: "Game", ability: AbilityOnStack) -> None:
+    def run_pump(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
-        magnitude = magnitude_expr(game, ability.controller)
-        literal = _X_TOKEN_RE.sub(str(magnitude), template)
+        magnitude = (
+            controller_magnitude_expr(game, ability.controller)
+            if controller_magnitude_expr is not None
+            else event_magnitude_expr(game, ability)  # type: ignore[misc]
+        )
+        literal = _X_TOKEN_RE.sub(str(magnitude), pump_sentence)
         builder = parsed_layer_effects(literal)
         if builder is None:
             continuous_effects(game).layer_notices.append(
                 LayerNotice(source_id=source.id, source_name=source.name, text=literal)
             )
             return
-        profile = profile_for_text(literal)
-        requires_target = profile.understood and bool(profile.requirements)
-        targets = game.resolve_card_targets(ability) if requires_target else [source]
+        # Craterclaw Colossus's own "creatures you control gain trample and
+        # get +X/+0 ..." names no target at all (CR 611.2c's fixed-at-
+        # resolution group) - `_mass_creature_group_targets` is the same
+        # resolver `_run_mass_pump` uses for the symmetric "+X/+X" shape,
+        # tried first so a group subject is never mistaken for "this
+        # creature" alone.
+        group_targets = _mass_creature_group_targets(game, ability.controller, source.id, literal)
+        if group_targets is not None:
+            targets = group_targets
+        else:
+            profile = profile_for_text(literal)
+            requires_target = profile.understood and bool(profile.requirements)
+            targets = game.resolve_card_targets(ability) if requires_target else [source]
         if not targets:
             # CR 115.6: "up to one target" legally choosing zero, or every
             # chosen target since gone illegal (CR 608.2b) - nothing to affect.
@@ -1726,6 +1808,26 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
         for built in builder(source, timestamp, targets, context):
             if built.holds(game):
                 store.add(built)
+
+    def run_remainder(game: "Game", ability: AbilityOnStack) -> None:
+        if remainder_effect is not None:
+            remainder_effect(game, ability)
+        elif remainder_text:
+            game.layer_remainder_notices.append(
+                LayerRemainderNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=remainder_text,
+                )
+            )
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if pump_first:
+            run_pump(game, ability)
+            run_remainder(game, ability)
+        else:
+            run_remainder(game, ability)
+            run_pump(game, ability)
 
     return effect
 
