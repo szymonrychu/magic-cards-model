@@ -2798,6 +2798,23 @@ def damage_each_opponent(amount: int) -> AbilityEffect:
     return effect
 
 
+def damage_each_opponent_for_spell(amount: int) -> Effect:
+    """`damage_each_opponent`'s own spell-side twin - Dragon's Approach's own
+    "Dragon's Approach deals 3 damage to each opponent." (CR 119.3, CR
+    102.2). The source is the resolving spell itself, the same reading
+    `deal_damage` already gives its own targeted damage (CR 120.2b): the
+    printed sentence names the spell, not "this creature", so there is no
+    `AbilityOnStack.source(game)` lookup to make - the spell is its own
+    source.
+    """
+
+    def effect(game: "Game", spell: CardState) -> None:
+        for opponent in _opponents(game, game.controller_of(spell).username):
+            game.deal_damage(opponent, amount, source=spell)
+
+    return effect
+
+
 #: "Each opponent skips their next untap step." - Brine Elemental's own
 #: "turned face up" trigger (CR 702.37e, CR 614.10, CR 502.3).
 _EACH_OPPONENT_SKIPS_NEXT_UNTAP_RE = re.compile(
@@ -3773,6 +3790,29 @@ def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
         if lone_color is None:
             return lambda state: not state.colors
         return lambda state: lone_color in state.colors
+    if len(parts) == 2 and parts[0] in subtype_vocabulary():
+        try:
+            named_type: Type | None = Type(parts[1])
+        except ValueError:
+            named_type = None
+        if named_type is not None:
+            # "`<subtype>` `<type>` card" - Sphinx's Approach's own "a Sphinx
+            # creature card" (CR 205.3, `subtype_vocabulary`) - a conjunction
+            # of the named type and the named subtype, the identical "type
+            # qualified by a second word" idiom the colour branch above
+            # already reads for "colorless creature". Without this,
+            # `_named_type_matcher` tried to read the whole two-word phrase
+            # as one type or land type, found neither, and matched
+            # **nothing at all** - the same fails-open gap that branch's own
+            # docstring already documents for a bare colour word.
+            subtype_word = parts[0]
+
+            def subtype_and_type_matches(state: CardState) -> bool:
+                return named_type in state.types and any(
+                    subtype.lower() == subtype_word for subtype in state.subtypes
+                )
+
+            return subtype_and_type_matches
     return _named_type_matcher(word)
 
 
@@ -3934,6 +3974,17 @@ def _card_description_is_readable(quality: str) -> bool:
         if parts[0] in _COLOR_COUNT_WORDS or parts[0] in _HAND_EXILE_COLOR_WORDS:
             if len(parts) > 2 or (len(parts) == 2 and not _named_type_word_is_readable(parts[1])):
                 return False
+        elif (
+            len(parts) == 2
+            and parts[0] in subtype_vocabulary()
+            and _named_type_word_is_readable(parts[1])
+        ):
+            # "`<subtype>` `<type>`" - Sphinx's Approach's own "a Sphinx
+            # creature card" (CR 205.3): a printed subtype qualifying a card
+            # type, read as a conjunction of the two - the same "adjective
+            # then noun" shape the colour branch above already reads,
+            # spelled with a subtype instead of a colour.
+            continue
         elif len(parts) != 1 or not _named_type_word_is_readable(word):
             return False
     return True
@@ -9909,11 +9960,10 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
 
     if match := _DAMAGE_EACH_OPPONENT_RE.fullmatch(clause):
         # No target at all (CR 102.2's "each opponent"), so nothing to check
-        # through `_targets_understood` - and `damage_each_opponent` reads
-        # `ability.controller` directly, which only an `AbilityOnStack` has.
-        if for_spell:
-            return None
+        # through `_targets_understood`.
         amount = parse_count(match.group("n"))
+        if for_spell:
+            return damage_each_opponent_for_spell(amount)  # type: ignore[return-value]
         return damage_each_opponent(amount)  # type: ignore[return-value]
 
     if match := _DAMAGE_EACH_CREATURE_RE.fullmatch(clause):
@@ -14765,6 +14815,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=True)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
+    may_exile_self_and_named_copies = _parse_may_exile_self_and_named_copies_if_you_do_clause(
+        effect_text
+    )
+    if may_exile_self_and_named_copies is not None:
+        return may_exile_self_and_named_copies
     target_energy_damage = _parse_target_get_energy_pay_damage(effect_text)
     if target_energy_damage is not None:
         return target_energy_damage
@@ -21050,6 +21105,15 @@ def _search_quality_is_readable(quality: str) -> bool:
         elif len(parts) == 2 and parts[0] in _HAND_EXILE_COLOR_WORDS:
             if not _type_word_is_readable(parts[1]):
                 return False
+        elif (
+            len(parts) == 2
+            and parts[0] in subtype_vocabulary()
+            and _type_word_is_readable(parts[1])
+        ):
+            # "`<subtype>` `<type>`" - Sphinx's Approach's own "Sphinx
+            # creature card" - mirrors `_quality_word_matcher`'s identical
+            # branch (CR 205.3, `subtype_vocabulary`).
+            pass
         elif len(parts) != 1 or not _type_word_is_readable(word):
             return False
     return True
@@ -25534,6 +25598,104 @@ def _parse_reveal_from_outside_the_game_into_hand_clause(effect_text: str) -> Ef
             for card_id in chosen_ids:
                 _reveal_and_bring_into_hand(game, controller, by_id[card_id], spell.name)
         game.exile_cards([spell])
+
+    return effect
+
+
+#: "`<antecedent>`. [Then ]you may exile `<self>` and `<n>` cards named
+#: `<name>` from your graveyard. If you do, `<consequence>`." (CR 118.12's
+#: cost-paid-on-resolution "if you do", CR 201.5's self-reference) - the
+#: Approach cycle's own "a deck can have any number of cards named
+#: `<name>`" template: Sphinx's Approach's own "you may exile **this
+#: spell**", Dragon's Approach's own "you may exile **Dragon's Approach**"
+#: (the literal printed name - never validated against the resolving
+#: spell's actual name here, the same "the source is never named here"
+#: reading the damage-dealing clause family already gives a literal source
+#: prefix). `<antecedent>` is read and run exactly as it would be on its
+#: own (a plain draw, a damage clause, ...), and `<consequence>` is always
+#: a search-and-put, but neither is hardcoded to one shape - both are
+#: re-dispatched through the ordinary spell parser.
+_MAY_EXILE_SELF_AND_NAMED_COPIES_IF_YOU_DO_RE = re.compile(
+    r"^(?P<antecedent>.+?)\.\s*(?:then\s+)?you may exile "
+    r"(?:this spell|this card|[^.]+?) and "
+    rf"(?P<n>{COUNT}) cards? named (?P<name>.+?) from your graveyard\.\s*"
+    r"if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_exile_self_and_named_copies_if_you_do_clause(text: str) -> Effect | None:
+    """`_MAY_EXILE_SELF_AND_NAMED_COPIES_IF_YOU_DO_RE`'s shape, or `None`.
+
+    The antecedent always happens first (it carries no "may" of its own),
+    read through `_spell_effect_or_notice` exactly as it would be alone.
+    Then CR 118.12: exiling is the cost paid *as this spell resolves*, not
+    a separate action with its own success or failure to check - "if you
+    do" is answered by whether the player said yes, matching `_parse_
+    conditional_sacrifice_clause`'s own reading of the identical rule.
+    `Game.exile_cards` moves the resolving spell itself and every chosen
+    graveyard copy together, as one CR 608.2b instruction - the same call
+    `_parse_reveal_from_outside_the_game_into_hand_clause` already makes for
+    Burning Wish's own bare "Exile <this>." on a spell still mid-resolution
+    (popped off the stack, no zone of its own until this gives it one).
+    """
+    match = _MAY_EXILE_SELF_AND_NAMED_COPIES_IF_YOU_DO_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    antecedent_text = match.group("antecedent").strip()
+    if not antecedent_text.endswith("."):
+        antecedent_text += "."
+    antecedent_effect = _spell_effect_or_notice(antecedent_text)
+    if antecedent_effect is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+    copy_name = match.group("name").strip()
+    consequence_text = match.group("consequence").strip()
+    consequence_effect = parse_mixed_effect_for_spell(consequence_text)
+    if consequence_effect is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        antecedent_effect(game, spell)
+        controller = game.controller_of(spell)
+        candidates = [
+            card for card in controller.graveyard if card.name.lower() == copy_name.lower()
+        ]
+        needed = min(count, len(candidates))
+        if not game.may(
+            controller,
+            f"exile this spell and {needed} card(s) named {copy_name} from your graveyard",
+            source=spell.name,
+            source_id=source_id_of(spell),
+        ):
+            return
+        chosen: list[CardState] = []
+        if needed:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=(
+                        f"choose {needed} card(s) named {copy_name} to exile from your graveyard"
+                    ),
+                    source=spell.name,
+                    source_id=source_id_of(spell),
+                    amount=needed,
+                    cards=tuple(candidate.id for candidate in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {candidate.id: candidate for candidate in candidates}
+            chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+        game.exile_cards([spell, *chosen])
+        # CR 118.12: "if you do" is answered by the cost having been paid,
+        # not by what it happened to accomplish - the consequence runs
+        # whether or not the graveyard held every one of the named copies.
+        consequence_effect(game, spell)
 
     return effect
 
