@@ -9130,6 +9130,113 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Reveal cards from the top of your library until you reveal a `<kind>`[ or
+#: `<kind2>`] card. Put that card `<dest>` and the rest on the bottom of your
+#: library in a random order." - CR 701.20a's open-ended reveal, the same
+#: family `_parse_reveal_until_land_damage_clause` reads for its own
+#: damage-and-doubling shape, generalized to any of `_SELECT_FROM_TOP_KINDS`'
+#: single types or an "or" pair of them, and to a plain "put that card
+#: somewhere" outcome rather than a damage consequence - Identity Echo's own
+#: activated ability. A common template (Evolutionary Leap, Clifftop Lookout,
+#: Jace, Multiverse Architect's own `-3`), not unique to this card.
+_REVEAL_UNTIL_KIND_RE = re.compile(
+    r"^reveal cards from the top of your library until you reveal "
+    r"an? (?P<kind>[a-z]+(?: or [a-z]+)?) cards?$",
+    re.IGNORECASE,
+)
+#: The rider naming what to do with the card that stopped the reveal -
+#: `_CLAUSE_SEPARATOR`'s own bare-"and" split cuts this away from "the rest
+#: ..." below it (`_PUT_REVEALED_CARD_REST_RANDOM_RE`) into two clause
+#: fragments of its own, the same way it does everywhere else a printed
+#: sentence joins two instructions with a bare "and".
+_PUT_REVEALED_CARD_RE = re.compile(
+    r"^put that card (?P<dest>into your hand|onto the battlefield tapped"
+    r"|onto the battlefield|into your graveyard)$",
+    re.IGNORECASE,
+)
+#: Where every other card revealed along the way goes - always the bottom of
+#: the library, always randomized (CR 701.24a's shuffle is never the verb
+#: printed here, so this is not a shuffle and nothing watching for one
+#: fires), whichever of the two synonymous phrasings the pool prints for
+#: "the cards that were not kept."
+_PUT_REVEALED_CARD_REST_RANDOM_RE = re.compile(
+    r"^(?:the rest|all other cards revealed this way) "
+    r"on the bottom of your library in a random order$",
+    re.IGNORECASE,
+)
+
+
+def _merge_reveal_until_kind_then_put_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_REVEAL_UNTIL_KIND_RE` immediately followed by `_PUT_REVEALED_CARD_RE`
+    and `_PUT_REVEALED_CARD_REST_RANDOM_RE` - a three-clause merge, not
+    independent instructions, for the identical reason `_merge_surveil_
+    then_if_quality_to_hand_clauses` is: "that card" (CR 400.7/CR 607.1) is
+    the specific card that stopped the reveal, which only a caller holding
+    that live object (not a fresh library/graveyard scan) can name, and "the
+    rest" is everything else this same reveal showed.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    reveal_match = _REVEAL_UNTIL_KIND_RE.fullmatch(clauses[index].strip().rstrip("."))
+    if reveal_match is None:
+        return None
+    put_match = _PUT_REVEALED_CARD_RE.fullmatch(clauses[index + 1].strip().rstrip("."))
+    if put_match is None:
+        return None
+    if _PUT_REVEALED_CARD_REST_RANDOM_RE.fullmatch(clauses[index + 2].strip().rstrip(".")) is None:
+        return None
+    kind_words = [word.strip() for word in reveal_match.group("kind").lower().split(" or ")]
+    predicates = [_SELECT_FROM_TOP_KINDS.get(word) for word in kind_words]
+    if any(predicate is None for predicate in predicates):
+        return None
+
+    def matches_kind(state: CardState) -> bool:
+        return any(predicate(state) for predicate in predicates)  # type: ignore[misc]
+
+    dest = put_match.group("dest").lower()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        revealed: list[CardState] = []
+        stopper: CardState | None = None
+        for state in list(controller.library):
+            game.reveal(state, source=source)
+            revealed.append(state)
+            if matches_kind(state):
+                stopper = state
+                break
+        if stopper is not None:
+            if dest == "into your hand":
+                controller.move(stopper, Zone.HAND)
+            elif dest == "into your graveyard":
+                game.put_into_graveyard(stopper)
+            else:
+                game.put_onto_battlefield(
+                    stopper, controller.username, tapped=dest.endswith("tapped")
+                )
+        # "The rest" is a randomization (CR 401.4's own owner's-choice
+        # ordering is never asked here, unlike `_select_from_top_runner`'s
+        # own "in any order" arm), reusing the same reproducible-seed
+        # convention `_select_from_top_runner` and `_parse_reveal_top_n_
+        # one_per_card_type_clause` already share.
+        remainder = [
+            state for state in revealed if state is not stopper and state.zone is Zone.LIBRARY
+        ]
+        if remainder:
+            rng = Random(  # noqa: S311
+                f"{game.shuffle_seed}:{game.shuffles_performed}:reveal-until-kind"
+            )
+            rng.shuffle(remainder)
+            game.shuffles_performed += 1
+            for state in remainder:
+                controller.move(state, Zone.LIBRARY)
+
+    return 3, effect
+
+
 #: Atraxa, Grand Unifier's enters trigger: "reveal the top ten cards of your
 #: library. For each card type, you may put a card of that type from among the
 #: revealed cards into your hand. Put the rest on the bottom of your library
@@ -24032,6 +24139,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_surveil_then_if_quality_to_hand_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_reveal_until_kind_then_put_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
