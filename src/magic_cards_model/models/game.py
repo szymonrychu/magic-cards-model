@@ -2050,6 +2050,14 @@ class Game(EngineModel):
     general ledger rather than a narrower counter. Cleared when a new turn
     begins."""
 
+    life_gained_amount_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How much life each player has gained this turn, the amount twin of
+    `life_gained_this_turn`'s plain boolean - recorded at the same call site
+    (`Player.gain_life`) for the same CR 119.9 reason, the same shape
+    `cards_drawn_this_turn` already counts a per-player total in. Feeds
+    Germinate Recruits' own "where X is the amount of life you gained this
+    turn" (CR 107.3f). Cleared when a new turn begins."""
+
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
@@ -2298,7 +2306,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 24
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2553,6 +2561,14 @@ class Game(EngineModel):
     A version-22 delayed trigger of this shape has neither flag set, so a
     decoded one would match noncombat damage and damage to a creature too;
     refused rather than silently over-firing. FRA stream S5's own commit.
+
+    Bumped 23 -> 24: `Game` gained `life_gained_amount_this_turn` (FRA
+    stream S3's own commit, merged in here alongside S5's: Germinate
+    Recruits' own "where X is the amount of life you gained this turn" -
+    CR 107.3f). A version-23 dump has no record of how much life was already
+    gained this turn, and a default of zero would silently answer "none" for
+    a turn where life was in fact already gained before the snapshot -
+    refused instead of trusted on that gap being harmless.
     """
 
     @model_validator(mode="before")
@@ -15393,6 +15409,7 @@ class Game(EngineModel):
             self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
+            self.life_gained_amount_this_turn = {}
             # Snapshotted the same way `spells_cast_last_turn` is: Command
             # the Stage's own "dealt noncombat damage last turn" needs it.
             self.turn_facts_last_turn = self.turn_facts

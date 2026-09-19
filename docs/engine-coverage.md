@@ -2423,3 +2423,98 @@ exception with a genuine second printing: Seven Dwarves (`tests/scenarios/
 test_named_count_pump.py`), which shares the shape with different wording
 ("you control" instead of "on the battlefield") and exercises
 `CountOtherCreaturesNamed.controlled_by_source`.
+
+## Reality Fracture (fra): Heartwood and the token-creation templates
+
+CR 111.10x adds **Heartwood** to the CR 111.10 predefined-token table - "a red
+and green Heartwood artifact token with '{T}: Add {R} or {G}.'" - as a new
+row in `models/token.PREDEFINED` (`HEARTWOOD`), read through the same
+`predefined_name in PREDEFINED` branch `_parse_token_clause` already uses for
+Treasure and Food. Aerid Konstrari, Hungering Puppetbeast, and Tenured
+Tethermage each create it off their own printed text with no new parser code.
+
+Four noun-phrase shapes `_parse_generic_token_descriptor`/`_parse_token_clause`
+did not read before this wave:
+
+- **"land creature" token** - a second two-type branch beside the existing
+  "artifact creature" one, so Verdant Kraken's Forest Tentacle and off-set
+  Awaken the Woods' Forest Dryad both read; CR 305.6's basic-land mana
+  ability comes free off the token's own "Forest" subtype, no quoted tail
+  needed.
+- **CR 111.9's named appositive** - "create `<Name>`, a `<descriptor>` token"
+  (`_parse_named_appositive_token_clause`), a different shape from
+  `_TOKEN_CLAUSE_RE`'s own trailing "named `<Name>`" tail: Jiang Yanggu,
+  Never Alone's Mowu and off-set Drizzt Do'Urden's Guenhwyvar. The generic
+  descriptor also reads a leading "legendary" supertype now.
+- **CR 111.9's own named artifact token with a quoted ability** (Kwia
+  Vigorbloom's Lotus) already read with no new parser code - what was
+  actually missing was a **CR 603.2h once-per-turn trailer defect**: "...
+  with '{T}, Sacrifice this token: ...'.\" This ability triggers only once
+  each turn." has the token's own closing quote mark sitting between its
+  sentence period and the trailer, which `_ONCE_PER_TURN_TRAILER` in
+  `machines/abilities.py` did not tolerate - the whole restriction sentence
+  stayed stuck in `TriggeredAbility.effect`, taking the entire clause down as
+  unreadable. Fixed to restore the quote mark rather than delete it.
+- **Self-copy tokens** - "create N token(s) that('s a copy|are copies) of
+  it", gated by a new "it isn't a token" `intervening_if_holds` clause read
+  straight off `CardState.token` (CR 603.10a's look-back keeps it set through
+  a dies trigger). Sphinx of False Conclusions (dies) and off-set Gruff
+  Triplets (enters) both prove neither the trigger nor the parser is fitted
+  to one card's wording, and that a token's own copy of itself does not
+  re-trigger (it is a token, so its own "isn't a token" reads false).
+- **"For each creature target player controls, create a token that's a copy
+  of that creature[, except it has `<keyword>`[ and "`<ability>`"]]"** -
+  Clone Legion (off-set, no tail) and Face Yourself (on-set, a mixed
+  keyword-then-quoted tail neither existing copy-tail reader handled: the
+  quoted ability's own internal comma would have been cut by a naive split).
+  Read whole, ahead of the per-clause split, the same as the two shapes below.
+- **CR 107.3f's own-text X in a token count** - "Create X `<descriptor>`
+  tokens..., where X is `<expr>`", through the already-shared
+  `count_expression`. `Game` gained `life_gained_amount_this_turn` (schema
+  v21 -> v22), the running-total twin of `life_gained_this_turn`'s boolean,
+  for Germinate Recruits' own "the amount of life you gained this turn";
+  off-set Charisma Bobblehead's "the number of Bobbleheads you control"
+  proves the shape composes with an already-supported magnitude too.
+- **"If this spell was cast from a graveyard, put counters on {that
+  token|each of them}[ for every N cards in your graveyard]"** - read off
+  `Game.cast_record(spell).origin_zone`, already recorded for every keyword
+  cast including flashback. Recursive Recruitment's own divisor ("for every
+  three cards in your graveyard") and off-set Retrieve the Esper's flat
+  count both read, cast from hand (no bonus) and from the graveyard (bonus).
+- **"Create ... token named X, then put a counter on each other `<subtype>`
+  you control"** - Command the Stage. `_parse_put_counters_on_group_clause`
+  gained its own, different "other" (excluding an *ability's* own source,
+  proven off-set on Summon: Good King Mog XII's Saga chapter IV); Command the
+  Stage's own "other" excludes the tokens the same sentence just created
+  instead, which needed a dedicated combined parser
+  (`_parse_create_tokens_then_counter_other_subtype_clause`).
+
+Command the Stage also carries a second, independent paragraph - "At the
+beginning of each upkeep, ... return this card from your graveyard to your
+hand." (CR 112.6c, an ability that functions from the graveyard) - printed
+below its own spell effect. `Game.resolve_top` reads a resolving spell's whole
+`oracle_text`, so that second paragraph used to poison the first one's own
+resolution too (CR 608.2c's no-half-effect discipline, applied to two
+*different* abilities concatenated by accident). `effect_for` now calls
+`_strip_trailing_standalone_triggered_ability`, which peels off a trailing
+paragraph only when it is this specific, widely-templated (25+ real
+printings) "return this card from your graveyard to your hand" shape - not
+"any paragraph that happens to parse as one complete ability": Summoner's
+Pact's own second paragraph also parses as one complete triggered ability and
+is genuinely part of the spell's own resolution (the delayed pay-or-lose
+trigger it creates), and a broader rule silently dropped it, caught by the
+full suite before this landed. The graveyard-functioning ability itself
+(reading and executing a trigger while its card sits in the graveyard) is not
+built - `docs/engine-coverage.md`'s own gap, not `machines/effects.py`'s.
+
+**Left for other streams, same cards:** Heartwood Crafter, Konstrari
+Improviser, and Woodwork Prodigy's shared "Soul Tether" inset spell (also a
+plain "Create a Heartwood token.") is reachable only once the `prepare`
+layout subsystem exists (S2). Aerid Konstrari's `{6}` activated ability
+("Create a Heartwood token. Then Aerid Konstrari gets +X/+0...") and
+Hungering Puppetbeast's own "It gains your choice of trample, hexproof, or
+haste" both need `effect_for`'s token-clause-then-trailing-grant composition
+(S6). Jiang Yanggu, Never Alone's "untap all tokens you control" is a group
+static this wave does not read (S9).
+
+Scenario coverage: `tests/scenarios/test_token_effect_parser.py`.

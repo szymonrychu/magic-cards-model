@@ -2772,6 +2772,16 @@ def intervening_if_holds(
         # "suspended" is deliberately *not* what the rule reaches for here.
         return source.zone is Zone.EXILE
 
+    if clause == "it isn't a token":
+        # Gruff Triplets' own ETB ("if it isn't a token, create two tokens
+        # that are copies of it") and Sphinx of False Conclusions' dies
+        # trigger ("if it isn't a token, create a token that's a copy of
+        # it") - CR 111.1/CR 111.6's own distinction, read straight off
+        # `CardState.token` (CR 603.10a's look-back keeps it set on the last
+        # known information for a dies trigger the same way every other
+        # last-known field here is read).
+        return not source.token
+
     if clause == "it had no -1/-1 counters on it":
         # CR 702.79a asks about the permanent as it last existed on the
         # battlefield, and CR 122.2 has already destroyed its counters on the

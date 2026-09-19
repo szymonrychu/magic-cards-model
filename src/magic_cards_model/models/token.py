@@ -516,6 +516,18 @@ YOUNG_HERO_ROLE = TokenDefinition(
     ),
 )
 
+#: CR 111.10x: "A Heartwood token is a red and green Heartwood artifact token
+#: with '{T}: Add {R} or {G}.'" - Reality Fracture's own addition to CR 111.10,
+#: read the same way every other predefined token is: as a data row, not a
+#: card-specific parser. Aerid Konstrari, Hungering Puppetbeast, and Tenured
+#: Tethermage each create one off their own printed text with no new code.
+HEARTWOOD = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Heartwood",),
+    colors=(Color.RED, Color.GREEN),
+    rules_text="{T}: Add {R} or {G}.",
+)
+
 #: The predefined tokens this engine knows, by the name a card calls them
 #: (CR 111.10). The list in the rules is much longer; these are the ones the
 #: card pool reaches for.
@@ -524,6 +536,7 @@ PREDEFINED: dict[str, TokenDefinition] = {
     "Food": FOOD,
     "Clue": CLUE,
     "Powerstone": POWERSTONE,
+    "Heartwood": HEARTWOOD,
     "Monster": MONSTER_ROLE,
     "Cursed": CURSED_ROLE,
     "Royal": ROYAL_ROLE,

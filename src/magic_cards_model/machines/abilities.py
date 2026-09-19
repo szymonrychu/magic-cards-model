@@ -2631,10 +2631,28 @@ _INTERVENING_IF_CAST_THIS_TURN_BOUNDARY = re.compile(
 #: CR 603.2h's own trailing restriction, in either the rule's own wording
 #: ("Do this only once each turn") or Caretaker's Talent's paraphrase ("This
 #: ability triggers only once each turn") - both always the ability's last
-#: sentence.
+#: sentence. The named `quote` group is Kwia Vigorbloom's own shape: "... with
+#: '{T}, Sacrifice this token: Add three mana of any one color.' This ability
+#: triggers only once each turn." - the quoted token ability's own closing
+#: quote mark sits between its sentence-ending period and the trailer,
+#: straight or curly, so the bare `\.\s*` this used to be would never match
+#: and the whole restriction sentence stayed stuck in `effect`, taking the
+#: entire clause down as unreadable (CR 608.2c) instead of being read as
+#: CR 603.2h's own once-per-turn limiter. `_strip_once_per_turn_trailer`
+#: below restores that closing quote mark rather than deleting it along with
+#: the trailer - it is the quoted ability's own punctuation, not the
+#: trailer's.
 _ONCE_PER_TURN_TRAILER = re.compile(
-    r"\.\s*(?:do this|this ability triggers) only once each turn\.?\s*$", re.IGNORECASE
+    r"\.(?P<quote>[\"'“”‘’]?)\s*"
+    r"(?:do this|this ability triggers) only once each turn\.?\s*$",
+    re.IGNORECASE,
 )
+
+
+def _strip_once_per_turn_trailer(text: str) -> str:
+    """`text` with `_ONCE_PER_TURN_TRAILER` cut off, its own closing quote
+    mark (if any) put back - see that pattern's own docstring."""
+    return _ONCE_PER_TURN_TRAILER.sub(lambda m: "." + m.group("quote"), text)
 
 
 #: Ruby, Daring Tracker's shape: "Whenever Ruby attacks **while** you control
@@ -2698,7 +2716,7 @@ def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
             rest = ", ".join(clause_parts[1:])
 
     once_per_turn = False
-    stripped = _ONCE_PER_TURN_TRAILER.sub("", rest).strip()
+    stripped = _strip_once_per_turn_trailer(rest).strip()
     if stripped != rest.strip():
         once_per_turn = True
         rest = stripped
