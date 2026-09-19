@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "4f6fd2fa-8bc8-4743-bbc8-b56475d64eff",
+  "oracle_id": "e0142e7d-7b0b-4290-a56c-5fa950fdccf8",
+  "multiverse_ids": [],
+  "tcgplayer_id": 717678,
+  "cardmarket_id": 909930,
+  "name": "Loot, the Anomaly",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff",
+  "scryfall_uri": "https://scryfall.com/card/fra/232/loot-the-anomaly?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-16T14:20:30Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.jpg?1789568430",
+    "normal": "https://cards.scryfall.io/normal/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.jpg?1789568430",
+    "large": "https://cards.scryfall.io/large/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.jpg?1789568430",
+    "png": "https://cards.scryfall.io/png/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.png?1789568430",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.jpg?1789568430",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.jpg?1789568430",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.webp?1789568430",
+    "grid": "https://cards.scryfall.io/grid/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.webp?1789568430",
+    "display": "https://cards.scryfall.io/display/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.webp?1789568430",
+    "art": "https://cards.scryfall.io/art/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.webp?1789568430",
+    "crop": "https://cards.scryfall.io/crop/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.webp?1789568430"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Beast Horror",
+  "oracle_text": "If Loot's power is negative, he assigns combat damage as though his power were positive.\nThreshold \u2014 Sacrifice another creature or planeswalker: Loot gets -2/-0 until end of turn. Activate only if there are seven or more cards in your graveyard.",
+  "power": "-2",
+  "toughness": "4",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Threshold"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae0142e7d-7b0b-4290-a56c-5fa950fdccf8&unique=prints",
+  "collector_number": "232",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "echoverse",
+  "flavor_text": "Loot's value is absolute in any Multiverse, so Jace kept him locked away and hidden.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Filip Burburan",
+  "artist_ids": [
+    "66082c3b-a623-4d34-be51-2475214b85d3"
+  ],
+  "illustration_id": "e3e7e826-d1c9-46a6-92f4-de97f6b473a4",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 31551,
+  "prices": {
+    "usd": "1.99",
+    "usd_foil": "2.00",
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLoot%252C%2Bthe%2BAnomaly",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLoot%252C%2Bthe%2BAnomaly",
+    "edhrec": "https://edhrec.com/route/?cc=Loot%2C+the+Anomaly"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717678%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909930&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Loot%2C+the+Anomaly&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

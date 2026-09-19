@@ -122,6 +122,62 @@ KEYWORDS_OUTSIDE_COMBAT: frozenset[str] = frozenset(
 )
 
 
+#: Canonical granted-ability text for "can attack as though it/they didn't
+#: have defender" (Ghalta the Immovable's group grant over creatures it
+#: controls; Surveillance Phantasm's self one). `machines/layers.py`'s static
+#: parsers grant this one fixed string regardless of the printed pronoun, so
+#: `attack_refusal` below checks a single literal rather than pattern-matching
+#: the source's own wording - the same normalisation every other grant there
+#: already does by capitalising a bare keyword instead of keeping the printed
+#: casing.
+ATTACK_WITHOUT_DEFENDER_TEXT = "Can attack as though it didn't have defender."
+
+
+def _can_attack_despite_defender(creature: CardState, game: "Game") -> bool:
+    """CR 702.3b's "can't attack" is what a static grant like Ghalta the
+    Immovable's or Surveillance Phantasm's overrides - read off the computed
+    board (CR 613.5) the same way `has_keyword` reads defender itself.
+    """
+    return game.characteristics_of(creature).has_ability(ATTACK_WITHOUT_DEFENDER_TEXT)
+
+
+#: Ghalta the Immovable's group grant: "Each creature you control with
+#: toughness greater than its power assigns combat damage equal to its
+#: toughness rather than its power." The condition (toughness greater than
+#: power) lives in the `Selector` that grants this - `machines/layers.py`'s
+#: `CreaturesControlledByWhereToughnessExceedsPower` - so by the time this
+#: text is present on the computed board (CR 613.5), the condition already
+#: holds and `_assignment_power_of` below does not need to re-check it.
+ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT = (
+    "Assigns combat damage equal to its toughness rather than its power."
+)
+
+#: Loot, the Anomaly's self grant: "If Loot's power is negative, he assigns
+#: combat damage as though his power were positive." Same "the Selector
+#: already checked it" shape as the text above, one object instead of a team.
+ASSIGNS_DAMAGE_AS_THOUGH_POSITIVE_TEXT = "Assigns combat damage as though its power were positive."
+
+
+def _assignment_power_of(game: "Game | None", creature: CardState) -> int | None:
+    """How much damage this creature assigns (CR 510.1a's "equal to its
+    power"), with the two alternate-assignment grants above applied on top of
+    `_power_of`. `attack_refusal` and CR 510.1a's zero-or-less rule both still
+    read the ordinary `_power_of`/`_toughness_of` - only the amount actually
+    *assigned* changes.
+    """
+    power = _power_of(game, creature)
+    if power is None or game is None:
+        return power
+    chars = game.characteristics_of(creature)
+    if chars.has_ability(ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT):
+        toughness = _toughness_of(game, creature)
+        if toughness is not None:
+            return toughness
+    if power < 0 and chars.has_ability(ASSIGNS_DAMAGE_AS_THOUGH_POSITIVE_TEXT):
+        return -power
+    return power
+
+
 #: Which land type each landwalk ability looks for (CR 702.14a, CR 305.6).
 LANDWALK_TYPES: dict[Keyword, str] = {
     Keyword.PLAINSWALK: "Plains",
@@ -370,7 +426,9 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
         return f"{creature.name} is tapped"
     if creature.summoning_sick and not has_keyword(creature, Keyword.HASTE, game):
         return f"{creature.name} has summoning sickness and no haste"
-    if has_keyword(creature, Keyword.DEFENDER, game):
+    if has_keyword(creature, Keyword.DEFENDER, game) and not _can_attack_despite_defender(
+        creature, game
+    ):
         # CR 702.3b: "A creature with defender can't attack." Checked after
         # tapping and summoning sickness so a Wall that is also tapped still
         # reports the reason a scenario is most likely asking about.
@@ -859,7 +917,7 @@ def combat_damage_step(game: "Game") -> list[tuple["Targetable", int]]:
             # CR 510.1d: a blocker whose attacker has gone assigns no damage.
             if attacker is None or attacker.zone is not Zone.BATTLEFIELD:
                 continue
-            power = _power_of(game, blocker)
+            power = _assignment_power_of(game, blocker)
             if power is None:
                 _record_undefined_power(game, blocker)
             elif power > 0:
@@ -906,6 +964,13 @@ def _deal_combat_damage(game: "Game", source: CardState, target: "Targetable", a
     dealt = game.deal_damage(target, amount, source=source)
     if dealt <= 0:
         return 0
+
+    # This function only ever deals combat damage (CR 510.2), so recording
+    # the source here is Ruric Thar's "hexproof as long as they haven't dealt
+    # combat damage yet" ledger - off *dealt* damage, the same way deathtouch
+    # and lifelink below key off it: zero dealt is not "dealt" for any of the
+    # three.
+    game.combat_damage_dealt_this_turn_by.add(source.id)
 
     if isinstance(target, CardState) and has_keyword(source, Keyword.DEATHTOUCH, game):
         # CR 702.2b: destroyed as a state-based action, whatever its toughness.
@@ -1026,7 +1091,7 @@ def _attacker_assignment(
     lethal damage to each blocker in declaration order, then the rest through
     with trample or onto the last blocker without it.
     """
-    power = _power_of(game, attacker)
+    power = _assignment_power_of(game, attacker)
     if power is None:
         _record_undefined_power(game, attacker)
         return []

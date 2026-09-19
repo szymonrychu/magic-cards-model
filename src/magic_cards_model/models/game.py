@@ -2044,6 +2044,16 @@ class Game(EngineModel):
     Stage's own "if an opponent was dealt noncombat damage **last turn**"
     (CR 603.4), the same snapshot `spells_cast_last_turn` already takes."""
 
+    combat_damage_dealt_this_turn_by: SortedSet[UUID] = Field(default_factory=set)
+    """The ids of every creature that has dealt combat damage this turn
+    (CR 510.2) - a per-object "this turn" fact rather than a per-player one,
+    which is why it is its own field instead of a `turn_facts` key.
+    `machines/combat.py`'s `_deal_combat_damage` is the single writer, the
+    same way `Player.gain_life` is `life_gained_this_turn`'s. Ruric Thar's
+    "hexproof as long as they haven't dealt combat damage yet" is the reader,
+    through `LayerContext.combat_damage_dealt_this_turn`. Cleared when a new
+    turn begins."""
+
     graveyard_arrivals_this_turn: list[GraveyardArrival] = Field(default_factory=list)
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
     per arrival - see `GraveyardArrival`'s own docstring for why this is one
@@ -2298,7 +2308,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 24
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2553,6 +2563,17 @@ class Game(EngineModel):
     A version-22 delayed trigger of this shape has neither flag set, so a
     decoded one would match noncombat damage and damage to a creature too;
     refused rather than silently over-firing. FRA stream S5's own commit.
+
+    Bumped 23 -> 24: `Game` gained `combat_damage_dealt_this_turn_by`
+    (Ruric Thar, Magecrusher's "hexproof as long as they haven't dealt combat
+    damage yet") and `machines/layers.py`'s `LayerContext` gained
+    `active_player`/`turn_facts`/`combat_damage_dealt_this_turn`, read by
+    several newly-parsed static shapes (during-your-turn, scried-or-
+    surveilled-this-turn, and opponent-noncombat-damage-this-turn keyword
+    grants). A version-23 snapshot mid-combat has no record of which
+    creatures already dealt combat damage this turn, and a default of "none"
+    would wrongly grant Ruric Thar hexproof back after it has already fought;
+    refused rather than silently mis-answering. FRA stream S9's own commit.
     """
 
     @model_validator(mode="before")
@@ -11281,6 +11302,9 @@ class Game(EngineModel):
                 player.username: dict(self.unspent_mana_of(player).floating)
                 for player in self.players_in_game
             },
+            active_player=self.turn.active_player if self.turn is not None else None,
+            turn_facts={fact: frozenset(players) for fact, players in self.turn_facts.items()},
+            combat_damage_dealt_this_turn=frozenset(self.combat_damage_dealt_this_turn_by),
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a
@@ -15397,6 +15421,7 @@ class Game(EngineModel):
             # the Stage's own "dealt noncombat damage last turn" needs it.
             self.turn_facts_last_turn = self.turn_facts
             self.turn_facts = {}
+            self.combat_damage_dealt_this_turn_by = set()
             self.graveyard_arrivals_this_turn = []
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and
