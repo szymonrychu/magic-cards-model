@@ -621,6 +621,19 @@ class AbilityOnStack(EngineModel):
     `None` here (no caller announces one yet for an ability) falls through to
     `_divided_damage_shares`'s own even-split fallback, exactly as an
     un-announced spell already does."""
+    target_amounts: list[int] | None = None
+    """One entry per resolved target of `targets`, in the same order, for a
+    "`<source>` deals `<n>` damage to `<phrase1>` and `<m>` damage to
+    `<phrase2>`" instruction whose two halves name *different* amounts
+    (`machines/effects._merge_split_damage_clauses`) - `CardState.target_
+    amounts`'s own twin mirrored here for the identical CR 602.2b reason
+    `division` already is. Unlike `division`, nothing here is a player
+    announcement: the amounts are fixed by the printed card text, so this is
+    computed and stamped on as resolution begins rather than carried from
+    CR 601.2c/d announcement. `None` when the resolving instruction never
+    named more than one amount (the ordinary single-amount case, and the
+    equal-amount case, which never needed a per-target answer to begin
+    with)."""
     cost_exiled_card_id: UUID | None = None
     """The id of the card exiled to pay this ability's own cost, when the
     ability's *effect* refers back to it anaphorically - Back from the

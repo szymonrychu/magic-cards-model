@@ -102,6 +102,35 @@ def _fetchland_search() -> tuple[list[Decision], CardState]:
     return _asked(scenario.questions_asked(), DecisionKind.CHOOSE_CARDS), strand
 
 
+def _proliferate_choose_players() -> tuple[list[Decision], CardState]:
+    """Fuel for the Cause's own "Counter target spell, then proliferate."
+    (CR 701.34a), with bob poisoned so the `CHOOSE_PLAYERS` question has
+    someone real to offer."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice", hand=["Fuel for the Cause"], library=["Island"] * 3, battlefield=["Island"] * 4
+        )
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"], life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.game.player("bob")
+    scenario.game.add_player_counters(bob, Counter.POISON, 1)
+    scenario.pass_priority("alice")
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    scenario.pass_priority("bob")
+
+    scenario.will_choose_players(bob)
+    sources = scenario.untapped_sources("Island", "Island", "Island", "Island")
+    fuel = scenario.cast_and_resolve(
+        "Fuel for the Cause", *sources, username="alice", targets=[bolt]
+    )
+
+    return _asked(scenario.questions_asked(), DecisionKind.CHOOSE_PLAYERS), fuel
+
+
 def _preordain_scry() -> tuple[list[Decision], CardState]:
     """Preordain's scry 2, asked by the spell while it is on the stack."""
     scenario = (
@@ -341,6 +370,7 @@ SOURCED: dict[DecisionKind, Probe] = {
     DecisionKind.SURVEIL: _surveil_land_trigger,
     DecisionKind.OPENING_HAND_ACTION: _opening_hand_action,
     DecisionKind.CHOOSE_CARDS: _fetchland_search,
+    DecisionKind.CHOOSE_PLAYERS: _proliferate_choose_players,
     DecisionKind.CHOOSE_TARGETS: _activated_ability_targets,
     DecisionKind.CHOOSE_A_QUALITY: _choose_a_color,
     DecisionKind.CHOOSE_A_MODE: _modal_trigger_mode,

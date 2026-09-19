@@ -2933,18 +2933,27 @@ creature or planeswalker **and** 2 damage to target player.") - CR 608.2c's
 one instruction, cut in half by `_CLAUSE_SEPARATOR`'s bare "and" split, left
 the second half ("2 damage to target player") with no subject or verb of
 its own, and nothing recombined the pair. `_merge_split_damage_clauses`
-(`machines/effects.py`) reunites this shape whenever both halves print the
-identical amount - CR 601.2c already keeps the two target requirements
-separate at announcement, so resolution only needs "how much", and with
-both halves equal that answer does not depend on which requirement a
-resolved target came from, so every target `Game.resolve_targets` returns
-takes the one shared amount (the same loop a single-phrase multi-target
-clause already runs). An *unequal* split is deliberately left unmerged -
-nothing on `AbilityOnStack` records which resolved target belongs to which
-requirement, so building that would need new state this pass's own two
-real printings never needed. Proven off-set on Lunge's identically-shaped
-"Lunge deals 2 damage to target creature and 2 damage to target player or
+(`machines/effects.py`) reunites this shape - CR 601.2c already keeps the
+two target requirements separate at announcement, so resolution only needs
+"how much" for each. Proven off-set on Lunge's identically-shaped "Lunge
+deals 2 damage to target creature and 2 damage to target player or
 planeswalker."
+
+**The unequal-amount half of that same shape, closed on `fra-s4`**:
+`_merge_split_damage_clauses` originally refused a pair whose two halves
+printed *different* amounts (`<n> != <m>`), since nothing recorded which
+resolved target belonged to which of the two requirements once
+`Game.resolve_targets` flattened them together. `AbilityOnStack.target_
+amounts`/`CardState.target_amounts` now record one amount per entry of
+`targets`, classified against each requirement's own restriction
+(`TargetRequirement.rejects`, read back through `profile_for_text` on each
+half's own phrase) rather than assumed by position, so the pairing is
+correct whichever order the targets were announced or stored in. Proven
+off-set on Hungry Flames ("Hungry Flames deals 3 damage to target creature
+and 2 damage to target player or planeswalker.") - a real Scryfall printing
+outside this stream's own deck pool, with two independently-typed mandatory
+requirements so the unequal amounts are the only thing under test
+(`tests/scenarios/test_split_damage_targets.py`).
 
 **CR 704.5i's 0-loyalty state-based action, exempted per controller** -
 Sanctum Lurker's own "Planeswalkers you control aren't put into their
@@ -3129,22 +3138,29 @@ printed "may" belongs to the ordinary land play it makes legal, never to a
 CR 608.2d choice about accepting the grant.
 
 **Proliferate (CR 701.34a)**, entirely new - the keyword action did not
-exist anywhere in the engine before this stream. `Game.proliferate`
-(chosen permanents only) adds one more counter of each kind a chosen
-permanent already has; `_parse_proliferate_clause` (`_PROLIFERATE_RE`)
-reads the bare keyword and CR 107.3f's own "`<n>` times[, where X is
-`<expr>`]" repeat count through the same `_fixed_or_where_x_amount` reader
-Empower Jace's own "N, where X is ..." shape already uses, asking a fresh
-CHOOSE_CARDS question (`exact=False`, "any number", CR 608.2d) before each
-repetition, over whatever the battlefield looks like at that moment - a
-counter a repetition just added can make a permanent newly eligible for
-the next one. **Documented gap**: CR 701.34a's own "and/or players" half
-(a player's poison/experience counters) is not modelled - it needs a
-player-choice decision shape this store's `DecisionKind` vocabulary does
-not carry yet, and no printing in this stream's own scope needs it; every
-permanent-only "proliferate" in the pool reads correctly as printed. Proven
-off-set on Fuel for the Cause's own bare "Counter target spell, then
-proliferate."
+exist anywhere in the engine before this stream, and both of its halves
+are modelled. `Game.proliferate(chosen, chosen_players)` adds one more
+counter of each kind a chosen permanent or player already has;
+`_parse_proliferate_clause` (`_PROLIFERATE_RE`) reads the bare keyword and
+CR 107.3f's own "`<n>` times[, where X is `<expr>`]" repeat count through
+the same `_fixed_or_where_x_amount` reader Empower Jace's own "N, where X
+is ..." shape already uses, asking a fresh `CHOOSE_CARDS` question over
+every countered permanent and a fresh `CHOOSE_PLAYERS` question over every
+countered player before each repetition (`exact=False`, "any number", CR
+608.2d, each skipped outright when its own candidate list is empty) - a
+counter a repetition just added can make a permanent or player newly
+eligible for the next one. The player half needed a new `DecisionKind.
+CHOOSE_PLAYERS` (`Decision.players`, a tuple of usernames - `Decision.
+cards`' own twin, since a player has no `UUID`) and a matching `Answer.
+usernames` field for the pause/replay tape, both wired into `Game.ask`'s
+validation and `decisions.default_answer` the same way `CHOOSE_CARDS`
+already is. Proliferate reads as one CR 608.2c instruction even though it
+is now two separate `Game.ask` questions: nothing about the *result* - who
+ends up with what extra counters - depends on which order the two
+questions were asked in. Proven off-set on Fuel for the Cause's own bare
+"Counter target spell, then proliferate.", staging a real poisoned and
+experienced opponent directly (`Game.add_player_counters`) the same way
+the permanent half stages a real countered permanent.
 
 Tam, the Possibility's own "Proliferate X times, where X is the number of
 planeswalker types among planeswalkers you control." needed two more

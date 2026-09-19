@@ -811,6 +811,25 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.CHOOSE_CARDS, tuple(c.id for c in cards), username, source, times)
 
+    def will_choose_players(
+        self,
+        *players: Player | str,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next `CHOOSE_PLAYERS` question with exactly these
+        players - `will_choose_cards`' own twin, for CR 701.34a's own
+        proliferate ("choose any number of ... players ...") and any future
+        card sharing the same CR 608.2d player-choice shape."""
+        self._queue(
+            DecisionKind.CHOOSE_PLAYERS,
+            tuple(p if isinstance(p, str) else p.username for p in players),
+            username,
+            source,
+            times,
+        )
+
     def will_choose_targets(
         self,
         *targets: Target,

@@ -3031,6 +3031,20 @@ class Game(EngineModel):
     land drop) has no record of any of these and a default of "none" would
     silently drop the still-active grant; refused rather than
     mis-answering.
+
+    Still version 31 - two narrow gaps closed on the same branch before it
+    merged, combined into this one note rather than bumped again, since
+    neither changed anything a version-30 snapshot could already be resolved
+    against mid-decode: `machines/decisions.DecisionKind` gained
+    `CHOOSE_PLAYERS` (CR 701.34a's own "and/or players" half of Proliferate),
+    with `Decision.players` and `Answer.usernames` alongside it - a wholly
+    new decision kind no older snapshot's pending decision or answer tape
+    could ever have recorded, so an old dump decodes exactly as before. And
+    `AbilityOnStack`/`CardState` both gained `target_amounts` (an unequal
+    two-target damage split, "`<n>` damage to `<phrase1>` and `<m>` damage to
+    `<phrase2>`" - Hungry Flames), `None` by default and populated only as
+    resolution of that specific shape begins, so a version-30 stack object
+    mid-resolution simply has none yet, same as it always would have.
     """
 
     @model_validator(mode="before")
@@ -8061,6 +8075,31 @@ class Game(EngineModel):
                 )
             return value
 
+        if decision.kind is DecisionKind.CHOOSE_PLAYERS:
+            if not isinstance(value, tuple) or not all(isinstance(v, str) for v in value):
+                raise ValueError(f"{decision.prompt}: needs a tuple of chosen usernames")
+            offered_players = set(decision.players)
+            stray_players = [username for username in value if username not in offered_players]
+            if stray_players:
+                raise ValueError(
+                    f"{decision.prompt}: cannot choose a player that was not offered: "
+                    f"{', '.join(stray_players)}"
+                )
+            if len(set(value)) != len(value):
+                raise ValueError(f"{decision.prompt}: the same player cannot be chosen twice")
+            if decision.exact:
+                if len(value) != decision.amount:
+                    raise ValueError(
+                        f"{decision.prompt}: needs {decision.amount} player(s) chosen, "
+                        f"{len(value)} given"
+                    )
+            elif len(value) > decision.amount:
+                raise ValueError(
+                    f"{decision.prompt}: at most {decision.amount} player(s) may be chosen "
+                    f"(CR 107.1c), {len(value)} given"
+                )
+            return value
+
         if decision.kind is DecisionKind.CHOOSE_TARGETS:
             if not isinstance(value, (tuple, list)):
                 raise ValueError(f"{decision.prompt}: needs a tuple of targets")
@@ -9934,23 +9973,26 @@ class Game(EngineModel):
             self._emit_counters_put(permanent, str(kind), event.amount)
             return new_total
 
-    def proliferate(self, chosen: Sequence[CardState]) -> None:
-        """CR 701.34a: "choose any number of permanents ... that have a
-        counter, then give each one additional counter of each kind that
-        permanent ... already has." `chosen` is the controller's own choice
-        (CR 608.2d - `_parse_proliferate_clause`, `machines/effects.py`, asks
-        it as a `CHOOSE_CARDS` question over every permanent on the
-        battlefield carrying at least one counter, `amount=None`/no
-        `exact` so "any number" including zero is legal).
+    def proliferate(
+        self, chosen: Sequence[CardState], chosen_players: Sequence["Player | str"] = ()
+    ) -> None:
+        """CR 701.34a: "choose any number of permanents and/or players that
+        have a counter, then give each one additional counter of each kind
+        that permanent or player already has." Both `chosen` (permanents)
+        and `chosen_players` are the controller's own choice (CR 608.2d -
+        `_parse_proliferate_clause`, `machines/effects.py`, asks a
+        `CHOOSE_CARDS` question over every permanent on the battlefield
+        carrying at least one counter, and a `CHOOSE_PLAYERS` question over
+        every player carrying at least one counter of their own, `exact=
+        False` on both so "any number" including zero is legal on each).
 
-        Permanents only. CR 701.34a's "and/or players" half - proliferating
-        a player's own poison or experience counters - is a documented gap:
-        it needs its own player-choice decision shape this store has no
-        vocabulary for yet (every existing `DecisionKind` here answers in
-        card ids), and building one under-tested for a mechanic no handed
-        card in this stream's own scope needs is a worse trade than shipping
-        the permanent half, which every printed "proliferate" in the pool so
-        far only ever needs. See `docs/engine-coverage.md`.
+        One CR 608.2c instruction, still: the permanent and player choices
+        are asked as two separate `Game.ask` questions rather than one
+        combined one (`DecisionKind` has no vocabulary for a single mixed
+        card-or-player answer), but nothing about the *result* - who ends up
+        with what extra counters - depends on which order the two questions
+        were asked in, so this reads identically to CR 701.34a's own single
+        sentence.
         """
         with self._id_allocator_scope():
             for permanent in chosen:
@@ -9959,6 +10001,15 @@ class Game(EngineModel):
                 for kind, count in list(permanent.counters.counts.items()):
                     if count > 0:
                         self.add_counters(permanent, kind, 1)
+            for player_or_username in chosen_players:
+                player = (
+                    player_or_username
+                    if isinstance(player_or_username, Player)
+                    else self.player(player_or_username)
+                )
+                for kind, count in list(player.counters.counts.items()):
+                    if count > 0:
+                        self.add_player_counters(player, kind, 1)
 
     def add_player_counters(self, player: "Player | str", kind: str, amount: int = 1) -> int:
         """Give a player counters, replacement effects included (CR 122.1,

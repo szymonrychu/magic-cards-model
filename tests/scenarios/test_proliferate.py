@@ -2,35 +2,41 @@
 
 "To proliferate means to choose any number of permanents and/or players,
 then give each another counter of each kind already there." `Game.
-proliferate(chosen)` is the permanent half only - CR 701.34a's "and/or
-players" (poison, experience) is a **documented, deliberate gap**, spelled
-out in that method's own docstring: proliferating a player's own counters
-needs a player-choice `DecisionKind` this store does not have a vocabulary
-for yet, and no card in this stream's own scope needs it. Nothing here tests
-the player half as though it worked.
+proliferate(chosen, chosen_players)` reads both halves of that sentence:
+permanents through the existing `DecisionKind.CHOOSE_CARDS` question, and
+players through a new `DecisionKind.CHOOSE_PLAYERS` question (`Decision.
+players`, `Answer.usernames`) - CR 701.34a's own "and/or players" (poison,
+experience, or any other counter kind a player happens to carry), asked as
+a second, independent CR 608.2d question rather than folded into the same
+one, since nothing in this store's own `DecisionKind` vocabulary answers a
+single question with a mix of cards and usernames.
 
-`machines/effects._parse_proliferate_clause` asks a `DecisionKind.CHOOSE_
-CARDS` (`exact=False`, "any number") over every battlefield permanent
-carrying at least one counter of any kind - candidates are re-derived fresh
-before *each* repetition of a repeated proliferate, which is what would let
-a counter added by one repetition make a permanent newly eligible for the
+`machines/effects._parse_proliferate_clause` asks both questions fresh
+before *each* repetition of a repeated proliferate - each skipped outright
+when its own candidate list is empty - which is what would let a counter
+added by one repetition make a permanent or player newly eligible for the
 next.
 
-Two real printings, both already in the pool:
+Three real printings, all already in the pool:
 
 - **Fuel for the Cause** (off-set instant): "Counter target spell, then
   proliferate." - a bare, one-shot proliferate, composed after an ordinary
-  counterspell clause (CR 608.2c).
+  counterspell clause (CR 608.2c). Used for both the permanent half and the
+  player half, staging a real poisoned/experienced player directly
+  (`Game.add_player_counters`) the same way the permanent tests stage a
+  real countered permanent (`Game.add_counters`) - CR 701.34a does not care
+  where a counter came from, only that it is there to proliferate.
 - **Tam, the Possibility**'s own `{W}{U}{B}{R}{G}, {T}: Proliferate X times,
   where X is the number of planeswalker types among planeswalkers you
   control.` - CR 107.3f's "where X is ..." tail, evaluated through
   `machines/effects.count_expression`/`amount_expression`.
 
 CR numbers looked up with `knowledge_search(type="rules")` in this session:
-CR 701.34, CR 701.34a, CR 122.1, CR 608.2c, CR 107.3f.
+CR 701.34, CR 701.34a, CR 122.1, CR 122.1f, CR 608.2c, CR 107.3f.
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from magic_cards_model.models.token import PREDEFINED, create_tokens
@@ -216,3 +222,111 @@ def test_tam_proliferates_once_per_planeswalker_type_among_planeswalkers_you_con
     # choose-and-add step twice, adding two loyalty counters to each.
     assert jace.loyalty == 7
     assert ugin.loyalty == 9
+
+
+def test_a_chosen_poisoned_player_gets_one_more_of_each_counter_kind_they_have():
+    """CR 701.34a's own "and/or players" half. Bob is staged with one poison
+    counter (CR 122.1f) and one experience counter directly - CR 122.1's own
+    open set of counter kinds names no dedicated sub-rule for "experience",
+    verified absent from the local Comprehensive Rules text this session -
+    a real proliferate spell then chooses him alongside a permanent, and
+    each of his own counter kinds goes up by exactly one, the identical
+    "one more of each kind it already has" rule the permanent half already
+    proves, over `Game.add_player_counters` instead of `Game.add_counters`.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Fuel for the Cause"],
+            library=["Island"] * 3,
+            battlefield=["Island", "Island", "Island", "Island", "Grizzly Bears"],
+        )
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"], life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bear = scenario.creature("Grizzly Bears", "alice")
+    bob = scenario.game.player("bob")
+    scenario.game.add_player_counters(bob, Counter.POISON, 1)
+    scenario.game.add_player_counters(bob, Counter.EXPERIENCE, 1)
+
+    scenario.pass_priority("alice")
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    scenario.pass_priority("bob")
+
+    scenario.will_choose_cards(source="Fuel for the Cause")
+    scenario.will_choose_players(bob, source="Fuel for the Cause")
+    sources = scenario.untapped_sources("Island", "Island", "Island", "Island")
+    scenario.cast_and_resolve("Fuel for the Cause", *sources, username="alice", targets=[bolt])
+
+    assert bolt.zone is Zone.GRAVEYARD, "the spell was countered before it ever resolved"
+    assert bob.counter_count(Counter.POISON) == 2
+    assert bob.counter_count(Counter.EXPERIENCE) == 2
+    assert bear.counters.counts == {}, "a permanent with no counters is untouched either way"
+
+
+def test_an_unpoisoned_player_is_never_offered_as_a_candidate():
+    """CR 701.34a's own "that have a counter": with nobody carrying any
+    counter at all, `CHOOSE_PLAYERS` is never even asked - the same
+    "skip the impossible question" posture the permanent half already
+    takes when no permanent on the battlefield carries one either
+    (CR 608.2d)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice", hand=["Fuel for the Cause"], library=["Island"] * 3, battlefield=["Island"] * 4
+        )
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"], life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.pass_priority("alice")
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    scenario.pass_priority("bob")
+
+    sources = scenario.untapped_sources("Island", "Island", "Island", "Island")
+    scenario.cast_and_resolve("Fuel for the Cause", *sources, username="alice", targets=[bolt])
+
+    asked = [
+        question
+        for question in scenario.questions_asked()
+        if question.source == "Fuel for the Cause" and question.kind is DecisionKind.CHOOSE_PLAYERS
+    ]
+    assert asked == [], "neither alice nor bob carries any counter at all"
+
+
+def test_only_the_poisoned_player_is_offered_when_the_other_is_not():
+    """CR 701.34a's own "that have a counter", the positive half: with bob
+    poisoned and alice carrying no counter of her own, the `CHOOSE_PLAYERS`
+    question offers bob alone."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice", hand=["Fuel for the Cause"], library=["Island"] * 3, battlefield=["Island"] * 4
+        )
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"], life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.game.player("bob")
+    scenario.game.add_player_counters(bob, Counter.POISON, 1)
+
+    scenario.pass_priority("alice")
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    scenario.pass_priority("bob")
+
+    scenario.will_choose_players(bob, source="Fuel for the Cause")
+    sources = scenario.untapped_sources("Island", "Island", "Island", "Island")
+    scenario.cast_and_resolve("Fuel for the Cause", *sources, username="alice", targets=[bolt])
+
+    [choice] = [
+        question
+        for question in scenario.questions_asked()
+        if question.source == "Fuel for the Cause" and question.kind is DecisionKind.CHOOSE_PLAYERS
+    ]
+    assert choice.players == ("bob",), "alice carries no counter, so she is never a candidate"
+    assert bob.counter_count(Counter.POISON) == 2

@@ -10278,28 +10278,33 @@ _BARE_DAMAGE_CONTINUATION_RE = re.compile(
 def _merge_split_damage_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """ "`<source>` deals `<n>` damage to `<phrase1>` and `<n>` damage to
+    """ "`<source>` deals `<n>` damage to `<phrase1>` and `<m>` damage to
     `<phrase2>`." - one CR 608.2c instruction, cut into two clauses by
     `_CLAUSE_SEPARATOR`'s bare "and" split, which leaves the second half
     with no subject of its own (`_BARE_DAMAGE_CONTINUATION_RE`).
 
-    Deliberately narrower than a fully general multi-phrase damage split:
-    fires only when both halves print the identical amount. CR 601.2c
-    already keeps `phrase1`'s and `phrase2`'s own targets as two separate
-    target requirements at announcement (`machines/targeting.py`'s own
-    per-clause target reading handles that; this function is resolution-only
-    and never re-derives it) - what this merge needs from *resolution* is
-    only "how much damage", and with both halves printing the same number
-    that answer does not depend on which requirement a resolved target came
-    from, so `game.resolve_targets(stack_object)` (CR 608.2b's own re-check,
-    already returning every surviving target in announced order) is enough:
-    every one of them takes the one shared amount, the same loop `damage_
-    ability_targets` already runs for a single-phrase multi-target clause.
-    An unequal split (`<n>` != `<n2>`) would need to know *which* resolved
-    target belongs to which requirement, which nothing on `AbilityOnStack`
-    records - so an unequal pair is refused here and falls through to the
-    ordinary per-clause path, which fails closed on the subjectless second
-    clause exactly as it did before this merge existed.
+    CR 601.2c already keeps `phrase1`'s and `phrase2`'s own targets as two
+    separate target requirements at announcement (`machines/targeting.py`'s
+    own per-clause target reading handles that; this function is
+    resolution-only and never re-derives an announcement). When `<n>` and
+    `<m>` are the same amount, which requirement a resolved target came from
+    does not matter - `game.resolve_targets(stack_object)` (CR 608.2b's own
+    re-check) is enough, every one of them taking the one shared amount.
+
+    When they differ (Hungry Flames: 3 to the creature, 2 to the player),
+    *which* target came from which requirement matters, and `stack_object.
+    targets` alone does not say - CR 601.2c lets the same word "target"
+    appear more than once and each instance keep its own chosen object,  but
+    nothing tags a stored `TargetRef` with which instance it answered.
+    `first_match.group("phrase")`/`second_match.group("phrase")` are read
+    back through `profile_for_text` into the same two `TargetRequirement`s
+    `targeting.py` built at announcement, and each resolved target is
+    classified against them with `TargetRequirement.rejects` (CR 601.2c/CR
+    115's own eligibility rules restated, not reimplemented) rather than
+    assumed by position - correct whichever order the targets were chosen or
+    stored in. `AbilityOnStack.target_amounts`/`CardState.target_amounts`
+    record the result, one entry per `targets` entry, mirroring `division`'s
+    own resolution-time-read, announcement-shaped field.
     """
     if index + 1 >= len(clauses):
         return None
@@ -10313,26 +10318,55 @@ def _merge_split_damage_clauses(
     second_match = _BARE_DAMAGE_CONTINUATION_RE.fullmatch(second)
     if second_match is None:
         return None
-    if first_match.group("n").strip().lower() != second_match.group("n").strip().lower():
+    first_amount = parse_count(first_match.group("n"))
+    second_amount = parse_count(second_match.group("n"))
+    if first_amount is None or second_amount is None:
         return None
-    amount = parse_count(first_match.group("n"))
-    if amount is None:
+    first_phrase = first_match.group("phrase")
+    second_phrase = second_match.group("phrase")
+    if not _targets_understood(first_phrase, count_agnostic=True, allow_player_targets=True):
         return None
-    if not _targets_understood(
-        first_match.group("phrase"), count_agnostic=True, allow_player_targets=True
-    ):
+    if not _targets_understood(second_phrase, count_agnostic=True, allow_player_targets=True):
         return None
-    if not _targets_understood(
-        second_match.group("phrase"), count_agnostic=True, allow_player_targets=True
-    ):
-        return None
+    first_requirement = profile_for_text(first_phrase).requirements[0]
+    second_requirement = profile_for_text(second_phrase).requirements[0]
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = (
             stack_object if for_spell else stack_object.source(game)  # type: ignore[union-attr]
         )
-        for target in game.resolve_targets(stack_object):
-            game.deal_damage(target, amount, source=source)
+        caster = game.controller_of(stack_object).username
+        source_id = source.id
+        amounts: list[int] = []
+        for reference in stack_object.targets:
+            target = game.legal_target(stack_object, reference)
+            if target is None:
+                amounts.append(0)
+                continue
+            # Classified by which requirement's own restrictions the
+            # resolved target actually satisfies (CR 601.2c), not by
+            # position - `first_requirement` tried first only because it is
+            # the one printed first, exactly the left-to-right order
+            # `TargetingProfile._fill_slots` already searches announced
+            # requirements in.
+            if first_requirement.rejects(target, caster, game, source_id) is None:
+                amounts.append(first_amount)
+            elif second_requirement.rejects(target, caster, game, source_id) is None:
+                amounts.append(second_amount)
+            else:
+                # Neither requirement still accepts this target (a
+                # continuous effect changed its qualities after it was
+                # legally chosen) - CR 608.2b already treats that as an
+                # illegal target for the parts of the effect it cannot
+                # satisfy, so no amount is paid rather than guessed.
+                amounts.append(0)
+        stack_object.target_amounts = amounts
+        for reference, amount in zip(stack_object.targets, amounts, strict=True):
+            if amount <= 0:
+                continue
+            target = game.legal_target(stack_object, reference)
+            if target is not None:
+                game.deal_damage(target, amount, source=source)
 
     return 2, effect
 
@@ -27522,12 +27556,15 @@ _PROLIFERATE_RE = re.compile(
 def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
     """`_PROLIFERATE_RE`'s shape.
 
-    CR 701.34a's own choice - "any number of permanents ... that have a
-    counter" - is asked fresh each repetition (`game.proliferate` itself
-    only ever applies to what it is handed, never re-derives candidates),
-    since a counter proliferate just added can make a permanent that had
-    none a legal choice for the *next* repetition. Permanents only - see
-    `Game.proliferate`'s own docstring for the documented player-counter gap.
+    CR 701.34a's own choice - "any number of permanents and/or players ...
+    that have a counter" - is asked fresh each repetition (`game.
+    proliferate` itself only ever applies to what it is handed, never
+    re-derives candidates), since a counter proliferate just added can make
+    a permanent or player that had none a legal choice for the *next*
+    repetition. Permanents and players are asked as two separate
+    questions (`Game.proliferate`'s own docstring explains why that is
+    still one CR 608.2c instruction), each skipped outright when its own
+    candidate list is empty rather than asked with nothing to offer.
     """
     match = _PROLIFERATE_RE.fullmatch(clause.strip())
     if match is None:
@@ -27561,23 +27598,48 @@ def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
                 for state in game.battlefield
                 if any(count > 0 for count in state.counters.counts.values())
             ]
-            if not candidates:
-                continue
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=controller.username,
-                    prompt="choose any number of permanents to proliferate",
-                    source=source_name,
-                    source_id=source_id_of(stack_object),
-                    amount=len(candidates),
-                    cards=tuple(state.id for state in candidates),
-                    exact=False,
+            chosen: list[CardState] = []
+            if candidates:
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=controller.username,
+                        prompt="choose any number of permanents to proliferate",
+                        source=source_name,
+                        source_id=source_id_of(stack_object),
+                        amount=len(candidates),
+                        cards=tuple(state.id for state in candidates),
+                        exact=False,
+                    )
                 )
-            )
-            by_id = {state.id: state for state in candidates}
-            chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
-            game.proliferate(chosen)
+                by_id = {state.id: state for state in candidates}
+                chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+            player_candidates = [
+                player
+                for player in game.players
+                if any(count > 0 for count in player.counters.counts.values())
+            ]
+            chosen_players: list[str] = []
+            if player_candidates:
+                chosen_usernames = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_PLAYERS,
+                        player=controller.username,
+                        prompt="choose any number of players to proliferate",
+                        source=source_name,
+                        source_id=source_id_of(stack_object),
+                        amount=len(player_candidates),
+                        players=tuple(player.username for player in player_candidates),
+                        exact=False,
+                    )
+                )
+                offered_usernames = {player.username for player in player_candidates}
+                chosen_players = [
+                    username for username in chosen_usernames if username in offered_usernames
+                ]
+            if not chosen and not chosen_players:
+                continue
+            game.proliferate(chosen, chosen_players)
 
     return effect
 
