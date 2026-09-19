@@ -23408,6 +23408,15 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # that card on top" as two fragments neither of which is a clause
         # `_parse_mixed_clause` can read alone.
         return [search_reveal_shuffle_top]
+    reveal_two_outside_opponent_chooses = _parse_reveal_two_outside_opponent_chooses_clause(
+        text, for_spell=for_spell
+    )
+    if reveal_two_outside_opponent_chooses is not None:
+        # Read whole: three sentences carrying anaphora across all of them
+        # ("one of them" back to the two revealed cards, "that card" back to
+        # the opponent's own choice), with no reading of any one sentence
+        # alone.
+        return [reveal_two_outside_opponent_chooses]
     target_player_draws_and_loses_life = _parse_target_player_draws_and_loses_life_clause(
         text, for_spell=for_spell
     )
@@ -24628,6 +24637,104 @@ def _reveal_and_bring_into_hand(
     """
     game.reveal(card, source=source)
     controller.bring_into_the_game(card, Zone.HAND)
+
+
+#: "You may reveal exactly two cards you own with different names from
+#: outside the game. An opponent chooses one of them. You put that card into
+#: your hand." - Extrapolate the Impossible's own whole effect. CR 608.2d's
+#: own "you may" gates the whole instruction, not just the reveal; "with
+#: different names" narrows the candidate pool the same way `_parse_search_
+#: distinct_names_clause` already does for a library search, one
+#: representative per name before any choice is offered, so the controller's
+#: own CR 608.2d pick of exactly two can never name the same card twice. The
+#: opponent's own choice (CR 608.2d again, made by whoever "an opponent"
+#: names rather than by this spell's controller) is the one place in this
+#: family the choosing player is not the ability's own controller.
+_REVEAL_TWO_DIFFERENT_NAMES_OUTSIDE_THEN_OPPONENT_CHOOSES_RE = re.compile(
+    r"^you may reveal exactly two cards you own with different names from "
+    r"outside the game\.\s*an opponent chooses one of them\.\s*"
+    r"you put that card into your hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_reveal_two_outside_opponent_chooses_clause(
+    effect_text: str, *, for_spell: bool
+) -> Effect | None:
+    """`_REVEAL_TWO_DIFFERENT_NAMES_OUTSIDE_THEN_OPPONENT_CHOOSES_RE`'s
+    shape, or `None`. Never an ability's own shape - nothing in the pool
+    prints this off a permanent - so `for_spell` is checked rather than
+    reached for a `CardState` that would be the wrong stack object.
+    """
+    if not for_spell:
+        return None
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    if _REVEAL_TWO_DIFFERENT_NAMES_OUTSIDE_THEN_OPPONENT_CHOOSES_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        by_name: dict[str, CardState] = {}
+        for state in controller.owned_outside_the_game():
+            by_name.setdefault(state.name or "", state)
+        candidates = list(by_name.values())
+        if len(candidates) < 2:
+            return
+        if not game.may(
+            controller,
+            "reveal exactly two cards you own with different names from outside the game",
+            source=spell.name,
+            source_id=source_id_of(spell),
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="choose exactly two cards with different names to reveal",
+                source=spell.name,
+                source_id=source_id_of(spell),
+                amount=2,
+                exact=True,
+                cards=tuple(state.id for state in candidates),
+                card_labels=tuple(state.name for state in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        if len(chosen_ids) < 2:
+            return
+        by_id = {state.id: state for state in candidates}
+        revealed = [by_id[card_id] for card_id in chosen_ids]
+        for state in revealed:
+            game.reveal(state, source=spell.name)
+        opponents = _opponents(game, controller.username)
+        if not opponents:
+            return
+        # CR 102.2 for who "an opponent" is; a single-opponent game (the
+        # only shape this engine plays) has exactly one to ask.
+        chooser = opponents[0]
+        picked_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=chooser.username,
+                prompt=f"choose one of the two cards {controller.username} revealed",
+                source=spell.name,
+                source_id=source_id_of(spell),
+                amount=1,
+                cards=tuple(state.id for state in revealed),
+                card_labels=tuple(state.name for state in revealed),
+            )
+        )
+        assert isinstance(picked_ids, tuple)
+        if not picked_ids:
+            return
+        by_revealed_id = {state.id: state for state in revealed}
+        chosen = by_revealed_id[picked_ids[0]]
+        # Already revealed above (both cards were, together, as the
+        # sentence's own first instruction) - only the move is left.
+        controller.bring_into_the_game(chosen, Zone.HAND)
+
+    return effect
 
 
 #: The Burning Wish family: "You may reveal a <quality> card you own from
