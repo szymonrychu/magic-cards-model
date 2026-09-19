@@ -14471,10 +14471,23 @@ _LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE = re.compile(
 #: are the same anaphor in two syntactic positions, so a subject-anchored
 #: regex like `_ANAPHORIC_SUBJECT_RE`'s cannot serve.
 #:
+#: "He"/"she"/"him"/"her" belong here too: recent templating gives a
+#: legendary permanent with an established character its own gendered
+#: pronoun once the antecedent clause has already named it (by printed name,
+#: normalised to "this permanent" by `self_normalized_effect_text` before
+#: this ever runs) - Edgar, Ancient Bloodlord's "Put a +1/+1 counter on
+#: Edgar. He gains menace until end of turn." is exactly the pattern "It
+#: gains first strike." already reads, spelled with the character's own
+#: pronoun instead of "it". A player is never referred to this way in
+#: current templating (CR wording always says "that player"/"you"/
+#: "opponent"), so there is no ambiguity with the player anaphor family
+#: below.
+#:
 #: "That player" is **not** here: it is a player anaphor and
 #: `_ANAPHORIC_SUBJECT_RE`/`_parse_referent_clause` already own it.
 _OBJECT_ANAPHOR = (
-    r"(?:it|they|them|that (?:creature|permanent|artifact|enchantment|land|token|card))"
+    r"(?:it|they|them|he|she|him|her|"
+    r"that (?:creature|permanent|artifact|enchantment|land|token|card))"
 )
 _OBJECT_ANAPHOR_RE = re.compile(rf"\b{_OBJECT_ANAPHOR}\b", re.IGNORECASE)
 
@@ -14690,6 +14703,21 @@ _RIDER_CANT_BE_REGENERATED_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} can'?t be regenerated$", re.IGNORECASE
 )
 
+#: "Put a `<kind>` counter on it if it's a `<type>`." - Teyo, Lightshield
+#: Expert's and Teyo, Diamondblade Mage's own "Put a +1/+1 counter on it if
+#: it's a creature. Put a loyalty counter on it if it's a planeswalker.",
+#: each a separate rider sentence rather than one compound clause. CR 608.2h:
+#: "the effect uses the current information of that object" is what backs
+#: checking the referent's type *now*, when this rider runs, rather than at
+#: whatever type it had when targeted. `<type>` is any of CR 300.1's card
+#: types, not the two Teyo happens to print - a future "... if it's an
+#: artifact." reads the identical way with no new vocabulary.
+_RIDER_COUNTER_IF_TYPE_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on {_OBJECT_ANAPHOR} "
+    r"if (?:it'?s|they'?re) an? (?P<type>[a-z]+)$",
+    re.IGNORECASE,
+)
+
 
 def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
     """A rider sentence read as something to do to the objects its antecedent
@@ -14821,6 +14849,27 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
 
         return layer_rider
 
+    if match := _RIDER_COUNTER_IF_TYPE_RE.fullmatch(rider):
+        amount = parse_count(match.group("n"))
+        kind = _counter_kind(match.group("kind"))
+        if amount is None:
+            return None
+        try:
+            required_type = Type(match.group("type").strip().lower())
+        except ValueError:
+            return None
+
+        def put_counters_if_type(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            for referent in referents:
+                if referent.zone is not Zone.BATTLEFIELD:
+                    continue
+                if required_type in game.characteristics_of(referent).types:
+                    game.add_counters(referent, kind, amount)
+
+        return put_counters_if_type
+
     return None
 
 
@@ -14920,6 +14969,57 @@ def _parse_object_anaphor_clause_pair(
             # own source, which is the bug Karn, the Great Creator's +1 had.
             return
         rider(game, referents, stack_object)
+
+    return effect
+
+
+def _parse_object_anaphor_clause_series(
+    first: str, riders: Sequence[str], *, for_spell: bool
+) -> TargetedClause | None:
+    """`_parse_object_anaphor_clause_pair`'s own shape, widened to **two or
+    more** trailing rider sentences that all refer back to the same
+    antecedent - Teyo, Lightshield Expert's "target permanent you control
+    gains hexproof until end of turn. Put a +1/+1 counter on it if it's a
+    creature. Put a loyalty counter on it if it's a planeswalker." is one
+    antecedent with two independent riders, not a rider with a rider of its
+    own: CR 608.2c runs every one of a resolving ability's instructions in
+    printed order against the same referent, and nothing says there can only
+    ever be one instruction after the first.
+
+    `riders` must have at least one entry and every one of them must parse
+    (`_parse_referent_object_clause`) - a card whose second rider this wave
+    cannot read is refused whole, the same fail-closed-per-instruction rule
+    `_parse_object_anaphor_clause_pair` already follows for its own single
+    rider.
+    """
+    if not riders:
+        return None
+    if not all(_OBJECT_ANAPHOR_RE.search(rider) for rider in riders):
+        return None
+    referent_of = _referent_reader(first)
+    if referent_of is None:
+        return None
+    antecedent = _parse_mixed_clause(first, for_spell=for_spell)
+    if antecedent is None:
+        antecedent = _layer_antecedent_clause(first, referent_of)
+    if antecedent is None:
+        return None
+    built_riders = [_parse_referent_object_clause(rider) for rider in riders]
+    if any(built is None for built in built_riders):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        referents = referent_of(game, stack_object)
+        antecedent(game, stack_object)
+        if not referents:
+            # CR 115.6's "up to one" choosing none, or CR 608.2b leaving
+            # nothing legal: none of the riders have anything to refer back
+            # to and none of them run either (CR 608.2c - one instruction,
+            # not several independent ones).
+            return
+        for built in built_riders:
+            assert built is not None
+            built(game, referents, stack_object)
 
     return effect
 
@@ -22617,6 +22717,20 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         )
         if anaphor_pair is not None:
             return [anaphor_pair]
+    elif len(sentences) >= 3:
+        # Teyo, Lightshield Expert's own three-sentence ETB: an antecedent
+        # ("target permanent you control gains hexproof until end of turn.")
+        # followed by *two* independent riders naming the same referent
+        # ("Put a +1/+1 counter on it if it's a creature." / "Put a loyalty
+        # counter on it if it's a planeswalker."), read whole for the
+        # identical reason the two-sentence case just above is - reached
+        # only once the exactly-two-sentence shapes above have already
+        # failed to match, so it never steals a genuine two-clause pair.
+        series = _parse_object_anaphor_clause_series(
+            sentences[0], sentences[1:], for_spell=for_spell
+        )
+        if series is not None:
+            return [series]
     clauses = _prepare_effect_clauses(text)
     if clauses is None:
         return None

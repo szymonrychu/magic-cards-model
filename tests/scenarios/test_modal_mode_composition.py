@@ -644,3 +644,107 @@ def test_tomik_refuses_a_target_with_no_counter_on_it():
 
     with pytest.raises(ValueError):
         scenario.activate(tomik, index=0, targets=[bears], username="alice")
+
+
+def test_edgar_ancient_bloodlord_puts_a_counter_on_himself_and_gains_menace():
+    """ "{2}, Sacrifice another creature or planeswalker: Put a +1/+1 counter
+    on Edgar. He gains menace until end of turn." - CR 109.2's self-reference
+    spelled out with the card's own printed name for the counter clause
+    (`self_normalized_effect_text` already rewrites "Edgar" to "this
+    permanent" before this ever reaches a parser), and CR 400.7's anaphora
+    for the rider, this time with the "he" pronoun recent templating gives a
+    legendary character instead of "it" - `_OBJECT_ANAPHOR`
+    (`machines/effects.py`) did not read that pronoun family before.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Edgar, Ancient Bloodlord", "Grizzly Bears", "Plains", "Plains"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    edgar = scenario.creature("Edgar, Ancient Bloodlord", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.activate(
+        edgar,
+        *scenario.untapped_sources("Plains", "Plains"),
+        index=0,
+        sacrificing=[bears],
+        username="alice",
+    )
+    # Sacrificing triggers Edgar's own "dies" life-gain ability, which goes
+    # on the stack above the activation just announced (CR 603.3b) - both
+    # are resolved in turn.
+    scenario.resolve_top()
+    scenario.resolve_top()
+
+    assert edgar.counters[Counter.PLUS_ONE] == 1
+    assert has_keyword(edgar, Keyword.MENACE, scenario.game)
+
+
+def test_teyo_lightshield_expert_grants_hexproof_and_counts_a_creature_target():
+    """ "When Teyo enters, target permanent you control gains hexproof until
+    end of turn. Put a +1/+1 counter on it if it's a creature. Put a loyalty
+    counter on it if it's a planeswalker." - a target-type-conditional
+    counter placement (CR 608.2h: the referent's *current* characteristics
+    are checked as each rider runs), read as one antecedent with two
+    independent riders rather than only the first ever reading.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Teyo, Lightshield Expert"],
+            battlefield=["Grizzly Bears", "Plains", "Plains"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Teyo, Lightshield Expert", [bears])
+
+    scenario.cast_and_resolve(
+        "Teyo, Lightshield Expert", *scenario.untapped_sources("Plains", "Plains")
+    )
+    scenario.resolve_top()
+
+    assert has_keyword(bears, "hexproof", scenario.game)
+    assert bears.counters[Counter.PLUS_ONE] == 1
+    assert Counter.LOYALTY not in bears.counters
+
+
+def test_teyo_diamondblade_mage_counts_a_planeswalker_target_with_loyalty_instead():
+    """The same shape's other mode, proving the branch and not just the
+    first-checked type: "Put a loyalty counter on it if it's a
+    planeswalker." fires and the creature-only counter above does not, off a
+    genuinely different card (Teyo, Diamondblade Mage's own "deathtouch"
+    rather than "hexproof") targeting a planeswalker instead of a creature.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Teyo, Diamondblade Mage"],
+            battlefield=["Karn, the Great Creator", "Swamp", "Swamp", "Swamp", "Swamp"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    karn = scenario.find("Karn, the Great Creator", Zone.BATTLEFIELD, "alice")
+    loyalty_before = karn.counters[Counter.LOYALTY]
+    scenario.choose_trigger_targets("Teyo, Diamondblade Mage", [karn])
+
+    scenario.cast_and_resolve(
+        "Teyo, Diamondblade Mage", *scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp")
+    )
+    scenario.resolve_top()
+
+    assert has_keyword(karn, "deathtouch", scenario.game)
+    assert karn.counters[Counter.LOYALTY] == loyalty_before + 1
+    assert Counter.PLUS_ONE not in karn.counters
