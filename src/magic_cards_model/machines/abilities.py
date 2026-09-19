@@ -1964,10 +1964,29 @@ def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
     candidates = {card_name, front}
     if "," in front:
         candidates.add(front.split(",", 1)[0].strip())
+    else:
+        # CR 201.5's short form for a legendary permanent whose own
+        # multi-word name carries an epithet introduced by "the" and no
+        # comma at all ("Liliana the Repentant" - "Put a +1/+1 counter on
+        # Liliana."), rather than the comma-separated "Name, Title" shape
+        # above. Anchored on "the" specifically, not any lowercase word -
+        # a name that is itself an ordinary phrase (Search for Azcanta) has
+        # lowercase prepositions of its own that are not an epithet
+        # boundary, and reading every one as a candidate self-reference
+        # rewrote an unrelated "Search" inside Search for Azcanta's own
+        # printed name mid-sentence, corrupting it.
+        words = front.split()
+        if len(words) > 1 and words[1] == "the":
+            candidates.add(words[0])
+    # Longest candidate first: "Liliana the Repentant" and "Liliana" can
+    # both be real substrings of the same text (Azcanta's own front face
+    # printed a second time, verbatim, inside its own effect), and
+    # substituting the short one first would eat into the long one's own
+    # match, leaving it unmatched and half the sentence corrupted. A set's
+    # own iteration order cannot be trusted to avoid that on its own.
     normalized = effect_text
-    for name in candidates:
-        if name:
-            normalized = re.sub(rf"\b{re.escape(name)}\b", "this permanent", normalized)
+    for name in sorted((n for n in candidates if n), key=len, reverse=True):
+        normalized = re.sub(rf"\b{re.escape(name)}\b", "this permanent", normalized)
     return normalized
 
 
