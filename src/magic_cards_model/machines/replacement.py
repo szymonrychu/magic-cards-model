@@ -126,6 +126,7 @@ from ..models.zone import Zone
 from ..numbers import COUNT, MULTIPLIER, parse_count, parse_multiplier
 from ..snapshot import EngineModel
 from .abilities import keywords_in_lines
+from .casting import PlayAction
 from .combat import Keyword
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import ReflexiveExileCopiedCard
@@ -4720,6 +4721,73 @@ def draw_redirection_for(text: str, controller: str, target: str | None) -> Draw
     )
 
 
+class DrawReplacementKind(StrEnum):
+    """The shapes a `NextTimeDrawReplacement` can take. One variant today,
+    the same open-ended enum pattern `ShieldKind` already gives CR 615.8's
+    "next time [a source] would deal damage" shield - a new variant is a
+    schema bump, not a new stored type, the next time this pool needs one."""
+
+    #: "Instead [player] exiles the top card of their library[. They may
+    #: play it this turn.]" - Urabrask, Heretic Praetor's own second
+    #: trigger.
+    EXILE_TOP_CARD = "exile_top_card"
+
+
+class NextTimeDrawReplacement(EngineModel):
+    """One player's *next* draw this turn, replaced with something else
+    (CR 614.1a's "the next time ... would ..., instead ..." shape), rather
+    than every draw for a duration the way `DrawRedirection` reads Plagiarize's
+    "until end of turn, if ... would draw ..., instead ...".
+
+    Urabrask, Heretic Praetor prints the only one in this pool: "At the
+    beginning of each opponent's upkeep, the next time they would draw a
+    card this turn, instead they exile the top card of their library. They
+    may play it this turn." The trigger's own resolution installs this
+    record; nothing else happens when it resolves - the same division
+    `Game.create_prevention_shield` already draws for CR 615.8 ("creating the
+    shield *is* the effect").
+
+    Stored on `Game.next_time_draw_replacements` for the same reason
+    `Game.prevention_shields` and `Game.draw_redirections` are stored rather
+    than closed over: the ability that created it is off the stack by the
+    time a future draw event checks for it, and CR 514.2's cleanup step needs
+    an unused one to expire with every other "this turn" effect.
+    """
+
+    kind: DrawReplacementKind
+    label: str
+    """What the effect says, for the event trace."""
+
+    controller: str
+    """Who created it - `ApplicableEffect` needs a controller for CR 616.1's
+    ordering, and the ability that made this may be off the stack by the time
+    it fires."""
+
+    affected: str
+    """The player whose draw is replaced - Urabrask's own "they"."""
+
+    grants_play_permission: bool = False
+    """"They may play it this turn." - CR 601.3, via `Game.
+    grant_play_permission`, the same primitive Ragavan, Nimble Pilferer and
+    Emry, Lurker of the Loch already use."""
+
+    action: PlayAction = PlayAction.PLAY
+    """CR 601.1a's "play"/"cast" distinction, read off the printed permission
+    sentence - only meaningful when `grants_play_permission` is set."""
+
+    pays_mana_cost: bool = True
+    """CR 118.9: whether the permission includes "without paying its mana
+    cost" - only meaningful when `grants_play_permission` is set."""
+
+    spent: bool = False
+    """CR 614.5: applied at most once. Consumed on the very next draw event
+    for `affected`, however that draw happens."""
+
+    until_end_of_turn: bool = True
+    """CR 514.2 ends an unused one in the cleanup step, alongside every other
+    "this turn" effect."""
+
+
 def _finality_counter_effects(event: ReplaceableEvent) -> list[ApplicableEffect]:
     """A finality counter's replacement effect (CR 122.1h): "One or more
     finality counters on a permanent create a single replacement effect that
@@ -4792,6 +4860,67 @@ def _draw_redirection_effects(game: "Game", event: ReplaceableEvent) -> list[App
     ]
 
 
+def _next_time_draw_replacement_effects(
+    game: "Game", event: ReplaceableEvent
+) -> list[ApplicableEffect]:
+    """The unspent "next time [player] would draw a card this turn, instead
+    ..." replacements waiting on this draw event (CR 614.1a, CR 614.5).
+
+    Sourceless, like `_draw_redirection_effects`: the ability that installed
+    one may be off the stack, and CR 614.6 does not care. Unlike a
+    `DrawRedirection`, this fires at most once - `replacement.spent` is set
+    inside `apply` rather than the record being removed from `Game.
+    next_time_draw_replacements`, so a player ordering several replaceable
+    effects on the same draw (CR 616.1) still sees a consistent list while
+    they choose, and the spent record is what CR 514.2's cleanup step (and
+    every later draw this turn) then skips.
+    """
+    if event.kind is not EventKind.DRAW or event.player is None:
+        return []
+
+    def applier(replacement: NextTimeDrawReplacement) -> Apply:
+        def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+            replacement.spent = True
+            # "instead they exile the top card of their library" - the
+            # event's own draw is replaced down to nothing (CR 603.2g), and a
+            # *different* zone change happens in its place.
+            event.amount = 0
+            player = game.player(replacement.affected)
+            if not player.library:
+                return
+            if replacement.kind is DrawReplacementKind.EXILE_TOP_CARD:
+                card = game.exile_permanent(player.library[0])
+                if replacement.grants_play_permission:
+                    # "They may play it this turn." (CR 601.3), the same
+                    # primitive Ragavan, Nimble Pilferer's own "you may cast
+                    # that card" already grants.
+                    game.grant_play_permission(
+                        card,
+                        replacement.affected,
+                        action=replacement.action,
+                        pays_mana_cost=replacement.pays_mana_cost,
+                        source_name=replacement.label,
+                        rule="CR 601.3",
+                        zone=card.zone,
+                    )
+
+        return apply
+
+    return [
+        ApplicableEffect(
+            key=f"next-time-draw-replacement:{index}",
+            source=None,
+            label=replacement.label,
+            apply=applier(replacement),
+            controller_username=replacement.controller,
+        )
+        for index, replacement in enumerate(game.next_time_draw_replacements)
+        if not replacement.spent
+        and replacement.affected == event.player.username
+        and event.amount > 0
+    ]
+
+
 def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """Every effect that would modify this event as it stands (CR 614.1, 616.1).
 
@@ -4810,6 +4939,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     found.extend(_regeneration_effects(game, event))
     found.extend(_finality_counter_effects(event))
     found.extend(_draw_redirection_effects(game, event))
+    found.extend(_next_time_draw_replacement_effects(game, event))
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
         entering = event.card

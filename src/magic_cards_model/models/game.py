@@ -190,6 +190,7 @@ from ..machines.priority import PriorityMachine, PriorityOutcome
 from ..machines.replacement import (
     DrawRedirection,
     EventKind,
+    NextTimeDrawReplacement,
     ReplaceableEvent,
     UnreadableCopyExceptionNotice,
     UnwiredChoiceNotice,
@@ -2264,7 +2265,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 25
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 26
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2520,6 +2521,16 @@ class Game(EngineModel):
     Fungi and/or Saprolings" - a subtype-based live count no existing `Count`
     variant answers) - a new tag reachable from `Game.continuous_effects`,
     per the same rule.
+
+    Bumped 25 -> 26: `Game` gained `next_time_draw_replacements` (Urabrask,
+    Heretic Praetor's own "the next time they would draw a card this turn,
+    instead they exile the top card of their library" - CR 614.1a's one-shot
+    "next time ... instead ..." shape for a draw event, distinct from
+    `draw_redirections`' every-draw-until-end-of-turn shape) - a field added
+    to `Game` itself, per the bump rule's first bullet, and a decoded
+    mid-turn `Game` with no record of a still-pending one would silently
+    drop it, letting that player's next draw resolve as an ordinary draw
+    instead.
     """
 
     @model_validator(mode="before")
@@ -2607,6 +2618,14 @@ class Game(EngineModel):
     graveyard card by the time the effect ever applies, and the effect has a
     duration of its own (CR 514.2 ends it in the cleanup step, which is where
     `discard_to_maximum_hand_size` clears the list)."""
+
+    next_time_draw_replacements: list[NextTimeDrawReplacement] = Field(default_factory=list)
+    """CR 614.1a's "the next time [player] would draw a card this turn,
+    instead ..." - a one-shot replacement, unlike `draw_redirections`'
+    every-draw-until-end-of-turn shape. Urabrask, Heretic Praetor's own
+    triggered ability installs one of these here when it resolves; a future
+    draw event for the named player consumes it at most once (CR 614.5) and
+    the cleanup step drops whatever is left unused (CR 514.2)."""
 
     prevention_shields: list["PreventionShield"] = Field(default_factory=list)
     """Prevention effects created by a resolving spell or ability (CR 615.1).
@@ -3275,6 +3294,14 @@ class Game(EngineModel):
                 redirection
                 for redirection in self.draw_redirections
                 if not redirection.until_end_of_turn
+            ]
+            # CR 514.2's same sentence again, for the one-shot "next time ...
+            # would draw ..., instead ..." replacements: whichever of these
+            # never got a draw to consume this turn stops existing here.
+            self.next_time_draw_replacements = [
+                replacement
+                for replacement in self.next_time_draw_replacements
+                if not replacement.spent and not replacement.until_end_of_turn
             ]
             # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
             # A card exiled by Ugin's −11 stays exiled and stops being castable.
@@ -10018,6 +10045,22 @@ class Game(EngineModel):
     def active_prevention_shields(self) -> list[PreventionShield]:
         """The shields that are neither used up nor expired (CR 615.3)."""
         return [shield for shield in self.prevention_shields if not shield.spent]
+
+    def create_next_time_draw_replacement(
+        self, replacement: NextTimeDrawReplacement
+    ) -> NextTimeDrawReplacement:
+        """Record a CR 614.1a "next time [player] would draw a card this
+        turn, instead ..." replacement, installed by a resolving ability
+        (Urabrask, Heretic Praetor's own second trigger).
+
+        The same division `create_prevention_shield` already draws for CR
+        615.1: creating the record *is* the effect; nothing else happens
+        when the ability resolves. `machines.replacement._next_time_draw_
+        replacement_effects` is what a later draw event actually consumes.
+        """
+        with self._id_allocator_scope():
+            self.next_time_draw_replacements.append(replacement)
+            return replacement
 
     def shield_applies(self, shield: PreventionShield, event: ReplaceableEvent) -> bool:
         """Whether this shield would prevent any of this damage (CR 615.7-615.9).

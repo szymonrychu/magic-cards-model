@@ -170,6 +170,7 @@ from .modes import (
     mode_effect_text,
     substitute_x,
 )
+from .replacement import DrawReplacementKind, NextTimeDrawReplacement
 from .targeting import (
     COMPARISON_CLAUSE_PATTERN,
     TargetRequirement,
@@ -18907,8 +18908,18 @@ def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect
 #: that card" (Ragavan) or "You may cast that card this turn" (Emry, Lurker of
 #: the Loch) - and CR 514.2 ends both in the same cleanup step: "all 'until end
 #: of turn' and 'this turn' effects end". Exactly one of the two is required.
+#:
+#: The permission's own subject pronoun is "you" on nearly every card, because
+#: nearly every one grants the permission to its own caster or controller -
+#: but a *third-person* triggered ability whose CR 607.1 antecedent is some
+#: other player (Urabrask, Heretic Praetor's "the next time **they** would
+#: draw ..., instead **they** exile ... **They** may play it this turn.")
+#: prints "they"/"that player" instead, naming exactly the same permission.
+#: Nothing downstream reads which pronoun matched - only `action`, `subject`,
+#: `free`, `leading`, and `trailing` are ever inspected - so widening the
+#: front of the sentence costs nothing and reads every printing generally.
 _PLAY_PERMISSION_RE = re.compile(
-    r"^(?P<leading>until end of turn, )?you may (?P<action>cast|play) "
+    r"^(?P<leading>until end of turn, )?(?:you|they|that player) may (?P<action>cast|play) "
     r"(?P<subject>it|that card|those cards|them)"
     r"(?P<free> without paying (?:its|their) mana costs?)?"
     r"(?P<trailing> this turn)?$",
@@ -19152,6 +19163,79 @@ def _parse_exile_then_play_permission_pair(
                 rule="CR 601.3",
                 zone=card.zone,
             )
+
+    return effect
+
+
+#: "The next time they would draw a card this turn, instead they exile the
+#: top card of their library." - Urabrask, Heretic Praetor's own second
+#: trigger. "They" is CR 607.1's own anaphora back to the specific opponent
+#: whose upkeep condition just fired, read off `AbilityOnStack.event.player`
+#: exactly the way `_parse_they_gain_or_lose_life_clause` already reads
+#: Sheoldred, the Apocalypse's own "they lose 2 life" - never the resolving
+#: ability's controller.
+#:
+#: CR 614.1a's "next time ... would ..., instead ..." shape does not run
+#: anything when the *trigger* resolves - it installs a one-shot replacement
+#: (`Game.create_next_time_draw_replacement`) that a later draw event
+#: consumes, the same division `_prevent_next_damage_from_target` already
+#: draws for CR 615.8's identically-shaped damage shield. "your"/"that
+#: player" are read too, on the same "target the mechanic" grounds the
+#: widened `_PLAY_PERMISSION_RE` above already argues for third-person
+#: permission sentences - only Urabrask's own "they"/"their" is proven here.
+_NEXT_TIME_WOULD_DRAW_EXILE_TOP_RE = re.compile(
+    r"^the next time (?:they|you|that player) would draw a card this turn, "
+    r"instead (?:they|you|that player) exiles? the top card of "
+    r"(?:their|your|that player'?s) library\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_next_time_draw_replacement_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_NEXT_TIME_WOULD_DRAW_EXILE_TOP_RE`'s first sentence, paired with the
+    "They may play it this turn." permission that gives the exiled card
+    anywhere to go (CR 601.3) - read together for the same reason
+    `_parse_exile_then_play_permission_pair` reads its own pair together: the
+    permission's pronoun has no meaning without the exile clause that names
+    what "it" is.
+
+    Ability-only: needs `AbilityOnStack.event.player` to resolve "they"
+    against (CR 607.1), which a resolving spell has no equivalent of.
+    """
+    if for_spell:
+        return None
+    if _NEXT_TIME_WOULD_DRAW_EXILE_TOP_RE.fullmatch(first.strip()) is None:
+        return None
+    permission = _PLAY_PERMISSION_RE.fullmatch(second.strip())
+    if permission is None:
+        return None
+    if bool(permission.group("leading")) == bool(permission.group("trailing")):
+        return None
+    if permission.group("subject").lower() in _PLURAL_PERMISSION_SUBJECTS:
+        # One card exiled; the permission's pronoun must be singular.
+        return None
+    action = PlayAction.PLAY if permission.group("action").lower() == "play" else PlayAction.CAST
+    free = permission.group("free") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.player is None:
+            return
+        game.create_next_time_draw_replacement(
+            NextTimeDrawReplacement(
+                kind=DrawReplacementKind.EXILE_TOP_CARD,
+                label=f"{ability.source_name}'s replacement effect",
+                controller=game.controller_of(ability).username,
+                affected=event.player,
+                grants_play_permission=True,
+                action=action,
+                pays_mana_cost=not free,
+            )
+        )
 
     return effect
 
@@ -22052,6 +22136,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_exile_then_play_permission_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_next_time_draw_replacement_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:
