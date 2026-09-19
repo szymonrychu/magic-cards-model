@@ -1,0 +1,165 @@
+{
+  "object": "card",
+  "id": "caef93cc-70d0-4cce-9aaa-13c0931b2ef7",
+  "oracle_id": "b69bbb8d-7f8c-45d6-983a-759b5fce6ebd",
+  "multiverse_ids": [
+    636956
+  ],
+  "mtgo_id": 118310,
+  "arena_id": 87397,
+  "tcgplayer_id": 524170,
+  "cardmarket_id": 740878,
+  "name": "The Mycotyrant",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/caef93cc-70d0-4cce-9aaa-13c0931b2ef7",
+  "scryfall_uri": "https://scryfall.com/card/lci/235/the-mycotyrant?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:35:30Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.jpg?1783913730",
+    "normal": "https://cards.scryfall.io/normal/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.jpg?1783913730",
+    "large": "https://cards.scryfall.io/large/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.jpg?1783913730",
+    "png": "https://cards.scryfall.io/png/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.png?1783913730",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.jpg?1783913730",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.jpg?1783913730",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.webp?1783913730",
+    "grid": "https://cards.scryfall.io/grid/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.webp?1783913730",
+    "display": "https://cards.scryfall.io/display/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.webp?1783913730",
+    "art": "https://cards.scryfall.io/art/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.webp?1783913730",
+    "crop": "https://cards.scryfall.io/crop/front/c/a/caef93cc-70d0-4cce-9aaa-13c0931b2ef7.webp?1783913730"
+  },
+  "mana_cost": "{1}{B}{G}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Elder Fungus",
+  "oracle_text": "Trample\nThe Mycotyrant's power and toughness are each equal to the number of creatures you control that are Fungi and/or Saprolings.\nAt the beginning of your end step, create X 1/1 black Fungus creature tokens with \"This token can't block,\" where X is the number of times you descended this turn. (You descend each time a permanent card is put into your graveyard from anywhere.)",
+  "power": "*",
+  "toughness": "*",
+  "colors": [
+    "B",
+    "G"
+  ],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "73ff66e3-ea24-4542-887f-c41abb1759e6",
+      "component": "token",
+      "name": "Fungus",
+      "type_line": "Token Creature \u2014 Fungus",
+      "uri": "https://api.scryfall.com/cards/73ff66e3-ea24-4542-887f-c41abb1759e6"
+    },
+    {
+      "object": "related_card",
+      "id": "b27e6494-6f64-4adf-96ca-65a17100b8fe",
+      "component": "combo_piece",
+      "name": "The Mycotyrant",
+      "type_line": "Legendary Creature \u2014 Elder Fungus",
+      "uri": "https://api.scryfall.com/cards/b27e6494-6f64-4adf-96ca-65a17100b8fe"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set": "lci",
+  "set_name": "The Lost Caverns of Ixalan",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alci&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lci?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/caef93cc-70d0-4cce-9aaa-13c0931b2ef7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab69bbb8d-7f8c-45d6-983a-759b5fce6ebd&unique=prints",
+  "collector_number": "235",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chase Stone",
+  "artist_ids": [
+    "2d753f61-5f5b-468e-97ea-8e0fdd347340"
+  ],
+  "illustration_id": "8b99ea9d-061a-49f3-90f7-37282610d5aa",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 5745,
+  "penny_rank": 15206,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=Szm0yzSUUm0",
+    "previewed_at": "2023-10-24"
+  },
+  "prices": {
+    "usd": "1.30",
+    "usd_foil": "1.97",
+    "usd_etched": null,
+    "eur": "0.97",
+    "eur_foil": "1.45",
+    "tix": "0.39"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636956&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BMycotyrant",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BMycotyrant",
+    "edhrec": "https://edhrec.com/route/?cc=The+Mycotyrant"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F524170%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=740878&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/118310?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

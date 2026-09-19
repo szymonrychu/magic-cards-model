@@ -3103,6 +3103,20 @@ def has_rebound(card: Card) -> bool:
     return any(keyword.lower() == "rebound" for keyword in card.keywords)
 
 
+def has_rebound_now(card_state: CardState) -> bool:
+    """Whether `card_state` has rebound *right now*, printed (`has_rebound`)
+    or granted by another card's effect (`CardState.granted_rebound`, CR
+    614.12: a granted static ability "functions" the same as a printed one
+    for as long as it applies) - Ojer Pakpatiq, Deepest Epoch's own "Whenever
+    you cast an instant spell from your hand, it gains rebound." The two
+    call sites that used to ask `has_rebound(spell.card)` alone
+    (`machines/replacement._stack_replacements`'s exile-instead-of-graveyard
+    swap, `Game._create_rebound_delayed_trigger`'s own guard) both ask this
+    instead, so a granted rebound reaches the same two effects a printed one
+    does."""
+    return has_rebound(card_state.card) or card_state.granted_rebound
+
+
 # --------------------------------------------------------------------------
 # Paradigm (CR 702.192)
 # --------------------------------------------------------------------------
@@ -3180,6 +3194,12 @@ def dredge(game: Any, card: CardState, player: str) -> list[CardState]:
         milled = list(owner.library[:count])
         for state in milled:
             owner.move(state, Zone.GRAVEYARD)  # CR 701.17a
+            # CR 700.11/CR 400.6: dredge moves a card straight from library
+            # to graveyard without going through `Game.put_into_graveyard`,
+            # so it has to feed the ledger itself.
+            game._record_graveyard_arrival(  # noqa: SLF001
+                state, origin_zone=Zone.LIBRARY, permanent_types=None
+            )
         owner.cards_in(Zone.GRAVEYARD).remove(card)
         owner.add(card, Zone.HAND)
         card.move_to(Zone.HAND)
@@ -3323,6 +3343,12 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
 
         if not madness_replaces_discard(card):
             owner.move(card, Zone.GRAVEYARD)
+            # CR 700.11/CR 400.6: an ordinary discard moves straight from
+            # hand to graveyard without going through `Game.
+            # put_into_graveyard`, so it has to feed the ledger itself.
+            game._record_graveyard_arrival(  # noqa: SLF001
+                card, origin_zone=Zone.HAND, permanent_types=None
+            )
             # CR 702.187b's "as long as you discarded this card this turn", recorded
             # on the card the far side of the move because that is the object the
             # clause is about. Not a count - `Game.cards_discarded_this_turn` is

@@ -1763,7 +1763,18 @@ def condition_matches(
             return mana_value == threshold
         if mine and "this spell" in lowered:
             return event.subject_id == source.id
-        if not _controller_clause_holds(condition, controller, event.player):
+        if "an opponent" in lowered:
+            # Jin-Gitaxias, Progress Tyrant's own "Whenever an opponent
+            # casts ..." - `_controller_clause_holds` only ever recognises
+            # "an opponent **controls**"/"your opponents **control**"
+            # (CR 613.5's board-control question), never "casts", so a
+            # condition worded this way fell through its default "nothing
+            # named, nothing required" branch and matched *any* caster,
+            # controller included - the same "an opponent" fallback
+            # `TriggerEvent.DRAWS_A_CARD`/`GAINS_LIFE` already use just below.
+            if event.player is None or event.player == controller:
+                return False
+        elif not _controller_clause_holds(condition, controller, event.player):
             return False
         if not _origin_zone_matches(event.origin_zone, condition):
             return False
@@ -1981,17 +1992,41 @@ def condition_matches(
         # type - and "you tap a Swamp for mana" (Nirkana Revenant), "a Forest is
         # tapped for mana" (Vernal Bloom), naming a land subtype instead.
         # Nothing in the pool prints the self-referential form.
+        if "an opponent" in lowered:
+            # Vorinclex, Voice of Hunger's own "Whenever an opponent taps a
+            # land for mana, ..." - `_controller_clause_holds` only ever
+            # recognises "an opponent **controls**"/"your opponents
+            # **control**" (CR 613.5's board-control question), never
+            # "taps", so this fell through its default "nothing named,
+            # nothing required" branch and matched *any* tap, controller
+            # included - the same "an opponent" fallback `TriggerEvent.
+            # CAST_SPELL`/`DRAWS_A_CARD`/`GAINS_LIFE` already use for their
+            # own branches.
+            controller_ok = event.subject_controller is not None and (
+                event.subject_controller != controller
+            )
+        else:
+            controller_ok = _controller_clause_holds(
+                condition, controller, event.subject_controller
+            )
         return (
-            _controller_clause_holds(condition, controller, event.subject_controller)
+            controller_ok
             and _types_match(event.subject_types, condition)
             and _subtype_matches(event.subject_subtypes, _required_tapped_subtype(condition))
         )
 
     if ability.event is TriggerEvent.TURNED_FACE_UP:
-        # CR 702.37e/708.8. Brine Elemental's own printing is the only one
-        # in the pool ("When this creature is turned face up, ..."), always
-        # self-referential.
-        return mine and event.subject_id == source.id
+        # CR 702.37e/708.8. Brine Elemental's own "When this creature is
+        # turned face up, ..." is self-referential (`mine`); Mastery of the
+        # Unseen's "Whenever a permanent you control is turned face up, ..."
+        # is not - it watches every permanent its controller turns face up,
+        # not only itself, the same self-vs-general split every other event
+        # branch in this function reads off `mine` rather than hardcoding.
+        if mine:
+            return event.subject_id == source.id
+        return _controller_clause_holds(
+            condition, controller, event.subject_controller
+        ) and _types_match(event.subject_types, condition)
 
     if ability.event is TriggerEvent.DISCARDS_A_CARD:
         # Titanbones, Towering Heart's own "When you discard this card, ..."
@@ -2353,6 +2388,13 @@ def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
         return False
     if "your" in lowered:
         return event.player == controller
+    if "opponent" in lowered:
+        # "At the beginning of each opponent's upkeep" (Sheoldred, Whispering
+        # One; Urabrask, Heretic Praetor) - CR 102.2's opponent, not "whoever's
+        # step it is": without this, the bare "each upkeep" default just below
+        # matched the ability's own controller's step too, firing the trigger
+        # on the wrong player's turn as well as the right one.
+        return event.player is not None and event.player != controller
     # "each upkeep", "the end step" - whoever's step it is.
     return True
 
@@ -2957,6 +2999,16 @@ def intervening_if_holds(
     other_subtype_count = _controls_at_least_other_subtype_count_holds(game, clause, source)
     if other_subtype_count is not None:
         return other_subtype_count
+
+    if clause == "you descended this turn":
+        # CR 700.11: "This means that a permanent card has been put into
+        # that player's graveyard from anywhere this turn." Broodrage
+        # Mycoid's own end-step trigger, and every other "if you descended
+        # this turn" printing - `Game.descended` is the one shared answer,
+        # reading FRA S5's `graveyard_arrivals_this_turn` ledger (see that
+        # method's own docstring for the merge note).
+        controller = source.controller or game.active_player.username
+        return game.descended(controller)
 
     if clause in _REVOLT_CLAUSES:
         # CR 207.2c: Revolt is an ability word, so no numbered rule spells out

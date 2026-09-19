@@ -108,19 +108,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 1373,
+  "edhrec_rank": 1378,
   "preview": {
     "source": "Gamerbraves",
     "source_uri": "https://www.gamerbraves.com/agathas-soul-cauldron-is-a-must-pick-card-in-mtg-wilds-of-eldraine/",
     "previewed_at": "2023-08-16"
   },
   "prices": {
-    "usd": "38.00",
-    "usd_foil": "42.27",
+    "usd": "38.07",
+    "usd_foil": "42.05",
     "usd_etched": null,
-    "eur": "33.67",
-    "eur_foil": "44.98",
-    "tix": "6.01"
+    "eur": "33.13",
+    "eur_foil": "43.14",
+    "tix": "4.69"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629743&printed=false",

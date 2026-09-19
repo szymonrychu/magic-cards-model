@@ -153,7 +153,7 @@ from ..machines.keywords import (
     equipment_state_based_actions,
     grant_the_citys_blessing,
     has_paradigm,
-    has_rebound,
+    has_rebound_now,
     has_suspend,
     is_indestructible,
     keyword_effect_for,
@@ -191,6 +191,7 @@ from ..machines.priority import PriorityMachine, PriorityOutcome
 from ..machines.replacement import (
     DrawRedirection,
     EventKind,
+    NextTimeDrawReplacement,
     ReplaceableEvent,
     UnreadableCopyExceptionNotice,
     UnwiredChoiceNotice,
@@ -202,6 +203,7 @@ from ..machines.targeting import (
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
+    reflexive_consequence_text,
     targeting_profile,
 )
 from ..machines.triggers import (
@@ -665,6 +667,13 @@ _CONDITION_SELF_COUNTERS = re.compile(
 #: CR 702.62b: "A card is 'suspended' if it's in the exile zone, has suspend,
 #: and has a time counter on it." Greater Gargadon's own restriction.
 _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IGNORECASE)
+#: CR 702.33d/601.4: Inscription of Abundance's own "If this spell was
+#: kicked, choose any number instead." - CR 601.4's worked example for this
+#: exact card.
+_CONDITION_KICKED = re.compile(r"this spell was kicked", re.IGNORECASE)
+#: CR 700.11: Molten Collapse's "If you descended this turn, you may choose
+#: both instead."
+_CONDITION_DESCENDED = re.compile(r"you descended this turn", re.IGNORECASE)
 #: Xerex Strobe-Knight: "you've cast two or more spells this turn" - counted
 #: off `Game.spells_cast_this_turn`, which already excludes copies (CR 707.10).
 _CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
@@ -1424,9 +1433,14 @@ class GraveyardArrival(EngineModel):
     questions about the turn as a whole, which is why this is a plain
     `Game`-level ledger rather than something `machines/triggers.py` matches.
 
-    `Game.put_into_graveyard` is the one place every graveyard arrival passes
-    through (CR 400.6, 614.1a's own docstring on that method), so it is
-    recorded there and nowhere else. `origin_zone` is the zone the card left
+    `Game.put_into_graveyard` is the main place a graveyard arrival passes
+    through (CR 400.6, 614.1a's own docstring on that method), but not the
+    only one: `machines/keywords.discard`/`.dredge` and the two
+    `Game.enter_the_battlefield` branches where a replacement effect
+    (CR 614.6) redirects an entering permanent's destination to a graveyard
+    instead never call it, so each records its own arrival too - see
+    `Game.descended`'s own docstring for why CR 700.11's "from anywhere"
+    needs every one of them. `origin_zone` is the zone the card left
     (captured before the move, the same way `CastRecord.origin_zone` is), and
     `permanent_types` is the computed types the object had while it was still
     on the battlefield for a card that arrived that way (`None` for a card
@@ -1441,6 +1455,17 @@ class GraveyardArrival(EngineModel):
     """The graveyard's owner (CR 111.4/400.3: a card's owner's graveyard is
     where it goes), read off `Game._owner_of` at the moment of arrival."""
     origin_zone: Zone
+    is_permanent_card: bool = False
+    """CR 110.4a's "permanent card" question - artifact, battle, creature,
+    enchantment, land, or planeswalker - asked of the card's own *printed*
+    types (`CardState.types`, front-face-safe) regardless of whether it was
+    ever on the battlefield on this trip. Deliberately not answered by
+    `permanent_types` below: that field is `None` for anything that skipped
+    the battlefield (a discard, a mill, a countered permanent spell), and CR
+    700.11's Descend counts exactly those too - "permanent cards put into a
+    player's graveyard from anywhere this turn" has no battlefield
+    requirement at all. `Game.cards_put_into_graveyard_this_turn`'s own
+    `permanent_only` filter reads this field, not `permanent_types`."""
     permanent_types: tuple[Type, ...] | None = None
     """The computed card types (CR 613.5) the object had while still a
     permanent, for an arrival straight off the battlefield (CR 700.4's dies,
@@ -2095,7 +2120,19 @@ class Game(EngineModel):
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
     per arrival - see `GraveyardArrival`'s own docstring for why this is one
     general ledger rather than a narrower counter. Cleared when a new turn
-    begins."""
+    begins.
+
+    The fu-events stream independently built the identical fact for CR
+    700.11's Descend as `Game.permanent_cards_to_graveyard_this_turn` (a
+    `dict[str, int]` running count) before this field landed; reconciled at
+    merge in favour of this one - `Game.descended`/`Game.descend_count` now
+    read `cards_put_into_graveyard_this_turn(player, permanent_only=True)`
+    instead, per `CLAUDE.md`'s "keep one mechanism" rule. That method's own
+    `permanent_only` filter was widened at the same merge to also recognise
+    a permanent card that reached the graveyard without ever touching the
+    battlefield (a discard, a mill, a countered permanent spell) - see
+    `GraveyardArrival.is_permanent_card`'s own docstring for why CR 700.11's
+    "from anywhere" needs that in addition to `permanent_types`."""
 
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
@@ -2363,7 +2400,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 26
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 27
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2676,6 +2713,39 @@ class Game(EngineModel):
     reachable from [`Game.model_dump()`]" bullet, not because this one's
     default could ever disagree with an old dump. Merged onto the FRA S5
     line above; the number moves on once more.
+
+    Bumped 26 -> 27: the fu-events line of development claimed 21 -> 26
+    independently too, in its own five steps, reconciled at the same merge
+    as this note. Four of its five fields are real additions, carried
+    forward under this one combined bump:
+
+    - `CardState` gained `granted_rebound` (CR 702.88, Ojer Pakpatiq,
+      Deepest Epoch's own "it gains rebound") - one whose absence would
+      silently drop a granted rebound for a spell mid-resolution on the
+      stack.
+    - `machines/layers.py`'s `Selector` discriminated union gained
+      `PermanentsOfTypesControlledBy` (Sorin, Vengeful Bloodlord's own
+      "creatures and planeswalkers you control have lifelink" - a compound
+      subject `PermanentsControlledBy` cannot name).
+    - `machines/layers.py`'s `Count` discriminated union gained
+      `CountCreaturesWithSubtypesControlledBy` (The Mycotyrant's own
+      characteristic-defining "the number of creatures you control that are
+      Fungi and/or Saprolings").
+    - `Game` gained `next_time_draw_replacements` (Urabrask, Heretic
+      Praetor's own "the next time they would draw a card this turn,
+      instead they exile the top card of their library" - CR 614.1a's
+      one-shot "next time ... instead ..." shape, distinct from
+      `draw_redirections`' every-draw-until-end-of-turn shape).
+
+    The fifth, `permanent_cards_to_graveyard_this_turn` (CR 700.11, Descend's
+    own running count), was dropped rather than carried forward: FRA S5's
+    `graveyard_arrivals_this_turn` above already ledgers the identical fact
+    more generally, so `Game.descended`/`Game.descend_count` now read
+    `cards_put_into_graveyard_this_turn(player, permanent_only=True)`
+    instead - one mechanism, not two, per `CLAUDE.md`'s own rule. A
+    version-26 dump from either line is refused either way, since every one
+    of the four surviving fields is a field added to something reachable
+    from `Game.model_dump()`, per the bump rule's first bullet.
     """
 
     @model_validator(mode="before")
@@ -2763,6 +2833,14 @@ class Game(EngineModel):
     graveyard card by the time the effect ever applies, and the effect has a
     duration of its own (CR 514.2 ends it in the cleanup step, which is where
     `discard_to_maximum_hand_size` clears the list)."""
+
+    next_time_draw_replacements: list[NextTimeDrawReplacement] = Field(default_factory=list)
+    """CR 614.1a's "the next time [player] would draw a card this turn,
+    instead ..." - a one-shot replacement, unlike `draw_redirections`'
+    every-draw-until-end-of-turn shape. Urabrask, Heretic Praetor's own
+    triggered ability installs one of these here when it resolves; a future
+    draw event for the named player consumes it at most once (CR 614.5) and
+    the cleanup step drops whatever is left unused (CR 514.2)."""
 
     prevention_shields: list["PreventionShield"] = Field(default_factory=list)
     """Prevention effects created by a resolving spell or ability (CR 615.1).
@@ -3463,6 +3541,14 @@ class Game(EngineModel):
                 redirection
                 for redirection in self.draw_redirections
                 if not redirection.until_end_of_turn
+            ]
+            # CR 514.2's same sentence again, for the one-shot "next time ...
+            # would draw ..., instead ..." replacements: whichever of these
+            # never got a draw to consume this turn stops existing here.
+            self.next_time_draw_replacements = [
+                replacement
+                for replacement in self.next_time_draw_replacements
+                if not replacement.spent and not replacement.until_end_of_turn
             ]
             # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
             # A card exiled by Ugin's −11 stays exiled and stops being castable.
@@ -4401,7 +4487,7 @@ class Game(EngineModel):
         somewhere other than exile first (CR 616.1: only one effect can
         finally decide where an object goes).
         """
-        if not cast_from_hand or not has_rebound(spell.card) or spell.zone is not Zone.EXILE:
+        if not cast_from_hand or not has_rebound_now(spell) or spell.zone is not Zone.EXILE:
             return
         controller = spell.controller or self.active_player.username
         self.delayed_triggers.create(
@@ -6291,6 +6377,26 @@ class Game(EngineModel):
         A card may print more than one targeting trigger. The announcement names
         the card, not the ability, so the targets are legal if *any* of its
         triggers would accept them; the first reason is reported when none do.
+
+        Also tried, for each printed trigger: `reflexive_consequence_text`'s
+        own reading of a CR 603.12 "`<action>`. When you do, `<consequence>`."
+        shape - `profile_for_text(ability.text)` deliberately excludes that
+        tail (it belongs to a *different*, reflexively created ability, not
+        this one), so without this a card whose only targeted clause is its
+        own reflexive consequence - Earthbender Ascension's Landfall trigger,
+        "... put a quest counter on this enchantment. When you do, if it has
+        four or more quest counters on it, put a +1/+1 counter on target
+        creature you control." - had no profile anywhere in this function
+        that would ever accept the target `Game.create_reflexive_trigger`
+        goes on to ask for once the reflexive ability actually reaches the
+        stack, `choose_trigger_targets(card_name, ...)` refuses to record any
+        answer for it, and the shortcut cannot be used at all - only a live
+        `DecisionKind.CHOOSE_TARGETS` question at resolution can supply it.
+        The key `create_reflexive_trigger` puts the reflexive `AbilityOnStack`
+        on the stack under is this same `source_name`
+        (`Game.create_reflexive_trigger`'s own controller/source_id/source_name
+        arguments), so a target recorded here under `card_name` is exactly
+        what `_targets_for_trigger` reads back for it.
         """
         source = self._trigger_source_named(card_name)
         if source is None:
@@ -6306,9 +6412,62 @@ class Game(EngineModel):
             for ability in parse_abilities(source.card)
             if isinstance(ability, TriggeredAbility)
         ]
+        # CR 603.12's reflexive ability is a plain triggered ability once
+        # created (`Game.create_reflexive_trigger`), whatever *kind* of
+        # ability's text it was carved out of - Agatha's Soul Cauldron's own
+        # "{T}: Exile target card from a graveyard. When a creature card is
+        # exiled this way, put a +1/+1 counter on target creature you
+        # control." is activated, not triggered, so it never reaches
+        # `printed` above, and its own outer target (the graveyard card) is
+        # addressed through `Game.activate_ability`'s `targets`, not this
+        # method - only the reflexive "target creature you control" the
+        # `when ... this way,` tail names is this method's business here.
+        printed_activated = [
+            ability
+            for ability in parse_abilities(source.card)
+            if isinstance(ability, ActivatedAbility)
+        ]
         reasons: list[str] = []
         for ability in printed:
             profile = profile_for_text(ability.text)
+            if profile.understood and profile.requirements:
+                try:
+                    profile.check(list(targets), controller, self, source_id=source.id)
+                except ValueError as refusal:
+                    reasons.append(str(refusal))
+                else:
+                    return None
+            # The reflexive tail, tried as an *additional* way to accept -
+            # never to refuse. `profile_for_text(ability.text)` above already
+            # cut this tail away because CR 603.3d has the reflexive ability
+            # choose its own target once *it* exists, a separate
+            # announcement from this (outer) one's; Guide of Souls' "Whenever
+            # you attack, you may pay {E}{E}{E}. When you do, put ... on
+            # target attacking creature" prints no target on the outer
+            # trigger at all, and `test_the_outer_attack_trigger_has_no_
+            # target_of_its_own` pins that a target named for it is accepted
+            # unchecked regardless of what the *reflexive* half would want -
+            # the "when you do" may never even be reached. So a target this
+            # reflexive profile likes is accepted early; one it dislikes adds
+            # no reason, and falls through exactly as if there were no
+            # reflexive clause to read at all.
+            reflexive_text = reflexive_consequence_text(ability.text)
+            if not reflexive_text:
+                continue
+            reflexive_profile = profile_for_text(reflexive_text)
+            if not reflexive_profile.understood or not reflexive_profile.requirements:
+                continue
+            try:
+                reflexive_profile.check(list(targets), controller, self, source_id=source.id)
+            except ValueError:
+                pass
+            else:
+                return None
+        for ability in printed_activated:
+            reflexive_text = reflexive_consequence_text(ability.text)
+            if not reflexive_text:
+                continue
+            profile = profile_for_text(reflexive_text)
             if not profile.understood or not profile.requirements:
                 continue
             try:
@@ -6516,17 +6675,20 @@ class Game(EngineModel):
 
         `from_zone=Zone.LIBRARY` answers a mill's own "cards put into a
         graveyard from a library this turn"; `permanent_only=True` answers
-        the narrower "permanent cards put into graveyards this turn" a
-        Descend-style count asks (CR 702.187a-adjacent - whether the card was
-        a permanent card as it left the battlefield, not what it is now that
-        it is a card in a graveyard). Both filters compose, and neither
+        CR 700.11's Descend - "the number of permanent cards put into [a
+        player]'s graveyard from anywhere this turn" - reading `arrival.
+        is_permanent_card` (CR 110.4a's printed-type question, true "from
+        anywhere" and not only for an arrival straight off the battlefield)
+        rather than `arrival.permanent_types` (which answers a narrower,
+        computed-characteristics question and is `None` for a card that
+        skipped the battlefield entirely). Both filters compose, and neither
         filter given counts every arrival, permanent or not."""
         return sum(
             1
             for arrival in self.graveyard_arrivals_this_turn
             if arrival.player == player
             and (from_zone is None or arrival.origin_zone is from_zone)
-            and (not permanent_only or bool(arrival.permanent_types))
+            and (not permanent_only or arrival.is_permanent_card)
         )
 
     def _additional_entering_loyalty(self, card_state: CardState) -> int:
@@ -6634,6 +6796,10 @@ class Game(EngineModel):
                     self.exile.append(card_state)
                 else:
                     self._owner_of(card_state).add(card_state, event.destination or Zone.GRAVEYARD)
+                    if (event.destination or Zone.GRAVEYARD) is Zone.GRAVEYARD:
+                        self._record_graveyard_arrival(
+                            card_state, origin_zone=event.origin, permanent_types=None
+                        )
                 return card_state
 
             if (
@@ -6644,6 +6810,9 @@ class Game(EngineModel):
                 # CR 303.4d: an Aura can't enchant itself - see the docstring above.
                 self._take_out_of_every_zone(card_state)
                 self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
+                self._record_graveyard_arrival(
+                    card_state, origin_zone=event.origin, permanent_types=None
+                )
                 return card_state
 
             self._take_out_of_every_zone(card_state)
@@ -9259,6 +9428,34 @@ class Game(EngineModel):
             self._emit_counters_put(permanent, str(kind), event.amount)
             return new_total
 
+    def add_player_counters(self, player: "Player | str", kind: str, amount: int = 1) -> int:
+        """Give a player counters, replacement effects included (CR 122.1,
+        122.6).
+
+        The player twin of `add_counters` above: Winding Constrictor's own
+        two-line static ability doubles+1 both halves of CR 122.6's "counters
+        being put on an object" - "an artifact or creature you control" and
+        "you [get counters]", CR 122.1's "some kinds of counters are normally
+        placed on players rather than on objects" (poison, energy, experience
+        chief among them). Before this, `Player.add_counters` was called
+        directly with no `ReplaceableEvent` in between, so a replacement
+        effect written "If you would get one or more counters, ..." had
+        nothing to apply to and silently never ran.
+        """
+        with self._id_allocator_scope():
+            if isinstance(player, str):
+                player = self.player(player)
+            if amount <= 0:
+                return player.counter_count(kind)
+
+            event = ReplaceableEvent(
+                kind=EventKind.ADD_COUNTERS, player=player, counter_kind=kind, amount=amount
+            )
+            apply_replacements(self, event)
+            if event.amount <= 0:
+                return player.counter_count(kind)
+            return player.add_counters(kind, event.amount)
+
     def _emit_counters_put(self, permanent: CardState, kind: str, amount: int) -> None:
         """CR 122.6's generic "counters are put on this object" event.
 
@@ -10305,6 +10502,22 @@ class Game(EngineModel):
         """The shields that are neither used up nor expired (CR 615.3)."""
         return [shield for shield in self.prevention_shields if not shield.spent]
 
+    def create_next_time_draw_replacement(
+        self, replacement: NextTimeDrawReplacement
+    ) -> NextTimeDrawReplacement:
+        """Record a CR 614.1a "next time [player] would draw a card this
+        turn, instead ..." replacement, installed by a resolving ability
+        (Urabrask, Heretic Praetor's own second trigger).
+
+        The same division `create_prevention_shield` already draws for CR
+        615.1: creating the record *is* the effect; nothing else happens
+        when the ability resolves. `machines.replacement._next_time_draw_
+        replacement_effects` is what a later draw event actually consumes.
+        """
+        with self._id_allocator_scope():
+            self.next_time_draw_replacements.append(replacement)
+            return replacement
+
     def shield_applies(self, shield: PreventionShield, event: ReplaceableEvent) -> bool:
         """Whether this shield would prevent any of this damage (CR 615.7-615.9).
 
@@ -10940,14 +11153,10 @@ class Game(EngineModel):
                 # graveyard it lands in and wherever it came from - see
                 # `GraveyardArrival`'s own docstring for why this is a
                 # general record rather than a single-purpose counter.
-                self.graveyard_arrivals_this_turn.append(
-                    GraveyardArrival(
-                        player=self._owner_of(card_state).username,
-                        origin_zone=Zone.BATTLEFIELD if was_on_battlefield else origin,
-                        permanent_types=(
-                            left_battlefield_chars.types if was_on_battlefield else None
-                        ),
-                    )
+                self._record_graveyard_arrival(
+                    card_state,
+                    origin_zone=Zone.BATTLEFIELD if was_on_battlefield else origin,
+                    permanent_types=(left_battlefield_chars.types if was_on_battlefield else None),
                 )
             elif event.destination is Zone.EXILE:
                 card_state.move_to(Zone.EXILE)
@@ -10992,6 +11201,70 @@ class Game(EngineModel):
                     )
                 )
             return card_state
+
+    def _record_graveyard_arrival(
+        self,
+        card_state: CardState,
+        *,
+        origin_zone: Zone,
+        permanent_types: tuple[Type, ...] | None,
+    ) -> None:
+        """One ledger entry on `graveyard_arrivals_this_turn` (CR 400.6/400.3).
+
+        The single place every `GraveyardArrival` is actually built, so
+        `is_permanent_card` (CR 110.4a) is computed the same way regardless
+        of which of the four call sites reached it: `Game.put_into_graveyard`
+        (the main one), `Game.enter_the_battlefield`'s two branches where a
+        replacement effect (CR 614.6) redirects an entering permanent to a
+        graveyard instead, and `machines/keywords.discard`/`.dredge`, neither
+        of which goes through `put_into_graveyard` at all - see `Game.
+        descended`'s own docstring for why CR 700.11's "from anywhere" needs
+        every one of them fed.
+
+        `card_state.types` (not `permanent_types`) is what answers CR
+        110.4a's "permanent card" question - the front-face-safe, off-
+        battlefield read (`CardState.types`'s own docstring), a fixed
+        property of the card itself rather than of whatever it happened to
+        be while animated on the battlefield: a land earthbent into a
+        creature (CR 701.66a) that dies is already a permanent card for
+        being a land, and does not also need to have been a creature at the
+        time. This is why `is_permanent_card` is never derived from
+        `permanent_types`, which is `None` for an arrival that skipped the
+        battlefield and would otherwise silently undercount every discarded,
+        milled, or countered permanent card.
+        """
+        owner = card_state.owner
+        if owner is None:
+            return
+        self.graveyard_arrivals_this_turn.append(
+            GraveyardArrival(
+                player=owner,
+                origin_zone=origin_zone,
+                is_permanent_card=bool(_PERMANENT_TYPES.intersection(card_state.types)),
+                permanent_types=permanent_types,
+            )
+        )
+
+    def descended(self, username: str) -> bool:
+        """CR 700.11: whether `username` "has descended this turn" - a
+        permanent card was put into their graveyard from anywhere this turn.
+
+        Reads `cards_put_into_graveyard_this_turn(username, permanent_only=
+        True)` off `graveyard_arrivals_this_turn` - FRA S5's general ledger,
+        reconciled at merge in favour of a separate `permanent_cards_to_
+        graveyard_this_turn` running count the fu-events line of development
+        built independently for the identical CR 700.11 question, per
+        `CLAUDE.md`'s "keep one mechanism" rule.
+        """
+        return self.cards_put_into_graveyard_this_turn(username, permanent_only=True) > 0
+
+    def descend_count(self, username: str) -> int:
+        """CR 700.11: "the number of times [`username`] descended this
+        turn" - the number of permanent cards put into their graveyard from
+        anywhere this turn (CR 700.11's own count question, The Mycotyrant's
+        "X is the number of times you descended this turn"). See
+        `descended`'s own docstring for where this now reads from."""
+        return self.cards_put_into_graveyard_this_turn(username, permanent_only=True)
 
     def card_imprinted_on(self, permanent_id: UUID) -> CardState | None:
         """The card exiled *with* `permanent_id`, if any.
@@ -11559,6 +11832,7 @@ class Game(EngineModel):
                 player.username: dict(self.unspent_mana_of(player).floating)
                 for player in self.players_in_game
             },
+            active_player=self.turn.active_player if self.turn is not None else None,
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a
@@ -13992,6 +14266,25 @@ class Game(EngineModel):
                 and source.counter_count(Counter.TIME) > 0
             )
 
+        if _CONDITION_KICKED.fullmatch(text):
+            # CR 702.33d: "this spell" is the ability's own source. Reads the
+            # finalized `CastRecord`, which only exists once `Casting.cast()`
+            # completes - the right answer for anything asking after the
+            # fact, but *not* for a modal choice made mid-announcement
+            # (CR 601.2b), which is exactly what `Casting._alternative_mode_
+            # count` special-cases with its own live `self.kicked` and this
+            # method's `condition_override` instead of reaching here at all.
+            if source is None:
+                return None
+            record = self.cast_record_of(source)
+            return record is not None and record.kicked > 0
+
+        if _CONDITION_DESCENDED.fullmatch(text):
+            # CR 700.11, Molten Collapse's own "If you descended this turn,
+            # you may choose both instead." - the same running count
+            # `intervening_if_holds`'s "you descended this turn" reads.
+            return self.descended(controller)
+
         return None
 
     def modal_alternative_applies(
@@ -14001,6 +14294,8 @@ class Game(EngineModel):
         source_id: UUID | None,
         source_name: str,
         source: CardState | None = None,
+        *,
+        condition_override: bool | None = None,
     ) -> bool:
         """Whether a modal instruction's "If <condition>, [you may] choose N
         instead" raises its mode count right now (CR 700.2).
@@ -14011,15 +14306,25 @@ class Game(EngineModel):
         `ConditionalClauseNotice`: the larger count is a permission nobody
         checked, and granting it unchecked would let a spell do more than its
         caster is entitled to.
+
+        `condition_override`, when not `None`, is used in place of asking
+        `condition_holds` at all - `Casting._alternative_mode_count`'s own
+        "this spell was kicked" (CR 601.4) reads its still-in-progress
+        `self.kicked` this way, because `condition_holds` can only ever read
+        the finalized `CastRecord` a completed `cast()` writes, which does
+        not exist yet while modes are still being chosen.
         """
         condition = modal.alternative_condition
         if condition is None:
             return False
-        held = (
-            None
-            if modal.alternative_minimum is None
-            else self.condition_holds(controller, condition, source)
-        )
+        if condition_override is not None:
+            held: bool | None = condition_override
+        else:
+            held = (
+                None
+                if modal.alternative_minimum is None
+                else self.condition_holds(controller, condition, source)
+            )
         if held is None:
             notice = ConditionalClauseNotice(
                 source_id=source_id,

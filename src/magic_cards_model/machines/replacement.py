@@ -126,6 +126,7 @@ from ..models.zone import Zone
 from ..numbers import COUNT, MULTIPLIER, parse_count, parse_multiplier
 from ..snapshot import EngineModel
 from .abilities import keywords_in_lines
+from .casting import PlayAction
 from .combat import Keyword
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import ReflexiveExileCopiedCard
@@ -1797,6 +1798,32 @@ def _counter_amount_applies(
     return applies
 
 
+def _counter_amount_applies_to_player(kind: str | None) -> Applies:
+    """ "If you would get one or more [kind] counters, ..." - the player twin
+    of `_counter_amount_applies`. "You" is CR 201.5's own reference to
+    whoever controls the source printing the ability (its controller, not
+    necessarily the player the counters land on in general - every printing
+    of this shape in the pool is self-referential, "you" meaning the
+    ability's own controller, so that is the only shape read here).
+
+    `kind` `None` is "one or more counters" of any kind (Winding
+    Constrictor's own "you get" line); a named kind (Aether Refinery's "{E}")
+    is read the same way `_counter_amount_applies` reads a card-counter
+    replacement's own kind.
+    """
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
+            return False
+        if event.card is not None or event.player is None:
+            return False
+        if event.player.username != source.controller:
+            return False
+        return kind is None or (event.counter_kind or "").strip().lower() == kind
+
+    return applies
+
+
 def _fog_bank_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
     """ "Prevent all combat damage that would be dealt to and dealt by this creature."
 
@@ -2638,17 +2665,28 @@ def _compile_extra_token(effect: ReplacementEffect) -> CardReplacement | None:
 # effect") - so this compiler and `Game.add_counters` together are what make
 # Vizier stop Devoted Druid's own activation cost, not only a spell's.
 
+#: A counter kind word, as either shape oracle text prints one: a bare word
+#: ("+1/+1", "charge", "loyalty") or a mana-symbol kind written the way
+#: energy always is ("{E}").
+_COUNTER_KIND_WORD = r"(?:\{[^}]+\}|[+/\w-]+)"
+
 _COUNTER_AMOUNT_EVENT_RE = re.compile(
     r"^(?:an effect would put one or more counters on (?P<effect_subject>.+?)"
-    r"|one or more (?:(?P<kind>[+/\w-]+) )?counters would be put on (?P<subject>.+?))$",
+    rf"|one or more (?:(?P<kind>{_COUNTER_KIND_WORD}) )?counters would be put on (?P<subject>.+?)"
+    rf"|(?P<player_event>you would get one or more"
+    rf" (?:counters?|(?P<player_kind>{_COUNTER_KIND_WORD}))))$",
     re.IGNORECASE,
 )
 _COUNTER_AMOUNT_REPLACEMENT_RE = re.compile(
     rf"^(?:it puts (?P<it_mult>{MULTIPLIER}) that many of those counters on that permanent"
     rf"|(?:(?P<mult>{MULTIPLIER}) that many|that many(?: plus (?P<plus>{COUNT}))?)"
     r"(?: of each of those kinds of counters"
-    rf"| (?P<kind>[+/\w-]+) counters(?: (?P<op>plus|minus) (?P<n>{COUNT}))?)"
-    r" are put on (?:it|that creature|that permanent))$",
+    rf"| (?P<kind>{_COUNTER_KIND_WORD}) counters(?: (?P<op>plus|minus) (?P<n>{COUNT}))?)"
+    r" are put on (?:it|that creature|that permanent)"
+    rf"|you get (?:(?P<pmult>{MULTIPLIER}) that many|that many(?: plus (?P<pplus>{COUNT}))?)"
+    r"(?: of each of those kinds of counters"
+    rf"| (?P<pkind>{_COUNTER_KIND_WORD})(?: counters?)?"
+    rf"(?: (?P<pop>plus|minus) (?P<pn>{COUNT}))?)?)$",
     re.IGNORECASE,
 )
 #: "a creature you control", "an artifact or creature you control", "a permanent".
@@ -2669,18 +2707,47 @@ def _counter_subject_types(types_text: str) -> frozenset[Type] | None | bool:
 
 
 def _counter_amount(match: re.Match[str]) -> Apply | None:
-    """The multiplier or addend a counter replacement prints, or None."""
-    multiplier_text = match.group("it_mult") or match.group("mult")
+    """The multiplier or addend a counter replacement prints, or None.
+
+    `p`-prefixed groups are `_COUNTER_AMOUNT_REPLACEMENT_RE`'s player-counter
+    branch ("you get twice that many ..."); the rest are its card-counter
+    branch ("... are put on it") - exactly one set is ever populated for a
+    given match, so reading both costs nothing.
+    """
+    multiplier_text = match.group("it_mult") or match.group("mult") or match.group("pmult")
     if multiplier_text is not None:
         multiplier = parse_multiplier(multiplier_text)
         return None if multiplier is None else _scale_amount(multiplier=multiplier)
-    addend_text = match.group("plus") or match.group("n")
+    addend_text = (
+        match.group("plus") or match.group("n") or match.group("pplus") or match.group("pn")
+    )
     if addend_text is None:
         return None  # a bare "that many" replaces nothing
     addend = parse_count(addend_text)
     if addend is None:
         return None
-    return _scale_amount(addend=-addend if match.group("op") == "minus" else addend)
+    op = match.group("op") or match.group("pop")
+    return _scale_amount(addend=-addend if op == "minus" else addend)
+
+
+def _normalized_counter_kind(raw: str | None) -> str | None:
+    """A matched kind group, lower-cased, or `None` for "no kind at all" -
+    which is both an empty match and the bare word "counters"/"counter"
+    itself (`_COUNTER_KIND_WORD` matches that word too, since it is not
+    distinguishable from a kind name by shape alone; "you get twice that many
+    counters instead" names no kind, the same as "... of each of those kinds
+    of counters").
+
+    CR 107.14: "The energy symbol is {E}. It represents one energy counter" -
+    `{e}` is normalised to `"energy"`, `Counter.ENERGY`'s own value and what
+    `Game.add_player_counters` actually stamps `ReplaceableEvent.counter_kind`
+    with, so Aether Refinery's own "one or more {E} (energy counters)" reads
+    the same kind a caller passing `Counter.ENERGY` produces.
+    """
+    lowered = (raw or "").strip().lower()
+    if lowered == "{e}":
+        return "energy"
+    return None if lowered in ("", "counter", "counters") else lowered
 
 
 def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | None:
@@ -2694,6 +2761,33 @@ def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | Non
     )
     if replacement_match is None:
         return None
+
+    if event_match.group("player_event") is not None:
+        # "If you would get one or more [kind] counters, ..." - CR 201.5's
+        # "you" is the ability's own controller (see
+        # `_counter_amount_applies_to_player`'s docstring); there is no card
+        # subject or type filter to read at all.
+        event_kind = _normalized_counter_kind(event_match.group("player_kind"))
+        is_player_replacement = (
+            replacement_match.group("pmult") is not None
+            or replacement_match.group("pplus") is not None
+            or replacement_match.group("pkind") is not None
+            or "you get" in (effect.replacement or "").strip().lower()
+        )
+        if not is_player_replacement:
+            return None  # the card-counter branch matched instead - wrong shape
+        pkind = _normalized_counter_kind(replacement_match.group("pkind"))
+        if pkind != event_kind:
+            return None
+        apply = _counter_amount(replacement_match)
+        if apply is None:
+            return None
+        return CardReplacement(
+            label=effect.text,
+            applies=_counter_amount_applies_to_player(event_kind),
+            apply=apply,
+        )
+
     subject_match = _COUNTER_SUBJECT_RE.match(
         (event_match.group("effect_subject") or event_match.group("subject")).lower()
     )
@@ -4529,9 +4623,9 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
-    from .keywords import has_rebound  # imported here: casting imports this module's siblings
+    from .keywords import has_rebound_now  # imported here: casting imports this module's siblings
 
-    if has_rebound(card.card) and record.origin_zone is Zone.HAND and event.resolving:
+    if has_rebound_now(card) and record.origin_zone is Zone.HAND and event.resolving:
         # CR 702.88a: "If this spell was cast from your hand, instead of
         # putting it into your graveyard as it resolves, exile it." A spell
         # cast from anywhere else - most pointedly from exile by its own
@@ -4856,6 +4950,73 @@ def draw_redirection_for(text: str, controller: str, target: str | None) -> Draw
     )
 
 
+class DrawReplacementKind(StrEnum):
+    """The shapes a `NextTimeDrawReplacement` can take. One variant today,
+    the same open-ended enum pattern `ShieldKind` already gives CR 615.8's
+    "next time [a source] would deal damage" shield - a new variant is a
+    schema bump, not a new stored type, the next time this pool needs one."""
+
+    #: "Instead [player] exiles the top card of their library[. They may
+    #: play it this turn.]" - Urabrask, Heretic Praetor's own second
+    #: trigger.
+    EXILE_TOP_CARD = "exile_top_card"
+
+
+class NextTimeDrawReplacement(EngineModel):
+    """One player's *next* draw this turn, replaced with something else
+    (CR 614.1a's "the next time ... would ..., instead ..." shape), rather
+    than every draw for a duration the way `DrawRedirection` reads Plagiarize's
+    "until end of turn, if ... would draw ..., instead ...".
+
+    Urabrask, Heretic Praetor prints the only one in this pool: "At the
+    beginning of each opponent's upkeep, the next time they would draw a
+    card this turn, instead they exile the top card of their library. They
+    may play it this turn." The trigger's own resolution installs this
+    record; nothing else happens when it resolves - the same division
+    `Game.create_prevention_shield` already draws for CR 615.8 ("creating the
+    shield *is* the effect").
+
+    Stored on `Game.next_time_draw_replacements` for the same reason
+    `Game.prevention_shields` and `Game.draw_redirections` are stored rather
+    than closed over: the ability that created it is off the stack by the
+    time a future draw event checks for it, and CR 514.2's cleanup step needs
+    an unused one to expire with every other "this turn" effect.
+    """
+
+    kind: DrawReplacementKind
+    label: str
+    """What the effect says, for the event trace."""
+
+    controller: str
+    """Who created it - `ApplicableEffect` needs a controller for CR 616.1's
+    ordering, and the ability that made this may be off the stack by the time
+    it fires."""
+
+    affected: str
+    """The player whose draw is replaced - Urabrask's own "they"."""
+
+    grants_play_permission: bool = False
+    """"They may play it this turn." - CR 601.3, via `Game.
+    grant_play_permission`, the same primitive Ragavan, Nimble Pilferer and
+    Emry, Lurker of the Loch already use."""
+
+    action: PlayAction = PlayAction.PLAY
+    """CR 601.1a's "play"/"cast" distinction, read off the printed permission
+    sentence - only meaningful when `grants_play_permission` is set."""
+
+    pays_mana_cost: bool = True
+    """CR 118.9: whether the permission includes "without paying its mana
+    cost" - only meaningful when `grants_play_permission` is set."""
+
+    spent: bool = False
+    """CR 614.5: applied at most once. Consumed on the very next draw event
+    for `affected`, however that draw happens."""
+
+    until_end_of_turn: bool = True
+    """CR 514.2 ends an unused one in the cleanup step, alongside every other
+    "this turn" effect."""
+
+
 def _finality_counter_effects(event: ReplaceableEvent) -> list[ApplicableEffect]:
     """A finality counter's replacement effect (CR 122.1h): "One or more
     finality counters on a permanent create a single replacement effect that
@@ -4928,6 +5089,67 @@ def _draw_redirection_effects(game: "Game", event: ReplaceableEvent) -> list[App
     ]
 
 
+def _next_time_draw_replacement_effects(
+    game: "Game", event: ReplaceableEvent
+) -> list[ApplicableEffect]:
+    """The unspent "next time [player] would draw a card this turn, instead
+    ..." replacements waiting on this draw event (CR 614.1a, CR 614.5).
+
+    Sourceless, like `_draw_redirection_effects`: the ability that installed
+    one may be off the stack, and CR 614.6 does not care. Unlike a
+    `DrawRedirection`, this fires at most once - `replacement.spent` is set
+    inside `apply` rather than the record being removed from `Game.
+    next_time_draw_replacements`, so a player ordering several replaceable
+    effects on the same draw (CR 616.1) still sees a consistent list while
+    they choose, and the spent record is what CR 514.2's cleanup step (and
+    every later draw this turn) then skips.
+    """
+    if event.kind is not EventKind.DRAW or event.player is None:
+        return []
+
+    def applier(replacement: NextTimeDrawReplacement) -> Apply:
+        def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+            replacement.spent = True
+            # "instead they exile the top card of their library" - the
+            # event's own draw is replaced down to nothing (CR 603.2g), and a
+            # *different* zone change happens in its place.
+            event.amount = 0
+            player = game.player(replacement.affected)
+            if not player.library:
+                return
+            if replacement.kind is DrawReplacementKind.EXILE_TOP_CARD:
+                card = game.exile_permanent(player.library[0])
+                if replacement.grants_play_permission:
+                    # "They may play it this turn." (CR 601.3), the same
+                    # primitive Ragavan, Nimble Pilferer's own "you may cast
+                    # that card" already grants.
+                    game.grant_play_permission(
+                        card,
+                        replacement.affected,
+                        action=replacement.action,
+                        pays_mana_cost=replacement.pays_mana_cost,
+                        source_name=replacement.label,
+                        rule="CR 601.3",
+                        zone=card.zone,
+                    )
+
+        return apply
+
+    return [
+        ApplicableEffect(
+            key=f"next-time-draw-replacement:{index}",
+            source=None,
+            label=replacement.label,
+            apply=applier(replacement),
+            controller_username=replacement.controller,
+        )
+        for index, replacement in enumerate(game.next_time_draw_replacements)
+        if not replacement.spent
+        and replacement.affected == event.player.username
+        and event.amount > 0
+    ]
+
+
 def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """Every effect that would modify this event as it stands (CR 614.1, 616.1).
 
@@ -4946,6 +5168,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     found.extend(_regeneration_effects(game, event))
     found.extend(_finality_counter_effects(event))
     found.extend(_draw_redirection_effects(game, event))
+    found.extend(_next_time_draw_replacement_effects(game, event))
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
         entering = event.card
