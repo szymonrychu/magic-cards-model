@@ -20297,6 +20297,96 @@ def _merge_look_top_split_hand_graveyard_clauses(
     return 3, effect
 
 
+#: "put all <quality> cards revealed this way into your hand" - Wrenn and
+#: Seven's own +1 ("land cards"), Mulch (the same "land cards" sentence,
+#: word for word, off-pool), Merfolk Wayfinder ("Island cards"), Lair Delve
+#: ("creature and land cards"). Every matching card, mandatorily - unlike
+#: `_MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE`'s "you may put a
+#: `<quality>` card", which is CR 608.2d's optional pick of *at most one*.
+_PUT_ALL_QUALITY_REVEALED_INTO_HAND_RE = re.compile(
+    r"^put all (?P<quality>.+?) cards? revealed this way into your hand$", re.IGNORECASE
+)
+
+
+def _merge_reveal_top_put_all_quality_to_hand_rest_elsewhere_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Wrenn and Seven's whole +1: "Reveal the top four cards of your
+    library. Put all land cards revealed this way into your hand and the
+    rest into your graveyard." - `_CLAUSE_SEPARATOR`'s own "and" cuts the
+    second sentence into two clauses the same way `_merge_look_top_split_
+    hand_graveyard_clauses` right above already reads its own pair back
+    together, which is why this reuses that function's own `_THE_OTHER_
+    INTO_A_DESTINATION_RE` for the tail rather than a second copy of it -
+    Merfolk Wayfinder's "the rest on the bottom of your library in any
+    order" is the identical shape with a different destination, not a
+    different mechanic.
+
+    CR 701.20a/b: every one of the `count` cards is revealed - shown to all
+    players - while still in the library, before any of them move; which
+    ones qualify for hand is CR 608.2c's own fixed instruction, not a
+    choice, so nothing is asked about which cards go where, only (for the
+    "on the bottom" destination) what order the rest keep.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    reveal_match = _REVEAL_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if reveal_match is None:
+        return None
+    count = parse_count(reveal_match.group("count"))
+    if count is None:
+        return None
+    put_match = _PUT_ALL_QUALITY_REVEALED_INTO_HAND_RE.fullmatch(clauses[index + 1].strip())
+    if put_match is None:
+        return None
+    quality = put_match.group("quality").strip()
+    if not _search_quality_is_readable(quality):
+        return None
+    matches = _quality_matcher(quality)
+    other = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(clauses[index + 2].strip())
+    if other is None:
+        return None
+    to_bottom = other.group("destination").lower().startswith("on the bottom")
+    randomised = other.group("random") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        source_id = source_id_of(stack_object)
+        revealed = list(player.library[:count])
+        for state in revealed:
+            game.reveal(state, source=source)
+        to_hand = [state for state in revealed if matches(state)]
+        rest = [state for state in revealed if state not in to_hand]
+        for state in to_hand:
+            player.add(state, Zone.HAND)
+        if not rest:
+            return
+        if to_bottom:
+            if randomised:
+                rng = Random(  # noqa: S311
+                    f"{game.shuffle_seed}:{game.shuffles_performed}:reveal-top-{count}-bottom"
+                )
+                rng.shuffle(rest)
+                game.shuffles_performed += 1
+            else:
+                # CR 401.4: "in any order" is the player's own arrangement.
+                rest = game.ask_library_bottom_order(
+                    player, rest, source=source, source_id=source_id
+                )
+            # Under every card already there (CR 401.2), each revealed card
+            # once (CR 400.7).
+            player.library.extend(rest)
+            player.note_library_changed(placed=rest)
+        else:
+            for state in rest:
+                game.put_into_graveyard(state)
+
+    return 3, effect
+
+
 #: Expressive Iteration's own second sentence, split by `_CLAUSE_SEPARATOR`'s
 #: single "and" into two raw clauses rather than three (no "then"/"and"
 #: separates the first two destinations, only a comma) - "Put one of them
@@ -21686,6 +21776,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_split_hand_graveyard_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_reveal_top_put_all_quality_to_hand_rest_elsewhere_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
