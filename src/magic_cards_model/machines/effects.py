@@ -8744,6 +8744,60 @@ _EXILE_ALL_GRAVEYARDS_RE = re.compile(r"^exile all graveyards\.?$", re.IGNORECAS
 _EXILE_EACH_OPPONENTS_GRAVEYARD_RE = re.compile(
     r"^exile each opponent'?s graveyards?\.?$", re.IGNORECASE
 )
+#: "Exile all but the bottom card of each opponent's library." (Jace,
+#: Reality Sculptor's own `0`) and "Exile all but the bottom card of target
+#: player's library." (Nicol Bolas, the Arisen's `-12`, off-set) - the same
+#: instruction over two different subjects, an unscoped group ("each
+#: opponent's") and CR 115.1's ordinary player target ("target player's"),
+#: the identical split `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`'s own `who`
+#: reads between "opponent" and "player". `<n>` is optional (CR 107.3f's
+#: bare "the bottom card" prints no number at all) and defaults to one.
+_EXILE_ALL_BUT_BOTTOM_OF_LIBRARY_RE = re.compile(
+    rf"^exile all but the bottom (?:{count_pattern('n')} )?cards? of "
+    r"(?P<who>each opponent'?s|target player'?s) librar(?:y|ies)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_all_but_bottom_of_library_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EXILE_ALL_BUT_BOTTOM_OF_LIBRARY_RE`'s shape.
+
+    CR 609.3: a library holding `n` or fewer cards is left untouched - there
+    is nothing above the bottom `n` to exile. Read off `player.library`
+    (`CardState.zone_change_stamp`'s own bottom-is-last ordering, the same
+    "library[0] is the top" convention every mill/look-at-top reader in this
+    module already shares), and moved as one `Game.exile_cards` batch so
+    CR 603.2c's "one event, however many cards" trigger shape is preserved.
+    """
+    match = _EXILE_ALL_BUT_BOTTOM_OF_LIBRARY_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    n = parse_count(match.group("n")) if match.group("n") else 1
+    if n is None or n < 0:
+        return None
+    targeted = match.group("who").lower().startswith("target")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if targeted:
+            players = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+        else:
+            controller = game.controller_of(stack_object).username
+            players = [player for player in game.players_in_game if player.username != controller]
+        for player in players:
+            library = list(player.library)
+            if len(library) <= n:
+                continue
+            game.exile_cards(library[: len(library) - n])
+
+    return effect
+
+
 _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
     r"^exile all cards that are (?P<quality>.+?) from all graveyards\.?$", re.IGNORECASE
 )
@@ -10447,6 +10501,12 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
 
     if _EXILE_EACH_OPPONENTS_GRAVEYARD_RE.fullmatch(clause):
         return exile_each_opponents_graveyard  # type: ignore[return-value]
+
+    exile_all_but_bottom = _parse_exile_all_but_bottom_of_library_clause(
+        clause, for_spell=for_spell
+    )
+    if exile_all_but_bottom is not None:
+        return exile_all_but_bottom
 
     if match := _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE.fullmatch(clause):
         matches = _graveyard_exile_quality_matcher(match.group("quality"))
@@ -12982,8 +13042,14 @@ def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | No
 #: chooses among their own graveyard's matching cards as the effect resolves
 #: (CR 608.2d). An optional "tapped" and an optional "with N `<kind>`
 #: counter(s) on it/them" ride along.
+#: "another" stands in for `{COUNT}`'s own "a"/"an" here - CR 400.7's "an
+#: other" object, not a real quantity word `parse_count` reads - so Rise of
+#: the Witch-king's own no-target "you may return another permanent card
+#: from your graveyard to the battlefield" is one instance of this same
+#: templated CR 608.2d choice, not a different shape.
 _RETURN_CARDS_FROM_YOUR_GRAVEYARD_RE = re.compile(
-    rf"^return (?P<n>{COUNT}) (?P<quality>[a-z ,]+?) cards? from your graveyard to the battlefield"
+    rf"^(?P<may>you may )?return (?P<n>{COUNT}|another) (?P<quality>[a-z ,]+?) cards? "
+    r"from your graveyard to the battlefield"
     r"(?P<tapped> tapped)?"
     rf"(?: with (?P<counter_n>{COUNT}) (?P<counter>[a-z0-9+/-]+) counters? on (?:it|them))?\.?$",
     re.IGNORECASE,
@@ -12999,11 +13065,18 @@ def _parse_return_cards_from_your_graveyard_clause(
     what it has. The counters are placed as each permanent arrives, the way
     Neoform's "with an additional +1/+1 counter on it" already is, so a
     finality counter (CR 122.1h) is on it from then on.
+
+    An optional leading "you may" is CR 608.2d's own choice, asked with
+    `affirmative_is_legal` set to whether the graveyard actually holds a
+    matching card right now - the same "no impossible option" shape
+    `_parse_conditional_sacrifice_clause`'s own "you may sacrifice" already
+    asks - rather than a bare CHOOSE_CARDS question with zero as a silent
+    "no".
     """
     match = _RETURN_CARDS_FROM_YOUR_GRAVEYARD_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    count = parse_count(match.group("n"))
+    count = 1 if match.group("n").lower() == "another" else parse_count(match.group("n"))
     if count is None or count < 1:
         return None
     matches = _quality_matcher(match.group("quality"))
@@ -13012,6 +13085,7 @@ def _parse_return_cards_from_your_graveyard_clause(
     if counter_kind and not counter_amount:
         return None
     tapped = match.group("tapped") is not None
+    may = match.group("may") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -13020,6 +13094,23 @@ def _parse_return_cards_from_your_graveyard_clause(
         wanted = min(count, len(candidates))
         if wanted <= 0:
             return
+        if may:
+            decision = game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=player.username,
+                    prompt=(
+                        "return a card from your graveyard to the battlefield"
+                        if wanted == 1
+                        else f"return {wanted} cards from your graveyard to the battlefield"
+                    ),
+                    source=source,
+                    affirmative_is_legal=True,
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            if not decision:
+                return
         chosen_ids = game.ask(
             Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
@@ -14214,6 +14305,62 @@ def _parse_each_opponent_choose_one_of_each_type_then_sacrifice(
     return effect
 
 
+#: "Until your next turn, whenever a creature attacks you or a planeswalker
+#: you control, it gets `<power>`/`<toughness>` until end of turn." - Jace,
+#: Reality Sculptor's own `-3` and Tamiyo Meets the Story Circle's chapter I
+#: (off-set: the identical sentence, "-2/-0" in place of "-5/-0", on a Saga
+#: chapter rather than a loyalty ability - proof this is CR 603.7's delayed
+#: trigger mechanism, not something specific to a planeswalker's own cost).
+#: CR 508.3d/CR 306.6's compound defender ("you" the player, or a
+#: planeswalker you control) is `DelayedTrigger.defending_controller_only`,
+#: read off `GameEvent.defender_controller` at match time - see that field's
+#: own docstring in `machines/triggers.py` for why it has to be resolved at
+#: emission rather than here.
+_UNTIL_YOUR_NEXT_TURN_ATTACK_PUMP_RE = re.compile(
+    r"^until your next turn, whenever a creature attacks you or a planeswalker "
+    r"you control, it gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_until_your_next_turn_attack_pump_clause(text: str) -> AbilityEffect | None:
+    """`_UNTIL_YOUR_NEXT_TURN_ATTACK_PUMP_RE`'s shape.
+
+    A delayed triggered ability (CR 603.7) with two independent durations at
+    once: the *watch* itself lasts until the creating ability's own
+    controller's next turn (CR 800.4m, `expires_end_of_next_turn`), firing on
+    every matching attack until then (`remaining=None`); each pump it grants,
+    once fired, lasts only until the ordinary end of that turn
+    (`PumpEventSubject`'s own `Duration.UNTIL_END_OF_TURN`) - the same two-
+    tier duration CR 800.4m itself describes ("that turn" bounding when the
+    ability can still trigger, not how long any one firing's own effect
+    lasts).
+    """
+    whole = " ".join(text.strip().split())
+    match = _UNTIL_YOUR_NEXT_TURN_ATTACK_PUMP_RE.fullmatch(whole)
+    if match is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=whole,
+                event=TriggerEvent.ATTACKS,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                remaining=None,
+                expires_end_of_next_turn=True,
+                defending_controller_only=True,
+                effect=PumpEventSubject(power=power, toughness=toughness),
+            )
+        )
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -14302,6 +14449,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     casting_rule_whole = parse_casting_rule_clause(effect_text, for_spell=False)
     if casting_rule_whole is not None:
         return casting_rule_whole
+    until_your_next_turn_attack_pump = _parse_until_your_next_turn_attack_pump_clause(effect_text)
+    if until_your_next_turn_attack_pump is not None:
+        return until_your_next_turn_attack_pump
     ante_self = _parse_ante_self_if_you_do_clause(effect_text)
     if ante_self is not None:
         return ante_self
@@ -17422,6 +17572,21 @@ _RIDER_COUNTER_IF_TYPE_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "That creature is a `<creature type>` in addition to its other types." -
+#: Sorin, Vengeful Bloodlord's own `-X` rider, after returning a creature
+#: card from a graveyard to the battlefield. CR 205.1b: "in addition to its
+#: other types" is the phrase that keeps every type the object already has
+#: rather than replacing them (unlike a bare "becomes a `<type>`"), and
+#: CR 205.3m lists creature types as CR 205's own subtype vocabulary, so
+#: `<type>` is read as a subtype, not a card type - `add_subtype`, not
+#: `add_type`. No stated duration, so this is CR 611.3b's ordinary lasting
+#: grant (`Duration.INDEFINITE`), the same choice `_amass` already makes for
+#: an Army token's own name-becomes-subtype line.
+_RIDER_BECOMES_TYPE_IN_ADDITION_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} is an? (?P<type>[A-Za-z][a-z]*) in addition to its other types$",
+    re.IGNORECASE,
+)
+
 
 def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
     """A rider sentence read as something to do to the objects its antecedent
@@ -17573,6 +17738,36 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
                     game.add_counters(referent, kind, amount)
 
         return put_counters_if_type
+
+    if match := _RIDER_BECOMES_TYPE_IN_ADDITION_RE.fullmatch(rider):
+        subtype = match.group("type").strip().capitalize()
+
+        def becomes_type_in_addition(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            effects = game.continuous_effects
+            for referent in referents:
+                if referent.zone is not Zone.BATTLEFIELD:
+                    continue
+                if any(
+                    existing.lower() == subtype.lower()
+                    for existing in game.characteristics_of(referent).subtypes
+                ):
+                    continue
+                effects.add(
+                    ContinuousEffect(
+                        description=(
+                            f"{referent.name} is a {subtype} in addition to its other types"
+                        ),
+                        layer=Layer.TYPE,
+                        timestamp=effects.tick(),
+                        duration=Duration.INDEFINITE,
+                        selector=only_this_incarnation(referent, referent.zone_change_stamp),
+                        modification=add_subtype(subtype),
+                    )
+                )
+
+        return becomes_type_in_addition
 
     return None
 
@@ -27480,6 +27675,23 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if grant_then_return_front_face is not None:
         return [grant_then_return_front_face]
+    each_sacrifices_then_conditional = _parse_each_sacrifices_then_conditional_whole_text(
+        text, for_spell=for_spell
+    )
+    if each_sacrifices_then_conditional is not None:
+        return [each_sacrifices_then_conditional]
+    each_discards_then_draw_per_shortfall = (
+        _parse_each_opponent_discards_then_draw_per_shortfall_whole_text(text, for_spell=for_spell)
+    )
+    if each_discards_then_draw_per_shortfall is not None:
+        return [each_discards_then_draw_per_shortfall]
+    each_discards_then_shortfall_loses_life = (
+        _parse_each_opponent_discards_then_shortfall_loses_life_whole_text(
+            text, for_spell=for_spell
+        )
+    )
+    if each_discards_then_shortfall_loses_life is not None:
+        return [each_discards_then_shortfall_loses_life]
     if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(" ".join(text.strip().split())):
         # Read whole for the same reason the two above are: Echoing Courage's
         # subject, "Target creature and all other creatures with the same name
@@ -29514,6 +29726,269 @@ def _parse_each_sacrifices_of_their_choice_clause(clause: str) -> TargetedClause
         for permanent in chosen:
             if permanent.zone is Zone.BATTLEFIELD:
                 game.sacrifice(permanent)
+
+    return effect
+
+
+#: "Each `<player|opponent>` sacrifices `<n>` `<description>` of their
+#: choice. If you sacrificed `<description>` this way, `<consequence>`." -
+#: Garruk, Veiled Butcher's own `-2`: "Each player sacrifices a creature of
+#: their choice. If you sacrificed a creature this way, create a 4/4 green
+#: Beast creature token with trample." CR 608.2c's "this way" ties the
+#: second sentence to the first's own outcome, but unlike Empower Jace's
+#: "exiled this way" (which counts an X for a magnitude), the count that
+#: matters here is binary and per-player: did *this* ability's own
+#: controller - "you" - actually part with a matching permanent, which they
+#: do not when they control none. CR 101.4's APNAP order and CR 608.2d's
+#: "no impossible choice" are both inherited from `_EACH_SACRIFICES_OF_
+#: THEIR_CHOICE_RE`'s own reading of the antecedent; this is that same
+#: antecedent with the rider read off the controller's own share of it,
+#: rather than a second, independent copy of the sacrifice logic.
+_EACH_SACRIFICES_THEN_CONDITIONAL_RE = re.compile(
+    rf"^each (?P<who>opponent|player) sacrifices (?P<n>{COUNT}) (?P<description>.+?) "
+    r"of their choice(?P<tail> with [^.]+?)?\.\s*"
+    rf"if you sacrificed (?:a|an|{COUNT}) [^.]+? this way,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_each_sacrifices_then_conditional_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_SACRIFICES_THEN_CONDITIONAL_RE`'s shape; see the banner above.
+
+    Read whole, ahead of `_prepare_effect_clauses`'s ordinary sentence split,
+    the same reason every other two-sentence "this way"/"if you do" shape in
+    this module is: the second sentence is not an independent instruction, it
+    is CR 608.2c's rider on the first, and the per-clause dispatcher has no
+    notion of that relationship.
+    """
+    match = _EACH_SACRIFICES_THEN_CONDITIONAL_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    description = match.group("description").strip()
+    if match.group("tail") is not None:
+        description = f"{description}{match.group('tail')}"
+    requirement = permanent_description(description)
+    if requirement is None or count is None or count < 1:
+        return None
+    opponents_only = match.group("who").lower() == "opponent"
+    wanted_words = with_indefinite_article(description) if count == 1 else f"{count} {description}"
+    consequence_text = match.group("consequence").strip()
+    consequence_clause = (
+        parse_mixed_effect_for_spell(consequence_text)  # type: ignore[assignment]
+        if for_spell
+        else parse_mixed_effect(consequence_text)
+    )
+    if consequence_clause is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        controller_sacrificed = False
+        for player in _players_in_apnap_order(game):
+            if opponents_only and player.username == controller:
+                continue
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if requirement.rejects(permanent, player.username, game) is None
+            ]
+            if len(candidates) <= count:
+                chosen = candidates
+            else:
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"sacrifice {wanted_words}",
+                        source=source_name,
+                        amount=count,
+                        cards=tuple(permanent.id for permanent in candidates),
+                        source_id=source_id_of(stack_object),
+                    )
+                )
+                by_id = {permanent.id: permanent for permanent in candidates}
+                chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+            for permanent in chosen:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.sacrifice(permanent)
+                    if player.username == controller:
+                        controller_sacrificed = True
+        if controller_sacrificed:
+            consequence_clause(game, stack_object)  # type: ignore[arg-type]
+
+    return effect
+
+
+#: "Each opponent discards `<n>` cards. For each opponent who didn't discard
+#: `<n>` nonland cards this way, you draw a card." - Garruk, Veiled Butcher's
+#: own `-3`. CR 701.9b's discard is each opponent's own choice, and CR 609.3
+#: still lets a hand shorter than `<n>` discard fewer than `<n>` cards - both
+#: of which are exactly why "didn't discard `<n>` nonland cards" is a real,
+#: per-opponent shortfall rather than a fixed penalty: an opponent with two
+#: lands and a Bolt discards Bolt plus one land and still falls one nonland
+#: short, the same as an opponent with only one card in hand.
+def _each_opponent_discards_and_count_shortfalls(
+    game: "Game",
+    stack_object: "StackObject",
+    *,
+    discard_n: int,
+    nonland_n: int,
+    source_name: str,
+) -> list[Player]:
+    """CR 701.9b: each opponent discards `discard_n` cards of their own
+    choice (CR 609.3: a shorter hand discards what it has), then reports
+    which opponents fell short of `nonland_n` nonland cards among what they
+    actually discarded - the shared half of Garruk, Veiled Butcher's own
+    `-3` ("For each opponent who didn't discard two nonland cards this way,
+    you draw a card.") and Kroxa, Titan of Death's Hunger's identically
+    shaped antecedent ("... then each opponent who didn't discard a nonland
+    card this way loses 3 life."). Only the *consequence* differs between
+    the two - a controller-side count-of-shortfalls draw for Garruk, a
+    per-shortfall-player life loss for Kroxa - so it is each caller's own
+    small wrapper, not this shared antecedent, that reads differently.
+
+    Every opponent discards before any shortfall is judged: nothing any one
+    opponent sees changes what another may discard, so there is no CR 101.4
+    ordering question here, only CR 608.2c's "this way" scoping the second
+    half to what the first actually put into a graveyard.
+    """
+    controller_username = game.controller_of(stack_object).username
+    shortfall_players: list[Player] = []
+    for player in _players_in_apnap_order(game):
+        if player.username == controller_username:
+            continue
+        hand = list(player.hand)
+        amount = min(discard_n, len(hand))
+        if amount <= 0:
+            shortfall_players.append(player)
+            continue
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose {amount} card(s) to discard",
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                amount=amount,
+                cards=tuple(state.id for state in reversed(hand)),
+            )
+        )
+        by_id = {state.id: state for state in hand}
+        discarded = [by_id[card_id] for card_id in chosen_ids]
+        game.discard_cards(player.username, discarded, source=source_name)
+        nonlands = sum(1 for state in discarded if not state.card.is_land)
+        if nonlands < nonland_n:
+            shortfall_players.append(player)
+    return shortfall_players
+
+
+_EACH_OPPONENT_DISCARDS_THEN_DRAW_PER_SHORTFALL_RE = re.compile(
+    rf"^each opponent discards {count_pattern('discard_n')} cards?\.\s*"
+    rf"for each opponent who didn'?t discard {count_pattern('nonland_n')} nonland cards? "
+    r"this way, you draw a card\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_opponent_discards_then_draw_per_shortfall_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_OPPONENT_DISCARDS_THEN_DRAW_PER_SHORTFALL_RE`'s shape - Garruk,
+    Veiled Butcher's own `-3`. Read whole, the same "this way" reason every
+    other two-sentence rider in this module is: the second sentence counts a
+    fact about the first sentence's own outcome, one draw per opponent who
+    fell short, not an independent instruction.
+    """
+    match = _EACH_OPPONENT_DISCARDS_THEN_DRAW_PER_SHORTFALL_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    discard_n = parse_count(match.group("discard_n"))
+    nonland_n = parse_count(match.group("nonland_n"))
+    if discard_n is None or discard_n < 1 or nonland_n is None or nonland_n < 1:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller_username = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        shortfalls = _each_opponent_discards_and_count_shortfalls(
+            game,
+            stack_object,
+            discard_n=discard_n,
+            nonland_n=nonland_n,
+            source_name=source_name,
+        )
+        if shortfalls:
+            game.draw_cards(game.player(controller_username), len(shortfalls))
+
+    return effect
+
+
+#: "Each opponent discards `<n>` card(s), then each opponent who didn't
+#: discard `<n>` nonland card(s) this way loses `<m>` life." - Kroxa, Titan
+#: of Death's Hunger's own enters-or-attacks trigger. The same antecedent as
+#: Garruk, Veiled Butcher's `-3` (`_each_opponent_discards_and_count_
+#: shortfalls`), joined with "then" rather than a new sentence, and the
+#: consequence lands on each shortfall *opponent themselves* ("loses N
+#: life") rather than on the ability's controller.
+_EACH_OPPONENT_DISCARDS_THEN_SHORTFALL_LOSES_LIFE_RE = re.compile(
+    rf"^each opponent discards {count_pattern('discard_n')} cards?,?\s*then each opponent who "
+    rf"did(?:n'?t|\s+not) discard {count_pattern('nonland_n')} nonland cards? this way loses "
+    rf"{count_pattern('life_n')} life\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_opponent_discards_then_shortfall_loses_life_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_OPPONENT_DISCARDS_THEN_SHORTFALL_LOSES_LIFE_RE`'s shape."""
+    match = _EACH_OPPONENT_DISCARDS_THEN_SHORTFALL_LOSES_LIFE_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    discard_n = parse_count(match.group("discard_n"))
+    nonland_n = parse_count(match.group("nonland_n"))
+    life_n = parse_count(match.group("life_n"))
+    if (
+        discard_n is None
+        or discard_n < 1
+        or nonland_n is None
+        or nonland_n < 1
+        or life_n is None
+        or life_n < 1
+    ):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        shortfalls = _each_opponent_discards_and_count_shortfalls(
+            game,
+            stack_object,
+            discard_n=discard_n,
+            nonland_n=nonland_n,
+            source_name=source_name,
+        )
+        for player in shortfalls:
+            player.lose_life(life_n)
 
     return effect
 

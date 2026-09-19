@@ -118,19 +118,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 4913,
+  "edhrec_rank": 4927,
   "preview": {
     "source": "Noxious",
     "source_uri": "https://twitter.com/coL_noxious/status/1214271419682607104",
     "previewed_at": "2020-01-06"
   },
   "prices": {
-    "usd": "2.91",
-    "usd_foil": "3.13",
+    "usd": "3.15",
+    "usd_foil": "3.10",
     "usd_etched": null,
-    "eur": "2.80",
-    "eur_foil": "4.32",
-    "tix": "0.35"
+    "eur": "3.09",
+    "eur_foil": "4.12",
+    "tix": "0.31"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=476472&printed=false",
