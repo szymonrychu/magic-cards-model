@@ -33,6 +33,7 @@ from scripts.sweep_pool import (
     _effect_matched_inside_quotes,
     _intended_token_requirement,
     _modal_category,
+    _modal_trigger_category,
     _spell_faces,
     _worse,
     _x_candidates,
@@ -294,6 +295,56 @@ def test_an_ability_word_is_not_reported_as_an_unexecuted_keyword(name, word):
     `_parse_undergrowth_pump_and_fight_clause`). Reporting them as keywords
     with no execution path produced seven false gap findings across four deck
     reports in one day.
+    """
+    assert word not in ignored_keywords(card(name))
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Barbarian Ring",
+        "Werebear",
+        "Loot, the Anomaly",
+        "Null Summoner",
+        "Proft, Sinister Mastermind",
+    ],
+)
+def test_thresholds_ability_word_is_not_reported_as_an_unexecuted_keyword(name):
+    """fra-final-audit batch A item 2: Reality Fracture's "Threshold —
+    <condition>." is CR 207.2c's own ability-word shape - `machines/
+    casting.py`'s own `_CANNOT_CAST_UNLESS_RE` comment says so outright: "The
+    ability word ('Threshold') carries no rules meaning of its own (CR
+    207.2c) and is not part of the match; the restriction is the sentence
+    after it." The word labels four different clause shapes across the pool
+    (a cast restriction, an "Activate only if" activation gate, and a static
+    conditional pump), each already read by its own existing, unrelated
+    parser - exactly the converge/revolt/undergrowth/domain shape above, not
+    a keyword with a code path of its own.
+    """
+    assert "Threshold" not in ignored_keywords(card(name))
+
+
+@pytest.mark.parametrize(
+    ("name", "word"),
+    [
+        ("Emergency Phytomedic", "Prepared"),
+        ("Countersculpt", "Behold"),
+        ("Greenbelt Guardian", "Exhaust"),
+        ("Fuel for the Cause", "Proliferate"),
+    ],
+)
+def test_a_genuinely_executed_keyword_is_not_reported_as_unexecuted(name, word):
+    """fra-final-audit batch A item 2: unlike Threshold, each of these four
+    keywords has real, dedicated machinery keyed off the word itself, not
+    just an ordinary clause a generic parser happens to read - Prepared
+    (`Game.become_prepared`/`become_unprepared`, CR 722), Behold
+    (`machines/cost.behold_cost`, CR 701.4a), Exhaust (`Game.exhausted`
+    gating `activate_ability`, CR 702.177a), and Proliferate
+    (`machines/effects._parse_proliferate_clause`, CR 701.34a). Each is
+    proven live by its own scenario test (`test_prepare.py`, `test_behold.py`,
+    `test_exhaust.py`, `test_proliferate.py`), so reporting the keyword
+    itself as having no execution path was purely a measurement gap in
+    `executed_keywords`.
     """
     assert word not in ignored_keywords(card(name))
 
@@ -836,3 +887,46 @@ def test_a_permanent_faces_spell_clause_is_never_credited_even_when_effect_for_p
         outcome.category for outcome in classify_clauses(card("Screeching Soulbreaker"))
     }
     assert soulbreaker_categories == {HANDLED}
+
+
+def test_self_enters_line_category_reads_past_the_reminder_text():
+    """`_self_enters_line_category` compared `ReplacementEffect.raw` - "the
+    whole ability paragraph as printed, reminder text included"
+    (`machines/replacement.py`'s own docstring) - against `_static_ability_
+    category`'s per-sentence `text`, which never carries the reminder. Every
+    "This creature enters prepared." line failed that comparison and fell
+    through to `STATIC_UNAUDITED`, even though `_self_enters_modifiers`
+    genuinely performs it (`tests/scenarios/test_prepare.py`). The fix reads
+    `ReplacementEffect.text` - "the one sentence this effect was parsed from,
+    reminder text removed" - instead.
+
+    Emergency Phytomedic is the off-report proof: it already has a scenario
+    test naming "enters prepared" directly (`test_prepare.py`), so it was
+    never one of the 7 the audit named as untested, and it still misclassified
+    the same way - the bug was in the classifier's field choice, not specific
+    to any one card.
+    """
+    for name in ("Blossom-Blessed Angel", "Emergency Phytomedic"):
+        by_source = {outcome.source: outcome.category for outcome in classify_clauses(card(name))}
+        assert by_source["static"] == HANDLED, f"{name}: {by_source}"
+
+
+def test_modal_trigger_category_follows_the_same_fallback_chain_as_resolution():
+    """Yuriko, Hope from the Shadows: mode 1, "Target creature gets -X/-0
+    until end of turn, where X is the number of cards in your graveyard.",
+    is CR 107.3f's own X - not `parse_mixed_effect`'s business at all.
+    `_resolve_modal_triggered_ability_clause` (`machines/effects.py`) tries
+    three readers per mode in order - `parse_mixed_effect`, then
+    `_compose_layer_effect_with_remainder_for_ability_mode`, then
+    `_parse_where_x_is_continuous_effect` - and the third is what actually
+    reads this mode (`tests/scenarios/test_modal_mode_composition.py::
+    test_yuriko_mode_one_shrinks_by_the_graveyard_count` proves it live).
+    `_modal_trigger_category` only ever tried the first, so a genuinely
+    handled modal trigger read as `NOTICE`.
+    """
+    (yuriko_trigger,) = (
+        ability
+        for ability in parse_abilities(card("Yuriko, Hope from the Shadows"))
+        if isinstance(ability, TriggeredAbility)
+    )
+    assert _modal_trigger_category(yuriko_trigger.effect) == HANDLED
