@@ -471,6 +471,7 @@ _NOTICE_STAND_IN_NAMES = frozenset(
         "damage_then_group_grant_notice_only",
         "control_replacement_notice_only",
         "search_description_notice_only",
+        "layer_effect_with_remainder_notice",
     }
 )
 
@@ -1007,6 +1008,15 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
 _QUOTED_SPAN_RE = re.compile(r'"[^"]*"')
 
 
+#: `machines/effects.py`'s `_compose_layer_effect_with_remainder*` family
+#: names its two closures identically across all four of its spell/ability/
+#: mode variants - see `_is_sentinel_effect`'s own note on why they join the
+#: sentinel set below rather than being asked the quoted-text question.
+_LAYER_COMPOSED_NAMES = frozenset(
+    {"layer_and_remainder_effect", "layer_effect_with_remainder_notice"}
+)
+
+
 def _is_sentinel_effect(effect: object) -> bool:
     """Whether `effect` is one of `_dispatch_category`'s three named stand-
     ins (`create_continuous_effect`, `create_continuous_effect_of_ability`,
@@ -1018,12 +1028,25 @@ def _is_sentinel_effect(effect: object) -> bool:
     `trigger_effect_for` itself returns for that one string, but not the
     independent, whole-card verdict `_dispatch_category` actually reports -
     so the quoted-text closure must never ask about a sentinel's own
-    dispatch answer, only ever about an ordinary callable's."""
-    return effect in (
+    dispatch answer, only ever about an ordinary callable's.
+
+    A closure `_compose_layer_effect_with_remainder`/its three siblings
+    build - `layer_and_remainder_effect` or `layer_effect_with_remainder_
+    notice`, named by `_LAYER_COMPOSED_NAMES` - is the identical situation
+    one level up: its own layer half is still the same `create_continuous_
+    effect`/`_of_ability` sentinel underneath, whose verdict on a quoted span
+    is `_layer_category`'s to give, and its composed remainder half (an
+    ordinary clause, never one carrying its own quoted ability text in this
+    pool) does not depend on the layer sentence's quote either. Matched by
+    name rather than identity, since a fresh closure is built on every call.
+    """
+    if effect in (
         create_continuous_effect,
         create_continuous_effect_of_ability,
         resolve_modal_spell,
-    )
+    ):
+        return True
+    return getattr(effect, "__name__", "") in _LAYER_COMPOSED_NAMES
 
 
 def _blank_quoted_spans(text: str) -> str:

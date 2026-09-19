@@ -2763,12 +2763,22 @@ _ANTHEM_RE = re.compile(
 #: shape (`machines/effects.py`'s `_run_mass_pump` already resolved the
 #: concrete `targets` before this ever runs; see `_mass_creature_group_
 #: targets`'s own "all creatures" branch).
+#: A keyword list may stand alone too - "Creatures you control gain first
+#: strike until end of turn." (Artifist Acumen), "creatures you control gain
+#: haste until end of turn." (Ingris Stingerquill's trailing rider) - CR
+#: 611.2's one-shot group *ability* grant with no power/toughness change at
+#: all. `power`/`toughness` capture the pump when it follows "and get ...";
+#: `power_only`/`toughness_only` capture it when there is no keyword grant in
+#: front of it at all - two names for the same magnitude because `re` refuses
+#: a group name used twice, and `_parse_layer_sentence` reads whichever pair
+#: matched.
 _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     r"^(?:(?P<other>other )?creatures (?P<whose>you control|your opponents control)|"
     r"all creatures) "
     r"(?:gain (?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
-    r"(?:\s+and\s+[a-z]+(?: [a-z]+)?)?) and )?"
-    r"get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn\.?$",
+    r"(?:\s+and\s+[a-z]+(?: [a-z]+)?)?)"
+    r"(?:\s+and\s+get\s+(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+))?|"
+    r"get (?P<power_only>[+-]\d+)/(?P<toughness_only>[+-]\d+)) until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -3023,6 +3033,17 @@ def _self_becomes_type_until_next_turn_builder(
 #: have produced the retention and nothing else, which is half an ability
 #: (CR 608.2c has no notion of running half an instruction).
 _RETENTION_CLAUSE_RE = re.compile(r"^[Ii]t's still an? [a-z]+\.?$")
+
+
+def is_retention_clause(sentence: str) -> bool:
+    """`_RETENTION_CLAUSE_RE`'s shape, public: "It's still a `<type>`." (CR
+    205.1b) never stands as an ability of its own - it only ever qualifies
+    the type-changing sentence in front of it. `machines/effects.py` uses
+    this to keep such a clause from being misread as an unread sibling
+    instruction (`_plain_resolution_sentences`) the way any other trailing
+    sentence would be.
+    """
+    return bool(_RETENTION_CLAUSE_RE.match(sentence.strip()))
 
 
 def _fold_retention_clauses(sentences: list[str]) -> list[str]:
@@ -3520,15 +3541,27 @@ _LOOKS_LIKE_LAYER_EFFECT_RE = re.compile(
 #: read regardless of where "until end of turn" sits.
 _DURATION_FIRST_RE = re.compile(r"^until end of turn,\s*(?P<rest>.+)$", re.IGNORECASE)
 
+#: A sentence-initial sequencing word (CR 608.2c: "the controller ... follows
+#: its instructions in the order written") - "Then creatures you control gain
+#: haste until end of turn." (Ingris Stingerquill, after an earlier token
+#: creation in the same ability). `machines/effects.split_effect_clauses`
+#: already strips this same word from an ordinary clause for the identical
+#: reason; a layer sentence that happens to follow another instruction in the
+#: same paragraph must read the same as if it opened the sentence itself.
+_LEADING_THEN_RE = re.compile(r"^then,?\s+", re.IGNORECASE)
+
 
 def _normalize_duration_first(sentence: str) -> str:
     """Rewrite "Until end of turn, X" to "X until end of turn." so a
     duration-first sentence reaches `_parse_layer_sentence` and
     `_LOOKS_LIKE_LAYER_EFFECT_RE` the same way the ordinary trailing-duration
     phrasing already does. A sentence that does not open this way is returned
-    unchanged.
+    unchanged. A leading "Then " (`_LEADING_THEN_RE`) is stripped first,
+    always, so both the duration check and the shapes read afterward see the
+    sentence as it would look on its own.
     """
-    match = _DURATION_FIRST_RE.match(sentence.strip())
+    sentence = _LEADING_THEN_RE.sub("", sentence.strip())
+    match = _DURATION_FIRST_RE.match(sentence)
     if match is None:
         return sentence
     rest = match.group("rest").strip().rstrip(".")
@@ -3567,6 +3600,23 @@ def _effect_sentences(
     list of its own, so nobody can edit what the next caller reads.
     """
     return list(_effect_sentences_memo(oracle_text, static_only, card_name))
+
+
+def resolution_effect_sentences(text: str | None) -> list[str]:
+    """The public entry point onto `_effect_sentences`: every sentence of a
+    resolving spell's or ability's own effect text, split the same way
+    `is_resolution_layer_effect_text` itself splits it before asking each one
+    whether it is a CR 611.2 layer shape.
+
+    `machines/effects.py` uses this to separate a layer-effect sentence from
+    a sibling one-shot instruction it must compose rather than drop
+    (`_compose_layer_effect_with_remainder`), and to see a compound antecedent
+    ("Target creature gets +2/+2 and gains reach until end of turn.") whole,
+    ahead of the finer comma/and clause split that would otherwise cut it into
+    fragments no anaphoric-pair parser can read back together
+    (`_parse_object_anaphor_clause_pair`'s own whole-text pre-check).
+    """
+    return _effect_sentences(text)
 
 
 @functools.lru_cache(maxsize=16384)
@@ -3846,9 +3896,15 @@ def _anthem_builder(
     return builder
 
 
-def _mass_pump_until_eot_builder(power: int, toughness: int, keywords: list[str]) -> EffectBuilder:
+def _mass_pump_until_eot_builder(
+    power: int | None, toughness: int | None, keywords: list[str]
+) -> EffectBuilder:
     """ "[Other] creatures [you control|your opponents control] [gain <keyword(s)>
-    and ]get +N/+N until end of turn." (CR 611.2).
+    and ]get +N/+N until end of turn." (CR 611.2) - or, with `power`/
+    `toughness` both `None`, the keyword-only twin with no power/toughness
+    change at all ("Creatures you control gain first strike until end of
+    turn."): no sublayer 7c modifier is built for that shape, only the
+    layer 6 grant(s) below.
 
     Unlike `_anthem_builder`'s live `Selector` - right because a *static*
     ability's group (CR 611.3) has to keep re-including whoever is on the
@@ -3871,17 +3927,18 @@ def _mass_pump_until_eot_builder(power: int, toughness: int, keywords: list[str]
     ) -> list[ContinuousEffect]:
         effects: list[ContinuousEffect] = []
         for target in targets:
-            effects.append(
-                ContinuousEffect(
-                    description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
-                    layer=Layer.POWER_TOUGHNESS,
-                    sublayer=Sublayer.MODIFY,
-                    timestamp=timestamp,
-                    duration=Duration.UNTIL_END_OF_TURN,
-                    selector=only_this_incarnation(target, target.zone_change_stamp),
-                    modification=modify_power_toughness(power, toughness),
+            if power is not None and toughness is not None:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
+                        layer=Layer.POWER_TOUGHNESS,
+                        sublayer=Sublayer.MODIFY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=modify_power_toughness(power, toughness),
+                    )
                 )
-            )
             for keyword in keywords:
                 effects.append(
                     ContinuousEffect(
@@ -5398,9 +5455,11 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             if validated is None:
                 return None
             keywords = validated
-        return _mass_pump_until_eot_builder(
-            int(match.group("power")), int(match.group("toughness")), keywords
-        )
+        power_text = match.group("power") or match.group("power_only")
+        toughness_text = match.group("toughness") or match.group("toughness_only")
+        power = int(power_text) if power_text is not None else None
+        toughness = int(toughness_text) if toughness_text is not None else None
+        return _mass_pump_until_eot_builder(power, toughness, keywords)
     if match := _INDEFINITE_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
@@ -5774,41 +5833,109 @@ def is_resolution_layer_effect_text(text: str | None) -> bool:
     is exactly where it belongs.
     """
     for sentence in _effect_sentences(text):
-        normalized = _normalize_duration_first(sentence)
-        if _parse_static_layer_sentence(_strip_ability_word(normalized)) is not None:
-            # CR 611.3's static shapes, excluded for exactly the reason the
-            # anthem below is: "Nonbasic lands are Mountains", "Lands you
-            # control are every basic land type ...", "Other Dragons you
-            # control get +1/+1" and their siblings are a *permanent's* own
-            # static ability, and the battlefield sweep already reapplies each
-            # of them every time the board is computed (CR 613.5). Routing the
-            # permanent spell's resolution here as well would create a second,
-            # permanent copy of the same effect - doubling an anthem, and
-            # leaving a stored effect behind that CR 611.3b says should stop
-            # the moment its source leaves the battlefield.
-            continue
-        anthem_opening = _LOOKS_LIKE_ANTHEM_RE.match(normalized)
-        self_graveyard_pump_opening = _SELF_PUMP_PER_GRAVEYARD_CARD_RE.match(normalized)
-        has_duration = Duration.UNTIL_END_OF_TURN in normalized
-        if (anthem_opening or self_graveyard_pump_opening) and not has_duration:
-            # CR 611.3's own static shape: "lasts for as long as the object
-            # with that static ability remains on the battlefield", i.e.
-            # never expires on its own - the two shapes excluded on purpose.
-            continue
-        if anthem_opening and has_duration:
-            # Same opening words, but an explicit duration ("Creatures you
-            # control get +1/+0 until end of turn.", Violent Outburst) is
-            # never CR 611.3's forever-lasting anthem - it can only be CR
-            # 611.2's one-shot group pump, which `_ANTHEM_RE` does not parse
-            # (it has no duration group at all) and nothing else here reads
-            # either, so this counts as a failed-parse attempt rather than
-            # routing through the anthem's durationless `continue` above.
-            return True
-        if _parse_layer_sentence(sentence) is not None:
-            return True
-        if _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE.match(normalized):
+        genuine, loose = _classify_resolution_layer_sentence(sentence)
+        if genuine or loose:
             return True
     return False
+
+
+def _classify_resolution_layer_sentence(sentence: str) -> tuple[bool, bool]:
+    """`(genuine, loose)` for one sentence alone - the shared classification
+    both `is_resolution_layer_effect_text` and `genuine_resolution_layer_
+    text`/`is_genuine_resolution_layer_sentence` build on, so the CR 611.3
+    exclusions (a static line, a durationless anthem or self-graveyard-pump)
+    are written in exactly one place.
+
+    `genuine` is true only for a sentence `create_continuous_effect`/
+    `create_continuous_effect_of_ability` would actually turn into a real
+    continuous effect (`_parse_layer_sentence` itself succeeds) and that is
+    not one of the excluded CR 611.3 shapes. `loose` is true only when
+    nothing here fully parses but the sentence still resembles a failed
+    attempt (`_LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE`, or an anthem-looking
+    opening with an explicit duration that no specific shape below actually
+    reads) - the signal `LayerNotice`/`ModeNotice` exist for. The two are
+    mutually exclusive by construction: a sentence is never both.
+
+    `_parse_layer_sentence` is tried **before** the anthem-with-duration
+    check below, not after: an explicitly-durationed anthem-looking sentence
+    ("Creatures you control get +1/+0 until end of turn.", Violent Outburst)
+    is exactly `_MASS_PUMP_UNTIL_EOT_RE`'s own shape and genuinely parses,
+    even though `_ANTHEM_RE` itself has no duration group to match it -
+    checking order here only changes which branch a genuine match is
+    attributed to, never `is_resolution_layer_effect_text`'s own `genuine or
+    loose` answer, so its behaviour is unchanged.
+    """
+    normalized = _normalize_duration_first(sentence)
+    if _parse_static_layer_sentence(_strip_ability_word(normalized)) is not None:
+        # CR 611.3's static shapes: "Nonbasic lands are Mountains", "Lands
+        # you control are every basic land type ...", "Other Dragons you
+        # control get +1/+1" and their siblings are a *permanent's* own
+        # static ability, and the battlefield sweep already reapplies each
+        # of them every time the board is computed (CR 613.5). Routing the
+        # permanent spell's resolution here as well would create a second,
+        # permanent copy of the same effect - doubling an anthem, and
+        # leaving a stored effect behind that CR 611.3b says should stop the
+        # moment its source leaves the battlefield.
+        return False, False
+    anthem_opening = _LOOKS_LIKE_ANTHEM_RE.match(normalized)
+    self_graveyard_pump_opening = _SELF_PUMP_PER_GRAVEYARD_CARD_RE.match(normalized)
+    has_duration = Duration.UNTIL_END_OF_TURN in normalized
+    if (anthem_opening or self_graveyard_pump_opening) and not has_duration:
+        # CR 611.3's own static shape: "lasts for as long as the object with
+        # that static ability remains on the battlefield", i.e. never
+        # expires on its own - the two shapes excluded on purpose.
+        return False, False
+    if _parse_layer_sentence(sentence) is not None:
+        return True, False
+    if anthem_opening and has_duration:
+        # An explicit duration is never CR 611.3's forever-lasting anthem -
+        # it can only be CR 611.2's one-shot group pump - but nothing above
+        # read this particular sentence into one, so it counts as a failed
+        # attempt.
+        return False, True
+    if _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE.match(normalized):
+        return False, True
+    return False, False
+
+
+def is_genuine_resolution_layer_sentence(sentence: str) -> bool:
+    """Whether `sentence` alone is genuinely, safely one of `machines.
+    layers`'s CR 611.2 one-shot resolution shapes - `_classify_resolution_
+    layer_sentence`'s own `genuine` half.
+
+    `machines/effects.py`'s composition wave (`_compose_layer_effect_with_
+    remainder` and its three siblings) uses this to decide, sentence by
+    sentence, which parts of a multi-sentence resolution `create_continuous_
+    effect`/`_of_ability` already covers on its own and which are left over
+    to compose - never `is_resolution_layer_effect_text` for that per-
+    sentence question, since its looser "or looks like one" half would
+    wrongly treat a CR 611.3 static/anthem/self-pump sentence sitting beside
+    a genuine one as "already handled", when in fact `create_continuous_
+    effect` never applies that excluded sentence at all.
+    """
+    genuine, _ = _classify_resolution_layer_sentence(sentence)
+    return genuine
+
+
+def genuine_resolution_layer_text(text: str | None) -> bool:
+    """Whether some sentence of `text` is genuinely, safely a CR 611.2
+    layer shape - `is_resolution_layer_effect_text` narrowed to just its
+    `genuine` half, with the "or looks like a failed attempt" signal left
+    out.
+
+    `machines/effects.py`'s composition wave uses this as its own entry
+    gate: `create_continuous_effect` already answers a loose-only match
+    correctly on its own, through `effects_for`'s own `LayerNotice` channel,
+    and gating composition on the looser test too would treat Glorious
+    Anthem's own durationless "Creatures you control get +1/+1." - or Fiend
+    Artisan's own durationless self-pump - as something to compose a
+    remainder around, when CR 611.3 excludes both from ever being a
+    resolution effect at all (CR 608.3a: a permanent spell has nothing to
+    resolve).
+    """
+    return any(
+        is_genuine_resolution_layer_sentence(sentence) for sentence in _effect_sentences(text)
+    )
 
 
 class LayerNotice(EngineModel):

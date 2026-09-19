@@ -152,8 +152,11 @@ from .layers import (
     creatures_controlled_by,
     creatures_controlled_by_opponents_of,
     every_creature,
+    genuine_resolution_layer_text,
     grant_ability,
+    is_genuine_resolution_layer_sentence,
     is_resolution_layer_effect_text,
+    is_retention_clause,
     modify_power_toughness,
     only_this_incarnation,
     other_creatures_controlled_by,
@@ -578,6 +581,57 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
         context=layer_context_for(game, game.controller_of(ability)),
         game=game,
     )
+
+
+def _create_continuous_effect_for_mode_text(mode_text: str) -> Effect:
+    """`create_continuous_effect`, scoped to one chosen mode's own text
+    rather than the whole card (`parse_mode_effect`).
+
+    The bare `create_continuous_effect` sentinel always re-reads `spell.card`'s
+    *whole* printed text through `parsed_layer_effects` (see its own
+    docstring) - right for an ordinary, non-modal spell, but wrong for one
+    mode of a modal spell (CR 700.2a): a card with two modes that each happen
+    to be a CR 611.2 layer shape would apply *both* the moment either one
+    reached the bare sentinel, even though only one was chosen and the other
+    mode's own targets were never even asked for. `ContinuousEffects.create`'s
+    `ability_text` override - the same mechanism `create_continuous_effect_
+    of_ability` already relies on to read a granted ability's own text
+    instead of its permanent's - reads `mode_text` alone instead.
+    """
+
+    def effect(game: "Game", spell: CardState) -> None:
+        continuous_effects(game).create(
+            spell,
+            targets=game.resolve_card_targets(spell),
+            context=layer_context_for(game, game.controller_of(spell)),
+            ability_text=mode_text,
+            game=game,
+        )
+
+    return effect
+
+
+def _create_continuous_effect_of_ability_for_mode_text(mode_text: str) -> AbilityEffect:
+    """The ability-side twin of `_create_continuous_effect_for_mode_text`,
+    for one chosen mode of a modal *triggered* ability
+    (`_resolve_modal_triggered_ability_clause` - Elder Gargaroth, Abiding
+    Grace, and any modal trigger whose own chosen mode is itself a layer
+    shape).
+    """
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        continuous_effects(game).create(
+            source,
+            targets=game.resolve_card_targets(ability),
+            context=layer_context_for(game, game.controller_of(ability)),
+            ability_text=mode_text,
+            game=game,
+        )
+
+    return effect
 
 
 #: "Discard a card: This creature gets +1/+1 and becomes the color of your
@@ -1434,12 +1488,13 @@ def _mass_creature_group_targets(
 
 def _parse_mass_pump_clause(
     effect_text: str,
-) -> tuple[str, Callable[["Game", str], int] | None] | None:
+) -> tuple[str, Callable[["Game", str], int] | None, str] | None:
     """The mass-pump sentence, as a template with a literal "+N/+N" already in
     it (`magnitude_expr` is `None`) or with "+X/+X" still in it and a
-    `count_expression` to resolve it later (`magnitude_expr` is not `None`) -
-    or `None` if `effect_text` is not this shape at all, or names a "where X
-    is ..." expression `count_expression` cannot read.
+    `count_expression` to resolve it later (`magnitude_expr` is not `None`),
+    plus whatever sibling sentence follows it (`""` when there is none) - or
+    `None` if `effect_text`'s own first sentence is not this shape at all, or
+    names a "where X is ..." expression `count_expression` cannot read.
 
     Requires an explicit "until end of turn": without it, "Creatures you
     control get +1/+1." is Glorious Anthem's own CR 611.3 anthem - a
@@ -1451,22 +1506,35 @@ def _parse_mass_pump_clause(
     its own every time the board is computed (CR 613.5), doubling the bonus -
     exactly the trap `is_resolution_layer_effect_text`'s own docstring
     documents for why it excludes the anthem shape.
+
+    Read off `effect_text`'s own **first sentence only** - not the whole,
+    unsplit text the way this used to work, whose subject and duration checks
+    were unanchored substring tests rather than a whole-text match: Artifist
+    Acumen's own "Creatures you control gain first strike until end of turn.
+    Draw a card." used to fold the trailing "Draw a card." silently into the
+    returned template string, so the draw was never read by anything and
+    never recorded as unread either. The caller (`_mass_pump_spell_effect`/
+    `_mass_pump_ability_effect`) composes the returned remainder the same way
+    `_compose_layer_effect_with_remainder` composes any other layer
+    sentence's own sibling.
     """
-    text = effect_text.strip()
+    sentences = _plain_resolution_sentences(effect_text)
+    text = sentences[0].strip() if sentences else effect_text.strip()
+    remainder = " ".join(sentences[1:]) if len(sentences) > 1 else ""
     if _MASS_SUBJECT_RE.match(text) is None and _MASS_SUBTYPE_SUBJECT_RE.match(text) is None:
         return None
     if Duration.UNTIL_END_OF_TURN not in text.lower():
         return None
     where_match = _WHERE_X_IS_RE.search(text)
     if where_match is None:
-        return text, None
+        return text, None, remainder
     magnitude_expr = count_expression(where_match.group("expr"))
     if magnitude_expr is None:
         return None
     template = text[: where_match.start()].rstrip(", ").rstrip(".") + "."
     if "+x/+x" not in template.lower():
         return None
-    return template, magnitude_expr
+    return template, magnitude_expr, remainder
 
 
 def _run_mass_pump(
@@ -1532,17 +1600,35 @@ def _run_mass_pump(
 def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
     """Craterhoof Behemoth's own ETB shape: a mass pump read whole off a
     resolving *ability's* text, with `ability.controller` and its own source.
+
+    A sibling sentence after the pump (`remainder`) is composed the same way
+    `_compose_layer_effect_with_remainder_for_ability` composes any other
+    layer sentence's own remainder - run in printed order (CR 608.2c) when it
+    parses, recorded as a `LayerRemainderNotice` when it does not, rather
+    than silently folded into (and lost inside) the pump's own template the
+    way it used to be.
     """
     parsed = _parse_mass_pump_clause(effect_text)
     if parsed is None:
         return None
-    template, magnitude_expr = parsed
+    template, magnitude_expr, remainder = parsed
+    remainder_effect = parse_mixed_effect(remainder) if remainder else None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
         if source is None:
             return
         _run_mass_pump(game, source, ability.controller, template, magnitude_expr)
+        if not remainder:
+            return
+        if remainder_effect is not None:
+            remainder_effect(game, ability)
+        else:
+            game.layer_remainder_notices.append(
+                LayerRemainderNotice(
+                    source_id=ability.source_id, source_name=ability.source_name, text=remainder
+                )
+            )
 
     return effect
 
@@ -1777,14 +1863,28 @@ def _mass_pump_spell_effect(effect_text: str) -> Effect | None:
     """Violent Outburst's own pump line, the spell-side twin of
     `_mass_pump_ability_effect` above - its cascade half is unaffected (CR
     702.85a's exile-hit-free-cast pipeline reads no part of this sentence).
+
+    Composes a sibling sentence after the pump the same way
+    `_mass_pump_ability_effect` does - Artifist Acumen's own "Draw a card."
     """
     parsed = _parse_mass_pump_clause(effect_text)
     if parsed is None:
         return None
-    template, magnitude_expr = parsed
+    template, magnitude_expr, remainder = parsed
+    remainder_effect = parse_mixed_effect_for_spell(remainder) if remainder else None
 
     def effect(game: "Game", spell: CardState) -> None:
         _run_mass_pump(game, spell, game.controller_of(spell).username, template, magnitude_expr)
+        if not remainder:
+            return
+        if remainder_effect is not None:
+            remainder_effect(game, spell)
+        else:
+            game.layer_remainder_notices.append(
+                LayerRemainderNotice(
+                    source_id=spell.id, source_name=spell.card.name, text=remainder
+                )
+            )
 
     return effect
 
@@ -5388,6 +5488,62 @@ def _strip_non_effect_preamble(text: str) -> str:
     return _strip_keyword_ability_lines(text)
 
 
+#: A plain sentence boundary - a full stop (or ! or ?) followed by
+#: whitespace and a capital letter, digit, or opening parenthesis, or a bare
+#: line break. Deliberately simpler than English sentence-splitting in
+#: general: this only ever sees text already narrowed to one resolving
+#: object's own effect body (see `_plain_resolution_sentences`'s docstring),
+#: never a run-on abbreviation or a decimal number.
+_SENTENCE_BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z(0-9])|\n+")
+
+
+def _plain_resolution_sentences(text: str) -> list[str]:
+    """`text` - a single spell's or ability's own already-isolated resolution
+    effect body - split into sentences on plain full-stop/line-break
+    boundaries, with reminder text (`_REMINDER_LINE_RE`/`_INLINE_REMINDER_RE`)
+    stripped first so a reminder's own internal periods (Empower Jace's own
+    parenthetical explanation) are never read as sentence boundaries.
+
+    Deliberately **not** `machines/layers.resolution_effect_sentences`: that
+    splitter is built to read a *permanent's whole printed oracle text* for
+    the battlefield sweep (`machines/layers.py::effects_for`), and as part of
+    that job it also strips a triggered ability's own leading condition and
+    an activated ability's own leading cost - exactly right when the input
+    is a permanent's raw lines, and exactly wrong here. `effect_for`,
+    `trigger_effect_for`, and `activated_effect_for` are each called with one
+    object's own resolution text, already separated from any such prefix -
+    except for a **permanent spell**, whose full, unfiltered oracle text
+    (keyword lines and a granted triggered ability's own body included) is
+    still handed to `effect_for` every time it resolves (CR 608.3a: there is
+    nothing there for any parser to read, by design). Reusing the smart
+    splitter for this composition wave's own sentence-level checks read
+    Craterhoof Behemoth's leading "When this creature enters," off as noise
+    and matched its *triggered* ability's own pump sentence as though it
+    were the permanent spell's own effect - the pump ran once, with the
+    wrong board, during the spell's own resolution, and again, correctly,
+    when the triggered ability itself resolved afterward.
+
+    A bare "It's still a `<type>`." (CR 205.1b) is folded back onto the
+    sentence before it, the same way `machines/layers._fold_retention_
+    clauses` already folds it for the smart splitter: it is CR 205.1b's own
+    qualifier on the type change in front of it, never an instruction of its
+    own, so leaving it as a separate "sentence" here would misread Jolrael,
+    Voice of Zhalfir's animation as carrying an unread sibling clause.
+    """
+    without_reminders = _INLINE_REMINDER_RE.sub("", _REMINDER_LINE_RE.sub("", text))
+    stripped = without_reminders.strip()
+    if not stripped:
+        return []
+    parts = [part.strip() for part in _SENTENCE_BOUNDARY_RE.split(stripped) if part.strip()]
+    folded: list[str] = []
+    for part in parts:
+        if folded and is_retention_clause(part):
+            folded[-1] = f"{folded[-1].rstrip()} {part}"
+            continue
+        folded.append(part)
+    return folded
+
+
 #: A bare "shuffle" left over once `split_effect_clauses` has cut across the
 #: "then" inside a search's own "..., then shuffle." - CR 608.2c's clause
 #: split has no notion that this particular "then" is the tail of the
@@ -6680,6 +6836,32 @@ def _parse_untap_self_clause(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
         if source is not None and source.zone is Zone.BATTLEFIELD:
+            source.untap()
+
+    return effect
+
+
+#: "Untap `<Name>`." - CR 109.2's plain self-reference, spelled out with the
+#: permanent's own printed name instead of "this creature": Hydro-Man, Fluid
+#: Felon's "At the beginning of your end step, untap Hydro-Man." (the "he/
+#: she" pronoun family prints this way rather than "this creature" once it
+#: has already used a pronoun for itself elsewhere in the same ability).
+#: `name` is read generically and checked against the resolving ability's
+#: own source at runtime, never pinned to one card's literal name.
+_UNTAP_NAMED_SELF_RE = re.compile(r"^untap (?P<name>[A-Z][A-Za-z',.\- ]*?)\.?$")
+
+
+def _parse_untap_named_self_clause(text: str) -> AbilityEffect | None:
+    """`_UNTAP_NAMED_SELF_RE`'s shape - the named-self twin of
+    `_parse_untap_self_clause`."""
+    match = _UNTAP_NAMED_SELF_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    name = match.group("name").strip()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD and source.name == name:
             source.untap()
 
     return effect
@@ -9209,6 +9391,17 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     mode shape - a mode is exactly one card's worth of CR 608.2c instructions
     once it is standing on its own, X already substituted and no bulleted
     list left for `is_modal_text` to trip over.
+
+    A mode whose own text is a CR 611.2 layer shape (a pump, a keyword
+    grant, a base P/T set) that `parse_mixed_effect_for_spell` does not cover
+    on its own - Perfected Theory's "Target creature has base power and
+    toughness 1/1 until end of turn.", Charge the Sanctum's "Creatures you
+    control get +2/+0 until end of turn." - falls to
+    `_compose_layer_effect_with_remainder_for_mode` last, the mode-scoped
+    twin of the whole-card fallback `_spell_effect_or_notice` itself uses:
+    `parse_mixed_effect_for_spell` alone never reached `_is_layer_effect_
+    text` at all for a mode, since that fallback lived only in the whole-card
+    dispatcher, one level above where a mode is ever read.
     """
     text = _strip_non_effect_preamble(substitute_x(mode_effect_text(mode), x_value)).strip()
     if not text:
@@ -9226,7 +9419,10 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     select_from_top = _parse_select_from_top_spell_clause(text)
     if select_from_top is not None:
         return select_from_top
-    return parse_mixed_effect_for_spell(text)
+    mixed = parse_mixed_effect_for_spell(text)
+    if mixed is not None:
+        return mixed
+    return _compose_layer_effect_with_remainder_for_mode(text)
 
 
 class ModeNotice(EngineModel):
@@ -9407,7 +9603,10 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
             for position, number in enumerate(chosen):
                 mode = profile.mode(number)
                 ability.targets = list(slices[position]) if position < len(slices) else []
-                clause = parse_mixed_effect(mode_effect_body(mode))
+                mode_text = mode_effect_body(mode)
+                clause = parse_mixed_effect(mode_text)
+                if clause is None:
+                    clause = _compose_layer_effect_with_remainder_for_ability_mode(mode_text)
                 if clause is None:
                     game.mode_notices.append(
                         ModeNotice(
@@ -9938,6 +10137,229 @@ def _is_layer_effect_text(text: str) -> bool:
     like that one piece.
     """
     return is_resolution_layer_effect_text(text)
+
+
+class LayerRemainderNotice(EngineModel):
+    """One sentence of a multi-sentence resolution that *is* a CR 611.2
+    continuous-effect shape - a pump, a keyword grant, a base P/T set - runs
+    fine on its own, but a sibling sentence in the same paragraph is not one
+    of those shapes and this wave cannot read it either.
+
+    `_is_layer_effect_text` decides whether a whole piece of resolving text
+    should route to `create_continuous_effect`/`create_continuous_effect_of_
+    ability` (or, for one mode of a modal spell or trigger, their mode-scoped
+    twins) by asking whether *any* sentence in it looks like a layer shape -
+    right for that routing decision, but the routed-to dispatcher itself
+    (`parsed_layer_effects`, `machines/layers.py`) silently skips whatever
+    sentence it does not recognise, which is correct when it is sweeping a
+    permanent's whole oracle text off the battlefield (a static line and a
+    triggered ability's own body sit side by side there on purpose) and wrong
+    when it is reading a *resolving* spell's or ability's own multi-sentence
+    effect: Academic Ascent's own "Empower Jace 2." used to never reach any
+    parser at all, with nothing anywhere recording that it had gone unread.
+    `_compose_layer_effect_with_remainder`/`_compose_layer_effect_with_
+    remainder_for_ability` still run the layer sentence, and now record this
+    instead of losing the sibling sentence with no trace - the same
+    "unreadable is not the same as no effect" record `AnaphoricClauseNotice`,
+    `ModeNotice`, and `LayerNotice` already keep for their own gaps.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The sibling sentence(s) this wave could not read, as printed."""
+
+
+def _layer_remainder_or_composed(remainder_text: str, *, for_spell: bool) -> TargetedClause | None:
+    """Whatever `parse_mixed_effect_for_spell`/`parse_mixed_effect` reads out
+    of `remainder_text`, or `None` when neither can - in which case the
+    caller records a `LayerRemainderNotice` instead. Shared by every layer-
+    fallback call site (whole spell, whole ability, one mode of either) so
+    the remainder is always read the same way, regardless of which shape
+    carries the layer sentence beside it.
+    """
+    return (
+        parse_mixed_effect_for_spell(remainder_text)
+        if for_spell
+        else parse_mixed_effect(remainder_text)
+    )
+
+
+def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
+    """A whole resolving spell's own effect text, when some sentence of it is
+    a CR 611.2 layer shape (`_is_layer_effect_text`) but the text as a whole
+    did not parse through `parse_mixed_effect_for_spell` - `_spell_effect_or_
+    notice`'s own fallback, widened to compose rather than to silently drop
+    whatever sentence is not the layer shape (see `LayerRemainderNotice`).
+
+    `None` when `effect_text` carries no *genuinely* readable layer sentence
+    at all (`parsed_layer_effects` finds none) and does not even loosely
+    resemble one (`is_resolution_layer_effect_text` is also false) - the
+    caller's cue to keep trying its own other fallbacks (an unreadable
+    conditional, an unreadable search, an unreadable anaphoric clause, ...)
+    exactly as before this existed. When it carries no genuine layer sentence
+    but does loosely resemble one, the bare sentinel is returned unchanged -
+    `create_continuous_effect` already answers that case correctly on its
+    own, through `effects_for`'s own `LayerNotice` channel, and there is
+    nothing genuine here to compose a remainder around: Kraul Harpooner's
+    *permanent spell* reads its own Undergrowth trigger's condition and body
+    as if they were sibling instructions of a spell resolution this way, and
+    neither is one.
+    """
+    if not genuine_resolution_layer_text(effect_text):
+        return create_continuous_effect if is_resolution_layer_effect_text(effect_text) else None
+    sentences = _plain_resolution_sentences(effect_text)
+    remainder = [
+        sentence for sentence in sentences if not is_genuine_resolution_layer_sentence(sentence)
+    ]
+    if not remainder:
+        # Every sentence is a layer shape (or the text could not be split
+        # into sentences at all - `_plain_resolution_sentences` then comes
+        # back empty, and there is nothing to compose either way): unchanged
+        # behaviour, the bare sentinel `create_continuous_effect` is
+        # returned so `scripts/sweep_pool.py`'s `_dispatch_category` still
+        # reads the whole-card verdict off `_layer_category` the way it
+        # always has.
+        return create_continuous_effect
+    remainder_text = " ".join(remainder)
+    remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=True)
+    if remainder_effect is not None:
+
+        def layer_and_remainder_effect(game: "Game", spell: CardState) -> None:
+            create_continuous_effect(game, spell)
+            remainder_effect(game, spell)
+
+        return layer_and_remainder_effect
+
+    def layer_effect_with_remainder_notice(game: "Game", spell: CardState) -> None:
+        create_continuous_effect(game, spell)
+        game.layer_remainder_notices.append(
+            LayerRemainderNotice(
+                source_id=spell.id, source_name=spell.card.name, text=remainder_text
+            )
+        )
+
+    return layer_effect_with_remainder_notice
+
+
+def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> AbilityEffect | None:
+    """The ability-side twin of `_compose_layer_effect_with_remainder`, for
+    `_ability_effect_or_notice`'s own `_is_layer_effect_text` fallback."""
+    if not genuine_resolution_layer_text(effect_text):
+        return (
+            create_continuous_effect_of_ability
+            if is_resolution_layer_effect_text(effect_text)
+            else None
+        )
+    sentences = _plain_resolution_sentences(effect_text)
+    remainder = [
+        sentence for sentence in sentences if not is_genuine_resolution_layer_sentence(sentence)
+    ]
+    if not remainder:
+        return create_continuous_effect_of_ability
+    remainder_text = " ".join(remainder)
+    remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=False)
+    if remainder_effect is not None:
+
+        def layer_and_remainder_effect(game: "Game", ability: AbilityOnStack) -> None:
+            create_continuous_effect_of_ability(game, ability)
+            remainder_effect(game, ability)
+
+        return layer_and_remainder_effect
+
+    def layer_effect_with_remainder_notice(game: "Game", ability: AbilityOnStack) -> None:
+        create_continuous_effect_of_ability(game, ability)
+        game.layer_remainder_notices.append(
+            LayerRemainderNotice(
+                source_id=ability.source_id, source_name=ability.source_name, text=remainder_text
+            )
+        )
+
+    return layer_effect_with_remainder_notice
+
+
+def _compose_layer_effect_with_remainder_for_mode(mode_text: str) -> Effect | None:
+    """One chosen mode's own text (`parse_mode_effect`), the modal-spell twin
+    of `_compose_layer_effect_with_remainder` - scoped to `mode_text` alone
+    through `_create_continuous_effect_for_mode_text` rather than the bare
+    `create_continuous_effect` sentinel, which would read the *whole* card's
+    text and wrongly also apply a different, unchosen mode's own layer
+    sentence the moment that mode happened to be one too.
+
+    Gated on a *genuine* parse (`parsed_layer_effects`), stricter than the
+    whole-card composers above: a mode has no prior "route to the bare
+    sentinel" behaviour to preserve for a merely apparent layer sentence -
+    before this function existed, `parse_mode_effect` simply returned `None`
+    for one, and `resolve_modal_spell` recorded the correct `ModeNotice`.
+    Returning a scoped-but-empty continuous effect here instead would make
+    that mode look like it ran when nothing on it actually did.
+    """
+    if not genuine_resolution_layer_text(mode_text):
+        return None
+    sentences = _plain_resolution_sentences(mode_text)
+    remainder = [
+        sentence for sentence in sentences if not is_genuine_resolution_layer_sentence(sentence)
+    ]
+    layer_effect = _create_continuous_effect_for_mode_text(mode_text)
+    if not remainder:
+        return layer_effect
+    remainder_text = " ".join(remainder)
+    remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=True)
+    if remainder_effect is not None:
+
+        def layer_and_remainder_effect(game: "Game", spell: CardState) -> None:
+            layer_effect(game, spell)
+            remainder_effect(game, spell)
+
+        return layer_and_remainder_effect
+
+    def layer_effect_with_remainder_notice(game: "Game", spell: CardState) -> None:
+        layer_effect(game, spell)
+        game.layer_remainder_notices.append(
+            LayerRemainderNotice(
+                source_id=spell.id, source_name=spell.card.name, text=remainder_text
+            )
+        )
+
+    return layer_effect_with_remainder_notice
+
+
+def _compose_layer_effect_with_remainder_for_ability_mode(mode_text: str) -> AbilityEffect | None:
+    """One chosen mode's own text, for a modal *triggered* ability
+    (`_resolve_modal_triggered_ability_clause`) - the ability-side twin of
+    `_compose_layer_effect_with_remainder_for_mode`. Gated on a genuine parse
+    the same way, and for the same reason.
+    """
+    if not genuine_resolution_layer_text(mode_text):
+        return None
+    sentences = _plain_resolution_sentences(mode_text)
+    remainder = [
+        sentence for sentence in sentences if not is_genuine_resolution_layer_sentence(sentence)
+    ]
+    layer_effect = _create_continuous_effect_of_ability_for_mode_text(mode_text)
+    if not remainder:
+        return layer_effect
+    remainder_text = " ".join(remainder)
+    remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=False)
+    if remainder_effect is not None:
+
+        def layer_and_remainder_effect(game: "Game", ability: AbilityOnStack) -> None:
+            layer_effect(game, ability)
+            remainder_effect(game, ability)
+
+        return layer_and_remainder_effect
+
+    def layer_effect_with_remainder_notice(game: "Game", ability: AbilityOnStack) -> None:
+        layer_effect(game, ability)
+        game.layer_remainder_notices.append(
+            LayerRemainderNotice(
+                source_id=ability.source_id, source_name=ability.source_name, text=remainder_text
+            )
+        )
+
+    return layer_effect_with_remainder_notice
 
 
 #: A literal mana symbol or run of them - "{G}". Read by several clause
@@ -11739,8 +12161,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
-    if _is_layer_effect_text(effect_text):
-        return create_continuous_effect_of_ability
+    composed = _compose_layer_effect_with_remainder_for_ability(effect_text)
+    if composed is not None:
+        return composed
     unread_conditional = _unreadable_conditional_clause(effect_text, for_spell=False)
     if unread_conditional is not None:
 
@@ -13321,8 +13744,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     parsed = parse_mixed_effect_for_spell(effect_text)
     if parsed is not None:
         return parsed
-    if _is_layer_effect_text(effect_text):
-        return create_continuous_effect
+    composed = _compose_layer_effect_with_remainder(effect_text)
+    if composed is not None:
+        return composed
     unread_conditional = _unreadable_conditional_clause(effect_text, for_spell=True)
     if unread_conditional is not None:
 
@@ -13888,6 +14312,10 @@ _RIDER_CANT_BE_BLOCKED_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} can'?t be blocked this turn$", re.IGNORECASE
 )
 
+#: "Untap it." - Tethermage's Advantage's own rider, after its pump. CR
+#: 701.18a: "To untap a permanent means to remove the tapped status from it."
+_RIDER_UNTAP_RE = re.compile(rf"^untap {_OBJECT_ANAPHOR}$", re.IGNORECASE)
+
 #: "They can't be regenerated." / "It can't be regenerated." - Wrath of God,
 #: and CR 608.2c's own worked example of a rider that *modifies its
 #: antecedent* rather than running after it. Handled separately from every
@@ -13943,6 +14371,17 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
 
         return cant_be_blocked
 
+    if _RIDER_UNTAP_RE.fullmatch(rider):
+
+        def untap_rider(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            for referent in referents:
+                if referent.zone is Zone.BATTLEFIELD:
+                    referent.untap()
+
+        return untap_rider
+
     if match := _RIDER_LAYER_SUBJECT_RE.fullmatch(rider):
         rewritten = f"Target creature {match.group('predicate').strip()}."
         builder = parsed_layer_effects(rewritten)
@@ -13972,6 +14411,48 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
         return layer_rider
 
     return None
+
+
+def _layer_antecedent_clause(first: str, referent_of: ReferentReader) -> TargetedClause | None:
+    """A CR 611.2 layer shape (a pump, a keyword grant, a base P/T set) used
+    as an anaphoric pair's own antecedent - Tethermage's Advantage's "Target
+    creature gets +2/+2 and gains reach until end of turn." (then "Untap
+    it."). `_parse_mixed_clause` does not read this shape at all: only
+    `effect_for`'s/`_ability_effect_or_notice`'s own whole-text
+    `_is_layer_effect_text` fallback does, and that fallback sits a level
+    above this pair - it is never reached once `_parse_mixed_clauses` has
+    already claimed both sentences as one anaphoric pair. Built against
+    `referent_of`'s own objects, read the same way the rider reads them,
+    rather than a fresh `game.resolve_targets` call, so the antecedent and
+    the rider can never disagree about what "it" means.
+    """
+    if not is_resolution_layer_effect_text(first):
+        return None
+    builder = parsed_layer_effects(first)
+    if builder is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targets = [
+            target for target in referent_of(game, stack_object) if target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        if source is None:
+            return
+        effects = game.continuous_effects
+        for built in builder(
+            source,
+            effects.tick(),
+            targets,
+            layer_context_for(game, game.controller_of(stack_object)),
+        ):
+            effects.add(built, game)
+
+    return effect
 
 
 def _parse_object_anaphor_clause_pair(
@@ -14009,6 +14490,8 @@ def _parse_object_anaphor_clause_pair(
     if referent_of is None:
         return None
     antecedent = _parse_mixed_clause(first, for_spell=for_spell)
+    if antecedent is None:
+        antecedent = _layer_antecedent_clause(first, referent_of)
     if antecedent is None:
         return None
     rider = _parse_referent_object_clause(second)
@@ -20518,8 +21001,13 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
 #: name-keyed row. `PlayAction.PLAY` rather than `.CAST`: CR 601.1a's "playing
 #: a card" covers a land found among the exiled cards, which "you may play"
 #: (not "you may cast") is broad enough to reach.
+#: `count` is optional: "Exile the top card of your library." (Blazing
+#: Crescendo) names no count word at all for the singular, the same implicit
+#: "one" every other singular "target creature"/"a card" phrase in this file
+#: already reads without a literal word for it - `parse_count` below defaults
+#: to 1 when the group did not match.
 _EXILE_TOP_N_CARDS_RE = re.compile(
-    rf"^exile the top (?P<count>{COUNT}) cards? of your library\.?$", re.IGNORECASE
+    rf"^exile the top (?:(?P<count>{COUNT}) )?cards? of your library\.?$", re.IGNORECASE
 )
 _UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE = re.compile(
     r"^until the end of your next turn, you may play (?:those cards|that card)\.?$",
@@ -20553,7 +21041,8 @@ def _merge_exile_top_then_play_until_next_turn_clauses(
         return None
     if not _UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE.fullmatch(clauses[index + 1].strip()):
         return None
-    count = parse_count(exile_match.group("count"))
+    count_word = exile_match.group("count")
+    count = parse_count(count_word) if count_word is not None else 1
     if count is None:
         return None
 
@@ -21321,6 +21810,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         untap_self = _parse_untap_self_clause(clause)
         if untap_self is not None:
             return untap_self  # type: ignore[return-value]
+        untap_named_self = _parse_untap_named_self_clause(clause)
+        if untap_named_self is not None:
+            return untap_named_self  # type: ignore[return-value]
     return_from_your_graveyard = _parse_return_cards_from_your_graveyard_clause(
         clause, for_spell=for_spell
     )
@@ -21558,6 +22050,28 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # reaches exactly the same `create_continuous_effect` one step earlier
         # than it used to, for the identical effect.
         return [create_continuous_effect]  # type: ignore[list-item]
+    sentences = _plain_resolution_sentences(text)
+    if len(sentences) == 2:
+        # Tried whole, ahead of the comma/and clause split, for the same
+        # reason the `_CONTINUOUS_PUMP_OR_KEYWORD_RE` case just above is:
+        # Tethermage's Advantage's own antecedent, "Target creature gets
+        # +2/+2 and gains reach until end of turn.", is cut by
+        # `_CLAUSE_SEPARATOR`'s bare "and" into two clause fragments before
+        # `_parse_object_anaphor_clause_pair` ever gets a two-clause window
+        # where the first element is the *whole* antecedent sentence - by
+        # the time the loop below reaches the rider ("Untap it."), the
+        # pump-keyword merge has already consumed the antecedent's own
+        # fragments into a callable, leaving no text behind to pair it with.
+        # Every other object-anaphor pair already in the pool (Kaito's own
+        # "Tap target creature. Put two stun counters on it.") is exactly
+        # two sentences with no internal "and" to begin with, so reading the
+        # sentences whole here changes nothing for them - it only reaches
+        # the compound-antecedent shape the finer split could never recover.
+        anaphor_pair = _parse_object_anaphor_clause_pair(
+            sentences[0], sentences[1], for_spell=for_spell
+        )
+        if anaphor_pair is not None:
+            return [anaphor_pair]
     clauses = _prepare_effect_clauses(text)
     if clauses is None:
         return None
