@@ -15320,17 +15320,16 @@ def _bare_subtype_word(description: str) -> str | None:
     Read here rather than through `permanent_description`, whose target
     grammar takes a lone plural noun it does not know as a creature type and
     would demand the Island be a creature. A card type ("creatures") is left
-    to that grammar.
+    to that grammar - rejected here before the shared singulariser even
+    runs, since this caller's own vocabulary lookup would otherwise still
+    fire on a multi-word phrase or a card type word the way `count_
+    expression`'s own subtype branch never has to guard against (its match
+    groups are already a lone word by construction).
     """
     word = description.strip()
     if " " in word or _singular_card_type(word) is not None:
         return None
-    lowered = word.lower()
-    vocabulary = subtype_vocabulary()
-    spellings = [lowered, lowered.removesuffix("s")]
-    if lowered.endswith("ves"):
-        spellings.append(lowered.removesuffix("ves") + "f")
-    return next((spelling for spelling in spellings if spelling in vocabulary), None)
+    return _singular_subtype_for_count_expression(word)
 
 
 def _sacrifice_is_payable(quantity: Quantity, candidates: list[CardState]) -> bool:
