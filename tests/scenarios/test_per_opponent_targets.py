@@ -197,3 +197,56 @@ def test_hapatra_frost_may_tap_fewer_than_every_opponent() -> None:
 
     assert bears.tapped
     assert not angel.tapped
+
+
+# --------------------------------------------------------------------------
+# "For each opponent, return up to one target `<X>` that player controls to
+# its owner's hand." - `_FOR_EACH_OPPONENT_DESTROY_RE`'s own bounce twin
+# (`_parse_for_each_opponent_return_to_hand_clause`). The Theorist, Jace
+# Beleren's own `-2` targeting profile already read (an earlier wave); the
+# resolved effect itself did not. Enigma Thief is the off-pool generality
+# proof - an ETB trigger, not a loyalty ability, and "nonland permanent"
+# rather than "artifact or creature".
+# --------------------------------------------------------------------------
+
+
+def test_the_theorist_returns_the_targeted_opponent_permanent_to_hand() -> None:
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["The Theorist, Jace Beleren"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    theorist = scenario.creature("The Theorist, Jace Beleren", "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.activate(theorist, index=1, targets=[bears])
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.HAND
+    assert bears in scenario.player("bob").hand
+    assert theorist.loyalty == 1
+
+
+def test_enigma_thief_returns_a_nonland_permanent_per_opponent_off_pool() -> None:
+    """Off-pool generality proof: Enigma Thief's own ETB trigger, "for each
+    opponent, return up to one target nonland permanent that player controls
+    to its owner's hand" - an artifact this time, not a creature, proving the
+    parser's own `desc` is not fitted to "artifact or creature"."""
+    islands = ["Island"] * 7
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Enigma Thief"], battlefield=islands)
+        .player("bob", battlefield=["Mind Stone"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mind_stone = scenario.find("Mind Stone", Zone.BATTLEFIELD, "bob")
+    scenario.choose_trigger_targets("Enigma Thief", [mind_stone])
+
+    scenario.cast_and_resolve("Enigma Thief", *scenario.untapped_sources(*islands))
+    scenario.resolve_top()  # the enters trigger
+
+    assert mind_stone.zone is Zone.HAND
+    assert mind_stone in scenario.player("bob").hand

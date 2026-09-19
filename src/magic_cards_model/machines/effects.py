@@ -17073,6 +17073,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if for_each_opponent_destroy is not None:
         return for_each_opponent_destroy
+    for_each_opponent_return_to_hand = _parse_for_each_opponent_return_to_hand_clause(
+        effect_text, for_spell=False
+    )
+    if for_each_opponent_return_to_hand is not None:
+        return for_each_opponent_return_to_hand
     whole_text_token = _parse_whole_text_token_clause(effect_text)
     if whole_text_token is not None:
         return whole_text_token
@@ -24068,6 +24073,36 @@ def _parse_for_each_opponent_destroy_clause(text: str, *, for_spell: bool) -> Ab
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
                 game.destroy(target)
+
+    return effect
+
+
+#: "For each opponent, return up to one target `<X>` that player controls to
+#: its owner's hand." - `_FOR_EACH_OPPONENT_DESTROY_RE`'s own bounce twin.
+#: The Theorist, Jace Beleren's own `-2`, and the real, off-set printing
+#: Enigma Thief's identical ETB trigger.
+_FOR_EACH_OPPONENT_RETURN_TO_HAND_RE = re.compile(
+    r"^for each opponent, return up to one target (?P<desc>.+?) that player controls "
+    r"to its owner'?s hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_for_each_opponent_return_to_hand_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_FOR_EACH_OPPONENT_RETURN_TO_HAND_RE`'s shape - see the banner above."""
+    match = _FOR_EACH_OPPONENT_RETURN_TO_HAND_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    phrase = _for_each_opponent_target_phrase(match.group("desc"))
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                game.return_to_hand(target)
 
     return effect
 
@@ -32080,6 +32115,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     for_each_opponent_destroy = _parse_for_each_opponent_destroy_clause(clause, for_spell=for_spell)
     if for_each_opponent_destroy is not None:
         return for_each_opponent_destroy  # type: ignore[return-value]
+    for_each_opponent_return_to_hand = _parse_for_each_opponent_return_to_hand_clause(
+        clause, for_spell=for_spell
+    )
+    if for_each_opponent_return_to_hand is not None:
+        return for_each_opponent_return_to_hand  # type: ignore[return-value]
     counter_each_creature_target_player = _parse_counter_each_creature_target_player_clause(
         clause, for_spell=for_spell
     )
