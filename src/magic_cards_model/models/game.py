@@ -5962,19 +5962,43 @@ class Game(EngineModel):
     def why_cannot_target_with_trigger(self, card_name: str, targets: list[object]) -> str | None:
         """Why this card's trigger could not target those, or None (CR 601.2c, 603.3d).
 
-        The source is found by name among the objects that can carry a trigger -
-        the battlefield and the stack - because `trigger_targets` is keyed by
-        name and there is no ability object yet at the time a scenario says what
-        it will aim at.
+        The source is found by name, first among the objects that can
+        actually carry a trigger right now - the battlefield and the stack -
+        and, failing that, anywhere else in the game (`_find_card_named_
+        anywhere`): a scenario very often scripts a trigger's targets ahead
+        of casting the card that will fire it (`trigger_targets` is keyed by
+        name precisely so this can be done before there is an ability
+        object to aim it at), and the ability's own printed text - what this
+        method actually validates against - is identical wherever the card
+        currently sits. Only when the card cannot be found *anywhere* is the
+        choice genuinely left unchecked, the same way an unreadable spell's
+        targets are (see `docs/engine-coverage.md`) - not merely because it
+        has not been cast yet, which used to let an impossible target sail
+        through untouched: real play never asks for this trigger's targets
+        until the card *is* on the battlefield or the stack, at which point
+        `_ask_trigger_targets` runs this identical `profile_for_text`/
+        `TargetingProfile.check` pair for real, so scripting a target this
+        method would already refuse was scripting something real play could
+        never have accepted either.
 
         A card may print more than one targeting trigger. The announcement names
         the card, not the ability, so the targets are legal if *any* of its
         triggers would accept them; the first reason is reported when none do.
         """
-        source = self._trigger_source_named(card_name)
+        source = self._trigger_source_named(card_name) or self._find_card_named_anywhere(card_name)
         if source is None:
             return None
-        controller = self.controller_of(source).username
+        # `controller_or_owner` (CR 108.4a), not `Game.controller_of`: a card
+        # found only by `_find_card_named_anywhere` may not be on the
+        # battlefield or the stack at all (CR 109.4 gives a card in a hand,
+        # library, or graveyard no controller), and `controller_of` silently
+        # answers `active_player` for one of those instead of raising - which
+        # was this exact card's own bug: Badgermole Cub scripted from bob's
+        # hand read back as alice's (the active player, always seat 0),
+        # because "target land you control" was checked against whoever
+        # `controller_of` defaults to rather than whoever actually owns the
+        # ability being scripted.
+        controller = source.controller_or_owner or self.active_player.username
 
         # `parse_abilities` rather than `triggers_for`'s `triggered_abilities_of`,
         # which keeps only the six trigger conditions the matcher recognises. A
@@ -6010,6 +6034,36 @@ class Game(EngineModel):
         for state in [*self.battlefield, *self.spells_on_stack]:
             if state.name in (card_name, front) or state.name.split("//")[0].strip() == front:
                 return state
+        return None
+
+    def _find_card_named_anywhere(self, card_name: str) -> CardState | None:
+        """The first card by this name in *any* zone this game can see.
+
+        `_trigger_source_named`'s own battlefield-and-stack search answers
+        "where would this trigger actually fire from right now" (CR 603.6a,
+        603.2g) - the right, narrow question for the engine's own use of it.
+        `why_cannot_target_with_trigger` asks a different question when that
+        search comes up empty: "is this card's own printed ability even
+        capable of legally targeting this" - answerable from the card's text
+        alone, wherever the card currently sits, since a hand card about to
+        be cast prints the identical ability a battlefield one would. This
+        is what lets a scenario script a trigger's targets before casting
+        the card without silently skipping validation for it.
+        """
+        front = card_name.split("//")[0].strip()
+
+        def matches(state: CardState) -> bool:
+            return state.name in (card_name, front) or state.name.split("//")[0].strip() == front
+
+        for zone_cards in self.shared_zones.values():
+            for state in zone_cards:
+                if isinstance(state, CardState) and matches(state):
+                    return state
+        for player in self.players:
+            for zone_cards in player.zones.values():
+                for state in zone_cards:
+                    if matches(state):
+                        return state
         return None
 
     def _turn_order_from_active(self) -> list[str]:
