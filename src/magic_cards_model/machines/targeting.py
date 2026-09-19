@@ -435,6 +435,16 @@ class TargetRequirement(EngineModel):
     unenforced - so a card this narrow reader does not know about does not
     regress from "ignored" to "the whole targeting text refuses to parse"."""
 
+    required_counter_kind: str | None = None
+    """"with a +1/+1 counter on it" in "target creature with a +1/+1 counter
+    on it" (Tomik, Orzhov Lawmage) - CR 122.1's counter kind (any single
+    word or the two printed +N/-N shapes), read the same narrow way
+    `required_keyword` reads a trailing "with <keyword>" clause
+    (`_WITH_COUNTER_RE`): this used to be exactly the unenforced "with"
+    clause `required_keyword`'s own docstring names as the reason its own
+    vocabulary stays narrow, so a target with no counter on it at all was
+    silently accepted as legal."""
+
     if_gift_promised: "TargetRequirement | None" = None
     """CR 702.174m: "If part of a spell's ability has its effect only if its
     gift was promised, and that part of the ability includes any targets, the
@@ -655,6 +665,9 @@ class TargetRequirement(EngineModel):
         keyword = self._rejects_required_keyword(target, game)
         if keyword is not None:
             return keyword
+        counter_kind = self._rejects_required_counter_kind(target)
+        if counter_kind is not None:
+            return counter_kind
         target_count = self._rejects_target_count(target)
         if target_count is not None:
             return target_count
@@ -732,6 +745,25 @@ class TargetRequirement(EngineModel):
                 f"and {target.name} is not"
             )
         return None
+
+    def _rejects_required_counter_kind(self, target: Any) -> str | None:
+        """CR 122.1: "with a `<kind>` counter on it" (Tomik, Orzhov Lawmage).
+
+        Fails open for anything with no `counters` to read - a bare `UUID`
+        or `TargetRef`, the same shape every other restriction here already
+        falls back to when the caller supplied less than a real `CardState`.
+        """
+        if self.required_counter_kind is None:
+            return None
+        counters = getattr(target, "counters", None)
+        if counters is None:
+            return None
+        if self.required_counter_kind in counters:
+            return None
+        return (
+            f"{self.phrase} needs a permanent with a {self.required_counter_kind} counter "
+            f"on it, and {target.name} has none"
+        )
 
     def _rejects_token(self, target: CardState) -> str | None:
         """CR 111.1: a token is a permanent that no card represents.
@@ -2426,6 +2458,12 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     # it to tell Aeronaut Cavalry's bare "Soldier" (CR 205.3m, elided
     # "creature") apart from an ordinary lower-case English noun the way
     # `_read_subtype_list` already does for its own two-or-more-item list.
+    # Read *before* tokenization, not after: the counter-kind spelling
+    # ("+1/+1", "-1/-1") uses "+"/"/" characters the word tokenizer below
+    # does not keep, so a clause extracted from the already-tokenized `rest`
+    # the way `required_keyword`'s own plain-word vocabulary safely is would
+    # never see the literal symbols to match against.
+    required_counter_kind, noun_phrase = _extract_required_counter_kind(noun_phrase)
     raw_words = re.findall(r"[\w'-]+|,", noun_phrase)
     words = re.findall(r"[\w'-]+|,", noun_phrase.lower())
     if not words:
@@ -2683,6 +2721,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         comparison_x_definition=comparison_x_definition,
         distinct_controllers=distinct_controllers,
         required_keyword=required_keyword,
+        required_counter_kind=required_counter_kind,
     )
 
 
@@ -3049,27 +3088,88 @@ def _extract_distinct_controllers(rest: str) -> tuple[bool, str]:
     return True, rest[match.end() :].strip()
 
 
-#: A trailing "with `<keyword>`" clause - "target creature you don't control
-#: with flying" (Kraul Harpooner). Deliberately a small, explicit vocabulary
-#: rather than "with (?P<keyword>.+)$": an unrecognised "with" clause (a
-#: counter, "with the highest power", CR 205.2a shapes this reader is not
-#: meant to reach) is left exactly as unenforced as it always was, rather
-#: than newly failing the whole phrase closed - only a *recognised* keyword
-#: gains enforcement here.
+#: A "with `<keyword>`" clause modifying the noun - "target creature you
+#: don't control with flying" (Kraul Harpooner). Deliberately a small,
+#: explicit vocabulary rather than "with (?P<keyword>.+)": an unrecognised
+#: "with" clause (a counter, "with the highest power", CR 205.2a shapes this
+#: reader is not meant to reach) is left exactly as unenforced as it always
+#: was, rather than newly failing the whole phrase closed - only a
+#: *recognised* keyword gains enforcement here.
+#:
+#: Not anchored to the end of the string: Kraul Harpooner's own "with flying"
+#: happens to sit at a sentence boundary ("...with flying. This creature
+#: gets..."), but Tomik, Orzhov Lawmage's "target creature with a +1/+1
+#: counter on it gains flying until end of turn." keeps the restriction and
+#: the resolving verb in one sentence, so a trailing `$` never matched there
+#: at all - `_extract_required_keyword`/`_extract_required_counter_kind`
+#: below splice the clause out of wherever it sits instead.
 _WITH_KEYWORD_RE = re.compile(
     r"\bwith\s+(?P<keyword>flying|reach|trample|menace|haste|vigilance|"
-    r"first strike|double strike|defender|deathtouch|lifelink)$",
+    r"first strike|double strike|defender|deathtouch|lifelink)\b",
     re.IGNORECASE,
 )
 
+#: "with a `<kind>` counter on it" - Tomik, Orzhov Lawmage's own "target
+#: creature with a +1/+1 counter on it". `_WITH_KEYWORD_RE`'s own docstring
+#: names a counter clause as exactly the "with" shape it deliberately leaves
+#: unread; this is that shape's own reader, CR 122.1's counter-kind grammar
+#: (a bare word, or one of the two +N/-N power/toughness spellings) rather
+#: than "with `<word>`" in general. See `_WITH_KEYWORD_RE`'s docstring for why
+#: this is not anchored to the end of the string either.
+_WITH_COUNTER_RE = re.compile(
+    r"\bwith an? (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|them)\b", re.IGNORECASE
+)
+
+#: A small, deliberately narrow vocabulary of resolution verbs that always
+#: mark the end of a target's own restrictive clauses and the start of what
+#: the ability actually does to it - Tomik's "gains", a mass-pump's "gets",
+#: a land turning into a creature's "becomes" (Jolrael, Voice of Zhalfir's
+#: own shape), "loses". Confining a "with `<restriction>`" search to the text
+#: *before* the first one of these, rather than the whole remaining sentence,
+#: is what tells Tomik's "target creature with a +1/+1 counter on it gains
+#: flying ..." (the counter clause restricts the target) apart from
+#: Jolrael's "target land ... becomes ... a Bird creature with flying and
+#: haste ..." (the keyword there describes what the target *becomes*, not a
+#: restriction on what may be targeted) - the same distinction CR 608.2c's
+#: printed order already draws between an instruction's target and what it
+#: goes on to do. Without this cut, dropping `_WITH_KEYWORD_RE`'s old
+#: end-anchor made "with flying" match Jolrael's *effect* text and wrongly
+#: refuse every land without flying already on it as an illegal target.
+_TARGET_CLAUSE_VERB_RE = re.compile(r"\b(?:gains?|gets?|becomes?|loses?)\b", re.IGNORECASE)
+
+
+def _before_target_clause_verb(text: str) -> str:
+    """The prefix of `text` up to (not including) the first resolution verb
+    `_TARGET_CLAUSE_VERB_RE` recognises - the scope a "with `<restriction>`"
+    search is confined to, so it never reaches into what the ability *does*
+    once its target is chosen."""
+    match = _TARGET_CLAUSE_VERB_RE.search(text)
+    return text if match is None else text[: match.start()]
+
 
 def _extract_required_keyword(rest: str) -> tuple[str | None, str]:
-    """Read a trailing "with `<keyword>`" clause out of `rest` (CR 702), or
-    leave it untouched when there is none - see `_WITH_KEYWORD_RE`."""
-    match = _WITH_KEYWORD_RE.search(rest)
+    """Read a "with `<keyword>`" clause out of `rest` (CR 702), spliced out
+    from wherever it sits ahead of the resolving verb, or leave `rest`
+    untouched when there is none - see `_WITH_KEYWORD_RE`."""
+    match = _WITH_KEYWORD_RE.search(_before_target_clause_verb(rest))
     if match is None:
         return None, rest
-    return match.group("keyword").lower(), rest[: match.start()].strip()
+    remainder = (rest[: match.start()] + " " + rest[match.end() :]).strip()
+    return match.group("keyword").lower(), remainder
+
+
+def _extract_required_counter_kind(rest: str) -> tuple[str | None, str]:
+    """Read a "with a `<kind>` counter on it" clause out of `rest`
+    (CR 122.1), spliced out from wherever it sits ahead of the resolving
+    verb, or leave `rest` untouched when there is none - see
+    `_WITH_COUNTER_RE`. `kind` is normalised the identical way `machines/
+    effects._counter_kind` already normalises a printed counter word:
+    lower-cased, the two power/toughness spellings kept literal."""
+    match = _WITH_COUNTER_RE.search(_before_target_clause_verb(rest))
+    if match is None:
+        return None, rest
+    remainder = (rest[: match.start()] + " " + rest[match.end() :]).strip()
+    return match.group("kind").lower(), remainder
 
 
 #: "target permanent that's one or more colors" (Devourer of Destiny, Ugin,

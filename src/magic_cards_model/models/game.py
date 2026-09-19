@@ -132,6 +132,7 @@ from ..machines.effects import (
     ControlReplacementNotice,
     DelayedClauseNotice,
     ImprintNotice,
+    LayerRemainderNotice,
     ModeNotice,
     ReflexiveClauseNotice,
     SearchDescriptionNotice,
@@ -1666,6 +1667,14 @@ class Game(EngineModel):
     at all, with nothing anywhere recording that the second sentence had gone
     unread. The same unreadable-is-not-the-same-as-no-effect record every
     other notice list here keeps."""
+
+    layer_remainder_notices: list[LayerRemainderNotice] = Field(default_factory=list)
+    """One entry per multi-sentence resolution whose CR 611.2 layer sentence
+    (a pump, a keyword grant, a base P/T set) ran, but a sibling sentence in
+    the same paragraph is not a layer shape and could not be read either -
+    Academic Ascent's own "Empower Jace 2." used to be silently dropped the
+    moment the pump sentence routed the *whole* text to `create_continuous_
+    effect`. See `LayerRemainderNotice`."""
 
     search_description_notices: list[SearchDescriptionNotice] = Field(default_factory=list)
     """Library searches whose card description could not be read, so the

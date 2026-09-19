@@ -32,6 +32,7 @@ from scripts.sweep_pool import (
     _condition_can_fire,
     _effect_matched_inside_quotes,
     _intended_token_requirement,
+    _modal_category,
     _spell_faces,
     _worse,
     _x_candidates,
@@ -755,3 +756,45 @@ def test_watcher_for_tomorrows_leaves_the_battlefield_clause_is_not_silent():
     clause = "When this creature leaves the battlefield, put the exiled card into its owner's hand."
     assert outcomes[clause] == HANDLED
     assert classify_card(watcher)[0] != SILENT
+
+
+def test_modal_category_is_worst_mode_not_best_mode():
+    """`_modal_category` used to score `HANDLED` the moment *any* chosen
+    mode's text parsed, on the reading that a card with at least one working
+    mode is not dead - but that scores a card `HANDLED` when a real, chosen
+    mode of it does nothing (CR 700.2a lets a player choose *any* mode with
+    no minimum-usefulness rule), which is exactly the "best clause wins" bug
+    `classify_card`'s own docstring already rejects for an ordinary card
+    (Territorial Kavu, Obsidian Charmaw, Engineered Explosives).
+
+    Cryptic Command (off-set, not Reality Fracture and not the reported
+    card): four modes, the third ("Return target permanent to its owner's
+    hand" is fine, but the counter-then-draw combination and the tap-all
+    mode are what actually leaves one mode dark) reads False, proving the
+    worst-mode rule on its own. Vraska's Final Mercy was the reported shape
+    at the time this test was written - mode 1 (destroy) read, mode 2 (lose
+    life, Empower Jace 6) did not, since Empower Jace (CR 701.71) belonged to
+    a different wave - and now that Empower Jace has landed, both of its
+    modes read: it is fully `HANDLED`, which this test keeps asserting so a
+    future regression in either mode is still caught.
+    """
+    assert _modal_category(card("Cryptic Command")) == NOTICE
+    assert _modal_category(card("Vraska's Final Mercy")) == HANDLED
+
+
+def test_ingris_stingerquills_permanent_spell_records_no_phantom_notice():
+    """Ingris Stingerquill: "{4}: Create a 2/2 ... Cadet. Then creatures you
+    control gain haste until end of turn." is its *activated* ability's own
+    line, read correctly through `activated_effect_for`. `effect_for` is
+    still called on the whole permanent's raw printed text for its own
+    (nonexistent, CR 608.3a) spell resolution, and the group-haste sentence
+    embedded in that text is now genuinely readable
+    (`_MASS_PUMP_UNTIL_EOT_RE`'s own keyword-only widening) - which used to
+    make `_compose_layer_effect_with_remainder` treat the activated
+    ability's own cost line as an unread sibling instruction of the spell's
+    resolution and record a `LayerRemainderNotice` for a permanent spell
+    that has no resolution text to run at all.
+    """
+    outcomes = classify_clauses(card("Ingris Stingerquill"))
+    assert all(outcome.source != "spell" for outcome in outcomes)
+    assert {outcome.category for outcome in outcomes} == {HANDLED}

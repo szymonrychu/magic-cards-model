@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "6471b135-33a8-4005-9a07-ebb74e0bf145",
+  "oracle_id": "bda098cb-31ec-41a1-a9d7-122877cc69d2",
+  "multiverse_ids": [],
+  "tcgplayer_id": 715923,
+  "cardmarket_id": 907314,
+  "name": "Ingris Stingerquill",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/6471b135-33a8-4005-9a07-ebb74e0bf145",
+  "scryfall_uri": "https://scryfall.com/card/fra/137/ingris-stingerquill?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-08T14:36:52Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.jpg?1788878212",
+    "normal": "https://cards.scryfall.io/normal/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.jpg?1788878212",
+    "large": "https://cards.scryfall.io/large/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.jpg?1788878212",
+    "png": "https://cards.scryfall.io/png/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.png?1788878212",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.jpg?1788878212",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.jpg?1788878212",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.webp?1788878212",
+    "grid": "https://cards.scryfall.io/grid/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.webp?1788878212",
+    "display": "https://cards.scryfall.io/display/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.webp?1788878212",
+    "art": "https://cards.scryfall.io/art/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.webp?1788878212",
+    "crop": "https://cards.scryfall.io/crop/front/6/4/6471b135-33a8-4005-9a07-ebb74e0bf145.webp?1788878212"
+  },
+  "mana_cost": "{B}{R}{R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Elder Sphinx",
+  "oracle_text": "Flying\nWhenever a creature you control attacks, that creature deals 1 damage to each opponent.\n{4}: Create a 2/2 colorless Wizard Soldier creature token named Cadet. Then creatures you control gain haste until end of turn.",
+  "power": "1",
+  "toughness": "4",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6471b135-33a8-4005-9a07-ebb74e0bf145/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abda098cb-31ec-41a1-a9d7-122877cc69d2&unique=prints",
+  "collector_number": "137",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chase Stone",
+  "artist_ids": [
+    "2d753f61-5f5b-468e-97ea-8e0fdd347340"
+  ],
+  "illustration_id": "f202ab9a-bbe6-4370-b0f2-c773dec5e6dc",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 21880,
+  "prices": {
+    "usd": "38.00",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "19.79",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIngris%2BStingerquill",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIngris%2BStingerquill",
+    "edhrec": "https://edhrec.com/route/?cc=Ingris+Stingerquill"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715923%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907314&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Ingris+Stingerquill&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

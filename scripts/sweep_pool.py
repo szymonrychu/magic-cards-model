@@ -116,6 +116,9 @@ from magic_cards_model.machines.effects import (  # noqa: E402
     create_continuous_effect,
     create_continuous_effect_of_ability,
     effect_for,
+    modal_trigger_profile,
+    mode_effect_body,
+    parse_mixed_effect,
     parse_mode_effect,
     reads_as_transforms_line,
     resolve_modal_spell,
@@ -484,6 +487,7 @@ _NOTICE_STAND_IN_NAMES = frozenset(
         "damage_then_group_grant_notice_only",
         "control_replacement_notice_only",
         "search_description_notice_only",
+        "layer_effect_with_remainder_notice",
     }
 )
 
@@ -791,17 +795,52 @@ def _static_ability_category(printing: Card, text: str) -> str:
 def _modal_category(printing: Card) -> str:
     """Handled/notice/silent for a modal spell, mirroring `resolve_modal_spell`
     mode by mode: it runs whichever chosen mode's text `parse_mode_effect`
-    reads and appends a `ModeNotice` for one it cannot, per mode - so a card
-    with at least one readable mode is "handled" (some chosen mode really does
-    something), and one where every mode is unreadable is "notice" rather than
-    "silent", because choosing *any* mode of it always leaves a `ModeNotice`
-    behind. An unrecognised modal structure (`understood=False`) never reaches
-    `resolve_modal_spell`'s per-mode loop at all and is silent with no notice.
+    reads and appends a `ModeNotice` for one it cannot, per mode.
+
+    **The worst mode wins**, the identical rule `classify_card` already
+    applies across a whole card's clauses (see its own docstring): CR 700.2a
+    lets a player choose *any* mode, with no rule that the chosen one has to
+    be the readable one, so a card is only genuinely `HANDLED` when *every*
+    one of its modes would actually do something if chosen - Vraska's Final
+    Mercy's own mode 2 ("lose 2 life. Empower Jace 6.") is a legal choice
+    that currently does nothing, and scoring the card `HANDLED` on the
+    strength of mode 1 alone hid that the same way Territorial Kavu's
+    working attack trigger used to hide its own dead characteristic-defining
+    ability. A card where *no* mode reads is still `NOTICE` rather than
+    `SILENT`, because choosing any mode of it leaves a `ModeNotice` behind.
+    An unrecognised modal structure (`understood=False`) never reaches
+    `resolve_modal_spell`'s per-mode loop at all and is silent with no
+    notice.
     """
     modal = modal_profile(printing)
     if modal is None or not modal.understood or not modal.modes:
         return SILENT
-    if any(parse_mode_effect(mode, 0) is not None for mode in modal.modes):
+    if all(parse_mode_effect(mode, 0) is not None for mode in modal.modes):
+        return HANDLED
+    return NOTICE
+
+
+def _modal_trigger_category(effect_text: str) -> str | None:
+    """`_modal_category`'s own worst-mode rule, for a modal *triggered*
+    ability's "choose one/one or both -" tail (CR 700.2, CR 603.3c -
+    Fateshaper Aspirant, Yuriko, Hope from the Shadows) rather than a modal
+    spell's.
+
+    `None` when `effect_text` is not this shape at all - `_dispatch_
+    category`'s cue to fall through to its ordinary identity-based
+    dispatch. `_resolve_modal_triggered_ability_clause`'s own closure has no
+    fixed identity to compare against the way `resolve_modal_spell` does (a
+    fresh closure is built on every call), so without this a modal
+    triggered ability's *whole* ability fell to `_dispatch_category`'s
+    default `HANDLED` the moment `trigger_effect_for` returned any non-`None`
+    callable at all - true the instant *one* mode read, wrong for every
+    other mode beside it, the identical "best mode wins" defect
+    `_modal_category` itself was fixed for.
+    """
+    profile = modal_trigger_profile(effect_text)
+    if profile is None:
+        return None
+    if all(parse_mixed_effect(mode_effect_body(mode)) is not None for mode in profile.modes):
         return HANDLED
     return NOTICE
 
@@ -1201,6 +1240,15 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
 _QUOTED_SPAN_RE = re.compile(r'"[^"]*"')
 
 
+#: `machines/effects.py`'s `_compose_layer_effect_with_remainder*` family
+#: names its two closures identically across all four of its spell/ability/
+#: mode variants - see `_is_sentinel_effect`'s own note on why they join the
+#: sentinel set below rather than being asked the quoted-text question.
+_LAYER_COMPOSED_NAMES = frozenset(
+    {"layer_and_remainder_effect", "layer_effect_with_remainder_notice"}
+)
+
+
 def _is_sentinel_effect(effect: object) -> bool:
     """Whether `effect` is one of `_dispatch_category`'s three named stand-
     ins (`create_continuous_effect`, `create_continuous_effect_of_ability`,
@@ -1212,12 +1260,25 @@ def _is_sentinel_effect(effect: object) -> bool:
     `trigger_effect_for` itself returns for that one string, but not the
     independent, whole-card verdict `_dispatch_category` actually reports -
     so the quoted-text closure must never ask about a sentinel's own
-    dispatch answer, only ever about an ordinary callable's."""
-    return effect in (
+    dispatch answer, only ever about an ordinary callable's.
+
+    A closure `_compose_layer_effect_with_remainder`/its three siblings
+    build - `layer_and_remainder_effect` or `layer_effect_with_remainder_
+    notice`, named by `_LAYER_COMPOSED_NAMES` - is the identical situation
+    one level up: its own layer half is still the same `create_continuous_
+    effect`/`_of_ability` sentinel underneath, whose verdict on a quoted span
+    is `_layer_category`'s to give, and its composed remainder half (an
+    ordinary clause, never one carrying its own quoted ability text in this
+    pool) does not depend on the layer sentence's quote either. Matched by
+    name rather than identity, since a fresh closure is built on every call.
+    """
+    if effect in (
         create_continuous_effect,
         create_continuous_effect_of_ability,
         resolve_modal_spell,
-    )
+    ):
+        return True
+    return getattr(effect, "__name__", "") in _LAYER_COMPOSED_NAMES
 
 
 def _blank_quoted_spans(text: str) -> str:
@@ -1601,7 +1662,12 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 clauses.append(ClauseOutcome(SILENT, ability.text, "triggered (unread condition)"))
                 continue
             effect = trigger_effect_for(printing.name, ability.event, ability.effect)
-            category = _dispatch_category(effect, printing)
+            modal_category = _modal_trigger_category(ability.effect)
+            category = (
+                modal_category
+                if modal_category is not None
+                else _dispatch_category(effect, printing)
+            )
             if (
                 category == HANDLED
                 and not _is_sentinel_effect(effect)
