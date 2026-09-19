@@ -44,6 +44,14 @@ The rules these rest on:
   *creating* player's control, which both `_extra_token_applies` (already
   proven) and the new substitution reuse unchanged.
 
+Tomik, Izzet Sparkmage's "If a source you control would deal noncombat
+damage to an opponent or a permanent an opponent controls, it deals that
+much damage plus 1 instead." and Yoshimaru, Beloved Companion's "If one or
+more +1/+1 counters would be put on a creature you control, that many plus
+one +1/+1 counters are put on it instead." both already compiled through
+`_compile_damage_plus_amount` and `_compile_counter_doubler` with no code
+change at all - verified end to end below rather than only at the parser.
+
 Every CR number here was looked up with `knowledge_search(q="...",
 type="rules")` in the session that wrote it, and every card's text with
 `resolve_cards` or straight off its fixture.
@@ -191,3 +199,72 @@ def test_divine_visitation_replaces_a_creature_token_with_an_angel_off_set():
     assert scenario.game.characteristics_of(token).power_toughness == (4, 4)
     assert has_keyword(token, Keyword.FLYING, scenario.game)
     assert has_keyword(token, Keyword.VIGILANCE, scenario.game)
+
+
+# --------------------------------------------------------------------------
+# Tomik, Izzet Sparkmage and Yoshimaru, Beloved Companion: already read by
+# `_compile_damage_plus_amount` and `_compile_counter_doubler` with no code
+# change needed - verified end to end here rather than only at the parser.
+# --------------------------------------------------------------------------
+
+
+def test_tomik_izzet_sparkmage_adds_one_to_noncombat_damage_dealt_to_an_opponent():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tomik, Izzet Sparkmage", "Grizzly Bears"])
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bob = scenario.player("bob")
+
+    dealt = scenario.game.deal_damage(bob, 3, source=bears)
+
+    assert dealt == 4, "noncombat damage from a source alice controls, plus 1"
+
+
+def test_tomik_izzet_sparkmage_leaves_its_own_controllers_damage_alone():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tomik, Izzet Sparkmage", "Grizzly Bears"], life=20)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    alice = scenario.player("alice")
+
+    dealt = scenario.game.deal_damage(alice, 3, source=bears)
+
+    assert dealt == 3, "not dealt to an opponent - no plus 1"
+
+
+def test_yoshimaru_beloved_companion_adds_one_plus_one_counter():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Yoshimaru, Beloved Companion", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.game.add_counters(bears, "+1/+1", 2)
+
+    assert bears.counters["+1/+1"] == 3, "2 stated, plus one more"
+
+
+def test_yoshimaru_beloved_companion_leaves_an_opponents_creature_alone():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Yoshimaru, Beloved Companion"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    theirs = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.game.add_counters(theirs, "+1/+1", 2)
+
+    assert theirs.counters["+1/+1"] == 2, "not a creature alice controls - no plus one"
