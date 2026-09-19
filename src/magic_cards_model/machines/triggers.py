@@ -2439,6 +2439,14 @@ _PERMANENT_KEYWORD_COST_PAID_WITH_COUNTER = re.compile(
     r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counter on it$"
 )
 
+#: "it had power greater than `<name>`'s power" - Drizzt Do'Urden's own dies
+#: trigger, `<name>` printed as the card's own name (CR 201.5) rather than
+#: CR 700.7's "this creature". `clause` arrives lowercased (see below), so
+#: `<name>` is matched case-insensitively and checked against the source's
+#: own printed name the same way `_parse_may_exile_self_then_return_clause`
+#: already does for its own CR 201.5 self-reference.
+_POWER_GREATER_THAN_SELF_RE = re.compile(r"^it had power greater than (?P<name>.+)'s power$")
+
 
 def intervening_if_holds(
     game: "Game",
@@ -2600,6 +2608,14 @@ def intervening_if_holds(
         # by this point the card has no time counters left, so CR 702.62b's
         # "suspended" is deliberately *not* what the rule reaches for here.
         return source.zone is Zone.EXILE
+
+    if match := _POWER_GREATER_THAN_SELF_RE.fullmatch(clause):
+        if match.group("name") not in (source.name or "").lower():
+            return _fail_closed(game, ability, source)
+        dying = event_subject_power(game, event)
+        if dying is None:
+            return _fail_closed(game, ability, source)
+        return dying > (game.power_of(source) or 0)
 
     if clause == "it isn't a token":
         # Gruff Triplets' own ETB ("if it isn't a token, create two tokens
@@ -3044,6 +3060,33 @@ def _spells_cast_last_turn_holds(game: "Game", clause: str) -> bool | None:
         return any(len(cast) >= wanted for cast in game.spells_cast_last_turn.values())
 
     return None
+
+
+def event_subject_power(game: "Game", event: "GameEvent | None") -> int | None:
+    """The power of `event`'s own subject - the creature that died, entered,
+    attacked, or whatever else the event names (CR 603.2) - or `None` when
+    there is no event, no subject, or the subject cannot be found at all.
+
+    Reads `CardState.power` directly rather than `Game.power_of`
+    (`computed_board().of(...)`, CR 613.5's layer system): a dead or
+    otherwise departed subject is not part of any battlefield the layer
+    system computes over, and `CardState.power` already falls back to
+    `last_known_power` (CR 608.2h) the moment the object leaves the
+    battlefield, the same last-known-information convention
+    `intervening_if_holds`'s own "it had no -1/-1 counters on it" clause
+    reads for a dying creature's counters. Shared by Drizzt Do'Urden's own
+    "the difference" between a dying creature's power and its own
+    (`machines/effects.py`'s `_parse_put_counters_equal_to_clause`) and
+    Gruff Triplets' own "a number of +1/+1 counters equal to its power" on
+    its own dies trigger - the same dying-creature's-power read, used two
+    different ways.
+    """
+    if event is None or event.subject_id is None:
+        return None
+    subject = game.find_by_id(event.subject_id)
+    if subject is None:
+        return None
+    return subject.power
 
 
 def _fail_closed(game: "Game", ability: TriggeredAbility, source: CardState) -> bool:

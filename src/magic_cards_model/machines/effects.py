@@ -185,6 +185,7 @@ from .targeting import (
 )
 from .triggers import (
     AbilityOnStack,
+    event_subject_power,
     is_ability,
     resolution_key,
     triggered_mana_count,
@@ -1231,13 +1232,20 @@ class UnreadableCounterAmountNotice(EngineModel):
     expression: str
 
 
-#: "Put a number of `<kind>` counters on it/this `<noun>` equal to `<expr>`." -
-#: the resolving-effect twin of the "enters with a number of `<kind>` counters
-#: on it equal to `<expr>`" replacement (Reverent Hunter's enters trigger).
+#: "Put a number of `<kind>` counters on it/this `<noun>`/`<Name>` equal to
+#: `<expr>`." - the resolving-effect twin of the "enters with a number of
+#: `<kind>` counters on it equal to `<expr>`" replacement (Reverent Hunter's
+#: enters trigger). The third `object` shape is Drizzt Do'Urden's own "put a
+#: number of +1/+1 counters on Drizzt equal to the difference" - CR 201.5's
+#: self-reference by the card's own (here, CR 201.5c's *shortened*) printed
+#: name rather than CR 700.7's "this creature"; `_parse_put_counters_equal_
+#: to_clause` below checks the captured name against the resolving ability's
+#: actual source before treating it as one, the same guard `_parse_may_
+#: exile_self_then_return_clause` already uses for its own CR 201.5 shape.
 _COUNTERS_EQUAL_TO_ON_OBJECT_RE = re.compile(
-    r"^put a number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<object>it|this \w+) "
-    r"equal to (?P<expression>.+?)\.?$",
-    re.IGNORECASE,
+    r"^(?i:put a number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on )"
+    r"(?P<object>(?i:it|this \w+)|[A-Z][A-Za-z']*)"
+    r"(?i: equal to )(?P<expression>.+?)\.?$"
 )
 
 
@@ -1250,14 +1258,31 @@ def _parse_put_counters_equal_to_clause(text: str) -> AbilityEffect | None:
     an ability with no event. X is the ability's own announced X. An
     expression `amount_expression` cannot read records an
     `UnreadableCounterAmountNotice` and places nothing.
+
+    "The difference" is Drizzt Do'Urden's own magnitude - "if it had power
+    greater than Drizzt's power, put a number of +1/+1 counters on Drizzt
+    equal to the difference" - read here rather than as an `amount_expression`
+    term: it needs `AbilityOnStack.event` (the dying creature `event_subject_
+    power` reads, CR 603.10a's look-back), which `amount_expression`'s own
+    `(game, controller, obj, x)` reader shape has no room for. CR 107.1b's
+    "if a calculation ... yields a negative number, zero is used instead"
+    applies the same way it does inside `amount_expression` itself.
     """
     match = _COUNTERS_EQUAL_TO_ON_OBJECT_RE.fullmatch(text.strip())
     if match is None:
         return None
     kind = _counter_kind(match.group("kind"))
     expression = match.group("expression").strip()
-    reader = amount_expression(expression)
-    names_the_subject = match.group("object").lower() == "it"
+    is_the_difference = expression.lower() == "the difference"
+    reader = None if is_the_difference else amount_expression(expression)
+    object_phrase = match.group("object")
+    names_the_subject = object_phrase.lower() == "it"
+    # CR 201.5/201.5c: anything left is neither "it" nor "this <noun>" -
+    # the card's own (possibly shortened) printed name, self-referencing the
+    # ability's own source and nothing else with the same name.
+    self_named = (
+        None if names_the_subject or object_phrase.lower().startswith("this ") else object_phrase
+    )
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         obj = ability.source(game)
@@ -1266,7 +1291,14 @@ def _parse_put_counters_equal_to_clause(text: str) -> AbilityEffect | None:
             obj = game.find_by_id(event.subject_id)
         if obj is None or obj.zone is not Zone.BATTLEFIELD:
             return
-        if reader is None:
+        if self_named is not None and self_named.lower() not in (obj.name or "").lower():
+            return
+        if is_the_difference:
+            dying = event_subject_power(game, event)
+            if dying is None:
+                return
+            amount = max(dying - (game.power_of(obj) or 0), 0)
+        elif reader is None:
             game.unreadable_counter_amount_notices.append(
                 UnreadableCounterAmountNotice(
                     source_id=ability.source_id,
@@ -1276,7 +1308,8 @@ def _parse_put_counters_equal_to_clause(text: str) -> AbilityEffect | None:
                 )
             )
             return
-        amount = reader(game, ability.controller, obj, ability.x_value)
+        else:
+            amount = reader(game, ability.controller, obj, ability.x_value)
         if amount > 0:
             game.add_counters(obj, kind, amount)
 
