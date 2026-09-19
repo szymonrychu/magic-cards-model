@@ -4204,6 +4204,73 @@ def _parse_search_clause(clause: str, *, for_spell: bool) -> TargetedClause | No
     return _build_search_clause(match, for_spell=for_spell)
 
 
+#: "Search your library for `<quality>` card[s], reveal it, then shuffle and
+#: put that card on top [of your library]." - Loyal Tutor's own shape, the
+#: classic Mystical Tutor family. A fourth search destination beside
+#: `_SEARCH_AND_PUT_RE`'s hand/battlefield pair: CR 701.24a's shuffle happens
+#: to the *remaining* library before the find goes back, not after (the
+#: found card is already removed from the library by `Game.search_library`
+#: before its own shuffle runs, so the shuffle never touches it), and the
+#: find is put back on top of the very library it came out of rather than
+#: into a different zone at all - `Game.put_cards_into_library`'s own
+#: `to_bottom=False` arm is exactly CR 701.20d's "a card put on top sits
+#: above every card already there".
+_SEARCH_REVEAL_SHUFFLE_TOP_RE = re.compile(
+    r"(?P<subject>you may )?"
+    r"search (?:your|their) library for "
+    rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<that_many>that many)) "
+    r"(?:(?P<quality>.+?) )?card(?:s)?"
+    r"(?P<basic_land_type> with a basic land type)?"
+    r"(?: with mana value (?P<max_mv>\d+) or less)?"
+    r", reveal (?:it|them|that card|those cards), then shuffle(?: (?:your|their) library)? "
+    r"and put (?:it|them|that card|those cards) on top(?: of (?:your|their) library)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_search_reveal_shuffle_top_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SEARCH_REVEAL_SHUFFLE_TOP_RE`'s shape, or `None`."""
+    match = _SEARCH_REVEAL_SHUFFLE_TOP_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    described = _search_descriptions(match)
+    if described is None:
+        return None
+    count_reader = _read_search_count(match)
+    if count_reader is None:
+        return None
+    matches, description = described
+    optional = bool((match.group("subject") or "").strip())
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        if optional and not game.may(
+            player,
+            f"search your library for {description}",
+            source=source,
+            source_id=source_id,
+        ):
+            return
+        found = game.search_library(
+            player,
+            matches,
+            count=count_reader(game, player.username),
+            optional=True,
+            shuffle=True,
+            source=source,
+            source_id=source_id,
+        )
+        for state in found:
+            game.reveal(state, source=source)
+        game.put_cards_into_library(found, to_bottom=False)
+
+    return effect
+
+
 #: Beseech the Queen's own shape: "Search your library for a card with mana
 #: value less than or equal to <the number of lands you control>, reveal it,
 #: put it into your hand, then shuffle." `_SEARCH_AND_PUT_RE`'s own `max_mv`
@@ -22659,6 +22726,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     search = _parse_search_clause(clause, for_spell=for_spell)
     if search is not None:
         return search
+    search_reveal_shuffle_top = _parse_search_reveal_shuffle_top_clause(clause, for_spell=for_spell)
+    if search_reveal_shuffle_top is not None:
+        return search_reveal_shuffle_top
     put_land_from_hand = _parse_put_land_from_hand_clause(clause, for_spell=for_spell)
     if put_land_from_hand is not None:
         return put_land_from_hand
@@ -22876,6 +22946,15 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if draw_and_gain_off_sacrificed is not None:
         return [draw_and_gain_off_sacrificed]
+    search_reveal_shuffle_top = _parse_search_reveal_shuffle_top_clause(text, for_spell=for_spell)
+    if search_reveal_shuffle_top is not None:
+        # Read whole, ahead of the comma/clause split, for the identical
+        # reason the two whole-text parsers just above are: "reveal it, then
+        # shuffle and put that card on top" carries a bare " and " that
+        # `_CLAUSE_SEPARATOR` cuts clean through, leaving "shuffle" and "put
+        # that card on top" as two fragments neither of which is a clause
+        # `_parse_mixed_clause` can read alone.
+        return [search_reveal_shuffle_top]
     if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(" ".join(text.strip().split())):
         # Read whole for the same reason the two above are: Echoing Courage's
         # subject, "Target creature and all other creatures with the same name
