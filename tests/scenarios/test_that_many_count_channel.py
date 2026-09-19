@@ -649,3 +649,38 @@ def test_campsite_cuisine_makes_food_when_a_legendary_creature_enters():
     scenario.game.put_triggers_on_stack()
     _resolve_stack(scenario)
     assert len([p for p in scenario.game.battlefield if p.name == "Food Token"]) == 2
+
+
+def test_chandra_legacy_of_fire_exiles_one_card_per_loyalty_counter_removed():
+    """Chandra, Legacy of Fire's 0: "Remove a loyalty counter from each of any
+    number of permanents you control. Exile that many cards from the top of
+    your library. You may play them this turn." Two counters removed (from
+    Chandra and Karn) is two cards exiled, each playable this turn."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Chandra, Legacy of Fire", "Karn, the Great Creator"],
+            library=["Mountain", "Lightning Bolt", "Forest", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    chandra = scenario.find("Chandra, Legacy of Fire", Zone.BATTLEFIELD, "alice")
+    karn = scenario.find("Karn, the Great Creator", Zone.BATTLEFIELD, "alice")
+    chandra_before, karn_before = chandra.loyalty, karn.loyalty
+    top_two = list(alice.library[:2])
+
+    scenario.will_choose_cards(chandra, karn, username="alice")
+    scenario.activate(chandra, index=1)
+    _resolve_stack(scenario)
+
+    assert chandra.loyalty == chandra_before - 1
+    assert karn.loyalty == karn_before - 1
+    assert all(card.zone is Zone.EXILE for card in top_two)
+    assert len(alice.library) == 2
+    (mountain,) = [card for card in top_two if card.name == "Mountain"]
+    scenario.play_land("Mountain", "alice", from_zone=Zone.EXILE)
+    assert mountain.zone is Zone.BATTLEFIELD

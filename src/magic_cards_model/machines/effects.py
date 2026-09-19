@@ -4692,6 +4692,15 @@ _SCRY_RE = re.compile(rf"scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IG
 #: paying), so it is one question (`Game.pay_any_amount_of_life`), never a
 #: "you may" wrapper plus a second one. The amount paid is recorded for a
 #: later "that many" (`that_many`).
+#: "Remove a loyalty counter from each of any number of permanents you
+#: control." (Chandra, Legacy of Fire's 0) - CR 107.1c's any number, zero
+#: upward, of the controller's own permanents that have such a counter; how
+#: many were chosen is recorded for a later "that many" (`that_many`).
+_REMOVE_A_COUNTER_FROM_EACH_OF_ANY_NUMBER_RE = re.compile(
+    r"^remove an? (?P<kind>\S+) counter from each of any number of "
+    r"(?P<description>.+?) you control$",
+    re.IGNORECASE,
+)
 _PAY_ANY_AMOUNT_OF_LIFE_RE = re.compile(r"^(?:you may )?pay any amount of life$", re.IGNORECASE)
 #: "You gain life equal to the life you've lost this turn." - Children of
 #: Korlis. The amount is read off `Player.life_lost_this_turn`, the gross
@@ -4960,6 +4969,53 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             game.gain_life(player, total)
 
         return gain_life
+
+    if match := _REMOVE_A_COUNTER_FROM_EACH_OF_ANY_NUMBER_RE.fullmatch(clause):
+        kind = _counter_kind(match.group("kind"))
+        description = match.group("description")
+        requirement = (
+            None
+            if description.lower() in ("permanent", "permanents")
+            else permanent_description(description)
+        )
+        if requirement is None and description.lower() not in ("permanent", "permanents"):
+            return None
+
+        def remove_from_any_number(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if permanent.counters[kind] > 0
+                and (
+                    requirement is None
+                    or requirement.rejects(permanent, player.username, game) is None
+                )
+            ]
+            chosen_ids: tuple[UUID, ...] = ()
+            if candidates:
+                answer = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"remove a {kind} counter from each of any number of permanents",
+                        source=source,
+                        source_id=source_id,
+                        amount=len(candidates),
+                        exact=False,
+                        cards=tuple(state.id for state in candidates),
+                    )
+                )
+                assert isinstance(answer, tuple)
+                chosen_ids = answer
+            by_id = {state.id: state for state in candidates}
+            for card_id in chosen_ids:
+                by_id[card_id].remove_counters(kind, 1)
+            # CR 608.2c: "Exile that many cards" reads how many came off.
+            game.record_count(len(chosen_ids))
+
+        return remove_from_any_number
 
     if _PAY_ANY_AMOUNT_OF_LIFE_RE.fullmatch(clause):
 
@@ -19631,7 +19687,9 @@ ExileAntecedent = Callable[["Game", AbilityOnStack], list[CardState]]
 #: antecedent Experimental Synthesizer prints in front of "Until end of turn,
 #: you may play that card."
 _EXILE_TOP_OF_YOUR_LIBRARY_RE = re.compile(
-    rf"^exile the top (?:card|{count_pattern('n')} cards) of your library$", re.IGNORECASE
+    rf"^exile (?:the top (?:card|{count_pattern('n')} cards) of your library"
+    r"|(?P<that_many>that many) cards from the top of your library)$",
+    re.IGNORECASE,
 )
 
 
@@ -19666,18 +19724,29 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
         # whether the library actually held that many - CR 107.1b/608.2b have
         # nothing to say about a search or exile running short, it just
         # exiles what is there.
+        # "that many cards from the top" (Chandra, Legacy of Fire's 0) is the
+        # count channel's number (`that_many`), read as it resolves.
+        carried = match.group("that_many") is not None
         n = parse_count(match.group("n")) if match.group("n") else 1
 
         def exile_own_top(game: "Game", ability: AbilityOnStack) -> list[CardState]:
             player = game.controller_of(ability)
             exiled: list[CardState] = []
-            for _ in range(n):
+            count = n
+            if carried:
+                counted = _that_many_or_notice(
+                    game, stripped, source_id=ability.source_id, source_name=ability.source_name
+                )
+                if counted is None:
+                    return []
+                count = counted
+            for _ in range(count):
                 if not player.library:
                     break
                 exiled.append(game.exile_permanent(player.library[0]))
             return exiled
 
-        return exile_own_top, n > 1
+        return exile_own_top, carried or n > 1
 
     if _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE.fullmatch(stripped):
 
