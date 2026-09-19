@@ -84,6 +84,12 @@ def _rng(seed: Seed) -> Random:
     return seed if isinstance(seed, Random) else Random(seed)  # noqa: S311 - not cryptographic
 
 
+#: "You have no maximum hand size." - the emblem ability this engine reads
+#: generally (CR 114.2's own template): Wrenn and Seven's -8 and Tamiyo,
+#: Inquisitive Student's -7 both print this exact sentence.
+_NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT = "you have no maximum hand size"
+
+
 class Player(EngineModel):
     """One player and everything they own.
 
@@ -222,18 +228,6 @@ class Player(EngineModel):
 
     `None` is the stamp of a player with no game around them, which never
     changes, so a `Player` built on its own accumulates and never clears."""
-
-    life_gained_tally: int = 0
-    """Bookkeeping behind `life_gained_this_turn_amount` - the amount twin
-    of `life_lost_tally`, same shape, same reason: Germinate Recruits' own
-    "X is the amount of life you gained this turn" and Enlightened
-    Confidant's "the amount of life you gained this turn" both need the
-    number, not just `Game.life_gained_this_turn`'s bare yes/no."""
-
-    life_gained_tally_turn: int | None = None
-    """Which turn `life_gained_tally` was counted during - see
-    `life_lost_tally_turn`'s own docstring for why this is a stamp rather
-    than a turn-boundary reset."""
 
     tried_to_draw_from_empty_library: bool = False
     """Set when a draw found no cards. The player loses the next time state-based
@@ -566,8 +560,37 @@ class Player(EngineModel):
         return card_state
 
     @property
+    def emblems(self) -> list[CardState]:
+        """CR 114.2's "[Player] gets an emblem with [ability]": every emblem
+        this player controls, in the order granted - read off the shared
+        command zone (`Game.create_emblem`, `Game.emblems_of`), where an
+        emblem's abilities function (CR 114.4). Empty for a player not bound
+        to a game."""
+        game = self.game
+        return [] if game is None else game.emblems_of(self.username)
+
+    @property
+    def has_no_maximum_hand_size(self) -> bool:
+        """CR 613.11: whether some continuous effect this player controls
+        overrides CR 402.2's own maximum hand size to "no maximum" - read
+        generally off any emblem granting CR 114.2's own "You have no
+        maximum hand size." sentence, not any one card's name, so a future
+        printing granting the identical ability the same way is covered for
+        free.
+        """
+        return any(
+            (emblem.card.oracle_text or "").strip().rstrip(".").lower()
+            == _NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT
+            for emblem in self.emblems
+        )
+
+    @property
     def cards_over_maximum_hand_size(self) -> int:
-        """How many cards the cleanup step would make this player discard (CR 402.2)."""
+        """How many cards the cleanup step would make this player discard
+        (CR 402.2), or zero unconditionally when `has_no_maximum_hand_size`
+        holds (CR 613.11's own game-rule-modifying continuous effect)."""
+        if self.has_no_maximum_hand_size:
+            return 0
         return max(0, len(self.hand) - self.maximum_hand_size)
 
     def discard_to_maximum_hand_size(
@@ -647,7 +670,10 @@ class Player(EngineModel):
         than only at `Game.gain_life`'s call site. Recording it only there
         left the direct paths silently unrecorded: two Guide of Souls raising
         alice from 20 to 22 left `life_gained_this_turn` empty, and Ocelot
-        Pride's end step trigger never went on the stack.
+        Pride's end step trigger never went on the stack. Its amount twin,
+        `Game.life_gained_amount_this_turn`, is recorded in the same place
+        for the same reason - Germinate Recruits' own X (CR 107.3f) needs the
+        total, not just whether any gain happened.
 
         `cannot_gain_life` refuses the whole thing (CR 101.2): the life total
         is left alone *and* nothing is recorded, because a gain that can't
@@ -671,33 +697,10 @@ class Player(EngineModel):
         self.life += amount
         if self.game is not None:
             self.game.life_gained_this_turn.add(self.username)
-        if amount:
-            self._record_life_gained(amount)
+            self.game.life_gained_amount_this_turn[self.username] = (
+                self.game.life_gained_amount_this_turn.get(self.username, 0) + amount
+            )
         return self.life
-
-    def _record_life_gained(self, amount: int) -> None:
-        stamp = self._current_turn_stamp
-        if self.life_gained_tally_turn != stamp:
-            self.life_gained_tally = 0
-            self.life_gained_tally_turn = stamp
-        self.life_gained_tally += amount
-
-    @property
-    def life_gained_this_turn_amount(self) -> int:
-        """How much life this player has gained so far this turn.
-
-        Germinate Recruits' own "create X ... tokens, where X is the amount
-        of life you gained this turn" and Enlightened Confidant's "a card
-        with mana value less than or equal to the amount of life you gained
-        this turn" both ask for the number `Game.life_gained_this_turn`
-        cannot give (that set only answers "did you, at all"). Deliberately
-        named apart from `Game.life_gained_this_turn` - the set of players
-        who gained any - rather than reusing that name on `Player`, so a
-        reader is never one dropped `.username` away from silently asking
-        the wrong object's question."""
-        return (
-            self.life_gained_tally if self.life_gained_tally_turn == self._current_turn_stamp else 0
-        )
 
     @property
     def _prohibited_from_gaining_life(self) -> bool:

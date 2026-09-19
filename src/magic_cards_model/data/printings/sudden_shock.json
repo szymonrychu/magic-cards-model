@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "5b659a3b-0f66-40f2-8e2e-f13b694e270e",
+  "oracle_id": "7b139231-dcd2-4b03-bcf2-fcb040617b69",
+  "multiverse_ids": [
+    509559
+  ],
+  "mtgo_id": 86763,
+  "tcgplayer_id": 234009,
+  "cardmarket_id": 547016,
+  "name": "Sudden Shock",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/5b659a3b-0f66-40f2-8e2e-f13b694e270e",
+  "scryfall_uri": "https://scryfall.com/card/tsr/194/sudden-shock?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:29:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.jpg?1783927786",
+    "normal": "https://cards.scryfall.io/normal/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.jpg?1783927786",
+    "large": "https://cards.scryfall.io/large/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.jpg?1783927786",
+    "png": "https://cards.scryfall.io/png/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.png?1783927786",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.jpg?1783927786",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.jpg?1783927786",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.webp?1783927786",
+    "grid": "https://cards.scryfall.io/grid/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.webp?1783927786",
+    "display": "https://cards.scryfall.io/display/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.webp?1783927786",
+    "art": "https://cards.scryfall.io/art/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.webp?1783927786",
+    "crop": "https://cards.scryfall.io/crop/front/5/b/5b659a3b-0f66-40f2-8e2e-f13b694e270e.webp?1783927786"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)\nSudden Shock deals 2 damage to any target.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Split second"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/5b659a3b-0f66-40f2-8e2e-f13b694e270e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7b139231-dcd2-4b03-bcf2-fcb040617b69&unique=prints",
+  "collector_number": "194",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Arc mages aren't known for their patience.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Vance Kovacs",
+  "artist_ids": [
+    "b5516011-4722-4fc8-8542-102cecc52b71"
+  ],
+  "illustration_id": "9d4ddd99-a8e6-4edf-8aa8-8b8767860c3a",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13987,
+  "penny_rank": 4246,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2021-03-03"
+  },
+  "prices": {
+    "usd": "0.16",
+    "usd_foil": "0.46",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.30",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509559&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSudden%2BShock",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSudden%2BShock",
+    "edhrec": "https://edhrec.com/route/?cc=Sudden+Shock"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F234009%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=547016&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86763?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

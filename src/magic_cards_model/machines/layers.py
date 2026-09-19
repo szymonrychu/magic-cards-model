@@ -87,11 +87,12 @@ from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
 from magic_cards_model.phrases import with_indefinite_article
 
+from ..data.subtypes import subtype_vocabulary
 from ..ids import new_id
-from ..models.card import Color, Supertype, Type
+from ..models.card import Color, Layout, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
-from ..numbers import parse_count
+from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
 from .abilities import layer_readable_sentences, self_normalized_effect_text
 from .combat import (
@@ -455,6 +456,28 @@ class CountPermanentsControlledBy(CountBase):
         )
 
 
+class CountCreaturesWithSubtypesControlledBy(CountBase):
+    """How many creatures a player controls that have *any* of a set of
+    subtypes (CR 205.3) - The Mycotyrant's own "the number of creatures you
+    control that are Fungi and/or Saprolings", a CR 604.3a characteristic-
+    defining ability's count, not `CreaturesControlledByWithSubtype`'s own
+    boolean `Selector` answer for one specific creature."""
+
+    kind: Literal["creatures_with_subtypes_controlled_by"] = "creatures_with_subtypes_controlled_by"
+    username: str | None = None
+    subtypes: tuple[str, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        wanted = {subtype.lower() for subtype in self.subtypes}
+        return sum(
+            1
+            for other in board.values()
+            if other.is_creature
+            and other.controller == self.username
+            and any(subtype.lower() in wanted for subtype in other.subtypes)
+        )
+
+
 class CountBasicLandTypesAmongLandsControlledBy(CountBase):
     """How many of the five basic land types (CR 305.6) are among the lands
     one player controls - *domain*'s number.
@@ -483,6 +506,7 @@ Count = Annotated[
     | CountOtherCreaturesNamed
     | CountLandsControlledBy
     | CountPermanentsControlledBy
+    | CountCreaturesWithSubtypesControlledBy
     | CountBasicLandTypesAmongLandsControlledBy,
     Field(discriminator="kind"),
 ]
@@ -826,6 +850,23 @@ class CreaturesControlledByWithColor(SelectorBase):
         )
 
 
+class PermanentsOfTypesControlledBy(SelectorBase):
+    """ "<type> and <type> you control" (CR 205.2a) - `PermanentsControlledBy`'s
+    own multi-type sibling, for a compound subject naming more than one card
+    type at once (Sorin, Vengeful Bloodlord's own "creatures and
+    planeswalkers you control"): any permanent whose computed types
+    intersect the named set, not only one specific type."""
+
+    kind: Literal["permanents_of_types_controlled_by"] = "permanents_of_types_controlled_by"
+    username: str | None = None
+    card_types: tuple[Type, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.controller == self.username and any(
+            card_type in chars.types for card_type in self.card_types
+        )
+
+
 class PermanentsControlledByWithCounters(SelectorBase):
     """ "[Each other] [creature] you control with [a/an <counter kind>] counter
     on it/them" (Innkeeper's Talent's bare "permanents ... with counters", and
@@ -881,6 +922,7 @@ Selector = Annotated[
     | SelfIfPowerNegative
     | AllPermanentsControlledBy
     | PermanentsControlledBy
+    | PermanentsOfTypesControlledBy
     | CreaturesControlledByWithSubtype
     | CreaturesControlledByWithColor
     | PermanentsControlledByWithCounters,
@@ -2433,6 +2475,30 @@ def count_card_types(cards: Iterable[CardState]) -> int:
     return len(types)
 
 
+#: CR 110.4a: "The term 'permanent card' is used to refer to a card that could
+#: be put onto the battlefield. Specifically, it means an artifact, battle,
+#: creature, enchantment, land, or planeswalker card." Descend's own count
+#: (CR 700.11, and the "descend 4"/"descend 8" ability words, CR 207.2c).
+_PERMANENT_CARD_TYPES = frozenset(
+    {Type.ARTIFACT, Type.BATTLE, Type.CREATURE, Type.ENCHANTMENT, Type.LAND, Type.PLANESWALKER}
+)
+
+
+def count_permanent_cards(cards: Iterable[CardState]) -> int:
+    """How many of `cards` are permanent cards (CR 110.4a).
+
+    Descend's own count: "the number of permanent cards put into [a player's]
+    graveyard" (CR 700.11) is a *per-turn event* count (`Game.descend_count`),
+    but the "descend 4"/"descend 8" ability words (Basking Capybara, Akawalli,
+    the Seething Tower) ask a different, simpler question - "there are N or
+    more permanent cards in your graveyard" *right now* - a live count of the
+    graveyard's current contents, the same "no stored state, recomputed every
+    time the board is computed" shape `count_card_types` already answers for
+    delirium.
+    """
+    return sum(1 for state in cards if _PERMANENT_CARD_TYPES.intersection(state.types))
+
+
 #: Sublayer 7d (CR 613.4d).
 #:
 #: "Such effects take the value of power and apply it to the creature's
@@ -2513,16 +2579,53 @@ switch_power_toughness: Modification = SwitchPowerToughness()
 #: name - Ruby, Daring Tracker's "Ruby gets +2/+2 until end of turn." - which
 #: is why it is read here interchangeably with "this creature" rather than as
 #: a separate, narrower case.
+#: The noun a "target"/"another target" subject may carry - a bare
+#: "creature"/"permanent", or the "creature or planeswalker" compound this
+#: pool's own post-War-of-the-Spark cards print as often as the bare noun
+#: (Liliana the Faultless's "another target creature or planeswalker you
+#: control gains hexproof until end of turn.").
+_SUBJECT_NOUN = r"(?:creature or planeswalker|creature|permanent)"
 _SUBJECT = (
-    r"(?:target(?: [a-z]+)? creature|this creature|this permanent"
-    r"|another target(?: [a-z]+)? creature(?: you control)?)"
+    rf"(?:target(?: [a-z]+)? {_SUBJECT_NOUN}(?: you control)?|this creature|this permanent"
+    rf"|another target(?: [a-z]+)? {_SUBJECT_NOUN}(?: you control)?)"
 )
 
+#: A plural target subject - "up to two target creatures" (Dauntless
+#: Onslaught's own CR 115.6 shape), "up to 2 target attacking creatures" (a
+#: reflexive ability's count written in as a digit, Swashbuckler
+#: Extraordinaire, Campsite Cuisine) - read with the plural verb ("get",
+#: "each get", "gain"). CR 601.2c/603.3d already fixed how many and which
+#: were targeted; the builders below apply to every resolved target.
+_PLURAL_TARGET_SUBJECT = rf"(?:up to )?(?:\d+|{COUNT}) target(?: [a-z]+)? creatures"
+_PLURAL_PUMP_SUBJECT = rf"{_PLURAL_TARGET_SUBJECT}(?: each)?"
+
+#: Xenagos, God of Revels' own reversed order: "another target creature you
+#: control **gains haste and gets** +X/+X until end of turn" - the keyword
+#: comes first, not last, so the two verb phrases need their own branch
+#: rather than the forward "gets ... and gains ..." shape's trailing
+#: optional keyword. Both branches feed the same builder either way.
+#: `power`/`toughness` (or the reversed order's own `power2`/`toughness2`)
+#: read `x` as well as a literal number - CR 107.3a's X, evaluated through
+#: `where_x_pattern`'s tail rather than a fixed digit, for Xenagos' own
+#: "where X is that creature's power". The forward shape's keyword may be a
+#: list ("gains trample and indestructible"), split by
+#: `_split_and_validate_keywords`.
 _PUMP_RE = re.compile(
-    rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
-    rf"(?: and gains (?P<keyword>[a-z ]+))? until end of turn\.?$",
+    rf"^(?:{_SUBJECT}|{_PLURAL_PUMP_SUBJECT}) (?:"
+    rf"gets? (?P<power>[+-](?:{COUNT}|x))/(?P<toughness>[+-](?:{COUNT}|x))"
+    rf"(?: and gains? (?P<keyword>[a-z ,]+?))?"
+    rf"|gains (?P<keyword2>[a-z ]+) and gets? "
+    rf"(?P<power2>[+-](?:{COUNT}|x))/(?P<toughness2>[+-](?:{COUNT}|x))"
+    rf") until end of turn{where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
+
+#: "that creature's power" - Xenagos, God of Revels' own X definition, read
+#: per target off `CardState.power` (CR 613.5's computed value) at the
+#: moment this ability resolves (CR 611.2c fixes the magnitude then, so this
+#: is a one-time snapshot, not a live recompute that would let the pump
+#: retroactively inflate what defined it).
+_THAT_CREATURES_POWER_RE = re.compile(r"^that creature'?s power$", re.IGNORECASE)
 
 #: Echoing Courage: "Target creature and all other creatures with the same name
 #: as that creature get +2/+2 until end of turn." A sibling of `_PUMP_RE` and
@@ -2576,6 +2679,34 @@ def _card_type_word(word: str) -> Type | None:
         return Type(singular.lower())
     except ValueError:
         return None
+
+
+#: The one Latin-plural subtype irregularity in CR 205.3's creature-subtype
+#: list that no suffix rule covers - "Fungus" (singular) / "Fungi" (plural),
+#: the way it is genuinely printed (The Mycotyrant: "... Fungi and/or
+#: Saprolings"). Everything else in the subtype vocabulary pluralises with a
+#: bare trailing "s" ("Saproling" -> "Saprolings"), which `_singular_subtype_
+#: word` strips directly.
+_IRREGULAR_SUBTYPE_PLURALS = {"fungi": "fungus"}
+
+
+def _singular_subtype_word(word: str) -> str | None:
+    """A printed subtype word, singular and lower-cased, or `None` if it
+    names no subtype `subtype_vocabulary` recognises - the same fail-closed
+    shape `_card_type_word` holds itself to for card types.
+
+    `machines/effects.py::_singular_subtype_for_count_expression` reads the
+    identical phrase for a resolving effect's own "number of `<subtype>` you
+    control"; kept local rather than imported for the same reverse-import
+    reason `_card_type_word`'s own docstring gives.
+    """
+    lowered = word.lower()
+    vocabulary = subtype_vocabulary()
+    candidates = [
+        _IRREGULAR_SUBTYPE_PLURALS.get(lowered, lowered),
+        lowered.removesuffix("s"),
+    ]
+    return next((candidate for candidate in candidates if candidate in vocabulary), None)
 
 
 def _self_pump_per_graveyard_card_builder(
@@ -2931,8 +3062,15 @@ def _become_a_copy_builder(
     return builder
 
 
+#: `keywords` reads one *or more* keyword names, comma/"and"-joined the same
+#: way `_INDEFINITE_KEYWORD_GRANT_RE`'s own list does (Fateshaper Aspirant's
+#: "It gains vigilance and indestructible until end of turn.") - each is
+#: validated separately against `_KNOWN_KEYWORDS` by `_split_and_validate_
+#: keywords`, not looked up as one compound string.
 _KEYWORD_GRANT_RE = re.compile(
-    rf"^{_SUBJECT} gains (?P<keyword>[a-z ]+) until end of turn\.?$",
+    rf"^(?:{_SUBJECT} gains|{_PLURAL_TARGET_SUBJECT} gain) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) "
+    r"until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -3005,6 +3143,15 @@ _ANTHEM_AND_KEYWORD_GRANT_RE = re.compile(
 #: shape (`machines/effects.py`'s `_run_mass_pump` already resolved the
 #: concrete `targets` before this ever runs; see `_mass_creature_group_
 #: targets`'s own "all creatures" branch).
+#: A keyword list may stand alone too - "Creatures you control gain first
+#: strike until end of turn." (Artifist Acumen), "creatures you control gain
+#: haste until end of turn." (Ingris Stingerquill's trailing rider) - CR
+#: 611.2's one-shot group *ability* grant with no power/toughness change at
+#: all. `power`/`toughness` capture the pump when it follows "and get ...";
+#: `power_only`/`toughness_only` capture it when there is no keyword grant in
+#: front of it at all - two names for the same magnitude because `re` refuses
+#: a group name used twice, and `_parse_layer_sentence` reads whichever pair
+#: matched.
 _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     r"^(?:(?P<other>other )?creatures (?P<whose>you control|your opponents control)|"
     r"all creatures) "
@@ -3036,6 +3183,19 @@ _MASS_PUMP_UNTIL_EOT_RE = re.compile(
 #: `looks_like_unparsed_layer_effect` instead of granting the wrong thing.
 _INDEFINITE_KEYWORD_GRANT_RE = re.compile(
     rf"^{_QUALIFIED_CREATURE_SUBJECT} "
+    r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+#: "During your turn, `<type> and <type>` you control have `<keyword(s)>`."
+#: (Sorin, Vengeful Bloodlord: "During your turn, creatures and planeswalkers
+#: you control have lifelink.") - `_QUALIFIED_CREATURE_SUBJECT`'s own noun
+#: slot only ever reads "creatures"/"creature tokens", never a compound of
+#: two different card types, so this is a separate shape rather than a
+#: widening of it - the same reasoning that already keeps `_INDEFINITE_
+#: KEYWORD_AND_PROTECTION_GRANT_RE` apart from the plain keyword grant.
+_DURING_YOUR_TURN_MULTI_TYPE_KEYWORD_GRANT_RE = re.compile(
+    r"^during your turn, (?P<type1>[a-z]+) and (?P<type2>[a-z]+) you control "
     r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
     re.IGNORECASE,
 )
@@ -3337,6 +3497,17 @@ def _self_becomes_type_until_next_turn_builder(
 #: have produced the retention and nothing else, which is half an ability
 #: (CR 608.2c has no notion of running half an instruction).
 _RETENTION_CLAUSE_RE = re.compile(r"^[Ii]t's still an? [a-z]+\.?$")
+
+
+def is_retention_clause(sentence: str) -> bool:
+    """`_RETENTION_CLAUSE_RE`'s shape, public: "It's still a `<type>`." (CR
+    205.1b) never stands as an ability of its own - it only ever qualifies
+    the type-changing sentence in front of it. `machines/effects.py` uses
+    this to keep such a clause from being misread as an unread sibling
+    instruction (`_plain_resolution_sentences`) the way any other trailing
+    sentence would be.
+    """
+    return bool(_RETENTION_CLAUSE_RE.match(sentence.strip()))
 
 
 def _fold_retention_clauses(sentences: list[str]) -> list[str]:
@@ -3786,7 +3957,8 @@ def _board_wide_type_grant_builder(
 #: answering yes. `machines/effects.py`'s routing needs exactly that
 #: distinction: see `is_resolution_layer_effect_text`.
 _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE = re.compile(
-    rf"^{_SUBJECT} (?:gets?|gains?|has|have)\b|^Until your next turn, up to \S+ target\b"
+    rf"^(?:{_SUBJECT}|{_PLURAL_TARGET_SUBJECT}) (?:(?:each )?gets?|gains?|has|have)\b"
+    r"|^Until your next turn, up to \S+ target\b"
     r"|^target permanent becomes\b",
     re.IGNORECASE,
 )
@@ -3834,15 +4006,27 @@ _LOOKS_LIKE_LAYER_EFFECT_RE = re.compile(
 #: read regardless of where "until end of turn" sits.
 _DURATION_FIRST_RE = re.compile(r"^until end of turn,\s*(?P<rest>.+)$", re.IGNORECASE)
 
+#: A sentence-initial sequencing word (CR 608.2c: "the controller ... follows
+#: its instructions in the order written") - "Then creatures you control gain
+#: haste until end of turn." (Ingris Stingerquill, after an earlier token
+#: creation in the same ability). `machines/effects.split_effect_clauses`
+#: already strips this same word from an ordinary clause for the identical
+#: reason; a layer sentence that happens to follow another instruction in the
+#: same paragraph must read the same as if it opened the sentence itself.
+_LEADING_THEN_RE = re.compile(r"^then,?\s+", re.IGNORECASE)
+
 
 def _normalize_duration_first(sentence: str) -> str:
     """Rewrite "Until end of turn, X" to "X until end of turn." so a
     duration-first sentence reaches `_parse_layer_sentence` and
     `_LOOKS_LIKE_LAYER_EFFECT_RE` the same way the ordinary trailing-duration
     phrasing already does. A sentence that does not open this way is returned
-    unchanged.
+    unchanged. A leading "Then " (`_LEADING_THEN_RE`) is stripped first,
+    always, so both the duration check and the shapes read afterward see the
+    sentence as it would look on its own.
     """
-    match = _DURATION_FIRST_RE.match(sentence.strip())
+    sentence = _LEADING_THEN_RE.sub("", sentence.strip())
+    match = _DURATION_FIRST_RE.match(sentence)
     if match is None:
         return sentence
     rest = match.group("rest").strip().rstrip(".")
@@ -3855,8 +4039,11 @@ def _normalize_duration_first(sentence: str) -> str:
 #: keywords in that they tie together cards that have similar functionality,
 #: but they have no special rules meaning", so the words in front of the dash
 #: are decoration and the ability is everything after it. Capped at two words
-#: and required to start with a capital, which is how Oracle prints them.
-_ABILITY_WORD_RE = re.compile(r"^[A-Z][a-z']*(?: [A-Za-z][a-z']*)? — (?P<rest>.+)$")
+#: and required to start with a capital, which is how Oracle prints them -
+#: except CR 207.2c's own "descend 4"/"descend 8", whose second word is a
+#: bare number rather than another capitalised word, so the second slot
+#: accepts one too.
+_ABILITY_WORD_RE = re.compile(r"^[A-Z][a-z']*(?: (?:[A-Za-z][a-z']*|\d+))? — (?P<rest>.+)$")
 
 
 def _strip_ability_word(sentence: str) -> str:
@@ -3881,6 +4068,23 @@ def _effect_sentences(
     list of its own, so nobody can edit what the next caller reads.
     """
     return list(_effect_sentences_memo(oracle_text, static_only, card_name))
+
+
+def resolution_effect_sentences(text: str | None) -> list[str]:
+    """The public entry point onto `_effect_sentences`: every sentence of a
+    resolving spell's or ability's own effect text, split the same way
+    `is_resolution_layer_effect_text` itself splits it before asking each one
+    whether it is a CR 611.2 layer shape.
+
+    `machines/effects.py` uses this to separate a layer-effect sentence from
+    a sibling one-shot instruction it must compose rather than drop
+    (`_compose_layer_effect_with_remainder`), and to see a compound antecedent
+    ("Target creature gets +2/+2 and gains reach until end of turn.") whole,
+    ahead of the finer comma/and clause split that would otherwise cut it into
+    fragments no anaphoric-pair parser can read back together
+    (`_parse_object_anaphor_clause_pair`'s own whole-text pre-check).
+    """
+    return _effect_sentences(text)
 
 
 @functools.lru_cache(maxsize=16384)
@@ -3933,8 +4137,11 @@ def _effect_sentences_uncached(
     )
 
 
-def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -> EffectBuilder:
-    """ "[Subject] gets +N/+N [and gains <keyword>] until end of turn."
+def _pump_and_keyword_builder(
+    power: int, toughness: int, keywords: Sequence[str] = ()
+) -> EffectBuilder:
+    """ "[Subject] gets +N/+N [and gains <keyword>[ and <keyword>]] until end
+    of turn."
 
     Sublayer 7c for the pump (CR 613.4c: "modify power and/or toughness ...
     don't set"), layer 6 for the keyword (CR 613.1f, CR 113.10). Applies to
@@ -3965,7 +4172,62 @@ def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -
                     modification=modify_power_toughness(power, toughness),
                 )
             )
-            if keyword is not None:
+            for keyword in keywords:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=grant_ability(keyword),
+                    )
+                )
+        return effects
+
+    return builder
+
+
+def _pump_and_keyword_per_target_power_builder(
+    power_sign: int, toughness_sign: int, keywords: Sequence[str] = ()
+) -> EffectBuilder:
+    """Xenagos, God of Revels' own shape: "[Subject] gets +X/+X [and gains
+    <keyword>] until end of turn, where X is that creature's power."
+
+    `power_sign`/`toughness_sign` are `+1`/`-1` off the printed sign in front
+    of each X (both `+1` for Xenagos' own "+X/+X"; nothing in the pool prints
+    "-X/-X" here, but the mechanism is the same one `_PUMP_RE` already reads
+    generally rather than something special-cased to this one card). X is
+    read once **per target**, off that target's own `CardState.power` - the
+    CR 613.5 computed value, already what `power` gives - at the moment this
+    builder runs, which `ContinuousEffects.create` only ever calls once, as
+    the ability resolves (CR 611.2c fixes the magnitude then). A target
+    without a numeric power (`*`, or gone before this runs) contributes X = 0
+    rather than guessing (CR 107.2).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            x = target.power if target.power is not None else 0
+            power, toughness = power_sign * x, toughness_sign * x
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+            for keyword in keywords:
                 effects.append(
                     ContinuousEffect(
                         description=f"{source.name}: {target.name} gains {keyword}",
@@ -4087,8 +4349,10 @@ def spend_effect_effects(text: str, permanent: CardState, timestamp: int) -> lis
     ]
 
 
-def _keyword_grant_builder(keyword: str) -> EffectBuilder:
-    """ ""[Subject] gains <keyword> until end of turn." (CR 613.1f, CR 113.10)."""
+def _keyword_grant_builder(keywords: Sequence[str]) -> EffectBuilder:
+    """ "[Subject] gains <keyword>[, <keyword>, and <keyword>] until end of
+    turn." (CR 613.1f, CR 113.10) - one or more keywords, each its own layer
+    6 grant."""
 
     def builder(
         source: CardState,
@@ -4106,6 +4370,7 @@ def _keyword_grant_builder(keyword: str) -> EffectBuilder:
                 modification=grant_ability(keyword),
             )
             for target in targets
+            for keyword in keywords
         ]
 
     return builder
@@ -4213,9 +4478,15 @@ def _anthem_and_keyword_grant_builder(
     return builder
 
 
-def _mass_pump_until_eot_builder(power: int, toughness: int, keywords: list[str]) -> EffectBuilder:
+def _mass_pump_until_eot_builder(
+    power: int | None, toughness: int | None, keywords: list[str]
+) -> EffectBuilder:
     """ "[Other] creatures [you control|your opponents control] [gain <keyword(s)>
-    and ]get +N/+N until end of turn." (CR 611.2).
+    and ]get +N/+N until end of turn." (CR 611.2) - or, with `power`/
+    `toughness` both `None`, the keyword-only twin with no power/toughness
+    change at all ("Creatures you control gain first strike until end of
+    turn."): no sublayer 7c modifier is built for that shape, only the
+    layer 6 grant(s) below.
 
     Unlike `_anthem_builder`'s live `Selector` - right because a *static*
     ability's group (CR 611.3) has to keep re-including whoever is on the
@@ -4238,7 +4509,7 @@ def _mass_pump_until_eot_builder(power: int, toughness: int, keywords: list[str]
     ) -> list[ContinuousEffect]:
         effects: list[ContinuousEffect] = []
         for target in targets:
-            if power or toughness:
+            if power is not None and toughness is not None:
                 effects.append(
                     ContinuousEffect(
                         description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
@@ -4503,6 +4774,50 @@ def _lands_keyword_grant_builder(keywords: list[str], *, line: str) -> EffectBui
                 modification=grant_ability(keyword),
             )
             for keyword in keywords
+        ]
+
+    return builder
+
+
+def _during_your_turn_multi_type_keyword_grant_builder(
+    card_types: tuple[Type, ...], abilities: list[str], *, line: str
+) -> EffectBuilder:
+    """ "During your turn, `<type> and <type>` you control have `<keyword(s)>`."
+    - Sorin, Vengeful Bloodlord's own "During your turn, creatures and
+    planeswalkers you control have lifelink." Two things set this apart from
+    the plain `_indefinite_keyword_grant_builder` above: the subject names
+    more than one card type at once (`PermanentsOfTypesControlledBy`, not
+    `CreaturesControlledBy`), and the whole grant only applies during the
+    source's own controller's turn (`LayerContext.active_player`), checked
+    once at build time the same way `_graveyard_count_gated_self_static_
+    builder`'s graveyard count is - `effects_for` reruns on every `computed_
+    board()` (CR 613.5), so the grant disappears the instant the turn passes
+    with nothing to store or clear.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if context.active_player != source.controller:
+            return []
+        selector = PermanentsOfTypesControlledBy(username=source.controller, card_types=card_types)
+        types_text = " and ".join(f"{card_type.value}s" for card_type in card_types)
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {types_text} you control have {ability} during your turn"
+                ),
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=selector,
+                modification=grant_ability(ability),
+            )
+            for ability in abilities
         ]
 
     return builder
@@ -4798,6 +5113,72 @@ _BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This permanent's power and toughness are each equal to the number of
+#: creatures you control that are `<subtype>`[ and/or `<subtype>`...]." - The
+#: Mycotyrant's own CDA ("... Fungi and/or Saprolings"), read generally
+#: rather than as a `Boneyard Wurm`-shaped hardcoded row: any number of
+#: subtypes, joined by "and/or", plain "or", or a comma list, counts a
+#: creature that has *any* of them (CR 205.3's own "and/or" reads as an
+#: inclusive "or" - a Fungus Saproling counts once, not twice).
+_CREATURE_SUBTYPE_COUNT_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s power and toughness are each equal to the "
+    r"number of creatures you control that are "
+    r"(?P<subtypes>[a-z]+(?:(?:,\s*| and/or | and | or )[a-z]+)*)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _creature_subtype_count_cda_builder(subtypes: tuple[str, ...], *, line: str) -> EffectBuilder:
+    """`_CREATURE_SUBTYPE_COUNT_CDA_RE`'s shape - see its own docstring.
+
+    Sublayer 7a (CR 613.4a), the same choice `_basic_land_type_count_cda_
+    builder` makes - a CDA defines the value, it never modifies one
+    (CR 613.4a against CR 613.4c) - counted live off the board through
+    `CountCreaturesWithSubtypesControlledBy` rather than baked in at build
+    time, since (unlike Boneyard Wurm's graveyard count) the battlefield is
+    already the board the layer engine threads through every `Count` here.
+
+    `source_ability` is `_source_line_for(source, line)`, not `line` itself -
+    The Mycotyrant's own printed name is rewritten to "this permanent" by
+    `self_normalized_effect_text` on the way to `_parse_layer_sentence`
+    (Territorial Kavu's own defect, `_source_line_for`'s docstring), and
+    `_still_exists` matches `source_ability` against `Characteristics.
+    abilities`, which is the card's lines verbatim - the normalized sentence
+    is never one of them, so without this the effect would look, to CR
+    613.6's own "has this ability been removed" question, like it already had
+    been, and never apply at all.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: power/toughness equal to the number of creatures "
+                    f"you control that are {' and/or '.join(subtypes)}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                characteristic_defining=True,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=define_power_toughness(
+                    CountCreaturesWithSubtypesControlledBy(
+                        username=source.controller, subtypes=subtypes
+                    )
+                ),
+            )
+        ]
+
+    return builder
+
+
 #: "Equipped creature gets +1/+1 and has trample and haste." (Cori-Steel
 #: Cutter); "Enchanted creature gets +2/+0 and has trample." (Rancor);
 #: `Equipped creature has "{3}, {Q}: This creature gets +2/+2 until end of
@@ -5026,6 +5407,36 @@ _SELF_HASNT_DEALT_COMBAT_DAMAGE_RE = re.compile(
     r"^this (?:creature|permanent|token) (?:has|have) "
     r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) as long as "
     r"(?:it|they|he|she) haven'?t dealt combat damage(?: this turn)? yet\.?$",
+    re.IGNORECASE,
+)
+
+#: "descend 4"/"descend 8" (CR 207.2c's own ability-word list) - the same
+#: gated-self-static shape as delirium above, printed both ways round in the
+#: pool: condition-leading (Akawalli, the Seething Tower's own "As long as
+#: there are four or more permanent cards in your graveyard, Akawalli gets
+#: +2/+2 and has trample.") and condition-trailing (Basking Capybara's "This
+#: creature gets +3/+0 as long as there are four or more permanent cards in
+#: your graveyard."). CR 700.11's own "permanent card" - artifact, battle,
+#: creature, enchantment, land, planeswalker (CR 110.4a) - is `count_
+#: permanent_cards`, not `count_card_types`: the two ability words happen to
+#: share delirium's gated-static template, not its count.
+#: Read after `self_normalized_effect_text` has already rewritten Akawalli's
+#: own literal name to "this permanent" (`_layer_readable_sentences_
+#: uncached`'s own call), the same normalisation every self-referential
+#: static sentence in this module already relies on - so no literal-name
+#: branch is needed here, only "this creature/permanent/token".
+_DESCEND_GATED_SELF_STATIC_LEADING_RE = re.compile(
+    r"^as long as there are (?P<count>[a-z]+) or more permanent cards in your "
+    r"graveyard, this (?:creature|permanent|token) "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
+    r"|(?P<grant_only>has .+?))\.?$",
+    re.IGNORECASE,
+)
+_DESCEND_GATED_SELF_STATIC_TRAILING_RE = re.compile(
+    r"^this (?:creature|permanent|token) "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
+    r"|(?P<grant_only>has .+?))"
+    r" as long as there are (?P<count>[a-z]+) or more permanent cards in your graveyard\.?$",
     re.IGNORECASE,
 )
 
@@ -5262,6 +5673,66 @@ def _basic_land_type_count_power_only_cda_builder(line: str) -> EffectBuilder:
                 selector=_only(source.id),
                 modification=define_power(
                     count_basic_land_types_among_lands_controlled_by(source.controller)
+                ),
+            )
+        ]
+
+    return builder
+
+
+#: "This creature's/permanent's/token's power and toughness are each equal
+#: to the number of `<type>` you control." - a real, heavily templated
+#: "lands matter" archetype (Molimo, Maro-Sorcerer; Old Man Willow; Titania,
+#: Gaea Incarnate; Ulvenwald Hydra; Cultivator Colossus; Ashaya, Soul of the
+#: Wild - a card search on the exact sentence turns up over a dozen real
+#: printings) as well as Wrenn and Seven's own -3 token, which grants the
+#: identical sentence in quotes rather than printing it directly - CR 111.3
+#: puts the quoted text verbatim onto `TokenDefinition.rules_text`, read by
+#: this module's ordinary static-ability sweep the same as a printed card's
+#: oracle text (see `_self_pump_per_controlled_permanent_builder`'s own
+#: docstring, built for the Urza's Saga Construct token the same way).
+#:
+#: `<type>` is any of CR 205.2a's fifteen card types, not only "lands" -
+#: `_card_type_word` reads whichever one is printed, the same singularisation
+#: `_BASIC_LAND_TYPE_COUNT_CDA_RE`'s own domain sibling and `machines/
+#: effects.py::count_expression` already use. A subtype ("Zombies you
+#: control") is not read here: no real printing in this shape needs one, and
+#: guessing at the vocabulary check `count_expression`'s own subtype branch
+#: uses would be new, unverified scope.
+_QUALIFIER_COUNT_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s power and toughness are each equal to "
+    r"the number of (?P<qualifier>[a-z]+) you control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _qualifier_count_cda_builder(line: str, card_type: Type) -> EffectBuilder:
+    """`_QUALIFIER_COUNT_CDA_RE`'s shape - CR 604.3a's characteristic-
+    defining ability, sublayer 7a (CR 613.4a), the same "set, not add" shape
+    `_basic_land_type_count_cda_builder` right above already is.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: P/T equal to the number of "
+                    f"{card_type.value}s its controller controls"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                characteristic_defining=True,
+                selector=_only(source.id),
+                modification=define_power_toughness(
+                    count_permanents_controlled_by(source.controller, card_type)
                 ),
             )
         ]
@@ -6046,15 +6517,35 @@ def _graveyard_card_types_gated_self_static_builder(
     threshold: int, power: int, toughness: int, granted: list[str], *, line: str
 ) -> EffectBuilder:
     """`_GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE`'s shape - Dragon's Rage
-    Channeler's *delirium* ability.
+    Channeler's *delirium* ability. A thin alias of `_graveyard_count_gated_
+    self_static_builder` over `count_card_types`, kept under its old name
+    since every existing call site already spells it out."""
+    return _graveyard_count_gated_self_static_builder(
+        threshold, power, toughness, granted, line=line, count_fn=count_card_types
+    )
+
+
+def _graveyard_count_gated_self_static_builder(
+    threshold: int,
+    power: int,
+    toughness: int,
+    granted: list[str],
+    *,
+    line: str,
+    count_fn: Callable[[Iterable[CardState]], int],
+) -> EffectBuilder:
+    """A static pump/grant whose condition is some count over the controller's
+    own graveyard - Dragon's Rage Channeler's *delirium* (`count_card_types`)
+    and the "descend 4"/"descend 8" ability words (`count_permanent_cards`,
+    CR 700.11, CR 207.2c) share this same shape and differ only in what they
+    count.
 
     The condition is counted over the controller's own graveyard through
-    `LayerContext.graveyard_of` (CR 300.1's card types, the same count
-    Tarmogoyf's row already uses), and it is checked here, at build time,
-    rather than stored: CR 604.2 has a static ability's effect active exactly
-    while the ability is there and its condition holds, and `effects_for` is
+    `LayerContext.graveyard_of`, and it is checked here, at build time, rather
+    than stored: CR 604.2 has a static ability's effect active exactly while
+    the ability is there and its condition holds, and `effects_for` is
     re-run every time the board is computed (CR 613.5), so a graveyard that
-    stops being delirious simply stops producing the effect on the next
+    stops meeting the threshold simply stops producing the effect on the next
     computation.
 
     Sublayer 7c for the pump (CR 613.4c) and layer 6 for everything granted
@@ -6069,7 +6560,7 @@ def _graveyard_card_types_gated_self_static_builder(
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        if count_card_types(context.graveyard_of(source.controller)) < threshold:
+        if count_fn(context.graveyard_of(source.controller)) < threshold:
             return []
         effects: list[ContinuousEffect] = []
         if power or toughness:
@@ -6408,15 +6899,15 @@ def _permanents_with_counters_ward_builder(cost: str, *, line: str) -> EffectBui
     return builder
 
 
-#: The keyword grant shapes only ever grant one bare keyword - `machines/
-#: combat.py`'s own vocabulary, since that is what a grant needs to be able to
-#: do anything (`combat.has_keyword` is the only reader). Aerial Maneuver's
-#: "gains flying **and first strike**" is exactly why this is a whitelist and
-#: not `[a-z ]+` on its own: without it, "flying and first strike" would be
-#: accepted and granted as one bogus ability instead of two real ones. A
-#: keyword outside this set - or a conjunction the pool does not use single
-#: keywords with - fails the match and falls to `looks_like_unparsed_layer_effect`
-#: instead of silently granting the wrong thing.
+#: The keyword grant shapes grant bare keywords from `machines/combat.py`'s
+#: own vocabulary, since that is what a grant needs to be able to do anything
+#: (`combat.has_keyword` is the only reader). Aerial Maneuver's "gains flying
+#: **and first strike**" is why this is a whitelist and not `[a-z ]+` on its
+#: own: "flying and first strike" is split into its keywords
+#: (`_split_and_validate_keywords`) and granted as two real ones, never one
+#: bogus ability. A keyword outside this set fails the match and falls to
+#: `looks_like_unparsed_layer_effect` instead of silently granting the wrong
+#: thing.
 # Keywords no combat rule reads, and so absent from `machines/combat.py`'s own
 # `Keyword` vocabulary, that a grant still has to be able to name -
 # CR 702.12a's indestructible ("Indestructible is a static ability"; before it
@@ -6434,6 +6925,12 @@ def _permanents_with_counters_ward_builder(cost: str, *, line: str) -> EffectBui
 # `machines/combat.py::_reading_vocabulary` is what makes a shared line work,
 # and `KeywordLineNotice` is what records a line it still cannot read whole.
 _KNOWN_KEYWORDS = frozenset(keyword.value for keyword in Keyword) | KEYWORDS_OUTSIDE_COMBAT
+#: The public name for the same whitelist, for a caller outside this module
+#: that needs to validate a keyword name the identical way every shape here
+#: does - `machines/effects.py`'s own keyword-*choice* riders ("gains your
+#: choice of trample, hexproof, or haste"), whose "or"-joined list is not
+#: the "and"/comma grammar `_split_and_validate_keywords` reads.
+KNOWN_KEYWORDS = _KNOWN_KEYWORDS
 
 
 def _split_and_validate_keywords(raw: str) -> list[str] | None:
@@ -6446,6 +6943,15 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
     if not parts or any(part.lower() not in _KNOWN_KEYWORDS for part in parts):
         return None
     return [part.capitalize() for part in parts]
+
+
+#: The public name for the same reader, for `machines/effects.py`'s own
+#: direct (non-layer-shaped-subject) keyword-grant clauses - Tomik, Orzhov
+#: Lawmage's "Target creature with a +1/+1 counter on it gains flying until
+#: end of turn.", whose target phrase `machines/layers.py`'s own narrow
+#: `_SUBJECT` pattern was never meant to grow a comparison/counter grammar
+#: to match, when `machines/targeting.py` already reads it in full.
+split_and_validate_keywords = _split_and_validate_keywords
 
 
 def _split_protection_qualities(raw: str) -> list[str]:
@@ -6531,13 +7037,24 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("power")), int(match.group("toughness"))
         )
     if match := _PUMP_RE.fullmatch(sentence):
-        power, toughness = int(match.group("power")), int(match.group("toughness"))
-        keyword = match.group("keyword")
-        if keyword is not None:
-            if keyword.strip().lower() not in _KNOWN_KEYWORDS:
+        power_raw = match.group("power") or match.group("power2")
+        toughness_raw = match.group("toughness") or match.group("toughness2")
+        keyword_text = match.group("keyword") or match.group("keyword2")
+        granted: list[str] = []
+        if keyword_text is not None:
+            validated = _split_and_validate_keywords(keyword_text)
+            if validated is None:
                 return None
-            keyword = keyword.strip().capitalize()
-        return _pump_and_keyword_builder(power, toughness, keyword)
+            granted = validated
+        if power_raw.lstrip("+-").lower() == "x" or toughness_raw.lstrip("+-").lower() == "x":
+            where_x = match.group("where_x")
+            if where_x is None or not _THAT_CREATURES_POWER_RE.fullmatch(where_x.strip()):
+                return None
+            power_sign = -1 if power_raw.startswith("-") else 1
+            toughness_sign = -1 if toughness_raw.startswith("-") else 1
+            return _pump_and_keyword_per_target_power_builder(power_sign, toughness_sign, granted)
+        power, toughness = int(power_raw), int(toughness_raw)
+        return _pump_and_keyword_builder(power, toughness, granted)
     if match := _SELF_PUMP_PER_GRAVEYARD_CARD_RE.fullmatch(sentence):
         words = re.split(r",\s*|\s+and\s+", match.group("qualifier"))
         card_types = [_card_type_word(word) for word in words]
@@ -6573,10 +7090,10 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _BECOME_A_COPY_RE.fullmatch(sentence):
         return _become_a_copy_builder(until_eot=bool(match.group("until_eot")))
     if match := _KEYWORD_GRANT_RE.fullmatch(sentence):
-        keyword = match.group("keyword").strip()
-        if keyword.lower() not in _KNOWN_KEYWORDS:
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
             return None
-        return _keyword_grant_builder(keyword.capitalize())
+        return _keyword_grant_builder(keywords)
     if match := _ANTHEM_AND_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
@@ -6606,14 +7123,21 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             if validated is None:
                 return None
             keywords = validated
-        power = match.group("power") or match.group("power_only")
-        toughness = match.group("toughness") or match.group("toughness_only")
-        if power is None and not keywords:
+        power_text = match.group("power") or match.group("power_only")
+        toughness_text = match.group("toughness") or match.group("toughness_only")
+        if power_text is None and not keywords:
             return None
-        return _mass_pump_until_eot_builder(
-            int(power) if power is not None else 0,
-            int(toughness) if toughness is not None else 0,
-            keywords,
+        power = int(power_text) if power_text is not None else None
+        toughness = int(toughness_text) if toughness_text is not None else None
+        return _mass_pump_until_eot_builder(power, toughness, keywords)
+    if match := _DURING_YOUR_TURN_MULTI_TYPE_KEYWORD_GRANT_RE.fullmatch(sentence):
+        card_type1 = _card_type_word(match.group("type1"))
+        card_type2 = _card_type_word(match.group("type2"))
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if card_type1 is None or card_type2 is None or keywords is None:
+            return None
+        return _during_your_turn_multi_type_keyword_grant_builder(
+            (card_type1, card_type2), keywords, line=sentence
         )
     if match := _INDEFINITE_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
@@ -6810,6 +7334,16 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _basic_land_type_count_cda_builder(sentence)
     if _BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE.fullmatch(sentence):
         return _basic_land_type_count_power_only_cda_builder(sentence)
+    if match := _QUALIFIER_COUNT_CDA_RE.fullmatch(sentence):
+        card_type = _card_type_word(match.group("qualifier"))
+        if card_type is not None:
+            return _qualifier_count_cda_builder(sentence, card_type)
+    if match := _CREATURE_SUBTYPE_COUNT_CDA_RE.fullmatch(sentence):
+        words = re.split(r",\s*|\s+and/or\s+|\s+and\s+|\s+or\s+", match.group("subtypes"))
+        subtypes = [_singular_subtype_word(word) for word in words if word]
+        if not subtypes or any(subtype is None for subtype in subtypes):
+            return None
+        return _creature_subtype_count_cda_builder(tuple(subtypes), line=sentence)
     if match := _ATTACHED_CREATURE_PUMP_AND_QUOTED_RE.fullmatch(sentence):
         keywords = []
         if match.group("keywords") is not None:
@@ -6933,6 +7467,32 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             granted,
             line=sentence,
         )
+    for descend_re in (
+        _DESCEND_GATED_SELF_STATIC_LEADING_RE,
+        _DESCEND_GATED_SELF_STATIC_TRAILING_RE,
+    ):
+        if match := descend_re.fullmatch(sentence):
+            threshold = parse_count(match.group("count"), article=False)
+            if threshold is None:
+                return None
+            grant_only = match.group("grant_only")
+            if grant_only is not None:
+                granted = _split_gated_grants(grant_only)
+                power = toughness = 0
+            else:
+                granted = _split_gated_grants(match.group("rest") or "")
+                power = int(match.group("power"))
+                toughness = int(match.group("toughness"))
+            if granted is None:
+                return None
+            return _graveyard_count_gated_self_static_builder(
+                threshold,
+                power,
+                toughness,
+                granted,
+                line=sentence,
+                count_fn=count_permanent_cards,
+            )
     if match := _PER_COLOR_KEYWORD_GRANT_RE.fullmatch(sentence):
         grants = _split_per_color_grants(match.group("clauses"))
         if grants is None:
@@ -7020,7 +7580,8 @@ def _split_subtype_list(raw: str) -> list[str] | None:
 
 def _split_gated_grants(rest: str) -> list[str] | None:
     """The tail of a gated self-static - ", has flying, and attacks each combat
-    if able" - as the ability lines it grants.
+    if able" or (Akawalli's own single-grant shape, no comma at all) " and has
+    trample" - as the ability lines it grants.
 
     A "has <keyword(s)>" clause is validated against `_KNOWN_KEYWORDS` the same
     way every other grant here is; any other clause is granted verbatim, since
@@ -7029,6 +7590,7 @@ def _split_gated_grants(rest: str) -> list[str] | None:
     nothing, which is a plain conditional pump.
     """
     tail = rest.strip().lstrip(",").strip()
+    tail = re.sub(r"^and\s+", "", tail, flags=re.IGNORECASE)
     if not tail:
         return []
     granted: list[str] = []
@@ -7181,41 +7743,109 @@ def is_resolution_layer_effect_text(text: str | None) -> bool:
     is exactly where it belongs.
     """
     for sentence in _effect_sentences(text):
-        normalized = _normalize_duration_first(sentence)
-        if _parse_static_layer_sentence(_strip_ability_word(normalized)) is not None:
-            # CR 611.3's static shapes, excluded for exactly the reason the
-            # anthem below is: "Nonbasic lands are Mountains", "Lands you
-            # control are every basic land type ...", "Other Dragons you
-            # control get +1/+1" and their siblings are a *permanent's* own
-            # static ability, and the battlefield sweep already reapplies each
-            # of them every time the board is computed (CR 613.5). Routing the
-            # permanent spell's resolution here as well would create a second,
-            # permanent copy of the same effect - doubling an anthem, and
-            # leaving a stored effect behind that CR 611.3b says should stop
-            # the moment its source leaves the battlefield.
-            continue
-        anthem_opening = _LOOKS_LIKE_ANTHEM_RE.match(normalized)
-        self_graveyard_pump_opening = _SELF_PUMP_PER_GRAVEYARD_CARD_RE.match(normalized)
-        has_duration = Duration.UNTIL_END_OF_TURN in normalized
-        if (anthem_opening or self_graveyard_pump_opening) and not has_duration:
-            # CR 611.3's own static shape: "lasts for as long as the object
-            # with that static ability remains on the battlefield", i.e.
-            # never expires on its own - the two shapes excluded on purpose.
-            continue
-        if anthem_opening and has_duration:
-            # Same opening words, but an explicit duration ("Creatures you
-            # control get +1/+0 until end of turn.", Violent Outburst) is
-            # never CR 611.3's forever-lasting anthem - it can only be CR
-            # 611.2's one-shot group pump, which `_ANTHEM_RE` does not parse
-            # (it has no duration group at all) and nothing else here reads
-            # either, so this counts as a failed-parse attempt rather than
-            # routing through the anthem's durationless `continue` above.
-            return True
-        if _parse_layer_sentence(sentence) is not None:
-            return True
-        if _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE.match(normalized):
+        genuine, loose = _classify_resolution_layer_sentence(sentence)
+        if genuine or loose:
             return True
     return False
+
+
+def _classify_resolution_layer_sentence(sentence: str) -> tuple[bool, bool]:
+    """`(genuine, loose)` for one sentence alone - the shared classification
+    both `is_resolution_layer_effect_text` and `genuine_resolution_layer_
+    text`/`is_genuine_resolution_layer_sentence` build on, so the CR 611.3
+    exclusions (a static line, a durationless anthem or self-graveyard-pump)
+    are written in exactly one place.
+
+    `genuine` is true only for a sentence `create_continuous_effect`/
+    `create_continuous_effect_of_ability` would actually turn into a real
+    continuous effect (`_parse_layer_sentence` itself succeeds) and that is
+    not one of the excluded CR 611.3 shapes. `loose` is true only when
+    nothing here fully parses but the sentence still resembles a failed
+    attempt (`_LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE`, or an anthem-looking
+    opening with an explicit duration that no specific shape below actually
+    reads) - the signal `LayerNotice`/`ModeNotice` exist for. The two are
+    mutually exclusive by construction: a sentence is never both.
+
+    `_parse_layer_sentence` is tried **before** the anthem-with-duration
+    check below, not after: an explicitly-durationed anthem-looking sentence
+    ("Creatures you control get +1/+0 until end of turn.", Violent Outburst)
+    is exactly `_MASS_PUMP_UNTIL_EOT_RE`'s own shape and genuinely parses,
+    even though `_ANTHEM_RE` itself has no duration group to match it -
+    checking order here only changes which branch a genuine match is
+    attributed to, never `is_resolution_layer_effect_text`'s own `genuine or
+    loose` answer, so its behaviour is unchanged.
+    """
+    normalized = _normalize_duration_first(sentence)
+    if _parse_static_layer_sentence(_strip_ability_word(normalized)) is not None:
+        # CR 611.3's static shapes: "Nonbasic lands are Mountains", "Lands
+        # you control are every basic land type ...", "Other Dragons you
+        # control get +1/+1" and their siblings are a *permanent's* own
+        # static ability, and the battlefield sweep already reapplies each
+        # of them every time the board is computed (CR 613.5). Routing the
+        # permanent spell's resolution here as well would create a second,
+        # permanent copy of the same effect - doubling an anthem, and
+        # leaving a stored effect behind that CR 611.3b says should stop the
+        # moment its source leaves the battlefield.
+        return False, False
+    anthem_opening = _LOOKS_LIKE_ANTHEM_RE.match(normalized)
+    self_graveyard_pump_opening = _SELF_PUMP_PER_GRAVEYARD_CARD_RE.match(normalized)
+    has_duration = Duration.UNTIL_END_OF_TURN in normalized
+    if (anthem_opening or self_graveyard_pump_opening) and not has_duration:
+        # CR 611.3's own static shape: "lasts for as long as the object with
+        # that static ability remains on the battlefield", i.e. never
+        # expires on its own - the two shapes excluded on purpose.
+        return False, False
+    if _parse_layer_sentence(sentence) is not None:
+        return True, False
+    if anthem_opening and has_duration:
+        # An explicit duration is never CR 611.3's forever-lasting anthem -
+        # it can only be CR 611.2's one-shot group pump - but nothing above
+        # read this particular sentence into one, so it counts as a failed
+        # attempt.
+        return False, True
+    if _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE.match(normalized):
+        return False, True
+    return False, False
+
+
+def is_genuine_resolution_layer_sentence(sentence: str) -> bool:
+    """Whether `sentence` alone is genuinely, safely one of `machines.
+    layers`'s CR 611.2 one-shot resolution shapes - `_classify_resolution_
+    layer_sentence`'s own `genuine` half.
+
+    `machines/effects.py`'s composition wave (`_compose_layer_effect_with_
+    remainder` and its three siblings) uses this to decide, sentence by
+    sentence, which parts of a multi-sentence resolution `create_continuous_
+    effect`/`_of_ability` already covers on its own and which are left over
+    to compose - never `is_resolution_layer_effect_text` for that per-
+    sentence question, since its looser "or looks like one" half would
+    wrongly treat a CR 611.3 static/anthem/self-pump sentence sitting beside
+    a genuine one as "already handled", when in fact `create_continuous_
+    effect` never applies that excluded sentence at all.
+    """
+    genuine, _ = _classify_resolution_layer_sentence(sentence)
+    return genuine
+
+
+def genuine_resolution_layer_text(text: str | None) -> bool:
+    """Whether some sentence of `text` is genuinely, safely a CR 611.2
+    layer shape - `is_resolution_layer_effect_text` narrowed to just its
+    `genuine` half, with the "or looks like a failed attempt" signal left
+    out.
+
+    `machines/effects.py`'s composition wave uses this as its own entry
+    gate: `create_continuous_effect` already answers a loose-only match
+    correctly on its own, through `effects_for`'s own `LayerNotice` channel,
+    and gating composition on the looser test too would treat Glorious
+    Anthem's own durationless "Creatures you control get +1/+1." - or Fiend
+    Artisan's own durationless self-pump - as something to compose a
+    remainder around, when CR 611.3 excludes both from ever being a
+    resolution effect at all (CR 608.3a: a permanent spell has nothing to
+    resolve).
+    """
+    return any(
+        is_genuine_resolution_layer_sentence(sentence) for sentence in _effect_sentences(text)
+    )
 
 
 class LayerNotice(EngineModel):
@@ -7292,6 +7922,16 @@ class LayerContext(EngineModel):
     #: own controller - so the per-source answer has to be looked up rather
     #: than handed in directly the way `your_graveyard` is.
     graveyard_by_controller: Mapping[str, tuple[CardState, ...]] = Field(default_factory=dict)
+
+    #: CR 500.1's active player - the third thing the layer engine never sees
+    #: standing on the battlefield. Sorin, Vengeful Bloodlord's own "During
+    #: your turn, creatures and planeswalkers you control have lifelink." is
+    #: the only reader: a condition checked once, at build time, the same way
+    #: `_graveyard_count_gated_self_static_builder`'s graveyard count is -
+    #: `effects_for` is rebuilt on every `computed_board()` call (CR 613.5),
+    #: so an effect gated on this stops applying the instant the turn passes,
+    #: with nothing to store or clear.
+    active_player: str | None = None
 
     #: The unspent mana in each player's mana pool, keyed by the username
     #: whose pool it is. A second thing the layer engine never sees, and for
@@ -7829,7 +8469,7 @@ def _violent_urge(
     exactly this reason - the row is not dead weight, it does one thing the
     parser cannot.
     """
-    effects = _pump_and_keyword_builder(1, 0, "First strike")(source, timestamp, targets, context)
+    effects = _pump_and_keyword_builder(1, 0, ["First strike"])(source, timestamp, targets, context)
     if count_card_types(context.your_graveyard) >= 4:
         effects.extend(
             ContinuousEffect(
@@ -8101,6 +8741,17 @@ def _impending_not_a_creature(source: CardState, timestamp: int) -> list[Continu
             selector=_only(source.id),
             modification=RemoveType(card_type=Type.CREATURE),
         )
+    ]
+
+
+def _emblems_in(game: Game | None) -> list[CardState]:
+    """The emblems in the command zone (CR 114.1), in the order created."""
+    if game is None:
+        return []
+    return [
+        state
+        for state in game.shared_zones[Zone.COMMAND]
+        if isinstance(state, CardState) and state.card.layout is Layout.EMBLEM
     ]
 
 
@@ -8379,8 +9030,13 @@ class ContinuousEffects(EngineModel):
         self.note(permanents)
         shared = context or LayerContext()
         sync_granted_ability_texts(permanents, _every_card_state_in(game) if game else None)
+        # CR 114.4: an emblem's static abilities function in the command zone
+        # (Kaito, Bane of Nightmares' "Ninjas you control get +1/+1."), and
+        # CR 613.7d stamps it as it entered that zone.
+        emblems = _emblems_in(game)
+        self.note(emblems)
         effects: list[ContinuousEffect] = []
-        for permanent in permanents:
+        for permanent in [*permanents, *emblems]:
             effects.extend(
                 effects_for(
                     permanent,
@@ -8399,5 +9055,9 @@ class ContinuousEffects(EngineModel):
         context: LayerContext | None = None,
         game: Game | None = None,
     ) -> ComputedBoard:
-        """What the board is, with everything applied (CR 613.5)."""
-        return compute_board(permanents, self.all_effects(permanents, context, game))
+        """What the board is, with everything applied (CR 613.5). Emblems are
+        on it too - they have no types, so no permanent-reading question sees
+        them - because an effect's source must be on the board for CR 613.6's
+        "does its ability still exist" check (`_still_exists`)."""
+        effects = self.all_effects(permanents, context, game)
+        return compute_board([*permanents, *_emblems_in(game)], effects)

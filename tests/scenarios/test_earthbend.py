@@ -253,3 +253,42 @@ def test_earthbend_with_no_legal_target_leaves_a_notice_and_does_nothing():
     notices = scenario.game.targeting_notices
     assert len(notices) == 1
     assert notices[0].source_name == "Badgermole Cub"
+
+
+def test_rockalanche_reads_earthbend_x_where_x_is_defined_by_the_card():
+    """Rockalanche (off-pool, added with `scripts/add_card.py`, verified
+    against its own printed text): "Earthbend X, where X is the number of
+    Forests you control." (CR 107.3f's own defined X, evaluated through
+    `machines/effects.amount_expression` the way `_parse_put_counters_
+    equal_to_clause`'s "equal to `<expr>`" tail already is.)
+
+    Two things Badgermole Cub's fixed "earthbend 1" cannot prove: Rockalanche
+    prints the keyword directly on a sorcery rather than on a creature's
+    triggered ability, so `_parse_earthbend_clause` has to read `for_spell=
+    True` the same as `for_spell=False`; and its count is a variable X, not
+    a literal digit, read off the board rather than off the text.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Rockalanche"],
+            battlefield=["Forest", "Forest", "Forest", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    island = scenario.find("Island", Zone.BATTLEFIELD, "alice")
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest")
+
+    scenario.cast_and_resolve("Rockalanche", *sources, targets=[island])
+
+    assert scenario.game.targeting_notices == []
+    assert scenario.game.characteristics_of(island).is_creature
+    # X = 3, the number of Forests alice controls - unaffected by which land
+    # was actually earthbent (the Island, deliberately not one of the
+    # Forests being counted).
+    assert scenario.game.power_of(island) == 3
+    assert scenario.game.toughness_of(island) == 3
+    assert island.counters[Counter.PLUS_ONE] == 3

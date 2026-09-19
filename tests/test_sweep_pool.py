@@ -32,6 +32,7 @@ from scripts.sweep_pool import (
     _condition_can_fire,
     _effect_matched_inside_quotes,
     _intended_token_requirement,
+    _modal_category,
     _spell_faces,
     _worse,
     _x_candidates,
@@ -79,32 +80,33 @@ def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
     would be a control that controls nothing.)
 
     (Grand Arbiter Augustin IV used to be this control, on the reading that
-    its cost-modifier statics reached no notice at all. Measured today, two of
-    its three lines are read by `machines/cost.cost_modifier_effect` and the
-    third records a `CostModifierNotice` - see
-    `test_a_cost_modifier_static_that_fails_closed_is_a_notice`, which now
-    pins that card instead. Three earlier examples of the identical kind had
-    already been closed the same way: March of Otherworldly Light's
-    two-sentence additional-cost preamble, Blood Artist's back-to-back
-    "target player loses 1 life and you gain 1 life" clauses, and History of
-    Benalia's Saga chapters.)
+    its cost-modifier statics reached no notice at all. All three of its
+    lines are now read by `machines/cost.cost_modifier_effect` - see
+    `test_grand_arbiters_three_cost_modifier_statics_are_all_handled` - so it
+    would be a control that controls nothing. Four earlier examples of the
+    identical kind had already been closed the same way: March of
+    Otherworldly Light's two-sentence additional-cost preamble, Blood
+    Artist's back-to-back "target player loses 1 life and you gain 1 life"
+    clauses, History of Benalia's Saga chapters, and Rancor's "Enchanted
+    creature ..." static above.)
     """
     category, _ = classify_card(card("Keen-Eyed Curator"))
     assert category == SILENT
 
 
-def test_a_cost_modifier_static_that_fails_closed_is_a_notice():
+def test_grand_arbiters_three_cost_modifier_statics_are_all_handled():
     """Grand Arbiter Augustin IV: "White/Blue spells you cast cost {1} less to
-    cast" is read by `machines/cost.cost_modifier_effect`, and "Spells your
-    opponents cast cost {1} more to cast" is controller-relative in a way its
-    shapes do not cover - `looks_like_unparsed_cost_modifier` catches it and
-    `Game.total_cost_for` records a `CostModifierNotice`. That is fail-closed
-    behaviour, not silence, and the sweep must read a permanent's static line
+    cast" was already read by `machines/cost.cost_modifier_effect`; "Spells
+    your opponents cast cost {1} more to cast" - controller-relative the
+    other way round - is now too (`CostModifierKind.OPPONENT_TYPE_INCREASE`,
+    S10 survey 2026-09-19, read for Thalia, the Survivor's qualified sibling
+    "Noncreature spells your opponents cast cost {1} more to cast"). All
+    three lines are HANDLED; the sweep must read a permanent's static line
     through the same two functions the engine reads it with.
     """
     clauses = classify_clauses(card("Grand Arbiter Augustin IV"))
-    assert [clause.category for clause in clauses] == [HANDLED, HANDLED, NOTICE]
-    assert classify_card(card("Grand Arbiter Augustin IV"))[0] == NOTICE
+    assert [clause.category for clause in clauses] == [HANDLED, HANDLED, HANDLED]
+    assert classify_card(card("Grand Arbiter Augustin IV"))[0] == HANDLED
 
 
 # -- Defect 1: a permanent's static line is not "no rules text" -------------
@@ -424,36 +426,20 @@ def test_intended_token_requirement_reads_nontoken_before_token():
     assert _intended_token_requirement("a Human you control enters") is None
 
 
-def test_ygras_food_graveyard_condition_can_never_fire():
+def test_ygras_food_graveyard_condition_now_fires():
     """Ygra, Eater of All's "a Food is put into a graveyard from the
-    battlefield" hits a different bug than Weapons Manufacturing's, in the
-    same `condition_matches` `DIES` branch: a condition naming neither a
-    self-reference nor "another"/"other" never matches anything, self or
-    other (`docs/2026-09-08-trigger-findings.md` traces the same escaping
-    shape - readable event, unmatched condition - to a second, independent
-    cause). Nobody is fixing this one, which is what makes it a stable
-    fixture: Weapons Manufacturing's own condition now fires correctly since
-    `main`'s nontoken substring fix (see the sibling test below), so this
-    closure's fixtures have to point at a gap that is still actually open.
+    battlefield" names neither a self-reference nor "another"/"other". The
+    `condition_matches` `DIES` branch used to read such a condition as
+    self-only and never matched it; a condition naming no object of its own
+    is about any such object, and this closure tracks the production answer.
     """
     ability = _triggered_ability("Ygra, Eater of All", condition_contains="Food is put into")
-    assert _condition_can_fire(card("Ygra, Eater of All"), ability) is False
+    assert _condition_can_fire(card("Ygra, Eater of All"), ability) is not False
 
 
 def test_blade_of_the_bloodchiefs_creature_dies_condition_now_fires():
-    """Blade of the Bloodchief's "a creature dies" (no "this", no
-    "another"/"other") used to hit the same `DIES`-branch gap Ygra's own
-    fixture still does - but the two are not actually the same bug. Ygra's
-    condition names no card *type* at all ("a Food is put into a graveyard",
-    Food being a subtype `_types_match` cannot see), so the guard's type
-    check never had anything to bite on and Ygra stays open on purpose (see
-    that test's own docstring). Blade of the Bloodchief's condition names
-    "creature" outright, and Blade of the Bloodchief is Equipment - never a
-    candidate for its own condition - which is exactly the FRA "trigger
-    events and per-turn history" stream's own fix (Gardenize, Way of the
-    Necromancer): the "another"/"other" requirement only applies when the
-    source could plausibly have been the subject.
-    """
+    """Blade of the Bloodchief's "a creature dies" - the same `DIES`-branch
+    fix as Ygra's, on a plainer card."""
     ability = _triggered_ability("Blade of the Bloodchief", condition_contains="a creature dies")
     assert _condition_can_fire(card("Blade of the Bloodchief"), ability) is not False
 
@@ -502,6 +488,21 @@ def test_amulet_of_vigors_enters_tapped_condition_is_genuinely_reachable():
     assert _condition_can_fire(card("Amulet of Vigor"), ability) is True
 
 
+def test_tetsuko_umezawa_pursuers_power_or_toughness_condition_now_fires():
+    """Tetsuko's own "a creature an opponent controls with power or
+    toughness 1 or less blocks" is a BLOCKS probe, and none of `_cards_by_
+    type()[Type.CREATURE]`'s capped first five real printings happen to be
+    that small - `_power_or_toughness_probe_cards` adds real creatures
+    (found by scanning the whole pool once, cached) that actually satisfy
+    the numeric qualifier the condition names, on top of that fixed cache,
+    so a probe genuinely exists to try."""
+    ability = _triggered_ability(
+        "Tetsuko Umezawa, Pursuer", condition_contains="power or toughness"
+    )
+    assert _condition_can_fire(card("Tetsuko Umezawa, Pursuer"), ability) is not False
+    assert classify_card(card("Tetsuko Umezawa, Pursuer"))[0] != UNMATCHABLE_CONDITION
+
+
 def test_caretakers_talents_unread_condition_is_not_reclassified():
     """`ability.event is None` (CR 603.2's condition this module cannot read
     at all, `docs/engine-coverage.md`'s own documented gap) is a different,
@@ -513,28 +514,22 @@ def test_caretakers_talents_unread_condition_is_not_reclassified():
     assert by_source["triggered (unread condition)"] == SILENT
 
 
-def test_ygra_reports_unmatchable_condition_not_handled():
-    """The requirement, end to end: this card's own triggered clause must
-    stop scoring `handled`, and it must score a bucket distinct from
-    `silent` - the two mean different things to whoever reads the report.
-    Ygra was previously scored fully `handled` - a card the sweeper had
-    never flagged at all, which the condition-matching closure is what
-    finds.
-    """
+def test_ygra_no_longer_reports_an_unmatchable_condition():
+    """End to end: with the condition fixed, Ygra's triggered clause is no
+    longer in the can-never-fire bucket."""
     by_source = {c.source: c.category for c in classify_clauses(card("Ygra, Eater of All"))}
-    assert by_source["triggered"] == UNMATCHABLE_CONDITION
-    assert classify_card(card("Ygra, Eater of All"))[0] == UNMATCHABLE_CONDITION
+    assert by_source["triggered"] != UNMATCHABLE_CONDITION
 
 
-def test_blade_of_the_bloodchief_reports_silent_again_now_the_condition_fires():
+def test_blade_of_the_bloodchief_no_longer_reports_an_unmatchable_condition():
     """The condition hole is closed (see the `_condition_can_fire` test
-    above); the effect itself - "put a +1/+1 counter on equipped creature...
-    two if Vampire" - still has no `TRIGGER_EFFECTS` entry or clause parser,
-    so the card reports `SILENT` once more rather than `UNMATCHABLE_
-    CONDITION` - the same shape `test_miirym_still_reports_silent_for_its_
-    missing_effect` already pins for the nontoken fix's own sibling case.
+    above). Its effect - "put a +1/+1 counter on equipped creature... two if
+    Vampire" - is read by the num-g0b line's own "put a counter on X. If X
+    is a `<Subtype>`, put N counters on it instead" parser, landed
+    independently of this fix, so the card reports `HANDLED` rather than
+    `SILENT` or `UNMATCHABLE_CONDITION`; this only pins the condition half.
     """
-    assert classify_card(card("Blade of the Bloodchief"))[0] == SILENT
+    assert classify_card(card("Blade of the Bloodchief"))[0] != UNMATCHABLE_CONDITION
 
 
 def test_miirym_still_reports_silent_for_its_missing_effect():
@@ -762,3 +757,45 @@ def test_watcher_for_tomorrows_leaves_the_battlefield_clause_is_not_silent():
     clause = "When this creature leaves the battlefield, put the exiled card into its owner's hand."
     assert outcomes[clause] == HANDLED
     assert classify_card(watcher)[0] != SILENT
+
+
+def test_modal_category_is_worst_mode_not_best_mode():
+    """`_modal_category` used to score `HANDLED` the moment *any* chosen
+    mode's text parsed, on the reading that a card with at least one working
+    mode is not dead - but that scores a card `HANDLED` when a real, chosen
+    mode of it does nothing (CR 700.2a lets a player choose *any* mode with
+    no minimum-usefulness rule), which is exactly the "best clause wins" bug
+    `classify_card`'s own docstring already rejects for an ordinary card
+    (Territorial Kavu, Obsidian Charmaw, Engineered Explosives).
+
+    Cryptic Command (off-set, not Reality Fracture and not the reported
+    card): four modes, the third ("Return target permanent to its owner's
+    hand" is fine, but the counter-then-draw combination and the tap-all
+    mode are what actually leaves one mode dark) reads False, proving the
+    worst-mode rule on its own. Vraska's Final Mercy was the reported shape
+    at the time this test was written - mode 1 (destroy) read, mode 2 (lose
+    life, Empower Jace 6) did not, since Empower Jace (CR 701.71) belonged to
+    a different wave - and now that Empower Jace has landed, both of its
+    modes read: it is fully `HANDLED`, which this test keeps asserting so a
+    future regression in either mode is still caught.
+    """
+    assert _modal_category(card("Cryptic Command")) == NOTICE
+    assert _modal_category(card("Vraska's Final Mercy")) == HANDLED
+
+
+def test_ingris_stingerquills_permanent_spell_records_no_phantom_notice():
+    """Ingris Stingerquill: "{4}: Create a 2/2 ... Cadet. Then creatures you
+    control gain haste until end of turn." is its *activated* ability's own
+    line, read correctly through `activated_effect_for`. `effect_for` is
+    still called on the whole permanent's raw printed text for its own
+    (nonexistent, CR 608.3a) spell resolution, and the group-haste sentence
+    embedded in that text is now genuinely readable
+    (`_MASS_PUMP_UNTIL_EOT_RE`'s own keyword-only widening) - which used to
+    make `_compose_layer_effect_with_remainder` treat the activated
+    ability's own cost line as an unread sibling instruction of the spell's
+    resolution and record a `LayerRemainderNotice` for a permanent spell
+    that has no resolution text to run at all.
+    """
+    outcomes = classify_clauses(card("Ingris Stingerquill"))
+    assert all(outcome.source != "spell" for outcome in outcomes)
+    assert {outcome.category for outcome in outcomes} == {HANDLED}

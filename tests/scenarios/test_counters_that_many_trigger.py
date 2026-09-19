@@ -7,13 +7,9 @@ this trigger silently placed nothing no matter how many cards were
 discarded.
 
 "That many" is CR 607.1's anaphora back to the ability's own triggering
-event, read off `GameEvent.amount` by `_triggering_event_amount` - a local
-stand-in for the number sweep's group-0b event-count channel (see that
-function's own docstring: `dressdown-self-sac` already built the same
-pass-through for The Millennium Calendar's own untap-step trigger, ahead of
-group-0b, and this is the same shape rewritten against `numbers.py` for the
-discard-count half). Proven here against Mind Rot's real two-card discard
-rather than a hardcoded one.
+event, read off `GameEvent.amount` by the number sweep's shared count
+channel reader (`machines/effects.that_many`). Proven here against Mind
+Rot's real two-card discard rather than a hardcoded one.
 
 Every CR number here was looked up with `mise run rules:find` in the session
 that wrote this file:

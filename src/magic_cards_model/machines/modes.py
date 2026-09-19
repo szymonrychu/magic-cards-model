@@ -36,11 +36,12 @@ The sub-rules this module implements, all looked up rather than remembered:
   convention is covered for free. Each mode's own cost is read into
   `Mode.cost`; `machines/casting.py`'s `choose_modes` charges it
   automatically, the same way `_charge_entwine` already does for CR 702.42a.
-  Spree (CR 702.172a) shares this same "cost before effect" shape and the
-  parenthetical-instruction reading now covers it too, but its `+`-symbol
-  bullets (CR 702.172b) are not - `BULLET` still only recognizes `•`, and no
-  Spree printing is in this pool to prove a `+` reading against real data, so
-  that half is left for whoever adds one, not guessed at here.
+  Spree (CR 702.172a) shares this same "cost before effect" shape, the
+  parenthetical-instruction reading, and now its own `+`-symbol bullets
+  (CR 702.172b) too - `_BULLET_RE` matches `+` followed by whitespace as well
+  as `•`, told apart from a loyalty ability's "+1:"/"+2:" line (CR 606.4) by
+  that same whitespace, which a loyalty symbol's immediate digit never has.
+  Proved against Smuggler's Surprise, a real printing in this pool.
 
 Deliberately not handled, each of them leaving `understood=False` rather than a
 confident wrong answer:
@@ -64,6 +65,17 @@ from ..snapshot import EngineModel
 
 #: The bullet WOTC prints in front of each mode.
 BULLET = "•"
+#: CR 702.172b: "Cards with the spree ability ... use a plus sign (+) rather
+#: than traditional bullet points." Spree's own bullet is always followed by
+#: whitespace before its cost ("+ {2} — Mill four cards...", Smuggler's
+#: Surprise) - never immediately by a digit and a colon the way a loyalty
+#: ability's own "+1:"/"+2:" line is (CR 606.4, Wrenn and Seven's "+1: Reveal
+#: the top four cards..."). The two shapes never collide on that whitespace,
+#: so this reads generally off any card printing either bullet rather than
+#: needing a Spree-specific keyword gate - the same "shape rule, not a
+#: keyword-name check" `_PARENTHETICAL_INSTRUCTION` already is for Tiered
+#: and Spree's shared reminder-text instruction line.
+_BULLET_RE = re.compile(rf"^(?:{re.escape(BULLET)}|\+\s+)")
 
 _INSTRUCTION = re.compile(r"^choose\b(?P<rest>.*)$", re.IGNORECASE)
 _REPEATABLE = re.compile(r"you may choose the same mode more than once", re.IGNORECASE)
@@ -365,7 +377,7 @@ def mode_effect_text(mode: Mode) -> str:
 
 def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
     lines = [line.strip() for line in oracle_text.splitlines()]
-    bullets = [index for index, line in enumerate(lines) if line.startswith(BULLET)]
+    bullets = [index for index, line in enumerate(lines) if _BULLET_RE.match(line)]
     if not bullets:
         return None
 
@@ -396,7 +408,7 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
             understood=False,
         )
 
-    mode_texts = [lines[index].removeprefix(BULLET).strip() for index in bullets]
+    mode_texts = [_BULLET_RE.sub("", lines[index], count=1).strip() for index in bullets]
     mode_costs: list[str | None] = []
     for text in mode_texts:
         match = _MODE_WITH_COST.match(text)
@@ -470,10 +482,16 @@ def _read_alternative(
 
     The alternative count is read the way the printed one is (`_read_counts`),
     so "two", "one or more" and "up to three" all work; "both" and "all" are
-    every mode. "You may choose two instead" of "Choose one" leaves one legal
-    too, so the range is widened rather than replaced; a mandatory "choose
-    both instead" replaces it. An unread count keeps only the condition, which
-    `Game.modal_alternative_applies` turns into a notice.
+    every mode. "Any number" (CR 601.4's own Inscription of Abundance
+    example: "its controller may choose any number of modes") is zero to
+    every mode, the same "choose any number of ..." idiom CR 701.34a
+    (proliferate) and its siblings use elsewhere - zero is a legal choice,
+    unlike "both"/"all", which is why it is not folded into that branch.
+    "You may choose two instead" of "Choose one" leaves one legal too, so the
+    range is widened rather than replaced; a mandatory "choose both instead"
+    (or "choose any number instead") replaces it. An unread count keeps only
+    the condition, which `Game.modal_alternative_applies` turns into a
+    notice.
     """
     match = _ALTERNATIVE.search(instruction)
     if match is None:
@@ -485,6 +503,8 @@ def _read_alternative(
     }
     if text.lower() in ("both", "all"):
         alternative: tuple[int, int] | None = (mode_count, mode_count)
+    elif text.lower() == "any number":
+        alternative = (0, mode_count)
     else:
         alternative = _read_counts(f"Choose {text}", mode_count)
     if alternative is None or counted is None:

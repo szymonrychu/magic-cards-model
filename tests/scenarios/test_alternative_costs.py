@@ -431,6 +431,96 @@ def test_omniscience_does_not_reach_a_spell_cast_from_the_graveyard():
     assert "hand" in (static[0].unavailable or "")
 
 
+# -- Omnipresence: the same grant, capped by a live mana-value count --------
+
+
+def test_omnipresence_makes_a_cheap_spell_free_when_enough_creatures_are_out():
+    """Omnipresence: "You may cast spells with mana value less than or equal
+    to the number of creatures you control from your hand without paying
+    their mana costs." Two creatures out, casting Lightning Bolt (mana value
+    1): within the live cap, so the grant is available."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Lightning Bolt"],
+            battlefield=["Omnipresence", "Grizzly Bears", "Hill Giant"],
+        )
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Lightning Bolt")
+
+    (option,) = casting.alternative_costs
+    assert option.source is AlternativeCostSource.STATIC
+    assert option.source_name == "Omnipresence"
+    assert option.available
+
+    casting.use_alternative_cost()
+    casting.choose_targets(["bob"])
+    payment = casting.begin_paying()
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+
+    assert scenario.player("bob").life == 17
+    assert casting.free_cast_source == "Omnipresence"
+
+
+def test_omnipresence_is_unavailable_with_no_creatures_to_count():
+    """No creatures controlled: the live cap is 0, so even Lightning Bolt's
+    mana value of 1 is over it."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Omnipresence"])
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Lightning Bolt")
+
+    (option,) = casting.alternative_costs
+    assert not option.available
+    assert "mana value 0 or less" in (option.unavailable or "")
+
+
+def test_omnipresence_is_unavailable_when_the_spell_is_still_too_expensive():
+    """One creature out (cap 1), Counterspell's mana value is 2 - over the
+    cap, so the grant does not reach it even though it is a real hand card."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Counterspell"], battlefield=["Omnipresence", "Grizzly Bears"])
+        .player("bob", hand=["Lightning Bolt"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Counterspell")
+
+    (option,) = casting.alternative_costs
+    assert not option.available
+    assert "mana value 1 or less" in (option.unavailable or "")
+
+
+def test_omnipresence_does_not_reach_an_opponents_spell():
+    """ "You may cast spells ... from *your* hand" - the same controller
+    scoping Omniscience's own grant already has."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Omnipresence", "Grizzly Bears", "Hill Giant"])
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Lightning Bolt", username="bob", targets=["alice"])
+
+    assert casting.alternative_costs == []
+
+
 def test_delraich_is_cast_for_three_black_creatures():
     """A colour requirement rather than a subtype one, and three objects
     rather than two - the announcement chooses them all (CR 601.2b) and the

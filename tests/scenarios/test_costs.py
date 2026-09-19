@@ -1017,26 +1017,62 @@ def test_damping_sphere_taxes_the_second_spell_a_player_casts_this_turn():
     scenario.cast_and_resolve("Lightning Bolt", *mountains, username="alice", targets=[second_bear])
 
 
-def test_an_unreadable_cost_increase_fails_closed_and_leaves_a_notice():
+def test_grand_arbiters_opponent_tax_applies_to_an_opponents_spell():
     """Grand Arbiter Augustin IV: "Spells your opponents cast cost {1} more to
-    cast." - a controller-relative increase this parser does not read, since
-    it is not the unconditional "Spells cost {N} more" shape. It must neither
-    silently apply the tax nor silently skip it: `Game.cost_modifier_notices`
-    records the gap instead."""
+    cast." - CostModifierKind.OPPONENT_TYPE_INCREASE's unqualified case (no
+    card-type qualifier, so every spell an opponent casts is taxed), the
+    controller-relative mirror of COLOR_DECREASE/TYPE_DECREASE below. No
+    notice: the shape reads now (S10 survey, 2026-09-19 - see
+    test_thalias_opponent_tax_only_charges_noncreature_spells below for the
+    qualified sibling, "Noncreature spells your opponents cast cost {1}
+    more to cast.")."""
     scenario = (
         Scenario()
         .player("alice", battlefield=["Grand Arbiter Augustin IV"])
-        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain", "Mountain"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = announce(scenario, "Lightning Bolt", username="bob")
 
-    assert casting.total_cost.mana == ManaCost.parse("{R}"), "unread, so not applied - fail closed"
-    assert len(scenario.game.cost_modifier_notices) == 1
-    notice = scenario.game.cost_modifier_notices[0]
-    assert notice.source_name == "Grand Arbiter Augustin IV"
+    assert casting.total_cost.mana == ManaCost.parse("{1}{R}")
+    assert scenario.game.cost_modifier_notices == []
+
+
+def test_thalias_opponent_tax_only_charges_noncreature_spells():
+    """Thalia, the Survivor: "Noncreature spells your opponents cast cost {1}
+    more to cast." The qualified sibling of Grand Arbiter's own unqualified
+    tax above: an opponent's noncreature spell is taxed, their creature spell
+    is not, and Thalia's own controller pays neither."""
+    scenario = (
+        Scenario()
+        .player(
+            "bob",
+            hand=["Lightning Bolt", "Grizzly Bears"],
+            battlefield=["Mountain", "Mountain", "Forest", "Forest"],
+        )
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Thalia, the Survivor", "Mountain"])
+        .build()
+    )
+    # Bob is the active player, so his own sorcery-speed creature spell is
+    # legal too (CR 117.1a) - only Alice's controller-relative exemption is
+    # under test, not who gets priority when.
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    bolt = announce(scenario, "Lightning Bolt", username="bob")
+    assert bolt.total_cost.mana == ManaCost.parse("{1}{R}")
+    assert scenario.game.cost_modifier_notices == []
+    bolt.cancel()
+
+    bears = announce(scenario, "Grizzly Bears", username="bob")
+    assert bears.total_cost.mana == ManaCost.parse("{1}{G}"), "a creature spell is not taxed"
+    bears.cancel()
+
+    alices_bolt = announce(scenario, "Lightning Bolt", username="alice")
+    assert alices_bolt.total_cost.mana == ManaCost.parse("{R}"), (
+        "Thalia's own controller is not taxed"
+    )
 
 
 def test_auto_tap_refuses_a_spell_the_increase_makes_unaffordable():

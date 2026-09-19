@@ -131,6 +131,44 @@ def test_atlas_gains_life_for_each_creature_with_power_four_or_greater():
     assert alice.life == life_before + 2
 
 
+def test_honden_of_cleansing_fire_gains_life_for_each_shrine_you_control():
+    """Pre-existing bug, unrelated to this wave's own families: `_for_each_
+    qualifier_count`'s subtype branch (`machines/effects.py`) called a bare
+    `_singular_subtype`, a name no module-level function defines any more.
+    The number-sweep integration merge renamed every other same-named
+    `_singular_subtype` definition to a distinct successor
+    (`_singular_subtype_for_count_expression`,
+    `_singular_subtype_for_transform_all`, `_singular_subtype_for_amass`) to
+    fix the shadowing those three sharing one name caused, but missed this
+    caller, so any "for each `<subtype>` you control" qualifier raised
+    `NameError` instead of counting - Immaculate Magistrate's own "for each
+    Elf you control" among the pool cards it broke.
+
+    Honden of Cleansing Fire: "At the beginning of your upkeep, you gain 2
+    life for each Shrine you control." "Shrine" is a subtype (CR 205.3m),
+    not one of the fifteen CR 205.2a card types, so it exercises exactly the
+    broken branch. Go-Shintai of Boundless Vigor is on the battlefield too,
+    also a Shrine, so the count must be 2, not 1 (proves the qualifier reads
+    the whole board, not just the source permanent).
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Honden of Cleansing Fire", "Go-Shintai of Boundless Vigor"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    life_before = alice.life
+
+    effect = parse_clause_effect("you gain 2 life for each Shrine you control.")
+    assert effect is not None
+    effect(scenario.game, alice, "Honden of Cleansing Fire", None)
+
+    # Two Shrines alice controls: Honden itself and Go-Shintai.
+    assert alice.life == life_before + 4
+
+
 # --------------------------------------------------------------------------
 # G1-2: "<verb> X, where X is <expr>"
 # --------------------------------------------------------------------------

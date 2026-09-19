@@ -58,8 +58,9 @@ def test_a_genuinely_dead_card_classifies_as_silent(tmp_path):
     `scripts/sweep_pool.has_rules_text` no longer has: a permanent's static
     ability (CR 604.2) is now judged, and lands in `silent`,
     `static_unaudited`, `notice` or `handled` like anything else. Grand
-    Arbiter itself is a `notice` today (`machines/cost.py` reads two of its
-    three lines and records a `CostModifierNotice` for the third), which is
+    Arbiter itself is `handled` today (`machines/cost.py` reads all three of
+    its lines, including the opponent-scoped tax `CostModifierKind.
+    OPPONENT_TYPE_INCREASE` closed for the S10 survey, 2026-09-19), which is
     why it is no longer the dead-card control anywhere.
     """
     result = survey_one("Keen-Eyed Curator", tmp_path)

@@ -317,3 +317,83 @@ def test_an_unreadable_group_where_x_is_expression_fails_closed_with_a_notice():
     (notice,) = scenario.game.unreadable_counter_amount_notices
     assert notice.source_name == "Ouroboroid"
     assert notice.expression == "the number of dreams you had last night"
+
+
+# --------------------------------------------------------------------------
+# "Put N counters [equal to <expr>] on each [other] creature you control
+# named <Name>" - CR 201.5's own name-based group, not a type or subtype
+# --------------------------------------------------------------------------
+
+
+def test_baloth_packhunter_counters_another_baloth_packhunter_not_itself():
+    """Off-set: Baloth Packhunter: "When this creature enters, put two +1/+1
+    counters on each other creature you control named Baloth Packhunter." A
+    fixed literal count, and "other" excludes the newly entering creature
+    itself from its own trigger.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Baloth Packhunter"],
+            battlefield=["Baloth Packhunter", "Forest", "Forest", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    original = scenario.creature("Baloth Packhunter", "alice")
+    sources = scenario.untapped_sources(*["Forest"] * 4, username="alice")
+    scenario.cast_and_resolve("Baloth Packhunter", *sources, username="alice")
+    scenario.resolve_top()  # the enters trigger
+
+    new_one = next(
+        state
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.name == "Baloth Packhunter" and state is not original
+    )
+    assert original.counter_count(Counter.PLUS_ONE) == 2
+    assert new_one.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_gruff_triplets_dies_trigger_counters_its_own_token_copies():
+    """On-set: Gruff Triplets: "When this creature enters, if it isn't a
+    token, create two tokens that are copies of it. When this creature
+    dies, put a number of +1/+1 counters equal to its power on each
+    creature you control named Gruff Triplets." Differently worded from
+    Baloth Packhunter (no "other" at all - the dead original is never part
+    of the battlefield scan to begin with - and "equal to its power" instead
+    of a flat count) - proof the reader is not fitted to either card's own
+    sentence. `its power` is read off `AbilityOnStack.event` (CR 603.10a's
+    look-back onto the dying original), not off the token copies receiving
+    the counters.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Gruff Triplets"],
+            battlefield=["Forest"] * 6,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Forest"] * 6, username="alice")
+    original = scenario.cast_and_resolve("Gruff Triplets", *sources, username="alice")
+    scenario.resolve_top()  # the enters trigger, making two token copies
+
+    copies = [
+        state
+        for state in scenario.game.battlefield
+        if state.name == "Gruff Triplets" and state is not original
+    ]
+    assert len(copies) == 2
+    assert original.power == 3
+
+    scenario.game.destroy(original)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()  # the dies trigger
+
+    assert all(copy.counter_count(Counter.PLUS_ONE) == 3 for copy in copies)
+    assert all(copy.power == 6 for copy in copies)

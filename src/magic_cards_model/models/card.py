@@ -339,6 +339,23 @@ class Card(ScryfallModel):
                 return face
         return None
 
+    @property
+    def prepare_spell(self) -> "CardFace | None":
+        """This card's inset "prepare spell" face, or None (CR 722.1, 722.2a).
+
+        "The inset frame of a preparation card is called a 'prepare spell.'"
+        Only a `Layout.PREPARE` card has one, and Scryfall's own shape for it
+        is the ordinary two-face `card_faces` list every other multifaced
+        layout uses - `card_faces[0]` the front (a normal permanent, cast and
+        played like any other), `card_faces[1]` the inset spell. CR 722.3:
+        "Preparation cards can't be cast using the alternative characteristics
+        found within their inset frames" - this is read only to build a
+        CR 722.3c exile copy from, never to cast the printing itself.
+        """
+        if self.layout is not Layout.PREPARE:
+            return None
+        return self.back_face
+
 
 def _words_before_dash(type_line: str) -> frozenset[str]:
     """Lowercased words left of the em dash. Module level: `set` is a Card field."""

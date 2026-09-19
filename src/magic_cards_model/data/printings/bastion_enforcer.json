@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "7cbf17a0-2dbc-4e79-9cfa-ea49b1605105",
+  "oracle_id": "87449f64-9500-4967-a073-cde19824e087",
+  "multiverse_ids": [
+    469856
+  ],
+  "mtgo_id": 73523,
+  "arena_id": 70087,
+  "tcgplayer_id": 192948,
+  "cardmarket_id": 381255,
+  "name": "Bastion Enforcer",
+  "lang": "en",
+  "released_at": "2019-07-12",
+  "uri": "https://api.scryfall.com/cards/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105",
+  "scryfall_uri": "https://scryfall.com/card/m20/303/bastion-enforcer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:55:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.jpg?1783932914",
+    "normal": "https://cards.scryfall.io/normal/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.jpg?1783932914",
+    "large": "https://cards.scryfall.io/large/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.jpg?1783932914",
+    "png": "https://cards.scryfall.io/png/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.png?1783932914",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.jpg?1783932914",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.jpg?1783932914",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.webp?1783932914",
+    "grid": "https://cards.scryfall.io/grid/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.webp?1783932914",
+    "display": "https://cards.scryfall.io/display/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.webp?1783932914",
+    "art": "https://cards.scryfall.io/art/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.webp?1783932914",
+    "crop": "https://cards.scryfall.io/crop/front/7/c/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105.webp?1783932914"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Dwarf Soldier",
+  "oracle_text": "",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set": "m20",
+  "set_name": "Core Set 2020",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/7cbf17a0-2dbc-4e79-9cfa-ea49b1605105/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A87449f64-9500-4967-a073-cde19824e087&unique=prints",
+  "collector_number": "303",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Headquartered at the Bastion of the Honorable, the soldiers of Ghirapur are charged with the task of keeping peace in the city.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Matt Stewart",
+  "artist_ids": [
+    "20871267-2d8a-41d5-b03a-be3d557c5734"
+  ],
+  "illustration_id": "f0423a9d-f89e-402c-8655-8bf831ada12d",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "starterdeck"
+  ],
+  "edhrec_rank": 28788,
+  "penny_rank": 16513,
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.04",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=469856&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBastion%2BEnforcer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBastion%2BEnforcer",
+    "edhrec": "https://edhrec.com/route/?cc=Bastion+Enforcer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192948%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=381255&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/73523?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

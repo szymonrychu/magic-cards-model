@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "50326a2a-7e10-464b-a97e-e880bda0558c",
+  "oracle_id": "cb27dc83-85ee-4f54-b032-41cd1806d3ac",
+  "multiverse_ids": [],
+  "tcgplayer_id": 718472,
+  "cardmarket_id": 908434,
+  "name": "Way of the Healer",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/50326a2a-7e10-464b-a97e-e880bda0558c",
+  "scryfall_uri": "https://scryfall.com/card/fra/207/way-of-the-healer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-18T11:05:03Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.jpg?1789729503",
+    "normal": "https://cards.scryfall.io/normal/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.jpg?1789729503",
+    "large": "https://cards.scryfall.io/large/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.jpg?1789729503",
+    "png": "https://cards.scryfall.io/png/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.png?1789729503",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.jpg?1789729503",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.jpg?1789729503",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.webp?1789729503",
+    "grid": "https://cards.scryfall.io/grid/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.webp?1789729503",
+    "display": "https://cards.scryfall.io/display/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.webp?1789729503",
+    "art": "https://cards.scryfall.io/art/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.webp?1789729503",
+    "crop": "https://cards.scryfall.io/crop/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.webp?1789729503"
+  },
+  "mana_cost": "{3}{W}",
+  "cmc": 4.0,
+  "type_line": "Legendary Enchantment",
+  "oracle_text": "When Way of the Healer enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\u22121]: Surveil 1\" and \"[\u22123]: Draw a card.\")\nPlaneswalkers you control have \"[\u22122]: Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.\"",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8d1e424f-6407-4f8c-bed2-eaf148237c81",
+      "component": "token",
+      "name": "Jace",
+      "type_line": "Token Planeswalker \u2014 Jace",
+      "uri": "https://api.scryfall.com/cards/8d1e424f-6407-4f8c-bed2-eaf148237c81"
+    },
+    {
+      "object": "related_card",
+      "id": "50326a2a-7e10-464b-a97e-e880bda0558c",
+      "component": "combo_piece",
+      "name": "Way of the Healer",
+      "type_line": "Legendary Enchantment",
+      "uri": "https://api.scryfall.com/cards/50326a2a-7e10-464b-a97e-e880bda0558c"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/50326a2a-7e10-464b-a97e-e880bda0558c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Acb27dc83-85ee-4f54-b032-41cd1806d3ac&unique=prints",
+  "collector_number": "207",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "echoverse",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Pauline Voss",
+  "artist_ids": [
+    "d0d814a5-f4bc-4383-afe5-a3f329b68dce"
+  ],
+  "illustration_id": "afbb236e-1073-49b5-b971-54fa58dd32ae",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment",
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 30337,
+  "preview": {
+    "source": "Pauline Voss",
+    "source_uri": "https://www.facebook.com/photo?fbid=10232659925911655&set=a.1014484053459",
+    "previewed_at": "2026-09-10"
+  },
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BHealer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BHealer",
+    "edhrec": "https://edhrec.com/route/?cc=Way+of+the+Healer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F718472%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908434&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Way+of+the+Healer&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

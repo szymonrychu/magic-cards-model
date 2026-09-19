@@ -180,17 +180,18 @@ def test_scapeshift_cannot_sacrifice_more_lands_than_are_there():
 # `_SEARCH_AND_PUT_RE` used to accept only the literal article "a"/"an", so
 # this shape never matched at all; the count slot now reads any `{COUNT}`.
 #
-# Behold the Beyond's own first sentence, "Discard your hand.", is a
-# separate, pre-existing gap this wave does not own (no parser anywhere reads
-# a bare "discard your hand" - as opposed to a counted "discard N cards" -
-# and it was not part of any family this sweep assigned; found here and
-# reported, not fixed). Casting the whole card through the ordinary path
-# would exercise that unrelated gap and fail closed on it before ever
-# reaching the search sentence this file is actually about, so this drives
-# the search clause directly - `effect_for` on the real printed sentence,
-# run against a real board and the real `StackObject` casting the real card
-# produces - rather than through the two-clause `cast_and_resolve` that gap
-# currently blocks.
+# Behold the Beyond's own first sentence, "Discard your hand.", used to be a
+# separate, pre-existing gap this file's own family did not own (no parser
+# anywhere read a bare "discard your hand"/"discards their hand", as opposed
+# to a counted "discard N cards") - closed generally in `_DISCARD_HAND_RE`
+# (`machines/effects.py`), proved end to end through the ordinary two-clause
+# `cast_and_resolve` path in
+# `tests/scenarios/test_whole_hand_discard.py::test_behold_the_beyond_
+# discards_the_whole_hand_then_searches`. This file keeps driving the search
+# clause directly - `effect_for` on the real printed sentence, run against a
+# real board and the real `StackObject` casting the real card produces -
+# because that is still the more targeted way to exercise the search-count
+# shape these tests are actually about.
 _BEHOLD_THE_BEYOND_SEARCH = (
     "Search your library for three cards, put them into your hand, then shuffle."
 )
@@ -265,21 +266,17 @@ def test_behold_the_beyond_finds_fewer_than_three_when_the_library_runs_short():
     assert alice.library == []
 
 
-# -- The Earth King: "up to that many" carries a count from an earlier
-# instruction (here, how many qualifying creatures attacked) rather than
-# printing one - Group 0b's own channel, not built yet. `_SEARCH_AND_PUT_RE`
-# recognises the shape (so the clause is not treated as unreadable
-# altogether) but `_read_search_count` refuses to guess the number, and
-# `_unreadable_search_count` turns that refusal into a recorded notice
-# instead of the trigger silently doing nothing.
+# -- The Earth King: "up to that many" carries a count from the trigger
+# event (how many qualifying creatures attacked) rather than printing one -
+# read through the count channel (`machines/effects.that_many`); the full
+# corner cases live in `test_that_many_count_channel.py`.
 
 
-def test_the_earth_king_records_a_notice_instead_of_guessing_that_many():
+def test_the_earth_king_searches_for_up_to_one_land_for_one_qualifying_attacker():
     """ "Whenever one or more creatures you control with power 4 or greater
     attack, search your library for up to that many basic land cards, put
-    them onto the battlefield tapped, then shuffle." Anafenza (4/4) attacking
-    fires the trigger; the search itself is left to Group 0b and is recorded
-    here rather than run - the library is untouched."""
+    them onto the battlefield tapped, then shuffle." Anafenza (4/4) alone
+    attacking is a count of one: one basic, tapped."""
     scenario = (
         Scenario()
         .player(
@@ -295,10 +292,8 @@ def test_the_earth_king_records_a_notice_instead_of_guessing_that_many():
     scenario.attack_with(anafenza)
     scenario.pass_until_resolved()
 
-    assert scenario.player("alice").library == [
-        scenario.find("Forest", Zone.LIBRARY, "alice"),
-        scenario.find("Mountain", Zone.LIBRARY, "alice"),
-    ], "the search was not run - Group 0b's own carried-count channel"
-    (notice,) = scenario.game.search_description_notices
-    assert notice.source_name == "The Earth King"
-    assert "that many" in notice.text
+    assert len(scenario.player("alice").library) == 1
+    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.card.is_land]
+    assert len(lands) == 1
+    assert lands[0].tapped
+    assert scenario.game.search_description_notices == []

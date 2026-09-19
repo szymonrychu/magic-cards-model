@@ -1,0 +1,147 @@
+{
+  "object": "card",
+  "id": "282588b9-3656-453b-aa25-2419e078ddc1",
+  "oracle_id": "89bd056d-8f5b-4d0e-b80a-58a984e21100",
+  "multiverse_ids": [],
+  "tcgplayer_id": 715902,
+  "cardmarket_id": 907292,
+  "name": "Jace's Machinations",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/282588b9-3656-453b-aa25-2419e078ddc1",
+  "scryfall_uri": "https://scryfall.com/card/fra/32/jaces-machinations?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-08T14:35:50Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.jpg?1788878150",
+    "normal": "https://cards.scryfall.io/normal/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.jpg?1788878150",
+    "large": "https://cards.scryfall.io/large/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.jpg?1788878150",
+    "png": "https://cards.scryfall.io/png/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.png?1788878150",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.jpg?1788878150",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.jpg?1788878150",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.webp?1788878150",
+    "grid": "https://cards.scryfall.io/grid/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.webp?1788878150",
+    "display": "https://cards.scryfall.io/display/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.webp?1788878150",
+    "art": "https://cards.scryfall.io/art/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.webp?1788878150",
+    "crop": "https://cards.scryfall.io/crop/front/2/8/282588b9-3656-453b-aa25-2419e078ddc1.webp?1788878150"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Instant",
+  "oracle_text": "Until end of turn, you may activate loyalty abilities of Jace planeswalkers you control on any player's turn any time you could cast an instant.\nEmpower Jace 8. (Put eight loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\u22121]: Surveil 1\" and \"[\u22123]: Draw a card.\")",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "aabdc0a6-5d60-44c4-96cb-692eeeac0630",
+      "component": "combo_piece",
+      "name": "Jace's Machinations",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/aabdc0a6-5d60-44c4-96cb-692eeeac0630"
+    },
+    {
+      "object": "related_card",
+      "id": "8d1e424f-6407-4f8c-bed2-eaf148237c81",
+      "component": "token",
+      "name": "Jace",
+      "type_line": "Token Planeswalker \u2014 Jace",
+      "uri": "https://api.scryfall.com/cards/8d1e424f-6407-4f8c-bed2-eaf148237c81"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/282588b9-3656-453b-aa25-2419e078ddc1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A89bd056d-8f5b-4d0e-b80a-58a984e21100&unique=prints",
+  "collector_number": "32",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Serena Malyon",
+  "artist_ids": [
+    "d9fee7a6-7c5e-48a5-8639-bba25abc8a06"
+  ],
+  "illustration_id": "92c11ae8-6501-4b39-8539-f95570216efb",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 27091,
+  "prices": {
+    "usd": "13.49",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "4.98",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJace%2527s%2BMachinations",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJace%2527s%2BMachinations",
+    "edhrec": "https://edhrec.com/route/?cc=Jace%27s+Machinations"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715902%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907292&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Jace%27s+Machinations&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

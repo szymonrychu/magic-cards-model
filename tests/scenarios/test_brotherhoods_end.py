@@ -151,3 +151,51 @@ def test_only_one_mode_may_be_chosen():
     casting = scenario.cast("Brotherhood's End")
     with pytest.raises(ValueError):
         casting.choose_modes([1, 2])
+
+
+def test_calamitous_cave_in_reads_damage_x_where_x_is_defined_by_the_card():
+    """Calamitous Cave-In (off-pool, added with `scripts/add_card.py`,
+    verified against its own printed text): "Calamitous Cave-In deals X
+    damage to each creature and each planeswalker, where X is the number of
+    Caves you control plus the number of Cave cards in your graveyard."
+
+    Unmodal, and not a fixed digit the way Brotherhood's End's own "deals 3
+    damage" is - `_parse_damage_each_group_clause` reads X through
+    `_fixed_or_where_x_amount`/`amount_expression`, a two-term "plus"
+    expression whose second term ("Cave cards in your graveyard") needed
+    `count_expression`'s graveyard branch taught a subtype fallback (CR
+    205.3i: Cave is a land type, not one of CR 205.2a's card types) the same
+    way its "you control" branch already had one.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Calamitous Cave-In"],
+            battlefield=["Captivating Cave", "Captivating Cave", "Mountain", "Mountain"],
+            graveyard=["Captivating Cave"],
+        )
+        .player("bob", battlefield=["Grizzly Bears", "Elspeth, Sun's Champion", "Mountain"])
+        .build()
+    )
+    _to_main(scenario)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    elspeth = scenario.find("Elspeth, Sun's Champion", Zone.BATTLEFIELD, "bob")
+    mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "bob")
+    sources = scenario.untapped_sources(
+        "Captivating Cave", "Captivating Cave", "Mountain", "Mountain"
+    )
+
+    scenario.cast_and_resolve("Calamitous Cave-In", *sources)
+
+    # X = 2 Caves on the battlefield + 1 Cave card in the graveyard = 3.
+    # CR 120.3c removes that many loyalty counters immediately, not merely
+    # marking damage, so Elspeth's own starting 4 is checkable right here,
+    # exactly: had this read X as some other number, 4 - X would say so.
+    # Mountain, neither a creature nor a planeswalker, is the control.
+    assert elspeth.loyalty == 1
+    assert mountain.zone is Zone.BATTLEFIELD
+    scenario.state_based_actions()
+    # CR 704.5g: 3 damage is lethal to Grizzly Bears' 2 toughness.
+    assert bears.zone is Zone.GRAVEYARD
+    assert elspeth.zone is Zone.BATTLEFIELD  # 1 loyalty remaining, still alive

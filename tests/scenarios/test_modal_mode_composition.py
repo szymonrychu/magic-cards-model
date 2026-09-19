@@ -1,0 +1,754 @@
+"""Scenario: a mode of a modal spell or triggered ability whose own text is a
+shape `_parse_mixed_clause`/`parse_mixed_effect(_for_spell)` already reads for
+an ordinary card, but that a mode never reached before this file - each gap
+below is a real one-mode failure `_modal_category`'s new worst-mode rule
+(`tests/test_sweep_pool.py::test_modal_category_is_worst_mode_not_best_mode`)
+surfaced once it stopped hiding behind a sibling mode that did work.
+
+Every CR number below was looked up with `knowledge_search(q="...",
+type="rules")` (and cross-checked with `mise run rules:find`, on-disk CR
+effective 2026-09-25) in the session that wrote this file:
+
+- **CR 700.2a** - "the spell's controller chooses which mode... the effect
+  of only the chosen mode is applied" - why a legal mode that does nothing
+  is a real defect, not a partial one.
+- **CR 608.2c** - clause order within one instruction.
+- **CR 118.12a** - counter-unless-pay.
+- **CR 111.2/701.7a** - token creation and its controller.
+- **CR 613.1f** - a keyword grant, layer 6.
+- **CR 107.3f** - a card's own "where X is ..." definition, fixed once at
+  resolution (CR 608.2h/611.2c).
+"""
+
+import pytest
+
+from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import Keyword, has_keyword
+from magic_cards_model.machines.keywords import is_indestructible
+from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
+from tests.scenarios.harness import Scenario
+
+
+def test_surgical_precision_mode_two_draws_and_gains_life():
+    """ "You draw a card and gain 2 life." - `split_effect_clauses`'s bare
+    "and" leaves the second clause's subject implicit ("gain 2 life"), which
+    `_parse_optional_player_clause` now retries with "you " restored.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Surgical Precision"],
+            battlefield=["Plains", "Plains"],
+            library=["Opt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.game.player("alice")
+    hand_before = len(alice.hand)
+    life_before = alice.life
+
+    casting = scenario.cast("Surgical Precision")
+    casting.choose_modes([2])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Plains", "Plains"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    # The card itself left the hand to be cast; the draw puts one back.
+    assert len(alice.hand) == hand_before - 1 + 1
+    assert alice.life == life_before + 2
+
+
+def test_icy_reception_mode_one_counters_a_creature_spell_unless_paid():
+    """ "Counter target creature or legendary spell unless its controller
+    pays {3}." - `machines/targeting.py` already reads this compound target;
+    only the counter-unless-pay clause parser needed to accept a target
+    phrase other than the literal word "spell".
+    """
+    scenario = (
+        Scenario()
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("alice", hand=["Icy Reception"], battlefield=["Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob_casting = scenario.cast("Grizzly Bears", username="bob")
+    bob_payment = bob_casting.begin_paying()
+    scenario.pay_with(bob_payment, *scenario.untapped_sources("Forest", "Forest", username="bob"))
+    bears_on_stack = scenario.put_on_stack(bob_casting)
+    scenario.pass_priority()
+
+    alice_casting = scenario.cast("Icy Reception", username="alice")
+    alice_casting.choose_modes([1])
+    alice_casting.choose_targets([bears_on_stack])
+    payment = alice_casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Island", "Island", username="alice"))
+    scenario.put_on_stack(alice_casting)
+    scenario.resolve_top()
+
+    assert bears_on_stack.zone is Zone.GRAVEYARD
+
+
+def test_fulminous_forte_mode_one_hits_only_opponents_creatures_and_planeswalkers():
+    """ "Fulminous Forte deals 1 damage to each creature and planeswalker
+    your opponents control." - a compound type list with a controller
+    restriction, read as one whole-clause shape rather than absorbed
+    unfinished into the unfiltered "each creature" reading of the fragment
+    the bare-"and" split leaves behind.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Fulminous Forte"],
+            battlefield=["Mountain", "Mountain", "Mountain", "Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice_bears = scenario.creature("Grizzly Bears", "alice")
+    bobs_bear = scenario.creature("Grizzly Bears", "bob")
+
+    casting = scenario.cast("Fulminous Forte", username="alice")
+    casting.choose_modes([1])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Mountain", "Mountain"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert alice_bears.damage == 0
+    assert bobs_bear.damage == 1
+
+
+def test_stingerquill_charm_mode_three_creates_a_hasty_cadet():
+    """ "Create a 2/2 colorless Wizard Soldier creature token named Cadet. It
+    gains haste until end of turn." - a token-creation antecedent, whose
+    referent (the token itself) does not exist until the antecedent runs,
+    unlike every other object-anaphor pair's antecedent.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Stingerquill Charm"], battlefield=["Swamp", "Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Stingerquill Charm", username="alice")
+    casting.choose_modes([3])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Swamp", "Mountain"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    (cadet,) = [
+        state
+        for state in scenario.game.battlefield
+        if state.token and state.name == "Cadet" and state.controller == "alice"
+    ]
+    assert (cadet.power, cadet.toughness) == (2, 2)
+    assert has_keyword(cadet, Keyword.HASTE, scenario.game)
+
+
+def test_fateshaper_aspirant_mode_two_counters_and_grants_two_keywords():
+    """ "Put a +1/+1 counter on target creature. It gains vigilance and
+    indestructible until end of turn." - a rider granting *more than one*
+    keyword, which `_KEYWORD_GRANT_RE` used to read as a single (unknown,
+    hyphenated) keyword name and refuse.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Fateshaper Aspirant"], battlefield=["Plains"] * 5)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_mode(
+        "Put a +1/+1 counter on target creature. It gains vigilance and indestructible "
+        "until end of turn.",
+        username="alice",
+    )
+    casting = scenario.cast("Fateshaper Aspirant", username="alice")
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources(*["Plains"] * 5))
+    aspirant = scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    scenario.will_choose_targets(aspirant, username="alice")
+    scenario.resolve_top()
+
+    assert aspirant.counters[Counter.PLUS_ONE] == 1
+    assert has_keyword(aspirant, Keyword.VIGILANCE, scenario.game)
+    assert is_indestructible(aspirant, scenario.game)
+
+
+def test_yuriko_mode_one_shrinks_by_the_graveyard_count():
+    """ "Target creature gets -X/-0 until end of turn, where X is the number
+    of cards in your graveyard." - an *asymmetric* X pump
+    (`_parse_where_x_is_continuous_effect` used to read only a symmetric
+    "X/X" template) over an unfiltered graveyard count (`count_expression`
+    only read a graveyard count with a card-type qualifier in front of it).
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Yuriko, Hope from the Shadows"],
+            battlefield=["Island"],
+            graveyard=["Lightning Bolt", "Mountain", "Opt"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_mode(
+        "Target creature gets -X/-0 until end of turn, where X is the number of cards "
+        "in your graveyard.",
+        username="alice",
+    )
+    casting = scenario.cast("Yuriko, Hope from the Shadows", username="alice")
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Island"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    scenario.will_choose_targets(bears, username="alice")
+    scenario.resolve_top()
+
+    assert scenario.game.characteristics_of(bears).power_toughness == (2 - 3, 2)
+
+
+def test_vigorbloom_charm_mode_one_grants_hexproof_and_indestructible():
+    """ "Target permanent you control gains hexproof and indestructible
+    until end of turn." - `_SUBJECT` (`machines/layers.py`) only read "this
+    permanent", never "target permanent" at all (with or without "you
+    control"), so no permanent-subject grant reached a builder.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Vigorbloom Charm"], battlefield=["Forest", "Plains", "Sol Ring"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+
+    casting = scenario.cast("Vigorbloom Charm", username="alice")
+    casting.choose_modes([1])
+    casting.choose_targets([sol_ring])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Forest", "Plains"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert has_keyword(sol_ring, "hexproof", scenario.game)
+    assert is_indestructible(sol_ring, scenario.game)
+
+
+def test_vigorbloom_charm_mode_three_counters_then_fights():
+    """ "Put a +1/+1 counter on target creature you control. Then it fights
+    target creature an opponent controls." - the counter-placing twin of
+    Bridgeworks Battle's pump-then-fight pair.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Vigorbloom Charm"],
+            battlefield=["Forest", "Plains", "Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice_bears = scenario.creature("Grizzly Bears", "alice")
+    bobs_bear = scenario.creature("Grizzly Bears", "bob")
+
+    casting = scenario.cast("Vigorbloom Charm", username="alice")
+    casting.choose_modes([3])
+    casting.choose_targets([alice_bears, bobs_bear])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Forest", "Plains"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert alice_bears.counters[Counter.PLUS_ONE] == 1
+    # 3/3 (pumped) fights 2/2: alice's bear takes 2, bob's takes 3 and dies.
+    assert alice_bears.damage == 2
+    assert bobs_bear.zone is Zone.GRAVEYARD
+
+
+def test_rise_of_the_deathbringer_mode_one_draws_by_greatest_power_and_loses_that_much_life():
+    """ "Draw cards equal to the greatest power among creatures you control.
+    You lose life equal to the number of cards drawn this way." - an
+    anaphoric numeric reference back to a count the first sentence itself
+    computed, fixed once (CR 608.2h) rather than recomputed for the life
+    loss.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Rise of the Deathbringer"],
+            battlefield=["Swamp", "Swamp", "Swamp", "Swamp", "Swamp", "Craterhoof Behemoth"],
+            library=["Opt", "Opt", "Opt", "Opt", "Opt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.game.player("alice")
+    hand_before = len(alice.hand)
+    life_before = alice.life
+
+    casting = scenario.cast("Rise of the Deathbringer", username="alice")
+    casting.choose_modes([1])
+    payment = casting.begin_paying()
+    scenario.pay_with(
+        payment, *scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp", "Swamp")
+    )
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    # Craterhoof Behemoth is the only creature alice controls: power 5.
+    assert len(alice.hand) == hand_before - 1 + 5
+    assert alice.life == life_before - 5
+
+
+def test_hungering_puppetbeasts_activated_ability_counters_and_grants_the_chosen_keyword():
+    """ "Put a +1/+1 counter on this creature. It gains your choice of
+    trample, hexproof, or haste until end of turn." - a keyword-choice
+    rider (CR 608.2d), read the same way `_choose_mana_color` already asks
+    for a mana ability's own colour choice.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Hungering Puppetbeast", "Sol Ring", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    beast = scenario.creature("Hungering Puppetbeast", "alice")
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose("Haste", username="alice")
+
+    scenario.activate(
+        beast, *scenario.untapped_sources("Mountain"), sacrificing=[sol_ring], username="alice"
+    )
+    scenario.resolve_top()
+
+    assert beast.counters[Counter.PLUS_ONE] == 1
+    assert has_keyword(beast, Keyword.HASTE, scenario.game)
+
+
+def test_the_keyword_choice_reader_generalises_past_puppetbeasts_own_three_keywords():
+    """Generality proof for `_split_choice_keywords`, off Hungering
+    Puppetbeast's own reported card: no other printing in the pool or on
+    Scryfall pairs an antecedent with an "It gains your choice of ..."
+    rider the way Hungering Puppetbeast does (Hunter's Axe's and
+    Swiftspear's Teachings's identical wording is granted *inside a quoted
+    ability*, a different resolution path entirely), so this pins the
+    keyword-list half of the fix against a real card's own different,
+    longer list rather than re-asserting Puppetbeast's own three words:
+    Atraxa's Skitterfang prints "target creature you control gains your
+    choice of flying, vigilance, deathtouch, or lifelink until end of
+    turn." - four keywords, an Oxford comma before the final "or", and
+    none of them shared with Puppetbeast's own trample/hexproof/haste.
+    """
+    from magic_cards_model.machines.effects import _split_choice_keywords
+
+    assert _split_choice_keywords("flying, vigilance, deathtouch, or lifelink") == [
+        "Flying",
+        "Vigilance",
+        "Deathtouch",
+        "Lifelink",
+    ]
+
+
+def test_arnis_trigger_pumps_by_the_entering_creatures_own_power():
+    """ "Whenever another creature you control enters, Arni gets +X/+0 until
+    end of turn, where X is that creature's power." - CR 603.2's triggering
+    object, read off the ability's own event rather than counted across the
+    board the way every other X this wave reads is.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Craw Wurm"],
+            battlefield=["Arni, Renowned Champion", *["Forest"] * 6],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    arni = scenario.creature("Arni, Renowned Champion", "alice")
+    before = scenario.game.characteristics_of(arni).power_toughness
+
+    scenario.cast_and_resolve("Craw Wurm", *scenario.untapped_sources(*["Forest"] * 6))
+    scenario.resolve_top()  # Arni's own trigger
+
+    # Craw Wurm enters at printed power 6, with no ETB trigger of its own
+    # to compound the assertion.
+    assert scenario.game.characteristics_of(arni).power_toughness == (before[0] + 6, before[1])
+
+
+def test_craterclaw_colossus_pumps_and_grants_trample_to_the_whole_team():
+    """ "When this creature enters, creatures you control gain trample and
+    get +X/+0 until end of turn, where X is the number of artifacts you
+    control." - a *group* subject with no target at all
+    (`_mass_creature_group_targets`, the same resolver `_run_mass_pump`
+    already uses for the symmetric "+X/+X" shape).
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Craterclaw Colossus"],
+            battlefield=[*["Mountain"] * 7, "Grizzly Bears", "Sol Ring"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.cast_and_resolve("Craterclaw Colossus", *scenario.untapped_sources(*["Mountain"] * 7))
+    scenario.resolve_top()
+    colossus = scenario.creature("Craterclaw Colossus", "alice")
+
+    # Craterclaw Colossus is itself an artifact creature, plus Sol Ring: X = 2.
+    assert scenario.game.characteristics_of(colossus).power_toughness == (5 + 2, 5)
+    assert scenario.game.characteristics_of(bears).power_toughness == (2 + 2, 2)
+    assert has_keyword(bears, Keyword.TRAMPLE, scenario.game)
+
+
+def test_pias_activated_ability_pumps_by_artifacts_controlled():
+    """ "{5}{R}: Target creature gets +X/+0 until end of turn, where X is the
+    number of artifacts you control." - the single-target twin of Aerid
+    Konstrari's and Craterclaw Colossus's own X.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Pia, Determined Rebuilder", "Sol Ring", *["Mountain"] * 6],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    pia = scenario.creature("Pia, Determined Rebuilder", "alice")
+
+    scenario.activate(
+        pia, *scenario.untapped_sources(*["Mountain"] * 6), index=0, targets=[pia], username="alice"
+    )
+    scenario.resolve_top()
+
+    assert scenario.game.characteristics_of(pia).power_toughness == (2 + 1, 2)
+
+
+def test_aerid_konstraris_activated_ability_creates_the_token_and_pumps_by_its_own_count():
+    """ "{6}: Create a Heartwood token. Then Aerid Konstrari gets +X/+0 until
+    end of turn, where X is the number of artifacts you control." Now that
+    fra-s3's Heartwood token clause reads too, CR 608.2c's printed order
+    means the pump's own X is counted *after* the token exists: Sol Ring
+    plus the freshly created Heartwood Token is 2 artifacts, not 1, so the
+    card is fully handled with no `LayerRemainderNotice` left over.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Aerid Konstrari", "Sol Ring", *["Mountain"] * 5, "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    beast = scenario.creature("Aerid Konstrari", "alice")
+    before = scenario.game.characteristics_of(beast).power_toughness
+
+    scenario.activate(
+        beast,
+        *scenario.untapped_sources(*["Mountain"] * 5, "Forest"),
+        index=0,
+        username="alice",
+    )
+    scenario.resolve_top()
+
+    assert "Heartwood Token" in [
+        state.name for state in scenario.game.battlefield if state.controller == "alice"
+    ]
+    assert scenario.game.characteristics_of(beast).power_toughness == (before[0] + 2, before[1])
+    assert scenario.game.layer_remainder_notices == []
+
+
+def test_twinned_vision_draws_one_card_cast_normally_from_hand():
+    """ "Draw a card. If this spell wasn't cast from your hand, draw two
+    cards instead." - cast from hand, the base instruction runs.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Twinned Vision"], battlefield=["Island", "Island"], library=["Opt"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.game.player("alice")
+    hand_before = len(alice.hand)
+
+    scenario.cast_and_resolve("Twinned Vision", *scenario.untapped_sources("Island", "Island"))
+
+    assert len(alice.hand) == hand_before - 1 + 1
+
+
+def test_twinned_vision_draws_two_cards_cast_with_flashback():
+    """The same card, cast from the graveyard with flashback (CR 702.34a) -
+    `Game.cast_record(spell).origin_zone` is not `Zone.HAND`, so the
+    "instead" alternative replaces the base draw.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Opt"],
+            graveyard=["Twinned Vision"],
+            battlefield=["Island", "Island", "Island"],
+            library=["Opt", "Opt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.game.player("alice")
+    hand_before = len(alice.hand)
+    opt_in_hand = alice.hand[0]
+
+    casting = scenario.cast("Twinned Vision", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback", choosing=[opt_in_hand])
+    scenario.pay_with(
+        casting.begin_paying(), *scenario.untapped_sources("Island", "Island", "Island")
+    )
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    # The discarded Opt leaves the hand, and two are drawn in its place.
+    assert len(alice.hand) == hand_before - 1 + 2
+
+
+def test_eardrum_rattler_grants_evasion_to_a_small_creature_you_control():
+    """ "Another target creature you control with power 2 or less can't be
+    blocked this turn." - a direct grant (no antecedent) with a comparison-
+    restricted target `machines/targeting.py` already reads in full.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Eardrum Rattler", "Mountain", "Elvish Mystic"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    rattler = scenario.creature("Eardrum Rattler", "alice")
+    mystic = scenario.creature("Elvish Mystic", "alice")
+    bobs_bear = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.activate(
+        rattler, *scenario.untapped_sources("Mountain"), index=0, targets=[mystic], username="alice"
+    )
+    scenario.resolve_top()
+
+    from magic_cards_model.machines.combat import evasion_restriction_refusal
+
+    assert evasion_restriction_refusal(scenario.game, mystic, bobs_bear) is not None
+
+
+def test_liliana_the_faultless_grants_hexproof_to_another_planeswalker():
+    """ "Another target creature or planeswalker you control gains hexproof
+    until end of turn." - a compound "creature or planeswalker" subject
+    `_SUBJECT` (`machines/layers.py`) did not read before.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mountain"],
+            battlefield=[
+                "Liliana the Faultless",
+                "Plains",
+                "Karn, the Great Creator",
+            ],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    liliana = scenario.creature("Liliana the Faultless", "alice")
+    karn = scenario.find("Karn, the Great Creator", Zone.BATTLEFIELD, "alice")
+    alice = scenario.game.player("alice")
+    discard_target = alice.hand[0]
+
+    scenario.activate(
+        liliana,
+        *scenario.untapped_sources("Plains"),
+        index=0,
+        targets=[karn],
+        discarding=[discard_target],
+        username="alice",
+    )
+    scenario.resolve_top()
+
+    assert has_keyword(karn, "hexproof", scenario.game)
+
+
+def test_tomik_grants_flying_to_a_creature_carrying_a_counter():
+    """ "Target creature with a +1/+1 counter on it gains flying until end
+    of turn." - `machines/targeting.py`'s own new `required_counter_kind`
+    restriction, and the direct (non-`_SUBJECT`-shaped) keyword grant that
+    reads its target.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tomik, Orzhov Lawmage", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    tomik = scenario.creature("Tomik, Orzhov Lawmage", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.game.add_counters(bears, Counter.PLUS_ONE, 1)
+
+    scenario.activate(tomik, index=0, targets=[bears], username="alice")
+    scenario.resolve_top()
+
+    assert has_keyword(bears, Keyword.FLYING, scenario.game)
+
+
+def test_tomik_refuses_a_target_with_no_counter_on_it():
+    """The same ability, legally refusing a creature carrying no counter."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tomik, Orzhov Lawmage", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    tomik = scenario.creature("Tomik, Orzhov Lawmage", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    with pytest.raises(ValueError):
+        scenario.activate(tomik, index=0, targets=[bears], username="alice")
+
+
+def test_edgar_ancient_bloodlord_puts_a_counter_on_himself_and_gains_menace():
+    """ "{2}, Sacrifice another creature or planeswalker: Put a +1/+1 counter
+    on Edgar. He gains menace until end of turn." - CR 109.2's self-reference
+    spelled out with the card's own printed name for the counter clause
+    (`self_normalized_effect_text` already rewrites "Edgar" to "this
+    permanent" before this ever reaches a parser), and CR 400.7's anaphora
+    for the rider, this time with the "he" pronoun recent templating gives a
+    legendary character instead of "it" - `_OBJECT_ANAPHOR`
+    (`machines/effects.py`) did not read that pronoun family before.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Edgar, Ancient Bloodlord", "Grizzly Bears", "Plains", "Plains"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    edgar = scenario.creature("Edgar, Ancient Bloodlord", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.activate(
+        edgar,
+        *scenario.untapped_sources("Plains", "Plains"),
+        index=0,
+        sacrificing=[bears],
+        username="alice",
+    )
+    # Sacrificing triggers Edgar's own "dies" life-gain ability, which goes
+    # on the stack above the activation just announced (CR 603.3b) - both
+    # are resolved in turn.
+    scenario.resolve_top()
+    scenario.resolve_top()
+
+    assert edgar.counters[Counter.PLUS_ONE] == 1
+    assert has_keyword(edgar, Keyword.MENACE, scenario.game)
+
+
+def test_teyo_lightshield_expert_grants_hexproof_and_counts_a_creature_target():
+    """ "When Teyo enters, target permanent you control gains hexproof until
+    end of turn. Put a +1/+1 counter on it if it's a creature. Put a loyalty
+    counter on it if it's a planeswalker." - a target-type-conditional
+    counter placement (CR 608.2h: the referent's *current* characteristics
+    are checked as each rider runs), read as one antecedent with two
+    independent riders rather than only the first ever reading.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Teyo, Lightshield Expert"],
+            battlefield=["Grizzly Bears", "Plains", "Plains"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Teyo, Lightshield Expert", [bears])
+
+    scenario.cast_and_resolve(
+        "Teyo, Lightshield Expert", *scenario.untapped_sources("Plains", "Plains")
+    )
+    scenario.resolve_top()
+
+    assert has_keyword(bears, "hexproof", scenario.game)
+    assert bears.counters[Counter.PLUS_ONE] == 1
+    assert Counter.LOYALTY not in bears.counters
+
+
+def test_teyo_diamondblade_mage_counts_a_planeswalker_target_with_loyalty_instead():
+    """The same shape's other mode, proving the branch and not just the
+    first-checked type: "Put a loyalty counter on it if it's a
+    planeswalker." fires and the creature-only counter above does not, off a
+    genuinely different card (Teyo, Diamondblade Mage's own "deathtouch"
+    rather than "hexproof") targeting a planeswalker instead of a creature.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Teyo, Diamondblade Mage"],
+            battlefield=["Karn, the Great Creator", "Swamp", "Swamp", "Swamp", "Swamp"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    karn = scenario.find("Karn, the Great Creator", Zone.BATTLEFIELD, "alice")
+    loyalty_before = karn.counters[Counter.LOYALTY]
+    scenario.choose_trigger_targets("Teyo, Diamondblade Mage", [karn])
+
+    scenario.cast_and_resolve(
+        "Teyo, Diamondblade Mage", *scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp")
+    )
+    scenario.resolve_top()
+
+    assert has_keyword(karn, "deathtouch", scenario.game)
+    assert karn.counters[Counter.LOYALTY] == loyalty_before + 1
+    assert Counter.PLUS_ONE not in karn.counters

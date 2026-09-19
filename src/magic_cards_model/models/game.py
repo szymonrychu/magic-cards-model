@@ -46,10 +46,13 @@ from ..machines.casting import (
     grant_suspend_haste,
     granted_cast_options,
     keyword_cast_options,
+    mana_value_cap_for,
     marker_cast_options,
     play_permissions_on,
     spell_has_type_word,
+    split_second_restriction_source,
     static_free_cast_grants,
+    types_being_cast,
     usable_play_permission,
     why_cannot_cast_restriction,
 )
@@ -57,6 +60,7 @@ from ..machines.casting_restrictions import (
     CastingRuleEffect,
     CastingRuleKind,
     cannot_be_countered,
+    combat_lockdown_restriction_source,
 )
 from ..machines.combat import (
     Attack,
@@ -115,6 +119,7 @@ from ..machines.decisions import (
 )
 from ..machines.delayed import (
     DelayedEffectSpec,
+    DelayedEffectSpecBase,
     DelayedTrigger,
     DelayedTriggers,
     ExileWarped,
@@ -131,6 +136,7 @@ from ..machines.effects import (
     ControlReplacementNotice,
     DelayedClauseNotice,
     ImprintNotice,
+    LayerRemainderNotice,
     ModeNotice,
     ReflexiveClauseNotice,
     SearchDescriptionNotice,
@@ -152,7 +158,7 @@ from ..machines.keywords import (
     equipment_state_based_actions,
     grant_the_citys_blessing,
     has_paradigm,
-    has_rebound,
+    has_rebound_now,
     has_suspend,
     is_indestructible,
     keyword_effect_for,
@@ -195,6 +201,7 @@ from ..machines.priority import PriorityMachine, PriorityOutcome
 from ..machines.replacement import (
     DrawRedirection,
     EventKind,
+    NextTimeDrawReplacement,
     ReplaceableEvent,
     UnreadableCopyExceptionNotice,
     UnwiredChoiceNotice,
@@ -206,6 +213,7 @@ from ..machines.targeting import (
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
+    reflexive_consequence_text,
     targeting_profile,
 )
 from ..machines.triggers import (
@@ -223,6 +231,7 @@ from ..machines.triggers import (
     granted_activated_abilities_of,
     intervening_if_holds,
     mana_added_event,
+    resolution_key,
     rewritten_ability_lines,
     state_triggers_for,
     tapped_for_mana_event,
@@ -248,9 +257,9 @@ from .card_state import (
     TargetRef,
     planeswalkers_with_zero_loyalty,
 )
-from .mana import ManaCost, ManaPool, ManaSpend, ManaSpendEffect
+from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect
 from .player import Player
-from .token import TokenState, move_refused, tokens_that_cease_to_exist
+from .token import TokenDefinition, TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
 
 #: Anything a spell can point at and then affect (CR 115.1).
@@ -342,6 +351,18 @@ def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
     return any(name and re.search(rf"\b{re.escape(name)}\b", text) for name in names)
 
 
+def _cost_moved(payment: CostPayment, kind: ComponentKind) -> tuple[UUID, ...]:
+    """The ids of the objects a paid `payment`'s `kind` components moved -
+    Corpseweft's exiled creature cards, Radiant Lotus's sacrificed
+    artifacts - in payment order."""
+    return tuple(
+        state.id
+        for component in payment.components
+        if component.kind is kind
+        for state in component.cards
+    )
+
+
 def _exiles_itself_by_name(text: str, permanent: "CardState") -> bool:
     """Whether `text` is "Exile `<permanent's own printed name>`" - CR 201.5's
     other self-reference form: "If an object's text uses the object's own
@@ -381,6 +402,37 @@ _COSTS_LESS_PER_CARD_TYPE = re.compile(
 _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
     r"costs \{(\d+)\} less to cast if it targets a "
     r"(?P<color>white|blue|black|red|green) spell",
+    re.IGNORECASE,
+)
+
+#: CR 601.2f's general "if <board condition>" self reduction: "This spell
+#: costs {1} less to cast if you control a legendary creature." (Wrath of the
+#: Bloodmane) and "This spell costs {2} less to cast if you've cast a
+#: noncreature spell this turn." (Traxos, Academy Guardian). Unlike the two
+#: rows above - Emrakul's own per-card-type count and Mystical Dispute's own
+#: announced-target reading - this is not a shape of its own: it hands the
+#: condition straight to `condition_holds`, the same reader "Activate only if
+#: <condition>" (CR 602.5b) and a modal "If <condition>, choose N instead"
+#: (CR 700.2) already use, so every board condition that reader can already
+#: answer works here too rather than needing its own copy. A condition
+#: `condition_holds` does not recognise is read as false, the same fail-
+#: closed default an activation restriction gets, rather than a reduction
+#: applied on a guess.
+_COSTS_LESS_IF_CONDITION_RE = re.compile(
+    r"this spell costs \{(?P<amount>\d+)\} less to cast if (?P<condition>[^.]+)\.",
+    re.IGNORECASE,
+)
+
+#: "This spell costs {X} less to cast, where X is the greatest toughness
+#: among creatures you control." (Ghalta the Immovable), the power sibling
+#: (Ghalta the Unstoppable). Unlike every other row here, the amount is
+#: itself CR 601.2f's counted quantity rather than a printed multiplier on
+#: one - the same "greatest power/toughness among creatures you control"
+#: bound `machines/casting._GREATEST_AMONG_CREATURES` already reads for
+#: Soul Immolation's blight-X cap, read again here for the reduction itself.
+_COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE = re.compile(
+    r"this spell costs \{x\} less to cast,? where x is the greatest "
+    r"(?P<stat>power|toughness) among creatures you control",
     re.IGNORECASE,
 )
 
@@ -656,6 +708,13 @@ _CONDITION_SELF_COUNTERS = re.compile(
 #: CR 702.62b: "A card is 'suspended' if it's in the exile zone, has suspend,
 #: and has a time counter on it." Greater Gargadon's own restriction.
 _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IGNORECASE)
+#: CR 702.33d/601.4: Inscription of Abundance's own "If this spell was
+#: kicked, choose any number instead." - CR 601.4's worked example for this
+#: exact card.
+_CONDITION_KICKED = re.compile(r"this spell was kicked", re.IGNORECASE)
+#: CR 700.11: Molten Collapse's "If you descended this turn, you may choose
+#: both instead."
+_CONDITION_DESCENDED = re.compile(r"you descended this turn", re.IGNORECASE)
 #: Xerex Strobe-Knight: "you've cast two or more spells this turn" - counted
 #: off `Game.spells_cast_this_turn`, which already excludes copies (CR 707.10).
 _CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
@@ -665,6 +724,15 @@ _CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
 #: noncombat damage this turn" (CR 120.2a, CR 602.5b).
 _CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN = re.compile(
     r"an opponent has been dealt noncombat damage this turn", re.IGNORECASE
+)
+#: Traxos, Academy Guardian: "you've cast a noncreature spell this turn" - the
+#: singular "at least one" sibling of `_CONDITION_SPELLS_CAST_THIS_TURN`,
+#: qualified by card type/subtype the same way `_CONDITION_GRAVEYARD_CARDS`
+#: already is. Bare "you've cast a spell this turn" (no quality) is the same
+#: shape with nothing to qualify - `_card_quality(None)` reads that as every
+#: spell.
+_CONDITION_CAST_A_SPELL_THIS_TURN = re.compile(
+    r"you(?:'ve| have) cast an? (?:(?P<quality>[\w-]+) )?spell this turn", re.IGNORECASE
 )
 #: CR 110.4a: "Specifically, it means an artifact, battle, creature,
 #: enchantment, land, or planeswalker card."
@@ -772,10 +840,17 @@ def _permanent_quality(phrase: str) -> Callable[[Characteristics], bool] | None:
 def _card_quality(word: str | None) -> Callable[[CardState], bool] | None:
     """A graveyard card's one-word quality - "creature", "permanent" (CR
     110.4a), a card type or subtype - or every card when the text prints
-    none. None when the word is not read."""
+    none. A "non" prefix negates it ("noncreature"), the same recursive
+    reading `_characteristic_word` gives a permanent's computed
+    characteristics. None when the word is not read."""
     if word is None:
         return lambda state: True
     lowered = word.lower()
+    if lowered.startswith("non") and len(lowered) > 4:
+        inner = _card_quality(lowered.removeprefix("non").lstrip("-"))
+        if inner is None:
+            return None
+        return lambda state: not inner(state)
     if lowered == "permanent":
         return lambda state: bool(_PERMANENT_TYPES.intersection(state.types))
     card_type = _card_type_named(lowered)
@@ -1137,6 +1212,15 @@ class CastRecord(EngineModel):
 
     keyword: str | None = None
     """The keyword the spell was cast with, as printed: `Flashback`, `Warp`."""
+    exile_instead_of_graveyard: bool = False
+    """Cast under a `PlayPermission` whose own "If that spell would be put
+    into a graveyard, exile it instead." rider was printed alongside its
+    grant (Dire Fleet Daredevil, Nita, Forum Conciliator) - the same CR 604.5
+    "static ability applies while a spell is on the stack" shape flashback's
+    own second half already reaches through `keyword`, folded straight onto
+    this record instead of a second `keyword` value because the grant here
+    names no keyword at all. Read by `machines/replacement._stack_
+    replacements`."""
     keyword_cost_paid: bool = False
     """Whether the cost that keyword names was paid (`Casting.keyword_cost_paid`).
 
@@ -1415,9 +1499,14 @@ class GraveyardArrival(EngineModel):
     questions about the turn as a whole, which is why this is a plain
     `Game`-level ledger rather than something `machines/triggers.py` matches.
 
-    `Game.put_into_graveyard` is the one place every graveyard arrival passes
-    through (CR 400.6, 614.1a's own docstring on that method), so it is
-    recorded there and nowhere else. `origin_zone` is the zone the card left
+    `Game.put_into_graveyard` is the main place a graveyard arrival passes
+    through (CR 400.6, 614.1a's own docstring on that method), but not the
+    only one: `machines/keywords.discard`/`.dredge` and the two
+    `Game.enter_the_battlefield` branches where a replacement effect
+    (CR 614.6) redirects an entering permanent's destination to a graveyard
+    instead never call it, so each records its own arrival too - see
+    `Game.descended`'s own docstring for why CR 700.11's "from anywhere"
+    needs every one of them. `origin_zone` is the zone the card left
     (captured before the move, the same way `CastRecord.origin_zone` is), and
     `permanent_types` is the computed types the object had while it was still
     on the battlefield for a card that arrived that way (`None` for a card
@@ -1432,6 +1521,17 @@ class GraveyardArrival(EngineModel):
     """The graveyard's owner (CR 111.4/400.3: a card's owner's graveyard is
     where it goes), read off `Game._owner_of` at the moment of arrival."""
     origin_zone: Zone
+    is_permanent_card: bool = False
+    """CR 110.4a's "permanent card" question - artifact, battle, creature,
+    enchantment, land, or planeswalker - asked of the card's own *printed*
+    types (`CardState.types`, front-face-safe) regardless of whether it was
+    ever on the battlefield on this trip. Deliberately not answered by
+    `permanent_types` below: that field is `None` for anything that skipped
+    the battlefield (a discard, a mill, a countered permanent spell), and CR
+    700.11's Descend counts exactly those too - "permanent cards put into a
+    player's graveyard from anywhere this turn" has no battlefield
+    requirement at all. `Game.cards_put_into_graveyard_this_turn`'s own
+    `permanent_only` filter reads this field, not `permanent_types`."""
     permanent_types: tuple[Type, ...] | None = None
     """The computed card types (CR 613.5) the object had while still a
     permanent, for an arrival straight off the battlefield (CR 700.4's dies,
@@ -1618,12 +1718,12 @@ class Game(EngineModel):
 
     cost_modifier_notices: list[CostModifierNotice] = Field(default_factory=list)
     """One entry per permanent whose static cost-modifying text
-    (`static_cost_modifiers_for`) could not be read - Grand Arbiter Augustin
-    IV's controller-relative "Spells your opponents cast cost {1} more to
-    cast" is the example neither `cost_modifier_effect`'s shapes cover. A
-    cost increase that silently fails to apply looks identical to ordinary
-    play, which is the DDR#978 defect this is written against; recording it
-    here keeps the gap visible instead."""
+    (`static_cost_modifiers_for`) could not be read into one of
+    `cost_modifier_effect`'s recognised shapes - a card whose text
+    `looks_like_unparsed_cost_modifier` flags as a cost sentence this cannot
+    yet classify. A cost increase that silently fails to apply looks
+    identical to ordinary play, which is the DDR#978 defect this is written
+    against; recording it here keeps the gap visible instead."""
 
     anaphoric_clause_notices: list[AnaphoricClauseNotice] = Field(default_factory=list)
     """One entry per "<verb> target X. Its/that X's controller ..." effect
@@ -1632,6 +1732,14 @@ class Game(EngineModel):
     at all, with nothing anywhere recording that the second sentence had gone
     unread. The same unreadable-is-not-the-same-as-no-effect record every
     other notice list here keeps."""
+
+    layer_remainder_notices: list[LayerRemainderNotice] = Field(default_factory=list)
+    """One entry per multi-sentence resolution whose CR 611.2 layer sentence
+    (a pump, a keyword grant, a base P/T set) ran, but a sibling sentence in
+    the same paragraph is not a layer shape and could not be read either -
+    Academic Ascent's own "Empower Jace 2." used to be silently dropped the
+    moment the pump sentence routed the *whole* text to `create_continuous_
+    effect`. See `LayerRemainderNotice`."""
 
     search_description_notices: list[SearchDescriptionNotice] = Field(default_factory=list)
     """Library searches whose card description could not be read, so the
@@ -1773,7 +1881,11 @@ class Game(EngineModel):
     Also one entry per resolving instant or sorcery face `effect_for` has no
     reader for at all (`Game.resolve`), carrying the spell's id and name and
     the face's whole printed text - a spell that leaves a replacement effect
-    (Plagiarize) is not one."""
+    (Plagiarize) is not one.
+
+    And one entry per resolving triggered ability with printed effect text
+    that `_effect_of` has no reader for (`Game._note_unread_trigger`),
+    carrying the source's id and name and the ability's whole effect text."""
 
     control_replacement_notices: list[ControlReplacementNotice] = Field(default_factory=list)
     """One entry per resolving spell whose text reads as a CR 614.1a
@@ -1871,6 +1983,12 @@ class Game(EngineModel):
     _announced_targets: dict[str, tuple[list[TargetRef], CostPayment]] = PrivateAttr(
         default_factory=dict
     )
+    _opened_payments: dict[str, CostPayment] = PrivateAttr(default_factory=dict)
+    """The payment `begin_activating` opened, keyed like `activations`, for
+    `activate_ability` to read back which objects the cost actually moved
+    once it is paid (CR 602.2b) - "`<verb>` this way" on the resolving
+    ability counts them. Not persisted, for the same reason as
+    `_announced_targets`: both calls run inside one command."""
     """The targets `begin_activating` announced (CR 601.2c), keyed like
     `activations`, with the payment it opened for them. `activate_ability`
     takes them back only once that payment is paid (CR 601.2h): a payment
@@ -1932,6 +2050,14 @@ class Game(EngineModel):
     rather than a flag, so a future card asking "two or more" has the number;
     today only "at least one" is ever asked. Cleared when a new turn begins."""
 
+    ability_resolutions_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many times each triggered or activated ability has resolved this
+    turn, keyed by `_resolution_key` (the source object, as that object, and
+    the ability's own text). "If this is the fourth time this ability has
+    resolved this turn" (Sephiroth, Fabled SOLDIER) reads it; the count
+    includes the resolution in progress. Counted in `_resolve_ability` and
+    cleared when a new turn begins."""
+
     creatures_died_this_turn: int = 0
     """How many creatures have died this turn, whoever controlled them.
 
@@ -1983,6 +2109,14 @@ class Game(EngineModel):
     "at least one" is ever asked. Cleared when a new turn begins, the same
     reset `spells_cast_this_turn` already gets."""
 
+    attacked_this_turn: SortedSet[UUID] = Field(default_factory=set)
+    """Which creatures (by id) have attacked this turn (CR 508.1), for
+    Hexhaven Dueling Arena's own "target creature that attacked this turn" -
+    a historical fact CR 511.3/514's end of combat/cleanup does not answer,
+    unlike `machines/combat.Combat`'s live attacking status. Recorded by
+    `Game.declare_attackers`. Cleared when a new turn begins, the same reset
+    `spells_cast_this_turn` already gets."""
+
     spells_cast_last_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """What `spells_cast_this_turn` held during the turn before this one.
 
@@ -2028,6 +2162,34 @@ class Game(EngineModel):
     "you gained life this turn" intervening *if*. Cleared when a new turn
     begins."""
 
+    life_gained_amount_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How much life each player has gained this turn, the amount twin of
+    `life_gained_this_turn`'s plain boolean - recorded at the same call site
+    (`Player.gain_life`) for the same CR 119.9 reason, the same shape
+    `cards_drawn_this_turn` already counts a per-player total in. Feeds
+    Germinate Recruits' own "where X is the amount of life you gained this
+    turn" (CR 107.3f). Cleared when a new turn begins.
+
+    The FRA "trigger events and per-turn history" stream (S5) independently
+    built the identical fact as `Player.life_gained_tally`/`life_gained_
+    tally_turn` before this field landed; reconciled at merge in favour of
+    this one, since Germinate Recruits' own effect (`machines/effects.py`)
+    already reads it - `Player.gain_life` keeps only one recorder, not two,
+    per `CLAUDE.md`'s "keep one mechanism" rule."""
+
+    attacked_this_turn: SortedSet[UUID] = Field(default_factory=set)
+    """Which creatures (by id) have attacked this turn (CR 508.1), for
+    Hexhaven Dueling Arena's own "target creature that attacked this turn" -
+    a historical fact CR 511.3/514's end of combat/cleanup does not answer,
+    unlike `machines/combat.Combat`'s live attacking status. Recorded by
+    `Game.declare_attackers`. Cleared when a new turn begins, the same reset
+    `spells_cast_this_turn` already gets.
+
+    Deliberately per-object (`UUID`, not `turn_facts`' per-player `str`):
+    `turn_facts` answers "did this *player's* creatures do X this turn",
+    which is not enough to judge *which* creature a target names - FRA
+    stream S2's own field, not folded into `turn_facts` for that reason."""
+
     turn_facts: dict[str, SortedSet[str]] = Field(default_factory=dict)
     """A general per-turn, per-player fact ledger: `turn_facts[fact]` is the
     set of usernames for whom `fact` has happened this turn.
@@ -2063,12 +2225,34 @@ class Game(EngineModel):
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
     per arrival - see `GraveyardArrival`'s own docstring for why this is one
     general ledger rather than a narrower counter. Cleared when a new turn
-    begins."""
+    begins.
+
+    The fu-events stream independently built the identical fact for CR
+    700.11's Descend as `Game.permanent_cards_to_graveyard_this_turn` (a
+    `dict[str, int]` running count) before this field landed; reconciled at
+    merge in favour of this one - `Game.descended`/`Game.descend_count` now
+    read `cards_put_into_graveyard_this_turn(player, permanent_only=True)`
+    instead, per `CLAUDE.md`'s "keep one mechanism" rule. That method's own
+    `permanent_only` filter was widened at the same merge to also recognise
+    a permanent card that reached the graveyard without ever touching the
+    battlefield (a discard, a mill, a countered permanent spell) - see
+    `GraveyardArrival.is_permanent_card`'s own docstring for why CR 700.11's
+    "from anywhere" needs that in addition to `permanent_types`."""
 
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
     "Activate only once each turn". Cleared when a new turn begins."""
+
+    exhausted: set[str] = Field(default_factory=set)
+    """Which abilities have been activated at all, ever, keyed the same way
+    as `activations` - CR 702.177a's Exhaust: "'[Cost]: [Effect]' means
+    '[Cost]: [Effect]. Activate only once.'" Never cleared on a new turn,
+    unlike `activations` - the whole point of the keyword is that it is not a
+    per-turn limit. A key is naturally never reused by a different object:
+    `permanent.id` is minted fresh whenever an object enters the battlefield
+    (CR 400.7), so a card that leaves and returns is not exhausted by what
+    its earlier self did."""
 
     loyalty_activations: dict[str, int] = Field(default_factory=dict)
     """How often a loyalty ability of each permanent has been activated this
@@ -2098,6 +2282,24 @@ class Game(EngineModel):
     object that's resolving" needs to be able to name it, and this is the only
     place that can. Excluded from serialisation: it is live only for the length
     of one resolution and means nothing in a stored board."""
+
+    _linked_count: int | None = PrivateAttr(default=None)
+    """How many objects the latest counted instruction of the resolving
+    object actually moved - discarded, sacrificed, exiled, milled, life paid
+    - for a later "that many" of the same object to read (CR 608.2c: its
+    instructions are followed in the order written, and later text refers
+    back to earlier text). Written by `record_count`, read by
+    `recorded_count`, cleared by `resolve_top` around every resolution so it
+    never outlives the object that wrote it. Not persisted: a command that
+    pauses is replayed from its start, and the same clauses write it again."""
+
+    _linked_counts_by_player: dict[str, int] = PrivateAttr(default_factory=dict)
+    """The same count, one per player, for an "each player ..." instruction
+    whose later "that many" is each player's own (Awaken the Erstwhile's
+    "Each player discards all the cards in their hand, then creates that many
+    ... tokens"). Written while `counting_for` names a player."""
+
+    _counting_player: str | None = PrivateAttr(default=None)
 
     turn_ended_exiled_ids: SortedSet[UUID] = Field(default_factory=set, exclude=True, repr=False)
     """Spells CR 724.1b exiled while they were resolving.
@@ -2313,7 +2515,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 24
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 30
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2542,43 +2744,178 @@ class Game(EngineModel):
     an exception for a field whose default happens to match every existing
     use - refused rather than trusted on that observation holding forever.
 
-    Bumped 21 -> 22: `Game` gained `turn_facts`/`turn_facts_last_turn` (the
-    FRA set's scry-or-surveil, loyalty-activation, and noncombat-damage
-    this-turn predicates) and `graveyard_arrivals_this_turn`, and `GameEvent`
-    (reachable from a decoded `AbilityOnStack.event`) gained `target_id`/
+    Bumped 21 -> 22: number sweep G0b, the "that many" count channel.
+    `AbilityOnStack` gained `cost_exiled_card_ids`, and a batched "one or
+    more ... attack" trigger's `event` now carries its own `amount`. A
+    version-21 stack holding a "that many"/"this way" ability (Fable of the
+    Mirror-Breaker II, The Earth King, Corpseweft) resolved as a notice or
+    nothing and now moves cards. Refused instead. `ManaPool` also gained
+    `retained` (CR 500.5a/500.5b mana that survives a step or phase ending -
+    firebending, Photon, Mighty Marvel); a version-21 pool has none, so a
+    decoded one never silently loses mana it never had a way to keep.
+
+    Also bumped 21 -> 22, independently, on the fu-costs line: `Player`
+    gained `emblems` (CR 114.2 - Wrenn and Seven's -8, Tamiyo, Inquisitive
+    Student's -7), and `has_no_maximum_hand_size` read it, changing what
+    `cards_over_maximum_hand_size` (and so the cleanup step's own discard)
+    computes for a player any such emblem reaches.
+
+    Bumped 22 -> 23: the number sweep G0b and fu-costs lines of development
+    each claimed 21 -> 22 on their own; merged, the number moves on once
+    more. Both halves carry over: G0b's (above) and fu-costs', which added
+    CR 114 emblems - now one subsystem, emblem objects in the shared command
+    zone (`Game.create_emblem`, `Game.emblems_of`; `Player.emblems` reads
+    them), which also changes what `cards_over_maximum_hand_size` computes
+    for a player an emblem reaches. `Game.ability_resolutions_this_turn` is
+    new too. Refused instead.
+
+    Bumped 23 -> 24: the fra-s3 line of development claimed 21 -> 22
+    independently too, for `life_gained_amount_this_turn` (Germinate
+    Recruits' own "where X is the amount of life you gained this turn" -
+    CR 107.3f) - the running-total twin of `life_gained_this_turn`'s plain
+    boolean, recorded in `Player.gain_life` for the same CR 119.9 reason. A
+    version-23 dump has no record of how much life was already gained this
+    turn, and a default of zero would silently answer "none" for a turn
+    where life was in fact already gained before the snapshot. Merged onto
+    the G0b/fu-costs line above; the number moves on once more. Refused
+    instead.
+
+    Bumped 24 -> 25: the FRA S5 line of development (trigger events and
+    per-turn history), reconciled at the same merge as this note. `Game`
+    gained `turn_facts`/`turn_facts_last_turn` - a general per-turn,
+    per-player fact ledger (`record_turn_fact`/`turn_fact_holds`) for the
+    batch of this-turn predicates the stream adds (CR 701.22d's scry, CR
+    701.25c's surveil, CR 606.3's loyalty ability, CR 120.2a's noncombat
+    damage) - and `graveyard_arrivals_this_turn` (`GraveyardArrival`, one
+    entry per card that reached a graveyard this turn, with its origin zone
+    and whether it was a permanent card as it left the battlefield):
+    deliberately shaped so a Descend-style "permanent cards put into
+    graveyards this turn" count and this stream's own "from a library" one
+    both read the same ledger, for whichever of this branch and fu-events'
+    (not yet merged) lands its own record second. `GameEvent` (reachable
+    from a decoded `AbilityOnStack.event`) gained `target_id`/
     `target_controller`/`target_types` (a damage event's recipient, not just
     its source), `discarded_ids` (which cards a batched discard actually
     moved), and `attacking_alone`/`attacking_player_alone` (CR 506.5/506.6,
-    settled once the whole attacking party is known). `Player` (reachable
-    from `Game.players`) gained `life_gained_tally`/`life_gained_tally_turn`,
-    the amount twin of `life_lost_tally`/`life_lost_tally_turn`. None of
-    these fields existed for a version-21 dump to have populated, so a default would
-    silently read every attacks-alone/is-dealt-damage/discard-this-card
-    condition as false rather than admit the state was never recorded.
-    Refused instead. FRA stream S5's own commit; a sibling stream is adding
-    its own Descend per-turn record of permanent cards reaching graveyards
-    over the same turn boundary at the same time - `graveyard_arrivals_this_
-    turn` is deliberately shaped to answer both, and whichever of the two
-    branches lands second settles the final schema number.
+    settled once the whole attacking party is known). `machines/delayed.
+    DelayedTrigger` (reachable from `Game.delayed_triggers`) gained
+    `combat_only`/`to_player_only`, both defaulting `False` - Lyra, Tolarian
+    Archangel's own granted "Until end of turn, whenever Lyra deals combat
+    damage to a player, draw two cards." None of these fields existed for a
+    version-24 dump to have populated, so a default would silently read
+    every attacks-alone/is-dealt-damage/discard-this-card condition as
+    false, or a delayed trigger of Lyra's shape as also matching noncombat
+    damage and damage to a creature, rather than admit the state was never
+    recorded. Refused instead. (The stream's own independent `Player.
+    life_gained_tally`/`life_gained_tally_turn` field, for the identical
+    fact fra-s3's `life_gained_amount_this_turn` above already covers, was
+    dropped at this same merge rather than carried forward - one mechanism,
+    not two; no schema bump needed for a field that never reached a build
+    anyone decoded.)
 
-    Bumped 22 -> 23: `machines/delayed.DelayedTrigger` (reachable from
-    `Game.delayed_triggers`) gained `combat_only`/`to_player_only`, both
-    defaulting `False` - Lyra, Tolarian Archangel's own granted "Until end
-    of turn, whenever Lyra deals combat damage to a player, draw two cards."
-    A version-22 delayed trigger of this shape has neither flag set, so a
-    decoded one would match noncombat damage and damage to a creature too;
-    refused rather than silently over-firing. FRA stream S5's own commit.
+    Bumped 25 -> 26: the fra-s3b line of development claimed 24 -> 25
+    independently too, for `machines/delayed.py`'s `DelayedTrigger` gaining
+    `forbidden_types` (CR 205.2a's type negation - "a noncreature spell" -
+    checked against a watched event's own subject) alongside FRA S5's
+    `combat_only`/`to_player_only` on that same model, and for a new
+    `DelayedEffectSpec` member, `CreateTokenCopyOfControlledToken` (Summon:
+    Good King Mog XII's Saga chapters II and III: "Whenever you cast a
+    noncreature spell this turn, create a token that's a copy of a non-Saga
+    token you control."). A version-25 dump's own delayed triggers have no
+    `forbidden_types` at all, so a default empty tuple is exactly right for
+    every one of them (none could have used a field that did not exist yet)
+    - refused anyway, per the bump rule's own "a field added to ... anything
+    reachable from [`Game.model_dump()`]" bullet, not because this one's
+    default could ever disagree with an old dump. Merged onto the FRA S5
+    line above; the number moves on once more.
 
-    Bumped 23 -> 24: `Game` gained `combat_damage_dealt_this_turn_by`
-    (Ruric Thar, Magecrusher's "hexproof as long as they haven't dealt combat
-    damage yet") and `machines/layers.py`'s `LayerContext` gained
-    `active_player`/`turn_facts`/`combat_damage_dealt_this_turn`, read by
-    several newly-parsed static shapes (during-your-turn, scried-or-
-    surveilled-this-turn, and opponent-noncombat-damage-this-turn keyword
-    grants). A version-23 snapshot mid-combat has no record of which
-    creatures already dealt combat damage this turn, and a default of "none"
-    would wrongly grant Ruric Thar hexproof back after it has already fought;
-    refused rather than silently mis-answering. FRA stream S9's own commit.
+    Bumped 26 -> 27: the fu-events line of development claimed 21 -> 26
+    independently too, in its own five steps, reconciled at the same merge
+    as this note. Four of its five fields are real additions, carried
+    forward under this one combined bump:
+
+    - `CardState` gained `granted_rebound` (CR 702.88, Ojer Pakpatiq,
+      Deepest Epoch's own "it gains rebound") - one whose absence would
+      silently drop a granted rebound for a spell mid-resolution on the
+      stack.
+    - `machines/layers.py`'s `Selector` discriminated union gained
+      `PermanentsOfTypesControlledBy` (Sorin, Vengeful Bloodlord's own
+      "creatures and planeswalkers you control have lifelink" - a compound
+      subject `PermanentsControlledBy` cannot name).
+    - `machines/layers.py`'s `Count` discriminated union gained
+      `CountCreaturesWithSubtypesControlledBy` (The Mycotyrant's own
+      characteristic-defining "the number of creatures you control that are
+      Fungi and/or Saprolings").
+    - `Game` gained `next_time_draw_replacements` (Urabrask, Heretic
+      Praetor's own "the next time they would draw a card this turn,
+      instead they exile the top card of their library" - CR 614.1a's
+      one-shot "next time ... instead ..." shape, distinct from
+      `draw_redirections`' every-draw-until-end-of-turn shape).
+
+    The fifth, `permanent_cards_to_graveyard_this_turn` (CR 700.11, Descend's
+    own running count), was dropped rather than carried forward: FRA S5's
+    `graveyard_arrivals_this_turn` above already ledgers the identical fact
+    more generally, so `Game.descended`/`Game.descend_count` now read
+    `cards_put_into_graveyard_this_turn(player, permanent_only=True)`
+    instead - one mechanism, not two, per `CLAUDE.md`'s own rule. A
+    version-26 dump from either line is refused either way, since every one
+    of the four surviving fields is a field added to something reachable
+    from `Game.model_dump()`, per the bump rule's first bullet.
+
+    Bumped 27 -> 28: the FRA S2 line of development (Prepare / preparation
+    cards, CR 722), reconciled at the same merge as this note. `CardState`
+    gained `prepared`/`prepared_copy_id`/`prepare_spell_face` and `Game`
+    gained `attacked_this_turn` (Hexhaven Dueling Arena's own "target
+    creature that attacked this turn" - deliberately not folded into
+    `turn_facts` above, since that ledger answers "did this player's
+    creatures do X" and this needs *which* creature). A version-27 dump has
+    no record of which permanents were prepared, what their exile copies
+    were, or which creatures attacked this turn - a default of "none of the
+    above" would silently un-prepare every prepared permanent (dropping its
+    castable exile copy from the decode entirely) and refuse every "attacked
+    this turn" target that should be legal. Refused instead. (The stream's
+    own independent `Player._record_life_gained`/`life_gained_tally` field,
+    for the identical fact `life_gained_amount_this_turn` above already
+    covers - inherited from an earlier merge with fra-s3 on the FRA S2
+    branch itself - was dropped at this same merge rather than carried
+    forward, the same "one mechanism, not two" call this file already made
+    once for the same pair of fields.)
+
+    Bumped 28 -> 29: the FRA S10 line of development (costs, casting rules,
+    mana - CR 601.3/604.5/605.1b/605.4a work), reconciled at the same merge
+    as this note. `CastRecord` gained `exile_instead_of_graveyard` and
+    `PlayPermission` gained `any_type_mana`/`condition`/`exile_instead_of_
+    graveyard` (Dire Fleet Daredevil's "mana of any type can be spent to
+    cast that spell" and "exile it instead of graveyard" riders on a CR
+    601.3 grant; Null Summoner's Threshold-conditioned grant). `DelayedEffectSpec`
+    gained two variants: `RevokeGrantedAbility` (Emrakul, the Exigent Doom's
+    own land-mana-grant, revoked when the exiled card is cast) and
+    `AddManaWhenLandTapped` (Molten Tide's/High Tide's "until end of turn,
+    whenever you tap a Mountain for mana, add an additional {R}" delayed
+    trigger). The last also changed how `Game._resolve_triggered_mana_
+    abilities` runs: a delayed triggered mana ability now resolves inline,
+    with no stack, per CR 605.4a - `DelayedEffectSpecBase.is_mana_ability`
+    is a new `ClassVar` read there, not a persisted field, but the
+    resolution behaviour itself is exactly the "a `DelayedEffectSpec`'s
+    resolution" case the bump rule's second bullet already names. A
+    version-28 dump has none of the new fields (all default `False`/`None`,
+    silently dropping which spell an exile-instead redirect or an
+    any-type-mana grant belonged to) and no way to decode a pending
+    `RevokeGrantedAbility`/`AddManaWhenLandTapped` delayed trigger's own
+    `kind` at all. Refused instead.
+
+    Bumped 29 -> 30: the FRA S9 line of development (statics, layers, group
+    grants), reconciled at the same merge as this note. `Game` gained
+    `combat_damage_dealt_this_turn_by` (Ruric Thar, Magecrusher's "hexproof
+    as long as they haven't dealt combat damage yet") and
+    `machines/layers.py`'s `LayerContext` gained `active_player`/
+    `turn_facts`/`combat_damage_dealt_this_turn`, read by several newly-
+    parsed static shapes (during-your-turn, scried-or-surveilled-this-turn,
+    and opponent-noncombat-damage-this-turn keyword grants). A version-29
+    snapshot mid-combat has no record of which creatures already dealt
+    combat damage this turn, and a default of "none" would wrongly grant
+    Ruric Thar hexproof back after it has already fought; refused rather
+    than silently mis-answering.
     """
 
     @model_validator(mode="before")
@@ -2666,6 +3003,14 @@ class Game(EngineModel):
     graveyard card by the time the effect ever applies, and the effect has a
     duration of its own (CR 514.2 ends it in the cleanup step, which is where
     `discard_to_maximum_hand_size` clears the list)."""
+
+    next_time_draw_replacements: list[NextTimeDrawReplacement] = Field(default_factory=list)
+    """CR 614.1a's "the next time [player] would draw a card this turn,
+    instead ..." - a one-shot replacement, unlike `draw_redirections`'
+    every-draw-until-end-of-turn shape. Urabrask, Heretic Praetor's own
+    triggered ability installs one of these here when it resolves; a future
+    draw event for the named player consumes it at most once (CR 614.5) and
+    the cleanup step drops whatever is left unused (CR 514.2)."""
 
     prevention_shields: list["PreventionShield"] = Field(default_factory=list)
     """Prevention effects created by a resolving spell or ability (CR 615.1).
@@ -3022,20 +3367,45 @@ class Game(EngineModel):
                     player=state.controller,
                 )
             )
+        # CR 502.3's untap is one simultaneous event for the whole step, and
+        # "you untap one or more permanents" asks about it with its count -
+        # the permanents that actually untapped, and none at all is no event
+        # (CR 603.2g).
+        untapped = sum(1 for state in tapped if not state.tapped)
+        if untapped:
+            self.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP,
+                    player=active.username,
+                    amount=untapped,
+                    step=Step.UNTAP,
+                )
+            )
 
     # -- turn-based actions (CR 703) ---------------------------------------
 
-    def empty_mana_pools(self) -> None:
+    def empty_mana_pools(self, *, expiring: "frozenset[ManaRetentionScope] | None" = None) -> None:
         """Empty every player's mana pool (CR 500.5, 703.4q).
 
         "As a step or phase ends ... any unspent mana left in a player's mana
         pool empties." A turn-based action: automatic, controlled by no player,
         and never on the stack. The player is said to lose this mana (CR 106.4).
-        Replacement effects that keep mana from being lost this way (Horizon
-        Stone and friends) are not modelled.
+
+        `expiring` is threaded straight through to `ManaPool.empty` - a
+        firebending or Photon, Mighty Marvel style "you don't lose this mana
+        as steps and phases end" tag keeps mana past this ordinary call and
+        only empties at its own named point (CR 500.5a's end of the combat
+        phase, passed here by `_advance_past_checks`/`advance_to`; CR
+        500.5b/514.2's cleanup step, passed by `cleanup_step`). Left out, no
+        scope expires and every retained tag survives, exactly as an ordinary
+        mid-phase boundary should leave it. Replacement effects shaped
+        differently from those two - Horizon Stone's "doesn't empty ... this
+        turn" - are not modelled: `machines/effects.py`'s parsers for those two
+        sentences are the only source of a `ManaRetentionScope` tag today.
         """
+        scopes = expiring or frozenset()
         for player in self.players:
-            player.mana_pool.empty()
+            player.mana_pool.empty(expiring=scopes)
 
     def turn_based_actions(self) -> None:
         """Perform the turn-based actions of the step that has just begun (CR 703.3).
@@ -3331,6 +3701,13 @@ class Game(EngineModel):
             self.remove_all_damage()
             self.continuous_effects.end_the_turn(self)  # CR 514.2, the other half
             self.delayed_triggers.expire_this_turn()  # CR 514.2, the delayed-trigger half
+            # CR 500.5b / 514.2, the same simultaneous action once more: Photon,
+            # Mighty Marvel's "until end of turn, you don't lose this mana as
+            # steps and phases end" mana (`ManaRetentionScope.END_OF_TURN`) has
+            # survived every ordinary CR 500.5 emptying since it was added -
+            # this is where it finally empties, alongside every other "until
+            # end of turn" effect this step ends.
+            self.empty_mana_pools(expiring=frozenset({ManaRetentionScope.END_OF_TURN}))
             self.prevention_shields = [
                 shield
                 for shield in self.prevention_shields
@@ -3345,6 +3722,14 @@ class Game(EngineModel):
                 redirection
                 for redirection in self.draw_redirections
                 if not redirection.until_end_of_turn
+            ]
+            # CR 514.2's same sentence again, for the one-shot "next time ...
+            # would draw ..., instead ..." replacements: whichever of these
+            # never got a draw to consume this turn stops existing here.
+            self.next_time_draw_replacements = [
+                replacement
+                for replacement in self.next_time_draw_replacements
+                if not replacement.spent and not replacement.until_end_of_turn
             ]
             # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
             # A card exiled by Ugin's −11 stays exiled and stops being castable.
@@ -3513,6 +3898,7 @@ class Game(EngineModel):
         *,
         keyword: str | None = None,
         keyword_cost_paid: bool = False,
+        exile_instead_of_graveyard: bool = False,
         origin_zone: Zone = Zone.HAND,
         face: str | None = None,
         exile_annotation: "ExileAnnotation | None" = None,
@@ -3559,6 +3945,7 @@ class Game(EngineModel):
         record = CastRecord(
             keyword=keyword,
             keyword_cost_paid=keyword_cost_paid,
+            exile_instead_of_graveyard=exile_instead_of_graveyard,
             origin_zone=origin_zone,
             face=face,
             exile_annotation=exile_annotation,
@@ -3687,6 +4074,26 @@ class Game(EngineModel):
             self.stack.append(card_state)
         self.spells_cast_this_turn.setdefault(controller, []).append(card_state)
 
+        if card_state.prepare_spell_face:
+            # CR 601.2i: "That permanent loses the prepared designation at
+            # the time the spell becomes cast" (CR 722.3c) - this is that
+            # instant, now that CR 601.2a's move above has actually happened.
+            # `id` survives the zone move (CR 400.7's own exception for this
+            # engine - see `CardState.move_to`), so the permanent that minted
+            # this exact copy is still found by it. `become_unprepared`'s own
+            # "remove the copy from exile" half is a no-op here: this copy
+            # has already left `self.exile` for the stack.
+            source = next(
+                (
+                    permanent
+                    for permanent in self.battlefield
+                    if permanent.prepared_copy_id == card_state.id
+                ),
+                None,
+            )
+            if source is not None:
+                self.become_unprepared(source)
+
         # CR 601.2a: the card is now a spell on the stack, so the casting event
         # has happened and anything watching for it triggers (CR 603.2).
         # CR 202.3e: while this spell is on the stack, an {X} in its cost is
@@ -3739,11 +4146,80 @@ class Game(EngineModel):
         if self.stack_is_empty:
             raise ValueError("the stack is empty")
         self.resolving = self.stack[-1]
+        self._forget_counts()
         try:
             with self._id_allocator_scope():
                 return self._resolve_top()
         finally:
             self.resolving = None
+            self._forget_counts()
+
+    def create_emblem(self, owner: str, text: str, source_name: str) -> CardState:
+        """Put an emblem with `text`'s abilities into the command zone (CR
+        114.2): "[Player] gets an emblem with [ability]" - owned and controlled
+        by that player. CR 114.3: it has no characteristics but those
+        abilities, so its object carries only them (`Layout.EMBLEM`, no types,
+        no cost, no colour); its name is a label, "<source> emblem". CR 114.4:
+        its abilities function in the command zone - see `emit` and
+        `machines/triggers.zones_ability_functions_in`."""
+        with self._id_allocator_scope():
+            definition = TokenDefinition(
+                types=(), name=f"{source_name} emblem", rules_text=text.strip()
+            )
+            card = definition.to_card().model_copy(
+                update={"layout": Layout.EMBLEM, "type_line": "Emblem"}
+            )
+            emblem = CardState(card=card, zone=Zone.COMMAND, controller=owner, owner=owner)
+            emblem.bind_to_game(self)
+            self.shared_zones[Zone.COMMAND].append(emblem)
+            return emblem
+
+    def emblems_of(self, username: str) -> list[CardState]:
+        """The emblems `username` controls (CR 114.2)."""
+        return [
+            state
+            for state in self.shared_zones[Zone.COMMAND]
+            if isinstance(state, CardState)
+            and state.card.layout is Layout.EMBLEM
+            and state.controller == username
+        ]
+
+    def _forget_counts(self) -> None:
+        self._linked_count = None
+        self._linked_counts_by_player = {}
+        self._counting_player = None
+
+    @contextmanager
+    def counting_for(self, username: str) -> Iterator[None]:
+        """Scope `record_count`/`recorded_count` to one player's own count
+        while that player carries out their part of an "each player ..."
+        instruction (CR 608.2e)."""
+        previous = self._counting_player
+        self._counting_player = username
+        try:
+            yield
+        finally:
+            self._counting_player = previous
+
+    def record_count(self, count: int | None) -> None:
+        """Record how many objects the resolving object's current instruction
+        actually moved, for a later "that many" to read (`_linked_count`) -
+        or `None` to clear it ahead of an instruction whose count a later
+        "if you do" asks about."""
+        self._linked_count = count
+        if self._counting_player is not None:
+            if count is None:
+                self._linked_counts_by_player.pop(self._counting_player, None)
+            else:
+                self._linked_counts_by_player[self._counting_player] = count
+
+    def recorded_count(self) -> int | None:
+        """The count `record_count` last wrote during this resolution - the
+        player's own while `counting_for` names one - or None when no counted
+        instruction has run yet."""
+        if self._counting_player is not None:
+            return self._linked_counts_by_player.get(self._counting_player)
+        return self._linked_count
 
     def _resolve_top(self) -> StackObject:
         """Resolve the top of the stack (CR 608).
@@ -3795,11 +4271,26 @@ class Game(EngineModel):
         # Awakening, Sink into Stupor, Turntimber Symbiosis) resolve to
         # nothing, since `effect_text` came back empty.
         # CR 107.3a: X is fixed for the whole spell once announced, but only
-        # for a spell that actually has `{X}` in its own mana cost - a spell
-        # whose text defines its own X some other way (CR 107.3f) gets no
-        # substitution at all, which is `effect_for`'s own `x_value=None`
+        # for a spell whose own *cost* actually carries an X to announce - a
+        # spell whose text defines its own X some other way (CR 107.3f) gets
+        # no substitution at all, which is `effect_for`'s own `x_value=None`
         # default. `spell.mana_cost` already reads the up face of a DFC.
-        x_value = self.cast_record(spell).x_value if "{X}" in (spell.mana_cost or "") else None
+        #
+        # Not only `"{X}" in mana_cost`: CR 107.3a's X is announced whenever
+        # the cost's own text names it, and a printed cost is not only the
+        # mana symbols - Soul Immolation's "As an additional cost to cast
+        # this spell, blight X" announces X inside an additional cost with
+        # no `{X}` anywhere in its `{3}{R}{R}` mana cost, which used to leave
+        # its own "deals X damage to each opponent" sentence unsubstituted
+        # even though `blight`'s own X was announced and paid correctly.
+        # `cost_announces_x` on each additional-cost sentence is the same
+        # general "does this cost's own text carry a bare X" reader
+        # `create_continuous_effect_of_ability` now uses for an activated
+        # ability's own cost.
+        cost_has_x = "{X}" in (spell.mana_cost or "") or any(
+            cost_announces_x(phrase) for phrase in additional_cost_phrases(spell.card)
+        )
+        x_value = self.cast_record(spell).x_value if cost_has_x else None
         # CR 702.102d: a fused split spell resolves the left half's
         # instructions and then the right half's - two independent texts,
         # neither of which is `spell.oracle_text` (that property reads
@@ -3933,6 +4424,14 @@ class Game(EngineModel):
                 # sets the flag directly instead of routing through
                 # `models/token.create_tokens`.
                 spell.token = True
+                # "It ceases being a copy of a spell" - CR 707.10f's own
+                # words, taken literally: `is_copy` comes off in the same
+                # breath `token` goes on, or `Game._copies_that_cease_to_
+                # exist`'s CR 704.5e sweep (a copy of a *spell* in a zone
+                # other than the stack) would destroy this permanent the very
+                # next state-based-action check, the instant after it landed
+                # on the battlefield.
+                spell.is_copy = False
             if "Aura" in spell.subtypes:
                 attachment = self._aura_attachment(spell)
                 if attachment is None:
@@ -4199,7 +4698,7 @@ class Game(EngineModel):
         somewhere other than exile first (CR 616.1: only one effect can
         finally decide where an object goes).
         """
-        if not cast_from_hand or not has_rebound(spell.card) or spell.zone is not Zone.EXILE:
+        if not cast_from_hand or not has_rebound_now(spell) or spell.zone is not Zone.EXILE:
             return
         controller = spell.controller or self.active_player.username
         self.delayed_triggers.create(
@@ -4301,9 +4800,14 @@ class Game(EngineModel):
         spell's mana value". CR 608.2d: "the player can't choose an option
         that's illegal or impossible", so an option left out is never offered.
         X counts as 0: a spell cast without paying its mana cost has X of 0
-        (CR 107.3b)."""
+        (CR 107.3b). A land is never an option: "If an object is both a land
+        and another card type, it can be played only as a land. It can't be
+        cast as a spell" (CR 305.9), so an effect that offers a cast from among
+        several cards (Portent of Calamity) never offers the land."""
         options: list[str | None] = []
         for option in castable_faces(card.card):
+            if Type.LAND in types_being_cast(card.card, option):
+                continue
             if why_cannot_cast_restriction(card, caster, self, face=option) is not None:
                 continue
             if mana_value_below is not None and (
@@ -4410,6 +4914,12 @@ class Game(EngineModel):
                 if component.zone in (Zone.HAND, Zone.GRAVEYARD, Zone.LIBRARY)
                 else []
             )
+        elif component.kind is ComponentKind.BEHOLD:
+            # CR 701.4a: a hand card to reveal, or a battlefield permanent to
+            # choose - the same "either zone" pool `_behold_or_tapped`
+            # (`machines/replacement.py`) builds for the ETB shape of the
+            # same choice.
+            pool = list(player.hand) + list(self.permanents_controlled_by(caster))
         else:
             return None
         if component.requirement is not None:
@@ -4848,6 +5358,7 @@ class Game(EngineModel):
             ComponentKind.DISCARD: casting.discarding,
             ComponentKind.EXILE: casting.exiling,
             ComponentKind.TAP: casting.tapping,
+            ComponentKind.BEHOLD: casting.beholding,
         }
         for cost in casting._printed_additional_costs():  # noqa: SLF001
             chosen = self._choose_cost_objects(cost, caster, card, taken)
@@ -5040,6 +5551,13 @@ class Game(EngineModel):
                 face_played=spell.face_played,
                 land_face_played=spell.land_face_played,
                 division=spell.division,
+                # CR 722.3d: "If a prepare spell is copied, the copy is also
+                # a prepare spell" - carried onto any further copy of a
+                # CR 722.3c exile copy, so it keeps reading its inset face's
+                # characteristics and still counts as "a prepared spell" for
+                # `machines/triggers.py`'s CAST_SPELL condition, though a
+                # copy made here is never itself cast (CR 707.10).
+                prepare_spell_face=spell.prepare_spell_face,
             )
             self.stack.append(copy)
             return copy
@@ -5193,14 +5711,33 @@ class Game(EngineModel):
             ability = pending.pop(0)
             if ability not in self.pending_triggers:
                 continue
-            printed = ability.ability
-            if not isinstance(printed, TriggeredAbility):
-                continue
-            effect = printed.effect.lower().strip()
-            if ability.targets or (
-                parse_triggered_mana(printed.effect) is None and not effect.startswith("add ")
-            ):
+            if ability.targets:
                 continue  # CR 605.5a: not a mana ability.
+            # CR 603.7: a delayed triggered ability's own effect is not
+            # printed on any card (Molten Tide's, High Tide's own "until end
+            # of turn, whenever you tap ..." grant), so whether it is a mana
+            # ability at all is read off `DelayedEffectSpecBase.is_mana_
+            # ability` - the same self-description `_resolve_ability` already
+            # reaches for through `DelayedTriggers.effect_for` - rather than
+            # off printed text `parse_triggered_mana` was never going to
+            # find, since `ability.ability.effect` here is the *whole*
+            # "until end of turn, whenever ..." sentence, not a resolution
+            # instruction to re-read as one.
+            delayed = self.delayed_triggers.trigger_for(ability)
+            run_delayed: DelayedEffectSpecBase | None = None
+            if delayed is not None:
+                run_delayed = self.delayed_triggers.effect_for(ability)
+                if run_delayed is None or not run_delayed.is_mana_ability:
+                    continue
+            else:
+                printed = ability.ability
+                if not isinstance(printed, TriggeredAbility):
+                    continue
+                effect_text = printed.effect.lower().strip()
+                if parse_triggered_mana(printed.effect) is None and not effect_text.startswith(
+                    "add "
+                ):
+                    continue  # CR 605.5a: not a mana ability.
             if resolved >= self.TRIGGERED_MANA_ABILITY_LOOP_BOUND:
                 # CR 104.4b. See `Game.drawn`'s own docstring for what this
                 # detection does and does not cover.
@@ -5217,9 +5754,15 @@ class Game(EngineModel):
             # triggers on the stack) happens between one mana ability and the
             # next - only the CR 603.4 recheck and the effect itself.
             if self._intervening_if_still_true(ability):
-                effect = self._effect_of(ability)
-                if effect is not None:
-                    effect(self, ability)
+                if delayed is not None:
+                    if run_delayed is not None:
+                        run_delayed(self, ability, delayed)
+                else:
+                    run_printed = self._effect_of(ability)
+                    if run_printed is not None:
+                        run_printed(self, ability)
+                    else:
+                        self._note_unread_trigger(ability)
             resolved += 1
             added: list[Color] = []
             for username, was in before.items():
@@ -5278,9 +5821,15 @@ class Game(EngineModel):
                     if run is not None:
                         run(self, ability, delayed)
                 else:
+                    key = resolution_key(ability)
+                    self.ability_resolutions_this_turn[key] = (
+                        self.ability_resolutions_this_turn.get(key, 0) + 1
+                    )
                     effect = self._effect_of(ability)
                     if effect is not None:
                         effect(self, ability)
+                    else:
+                        self._note_unread_trigger(ability)
         except Exception:
             self.delayed_triggers.discard(ability)  # CR 608.2n: it ceases to exist
             self._before_priority()
@@ -5289,6 +5838,26 @@ class Game(EngineModel):
         self.delayed_triggers.discard(ability)  # CR 608.2n: it ceases to exist
         self._before_priority()
         return ability
+
+    def _note_unread_trigger(self, ability: AbilityOnStack) -> None:
+        """Fail closed for a triggered ability that resolved with no effect.
+
+        `_effect_of` answering None for a triggered ability with printed effect
+        text means no reader exists for that text, not that the ability legally
+        does nothing - Dress Down's end step trigger resolved as CHANGED
+        NOTHING with no trace. Recorded as the ability resolves (nothing
+        records it when it triggers), the same notice a resolving instant or
+        sorcery with unread text leaves.
+        """
+        if not isinstance(ability.ability, TriggeredAbility) or not ability.ability.effect:
+            return
+        self.unmodeled_trigger_effect_notices.append(
+            UnmodeledTriggerEffectNotice(
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                text=ability.ability.effect,
+            )
+        )
 
     def _effect_of(self, ability: AbilityOnStack) -> object | None:
         """The scripted effect of an ability, or None if nobody has written one.
@@ -5568,6 +6137,12 @@ class Game(EngineModel):
             # `CardState.is_suspended` - is the filter, so the widening stays
             # the size of the rule that needed it.
             sources.extend(card for card in self.exile if card.is_suspended)
+            # CR 114.4: "Abilities of emblems function in the command zone."
+            sources.extend(
+                state
+                for state in self.shared_zones[Zone.COMMAND]
+                if isinstance(state, CardState) and state.card.layout is Layout.EMBLEM
+            )
             if event.event is TriggerEvent.CAST_SPELL:
                 sources = self.spells_on_stack + sources
             elif (
@@ -6110,6 +6685,26 @@ class Game(EngineModel):
         A card may print more than one targeting trigger. The announcement names
         the card, not the ability, so the targets are legal if *any* of its
         triggers would accept them; the first reason is reported when none do.
+
+        Also tried, for each printed trigger: `reflexive_consequence_text`'s
+        own reading of a CR 603.12 "`<action>`. When you do, `<consequence>`."
+        shape - `profile_for_text(ability.text)` deliberately excludes that
+        tail (it belongs to a *different*, reflexively created ability, not
+        this one), so without this a card whose only targeted clause is its
+        own reflexive consequence - Earthbender Ascension's Landfall trigger,
+        "... put a quest counter on this enchantment. When you do, if it has
+        four or more quest counters on it, put a +1/+1 counter on target
+        creature you control." - had no profile anywhere in this function
+        that would ever accept the target `Game.create_reflexive_trigger`
+        goes on to ask for once the reflexive ability actually reaches the
+        stack, `choose_trigger_targets(card_name, ...)` refuses to record any
+        answer for it, and the shortcut cannot be used at all - only a live
+        `DecisionKind.CHOOSE_TARGETS` question at resolution can supply it.
+        The key `create_reflexive_trigger` puts the reflexive `AbilityOnStack`
+        on the stack under is this same `source_name`
+        (`Game.create_reflexive_trigger`'s own controller/source_id/source_name
+        arguments), so a target recorded here under `card_name` is exactly
+        what `_targets_for_trigger` reads back for it.
         """
         source = self._trigger_source_named(card_name)
         if source is None:
@@ -6125,9 +6720,62 @@ class Game(EngineModel):
             for ability in parse_abilities(source.card)
             if isinstance(ability, TriggeredAbility)
         ]
+        # CR 603.12's reflexive ability is a plain triggered ability once
+        # created (`Game.create_reflexive_trigger`), whatever *kind* of
+        # ability's text it was carved out of - Agatha's Soul Cauldron's own
+        # "{T}: Exile target card from a graveyard. When a creature card is
+        # exiled this way, put a +1/+1 counter on target creature you
+        # control." is activated, not triggered, so it never reaches
+        # `printed` above, and its own outer target (the graveyard card) is
+        # addressed through `Game.activate_ability`'s `targets`, not this
+        # method - only the reflexive "target creature you control" the
+        # `when ... this way,` tail names is this method's business here.
+        printed_activated = [
+            ability
+            for ability in parse_abilities(source.card)
+            if isinstance(ability, ActivatedAbility)
+        ]
         reasons: list[str] = []
         for ability in printed:
             profile = profile_for_text(ability.text)
+            if profile.understood and profile.requirements:
+                try:
+                    profile.check(list(targets), controller, self, source_id=source.id)
+                except ValueError as refusal:
+                    reasons.append(str(refusal))
+                else:
+                    return None
+            # The reflexive tail, tried as an *additional* way to accept -
+            # never to refuse. `profile_for_text(ability.text)` above already
+            # cut this tail away because CR 603.3d has the reflexive ability
+            # choose its own target once *it* exists, a separate
+            # announcement from this (outer) one's; Guide of Souls' "Whenever
+            # you attack, you may pay {E}{E}{E}. When you do, put ... on
+            # target attacking creature" prints no target on the outer
+            # trigger at all, and `test_the_outer_attack_trigger_has_no_
+            # target_of_its_own` pins that a target named for it is accepted
+            # unchecked regardless of what the *reflexive* half would want -
+            # the "when you do" may never even be reached. So a target this
+            # reflexive profile likes is accepted early; one it dislikes adds
+            # no reason, and falls through exactly as if there were no
+            # reflexive clause to read at all.
+            reflexive_text = reflexive_consequence_text(ability.text)
+            if not reflexive_text:
+                continue
+            reflexive_profile = profile_for_text(reflexive_text)
+            if not reflexive_profile.understood or not reflexive_profile.requirements:
+                continue
+            try:
+                reflexive_profile.check(list(targets), controller, self, source_id=source.id)
+            except ValueError:
+                pass
+            else:
+                return None
+        for ability in printed_activated:
+            reflexive_text = reflexive_consequence_text(ability.text)
+            if not reflexive_text:
+                continue
+            profile = profile_for_text(reflexive_text)
             if not profile.understood or not profile.requirements:
                 continue
             try:
@@ -6290,6 +6938,13 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        if permanent.prepared:
+            # CR 722.3c: the exile copy persists "for as long as the prepared
+            # permanent remains on the battlefield and has the prepared
+            # designation" - both halves of that end together the moment the
+            # permanent itself leaves, so this is the one choke point every
+            # route off the battlefield already reaches.
+            self.become_unprepared(permanent)
         controller = permanent.controller
         if controller is None:
             return
@@ -6335,17 +6990,20 @@ class Game(EngineModel):
 
         `from_zone=Zone.LIBRARY` answers a mill's own "cards put into a
         graveyard from a library this turn"; `permanent_only=True` answers
-        the narrower "permanent cards put into graveyards this turn" a
-        Descend-style count asks (CR 702.187a-adjacent - whether the card was
-        a permanent card as it left the battlefield, not what it is now that
-        it is a card in a graveyard). Both filters compose, and neither
+        CR 700.11's Descend - "the number of permanent cards put into [a
+        player]'s graveyard from anywhere this turn" - reading `arrival.
+        is_permanent_card` (CR 110.4a's printed-type question, true "from
+        anywhere" and not only for an arrival straight off the battlefield)
+        rather than `arrival.permanent_types` (which answers a narrower,
+        computed-characteristics question and is `None` for a card that
+        skipped the battlefield entirely). Both filters compose, and neither
         filter given counts every arrival, permanent or not."""
         return sum(
             1
             for arrival in self.graveyard_arrivals_this_turn
             if arrival.player == player
             and (from_zone is None or arrival.origin_zone is from_zone)
-            and (not permanent_only or bool(arrival.permanent_types))
+            and (not permanent_only or arrival.is_permanent_card)
         )
 
     def _additional_entering_loyalty(self, card_state: CardState) -> int:
@@ -6453,6 +7111,10 @@ class Game(EngineModel):
                     self.exile.append(card_state)
                 else:
                     self._owner_of(card_state).add(card_state, event.destination or Zone.GRAVEYARD)
+                    if (event.destination or Zone.GRAVEYARD) is Zone.GRAVEYARD:
+                        self._record_graveyard_arrival(
+                            card_state, origin_zone=event.origin, permanent_types=None
+                        )
                 return card_state
 
             if (
@@ -6463,6 +7125,9 @@ class Game(EngineModel):
                 # CR 303.4d: an Aura can't enchant itself - see the docstring above.
                 self._take_out_of_every_zone(card_state)
                 self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
+                self._record_graveyard_arrival(
+                    card_state, origin_zone=event.origin, permanent_types=None
+                )
                 return card_state
 
             self._take_out_of_every_zone(card_state)
@@ -6489,6 +7154,12 @@ class Game(EngineModel):
                 record = self.cast_record_of(card_state)
                 card_state.cast_with_keyword = record.keyword if record is not None else None
             card_state.tapped = event.tapped
+            if event.prepared:
+                # CR 722.3a: "This creature enters prepared" (`ENTERS_PREPARED`
+                # in `machines/replacement.py`). Applied after the move onto
+                # the battlefield, same as counters below, since `become_
+                # prepared` requires `permanent.zone is Zone.BATTLEFIELD`.
+                self.become_prepared(card_state)
             # CR 702.131 (ascend): "entered this turn" needs a turn-number stamp,
             # not just a boolean, the same way `ExileAnnotation.turn_exiled` is -
             # see `CardState.turn_entered`. Stamped here, the one choke point
@@ -8413,7 +9084,8 @@ class Game(EngineModel):
         source_id: str | None = None,
     ) -> list[CardState]:
         """Search a library for a stated quality, reveal the finds if the text
-        says so, put them into the hand or onto the battlefield, then shuffle.
+        says so, put them into the hand, onto the battlefield, or into the
+        graveyard, then shuffle.
 
         The funnel every printed "search your library for ..., [reveal it,]
         put it ..., then shuffle" goes through, in the order it is printed.
@@ -8425,14 +9097,20 @@ class Game(EngineModel):
         library's object (CR 701.20b), and the put comes before the CR 701.24a
         shuffle so a find put into its owner's hand carries the public record
         (`Player.add`, `carry_knowledge_into_hand`).
+
+        `Zone.GRAVEYARD` (Enroot's own "search your library for a land card,
+        put it into your graveyard, then shuffle") is the same `Player.add`
+        path `Zone.HAND` already takes - CR 701.23 puts no restriction on
+        which zone a search may name, and `player.add` already stamps a
+        card's owner correctly for any of the seven rules zones.
         """
         with self._id_allocator_scope():
             if isinstance(player, str):
                 player = self.player(player)
-            if destination not in (Zone.HAND, Zone.BATTLEFIELD):
+            if destination not in (Zone.HAND, Zone.BATTLEFIELD, Zone.GRAVEYARD):
                 raise ValueError(
-                    "a search puts its finds into a hand or onto the battlefield, "
-                    f"not {destination.value}"
+                    "a search puts its finds into a hand, onto the battlefield, or "
+                    f"into a graveyard, not {destination.value}"
                 )
             found = self.search_library(
                 player,
@@ -8447,10 +9125,10 @@ class Game(EngineModel):
                 for state in found:
                     self.reveal(state, source=source)
             for state in found:
-                if destination is Zone.HAND:
-                    player.add(state, Zone.HAND)
-                else:
+                if destination is Zone.BATTLEFIELD:
                     self.put_onto_battlefield(state, player.username, tapped=tapped)
+                else:
+                    player.add(state, destination)
             self.shuffle_library(player)
             return found
 
@@ -9077,6 +9755,34 @@ class Game(EngineModel):
                 self._emit_lore_counters_added(permanent, event.amount)
             self._emit_counters_put(permanent, str(kind), event.amount)
             return new_total
+
+    def add_player_counters(self, player: "Player | str", kind: str, amount: int = 1) -> int:
+        """Give a player counters, replacement effects included (CR 122.1,
+        122.6).
+
+        The player twin of `add_counters` above: Winding Constrictor's own
+        two-line static ability doubles+1 both halves of CR 122.6's "counters
+        being put on an object" - "an artifact or creature you control" and
+        "you [get counters]", CR 122.1's "some kinds of counters are normally
+        placed on players rather than on objects" (poison, energy, experience
+        chief among them). Before this, `Player.add_counters` was called
+        directly with no `ReplaceableEvent` in between, so a replacement
+        effect written "If you would get one or more counters, ..." had
+        nothing to apply to and silently never ran.
+        """
+        with self._id_allocator_scope():
+            if isinstance(player, str):
+                player = self.player(player)
+            if amount <= 0:
+                return player.counter_count(kind)
+
+            event = ReplaceableEvent(
+                kind=EventKind.ADD_COUNTERS, player=player, counter_kind=kind, amount=amount
+            )
+            apply_replacements(self, event)
+            if event.amount <= 0:
+                return player.counter_count(kind)
+            return player.add_counters(kind, event.amount)
 
     def _emit_counters_put(self, permanent: CardState, kind: str, amount: int) -> None:
         """CR 122.6's generic "counters are put on this object" event.
@@ -10124,6 +10830,22 @@ class Game(EngineModel):
         """The shields that are neither used up nor expired (CR 615.3)."""
         return [shield for shield in self.prevention_shields if not shield.spent]
 
+    def create_next_time_draw_replacement(
+        self, replacement: NextTimeDrawReplacement
+    ) -> NextTimeDrawReplacement:
+        """Record a CR 614.1a "next time [player] would draw a card this
+        turn, instead ..." replacement, installed by a resolving ability
+        (Urabrask, Heretic Praetor's own second trigger).
+
+        The same division `create_prevention_shield` already draws for CR
+        615.1: creating the record *is* the effect; nothing else happens
+        when the ability resolves. `machines.replacement._next_time_draw_
+        replacement_effects` is what a later draw event actually consumes.
+        """
+        with self._id_allocator_scope():
+            self.next_time_draw_replacements.append(replacement)
+            return replacement
+
     def shield_applies(self, shield: PreventionShield, event: ReplaceableEvent) -> bool:
         """Whether this shield would prevent any of this damage (CR 615.7-615.9).
 
@@ -10759,14 +11481,10 @@ class Game(EngineModel):
                 # graveyard it lands in and wherever it came from - see
                 # `GraveyardArrival`'s own docstring for why this is a
                 # general record rather than a single-purpose counter.
-                self.graveyard_arrivals_this_turn.append(
-                    GraveyardArrival(
-                        player=self._owner_of(card_state).username,
-                        origin_zone=Zone.BATTLEFIELD if was_on_battlefield else origin,
-                        permanent_types=(
-                            left_battlefield_chars.types if was_on_battlefield else None
-                        ),
-                    )
+                self._record_graveyard_arrival(
+                    card_state,
+                    origin_zone=Zone.BATTLEFIELD if was_on_battlefield else origin,
+                    permanent_types=(left_battlefield_chars.types if was_on_battlefield else None),
                 )
             elif event.destination is Zone.EXILE:
                 card_state.move_to(Zone.EXILE)
@@ -10811,6 +11529,70 @@ class Game(EngineModel):
                     )
                 )
             return card_state
+
+    def _record_graveyard_arrival(
+        self,
+        card_state: CardState,
+        *,
+        origin_zone: Zone,
+        permanent_types: tuple[Type, ...] | None,
+    ) -> None:
+        """One ledger entry on `graveyard_arrivals_this_turn` (CR 400.6/400.3).
+
+        The single place every `GraveyardArrival` is actually built, so
+        `is_permanent_card` (CR 110.4a) is computed the same way regardless
+        of which of the four call sites reached it: `Game.put_into_graveyard`
+        (the main one), `Game.enter_the_battlefield`'s two branches where a
+        replacement effect (CR 614.6) redirects an entering permanent to a
+        graveyard instead, and `machines/keywords.discard`/`.dredge`, neither
+        of which goes through `put_into_graveyard` at all - see `Game.
+        descended`'s own docstring for why CR 700.11's "from anywhere" needs
+        every one of them fed.
+
+        `card_state.types` (not `permanent_types`) is what answers CR
+        110.4a's "permanent card" question - the front-face-safe, off-
+        battlefield read (`CardState.types`'s own docstring), a fixed
+        property of the card itself rather than of whatever it happened to
+        be while animated on the battlefield: a land earthbent into a
+        creature (CR 701.66a) that dies is already a permanent card for
+        being a land, and does not also need to have been a creature at the
+        time. This is why `is_permanent_card` is never derived from
+        `permanent_types`, which is `None` for an arrival that skipped the
+        battlefield and would otherwise silently undercount every discarded,
+        milled, or countered permanent card.
+        """
+        owner = card_state.owner
+        if owner is None:
+            return
+        self.graveyard_arrivals_this_turn.append(
+            GraveyardArrival(
+                player=owner,
+                origin_zone=origin_zone,
+                is_permanent_card=bool(_PERMANENT_TYPES.intersection(card_state.types)),
+                permanent_types=permanent_types,
+            )
+        )
+
+    def descended(self, username: str) -> bool:
+        """CR 700.11: whether `username` "has descended this turn" - a
+        permanent card was put into their graveyard from anywhere this turn.
+
+        Reads `cards_put_into_graveyard_this_turn(username, permanent_only=
+        True)` off `graveyard_arrivals_this_turn` - FRA S5's general ledger,
+        reconciled at merge in favour of a separate `permanent_cards_to_
+        graveyard_this_turn` running count the fu-events line of development
+        built independently for the identical CR 700.11 question, per
+        `CLAUDE.md`'s "keep one mechanism" rule.
+        """
+        return self.cards_put_into_graveyard_this_turn(username, permanent_only=True) > 0
+
+    def descend_count(self, username: str) -> int:
+        """CR 700.11: "the number of times [`username`] descended this
+        turn" - the number of permanent cards put into their graveyard from
+        anywhere this turn (CR 700.11's own count question, The Mycotyrant's
+        "X is the number of times you descended this turn"). See
+        `descended`'s own docstring for where this now reads from."""
+        return self.cards_put_into_graveyard_this_turn(username, permanent_only=True)
 
     def card_imprinted_on(self, permanent_id: UUID) -> CardState | None:
         """The card exiled *with* `permanent_id`, if any.
@@ -11203,6 +11985,98 @@ class Game(EngineModel):
             if other.id != permanent.id and other.attached_to == permanent.id:
                 other.unattach()
 
+    def _copies_that_cease_to_exist(self) -> list[CardState]:
+        """CR 704.5e / 707.10a, both sentences, as one state-based action:
+        "If a copy of a spell is in a zone other than the stack, it ceases
+        to exist. If a copy of a card is in any zone other than the stack or
+        the battlefield, it ceases to exist."
+
+        `CardState.is_copy` is the one flag both sentences read (CR 112.1a's
+        "a copy of a spell is also a spell", CR 112.1b's "some effects allow
+        a player to cast a copy of a card; if the player does, that copy is
+        a spell as well" - the *same* copy is "a copy of a card" before it is
+        ever cast and "a copy of a spell" once it is, which is why one flag
+        and one sweep covers both sentences rather than needing two). The
+        two sentences differ only in which zones they exempt - the stack
+        alone for a spell-copy, the stack *and* the battlefield for a
+        card-copy - which is exactly `_EXEMPT_ZONES` below.
+
+        Proven on three unrelated mechanisms, none sharing a card or a
+        mechanism with either of the others
+        (`scenarios/test_copies_cease_to_exist.py`):
+        - **First sentence**, a copy that reached the stack and resolved: a
+          CR 722.3c prepare-spell copy (Enroot, `is_copy` still true after
+          casting per CR 722.3d) and a plain `Game.copy_spell` copy of an
+          instant (Alania, Divergent Storm's copy of Lightning Bolt).
+        - **Second sentence**, a copy that was never cast at all - purely "a
+          copy of a card", never "a copy of a spell": Isochron Scepter's own
+          copy of its imprinted card, abandoned mid-resolution with the
+          "cast the copy?" question left unanswered (`DecisionPending`) so
+          none of the ability's own hand-written cleanup for a *declined*
+          cast (`_parse_copy_exiled_card_and_cast`'s `if copy in game.exile:
+          game.exile.remove(copy)`) ever runs - this state-based action is
+          the only thing that removes it.
+
+        **Never a copy of a *permanent* spell that already resolved.**
+        CR 707.10f/111.13: "As that copy resolves, it ceases being a copy of
+        a spell and becomes a token permanent" - `Game._resolve_top_impl`
+        clears `is_copy` there, in the same branch that sets `token = True`,
+        for exactly that reason (a copy of Solitude sitting on the
+        battlefield is not swept the instant it lands, and the second
+        sentence's own battlefield exemption is for exactly this case too,
+        belt and braces: nothing in this engine currently reaches the
+        battlefield still carrying `is_copy`, since everything that resolves
+        into a permanent already has it cleared here, but the exemption is
+        read from the rule's own words rather than relied on staying moot).
+        This is why that clearing is part of the same fix as this method:
+        without it, this state-based action would have destroyed every
+        copied permanent one round after it resolved.
+
+        **CR 722.3c's own exile copy is this rule's one written exception**
+        ("This is an exception to rule 704.5e"), read here rather than on
+        `CardState` itself: a copy in `Zone.EXILE` is spared for as long as
+        some battlefield permanent's `prepared_copy_id` still names it -
+        `Game.become_prepared`/`become_unprepared` are what maintain that
+        link, and once nothing names it any more (it was cast, or the
+        permanent lost the designation or left the battlefield), the
+        exemption ends and the very next check this method makes is what
+        actually removes it.
+
+        Mirrors `models/token.tokens_that_cease_to_exist`'s own shape: every
+        shared zone but the exempt ones, then every player's own zones (none
+        of which is ever the stack or the battlefield).
+        """
+        exempt_zones = (Zone.STACK, Zone.BATTLEFIELD)
+        linked_exile_copy_ids = {
+            permanent.prepared_copy_id
+            for permanent in self.battlefield
+            if permanent.prepared_copy_id is not None
+        }
+
+        def sweep(zone: Zone, cards: list[Any]) -> list[CardState]:
+            doomed = [
+                state
+                for state in cards
+                if isinstance(state, CardState)
+                and state.is_copy
+                and not (zone is Zone.EXILE and state.id in linked_exile_copy_ids)
+            ]
+            for state in doomed:
+                cards.remove(state)
+            return doomed
+
+        gone: list[CardState] = []
+        for zone, cards in self.shared_zones.items():
+            if zone in exempt_zones:
+                continue
+            gone.extend(sweep(zone, cards))
+        for player in self.players:
+            for zone, cards in player.zones.items():
+                if zone in exempt_zones:
+                    continue
+                gone.extend(sweep(zone, cards))
+        return gone
+
     def _remember_sources_that_ceased_to_exist(self, gone: list[CardState]) -> None:
         """Keep each vanished token as the last known information of every
         ability on the stack or waiting to go there that it is the source of.
@@ -11450,21 +12324,28 @@ class Game(EngineModel):
         uncomputable - falls back to the printed value rather than being spared
         on a technicality.
 
-        CR 704.5d runs first, against the board as the check found it: "If a
-        token is in a zone other than the battlefield, it ceases to exist." A
-        token that one of the actions below kills in *this* round was still on
-        the battlefield when the conditions were checked, so it ceases to exist
-        on the repeat check CR 704.3 guarantees, not in the same event.
+        CR 704.5d and CR 704.5e (both sentences) all run first, against the
+        board as the check found it: "If a token is in a zone other than the
+        battlefield, it ceases to exist", "If a copy of a spell is in a zone
+        other than the stack, it ceases to exist", and "If a copy of a card
+        is in any zone other than the stack or the battlefield, it ceases to
+        exist." A token or a copy that one of the actions below sends off in
+        *this* round was still where it started when the conditions were
+        checked, so it ceases to exist on the repeat check CR 704.3
+        guarantees, not in the same event. See `_copies_that_cease_to_exist`
+        for CR 704.5e's own scope; CR 722.3c's exile copy is that rule's one
+        written exception, and this method is not where the exception lives.
         """
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
-        self._remember_sources_that_ceased_to_exist(gone_tokens)
+        gone_copies = self._copies_that_cease_to_exist()  # CR 704.5e/707.10a
+        self._remember_sources_that_ceased_to_exist(gone_tokens + gone_copies)
 
         # Every check below reads the battlefield and moves nothing, so they
         # share one layered board (`snapshot.scan_pin`); the moves come after.
         with scan_pin(self):
             board, leaving = self._state_based_action_losers()
         self._put_state_based_action_losers(leaving, board)
-        return leaving + gone_tokens
+        return leaving + gone_tokens + gone_copies
 
     def _state_based_action_losers(self) -> tuple[ComputedBoard, list[CardState]]:
         """The permanents one round of `_state_based_actions_once` removes, and
@@ -11965,6 +12846,13 @@ class Game(EngineModel):
             ]
             for creature, attack in registered:
                 self._emit_attacks(creature, attack)
+                # A per-turn historical fact, not `machines.combat.Combat`'s
+                # live attacking status - Hexhaven Dueling Arena's "target
+                # creature that attacked this turn" still needs an answer
+                # after this combat (and this turn's whole combat phase) is
+                # over. Cleared at the same new-turn reset as the rest of
+                # `Game`'s "this turn" fields.
+                self.attacked_this_turn.add(creature.id)
             if attacks:
                 # CR 508.3d: "An ability that reads 'Whenever [a player]
                 # attacks, . . .' triggers if one or more creatures that
@@ -12165,6 +13053,106 @@ class Game(EngineModel):
             )
         return None
 
+    # -- CR 722: preparation cards -----------------------------------------
+
+    def become_prepared(self, permanent: CardState) -> CardState | None:
+        """CR 722.3a: give `permanent` the prepared designation.
+
+        "Some spells and abilities cause a permanent with a prepare spell to
+        become prepared or state that a permanent enters prepared. If that
+        permanent has the alternative characteristics of a prepare spell,
+        this gives the permanent the 'prepared' designation. ... A permanent
+        can't gain this designation unless it has a prepare spell.
+        Additionally, a permanent can't gain this designation if the
+        permanent already has it." Both refusals are silent no-ops, not
+        errors: Codie's "each creature you control becomes prepared" and
+        Hexhaven Dueling Arena's "target creature becomes prepared" are
+        printed to apply to any creature, most of which have no prepare
+        spell at all, and CR 722.3a's own second sentence is what makes an
+        already-prepared permanent's own upkeep trigger a no-op rather than a
+        second copy.
+
+        CR 722.3c: "its controller creates a copy of that object in exile,
+        except that copy has only the characteristics of that permanent's
+        prepare spell ... Those characteristics become the copy's normal
+        characteristics. This copy remains in exile for as long as the
+        prepared permanent remains on the battlefield and has the prepared
+        designation. This is an exception to rule 704.5e. For as long as the
+        copy remains in exile, the prepared permanent's controller may cast
+        the copy." The copy is minted here, `prepare_spell_face=True` (read
+        by `CardState.up_face`), and a standing `PlayPermission` is granted
+        for it with no time limit - `become_unprepared` below, called
+        whenever the designation or the permanent itself goes away, is what
+        actually enforces the "for as long as" half, since nothing in this
+        engine yet dispatches the general CR 704.5e state-based action (see
+        `docs/engine-coverage.md`).
+
+        Returns the exile copy, or `None` if the permanent could not gain the
+        designation.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return None
+        if permanent.card.prepare_spell is None:
+            return None
+        if permanent.prepared:
+            return None
+        controller = permanent.controller or permanent.owner
+        if controller is None:
+            return None
+        with self._id_allocator_scope():
+            copy = CardState(
+                card=permanent.card,
+                zone=Zone.EXILE,
+                controller=controller,
+                owner=permanent.owner,
+                is_copy=True,
+                prepare_spell_face=True,
+            )
+            self.exile.append(copy)
+            permanent.prepared = True
+            permanent.prepared_copy_id = copy.id
+            self.grant_play_permission(
+                copy,
+                controller,
+                source_name=permanent.name,
+                rule="CR 722.3c",
+                zone=Zone.EXILE,
+                until_end_of_turn=False,
+            )
+        return copy
+
+    def become_unprepared(self, permanent: CardState) -> None:
+        """CR 722.3b: remove the prepared designation from `permanent`.
+
+        "A rule or effect may cause a permanent to become 'unprepared.' This
+        removes the prepared designation from that permanent." A no-op if it
+        was never prepared. The linked CR 722.3c exile copy is removed along
+        with the designation - unless it has already moved to the stack
+        (`Game.put_on_stack`'s own CR 601.2i hook clears the designation
+        there without touching the copy, which by then is no longer in
+        `self.exile` for this to find): the copy's "remains in exile for as
+        long as ... the prepared designation" holds is exactly this call's
+        other half.
+
+        Called by `Game.enter_the_battlefield`'s "enters prepared" hook (which
+        never finds an existing designation to remove), by the "becomes
+        unprepared" clause parser, and by `Game._note_left_battlefield` for
+        every route a permanent takes off the battlefield.
+        """
+        if not permanent.prepared:
+            return
+        permanent.prepared = False
+        copy_id = permanent.prepared_copy_id
+        permanent.prepared_copy_id = None
+        if copy_id is None:
+            return
+        copy = next((state for state in self.exile if state.id == copy_id), None)
+        if copy is not None:
+            self.exile.remove(copy)
+        self.play_permissions = [
+            permission for permission in self.play_permissions if permission.card_id != copy_id
+        ]
+
     # -- permission to play a card from somewhere else (CR 601.3) ----------
 
     def grant_play_permission(
@@ -12182,6 +13170,9 @@ class Game(EngineModel):
         until_next_turn_of: str | None = None,
         expires_end_of_next_turn: bool = False,
         flashback: bool = False,
+        any_type_mana: bool = False,
+        condition: str | None = None,
+        exile_instead_of_graveyard: bool = False,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -12247,6 +13238,9 @@ class Game(EngineModel):
                 granted_step=None if turn is None else turn.step,
                 until_next_turn_of=until_next_turn_of,
                 expires_end_of_next_turn=expires_end_of_next_turn,
+                any_type_mana=any_type_mana,
+                condition=condition,
+                exile_instead_of_graveyard=exile_instead_of_graveyard,
             )
             self.play_permissions.append(permission)
             return permission
@@ -12376,6 +13370,19 @@ class Game(EngineModel):
                     f"{source_name} only applies to {grant.type_word} spells, and "
                     f"{card.name} is not one"
                 )
+            elif grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
+                cap = mana_value_cap_for(grant, self, caster)
+                if cap is None:
+                    unavailable = (
+                        f"{source_name}'s mana value cap "
+                        f"({grant.max_mana_value_quality!r}) is not read by this engine "
+                        "(CR 118.9)"
+                    )
+                elif card.mana_value > cap:
+                    unavailable = (
+                        f"{source_name} only applies to spells with mana value {cap} or "
+                        f"less, and {card.name} is {card.mana_value}"
+                    )
             options.append(
                 AlternativeCostOption(
                     index=len(options),
@@ -12914,6 +13921,22 @@ class Game(EngineModel):
                     amount += int(target_match.group(1))
                     break
 
+        condition_match = _COSTS_LESS_IF_CONDITION_RE.search(text)
+        if condition_match is not None:
+            held = self.condition_holds(owner, condition_match.group("condition"), source=spell)
+            if held:
+                amount += int(condition_match.group("amount"))
+
+        greatest_stat = _COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE.search(text)
+        if greatest_stat is not None:
+            stat = greatest_stat.group("stat").lower()
+            values = [
+                getattr(self.characteristics_of(state), stat) or 0
+                for state in self.permanents_controlled_by(owner)
+                if self.characteristics_of(state).is_creature
+            ]
+            amount += max(values, default=0)
+
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
     def basic_land_types_controlled(self, controller: str) -> frozenset[str]:
@@ -13125,12 +14148,11 @@ class Game(EngineModel):
         counted when the permanent's controller is `caster`.
 
         Text that reads like a cost modifier but does not match one of
-        `cost_modifier_effect`'s recognised shapes - Grand Arbiter Augustin
-        IV's controller-relative "Spells your opponents cast cost {1} more to
-        cast" - is neither applied nor silently skipped: a `CostModifierNotice`
-        is appended to `cost_modifier_notices` instead (DDR#978 - an increase
-        that fails to apply looks identical to ordinary play). Deduplicated by
-        source, since this runs every time a cost is priced.
+        `cost_modifier_effect`'s recognised shapes is neither applied nor
+        silently skipped: a `CostModifierNotice` is appended to
+        `cost_modifier_notices` instead (DDR#978 - an increase that fails to
+        apply looks identical to ordinary play). Deduplicated by source,
+        since this runs every time a cost is priced.
 
         A loyalty-ability-granted, time-boxed discount - Ral, Monsoon Mage's
         own "+1: Until your next turn, instant and sorcery spells you cast
@@ -13156,8 +14178,8 @@ class Game(EngineModel):
             #
             # Read line by line, not as one blob: CR 604.1 makes each
             # sentence-per-line its own static ability (Grand Arbiter
-            # Augustin IV prints three - two readable color discounts and one
-            # controller-relative tax this wave still cannot read), and
+            # Augustin IV prints three - two color discounts and an
+            # opponent-scoped tax, all three readable), and
             # `cost_modifier_effect` only ever answers for the *first* shape
             # it recognises in whatever text it is given. Reading the whole
             # card at once would either apply only the first ability and
@@ -13230,6 +14252,19 @@ class Game(EngineModel):
                     if floor is None or effect.amount > floor:
                         floor = effect.amount
                 elif effect.kind is CostModifierKind.FLAT_INCREASE:
+                    if (
+                        effect.excludes_type is not None
+                        and effect.excludes_type in spell.card.types
+                    ):
+                        continue
+                    increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.OPPONENT_TYPE_INCREASE:
+                    # Thalia, the Survivor: "your opponents cast" - only when
+                    # the permanent's controller is not the caster, the exact
+                    # mirror of COLOR_DECREASE/TYPE_DECREASE's own "you cast"
+                    # scoping below.
+                    if permanent.controller == caster:
+                        continue
                     if (
                         effect.excludes_type is not None
                         and effect.excludes_type in spell.card.types
@@ -13503,20 +14538,36 @@ class Game(EngineModel):
         ability = abilities[index]
         controller = controller or self.controller_of(permanent).username
 
-        if ability.zone is not None and permanent.zone is not ability.zone:
+        if ability.zone is not None:
             # CR 113.6b/113.6j/113.6m, whichever `machines/abilities.py` read
             # off the printed text: an ability that functions in one named zone
-            # does not exist to be activated from any other. Checked before the
-            # flat battlefield rule below so the refusal names the real reason
-            # - "functions in the graveyard" rather than "not on the
-            # battlefield" - and so the battlefield itself is refused too,
+            # does not exist to be activated from any other - checked before
+            # the flat battlefield rule below so the refusal names the real
+            # reason, "functions in the graveyard" rather than "not on the
+            # battlefield", and so the battlefield itself is refused too,
             # which is DDR#970's Gollum sacrificing itself to its own
-            # graveyard-only ability.
-            return (
-                f"{permanent.name}'s ability functions in the {ability.zone.value}, "
-                f"but it is in the {permanent.zone.value} ({ability.zone_rule})"
-            )
-        if permanent.zone is not Zone.BATTLEFIELD:
+            # graveyard-only ability. The two are `elif`, not two independent
+            # `if`s: once `ability.zone` names a zone, CR 113.6's flat
+            # "usually only on the battlefield" default has already been
+            # displaced by the sub-rule that put it somewhere else (CR
+            # 113.6j/113.6m are each phrased as "functions from"/"functions
+            # only in", not as an addition to the battlefield case) - so a
+            # permanent correctly sitting in that zone must not *also* fail
+            # the flat rule a moment later. That double gate is what made
+            # Campus Crier's own "{1}, Exile this card from your graveyard:
+            # Empower Jace 2." (and Seasoned Pyromancer's identically-shaped
+            # ability, and Boseiju's Channel) refuse to activate through this
+            # door even once `machines/abilities._activated_ability_zone`
+            # correctly read their zone as the graveyard or the hand -
+            # `test_self_referential_costs.py`'s own Seasoned Pyromancer and
+            # Boseiju tests used to route around this gate by building and
+            # paying the `TotalCost` directly instead; they no longer need to.
+            if permanent.zone is not ability.zone:
+                return (
+                    f"{permanent.name}'s ability functions in the {ability.zone.value}, "
+                    f"but it is in the {permanent.zone.value} ({ability.zone_rule})"
+                )
+        elif permanent.zone is not Zone.BATTLEFIELD:
             return f"{permanent.name} is in {permanent.zone.value}, not on the battlefield"
         if self.controller_of(permanent).username != controller:
             return f"{controller} does not control {permanent.name}"
@@ -13627,6 +14678,29 @@ class Game(EngineModel):
                     f"{permanent.name} is level {permanent.class_level}, not level {required}, "
                     f"so its Level {ability.class_level_target} bar cannot be activated "
                     "(CR 716.2a)"
+                )
+
+        if ability.exhaust and self._activation_key(permanent, index) in self.exhausted:
+            return f"{permanent.name}'s exhaust ability has already been activated (CR 702.177a)"
+
+        if ability.mana is None:
+            # CR 702.61a: "As long as this spell is on the stack, players
+            # can't cast other spells or activate abilities that aren't mana
+            # abilities." CR 605.1a: a mana ability's own activation is never
+            # caught by this - `ability.mana` is set exactly when
+            # `machines/abilities.py` read this line as one (`_ADD.match`).
+            split_second_source = split_second_restriction_source(self)
+            if split_second_source is not None:
+                return (
+                    f"{split_second_source} has split second: as long as it is on the "
+                    f"stack, players can't activate abilities that aren't mana abilities "
+                    "(CR 702.61a)"
+                )
+            combat_lockdown_source = combat_lockdown_restriction_source(self)
+            if combat_lockdown_source is not None:
+                return (
+                    f"{combat_lockdown_source} says players can't activate abilities "
+                    f"that aren't mana abilities during combat (CR 506.1)"
                 )
 
         instructions = (ability.instructions or "").lower()
@@ -13819,6 +14893,12 @@ class Game(EngineModel):
                 for opponent in opponents
             )
 
+        if match := _CONDITION_CAST_A_SPELL_THIS_TURN.fullmatch(text):
+            quality = _card_quality(match.group("quality"))
+            if quality is None:
+                return None
+            return any(quality(state) for state in self.spells_cast_this_turn.get(controller, []))
+
         if _CONDITION_SUSPENDED.fullmatch(text):
             if source is None:
                 return None
@@ -13827,6 +14907,25 @@ class Game(EngineModel):
                 and has_suspend(source.card)
                 and source.counter_count(Counter.TIME) > 0
             )
+
+        if _CONDITION_KICKED.fullmatch(text):
+            # CR 702.33d: "this spell" is the ability's own source. Reads the
+            # finalized `CastRecord`, which only exists once `Casting.cast()`
+            # completes - the right answer for anything asking after the
+            # fact, but *not* for a modal choice made mid-announcement
+            # (CR 601.2b), which is exactly what `Casting._alternative_mode_
+            # count` special-cases with its own live `self.kicked` and this
+            # method's `condition_override` instead of reaching here at all.
+            if source is None:
+                return None
+            record = self.cast_record_of(source)
+            return record is not None and record.kicked > 0
+
+        if _CONDITION_DESCENDED.fullmatch(text):
+            # CR 700.11, Molten Collapse's own "If you descended this turn,
+            # you may choose both instead." - the same running count
+            # `intervening_if_holds`'s "you descended this turn" reads.
+            return self.descended(controller)
 
         return None
 
@@ -13837,6 +14936,8 @@ class Game(EngineModel):
         source_id: UUID | None,
         source_name: str,
         source: CardState | None = None,
+        *,
+        condition_override: bool | None = None,
     ) -> bool:
         """Whether a modal instruction's "If <condition>, [you may] choose N
         instead" raises its mode count right now (CR 700.2).
@@ -13847,15 +14948,25 @@ class Game(EngineModel):
         `ConditionalClauseNotice`: the larger count is a permission nobody
         checked, and granting it unchecked would let a spell do more than its
         caster is entitled to.
+
+        `condition_override`, when not `None`, is used in place of asking
+        `condition_holds` at all - `Casting._alternative_mode_count`'s own
+        "this spell was kicked" (CR 601.4) reads its still-in-progress
+        `self.kicked` this way, because `condition_holds` can only ever read
+        the finalized `CastRecord` a completed `cast()` writes, which does
+        not exist yet while modes are still being chosen.
         """
         condition = modal.alternative_condition
         if condition is None:
             return False
-        held = (
-            None
-            if modal.alternative_minimum is None
-            else self.condition_holds(controller, condition, source)
-        )
+        if condition_override is not None:
+            held: bool | None = condition_override
+        else:
+            held = (
+                None
+                if modal.alternative_minimum is None
+                else self.condition_holds(controller, condition, source)
+            )
         if held is None:
             notice = ConditionalClauseNotice(
                 source_id=source_id,
@@ -14124,6 +15235,7 @@ class Game(EngineModel):
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
         x_value: int = 0,
     ) -> TotalCost:
         """The total cost of one activation (CR 602.1a, 601.2f).
@@ -14137,6 +15249,18 @@ class Game(EngineModel):
         or `exiling`; leaving it empty builds a cost that correctly refuses to
         be paid (CR 118.3) rather than one that cannot be built.
 
+        `tapping` is the same idea for "Tap `<count>` untapped `<quality>` you
+        control" (Persistent Petitioners' "Tap four untapped Advisors you
+        control", Merchant's Dockhand's "Tap X untapped artifacts you
+        control") - CR 601.2b's own choice of *which* permanents pay a named-
+        quality tap cost, as distinct from the bare `{T}` symbol (CR 107.5's
+        fixed "tap this permanent", no choice at all, already built with its
+        own card filled in below). `machines/casting.py`'s own
+        `Casting._printed_additional_costs` already fills a spell's matching
+        `TAP` component this way (Swallow Whole's own additional cost); this
+        is that same fill, for an activated ability's cost instead of a
+        spell's.
+
         `x_value` is CR 107.3a's X, announced as this activation begins
         (CR 602.2b), the same moment `Casting.determine_cost` fixes X for a
         spell. `ManaCost.with_x` folds it in when the printed cost has one -
@@ -14148,6 +15272,7 @@ class Game(EngineModel):
         sacrifices = list(sacrificing or [])
         discards = list(discarding or [])
         exiles = list(exiling or [])
+        taps = list(tapping or [])
 
         mana = ManaCost()
         components = []
@@ -14280,6 +15405,18 @@ class Game(EngineModel):
                     while exiles and len(chosen) < component.required:
                         chosen.append(exiles.pop(0))
                     component = component.model_copy(update={"cards": chosen})
+                if not component.cards and taps and component.kind is ComponentKind.TAP:
+                    # "Tap `<count>` untapped `<quality>` you control"
+                    # (Persistent Petitioners, Merchant's Dockhand): the same
+                    # fill as the `EXILE` branch immediately above, from
+                    # `tapping` rather than `exiling`. This component's own
+                    # `CostKind` is `OTHER` too - the bare `{T}` symbol is
+                    # what the `CostKind.TAP` branch above already built with
+                    # `[permanent]` filled in, so this never double-fills it.
+                    chosen_taps: list[CardState] = []
+                    while taps and len(chosen_taps) < component.required:
+                        chosen_taps.append(taps.pop(0))
+                    component = component.model_copy(update={"cards": chosen_taps})
                 if component.kind is ComponentKind.REVEAL:
                     # CR 701.20a's reveal from hand: the cards named in
                     # `revealing` pay it, and for CR 107.3a's X their number
@@ -14596,6 +15733,7 @@ class Game(EngineModel):
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
         x_value: int = 0,
         targets: list[object] | None = None,
     ) -> CostPayment:
@@ -14629,6 +15767,7 @@ class Game(EngineModel):
             discarding=discarding,
             exiling=exiling,
             revealing=revealing,
+            tapping=tapping,
             x_value=x_value,
         )
         # CR 601.2h pays the cost the player chose, so a reveal cost nobody
@@ -14678,14 +15817,29 @@ class Game(EngineModel):
         # front face, wrong for a transformed permanent even before layers.
         # `machines/legal_actions.py` asks the identical question when it
         # enumerates the same activation, and the two must not disagree.
+        #
+        # `Game.computed_board` only ever covers the battlefield (CR 613.1's
+        # layers apply to permanents), so a CR 113.6j/113.6m ability
+        # activating from a hand or a graveyard has no computed board entry
+        # to ask - `characteristics_of` would raise `NotOnBoard`. `CardState`
+        # itself already answers `name`/`types`/`subtypes`/`supertypes`/
+        # `colors` off its own printed face (`up_face`-aware), which is the
+        # right read off the battlefield: CR 613.5 only starts substituting
+        # computed values once the card actually is a permanent. The same
+        # split `ManaSpend.casting` already draws for a spell on the stack
+        # (`Game.computed_board` does not cover that zone either).
+        source_characteristics = (
+            self.characteristics_of(permanent) if permanent.zone is Zone.BATTLEFIELD else permanent
+        )
         payment = CostPayment.for_total(
             total,
             game=self,
             payer=controller,
-            spend=ManaSpend.activating(self.characteristics_of(permanent)),
+            spend=ManaSpend.activating(source_characteristics),
         )
         if announced is not None:
             self._announced_targets[key] = (announced, payment)
+        self._opened_payments[key] = payment
         return payment
 
     def apply_mana_ability_rider(
@@ -14784,6 +15938,8 @@ class Game(EngineModel):
             # nothing rechecks that here; CR 608.2b does, on resolution.
             key = self._activation_key(permanent, index)
             entry = self._announced_targets.pop(key, None)
+            opened = self._opened_payments.pop(key, None)
+            paid = opened if opened is not None and opened.step is CostStep.PAID else None
             # Only the announcement whose payment was paid belongs to this
             # activation; one whose payment was rewound or abandoned is stale.
             recorded = entry[0] if entry is not None and entry[1].step is CostStep.PAID else None
@@ -14803,6 +15959,14 @@ class Game(EngineModel):
                 if announced_targets is not None:
                     targets = list(announced_targets)
             self.activations[key] = self.activations.get(key, 0) + 1
+            if ability.exhaust:
+                # CR 702.177a: "Activate only once" - unlike `activations`
+                # above, this is never cleared on a new turn (`exhausted`
+                # persists for the object's whole existence on the
+                # battlefield). `key` is already `permanent.id`-scoped, so an
+                # object that leaves and returns (CR 400.7's new object) gets
+                # a fresh id and is not exhausted by its own past self.
+                self.exhausted.add(key)
             if ability.loyalty is not None:
                 # CR 606.3's once-per-turn rule is per permanent: having activated
                 # any loyalty ability of this planeswalker this turn, the next one
@@ -15001,7 +16165,20 @@ class Game(EngineModel):
                 targets=[TargetRef.coerce(target) for target in targets or []],
                 x_value=x_value,
                 cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,
-                cost_sacrificed_card_ids=tuple(state.id for state in (sacrificed_for_cost or [])),
+                # CR 602.2b: the objects the paid cost moved, read off the
+                # payment itself when `begin_activating` opened one, so a
+                # "`<verb>` this way" count never depends on what the caller
+                # chose to repeat here.
+                cost_sacrificed_card_ids=(
+                    _cost_moved(paid, ComponentKind.SACRIFICE)
+                    if paid is not None
+                    else tuple(state.id for state in (sacrificed_for_cost or []))
+                ),
+                cost_exiled_card_ids=(
+                    _cost_moved(paid, ComponentKind.EXILE)
+                    if paid is not None
+                    else ((exiled_for_cost.id,) if exiled_for_cost is not None else ())
+                ),
             )
             self.stack.append(on_stack)
             # CR 602.2b's target announcement has settled (CR 601.2c, imported
@@ -15485,7 +16662,18 @@ class Game(EngineModel):
         # The pointer may have crossed several boundaries (the skip loop above,
         # or a cleanup that rolled into the next turn); nothing between them
         # can add mana, so one emptying covers every boundary crossed.
-        self.empty_mana_pools()
+        #
+        # CR 500.5a: firebending's "until end of combat" mana (`ManaRetentionScope
+        # .END_OF_COMBAT`) expires "at the end of the combat phase, not at the
+        # beginning of the end of combat step" - the same instant CR 511.3's
+        # combat-clearing above fires, since both are keyed off leaving the
+        # combat phase behind, which `previous_step is Step.END_OF_COMBAT`
+        # already answers.
+        self.empty_mana_pools(
+            expiring=frozenset({ManaRetentionScope.END_OF_COMBAT})
+            if previous_step is Step.END_OF_COMBAT
+            else None
+        )
 
         if self.turn.turns_taken != previous_turns_taken:
             # A new turn: land drops reset and the new active player gets
@@ -15502,11 +16690,14 @@ class Game(EngineModel):
             self.spells_cast_last_turn = self.spells_cast_this_turn
             self.spells_cast_this_turn = {}
             self.permanents_left_battlefield_this_turn = {}
+            self.attacked_this_turn = set()
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
+            self.ability_resolutions_this_turn = {}
             self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
+            self.life_gained_amount_this_turn = {}
             # Snapshotted the same way `spells_cast_last_turn` is: Command
             # the Stage's own "dealt noncombat damage last turn" needs it.
             self.turn_facts_last_turn = self.turn_facts
@@ -15583,7 +16774,15 @@ class Game(EngineModel):
         if STEP_SEQUENCE.index(step) < STEP_SEQUENCE.index(self.turn.step):
             raise ValueError(f"{step} already passed this turn, currently at {self.turn.step}")
         while self.turn.step is not step:
+            previous_step = self.turn.step
             self.turn.advance()
-            self.empty_mana_pools()
+            # CR 500.5a, the same reading `_advance_past_checks` uses above:
+            # firebending's "until end of combat" mana expires exactly when
+            # the combat phase this boundary just left behind ends.
+            self.empty_mana_pools(
+                expiring=frozenset({ManaRetentionScope.END_OF_COMBAT})
+                if previous_step is Step.END_OF_COMBAT
+                else None
+            )
         self.sync_priority_with_step()  # CR 502.4, 514.3
         return self.turn.step

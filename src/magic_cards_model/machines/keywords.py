@@ -61,9 +61,11 @@ from .abilities import (
     TriggerEvent,
     TriggerWord,
     keyword_abilities,
+    target_cost_reduction_amount,
 )
 from .combat import has_keyword
 from .cost import (
+    CostModifierNotice,
     CostPayment,
     CostStep,
     TotalCost,
@@ -225,6 +227,15 @@ def executes(keyword: str) -> bool:
         # performs it, reached through `_parse_investigate_clause` from
         # inside another ability's effect text.
         "investigate",
+        # CR 701.71a, Reality Fracture's own keyword action, the same shape
+        # once more: `machines/effects.empower_jace` performs it, reached
+        # through `_parse_empower_jace_clause`. Scryfall does not tag any
+        # fra printing's `keywords` with "Empower" (its own reminder-text
+        # scan picks up "Surveil"/"Behold" from the token's own quoted
+        # abilities instead), so nothing in the pool actually needs this
+        # entry to stop a false "no execution path" - listed anyway so a
+        # future printing that *is* tagged reads the sweeper correctly.
+        "empower",
         # CR 701.48a, the same shape once more: `machines/effects.learn`
         # performs both halves, discard-to-draw and the Lesson reveal from
         # outside the game, reached through `_parse_learn_clause`.
@@ -1108,6 +1119,38 @@ class KeywordActivation(EngineModel):
                 f"sorcery: {self.player}'s main phase, with the stack empty "
                 f"({self.rule}, CR 307.5)"
             )
+        if self.rule != "CR 702.62b" and self.game is not None:
+            # CR 602.5b's "Activate only if <condition>" applies here exactly
+            # as it does to a battlefield activation
+            # (`Game.why_cannot_activate`'s own `Game._activation_condition_
+            # holds`, built on `Game.condition_holds`) - this entry point
+            # never reached that check at all, so Grim Repriser's own
+            # graveyard-functioning "Activate only if an opponent has been
+            # dealt noncombat damage this turn" was activatable whether or
+            # not it actually held. Skipped for `"CR 702.62b"` - Greater
+            # Gargadon's own "this card is suspended" restriction - which the
+            # branch just above already checks more precisely (and, unlike
+            # this generic reader, runs before the zone/controller checks
+            # above ever let a wrongly-zoned Gargadon reach it); every other
+            # zone rule's ability is free to also carry an ordinary "Activate
+            # only if" restriction of its own, unrelated to why it functions
+            # off the battlefield at all.
+            held = self.game._activation_condition_holds(  # noqa: SLF001
+                self.ability, self.player, self.card
+            )
+            if held is not True:
+                from ..models.game import _activation_condition  # avoids an import cycle
+
+                condition = _activation_condition(self.ability.instructions or "") or (
+                    self.ability.instructions or ""
+                )
+                if held is None:
+                    return (
+                        f"{self.card.name}'s activation restriction \"Activate only if "
+                        f'{condition}" is not read by this engine, so the activation is '
+                        "refused rather than allowed unchecked (CR 602.5b)"
+                    )
+                return f"{self.card.name}'s activation restriction is not met (CR 602.5b)"
         return None
 
     def begin_paying(self) -> CostPayment:
@@ -1659,12 +1702,42 @@ def equip_activation(
     way `off_battlefield_activation` checks its own: an opponent's creature or
     a noncreature is refused before anything is paid. `_equip_effect` still
     rechecks on resolution (CR 608.2b) for a target that became illegal since.
+
+    **CR 602.2b's own order is targets (CR 601.2c) before cost (CR 601.2f)**,
+    which is why the target is announced and checked *before* the reduction
+    below is computed: Warrior's Blades' and Dragonfire Blade's own "This
+    ability costs [N] less to activate for each [quality] ... it targets"
+    (`ActivationCostReduction.target_quality`) needs to know the target to
+    price the activation at all, and could not be read correctly if this
+    method priced the cost first the way `unannounced_equip_activation`
+    (asked with no target yet, for `legal_actions`) necessarily still does.
     """
     from .targeting import profile_for_text
 
     activation = unannounced_equip_activation(game, equipment, player)
     profile_for_text(EQUIP_EFFECT).check([target], player, game, source_id=equipment.id)
     activation.targets = [TargetRef.to_card(target)]
+    ability = _keyword(equipment.card, "equip")
+    reduction = ability.cost_reduction if ability is not None else None
+    if reduction is not None and reduction.target_quality is not None:
+        amount = target_cost_reduction_amount(reduction, target, game)
+        if amount is None:
+            already_noticed = any(
+                notice.source_id == equipment.id for notice in game.cost_modifier_notices
+            )
+            if not already_noticed:
+                game.cost_modifier_notices.append(
+                    CostModifierNotice(
+                        source_id=equipment.id, source_name=equipment.name, text=ability.raw
+                    )
+                )
+        else:
+            reduced_by = reduction.amount * amount
+            if reduced_by:
+                activation.cost = TotalCost(
+                    mana=activation.cost.mana.minus(ManaCost.parse(f"{{{reduced_by}}}")),
+                    components=activation.cost.components,
+                )
     return activation
 
 
@@ -3071,6 +3144,20 @@ def has_rebound(card: Card) -> bool:
     return any(keyword.lower() == "rebound" for keyword in card.keywords)
 
 
+def has_rebound_now(card_state: CardState) -> bool:
+    """Whether `card_state` has rebound *right now*, printed (`has_rebound`)
+    or granted by another card's effect (`CardState.granted_rebound`, CR
+    614.12: a granted static ability "functions" the same as a printed one
+    for as long as it applies) - Ojer Pakpatiq, Deepest Epoch's own "Whenever
+    you cast an instant spell from your hand, it gains rebound." The two
+    call sites that used to ask `has_rebound(spell.card)` alone
+    (`machines/replacement._stack_replacements`'s exile-instead-of-graveyard
+    swap, `Game._create_rebound_delayed_trigger`'s own guard) both ask this
+    instead, so a granted rebound reaches the same two effects a printed one
+    does."""
+    return has_rebound(card_state.card) or card_state.granted_rebound
+
+
 # --------------------------------------------------------------------------
 # Paradigm (CR 702.192)
 # --------------------------------------------------------------------------
@@ -3148,6 +3235,12 @@ def dredge(game: Any, card: CardState, player: str) -> list[CardState]:
         milled = list(owner.library[:count])
         for state in milled:
             owner.move(state, Zone.GRAVEYARD)  # CR 701.17a
+            # CR 700.11/CR 400.6: dredge moves a card straight from library
+            # to graveyard without going through `Game.put_into_graveyard`,
+            # so it has to feed the ledger itself.
+            game._record_graveyard_arrival(  # noqa: SLF001
+                state, origin_zone=Zone.LIBRARY, permanent_types=None
+            )
         owner.cards_in(Zone.GRAVEYARD).remove(card)
         owner.add(card, Zone.HAND)
         card.move_to(Zone.HAND)
@@ -3291,6 +3384,12 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
 
         if not madness_replaces_discard(card):
             owner.move(card, Zone.GRAVEYARD)
+            # CR 700.11/CR 400.6: an ordinary discard moves straight from
+            # hand to graveyard without going through `Game.
+            # put_into_graveyard`, so it has to feed the ledger itself.
+            game._record_graveyard_arrival(  # noqa: SLF001
+                card, origin_zone=Zone.HAND, permanent_types=None
+            )
             # CR 702.187b's "as long as you discarded this card this turn", recorded
             # on the card the far side of the move because that is the object the
             # clause is about. Not a count - `Game.cards_discarded_this_turn` is

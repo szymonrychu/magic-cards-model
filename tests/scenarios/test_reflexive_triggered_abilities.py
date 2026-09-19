@@ -511,14 +511,12 @@ def test_ajani_creates_no_reflexive_ability_when_the_intervening_if_fails():
     assert bob.life == 20
 
 
-def test_one_or_more_then_that_many_fails_closed_until_the_count_is_carried():
+def test_one_or_more_then_that_many_carries_the_sacrificed_count():
     """Swashbuckler Extraordinaire: "Whenever you attack, you may sacrifice
     one or more Treasures. When you do, up to that many target creatures gain
-    double strike until end of turn." The restriction's count is readable,
-    but "that many" needs the sacrificed count carried into the reflexive
-    ability, which nothing carries yet: the ability records a
-    `ReflexiveClauseNotice` and sacrifices nothing, rather than sacrificing
-    Treasures for a consequence it cannot run."""
+    double strike until end of turn." One Treasure sacrificed is a reflexive
+    ability allowing up to one target (CR 603.12, the count carried into its
+    text); the two-Treasure case is in `test_that_many_count_channel.py`."""
     scenario = (
         Scenario()
         .player("alice", hand=["Swashbuckler Extraordinaire"], battlefield=["Grizzly Bears"])
@@ -536,9 +534,11 @@ def test_one_or_more_then_that_many_fails_closed_until_the_count_is_carried():
 
     scenario.attack_with(bears)
     scenario.game.put_triggers_on_stack()
+    scenario.will_choose_targets(bears, source="Swashbuckler Extraordinaire")
     scenario.resolve_top()
 
-    assert treasures[0].zone is Zone.BATTLEFIELD
-    assert [notice.source_name for notice in scenario.game.reflexive_clause_notices] == [
-        "Swashbuckler Extraordinaire"
-    ]
+    assert treasures[0].zone is not Zone.BATTLEFIELD
+    assert scenario.game.reflexive_clause_notices == []
+    scenario.game.put_triggers_on_stack()
+    (reflexive,) = scenario.game.stack
+    assert reflexive.ability.text.startswith("up to 1 target creatures")

@@ -1,0 +1,153 @@
+{
+  "object": "card",
+  "id": "7e324816-552f-455d-97c4-5ea6b26d2e6e",
+  "oracle_id": "d1af8018-35b5-4b6f-93c8-1ed6bd8c92b1",
+  "multiverse_ids": [],
+  "tcgplayer_id": 716673,
+  "cardmarket_id": 908800,
+  "name": "Hallway Heckler // Vicious Verse",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/7e324816-552f-455d-97c4-5ea6b26d2e6e",
+  "scryfall_uri": "https://scryfall.com/card/fra/85/hallway-heckler-vicious-verse?utm_source=api",
+  "layout": "prepare",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-11T11:52:56Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.jpg?1789127576",
+    "normal": "https://cards.scryfall.io/normal/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.jpg?1789127576",
+    "large": "https://cards.scryfall.io/large/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.jpg?1789127576",
+    "png": "https://cards.scryfall.io/png/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.png?1789127576",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.jpg?1789127576",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.jpg?1789127576",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.webp?1789127576",
+    "grid": "https://cards.scryfall.io/grid/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.webp?1789127576",
+    "display": "https://cards.scryfall.io/display/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.webp?1789127576",
+    "art": "https://cards.scryfall.io/art/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.webp?1789127576",
+    "crop": "https://cards.scryfall.io/crop/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.webp?1789127576"
+  },
+  "mana_cost": "{2}{R} // {B/R}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Elemental Sorcerer // Sorcery",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Prepared"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Hallway Heckler",
+      "mana_cost": "{2}{R}",
+      "type_line": "Creature \u2014 Elemental Sorcerer",
+      "oracle_text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n{T}, Discard a card: Draw a card.",
+      "power": "2",
+      "toughness": "3",
+      "artist": "Gustavo Pelissari",
+      "artist_id": "ad234dc7-82df-48bf-9b64-1901493641bb",
+      "illustration_id": "f4bf9beb-7f56-4876-b129-bb7dc7e7ed4c"
+    },
+    {
+      "object": "card_face",
+      "name": "Vicious Verse",
+      "mana_cost": "{B/R}",
+      "type_line": "Sorcery",
+      "oracle_text": "Vicious Verse deals 1 damage to target opponent.",
+      "artist": "Gustavo Pelissari",
+      "artist_id": "ad234dc7-82df-48bf-9b64-1901493641bb"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/7e324816-552f-455d-97c4-5ea6b26d2e6e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad1af8018-35b5-4b6f-93c8-1ed6bd8c92b1&unique=prints",
+  "collector_number": "85",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Gustavo Pelissari",
+  "artist_ids": [
+    "ad234dc7-82df-48bf-9b64-1901493641bb"
+  ],
+  "illustration_id": "f4bf9beb-7f56-4876-b129-bb7dc7e7ed4c",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 32195,
+  "prices": {
+    "usd": "1.99",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHallway%2BHeckler%2B%252F%252F%2BVicious%2BVerse",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHallway%2BHeckler%2B%252F%252F%2BVicious%2BVerse",
+    "edhrec": "https://edhrec.com/route/?cc=Hallway+Heckler"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716673%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908800&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Hallway+Heckler&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

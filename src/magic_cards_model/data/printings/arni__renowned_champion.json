@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "bd8db649-1dba-457d-8327-e1f1da1aab36",
+  "oracle_id": "1a929c4f-ae1f-44d9-a0a7-2ca2dc928dee",
+  "multiverse_ids": [],
+  "tcgplayer_id": 717561,
+  "cardmarket_id": 909931,
+  "name": "Arni, Renowned Champion",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/bd8db649-1dba-457d-8327-e1f1da1aab36",
+  "scryfall_uri": "https://scryfall.com/card/fra/243/arni-renowned-champion?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-16T11:10:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.jpg?1789557035",
+    "normal": "https://cards.scryfall.io/normal/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.jpg?1789557035",
+    "large": "https://cards.scryfall.io/large/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.jpg?1789557035",
+    "png": "https://cards.scryfall.io/png/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.png?1789557035",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.jpg?1789557035",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.jpg?1789557035",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.webp?1789557035",
+    "grid": "https://cards.scryfall.io/grid/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.webp?1789557035",
+    "display": "https://cards.scryfall.io/display/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.webp?1789557035",
+    "art": "https://cards.scryfall.io/art/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.webp?1789557035",
+    "crop": "https://cards.scryfall.io/crop/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.webp?1789557035"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Human Berserker",
+  "oracle_text": "Trample\nWhenever another creature you control enters, Arni gets +X/+0 until end of turn, where X is that creature's power.",
+  "power": "1",
+  "toughness": "5",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bd8db649-1dba-457d-8327-e1f1da1aab36/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1a929c4f-ae1f-44d9-a0a7-2ca2dc928dee&unique=prints",
+  "collector_number": "243",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "There is no man with more bravado in all Bretagard, yet he has never exaggerated a single detail.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Vincent Christiaens",
+  "artist_ids": [
+    "31b01a73-d14f-4f9e-a5dc-9cee3b036124"
+  ],
+  "illustration_id": "01418a6f-d20e-4fd9-9ed7-1195586c88cc",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 32287,
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArni%252C%2BRenowned%2BChampion",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArni%252C%2BRenowned%2BChampion",
+    "edhrec": "https://edhrec.com/route/?cc=Arni%2C+Renowned+Champion"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717561%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909931&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Arni%2C+Renowned+Champion&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

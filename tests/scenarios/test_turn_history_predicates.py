@@ -4,10 +4,14 @@ Sand's "if you've activated a loyalty ability this turn", Roiling Canopy's
 "if you control at least five other Forests", Darklight Phoenix's "if two or
 more creatures died this turn", Command the Stage's "if an opponent was dealt
 noncombat damage last turn", and Grim Repriser's "Activate only if an
-opponent has been dealt noncombat damage this turn" - plus `Player.
-life_gained_this_turn_amount`, the amount twin of `Game.life_gained_this_
+opponent has been dealt noncombat damage this turn" - plus `Game.
+life_gained_amount_this_turn`, the amount twin of `Game.life_gained_this_
 turn`'s bare yes/no, that Germinate Recruits and Enlightened Confidant both
 need and that S3/S8 consume directly rather than through a condition string.
+This stream (S5) originally built the identical fact as its own `Player.
+life_gained_tally`; reconciled at the int-engine-dsl merge in favour of
+fra-s3's `Game.life_gained_amount_this_turn`, which Germinate Recruits'
+effect already reads - one mechanism, not two.
 """
 
 from magic_cards_model.machines import Step
@@ -178,11 +182,11 @@ def test_life_gained_this_turn_amount_tracks_the_real_total_and_clears_next_turn
     scenario.start_at(Step.PRECOMBAT_MAIN)
     alice = scenario.player("alice")
 
-    assert alice.life_gained_this_turn_amount == 0
+    assert scenario.game.life_gained_amount_this_turn.get("alice", 0) == 0
     alice.gain_life(3)
     alice.gain_life(2)
-    assert alice.life_gained_this_turn_amount == 5
+    assert scenario.game.life_gained_amount_this_turn.get("alice", 0) == 5
 
     scenario.start_at(Step.CLEANUP)
     scenario.advance()  # into bob's turn
-    assert alice.life_gained_this_turn_amount == 0
+    assert scenario.game.life_gained_amount_this_turn.get("alice", 0) == 0
