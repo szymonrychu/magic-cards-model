@@ -723,6 +723,41 @@ class CopyNextSpellYouCast(DelayedEffectSpecBase):
             )
 
 
+class NextSpellCannotBeCountered(DelayedEffectSpecBase):
+    """ "The next spell you cast this turn can't be countered." - Theorist's
+    Sanctum's own Theorist's Proxy, and Mistrise Village (Tarkir:
+    Dragonstorm), the off-set card proving the shape is general.
+
+    The same CR 603.7 delayed-trigger shape `CopyNextSpellYouCast` already
+    uses for an identical "the next spell you cast this turn" template, down
+    to the same last-known-information fetch: if the spell was already
+    countered by the time this resolves (someone responded to the delayed
+    trigger itself rather than to the grant it was too late to give), there
+    is nothing left to mark and this is a no-op, not an error.
+
+    What "can't be countered" *means* is `machines/casting_restrictions.
+    cannot_be_countered`'s job, not this one's - this only records the grant,
+    the same way a permanent's layer-6 "gains an ability" grant is recorded
+    on `CardState.granted_ability_texts` rather than mutating some separate
+    uncounterable flag, so `cannot_be_countered` reads one place for both a
+    printed and a granted "This spell can't be countered."
+    """
+
+    kind: Literal["next_spell_cannot_be_countered"] = "next_spell_cannot_be_countered"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if not isinstance(spell, CardState) or spell.zone is not Zone.STACK:
+            return
+        spell.granted_ability_texts = (
+            *spell.granted_ability_texts,
+            "This spell can't be countered.",
+        )
+
+
 class ReturnRiderCounter(EngineModel):
     """Phelia, Exuberant Shepherd's third sentence: "If it entered under your
     control, put a +1/+1 counter on Phelia."
@@ -955,6 +990,7 @@ DelayedEffectSpec = Annotated[
     | PayOrLoseTheGame
     | CombatDamageToPlayerDraw
     | CopyNextSpellYouCast
+    | NextSpellCannotBeCountered
     | DelayedBlinkReturnWithRider
     | ReflexiveConsequence
     | ReflexivePayEnergyConsequence

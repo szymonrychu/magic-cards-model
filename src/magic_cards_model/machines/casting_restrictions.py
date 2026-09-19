@@ -74,7 +74,7 @@ from ..models.card_state import TargetKind
 from ..models.zone import Zone
 from ..numbers import count_pattern, parse_count
 from ..snapshot import EngineModel
-from .abilities import AbilityKind, parse_abilities
+from .abilities import AbilityKind, parse_abilities, parse_granted_ability_lines
 from .layers import Duration
 from .triggers import AbilityOnStack
 
@@ -756,7 +756,19 @@ def cannot_be_countered(spell: Any) -> bool:
     card = getattr(spell, "card", None)
     if card is None:
         return False
-    return any(
+    if any(
         line.kind is AbilityKind.STATIC and _CANT_BE_COUNTERED_RE.match((line.text or "").strip())
         for line in parse_abilities(card)
+    ):
+        return True
+    # A *granted* "This spell can't be countered.", the same way a permanent's
+    # layer-6 "gains an ability" grant lands on `CardState.granted_ability_
+    # texts` rather than on the printed card - Theorist's Proxy's own "The
+    # next spell you cast this turn can't be countered." resolves before the
+    # spell exists, so `NextSpellCannotBeCountered` records the grant here
+    # once that spell is actually cast (`machines/delayed.py`).
+    granted = getattr(spell, "granted_ability_texts", ())
+    return any(
+        line.kind is AbilityKind.STATIC and _CANT_BE_COUNTERED_RE.match((line.text or "").strip())
+        for line in parse_granted_ability_lines(granted)
     )

@@ -120,6 +120,7 @@ from .delayed import (
     DelayedTrigger,
     DrawACardForController,
     GrantExtraTurn,
+    NextSpellCannotBeCountered,
     PayOrLoseTheGame,
     ReflexiveConsequence,
     ReflexiveCounterCountConsequence,
@@ -11696,6 +11697,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     copy_next_spell_you_cast = _parse_copy_next_spell_you_cast_clause(effect_text)
     if copy_next_spell_you_cast is not None:
         return copy_next_spell_you_cast
+    next_spell_cannot_be_countered = _parse_next_spell_cannot_be_countered_clause(effect_text)
+    if next_spell_cannot_be_countered is not None:
+        return next_spell_cannot_be_countered
     pay_any_life_then_draw = _parse_pay_any_life_then_draw_that_many_clause(effect_text)
     if pay_any_life_then_draw is not None:
         return pay_any_life_then_draw
@@ -22045,6 +22049,48 @@ def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
                 remaining=1,
                 expires_end_of_turn=True,
                 effect=CopyNextSpellYouCast(may_retarget=may_retarget),
+            )
+        )
+
+    return effect
+
+
+#: "The next spell you cast this turn can't be countered." - Theorist's
+#: Proxy, and Mistrise Village (Tarkir: Dragonstorm) off-set. Not "count",
+#: "type", or any other filter - just the bare next one, CR 603.7b's default.
+_NEXT_SPELL_CANNOT_BE_COUNTERED_RE = re.compile(
+    r"^the next spell you cast this turn can'?t be countered\.?$", re.IGNORECASE
+)
+
+
+def _parse_next_spell_cannot_be_countered_clause(text: str) -> AbilityEffect | None:
+    """`_NEXT_SPELL_CANNOT_BE_COUNTERED_RE`'s shape, the same CR 603.7
+    delayed-trigger machinery `_parse_copy_next_spell_you_cast_clause` above
+    already builds for the identical "the next spell you cast this turn ..."
+    template - `remaining=1`, `expires_end_of_turn=True`, `only_when_active`
+    scoped to the controller who resolved this ability, watching
+    `TriggerEvent.CAST_SPELL`. Only the delayed effect itself differs:
+    `NextSpellCannotBeCountered` grants the found spell "This spell can't be
+    countered." onto `CardState.granted_ability_texts` instead of copying it.
+    """
+    match = _NEXT_SPELL_CANNOT_BE_COUNTERED_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text="The next spell you cast this turn can't be countered.",
+                event=TriggerEvent.CAST_SPELL,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                only_when_active=ability.controller,
+                remaining=1,
+                expires_end_of_turn=True,
+                effect=NextSpellCannotBeCountered(),
             )
         )
 
