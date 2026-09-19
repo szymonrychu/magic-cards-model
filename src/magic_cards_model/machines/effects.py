@@ -4494,6 +4494,17 @@ _DISCARD_A_CARD_RE = re.compile(
     rf"^discards? (?:(?P<any>any number of)|(?:(?P<upto>up to )?(?P<n>{AMOUNT})))\s+cards?$",
     re.IGNORECASE,
 )
+# "Discard your hand." (Behold the Beyond, second person, addressed to the
+# caster) and "discards their hand"/"discards his or her hand" (the same
+# verb, third person - Reforge the Soul's "Each player discards their hand,
+# then draws seven cards", reached through `_parse_each_player_step`'s own
+# fallback to `parse_clause_effect` for a step it has no dedicated pattern
+# for). CR 701 has no separate "Discard your hand" keyword action: this is
+# CR 701.9a's ordinary per-card discard, applied to every card the hand
+# holds at resolution - `_discard_cards`'s own `count=len(player.hand)`,
+# read fresh inside the returned callable rather than at parse time, is
+# exactly that.
+_DISCARD_HAND_RE = re.compile(r"^discards? (?:your|their|his or her) hand$", re.IGNORECASE)
 # CR 701.17a: "puts that many cards from the top of their library into their
 # graveyard." The optional "for each `<expr>`" tail is the same reader as
 # `_DRAW_RE`'s own.
@@ -4828,6 +4839,13 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         return lambda game, player, source, source_id: _discard_cards(
             game, player, amount, source, source_id=source_id, exact=exact
         )
+
+    if _DISCARD_HAND_RE.fullmatch(clause):
+
+        def discard_hand(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            _discard_cards(game, player, len(player.hand), source, source_id=source_id, exact=True)
+
+        return discard_hand
 
     if match := _MILL_RE.fullmatch(clause):
         amount = parse_count(match.group("n")) if match.group("n") else 1
