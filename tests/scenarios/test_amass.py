@@ -169,3 +169,40 @@ def test_an_opponents_army_is_not_yours_to_amass():
     assert bob_army.counters[Counter.PLUS_ONE] == 1
     assert alice_bears.life == 19
     assert scenario.player("bob").life == 19
+
+
+def test_commence_the_endgame_reads_amass_x_where_x_is_defined_by_the_card():
+    """Commence the Endgame (off-pool, added with `scripts/add_card.py`,
+    verified against its own printed text): "This spell can't be countered.
+    Draw two cards, then amass Zombies X, where X is the number of cards in
+    your hand."
+
+    X is CR 107.3f's own defined X - `_fixed_or_where_x_amount` reads it
+    through `machines/effects.amount_expression`, the same way Rockalanche's
+    own earthbend X is - and CR 608.2c's "in the order written" is why it has
+    to be counted *after* the draw: the two cards just drawn are already in
+    hand by the time this clause runs, so X is not merely "the number of
+    cards you started with."
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Commence the Endgame", "Forest", "Island"],
+            battlefield=["Island"] * 6,
+            library=["Mountain", "Swamp"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Island"] * 6)
+
+    scenario.cast_and_resolve("Commence the Endgame", *sources)
+
+    # Casting removed the spell (3 -> 2), the draw added two (2 -> 4).
+    assert len(scenario.player("alice").hand) == 4
+    army = scenario.creature("Zombie Army Token", "alice")
+    assert army.counters[Counter.PLUS_ONE] == 4
+    assert scenario.game.power_of(army) == 4
+    assert scenario.game.toughness_of(army) == 4

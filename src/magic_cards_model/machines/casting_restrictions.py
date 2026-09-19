@@ -67,9 +67,12 @@ from uuid import UUID
 
 from pydantic import ConfigDict, Field
 
+from ..data.subtypes import canonical_subtype
 from ..ids import new_id
 from ..models.card import Card, Type
+from ..models.card_state import TargetKind
 from ..models.zone import Zone
+from ..numbers import count_pattern, parse_count
 from ..snapshot import EngineModel
 from .abilities import AbilityKind, parse_abilities
 from .layers import Duration
@@ -110,7 +113,9 @@ class CastingRuleKind:
     player whose turn it is")."""
     SPELL_COUNT_CANT_CAST = "spell_count_cant_cast"
     """High Noon: "Each player can't cast more than one spell each turn."
-    Also synthesised live, counted off `Game.spells_cast_this_turn`."""
+    Also synthesised live, counted off `Game.spells_cast_this_turn`, with the
+    printed cap on `CastingRuleEffect.amount` - Fires of Invention's "no more
+    than two", Deafening Silence's "one noncreature spell"."""
     ZONE_CANT_CAST = "zone_cant_cast"
     """Grafdigger's Cage and Soulless Jailer: "Players can't cast spells from
     graveyards or libraries." Scoped to the zone a cast would come from, so it
@@ -153,7 +158,8 @@ class CastingRuleEffect(EngineModel):
     or (if somehow legally targeted) the caster - the restriction follows the
     target, not a fixed relationship to whoever cast the spell."""
     amount: int | None = None
-    """`INSTANT_SORCERY_COST_REDUCTION_GRANT` only: the flat discount."""
+    """`INSTANT_SORCERY_COST_REDUCTION_GRANT`: the flat discount.
+    `SPELL_COUNT_CANT_CAST`: the printed cap that has been reached."""
 
 
 def create_noncreature_cast_restriction(ability: AbilityOnStack) -> CastingRuleEffect:
@@ -200,7 +206,13 @@ def create_targeted_cant_cast_restriction(
     )
 
 
-def blanket_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect | None:
+def blanket_cant_cast_restriction(
+    game: Any,
+    caster: str,
+    *,
+    spell_types: Sequence[Type] | None = None,
+    spell_subtypes: Sequence[str] | None = None,
+) -> CastingRuleEffect | None:
     """Whatever stops `caster` from casting *any* spell at all right now, or
     None (CR 601.3, CR 101.2).
 
@@ -218,7 +230,9 @@ def blanket_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect |
     - **Live, turn-scoped** - Voice of Victory's "Your opponents can't cast
       spells during your turn."
     - **Live, count-scoped** - High Noon's "Each player can't cast more than
-      one spell each turn."
+      one spell each turn."; any count, subject and spell quality - `spell_types`
+      and `spell_subtypes` are the spell being cast, for Deafening Silence's
+      "more than one noncreature spell".
 
     The two live shapes are re-read off the battlefield on every call and
     never cached, per CR 611.3a: a continuous effect from a static ability
@@ -232,10 +246,16 @@ def blanket_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect |
             continue
         if effect.restricted_player == caster:
             return effect
-    return _live_blanket_cant_cast(game, caster)
+    return _live_blanket_cant_cast(game, caster, spell_types, spell_subtypes)
 
 
-def targeted_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect | None:
+def targeted_cant_cast_restriction(
+    game: Any,
+    caster: str,
+    *,
+    spell_types: Sequence[Type] | None = None,
+    spell_subtypes: Sequence[str] | None = None,
+) -> CastingRuleEffect | None:
     """The name `machines.casting.why_cannot_cast_restriction` imports.
 
     Kept as its own function rather than folded away because the *question*
@@ -244,19 +264,39 @@ def targeted_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect 
     it. `blanket_cant_cast_restriction` is the honest name; this is the
     call site's.
     """
-    return blanket_cant_cast_restriction(game, caster)
+    return blanket_cant_cast_restriction(
+        game, caster, spell_types=spell_types, spell_subtypes=spell_subtypes
+    )
 
 
-def _live_blanket_cant_cast(game: Any, caster: str) -> CastingRuleEffect | None:
+def _live_blanket_cant_cast(
+    game: Any,
+    caster: str,
+    spell_types: Sequence[Type] | None = None,
+    spell_subtypes: Sequence[str] | None = None,
+) -> CastingRuleEffect | None:
     """The battlefield half of `blanket_cant_cast_restriction`.
 
-    Both shapes here are statics on permanents, so CR 113.6's default applies
+    Every shape here is a static on a permanent, so CR 113.6's default applies
     - "abilities of all other objects usually function only while that object
     is on the battlefield" - and a scan of `game.battlefield` is the whole
-    lookup. Nothing is exempted by controller for High Noon ("*each* player"),
-    while Voice of Victory exempts its own controller twice over: "your
+    lookup. Voice of Victory exempts its own controller twice over: "your
     opponents", and only while it is that controller's turn.
+
+    A static may conjoin two restrictions in one sentence - Fires of
+    Invention's "You can cast spells only during your turn and you can cast no
+    more than two spells each turn" - so each "and <who> can ..." clause is
+    read on its own (`_RESTRICTION_CLAUSE_SPLIT`). Who a clause restricts is
+    read off its subject (`_restricts`): "each player", "each opponent" / "your
+    opponents", "you", or CR 303.4m's "enchanted player" (Curse of
+    Exhaustion). A spell-count cap counts the caster's own
+    `Game.spells_cast_this_turn` - the whole turn, even spells cast before the
+    permanent arrived, per Curse of Exhaustion's and Fires of Invention's
+    rulings - that share the cap's quality, and applies only to a spell that
+    has that quality itself.
     """
+    turn = getattr(game, "turn", None)
+    active_player = getattr(turn, "active_player", None)
     for source in list(getattr(game, "battlefield", [])):
         controller = game.controller_of(source).username
         for line in parse_abilities(source.card):
@@ -266,7 +306,7 @@ def _live_blanket_cant_cast(game: Any, caster: str) -> CastingRuleEffect | None:
             if _OPPONENTS_CANT_CAST_DURING_YOUR_TURN_RE.match(text):
                 if caster == controller:
                     continue
-                if getattr(getattr(game, "turn", None), "active_player", None) != controller:
+                if active_player != controller:
                     continue
                 return CastingRuleEffect(
                     kind=CastingRuleKind.TURN_WINDOW_CANT_CAST,
@@ -274,17 +314,104 @@ def _live_blanket_cant_cast(game: Any, caster: str) -> CastingRuleEffect | None:
                     source_name=source.name,
                     restricted_player=caster,
                 )
-            if _ONE_SPELL_EACH_TURN_RE.match(text):
-                already_cast = len(getattr(game, "spells_cast_this_turn", {}).get(caster, []))
-                if already_cast < 1:
+            for clause in _RESTRICTION_CLAUSE_SPLIT.split(text.rstrip(".")):
+                clause = clause.strip()
+                window = _CAST_ONLY_DURING_TURN_RE.fullmatch(clause)
+                if window is not None:
+                    if not _restricts(window.group("who"), source, controller, caster):
+                        continue
+                    owner = controller if window.group("whose").lower() == "your" else caster
+                    if active_player == owner:
+                        continue
+                    return CastingRuleEffect(
+                        kind=CastingRuleKind.TURN_WINDOW_CANT_CAST,
+                        controller=controller,
+                        source_name=source.name,
+                        restricted_player=caster,
+                    )
+                cap = _SPELL_COUNT_CAP_RE.fullmatch(clause)
+                if cap is None:
+                    continue
+                if not _restricts(cap.group("who"), source, controller, caster):
+                    continue
+                limit = parse_count(cap.group("count"))
+                has_quality = _spell_quality(cap.group("quality"))
+                if limit is None:
+                    continue
+                if spell_types is not None and not has_quality(
+                    tuple(spell_types), tuple(spell_subtypes or ())
+                ):
+                    continue
+                already_cast = sum(
+                    1
+                    for spell in getattr(game, "spells_cast_this_turn", {}).get(caster, [])
+                    if has_quality(tuple(spell.types), tuple(spell.subtypes))
+                )
+                if already_cast < limit:
                     continue
                 return CastingRuleEffect(
                     kind=CastingRuleKind.SPELL_COUNT_CANT_CAST,
                     controller=controller,
                     source_name=source.name,
                     restricted_player=caster,
+                    amount=limit,
                 )
     return None
+
+
+def _restricts(who: str, source: Any, controller: str, caster: str) -> bool:
+    """Whether a casting restriction's printed subject is `caster`.
+
+    "Each player" is everyone, its controller included; "each opponent" and
+    "your opponents" are everyone but the controller; "you" is the controller
+    alone; and "enchanted player" is whoever the permanent is attached to
+    (CR 303.4m: "An ability of a permanent that refers to the 'enchanted
+    [object or player]' refers to whatever object or player that permanent is
+    attached to"), nobody when it is attached to none.
+    """
+    subject = who.lower()
+    if subject == "each player":
+        return True
+    if subject in ("each opponent", "your opponents"):
+        return caster != controller
+    if subject == "you":
+        return caster == controller
+    attachment = getattr(source, "attachment", None)
+    return (
+        attachment is not None
+        and attachment.kind is TargetKind.PLAYER
+        and attachment.username == caster
+    )
+
+
+def _spell_quality(
+    word: str | None,
+) -> Callable[[tuple[Type, ...], tuple[str, ...]], bool]:
+    """A spell-count cap's one-word quality as a test on a spell's types and
+    subtypes: none printed is every spell, "noncreature" (a "non" prefix
+    negates) a card type (CR 205.2a), "non-Phyrexian" a subtype (CR 205.3).
+
+    A word that is neither is read as every spell - the stricter reading of a
+    "can't", which counts more spells toward the cap rather than fewer.
+    """
+    if word is None:
+        return lambda types, subtypes: True
+    lowered = word.lower()
+    negated = lowered.startswith("non")
+    core = lowered.removeprefix("non").lstrip("-") if negated else lowered
+    card_type = next((each for each in Type if each.value == core), None)
+    subtype = None if card_type is not None else canonical_subtype(core)
+    if card_type is None and subtype is None:
+        return lambda types, subtypes: True
+
+    def matches(types: tuple[Type, ...], subtypes: tuple[str, ...]) -> bool:
+        if card_type is not None:
+            found = card_type in types
+        else:
+            found = any(each.lower() == subtype for each in subtypes)
+        return found != negated
+
+    return matches
 
 
 def create_instant_sorcery_cost_reduction_grant(
@@ -348,14 +475,37 @@ _OPPONENTS_CANT_CAST_DURING_YOUR_TURN_RE = re.compile(
     r"^your opponents can't cast spells during your turn\.?$", re.IGNORECASE
 )
 
-#: High Noon's exact printed static, verified against the pool printing:
-#: "Each player can't cast more than one spell each turn." "Each player"
-#: includes its own controller, and "more than one" is a count over
-#: `Game.spells_cast_this_turn` - the running list that already excludes
+#: The subject of a casting restriction, read by `_restricts`.
+_RESTRICTED_WHO = r"(?P<who>each player|each opponent|your opponents|you|enchanted player)"
+
+#: A spell-count cap, CR 601.3's "no rule or effect prohibits": High Noon's
+#: and Archon of Emeria's "Each player can't cast more than one spell each
+#: turn", Curse of Exhaustion's "Enchanted player can't cast more than one
+#: spell each turn", Deafening Silence's "... more than one noncreature spell
+#: ...", Fires of Invention's "you can cast no more than two spells each
+#: turn". The count is `magic_cards_model.numbers`' `COUNT`; it is a count
+#: over `Game.spells_cast_this_turn`, the running list that already excludes
 #: copies put onto the stack, which are never cast (CR 707.10: "a copy of a
-#: spell isn't cast").
-_ONE_SPELL_EACH_TURN_RE = re.compile(
-    r"^each player can't cast more than one spell each turn\.?$", re.IGNORECASE
+#: spell isn't cast"). "Spells this way" (Hedonist's Trove) is a different
+#: restriction on a permission and does not match.
+_SPELL_COUNT_CAP_RE = re.compile(
+    rf"{_RESTRICTED_WHO} (?:can't cast more than|can cast no more than) "
+    rf"{count_pattern('count')} (?:(?P<quality>[\w-]+) )?spells? each turn",
+    re.IGNORECASE,
+)
+
+#: Fires of Invention's first half: "You can cast spells only during your
+#: turn" - CR 102.1's active player is the window.
+_CAST_ONLY_DURING_TURN_RE = re.compile(
+    rf"{_RESTRICTED_WHO} can cast spells only during (?P<whose>your|their(?: own)?) turns?",
+    re.IGNORECASE,
+)
+
+#: Where one static sentence conjoins two restrictions: "..., and you can cast
+#: no more than two spells each turn".
+_RESTRICTION_CLAUSE_SPLIT = re.compile(
+    r",? and (?=(?:each player|each opponent|your opponents|you|enchanted player) can)",
+    re.IGNORECASE,
 )
 
 #: Grafdigger's Cage's "Players can't cast spells from graveyards or

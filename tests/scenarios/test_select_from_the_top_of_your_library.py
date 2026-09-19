@@ -570,3 +570,96 @@ def test_with_no_land_among_them_the_may_is_never_asked_and_a_card_still_goes_to
     assert looked[2].zone is Zone.HAND
     assert len(alice.library) == 4
     scenario.assert_in_exactly_one_zone(*looked)
+
+
+# -- The quantity is read, not fixed at "a"/"an"/"one": Cartographer's Survey
+# prints "put up to two land cards from among them onto the battlefield
+# tapped" with no "you may" at all - CR 608.2d's optionality already lives in
+# "up to" itself (`numbers.QUANTITY`) --------------------------------------
+
+
+def _survey_board(library: list[str]) -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Cartographer's Survey"],
+            battlefield=["Forest", "Forest", "Forest", "Forest"],
+            library=library,
+        )
+        .player("bob")
+    )
+
+
+def _cast_survey(scenario) -> None:
+    mana = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+    scenario.cast_and_resolve("Cartographer's Survey", *mana)
+
+
+_SURVEY_WITH_TWO_LANDS = [
+    "Mountain",
+    "Swamp",
+    "Lightning Bolt",
+    "Counterspell",
+    "Grizzly Bears",
+    "Sol Ring",
+    "Opt",
+]
+_SURVEY_WITH_NO_LANDS = [
+    "Lightning Bolt",
+    "Counterspell",
+    "Grizzly Bears",
+    "Sol Ring",
+    "Opt",
+    "Mishra's Bauble",
+    "Vexing Bauble",
+]
+
+
+def test_cartographers_survey_puts_both_lands_onto_the_battlefield_tapped():
+    scenario = _survey_board(_SURVEY_WITH_TWO_LANDS).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    mountain, swamp, bolt, counterspell, bears, sol_ring, opt = scenario.top_of_library(7, "alice")
+    scenario.will_choose_cards(mountain, swamp, source="Cartographer's Survey")
+
+    _cast_survey(scenario)
+
+    assert mountain.zone is Zone.BATTLEFIELD and mountain.tapped
+    assert swamp.zone is Zone.BATTLEFIELD and swamp.tapped
+    assert {state.id for state in alice.library} == {
+        state.id for state in (bolt, counterspell, bears, sol_ring, opt)
+    }
+    question = [
+        q
+        for q in scenario.questions_asked()
+        if q.source == "Cartographer's Survey" and q.kind is DecisionKind.CHOOSE_CARDS
+    ][0]
+    assert question.amount == 2
+    assert question.exact is False
+
+
+def test_cartographers_survey_may_take_only_one_of_two_lands():
+    """CR 608.2d: "up to two" permits any count from zero through two - taking
+    only one is as legal as taking both."""
+    scenario = _survey_board(_SURVEY_WITH_TWO_LANDS).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mountain, swamp, bolt, counterspell, bears, sol_ring, opt = scenario.top_of_library(7, "alice")
+    scenario.will_choose_cards(mountain, source="Cartographer's Survey")
+
+    _cast_survey(scenario)
+
+    assert mountain.zone is Zone.BATTLEFIELD and mountain.tapped
+    assert swamp.zone is Zone.LIBRARY, "the declined land goes to the bottom with the rest"
+    scenario.assert_in_exactly_one_zone(mountain, swamp, bolt, counterspell, bears, sol_ring, opt)
+
+
+def test_cartographers_survey_with_no_lands_asks_no_question():
+    scenario = _survey_board(_SURVEY_WITH_NO_LANDS).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _cast_survey(scenario)
+
+    assert [q for q in scenario.questions_asked() if q.source == "Cartographer's Survey"] == [], (
+        "no land among the seven means nothing to choose from (CR 608.2d)"
+    )

@@ -219,3 +219,101 @@ def test_ajanis_plus_two_puts_a_counter_on_each_cat_he_controls():
     assert cat.counter_count(Counter.PLUS_ONE) == 1
     assert ajani.counter_count(Counter.PLUS_ONE) == 0, "a transformed Ajani is not a Cat"
     assert ajani.loyalty == 5, "CR 606.4: +2 puts two loyalty counters on as its cost"
+
+
+def test_vojas_x_is_the_number_of_elves_she_controls():
+    """Voja, Jaws of the Conclave's own attack trigger: "put X +1/+1 counters
+    on each creature you control, where X is the number of Elves you
+    control." Before this wave, `_COUNTER_EACH_GROUP_RE`'s "where X is"
+    reader only ever recognised the single literal string "this creature's
+    power" - any other expression, Voja's included, silently placed nothing.
+
+    Number-sweep G12-1. Two real Elves (Llanowar Elves, Elvish Mystic; CR
+    205.3) put X at 2 - not Voja herself, a Wolf - so all three of alice's
+    creatures (Voja included) get two +1/+1 counters each (CR 122.1a).
+
+    Driven through `_parse_put_counters_on_group_clause` directly against a
+    real board rather than a live attack: Voja's own printed ability is two
+    CR 608.2c clauses ("put X counters ...", then "Draw a card for each Wolf
+    you control"), and the second is the number sweep's G1 family's own
+    "for each" gap on the *player*-clause shape, not this one - unrelated to
+    G12 and not yet landed on this branch. `_parse_mixed_clauses`' own
+    all-or-nothing-per-ability rule (CR 608.2c has no notion of running half
+    an instruction) means the whole trigger cannot resolve live until G1
+    lands too; this proves G12's own half of it works, the same direct-call
+    technique `test_ouroboroids_own_x_is_zero_if_it_has_already_left_the_
+    battlefield` above already uses.
+    """
+    effect = _parse_put_counters_on_group_clause(
+        "Put X +1/+1 counters on each creature you control, where X is the "
+        "number of Elves you control."
+    )
+    assert effect is not None
+
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[
+                "Voja, Jaws of the Conclave",
+                "Llanowar Elves",
+                "Elvish Mystic",
+                "Grizzly Bears",
+            ],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    voja = scenario.creature("Voja, Jaws of the Conclave", "alice")
+    elves = scenario.creatures("Llanowar Elves", "Elvish Mystic", username="alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    stand_in_ability = parse_abilities(card("Voja, Jaws of the Conclave"))[-1]
+    ability = AbilityOnStack(
+        kind=AbilityKind.TRIGGERED,
+        ability=stand_in_ability,
+        source_id=voja.id,
+        source_name="Voja, Jaws of the Conclave",
+        controller="alice",
+    )
+    effect(scenario.game, ability)
+
+    assert voja.counter_count(Counter.PLUS_ONE) == 2
+    for elf in elves:
+        assert elf.counter_count(Counter.PLUS_ONE) == 2
+    assert bears.counter_count(Counter.PLUS_ONE) == 2
+    assert scenario.game.unreadable_counter_amount_notices == []
+
+
+def test_an_unreadable_group_where_x_is_expression_fails_closed_with_a_notice():
+    """No silent skip (number-sweep G12-1): an "X, where X is `<expr>`" this
+    wave's `amount_expression` cannot read must not guess - it places no
+    counters and records an `UnreadableCounterAmountNotice`, the same
+    fail-closed shape `tests/scenarios/test_counters_equal_to_an_expression.
+    py`'s own unreadable-expression test already exercises for the "equal to"
+    phrasing."""
+    effect = _parse_put_counters_on_group_clause(
+        "Put X +1/+1 counters on each creature you control, where X is the "
+        "number of dreams you had last night."
+    )
+    assert effect is not None
+
+    scenario = Scenario().player("alice", battlefield=["Ouroboroid"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ouroboroid = scenario.creature("Ouroboroid", "alice")
+
+    stand_in_ability = parse_abilities(card("Ouroboroid"))[0]
+    ability = AbilityOnStack(
+        kind=AbilityKind.TRIGGERED,
+        ability=stand_in_ability,
+        source_id=ouroboroid.id,
+        source_name="Ouroboroid",
+        controller="alice",
+    )
+    effect(scenario.game, ability)
+
+    assert ouroboroid.counter_count(Counter.PLUS_ONE) == 0
+    (notice,) = scenario.game.unreadable_counter_amount_notices
+    assert notice.source_name == "Ouroboroid"
+    assert notice.expression == "the number of dreams you had last night"

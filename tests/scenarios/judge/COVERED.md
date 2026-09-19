@@ -311,9 +311,9 @@ later wave that feeds one of the empty registries can revisit exactly those.
   - *Two-headed giant* (mountainwalk against a team, a team losing to an empty
     library) and the two *commander* questions (color identity, the command
     zone replacement) - variant formats this engine does not model.
-  - *Boon Reflection doubling lifelink life gain* - Boon Reflection is not in
-    the pool and its "if you would gain life, you gain twice that much" would
-    need the life-gain-doubler shape to fire off combat lifelink, which
+  - *Boon Reflection doubling lifelink life gain* - Boon Reflection's "if you
+    would gain life, you gain twice that much" compiles (`_compile_life_gain_doubler`),
+    but firing it off combat lifelink needs combat to raise the event, which
     `machines/combat.py` does not route through a replaceable event.
   - *Whipgrass Entangler / Deathrite Shaman / Sentinel's Stalwart* (paying an
     attack cost, and when mana can be made for it) - the attack-cost half of

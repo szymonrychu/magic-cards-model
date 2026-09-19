@@ -188,6 +188,10 @@ class Counter(StrEnum):
       stun counter on it would become untapped, instead remove a stun counter
       from it.'" `untap` is where that replacement lives, since every route
       to untapping passes through it.
+    - `finality` stops the permanent reaching a graveyard (CR 122.1h): "If
+      this permanent would be put into a graveyard from the battlefield, exile
+      it instead." `machines/replacement.py`'s `_finality_counter_effects` is
+      that replacement effect.
     - `charge` is the common named counter with no rules of its own.
     - `time` sits on a card in exile with suspend (CR 702.62a, 702.62b) or a
       permanent with vanishing/fading (CR 702.63a, 702.32a); "at the beginning
@@ -208,6 +212,7 @@ class Counter(StrEnum):
     ENERGY = "energy"
     EXPERIENCE = "experience"
     STUN = "stun"
+    FINALITY = "finality"
     TIME = "time"
     CHARGE = "charge"
 

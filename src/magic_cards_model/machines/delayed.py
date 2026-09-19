@@ -389,14 +389,17 @@ class DrawACardForController(DelayedEffectSpecBase):
     """ "Draw a card at the beginning of the next turn's upkeep" - Mishra's
     Bauble's second half. No object is named at all (CR 603.7c has nothing to
     check), so this is the creating ability's controller, drawing on their own
-    behalf (CR 121.2).
+    behalf (CR 121.2). `count` is 1 for every card in the pool; a future
+    "draw `<n>` cards at the beginning of ..." delayed trigger reads the same
+    way with a different count, rather than needing a new `kind` of its own.
     """
 
     kind: Literal["draw_a_card_for_controller"] = "draw_a_card_for_controller"
+    count: int = 1
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         if game.is_in_game(trigger.controller):
-            game.draw_cards(trigger.controller, 1)
+            game.draw_cards(trigger.controller, self.count)
 
 
 class DestroySubject(DelayedEffectSpecBase):
@@ -869,6 +872,32 @@ class ReflexiveMandatoryTokenDamageConsequence(DelayedEffectSpecBase):
         deal_the_damage(game, ability)
 
 
+class ReflexiveCounterCountConsequence(DelayedEffectSpecBase):
+    """ "Put a `<kind>` counter on this `<permanent>`. When you do, if it has
+    `<N>` or more `<kind>` counters on it, `<consequence>`." (CR 603.12, CR
+    603.4) - Earthbender Ascension's landfall, `machines/effects.py`'s
+    `_parse_reflexive_self_counter_if_clause`.
+
+    The intervening *if* was checked as this reflexive ability was created;
+    CR 603.4 checks it again as it resolves, against the same source, and the
+    ability does nothing if it is no longer true.
+    """
+
+    kind: Literal["reflexive_counter_count_consequence"] = "reflexive_counter_count_consequence"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import _reflexive_counter_count_parts
+
+        parts = _reflexive_counter_count_parts(trigger.text)
+        if parts is None:
+            return
+        holds, consequence = parts
+        source = ability.source(game)
+        if source is None or not holds(source):
+            return
+        consequence(game, ability)
+
+
 class ReflexiveExileCopiedCard(DelayedEffectSpecBase):
     """Superior Spider-Man's "When you do, exile that card." (CR 603.12,
     `machines/replacement.py`'s `_choose_a_quality`-adjacent copy-choice
@@ -930,6 +959,7 @@ DelayedEffectSpec = Annotated[
     | ReflexiveConsequence
     | ReflexivePayEnergyConsequence
     | ReflexiveMandatoryTokenDamageConsequence
+    | ReflexiveCounterCountConsequence
     | ReflexiveExileCopiedCard,
     Field(discriminator="kind"),
 ]

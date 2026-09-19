@@ -1,4 +1,4 @@
-"""Vizier of Remedies' -1/-1 counter reducer (`_counter_reducer_applies`,
+"""Vizier of Remedies' -1/-1 counter reducer (`_counter_amount_applies`,
 `machines/replacement.py`) gates on "a creature you control" by reading the
 computed board (CR 613.5), not the printed type line.
 

@@ -32,6 +32,7 @@ Card text verified with `resolve_cards`. CR numbers looked up with
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.triggers import triggered_abilities_of
+from magic_cards_model.models import Zone
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
@@ -91,3 +92,73 @@ def test_the_third_draw_of_a_turn_triggers_tamiyo():
     assert [trigger.source_name for trigger in scenario.pending_triggers] == [
         "Tamiyo, Inquisitive Student"
     ]
+
+
+# -- "each turn": the same ordinal, the other printed suffix -----------------
+#
+# Faerie Vandal (verified off its Scryfall printing): "Whenever you draw your
+# second card each turn, put a +1/+1 counter on this creature." Tamiyo prints
+# "in a turn"; the 34 other Modern cards with this trigger print "each turn",
+# and the matcher read only the first suffix, so their condition parsed with
+# `event=None` and was dropped. Second, not third: a different ordinal than
+# Tamiyo's, so the count is read off the card rather than off one printing.
+
+
+def vandal_board() -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            library=["Grizzly Bears", "Grizzly Bears", "Grizzly Bears", "Grizzly Bears"],
+            battlefield=["Faerie Vandal", "Island"],
+        )
+        .player("bob", library=["Island", "Island", "Island", "Island"])
+    )
+
+
+def test_faerie_vandals_each_turn_trigger_survives_the_parse():
+    vandal = card("Faerie Vandal")
+    conditions = [ability.condition for ability in triggered_abilities_of(vandal)]
+
+    assert "you draw your second card each turn" in conditions
+
+
+def test_the_first_draw_of_a_turn_does_not_trigger_faerie_vandal():
+    scenario = vandal_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.draw_cards("alice", 1)
+
+    assert scenario.pending_triggers == []
+
+
+def test_the_second_draw_of_a_turn_triggers_faerie_vandal_once():
+    """CR 121.2: two cards are two draws, and only the second is the event -
+    the third is not the second, so it triggers nothing further."""
+    scenario = vandal_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.draw_cards("alice", 3)
+
+    assert [trigger.source_name for trigger in scenario.pending_triggers] == ["Faerie Vandal"]
+
+
+def test_an_opponents_second_draw_does_not_trigger_faerie_vandal():
+    scenario = vandal_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.draw_cards("bob", 2)
+
+    assert scenario.pending_triggers == []
+
+
+def test_faerie_vandals_trigger_puts_a_counter_on_it():
+    scenario = vandal_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    vandal = scenario.find("Faerie Vandal", Zone.BATTLEFIELD, "alice")
+
+    scenario.game.draw_cards("alice", 2)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert vandal.counter_count("+1/+1") == 1

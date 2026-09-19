@@ -38,6 +38,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import parse_mana_abilities
 from magic_cards_model.models import Color, Zone
+from magic_cards_model.models.card_state import Counter
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
@@ -552,3 +553,89 @@ def test_cavern_of_souls_restricted_ability_produces_tagged_mana():
 
     assert pool.floating == {Color.BLUE: 1}
     assert pool.restrictions()[0].understood is False
+
+
+# --------------------------------------------------------------------------
+# "Add X mana of any one color, where X is ..." (G7-1): the count is
+# CR 107.3's X, read off the board the instant the ability resolves
+# (CR 605.3b), never a printed number. Before this fix `_ANY_COLOR` had no X
+# in it at all, so every one of these fell all the way through `_parse_effect`
+# to `mana=None` - a permanent that looked, to every caller, like a `{T}` cost
+# with no effect behind it.
+# --------------------------------------------------------------------------
+
+
+def test_seance_board_taps_for_mana_equal_to_its_soul_counters():
+    """Seance Board: "{T}: Add X mana of any one color, where X is the
+    number of soul counters on this artifact." CR 122.1's counters on the
+    ability's own source - `resolve_mana_count_expression`'s
+    "counters on this <noun>" shape."""
+    scenario = Scenario().player("alice", battlefield=["Séance Board"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (board,) = scenario.untapped_sources("Séance Board")
+    board.add_counters("soul", 2)
+
+    scenario.activate(board, color=Color.BLUE)
+
+    assert scenario.player().mana_pool.floating == {Color.BLUE: 2}
+    assert board.tapped
+    assert scenario.stack_names() == [], "CR 605.3b: a mana ability never uses the stack"
+
+
+def test_seance_board_with_no_soul_counters_taps_for_nothing():
+    """CR 605.2: "A mana ability remains a mana ability even if the game
+    state doesn't allow it to produce mana." Zero soul counters is a legal
+    activation that adds none - not a refusal, and not a crash on an X this
+    parser could not read."""
+    scenario = Scenario().player("alice", battlefield=["Séance Board"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (board,) = scenario.untapped_sources("Séance Board")
+
+    scenario.activate(board, color=Color.BLUE)
+
+    assert scenario.player().mana_pool.floating == {}
+    assert board.tapped
+
+
+def test_woodland_weavemaster_taps_for_mana_equal_to_its_power():
+    """Woodland Weavemaster: "{T}: Add X mana of any one color, where X is
+    this creature's power." CR 613.5's *computed* power - a +1/+1 counter
+    (CR 122.1a) raises the printed 1/2 to 3/4 before the ability resolves,
+    and the mana follows the raised number, not the printed one."""
+    scenario = Scenario().player("alice", battlefield=["Woodland Weavemaster"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (weavemaster,) = scenario.untapped_sources("Woodland Weavemaster")
+    weavemaster.add_counters(Counter.PLUS_ONE, 2)
+
+    scenario.activate(weavemaster, color=Color.RED)
+
+    assert scenario.player().mana_pool.floating == {Color.RED: 3}
+    assert scenario.stack_names() == []
+
+
+def test_kami_of_whispered_hopes_taps_for_mana_equal_to_its_power():
+    """Kami of Whispered Hopes (off-pool, a different real printing of the
+    same "this creature's power" shape, with a different base power - 1
+    rather than Woodland Weavemaster's 2 toughness - and a different +1/+1
+    counter total, 4): "{T}: Add X mana of any one color, where X is this
+    creature's power." """
+    scenario = Scenario().player("alice", battlefield=["Kami of Whispered Hopes"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (kami,) = scenario.untapped_sources("Kami of Whispered Hopes")
+    kami.add_counters(Counter.PLUS_ONE, 4)
+
+    scenario.activate(kami, color=Color.GREEN)
+
+    assert scenario.player().mana_pool.floating == {Color.GREEN: 5}
+
+
+def test_an_any_one_color_x_ability_with_an_unreadable_definition_does_not_parse():
+    """A defect-guard, not a real printing: if `_ANY_COLOR`'s X ever matched
+    a "where X is ..." clause this engine cannot read, `_read_mana_count`
+    must fail the whole ability closed rather than accept it and raise (or
+    silently misresolve) the first time someone taps it - the same
+    fail-closed contract `unparsed_rider` already holds for a trailing
+    sentence this parser cannot classify."""
+    from magic_cards_model.machines.abilities import _parse_effect
+
+    assert _parse_effect("X mana of any one color, where X is the phase of the moon") is None

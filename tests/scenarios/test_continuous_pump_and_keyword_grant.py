@@ -249,3 +249,86 @@ def test_more_than_one_granted_keyword_records_a_notice_and_applies_nothing():
             text=card("Aerial Maneuver").oracle_text,
         )
     ]
+
+
+# --------------------------------------------------------------------------
+# Dauntless Onslaught (off-pool, verified with `resolve_cards`): "Up to two
+# target creatures each get +2/+2 until end of turn." A plural subject
+# `_CONTINUOUS_PUMP_OR_KEYWORD_RE`/`_PUMP_RE` used to refuse outright - both
+# only ever recognised the singular "target creature" - so the whole spell
+# was silent even at a single legal target.
+# --------------------------------------------------------------------------
+
+
+def test_dauntless_onslaught_pumps_both_chosen_targets():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Dauntless Onslaught"],
+            battlefield=["Plains", "Plains", "Plains", "Grizzly Bears", "Watchwolf"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    wolf = scenario.creature("Watchwolf", "alice")
+    plains = scenario.untapped_sources("Plains", "Plains", "Plains")
+    scenario.cast_and_resolve("Dauntless Onslaught", *plains, targets=[bears, wolf])
+
+    board = computed(scenario)
+    assert board.of(bears).power_toughness == (4, 4), "a 2/2 plus +2/+2"
+    assert board.of(wolf).power_toughness == (5, 5), "a 3/3 plus +2/+2"
+
+
+def test_dauntless_onslaught_can_choose_only_one_of_its_up_to_two():
+    """CR 115.6: "up to two" allows fewer - the untargeted creature is
+    untouched."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Dauntless Onslaught"],
+            battlefield=["Plains", "Plains", "Plains", "Grizzly Bears", "Watchwolf"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    wolf = scenario.creature("Watchwolf", "alice")
+    plains = scenario.untapped_sources("Plains", "Plains", "Plains")
+    scenario.cast_and_resolve("Dauntless Onslaught", *plains, targets=[bears])
+
+    board = computed(scenario)
+    assert board.of(bears).power_toughness == (4, 4)
+    assert board.of(wolf).power_toughness == (3, 3), "never targeted, never pumped"
+
+
+# --------------------------------------------------------------------------
+# Xenagos, God of Revels (pool): "At the beginning of combat on your turn,
+# another target creature you control gains haste and gets +X/+X until end
+# of turn, where X is that creature's power." X is read once per target, off
+# that creature's own (CR 613.5 computed) power at the moment the trigger
+# resolves - `CardState.power` already gives the computed value.
+# --------------------------------------------------------------------------
+
+
+def test_xenagos_doubles_the_targets_power_and_grants_haste():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Xenagos, God of Revels", "Grizzly Bears"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Xenagos, God of Revels", [bears])
+    scenario.advance()
+    assert scenario.step is Step.BEGINNING_OF_COMBAT
+    scenario.pass_until_resolved()
+
+    board = computed(scenario)
+    assert board.of(bears).power_toughness == (4, 4), "a 2/2 plus +2/+2 (X = its own power, 2)"
+    assert has_keyword(bears, Keyword.HASTE, scenario.game)

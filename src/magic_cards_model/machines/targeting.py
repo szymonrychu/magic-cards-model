@@ -105,6 +105,7 @@ from magic_cards_model.phrases import with_indefinite_article
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
+from ..numbers import parse_count
 from ..serialization import SortedFrozenSet
 from ..snapshot import EngineModel
 from .abilities import AbilityKind, keyword_abilities
@@ -1480,21 +1481,6 @@ _ABILITY_OR_COLOR_COUNT_SPELL_RE = re.compile(
     r"^or\s+(?P<color_count>multicolored|monocolored|colorless)\s+spell$", re.IGNORECASE
 )
 
-_NUMBERS = {
-    "a": 1,
-    "an": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-
 _TYPE_NOUNS = {
     "creature": Type.CREATURE,
     "artifact": Type.ARTIFACT,
@@ -1674,6 +1660,23 @@ def targeting_profile(card: Card) -> TargetingProfile:
     if profile is None:
         if modal_profile(card):
             profile = TargetingProfile(understood=False)
+        elif text and _EARTHBEND.search(_spell_text(text)):
+            # Rockalanche prints "Earthbend X, ..." directly as a sorcery's
+            # own effect, not as a permanent's triggered ability - the same
+            # CR 701.66a keyword `profile_for_text` already special-cases for
+            # an ability, needed here too so the spell announces its target
+            # at all (CR 601.2c): the word "target" is in the keyword's own
+            # rules meaning, never printed on the card, and the ordinary
+            # scan below finds nothing to read unless told. Checked against
+            # `_spell_text(text)`, not the raw text: Badgermole Cub's own
+            # "When this creature enters, earthbend 1." is a *triggered
+            # ability's* line (CR 113.1c chooses its target when the ability
+            # goes on the stack, not when the creature is cast), and
+            # `_spell_text` already strips exactly that kind of line - the
+            # bug this line guards against is the *creature spell itself*
+            # wrongly demanding a target because the word "earthbend"
+            # appears somewhere in its printed text.
+            profile = _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
         else:
             profile = _parse(text)
             profile = _with_aura_target(card, profile)
@@ -2060,19 +2063,12 @@ def _read_division(text: str) -> Division | None:
             doubled = _DOUBLED_IF_X_AT_LEAST_RE.search(text)
             threshold = int(doubled.group("threshold")) if doubled else None
             return Division(amount=None, what="damage", doubled_if_x_at_least=threshold)
-        amount = _count_word(word)
+        amount = parse_count(word)
         return None if amount is None else Division(amount=amount, what="damage")
-    amount = _count_word(match.group("counters").lower())
+    amount = parse_count(match.group("counters").lower())
     if amount is None:
         return None
     return Division(amount=amount, what=f"{match.group('kind')} counters")
-
-
-def _count_word(word: str) -> int | None:
-    """A number written as a word, or as a digit once X has been substituted."""
-    if word.isdigit():
-        return int(word)
-    return _NUMBERS.get(word)
 
 
 def _read_count(prefix: str) -> tuple[int, int | None, bool] | None:
@@ -2108,25 +2104,72 @@ def _read_count(prefix: str) -> tuple[int, int | None, bool] | None:
     count "other", which is not a number, and the whole phrase falls back to
     a mandatory exactly-one. `_excludes_source` is what actually reads the
     word; this function only has to stop it from breaking the count.
+
+    "one, two, or three target creatures" - Arc Lightning, Inferno Titan, and
+    21 other Modern cards CR 601.2d divides this way - is a longer list than
+    the two-number "one or two" shape above, read by `_read_numeric_list`
+    over every word, not just the last three: a version of this reader that
+    only looked at the tail end used to read "two, or three" out of the full
+    list and silently drop the leading "one", pinning the floor at two
+    instead of one (Arc Lightning could not legally be cast at a single
+    target even though the card's own text lists "one" first).
     """
-    words = [w for w in re.findall(r"[\w'-]+", prefix.lower()) if w not in _SOURCE_EXCLUDING]
-    words = words[-3:]
+    all_words = [w for w in re.findall(r"[\w'-]+", prefix.lower()) if w not in _SOURCE_EXCLUDING]
+    words = all_words[-3:]
     if words[-3:] == ["any", "number", "of"]:
         return 0, None, False
     if len(words) >= 3 and words[-3] == "up" and words[-2] == "to":
         if words[-1] == "x":
             return 0, None, True
-        count = _count_word(words[-1])
+        count = parse_count(words[-1])
         return None if count is None else (0, count, False)
-    if len(words) >= 3 and words[-2] == "or":
-        fewest, most = _count_word(words[-3]), _count_word(words[-1])
-        if fewest is not None and most is not None:
-            return (fewest, most, False) if fewest <= most else None
+    numeric_list = _read_numeric_list(all_words)
+    if numeric_list is not None:
+        fewest, most = numeric_list
+        return fewest, most, False
     if words and words[-1] == "x":
         return 0, None, True
-    if words and words[-1] not in {"a", "an"} and (count := _count_word(words[-1])) is not None:
+    if words and words[-1] not in {"a", "an"} and (count := parse_count(words[-1])) is not None:
         return count, count, False
     return 1, 1, False
+
+
+def _read_numeric_list(words: list[str]) -> tuple[int, int] | None:
+    """The count list at the very end of `words` - "one, two, or three"
+    (commas are not word characters, so `re.findall(r"[\\w'-]+", ...)`
+    already tokenizes that as `["one", "two", "or", "three"]` with no comma
+    of its own to read) or the plain two-item "one or two" - as (fewest,
+    most).
+
+    CR 601.2d always prints a division's choices in ascending order, so the
+    first number in the list is the floor and the last is the ceiling. Reads
+    backward from the word right before a trailing "or" (or the Oxford
+    "and/or", which tokenizes as the two words "and", "or"), consuming
+    countable words one at a time and stopping at the first word that is not
+    one - which is what lets this run against the *whole* prefix rather than
+    a fixed-width window: whatever sits further back (an "among", a verb, an
+    unrelated word) simply is not a count and ends the scan on its own.
+
+    `None` when the end of `words` is not at least two counts joined by
+    "or"/"and or" - a single trailing count, or a phrase that happens to end
+    in an unrelated "... or <something>" that is not itself a number.
+    """
+    if len(words) < 3 or words[-2] != "or":
+        return None
+    last = parse_count(words[-1])
+    if last is None:
+        return None
+    index = len(words) - 3
+    if index >= 0 and words[index] == "and":
+        index -= 1
+    counts = [last]
+    while index >= 0 and (count := parse_count(words[index])) is not None:
+        counts.append(count)
+        index -= 1
+    if len(counts) < 2:
+        return None
+    fewest, most = counts[-1], counts[0]
+    return (fewest, most) if fewest <= most else None
 
 
 #: "up to one **other** target creature", "exile **another** target permanent":

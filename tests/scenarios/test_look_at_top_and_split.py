@@ -364,3 +364,101 @@ def test_narset_cannot_take_a_land_from_among_the_top_four():
 
     with pytest.raises(ValueError):
         scenario.resolve_top()
+
+
+# -- The quantity is read, not fixed at "a": Reality Heist ("up to two") and
+# Lead the Stampede ("any number of", CR 107.1c) ----------------------------
+
+
+def test_reality_heist_reveals_up_to_two_artifacts_and_takes_both():
+    """Reality Heist: "Look at the top seven cards of your library. You may
+    reveal up to two artifact cards from among them and put them into your
+    hand. Put the rest on the bottom of your library in a random order." -
+    the same four-clause family as Duskwatch Recruiter, with "up to two"
+    where Duskwatch prints "a" and "them" where it prints "it"."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Reality Heist"],
+            library=[
+                "Mishra's Bauble",
+                "Vexing Bauble",
+                "Forest",
+                "Mountain",
+                "Swamp",
+                "Plains",
+                "Grizzly Bears",
+            ],
+            battlefield=["Island"] * 7,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    bauble, vexing, forest, mountain, swamp, plains, bears = scenario.top_of_library(7, "alice")
+    _script_scry_split(scenario, username="alice", moved=[bauble.id, vexing.id])
+
+    scenario.cast_and_resolve("Reality Heist", *scenario.untapped_sources(*(["Island"] * 7)))
+
+    assert bauble.zone is Zone.HAND and bauble in alice.hand
+    assert vexing.zone is Zone.HAND and vexing in alice.hand
+    assert {state.id for state in alice.library[-5:]} == {
+        state.id for state in (forest, mountain, swamp, plains, bears)
+    }
+
+
+def test_reality_heist_declining_leaves_every_artifact_on_the_bottom():
+    """The default answer (nothing moved) is legal for "up to two" - CR
+    608.2d never forces a take when the printed maximum is not a floor."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Reality Heist"],
+            library=["Mishra's Bauble", "Forest", "Mountain", "Swamp", "Plains", "Island", "Opt"],
+            battlefield=["Island"] * 7,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    looked = scenario.top_of_library(7, "alice")
+
+    scenario.cast_and_resolve("Reality Heist", *scenario.untapped_sources(*(["Island"] * 7)))
+
+    assert alice.hand == []
+    assert {state.id for state in alice.library} == {state.id for state in looked}
+
+
+def test_lead_the_stampede_takes_any_number_of_creatures():
+    """Lead the Stampede: "Look at the top five cards of your library. You
+    may reveal any number of creature cards from among them and put the
+    revealed cards into your hand. Put the rest on the bottom of your library
+    in a random order." CR 107.1c's "any number" is no fixed ceiling - taking
+    three of the five looked at is as legal an answer as taking none."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lead the Stampede"],
+            library=["Grizzly Bears", "Grizzly Bears", "Grizzly Bears", "Forest", "Mountain"],
+            battlefield=["Forest", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    bear1, bear2, bear3, forest, mountain = scenario.top_of_library(5, "alice")
+    _script_scry_split(scenario, username="alice", moved=[bear1.id, bear2.id, bear3.id])
+
+    scenario.cast_and_resolve(
+        "Lead the Stampede", *scenario.untapped_sources("Forest", "Forest", "Forest")
+    )
+
+    for bear in (bear1, bear2, bear3):
+        assert bear.zone is Zone.HAND and bear in alice.hand
+    assert {state.id for state in alice.library} == {forest.id, mountain.id}

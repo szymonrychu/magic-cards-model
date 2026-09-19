@@ -209,3 +209,92 @@ def test_satyr_wayfinders_enters_trigger_reads_the_same_template():
     assert {bolt.zone, bears.zone, sol_ring.zone} == {Zone.GRAVEYARD}
     assert [state.name for state in alice.library] == ["Swamp"]
     assert known(scenario.game, "bob") == [("Island", Zone.HAND, None, True)]
+
+
+# -- The quantity is read, not fixed at "a": Glacial Revelation's "any number
+# of snow permanent cards" (CR 107.1c, CR 205.4g) --------------------------
+
+
+def _glacial_revelation_board(library: list[str]):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Glacial Revelation"],
+            battlefield=["Forest", "Forest", "Forest"],
+            library=library,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_glacial_revelation_takes_two_of_two_snow_permanents():
+    """ "Reveal the top six cards of your library. You may put any number of
+    snow permanent cards from among them into your hand. Put the rest into
+    your graveyard." CR 205.4g: a snow permanent is one with the snow
+    supertype - "Snow-Covered Forest"/"Snow-Covered Island" carry it, an
+    ordinary "Forest" does not."""
+    scenario = _glacial_revelation_board(
+        [
+            "Snow-Covered Forest",
+            "Snow-Covered Island",
+            "Lightning Bolt",
+            "Forest",
+            "Mishra's Bauble",
+            "Swamp",
+        ]
+    )
+    alice = scenario.player("alice")
+    snow_forest, snow_island, bolt, forest, bauble, swamp = scenario.top_of_library(6)
+    scenario.will_choose_cards(snow_forest, snow_island, source="Glacial Revelation")
+
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest", username="alice")
+    scenario.cast_and_resolve("Glacial Revelation", *forests)
+
+    assert snow_forest.zone is Zone.HAND and snow_island.zone is Zone.HAND
+    assert {bolt.zone, forest.zone, bauble.zone, swamp.zone} == {Zone.GRAVEYARD}
+    assert alice.library == []
+
+
+def test_glacial_revelation_takes_only_one_of_two_snow_permanents():
+    """CR 107.1c's "any number" permits a partial take - the second qualifying
+    card is a legal answer left behind, not a forced one."""
+    scenario = _glacial_revelation_board(
+        [
+            "Snow-Covered Forest",
+            "Snow-Covered Island",
+            "Lightning Bolt",
+            "Forest",
+            "Mishra's Bauble",
+            "Swamp",
+        ]
+    )
+    alice = scenario.player("alice")
+    snow_forest, snow_island, bolt, forest, bauble, swamp = scenario.top_of_library(6)
+    scenario.will_choose_cards(snow_forest, source="Glacial Revelation")
+
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest", username="alice")
+    scenario.cast_and_resolve("Glacial Revelation", *forests)
+
+    assert snow_forest.zone is Zone.HAND
+    assert {snow_island.zone, bolt.zone, forest.zone, bauble.zone, swamp.zone} == {Zone.GRAVEYARD}
+    assert alice.library == []
+
+
+def test_glacial_revelation_declining_puts_every_card_into_the_graveyard():
+    """The default answer (nothing chosen) is legal - CR 608.2d never forces
+    a take when the printed maximum is not a floor."""
+    scenario = _glacial_revelation_board(
+        ["Snow-Covered Forest", "Lightning Bolt", "Forest", "Mishra's Bauble", "Swamp", "Island"]
+    )
+    alice = scenario.player("alice")
+    revealed = scenario.top_of_library(6)
+
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest", username="alice")
+    scenario.cast_and_resolve("Glacial Revelation", *forests)
+
+    assert alice.hand == []
+    assert all(state.zone is Zone.GRAVEYARD for state in revealed)

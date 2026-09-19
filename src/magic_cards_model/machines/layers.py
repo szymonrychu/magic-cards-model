@@ -91,6 +91,7 @@ from ..ids import new_id
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
+from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
 from .abilities import layer_readable_sentences, self_normalized_effect_text
 from .combat import KEYWORDS_OUTSIDE_COMBAT, Keyword
@@ -396,16 +397,30 @@ class FixedCount(CountBase):
 
 
 class CountOtherCreaturesNamed(CountBase):
-    """How many *other* creatures on the board have this name."""
+    """How many *other* creatures on the board have this name.
+
+    `controlled_by_source` is Seven Dwarves' own "you control" qualifier -
+    Relentless Rats' "on the battlefield" leaves it `False` (every match
+    anywhere counts). Read against `chars.controller` rather than a
+    `username` baked in when the effect was built: CR 611.3a's "isn't
+    'locked in'" applies to who controls the *source* too, so a source whose
+    own control changes (a Threaten effect, an Act of Treason) is asked fresh
+    every time the board is computed (CR 613.5), the same live-recompute
+    trick every other `Count` in this module already relies on.
+    """
 
     kind: Literal["other_creatures_named"] = "other_creatures_named"
     name: str
+    controlled_by_source: bool = False
 
     def __call__(self, chars: Characteristics, board: Board) -> int:
         return sum(
             1
             for other in board.values()
-            if other.card_id != chars.card_id and other.is_creature and other.name == self.name
+            if other.card_id != chars.card_id
+            and other.is_creature
+            and other.name == self.name
+            and (not self.controlled_by_source or other.controller == chars.controller)
         )
 
 
@@ -2209,9 +2224,13 @@ def modify_power_toughness_per(count: Count, power: int, toughness: int) -> Modi
     return ModifyPowerToughnessPer(count=count, power=power, toughness=toughness)
 
 
-def count_other_creatures_named(name: str) -> Count:
-    """How many *other* creatures on the board have this name."""
-    return CountOtherCreaturesNamed(name=name)
+def count_other_creatures_named(name: str, *, controlled_by_source: bool = False) -> Count:
+    """How many *other* creatures on the board have this name.
+
+    `controlled_by_source=True` for Seven Dwarves' own "you control" -
+    Relentless Rats' "on the battlefield" leaves the default, unscoped.
+    """
+    return CountOtherCreaturesNamed(name=name, controlled_by_source=controlled_by_source)
 
 
 def count_lands_controlled_by(username: str | None) -> Count:
@@ -2326,11 +2345,39 @@ _SUBJECT = (
     r"|another target(?: [a-z]+)? creature(?: you control)?)"
 )
 
+#: Dauntless Onslaught's own plural CR 115.6 shape: "Up to two target
+#: creatures each get +2/+2 until end of turn." Scoped to `_PUMP_RE` alone
+#: rather than folded into `_SUBJECT` itself - several other shapes below
+#: (keyword grant, base P/T set, gain control, becomes-a-color) share
+#: `_SUBJECT` too, and none of them is this wave's territory; only the pump
+#: shape has a real pool/off-pool card printing a plural count here.
+_PLURAL_PUMP_SUBJECT = rf"(?:up to )?{COUNT} target(?: [a-z]+)? creatures(?: each)?"
+
+#: Xenagos, God of Revels' own reversed order: "another target creature you
+#: control **gains haste and gets** +X/+X until end of turn" - the keyword
+#: comes first, not last, so the two verb phrases need their own branch
+#: rather than the forward "gets ... and gains ..." shape's trailing
+#: optional keyword. Both branches feed the same builder either way.
+#: `power`/`toughness` (or the reversed order's own `power2`/`toughness2`)
+#: read `x` as well as a literal number - CR 107.3a's X, evaluated through
+#: `where_x_pattern`'s tail rather than a fixed digit, for Xenagos' own
+#: "where X is that creature's power".
 _PUMP_RE = re.compile(
-    rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
-    rf"(?: and gains (?P<keyword>[a-z ]+))? until end of turn\.?$",
+    rf"^(?:{_SUBJECT}|{_PLURAL_PUMP_SUBJECT}) (?:"
+    rf"gets? (?P<power>[+-](?:{COUNT}|x))/(?P<toughness>[+-](?:{COUNT}|x))"
+    rf"(?: and gains (?P<keyword>[a-z ]+))?"
+    rf"|gains (?P<keyword2>[a-z ]+) and gets? "
+    rf"(?P<power2>[+-](?:{COUNT}|x))/(?P<toughness2>[+-](?:{COUNT}|x))"
+    rf") until end of turn{where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
+
+#: "that creature's power" - Xenagos, God of Revels' own X definition, read
+#: per target off `CardState.power` (CR 613.5's computed value) at the
+#: moment this ability resolves (CR 611.2c fixes the magnitude then, so this
+#: is a one-time snapshot, not a live recompute that would let the pump
+#: retroactively inflate what defined it).
+_THAT_CREATURES_POWER_RE = re.compile(r"^that creature'?s power$", re.IGNORECASE)
 
 #: Echoing Courage: "Target creature and all other creatures with the same name
 #: as that creature get +2/+2 until end of turn." A sibling of `_PUMP_RE` and
@@ -2474,6 +2521,81 @@ def _self_pump_per_controlled_permanent_builder(
                 selector=_only(source.id),
                 modification=modify_power_toughness_per(
                     count_permanents_controlled_by(source.controller, card_type), power, toughness
+                ),
+            )
+        ]
+
+    return builder
+
+
+#: "This creature gets +1/+1 for each other creature on the battlefield named
+#: Relentless Rats." (Relentless Rats) and "This creature gets +1/+1 for each
+#: other creature named Seven Dwarves you control." (Seven Dwarves) - the same
+#: self-counting-by-name shape `count_other_creatures_named` already reads
+#: generally; only the card-name-keyed `LAYER_EFFECTS` row this replaces
+#: pinned it to "Relentless Rats" specifically. By the time this dispatcher
+#: sees the sentence, `self_normalized_effect_text` (CR 201.5) has already
+#: rewritten the card's own printed name to "this permanent" wherever it
+#: appears in its own text - both cards name only themselves, so `name` reads
+#: literally as "this permanent" for both, resolved back to the *source's own
+#: live name* inside `builder` (a DFC or copy effect can change it after this
+#: sentence was parsed, so this reads it at build time, not parse time) rather
+#: than the captured string itself. A future card whose template somehow named
+#: a *different* creature is still covered: only a captured "this permanent"
+#: gets the live-name treatment. "on the battlefield" and "you control" are
+#: both optional - Relentless Rats prints the first, Seven Dwarves the
+#: second, neither prints both.
+_SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE = re.compile(
+    r"^this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each other creature "
+    r"(?:on the battlefield )?named (?P<name>.+?)(?P<you_control> you control)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_pump_per_other_creature_named_builder(
+    power: int, toughness: int, name: str, controlled_by_source: bool, line: str
+) -> EffectBuilder:
+    """`_SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE`'s shape - Relentless Rats and
+    Seven Dwarves both print this self-counting pump.
+
+    Sublayer 7c (CR 613.4c), the same "modify, don't set" choice `_self_pump_
+    per_controlled_permanent_builder` makes for its own live board count -
+    `count_other_creatures_named` is `modify_power_toughness_per`'s same
+    `Count` machinery, counting by printed name (CR 201.4) instead of by card
+    type, scoped to the source's own controller when the sentence prints "you
+    control" (Seven Dwarves) and left unscoped when it prints "on the
+    battlefield" (Relentless Rats) instead. A static ability's effect (CR
+    611.3), switched off the moment the source loses the ability (CR 613.6) -
+    `source_ability` is the printed sentence layer 6 removal matches on,
+    `_source_line_for` because `line` may already have had its ability word
+    or self-normalized name taken off.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        resolved_name = source.name if name.strip().lower() == "this permanent" else name
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {power:+d}/{toughness:+d} for each other creature named "
+                    f"{resolved_name}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=modify_power_toughness_per(
+                    count_other_creatures_named(
+                        resolved_name, controlled_by_source=controlled_by_source
+                    ),
+                    power,
+                    toughness,
                 ),
             )
         ]
@@ -3573,6 +3695,61 @@ def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -
     return builder
 
 
+def _pump_and_keyword_per_target_power_builder(
+    power_sign: int, toughness_sign: int, keyword: str | None
+) -> EffectBuilder:
+    """Xenagos, God of Revels' own shape: "[Subject] gets +X/+X [and gains
+    <keyword>] until end of turn, where X is that creature's power."
+
+    `power_sign`/`toughness_sign` are `+1`/`-1` off the printed sign in front
+    of each X (both `+1` for Xenagos' own "+X/+X"; nothing in the pool prints
+    "-X/-X" here, but the mechanism is the same one `_PUMP_RE` already reads
+    generally rather than something special-cased to this one card). X is
+    read once **per target**, off that target's own `CardState.power` - the
+    CR 613.5 computed value, already what `power` gives - at the moment this
+    builder runs, which `ContinuousEffects.create` only ever calls once, as
+    the ability resolves (CR 611.2c fixes the magnitude then). A target
+    without a numeric power (`*`, or gone before this runs) contributes X = 0
+    rather than guessing (CR 107.2).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            x = target.power if target.power is not None else 0
+            power, toughness = power_sign * x, toughness_sign * x
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+            if keyword is not None:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=grant_ability(keyword),
+                    )
+                )
+        return effects
+
+    return builder
+
+
 def _target_and_same_name_pump_builder(power: int, toughness: int) -> EffectBuilder:
     """ "Target creature and all other creatures with the same name as that
     creature get +N/+N until end of turn." (Echoing Courage.)
@@ -4329,22 +4506,6 @@ _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE = re.compile(
     r"(?P<toughness>[+-]\d+)(?P<rest>.*?)\.?$",
     re.IGNORECASE,
 )
-
-#: The number words a printed condition spells out. CR 107.1 is the general
-#: rule that a number in the rules text is a number; the words themselves are
-#: just English, and only the ones the pool actually prints are listed.
-_NUMBER_WORDS: dict[str, int] = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
 
 #: "Each creature you control has vigilance if it's white, hexproof if it's
 #: blue, lifelink if it's black, first strike if it's red, and trample if it's
@@ -5218,7 +5379,7 @@ def _parse_board_gated_group_sentence(sentence: str) -> EffectBuilder | None:
     match = _BOARD_COUNT_GATE_RE.fullmatch(sentence)
     if match is None:
         return None
-    threshold = _NUMBER_WORDS.get(match.group("count").lower())
+    threshold = parse_count(match.group("count"), article=False)
     card_type = _card_type_word(match.group("subject"))
     if threshold is None or card_type is None:
         return None
@@ -5268,12 +5429,21 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("power")), int(match.group("toughness"))
         )
     if match := _PUMP_RE.fullmatch(sentence):
-        power, toughness = int(match.group("power")), int(match.group("toughness"))
-        keyword = match.group("keyword")
+        power_raw = match.group("power") or match.group("power2")
+        toughness_raw = match.group("toughness") or match.group("toughness2")
+        keyword = match.group("keyword") or match.group("keyword2")
         if keyword is not None:
             if keyword.strip().lower() not in _KNOWN_KEYWORDS:
                 return None
             keyword = keyword.strip().capitalize()
+        if power_raw.lstrip("+-").lower() == "x" or toughness_raw.lstrip("+-").lower() == "x":
+            where_x = match.group("where_x")
+            if where_x is None or not _THAT_CREATURES_POWER_RE.fullmatch(where_x.strip()):
+                return None
+            power_sign = -1 if power_raw.startswith("-") else 1
+            toughness_sign = -1 if toughness_raw.startswith("-") else 1
+            return _pump_and_keyword_per_target_power_builder(power_sign, toughness_sign, keyword)
+        power, toughness = int(power_raw), int(toughness_raw)
         return _pump_and_keyword_builder(power, toughness, keyword)
     if match := _SELF_PUMP_PER_GRAVEYARD_CARD_RE.fullmatch(sentence):
         card_type = _card_type_word(match.group("qualifier"))
@@ -5288,6 +5458,14 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             return None
         return _self_pump_per_controlled_permanent_builder(
             int(match.group("power")), int(match.group("toughness")), card_type
+        )
+    if match := _SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE.fullmatch(sentence):
+        return _self_pump_per_other_creature_named_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            match.group("name").strip(),
+            match.group("you_control") is not None,
+            sentence,
         )
     if match := _BECOME_A_COPY_RE.fullmatch(sentence):
         return _become_a_copy_builder(until_eot=bool(match.group("until_eot")))
@@ -5519,7 +5697,7 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _ALL_COLORS_RE.fullmatch(sentence):
         return _all_colors_builder(nonland=match.group("nonland") is not None, line=sentence)
     if match := _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE.fullmatch(sentence):
-        threshold = _NUMBER_WORDS.get(match.group("count").lower())
+        threshold = parse_count(match.group("count"), article=False)
         if threshold is None:
             return None
         granted = _split_gated_grants(match.group("rest"))
@@ -5999,38 +6177,6 @@ def _dress_down(
 #: no entry at all.
 
 
-def _relentless_rats(
-    source: CardState,
-    timestamp: int,
-    targets: Sequence[CardState],
-    context: LayerContext,
-) -> list[ContinuousEffect]:
-    """ "This creature gets +1/+1 for each other creature named Relentless Rats."
-
-    Sublayer 7c (CR 613.4c), not 7a: it *modifies* power and toughness rather
-    than defining them, and the printed 2/2 is a real printed value rather than
-    a `*` (CR 208.2). Every Rat counts every other Rat, so n of them are each
-    an (n+1)/(n+1).
-    """
-    text = (
-        "This creature gets +1/+1 for each other creature on the battlefield named Relentless Rats."
-    )
-    return [
-        ContinuousEffect(
-            description="Relentless Rats: +1/+1 for each other Relentless Rats",
-            layer=Layer.POWER_TOUGHNESS,
-            sublayer=Sublayer.MODIFY,
-            timestamp=timestamp,
-            source_id=source.id,
-            source_ability=text,
-            selector=_only(source.id),
-            modification=modify_power_toughness_per(
-                count_other_creatures_named("Relentless Rats"), 1, 1
-            ),
-        )
-    ]
-
-
 def _tarmogoyf(
     source: CardState,
     timestamp: int,
@@ -6383,7 +6529,12 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
     "Opalescence": _opalescence,
     "Twisted Image": _twisted_image,
     "Dress Down": _dress_down,
-    "Relentless Rats": _relentless_rats,
+    # Relentless Rats' own "This creature gets +1/+1 for each other creature
+    # on the battlefield named Relentless Rats." is not entered here any
+    # more: `_SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE` reads the shape off the
+    # card's own printed text with no card-name check at all, so a future
+    # card sharing the template with a different name or magnitude - Seven
+    # Dwarves among them - is covered for free.
     "Tarmogoyf": _tarmogoyf,
     "Boneyard Wurm": _boneyard_wurm,
     # "Omnath gets +1/+1 for each unspent green mana you have." A live count

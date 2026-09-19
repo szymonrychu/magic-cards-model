@@ -111,53 +111,38 @@ import functools
 import re
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 from uuid import UUID
 
 from pydantic import Field
 
 from ..models.card import Card, Color, Type, subtypes_of, types_of
+from ..models.card_state import CardState
 from ..models.zone import Zone
+from ..numbers import COUNT, count_pattern, parse_count, where_x_pattern
 from ..snapshot import EngineModel
+
+if TYPE_CHECKING:
+    from ..models.game import Game
 
 # --------------------------------------------------------------------------
 # Mana abilities (CR 605)
 # --------------------------------------------------------------------------
 
-#: The number words a printed "Add ..." can put in front of "mana", and what
-#: each is worth. Magic spells its counts out - "Add five mana in any
-#: combination of colors" (Cascading Cataracts), "Add four mana in any
-#: combination of colors" (Baxter Building) - and stops well short of ten, so
-#: the vocabulary is the numbers rather than the handful the first printings
-#: read here happened to need. "a" is the article standing in for one, which is
-#: how the singular is templated ("Add a mana of any color" does not print, but
-#: "a" reaches the shared `_COUNT` alternation through the same table).
-_ANY_COLOR_COUNTS = {
-    "a": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-#: The alternation those words make, longest first so a word that is a prefix
-#: of another can never win the match short. Every "Add <count> mana ..."
-#: pattern below is built from this one string, so a count word is learned
-#: once rather than once per shape.
-_COUNT = "|".join(sorted(_ANY_COLOR_COUNTS, key=len, reverse=True))
 
 _SYMBOL = re.compile(r"\{([WUBRGC])\}")
-#: "Add one mana of any color." (Cavern of Souls, Delighted Halfling) and
-#: "Add two mana of any one color." (Shang-Chi, Master of Kung Fu). The second
-#: shape adds more than one mana and requires them all to be the same colour,
-#: which is what "any **one** color" says; the count is kept so `resolve` adds
-#: that many rather than always one.
-_ANY_COLOR = re.compile(rf"(?P<count>{_COUNT}) mana of any (?:one )?color", re.IGNORECASE)
+#: "Add one mana of any color." (Cavern of Souls, Delighted Halfling), "Add
+#: two mana of any one color." (Shang-Chi, Master of Kung Fu), and "Add X
+#: mana of any one color, where X is ..." (Seance Board, Woodland
+#: Weavemaster): the second and third shapes add more than one mana and
+#: require them all to be the same colour, which is what "any **one** color"
+#: says. `count` matches CR 107.3's X too, in which case `where_x` carries the
+#: printed definition, read back by `_read_mana_count`; the count is kept so
+#: `resolve` adds that many rather than always one.
+_ANY_COLOR = re.compile(
+    rf"{count_pattern('count', x=True)} mana of any (?:one )?color{where_x_pattern()}",
+    re.IGNORECASE,
+)
 #: "Add two mana in any combination of colors." (Interdimensional Web Watch and
 #: Smokebraider, both in the pool and both played in
 #: `tests/scenarios/test_mana_spend_restrictions.py`). The same amount as
@@ -165,9 +150,11 @@ _ANY_COLOR = re.compile(rf"(?P<count>{_COUNT}) mana of any (?:one )?color", re.I
 #: one color" makes every mana the same colour, "any combination of colors"
 #: chooses each one independently.
 #: CR 106.1a's five colors are the universe for both; colorless is a type and
-#: not a color (CR 106.1b), so neither reaches it.
+#: not a color (CR 106.1b), so neither reaches it. `count`/`where_x` read the
+#: same way `_ANY_COLOR`'s do.
 _ANY_COLOR_COMBINATION = re.compile(
-    rf"(?P<count>{_COUNT}) mana in any combination of colors", re.IGNORECASE
+    rf"{count_pattern('count', x=True)} mana in any combination of colors{where_x_pattern()}",
+    re.IGNORECASE,
 )
 #: Nykthos, Shrine to Nyx: "Choose a color. Add an amount of mana of that
 #: color equal to your devotion to that color." Still a mana ability under
@@ -207,7 +194,7 @@ _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 #: CR 106.1a has five colors of mana, CR 106.1b six *types*, colorless
 #: included. So Reflecting Pool can copy a Wastes and Exotic Orchard cannot.
 _COULD_PRODUCE = re.compile(
-    rf"(?P<count>{_COUNT}) mana of any (?P<kind>type|color) that a land "
+    rf"(?P<count>{COUNT}) mana of any (?P<kind>type|color) that a land "
     r"(?P<whose>you control|an opponent controls) could produce",
     re.IGNORECASE,
 )
@@ -218,11 +205,117 @@ _COULD_PRODUCE = re.compile(
 #: five colors, so colorless is never an answer. Until the choice is known
 #: the ability's type is undefined and CR 106.5 makes it produce no mana -
 #: see `ManaAbility.effective`.
-_CHOSEN_COLOR_MANA = re.compile(rf"(?P<count>{_COUNT}) mana of the chosen color", re.IGNORECASE)
+_CHOSEN_COLOR_MANA = re.compile(rf"(?P<count>{COUNT}) mana of the chosen color", re.IGNORECASE)
 
 #: `Add {G}, {R}, or {W}` is a choice; `Add {C}{C}` is both at once. The comma
 #: is what separates them in WOTC templating.
 _CHOICE_SEPARATOR = re.compile(r",|\bor\b")
+
+#: "this creature's power" (Kami of Whispered Hopes, Woodland Weavemaster) -
+#: the one "where X is ..." shape that names a characteristic of the source
+#: itself rather than a board count. CR 613.5: the *computed* value, so a
+#: continuous effect that has pumped the source by the time the mana ability
+#: resolves is read, not the printed number - `Game.power_of`/`toughness_of`
+#: already answer that. Mirrors `_FIREBENDING_X_IS_POWER_RE` in
+#: `machines/effects.py`, which reads the identical clause for Firebending's
+#: own "add N {R}" (CR 702.189a) - kept separate because that one X is read
+#: as a triggered ability resolves, off `AbilityOnStack`, not as a mana
+#: ability resolves, off a tapped permanent.
+_SELF_CHARACTERISTIC_RE = re.compile(
+    r"^this (?:creature|permanent|artifact|land|source)'?s (?P<characteristic>power|toughness)$",
+    re.IGNORECASE,
+)
+#: "the number of soul counters on this artifact" (Seance Board) - CR 122.1's
+#: counters on the ability's own source, any kind a card invents included
+#: (`models/card_state.CounterKind`'s own "or any string a card invents").
+_SELF_COUNTERS_ON_RE = re.compile(
+    r"^the number of (?P<kind>[a-z]+) counters on this \w+$", re.IGNORECASE
+)
+
+
+def _mana_count_expression_readable(expression: str) -> bool:
+    """Whether `resolve_mana_count_expression` can answer this "where X is
+    ..." text, checked without a board so `_read_mana_count` can fail the
+    whole mana ability closed - the same way an unreadable count word already
+    does - on a definition this parser will never be able to answer, rather
+    than accepting the ability now and discovering the gap only once a
+    player taps it.
+    """
+    stripped = expression.strip().rstrip(".")
+    if _SELF_CHARACTERISTIC_RE.fullmatch(stripped) or _SELF_COUNTERS_ON_RE.fullmatch(stripped):
+        return True
+    # Lazy: `machines/effects.py` imports this module for `parse_mana_abilities`
+    # and friends, so importing it back at module scope would cycle. The
+    # counted-board shapes `count_expression` reads ("the number of Shrines
+    # you control", Sanctum of Fruitful Harvest) are pure text -> callable, no
+    # board needed to ask whether one exists.
+    from .effects import count_expression
+
+    return count_expression(stripped) is not None
+
+
+def resolve_mana_count_expression(
+    game: "Game", controller: str, source: CardState, expression: str
+) -> int:
+    """The board-derived count a mana ability's "where X is ..." definition
+    asks for, read at the moment the ability resolves (CR 605.3b: immediately,
+    so this is the only time that matters) - Woodland Weavemaster's "this
+    creature's power", Seance Board's "the number of soul counters on this
+    artifact" (CR 122.1), or one of `effects.count_expression`'s board-count
+    shapes (Sanctum of Fruitful Harvest's "the number of Shrines you
+    control"). CR 107.1b: a result that would be negative is 0 instead - only
+    reachable here through a pumped-negative power/toughness, since a counter
+    count and every `count_expression` shape are already non-negative.
+
+    Only ever called with an `expression` `_mana_count_expression_readable`
+    has already accepted, so this does not itself fail closed - `Game.
+    activate_ability` would have refused the activation earlier if the parser
+    had not been able to read the definition at all.
+    """
+    stripped = expression.strip().rstrip(".")
+    characteristic = _SELF_CHARACTERISTIC_RE.fullmatch(stripped)
+    if characteristic is not None:
+        wants_power = characteristic.group("characteristic").lower() == "power"
+        value = game.power_of(source) if wants_power else game.toughness_of(source)
+        return max(value, 0) if value is not None else 0
+    counters = _SELF_COUNTERS_ON_RE.fullmatch(stripped)
+    if counters is not None:
+        return max(source.counter_count(counters.group("kind").lower()), 0)
+    from .effects import count_expression
+
+    reader = count_expression(stripped)
+    assert reader is not None, (
+        f"{expression!r} was accepted as readable but count_expression refused it"
+    )
+    return max(reader(game, controller), 0)
+
+
+def _read_mana_count(match: "re.Match[str]") -> tuple[int, str | None] | None:
+    """The `(any_color_count, any_color_count_expression)` a mana-count regex
+    captured - `_ANY_COLOR`'s or `_ANY_COLOR_COMBINATION`'s own `count`/
+    `where_x` groups - or `None` when the count cannot be read at all: an
+    unknown word, or CR 107.3's X with no "where X is ..." definition this
+    module or `effects.count_expression` can answer (`_parse_effect` fails
+    the whole ability closed on either, the same as it always has for an
+    unread word).
+
+    A printed number reads as `(count, None)`. A readable X reads as
+    `(1, expression)` - `1` is a placeholder never used for anything:
+    `ManaAbility.resolve` takes the real count from `count=`, computed by
+    `Game.activate_ability` calling `resolve_mana_count_expression` once a
+    board exists to read it, mirroring `amount_from_devotion`'s own
+    placeholder `any_color_count` of 1.
+    """
+    word = match.group("count")
+    if word.lower() == "x":
+        where_x = match.groupdict().get("where_x")
+        if where_x is None or not _mana_count_expression_readable(where_x):
+            return None
+        return 1, where_x.strip()
+    count = parse_count(word)
+    if count is None:
+        return None
+    return count, None
 
 
 class CouldProduce(StrEnum):
@@ -493,6 +586,16 @@ class ManaAbility(EngineModel):
     #: `produces`, `tests/scenarios/harness.mana_from` - gets one mana of the
     #: chosen colour, which is the shape of the answer if not its size.
     amount_from_devotion: bool = False
+    #: The raw "where X is ..." definition, when the count is CR 107.3's X
+    #: rather than a printed number - Seance Board's "the number of soul
+    #: counters on this artifact", Woodland Weavemaster's "this creature's
+    #: power". `any_color_count` stays at its default 1, the same placeholder
+    #: `amount_from_devotion` already uses: the real count is only knowable
+    #: from the board at the moment of activation, read by
+    #: `resolve_mana_count_expression` and passed to `resolve` as `count`, the
+    #: same argument devotion already takes it through. `None` for every
+    #: ability whose count is a printed number or CR 700.5's devotion.
+    any_color_count_expression: str | None = None
     #: The raw trailing sentence, when the ability's text has one beyond
     #: "Add ..." and its own recognised conditional/spend-restriction
     #: clauses, but this parser could not classify it as a known rider shape.
@@ -715,15 +818,19 @@ class ManaAbility(EngineModel):
         if any_color:
             if chosen_colors is None:
                 raise ValueError("this ability adds any colour; pass the colour chosen")
-            # `count` is CR 700.5's devotion for `amount_from_devotion`, which
-            # nothing on this object can work out for itself - see that field's
-            # own docstring. Zero is a real answer (no permanent with a mana
-            # symbol of that colour) and produces no mana at all, which
-            # CR 605.2 already allows: "A mana ability remains a mana ability
-            # even if the game state doesn't allow it to produce mana."
+            # `count` is CR 700.5's devotion for `amount_from_devotion`, or a
+            # `resolve_mana_count_expression` answer for
+            # `any_color_count_expression` - neither is anything on this
+            # object can work out for itself, see those fields' own
+            # docstrings. Zero is a real answer (no permanent with a mana
+            # symbol of that colour, no counters yet) and produces no mana at
+            # all, which CR 605.2 already allows: "A mana ability remains a
+            # mana ability even if the game state doesn't allow it to produce
+            # mana."
             wanted = (
                 max(count, 0)
-                if self.amount_from_devotion and count is not None
+                if (self.amount_from_devotion or self.any_color_count_expression is not None)
+                and count is not None
                 else self.any_color_count
             )
             if single is not None:
@@ -845,7 +952,9 @@ def _parse_effect(effect: str) -> ManaAbility | None:
     # off a Plains. CR 106.7's survey is the whole meaning of the sentence.
     could_produce = _COULD_PRODUCE.search(effect)
     if could_produce:
-        count = _ANY_COLOR_COUNTS[could_produce.group("count").lower()]
+        count = parse_count(could_produce.group("count"))
+        if count is None:
+            return None
         # CR 106.1a: five colors of mana. CR 106.1b: six *types*, colorless
         # included. Reflecting Pool says "type" and so can copy a colorless
         # source; Exotic Orchard says "color" and cannot.
@@ -871,7 +980,9 @@ def _parse_effect(effect: str) -> ManaAbility | None:
     # either regex from silently reordering them.
     chosen = _CHOSEN_COLOR_MANA.search(effect)
     if chosen:
-        count = _ANY_COLOR_COUNTS[chosen.group("count").lower()]
+        count = parse_count(chosen.group("count"))
+        if count is None:
+            return None
         return ManaAbility(
             options=[[color] * count for color in _COLORS],
             any_color_count=count,
@@ -880,21 +991,29 @@ def _parse_effect(effect: str) -> ManaAbility | None:
 
     combination = _ANY_COLOR_COMBINATION.search(effect)
     if combination:
-        count = _ANY_COLOR_COUNTS[combination.group("count").lower()]
+        read = _read_mana_count(combination)
+        if read is None:
+            return None
+        count, expression = read
         return ManaAbility(
             options=[[color] * count for color in _COLORS],
             any_color=True,
             any_color_count=count,
             any_color_mixed=True,
+            any_color_count_expression=expression,
         )
 
     any_color = _ANY_COLOR.search(effect)
     if any_color:
-        count = _ANY_COLOR_COUNTS[any_color.group("count").lower()]
+        read = _read_mana_count(any_color)
+        if read is None:
+            return None
+        count, expression = read
         return ManaAbility(
             options=[[color] * count for color in _COLORS],
             any_color=True,
             any_color_count=count,
+            any_color_count_expression=expression,
         )
 
     # A choice reads `{G}, {R}, or {W}`; a multiple reads `{C}{C}`.
@@ -1731,8 +1850,13 @@ def parse_granted_ability_lines(texts: Sequence[str]) -> list[Ability]:
 #: "choose two —", "choose one or more —" - the header of a bulleted modal
 #: list. Anchored on the trailing em dash Scryfall prints, so an ordinary
 #: sentence that happens to contain the word "choose" ("Choose target
-#: creature.") never matches.
-_MODAL_INSTRUCTION_TAIL = re.compile(r"choose\b.*[-—]\s*$", re.IGNORECASE)
+#: creature.") never matches. The instruction may end in its own second
+#: sentence instead - "choose one. If there are four or more card types among
+#: cards in your graveyard, choose both instead." (Prophetic Titan) - which is
+#: still the header of the bullets under it.
+_MODAL_INSTRUCTION_TAIL = re.compile(
+    r"choose\b.*(?:[-—]|\bchoose [^.]+ instead\.)\s*$", re.IGNORECASE
+)
 
 
 def _merge_modal_bullet_lines(lines: list[str]) -> list[str]:
@@ -2845,7 +2969,7 @@ _TRIGGERED_MANA_CHOSEN_RE = re.compile(r"^one mana of (?:the chosen|that) color$
 #: "one mana of any color" (Fertile Ground) and "two mana in any combination
 #: of colors" (Market Festival): one colour chosen per mana (CR 105.1).
 _TRIGGERED_MANA_ANY_COLOR_RE = re.compile(
-    r"^(?P<count>one|two|three|\d+) mana (?:of any color|in any combination of colors)$",
+    rf"^(?P<count>{COUNT}) mana (?:of any color|in any combination of colors)$",
     re.IGNORECASE,
 )
 #: "one mana of any type that land produced" (Zendikar Resurgent, Mirari's
@@ -2854,7 +2978,6 @@ _TRIGGERED_MANA_ANY_COLOR_RE = re.compile(
 _TRIGGERED_MANA_PRODUCED_TYPE_RE = re.compile(
     r"^one mana of any type that (?:[a-z]+ )*?[a-z]+ produced$", re.IGNORECASE
 )
-_TRIGGERED_MANA_COUNTS = {"one": 1, "two": 2, "three": 3}
 #: "<mana> for each <phrase>" (Elvish Guidance's "{G} for each Elf on the
 #: battlefield"): the mana, that many times, counted as it is added
 #: (CR 608.2h).
@@ -2946,7 +3069,7 @@ def _parse_add_mana_sentence(sentence: str) -> TriggeredManaShape | None:
     any_color = _TRIGGERED_MANA_ANY_COLOR_RE.fullmatch(mana)
     if any_color is not None:
         word = any_color.group("count").lower()
-        amount = _TRIGGERED_MANA_COUNTS.get(word) or (int(word) if word.isdigit() else 0)
+        amount = parse_count(word) or 0
         return TriggeredManaShape(any_color=amount, **common) if amount else None
     symbols = _TRIGGERED_MANA_SYMBOLS_RE.findall(mana)
     round_trip = "".join(f"{{{symbol}}}" for symbol in symbols)
