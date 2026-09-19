@@ -1,0 +1,150 @@
+{
+  "object": "card",
+  "id": "2bb7a8eb-227f-410b-859f-750ef0aea2f0",
+  "oracle_id": "83c61083-b357-4775-a855-5a9013cc2bdf",
+  "multiverse_ids": [],
+  "tcgplayer_id": 717901,
+  "cardmarket_id": 909959,
+  "name": "Verdant Kraken",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/2bb7a8eb-227f-410b-859f-750ef0aea2f0",
+  "scryfall_uri": "https://scryfall.com/card/fra/118/verdant-kraken?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-17T11:34:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.jpg?1789644841",
+    "normal": "https://cards.scryfall.io/normal/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.jpg?1789644841",
+    "large": "https://cards.scryfall.io/large/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.jpg?1789644841",
+    "png": "https://cards.scryfall.io/png/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.png?1789644841",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.jpg?1789644841",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.jpg?1789644841",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.webp?1789644841",
+    "grid": "https://cards.scryfall.io/grid/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.webp?1789644841",
+    "display": "https://cards.scryfall.io/display/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.webp?1789644841",
+    "art": "https://cards.scryfall.io/art/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.webp?1789644841",
+    "crop": "https://cards.scryfall.io/crop/front/2/b/2bb7a8eb-227f-410b-859f-750ef0aea2f0.webp?1789644841"
+  },
+  "mana_cost": "{4}{G}{G}{G}",
+  "cmc": 7.0,
+  "type_line": "Creature \u2014 Plant Kraken",
+  "oracle_text": "At the beginning of each player's upkeep, you create a 3/3 green Forest Tentacle land creature token. (It has \"{T}: Add {G}.\" It's affected by summoning sickness until your next turn.)",
+  "power": "6",
+  "toughness": "6",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "G"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "fc924972-5014-45d1-9676-6a76d862b205",
+      "component": "token",
+      "name": "Forest Tentacle",
+      "type_line": "Token Land Creature \u2014 Forest Tentacle",
+      "uri": "https://api.scryfall.com/cards/fc924972-5014-45d1-9676-6a76d862b205"
+    },
+    {
+      "object": "related_card",
+      "id": "decca9e3-5ca8-4b48-8ec9-23b26ca683cb",
+      "component": "combo_piece",
+      "name": "Verdant Kraken",
+      "type_line": "Creature \u2014 Plant Kraken",
+      "uri": "https://api.scryfall.com/cards/decca9e3-5ca8-4b48-8ec9-23b26ca683cb"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2bb7a8eb-227f-410b-859f-750ef0aea2f0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A83c61083-b357-4775-a855-5a9013cc2bdf&unique=prints",
+  "collector_number": "118",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "It specializes in natural disorder.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wayne Reynolds",
+  "artist_ids": [
+    "afc47cec-3ccc-404e-a8c6-4d83dd504271"
+  ],
+  "illustration_id": "5d88d30e-5675-44bc-b85e-a96dbf3edd34",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "prices": {
+    "usd": "9.95",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVerdant%2BKraken",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVerdant%2BKraken",
+    "edhrec": "https://edhrec.com/route/?cc=Verdant+Kraken"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717901%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909959&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Verdant+Kraken&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

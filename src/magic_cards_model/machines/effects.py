@@ -104,7 +104,9 @@ from . import combat as combat_rules
 from .abilities import (
     AbilityKind,
     ActivatedAbility,
+    TriggeredAbility,
     TriggerEvent,
+    _parse_line,
     keyword_abilities,
     parse_abilities,
     parse_triggered_mana,
@@ -857,6 +859,14 @@ _COUNT_THIS_WAY_RE = re.compile(
 #: zone with no type restriction to read ("the hand is where a player holds
 #: cards that have been drawn"), so every card in it counts, whatever it is.
 _COUNT_CARDS_IN_YOUR_HAND_RE = re.compile(r"^(?:the )?number of cards in your hand$", re.IGNORECASE)
+#: "the amount of life you gained this turn" - Germinate Recruits' own X
+#: (CR 107.3f). `Game.life_gained_amount_this_turn` is the per-player running
+#: total `Player.gain_life` keeps for exactly this, the amount twin of
+#: `life_gained_this_turn`'s plain boolean Ocelot Pride's intervening *if*
+#: already reads.
+_AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE = re.compile(
+    r"^(?:the )?amount of life you(?:'ve| have)? gained this turn$", re.IGNORECASE
+)
 #: "the greatest power among creatures you control" - Tyvar, the Pummeler's
 #: own X. Not a count of anything: an extremum over a characteristic, which
 #: is why it needs its own reader rather than a wider qualifier on the two
@@ -1033,6 +1043,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return len(game.player(controller).hand)
 
         return count_in_hand
+
+    if _AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE.fullmatch(stripped):
+
+        def life_gained_amount(game: "Game", controller: str) -> int:
+            return game.life_gained_amount_this_turn.get(controller, 0)
+
+        return life_gained_amount
 
     if match := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
@@ -2619,6 +2636,69 @@ def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
     return pattern.sub("", text)
 
 
+#: "return this card from your graveyard to your hand" - a widely templated
+#: CR 112.6c ability shape ("some effects state that an ability of a card
+#: functions from a zone other than the zone the card is normally in") that
+#: real instants and sorceries print as a *second*, independent paragraph
+#: below their own effect - Command the Stage, Repeating Barrage, Rekindled
+#: Flame, Hammer of Bogardan, and dozens more, all genuine printings, not a
+#: shape invented for one card. Matched narrowly on this exact phrase, not on
+#: "any paragraph that happens to parse as a complete ability" - Summoner's
+#: Pact's own second paragraph ("At the beginning of the next upkeep, pay
+#: {2}{G}{G}. If you don't, you lose the game.") *also* parses as one
+#: complete triggered ability on its own, and is nonetheless genuinely part
+#: of the spell's own CR 608.2c resolution (the delayed trigger it creates,
+#: read by `_parse_delayed_pay_or_lose_clauses` elsewhere in this file) - a
+#: broader "strip anything ability-shaped" rule stripped that clause too and
+#: silently dropped the whole delayed-cost mechanic.
+_RETURNS_ITSELF_FROM_GRAVEYARD_RE = re.compile(
+    r"return this card from your graveyard to your hand", re.IGNORECASE
+)
+
+
+def _strip_trailing_standalone_triggered_ability(text: str) -> str:
+    """A printed paragraph after the first whose own effect is CR 112.6c's
+    "return this card from your graveyard to your hand" is never part of
+    this spell's own resolution - it is a different ability entirely, one
+    that functions while the card sits in the graveyard, merely printed on
+    the same card (Command the Stage's own second line is exactly this
+    shape).
+
+    Concatenating the two paragraphs into one effect text (as `Game.
+    resolve_top` does, reading `spell.oracle_text` whole) let that second
+    paragraph poison the first: `split_effect_clauses`'s own `\n+` separator
+    cut it off as its own "clause", which of course reads as nothing this
+    file's clause parsers understand, and CR 608.2c's no-half-effect
+    discipline then failed the *entire* card closed - including the token
+    creation the first paragraph alone would have read fine.
+
+    Read through `_parse_line` - the same per-line reader `parse_abilities`
+    itself uses - to confirm the trailing paragraph really is one complete
+    ability on its own before checking its shape, so a future card's
+    genuinely continued resolution text that happens to also start with a
+    capital "At" or "When" mid-sentence is never mistaken for one (a real
+    continuation line does not *parse* as a complete ability by itself). The
+    stripped ability's own execution - a triggered ability that functions
+    from a zone other than the battlefield or stack - is a mechanic this
+    wave does not build; `docs/engine-coverage.md` is where that gap is
+    recorded, not here.
+    """
+    lines = text.split("\n")
+    if len(lines) < 2:
+        return text
+    tail = lines[-1].strip()
+    if not tail:
+        return text
+    parsed = _parse_line(tail, [], lines[-1])
+    if (
+        len(parsed) == 1
+        and isinstance(parsed[0], TriggeredAbility)
+        and _RETURNS_ITSELF_FROM_GRAVEYARD_RE.search(parsed[0].effect)
+    ):
+        return "\n".join(lines[:-1])
+    return text
+
+
 def effect_for(
     card_name: str, effect_text: str | None = None, *, x_value: int | None = None
 ) -> Effect | None:
@@ -2663,6 +2743,7 @@ def effect_for(
     if effect_text is None:
         return None
     effect_text = _strip_self_shuffle_clause(card_name, effect_text)
+    effect_text = _strip_trailing_standalone_triggered_ability(effect_text)
     if is_modal_text(effect_text):
         return resolve_modal_spell
     effect = _spell_effect_or_notice(effect_text)
@@ -6625,7 +6706,7 @@ def put_counters_on_ability_targets(
 # characteristic read (CR 613.4, CR 613.5), not a count of anything.
 _COUNTER_EACH_GROUP_RE = re.compile(
     rf"^put (?P<n>{COUNT}|x) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
-    rf"(?P<group>[a-z]+) you control{where_x_pattern('expr')}\.?$",
+    rf"(?P<other>other )?(?P<group>[a-z]+) you control{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
 
@@ -6649,12 +6730,19 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     expression - an expression it cannot read fails closed with an
     `UnreadableCounterAmountNotice` instead of placing a guessed number
     (CR 611.2c: the magnitude is fixed once, at resolution).
+
+    An optional leading "other" - Summon: Good King Mog XII's own Saga
+    chapter IV, "Put two +1/+1 counters on each **other** Moogle you
+    control" - excludes the ability's own source (CR 109.2) from the group,
+    the same "other" every targeted clause in this file already reads for a
+    single target.
     """
     match = _COUNTER_EACH_GROUP_RE.fullmatch(text.strip())
     if match is None:
         return None
     kind = match.group("kind").lower()
     group = match.group("group")
+    excludes_source = match.group("other") is not None
     n_text = match.group("n").lower()
     expr = match.group("expr")
     reader: AmountReader | None = None
@@ -6691,6 +6779,8 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
         controller = ability.controller
         board = game.computed_board()
         for permanent in game.battlefield:
+            if excludes_source and permanent.id == source.id:
+                continue
             chars = board.of(permanent)
             if chars.controller != controller:
                 continue
@@ -9270,12 +9360,15 @@ def parse_targeted_effect(text: str) -> AbilityEffect | None:
 #: token **named Munitions** with ..." - between the noun phrase and the
 #: tail, since that is where Oracle text always prints it (CR 111.9's
 #: "create [name], a ..." appositive is a different shape this regex does not
-#: read; nothing in the pool needs it). `tail` is whatever follows "with",
-#: read by `_parse_token_tail`. `\btokens?\b` a whole word so a subtype that
-#: merely contains the letters "token" could never match it - none in the
-#: pool do, but the boundary costs nothing.
+#: read; `_parse_named_appositive_token_clause` below reads that one). `tail`
+#: is whatever follows "with", read by `_parse_token_tail`. `\btokens?\b` a
+#: whole word so a subtype that merely contains the letters "token" could
+#: never match it - none in the pool do, but the boundary costs nothing. A
+#: leading "you " (Verdant Kraken's "you create a ... token") is optional and
+#: read the same as no subject at all - a spell or ability's own clauses are
+#: always the resolving object's controller's actions either way.
 _TOKEN_CLAUSE_RE = re.compile(
-    rf"^(?:create )?(?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b"
+    rf"^(?:you )?(?:create )?(?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b"
     r"(?:\s+named (?P<name>.+?))?"
     r"(?:\s+with\s+(?P<tail>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -9453,11 +9546,26 @@ def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> Token
         if words and words[-1].lower() == "artifact":
             types = (Type.ARTIFACT, Type.CREATURE)
             words = words[:-1]
+        elif words and words[-1].lower() == "land":
+            # "land creature" - Verdant Kraken's Forest Tentacle, Awaken the
+            # Woods' Forest Dryad. CR 305.6 grants the basic-land mana ability
+            # intrinsically off the token's own "Forest" subtype below, so no
+            # quoted tail is needed for that half of it to work.
+            types = (Type.LAND, Type.CREATURE)
+            words = words[:-1]
     elif words[-1].lower() in _BARE_TOKEN_TYPE_WORDS:
         types = (_BARE_TOKEN_TYPE_WORDS[words[-1].lower()],)
         words = words[:-1]
     else:
         return None
+    supertypes: tuple[Supertype, ...] = ()
+    if words and words[0].lower() == "legendary":
+        # CR 205.4a's supertype, printed ahead of the P/T the same way it is
+        # on a real card's own type line - Jiang Yanggu, Never Alone's "a
+        # legendary 3/3 green Dog creature token" (Mowu), off-set Drizzt
+        # Do'Urden's "a legendary 4/1 green Cat creature token" (Guenhwyvar).
+        supertypes = (Supertype.LEGENDARY,)
+        words = words[1:]
     power = toughness = None
     if words and re.fullmatch(r"\d+/\d+", words[0]):
         power_text, toughness_text = words[0].split("/")
@@ -9481,6 +9589,7 @@ def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> Token
     return TokenDefinition(
         types=types,
         subtypes=tuple(words),
+        supertypes=supertypes,
         colors=tuple(colors),
         power=power,
         toughness=toughness,
@@ -9597,6 +9706,104 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         # whatever `card_name` would otherwise derive.
         definition = definition.model_copy(update={"name": name.strip()})
     return _token_creation_clause(definition, count, tapped=tapped)
+
+
+#: CR 111.9's appositive naming - "create `<Name>`, a `<descriptor>` token[
+#: with `<tail>`]." - Jiang Yanggu, Never Alone's "create Mowu, a legendary
+#: 3/3 green Dog creature token" (on-set), off-set Drizzt Do'Urden's "create
+#: Guenhwyvar, a legendary 4/1 green Cat creature token with trample". A
+#: different shape from `_TOKEN_CLAUSE_RE`'s own "named `<Name>`" tail - here
+#: the name leads the sentence as its own noun, immediately after "create",
+#: with no count word in front of it at all (CR 111.9's token is always one).
+_NAMED_APPOSITIVE_TOKEN_RE = re.compile(
+    r"^create (?P<name>[A-Z][^,]*), (?:a|an) (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+with\s+(?P<tail>.+))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_named_appositive_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_NAMED_APPOSITIVE_TOKEN_RE`'s shape, or `None` if this is not it.
+
+    `for_spell` is accepted only for symmetry with every other clause parser
+    in `_parse_mixed_clause`'s chain - CR 111.9 naming applies equally to a
+    spell and an ability, and nothing here reads the resolving object beyond
+    its controller.
+    """
+    match = _NAMED_APPOSITIVE_TOKEN_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if "copy of" in clause.lower():
+        return None  # CR 707.2 copying needs copiable values this wave does not read.
+    name = match.group("name").strip()
+    if not name or not name[0].isupper():
+        return None
+    words = match.group("desc").strip().split()
+    definition = _parse_generic_token_descriptor(words, match.group("tail"))
+    if definition is None:
+        return None
+    definition = definition.model_copy(update={"name": name})
+    return _token_creation_clause(definition, 1, tapped=False)
+
+
+#: "Create X `<descriptor>` tokens[ named `<Name>`][ with `<tail>`], where X
+#: is `<expr>`." (CR 107.3f) - Germinate Recruits' own "where X is the amount
+#: of life you gained this turn" and off-set Charisma Bobblehead's "where X
+#: is the number of Bobbleheads you control". `_TOKEN_CLAUSE_RE`'s own `n`
+#: group only ever reads a fixed `COUNT` word, never "X" - CR 107.3a's
+#: announced X is substituted into that shape by `effect_for` before this
+#: parser is ever tried, so a bare literal "X" reaching here always means CR
+#: 107.3f's *other* X, one the card's own text defines and only `count_
+#: expression` (already shared with every other "the number of ..." reader)
+#: can evaluate - at resolution, not at parse time (CR 611.2c fixes the
+#: magnitude once, the moment the effect applies).
+_VARIABLE_COUNT_TOKEN_RE = re.compile(
+    r"^(?:you )?(?:create )?x (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+named (?P<name>.+?))?"
+    r"(?:\s+with\s+(?P<tail>.+?))?"
+    r",?\s*where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_VARIABLE_COUNT_TOKEN_RE`'s shape, or `None` if this is not it."""
+    match = _VARIABLE_COUNT_TOKEN_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if "copy of" in clause.lower():
+        return None  # CR 707.2 copying needs copiable values this wave does not read.
+    words = match.group("desc").strip().split()
+    tail = match.group("tail")
+    name = match.group("name")
+
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
+    if not words:
+        return None
+
+    predefined_name = " ".join(words)
+    if tail is None and name is None and predefined_name in PREDEFINED:
+        definition = PREDEFINED[predefined_name]
+    else:
+        definition = _parse_generic_token_descriptor(words, tail)
+        if definition is None:
+            return None
+        if name is not None:
+            definition = definition.model_copy(update={"name": name.strip()})
+
+    reader = count_expression(match.group("expr"))
+    if reader is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        count = reader(game, controller)
+        if count > 0:
+            create_tokens(game, definition, controller, count, tapped=tapped)
+
+    return effect
 
 
 # --------------------------------------------------------------------------
@@ -12207,6 +12414,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     token_copies_except = _parse_create_token_copies_except_clause(effect_text, for_spell=False)
     if token_copies_except is not None:
         return token_copies_except
+    for_each_creature_target_player_copy = _parse_for_each_creature_target_player_copy_clause(
+        effect_text, for_spell=False
+    )
+    if for_each_creature_target_player_copy is not None:
+        return for_each_creature_target_player_copy
     modal_triggered = _resolve_modal_triggered_ability_clause(effect_text)
     if modal_triggered is not None:
         return modal_triggered
@@ -14056,6 +14268,161 @@ def _parse_citys_blessing_instead_clause(effect_text: str) -> Effect | None:
     return effect
 
 
+#: "Create `<n>` `<descriptor>` tokens[ named `<Name>`]. [Then ]if this spell
+#: was cast from a graveyard, put `<base>` `<kind>` counters on {that token|
+#: each of them}[ for every `<divisor>` cards in your graveyard]." - Recursive
+#: Recruitment's own "put a +1/+1 counter on each of them for every three
+#: cards in your graveyard" and off-set Retrieve the Esper's "Then if this
+#: spell was cast from a graveyard, put two +1/+1 counters on that token."
+#: Read whole, ahead of the ordinary per-clause split - the sentence boundary
+#: (a period) is one `_CLAUSE_SEPARATOR` would cut on too, and the second
+#: sentence's "each of them"/"that token" refers back to the first sentence's
+#: own tokens, which only a whole-text reader can carry forward.
+_CREATE_TOKENS_GRAVEYARD_CAST_COUNTERS_RE = re.compile(
+    rf"^create (?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+named (?P<name>.+?))?\.\s*"
+    r"(?:then\s+)?if this spell was cast from a graveyard,\s*"
+    rf"put (?P<base>{COUNT}) (?P<kind>\+1/\+1|-1/-1) counters? on "
+    r"(?:that token|each of them)"
+    rf"(?:\s+for every (?P<divisor>{COUNT}) cards? in your graveyard)?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_tokens_graveyard_cast_counters_clause(text: str) -> Effect | None:
+    """`_CREATE_TOKENS_GRAVEYARD_CAST_COUNTERS_RE`'s shape, or `None`.
+
+    `Game.cast_record(spell).origin_zone` (CR 601.2, already recorded by
+    `Game.note_cast` for every keyword-cast case, flashback's own exile
+    included) is CR 608.2c's "this spell" - the resolving object itself, not
+    the target of anything - so no target-resolution step is needed the way
+    the copy-token shapes above need one. `<base>` counters "for every
+    `<divisor>` cards in your graveyard" is CR 107.1's plain integer
+    division: one `<base>`-sized helping per whole `<divisor>` cards, applied
+    identically to every token the first sentence created, the same way
+    Recursive Recruitment's own plural "each of them" reads. No divisor tail
+    at all is Retrieve the Esper's own flat count instead.
+    """
+    match = _CREATE_TOKENS_GRAVEYARD_CAST_COUNTERS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if "copy of" in text.lower():
+        return None
+    count = parse_count(match.group("n"))
+    words = match.group("desc").strip().split()
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
+    if not words:
+        return None
+    predefined_name = " ".join(words)
+    name = match.group("name")
+    if name is None and predefined_name in PREDEFINED:
+        definition = PREDEFINED[predefined_name]
+    else:
+        definition = _parse_generic_token_descriptor(words, None)
+        if definition is None:
+            return None
+        if name is not None:
+            definition = definition.model_copy(update={"name": name.strip()})
+
+    kind = _counter_kind(match.group("kind"))
+    base = parse_count(match.group("base"))
+    divisor_text = match.group("divisor")
+    divisor = parse_count(divisor_text) if divisor_text is not None else None
+    if divisor_text is not None and not divisor:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        created = create_tokens(game, definition, controller, count, tapped=tapped)
+        if not created:
+            return
+        if game.cast_record(spell).origin_zone is not Zone.GRAVEYARD:
+            return
+        if divisor is not None:
+            graveyard_count = len(game.player(controller).graveyard)
+            amount = base * (graveyard_count // divisor)
+        else:
+            amount = base
+        if amount <= 0:
+            return
+        for token in created:
+            game.add_counters(token, kind, amount)
+
+    return effect
+
+
+#: "Create `<n>` `<descriptor>` tokens[ named `<Name>`], then put `<base>`
+#: `<kind>` counters on each other `<subtype>`[ token(s)] you control." -
+#: Command the Stage's own "Create a 2/2 colorless Wizard Soldier creature
+#: token named Cadet, then put a +1/+1 counter on each other Wizard token you
+#: control." "Other" here means other than the token(s) this same sentence
+#: just created (CR 608.2c's own instructions in order) - a different
+#: referent from `_parse_put_counters_on_group_clause`'s own "other", which
+#: excludes an *ability's* source and has no created-tokens list to exclude
+#: instead. Read whole, ahead of the per-clause split: the ", then " join is
+#: exactly what `_CLAUSE_SEPARATOR` cuts on, which would otherwise strand the
+#: second half with no "it"/"they" left to say what was just made.
+_CREATE_TOKENS_THEN_COUNTER_OTHER_SUBTYPE_RE = re.compile(
+    rf"^create (?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+named (?P<name>.+?))?,\s*then\s+"
+    rf"put (?P<base>{COUNT}) (?P<kind>\+1/\+1|-1/-1) counters? on each other "
+    r"(?P<subtype>[A-Za-z]+)(?:\s+tokens?)? you control\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_tokens_then_counter_other_subtype_clause(text: str) -> Effect | None:
+    """`_CREATE_TOKENS_THEN_COUNTER_OTHER_SUBTYPE_RE`'s shape, or `None`.
+
+    `<subtype>` is read off the **computed** board (CR 613.5), the same
+    convention `_parse_put_counters_on_group_clause` already uses for its own
+    "each `<group>` you control".
+    """
+    match = _CREATE_TOKENS_THEN_COUNTER_OTHER_SUBTYPE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if "copy of" in text.lower():
+        return None
+    count = parse_count(match.group("n"))
+    words = match.group("desc").strip().split()
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
+    if not words:
+        return None
+    predefined_name = " ".join(words)
+    name = match.group("name")
+    if name is None and predefined_name in PREDEFINED:
+        definition = PREDEFINED[predefined_name]
+    else:
+        definition = _parse_generic_token_descriptor(words, None)
+        if definition is None:
+            return None
+        if name is not None:
+            definition = definition.model_copy(update={"name": name.strip()})
+
+    kind = _counter_kind(match.group("kind"))
+    base = parse_count(match.group("base"))
+    subtype = match.group("subtype").lower()
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        created = create_tokens(game, definition, controller, count, tapped=tapped)
+        created_ids = {token.id for token in created}
+        board = game.computed_board()
+        for permanent in game.battlefield:
+            if permanent.id in created_ids:
+                continue
+            chars = board.of(permanent)
+            if chars.controller != controller:
+                continue
+            if subtype not in (word.lower() for word in chars.subtypes):
+                continue
+            game.add_counters(permanent, kind, base)
+
+    return effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -14085,6 +14452,19 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     token_copies_except = _parse_create_token_copies_except_clause(whole, for_spell=True)
     if token_copies_except is not None:
         return token_copies_except
+    for_each_creature_target_player_copy = _parse_for_each_creature_target_player_copy_clause(
+        whole, for_spell=True
+    )
+    if for_each_creature_target_player_copy is not None:
+        return for_each_creature_target_player_copy
+    tokens_graveyard_cast_counters = _parse_create_tokens_graveyard_cast_counters_clause(whole)
+    if tokens_graveyard_cast_counters is not None:
+        return tokens_graveyard_cast_counters
+    tokens_then_counter_other_subtype = _parse_create_tokens_then_counter_other_subtype_clause(
+        whole
+    )
+    if tokens_then_counter_other_subtype is not None:
+        return tokens_then_counter_other_subtype
     untap_and_gain_control = _parse_untap_and_gain_control_clause(whole)
     if untap_and_gain_control is not None:
         return untap_and_gain_control
@@ -20088,6 +20468,47 @@ def _parse_add_any_combination_mana_clause(
     return effect
 
 
+#: "Create `<n>` token(s) that('s a copy|are copies) of it." - Gruff Triplets'
+#: ETB ("if it isn't a token, create two tokens that are copies of it") and
+#: Sphinx of False Conclusions' dies trigger ("if it isn't a token, create a
+#: token that's a copy of it"). "It" is the ability's own source (CR 109.2,
+#: `intervening_if_holds`'s "it isn't a token" clause above already checked
+#: the same referent) - not a target, so no `_targets_understood` gate is
+#: needed the way `_parse_create_token_copy_of_target_clause` below needs one.
+_SELF_COPY_TOKEN_RE = re.compile(
+    rf"^create (?P<n>{COUNT}) "
+    r"(?:tokens that are copies|token that(?:'s| is) a copy) of it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SELF_COPY_TOKEN_RE`'s shape, or `None` if this is not it.
+
+    Ability-only: both pool cards printing this shape are permanents'
+    triggered abilities copying themselves, and `source_or_last_known` is
+    what makes a *dies* trigger's own "it" answerable at all (CR 113.7a,
+    CR 608.2h) once the source has already left the battlefield - a spell has
+    no comparable look-back object to fall back to.
+    """
+    if for_spell:
+        return None
+    match = _SELF_COPY_TOKEN_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        controller = game.controller_of(stack_object).username
+        source = stack_object.source_or_last_known(game)
+        if source is None:
+            return
+        token_copy_of(game, source, controller, count=count)
+
+    return effect  # type: ignore[return-value]
+
+
 #: Replicate (the sorcery half of Repudiate // Replicate): "Create a token
 #: that's a copy of target creature you control." (CR 707.2, CR 111.13's
 #: "created" token, not CR 111.13's exempt copy-of-a-spell). Deliberately not
@@ -20119,6 +20540,97 @@ def _parse_create_token_copy_of_target_clause(
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState):
                 token_copy_of(game, target, controller.username)
+
+    return effect
+
+
+#: "For each creature target player controls, create a token that's a copy of
+#: that creature[, except it has `<keyword>`[ and "`<ability>`"]]." - Clone
+#: Legion (no "except" tail) and Face Yourself's own "except it has haste and
+#: '...'" - a mixed keyword-then-quoted-ability tail neither
+#: `_parse_token_tail` (a single quoted string *or* bare keywords, never
+#: both) nor `_CREATE_TOKEN_COPIES_EXCEPT_RE`'s own tail (quoted only) reads,
+#: so `_parse_copy_added_ability_lines` below reads it directly.
+_FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE = re.compile(
+    r"^for each creature target player controls,\s*"
+    r"create a token that'?s a copy of that creature"
+    r"(?:,\s*except (?:it has|they have)\s+(?P<except_tail>.+?))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_copy_added_ability_lines(tail: str) -> tuple[str, ...] | None:
+    """ "`<keyword>`[, `<keyword>`][ and] ["`<ability>`"]" - CR 707.9a's added
+    abilities, as lines ready for `copiable_card_with_added_abilities`: a bare
+    keyword from `_TOKEN_KEYWORDS` is title-cased the way a real printing
+    lists one, and a trailing quoted sentence is copied through exactly as
+    printed. Any other part - a shape this wave does not read - fails the
+    whole tail rather than dropping it silently.
+
+    The quoted sentence is peeled off *first*, by its own closing quote mark
+    at the end of the whole tail, rather than folded into the same comma/
+    "and" split the bare keywords go through - Face Yourself's own quoted
+    ability ("if you don't control a planeswalker, **sacrifice this
+    creature**") has a comma of its own inside the quotes, which a naive
+    split would cut the sentence in half at.
+    """
+    tail = tail.strip()
+    quoted_text: str | None = None
+    if quote := re.search(r"""["“'‘](?P<text>.+)["”'’]\s*$""", tail, re.DOTALL):
+        quoted_text = quote.group("text")
+        tail = re.sub(r"\s+and\s*$", "", tail[: quote.start()]).strip()
+    added: list[str] = []
+    if tail:
+        parts = [part.strip() for part in re.split(r",\s*|\s+and\s+", tail) if part.strip()]
+        for part in parts:
+            if part.lower() not in _TOKEN_KEYWORDS:
+                return None
+            added.append(part.title())
+    if quoted_text is not None:
+        added.append(quoted_text)
+    if not added:
+        return None
+    return tuple(added)
+
+
+def _parse_for_each_creature_target_player_copy_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE`'s shape, or `None`.
+
+    The creatures target player controls are read once, off the computed
+    board (CR 613.5), at the moment this instruction resolves (CR 611.2c) -
+    the same fixed-set-now convention `_mass_creature_group_targets` already
+    uses for an untargeted "creatures you control", applied here to a
+    targeted player's own instead.
+    """
+    match = _FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    added: tuple[str, ...] = ()
+    except_tail = match.group("except_tail")
+    if except_tail is not None:
+        read = _parse_copy_added_ability_lines(except_tail)
+        if read is None:
+            return None
+        added = read
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            board = game.computed_board()
+            creatures = [
+                permanent
+                for permanent in game.battlefield
+                if board.of(permanent).controller == target.username
+                and Type.CREATURE in board.of(permanent).types
+            ]
+            for creature in creatures:
+                token_copy_of(game, creature, controller, added_abilities=added)
 
     return effect
 
@@ -22991,12 +23503,21 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     token = _parse_token_clause(clause, for_spell=for_spell)
     if token is not None:
         return token
+    named_appositive_token = _parse_named_appositive_token_clause(clause, for_spell=for_spell)
+    if named_appositive_token is not None:
+        return named_appositive_token
+    variable_count_token = _parse_variable_count_token_clause(clause, for_spell=for_spell)
+    if variable_count_token is not None:
+        return variable_count_token
     role_token = _parse_create_role_token_clause(clause, for_spell=for_spell)
     if role_token is not None:
         return role_token
     city_blessing_copy = _parse_city_blessing_token_copy_clause(clause, for_spell=for_spell)
     if city_blessing_copy is not None:
         return city_blessing_copy
+    self_copy_token = _parse_self_copy_token_clause(clause, for_spell=for_spell)
+    if self_copy_token is not None:
+        return self_copy_token
     create_token_copy_of_target = _parse_create_token_copy_of_target_clause(
         clause, for_spell=for_spell
     )

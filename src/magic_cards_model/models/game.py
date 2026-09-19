@@ -2011,6 +2011,14 @@ class Game(EngineModel):
     "you gained life this turn" intervening *if*. Cleared when a new turn
     begins."""
 
+    life_gained_amount_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How much life each player has gained this turn, the amount twin of
+    `life_gained_this_turn`'s plain boolean - recorded at the same call site
+    (`Player.gain_life`) for the same CR 119.9 reason, the same shape
+    `cards_drawn_this_turn` already counts a per-player total in. Feeds
+    Germinate Recruits' own "where X is the amount of life you gained this
+    turn" (CR 107.3f). Cleared when a new turn begins."""
+
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
@@ -2277,7 +2285,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 24
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2530,6 +2538,17 @@ class Game(EngineModel):
     them), which also changes what `cards_over_maximum_hand_size` computes
     for a player an emblem reaches. `Game.ability_resolutions_this_turn` is
     new too. Refused instead.
+
+    Bumped 23 -> 24: the fra-s3 line of development claimed 21 -> 22
+    independently too, for `life_gained_amount_this_turn` (Germinate
+    Recruits' own "where X is the amount of life you gained this turn" -
+    CR 107.3f) - the running-total twin of `life_gained_this_turn`'s plain
+    boolean, recorded in `Player.gain_life` for the same CR 119.9 reason. A
+    version-23 dump has no record of how much life was already gained this
+    turn, and a default of zero would silently answer "none" for a turn
+    where life was in fact already gained before the snapshot. Merged onto
+    the G0b/fu-costs line above; the number moves on once more. Refused
+    instead.
     """
 
     @model_validator(mode="before")
@@ -15404,6 +15423,7 @@ class Game(EngineModel):
             self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
+            self.life_gained_amount_this_turn = {}
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and
             # `cleanup_step` does exactly that; a game driven step by step may
