@@ -8231,6 +8231,42 @@ _RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE = re.compile(
 _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
     r"return (?P<phrase>.*target.+from your graveyard) to the battlefield\.?$", re.IGNORECASE
 )
+#: "Return target `<X>` from your graveyard to the battlefield[ tapped] with
+#: an additional `<n>` `<kind>` counter(s) on it." - Generous Revival's own
+#: shape, "an additional" being Neoform's own already-general rider phrase
+#: (CR 122.1's counter placed as the permanent arrives, mirroring `_RETURN_
+#: CARDS_FROM_YOUR_GRAVEYARD_RE`'s own untargeted "with N `<kind>` counters
+#: on it" tail for the targeted family).
+_RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_WITH_COUNTER_RE = re.compile(
+    r"return (?P<phrase>.*target.+from your graveyard) to the battlefield"
+    r"(?P<tapped> tapped)?"
+    rf" with an additional (?:(?P<counter_n>{COUNT}) )?(?P<counter>[a-z0-9+/-]+) counters? "
+    r"on it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _return_ability_targets_to_battlefield_with_counter(
+    tapped: bool, counter_kind: str, counter_amount: int
+) -> TargetedClause:
+    """`return_ability_targets_to_battlefield`'s own counter-and-tapped rider,
+    built once per match rather than read off a stored regex group at
+    resolution time.
+    """
+    kind = _counter_kind(counter_kind)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState):
+                continue
+            permanent = game.put_onto_battlefield(target, controller.username, tapped=tapped)
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.add_counters(permanent, kind, counter_amount)
+
+    return effect
+
+
 #: "Up to one target player puts all the cards from their graveyard on the
 #: bottom of their library in a random order." (Endurance) - CR 115.6's "up
 #: to one" prefix sits before "target player", which is why `phrase` starts
@@ -9454,6 +9490,18 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         ):
             return None
         return return_ability_targets_to_hand
+
+    if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_WITH_COUNTER_RE.fullmatch(clause):
+        if not _targets_understood(
+            match.group("phrase"), count_agnostic=True, battlefield_only=False
+        ):
+            return None
+        counter_amount = parse_count(match.group("counter_n")) if match.group("counter_n") else 1
+        if counter_amount is None:
+            return None
+        return _return_ability_targets_to_battlefield_with_counter(
+            bool(match.group("tapped")), match.group("counter"), counter_amount
+        )
 
     if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(clause):
         if not _targets_understood(
