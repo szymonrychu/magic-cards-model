@@ -735,8 +735,15 @@ _COLOR_NAME: dict[Color, str] = {
 # a value - because CR 611.2c only fixes the *result* at the moment a caller
 # actually evaluates it, not the expression itself; Craterhoof's own
 # docstring on `_run_mass_pump` is where that one evaluation happens.
+#: `<qualifier>` is a bare type/subtype word (CR 205.2a/CR 205.3, "creatures",
+#: "Elves") or CR 110.5's own status word ("tapped"/"untapped") in front of
+#: one - Harvest Season's own "the number of tapped creatures you control"
+#: and Ben-Ben, Akki Hermit's "the number of untapped Mountains you control".
+#: A single `[a-z]+` group used to read only the bare word, so a status-
+#: qualified phrase never matched this pattern at all.
 _COUNT_YOU_CONTROL_RE = re.compile(
-    r"^(?:the )?number of (?P<qualifier>[a-z]+) you control$", re.IGNORECASE
+    r"^(?:the )?number of (?:(?P<status>tapped|untapped) )?(?P<qualifier>[a-z]+) you control$",
+    re.IGNORECASE,
 )
 _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
     r"^(?:the )?number of (?P<qualifier>[a-z]+) cards? in your graveyard$", re.IGNORECASE
@@ -826,6 +833,11 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     """
     stripped = phrase.strip().rstrip(".")
     if match := _COUNT_YOU_CONTROL_RE.fullmatch(stripped):
+        # CR 110.5: status (tapped/untapped) is a permanent's physical state,
+        # not a characteristic the computed board's layers touch, so it is
+        # read straight off `CardState.tapped` rather than through `board.of`.
+        status = match.group("status")
+        wants_tapped = None if status is None else status.lower() == "tapped"
         card_type = _singular_card_type(match.group("qualifier"))
         if card_type is None:
             subtype = _singular_subtype_for_count_expression(match.group("qualifier"))
@@ -842,6 +854,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                     for permanent in game.battlefield
                     if board.of(permanent).controller == controller
                     and any(word.lower() == subtype for word in board.of(permanent).subtypes)
+                    and (wants_tapped is None or permanent.tapped == wants_tapped)
                 )
 
             return count_subtype_on_board
@@ -853,6 +866,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                 for permanent in game.battlefield
                 if board.of(permanent).controller == controller
                 and card_type in board.of(permanent).types
+                and (wants_tapped is None or permanent.tapped == wants_tapped)
             )
 
         return count_on_board
