@@ -34,6 +34,19 @@ file:
   combat damage, not only Ruric Thar - proven generic by dealing combat
   damage with a second, unrelated creature and confirming that creature's own
   ledger entry, not Ruric Thar's name, is what the condition reads.
+- **Theorix Metamage** / **Void Extrapolator** (Reality Fracture), *Threshold*
+  - "This creature gets +1/+0 and has flying as long as there are seven or
+  more cards in your graveyard." / "...gets +1/+1 as long as..." - handed
+  over from S2 (whose own scope is each card's "enters prepared" half; this
+  file covers only the static Threshold half, per the coordinator's
+  instruction to "test the static parts on your branch"). The reader
+  (`_GRAVEYARD_CARD_COUNT_GATED_SELF_STATIC_RE`/
+  `_graveyard_card_count_gated_self_static_builder`) already existed from
+  this file's earlier sections; **Werebear** (off-set, real Odyssey-block
+  Threshold, `resolve_cards`-confirmed identical "this creature gets +N/+N
+  ... as long as there are seven or more cards in your graveyard" wording,
+  pump only, no keyword) proves the two fra cards are not what the parser was
+  fitted to.
 
 The rules these five rest on:
 
@@ -52,6 +65,10 @@ The rules these five rest on:
   `combat_damage_dealt_this_turn_by` is written once per source in
   `_deal_combat_damage`, the same call site deathtouch and lifelink already
   key off.
+- **CR 207.2c** - *threshold* is one of the named ability words: no rules
+  meaning of its own, so the whole of Theorix Metamage's and Void
+  Extrapolator's abilities is the trailing "as long as..." condition once
+  "Threshold — " is stripped.
 
 Every CR number here was looked up with `knowledge_search(q="...",
 type="rules")` in the session that wrote it, and every card's text with
@@ -308,3 +325,95 @@ def test_ruric_thar_loses_hexproof_after_real_combat_damage_end_to_end():
 
     assert ruric.id in scenario.game.combat_damage_dealt_this_turn_by
     assert not scenario.game.characteristics_of(ruric).has_ability("Hexproof")
+
+
+# --------------------------------------------------------------------------
+# Threshold: "This creature gets +N/+N [and has <keyword>] as long as there
+# are seven or more cards in your graveyard." (Theorix Metamage; Void
+# Extrapolator) - handed over from S2's Prepare work (their own "enters
+# prepared" clause is S2's, tested there; this file covers only the static
+# half). Werebear (off-set, Odyssey block) proves the shared parser reads the
+# graveyard-count condition itself rather than either fra card's name -
+# `resolve_cards` confirms its oracle text is the identical ability-word
+# shape, pump only, no keyword.
+# --------------------------------------------------------------------------
+
+
+def sevencard_graveyard_context(controller: str = "alice") -> LayerContext:
+    filler = tuple(card_state("Mountain", zone=Zone.GRAVEYARD) for _ in range(7))
+    return LayerContext(graveyard_by_controller={controller: filler})
+
+
+def test_theorix_metamage_gets_pump_and_flying_at_threshold():
+    theorix = permanent("Theorix Metamage")
+    board = board_of(theorix, context=sevencard_graveyard_context())
+    chars = board.of(theorix)
+    assert chars.power == int(theorix.card.power) + 1
+    assert chars.toughness == int(theorix.card.toughness)
+    assert chars.has_ability("Flying")
+
+
+def test_theorix_metamage_stays_vanilla_below_threshold():
+    theorix = permanent("Theorix Metamage")
+    board = board_of(theorix)
+    chars = board.of(theorix)
+    assert chars.power == int(theorix.card.power)
+    assert not chars.has_ability("Flying")
+
+
+def test_void_extrapolator_gets_pump_at_threshold_no_keyword():
+    """A different pump and no keyword at all - proves the builder does not
+    assume a keyword clause is always present."""
+    extrapolator = permanent("Void Extrapolator")
+    board = board_of(extrapolator, context=sevencard_graveyard_context())
+    chars = board.of(extrapolator)
+    assert chars.power == int(extrapolator.card.power) + 1
+    assert chars.toughness == int(extrapolator.card.toughness) + 1
+
+
+def test_void_extrapolator_stays_vanilla_below_threshold():
+    extrapolator = permanent("Void Extrapolator")
+    board = board_of(extrapolator)
+    chars = board.of(extrapolator)
+    assert chars.power == int(extrapolator.card.power)
+    assert chars.toughness == int(extrapolator.card.toughness)
+
+
+def test_werebear_gets_pump_at_threshold_off_set():
+    """Off-set proof: a real Odyssey-block Threshold creature, same "this
+    creature gets +N/+N ... as long as there are seven or more cards in your
+    graveyard" shape, pump only."""
+    werebear = permanent("Werebear")
+    board = board_of(werebear, context=sevencard_graveyard_context())
+    chars = board.of(werebear)
+    assert chars.power == int(werebear.card.power) + 3
+    assert chars.toughness == int(werebear.card.toughness) + 3
+
+
+def test_theorix_metamage_reads_its_own_controllers_graveyard_not_an_opponents():
+    theorix = permanent("Theorix Metamage")
+    board = board_of(theorix, context=sevencard_graveyard_context(controller="bob"))
+    assert not board.of(theorix).has_ability("Flying")
+
+
+def test_theorix_metamage_actually_crosses_threshold_end_to_end():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Theorix Metamage"],
+            graveyard=["Mountain"] * 6,
+            library=["Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    theorix = scenario.creature("Theorix Metamage", "alice")
+
+    assert not scenario.game.characteristics_of(theorix).has_ability("Flying")
+
+    scenario.game.put_into_graveyard(scenario.player("alice").library[0])
+
+    assert scenario.game.characteristics_of(theorix).has_ability("Flying")
+    assert scenario.game.characteristics_of(theorix).power == int(theorix.card.power) + 1
