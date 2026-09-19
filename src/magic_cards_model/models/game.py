@@ -2363,7 +2363,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 25
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 26
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2660,6 +2660,22 @@ class Game(EngineModel):
     dropped at this same merge rather than carried forward - one mechanism,
     not two; no schema bump needed for a field that never reached a build
     anyone decoded.)
+
+    Bumped 25 -> 26: the fra-s3b line of development claimed 24 -> 25
+    independently too, for `machines/delayed.py`'s `DelayedTrigger` gaining
+    `forbidden_types` (CR 205.2a's type negation - "a noncreature spell" -
+    checked against a watched event's own subject) alongside FRA S5's
+    `combat_only`/`to_player_only` on that same model, and for a new
+    `DelayedEffectSpec` member, `CreateTokenCopyOfControlledToken` (Summon:
+    Good King Mog XII's Saga chapters II and III: "Whenever you cast a
+    noncreature spell this turn, create a token that's a copy of a non-Saga
+    token you control."). A version-25 dump's own delayed triggers have no
+    `forbidden_types` at all, so a default empty tuple is exactly right for
+    every one of them (none could have used a field that did not exist yet)
+    - refused anyway, per the bump rule's own "a field added to ... anything
+    reachable from [`Game.model_dump()`]" bullet, not because this one's
+    default could ever disagree with an old dump. Merged onto the FRA S5
+    line above; the number moves on once more.
     """
 
     @model_validator(mode="before")

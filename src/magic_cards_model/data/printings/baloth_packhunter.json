@@ -1,0 +1,123 @@
+{
+  "object": "card",
+  "id": "61b22c5d-3b29-47c1-8a04-13586461a143",
+  "oracle_id": "ee4c29c3-f790-4e5e-a0d1-d47af7b62753",
+  "multiverse_ids": [
+    548198
+  ],
+  "arena_id": 75531,
+  "name": "Baloth Packhunter",
+  "lang": "en",
+  "released_at": "2020-08-13",
+  "uri": "https://api.scryfall.com/cards/61b22c5d-3b29-47c1-8a04-13586461a143",
+  "scryfall_uri": "https://scryfall.com/card/anb/90/baloth-packhunter?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:03:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.jpg?1783929794",
+    "normal": "https://cards.scryfall.io/normal/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.jpg?1783929794",
+    "large": "https://cards.scryfall.io/large/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.jpg?1783929794",
+    "png": "https://cards.scryfall.io/png/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.png?1783929794",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.jpg?1783929794",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.jpg?1783929794",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.webp?1783929794",
+    "grid": "https://cards.scryfall.io/grid/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.webp?1783929794",
+    "display": "https://cards.scryfall.io/display/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.webp?1783929794",
+    "art": "https://cards.scryfall.io/art/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.webp?1783929794",
+    "crop": "https://cards.scryfall.io/crop/front/6/1/61b22c5d-3b29-47c1-8a04-13586461a143.webp?1783929794"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Beast",
+  "oracle_text": "Trample\nWhen this creature enters, put two +1/+1 counters on each other creature you control named Baloth Packhunter.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "fb2d12a7-a385-4ec0-b7fd-e2ff1796d7a8",
+  "set": "anb",
+  "set_name": "Arena Beginner Set",
+  "set_type": "starter",
+  "set_uri": "https://api.scryfall.com/sets/fb2d12a7-a385-4ec0-b7fd-e2ff1796d7a8",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aanb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/anb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/61b22c5d-3b29-47c1-8a04-13586461a143/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aee4c29c3-f790-4e5e-a0d1-d47af7b62753&unique=prints",
+  "collector_number": "90",
+  "digital": true,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "N\u00e9stor Ossand\u00f3n Leal",
+  "artist_ids": [
+    "7a6f1667-a8ac-47f5-a302-f71cb54b2adf"
+  ],
+  "illustration_id": "f5578f88-e4cb-4c60-ac18-7f694483d44f",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548198&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBaloth%2BPackhunter",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBaloth%2BPackhunter",
+    "edhrec": "https://edhrec.com/route/?cc=Baloth+Packhunter"
+  }
+}

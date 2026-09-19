@@ -122,6 +122,7 @@ from .delayed import (
     CombatDamageToPlayerDraw,
     CopyNextSpellYouCast,
     CreateAttackingTokens,
+    CreateTokenCopyOfControlledToken,
     DelayedBlinkReturnWithRider,
     DelayedTrigger,
     DrawACardForController,
@@ -185,6 +186,7 @@ from .targeting import (
 )
 from .triggers import (
     AbilityOnStack,
+    event_subject_power,
     is_ability,
     resolution_key,
     triggered_mana_count,
@@ -1231,13 +1233,20 @@ class UnreadableCounterAmountNotice(EngineModel):
     expression: str
 
 
-#: "Put a number of `<kind>` counters on it/this `<noun>` equal to `<expr>`." -
-#: the resolving-effect twin of the "enters with a number of `<kind>` counters
-#: on it equal to `<expr>`" replacement (Reverent Hunter's enters trigger).
+#: "Put a number of `<kind>` counters on it/this `<noun>`/`<Name>` equal to
+#: `<expr>`." - the resolving-effect twin of the "enters with a number of
+#: `<kind>` counters on it equal to `<expr>`" replacement (Reverent Hunter's
+#: enters trigger). The third `object` shape is Drizzt Do'Urden's own "put a
+#: number of +1/+1 counters on Drizzt equal to the difference" - CR 201.5's
+#: self-reference by the card's own (here, CR 201.5c's *shortened*) printed
+#: name rather than CR 700.7's "this creature"; `_parse_put_counters_equal_
+#: to_clause` below checks the captured name against the resolving ability's
+#: actual source before treating it as one, the same guard `_parse_may_
+#: exile_self_then_return_clause` already uses for its own CR 201.5 shape.
 _COUNTERS_EQUAL_TO_ON_OBJECT_RE = re.compile(
-    r"^put a number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<object>it|this \w+) "
-    r"equal to (?P<expression>.+?)\.?$",
-    re.IGNORECASE,
+    r"^(?i:put a number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on )"
+    r"(?P<object>(?i:it|this \w+)|[A-Z][A-Za-z']*)"
+    r"(?i: equal to )(?P<expression>.+?)\.?$"
 )
 
 
@@ -1250,14 +1259,31 @@ def _parse_put_counters_equal_to_clause(text: str) -> AbilityEffect | None:
     an ability with no event. X is the ability's own announced X. An
     expression `amount_expression` cannot read records an
     `UnreadableCounterAmountNotice` and places nothing.
+
+    "The difference" is Drizzt Do'Urden's own magnitude - "if it had power
+    greater than Drizzt's power, put a number of +1/+1 counters on Drizzt
+    equal to the difference" - read here rather than as an `amount_expression`
+    term: it needs `AbilityOnStack.event` (the dying creature `event_subject_
+    power` reads, CR 603.10a's look-back), which `amount_expression`'s own
+    `(game, controller, obj, x)` reader shape has no room for. CR 107.1b's
+    "if a calculation ... yields a negative number, zero is used instead"
+    applies the same way it does inside `amount_expression` itself.
     """
     match = _COUNTERS_EQUAL_TO_ON_OBJECT_RE.fullmatch(text.strip())
     if match is None:
         return None
     kind = _counter_kind(match.group("kind"))
     expression = match.group("expression").strip()
-    reader = amount_expression(expression)
-    names_the_subject = match.group("object").lower() == "it"
+    is_the_difference = expression.lower() == "the difference"
+    reader = None if is_the_difference else amount_expression(expression)
+    object_phrase = match.group("object")
+    names_the_subject = object_phrase.lower() == "it"
+    # CR 201.5/201.5c: anything left is neither "it" nor "this <noun>" -
+    # the card's own (possibly shortened) printed name, self-referencing the
+    # ability's own source and nothing else with the same name.
+    self_named = (
+        None if names_the_subject or object_phrase.lower().startswith("this ") else object_phrase
+    )
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         obj = ability.source(game)
@@ -1266,7 +1292,14 @@ def _parse_put_counters_equal_to_clause(text: str) -> AbilityEffect | None:
             obj = game.find_by_id(event.subject_id)
         if obj is None or obj.zone is not Zone.BATTLEFIELD:
             return
-        if reader is None:
+        if self_named is not None and self_named.lower() not in (obj.name or "").lower():
+            return
+        if is_the_difference:
+            dying = event_subject_power(game, event)
+            if dying is None:
+                return
+            amount = max(dying - (game.power_of(obj) or 0), 0)
+        elif reader is None:
             game.unreadable_counter_amount_notices.append(
                 UnreadableCounterAmountNotice(
                     source_id=ability.source_id,
@@ -1276,7 +1309,8 @@ def _parse_put_counters_equal_to_clause(text: str) -> AbilityEffect | None:
                 )
             )
             return
-        amount = reader(game, ability.controller, obj, ability.x_value)
+        else:
+            amount = reader(game, ability.controller, obj, ability.x_value)
         if amount > 0:
             game.add_counters(obj, kind, amount)
 
@@ -2773,6 +2807,42 @@ def damage_each_opponent(amount: int) -> AbilityEffect:
         source = ability.source(game)
         for opponent in _opponents(game, ability.controller):
             game.deal_damage(opponent, amount, source=source)
+
+    return effect
+
+
+def damage_to_itself(amount: int) -> AbilityEffect:
+    """ "This creature/permanent deals N damage to itself" (CR 119.3, CR
+    120.2b) - Goblin Kaboomist's own "this creature deals 2 damage to
+    itself", the losing half of its coin flip.
+
+    "Itself" is the ability's own source, still on the battlefield or this
+    does nothing (CR 113.7a: gone by resolution is not a legal target for a
+    non-targeted effect to still find).
+    """
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.deal_damage(source, amount, source=source)
+
+    return effect
+
+
+def damage_to_controller(amount: int) -> AbilityEffect:
+    """ "This artifact/creature/permanent deals N damage to you" (CR 119.3,
+    120.2b) - Mana Crypt's own "this artifact deals 3 damage to you", the
+    losing half of its own upkeep coin flip.
+
+    "You" (CR 105.3a is a player pronoun, not a search or count question) is
+    the ability's own controller - the player who would flip the coin in the
+    first place (CR 705.2: "the player that flips the coin").
+    """
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        game.deal_damage(game.player(ability.controller), amount, source=source)
 
     return effect
 
@@ -6794,6 +6864,104 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Put `<n>`/a number of `<kind>` counters[ equal to `<expr>`] on each
+#: [other ]creature you control named `<Name>`." - Gruff Triplets' own dies
+#: trigger: "put a number of +1/+1 counters equal to its power on each
+#: creature you control named Gruff Triplets." CR 201.5's own name-based
+#: reference (CR 205.3's subtype grouping is `_COUNTER_EACH_GROUP_RE`'s own
+#: job above; this is a *name*, not a type or subtype) - a real, multi-card
+#: MTG template, not invented for this one card: off-set Baloth Packhunter's
+#: own "When this creature enters, put two +1/+1 counters on each other
+#: creature you control named Baloth Packhunter." prints the identical
+#: "each [other ]creature you control named `<Name>`" selector with a fixed
+#: literal count instead of an "equal to" expression, and an "other" (its
+#: own trigger fires while it is still alive and on the battlefield, unlike
+#: Gruff Triplets' dies trigger, where the dead source is never part of the
+#: scan to begin with).
+_COUNTERS_ON_NAMED_GROUP_RE = re.compile(
+    rf"^(?i:put )(?P<n>{COUNT}|a number of)(?i: )(?P<kind>\+1/\+1|-1/-1|[a-z]+)(?i: counters?)"
+    r"(?:(?i: equal to )(?P<expression>.+?))?"
+    r"(?i: on each )(?P<other>(?i:other ))?"
+    r"(?i:creatures? you control named )"
+    r"(?P<name>[A-Z][A-Za-z']*(?:\s[A-Z][A-Za-z']*)*)\.?$"
+)
+
+
+def _parse_counters_on_named_group_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTERS_ON_NAMED_GROUP_RE`'s shape, or `None`.
+
+    "Its power" is Gruff Triplets' own magnitude: CR 700.7's "this creature"
+    read on a *dies* trigger, so "its" means the ability's own source as it
+    last existed (CR 603.10a's look-back) - `event_subject_power` reads
+    that off `AbilityOnStack.event`, the same helper Drizzt Do'Urden's own
+    "the difference" uses, because a departed source is not part of any
+    battlefield the layer system (`Game.power_of`) computes over. Any other
+    "equal to" expression goes through the shared `amount_expression`,
+    evaluated against the ability's own source - one neither reads fails
+    closed with an `UnreadableCounterAmountNotice` rather than placing a
+    guessed number (CR 611.2c). A bare literal count (Baloth Packhunter's
+    "two") needs neither: `parse_count` already reads `numbers.COUNT`'s own
+    "a"/"an" as one, so "a number of" is the only count word this pattern's
+    `n` group does not hand straight to it.
+
+    The name match is exact and case-sensitive against `CardState.name` -
+    CR 707.2 already makes a token copy's name the same as the original's,
+    so Gruff Triplets' own token copies (`_parse_self_copy_token_clause`)
+    are "creatures you control named Gruff Triplets" too, with no special
+    case needed for the fact that they are tokens.
+    """
+    match = _COUNTERS_ON_NAMED_GROUP_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    n_text = match.group("n").lower()
+    expression = match.group("expression")
+    is_its_power = expression is not None and expression.strip().lower() == "its power"
+    fixed_amount = None if n_text == "a number of" else parse_count(n_text)
+    reader = (
+        None
+        if fixed_amount is not None or is_its_power
+        else amount_expression((expression or "").strip())
+    )
+    excludes_source = match.group("other") is not None
+    name = match.group("name").strip()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if fixed_amount is not None:
+            amount = fixed_amount
+        elif is_its_power:
+            dying = event_subject_power(game, ability.event)
+            amount = max(dying, 0) if dying is not None else 0
+        elif reader is None:
+            game.unreadable_counter_amount_notices.append(
+                UnreadableCounterAmountNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=text.strip(),
+                    expression=(expression or "").strip(),
+                )
+            )
+            return
+        else:
+            amount = max(reader(game, ability.controller, source, ability.x_value), 0)
+        if amount <= 0:
+            return
+        controller = ability.controller
+        board = game.computed_board()
+        for permanent in game.battlefield:
+            if excludes_source and source is not None and permanent.id == source.id:
+                continue
+            chars = board.of(permanent)
+            if chars.controller != controller or not chars.is_creature:
+                continue
+            if permanent.name != name:
+                continue
+            game.add_counters(permanent, kind, amount)
+
+    return effect
+
+
 def _counter_kind(word: str) -> Counter | str:
     """Normalise a printed counter-kind word into what `add_counters`/
     `remove_counters` key on - the two CR 122.1a power/toughness spellings as
@@ -8626,6 +8794,18 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
 _DAMAGE_EACH_OPPONENT_RE = re.compile(
     rf".*\bdeals? (?P<n>{AMOUNT}) damage to each opponent{where_x_pattern()}\.?$", re.IGNORECASE
 )
+#: "<Source> deals N damage to itself." (CR 119.3, 120.2b) - Goblin
+#: Kaboomist's own coin-flip loser. Same `.*\bdeals?` source-agnostic prefix
+#: as `_DAMAGE_EACH_OPPONENT_RE` just above, so "this creature", "this
+#: token", or a self-named reference (CR 201.5) all read identically.
+_DAMAGE_TO_ITSELF_RE = re.compile(
+    rf".*\bdeals? (?P<n>{AMOUNT}) damage to itself{where_x_pattern()}\.?$", re.IGNORECASE
+)
+#: "<Source> deals N damage to you." (CR 119.3, 120.2b) - Mana Crypt's own
+#: coin-flip loser. Same source-agnostic prefix as the two patterns above.
+_DAMAGE_TO_CONTROLLER_RE = re.compile(
+    rf".*\bdeals? (?P<n>{AMOUNT}) damage to you{where_x_pattern()}\.?$", re.IGNORECASE
+)
 #: "<Source> deals N damage to each creature." (Extinguisher Battleship) -
 #: CR 119.3, also with no target: "each creature" is every creature on the
 #: battlefield, not something chosen or a player group. Same X/where-X
@@ -9209,6 +9389,29 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         if amount_fn is None:
             return None
         return _damage_each_opponent_for_expression(amount_fn)  # type: ignore[return-value]
+
+    if match := _DAMAGE_TO_ITSELF_RE.fullmatch(clause):
+        # No target either (CR 120.2b's own source, not something chosen),
+        # and ability-only for the same reason `_DAMAGE_EACH_OPPONENT_RE` is:
+        # `damage_to_itself` reads `AbilityOnStack.source`.
+        if for_spell:
+            return None
+        where_x = match.group("where_x")
+        if where_x is not None:
+            return None  # no printing in the pool needs a variable self-damage count yet
+        amount = parse_count(match.group("n"))
+        return damage_to_itself(amount)  # type: ignore[return-value]
+
+    if match := _DAMAGE_TO_CONTROLLER_RE.fullmatch(clause):
+        # Ability-only, same reason: `damage_to_controller` reads
+        # `AbilityOnStack.controller`.
+        if for_spell:
+            return None
+        where_x = match.group("where_x")
+        if where_x is not None:
+            return None  # no printing in the pool needs a variable count here yet
+        amount = parse_count(match.group("n"))
+        return damage_to_controller(amount)  # type: ignore[return-value]
 
     if match := _DAMAGE_EACH_CREATURE_RE.fullmatch(clause):
         # No target either (every creature on the battlefield, CR 119.3).
@@ -12215,6 +12418,55 @@ def _merge_flip_coin_damage_or_exile_transform_clauses(
     return 4, effect
 
 
+#: "Flip a coin. If you lose the flip, `<consequence>`." - CR 705.1/705.2's
+#: coin flip with only a losing branch printed (nothing at all happens on a
+#: win, unlike Ral, Monsoon Mage's own four-clause shape above, which always
+#: prints both). Goblin Kaboomist's own upkeep trigger: "... create a
+#: colorless artifact token named Land Mine with '...'. Then flip a coin. If
+#: you lose the flip, this creature deals 2 damage to itself." `<consequence>`
+#: is read through the same per-clause dispatcher (`parse_mixed_effect`)
+#: every other ability's own effect goes through, not a hand-written shape
+#: fitted to Goblin Kaboomist's own self-damage - a future card pairing
+#: "flip a coin. If you lose the flip, ..." with any other clause this file
+#: already reads gets it for free.
+_IF_YOU_LOSE_THE_FLIP_RE = re.compile(
+    r"^if you lose the flip, (?P<consequence>.+)$", re.IGNORECASE | re.DOTALL
+)
+
+
+def _merge_flip_coin_lose_consequence_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_FLIP_A_COIN_RE` then `_IF_YOU_LOSE_THE_FLIP_RE`, as one CR 608.2c
+    instruction pair - the second sentence means nothing without knowing
+    which side of the flip it answers for, the same reason Ral, Monsoon
+    Mage's own four-clause merge above reads all of its sentences together.
+
+    Ability-only: no spell in the pool prints this shape, the same as Ral's.
+    Tried after the four-clause merger above, so a card that prints both a
+    losing *and* a winning branch (Ral's own shape) is still read by that
+    more specific merger first; this one only ever sees the pair when there
+    is no third "if you win the flip" sentence to go with it.
+    """
+    if for_spell or index + 1 >= len(clauses):
+        return None
+    if _FLIP_A_COIN_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    match = _IF_YOU_LOSE_THE_FLIP_RE.fullmatch(clauses[index + 1].strip())
+    if match is None:
+        return None
+    consequence_text = match.group("consequence").strip().rstrip(".") + "."
+    consequence = parse_mixed_effect(consequence_text)
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if not game.flip_coin():
+            consequence(game, ability)  # type: ignore[arg-type]
+
+    return 2, effect
+
+
 #: Ajani, Nacatl Avenger's `−4`: "Each opponent chooses an artifact, a
 #: creature, an enchantment, and a planeswalker from among the nonland
 #: permanents they control, then sacrifices the rest." A "choose one of each
@@ -12474,6 +12726,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     self_combat_damage_draw = _parse_until_end_of_turn_self_combat_damage_draw_clause(effect_text)
     if self_combat_damage_draw is not None:
         return self_combat_damage_draw
+    cast_noncreature_this_turn_copy_token = (
+        _parse_cast_noncreature_spell_this_turn_copy_token_clause(effect_text)
+    )
+    if cast_noncreature_this_turn_copy_token is not None:
+        return cast_noncreature_this_turn_copy_token
     attacking_tokens_then_sacrifice = _parse_create_tapped_attacking_tokens_then_sacrifice(
         effect_text
     )
@@ -12530,6 +12787,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     put_counters_on_group = _parse_put_counters_on_group_clause(effect_text)
     if put_counters_on_group is not None:
         return put_counters_on_group
+    counters_on_named_group = _parse_counters_on_named_group_clause(effect_text)
+    if counters_on_named_group is not None:
+        return counters_on_named_group
     counter_then_if_count = _parse_put_counter_on_self_then_if_count_clause(effect_text)
     if counter_then_if_count is not None:
         return counter_then_if_count
@@ -17662,6 +17922,67 @@ def _parse_until_end_of_turn_self_combat_damage_draw_clause(text: str) -> Abilit
                 remaining=None,
                 expires_end_of_turn=True,
                 effect=DrawACardForController(count=count),
+            )
+        )
+
+    return effect
+
+
+#: "Whenever you cast a noncreature spell this turn, create a token that's a
+#: copy of a non-`<Subtype>` token you control." - Summon: Good King Mog
+#: XII's own Saga chapters II and III. CR 603.7a's own delayed trigger for
+#: the rest of the turn - the same shape Dalkovan Encampment's "whenever you
+#: attack this turn" builds above, just watching `CAST_SPELL` instead of
+#: `ATTACKS` and filtered by CR 205.2a's own type negation
+#: (`DelayedTrigger.forbidden_types`) rather than firing unconditionally.
+#: `excluded` is optional so a bare "a token you control" (no printing in
+#: the pool needs it yet) still reads.
+_CAST_NONCREATURE_SPELL_THIS_TURN_COPY_TOKEN_RE = re.compile(
+    r"^whenever you cast a noncreature spell this turn,\s*"
+    r"create a tokens? that'?s a copy of a "
+    r"(?:non-(?P<excluded>[A-Za-z]+) )?tokens? you control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_cast_noncreature_spell_this_turn_copy_token_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_CAST_NONCREATURE_SPELL_THIS_TURN_COPY_TOKEN_RE`'s shape, or `None`.
+
+    The chosen token to copy is read by `CreateTokenCopyOfControlledToken`
+    itself at resolution, not here - CR 608.2c fixes *what* to copy only
+    when the delayed trigger actually fires, which may be any later moment
+    this turn, never at the point this ability is created.
+    """
+    match = _CAST_NONCREATURE_SPELL_THIS_TURN_COPY_TOKEN_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    excluded = match.group("excluded")
+    excluded_subtypes = (excluded,) if excluded else ()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=match.group(0),
+                event=TriggerEvent.CAST_SPELL,
+                controller=controller.username,
+                source_id=source_id,
+                source_name=source_name,
+                # See `_parse_attack_this_turn_create_tapped_attacking_tokens`
+                # above for why `only_when_active` is the right field for
+                # "the event's own player must be this one" even off the
+                # controller's own turn (flash) - `CAST_SPELL` is never
+                # subjectless, so `subjectless_only` is left at its default.
+                only_when_active=controller.username,
+                forbidden_types=(Type.CREATURE,),
+                remaining=None,
+                expires_end_of_turn=True,
+                effect=CreateTokenCopyOfControlledToken(excluded_subtypes=excluded_subtypes),
             )
         )
 
@@ -23627,6 +23948,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counters_on_group = _parse_put_counters_on_group_clause(clause)
         if counters_on_group is not None:
             return counters_on_group  # type: ignore[return-value]
+        counters_on_named_group = _parse_counters_on_named_group_clause(clause)
+        if counters_on_named_group is not None:
+            return counters_on_named_group  # type: ignore[return-value]
         counters_equal_to = _parse_put_counters_equal_to_clause(clause)
         if counters_equal_to is not None:
             return counters_equal_to  # type: ignore[return-value]
@@ -24001,6 +24325,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         merged = _merge_flip_coin_damage_or_exile_transform_clauses(
             clauses, index, for_spell=for_spell
         )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_flip_coin_lose_consequence_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

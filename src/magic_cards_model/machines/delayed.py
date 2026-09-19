@@ -85,11 +85,11 @@ from ..ids import new_id
 from ..models.card import Type
 from ..models.card_state import PERMANENT_TYPES, CardState, Counter
 from ..models.mana import ManaCost
-from ..models.token import TokenDefinition, create_tokens
+from ..models.token import TokenDefinition, create_tokens, is_token, token_copy_of
 from ..models.zone import Zone
 from ..snapshot import EngineModel
 from .abilities import AbilityKind, TriggeredAbility, TriggerEvent, TriggerWord
-from .decisions import source_id_of
+from .decisions import Decision, DecisionKind, source_id_of
 from .triggers import AbilityOnStack, GameEvent
 from .turn import Step
 
@@ -634,6 +634,64 @@ class CreateAttackingTokens(DelayedEffectSpecBase):
             )
 
 
+class CreateTokenCopyOfControlledToken(DelayedEffectSpecBase):
+    """ "Create a token that's a copy of a `[non-<Subtype>]` token you
+    control." - Summon: Good King Mog XII's own Saga chapters II and III:
+    "Whenever you cast a noncreature spell this turn, create a token that's
+    a copy of a non-Saga token you control." CR 707.2's copy, over CR 111.1's
+    token qualifier, filtered by `excluded_subtypes` (empty reads "any token
+    you control" - no printing in the pool needs that bare form yet, but
+    nothing here assumes there is always a filter).
+
+    No target (CR 115.1 has nothing to check - "a ... token you control" is
+    not "target ... token"), so the choice among more than one qualifying
+    token is the controller's own, asked here at resolution (CR 608.2c) -
+    `DecisionKind.CHOOSE_CARDS`, the same shape `machines/effects.py`'s own
+    `_choose_permanents_to_sacrifice` already asks for a single pick among
+    several legal ones. Exactly one candidate skips the question outright;
+    CR 601.2c does not require asking a question with only one legal answer.
+    None at all is not an error - CR 608.2c has no notion of a partially
+    completed instruction, so the ability simply creates nothing.
+    """
+
+    kind: Literal["create_token_copy_of_controlled_token"] = "create_token_copy_of_controlled_token"
+
+    excluded_subtypes: tuple[str, ...] = ()
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if not game.is_in_game(trigger.controller):
+            return
+        board = game.computed_board()
+        excluded = {subtype.lower() for subtype in self.excluded_subtypes}
+        candidates = [
+            state
+            for state in game.permanents_controlled_by(trigger.controller)
+            if is_token(state)
+            and not any(word.lower() in excluded for word in board.of(state).subtypes)
+        ]
+        if not candidates:
+            return
+        if len(candidates) == 1:
+            chosen = candidates[0]
+        else:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=trigger.controller,
+                    prompt="choose a token to copy",
+                    source=trigger.source_name,
+                    source_id=trigger.source_id,
+                    amount=1,
+                    exact=True,
+                    cards=tuple(state.id for state in candidates),
+                )
+            )
+            chosen = next((state for state in candidates if state.id in chosen_ids), None)
+            if chosen is None:
+                return
+        token_copy_of(game, chosen, trigger.controller)
+
+
 class PayOrLoseTheGame(DelayedEffectSpecBase):
     """Summoner's Pact's own delayed half: pay `cost` - from floating mana and,
     per CR 608.2g, mana abilities activated while paying - or lose the game
@@ -952,6 +1010,7 @@ DelayedEffectSpec = Annotated[
     | StaticPrisonReturn
     | ReturnExiledCardAndAddCounters
     | CreateAttackingTokens
+    | CreateTokenCopyOfControlledToken
     | PayOrLoseTheGame
     | CombatDamageToPlayerDraw
     | CopyNextSpellYouCast
@@ -1086,6 +1145,15 @@ class DelayedTrigger(EngineModel):
     from `Game.cleanup_step`, alongside `ContinuousEffects.end_the_turn`) is
     what actually drops it - matching does not check the calendar itself."""
 
+    forbidden_types: tuple[Type, ...] = ()
+    """The types the watched event's own subject must *not* have - CR 205.2a's
+    "a noncreature spell" (Summon: Good King Mog XII's own Saga chapters II
+    and III: "Whenever you cast a noncreature spell this turn, ..."), the
+    delayed-trigger twin of `machines/triggers._required_types`'s "forbidden"
+    half, which the *ordinary*, printed form of "a noncreature spell" already
+    reads off `GameEvent.subject_types` the same way. Empty matches any
+    event regardless of type, the same as no clause naming a type at all."""
+
     sibling_ids: tuple[UUID, ...] = ()
     """Other `DelayedTrigger`s created alongside this one that watch for a
     different event but the same underlying CR 603.7a ability - earthbend's
@@ -1146,6 +1214,12 @@ class DelayedTrigger(EngineModel):
         if self.combat_only and not event.combat:
             return False
         if self.to_player_only and event.player is None:
+            return False
+        if (
+            self.forbidden_types
+            and event.subject_types is not None
+            and any(t in event.subject_types for t in self.forbidden_types)
+        ):
             return False
         return self.only_when_active is None or event.player == self.only_when_active
 
