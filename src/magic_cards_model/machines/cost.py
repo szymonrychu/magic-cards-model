@@ -593,7 +593,6 @@ _SPEND_ACTIVATE_CLAUSE = re.compile(
 _SPEND_RIDER = ", and "
 
 _SUPERTYPE_WORDS = {supertype.value: supertype for supertype in Supertype}
-_TYPE_WORDS = {type_.value: type_ for type_ in Type}
 #: The words that join a printed list of qualifying types into one clause.
 #: MTG templates the same list three ways - "instant and sorcery spells"
 #: (Tablet of Discovery), "a Knight or Equipment spell" (Tournament Grounds),
@@ -3706,14 +3705,11 @@ _SPELL_COST_FLOOR = re.compile(
     r"costs (?P<total>\w+) mana to cast\."
 )
 
-#: The Medallion cycle's own template - one color, one flat amount.
-_COLOR_WORDS: dict[str, Color] = {
-    "white": Color.WHITE,
-    "blue": Color.BLUE,
-    "black": Color.BLACK,
-    "red": Color.RED,
-    "green": Color.GREEN,
-}
+#: The Medallion cycle's own template - one color, one flat amount. Reads
+#: through the wider `_COLOR_WORDS` defined below (with "colorless"), which
+#: this regex's own closed color alternation can never actually produce -
+#: it exists once, past `_TYPE_WORDS`, so both this and `_requirement`'s
+#: colorless-aware quality reading share one source of truth.
 _COLOR_COST_DECREASE = re.compile(
     r"(?P<color>White|Blue|Black|Red|Green) spells you cast cost \{(?P<amount>\d+)\} "
     r"less to cast\.",
