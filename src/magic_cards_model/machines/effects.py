@@ -4586,6 +4586,18 @@ _DISCARD_A_CARD_RE = re.compile(
 # read fresh inside the returned callable rather than at parse time, is
 # exactly that.
 _DISCARD_HAND_RE = re.compile(r"^discards? (?:your|their|his or her) hand$", re.IGNORECASE)
+# CR 114.2: "[Player] gets an emblem with [ability]." - Wrenn and Seven's -8
+# ("You get an emblem with 'You have no maximum hand size.'"), Kaito, Bane
+# of Nightmares' +1 ("You get an emblem with 'Ninjas you control get
+# +1/+1.'"), Tamiyo, Inquisitive Student's -7. The quoted ability's own text
+# is recorded verbatim on the new `Emblem` (`Game.create_emblem`) - nothing
+# here reads *what* the ability says, only that this sentence grants one;
+# `Player.has_no_maximum_hand_size` is the one reader built so far that asks
+# a specific emblem's own text a question.
+_GET_AN_EMBLEM_RE = re.compile(
+    r"""^(?:you|they) gets? an emblem with ["“](?P<text>.+)["”]\.?$""",
+    re.IGNORECASE | re.DOTALL,
+)
 # CR 701.17a: "puts that many cards from the top of their library into their
 # graveyard." The optional "for each `<expr>`" tail is the same reader as
 # `_DRAW_RE`'s own.
@@ -4927,6 +4939,14 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             _discard_cards(game, player, len(player.hand), source, source_id=source_id, exact=True)
 
         return discard_hand
+
+    if match := _GET_AN_EMBLEM_RE.fullmatch(clause):
+        emblem_text = match.group("text")
+
+        def get_an_emblem(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            game.create_emblem(player, emblem_text, source_name=source)
+
+        return get_an_emblem
 
     if match := _MILL_RE.fullmatch(clause):
         amount = parse_count(match.group("n")) if match.group("n") else 1
@@ -8845,28 +8865,54 @@ _TOKEN_COLOR_WORDS = {
 _LEVELED_TOKEN_KEYWORDS = {"firebending"}
 
 
+#: The opening/closing quote characters a token's own quoted ability can be
+#: wrapped in (straight or curly, double or single - `_parse_token_tail`'s
+#: own docstring explains why both levels are read). Matched non-greedily on
+#: the opening side so a straight apostrophe *inside* the quoted ability's
+#: own text - Wrenn and Seven's own "This token's power and toughness ..." -
+#: is never mistaken for the mark that opens it: the real opening quote is
+#: always the first quote-shaped character in the tail, before any the
+#: ability's own sentence carries internally.
+_TOKEN_TAIL_QUOTE_RE = re.compile(r"""^(?P<pre>.*?)["“'‘](?P<text>.+)["”'’]$""", re.DOTALL)
+#: The join word/punctuation a keyword list leaves in front of a quoted
+#: ability that follows it - "reach and " (Wrenn and Seven's own -3), "with
+#: flying, " - stripped off before the keyword half is split on its own.
+_TOKEN_TAIL_KEYWORD_JOIN_RE = re.compile(r"(?:,?\s+and\s*|,\s*)$", re.IGNORECASE)
+
+
 def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | None:
     """The "with <...>" part of a token's noun phrase, or `None` if this wave
     cannot read it.
 
-    Two shapes: a single quoted ability, printed on the token as its
-    `rules_text` exactly as the card prints it - Drowner of Truth's "with
-    \"Sacrifice this token: Add {C}.\"" - CR 111.3 makes that quoted sentence
-    the token's stated text and this is a faithful transcription of it, not a
-    hand-written ability. The quote mark itself may be either a straight or
-    curly double quote (Drowner's own printing) *or* a straight or curly
-    single quote - Urza's Saga chapter II's own "Create a 0/0 colorless
-    Construct artifact creature token with 'This token gets +1/+1 for each
-    artifact you control.'" is a token ability nested one quoting level
-    *inside* the whole chapter's own double-quoted grant (CR 113.10a), so its
-    own tail is printed with single quotes to avoid a double quote inside a
-    double quote - the identical convention Scryfall's own oracle text uses
-    everywhere else in the game (double at the outer level, single one level
-    deeper). Or a comma/"and"-joined list of bare keywords from
-    `_TOKEN_KEYWORDS` - Spectral Procession's "with flying", Wurmcoil Engine's
-    "with deathtouch"/"with lifelink". Nothing else is read: a tail that is
-    neither, or that mixes a keyword with something else (Hangarback Walker's
-    "with flying for each +1/+1 counter on this creature"), returns `None` and
+    Three shapes, in order of how much of the tail they cover:
+
+    - A single quoted ability and nothing else, printed on the token as its
+      `rules_text` exactly as the card prints it - Drowner of Truth's "with
+      \"Sacrifice this token: Add {C}.\"" - CR 111.3 makes that quoted
+      sentence the token's stated text and this is a faithful transcription
+      of it, not a hand-written ability. The quote mark itself may be either
+      a straight or curly double quote (Drowner's own printing) *or* a
+      straight or curly single quote - Urza's Saga chapter II's own "Create
+      a 0/0 colorless Construct artifact creature token with 'This token
+      gets +1/+1 for each artifact you control.'" is a token ability nested
+      one quoting level *inside* the whole chapter's own double-quoted grant
+      (CR 113.10a), so its own tail is printed with single quotes to avoid a
+      double quote inside a double quote - the identical convention
+      Scryfall's own oracle text uses everywhere else in the game (double at
+      the outer level, single one level deeper).
+    - A comma/"and"-joined list of bare keywords from `_TOKEN_KEYWORDS` and
+      nothing else - Spectral Procession's "with flying", Wurmcoil Engine's
+      "with deathtouch"/"with lifelink".
+    - Both together, keywords first - Wrenn and Seven's own -3, "reach and
+      \"This token's power and toughness are each equal to the number of
+      lands you control.\"" CR 111.3's "any number of characteristics" is
+      not only one ability at a time, and a real printing combines them the
+      same way a permanent's own printed text does (a keyword line beside a
+      sentence).
+
+    Nothing else is read: a tail that mixes a keyword with something that is
+    neither another keyword nor a quoted ability (Hangarback Walker's "with
+    flying for each +1/+1 counter on this creature") returns `None` and
     takes the whole token clause with it.
 
     No tail at all - most of the pool's plain vanilla tokens - is the empty
@@ -8876,11 +8922,16 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
     if tail is None:
         return (), None
     tail = tail.strip()
-    if quote := re.fullmatch(r"""["“'‘](?P<text>.+)["”'’]""", tail, re.DOTALL):
-        return (), quote.group("text")
-    parts = [part.strip() for part in re.split(r",\s*|\s+and\s+", tail) if part.strip()]
+    quoted_text: str | None = None
+    keyword_part = tail
+    if quoted := _TOKEN_TAIL_QUOTE_RE.match(tail):
+        quoted_text = quoted.group("text")
+        keyword_part = _TOKEN_TAIL_KEYWORD_JOIN_RE.sub("", quoted.group("pre")).strip()
+    if not keyword_part:
+        return (), quoted_text
+    parts = [part.strip() for part in re.split(r",\s*|\s+and\s+", keyword_part) if part.strip()]
     if not parts:
-        return None
+        return (), quoted_text
     keywords: list[str] = []
     for part in parts:
         lowered = part.lower()
@@ -8892,7 +8943,7 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
             keywords.append(f"{leveled.group('word').title()} {leveled.group('n')}")
             continue
         return None
-    return tuple(keywords), None
+    return tuple(keywords), quoted_text
 
 
 #: A bare non-creature type word ending a token's noun phrase with no
@@ -21593,6 +21644,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if mass_return_from_graveyard is not None:
         return mass_return_from_graveyard
+    mass_return_from_graveyard_to_hand = _parse_mass_return_from_graveyard_to_hand_clause(
+        clause, for_spell=for_spell
+    )
+    if mass_return_from_graveyard_to_hand is not None:
+        return mass_return_from_graveyard_to_hand
     mass_return_to_hand = _parse_mass_return_to_hand_clause(clause, for_spell=for_spell)
     if mass_return_to_hand is not None:
         return mass_return_to_hand
@@ -23234,6 +23290,48 @@ def _parse_mass_return_from_graveyard_to_battlefield_clause(
         for state in chosen:
             if state.zone is Zone.GRAVEYARD:
                 game.put_onto_battlefield(state, controller.username, tapped=tapped)
+
+    return effect
+
+
+#: "Return all <description> from your graveyard to your hand." - Wrenn and
+#: Seven's own -8, "Return all permanent cards from your graveyard to your
+#: hand." The hand-bound twin of `_MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_
+#: RE` right above - same subject, same source zone, a different
+#: destination and (CR 400.7's plain "new object") no "tapped" of its own to
+#: read, since a card in a hand has no such status (CR 110.5d).
+_MASS_RETURN_FROM_GRAVEYARD_TO_HAND_RE = re.compile(
+    r"^return all (?P<rest>.+?) from your graveyard to your hand\.?$", re.IGNORECASE
+)
+
+
+def _parse_mass_return_from_graveyard_to_hand_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_MASS_RETURN_FROM_GRAVEYARD_TO_HAND_RE`'s shape - Wrenn and Seven's
+    -8, its own "permanent cards" quality read the same way `_parse_card_
+    group_qualifier`'s "permanent"/"permanents" branch already reads it for
+    the battlefield-bound family (CR 110.4a's own fifteen-type-minus-
+    instant-and-sorcery group).
+
+    Snapshotted before any card moves (CR 608.2f, the same reasoning
+    `_parse_mass_return_from_graveyard_to_battlefield_clause` documents),
+    and moved through `Game.return_to_hand` - the same primitive Raise
+    Dead's own single-target return already uses.
+    """
+    match = _MASS_RETURN_FROM_GRAVEYARD_TO_HAND_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    predicate = _parse_card_group_qualifier(match.group("rest"))
+    if predicate is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        chosen = [state for state in list(controller.graveyard) if predicate(state)]
+        for state in chosen:
+            if state.zone is Zone.GRAVEYARD:
+                game.return_to_hand(state)
 
     return effect
 

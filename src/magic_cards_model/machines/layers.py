@@ -4533,6 +4533,66 @@ def _basic_land_type_count_cda_builder(line: str) -> EffectBuilder:
     return builder
 
 
+#: "This creature's/permanent's/token's power and toughness are each equal
+#: to the number of `<type>` you control." - a real, heavily templated
+#: "lands matter" archetype (Molimo, Maro-Sorcerer; Old Man Willow; Titania,
+#: Gaea Incarnate; Ulvenwald Hydra; Cultivator Colossus; Ashaya, Soul of the
+#: Wild - a card search on the exact sentence turns up over a dozen real
+#: printings) as well as Wrenn and Seven's own -3 token, which grants the
+#: identical sentence in quotes rather than printing it directly - CR 111.3
+#: puts the quoted text verbatim onto `TokenDefinition.rules_text`, read by
+#: this module's ordinary static-ability sweep the same as a printed card's
+#: oracle text (see `_self_pump_per_controlled_permanent_builder`'s own
+#: docstring, built for the Urza's Saga Construct token the same way).
+#:
+#: `<type>` is any of CR 205.2a's fifteen card types, not only "lands" -
+#: `_card_type_word` reads whichever one is printed, the same singularisation
+#: `_BASIC_LAND_TYPE_COUNT_CDA_RE`'s own domain sibling and `machines/
+#: effects.py::count_expression` already use. A subtype ("Zombies you
+#: control") is not read here: no real printing in this shape needs one, and
+#: guessing at the vocabulary check `count_expression`'s own subtype branch
+#: uses would be new, unverified scope.
+_QUALIFIER_COUNT_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s power and toughness are each equal to "
+    r"the number of (?P<qualifier>[a-z]+) you control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _qualifier_count_cda_builder(line: str, card_type: Type) -> EffectBuilder:
+    """`_QUALIFIER_COUNT_CDA_RE`'s shape - CR 604.3a's characteristic-
+    defining ability, sublayer 7a (CR 613.4a), the same "set, not add" shape
+    `_basic_land_type_count_cda_builder` right above already is.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: P/T equal to the number of "
+                    f"{card_type.value}s its controller controls"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                characteristic_defining=True,
+                selector=_only(source.id),
+                modification=define_power_toughness(
+                    count_permanents_controlled_by(source.controller, card_type)
+                ),
+            )
+        ]
+
+    return builder
+
+
 def _attached_creature_static_builder(
     power: int,
     toughness: int,
@@ -5457,6 +5517,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if _BASIC_LAND_TYPE_COUNT_CDA_RE.fullmatch(sentence):
         return _basic_land_type_count_cda_builder(sentence)
+    if match := _QUALIFIER_COUNT_CDA_RE.fullmatch(sentence):
+        card_type = _card_type_word(match.group("qualifier"))
+        if card_type is not None:
+            return _qualifier_count_cda_builder(sentence, card_type)
     if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(sentence):
         raw_keywords = match.group("keywords") or match.group("only_keywords")
         keywords = []

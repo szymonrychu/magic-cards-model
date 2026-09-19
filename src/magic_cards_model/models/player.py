@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import AfterValidator, ConfigDict, Field
 
+from ..ids import new_id
 from ..snapshot import EngineModel
 from .card import Card
 from .card_state import CardState, Counter, CounterKind, Counters
@@ -82,6 +83,41 @@ Seed = int | str | bytes | Random
 
 def _rng(seed: Seed) -> Random:
     return seed if isinstance(seed, Random) else Random(seed)  # noqa: S311 - not cryptographic
+
+
+class Emblem(EngineModel):
+    """CR 114: "An emblem is a marker used to represent an object that has
+    one or more abilities, but usually no other characteristics."
+
+    CR 114.2: "An effect that creates an emblem is written '[Player] gets an
+    emblem with [ability].' This means that [player] puts an emblem with
+    [ability] into the command zone. The emblem is both owned and controlled
+    by that player" - which is why this lives on `Player.emblems` rather
+    than in any zone list `Zone` already enumerates: CR 114.5 says outright
+    "An emblem is neither a card nor a permanent. Emblem isn't a card type",
+    so it has no `CardState` to be, and CR 114.3 ("no characteristics other
+    than the abilities defined by the effect that created it ... no types,
+    no mana cost, and no color") leaves nothing else on it worth modelling
+    but that text.
+
+    `text` is read generally, off the emblem's own printed words - CR 114.2's
+    template, not any specific card's name - by whatever asks "does this
+    player have an emblem granting X" (`Player.has_no_maximum_hand_size` is
+    the first such question this engine asks). `source_name` is provenance
+    only (which permanent's ability created it), never read for behaviour.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    id: UUID = Field(default_factory=new_id)
+    text: str
+    source_name: str | None = None
+
+
+#: "You have no maximum hand size." - the emblem ability this engine reads
+#: generally (CR 114.2's own template): Wrenn and Seven's -8 and Tamiyo,
+#: Inquisitive Student's -7 both print this exact sentence.
+_NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT = "you have no maximum hand size"
 
 
 class Player(EngineModel):
@@ -238,6 +274,11 @@ class Player(EngineModel):
     Set-only: CR 702.131c gives no rule that ever takes it away, so a player
     who drops back under ten permanents keeps it, and this field is never
     cleared on a new turn the way `life_gained_this_turn` is."""
+
+    emblems: list[Emblem] = Field(default_factory=list)
+    """CR 114.2's "[Player] gets an emblem with [ability]": every emblem this
+    player owns and controls, in the order granted. See `Emblem`'s own
+    docstring for why this lives here rather than in a zone."""
 
     companion_id: UUID | None = None
     """The `CardState.id` of this player's chosen companion (CR 702.139a),
@@ -554,8 +595,26 @@ class Player(EngineModel):
         return card_state
 
     @property
+    def has_no_maximum_hand_size(self) -> bool:
+        """CR 613.11: whether some continuous effect this player controls
+        overrides CR 402.2's own maximum hand size to "no maximum" - read
+        generally off any emblem granting CR 114.2's own "You have no
+        maximum hand size." sentence, not any one card's name, so a future
+        printing granting the identical ability the same way is covered for
+        free.
+        """
+        return any(
+            emblem.text.strip().rstrip(".").lower() == _NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT
+            for emblem in self.emblems
+        )
+
+    @property
     def cards_over_maximum_hand_size(self) -> int:
-        """How many cards the cleanup step would make this player discard (CR 402.2)."""
+        """How many cards the cleanup step would make this player discard
+        (CR 402.2), or zero unconditionally when `has_no_maximum_hand_size`
+        holds (CR 613.11's own game-rule-modifying continuous effect)."""
+        if self.has_no_maximum_hand_size:
+            return 0
         return max(0, len(self.hand) - self.maximum_hand_size)
 
     def discard_to_maximum_hand_size(

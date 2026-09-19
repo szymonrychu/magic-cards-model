@@ -244,7 +244,7 @@ from .card_state import (
     planeswalkers_with_zero_loyalty,
 )
 from .mana import ManaCost, ManaPool, ManaSpend, ManaSpendEffect
-from .player import Player
+from .player import Emblem, Player
 from .token import TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
 
@@ -2227,7 +2227,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 21
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2455,6 +2455,17 @@ class Game(EngineModel):
     `Game.model_dump()` and the bump rule's first bullet does not carve out
     an exception for a field whose default happens to match every existing
     use - refused rather than trusted on that observation holding forever.
+
+    Bumped 21 -> 22: `Player` gained `emblems` (CR 114.2, a new `Emblem`
+    model - Wrenn and Seven's -8, Tamiyo, Inquisitive Student's -7).
+    Defaults to an empty list, which is every version-21 player's only
+    possible value, but the bump rule's first bullet carves out no
+    exception for that either - a field added to `Player`, reachable from
+    `Game.model_dump()`, is exactly the case it names. `has_no_maximum_
+    hand_size` reads the new field too, changing what `cards_over_
+    maximum_hand_size` (and so the cleanup step's own discard) computes
+    for a player any such emblem reaches - a behavioural change on top of
+    the shape one.
     """
 
     @model_validator(mode="before")
@@ -8888,6 +8899,20 @@ class Game(EngineModel):
                 player=permanent.controller,
             )
         )
+
+    def create_emblem(self, player: Player, text: str, *, source_name: str | None = None) -> Emblem:
+        """CR 114.2: "[Player] gets an emblem with [ability]" - puts an
+        emblem with `text` into the command zone, owned and controlled by
+        `player` (CR 109.4c).
+
+        No replacement effect touches this in the pool (nothing in CR 114
+        gives one a hook the way CR 122.1's counter-placement event has),
+        so this is a plain append, the same directness `add_counters` only
+        skips because a replacement effect really can intercept it.
+        """
+        emblem = Emblem(text=text, source_name=source_name)
+        player.emblems.append(emblem)
+        return emblem
 
     def return_to_hand(self, permanent: CardState) -> CardState:
         """Return a permanent to its owner's hand (CR 701.19a is "return").
