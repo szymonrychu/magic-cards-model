@@ -15062,13 +15062,21 @@ def _parse_destroy_then_if_not_attacking_clause_pair(
 
 #: "Destroy target `<X>`. If that permanent was a[n] `<quality>`, draw a
 #: card." - Budding Insurgent's own consequence; the real, off-set printing
-#: is Nissa's Defeat's identical wording ("If that permanent was a Nissa
-#: planeswalker, draw a card."). "That permanent" checked against the same
-#: `permanent_description` grammar `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`
-#: already reads, snapshotted before the destruction the same way `_parse_
-#: anaphoric_clause_pair` snapshots its own referent's controller and power.
+#: with the identical "draw a card" consequence is Nissa's Defeat's own
+#: wording ("If that permanent was a Nissa planeswalker, draw a card.") -
+#: also in this pool, so genuine off-pool proof of the shape instead comes
+#: from Liliana's Defeat's own second consequence, "her controller loses N
+#: life" ("her" being the destroyed planeswalker, read by its own last-known
+#: controller rather than the caster - CR 603.10a/704.8's look-back, the same
+#: source `_COUNTER_COUNT_CLAUSE`'s own "it had no -1/-1 counters on it"
+#: reads). "That permanent" checked against the same `permanent_description`
+#: grammar `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE` already reads, snapshotted
+#: before the destruction the same way `_parse_anaphoric_clause_pair`
+#: snapshots its own referent's controller and power.
 _IF_THAT_PERMANENT_WAS_A_RE = re.compile(
-    rf"^if that permanent was an? (?P<quality>.+?),\s*draw (?P<n>{COUNT}) cards?\.?$",
+    rf"^if that permanent was an? (?P<quality>.+?),\s*"
+    rf"(?:draw (?P<n>{COUNT}) cards?"
+    rf"|(?:his|her|its|their) controller loses (?P<life>{COUNT}) life)\.?$",
     re.IGNORECASE,
 )
 
@@ -15090,8 +15098,9 @@ def _parse_destroy_then_if_that_permanent_was_draw_clause_pair(
     requirement = permanent_description(cond_match.group("quality"))
     if requirement is None:
         return None
-    amount = parse_count(cond_match.group("n"))
-    if amount is None:
+    draw_amount = parse_count(cond_match.group("n")) if cond_match.group("n") else None
+    life_amount = parse_count(cond_match.group("life")) if cond_match.group("life") else None
+    if draw_amount is None and life_amount is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -15105,11 +15114,16 @@ def _parse_destroy_then_if_that_permanent_was_draw_clause_pair(
             return
         target = targets[0]
         matches = requirement.rejects(target, controller.username, game) is None
+        target_controller_username = game.controller_of(target).username
         game.destroy(target)
         if target.zone is Zone.BATTLEFIELD:
             return
-        if matches:
-            game.draw_cards(controller, amount)
+        if not matches:
+            return
+        if draw_amount is not None:
+            game.draw_cards(controller, draw_amount)
+        elif life_amount is not None:
+            game.player(target_controller_username).lose_life(life_amount)
 
     return effect
 
