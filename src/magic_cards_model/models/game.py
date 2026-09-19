@@ -218,6 +218,7 @@ from ..machines.triggers import (
     granted_activated_abilities_of,
     intervening_if_holds,
     mana_added_event,
+    resolution_key,
     rewritten_ability_lines,
     state_triggers_for,
     tapped_for_mana_event,
@@ -245,7 +246,7 @@ from .card_state import (
 )
 from .mana import ManaCost, ManaPool, ManaSpend, ManaSpendEffect
 from .player import Player
-from .token import TokenState, move_refused, tokens_that_cease_to_exist
+from .token import TokenDefinition, TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
 
 #: Anything a spell can point at and then affect (CR 115.1).
@@ -1901,6 +1902,14 @@ class Game(EngineModel):
     rather than a flag, so a future card asking "two or more" has the number;
     today only "at least one" is ever asked. Cleared when a new turn begins."""
 
+    ability_resolutions_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many times each triggered or activated ability has resolved this
+    turn, keyed by `_resolution_key` (the source object, as that object, and
+    the ability's own text). "If this is the fourth time this ability has
+    resolved this turn" (Sephiroth, Fabled SOLDIER) reads it; the count
+    includes the resolution in progress. Counted in `_resolve_ability` and
+    cleared when a new turn begins."""
+
     creatures_died_this_turn: int = 0
     """How many creatures have died this turn, whoever controlled them.
 
@@ -2040,6 +2049,14 @@ class Game(EngineModel):
     `recorded_count`, cleared by `resolve_top` around every resolution so it
     never outlives the object that wrote it. Not persisted: a command that
     pauses is replayed from its start, and the same clauses write it again."""
+
+    _linked_counts_by_player: dict[str, int] = PrivateAttr(default_factory=dict)
+    """The same count, one per player, for an "each player ..." instruction
+    whose later "that many" is each player's own (Awaken the Erstwhile's
+    "Each player discards all the cards in their hand, then creates that many
+    ... tokens"). Written while `counting_for` names a player."""
+
+    _counting_player: str | None = PrivateAttr(default=None)
 
     turn_ended_exiled_ids: SortedSet[UUID] = Field(default_factory=set, exclude=True, repr=False)
     """Spells CR 724.1b exiled while they were resolving.
@@ -3639,13 +3656,60 @@ class Game(EngineModel):
         if self.stack_is_empty:
             raise ValueError("the stack is empty")
         self.resolving = self.stack[-1]
-        self._linked_count = None
+        self._forget_counts()
         try:
             with self._id_allocator_scope():
                 return self._resolve_top()
         finally:
             self.resolving = None
-            self._linked_count = None
+            self._forget_counts()
+
+    def create_emblem(self, owner: str, text: str, source_name: str) -> CardState:
+        """Put an emblem with `text`'s abilities into the command zone (CR
+        114.2): "[Player] gets an emblem with [ability]" - owned and controlled
+        by that player. CR 114.3: it has no characteristics but those
+        abilities, so its object carries only them (`Layout.EMBLEM`, no types,
+        no cost, no colour); its name is a label, "<source> emblem". CR 114.4:
+        its abilities function in the command zone - see `emit` and
+        `machines/triggers.zones_ability_functions_in`."""
+        with self._id_allocator_scope():
+            definition = TokenDefinition(
+                types=(), name=f"{source_name} emblem", rules_text=text.strip()
+            )
+            card = definition.to_card().model_copy(
+                update={"layout": Layout.EMBLEM, "type_line": "Emblem"}
+            )
+            emblem = CardState(card=card, zone=Zone.COMMAND, controller=owner, owner=owner)
+            emblem.bind_to_game(self)
+            self.shared_zones[Zone.COMMAND].append(emblem)
+            return emblem
+
+    def emblems_of(self, username: str) -> list[CardState]:
+        """The emblems `username` controls (CR 114.2)."""
+        return [
+            state
+            for state in self.shared_zones[Zone.COMMAND]
+            if isinstance(state, CardState)
+            and state.card.layout is Layout.EMBLEM
+            and state.controller == username
+        ]
+
+    def _forget_counts(self) -> None:
+        self._linked_count = None
+        self._linked_counts_by_player = {}
+        self._counting_player = None
+
+    @contextmanager
+    def counting_for(self, username: str) -> Iterator[None]:
+        """Scope `record_count`/`recorded_count` to one player's own count
+        while that player carries out their part of an "each player ..."
+        instruction (CR 608.2e)."""
+        previous = self._counting_player
+        self._counting_player = username
+        try:
+            yield
+        finally:
+            self._counting_player = previous
 
     def record_count(self, count: int | None) -> None:
         """Record how many objects the resolving object's current instruction
@@ -3653,10 +3717,18 @@ class Game(EngineModel):
         or `None` to clear it ahead of an instruction whose count a later
         "if you do" asks about."""
         self._linked_count = count
+        if self._counting_player is not None:
+            if count is None:
+                self._linked_counts_by_player.pop(self._counting_player, None)
+            else:
+                self._linked_counts_by_player[self._counting_player] = count
 
     def recorded_count(self) -> int | None:
-        """The count `record_count` last wrote during this resolution, or
-        None when no counted instruction has run yet."""
+        """The count `record_count` last wrote during this resolution - the
+        player's own while `counting_for` names one - or None when no counted
+        instruction has run yet."""
+        if self._counting_player is not None:
+            return self._linked_counts_by_player.get(self._counting_player)
         return self._linked_count
 
     def _resolve_top(self) -> StackObject:
@@ -5192,6 +5264,10 @@ class Game(EngineModel):
                     if run is not None:
                         run(self, ability, delayed)
                 else:
+                    key = resolution_key(ability)
+                    self.ability_resolutions_this_turn[key] = (
+                        self.ability_resolutions_this_turn.get(key, 0) + 1
+                    )
                     effect = self._effect_of(ability)
                     if effect is not None:
                         effect(self, ability)
@@ -5430,6 +5506,12 @@ class Game(EngineModel):
             # `CardState.is_suspended` - is the filter, so the widening stays
             # the size of the rule that needed it.
             sources.extend(card for card in self.exile if card.is_suspended)
+            # CR 114.4: "Abilities of emblems function in the command zone."
+            sources.extend(
+                state
+                for state in self.shared_zones[Zone.COMMAND]
+                if isinstance(state, CardState) and state.card.layout is Layout.EMBLEM
+            )
             if event.event is TriggerEvent.CAST_SPELL:
                 sources = self.spells_on_stack + sources
             elif (
@@ -15180,6 +15262,7 @@ class Game(EngineModel):
             self.permanents_left_battlefield_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
+            self.ability_resolutions_this_turn = {}
             self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()

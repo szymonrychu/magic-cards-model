@@ -115,6 +115,7 @@ from magic_cards_model.machines.effects import (  # noqa: E402
     create_continuous_effect_of_ability,
     effect_for,
     parse_mode_effect,
+    reads_as_transforms_line,
     resolve_modal_spell,
     trigger_effect_for,
 )
@@ -689,6 +690,9 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return SILENT
     if is_attack_requirement_line(text, printing.name):
         # CR 508.1d: `Game.declare_attackers` enforces it.
+        return HANDLED
+    if reads_as_transforms_line(text):
+        # CR 712.20: `effects.transform_permanent` applies it as it transforms.
         return HANDLED
     return STATIC_UNAUDITED
 

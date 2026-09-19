@@ -569,3 +569,83 @@ def test_that_many_with_nothing_counted_draws_nothing_and_says_so():
     assert len(alice.library) == 2
     (notice,) = scenario.game.unmodeled_trigger_effect_notices
     assert "that many" in notice.text
+
+
+# -- a per-player count: "each player ... that many" ----------------------------
+
+
+def _each_player_board(spell: str, alice_hand: list[str], bob_hand: list[str]):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[spell, *alice_hand],
+            battlefield=["Swamp"] * 5,
+            library=["Forest"] * 5,
+        )
+        .player("bob", hand=bob_hand, library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_awaken_the_erstwhile_gives_each_player_their_own_count():
+    """Awaken the Erstwhile: "Each player discards all the cards in their
+    hand, then creates that many 2/2 black Zombie creature tokens." Each
+    player's "that many" is their own discard (CR 608.2c, one step at a time
+    for the whole table): alice's two cards are two Zombies for alice, bob's
+    three are three for bob."""
+    scenario = _each_player_board(
+        "Awaken the Erstwhile",
+        ["Grizzly Bears", "Lightning Bolt"],
+        ["Grizzly Bears", "Lightning Bolt", "Craw Wurm"],
+    )
+    swamps = scenario.untapped_sources(*["Swamp"] * 5, username="alice")
+    scenario.cast_and_resolve("Awaken the Erstwhile", *swamps)
+
+    for username, expected in (("alice", 2), ("bob", 3)):
+        zombies = [
+            p for p in scenario.game.permanents_controlled_by(username) if p.name == "Zombie Token"
+        ]
+        assert len(zombies) == expected, username
+        assert scenario.player(username).hand == []
+    assert scenario.game.unmodeled_trigger_effect_notices == []
+
+
+def test_dark_deal_draws_each_player_their_own_count_minus_one():
+    """Dark Deal: "Each player discards all the cards in their hand, then
+    draws that many cards minus one." Two discarded is one drawn; an empty
+    hand is zero discarded, and zero minus one draws nothing (CR 107.1b)."""
+    scenario = _each_player_board("Dark Deal", ["Grizzly Bears", "Lightning Bolt"], [])
+    swamps = scenario.untapped_sources("Swamp", "Swamp", "Swamp", username="alice")
+    scenario.cast_and_resolve("Dark Deal", *swamps)
+
+    assert [c.name for c in scenario.player("alice").hand] == ["Forest"]
+    assert scenario.player("bob").hand == []
+    assert len(scenario.player("bob").library) == 5
+
+
+def test_campsite_cuisine_makes_food_when_a_legendary_creature_enters():
+    """Campsite Cuisine's first trigger: "Whenever this enchantment or a
+    legendary creature you control enters, create a Food token." The
+    legendary supertype (CR 205.4d) is part of the condition: The Earth King
+    entering makes a Food, Grizzly Bears (not legendary) does not."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Campsite Cuisine", "The Earth King", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Campsite Cuisine", "alice")
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    scenario.put_onto_battlefield("Grizzly Bears", "alice")
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    assert len([p for p in scenario.game.battlefield if p.name == "Food Token"]) == 1
+    scenario.put_onto_battlefield("The Earth King", "alice")
+    scenario.game.put_triggers_on_stack()
+    _resolve_stack(scenario)
+    assert len([p for p in scenario.game.battlefield if p.name == "Food Token"]) == 2

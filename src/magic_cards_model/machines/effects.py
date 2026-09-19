@@ -87,12 +87,14 @@ from ..models.zone import Zone
 from ..numbers import (
     AMOUNT,
     COUNT,
+    ORDINAL,
     QUANTITY,
     Quantity,
     QuantitySource,
     count_pattern,
     parse_count,
     parse_multiplier,
+    parse_ordinal,
     parse_quantity,
     quantity_pattern,
     where_x_pattern,
@@ -100,9 +102,11 @@ from ..numbers import (
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
+    AbilityKind,
     ActivatedAbility,
     TriggerEvent,
     keyword_abilities,
+    parse_abilities,
     parse_triggered_mana,
     self_normalized_effect_text,
 )
@@ -180,6 +184,7 @@ from .targeting import (
 from .triggers import (
     AbilityOnStack,
     is_ability,
+    resolution_key,
     triggered_mana_count,
     triggered_mana_recipient,
 )
@@ -4638,8 +4643,11 @@ _ENERGY_RE = re.compile(r"(?:you )?gets? (?P<e>(?:\{e\})+)", re.IGNORECASE)
 # with mana value 3 or greater".
 #: "draw that many cards" (Jaya Ballard, Cavalier of Flame, Fable of the
 #: Mirror-Breaker II) reads the count channel (`that_many`).
+#: "that many cards minus one" (Dark Deal) / "plus one" adjusts it (CR 107.1b:
+#: a negative result is zero).
 _DRAW_RE = re.compile(
-    rf"(?:you )?draws? (?:a card|(?:(?P<that_many>that many)|(?P<n>{COUNT})) cards?)"
+    rf"(?:you )?draws? (?:a card|(?:(?P<that_many>that many)|(?P<n>{COUNT})) cards?"
+    rf"(?: (?P<op>plus|minus) (?P<adjust>{COUNT}))?)"
     rf"(?: for each (?P<each>.+))?",
     re.IGNORECASE,
 )
@@ -5006,6 +5014,11 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         if each is not None and multiplier is None:
             return None
         draws_that_many = match.group("that_many") is not None
+        adjust = parse_count(match.group("adjust")) if match.group("adjust") else 0
+        if adjust is None or (adjust and not draws_that_many):
+            return None
+        if match.group("op") and match.group("op").lower() == "minus":
+            adjust = -adjust
 
         def draw(game: "Game", player: Player, source: str, source_id: str | None) -> None:
             base = amount
@@ -5015,7 +5028,7 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
                 )
                 if counted is None:
                     return
-                base = counted
+                base = max(counted + adjust, 0)  # CR 107.1b
             total = base * multiplier(game, player.username, source_id) if multiplier else base
             if total:
                 game.draw_cards(player.username, total)
@@ -9341,6 +9354,16 @@ def _token_creation_clause(
     return effect
 
 
+def _token_definition_from_words(desc: str, tail: str | None) -> TokenDefinition | None:
+    """A token descriptor ("2/2 black Zombie creature", "Treasure") as a
+    definition, the same reading `_parse_token_clause` gives it."""
+    words = desc.strip().split()
+    predefined = " ".join(words)
+    if tail is None and predefined in PREDEFINED:
+        return PREDEFINED[predefined]
+    return _parse_generic_token_descriptor(words, tail)
+
+
 def _x_sized_token_clause(zero_sized: str, size_reader: AmountReader) -> TargetedClause:
     """A token clause whose "X/X" is only known as it resolves: the clause is
     read again with the size written in, then run."""
@@ -11559,7 +11582,136 @@ def _parse_transform_clause(text: str) -> AbilityEffect | None:
         source = ability.source(game)
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
-        source.transform()
+        transform_permanent(game, source)
+
+    return effect
+
+
+#: "[Ability word — ]As this `<noun>` transforms into `<face>`, `<effect>`"
+#: (Sephiroth, One-Winged Angel's Super Nova). CR 712.20: "If a double-faced
+#: card would have an 'As [this permanent] transforms . . .' ability after it
+#: transforms or converts, that ability is applied while that permanent is
+#: transforming or converting, not afterward."
+_AS_TRANSFORMS_INTO_RE = re.compile(
+    r"^(?:[^—]+—\s*)?as this [a-z]+ transforms into (?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def transform_permanent(game: "Game", permanent: CardState) -> None:
+    """CR 701.27a's transform, then the new face's own "As this ...
+    transforms into `<face>`, `<effect>`" (CR 712.20) for the permanent's
+    controller. An "as transforms" effect this cannot read records an
+    `UnmodeledTriggerEffectNotice` rather than being skipped silently."""
+    before = permanent.up_face_name
+    permanent.transform()
+    after = permanent.up_face_name
+    if after == before:
+        return  # CR 712.9: nothing happened
+    controller = game.controller_of(permanent)
+    for ability in parse_abilities(permanent.card):
+        if ability.kind is not AbilityKind.STATIC or getattr(ability, "face", None) != after:
+            continue
+        match = _AS_TRANSFORMS_INTO_RE.fullmatch((ability.text or "").strip())
+        # The face's own name may hold a comma ("Sephiroth, One-Winged
+        # Angel"), so it is matched as the name, not up to the first comma.
+        lead = f"{after}, ".lower()
+        if match is None or not match.group("rest").lower().startswith(lead):
+            continue
+        run = _player_instruction(match.group("rest")[len(lead) :])
+        if run is None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=permanent.id, source_name=permanent.name, text=ability.text
+                )
+            )
+            continue
+        run(game, controller, permanent.name, str(permanent.id))
+
+
+def reads_as_transforms_line(text: str) -> bool:
+    """Whether `text` is an "As this ... transforms into `<face>`, `<effect>`"
+    line whose effect `transform_permanent` can carry out, whatever the face's
+    name (which may itself hold a comma)."""
+    match = _AS_TRANSFORMS_INTO_RE.fullmatch(text.strip())
+    if match is None:
+        return False
+    rest = match.group("rest")
+    return any(
+        _player_instruction(rest[index + 2 :]) is not None
+        for index in range(len(rest))
+        if rest.startswith(", ", index)
+    )
+
+
+def _player_instruction(text: str) -> ClauseEffect | None:
+    """One instruction for a player, read whole ("you get an emblem with
+    ...", whose quoted text the clause splitter would cut) or as a plain
+    player clause."""
+    stripped = text.strip()
+    emblem = _EMBLEM_RE.fullmatch(stripped)
+    if emblem is not None:
+        quoted = emblem.group("text")
+        return lambda game, player, source, _source_id: _get_emblem(game, player, quoted, source)
+    return parse_clause_effect(stripped)
+
+
+#: "You get an emblem with "`<abilities>`"." - CR 114.2: "An effect that
+#: creates an emblem is written '[Player] gets an emblem with [ability].'
+#: This means that [player] puts an emblem with [ability] into the command
+#: zone." Scryfall prints the inner quotes as ASCII or as curly marks.
+_EMBLEM_RE = re.compile(
+    r"^you get an emblem with [\"\u201c](?P<text>.+)[\"\u201d]\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _get_emblem(game: "Game", player: Player, text: str, source: str) -> None:
+    game.create_emblem(player.username, text, source)
+
+
+def _parse_get_an_emblem_clause(text: str) -> AbilityEffect | None:
+    """Jaya Ballard's -8, read whole (the quoted abilities contain full stops
+    the clause splitter would cut at)."""
+    match = _EMBLEM_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    quoted = match.group("text")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        _get_emblem(game, game.controller_of(ability), quoted, ability.source_name)
+
+    return effect
+
+
+#: "`<effect>`. If this is the `<ordinal>` time this ability has resolved
+#: this turn, `<consequence>`." (Sephiroth, Fabled SOLDIER) - the count is
+#: `Game.ability_resolutions_this_turn`, which already includes the
+#: resolution in progress when the effect runs.
+_NTH_RESOLUTION_RE = re.compile(
+    rf"^(?P<first>.+?)\.\s*if this is the (?P<ordinal>{ORDINAL}) time this ability has "
+    r"resolved this turn, (?P<then>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_nth_resolution_clause(text: str) -> AbilityEffect | None:
+    """`_NTH_RESOLUTION_RE`'s shape. The first sentence is any effect this
+    file reads; the consequence runs only on the named resolution."""
+    match = _NTH_RESOLUTION_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    nth = parse_ordinal(match.group("ordinal"))
+    first = parse_mixed_effect(match.group("first") + ".")
+    then_text = match.group("then").strip() + "."
+    then = parse_mixed_effect(then_text) or _parse_transform_clause(then_text)
+    if nth is None or first is None or then is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        first(game, ability)
+        if game.ability_resolutions_this_turn.get(resolution_key(ability), 0) == nth:
+            then(game, ability)
 
     return effect
 
@@ -11927,6 +12079,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     add_one_mana_of_any_color = _parse_add_one_mana_of_any_color_trigger(effect_text)
     if add_one_mana_of_any_color is not None:
         return add_one_mana_of_any_color
+    emblem = _parse_get_an_emblem_clause(effect_text)
+    if emblem is not None:
+        return emblem
+    nth_resolution = _parse_nth_resolution_clause(effect_text)
+    if nth_resolution is not None:
+        return nth_resolution
     mill_then_take = _parse_mill_that_many_then_take_from_among_them(effect_text)
     if mill_then_take is not None:
         return mill_then_take
@@ -13174,6 +13332,22 @@ _SHUFFLE_HAND_AND_GRAVEYARD_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "discards all the cards in their hand" / "discards their hand" (Awaken
+#: the Erstwhile, Dark Deal) - CR 701.9a, every card, no choice.
+_DISCARD_WHOLE_HAND_RE = re.compile(
+    r"^discards? (?:all the cards in |all cards in )?(?:their|his or her|your) hand$",
+    re.IGNORECASE,
+)
+
+#: "creates that many 2/2 black Zombie creature tokens" / "creates N ...
+#: tokens" - one player's own token creation within an "each player ..."
+#: sentence (Awaken the Erstwhile).
+_PLAYER_CREATES_TOKENS_RE = re.compile(
+    rf"^creates? (?:(?P<that_many>that many)|(?P<n>{COUNT})) (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+with\s+(?P<tail>.+))?$",
+    re.IGNORECASE,
+)
+
 #: A bare "shuffles" left over at the end of a fan-out sentence - Field of
 #: Ruin's "..., then shuffles".
 _BARE_SHUFFLE_RE = re.compile(r"^shuffles?$", re.IGNORECASE)
@@ -13280,6 +13454,36 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
     if _BARE_SHUFFLE_RE.fullmatch(clause):
         return lambda game, player, source, source_id: game.shuffle_library(player)
 
+    if _DISCARD_WHOLE_HAND_RE.fullmatch(clause):
+
+        def discard_hand(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            # CR 701.9a: every card, so nobody chooses; the count is what a
+            # later "that many" of this player reads (CR 608.2c).
+            discarded = game.discard_cards(player.username, list(player.hand), source=source)
+            game.record_count(len(discarded))
+
+        return discard_hand
+
+    if match := _PLAYER_CREATES_TOKENS_RE.fullmatch(clause):
+        definition = _token_definition_from_words(match.group("desc"), match.group("tail"))
+        if definition is None:
+            return None
+        fixed = None if match.group("that_many") else parse_count(match.group("n"))
+        if fixed is None and not match.group("that_many"):
+            return None
+
+        def create_for_player(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            count = fixed
+            if count is None:
+                count = _that_many_or_notice(game, clause, source_id=source_id, source_name=source)
+            if count:
+                # CR 111.2: the player who creates the token owns and controls it.
+                create_tokens(game, definition, player.username, count)
+
+        return create_for_player
+
     if match := _EACH_PLAYER_EXILES_TOP_RE.fullmatch(clause):
         amount = parse_count(match.group("n")) if match.group("n") else 1
         face_down = match.group("face_down") is not None
@@ -13300,14 +13504,10 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
         return exile_top_of_library
 
     if match := _EACH_PLAYER_SEARCH_RE.fullmatch(clause):
-        if match.group("that_many"):
-            # "Each player ... that many" would be each player's own count,
-            # and the count channel (`that_many`) carries one number for the
-            # resolving object, not one per player - so this fails closed
-            # rather than handing every player the same guessed number.
-            return None
-        count = parse_count(match.group("n"))
-        if count is None:
+        # "that many" is each player's own count (`Game.counting_for`).
+        searches_that_many = match.group("that_many") is not None
+        printed = None if searches_that_many else parse_count(match.group("n"))
+        if printed is None and not searches_that_many:
             return None
         matcher = _quality_matcher(match.group("quality"))
         quality = match.group("quality")
@@ -13319,6 +13519,11 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
         def search_and_put(
             game: "Game", player: Player, source: str, source_id: str | None
         ) -> None:
+            count = printed
+            if count is None:
+                count = _that_many_or_notice(game, clause, source_id=source_id, source_name=source)
+                if count is None:
+                    return
             if optional and not game.may(
                 player,
                 f"search your library for up to {count} {quality} cards",
@@ -13416,7 +13621,10 @@ def _merge_each_player_clauses(
             # the next one starts, in APNAP order within each step.
             for player in _players_in_apnap_order(game):
                 before = len(game.exile)
-                step(game, player, source, source_id_of(stack_object))
+                # CR 608.2e: a later "that many" of this player's is this
+                # player's own count, not the table's.
+                with game.counting_for(player.username):
+                    step(game, player, source, source_id_of(stack_object))
                 # CR 607.2a, CR 406.6: an ability that exiles cards and later
                 # refers to "the exiled cards" or cards "exiled with [this
                 # object]" links the two. Knowledge Pool's "Imprint — When

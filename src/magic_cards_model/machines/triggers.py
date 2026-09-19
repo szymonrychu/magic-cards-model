@@ -57,7 +57,7 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 
 from ..ids import new_id
-from ..models.card import Card, Color, Type
+from ..models.card import Card, Color, Layout, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.token import TokenState
 from ..models.zone import Zone
@@ -1320,6 +1320,14 @@ _NONTOKEN_WORD = re.compile(r"\bnontoken\b")
 _TOKEN_WORD = re.compile(r"\btokens?\b")
 
 
+#: "this `<noun>` or `<other subject>` enters" - a self-or-other entry
+#: condition; `other` is read like any other "`<subject>` enters" condition.
+_SELF_OR_OTHER_ENTERS_RE = re.compile(
+    r"^this [a-z]+ or (?P<other>(?:an?|another) .+ enters?)$", re.IGNORECASE
+)
+_LEGENDARY_WORD = re.compile(r"\blegendary\b")
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -1441,10 +1449,28 @@ def condition_matches(
     if ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD:
         if not _entry_qualifier_matches(game, condition, event):
             return False
-        if mine:
+        either = _SELF_OR_OTHER_ENTERS_RE.match(condition)
+        if mine and either is None:
             return event.subject_id == source.id
+        if either is not None:
+            # "this enchantment or a legendary creature you control enters"
+            # (Campsite Cuisine): the source itself, or anything that fits
+            # the other half, read as its own condition below.
+            if event.subject_id == source.id:
+                return True
+            condition = either.group("other")
+            lowered = condition.lower()
         if "another" in lowered and event.subject_id == source.id:
             return False
+        if _LEGENDARY_WORD.search(lowered):
+            # CR 205.4a: "legendary" is a supertype, read off the computed
+            # object (CR 613.5) - not a card type `_types_match` knows.
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if (
+                subject is None
+                or Supertype.LEGENDARY not in game.characteristics_of(subject).supertypes
+            ):
+                return False
         if not _controller_clause_holds(
             condition, controller, event.subject_controller
         ) or not _types_match(event.subject_types, condition):
@@ -1493,8 +1519,10 @@ def condition_matches(
             return mine
         # Not the source's own death: only a condition that also names
         # something else - "another"/"other" - can still match (CR 700.4,
-        # 603.10a). A pure "When this creature dies" does not.
-        if "another" not in lowered and "other" not in lowered:
+        # 603.10a). A pure "When this creature dies" does not; a condition
+        # naming no object of its own at all ("Whenever a creature dies",
+        # an emblem's) is about any creature.
+        if mine and "another" not in lowered and "other" not in lowered:
             return False
         subtype = _required_subtype(condition)
         return (
@@ -2074,6 +2102,14 @@ _LOOK_BACK_EVENTS = (
 )
 
 
+def resolution_key(ability: "AbilityOnStack") -> str:
+    """The key `Game.ability_resolutions_this_turn` counts one ability's
+    resolutions under: its source as that object (CR 400.7 - a source that
+    changed zones is a new object, `source_stamp`) and its own text, so two
+    abilities of one permanent are counted apart."""
+    return f"{ability.source_id}:{ability.source_stamp}:{ability.ability.text}"
+
+
 def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> frozenset[Zone]:
     """Which zone(s) this printed ability functions from (CR 113.6).
 
@@ -2097,6 +2133,10 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     second one stack rights it does not have.
     """
     lowered = ability.condition.lower()
+
+    if source.card.layout is Layout.EMBLEM:
+        # CR 114.4: "Abilities of emblems function in the command zone."
+        return frozenset({Zone.COMMAND})
 
     # CR 113.6b: "An ability that states which zones it functions in functions
     # only from those zones."

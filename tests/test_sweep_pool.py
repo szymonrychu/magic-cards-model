@@ -424,30 +424,22 @@ def test_intended_token_requirement_reads_nontoken_before_token():
     assert _intended_token_requirement("a Human you control enters") is None
 
 
-def test_ygras_food_graveyard_condition_can_never_fire():
+def test_ygras_food_graveyard_condition_now_fires():
     """Ygra, Eater of All's "a Food is put into a graveyard from the
-    battlefield" hits a different bug than Weapons Manufacturing's, in the
-    same `condition_matches` `DIES` branch: a condition naming neither a
-    self-reference nor "another"/"other" never matches anything, self or
-    other (`docs/2026-09-08-trigger-findings.md` traces the same escaping
-    shape - readable event, unmatched condition - to a second, independent
-    cause). Nobody is fixing this one, which is what makes it a stable
-    fixture: Weapons Manufacturing's own condition now fires correctly since
-    `main`'s nontoken substring fix (see the sibling test below), so this
-    closure's fixtures have to point at a gap that is still actually open.
+    battlefield" names neither a self-reference nor "another"/"other". The
+    `condition_matches` `DIES` branch used to read such a condition as
+    self-only and never matched it; a condition naming no object of its own
+    is about any such object, and this closure tracks the production answer.
     """
     ability = _triggered_ability("Ygra, Eater of All", condition_contains="Food is put into")
-    assert _condition_can_fire(card("Ygra, Eater of All"), ability) is False
+    assert _condition_can_fire(card("Ygra, Eater of All"), ability) is not False
 
 
-def test_blade_of_the_bloodchiefs_creature_dies_condition_can_never_fire():
-    """Blade of the Bloodchief's "a creature dies" (no "this", no
-    "another"/"other") hits the identical `DIES`-branch gap Ygra does, on a
-    plainer card - CR 603.10a's own escaping shape again, distinct from and
-    unrelated to the nontoken substring collision.
-    """
+def test_blade_of_the_bloodchiefs_creature_dies_condition_now_fires():
+    """Blade of the Bloodchief's "a creature dies" - the same `DIES`-branch
+    fix as Ygra's, on a plainer card."""
     ability = _triggered_ability("Blade of the Bloodchief", condition_contains="a creature dies")
-    assert _condition_can_fire(card("Blade of the Bloodchief"), ability) is False
+    assert _condition_can_fire(card("Blade of the Bloodchief"), ability) is not False
 
 
 def test_weapons_manufacturings_condition_now_fires_after_the_nontoken_fix():
@@ -505,26 +497,15 @@ def test_caretakers_talents_unread_condition_is_not_reclassified():
     assert by_source["triggered (unread condition)"] == SILENT
 
 
-def test_ygra_reports_unmatchable_condition_not_handled():
-    """The requirement, end to end: this card's own triggered clause must
-    stop scoring `handled`, and it must score a bucket distinct from
-    `silent` - the two mean different things to whoever reads the report.
-    Ygra was previously scored fully `handled` - a card the sweeper had
-    never flagged at all, which the condition-matching closure is what
-    finds.
-    """
+def test_ygra_no_longer_reports_an_unmatchable_condition():
+    """End to end: with the condition fixed, Ygra's triggered clause is no
+    longer in the can-never-fire bucket."""
     by_source = {c.source: c.category for c in classify_clauses(card("Ygra, Eater of All"))}
-    assert by_source["triggered"] == UNMATCHABLE_CONDITION
-    assert classify_card(card("Ygra, Eater of All"))[0] == UNMATCHABLE_CONDITION
+    assert by_source["triggered"] != UNMATCHABLE_CONDITION
 
 
-def test_blade_of_the_bloodchief_reports_unmatchable_condition_not_silent():
-    """Blade of the Bloodchief used to be caught only as `silent` (no effect
-    reader) - the condition hole underneath it is a distinct, separately
-    tracked bug and must not stay hidden behind the effect one now that both
-    are checked.
-    """
-    assert classify_card(card("Blade of the Bloodchief"))[0] == UNMATCHABLE_CONDITION
+def test_blade_of_the_bloodchief_no_longer_reports_an_unmatchable_condition():
+    assert classify_card(card("Blade of the Bloodchief"))[0] != UNMATCHABLE_CONDITION
 
 
 def test_miirym_still_reports_silent_for_its_missing_effect():
