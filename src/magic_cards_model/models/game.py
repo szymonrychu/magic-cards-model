@@ -174,6 +174,7 @@ from ..machines.layers import (
     count_card_types,
     grant_ability,
     only_this_incarnation,
+    printed_characteristics,
     spend_effect_effects,
 )
 from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
@@ -656,6 +657,19 @@ _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IG
 #: off `Game.spells_cast_this_turn`, which already excludes copies (CR 707.10).
 _CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
     rf"you(?:'ve| have) cast {count_pattern('count')} or more spells this turn", re.IGNORECASE
+)
+#: Grim Repriser: "an opponent has been dealt noncombat damage this turn"
+#: (CR 120.2a) - read off `Game.noncombat_damage_recipients_this_turn`,
+#: recorded per recipient in `deal_damage`.
+_CONDITION_OPPONENT_DEALT_NONCOMBAT_DAMAGE = re.compile(
+    r"an opponent has been dealt noncombat damage this turn", re.IGNORECASE
+)
+#: Proctor of Potential: "you've scried or surveilled this turn" (CR
+#: 701.22a, 701.25a) - read off `Game.scried_or_surveilled_this_turn`,
+#: recorded in `scry` and `surveil` alike, since the printed condition
+#: treats either verb as satisfying it.
+_CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN = re.compile(
+    r"you(?:'ve| have) scried or surveilled this turn", re.IGNORECASE
 )
 #: CR 110.4a: "Specifically, it means an artifact, battle, creature,
 #: enchantment, land, or planeswalker card."
@@ -1988,6 +2002,22 @@ class Game(EngineModel):
     "you gained life this turn" intervening *if*. Cleared when a new turn
     begins."""
 
+    noncombat_damage_recipients_this_turn: SortedSet[str] = Field(default_factory=set)
+    """Which players have been dealt noncombat damage this turn (CR 120.2a's
+    combat/noncombat split, recorded per recipient rather than per source).
+    Written in `deal_damage` alongside the `DEALS_DAMAGE` event it already
+    emits. Feeds Grim Repriser's own "Activate only if an opponent has been
+    dealt noncombat damage this turn" (CR 602.5b). Cleared when a new turn
+    begins, the same reset `life_gained_this_turn` already gets."""
+
+    scried_or_surveilled_this_turn: SortedSet[str] = Field(default_factory=set)
+    """Which players have scried or surveilled this turn (CR 701.22a,
+    701.25a - two verbs read as one fact, the way `Game.condition_holds`'s
+    own callers already read "you've scried or surveilled" as a single
+    printed alternative rather than two). Written in `scry` and `surveil`.
+    Feeds Proctor of Potential's own "Activate only if you've scried or
+    surveilled this turn" (CR 602.5b). Cleared when a new turn begins."""
+
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
@@ -2236,7 +2266,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 22
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 23
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2473,6 +2503,12 @@ class Game(EngineModel):
     is reachable from `Game.model_dump()`, so the field is in scope for the
     bump rule even though it defaults to `None` and no version-21 dump's
     trigger reads it back for anything.
+
+    Bumped 22 -> 23: `Game` gained `noncombat_damage_recipients_this_turn`
+    and `scried_or_surveilled_this_turn` (FRA stream S8), the same
+    per-turn-history shape `life_gained_this_turn` already is - needed for
+    Grim Repriser's and Proctor of Potential's own "Activate only if"
+    restrictions, which nothing before this recorded at all.
     """
 
     @model_validator(mode="before")
@@ -7679,6 +7715,10 @@ class Game(EngineModel):
                 player = self.player(player)
             if count <= 0:
                 return CardSplit()
+            # CR 701.22b's own "no scry event occurs" is why this is recorded
+            # only past the count-0 refusal above (Proctor of Potential's own
+            # "Activate only if you've scried or surveilled this turn").
+            self.scried_or_surveilled_this_turn.add(player.username)
 
             looked_at = self._look_at_top(player, count)
             pending_looks = self._look_before_choosing(player, looked_at, source)
@@ -7754,6 +7794,9 @@ class Game(EngineModel):
                 player = self.player(player)
             if count <= 0:
                 return CardSplit()
+            # CR 701.25c's own "no surveil event" mirrors scry's - recorded
+            # only past the count-0 refusal above.
+            self.scried_or_surveilled_this_turn.add(player.username)
 
             looked_at = self._look_at_top(player, count)
             pending_looks = self._look_before_choosing(player, looked_at, source)
@@ -9840,6 +9883,11 @@ class Game(EngineModel):
 
             if isinstance(target, Player):
                 self.deal_damage_to_player(target, event.amount)
+                if not event.combat:
+                    # CR 120.2a's split, kept per recipient (Grim Repriser's
+                    # own "an opponent has been dealt noncombat damage this
+                    # turn").
+                    self.noncombat_damage_recipients_this_turn.add(target.username)
             else:
                 self._apply_damage_to_permanent(target, event.amount)
             # CR 613.5: the source's characteristics for this event are the
@@ -11161,7 +11209,25 @@ class Game(EngineModel):
         return self.open_payment_pools.get(player.username, player.mana_pool)
 
     def characteristics_of(self, permanent: CardState) -> Characteristics:
-        """This permanent's characteristics right now, layers included (CR 613.5)."""
+        """This permanent's characteristics right now, layers included (CR 613.5).
+
+        CR 613's whole layer system is about the battlefield - "the game
+        applies each applicable effect in a series of layers" governs what
+        that object *currently is*, a question only a permanent has - so an
+        object anywhere else (a graveyard-zone CR 113.6m ability's own
+        source, an exiled card, one still in a library or hand) falls back
+        to `printed_characteristics`, the same layer-1 starting point every
+        computed board itself begins from, with no continuous effect able to
+        reach it there to begin with (CR 611.1, 613.1a: an effect that could
+        apply "as long as" or "for as long as" a permanent condition holds
+        needs a permanent to hold it). Grim Repriser's and Proctor of
+        Potential's own graveyard-zone activation is what first needed this:
+        `CostPayment.for_total`'s own `ManaSpend.activating` call asks for
+        this unconditionally, for every activation, not only a battlefield
+        one.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return printed_characteristics(permanent)
         return self.computed_board().of(permanent)
 
     def power_of(self, permanent: CardState) -> int | None:
@@ -13512,6 +13578,15 @@ class Game(EngineModel):
                 and source.counter_count(Counter.TIME) > 0
             )
 
+        if _CONDITION_OPPONENT_DEALT_NONCOMBAT_DAMAGE.fullmatch(text):
+            return any(
+                username in self.noncombat_damage_recipients_this_turn
+                for username in (opponent.username for opponent in opponents)
+            )
+
+        if _CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN.fullmatch(text):
+            return controller in self.scried_or_surveilled_this_turn
+
         return None
 
     def modal_alternative_applies(
@@ -13905,6 +13980,16 @@ class Game(EngineModel):
                 # turns the sentence into something payable - "Exert this land"
                 # (CR 701.43a), "Exile a black card from your hand" (CR 118.9).
                 component = cost_component_for_phrase(piece.text, payer=controller)
+                if (
+                    component is not None
+                    and component.requirement is not None
+                    and component.requirement.excludes_source
+                ):
+                    # "Exile another <quality> card": `cost_component_for_
+                    # phrase` reads the printed sentence alone and never sees
+                    # a live board, so it cannot know which permanent
+                    # "another" excludes - this is the one place that does.
+                    component.requirement.source_id = permanent.id
                 if component is None and _exiles_itself_by_name(piece.text, permanent):
                     # CR 201.5: "if an object's text uses its own name, it is
                     # referring to that particular object" - the same
@@ -15174,6 +15259,8 @@ class Game(EngineModel):
             self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
+            self.noncombat_damage_recipients_this_turn = set()
+            self.scried_or_surveilled_this_turn = set()
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and
             # `cleanup_step` does exactly that; a game driven step by step may

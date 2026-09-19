@@ -2158,6 +2158,19 @@ class CardRequirement(EngineModel):
     different demand and is deliberately not read as this one."""
     description: str = ""
     """The phrase this was read from, for the message when it is not met."""
+    excludes_source: bool = False
+    """Gallia, Tragic Host's own "exile *another* creature card from your
+    graveyard" - CR 601.2c calls this reading "another"/"other" already,
+    `machines/targeting.py`'s own `TargetRequirement.excludes_source` is the
+    identical concept on the targeting side, not a second name for a
+    different one. `source_id` is what this checks against; set together,
+    by `Game.activation_cost`, which is the one place that already knows
+    which permanent this cost is being paid to activate."""
+    source_id: UUID | None = None
+    """The permanent `excludes_source` excludes, filled in by `Game.
+    activation_cost` rather than by the reader that builds this
+    `CardRequirement` - the reader never sees a live board, only the
+    printed phrase."""
 
     @property
     def is_empty(self) -> bool:
@@ -2195,6 +2208,8 @@ class CardRequirement(EngineModel):
         instead of the raw printing: they already resolve which face is up
         (CR 712.8d) the way `card.card`'s front face alone does not.
         """
+        if self.excludes_source and self.source_id is not None and card.id == self.source_id:
+            return f"{self.description or 'this cost'} excludes the ability's own source"
         if game is not None and card.zone is Zone.BATTLEFIELD:
             try:
                 characteristics = game.characteristics_of(card)
@@ -3893,8 +3908,15 @@ _COST_COUNT = rf"(?P<count>one or more|{count_pattern(x=True)})"
 #: substituted). It sits between the noun and the zone, so it is spelled once
 #: here and shared by every phrase that can carry it.
 _MANA_VALUE_TAIL = r"(?: with mana value (?P<mana_value>\d+))?"
+#: Gallia, Tragic Host's own "exile another creature card from your
+#: graveyard" - CR 601.2c/113.6's "another"/"other" reads as a single
+#: implicit "one", excluding the ability's own source (the same concept
+#: `machines/targeting.py`'s own `TargetRequirement.excludes_source` already
+#: names on the targeting side; `_requirement`'s caller below is what
+#: actually marks `CardRequirement.excludes_source`, since `_requirement`
+#: itself never sees which permanent this cost belongs to).
 _PHRASE_EXILE = re.compile(
-    rf"^exile (?:this card|{_COST_COUNT} (?P<quality>[\w ]*?)cards?)"
+    rf"^exile (?:this card|(?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ]*?)cards?)"
     + _MANA_VALUE_TAIL
     + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
     re.IGNORECASE,
@@ -4281,11 +4303,22 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
     exile = _PHRASE_EXILE.match(text)
     if exile is not None:
         zone = _ZONE_WORDS.get((exile.group("zone") or "hand").lower(), Zone.HAND)
-        if exile.group("count") is None:
+        if exile.group("count") is None and exile.group("another") is None:
             # "Exile this card [from your graveyard]": CR 700.7's self-
             # reference, so there is nothing to choose - only the caller
             # knows which permanent this is, same as `_PHRASE_EXERT_SELF`.
             return exile_cost(payer=payer, required=1, description=text, zone=zone)
+        if exile.group("another") is not None:
+            # "Exile another <quality> card": CR 601.2c/113.6's "another" -
+            # a plain, implicit one, excluding the ability's own source
+            # (`Game.activation_cost` fills in which permanent that is).
+            requirement = _requirement(exile.group("quality"))
+            if requirement is None:
+                return None
+            requirement.excludes_source = True
+            component = exile_cost(payer=payer, required=1, description=text, zone=zone)
+            component.requirement = requirement
+            return component
         read = _cost_count(exile.group("count"))
         requirement = _requirement(exile.group("quality"))
         if read is None or requirement is None:

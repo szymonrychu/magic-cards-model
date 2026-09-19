@@ -24917,8 +24917,19 @@ def _parse_card_group_alternatives(phrase: str) -> Callable[[CardState], bool] |
 # arrives is a new object, which is why nothing about the card's earlier life
 # on the battlefield is carried back with it.
 
+#: "Return this card from your graveyard to the battlefield[ tapped][ with N
+#: `<kind>` counter(s) on `<pronoun>`]." - Cauldron Familiar's and Arclight
+#: Phoenix's own bare shape, Grim Repriser's and Proctor of Potential's own
+#: "with a finality counter on it" (CR 122.1h), and Gallia, Tragic Host's own
+#: "tapped with a +1/+1 counter on her" - the source's own gendered pronoun
+#: (CR 201.5), read the same closed set `_OBJECT_ANAPHOR`'s own "it|him|her"
+#: alternatives already are, not a second copy of that vocabulary.
 _RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
-    r"^return this card from your graveyard to the battlefield\.?$", re.IGNORECASE
+    r"^return this card from your graveyard to the battlefield"
+    r"(?P<tapped> tapped)?"
+    rf"(?: with (?P<counter_n>{COUNT}) (?P<counter>[a-z0-9+/-]+) counters? "
+    r"on (?:it|him|her|them))?\.?$",
+    re.IGNORECASE,
 )
 
 
@@ -24941,7 +24952,13 @@ def _parse_return_self_from_graveyard_to_battlefield_clause(
     """
     if for_spell:
         return None
-    if _RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(clause.strip()) is None:
+    match = _RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    tapped = bool(match.group("tapped"))
+    counter_kind = match.group("counter")
+    counter_amount = parse_count(match.group("counter_n")) if counter_kind else 0
+    if counter_kind and not counter_amount:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -24950,7 +24967,11 @@ def _parse_return_self_from_graveyard_to_battlefield_clause(
         source = stack_object.source(game)
         if source is None or source.zone is not Zone.GRAVEYARD:
             return
-        game.put_onto_battlefield(source, game.controller_of(stack_object).username)
+        permanent = game.put_onto_battlefield(
+            source, game.controller_of(stack_object).username, tapped=tapped
+        )
+        if counter_kind and permanent.zone is Zone.BATTLEFIELD:
+            game.add_counters(permanent, counter_kind.lower(), counter_amount or 0)
 
     return effect
 
