@@ -160,7 +160,9 @@ from ..machines.keywords import (
     why_cannot_turn_face_up,
 )
 from ..machines.layers import (
+    ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT,
     BASIC_LAND_TYPES,
+    CREATURES_DONT_CAUSE_TRIGGERS_TEXT,
     DOESNT_UNTAP_TEXT,
     Characteristics,
     ComputedBoard,
@@ -5461,6 +5463,35 @@ class Game(EngineModel):
             )
         )
 
+    def _etb_triggers_suppressed(self, event: "GameEvent") -> bool:
+        """Torpor Orb's "Creatures entering don't cause abilities to
+        trigger."; Karn, Argent Defender's "Artifacts and creatures entering
+        the battlefield don't cause abilities to trigger." - CR 603.2's
+        automatic trigger check is what this refuses, for every ability that
+        would otherwise fire off this one `ENTERS_THE_BATTLEFIELD` event, not
+        only the entering permanent's own: a suppression grant reads no
+        controller, the same way Torpor Orb's own printed sentence names
+        none.
+        """
+        if event.subject_id is None:
+            return False
+        entering = self.find_by_id(event.subject_id)
+        if not isinstance(entering, CardState):
+            return False
+        chars = self.characteristics_of(entering)
+        watched: list[str] = []
+        if Type.CREATURE in chars.types:
+            watched.append(CREATURES_DONT_CAUSE_TRIGGERS_TEXT)
+        if Type.ARTIFACT in chars.types:
+            watched.append(ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT)
+        if not watched:
+            return False
+        board = self.computed_board()
+        return any(
+            any(board.of(permanent).has_ability(text) for text in watched)
+            for permanent in self.battlefield
+        )
+
     def emit(self, event: GameEvent) -> list[AbilityOnStack]:
         """Something happened; work out what it triggered (CR 603.2).
 
@@ -5540,6 +5571,14 @@ class Game(EngineModel):
                     sources = [*sources, gone]
 
             triggered = triggers_for(self, event, sources)
+            if event.event is TriggerEvent.ENTERS_THE_BATTLEFIELD and self._etb_triggers_suppressed(
+                event
+            ):
+                # Torpor Orb / Karn, Argent Defender: CR 603.2's automatic
+                # trigger check never fires at all for this entrance, so
+                # nothing watching for it - not even on another permanent -
+                # goes onto `pending_triggers`.
+                triggered = []
             # CR 603.7: a delayed triggered ability is not printed on any card, so
             # no source can be asked for it. It watches the event directly, and once
             # it has triggered it is an ordinary trigger in every other respect -

@@ -4860,6 +4860,16 @@ _ATTACHED_PERMANENT_BECOMES_CREATURE_RE = re.compile(
     r"(?P<power>\d+)/(?P<toughness>\d+) in addition to its other types\.?$"
 )
 
+#: "Creatures entering don't cause abilities to trigger." (Torpor Orb);
+#: "Artifacts and creatures entering the battlefield don't cause abilities to
+#: trigger." (Karn, Argent Defender) - an and-joined card-type list, "the
+#: battlefield" optional (Torpor Orb's own Oracle wording drops it).
+_DONT_CAUSE_TRIGGERS_RE = re.compile(
+    r"^(?P<types>[a-z]+(?:,\s*[a-z]+)*(?:\s+and\s+[a-z]+)?) entering(?: the battlefield)? "
+    r"don'?t cause abilities to trigger\.?$",
+    re.IGNORECASE,
+)
+
 #: "Traxos, Scourge Eternal doesn't untap during your untap step." - the
 #: card's own name is already rewritten to "this permanent" by `self_
 #: normalized_effect_text`. Basalt Monolith's identical shape on an artifact
@@ -5316,6 +5326,55 @@ def _attached_creature_static_builder(
 #: string, so `Game._untap_step_impl` checks a single literal rather than
 #: pattern-matching either printed pronoun.
 DOESNT_UNTAP_TEXT = "Doesn't untap during its controller's untap step."
+
+#: Canonical granted-ability text for "<Type>s entering [the battlefield]
+#: don't cause abilities to trigger" - Torpor Orb's "Creatures entering
+#: don't cause abilities to trigger." and Karn, Argent Defender's "Artifacts
+#: and creatures entering the battlefield don't cause abilities to trigger."
+#: both normalise to one of these two fixed strings per type named, so
+#: `Game.emit` checks a literal rather than pattern-matching either printed
+#: wording. Two constants, not one parametrised on a type list, because the
+#: check site asks "is *this* card type suppressed" one type at a time.
+CREATURES_DONT_CAUSE_TRIGGERS_TEXT = "Creatures entering don't cause abilities to trigger."
+ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT = "Artifacts entering don't cause abilities to trigger."
+
+#: The card types this shape can name, and the canonical text each grants.
+_DONT_CAUSE_TRIGGERS_TEXT_BY_TYPE: dict[Type, str] = {
+    Type.CREATURE: CREATURES_DONT_CAUSE_TRIGGERS_TEXT,
+    Type.ARTIFACT: ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT,
+}
+
+
+def _self_suppresses_etb_triggers_builder(card_types: list[Type], *, line: str) -> EffectBuilder:
+    """Torpor Orb's "Creatures entering don't cause abilities to trigger.";
+    Karn, Argent Defender's "Artifacts and creatures entering the battlefield
+    don't cause abilities to trigger." - one grant per named type, all
+    landing on the source itself. `Game.emit` is the reader: CR 603.2's
+    trigger check for an ENTERS_THE_BATTLEFIELD event asks whether any
+    permanent on the battlefield carries the matching text before adding
+    anything caused by that entrance to `pending_triggers`.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {card_type.value}s entering don't cause triggers",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(_DONT_CAUSE_TRIGGERS_TEXT_BY_TYPE[card_type]),
+            )
+            for card_type in card_types
+        ]
+
+    return builder
 
 
 def _self_doesnt_untap_builder(*, line: str) -> EffectBuilder:
@@ -6627,6 +6686,17 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             subject=match.group("subject").lower(),
             line=sentence,
+        )
+    if match := _DONT_CAUSE_TRIGGERS_RE.fullmatch(sentence):
+        words = re.split(r",\s*|\s+and\s+", match.group("types"))
+        card_types = [_card_type_word(word.rstrip("sS")) for word in words]
+        if any(
+            card_type is None or card_type not in _DONT_CAUSE_TRIGGERS_TEXT_BY_TYPE
+            for card_type in card_types
+        ):
+            return None
+        return _self_suppresses_etb_triggers_builder(
+            [card_type for card_type in card_types if card_type is not None], line=sentence
         )
     if _SELF_DOESNT_UNTAP_RE.fullmatch(sentence):
         return _self_doesnt_untap_builder(line=sentence)
