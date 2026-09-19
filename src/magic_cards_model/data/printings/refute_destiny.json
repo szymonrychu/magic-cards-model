@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "2c588954-c6eb-4aae-a2fa-0651ccf2d90a",
+  "oracle_id": "2a18b3f0-8a78-46d8-b60f-3cd634062f1b",
+  "multiverse_ids": [],
+  "tcgplayer_id": 717472,
+  "cardmarket_id": 909535,
+  "name": "Refute Destiny",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/2c588954-c6eb-4aae-a2fa-0651ccf2d90a",
+  "scryfall_uri": "https://scryfall.com/card/fra/18/refute-destiny?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-15T11:12:58Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.jpg?1789470778",
+    "normal": "https://cards.scryfall.io/normal/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.jpg?1789470778",
+    "large": "https://cards.scryfall.io/large/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.jpg?1789470778",
+    "png": "https://cards.scryfall.io/png/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.png?1789470778",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.jpg?1789470778",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.jpg?1789470778",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.webp?1789470778",
+    "grid": "https://cards.scryfall.io/grid/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.webp?1789470778",
+    "display": "https://cards.scryfall.io/display/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.webp?1789470778",
+    "art": "https://cards.scryfall.io/art/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.webp?1789470778",
+    "crop": "https://cards.scryfall.io/crop/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.webp?1789470778"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Exile target creature or planeswalker that's green or blue. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2c588954-c6eb-4aae-a2fa-0651ccf2d90a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2a18b3f0-8a78-46d8-b60f-3cd634062f1b&unique=prints",
+  "collector_number": "18",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Quandrix believed in finding the equations of the natural world. Hexhaven disrupted the pattern of existence.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Billy Christian",
+  "artist_ids": [
+    "10f26f94-64fc-4174-856e-701bea4f1521"
+  ],
+  "illustration_id": "49ff0c52-d29b-4ce0-908b-4640873769c2",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 32223,
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.75",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRefute%2BDestiny",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRefute%2BDestiny",
+    "edhrec": "https://edhrec.com/route/?cc=Refute+Destiny"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717472%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909535&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Refute+Destiny&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
