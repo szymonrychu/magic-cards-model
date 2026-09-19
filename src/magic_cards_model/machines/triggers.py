@@ -2032,6 +2032,19 @@ _COUNTERS_PUT_CONDITION = re.compile(
     r"^one or more (?P<kind>\S+) counters are put on (?P<subject>.+)$"
 )
 
+#: Inspired Tethermage's "Whenever you put one or more loyalty counters on a
+#: planeswalker, ..." (CR 122.6, CR 606.4) - a different shape from
+#: `_COUNTERS_PUT_CONDITION` above in every way that matters: active voice
+#: ("you put", not "are put"), a controller clause instead of a bare kind,
+#: and "a planeswalker" - any one, not only the ability's own source - as the
+#: subject rather than "this creature". CR 606.4's own "to activate a loyalty
+#: ability of a permanent is to put on or remove ... loyalty counters" is
+#: what makes activating a `[+N]` ability the ordinary way this fires,
+#: alongside any effect that puts loyalty counters on directly.
+_LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION = re.compile(
+    r"^(?P<who>you put|an opponent puts) one or more loyalty counters on a planeswalker$"
+)
+
 #: Hardened Academic's "one or more cards leave your graveyard" and Murktide
 #: Regent's "an instant or sorcery card leaves your graveyard" - one shape with
 #: an optional type restriction (CR 603.10a's own "abilities that trigger when
@@ -2090,6 +2103,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
     """
     lowered = condition.lower().strip()
     if _COUNTERS_PUT_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
+    if _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
     if _LEAVES_GRAVEYARD_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.LEAVES_GRAVEYARD})
@@ -2152,6 +2167,22 @@ def _unread_condition_matches(
         # the pool names itself as that object ("on this creature"). A
         # condition naming something else is not read at all.
         return mine and event.subject_id == source.id
+
+    match = _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION.match(condition)
+    if match is not None:
+        # CR 122.6/606.4: any planeswalker, not only the source - the
+        # subject here is whichever permanent the loyalty counters actually
+        # landed on, read straight off the event the same way the
+        # self-referential branch above reads it, minus the self-reference.
+        if event.event is not ExtraTriggerEvent.COUNTERS_PUT:
+            return False
+        if event.counter_kind != "loyalty":
+            return False
+        if Type.PLANESWALKER not in (event.subject_types or ()):
+            return False
+        if match.group("who") == "you put":
+            return event.subject_controller == controller
+        return event.subject_controller is not None and event.subject_controller != controller
 
     match = _LEAVES_GRAVEYARD_CONDITION.match(condition)
     if match is not None:
