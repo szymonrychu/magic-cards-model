@@ -10004,8 +10004,22 @@ _RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE = re.compile(
 #: first, against the *whole* unsplit ability text, so a card whose sentence
 #: continues past "to the battlefield." with "It gains ..." never reaches
 #: this fullmatch at all.
+#: Celestine, the Living Saint's own "... with mana value X or less from
+#: your graveyard to the battlefield, where X is the amount of life you
+#: gained this turn." widens this further: CR 107.3c's own "where X is
+#: <expression>" definition sits *after* "to the battlefield" in the printed
+#: sentence, past where the un-widened regex's own `\.?$` anchor used to end
+#: the match outright. `machines/targeting.profile_for_text` already reads
+#: "with mana value X or less, where X is ..." into `comparison_x_definition`
+#: regardless of what comes between the two ("from your graveyard to the
+#: battlefield" here) - proven directly against `profile_for_text` before
+#: this regex was touched - so the fix is only to let the *outer* fullmatch
+#: reach that far, and to fold the "where X is ..." tail into `phrase` before
+#: `_targets_understood` reads it, the same window `profile_for_text` itself
+#: already scans.
 _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
-    r"return (?P<phrase>.*target.+from your graveyard) to the battlefield(?P<tapped> tapped)?\.?$",
+    r"return (?P<phrase>.*target.+from your graveyard) to the battlefield(?P<tapped> tapped)?"
+    r"(?P<where_x>, where [xX] is [^.]+)?\.?$",
     re.IGNORECASE,
 )
 #: "Return target `<X>` from your graveyard to the battlefield[ tapped] with
@@ -11859,9 +11873,8 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         )
 
     if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(clause):
-        if not _targets_understood(
-            match.group("phrase"), count_agnostic=True, battlefield_only=False
-        ):
+        phrase = match.group("phrase") + (match.group("where_x") or "")
+        if not _targets_understood(phrase, count_agnostic=True, battlefield_only=False):
             return None
         if match.group("tapped"):
             return _return_ability_targets_to_battlefield_with_counter(True)
