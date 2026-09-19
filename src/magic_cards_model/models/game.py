@@ -11196,31 +11196,51 @@ class Game(EngineModel):
                 other.unattach()
 
     def _copies_that_cease_to_exist(self) -> list[CardState]:
-        """CR 704.5e's first sentence, as a state-based action: "If a copy of
-        a spell is in a zone other than the stack, it ceases to exist."
+        """CR 704.5e / 707.10a, both sentences, as one state-based action:
+        "If a copy of a spell is in a zone other than the stack, it ceases
+        to exist. If a copy of a card is in any zone other than the stack or
+        the battlefield, it ceases to exist."
 
-        `CardState.is_copy` is the flag (CR 112.1a's "a copy of a spell is
-        also a spell"; see that field's own docstring, which already named
-        this exact state-based action as its "one other place ... read").
-        A copy of an instant or sorcery has nowhere but a graveyard to go as
-        it finishes resolving (CR 608.2h), and one that gets countered has
-        nowhere but a graveyard or exile to go (CR 701.6a/701.13a) - this is
-        what stops either from getting there. Proven on two unrelated
-        mechanisms: a CR 722.3c prepare-spell copy that was cast and resolved
-        (`scenarios/test_copies_cease_to_exist.py`'s Enroot case - CR 722.3d
-        keeps `is_copy` true on it even after casting, unlike an ordinary
-        card), and a plain `Game.copy_spell` copy of an instant (the same
-        file's Alania, Divergent Storm case).
+        `CardState.is_copy` is the one flag both sentences read (CR 112.1a's
+        "a copy of a spell is also a spell", CR 112.1b's "some effects allow
+        a player to cast a copy of a card; if the player does, that copy is
+        a spell as well" - the *same* copy is "a copy of a card" before it is
+        ever cast and "a copy of a spell" once it is, which is why one flag
+        and one sweep covers both sentences rather than needing two). The
+        two sentences differ only in which zones they exempt - the stack
+        alone for a spell-copy, the stack *and* the battlefield for a
+        card-copy - which is exactly `_EXEMPT_ZONES` below.
+
+        Proven on three unrelated mechanisms, none sharing a card or a
+        mechanism with either of the others
+        (`scenarios/test_copies_cease_to_exist.py`):
+        - **First sentence**, a copy that reached the stack and resolved: a
+          CR 722.3c prepare-spell copy (Enroot, `is_copy` still true after
+          casting per CR 722.3d) and a plain `Game.copy_spell` copy of an
+          instant (Alania, Divergent Storm's copy of Lightning Bolt).
+        - **Second sentence**, a copy that was never cast at all - purely "a
+          copy of a card", never "a copy of a spell": Isochron Scepter's own
+          copy of its imprinted card, abandoned mid-resolution with the
+          "cast the copy?" question left unanswered (`DecisionPending`) so
+          none of the ability's own hand-written cleanup for a *declined*
+          cast (`_parse_copy_exiled_card_and_cast`'s `if copy in game.exile:
+          game.exile.remove(copy)`) ever runs - this state-based action is
+          the only thing that removes it.
 
         **Never a copy of a *permanent* spell that already resolved.**
         CR 707.10f/111.13: "As that copy resolves, it ceases being a copy of
         a spell and becomes a token permanent" - `Game._resolve_top_impl`
         clears `is_copy` there, in the same branch that sets `token = True`,
         for exactly that reason (a copy of Solitude sitting on the
-        battlefield is not swept the instant it lands). This is why that
-        clearing is part of the same fix as this method: without it, this
-        state-based action would have destroyed every copied permanent one
-        round after it resolved.
+        battlefield is not swept the instant it lands, and the second
+        sentence's own battlefield exemption is for exactly this case too,
+        belt and braces: nothing in this engine currently reaches the
+        battlefield still carrying `is_copy`, since everything that resolves
+        into a permanent already has it cleared here, but the exemption is
+        read from the rule's own words rather than relied on staying moot).
+        This is why that clearing is part of the same fix as this method:
+        without it, this state-based action would have destroyed every
+        copied permanent one round after it resolved.
 
         **CR 722.3c's own exile copy is this rule's one written exception**
         ("This is an exception to rule 704.5e"), read here rather than on
@@ -11233,9 +11253,10 @@ class Game(EngineModel):
         actually removes it.
 
         Mirrors `models/token.tokens_that_cease_to_exist`'s own shape: every
-        shared zone but the stack, then every player's own zones (none of
-        which is ever the stack).
+        shared zone but the exempt ones, then every player's own zones (none
+        of which is ever the stack or the battlefield).
         """
+        exempt_zones = (Zone.STACK, Zone.BATTLEFIELD)
         linked_exile_copy_ids = {
             permanent.prepared_copy_id
             for permanent in self.battlefield
@@ -11256,11 +11277,13 @@ class Game(EngineModel):
 
         gone: list[CardState] = []
         for zone, cards in self.shared_zones.items():
-            if zone is Zone.STACK:
+            if zone in exempt_zones:
                 continue
             gone.extend(sweep(zone, cards))
         for player in self.players:
             for zone, cards in player.zones.items():
+                if zone in exempt_zones:
+                    continue
                 gone.extend(sweep(zone, cards))
         return gone
 
@@ -11508,20 +11531,20 @@ class Game(EngineModel):
         uncomputable - falls back to the printed value rather than being spared
         on a technicality.
 
-        CR 704.5d and CR 704.5e's first sentence both run first, against the
+        CR 704.5d and CR 704.5e (both sentences) all run first, against the
         board as the check found it: "If a token is in a zone other than the
-        battlefield, it ceases to exist" and "If a copy of a spell is in a
-        zone other than the stack, it ceases to exist." A token or a copy
-        that one of the actions below sends off in *this* round was still
-        where it started when the conditions were checked, so either ceases
-        to exist on the repeat check CR 704.3 guarantees, not in the same
-        event. See `_copies_that_cease_to_exist` for CR 704.5e's own scope -
-        only the first sentence, about a copy of a *spell*; CR 722.3c's exile
-        copy is that rule's one written exception, and this method is not
-        where the exception lives.
+        battlefield, it ceases to exist", "If a copy of a spell is in a zone
+        other than the stack, it ceases to exist", and "If a copy of a card
+        is in any zone other than the stack or the battlefield, it ceases to
+        exist." A token or a copy that one of the actions below sends off in
+        *this* round was still where it started when the conditions were
+        checked, so it ceases to exist on the repeat check CR 704.3
+        guarantees, not in the same event. See `_copies_that_cease_to_exist`
+        for CR 704.5e's own scope; CR 722.3c's exile copy is that rule's one
+        written exception, and this method is not where the exception lives.
         """
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
-        gone_copies = self._copies_that_cease_to_exist()  # CR 704.5e (first sentence)
+        gone_copies = self._copies_that_cease_to_exist()  # CR 704.5e/707.10a
         self._remember_sources_that_ceased_to_exist(gone_tokens + gone_copies)
 
         # Every check below reads the battlefield and moves nothing, so they

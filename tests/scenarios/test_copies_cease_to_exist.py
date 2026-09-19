@@ -1,11 +1,18 @@
-"""CR 704.5e's first sentence, as a state-based action: "If a copy of a spell
-is in a zone other than the stack, it ceases to exist."
+"""CR 704.5e / 707.10a, both sentences, as one state-based action: "If a copy
+of a spell is in a zone other than the stack, it ceases to exist. If a copy
+of a card is in any zone other than the stack or the battlefield, it ceases
+to exist."
 
-Two independent proofs, on purpose: Enroot (a CR 722.3c prepare-spell copy,
-this stream's own reported gap) and Alania, Divergent Storm's copy of
-Lightning Bolt (an unrelated mechanism, CR 707.10, already in the pool before
-this fix existed) - the same state-based action has to catch both, since
-neither is special-cased by name.
+Three independent proofs, on purpose, none sharing a card or a mechanism with
+either of the others: Enroot (a CR 722.3c prepare-spell copy, this stream's
+own reported gap - **first sentence**, a copy that was cast and resolved),
+Alania, Divergent Storm's copy of Lightning Bolt (CR 707.10, already in the
+pool before this fix existed - **first sentence** again, off-mechanic), and
+Isochron Scepter's own copy of its imprinted card, abandoned with its "cast
+the copy?" question unanswered (**second sentence** - a copy that was never
+cast at all, so it is only ever "a copy of a card", never "a copy of a
+spell", and the ability's own hand-written cleanup for a *declined* cast
+never runs to remove it by hand the way it normally would).
 
 CR 707.10f/111.13 is the one carve-out: "Some effects copy a permanent spell.
 As that copy resolves, it ceases being a copy of a spell and becomes a token
@@ -24,9 +31,14 @@ happens once nothing exempts it any more.
 Every CR number here was verified this session with `mise run rules:find`.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionPending
 from magic_cards_model.models.zone import Zone
 from tests.scenarios.harness import Scenario
+
+from .test_scepter_chant_deck import imprint, imprinted_scepter_board
 
 # -- Enroot: a CR 722.3c prepare-spell copy -------------------------------
 
@@ -110,3 +122,44 @@ def test_a_copied_instant_ceases_to_exist_instead_of_reaching_the_graveyard():
         "only the real Bolt reached the graveyard - its copy ceased to exist (CR 704.5e)"
     )
     assert all(state.id == bolt.id or not state.is_copy for state in graveyard)
+
+
+# -- CR 704.5e's second sentence: a copy of a card, never cast -------------
+
+
+def test_a_declined_scepter_copy_ceases_to_exist_even_when_the_declined_cleanup_never_runs():
+    """Isochron Scepter's own "You may copy the exiled card. If you do, you
+    may cast the copy without paying its mana cost." already removes a
+    *declined* copy by hand (`machines/effects._parse_copy_exiled_card_and_
+    cast`) - but only because nothing ever gives another player a priority
+    window between the copy's creation and that second question, so the
+    whole ability resolves as one atomic step. Pausing on the second
+    question instead (`DecisionPending`, nothing scripted for it) leaves the
+    ability's own Python frame suspended before it ever reaches that cleanup
+    line, so the copy is left sitting in exile, genuinely uncleaned-up: only
+    this state-based action removes it.
+    """
+    scenario = imprinted_scepter_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scepter = imprint(scenario)
+    scenario.game.decisions.pause_when_unanswered = True
+    scenario.will_take_the_may(True, source="Isochron Scepter")  # only the first "may"
+
+    scenario.activate(scepter, auto=True, username="alice")
+    with pytest.raises(DecisionPending):
+        scenario.resolve_top()
+
+    copies = [state for state in scenario.game.exile if state.is_copy]
+    assert len(copies) == 1, "the copy exists, mid-resolution, uncleaned-up"
+    assert copies[0].name == "Orim's Chant"
+
+    scenario.state_based_actions()
+
+    assert not any(state.is_copy for state in scenario.game.exile), (
+        "CR 704.5e's second sentence: a copy of a card outside the stack and "
+        "the battlefield ceases to exist, whether or not it was ever cast"
+    )
+    imprinted = scenario.game.card_imprinted_on(scepter.id)
+    assert imprinted is not None and imprinted.name == "Orim's Chant", (
+        "the original imprinted card - not a copy - is untouched"
+    )
