@@ -5315,6 +5315,12 @@ def _permanents_with_counters_ward_builder(cost: str, *, line: str) -> EffectBui
 # `machines/combat.py::_reading_vocabulary` is what makes a shared line work,
 # and `KeywordLineNotice` is what records a line it still cannot read whole.
 _KNOWN_KEYWORDS = frozenset(keyword.value for keyword in Keyword) | KEYWORDS_OUTSIDE_COMBAT
+#: The public name for the same whitelist, for a caller outside this module
+#: that needs to validate a keyword name the identical way every shape here
+#: does - `machines/effects.py`'s own keyword-*choice* riders ("gains your
+#: choice of trample, hexproof, or haste"), whose "or"-joined list is not
+#: the "and"/comma grammar `_split_and_validate_keywords` reads.
+KNOWN_KEYWORDS = _KNOWN_KEYWORDS
 
 
 def _split_and_validate_keywords(raw: str) -> list[str] | None:

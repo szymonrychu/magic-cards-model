@@ -137,6 +137,7 @@ from .delayed import (
     return_subject_to_hand,
 )
 from .layers import (
+    KNOWN_KEYWORDS,
     Characteristics,
     ContinuousEffect,
     ContinuousEffects,
@@ -14459,6 +14460,33 @@ _RIDER_CANT_BE_BLOCKED_RE = re.compile(
 #: 701.18a: "To untap a permanent means to remove the tapped status from it."
 _RIDER_UNTAP_RE = re.compile(rf"^untap {_OBJECT_ANAPHOR}$", re.IGNORECASE)
 
+#: "gains your choice of `<keyword>`[, `<keyword>`, ...] until end of turn."
+#: - Hungering Puppetbeast's own rider (CR 608.2d: the choice is the
+#: resolving object's controller's, asked once - the same shape
+#: `_choose_mana_color` already asks for a mana ability's own colour).
+_RIDER_KEYWORD_CHOICE_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} gains? your choice of "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*(?:,?\s+or\s+[a-z]+(?: [a-z]+)?)?) "
+    r"until end of turn$",
+    re.IGNORECASE,
+)
+
+
+def _split_choice_keywords(raw: str) -> list[str] | None:
+    """ "trample, hexproof, or haste" -> each keyword, capitalised - or
+    `None` if any of them is not on `KNOWN_KEYWORDS`'s whitelist, the exact
+    same fail-closed rule `machines.layers._split_and_validate_keywords`
+    already enforces for a plain (non-choice) keyword list - kept as its
+    own small copy here rather than shared, since a *choice* needs each
+    option offered on its own, one per string, not folded into one combined
+    grant the way an "and"-joined list is.
+    """
+    parts = [part.strip() for part in re.split(r",\s*(?:or\s+)?|\s+or\s+", raw) if part.strip()]
+    if not parts or any(part.lower() not in KNOWN_KEYWORDS for part in parts):
+        return None
+    return [part.capitalize() for part in parts]
+
+
 #: "They can't be regenerated." / "It can't be regenerated." - Wrath of God,
 #: and CR 608.2c's own worked example of a rider that *modifies its
 #: antecedent* rather than running after it. Handled separately from every
@@ -14524,6 +14552,52 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
                     referent.untap()
 
         return untap_rider
+
+    if match := _RIDER_KEYWORD_CHOICE_RE.fullmatch(rider):
+        keywords = _split_choice_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+
+        def keyword_choice_rider(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            standing = [referent for referent in referents if referent.zone is Zone.BATTLEFIELD]
+            if not standing:
+                return
+            source_name = (
+                stack_object.name
+                if isinstance(stack_object, CardState)
+                else stack_object.source_name  # type: ignore[union-attr]
+            )
+            controller = game.controller_of(stack_object).username
+            chosen = keywords[0]
+            if len(keywords) > 1:
+                answer = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_A_QUALITY,
+                        player=controller,
+                        prompt="choose a keyword",
+                        source=source_name,
+                        options=tuple(keywords),
+                        source_id=source_id_of(stack_object),
+                    )
+                )
+                assert isinstance(answer, str)
+                chosen = answer
+            effects = game.continuous_effects
+            for referent in standing:
+                effects.add(
+                    ContinuousEffect(
+                        description=f"{source_name}: {referent.name} gains {chosen}",
+                        layer=Layer.ABILITY,
+                        timestamp=effects.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(referent, referent.zone_change_stamp),
+                        modification=grant_ability(chosen),
+                    )
+                )
+
+        return keyword_choice_rider
 
     if match := _RIDER_LAYER_SUBJECT_RE.fullmatch(rider):
         rewritten = f"Target creature {match.group('predicate').strip()}."

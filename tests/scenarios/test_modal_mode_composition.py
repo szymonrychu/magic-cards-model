@@ -315,3 +315,56 @@ def test_rise_of_the_deathbringer_mode_one_draws_by_greatest_power_and_loses_tha
     # Craterhoof Behemoth is the only creature alice controls: power 5.
     assert len(alice.hand) == hand_before - 1 + 5
     assert alice.life == life_before - 5
+
+
+def test_hungering_puppetbeasts_activated_ability_counters_and_grants_the_chosen_keyword():
+    """ "Put a +1/+1 counter on this creature. It gains your choice of
+    trample, hexproof, or haste until end of turn." - a keyword-choice
+    rider (CR 608.2d), read the same way `_choose_mana_color` already asks
+    for a mana ability's own colour choice.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Hungering Puppetbeast", "Sol Ring", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    beast = scenario.creature("Hungering Puppetbeast", "alice")
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose("Haste", username="alice")
+
+    scenario.activate(
+        beast, *scenario.untapped_sources("Mountain"), sacrificing=[sol_ring], username="alice"
+    )
+    scenario.resolve_top()
+
+    assert beast.counters[Counter.PLUS_ONE] == 1
+    assert has_keyword(beast, Keyword.HASTE, scenario.game)
+
+
+def test_the_keyword_choice_reader_generalises_past_puppetbeasts_own_three_keywords():
+    """Generality proof for `_split_choice_keywords`, off Hungering
+    Puppetbeast's own reported card: no other printing in the pool or on
+    Scryfall pairs an antecedent with an "It gains your choice of ..."
+    rider the way Hungering Puppetbeast does (Hunter's Axe's and
+    Swiftspear's Teachings's identical wording is granted *inside a quoted
+    ability*, a different resolution path entirely), so this pins the
+    keyword-list half of the fix against a real card's own different,
+    longer list rather than re-asserting Puppetbeast's own three words:
+    Atraxa's Skitterfang prints "target creature you control gains your
+    choice of flying, vigilance, deathtouch, or lifelink until end of
+    turn." - four keywords, an Oxford comma before the final "or", and
+    none of them shared with Puppetbeast's own trample/hexproof/haste.
+    """
+    from magic_cards_model.machines.effects import _split_choice_keywords
+
+    assert _split_choice_keywords("flying, vigilance, deathtouch, or lifelink") == [
+        "Flying",
+        "Vigilance",
+        "Deathtouch",
+        "Lifelink",
+    ]
