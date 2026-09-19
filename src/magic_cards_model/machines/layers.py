@@ -7980,8 +7980,23 @@ def _classify_resolution_layer_sentence(sentence: str) -> tuple[bool, bool]:
     checking order here only changes which branch a genuine match is
     attributed to, never `is_resolution_layer_effect_text`'s own `genuine or
     loose` answer, so its behaviour is unchanged.
+
+    One `_parse_static_layer_sentence` shape is deliberately *not* excluded
+    by the blanket check below: `_LEGEND_RULE_EXEMPT_THIS_TURN_RE`'s "this
+    turn" wording (Hall of Echoes' `{5}` ability) can only ever be CR 611.2's
+    one-shot resolution grant - a permanent's own forever CR 611.3 static
+    ability (Mirror Box's, Sakashima's plain "... permanents you control.",
+    no duration) never carries "this turn" at all, since a static ability
+    already applies for as long as its source has it (CR 604.2) and needs no
+    turn bound. Excluding it here the same way the durationless shapes are
+    excluded left `create_continuous_effect_of_ability`'s own genuine read of
+    this exact sentence (`_parse_layer_sentence`'s identical fallback)
+    unrecorded as "handled", so the composer logged a `LayerRemainderNotice`
+    for a sentence it had already applied.
     """
     normalized = _normalize_duration_first(sentence)
+    if _LEGEND_RULE_EXEMPT_THIS_TURN_RE.fullmatch(_strip_ability_word(normalized)):
+        return _parse_layer_sentence(sentence) is not None, False
     if _parse_static_layer_sentence(_strip_ability_word(normalized)) is not None:
         # CR 611.3's static shapes: "Nonbasic lands are Mountains", "Lands
         # you control are every basic land type ...", "Other Dragons you

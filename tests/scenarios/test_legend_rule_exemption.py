@@ -125,6 +125,50 @@ def test_hall_of_echoes_exempts_the_legend_rule_after_it_becomes_a_copy():
     assert scenario.game.characteristics_of(hall).name == "Karn, Argent Defender"
 
 
+def test_hall_of_echoes_activation_logs_no_spurious_layer_remainder_notice():
+    """fra-final-audit batch A, item 3: the grant works (the tests above),
+    but the ability's own "this turn" legend-rule sentence used to be
+    misclassified as an unread sibling of the "becomes a copy" sentence -
+    `_classify_resolution_layer_sentence` excluded *any* sentence matching
+    `_parse_static_layer_sentence` from "genuine", which is right for a
+    permanent's own forever CR 611.3 static line (an anthem, Mirror Box's own
+    plain exemption) and wrong for the CR 611.2 one-shot "this turn" variant,
+    which only ever appears embedded in a resolving ability's own text and is
+    genuinely read by that same fallback. `_compose_layer_effect_with_
+    remainder_for_ability` then logged a `LayerRemainderNotice` for a
+    sentence `create_continuous_effect_of_ability` had already applied.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[
+                "Hall of Echoes",
+                "Grizzly Bears",
+                "Forest",
+                "Forest",
+                "Forest",
+                "Forest",
+                "Forest",
+            ],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hall = scenario.find("Hall of Echoes", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    sources = scenario.untapped_sources(
+        "Forest", "Forest", "Forest", "Forest", "Forest", username="alice"
+    )
+
+    scenario.activate(hall, *sources, index=1, username="alice", targets=[bears])
+    scenario.resolve_top()
+
+    assert scenario.game.layer_remainder_notices == []
+
+
 def test_hall_of_echoes_grant_is_readable_directly_on_the_computed_board():
     """The narrower proof the fra-survey's misread was about: the grant
     itself reaches the computed board at all, alongside the copy effect."""
