@@ -11366,6 +11366,17 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     mill_then_take = _parse_mill_that_many_then_take_from_among_them(effect_text)
     if mill_then_take is not None:
         return mill_then_take
+    # Tried against the whole, unsplit text, the same precedent
+    # `parse_casting_rule_clause` above documents: "tapped and transformed"
+    # has a bare " and " in it, which `split_effect_clauses`'s
+    # `_CLAUSE_SEPARATOR` cuts into "return it to the battlefield tapped" /
+    # "transformed under its owner's control" before either fragment reaches
+    # a clause parser - Ojer Taq, Deepest Foundation's own death trigger.
+    return_self_transformed_whole = _parse_return_self_to_battlefield_transformed_clause(
+        effect_text, for_spell=False
+    )
+    if return_self_transformed_whole is not None:
+        return return_self_transformed_whole
     transform_self = _parse_transform_clause(effect_text)
     if transform_self is not None:
         return transform_self
@@ -21246,6 +21257,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if return_self_from_graveyard is not None:
         return return_self_from_graveyard
+    return_self_transformed = _parse_return_self_to_battlefield_transformed_clause(
+        clause, for_spell=for_spell
+    )
+    if return_self_transformed is not None:
+        return return_self_transformed
     mass_return_from_graveyard = _parse_mass_return_from_graveyard_to_battlefield_clause(
         clause, for_spell=for_spell
     )
@@ -22833,6 +22849,81 @@ def _parse_return_self_from_graveyard_to_battlefield_clause(
         if source is None or source.zone is not Zone.GRAVEYARD:
             return
         game.put_onto_battlefield(source, game.controller_of(stack_object).username)
+
+    return effect
+
+
+#: "return it to the battlefield[ tapped][ and][ transformed] under its
+#: owner's/your control[ with `<n>` `<kind>` counters on it]." - the Ojer
+#: cycle's own death trigger (Ojer Taq, Deepest Foundation: "When Ojer Taq
+#: dies, return it to the battlefield tapped and transformed under its
+#: owner's control.") and its sibling Ojer Pakpatiq, Deepest Epoch, which adds
+#: the trailing counters clause the first does not print ("... with three
+#: time counters on it."). Read generally rather than pinned to either
+#: printing: any future card sharing the sentence, whichever amount and kind
+#: of counter it names, reaches this the same way.
+#:
+#: "It" is CR 400.7's own anaphor for the object the ability is printed on -
+#: by the time a "dies" trigger resolves, that object is a new one wherever
+#: it landed (almost always a graveyard), found by id the same way
+#: `_parse_return_self_from_graveyard_to_battlefield_clause` finds "this
+#: card". CR 701.27a/CR 712.14a: "transformed" describes how the permanent
+#: *enters*, so the return goes through `Game.put_onto_battlefield
+#: (transformed=True)` rather than transforming it afterwards.
+_RETURN_SELF_TO_BATTLEFIELD_TRANSFORM_RE = re.compile(
+    r"^return it to the battlefield"
+    r"(?P<tapped> tapped)?"
+    r"(?: and)?"
+    r"(?P<transformed> transformed)?"
+    r" under (?P<control>its owner'?s|your) control"
+    rf"(?: with (?P<amount>{COUNT}) (?P<kind>[+/\w-]+) counters? on it)?"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_return_self_to_battlefield_transformed_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_RETURN_SELF_TO_BATTLEFIELD_TRANSFORM_RE`'s shape.
+
+    Never a spell's own shape: "return it to the battlefield ... under its
+    owner's control" with no preceding exile or destroy names nothing for a
+    resolving instant or sorcery to act on - this is always a triggered or
+    activated ability reading its own source back.
+
+    The return only happens if the card genuinely is still wherever it went
+    (CR 608.2's ordinary "the object is gone" case) - gated the same way the
+    "this card" sibling above is, on the object still sitting in a graveyard,
+    since every printing of this sentence is a death trigger.
+    """
+    if for_spell:
+        return None
+    match = _RETURN_SELF_TO_BATTLEFIELD_TRANSFORM_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    tapped = match.group("tapped") is not None
+    transformed = match.group("transformed") is not None
+    under_owner = match.group("control").lower().startswith("its")
+    counter_kind = _counter_kind(match.group("kind")) if match.group("kind") else None
+    counter_amount = parse_count(match.group("amount")) if match.group("amount") else None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        source = stack_object.source(game)
+        if source is None or source.zone is not Zone.GRAVEYARD:
+            return
+        controller = (
+            source.owner or game.controller_of(stack_object).username
+            if under_owner
+            else game.controller_of(stack_object).username
+        )
+        returned = game.put_onto_battlefield(
+            source, controller, tapped=tapped, transformed=transformed
+        )
+        if returned.zone is Zone.BATTLEFIELD and counter_kind is not None and counter_amount:
+            game.add_counters(returned, counter_kind, counter_amount)
 
     return effect
 
