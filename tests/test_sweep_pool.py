@@ -502,6 +502,21 @@ def test_amulet_of_vigors_enters_tapped_condition_is_genuinely_reachable():
     assert _condition_can_fire(card("Amulet of Vigor"), ability) is True
 
 
+def test_tetsuko_umezawa_pursuers_power_or_toughness_condition_now_fires():
+    """Tetsuko's own "a creature an opponent controls with power or
+    toughness 1 or less blocks" is a BLOCKS probe, and none of `_cards_by_
+    type()[Type.CREATURE]`'s capped first five real printings happen to be
+    that small - `_power_or_toughness_probe_cards` adds real creatures
+    (found by scanning the whole pool once, cached) that actually satisfy
+    the numeric qualifier the condition names, on top of that fixed cache,
+    so a probe genuinely exists to try."""
+    ability = _triggered_ability(
+        "Tetsuko Umezawa, Pursuer", condition_contains="power or toughness"
+    )
+    assert _condition_can_fire(card("Tetsuko Umezawa, Pursuer"), ability) is not False
+    assert classify_card(card("Tetsuko Umezawa, Pursuer"))[0] != UNMATCHABLE_CONDITION
+
+
 def test_caretakers_talents_unread_condition_is_not_reclassified():
     """`ability.event is None` (CR 603.2's condition this module cannot read
     at all, `docs/engine-coverage.md`'s own documented gap) is a different,

@@ -75,6 +75,7 @@ already is.
 """
 
 import argparse
+import operator
 import re
 import sys
 from collections import defaultdict
@@ -136,6 +137,9 @@ from magic_cards_model.machines.triggers import (  # noqa: E402
     _ENTERS_WITH_COUNTER_RE as _CONDITION_ENTERS_WITH_COUNTER_RE,
 )
 from magic_cards_model.machines.triggers import (  # noqa: E402
+    _POWER_OR_TOUGHNESS_QUALIFIER as _CONDITION_POWER_OR_TOUGHNESS_QUALIFIER_RE,
+)
+from magic_cards_model.machines.triggers import (  # noqa: E402
     _STATE_COUNTER_TRIGGER_RE,
     GameEvent,
     TriggerEvent,
@@ -154,6 +158,7 @@ from magic_cards_model.machines.triggers import (  # noqa: E402
 from magic_cards_model.models import CardState, Game, Player, Zone  # noqa: E402
 from magic_cards_model.models.card import Card, Layout, Type, types_of  # noqa: E402
 from magic_cards_model.models.card_state import Counters, TargetRef  # noqa: E402
+from magic_cards_model.numbers import parse_count  # noqa: E402
 
 #: Keywords that need no code because they change what a card *is*, not what the
 #: engine has to do. Each is inert in the sense that the rules attach no action
@@ -822,6 +827,69 @@ def _cards_by_type() -> dict[Type, tuple[Card, ...]]:
     return {card_type: tuple(cards) for card_type, cards in index.items()}
 
 
+def _numeric_stat(value: str | None) -> int | None:
+    """A creature's printed power/toughness (CR 208.1) as a plain int, or
+    `None` for a variable one ("*", "1+*") this closure cannot compare
+    numerically - Scryfall (and this engine's own `Card.power`/`.toughness`)
+    keeps both as strings for exactly that reason."""
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
+@cache
+def _cards_by_power_or_toughness(stat: str, direction: str, threshold: int) -> tuple[Card, ...]:
+    """A handful of real creature printings whose power and/or toughness
+    actually satisfies this exact numeric comparison (CR 208.1) - what
+    `_probe_cards` reaches for on top of `_cards_by_type`'s own capped,
+    stat-blind first five creatures, which are never guaranteed to include
+    one small or large enough to matter. Tetsuko Umezawa, Pursuer's own
+    "with power or toughness 1 or less blocks" is not satisfied by any of
+    `_cards_by_type()[Type.CREATURE]`'s first five real printings and never
+    would be, since that cache is built with no stat in mind at all -
+    `test_tetsuko_umezawa_pursuer_condition_now_fires` is the regression
+    this closure exists to fix.
+    """
+    compare = operator.le if direction == "less" else operator.ge
+    found: list[Card] = []
+    for printing in pool().values():
+        if Type.CREATURE not in printing.types:
+            continue
+        values = []
+        if stat != "toughness":
+            power = _numeric_stat(printing.power)
+            if power is not None:
+                values.append(power)
+        if stat != "power":
+            toughness = _numeric_stat(printing.toughness)
+            if toughness is not None:
+                values.append(toughness)
+        if any(compare(value, threshold) for value in values):
+            found.append(printing)
+            if len(found) >= 5:
+                break
+    return tuple(found)
+
+
+def _power_or_toughness_probe_cards(condition: str) -> list[Card]:
+    """Real creature printings matching `condition`'s own "with power [or
+    toughness] N or less/greater" qualifier (the same regex `machines.
+    triggers._power_or_toughness_qualifier_holds` reads at resolution time),
+    or an empty list when the condition names no such qualifier at all."""
+    match = _CONDITION_POWER_OR_TOUGHNESS_QUALIFIER_RE.search(condition.lower())
+    if match is None:
+        return []
+    threshold = parse_count(match.group("count"), article=False)
+    if threshold is None:
+        return []
+    return list(
+        _cards_by_power_or_toughness(match.group("stat"), match.group("direction"), threshold)
+    )
+
+
 def _probe_cards(printing: Card, condition: str, *, entering: bool) -> list[Card] | None:
     """Real printings plausible enough to stand in for whatever permanent
     `condition` names, or `None` when this closure has no probe for a named
@@ -853,6 +921,11 @@ def _probe_cards(printing: Card, condition: str, *, entering: bool) -> list[Card
         if not found and card_type not in printing.types:
             return None
         candidates.extend(found)
+    # Tetsuko Umezawa, Pursuer's own "with power or toughness 1 or less
+    # blocks" needs a probe small enough to satisfy that qualifier, which
+    # the plain type/subtype candidates above are never guaranteed to
+    # include - see `_power_or_toughness_probe_cards`'s own docstring.
+    candidates.extend(_power_or_toughness_probe_cards(condition))
     seen: set[str] = set()
     unique: list[Card] = []
     for candidate in candidates:
