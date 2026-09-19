@@ -1650,6 +1650,17 @@ class ActivatedAbility(BaseAbility):
     #: clause parser in `machines/effects.py` was ever meant to read. `None`
     #: for every ordinary activated ability, Class or not.
     class_level_target: int | None = None
+    #: CR 702.177a: "Exhaust — [Cost]: [Effect]" means "[Cost]: [Effect].
+    #: Activate only once." Set when the CR 207.2c-shaped prefix this line
+    #: was stripped of (`ability_word`, `_ABILITY_WORD`'s own em-dash form -
+    #: the same shape Channel's "Channel — {1}{G}, ..." uses) is literally
+    #: the word "Exhaust", the actual CR 702 keyword, read the same way
+    #: `_parse_keyword_cost`/`_parse_keyword_parameter` already recognise a
+    #: keyword by its printed name rather than by a lookup table.
+    #: `Game.activate_ability` reads this to record the permanent, never-
+    #: cleared-per-turn activation (`Game.exhausted`) CR 602.5b's "Activate
+    #: only once each turn" cannot express.
+    exhaust: bool = False
 
 
 class TriggeredAbility(BaseAbility):
@@ -2902,6 +2913,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
             )
 
     zone, zone_rule = _activated_ability_zone(costs, effect_text, instructions)
+    exhaust = (common.get("ability_word") or "").lower() == "exhaust"
 
     return ActivatedAbility(
         **common,
@@ -2914,6 +2926,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         zone=zone,
         zone_rule=zone_rule,
         cost_reduction=cost_reduction,
+        exhaust=exhaust,
     )
 
 

@@ -2031,6 +2031,16 @@ class Game(EngineModel):
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
     "Activate only once each turn". Cleared when a new turn begins."""
 
+    exhausted: set[str] = Field(default_factory=set)
+    """Which abilities have been activated at all, ever, keyed the same way
+    as `activations` - CR 702.177a's Exhaust: "'[Cost]: [Effect]' means
+    '[Cost]: [Effect]. Activate only once.'" Never cleared on a new turn,
+    unlike `activations` - the whole point of the keyword is that it is not a
+    per-turn limit. A key is naturally never reused by a different object:
+    `permanent.id` is minted fresh whenever an object enters the battlefield
+    (CR 400.7), so a card that leaves and returns is not exhausted by what
+    its earlier self did."""
+
     loyalty_activations: dict[str, int] = Field(default_factory=dict)
     """How often a loyalty ability of each permanent has been activated this
     turn, keyed by permanent id, for CR 606.3's once-per-turn rule - which is
@@ -13333,6 +13343,9 @@ class Game(EngineModel):
                     "(CR 716.2a)"
                 )
 
+        if ability.exhaust and self._activation_key(permanent, index) in self.exhausted:
+            return f"{permanent.name}'s exhaust ability has already been activated (CR 702.177a)"
+
         instructions = (ability.instructions or "").lower()
         limit = _ACTIVATION_LIMIT.search(instructions)
         if limit is not None:
@@ -14507,6 +14520,14 @@ class Game(EngineModel):
                 if announced_targets is not None:
                     targets = list(announced_targets)
             self.activations[key] = self.activations.get(key, 0) + 1
+            if ability.exhaust:
+                # CR 702.177a: "Activate only once" - unlike `activations`
+                # above, this is never cleared on a new turn (`exhausted`
+                # persists for the object's whole existence on the
+                # battlefield). `key` is already `permanent.id`-scoped, so an
+                # object that leaves and returns (CR 400.7's new object) gets
+                # a fresh id and is not exhausted by its own past self.
+                self.exhausted.add(key)
             if ability.loyalty is not None:
                 # CR 606.3's once-per-turn rule is per permanent: having activated
                 # any loyalty ability of this planeswalker this turn, the next one
