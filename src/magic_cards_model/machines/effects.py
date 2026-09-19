@@ -20385,14 +20385,30 @@ _YOU_LOSE_LIFE_RE = re.compile(r"^you lose (?P<life>\d+) life$", re.IGNORECASE)
 
 def _nonland_or_typed_card_matcher(quality: str) -> Callable[[CardState], bool] | None:
     """A predicate for "a `<quality>` card", where `<quality>` is either a
-    bare type `_quality_matcher` already reads, or that type's negation,
-    spelled "non`<type>`" (Thoughtseize's own "nonland"). `_quality_matcher`
-    has no notion of "non" - every caller before this one only ever named
-    what to *include* - so this reads the negation itself and delegates
-    everything else.
+    bare type `_quality_matcher` already reads, that type's negation, spelled
+    "non`<type>`" (Thoughtseize's own "nonland"), or a negated type qualifying
+    a second type word - Solve for Disappointment's and Auntie's Sentence's
+    shared "a nonland permanent card" (CR 110.4a's "permanent" card-type
+    umbrella, narrowed by CR 109.2's negation the way `_quality_matcher`'s own
+    "colorless creature" already stacks a colour onto a type). `_quality_
+    matcher` has no notion of "non" on its own - every caller before this one
+    only ever named what to *include* - so this reads the negation itself and
+    delegates everything else.
     """
     quality = quality.strip().lower()
     if quality.startswith("non"):
+        words = quality.split()
+        if len(words) == 2:
+            try:
+                excluded = Type(words[0].removeprefix("non").strip())
+            except ValueError:
+                return None
+            included = _quality_matcher(words[1])
+
+            def not_matches_but_is(state: CardState) -> bool:
+                return excluded not in state.types and included(state)
+
+            return not_matches_but_is
         try:
             excluded = Type(quality.removeprefix("non").strip())
         except ValueError:
