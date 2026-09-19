@@ -4282,6 +4282,16 @@ def _requirement(quality: str) -> CardRequirement | None:
         lowered = word.lower().rstrip("s")
         if lowered in _QUALITY_CONNECTORS:
             continue
+        if lowered == "permanent":
+            # CR 110.1 makes everything on the battlefield a permanent
+            # already, so "permanent"/"permanents" names no card type at all
+            # - the same "no restriction" reading `_controlled_requirement`
+            # already gives it on same-name comparisons, needed here too for
+            # a sacrifice cost with no type demand (Ward - Sacrifice three
+            # permanents, CR 702.21a) rather than one word away from a
+            # subtype (Greater Gargadon's "artifact, creature, or land" is
+            # the demand-bearing shape; bare "permanents" is not).
+            continue
         if lowered in _COLOR_WORDS:
             colors.append(_COLOR_WORDS[lowered])
         elif lowered in {supertype.value for supertype in Supertype}:
