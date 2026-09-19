@@ -379,6 +379,37 @@ _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: CR 601.2f's general "if <board condition>" self reduction: "This spell
+#: costs {1} less to cast if you control a legendary creature." (Wrath of the
+#: Bloodmane) and "This spell costs {2} less to cast if you've cast a
+#: noncreature spell this turn." (Traxos, Academy Guardian). Unlike the two
+#: rows above - Emrakul's own per-card-type count and Mystical Dispute's own
+#: announced-target reading - this is not a shape of its own: it hands the
+#: condition straight to `condition_holds`, the same reader "Activate only if
+#: <condition>" (CR 602.5b) and a modal "If <condition>, choose N instead"
+#: (CR 700.2) already use, so every board condition that reader can already
+#: answer works here too rather than needing its own copy. A condition
+#: `condition_holds` does not recognise is read as false, the same fail-
+#: closed default an activation restriction gets, rather than a reduction
+#: applied on a guess.
+_COSTS_LESS_IF_CONDITION_RE = re.compile(
+    r"this spell costs \{(?P<amount>\d+)\} less to cast if (?P<condition>[^.]+)\.",
+    re.IGNORECASE,
+)
+
+#: "This spell costs {X} less to cast, where X is the greatest toughness
+#: among creatures you control." (Ghalta the Immovable), the power sibling
+#: (Ghalta the Unstoppable). Unlike every other row here, the amount is
+#: itself CR 601.2f's counted quantity rather than a printed multiplier on
+#: one - the same "greatest power/toughness among creatures you control"
+#: bound `machines/casting._GREATEST_AMONG_CREATURES` already reads for
+#: Soul Immolation's blight-X cap, read again here for the reduction itself.
+_COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE = re.compile(
+    r"this spell costs \{x\} less to cast,? where x is the greatest "
+    r"(?P<stat>power|toughness) among creatures you control",
+    re.IGNORECASE,
+)
+
 #: CR 601.2f's per-turn-history reduction: "This spell costs {2} less to cast
 #: for each card you've cycled or discarded this turn." (Hollow One, text
 #: confirmed with `resolve_cards` this session). Unlike Emrakul's row above,
@@ -656,6 +687,15 @@ _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IG
 _CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
     rf"you(?:'ve| have) cast {count_pattern('count')} or more spells this turn", re.IGNORECASE
 )
+#: Traxos, Academy Guardian: "you've cast a noncreature spell this turn" - the
+#: singular "at least one" sibling of `_CONDITION_SPELLS_CAST_THIS_TURN`,
+#: qualified by card type/subtype the same way `_CONDITION_GRAVEYARD_CARDS`
+#: already is. Bare "you've cast a spell this turn" (no quality) is the same
+#: shape with nothing to qualify - `_card_quality(None)` reads that as every
+#: spell.
+_CONDITION_CAST_A_SPELL_THIS_TURN = re.compile(
+    r"you(?:'ve| have) cast an? (?:(?P<quality>[\w-]+) )?spell this turn", re.IGNORECASE
+)
 #: CR 110.4a: "Specifically, it means an artifact, battle, creature,
 #: enchantment, land, or planeswalker card."
 _PERMANENT_TYPES = frozenset(
@@ -762,10 +802,17 @@ def _permanent_quality(phrase: str) -> Callable[[Characteristics], bool] | None:
 def _card_quality(word: str | None) -> Callable[[CardState], bool] | None:
     """A graveyard card's one-word quality - "creature", "permanent" (CR
     110.4a), a card type or subtype - or every card when the text prints
-    none. None when the word is not read."""
+    none. A "non" prefix negates it ("noncreature"), the same recursive
+    reading `_characteristic_word` gives a permanent's computed
+    characteristics. None when the word is not read."""
     if word is None:
         return lambda state: True
     lowered = word.lower()
+    if lowered.startswith("non") and len(lowered) > 4:
+        inner = _card_quality(lowered.removeprefix("non").lstrip("-"))
+        if inner is None:
+            return None
+        return lambda state: not inner(state)
     if lowered == "permanent":
         return lambda state: bool(_PERMANENT_TYPES.intersection(state.types))
     card_type = _card_type_named(lowered)
@@ -12555,6 +12602,22 @@ class Game(EngineModel):
                     amount += int(target_match.group(1))
                     break
 
+        condition_match = _COSTS_LESS_IF_CONDITION_RE.search(text)
+        if condition_match is not None:
+            held = self.condition_holds(owner, condition_match.group("condition"), source=spell)
+            if held:
+                amount += int(condition_match.group("amount"))
+
+        greatest_stat = _COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE.search(text)
+        if greatest_stat is not None:
+            stat = greatest_stat.group("stat").lower()
+            values = [
+                getattr(self.characteristics_of(state), stat) or 0
+                for state in self.permanents_controlled_by(owner)
+                if self.characteristics_of(state).is_creature
+            ]
+            amount += max(values, default=0)
+
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
     def basic_land_types_controlled(self, controller: str) -> frozenset[str]:
@@ -13453,6 +13516,12 @@ class Game(EngineModel):
             if needed is None:
                 return None
             return len(self.spells_cast_this_turn.get(controller, [])) >= needed
+
+        if match := _CONDITION_CAST_A_SPELL_THIS_TURN.fullmatch(text):
+            quality = _card_quality(match.group("quality"))
+            if quality is None:
+                return None
+            return any(quality(state) for state in self.spells_cast_this_turn.get(controller, []))
 
         if _CONDITION_SUSPENDED.fullmatch(text):
             if source is None:
