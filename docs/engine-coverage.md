@@ -2392,3 +2392,34 @@ only.
 | "Each opponent mills N cards" is unread for any N | Fractured Sanity | `effects.py` player clauses |
 | "Tap N untapped <quality> you control" as an activation cost has no chooser: `Game.activation_cost` fills only EXILE and REVEAL object costs | Persistent Petitioners | `models/game.py` `activation_cost` |
 | "You may pay {B} rather than pay this spell's mana cost if there are N or more creatures on the battlefield" | Blasphemous Edict | `casting.py` conditional alternative costs |
+
+## G14: card-name rows and whole-card literal parsers (number sweep)
+
+Nine of G14's parsers read a count through `numbers.py` (so a future card
+sharing the exact template with a different count would read for free) but
+are, today, proven on only the one real printing whose shape they read - a
+full-text Scryfall search (`https://api.scryfall.com/cards/search?q=o:"..."`,
+run 2026-09-14) for each shape's own distinctive phrase turned up no second
+real printing with a different count. That is the honest state, not a gap:
+`CLAUDE.md`'s no-mocks rule bans a hand-typed sentence standing in for a
+card's own printed words in a test, so nothing here is tested against a count
+these parsers were never actually asked to read from a live card.
+
+| Parser | Card | Search phrase | Hits |
+|---|---|---|---|
+| `_parse_hideaway_counter_then_conditional_free_cast_clause` | Fight Rigging | `o:"then if you control a creature with power"` | 1 (itself) |
+| `_parse_search_mv_equal_to_sacrificed_clause` | Neoform | `o:"additional +1/+1 counter" o:"plus the sacrificed"` | 1 (itself) |
+| `_parse_put_land_from_hand_repeat_clause` | Cultivator Colossus | `o:"put a land card from your hand onto the battlefield" o:"repeat this process"` | 1 (itself; Zimone and Dina shares "repeat this process" but a different shape - draws first, repeats only once, conditionally) |
+| `_parse_draw_then_put_land_cave_bonus_clause` | Spelunking | `o:"if you put a cave onto the battlefield this way"` | 1 (itself) |
+| `_parse_remove_time_counter_from_self_clause` | Greater Gargadon | `o:"remove a time counter from this"` | 6, none saying "this card"/"this permanent" with a different count (Infinite Hourglass, Tourach's Gate, Watcher of Hours, Nihilith, Hourglass of the Lost all say "this artifact"/"this Aura", a different shape) |
+| `_parse_discard_then_draw_token_per_nonland_clause` | Seasoned Pyromancer | `o:"for each nonland card discarded this way"` | 1 (itself) |
+| `_parse_return_self_then_create_tokens_clause` | Thopter Assembly | `o:"return this creature to its owner's hand and create"` | 1 (itself); the broader `o:"return this creature to its owner's hand"` (72 hits) never combines a return with a token creation on any other card |
+| `_parse_switch_power_toughness_then_draw_clause` | Twisted Image | `o:"switch target creature's power and toughness"` | 10, one of which (Inside Out) prints the identical "Draw a card." - a reprint of the same count, not a different one |
+| `_parse_delirium_damage_instead_clause` | Unholy Heat | `o:"damage instead if there are four or more card types"` | 1 (itself) |
+
+`_SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE`/`_self_pump_per_other_creature_named_builder`
+(the tenth G14 parser, for the `LAYER_EFFECTS["Relentless Rats"]` row) is the
+exception with a genuine second printing: Seven Dwarves (`tests/scenarios/
+test_named_count_pump.py`), which shares the shape with different wording
+("you control" instead of "on the battlefield") and exercises
+`CountOtherCreaturesNamed.controlled_by_source`.

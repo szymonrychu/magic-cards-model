@@ -397,16 +397,30 @@ class FixedCount(CountBase):
 
 
 class CountOtherCreaturesNamed(CountBase):
-    """How many *other* creatures on the board have this name."""
+    """How many *other* creatures on the board have this name.
+
+    `controlled_by_source` is Seven Dwarves' own "you control" qualifier -
+    Relentless Rats' "on the battlefield" leaves it `False` (every match
+    anywhere counts). Read against `chars.controller` rather than a
+    `username` baked in when the effect was built: CR 611.3a's "isn't
+    'locked in'" applies to who controls the *source* too, so a source whose
+    own control changes (a Threaten effect, an Act of Treason) is asked fresh
+    every time the board is computed (CR 613.5), the same live-recompute
+    trick every other `Count` in this module already relies on.
+    """
 
     kind: Literal["other_creatures_named"] = "other_creatures_named"
     name: str
+    controlled_by_source: bool = False
 
     def __call__(self, chars: Characteristics, board: Board) -> int:
         return sum(
             1
             for other in board.values()
-            if other.card_id != chars.card_id and other.is_creature and other.name == self.name
+            if other.card_id != chars.card_id
+            and other.is_creature
+            and other.name == self.name
+            and (not self.controlled_by_source or other.controller == chars.controller)
         )
 
 
@@ -2210,9 +2224,13 @@ def modify_power_toughness_per(count: Count, power: int, toughness: int) -> Modi
     return ModifyPowerToughnessPer(count=count, power=power, toughness=toughness)
 
 
-def count_other_creatures_named(name: str) -> Count:
-    """How many *other* creatures on the board have this name."""
-    return CountOtherCreaturesNamed(name=name)
+def count_other_creatures_named(name: str, *, controlled_by_source: bool = False) -> Count:
+    """How many *other* creatures on the board have this name.
+
+    `controlled_by_source=True` for Seven Dwarves' own "you control" -
+    Relentless Rats' "on the battlefield" leaves the default, unscoped.
+    """
+    return CountOtherCreaturesNamed(name=name, controlled_by_source=controlled_by_source)
 
 
 def count_lands_controlled_by(username: str | None) -> Count:
@@ -2475,6 +2493,81 @@ def _self_pump_per_controlled_permanent_builder(
                 selector=_only(source.id),
                 modification=modify_power_toughness_per(
                     count_permanents_controlled_by(source.controller, card_type), power, toughness
+                ),
+            )
+        ]
+
+    return builder
+
+
+#: "This creature gets +1/+1 for each other creature on the battlefield named
+#: Relentless Rats." (Relentless Rats) and "This creature gets +1/+1 for each
+#: other creature named Seven Dwarves you control." (Seven Dwarves) - the same
+#: self-counting-by-name shape `count_other_creatures_named` already reads
+#: generally; only the card-name-keyed `LAYER_EFFECTS` row this replaces
+#: pinned it to "Relentless Rats" specifically. By the time this dispatcher
+#: sees the sentence, `self_normalized_effect_text` (CR 201.5) has already
+#: rewritten the card's own printed name to "this permanent" wherever it
+#: appears in its own text - both cards name only themselves, so `name` reads
+#: literally as "this permanent" for both, resolved back to the *source's own
+#: live name* inside `builder` (a DFC or copy effect can change it after this
+#: sentence was parsed, so this reads it at build time, not parse time) rather
+#: than the captured string itself. A future card whose template somehow named
+#: a *different* creature is still covered: only a captured "this permanent"
+#: gets the live-name treatment. "on the battlefield" and "you control" are
+#: both optional - Relentless Rats prints the first, Seven Dwarves the
+#: second, neither prints both.
+_SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE = re.compile(
+    r"^this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each other creature "
+    r"(?:on the battlefield )?named (?P<name>.+?)(?P<you_control> you control)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_pump_per_other_creature_named_builder(
+    power: int, toughness: int, name: str, controlled_by_source: bool, line: str
+) -> EffectBuilder:
+    """`_SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE`'s shape - Relentless Rats and
+    Seven Dwarves both print this self-counting pump.
+
+    Sublayer 7c (CR 613.4c), the same "modify, don't set" choice `_self_pump_
+    per_controlled_permanent_builder` makes for its own live board count -
+    `count_other_creatures_named` is `modify_power_toughness_per`'s same
+    `Count` machinery, counting by printed name (CR 201.4) instead of by card
+    type, scoped to the source's own controller when the sentence prints "you
+    control" (Seven Dwarves) and left unscoped when it prints "on the
+    battlefield" (Relentless Rats) instead. A static ability's effect (CR
+    611.3), switched off the moment the source loses the ability (CR 613.6) -
+    `source_ability` is the printed sentence layer 6 removal matches on,
+    `_source_line_for` because `line` may already have had its ability word
+    or self-normalized name taken off.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        resolved_name = source.name if name.strip().lower() == "this permanent" else name
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {power:+d}/{toughness:+d} for each other creature named "
+                    f"{resolved_name}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=modify_power_toughness_per(
+                    count_other_creatures_named(
+                        resolved_name, controlled_by_source=controlled_by_source
+                    ),
+                    power,
+                    toughness,
                 ),
             )
         ]
@@ -5274,6 +5367,14 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _self_pump_per_controlled_permanent_builder(
             int(match.group("power")), int(match.group("toughness")), card_type
         )
+    if match := _SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE.fullmatch(sentence):
+        return _self_pump_per_other_creature_named_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            match.group("name").strip(),
+            match.group("you_control") is not None,
+            sentence,
+        )
     if match := _BECOME_A_COPY_RE.fullmatch(sentence):
         return _become_a_copy_builder(until_eot=bool(match.group("until_eot")))
     if match := _KEYWORD_GRANT_RE.fullmatch(sentence):
@@ -5984,38 +6085,6 @@ def _dress_down(
 #: no entry at all.
 
 
-def _relentless_rats(
-    source: CardState,
-    timestamp: int,
-    targets: Sequence[CardState],
-    context: LayerContext,
-) -> list[ContinuousEffect]:
-    """ "This creature gets +1/+1 for each other creature named Relentless Rats."
-
-    Sublayer 7c (CR 613.4c), not 7a: it *modifies* power and toughness rather
-    than defining them, and the printed 2/2 is a real printed value rather than
-    a `*` (CR 208.2). Every Rat counts every other Rat, so n of them are each
-    an (n+1)/(n+1).
-    """
-    text = (
-        "This creature gets +1/+1 for each other creature on the battlefield named Relentless Rats."
-    )
-    return [
-        ContinuousEffect(
-            description="Relentless Rats: +1/+1 for each other Relentless Rats",
-            layer=Layer.POWER_TOUGHNESS,
-            sublayer=Sublayer.MODIFY,
-            timestamp=timestamp,
-            source_id=source.id,
-            source_ability=text,
-            selector=_only(source.id),
-            modification=modify_power_toughness_per(
-                count_other_creatures_named("Relentless Rats"), 1, 1
-            ),
-        )
-    ]
-
-
 def _tarmogoyf(
     source: CardState,
     timestamp: int,
@@ -6368,7 +6437,12 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
     "Opalescence": _opalescence,
     "Twisted Image": _twisted_image,
     "Dress Down": _dress_down,
-    "Relentless Rats": _relentless_rats,
+    # Relentless Rats' own "This creature gets +1/+1 for each other creature
+    # on the battlefield named Relentless Rats." is not entered here any
+    # more: `_SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE` reads the shape off the
+    # card's own printed text with no card-name check at all, so a future
+    # card sharing the template with a different name or magnitude - Seven
+    # Dwarves among them - is covered for free.
     "Tarmogoyf": _tarmogoyf,
     "Boneyard Wurm": _boneyard_wurm,
     # "Omnath gets +1/+1 for each unspent green mana you have." A live count
