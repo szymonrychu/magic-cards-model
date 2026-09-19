@@ -3148,6 +3148,24 @@ _TRIGGERED_MANA_SPEND_ONLY_RE = re.compile(r"^spend this mana only\b.*$", re.IGN
 _MANA_COUNT_PHRASE_RE = re.compile(
     r"^(?P<word>[A-Za-z]+) (?P<scope>on the battlefield|you control)$", re.IGNORECASE
 )
+#: "charge counter on this enchantment" (Gardenize) - CR 122.1's counters on
+#: the triggered mana ability's own source, the self-referential sibling
+#: `parse_mana_count`'s two board-scan scopes do not cover: this counts
+#: nothing on the battlefield at all, only what is already on the permanent
+#: whose ability this is. Kept separate from `parse_mana_count`'s own
+#: `(scope, card_type, subtype)` return shape rather than folded into it,
+#: since there is no board scan to describe - `triggered_mana_count` checks
+#: this first and only falls through to `parse_mana_count` when it misses.
+_SELF_COUNTER_MANA_COUNT_RE = re.compile(
+    r"^(?P<kind>[a-z][a-z '/+-]*?) counters? on this [a-z]+$", re.IGNORECASE
+)
+
+
+def self_counter_mana_count(phrase: str) -> str | None:
+    """The counter kind `_SELF_COUNTER_MANA_COUNT_RE` reads off a "for each"
+    phrase, lowercased (`CardState.counter_count`'s own key), or `None`."""
+    match = _SELF_COUNTER_MANA_COUNT_RE.fullmatch(phrase.strip().rstrip("."))
+    return match.group("kind").lower() if match else None
 
 
 def parse_mana_count(phrase: str) -> tuple[str, Type | None, str] | None:
@@ -3211,7 +3229,7 @@ def _parse_add_mana_sentence(sentence: str) -> TriggeredManaShape | None:
     for_each = _TRIGGERED_MANA_FOR_EACH_RE.fullmatch(mana)
     if for_each is not None:
         count = for_each.group("phrase").strip()
-        if parse_mana_count(count) is None:
+        if parse_mana_count(count) is None and self_counter_mana_count(count) is None:
             return None
         mana = for_each.group("mana").strip()
     common = {"recipient": recipient, "optional": optional, "count": count}

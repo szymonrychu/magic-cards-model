@@ -1105,7 +1105,7 @@ def triggered_mana_bonus(
             if triggered_mana_recipient(shape.recipient, controller, event) != context.payer:
                 continue
             times = (
-                triggered_mana_count(game, shape.count, controller)
+                triggered_mana_count(game, shape.count, controller, source=trigger_source)
                 if shape.count is not None
                 else 1
             )

@@ -10165,7 +10165,7 @@ def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
             return
         # CR 608.2h: a "for each" count is taken now, as the mana is added.
         times = (
-            triggered_mana_count(game, shape.count, ability.controller)
+            triggered_mana_count(game, shape.count, ability.controller, source=source)
             if shape.count is not None
             else 1
         )
