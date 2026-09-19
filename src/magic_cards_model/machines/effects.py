@@ -12936,8 +12936,15 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
 #: unfiltered shapes; anything neither reads stays unread rather than being
 #: guessed at, because a mass-damage filter read too widely wipes a board the
 #: card never touched.
+#:
+#: "X, where X is `<expr>`" (Cavalier of Flame's "it deals X damage to each
+#: opponent and each planeswalker they control, where X is the number of land
+#: cards in your graveyard") is read once as the effect applies (CR 608.2h),
+#: through `_resolve_multiplied_amount`, the same reader the unfiltered
+#: "each opponent"/"each creature" shapes use.
 _DAMAGE_EACH_FILTERED_RE = re.compile(
-    rf"^.*\bdeals? (?P<n>{COUNT}) damage to each (?P<filter>.+?)\.?$", re.IGNORECASE
+    rf"^.*\bdeals? (?P<n>{AMOUNT}) damage to each (?P<filter>.+?){where_x_pattern()}\.?$",
+    re.IGNORECASE,
 )
 
 #: "each opponent and each <types> they control" - End the Festivities. The
@@ -13040,7 +13047,9 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
     match = _DAMAGE_EACH_FILTERED_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    amount = parse_count(match.group("n"))
+    amount_of = _resolve_multiplied_amount(match.group("n"), None, match.group("where_x"))
+    if amount_of is None:
+        return None
     phrase = match.group("filter").strip()
 
     opponents_match = _DAMAGE_EACH_OPPONENT_AND_THEIRS_RE.fullmatch(phrase)
@@ -13057,6 +13066,9 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
                 stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
             )
             controller = game.controller_of(stack_object).username
+            amount = max(amount_of(game, controller), 0)  # CR 608.2h, once
+            if amount <= 0:
+                return
             opponents = _opponents(game, controller)
             names = {opponent.username for opponent in opponents}
             board = game.computed_board()
@@ -13079,6 +13091,9 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        amount = max(amount_of(game, game.controller_of(stack_object).username), 0)
+        if amount <= 0:
+            return
         recipients = [
             permanent for permanent in list(game.battlefield) if predicate(game, permanent)
         ]
