@@ -384,18 +384,52 @@ class GameEvent(EngineModel):
 
 
 class TargetingNoticeKind(StrEnum):
-    """Why a triggered ability went on the stack with no targets chosen."""
+    """Why a spell or ability ended up choosing no target.
+
+    Each value names one outcome, not one cause, because the outcomes differ:
+    two of these leave the object on the stack having chosen nothing, one
+    takes the ability off the stack (CR 603.3d), and one bins a resolving
+    Aura. A reader told only "there was no legal target" cannot tell which of
+    the four it is looking at, and every surface downstream - the browser's
+    toast, an agent reading its own game log - then has to guess which one
+    happened and whether it was an engine gap at all.
+    """
 
     UNPARSED = "unparsed_targets"
     """`machines/targeting.py` could not read the restriction at all
     (`TargetingProfile.understood` is False). An engine gap, not a legal game
-    state - the next unparsed shape must be audible, not silently dropped."""
+    state - the next unparsed shape must be audible, not silently dropped.
+    The ability still goes on the stack, having chosen nothing."""
 
     NO_LEGAL_TARGET = "no_legal_targets"
-    """The restriction was read fine, but nothing satisfies it right now. A
-    legitimate game state (CR 608.2d's own "nobody says otherwise" default),
-    not a bug - and not the same thing as CR 608.2b's target-becomes-illegal
-    fizzle, which only ever applies to a target that *was* chosen."""
+    """The restriction was read fine, nothing satisfies it right now, and the
+    requirement was optional anyway - CR 115.6's "may allow zero targets to be
+    chosen", printed as "up to N" or "any number of". A legitimate game state,
+    not a bug, and not the same thing as CR 608.2b's target-becomes-illegal
+    fizzle, which only ever applies to a target that *was* chosen. The ability
+    goes on the stack having chosen nothing, which is exactly what CR 115.6
+    says it may do."""
+
+    MANDATORY_TARGET_MISSING = "mandatory_target_missing"
+    """The restriction was read fine, nothing satisfies it, and the
+    requirement was *not* optional (a plain "target creature", no "up to").
+    Also a legitimate game state rather than a bug, but a different one:
+    CR 603.3d ("if a choice is required when the triggered ability goes on the
+    stack but no legal choices can be made for it ... the ability is simply
+    removed from the stack") means the ability never sits on the stack at all,
+    and CR 601.2e refuses the equivalent activation outright. Telling this
+    apart from `NO_LEGAL_TARGET` is the difference between "it is on the stack
+    and will do nothing" and "it is gone"."""
+
+    UNREADABLE_AURA_TARGET = "unreadable_aura_target"
+    """A resolving Aura spell with no target left to attach to, where
+    CR 608.2b's fizzle check already said it did not fizzle - so the target
+    was never announced, which for an Aura means the enchant restriction
+    CR 303.4a defines its target by was not read
+    (`machines/targeting._with_aura_target`). An engine gap, and the one
+    kind here whose object does not end up on the stack or resolve: the Aura
+    is put into its owner's graveyard rather than entering unattached, the
+    same place CR 704.5m would send it a moment later anyway."""
 
 
 class TargetingNotice(EngineModel):

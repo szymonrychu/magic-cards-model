@@ -22,6 +22,7 @@ graveyard).
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.triggers import TargetingNoticeKind
 from magic_cards_model.models import Color, Zone
 from tests.scenarios.harness import Scenario
 
@@ -239,3 +240,57 @@ def test_an_aura_is_binned_once_its_enchanted_creature_dies():
 
     assert umbra.zone is Zone.GRAVEYARD
     assert "Hyena Umbra" not in scenario.battlefield_names()
+
+
+def test_an_aura_with_no_readable_attachment_is_binned_as_an_engine_gap():
+    """CR 608.3c has nothing to attach to, so the Aura is not put onto the
+    battlefield at all - and the notice filed about it says *that*, not that
+    something went on the stack with no target.
+
+    The state under test: an Aura spell resolving with no target recorded.
+    CR 303.4a says an Aura spell requires a target ("defined by its enchant
+    ability"), and `machines/targeting.targeting_profile` turns that enchant
+    line into the requirement - so every Aura in this pool announces one and
+    this state is unreachable by casting one of them (the cast is refused,
+    "too few targets"). It is reachable for exactly one reason: an Aura whose
+    enchant restriction `_with_aura_target` cannot read comes back
+    `understood=False`, `TargetingProfile.check` then waves the announcement
+    through with no target, and `Game._aura_attachment` finds nothing at
+    resolution. That is an engine gap in the parser, which is why the spell
+    is put on the stack here by hand rather than cast: the branch has to be
+    exercised, and the pool's 19 Auras all parse (a printing that does not
+    would be the fixture the day one exists).
+
+    What the engine does with it is right and unchanged: the Aura does not
+    enter, because CR 704.5m ("If an Aura is ... not attached to an object or
+    player, that Aura is put into its owner's graveyard") would bin it on the
+    next state-based check anyway. What was wrong was the record: the notice
+    said `no_legal_targets`, the same value an "up to one target" trigger
+    files when it correctly chooses nothing, so every reader downstream was
+    told this fail-closed engine gap was the rules working as printed.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Hyena Umbra"], battlefield=["Grizzly Bears", "Plains"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    umbra = scenario.find("Hyena Umbra", Zone.HAND, username="alice")
+
+    scenario.game.put_on_stack(umbra, "alice")
+    assert umbra.targets == [], "the state under test: an Aura spell with no target"
+
+    scenario.resolve_top()
+
+    assert umbra.zone is Zone.GRAVEYARD
+    assert "Hyena Umbra" not in scenario.battlefield_names()
+
+    (notice,) = scenario.game.targeting_notices
+    assert notice.kind is TargetingNoticeKind.UNREADABLE_AURA_TARGET
+    assert notice.kind is not TargetingNoticeKind.NO_LEGAL_TARGET, (
+        "an Aura the parser could not read is an engine gap, and the Aura went "
+        "to the graveyard - not a legal board where an ability sits on the "
+        "stack having chosen nothing"
+    )
+    assert notice.source_name == "Hyena Umbra"

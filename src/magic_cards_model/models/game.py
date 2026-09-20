@@ -4834,9 +4834,15 @@ class Game(EngineModel):
                     # have CR 704.5m destroy it a moment later - so it does not
                     # enter at all, the same fail-closed policy as the fizzle
                     # branch just above.
+                    #
+                    # `UNREADABLE_AURA_TARGET`, never `NO_LEGAL_TARGET`: this
+                    # is the parser's gap, and the Aura is in a graveyard
+                    # rather than on the stack having chosen nothing. Filing
+                    # it as the latter told every reader downstream that a
+                    # fail-closed engine gap was the rules working as printed.
                     self.targeting_notices.append(
                         TargetingNotice(
-                            kind=TargetingNoticeKind.NO_LEGAL_TARGET,
+                            kind=TargetingNoticeKind.UNREADABLE_AURA_TARGET,
                             source_id=spell.id,
                             source_name=spell.name,
                             text=spell.oracle_text,
@@ -6954,10 +6960,12 @@ class Game(EngineModel):
           nothing;
         - nothing satisfies it and the requirement was mandatory
           (`profile.min_targets` > 0, a plain "target permanent" with no
-          "up to") - CR 603.3d: "if a choice is required when the triggered
-          ability goes on the stack but no legal choices can be made for it,
-          ... the ability is simply removed from the stack." Returns `None`
-          so the caller never places it, rather than the pre-fix behaviour of
+          "up to") - `TargetingNoticeKind.MANDATORY_TARGET_MISSING`, a
+          different outcome from the one above and so a different notice.
+          CR 603.3d: "if a choice is required when the triggered ability goes
+          on the stack but no legal choices can be made for it, ... the
+          ability is simply removed from the stack." Returns `None` so the
+          caller never places it, rather than the pre-fix behaviour of
           putting it on the stack anyway with an empty target list, where it
           would sit doing nothing while still occupying a stack slot CR
           603.3d says it should never have taken.
@@ -7009,12 +7017,15 @@ class Game(EngineModel):
           nothing;
         - nothing satisfies it and the requirement was mandatory
           (`profile.min_targets` > 0, a plain "target permanent" with no
-          "up to") - `None`, so the caller never puts the ability where it
-          would sit doing nothing: CR 603.3d removes a triggered ability from
-          the stack in this case, and CR 601.2e/602.2b makes an activation
-          with no legal target for a mandatory requirement illegal to begin
-          at all (the same refusal `Game.cast_during_resolution` already gives
-          a spell with no legal target, CR 601.2c).
+          "up to") - `TargetingNoticeKind.MANDATORY_TARGET_MISSING` and
+          `None`, so the caller never puts the ability where it would sit
+          doing nothing: CR 603.3d removes a triggered ability from the stack
+          in this case, and CR 601.2e/602.2b makes an activation with no
+          legal target for a mandatory requirement illegal to begin at all
+          (the same refusal `Game.cast_during_resolution` already gives a
+          spell with no legal target, CR 601.2c). A separate kind from the
+          optional case above because the board ends up somewhere else: the
+          ability is gone, not sitting on the stack having chosen nothing.
 
         An ability with no targeting requirement at all is not asked anything
         and gets no notice either - there is nothing to be silent about.
@@ -7034,15 +7045,27 @@ class Game(EngineModel):
 
         candidates = self._legal_target_candidates(profile, controller, source_id)
         if not candidates:
+            # Two different outcomes, so two different notice kinds. A
+            # mandatory requirement with nothing to point at takes the
+            # ability off the stack (CR 603.3d) or refuses the activation
+            # (CR 601.2e); an optional one (CR 115.6's "up to N") leaves it
+            # on the stack having chosen nothing. Both are the rules working
+            # as printed, but a reader handed one value for both cannot say
+            # which of the two happened to the board in front of them.
+            mandatory = profile.min_targets > 0
             self.targeting_notices.append(
                 TargetingNotice(
-                    kind=TargetingNoticeKind.NO_LEGAL_TARGET,
+                    kind=(
+                        TargetingNoticeKind.MANDATORY_TARGET_MISSING
+                        if mandatory
+                        else TargetingNoticeKind.NO_LEGAL_TARGET
+                    ),
                     source_id=source_id,
                     source_name=source_name,
                     text=text,
                 )
             )
-            return None if profile.min_targets > 0 else []
+            return None if mandatory else []
 
         decision = Decision(
             kind=DecisionKind.CHOOSE_TARGETS,
