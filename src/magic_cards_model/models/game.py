@@ -215,6 +215,7 @@ from ..machines.targeting import (
     profile_for_modes_with_owners,
     profile_for_text,
     reflexive_consequence_text,
+    spell_profile_for_text,
     targeting_profile,
 )
 from ..machines.triggers import (
@@ -10917,7 +10918,7 @@ class Game(EngineModel):
         if face is not None:
             return profile_for_text(substitute_x(face.oracle_text or "", x_value))
         if modal is None and x_value is not None and state.card.oracle_text:
-            return profile_for_text(substitute_x(state.card.oracle_text, x_value))
+            return spell_profile_for_text(substitute_x(state.card.oracle_text, x_value), state.card)
         return targeting_profile(state.card)
 
     _announcement_profile = announcement_profile
