@@ -1630,6 +1630,17 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
         minimum = decision.amount if decision.exact else 0
         return [build(decision_candidates=decision.cards, x_range=(minimum, decision.amount))]
 
+    if decision.kind is DecisionKind.CHOOSE_PLAYERS:
+        # `CHOOSE_CARDS`' own twin, over `decision.players` instead of
+        # `decision.cards` - CR 701.34a's "choose any number of ... players"
+        # is `exact=False` on every printing in the pool, so `minimum` is 0
+        # exactly as `Decision.default_answer`'s own "choose nobody" already
+        # treats it.
+        minimum = decision.amount if decision.exact else 0
+        return [
+            build(decision_player_candidates=decision.players, x_range=(minimum, decision.amount))
+        ]
+
     if decision.kind is DecisionKind.CHOOSE_TARGETS:
         maximum = (
             decision.target_maximum
@@ -1672,7 +1683,38 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
     if decision.kind in (DecisionKind.SCRY, DecisionKind.SURVEIL):
         return [build(decision_candidates=decision.cards, x_range=(0, len(decision.cards)))]
 
-    return []  # pragma: no cover - every DecisionKind is handled above
+    return []  # pragma: no cover - _DECISION_ANSWER_KINDS below makes this unreachable
+
+
+#: Every `DecisionKind` `decision_answers` has a branch for, kept in sync with
+#: the `if`/`elif` chain above by the `assert` right below it - CR 701.34a's
+#: own `CHOOSE_PLAYERS` reached the function's final `return []` with no
+#: branch of its own once, offering *no* legal action for a genuinely pending
+#: decision and hanging the game; nothing short of checking every member of
+#: the enum against the branches actually written catches that again. Mirrors
+#: `machines/decisions.py`'s own `_ANSWER_FIELD_FOR_KIND` assertion for the
+#: identical reason.
+_DECISION_ANSWER_KINDS = frozenset(
+    {
+        DecisionKind.DECLARE_ATTACKERS,
+        DecisionKind.DECLARE_BLOCKERS,
+        *_BOOLEAN_DECISION_KINDS,
+        DecisionKind.PAY_ENERGY_AMOUNT,
+        DecisionKind.PAY_LIFE_AMOUNT,
+        DecisionKind.CHOOSE_A_QUALITY,
+        DecisionKind.CHOOSE_A_MODE,
+        DecisionKind.CHOOSE_CARDS,
+        DecisionKind.CHOOSE_PLAYERS,
+        DecisionKind.CHOOSE_TARGETS,
+        DecisionKind.ASSIGN_COMBAT_DAMAGE,
+        DecisionKind.ORDER_TRIGGERS,
+        DecisionKind.SCRY,
+        DecisionKind.SURVEIL,
+    }
+)
+assert set(DecisionKind) == _DECISION_ANSWER_KINDS, (
+    "every DecisionKind needs a decision_answers branch - see _DECISION_ANSWER_KINDS"
+)
 
 
 # ---------------------------------------------------------------------------
