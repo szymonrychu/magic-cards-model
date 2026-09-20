@@ -620,12 +620,32 @@ class TargetRequirement(EngineModel):
             return f"{self.phrase} can only target a player, not {target.name}"
         if self.excludes_source and source_id is not None and target.id == source_id:
             return f"{self.phrase} cannot target {target.name}, which this is on"
-        if self.or_any_spell and target.zone is Zone.STACK:
-            # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
-            # second half of a two-kind noun list - see `or_any_spell`. Nothing
-            # further to check: the phrase named no type for this half.
-            return None
-        if target.zone not in self.zones:
+        # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
+        # second half of a two-kind noun list - see `or_any_spell`. The phrase
+        # names no card type or zone for this half, so those two checks are
+        # skipped for it - but a *shared* trailing clause ("target spell or
+        # permanent **with mana value 1 or greater**", Divide by Zero;
+        # "target spell or permanent **that's red or green**", Aether Gust)
+        # binds both halves of the disjunction at once and is not part of
+        # either noun's own type restriction, so a comparison or color check
+        # still runs for a spell on the stack exactly as it does for a
+        # permanent.
+        #
+        # A supertype/subtype restriction is different: Icy Reception's own
+        # "target creature or **legendary** spell" reads "legendary" as the
+        # *second* item's own leading adjective (`_read_adjectives`'
+        # per-item loop), not a trailing clause about the whole compound -
+        # but `required_supertypes`/`required_subtypes` hold one shared
+        # value for the whole requirement with no record of which disjunct
+        # it was read for, so by the time this runs there is no way to tell
+        # "legendary spell" apart from a genuinely shared "target legendary
+        # creature or spell" (a shape the pool does not print, but nothing
+        # here could rule out either way). The safe direction is the one
+        # that matches every printing actually seen: exempt the spell half,
+        # exactly as it always was, rather than assume a per-item adjective
+        # was meant to bind both.
+        spell_on_stack = self.or_any_spell and target.zone is Zone.STACK
+        if not spell_on_stack and target.zone not in self.zones:
             wanted = " or ".join(sorted(zone.value for zone in self.zones))
             return (
                 f"{self.phrase} needs a target in the {wanted}, "
@@ -644,7 +664,7 @@ class TargetRequirement(EngineModel):
                     f"{self.phrase} needs a card exiled with this permanent, "
                     f"and {target.name} is not one"
                 )
-        if self.card_types or self.excluded_card_types:
+        if not spell_on_stack and (self.card_types or self.excluded_card_types):
             current_types = set(self._current_types(target, game))
             if self.card_types and not (current_types & self.card_types):
                 wanted = " or ".join(sorted(kind.value for kind in self.card_types))
@@ -658,24 +678,33 @@ class TargetRequirement(EngineModel):
                     f"{self.phrase} cannot target {with_indefinite_article(unwanted)}, "
                     f"and {target.name} is one"
                 )
-        if self.required_supertypes and not (
-            set(self._current_supertypes(target, game)) & self.required_supertypes
+        if (
+            not spell_on_stack
+            and self.required_supertypes
+            and not (set(self._current_supertypes(target, game)) & self.required_supertypes)
         ):
             wanted = " or ".join(sorted(kind.value for kind in self.required_supertypes))
             return (
                 f"{self.phrase} needs {with_indefinite_article(wanted)} permanent, "
                 f"and {target.name} is not one"
             )
-        if self.excluded_supertypes and (
-            set(self._current_supertypes(target, game)) & self.excluded_supertypes
+        if (
+            not spell_on_stack
+            and self.excluded_supertypes
+            and (set(self._current_supertypes(target, game)) & self.excluded_supertypes)
         ):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
             return (
                 f"{self.phrase} cannot target {with_indefinite_article(unwanted)} permanent, "
                 f"and {target.name} is one"
             )
-        if self.required_subtypes and not any(
-            word.lower() in self.required_subtypes for word in self._current_subtypes(target, game)
+        if (
+            not spell_on_stack
+            and self.required_subtypes
+            and not any(
+                word.lower() in self.required_subtypes
+                for word in self._current_subtypes(target, game)
+            )
         ):
             wanted = " or ".join(sorted(self.required_subtypes))
             return (
