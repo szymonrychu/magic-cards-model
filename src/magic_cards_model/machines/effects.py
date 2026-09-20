@@ -10650,15 +10650,19 @@ _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
     re.IGNORECASE,
 )
 #: "Return target `<X>` from your graveyard to the battlefield[ tapped] with
-#: an additional `<n>` `<kind>` counter(s) on it." - Generous Revival's own
-#: shape, "an additional" being Neoform's own already-general rider phrase
-#: (CR 122.1's counter placed as the permanent arrives, mirroring `_RETURN_
-#: CARDS_FROM_YOUR_GRAVEYARD_RE`'s own untargeted "with N `<kind>` counters
-#: on it" tail for the targeted family).
+#: [an additional] `<n>` `<kind>` counter(s) on it." - Generous Revival's own
+#: "an additional" (Neoform's own already-general rider phrase) and Persist's
+#: bare "with a `<kind>` counter on it" (no "additional" at all) are the same
+#: CR 122.1 counter-placed-as-the-permanent-arrives shape, one word shorter -
+#: "additional" is optional rather than required, mirroring `_RETURN_CARDS_
+#: FROM_YOUR_GRAVEYARD_RE`'s own untargeted "with N `<kind>` counters on it"
+#: tail for the targeted family. Makeshift Mannequin's own "mannequin"
+#: counter (real, off-set, non-fra) proves this reads the shape rather than
+#: either card's own counter word.
 _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_WITH_COUNTER_RE = re.compile(
     r"return (?P<phrase>.*target.+from your graveyard) to the battlefield"
     r"(?P<tapped> tapped)?"
-    rf" with an additional (?:(?P<counter_n>{COUNT}) )?(?P<counter>[a-z0-9+/-]+) counters? "
+    rf" with an? (?:additional )?(?:(?P<counter_n>{COUNT}) )?(?P<counter>[a-z0-9+/-]+) counters? "
     r"on it\.?$",
     re.IGNORECASE,
 )
@@ -20052,8 +20056,9 @@ def _parse_exile_if_mv_return_then_re_exile_clause(
 
 
 #: "return it/that card/that permanent/that creature to the battlefield[
-#: tapped][ transformed][ under its owner's/your control]." - the return half
-#: of Ephemerate's own "Exile target creature you control, then return it to
+#: tapped][ transformed][ under its owner's/your control][ with [an
+#: additional] `<n>` `<kind>` counter(s) on it]." - the return half of
+#: Ephemerate's own "Exile target creature you control, then return it to
 #: the battlefield under its owner's control." (CR 608.2c: one instruction in
 #: two sentences), and of the same "blink" idiom wherever else a card states
 #: it as a direct instruction rather than through a delayed trigger -
@@ -20062,16 +20067,25 @@ def _parse_exile_if_mv_return_then_re_exile_clause(
 #: `machines/keywords.persist_return`/`earthbend` cover the two keyworded
 #: shapes; none of the three reach this regex, and this one does not reach
 #: them. `fullmatch` only, and no bare "return it to the battlefield." with
-#: none of the three optional groups - that shape names no controller at all
+#: none of the four optional groups - that shape names no controller at all
 #: and CR 110.2a leaves it to whoever the effect names elsewhere, which is
 #: not something a lone regex on this one sentence can decide, so it is left
 #: unread (see `_UNREAD_RETURN_TO_BATTLEFIELD_RE` below) rather than guessed.
+#:
+#: The trailing counter rider is Daydream's own "... under its owner's
+#: control with a +1/+1 counter on it" - the identical CR 122.1
+#: counter-placed-as-it-arrives shape `_RETURN_FROM_YOUR_GRAVEYARD_TO_
+#: BATTLEFIELD_WITH_COUNTER_RE` already reads for the graveyard-targeted
+#: family, read here too since a blinked permanent arrives exactly the same
+#: way a reanimated one does (CR 614.12, 604.1a).
 _RETURN_TO_BATTLEFIELD_RE = re.compile(
     r"^return (?:it|that (?:card|permanent|creature))"
     r" to the battlefield"
     r"(?P<tapped> tapped)?"
     r"(?P<transformed> transformed)?"
-    r"(?: under (?P<control>its owner's|your) control)?\.?$",
+    r"(?: under (?P<control>its owner's|your) control)?"
+    rf"(?: with an? (?:additional )?(?:(?P<counter_n>{COUNT}) )?(?P<counter>[a-z0-9+/-]+) "
+    r"counters? on (?:it|them))?\.?$",
     re.IGNORECASE,
 )
 
@@ -21257,6 +21271,12 @@ def _parse_exile_then_return_clause_pair(
     tapped = return_match.group("tapped") is not None
     transformed = return_match.group("transformed") is not None
     control = return_match.group("control")
+    counter_word = return_match.group("counter")
+    counter_kind = _counter_kind(counter_word) if counter_word else None
+    counter_n_word = return_match.group("counter_n")
+    counter_amount = (
+        ((parse_count(counter_n_word) if counter_n_word else 1) or 1) if counter_word else 0
+    )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
@@ -21273,9 +21293,11 @@ def _parse_exile_then_return_clause_pair(
             # counters, which are put on as it enters and read off the face
             # that is up. Transforming after the fact left a planeswalker back
             # face on the battlefield at 0 loyalty, dead to CR 704.5i.
-            game.put_onto_battlefield(
+            permanent = game.put_onto_battlefield(
                 exiled, new_controller, tapped=tapped, transformed=transformed
             )
+            if counter_kind is not None and permanent.zone is Zone.BATTLEFIELD:
+                game.add_counters(permanent, counter_kind, counter_amount)
 
     return effect
 
@@ -33939,6 +33961,7 @@ def trigger_effect_for(
     effect_text: str | None = None,
     *,
     x_value: int | None = None,
+    legendary: bool = True,
 ) -> AbilityEffect | None:
     """The effect of a card's trigger on `event`, or None if it is not scripted.
 
@@ -34021,7 +34044,9 @@ def trigger_effect_for(
         # pump clause spelled with the card's own name instead of CR 700.7's
         # "this creature" fell through every clause parser and resolved
         # silently.
-        return _ability_effect_or_notice(_self_normalized_effect_text(card_name, effect_text))
+        return _ability_effect_or_notice(
+            _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
+        )
     if len(entries) == 1 and not entries[0][0]:
         return entries[0][1]
     return _dispatch_by_printed_text(entries)
@@ -34060,7 +34085,12 @@ _self_normalized_effect_text = self_normalized_effect_text
 
 
 def activated_effect_for(
-    card_name: str, index: int, effect_text: str | None = None, *, x_value: int | None = None
+    card_name: str,
+    index: int,
+    effect_text: str | None = None,
+    *,
+    x_value: int | None = None,
+    legendary: bool = True,
 ) -> AbilityEffect | None:
     """The effect of a card's activated ability at `index`, or a parsed one.
 
@@ -34097,7 +34127,7 @@ def activated_effect_for(
     if effect_text is None:
         return None
     effect_text = _TRAILING_ACTIVATION_TIMING_RESTRICTION_RE.sub("", effect_text).strip()
-    effect_text = _self_normalized_effect_text(card_name, effect_text)
+    effect_text = _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
     if x_value is not None:
         substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))
         if substituted is not None:

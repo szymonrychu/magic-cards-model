@@ -2231,14 +2231,6 @@ class Game(EngineModel):
     "at least one" is ever asked. Cleared when a new turn begins, the same
     reset `spells_cast_this_turn` already gets."""
 
-    attacked_this_turn: SortedSet[UUID] = Field(default_factory=set)
-    """Which creatures (by id) have attacked this turn (CR 508.1), for
-    Hexhaven Dueling Arena's own "target creature that attacked this turn" -
-    a historical fact CR 511.3/514's end of combat/cleanup does not answer,
-    unlike `machines/combat.Combat`'s live attacking status. Recorded by
-    `Game.declare_attackers`. Cleared when a new turn begins, the same reset
-    `spells_cast_this_turn` already gets."""
-
     spells_cast_last_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """What `spells_cast_this_turn` held during the turn before this one.
 
@@ -6260,7 +6252,14 @@ class Game(EngineModel):
                     record = self.cast_record_of(source)
                     if record is not None:
                         effect_text = substitute_x(effect_text, record.x_value)
-            return trigger_effect_for(ability.source_name, ability.ability.event, effect_text)
+            trigger_source = ability.source(self)
+            trigger_source_card = getattr(trigger_source, "card", None)
+            legendary = trigger_source_card is not None and (
+                Supertype.LEGENDARY in trigger_source_card.supertypes
+            )
+            return trigger_effect_for(
+                ability.source_name, ability.ability.event, effect_text, legendary=legendary
+            )
         if isinstance(ability.ability, ActivatedAbility):
             if ability.ability.class_level_target is not None:
                 # CR 716.2a's own mechanical half - "This Class's level
@@ -6297,8 +6296,17 @@ class Game(EngineModel):
                 # `x_value`, so an ordinary ability's bare "X" in its rules
                 # text (CR 107.3f) is never mistaken for this one.
                 x_value = ability.x_value if cost_announces_x(ability.ability.cost) else None
+                activated_source = ability.source(self)
+                activated_source_card = getattr(activated_source, "card", None)
+                legendary = activated_source_card is not None and (
+                    Supertype.LEGENDARY in activated_source_card.supertypes
+                )
                 return activated_effect_for(
-                    ability.source_name, index, ability.ability.effect, x_value=x_value
+                    ability.source_name,
+                    index,
+                    ability.ability.effect,
+                    x_value=x_value,
+                    legendary=legendary,
                 )
         return None
 
@@ -10802,11 +10810,29 @@ class Game(EngineModel):
         It sits *below* `ability_index` and `modes` in precedence, because an
         activated ability's own effect text and a chosen mode's own text are
         both narrower than the face the mode or ability is printed on.
+
+        **`state.prepare_spell_face` is a fifth read**, checked right after
+        `ability_index` and ahead of everything else: CR 722.3c's exile copy
+        "has only the characteristics of that permanent's prepare spell",
+        the same face `Casting.base_cost`/`CardState.up_face` already read
+        for this exact copy - `targeting_profile(state.card)`'s own fallback
+        below reads the front permanent's text instead, since `state.card` is
+        still the two-face preparation card and nothing else here ever asks
+        `up_face`. Without this, `legal_targets` offered no target at all for
+        a prepared spell that targets (Seed Suture, Vicious Verse), because
+        `face_being_cast` needs an explicit `spell_face` name no caller had
+        any reason to pass for a copy that is not a split card or an
+        Adventure. No prepare spell in the pool is modal or split, so this
+        is checked unconditionally rather than raced against those two.
         """
         if ability_index is not None:
             ability = self.activated_abilities(state)[ability_index]
             effect = getattr(ability, "effect", None) or getattr(ability, "text", "")
             return profile_for_text(substitute_x(effect, x_value))
+        if state.prepare_spell_face:
+            prepare_face = state.card.prepare_spell
+            if prepare_face is not None:
+                return profile_for_text(substitute_x(prepare_face.oracle_text or "", x_value))
         modal = modal_profile(state.card)
         if modes and modal is not None:
             chosen = modal.resolve(

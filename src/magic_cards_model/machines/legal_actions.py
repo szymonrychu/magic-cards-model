@@ -76,7 +76,7 @@ from ..models.action import (
     SpliceOption,
     TargetSlot,
 )
-from ..models.card import Card, Layout, Type
+from ..models.card import Layout, Type
 from ..models.card_state import CardState
 from ..models.mana import ManaCost, ManaSpend
 from ..models.player import Player
@@ -665,11 +665,11 @@ def _why_cannot_cast_face(
     )
 
 
-def _base_cost_options(card: Card) -> list[tuple[str | None, ManaCost]]:
-    """Every face this card could announce a plain cast for (CR 709.3's
-    split-card choice, CR 715.3's Adventure), as `(face name to record via
-    `spell_face`, or None for the plain front-face cast, that face's own
-    mana cost)`.
+def _base_cost_options(card: CardState) -> list[tuple[str | None, ManaCost]]:
+    """Every face this object could announce a plain cast for (CR 709.3's
+    split-card choice, CR 715.3's Adventure, CR 722.3c's prepare-spell
+    copy), as `(face name to record via `spell_face`, or None for the plain
+    front-face cast, that face's own mana cost)`.
 
     A split card's `card.mana_cost` is both halves joined by `" // "` -
     `Wear // Tear` is `"{1}{R} // {W}"` - and `ManaCost.parse` reads a split
@@ -686,19 +686,32 @@ def _base_cost_options(card: Card) -> list[tuple[str | None, ManaCost]]:
     top-level `mana_cost` is the same joined string - and its Adventure half
     (`adventure_face`) is the second option, recorded the way `Casting.
     cast_as_adventure` records it.
+
+    **CR 722.3c's exile copy is checked first**, ahead of every other shape:
+    "that copy has only the characteristics of that permanent's prepare
+    spell", which is `Card.prepare_spell` (`card_faces[1]`'s inset frame),
+    never the front permanent's whole-card cost the fallback below would
+    otherwise report. A single option, no choice offered, the same way
+    `Casting.base_cost` reads it unconditionally once `prepare_spell_face`
+    is set - CR 722.3 forbids a prepare spell from also being split or
+    Adventure, so this never races either of those two branches.
     """
-    faces = card.card_faces or []
-    if card.layout is Layout.SPLIT and faces:
+    if card.prepare_spell_face:
+        prepare_face = card.card.prepare_spell
+        if prepare_face is not None:
+            return [(None, ManaCost.parse(prepare_face.mana_cost or ""))]
+    faces = card.card.card_faces or []
+    if card.card.layout is Layout.SPLIT and faces:
         return [(face.name, ManaCost.parse(face.mana_cost or "")) for face in faces]
-    if card.layout is Layout.ADVENTURE and faces:
+    if card.card.layout is Layout.ADVENTURE and faces:
         options: list[tuple[str | None, ManaCost]] = [
             (None, ManaCost.parse(faces[0].mana_cost or ""))
         ]
-        inset = adventure_face(card)
+        inset = adventure_face(card.card)
         if inset is not None:
             options.append((inset.name, ManaCost.parse(inset.mana_cost or "")))
         return options
-    return [(None, ManaCost.parse(card.mana_cost or ""))]
+    return [(None, ManaCost.parse(card.card.mana_cost or ""))]
 
 
 def _splice_options_for(game: Any, player: str, card: CardState) -> tuple[SpliceOption, ...]:
@@ -745,7 +758,7 @@ def _permission_cast_actions(
         if permission.why_not(card, player, game, action=PlayAction.CAST) is not None:
             continue
         if permission.pays_mana_cost:
-            for face_name, mana in _base_cost_options(card.card):
+            for face_name, mana in _base_cost_options(card):
                 # CR 709.3a/715.3a: both of CR 601.3's questions belong to the
                 # *named* face - see the plain-hand branch in `_cast_actions`
                 # for what the face-blind versions of these calls reported.
@@ -810,7 +823,7 @@ def _cast_actions(
 
     if zone is Zone.HAND:
         if why_cannot_cast_from(card, player, Zone.HAND, game) is None:
-            for face_name, mana in _base_cost_options(card.card):
+            for face_name, mana in _base_cost_options(card):
                 # CR 709.3a/715.3a: "only the chosen half is evaluated to see
                 # if it can be cast", and CR 601.3e makes that substitution
                 # cover CR 117.1a's timing and CR 611.1's prohibitions alike -
@@ -866,7 +879,7 @@ def _cast_actions(
         # option enumerates faces at all (CR 709.3a/715.3a/601.3e) and once
         # for the card otherwise.
         if option.pays_mana_cost:
-            for face_name, mana in _base_cost_options(card.card):
+            for face_name, mana in _base_cost_options(card):
                 if _why_cannot_cast_face(game, player, card, face_name) is not None:
                     continue
                 actions.append(
@@ -1630,6 +1643,17 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
         minimum = decision.amount if decision.exact else 0
         return [build(decision_candidates=decision.cards, x_range=(minimum, decision.amount))]
 
+    if decision.kind is DecisionKind.CHOOSE_PLAYERS:
+        # `CHOOSE_CARDS`' own twin, over `decision.players` instead of
+        # `decision.cards` - CR 701.34a's "choose any number of ... players"
+        # is `exact=False` on every printing in the pool, so `minimum` is 0
+        # exactly as `Decision.default_answer`'s own "choose nobody" already
+        # treats it.
+        minimum = decision.amount if decision.exact else 0
+        return [
+            build(decision_player_candidates=decision.players, x_range=(minimum, decision.amount))
+        ]
+
     if decision.kind is DecisionKind.CHOOSE_TARGETS:
         maximum = (
             decision.target_maximum
@@ -1672,7 +1696,38 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
     if decision.kind in (DecisionKind.SCRY, DecisionKind.SURVEIL):
         return [build(decision_candidates=decision.cards, x_range=(0, len(decision.cards)))]
 
-    return []  # pragma: no cover - every DecisionKind is handled above
+    return []  # pragma: no cover - _DECISION_ANSWER_KINDS below makes this unreachable
+
+
+#: Every `DecisionKind` `decision_answers` has a branch for, kept in sync with
+#: the `if`/`elif` chain above by the `assert` right below it - CR 701.34a's
+#: own `CHOOSE_PLAYERS` reached the function's final `return []` with no
+#: branch of its own once, offering *no* legal action for a genuinely pending
+#: decision and hanging the game; nothing short of checking every member of
+#: the enum against the branches actually written catches that again. Mirrors
+#: `machines/decisions.py`'s own `_ANSWER_FIELD_FOR_KIND` assertion for the
+#: identical reason.
+_DECISION_ANSWER_KINDS = frozenset(
+    {
+        DecisionKind.DECLARE_ATTACKERS,
+        DecisionKind.DECLARE_BLOCKERS,
+        *_BOOLEAN_DECISION_KINDS,
+        DecisionKind.PAY_ENERGY_AMOUNT,
+        DecisionKind.PAY_LIFE_AMOUNT,
+        DecisionKind.CHOOSE_A_QUALITY,
+        DecisionKind.CHOOSE_A_MODE,
+        DecisionKind.CHOOSE_CARDS,
+        DecisionKind.CHOOSE_PLAYERS,
+        DecisionKind.CHOOSE_TARGETS,
+        DecisionKind.ASSIGN_COMBAT_DAMAGE,
+        DecisionKind.ORDER_TRIGGERS,
+        DecisionKind.SCRY,
+        DecisionKind.SURVEIL,
+    }
+)
+assert set(DecisionKind) == _DECISION_ANSWER_KINDS, (
+    "every DecisionKind needs a decision_answers branch - see _DECISION_ANSWER_KINDS"
+)
 
 
 # ---------------------------------------------------------------------------

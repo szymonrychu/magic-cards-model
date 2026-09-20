@@ -620,12 +620,32 @@ class TargetRequirement(EngineModel):
             return f"{self.phrase} can only target a player, not {target.name}"
         if self.excludes_source and source_id is not None and target.id == source_id:
             return f"{self.phrase} cannot target {target.name}, which this is on"
-        if self.or_any_spell and target.zone is Zone.STACK:
-            # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
-            # second half of a two-kind noun list - see `or_any_spell`. Nothing
-            # further to check: the phrase named no type for this half.
-            return None
-        if target.zone not in self.zones:
+        # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
+        # second half of a two-kind noun list - see `or_any_spell`. The phrase
+        # names no card type or zone for this half, so those two checks are
+        # skipped for it - but a *shared* trailing clause ("target spell or
+        # permanent **with mana value 1 or greater**", Divide by Zero;
+        # "target spell or permanent **that's red or green**", Aether Gust)
+        # binds both halves of the disjunction at once and is not part of
+        # either noun's own type restriction, so a comparison or color check
+        # still runs for a spell on the stack exactly as it does for a
+        # permanent.
+        #
+        # A supertype/subtype restriction is different: Icy Reception's own
+        # "target creature or **legendary** spell" reads "legendary" as the
+        # *second* item's own leading adjective (`_read_adjectives`'
+        # per-item loop), not a trailing clause about the whole compound -
+        # but `required_supertypes`/`required_subtypes` hold one shared
+        # value for the whole requirement with no record of which disjunct
+        # it was read for, so by the time this runs there is no way to tell
+        # "legendary spell" apart from a genuinely shared "target legendary
+        # creature or spell" (a shape the pool does not print, but nothing
+        # here could rule out either way). The safe direction is the one
+        # that matches every printing actually seen: exempt the spell half,
+        # exactly as it always was, rather than assume a per-item adjective
+        # was meant to bind both.
+        spell_on_stack = self.or_any_spell and target.zone is Zone.STACK
+        if not spell_on_stack and target.zone not in self.zones:
             wanted = " or ".join(sorted(zone.value for zone in self.zones))
             return (
                 f"{self.phrase} needs a target in the {wanted}, "
@@ -644,7 +664,7 @@ class TargetRequirement(EngineModel):
                     f"{self.phrase} needs a card exiled with this permanent, "
                     f"and {target.name} is not one"
                 )
-        if self.card_types or self.excluded_card_types:
+        if not spell_on_stack and (self.card_types or self.excluded_card_types):
             current_types = set(self._current_types(target, game))
             if self.card_types and not (current_types & self.card_types):
                 wanted = " or ".join(sorted(kind.value for kind in self.card_types))
@@ -658,24 +678,33 @@ class TargetRequirement(EngineModel):
                     f"{self.phrase} cannot target {with_indefinite_article(unwanted)}, "
                     f"and {target.name} is one"
                 )
-        if self.required_supertypes and not (
-            set(self._current_supertypes(target, game)) & self.required_supertypes
+        if (
+            not spell_on_stack
+            and self.required_supertypes
+            and not (set(self._current_supertypes(target, game)) & self.required_supertypes)
         ):
             wanted = " or ".join(sorted(kind.value for kind in self.required_supertypes))
             return (
                 f"{self.phrase} needs {with_indefinite_article(wanted)} permanent, "
                 f"and {target.name} is not one"
             )
-        if self.excluded_supertypes and (
-            set(self._current_supertypes(target, game)) & self.excluded_supertypes
+        if (
+            not spell_on_stack
+            and self.excluded_supertypes
+            and (set(self._current_supertypes(target, game)) & self.excluded_supertypes)
         ):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
             return (
                 f"{self.phrase} cannot target {with_indefinite_article(unwanted)} permanent, "
                 f"and {target.name} is one"
             )
-        if self.required_subtypes and not any(
-            word.lower() in self.required_subtypes for word in self._current_subtypes(target, game)
+        if (
+            not spell_on_stack
+            and self.required_subtypes
+            and not any(
+                word.lower() in self.required_subtypes
+                for word in self._current_subtypes(target, game)
+            )
         ):
             wanted = " or ".join(sorted(self.required_subtypes))
             return (
@@ -2092,8 +2121,8 @@ _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
 #: Desert Fang's, and Lich's Relic's own reflexive consequence, all sharing
 #: this one grammar. CR 601.2c/603.3d target *every* instance of the word
 #: "target" a spell or ability's text prints, and "for each opponent" prints
-#: one such instance per opponent (CR 102.2's "each other player in the
-#: game" - not fixed at two), which the ordinary word-scan below cannot
+#: one such instance per opponent (CR 102.3's "opponents are all players not
+#: on their team" - not fixed at two), which the ordinary word-scan below cannot
 #: express: it reads one `TargetRequirement` per literal "target" word in
 #: the text, and this sentence prints only one such word regardless of how
 #: many opponents there are. Special-cased ahead of that scan the same way
@@ -2900,7 +2929,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     #: creature spell" and "target creature or spell" differ by this word and
     #: by nothing else - see `TargetRequirement.or_any_spell`. Left `True`
     #: across an intervening per-item adjective (Icy Reception's "creature or
-    #: **legendary** spell" - CR 700.6's supertype word sits between the "or"
+    #: **legendary** spell" - CR 205.4a's supertype word sits between the "or"
     #: and the noun it belongs to), since the adjective is part of the same
     #: item as the noun that follows it, not a fresh item of its own.
     after_conjunction = False
@@ -3707,7 +3736,24 @@ _WITH_COUNTER_RE = re.compile(
 #: goes on to do. Without this cut, dropping `_WITH_KEYWORD_RE`'s old
 #: end-anchor made "with flying" match Jolrael's *effect* text and wrongly
 #: refuse every land without flying already on it as an illegal target.
-_TARGET_CLAUSE_VERB_RE = re.compile(r"\b(?:gains?|gets?|becomes?|loses?)\b", re.IGNORECASE)
+#:
+#: "`<verb>` `<destination>` the battlefield" joins the same vocabulary for
+#: the identical reason, one preposition later: Persist's "Return target
+#: nonlegendary creature card from your graveyard **to the battlefield**
+#: with a -1/-1 counter on it." and Daydream's "..., then return that card
+#: **to the battlefield** under its owner's control with a +1/+1 counter on
+#: it." both put their own counter clause after this phrase, describing the
+#: counter the return is about to place - CR 122.2 has already stripped any
+#: the card carried before it changed zones, so a graveyard or exiled card
+#: never has one to be restricted by. No target's own restrictive clause in
+#: the pool ever contains "to the battlefield" (a target is described by what
+#: it *is*, never by where an effect is about to move it), so this is a safe
+#: general cutoff, not a card-specific one - proven on Makeshift Mannequin's
+#: differently-worded, differently-named ("mannequin") counter of the same
+#: shape.
+_TARGET_CLAUSE_VERB_RE = re.compile(
+    r"\b(?:gains?|gets?|becomes?|loses?|(?:to|onto)\s+the\s+battlefield)\b", re.IGNORECASE
+)
 
 
 def _before_target_clause_verb(text: str) -> str:
@@ -3814,10 +3860,12 @@ def _extract_attacked_this_turn(rest: str) -> tuple[bool, str]:
 
 
 #: "target creature that entered this turn" (Mabel, Valley Hero's trigger;
-#: Gallia, the Merrymaker's activated ability) - CR 603.6d's per-turn
-#: historical fact ("this turn" always means the current turn, regardless of
-#: how many times control of the permanent or of priority has changed),
-#: read the identical way `_ATTACKED_THIS_TURN_RE` reads its own "that
+#: Gallia, the Merrymaker's activated ability) - a per-turn historical fact
+#: ("this turn" always means the current turn, regardless of how many times
+#: control of the permanent or of priority has changed; no single CR number
+#: states this generally - CR 500.1's turn structure is the closest numbered
+#: rule, and this comment does not claim it says more than that), read the
+#: identical way `_ATTACKED_THIS_TURN_RE` reads its own "that
 #: attacked this turn": stripped out here, enforced at
 #: `_rejects_entered_this_turn` against the turn number `CardState.
 #: turn_entered` already carries (`Game.turn.turn_number` is the "turn

@@ -613,6 +613,38 @@ def test_pending_decision_gives_exactly_its_legal_answers():
     assert legal_actions(game, "bob", pending=pending) == []
 
 
+def test_pending_choose_players_offers_the_candidate_players_not_nothing():
+    """`decision_answers` had no branch for `CHOOSE_PLAYERS` and the kind was
+    not in `_BOOLEAN_DECISION_KINDS` either, so the function fell all the way
+    through to its own `return []` - a pending proliferate's own player
+    question (CR 701.34a's "any number of ... players") offered no legal
+    action at all, hanging the game. Real pause path: `game.ask` itself
+    raises `DecisionPending`, exactly as CR 701.34a's `Game.proliferate`
+    reaches it - nothing here pre-scripts an answer."""
+    scenario = Scenario().player("alice").player("bob").build()
+    game = scenario.game
+    game.decisions.pause_when_unanswered = True
+    decision = Decision(
+        kind=DecisionKind.CHOOSE_PLAYERS,
+        player="alice",
+        prompt="choose any number of players to proliferate",
+        players=("alice", "bob"),
+        amount=2,
+        exact=False,
+    )
+
+    with pytest.raises(DecisionPending) as excinfo:
+        game.ask(decision)
+
+    pending = excinfo.value.pending
+    actions = legal_actions(game, "alice", pending=pending)
+    assert actions
+    assert all(a.kind is ActionKind.ANSWER_DECISION for a in actions)
+    (action,) = actions
+    assert set(action.decision_player_candidates) == {"alice", "bob"}
+    assert action.x_range == (0, 2)
+
+
 # -- the two pure Game entry points requirement 4 asks for ------------------
 
 

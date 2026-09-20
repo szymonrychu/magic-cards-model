@@ -4104,14 +4104,18 @@ def _strip_ability_word(sentence: str) -> str:
 
 
 def _effect_sentences(
-    oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
+    oracle_text: str | None,
+    *,
+    static_only: bool = False,
+    card_name: str | None = None,
+    legendary: bool = True,
 ) -> list[str]:
     """`_effect_sentences_uncached`, memoised on every argument - the battlefield
     sweep asks it for every permanent on every board computation, and the answer
     depends on nothing but the printed text and these flags. Each caller gets a
     list of its own, so nobody can edit what the next caller reads.
     """
-    return list(_effect_sentences_memo(oracle_text, static_only, card_name))
+    return list(_effect_sentences_memo(oracle_text, static_only, card_name, legendary))
 
 
 def resolution_effect_sentences(text: str | None) -> list[str]:
@@ -4133,15 +4137,21 @@ def resolution_effect_sentences(text: str | None) -> list[str]:
 
 @functools.lru_cache(maxsize=16384)
 def _effect_sentences_memo(
-    oracle_text: str | None, static_only: bool, card_name: str | None
+    oracle_text: str | None, static_only: bool, card_name: str | None, legendary: bool
 ) -> tuple[str, ...]:
     return tuple(
-        _effect_sentences_uncached(oracle_text, static_only=static_only, card_name=card_name)
+        _effect_sentences_uncached(
+            oracle_text, static_only=static_only, card_name=card_name, legendary=legendary
+        )
     )
 
 
 def _effect_sentences_uncached(
-    oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
+    oracle_text: str | None,
+    *,
+    static_only: bool = False,
+    card_name: str | None = None,
+    legendary: bool = True,
 ) -> list[str]:
     """Every sentence a continuous effect could come from, off a card's own
     printed text.
@@ -4177,7 +4187,9 @@ def _effect_sentences_uncached(
     whether or not it happens to parse.
     """
     return _fold_retention_clauses(
-        layer_readable_sentences(oracle_text, static_only=static_only, card_name=card_name)
+        layer_readable_sentences(
+            oracle_text, static_only=static_only, card_name=card_name, legendary=legendary
+        )
     )
 
 
@@ -5602,8 +5614,12 @@ def _source_line_for(source: CardState, sentence: str) -> str:
             continue
         if line == sentence:
             return line
+        source_card = getattr(source, "card", None)
+        legendary = source_card is not None and Supertype.LEGENDARY in source_card.supertypes
         normalized = _strip_ability_word(
-            self_normalized_effect_text(source.name, _REMINDER_TEXT_RE.sub("", line).strip())
+            self_normalized_effect_text(
+                source.name, _REMINDER_TEXT_RE.sub("", line).strip(), legendary=legendary
+            )
         )
         if normalized == sentence or normalized.startswith(sentence):
             return line
@@ -6214,7 +6230,12 @@ def quoted_ability_grants(
     # handful that could possibly matter.
     if not text_to_read or '"' not in text_to_read:
         return grantable, wanted
-    for sentence in _effect_sentences(text_to_read, static_only=True, card_name=source.name):
+    for sentence in _effect_sentences(
+        text_to_read,
+        static_only=True,
+        card_name=source.name,
+        legendary=Supertype.LEGENDARY in source.card.supertypes,
+    ):
         normalized = _strip_ability_word(_normalize_duration_first(sentence))
         if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(normalized):
             text = (match.group("granted") or "").strip()
@@ -7847,7 +7868,11 @@ def _split_per_color_grants(clauses: str) -> list[tuple[str, Color]] | None:
 
 
 def parsed_layer_effects(
-    oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
+    oracle_text: str | None,
+    *,
+    static_only: bool = False,
+    card_name: str | None = None,
+    legendary: bool = True,
 ) -> EffectBuilder | None:
     """Every sentence of `oracle_text` that is one of the generalised shapes
     above, combined into one builder - or `None` if none of them matched at all.
@@ -7864,7 +7889,9 @@ def parsed_layer_effects(
     """
     builders = [
         builder
-        for sentence in _effect_sentences(oracle_text, static_only=static_only, card_name=card_name)
+        for sentence in _effect_sentences(
+            oracle_text, static_only=static_only, card_name=card_name, legendary=legendary
+        )
         if (builder := _parse_layer_sentence(sentence)) is not None
     ]
     if not builders:
@@ -7915,7 +7942,11 @@ def parsed_layer_effects(
 
 
 def looks_like_unparsed_layer_effect(
-    oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
+    oracle_text: str | None,
+    *,
+    static_only: bool = False,
+    card_name: str | None = None,
+    legendary: bool = True,
 ) -> bool:
     """True if some sentence of `oracle_text` reads like one of the
     pump/keyword-grant/anthem shapes above but did not fully match - the
@@ -7933,7 +7964,9 @@ def looks_like_unparsed_layer_effect(
     return any(
         _LOOKS_LIKE_LAYER_EFFECT_RE.match(_normalize_duration_first(sentence))
         and _parse_layer_sentence(sentence) is None
-        for sentence in _effect_sentences(oracle_text, static_only=static_only, card_name=card_name)
+        for sentence in _effect_sentences(
+            oracle_text, static_only=static_only, card_name=card_name, legendary=legendary
+        )
     )
 
 
@@ -8816,8 +8849,11 @@ def _granted_ability_effects(source: CardState) -> EffectBuilder | None:
     permanent, and a permanent carrying two different granted quoted layer
     abilities at once would need it.
     """
+    legendary = Supertype.LEGENDARY in source.card.supertypes
     for text in source.granted_ability_texts:
-        builder = parsed_layer_effects(text, static_only=False, card_name=source.name)
+        builder = parsed_layer_effects(
+            text, static_only=False, card_name=source.name, legendary=legendary
+        )
         if builder is not None:
             return builder
     return None
@@ -8887,9 +8923,12 @@ def effects_for(
     either way (the ability text is a subset of that text). The only new
     outcome is the granted one.
     """
+    legendary = Supertype.LEGENDARY in source.card.supertypes
     builder = LAYER_EFFECTS.get(source.name)
     if builder is None and ability_text:
-        builder = parsed_layer_effects(ability_text, static_only=static_only, card_name=source.name)
+        builder = parsed_layer_effects(
+            ability_text, static_only=static_only, card_name=source.name, legendary=legendary
+        )
     if builder is None and not static_only:
         builder = _granted_ability_effects(source)
     # `oracle_text` reads the up face (CR 712.8d/712.8f); `card.oracle_text`
@@ -8908,12 +8947,14 @@ def effects_for(
     # read, so it is added beside whatever the text produced.
     keyword_statics = _impending_not_a_creature(source, timestamp) if static_only else []
     if builder is None:
-        builder = parsed_layer_effects(text, static_only=static_only, card_name=source.name)
+        builder = parsed_layer_effects(
+            text, static_only=static_only, card_name=source.name, legendary=legendary
+        )
     if builder is None:
         if (
             notices is not None
             and looks_like_unparsed_layer_effect(
-                text, static_only=static_only, card_name=source.name
+                text, static_only=static_only, card_name=source.name, legendary=legendary
             )
             # The board is recomputed continually (CR 613.5), so the same
             # unreadable permanent is asked about over and over - record it

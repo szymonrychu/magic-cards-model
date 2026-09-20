@@ -93,6 +93,7 @@ from magic_cards_model.machines.abilities import (  # noqa: E402
     AbilityKind,
     ActivatedAbility,
     TriggeredAbility,
+    _strip_reminder,
     keyword_abilities,
     parse_abilities,
     parse_mana_abilities,
@@ -772,16 +773,29 @@ def _self_enters_line_category(printing: Card, text: str) -> str | None:
         if effect.kind in ENTERS_KINDS
         and effect.self_replacement
         # `.raw` is "the whole ability paragraph as printed, reminder text
-        # included" (`ReplacementEffect`'s own docstring) - by design, for
-        # reporting - while `_static_ability_category`'s `text` argument is
-        # `parse_abilities`'s per-sentence line with the reminder already
-        # stripped, exactly matching `.text` ("the one sentence this effect
-        # was parsed from, reminder text removed"). Comparing against `.raw`
-        # made every reminder-carrying "enters prepared" line (every one in
-        # the pool prints the CR 722.3a reminder) fail this match and fall
-        # through to `STATIC_UNAUDITED`, even on cards genuinely proven by a
-        # scenario test (Emergency Phytomedic, `test_prepare.py`).
-        and effect.text.strip() == text.strip()
+        # included" (`ReplacementEffect`'s own docstring), and `_static_
+        # ability_category`'s own `text` argument is `parse_abilities`'s
+        # line with the reminder already stripped by the identical `_strip_
+        # reminder` used here - comparing the two on equal footing this way
+        # is what makes a match possible at all regardless of how many
+        # sentences the paragraph holds.
+        #
+        # Comparing against `.text` alone ("the one sentence this effect was
+        # parsed from") instead broke every *multi*-sentence paragraph:
+        # Blood Crypt's "As this land enters, you may pay 2 life. If you
+        # don't, it enters tapped." parses into two effects, each `.text`
+        # only its own half of the sentence, so neither ever equalled the
+        # whole two-sentence `text` and both silently missed this match - 18
+        # pool cards' worth of shocklands, Port Town, Sunken Citadel and
+        # their like moved from `HANDLED` to `STATIC_UNAUDITED` this way,
+        # with nothing about their actual runtime behaviour having changed.
+        # Comparing against bare `.raw` (the shape before that regression)
+        # broke the opposite case instead: every reminder-carrying
+        # single-sentence paragraph ("enters prepared", CR 722.3a's own
+        # reminder printed right after it) failed to match because `.raw`
+        # still carried the reminder `text` did not. Stripping the reminder
+        # off `.raw` before comparing answers both at once.
+        and _strip_reminder(effect.raw)[0] == text.strip()
     ]
     if not self_kinds:
         return None

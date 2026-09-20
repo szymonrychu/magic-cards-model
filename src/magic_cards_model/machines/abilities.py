@@ -2145,13 +2145,33 @@ def self_reference_pattern(name: str) -> str:
 _EPITHET_BOUNDARY_WORDS = ("the", "of")
 
 
-def self_reference_names(card_name: str) -> tuple[str, ...]:
+def self_reference_names(card_name: str, *, legendary: bool = True) -> tuple[str, ...]:
     """Every string CR 201.5/201.5c lets `card_name`'s own printed text use to
     mean itself, longest first: the full name, the face before a `//`, the
-    short form before a comma (Grist, the Hunger Tide -> Grist), an epithet
-    short form for a no-comma legend (`<Name> the/of <Epithet>` -> `<Name>`),
-    and a bare short form for a plain two-word name with no comma or epithet
-    word at all (`Ajani Resolute` -> `Ajani`, CR 201.5c).
+    short form before a comma (Grist, the Hunger Tide -> Grist), and - only
+    for a legendary permanent (`legendary=True`, the default a caller with no
+    supertype to check keeps) - an epithet short form for a no-comma legend
+    (`<Name> the/of <Epithet>` -> `<Name>`) and a bare short form for a plain
+    two-word name with no comma or epithet word at all (`Ajani Resolute` ->
+    `Ajani`, CR 201.5c).
+
+    **The epithet and bare-short forms are a legendary-permanent
+    convention.** Every printing this module has ever seen use either shape
+    to name itself is a legendary creature or planeswalker (CR 201.5c gives
+    a character its own "call sign"); a non-legendary card's first word is
+    an ordinary English or Magic vocabulary word far more often than it is
+    the card naming itself - Eldrazi Temple's "cast colorless **Eldrazi**
+    spells" names CR 205.3m's creature type, Thopter Assembly's "create ...
+    **Thopter** artifact creature tokens" names the token's own type, and
+    Fire Magic's own Tiered mode labels ("**Fire** — {0} — ...") are CR
+    700.2h's own modal cost-tier names - none of the three is this card
+    naming itself, and all three used to be rewritten to "this permanent" as
+    though they were. `legendary=False` from a caller that knows the card's
+    own supertypes (CR 205.4a) turns both shapes off; the full name and the
+    comma-shortened short form stay available regardless, since CR 201.5's
+    plain "refers to the object it's on by name" and Oracle's own comma
+    convention are not legendary-only the way the epithet and bare-word
+    shortenings are.
 
     Longest first is what lets a caller building a find-and-replace out of
     this win the race a shorter candidate would otherwise lose: "Aerid
@@ -2185,7 +2205,7 @@ def self_reference_names(card_name: str) -> tuple[str, ...]:
     if "," in front:
         candidates.add(front.split(",", 1)[0].strip())
     words = front.split(" ")
-    if (
+    if legendary and (
         len(words) >= 3
         and words[1].lower() in _EPITHET_BOUNDARY_WORDS
         or (
@@ -2198,7 +2218,7 @@ def self_reference_names(card_name: str) -> tuple[str, ...]:
     return tuple(sorted((name for name in candidates if name), key=len, reverse=True))
 
 
-def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
+def self_normalized_effect_text(card_name: str, effect_text: str, *, legendary: bool = True) -> str:
     """`effect_text` with every CR 201.5/201.5c self-reference to `card_name`
     rewritten to CR 700.7's own "this permanent" - The Filigree Sylex's "Put
     an oil counter on The Filigree Sylex.", Grist, the Hunger Tide's own "put
@@ -2221,9 +2241,15 @@ def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
     ability is printed on). A future "empower `<name>`" keyword sharing a
     planeswalker's own short name would hit the identical collision, so the
     guard is on the keyword phrase, not on the literal word "Jace".
+
+    `legendary` (default `True`, preserving this function's own long-
+    standing behaviour for a caller with no supertype to check) gates
+    `self_reference_names`' own epithet and bare-two-word shortenings -
+    see that function's docstring for why those two are a legendary-only
+    convention and the full/comma-shortened forms are not.
     """
     normalized = effect_text
-    for name in self_reference_names(card_name):
+    for name in self_reference_names(card_name, legendary=legendary):
         normalized = re.sub(self_reference_pattern(name), "this permanent", normalized)
     return normalized
 
@@ -2234,6 +2260,7 @@ def layer_readable_sentences(
     *,
     static_only: bool = False,
     card_name: str | None = None,
+    legendary: bool = True,
 ) -> list[str]:
     """`_layer_readable_sentences_uncached`, memoised - see that for what the
     sentences are.
@@ -2245,17 +2272,27 @@ def layer_readable_sentences(
     own, so no caller can edit what the next one reads.
     """
     return list(
-        _layer_readable_sentences_memo(text, tuple(known_keywords or ()), static_only, card_name)
+        _layer_readable_sentences_memo(
+            text, tuple(known_keywords or ()), static_only, card_name, legendary
+        )
     )
 
 
 @functools.lru_cache(maxsize=16384)
 def _layer_readable_sentences_memo(
-    text: str | None, known_keywords: tuple[str, ...], static_only: bool, card_name: str | None
+    text: str | None,
+    known_keywords: tuple[str, ...],
+    static_only: bool,
+    card_name: str | None,
+    legendary: bool,
 ) -> tuple[str, ...]:
     return tuple(
         _layer_readable_sentences_uncached(
-            text, list(known_keywords), static_only=static_only, card_name=card_name
+            text,
+            list(known_keywords),
+            static_only=static_only,
+            card_name=card_name,
+            legendary=legendary,
         )
     )
 
@@ -2266,6 +2303,7 @@ def _layer_readable_sentences_uncached(
     *,
     static_only: bool = False,
     card_name: str | None = None,
+    legendary: bool = True,
 ) -> list[str]:
     """Every sentence of `text` this module's own line classifier says a
     continuous effect (CR 611.2, CR 611.3) could plausibly come from.
@@ -2355,7 +2393,9 @@ def _layer_readable_sentences_uncached(
                 sentence = sentence.strip()
                 if sentence:
                     if card_name:
-                        sentence = self_normalized_effect_text(card_name, sentence)
+                        sentence = self_normalized_effect_text(
+                            card_name, sentence, legendary=legendary
+                        )
                     sentences.append(sentence)
     return sentences
 

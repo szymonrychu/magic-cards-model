@@ -3990,12 +3990,14 @@ def _classify_choice(replacement_text: str) -> ChoiceKind | None:
 
 class UnwiredChoiceNotice(EngineModel):
     """A card's own sentence reads back "the chosen color/card name/creature
-    type" (CR 614.12a's choice, once made), but this wave only performs the
-    one shape that adds mana - `machines/effects.py`'s "adds an additional
-    ..." clause. Recorded instead of the card silently doing nothing, the
-    same shape `AnaphoricClauseNotice`/`ConditionalClauseNotice`/
-    `LayerNotice` already use elsewhere in this codebase for a clause this
-    read but did not perform.
+    type" (CR 614.12a's choice, once made), but this wave only performs two
+    shapes that add mana - `machines/effects.py`'s "adds an additional ..."
+    clause, and `machines/abilities.ManaAbility`'s own "{T}: Add ... mana of
+    the chosen color" printed ability (Room of Refuge, Sunken Citadel).
+    Recorded instead of the card silently doing nothing, the same shape
+    `AnaphoricClauseNotice`/`ConditionalClauseNotice`/`LayerNotice` already
+    use elsewhere in this codebase for a clause this read but did not
+    perform.
 
     Three of the pool's seven "as this enters, choose ..." cards land here:
 
@@ -4029,10 +4031,11 @@ class UnwiredChoiceNotice(EngineModel):
     its own; only the player-targeted and cost/restriction shapes needed a
     notice built here.
 
-    None of the four attempted consumers are wired this wave - CR 614.12a's
-    choice itself is (`CardState.choice`), and the one payoff this wave
-    performs end to end is the mana clause (Utopia Sprawl, Leyline of
-    Abundance, Badgermole Cub).
+    None of the four attempted consumers listed above is wired - CR
+    614.12a's choice itself is (`CardState.choice`), and the two payoffs
+    performed end to end are the "adds an additional" mana clause (Utopia
+    Sprawl, Leyline of Abundance, Badgermole Cub) and the printed "{T}: Add
+    ... mana of the chosen color" ability (Room of Refuge, Sunken Citadel).
     """
 
     source_id: UUID
@@ -4074,6 +4077,21 @@ _LAYER_HANDLED_SUBJECT_RE = re.compile(
     r"(?:has|have|gets?|gains?)\b",
     re.IGNORECASE,
 )
+#: The third shape this engine performs end to end: "{T}: Add [N] mana of
+#: the chosen color." (Room of Refuge, Sunken Citadel), CR 614.12a's choice
+#: bound straight into the mana ability itself rather than into a triggered
+#: "adds an additional" rider - `machines/abilities.ManaAbility.uses_chosen_
+#: color`, read against `CardState.choice` by both `Game.activate_ability`'s
+#: own CR 605.3b fast path and `machines/cost.py`'s auto-tap solver
+#: (`_mana_narrowings`), so a colour other than the chosen one is refused
+#: and the chosen one is the only one ever produced. Excluded here so a
+#: wired consumer stops being reported as an unwired one; "mana of the
+#: chosen color" alone (no leading "add") is left unexcluded, since nothing
+#: in the pool prints the anaphora that way without the mana verb in front
+#: of it.
+_WIRED_CHOSEN_COLOR_MANA_HINT_RE = re.compile(
+    r"\badds? (?:[a-z]+|\d+) mana of the chosen color\b", re.IGNORECASE
+)
 
 
 def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNotice]:
@@ -4093,6 +4111,7 @@ def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNo
             sentence.lower().startswith("as ")
             or _WIRED_MANA_CLAUSE_HINT_RE.search(sentence)
             or _WIRED_NAMED_COST_INCREASE_HINT_RE.search(sentence)
+            or _WIRED_CHOSEN_COLOR_MANA_HINT_RE.search(sentence)
             or _LAYER_HANDLED_SUBJECT_RE.match(sentence)
         ):
             continue

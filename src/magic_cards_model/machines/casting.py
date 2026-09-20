@@ -2366,6 +2366,23 @@ class Casting(EngineModel):
     """Whether this spell's blight cost was paid (CR 701.68a), set by
     `pay_blight` - read by whatever linked ability the card's own printed
     text carries ("If this spell's additional cost was paid, ...")."""
+    paying_life_for_additional_cost: frozenset[int] = Field(default_factory=frozenset)
+    """Which of CR 601.2b's "[cost] or pay [mana]" additional-cost sentences
+    (`_OR_PAY_TAIL`, indexed the same way `additional_cost_phrases` orders
+    them) the caster is paying with a life-total primary instead of the mana
+    alternative - Redirect Lightning's own "pay 5 life or pay {2}".
+
+    `_additional_cost_primary_alternatives` otherwise infers which side is
+    being paid from whether objects were nominated for the primary's own
+    `ComponentKind` pool (`sacrificing`, `discarding`, ...) - the same way
+    `sacrificing=[...]` already says "pay Fling's plain sacrifice cost" with
+    no separate flag. A life payment has no object to nominate at all, so
+    that inference always saw an empty pool and silently fell through to
+    the mana half no matter what the caster wanted - the payer could not
+    choose. This is `ComponentKind.PAY_LIFE`'s own explicit twin of that
+    object-pool inference, read the identical way `blight_paid` already
+    flags a choice with no object behind it either.
+    """
     gift_promised: bool = False
     """Whether this spell's gift was promised (CR 702.174k), set by
     `pay_gift`."""
@@ -4313,14 +4330,16 @@ class Casting(EngineModel):
         the two cards' identical clauses are the same mechanic rather than
         two.
 
-        CR 602.2b's targets-before-cost order (the same order Dragonfire
-        Blade's/Warrior's Blades' own per-target equip discount already
-        relies on, `machines/keywords.equip_activation`) is what makes this
-        askable at all: `self.targets` is already announced (CR 601.2c) by
-        the time CR 601.2f prices the spell, so "beyond the first" of
-        *however many targets were actually chosen* is simply
-        `len(self.targets) - 1`, floored at zero for a spell targeting one
-        thing or fewer.
+        CR 601.2's own targets-before-cost order - CR 601.2c announces
+        targets before CR 601.2f prices the spell - is what makes this
+        askable at all: `self.targets` is already announced by the time this
+        runs, so "beyond the first" of *however many targets were actually
+        chosen* is simply `len(self.targets) - 1`, floored at zero for a
+        spell targeting one thing or fewer. Dragonfire Blade's/Warrior's
+        Blades' own per-target equip discount (`machines/keywords.
+        equip_activation`) relies on the identical order for an *activated*
+        ability instead, which CR 602.2b makes CR 601.2b-i's own order for
+        casting a spell.
         """
         match = _COST_INCREASE_PER_TARGET_RE.search(self.spell.oracle_text or "")
         if match is None:
@@ -4453,6 +4472,12 @@ class Casting(EngineModel):
         its pool defaults to the mana half, exactly like an unblighted
         "blight N or pay {M}" already defaults to the mana (`blighted`).
 
+        A `ComponentKind.PAY_LIFE` primary (Redirect Lightning's own "pay 5
+        life or pay {2}") has no object to nominate at all, so the pool
+        inference alone could never choose it - `paying_life_for_additional_
+        cost`'s own explicit index set is read here too, and either one
+        picks the life half.
+
         Blight's own "or pay" sentences are excluded: they are resolved by
         `blight_paid`/`pay_blight`, never by this.
         """
@@ -4464,7 +4489,12 @@ class Casting(EngineModel):
             if or_pay is None:
                 continue
             component = cost_component_for_phrase(or_pay.group("primary"), self.caster)
-            if component is not None and pools.get(component.kind):
+            if component is None:
+                continue
+            if pools.get(component.kind) or (
+                component.kind is ComponentKind.PAY_LIFE
+                and index in self.paying_life_for_additional_cost
+            ):
                 chosen.add(index)
         return frozenset(chosen)
 
