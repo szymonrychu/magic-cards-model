@@ -71,6 +71,7 @@ from typing import Any, NamedTuple
 from ..models.action import (
     Action,
     ActionKind,
+    AdditionalCostOption,
     Affordability,
     ManaPlanEntry,
     SpliceOption,
@@ -92,6 +93,7 @@ from .casting import (
     keyword_cast_options,
     mandatory_additional_costs,
     marker_cast_options,
+    optional_additional_costs,
     play_permissions_on,
     splice_candidates,
     why_cannot_cast_a_land,
@@ -611,6 +613,16 @@ def _cast_action(
         modes=modes,
         x_range=x_range,
         splice_options=splice_options,
+        additional_cost_options=tuple(
+            AdditionalCostOption(
+                keyword=option.keyword,
+                cost=option.cost,
+                rule=option.rule,
+                repeatable=option.repeatable,
+                understood=option.understood,
+            )
+            for option in optional_additional_costs(card.card)
+        ),
     )
 
 
