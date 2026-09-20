@@ -10810,11 +10810,29 @@ class Game(EngineModel):
         It sits *below* `ability_index` and `modes` in precedence, because an
         activated ability's own effect text and a chosen mode's own text are
         both narrower than the face the mode or ability is printed on.
+
+        **`state.prepare_spell_face` is a fifth read**, checked right after
+        `ability_index` and ahead of everything else: CR 722.3c's exile copy
+        "has only the characteristics of that permanent's prepare spell",
+        the same face `Casting.base_cost`/`CardState.up_face` already read
+        for this exact copy - `targeting_profile(state.card)`'s own fallback
+        below reads the front permanent's text instead, since `state.card` is
+        still the two-face preparation card and nothing else here ever asks
+        `up_face`. Without this, `legal_targets` offered no target at all for
+        a prepared spell that targets (Seed Suture, Vicious Verse), because
+        `face_being_cast` needs an explicit `spell_face` name no caller had
+        any reason to pass for a copy that is not a split card or an
+        Adventure. No prepare spell in the pool is modal or split, so this
+        is checked unconditionally rather than raced against those two.
         """
         if ability_index is not None:
             ability = self.activated_abilities(state)[ability_index]
             effect = getattr(ability, "effect", None) or getattr(ability, "text", "")
             return profile_for_text(substitute_x(effect, x_value))
+        if state.prepare_spell_face:
+            prepare_face = state.card.prepare_spell
+            if prepare_face is not None:
+                return profile_for_text(substitute_x(prepare_face.oracle_text or "", x_value))
         modal = modal_profile(state.card)
         if modes and modal is not None:
             chosen = modal.resolve(
