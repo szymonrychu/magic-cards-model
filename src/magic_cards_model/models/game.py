@@ -2231,14 +2231,6 @@ class Game(EngineModel):
     "at least one" is ever asked. Cleared when a new turn begins, the same
     reset `spells_cast_this_turn` already gets."""
 
-    attacked_this_turn: SortedSet[UUID] = Field(default_factory=set)
-    """Which creatures (by id) have attacked this turn (CR 508.1), for
-    Hexhaven Dueling Arena's own "target creature that attacked this turn" -
-    a historical fact CR 511.3/514's end of combat/cleanup does not answer,
-    unlike `machines/combat.Combat`'s live attacking status. Recorded by
-    `Game.declare_attackers`. Cleared when a new turn begins, the same reset
-    `spells_cast_this_turn` already gets."""
-
     spells_cast_last_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """What `spells_cast_this_turn` held during the turn before this one.
 

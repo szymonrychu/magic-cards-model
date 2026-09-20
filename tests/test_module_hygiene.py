@@ -121,6 +121,50 @@ def test_no_duplicate_module_level_bindings():
     assert not violations, "duplicate module-level binding(s):\n" + "\n".join(violations)
 
 
+# -------------------------------------------------------------------- (a2)
+
+
+def _class_level_bindings(class_def: ast.ClassDef) -> dict[str, list[int]]:
+    """name -> every line it is bound on, directly in this class's own body -
+    the class-body twin of `_top_level_bindings` right above, which only
+    ever walked `tree.body` and so never saw a duplicate pydantic field: an
+    `AnnAssign`/`Assign` inside a `ClassDef` is invisible to a walk that
+    only reads the module's own top level. Deliberately not recursive into
+    a nested `if`/`try` inside the class body, the same restriction
+    `_top_level_bindings` applies at module scope.
+    """
+    bindings: dict[str, list[int]] = {}
+    for node in class_def.body:
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            bindings.setdefault(node.target.id, []).append(node.lineno)
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    bindings.setdefault(target.id, []).append(node.lineno)
+    return bindings
+
+
+def test_no_duplicate_field_in_one_class_body():
+    """No class declares the same field (or other class-body name) twice.
+
+    `Game.attacked_this_turn` was bound at two separate lines in the same
+    class body, an identical `SortedSet[UUID]` annotation and default at
+    each - Pydantic silently let the second declaration win (the same
+    "last binding wins" behaviour (a) already refuses at module level), with
+    nothing checking that the first one's own, more detailed docstring was
+    ever meant to be thrown away.
+    """
+    violations = []
+    for path in _iter_modules():
+        for node in ast.walk(_parse(path)):
+            if not isinstance(node, ast.ClassDef):
+                continue
+            for name, lines in _class_level_bindings(node).items():
+                if len(lines) > 1:
+                    violations.append(f"{_rel(path)}: `{node.name}.{name}` bound at lines {lines}")
+    assert not violations, "duplicate class-body binding(s):\n" + "\n".join(violations)
+
+
 # ---------------------------------------------------------------------- (b)
 
 
