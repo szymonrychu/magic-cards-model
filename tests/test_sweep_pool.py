@@ -974,3 +974,70 @@ def test_ajanis_anguish_is_not_a_second_misreport_of_the_same_shape():
         outcome.source: outcome.category for outcome in classify_clauses(card("Ajani's Anguish"))
     }
     assert by_source["triggered"] == HANDLED, by_source
+
+
+# -- `_self_enters_line_category` reads a multi-sentence "as this enters" --
+# -- paragraph, not only a single reminder-carrying sentence ---------------
+
+#: The 18 real pool printings a prior fix to `_self_enters_line_category`
+#: moved from `HANDLED` to `STATIC_UNAUDITED`: every one of them prints a
+#: two-sentence "As this `<permanent>` enters, ..." static line (a choice
+#: plus its own consequence), which `parse_replacement_effects` reads as two
+#: `ReplacementEffect`s, each `.text` only its own half of the sentence -
+#: comparing that against the *whole* two-sentence line (`_static_ability_
+#: category`'s own `text` argument) never matched either half, so the
+#: paragraph fell through to the honest-looking but wrong `STATIC_UNAUDITED`
+#: even though `Game`/`machines/replacement.py` already play every one of
+#: these correctly (`test_fra_lands.py`, `test_shockland_replacement.py` and
+#: their siblings already prove the runtime behaviour; this file is only
+#: about what the sweeper *reports*).
+_SELF_ENTERS_MULTI_SENTENCE_CARDS = (
+    "Blood Crypt",
+    "Breeding Pool",
+    "Godless Shrine",
+    "Hallowed Fountain",
+    "Overgrown Tomb",
+    "Sacred Foundry",
+    "Steam Vents",
+    "Stomping Ground",
+    "Temple Garden",
+    "Watery Grave",
+    "Port Town",
+    "Gilt-Leaf Palace",
+    "Sunken Citadel",
+    "Room of Refuge",
+    "Devouring Hellion",
+    "Rhizome Lurcher",
+    "Shimatsu the Bloodcloaked",
+    "Superior Spider-Man",
+)
+
+
+@pytest.mark.parametrize("name", _SELF_ENTERS_MULTI_SENTENCE_CARDS)
+def test_self_enters_multi_sentence_paragraphs_classify_as_handled(name):
+    category, clause = classify_card(card(name))
+    assert category == HANDLED, (name, clause)
+
+
+def test_self_enters_still_reports_a_reminder_carrying_single_sentence_as_handled():
+    """The shape the prior fix was originally written for must not regress
+    while fixing the multi-sentence one: "This creature enters prepared."
+    prints CR 722.3a's own reminder text immediately after it on the same
+    line, and still has to classify `HANDLED`."""
+    category, clause = classify_card(card("Emergency Phytomedic"))
+    assert category == HANDLED, clause
+
+
+def test_self_enters_line_category_does_not_match_an_unrelated_paragraph():
+    """The honesty check the other direction: `_self_enters_line_category`
+    must not credit a card for a paragraph it does not actually print -
+    the widened match still has to find the effect's own paragraph among
+    `printing`'s real replacement effects, not merely resemble it."""
+    from scripts.sweep_pool import _self_enters_line_category
+
+    printing = card("Blood Crypt")
+    result = _self_enters_line_category(
+        printing,
+        "As this land enters, you may pay 2 life. If you don't, it deals 2 damage to you.",
+    )
+    assert result is None
