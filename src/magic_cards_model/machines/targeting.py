@@ -3707,7 +3707,24 @@ _WITH_COUNTER_RE = re.compile(
 #: goes on to do. Without this cut, dropping `_WITH_KEYWORD_RE`'s old
 #: end-anchor made "with flying" match Jolrael's *effect* text and wrongly
 #: refuse every land without flying already on it as an illegal target.
-_TARGET_CLAUSE_VERB_RE = re.compile(r"\b(?:gains?|gets?|becomes?|loses?)\b", re.IGNORECASE)
+#:
+#: "`<verb>` `<destination>` the battlefield" joins the same vocabulary for
+#: the identical reason, one preposition later: Persist's "Return target
+#: nonlegendary creature card from your graveyard **to the battlefield**
+#: with a -1/-1 counter on it." and Daydream's "..., then return that card
+#: **to the battlefield** under its owner's control with a +1/+1 counter on
+#: it." both put their own counter clause after this phrase, describing the
+#: counter the return is about to place - CR 122.2 has already stripped any
+#: the card carried before it changed zones, so a graveyard or exiled card
+#: never has one to be restricted by. No target's own restrictive clause in
+#: the pool ever contains "to the battlefield" (a target is described by what
+#: it *is*, never by where an effect is about to move it), so this is a safe
+#: general cutoff, not a card-specific one - proven on Makeshift Mannequin's
+#: differently-worded, differently-named ("mannequin") counter of the same
+#: shape.
+_TARGET_CLAUSE_VERB_RE = re.compile(
+    r"\b(?:gains?|gets?|becomes?|loses?|(?:to|onto)\s+the\s+battlefield)\b", re.IGNORECASE
+)
 
 
 def _before_target_clause_verb(text: str) -> str:
