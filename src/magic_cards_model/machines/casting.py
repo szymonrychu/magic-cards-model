@@ -3406,6 +3406,71 @@ class Casting(EngineModel):
             self.choose_alternative_cost(TotalCost())
         return self.step
 
+    def _claim_zone_permission_if_unannounced(self) -> None:
+        """CR 601.2b's announcement, made at CR 601.2f for a caller that never
+        made it, when a `PlayPermission` is the only thing allowing this cast.
+
+        `_refuse_unless_allowed_from_its_zone` already lets such a cast
+        through: a live permission **is** CR 601.3's "a rule or effect allows
+        that player to cast it" the moment a resolving effect hands it out, so
+        unlike a keyword there is nothing further for CR 601.2b to name. That
+        leniency was one-sided, and the asymmetry was the defect (owner's
+        report, Ugin, Eye of the Storms' −11): the cast was legal under the
+        permission and *priced* without it, because `total_cost` reads
+        `alternative_cost`, which only `use_permission` ever set. Anything
+        driving `Casting` by hand - as opposed to `Game.cast` and
+        `magic_cards_model_api.engine_api.cast_card`, which both read
+        `play_permission_for` before CR 601.2a's move and call
+        `use_permission()` - paid the printed mana cost for a spell the
+        granting effect said costs nothing.
+
+        CR 118.9b is what makes claiming it for the caster right rather than
+        presumptuous: "Alternative costs are generally optional. An effect
+        that allows you to cast a spell may require a certain alternative cost
+        to be paid." Ugin's −11 allows the cast only "without paying their
+        mana costs", so paying the printed cost instead was never one of the
+        options that ability granted - declining the waiver would leave
+        nothing permitting the cast at all. That is also exactly where this
+        stops: Omniscience's CR 604.2 static grant (`static_free_cast_grant`)
+        is an ordinary optional alternative cost, because casting from your
+        hand is already legal without it, so it is left to
+        `use_alternative_cost` and this returns at the `Zone.HAND` guard.
+
+        Nothing else about the cost is touched. CR 118.9d: "If an alternative
+        cost is being paid to cast a spell, any additional costs, cost
+        increases, and cost reductions that affect that spell are applied to
+        that alternative cost" - `total_cost` applies all three to whatever
+        `base` is, so a tax and a printed "as an additional cost" sentence are
+        owed on a free cast exactly as they are on a paid one.
+
+        A permission whose `pays_mana_cost` is true (Ragavan's "you may cast
+        that card", warp's own second half) announces nothing at all here
+        beyond `permission_used`: the printed mana cost is the right cost, and
+        CR 118.9 never entered into it.
+
+        The step machine is deliberately not rewound to CR 601.2b for this.
+        `use_permission` goes through `_enter_modes`, which refuses once
+        targets have been announced (CR 601.2c) - the ordinary order for a
+        caller that reaches CR 601.2f at all - so the two fields are set
+        directly. CR 118.9a's "only one alternative cost" is upheld by the
+        guards above rather than by `choose_alternative_cost`: this runs only
+        when no keyword, permission or alternative cost was announced.
+        """
+        if self.origin_zone is Zone.HAND:
+            return
+        if self.keyword_used is not None or self.permission_used is not None:
+            return
+        if self.alternative_cost is not None:
+            return
+        permission = usable_play_permission(self.game, self._as_announced, self.caster)
+        if permission is None:
+            return
+        self.permission_used = permission
+        if not permission.pays_mana_cost:
+            # CR 118.9 / CR 107.3b: an alternative cost with nothing in it,
+            # which is not the same object as a cost of {0}.
+            self.alternative_cost = TotalCost().assign_payer(self.caster)
+
     def use_pitch_cost(
         self, *, x_value: int | None = None, choosing: list[CardState] | None = None
     ) -> CastingStep:
@@ -4682,6 +4747,7 @@ class Casting(EngineModel):
         additional: ManaCost | None,
         choices: list[int | None] | None,
     ) -> CostPayment:
+        self._claim_zone_permission_if_unannounced()
         self._advance_to(CastingStep.COST_DETERMINED)
         if x_value is not None:
             self.x_value = x_value

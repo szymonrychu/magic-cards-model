@@ -600,3 +600,245 @@ def test_without_the_permission_lightning_bolt_still_needs_red_mana():
     with pytest.raises(ValueError, match="cannot pay"):
         payment.tap_for_mana(forest, [Color.GREEN])
         payment.pay()
+
+
+# -- The waiver belongs to the permission, not to the announcement ---------
+#
+# Found live (owner's report, Ugin's −11): "the spells should be castable
+# from exile for free, but the engine kept tapping and paying some mana for
+# them. Not all, random-ish."
+#
+# Two of this engine's paths ask CR 601.3's question and then *claim* the
+# permission - `Game.cast` and `magic_cards_model_api.engine_api.cast_card`
+# both read `play_permission_for` before CR 601.2a's move and call
+# `use_permission()`. Every other caller that drives a `Casting` by hand does
+# not, and `Casting._refuse_unless_allowed_from_its_zone` lets that cast
+# through anyway: a live permission is CR 601.3's "a rule or effect allows
+# that player to cast it" the moment the resolving effect hands it out, so
+# nothing further has to be announced for the cast to be *legal*. What the
+# cost path then charged was the printed mana cost, because
+# `Casting.total_cost` read `alternative_cost`, which only `use_permission`
+# ever set - the same cast, legal under the waiver and priced without it.
+#
+# Every rule below was looked up this session (`mise run rules:find`):
+#
+# - **CR 118.9** - "An alternative cost is a cost listed in a spell's text,
+#   or applied to it from another effect, that its controller may pay rather
+#   than paying the spell's mana cost ... 'You may cast [this object] without
+#   paying its mana cost.'"
+# - **CR 118.9b** - "Alternative costs are generally optional. **An effect
+#   that allows you to cast a spell may require a certain alternative cost to
+#   be paid.**" That second sentence is why this is claimed for the caster
+#   rather than offered: Ugin's −11 allows the cast only "without paying
+#   their mana costs", so paying the printed cost instead is not one of the
+#   things that ability ever permitted. It is also why the waiver stops at a
+#   permission: Omniscience's CR 604.2 static grant costs nothing to decline,
+#   because casting from your hand was already legal without it.
+# - **CR 118.9a** - "Only one alternative cost can be applied to any one
+#   spell", so this only ever fires when nothing else was announced.
+# - **CR 118.9d** / **CR 601.2f** - "If an alternative cost is being paid ...
+#   any additional costs, cost increases, and cost reductions that affect
+#   that spell are applied to that alternative cost", and the total cost is
+#   "the mana cost or alternative cost ..., plus all additional costs and
+#   cost increases, and minus all cost reductions". The waiver covers the
+#   mana cost and nothing else, which is what the last two tests pin down.
+# - **CR 601.3** - "A player can begin to cast a spell only if a rule or
+#   effect allows that player to cast it."
+
+
+def test_a_free_cast_is_free_even_when_the_announcement_never_claimed_it():
+    """CR 118.9b: the permission required its own cost, so the cost applies.
+
+    The reported bug, at its smallest: a `Casting` driven without
+    `use_permission()`. It was allowed (CR 601.3's leniency) and priced at
+    Sol Ring's printed `{1}`, so a Mountain was tapped for a spell Ugin said
+    costs nothing.
+    """
+    scenario = _ugin_board(["Sol Ring", "Forest"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (sol_ring,) = _ultimate(scenario)
+
+    casting = scenario.cast("Sol Ring", from_zone=Zone.EXILE)
+    # No `use_permission()`, no `use_alternative_cost()`: exactly what every
+    # caller that is not `Game.cast` drives.
+    payment = casting.begin_paying()
+
+    assert str(casting.base_cost) == "{1}", "CR 118.9c: the printed cost is untouched"
+    assert str(casting.total_cost.mana) == ""
+    assert payment.shortfall is False
+    assert casting.permission_used is not None, "the permission is what allowed this cast"
+
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert sol_ring.zone is Zone.BATTLEFIELD
+    assert len(scenario.untapped_sources("Mountain", "Mountain")) == 2, "nothing was paid"
+
+
+def test_a_permission_that_charges_the_mana_cost_is_still_charged():
+    """The boundary in the other direction, on the same unannounced path.
+
+    Ragavan's trigger says "you may cast that card" and nothing about paying
+    nothing (`pays_mana_cost=True`), so CR 601.2f's total cost is the printed
+    `{R}` whether or not the announcement claimed the permission. A waiver
+    applied to every permission rather than to the ones that print one would
+    make this Bolt free.
+    """
+    scenario = _ragavan_board().build()
+    bolt = _connect(scenario)
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+
+    casting = scenario.cast("Lightning Bolt", username="alice", from_zone=Zone.EXILE)
+    casting.choose_targets(["bob"])
+    assert str(casting.total_cost.mana) == "{R}"
+
+    (mountain,) = scenario.untapped_sources("Mountain")
+    scenario.pay_with(casting.begin_paying(), mountain)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert bolt.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 15, "2 from Ragavan's own hit, 3 from the Bolt"
+
+
+def test_a_tax_is_still_paid_on_a_free_cast_that_never_claimed_the_permission():
+    """CR 118.9d: "any additional costs, cost increases, and cost reductions
+    that affect that spell are applied to that alternative cost."
+
+    Sphere of Resistance's "Spells cost {1} more to cast" is a cost increase,
+    not part of the mana cost, so it survives the waiver - the free cast owes
+    exactly `{1}`. Getting this wrong in the other direction (waiving the
+    whole total cost) is its own bug.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Sol Ring", "Forest"],
+            battlefield=[
+                "Ugin, Eye of the Storms",
+                "Sphere of Resistance",
+                "Mountain",
+                "Mountain",
+            ],
+        )
+        .player("bob", library=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (sol_ring,) = _ultimate(scenario)
+
+    casting = scenario.cast("Sol Ring", from_zone=Zone.EXILE)
+    payment = casting.begin_paying()
+    assert str(casting.total_cost.mana) == "{1}"
+
+    (mountain, _) = scenario.untapped_sources("Mountain", "Mountain")
+    scenario.pay_with(payment, mountain)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert sol_ring.zone is Zone.BATTLEFIELD
+    assert len(scenario.untapped_sources("Mountain")) == 1, "the tax was paid, once"
+
+
+# -- Generality: Ral, Leyline Prodigy's −8 ---------------------------------
+#
+# A different card, a different parser and a different sentence: "Exile the
+# top eight cards of your library. You may cast instant and sorcery spells
+# from among them this turn without paying their mana costs."
+# (`machines/effects._parse_exile_top_then_cast_types_free_this_turn_whole_
+# text`, read off the whole text rather than Ugin's clause pair, filtered by
+# card type, counted from the top of the library rather than searched for,
+# and durationed "this turn" rather than "until end of turn"). Nothing about
+# Ugin, and nothing an Ugin deck would ever play - if the waiver were fitted
+# to Ugin's own grant it would miss this one entirely.
+
+
+def _ral_ultimate(library: list[str]):
+    """Ral, transformed, ultimated: returns the scenario and what it exiled.
+
+    `transform` plus `add_counters` is how `test_ral_monsoon_mage.py` already
+    reaches the back face - CR 716.2b's own reasoning: the loyalty a real
+    flip would have left is state, not an event, so putting it there is the
+    same board.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Mountain", "Forest"],
+            library=library,
+            battlefield=["Ral, Monsoon Mage", "Mountain", "Mountain", "Mountain"],
+        )
+        .player("bob", library=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ral = scenario.find("Ral, Monsoon Mage", Zone.BATTLEFIELD)
+    ral.transform()
+    ral.add_counters(Counter.LOYALTY, 8)  # CR 606.6: the −8 needs eight
+    before = {state.id for state in scenario.game.exile}
+    scenario.activate(ral, index=2)
+    scenario.pass_until_resolved()
+    return scenario, [state for state in scenario.game.exile if state.id not in before]
+
+
+def test_rals_ultimate_free_cast_is_free_without_an_announcement_too():
+    """The same waiver, reached through a parser that shares no code with
+    Ugin's beyond `Game.grant_play_permission` itself."""
+    scenario, exiled = _ral_ultimate(["Lightning Bolt", "Forest"])
+
+    bolt = next(state for state in exiled if state.name == "Lightning Bolt")
+    permission = scenario.game.play_permission_for(bolt, "alice")
+    assert permission is not None
+    assert permission.pays_mana_cost is False
+
+    casting = scenario.cast("Lightning Bolt", from_zone=Zone.EXILE)
+    casting.choose_targets(["bob"])
+    payment = casting.begin_paying()
+
+    assert str(casting.total_cost.mana) == ""
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.player("bob").life == 17
+    assert len(scenario.untapped_sources("Mountain", "Mountain", "Mountain")) == 3
+
+
+def test_a_printed_additional_cost_survives_the_waiver():
+    """CR 118.8a and CR 118.9d, on the same unannounced path: "without paying
+    its mana cost" waives the mana cost, never the sentence that says "As an
+    additional cost to cast this spell, discard two cards."
+
+    Cathartic Reunion is a sorcery Ral's −8 reaches, and the two cards it
+    discards are still discarded - the cast costs no mana and two cards.
+    """
+    # Eight cards leave for exile, so the three Cathartic Reunion draws need a
+    # library that is longer than the −8 itself.
+    scenario, exiled = _ral_ultimate(["Cathartic Reunion"] + ["Forest"] * 7 + ["Mountain"] * 3)
+    reunion = next(state for state in exiled if state.name == "Cathartic Reunion")
+    assert scenario.game.play_permission_for(reunion, "alice") is not None
+
+    hand = list(scenario.player("alice").hand)
+    assert len(hand) == 2
+
+    casting = scenario.cast("Cathartic Reunion", from_zone=Zone.EXILE, discarding=hand)
+    payment = casting.begin_paying()
+
+    assert str(casting.total_cost.mana) == ""
+    assert casting.total_cost.components, "CR 118.8a's discard is still owed"
+
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    graveyard = [state.name for state in scenario.player("alice").graveyard]
+    assert graveyard[-3:] == ["Mountain", "Forest", "Cathartic Reunion"], (
+        "the two cards paid CR 118.8a's cost, then the spell itself resolved "
+        "(Ral is in there ahead of them: the −8 took his last loyalty)"
+    )
+    assert len(scenario.player("alice").hand) == 3, "it drew three"
