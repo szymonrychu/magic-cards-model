@@ -24,6 +24,7 @@ WOTC templates these effects tightly, which is what makes them readable:
 | `... rather than ...` | CR 614.1a shape | `RATHER_THAN` |
 | `Skip ...` | CR 614.1b, 614.10 | `SKIP` |
 | `[This] enters tapped.` | CR 614.1d | `ENTERS_TAPPED` |
+| `[This] enters prepared.` | CR 722.3a | `ENTERS_PREPARED` |
 | `[This] enters with N counters on it.` | CR 614.1c | `ENTERS_WITH` |
 | `... enter as a copy of ...` | CR 614.1c, 616.1c | `ENTERS_AS_COPY` |
 | `As [this] enters, ...` | CR 614.1c | `AS_ENTERS` |
@@ -119,12 +120,14 @@ from pydantic import ConfigDict
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.creature_types import creature_types
-from ..models.card import Card, Color, Type
-from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
+from ..models.card import Card, Color, Supertype, Type
+from ..models.card_state import CardState, Choice, ChoiceKind, Counter, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
+from ..numbers import COUNT, MULTIPLIER, parse_count, parse_multiplier
 from ..snapshot import EngineModel
 from .abilities import keywords_in_lines
+from .casting import PlayAction
 from .combat import Keyword
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import ReflexiveExileCopiedCard
@@ -132,6 +135,7 @@ from .delayed import ReflexiveExileCopiedCard
 if TYPE_CHECKING:
     from ..models.game import Game
     from ..models.player import Player
+    from .effects import _SacrificeRestriction
     from .layers import ComputedBoard
 
 # --------------------------------------------------------------------------
@@ -176,6 +180,12 @@ class ReplacementKind(StrEnum):
     AS_ENTERS = "as_enters"
     #: CR 614.1e - "As [this permanent] is turned face up, ...".
     AS_TURNED_FACE_UP = "as_turned_face_up"
+    #: CR 614.1d's bare form, Reality Fracture's own addition: "[This
+    #: creature] enters prepared" (CR 722.3a - "Some spells and abilities
+    #: cause a permanent with a prepare spell to become prepared or state
+    #: that a permanent enters prepared."). Verified this session: CR 722.3a
+    #: is the rule that names this exact phrasing.
+    ENTERS_PREPARED = "enters_prepared"
     #: CR 615.1a - "Prevent the next N damage that would be dealt to X this turn."
     PREVENT_NEXT = "prevent_next"
     #: CR 615.1a - "Prevent all [combat] damage that would be dealt ...".
@@ -208,6 +218,7 @@ ENTERS_KINDS = frozenset(
         ReplacementKind.ENTERS_WITH,
         ReplacementKind.ENTERS_AS_COPY,
         ReplacementKind.AS_ENTERS,
+        ReplacementKind.ENTERS_PREPARED,
     }
 )
 
@@ -358,6 +369,15 @@ class ReplacementEffect(EngineModel):
     combat_only: bool = False
     #: Who or what the damage would be dealt to, as printed.
     damage_target: str | None = None
+    #: The multiplier on an `ENTERS_WITH` "[`<multiplier>`] that many
+    #: `<counter_kind>` counters" clause, when the count is carried from a
+    #: sibling `AS_ENTERS` "[you may ]sacrifice any number of `<description>`"
+    #: choice rather than CR 107.3m's X - 1 for a bare "that many" (Shimatsu
+    #: the Bloodcloaked), 2 for "twice that many" (Devouring Hellion), and so
+    #: on through `numbers.parse_multiplier`. `None` when the clause carries
+    #: no such count at all - including CR 107.3m's own "X" shape, which is a
+    #: different channel entirely and stays on `variable_amount` alone.
+    that_many_multiplier: int | None = None
 
     @property
     def is_prevention(self) -> bool:
@@ -403,23 +423,6 @@ def strip_reminder_text(text: str) -> tuple[str, str | None]:
 # --------------------------------------------------------------------------
 # Vocabulary
 # --------------------------------------------------------------------------
-
-_NUMBER_WORDS = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-    "eleven": 11,
-    "twelve": 12,
-    "a": 1,
-    "an": 1,
-}
 
 #: Cue words that make a sentence worth reporting as `UNPARSED` when nothing
 #: matched. Without this gate every vanilla line would come back as a non-effect.
@@ -492,6 +495,15 @@ _PLAYER_SKIPS = re.compile(r"^(?P<who>[^,]{1,40}?) skips (?P<skipped>.+?)\.?$", 
 _ENTERS_TAPPED = re.compile(
     rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} tapped"
     r"(?:\s+(?P<unless>unless .+?))?\.?$",
+    re.IGNORECASE,
+)
+# CR 722.3a's bare form: "This creature enters prepared." Every printing in
+# the pool states it unconditionally - no "unless"/"If" polarity to read -
+# but the leading `If (...)` group is kept anyway for the same reason
+# `_ENTERS_TAPPED` keeps one: a future conditional printing should be read by
+# this shape rather than falling to `UNPARSED`.
+_ENTERS_PREPARED = re.compile(
+    rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} prepared\.?$",
     re.IGNORECASE,
 )
 # CR 614.1d - "[Objects] enter [the battlefield] untapped." Spelunking's own
@@ -650,8 +662,14 @@ def _names_of(card: Card) -> tuple[str, ...]:
     """Every name the card may refer to itself by, longest first.
 
     Older templating spells the card's own name out ("Forsaken Crossroads enters
-    the battlefield tapped"), and legendary cards use their short name
-    ("Kalitas"), so both the full name and its first word count.
+    the battlefield tapped"), and legendary cards use their short name - the
+    part before a comma ("Kalitas, Bloodchief of Ghet" -> "Kalitas") or, when
+    there is no comma, the bare first word ("Shimatsu the Bloodcloaked" ->
+    "Shimatsu", whose own text reads "As Shimatsu enters, ...") - so the full
+    name, its comma-split head, and its first word all count. CR 201.5c:
+    "Text printed on some cards refers to that card by a shortened version of
+    its name. Instances of a card's shortened name used in this manner are
+    treated as though they used the card's full name."
     """
     names: list[str] = []
     for name in [card.name, *(face.name for face in card.card_faces or [])]:
@@ -661,6 +679,10 @@ def _names_of(card: Card) -> tuple[str, ...]:
                 continue
             names.append(part)
             names.append(part.split(",")[0].strip())
+            if Supertype.LEGENDARY in card.supertypes:
+                # CR 201.5c's shortened name is a legendary card's usage;
+                # a nonlegendary "Goblin Guide" is never "Goblin".
+                names.append(part.split()[0].strip())
     return tuple(sorted(set(names), key=len, reverse=True))
 
 
@@ -811,6 +833,7 @@ def _parse_sentence(sentence: str, names: tuple[str, ...]) -> list[ReplacementEf
         _try_as_turned_face_up,
         _try_enters_as_copy,
         _try_enters_tapped,
+        _try_enters_prepared,
         _try_enters_untapped,
         _try_enters_with,
         _try_skip,
@@ -844,16 +867,20 @@ def _is_optional(phrase: str | None) -> bool:
     return bool(phrase) and bool(re.search(r"\byou may\b", phrase, re.IGNORECASE))
 
 
-def _amount_of(word: str) -> tuple[int | None, bool]:
-    """Read a templated count. Returns (amount, variable)."""
+def _amount_of(word: str) -> tuple[int | None, bool] | None:
+    """Read a templated count. Returns (amount, variable), or None when the
+    word is not a count at all.
+
+    A word that is not a count - the "that" a split "that many" leaves, the
+    "twice" of "twice that many", the "your" of "your choice of" - is refused,
+    never read as CR 107.3m's X: that would take the count from the cast's
+    announcement, which has nothing to do with the sentence.
+    """
     word = word.strip().lower()
     if word in ("x", "that many", "any number"):
         return None, True
-    if word.isdigit():
-        return int(word), False
-    if word in _NUMBER_WORDS:
-        return _NUMBER_WORDS[word], False
-    return None, True
+    amount = parse_count(word)
+    return None if amount is None else (amount, False)
 
 
 # --------------------------------------------------------------------------
@@ -865,7 +892,10 @@ def _try_prevent_next(sentence: str, names: tuple[str, ...]) -> list[Replacement
     match = _PREVENT_NEXT.match(sentence)
     if not match:
         return []
-    amount, variable = _amount_of(match.group("amount"))
+    read = _amount_of(match.group("amount"))
+    if read is None:
+        return []
+    amount, variable = read
     return [
         _make(
             ReplacementKind.PREVENT_NEXT,
@@ -1054,6 +1084,23 @@ def _try_enters_tapped(sentence: str, names: tuple[str, ...]) -> list[Replacemen
     ]
 
 
+def _try_enters_prepared(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    match = _ENTERS_PREPARED.match(sentence)
+    if not match:
+        return []
+    subject = match.group("subject").strip()
+    condition = match.group("condition")
+    return [
+        _make(
+            ReplacementKind.ENTERS_PREPARED,
+            sentence,
+            subject=subject,
+            condition=(condition or "").strip() or None,
+            self_replacement=_refers_to_self(subject, names),
+        )
+    ]
+
+
 def _try_enters_untapped(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
     match = _ENTERS_UNTAPPED.match(sentence)
     if not match:
@@ -1076,7 +1123,12 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
         return []
     subject = match.group("subject").strip()
     what = match.group("what").strip()
-    amount, variable, counter_kind, expression = _read_counters(what)
+    counters = _read_counters(what)
+    if counters is None:
+        # A counter count this cannot read fails closed as UNPARSED rather
+        # than as an enters-with effect with a made-up amount or kind.
+        return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
+    amount, variable, counter_kind, expression, that_many_multiplier = counters
     return [
         _make(
             ReplacementKind.ENTERS_WITH,
@@ -1087,6 +1139,7 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
             variable_amount=variable,
             counter_kind=counter_kind,
             amount_expression=expression,
+            that_many_multiplier=that_many_multiplier,
             condition=(match.group("condition") or "").strip() or None,
             self_replacement=_refers_to_self(subject, names),
         )
@@ -1107,27 +1160,64 @@ _COUNTERS_EQUAL_TO = re.compile(
     re.IGNORECASE,
 )
 
+#: "[`<multiplier>`] that many `<kind>` counters" - Shimatsu the Bloodcloaked's
+#: bare "that many +1/+1 counters" and Devouring Hellion's "twice that many
+#: +1/+1 counters". Unlike `_amount_of`'s own refusal of "that many" as a
+#: guessed CR 107.3m X (that count is not knowable from the text alone), this
+#: count *is* knowable - it is carried from a sibling `AS_ENTERS` "[you may
+#: ]sacrifice any number of `<description>`" choice in the same paragraph, and
+#: `_self_enters_modifiers` is what pairs the two and fills it in from how
+#: many were actually sacrificed (CR 614.12a).
+_THAT_MANY_COUNTERS = re.compile(
+    rf"^(?:(?P<multiplier>{MULTIPLIER})\s+)?that many (?P<kind>.+?) counters?$",
+    re.IGNORECASE,
+)
 
-def _read_counters(what: str) -> tuple[int | None, bool, str | None, str | None]:
+
+def _read_counters(
+    what: str,
+) -> tuple[int | None, bool, str | None, str | None, int | None] | None:
     """Read "four +1/+1 counters", "X charge counters", "a shield counter",
-    and "a number of +1/+1 counters on it equal to [expression]".
+    "a number of +1/+1 counters on it equal to [expression]", and "[`<multiplier>`]
+    that many `<kind>` counters".
 
-    Returns `(amount, variable, kind, expression)`. Only the last shape fills
-    `expression`, and it always leaves `amount` unset and `variable` true - the
-    count is not knowable from the text alone.
+    Returns `(amount, variable, kind, expression, that_many_multiplier)`. The
+    "equal to" shape fills only `expression`, always leaving `amount` unset and
+    `variable` true - the count is not knowable from the text alone. The "that
+    many" shape fills only `that_many_multiplier` (1 for a bare "that many",
+    2 for "twice that many", and so on), also leaving `amount` unset and
+    `variable` true - the count is knowable, but only once a sibling clause's
+    own choice has been made (see `_THAT_MANY_COUNTERS`).
 
     Anything more elaborate - Agent's Toolkit enters with four different kinds
-    at once - leaves the counter fields empty rather than picking one.
+    at once - leaves the counter fields empty rather than picking one. A count
+    word that is neither of the above ("your choice of") is None: unreadable.
     """
     text = what.strip()
     equal_to = _COUNTERS_EQUAL_TO.match(text)
     if equal_to:
-        return None, True, equal_to.group("kind").strip(), equal_to.group("expression").strip()
+        return (
+            None,
+            True,
+            equal_to.group("kind").strip(),
+            equal_to.group("expression").strip(),
+            None,
+        )
+    that_many = _THAT_MANY_COUNTERS.match(text)
+    if that_many:
+        multiplier_text = that_many.group("multiplier")
+        multiplier = 1 if multiplier_text is None else parse_multiplier(multiplier_text)
+        if multiplier is None:
+            return None
+        return None, True, that_many.group("kind").strip(), None, multiplier
     match = _COUNTERS.match(text)
     if not match:
-        return None, False, None, None
-    amount, variable = _amount_of(match.group("amount"))
-    return amount, variable, match.group("kind").strip(), None
+        return None, False, None, None, None
+    read = _amount_of(match.group("amount"))
+    if read is None:
+        return None
+    amount, variable = read
+    return amount, variable, match.group("kind").strip(), None, None
 
 
 # --------------------------------------------------------------------------
@@ -1347,6 +1437,8 @@ class ReplaceableEvent:
     counters: dict[str, int] = field(default_factory=dict)
     #: Whether the permanent arrives tapped (CR 614.1c).
     tapped: bool = False
+    #: Whether the permanent arrives with the prepared designation (CR 722.3a).
+    prepared: bool = False
 
     #: The object dealing the damage (CR 120.1, CR 120.7). `None` when the
     #: caller did not say - CR 609.7b, CR 615.8 and CR 702.16e all ask about the
@@ -1632,8 +1724,21 @@ def _containment_priest_applies(game: "Game", source: CardState, event: Replacea
     )
 
 
-def _double_life(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    event.amount *= 2
+def _scale_amount(multiplier: int = 1, addend: int = 0) -> Apply:
+    """ "twice that many", "three times that many", "that many plus one",
+    "that many minus one", "that much life plus 1" - one replacement, read as
+    data: the event's count times `multiplier`, plus `addend`.
+
+    CR 614.5 gives each effect one opportunity at the event, so the addend is
+    flat rather than per unit. CR 107.1b: "If a calculation that would
+    determine the result of an effect yields a negative number, zero is used
+    instead" - a "minus one" on a single counter leaves none, never fewer.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        event.amount = max(event.amount * multiplier + addend, 0)
+
+    return apply
 
 
 def _archive_life_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
@@ -1694,57 +1799,66 @@ def _draw_plus(amount: int) -> Apply:
     return apply
 
 
-def _doubling_season_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-    """ "If an effect would put one or more counters on a permanent you control..."
+def _counter_amount_applies(
+    kind: str | None, types: frozenset[Type] | None, you_control: bool
+) -> Applies:
+    """ "If one or more [kind] counters would be put on [a creature] [you control]..."
 
     CR 122.6: "counters being put on an object ... refers to putting counters on
     that object while it's on the battlefield and also to an object that's given
     counters as it enters the battlefield", which is why the enters-with
     counters of CR 614.1c reach this too.
+
+    `kind` None is "one or more counters" of any kind; `types` None is "a
+    permanent". A permanent already on the battlefield reads its computed types
+    (CR 613.5) - a land earthbend (CR 701.66a) made a creature is a creature
+    you control, whatever it prints.
     """
-    return (
-        event.kind is EventKind.ADD_COUNTERS
-        and event.amount > 0
-        and event.card is not None
-        and event.card.controller == source.controller
-    )
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
+            return False
+        card = event.card
+        if card is None:
+            return False
+        if you_control and card.controller != source.controller:
+            return False
+        if kind is not None and (event.counter_kind or "").strip().lower() != kind:
+            return False
+        if types is None:
+            return True
+        card_types = (
+            game.characteristics_of(card).types if card.zone is Zone.BATTLEFIELD else card.types
+        )
+        return any(wanted in card_types for wanted in types)
+
+    return applies
 
 
-def _double_counters(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    event.amount *= 2
+def _counter_amount_applies_to_player(kind: str | None) -> Applies:
+    """ "If you would get one or more [kind] counters, ..." - the player twin
+    of `_counter_amount_applies`. "You" is CR 201.5's own reference to
+    whoever controls the source printing the ability (its controller, not
+    necessarily the player the counters land on in general - every printing
+    of this shape in the pool is self-referential, "you" meaning the
+    ability's own controller, so that is the only shape read here).
 
-
-def _doubling_season_tokens_applies(
-    game: "Game", source: CardState, event: ReplaceableEvent
-) -> bool:
-    """ "If an effect would create one or more tokens under your control..."
-
-    "Under your control" is CR 111.2's "the token enters the battlefield under
-    that player's control", so the test is against the player *creating* them and
-    not against whoever the effect belongs to - Kozilek's Command makes the
-    targeted player the creator, and a Doubling Season that player does not
-    control does nothing about it.
-
-    "One or more" is why `amount > 0` is checked: creating nothing is not an
-    event this can double.
+    `kind` `None` is "one or more counters" of any kind (Winding
+    Constrictor's own "you get" line); a named kind (Aether Refinery's "{E}")
+    is read the same way `_counter_amount_applies` reads a card-counter
+    replacement's own kind.
     """
-    return (
-        event.kind is EventKind.CREATE_TOKENS
-        and event.amount > 0
-        and event.player is not None
-        and event.player.username == source.controller
-    )
 
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
+            return False
+        if event.card is not None or event.player is None:
+            return False
+        if event.player.username != source.controller:
+            return False
+        return kind is None or (event.counter_kind or "").strip().lower() == kind
 
-def _double_tokens(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    """ "...it creates twice that many of those tokens instead."
-
-    "Those tokens" - the characteristics are untouched, only the count changes,
-    which is what CR 701.7b's ordering guarantees is still possible: the
-    replacement lands before any continuous effect has had a say about what the
-    tokens will look like.
-    """
-    event.amount *= 2
+    return applies
 
 
 def _fog_bank_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
@@ -1996,6 +2110,62 @@ def _compile_graveyard_exile(effect: ReplacementEffect) -> CardReplacement | Non
     return _graveyard_replacer(effect.text, whose)
 
 
+# -- "if a creature [an opponent controls] would die, exile it instead" --
+#
+# CR 700.4: "dies" means "is put into a graveyard from the battlefield" - a
+# narrower event than `_GRAVEYARD_EVENT_RE`'s "would be put into a graveyard
+# [from anywhere]", so this is its own shape rather than a third alternative
+# folded into that regex: a card milled from a library, or discarded, would
+# wrongly match "would die" if the origin were not checked.
+_DIES_EVENT_RE = re.compile(
+    r"^a creature (?P<whose>an opponent controls|you control) would die$", re.IGNORECASE
+)
+_SELF_DIES_EVENT_RE = re.compile(r"^this creature would die$", re.IGNORECASE)
+
+
+def _compile_dies_exile(effect: ReplacementEffect) -> CardReplacement | None:
+    """Garruk, Veiled Butcher's "If a creature an opponent controls would
+    die, exile it instead."; Gisa, Glorious Resurrector's and Corpseweaver
+    Prodigy's identical real printing; Gloomshrieker's self-only "If this
+    creature would die, exile it instead."
+
+    The "whose" question here is who *controls* the dying creature
+    (CR 108.4), not whose graveyard it would land in - CR 400.3 does not
+    require the two to be the same player, so this reads `CardState.
+    controller` directly rather than routing through `_graveyard_replacer`'s
+    owner-of-the-graveyard matchers.
+    """
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    if (effect.replacement or "").strip().rstrip(".").lower() != "exile it":
+        return None
+    event_text = (effect.event or "").strip()
+    if match := _DIES_EVENT_RE.match(event_text):
+        wants_opponent = match.group("whose") == "an opponent controls"
+
+        def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+            if not _to_graveyard(event) or event.origin is not Zone.BATTLEFIELD:
+                return False
+            if event.card is None or event.card.controller is None:
+                return False
+            is_opponent = _is_opponent(game, event.card.controller, source.controller)
+            return is_opponent if wants_opponent else not is_opponent
+
+        return CardReplacement(label=effect.text, applies=applies, apply=_exile_instead)
+    if _SELF_DIES_EVENT_RE.match(event_text):
+
+        def self_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+            return (
+                _to_graveyard(event)
+                and event.origin is Zone.BATTLEFIELD
+                and event.card is not None
+                and event.card.id == source.id
+            )
+
+        return CardReplacement(label=effect.text, applies=self_applies, apply=_exile_instead)
+    return None
+
+
 # -- "if a nontoken creature would enter and it wasn't cast, exile it instead" --
 
 _ENTERS_UNCAST_EVENT_RE = re.compile(
@@ -2173,7 +2343,15 @@ def _compile_self_prevent_combat_damage(effect: ReplacementEffect) -> CardReplac
     return CardReplacement(label=effect.text, applies=_fog_bank_applies, apply=_prevent_all)
 
 
-# -- "if you would gain life, you gain twice that much life instead" --
+# -- "if you would gain life, you gain twice that much life instead" /
+#    "... you gain that much life plus 1 instead" --
+
+#: Alhammarret's Archive's "twice that much life", Angel of Vitality's "that
+#: much life plus 1". The number is read, never pinned (CR 107.1: integers).
+_LIFE_GAIN_AMOUNT_RE = re.compile(
+    rf"^you gain (?:(?P<mult>{MULTIPLIER}) that much life|that much life plus (?P<plus>{COUNT}))$",
+    re.IGNORECASE,
+)
 
 
 def _compile_life_gain_doubler(effect: ReplacementEffect) -> CardReplacement | None:
@@ -2181,9 +2359,20 @@ def _compile_life_gain_doubler(effect: ReplacementEffect) -> CardReplacement | N
         return None
     if (effect.event or "").strip().lower() != "you would gain life":
         return None
-    if (effect.replacement or "").strip().rstrip(".").lower() != "you gain twice that much life":
+    match = _LIFE_GAIN_AMOUNT_RE.match((effect.replacement or "").strip().rstrip("."))
+    if match is None:
         return None
-    return CardReplacement(label=effect.text, applies=_archive_life_applies, apply=_double_life)
+    if match.group("mult") is not None:
+        multiplier = parse_multiplier(match.group("mult"))
+        if multiplier is None:
+            return None
+        apply = _scale_amount(multiplier=multiplier)
+    else:
+        addend = parse_count(match.group("plus"))
+        if addend is None:
+            return None
+        apply = _scale_amount(addend=addend)
+    return CardReplacement(label=effect.text, applies=_archive_life_applies, apply=apply)
 
 
 # -- "if you would draw a card except the first ... in each of your draw
@@ -2256,8 +2445,8 @@ def _compile_draw_plus(effect: ReplacementEffect) -> CardReplacement | None:
     match = _DRAW_PLUS_RE.match((effect.replacement or "").strip().rstrip("."))
     if match is None:
         return None
-    amount, variable = _amount_of(match.group("amount"))
-    if amount is None or variable:
+    amount = parse_count(match.group("amount"))
+    if amount is None:
         return None
 
     hand_limit: int | None = None
@@ -2265,8 +2454,8 @@ def _compile_draw_plus(effect: ReplacementEffect) -> CardReplacement | None:
         condition = _FEWER_CARDS_IN_HAND_RE.match(effect.condition.strip().rstrip(","))
         if condition is None:
             return None  # an "as long as" clause this cannot check - fail closed.
-        hand_limit, hand_variable = _amount_of(condition.group("count"))
-        if hand_limit is None or hand_variable:
+        hand_limit = parse_count(condition.group("count"))
+        if hand_limit is None:
             return None
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
@@ -2282,51 +2471,86 @@ def _compile_draw_plus(effect: ReplacementEffect) -> CardReplacement | None:
     return CardReplacement(label=effect.text, applies=applies, apply=_draw_plus(amount))
 
 
-# -- "if an effect would create one or more tokens under your control, it
-#     creates twice that many of those tokens instead" --
+# -- "if [an effect would create] one or more [type] tokens [would be created]
+#    under your control, [N times that many of those tokens | those tokens
+#    plus <count> <token>] ... instead" --
+#
+# CR 614.16, verified this session: "Some replacement effects apply 'if an
+# effect would create one or more tokens' ... These replacement effects apply
+# if the effect of a resolving spell or ability creates a token" - so a token
+# created by a resolving triggered ability (Hangarback Walker's dies trigger)
+# is squarely in scope.
+#
+# CR 701.7b is what makes a type filter readable at all: "If a replacement
+# effect applies to a token being created, that effect applies before
+# considering any continuous effects that will modify the characteristics of
+# that token." The `CREATE_TOKENS` event is raised before a single token has
+# been built, so the `TokenDefinition` on it is still exactly what the creating
+# effect stated (CR 111.3) and "creature tokens" is a question that can be
+# answered.
+
+#: The event half, shared by both replacement shapes below. `filter` is an
+#: optional single word naming a card type, and only `_CARD_TYPE_WORDS` are
+#: read - a filter this cannot check ("Thopter tokens") leaves the whole effect
+#: uncompiled, per the fail-closed rule above.
+_TOKEN_CREATION_EVENT_RE = re.compile(
+    r"^(?:an effect would create one or more tokens under your control"
+    r"|one or more (?:(?P<filter>\w+) )?tokens would be created under your control)$",
+    re.IGNORECASE,
+)
+#: Doubling Season's "it creates twice that many of those tokens", Adrix and
+#: Nev's "twice that many of those tokens are created", Ojer Taq's "three times
+#: that many of those tokens are created".
+_TOKEN_MULTIPLIER_RE = re.compile(
+    rf"^(?:it creates (?P<it_mult>{MULTIPLIER}) that many of those tokens"
+    rf"|(?P<mult>{MULTIPLIER}) that many of those tokens are created)$",
+    re.IGNORECASE,
+)
+#: Stridehangar Automaton's "those tokens plus an additional 1/1 ... Thopter
+#: ...", Quina's "those tokens plus a 1/1 green Frog creature token",
+#: Chatterfang's "those tokens plus that many 1/1 green Squirrel creature tokens".
+_EXTRA_TOKEN_REPLACEMENT_RE = re.compile(
+    rf"^those tokens plus (?P<count>that many|{COUNT})(?: additional)? "
+    r"(?P<descriptor>.+?) are created$",
+    re.IGNORECASE,
+)
+
+
+def _token_creation_filter(effect: ReplacementEffect) -> frozenset[Type] | None:
+    """The card type a token-creation event names, as a set: empty for "one or
+    more tokens", `None` when the event is not this shape or names something
+    that cannot be checked."""
+    match = _TOKEN_CREATION_EVENT_RE.match((effect.event or "").strip())
+    if match is None:
+        return None
+    word = match.group("filter")
+    if word is None:
+        return frozenset()
+    wanted = _CARD_TYPE_WORDS.get(word.lower())
+    return None if wanted is None else frozenset({wanted})
 
 
 def _compile_token_doubler(effect: ReplacementEffect) -> CardReplacement | None:
+    """ "...N times that many of those tokens" - "those tokens" leaves the
+    characteristics untouched and only the count changes, which CR 701.7b's
+    ordering guarantees is still possible."""
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
-    expected_event = "an effect would create one or more tokens under your control"
-    if (effect.event or "").strip().lower() != expected_event:
+    wanted = _token_creation_filter(effect)
+    if wanted is None:
         return None
-    expected = "it creates twice that many of those tokens"
-    if (effect.replacement or "").strip().rstrip(".").lower() != expected:
+    match = _TOKEN_MULTIPLIER_RE.match((effect.replacement or "").strip().rstrip("."))
+    if match is None:
+        return None
+    multiplier = parse_multiplier(match.group("it_mult") or match.group("mult"))
+    if multiplier is None:
         return None
     return CardReplacement(
-        label=effect.text, applies=_doubling_season_tokens_applies, apply=_double_tokens
+        label=effect.text,
+        applies=_extra_token_applies(wanted),
+        apply=_scale_amount(multiplier=multiplier),
     )
 
-
-# -- "if one or more <filter> tokens would be created under your control, those
-#     tokens plus an additional <descriptor> are created instead" --
-#
-# Stridehangar Automaton. CR 614.16, verified this session: "Some replacement
-# effects apply 'if an effect would create one or more tokens' ... These
-# replacement effects apply if the effect of a resolving spell or ability
-# creates the tokens" - the same clause `_compile_token_doubler` above leans
-# on, so a token created by a resolving triggered ability (Hangarback Walker's
-# dies trigger) is squarely in scope.
-#
-# CR 701.7b is what makes this readable at all: "If a replacement effect
-# applies to a token being created, that effect applies before considering any
-# continuous effects that will modify the characteristics of that token." The
-# `CREATE_TOKENS` event is raised before a single token has been built, so the
-# `TokenDefinition` on it is still exactly what the creating effect stated
-# (CR 111.3) and "artifact tokens" is a question that can be answered.
-
-#: The event half. `filter` is a single word naming a card type, and only the
-#: types below are read - a filter this cannot check ("Thopter tokens",
-#: "creature tokens you control that aren't Thopters") matches nothing and the
-#: whole effect goes uncompiled, per the fail-closed rule above.
-_EXTRA_TOKEN_EVENT_RE = re.compile(
-    r"^one or more (?P<filter>\w+) tokens would be created under your control$", re.IGNORECASE
-)
-_EXTRA_TOKEN_REPLACEMENT_RE = re.compile(
-    r"^those tokens plus an additional (?P<descriptor>.+?) are created$", re.IGNORECASE
-)
 
 #: The card types a filter may name, as CR 205.2a spells them.
 _CARD_TYPE_WORDS: dict[str, Type] = {
@@ -2334,6 +2558,7 @@ _CARD_TYPE_WORDS: dict[str, Type] = {
     "creature": Type.CREATURE,
     "enchantment": Type.ENCHANTMENT,
     "land": Type.LAND,
+    "planeswalker": Type.PLANESWALKER,
 }
 
 #: Colour words a token descriptor may use (CR 105.1), plus CR 105.2's
@@ -2402,7 +2627,8 @@ def _read_token_descriptor(descriptor: str) -> TokenDefinition | None:
         text = tail_match.group("head")
 
     words = text.split()
-    if not words or words[-1].lower() != "token":
+    # "token", or "tokens" after a count above one or "that many".
+    if not words or words[-1].lower() not in ("token", "tokens"):
         return None
     words = words[:-1]
     if not words or words[-1].lower() != "creature":
@@ -2439,17 +2665,21 @@ def _read_token_descriptor(descriptor: str) -> TokenDefinition | None:
     )
 
 
-def _extra_token_applies(wanted: Type) -> Applies:
-    """ "If one or more **artifact** tokens would be created under your control".
+def _extra_token_applies(wanted: frozenset[Type]) -> Applies:
+    """ "If one or more [**artifact**] tokens would be created under your control".
 
     "Under your control" is CR 111.2's "the token enters the battlefield under
-    that player's control", so the test is against the player *creating* them,
-    exactly as `_doubling_season_tokens_applies` already reads the same phrase.
+    that player's control", so the test is against the player *creating* them
+    and not against whoever the effect belongs to - Kozilek's Command makes the
+    targeted player the creator, and a Doubling Season that player does not
+    control does nothing about it. "One or more" is why `amount > 0` is
+    checked: creating nothing is not an event to replace.
 
     What kind of token is read off the event's `definition` when the creating
     effect stated one (CR 111.3), and off the original permanent's own types
     when this is a token *copy* instead, whose characteristics are a printed
     card's (CR 707.2, CR 111.3's "functionally equivalent" both ways round).
+    An empty `wanted` names no type and takes every token.
     """
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
@@ -2457,23 +2687,30 @@ def _extra_token_applies(wanted: Type) -> Applies:
             return False
         if event.player is None or event.player.username != source.controller:
             return False
+        if not wanted:
+            return True
         if event.definition is not None:
-            return wanted in event.definition.types
-        return event.card is not None and wanted in event.card.types
+            types: Iterable[Type] = event.definition.types
+        elif event.card is not None:
+            types = event.card.types
+        else:
+            return False
+        return any(card_type in wanted for card_type in types)
 
     return applies
 
 
-def _create_an_additional_token(extra: TokenDefinition) -> Apply:
-    """ "...those tokens plus an additional [token] are created instead."
+def _create_additional_tokens(extra: TokenDefinition, count: int | None) -> Apply:
+    """ "...those tokens plus [an additional | a | that many] [token] are created instead."
 
     "Those tokens" is the batch untouched - `amount` and `definition` are left
     exactly as they were - and the addition is queued on the event for
     `create_tokens` to drain. One modified event, one creation (CR 614.6).
+    `count` None is "that many": the event's own count as this effect applies.
     """
 
     def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
-        event.extra.append(extra)
+        event.extra.extend([extra] * (event.amount if count is None else count))
 
     return apply
 
@@ -2481,10 +2718,7 @@ def _create_an_additional_token(extra: TokenDefinition) -> Apply:
 def _compile_extra_token(effect: ReplacementEffect) -> CardReplacement | None:
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
-    event_match = _EXTRA_TOKEN_EVENT_RE.match((effect.event or "").strip())
-    if event_match is None:
-        return None
-    wanted = _CARD_TYPE_WORDS.get(event_match.group("filter").lower())
+    wanted = _token_creation_filter(effect)
     if wanted is None:
         return None
     replacement_match = _EXTRA_TOKEN_REPLACEMENT_RE.match(
@@ -2492,95 +2726,228 @@ def _compile_extra_token(effect: ReplacementEffect) -> CardReplacement | None:
     )
     if replacement_match is None:
         return None
+    count_text = replacement_match.group("count")
+    count: int | None = None
+    if count_text.lower() != "that many":
+        count = parse_count(count_text)
+        if count is None:
+            return None
     extra = _read_token_descriptor(replacement_match.group("descriptor"))
     if extra is None:
         return None
     return CardReplacement(
         label=effect.text,
         applies=_extra_token_applies(wanted),
-        apply=_create_an_additional_token(extra),
+        apply=_create_additional_tokens(extra, count),
     )
 
 
-# -- "if an effect would put one or more counters on a permanent you control,
-#     it puts twice that many of those counters on that permanent instead" --
+#: Draconic Visitor's "...that many 5/5 red Dragon creature tokens with
+#: flying are created instead" - unlike `_EXTRA_TOKEN_REPLACEMENT_RE`'s
+#: "those tokens **plus** ...", there is no "those tokens" here at all: the
+#: whole batch becomes a different kind, not an addition alongside it.
+_TOKEN_SUBSTITUTION_RE = re.compile(r"^that many (?P<descriptor>.+?) are created$", re.IGNORECASE)
+
+
+def _substitute_tokens(new_definition: TokenDefinition) -> Apply:
+    """ "...that many <descriptor> are created instead" - the same count
+    (CR 614.6's modified event), a different `TokenDefinition` entirely.
+    `event.card` is cleared too: it is the token-*copy* alternative to
+    `definition` (CR 707.2), and this effect always states real
+    characteristics of its own, never "copy the original".
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        event.definition = new_definition
+        event.card = None
+
+    return apply
+
+
+def _compile_token_substitution(effect: ReplacementEffect) -> CardReplacement | None:
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    wanted = _token_creation_filter(effect)
+    if wanted is None:
+        return None
+    match = _TOKEN_SUBSTITUTION_RE.match((effect.replacement or "").strip().rstrip("."))
+    if match is None:
+        return None
+    new_definition = _read_token_descriptor(match.group("descriptor"))
+    if new_definition is None:
+        return None
+    return CardReplacement(
+        label=effect.text,
+        applies=_extra_token_applies(wanted),
+        apply=_substitute_tokens(new_definition),
+    )
+
+
+# -- "if [an effect would put] one or more [kind] counters [would be put] on
+#    [a subject] you control, [N times | that many plus/minus N] ... instead" --
+#
+# Doubling Season ("it puts twice that many of those counters on that
+# permanent"), Branching Evolution ("twice that many +1/+1 counters are put on
+# that creature"), Hardened Scales ("that many plus one +1/+1 counters are put
+# on it"), Winding Constrictor ("that many plus one of each of those kinds of
+# counters are put on that permanent") and Vizier of Remedies ("that many -1/-1
+# counters minus one are put on it") are one replacement: the multiplier or
+# the addend is read as data, never pinned.
+#
+# CR 614.16: "if an effect would put one or more counters on a permanent"
+# replacement effects apply whether the event came from a resolving effect *or
+# from a cost* ("even if the original event being modified wasn't itself an
+# effect") - so this compiler and `Game.add_counters` together are what make
+# Vizier stop Devoted Druid's own activation cost, not only a spell's.
+
+#: A counter kind word, as either shape oracle text prints one: a bare word
+#: ("+1/+1", "charge", "loyalty") or a mana-symbol kind written the way
+#: energy always is ("{E}").
+_COUNTER_KIND_WORD = r"(?:\{[^}]+\}|[+/\w-]+)"
+
+_COUNTER_AMOUNT_EVENT_RE = re.compile(
+    r"^(?:an effect would put one or more counters on (?P<effect_subject>.+?)"
+    rf"|one or more (?:(?P<kind>{_COUNTER_KIND_WORD}) )?counters would be put on (?P<subject>.+?)"
+    rf"|(?P<player_event>you would get one or more"
+    rf" (?:counters?|(?P<player_kind>{_COUNTER_KIND_WORD}))))$",
+    re.IGNORECASE,
+)
+_COUNTER_AMOUNT_REPLACEMENT_RE = re.compile(
+    rf"^(?:it puts (?P<it_mult>{MULTIPLIER}) that many of those counters on that permanent"
+    rf"|(?:(?P<mult>{MULTIPLIER}) that many|that many(?: plus (?P<plus>{COUNT}))?)"
+    r"(?: of each of those kinds of counters"
+    rf"| (?P<kind>{_COUNTER_KIND_WORD}) counters(?: (?P<op>plus|minus) (?P<n>{COUNT}))?)"
+    r" are put on (?:it|that creature|that permanent)"
+    rf"|you get (?:(?P<pmult>{MULTIPLIER}) that many|that many(?: plus (?P<pplus>{COUNT}))?)"
+    r"(?: of each of those kinds of counters"
+    rf"| (?P<pkind>{_COUNTER_KIND_WORD})(?: counters?)?"
+    rf"(?: (?P<pop>plus|minus) (?P<pn>{COUNT}))?)?)$",
+    re.IGNORECASE,
+)
+#: "a creature you control", "an artifact or creature you control", "a permanent".
+_COUNTER_SUBJECT_RE = re.compile(r"^an? (?P<types>.+?)(?P<you_control> you control)?$")
+
+
+def _counter_subject_types(types_text: str) -> frozenset[Type] | None | bool:
+    """ "permanent" is None (anything), a card-type list is its types (CR
+    205.2a), and anything else - a subtype, a name, "another creature" - is
+    False, which leaves the effect uncompiled rather than guessed at."""
+    words = [word for word in re.split(r",\s*(?:or\s+)?|\s+or\s+", types_text) if word]
+    if words == ["permanent"]:
+        return None
+    types = [_CARD_TYPE_WORDS.get(word.strip()) for word in words]
+    if not types or any(wanted is None for wanted in types):
+        return False
+    return frozenset(wanted for wanted in types if wanted is not None)
+
+
+def _counter_amount(match: re.Match[str]) -> Apply | None:
+    """The multiplier or addend a counter replacement prints, or None.
+
+    `p`-prefixed groups are `_COUNTER_AMOUNT_REPLACEMENT_RE`'s player-counter
+    branch ("you get twice that many ..."); the rest are its card-counter
+    branch ("... are put on it") - exactly one set is ever populated for a
+    given match, so reading both costs nothing.
+    """
+    multiplier_text = match.group("it_mult") or match.group("mult") or match.group("pmult")
+    if multiplier_text is not None:
+        multiplier = parse_multiplier(multiplier_text)
+        return None if multiplier is None else _scale_amount(multiplier=multiplier)
+    addend_text = (
+        match.group("plus") or match.group("n") or match.group("pplus") or match.group("pn")
+    )
+    if addend_text is None:
+        return None  # a bare "that many" replaces nothing
+    addend = parse_count(addend_text)
+    if addend is None:
+        return None
+    op = match.group("op") or match.group("pop")
+    return _scale_amount(addend=-addend if op == "minus" else addend)
+
+
+def _normalized_counter_kind(raw: str | None) -> str | None:
+    """A matched kind group, lower-cased, or `None` for "no kind at all" -
+    which is both an empty match and the bare word "counters"/"counter"
+    itself (`_COUNTER_KIND_WORD` matches that word too, since it is not
+    distinguishable from a kind name by shape alone; "you get twice that many
+    counters instead" names no kind, the same as "... of each of those kinds
+    of counters").
+
+    CR 107.14: "The energy symbol is {E}. It represents one energy counter" -
+    `{e}` is normalised to `"energy"`, `Counter.ENERGY`'s own value and what
+    `Game.add_player_counters` actually stamps `ReplaceableEvent.counter_kind`
+    with, so Aether Refinery's own "one or more {E} (energy counters)" reads
+    the same kind a caller passing `Counter.ENERGY` produces.
+    """
+    lowered = (raw or "").strip().lower()
+    if lowered == "{e}":
+        return "energy"
+    return None if lowered in ("", "counter", "counters") else lowered
 
 
 def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | None:
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
-    expected_event = "an effect would put one or more counters on a permanent you control"
-    if (effect.event or "").strip().lower() != expected_event:
+    event_match = _COUNTER_AMOUNT_EVENT_RE.match((effect.event or "").strip())
+    if event_match is None:
         return None
-    expected_replacement = "it puts twice that many of those counters on that permanent"
-    if (effect.replacement or "").strip().rstrip(".").lower() != expected_replacement:
+    replacement_match = _COUNTER_AMOUNT_REPLACEMENT_RE.match(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if replacement_match is None:
+        return None
+
+    if event_match.group("player_event") is not None:
+        # "If you would get one or more [kind] counters, ..." - CR 201.5's
+        # "you" is the ability's own controller (see
+        # `_counter_amount_applies_to_player`'s docstring); there is no card
+        # subject or type filter to read at all.
+        event_kind = _normalized_counter_kind(event_match.group("player_kind"))
+        is_player_replacement = (
+            replacement_match.group("pmult") is not None
+            or replacement_match.group("pplus") is not None
+            or replacement_match.group("pkind") is not None
+            or "you get" in (effect.replacement or "").strip().lower()
+        )
+        if not is_player_replacement:
+            return None  # the card-counter branch matched instead - wrong shape
+        pkind = _normalized_counter_kind(replacement_match.group("pkind"))
+        if pkind != event_kind:
+            return None
+        apply = _counter_amount(replacement_match)
+        if apply is None:
+            return None
+        return CardReplacement(
+            label=effect.text,
+            applies=_counter_amount_applies_to_player(event_kind),
+            apply=apply,
+        )
+
+    subject_match = _COUNTER_SUBJECT_RE.match(
+        (event_match.group("effect_subject") or event_match.group("subject")).lower()
+    )
+    if subject_match is None:
+        return None
+    types = _counter_subject_types(subject_match.group("types"))
+    if types is False:
+        return None
+
+    event_kind = (event_match.group("kind") or "").lower() or None
+    replacement_kind = (replacement_match.group("kind") or "").lower() or None
+    if replacement_kind != event_kind:
+        # "+1/+1 counters would be put ... that many plus one -1/-1 counters"
+        # is no card; "of each of those kinds" answers only a kindless event.
+        return None
+    apply = _counter_amount(replacement_match)
+    if apply is None:
         return None
     return CardReplacement(
-        label=effect.text, applies=_doubling_season_applies, apply=_double_counters
+        label=effect.text,
+        applies=_counter_amount_applies(
+            event_kind, types, subject_match.group("you_control") is not None
+        ),
+        apply=apply,
     )
-
-
-# -- "if one or more <kind> counters would be put on a creature you control,
-#    that many <kind> counters minus one are put on it instead" --
-#
-# Vizier of Remedies: "If one or more -1/-1 counters would be put on a
-# creature you control, that many -1/-1 counters minus one are put on it
-# instead." CR 614.16 is the same clause `_compile_counter_doubler` already
-# leans on - "if an effect would put one or more counters on a permanent"
-# replacement effects apply whether the event came from a resolving effect
-# *or from a cost* ("even if the original event being modified wasn't itself
-# an effect") - so this compiler and `Game.add_counters` together are what
-# make Vizier stop Devoted Druid's own activation cost, not only a spell's.
-_COUNTER_REDUCER_EVENT_RE = re.compile(
-    r"^one or more (?P<kind>[+/\w-]+) counters would be put on a "
-    r"(?P<subject>creature|permanent) you control$",
-    re.IGNORECASE,
-)
-_COUNTER_REDUCER_REPLACEMENT_RE = re.compile(
-    r"^that many (?P<kind>[+/\w-]+) counters minus one are put on it$", re.IGNORECASE
-)
-
-
-def _counter_reducer_applies(
-    kind: str, creature_only: bool
-) -> Callable[["Game", CardState, ReplaceableEvent], bool]:
-    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
-            return False
-        if event.card is None or event.card.controller != source.controller:
-            return False
-        if creature_only:
-            # "a creature you control" (CR 613.5): a permanent already on the
-            # battlefield when its counters would be placed reads its
-            # computed types - a land earthbend (CR 701.66a) made a creature
-            # is a creature you control, whatever it prints.
-            is_creature = (
-                game.characteristics_of(event.card).is_creature
-                if event.card.zone is Zone.BATTLEFIELD
-                else event.card.is_creature
-            )
-            if not is_creature:
-                return False
-        return (event.counter_kind or "").strip().lower() == kind
-
-    return applies
-
-
-def _reduce_counters(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    """ "...that many [counters] minus one are put on it instead."
-
-    CR 614.5 gives a replacement effect only one opportunity to affect an
-    event, so this is a flat minus one regardless of how many counters were
-    headed for the permanent - not a floor applied per counter. When only one
-    counter would have been placed, one minus one is zero: no counter is put
-    on at all, which `Game.add_counters` already treats as nothing to do for
-    a non-positive amount, the same way it already does for the doubler's
-    opposite case. There is no numbered CR clause for the zero floor itself -
-    it is what "one minus one" already equals; `max(..., 0)` only guards
-    against a `-1/-1 counters minus one` misreading a larger single removal as
-    negative, which no printed card's wording asks for.
-    """
-    event.amount = max(event.amount - 1, 0)
 
 
 # -- "lands you control enter untapped" (CR 614.1d, general and non-self) --
@@ -2633,29 +3000,6 @@ def _compile_lands_you_control_enter_untapped(effect: ReplacementEffect) -> Card
         label=effect.text,
         applies=_lands_you_control_enter_untapped_applies,
         apply=_lands_you_control_enter_untapped,
-    )
-
-
-def _compile_counter_reducer(effect: ReplacementEffect) -> CardReplacement | None:
-    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
-        return None
-    event_match = _COUNTER_REDUCER_EVENT_RE.match((effect.event or "").strip())
-    if event_match is None:
-        return None
-    replacement_match = _COUNTER_REDUCER_REPLACEMENT_RE.match(
-        (effect.replacement or "").strip().rstrip(".")
-    )
-    if replacement_match is None:
-        return None
-    event_kind = event_match.group("kind").strip().lower()
-    replacement_kind = replacement_match.group("kind").strip().lower()
-    if event_kind != replacement_kind:
-        return None
-    creature_only = event_match.group("subject").strip().lower() == "creature"
-    return CardReplacement(
-        label=effect.text,
-        applies=_counter_reducer_applies(event_kind, creature_only),
-        apply=_reduce_counters,
     )
 
 
@@ -2896,6 +3240,7 @@ def _cant_enter_replacements(card: Card) -> list[CardReplacement]:
 #: specific enough that at most one ever claims a given `ReplacementEffect`.
 _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = (
     _compile_graveyard_exile,
+    _compile_dies_exile,
     _compile_enters_uncast_exile,
     _compile_damage_multiplier,
     _compile_damage_plus_amount,
@@ -2907,8 +3252,8 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_draw_plus,
     _compile_token_doubler,
     _compile_extra_token,
+    _compile_token_substitution,
     _compile_counter_doubler,
-    _compile_counter_reducer,
     _compile_lands_you_control_enter_untapped,
 )
 
@@ -3050,6 +3395,282 @@ def _pay_life_or_tapped(amount: int, card_name: str) -> Apply:
     return apply
 
 
+#: "you may reveal a Plains or Island card from your hand" - the optional half
+#: of a reveal land's CR 614.12a choice. The part after "you may" is an
+#: ordinary reveal cost, read by the same `total_cost_for_phrase` a spell's
+#: "Reveal X white cards from your hand" is.
+_REVEAL_CHOICE = re.compile(r"^you may (?P<cost>reveal .+ from your hand)\.?$", re.IGNORECASE)
+
+#: "you may behold a Jace" (Theorist's Sanctum) - CR 701.4a's keyword action
+#: as the optional half of the same CR 614.12a choice, read the same way
+#: `_REVEAL_CHOICE` reads a reveal land's own offer.
+_BEHOLD_CHOICE = re.compile(r"^you may (?P<cost>behold (?:a|an) .+)\.?$", re.IGNORECASE)
+
+
+def _optional_enters_payment(effect: ReplacementEffect, card_name: str) -> Apply | None:
+    """What an optional "As this enters, you may ..." (CR 614.1c) does as the
+    permanent enters, or `None` when no reader claims its payment.
+
+    Its caller pairs it with the "If you don't, it enters tapped" that
+    follows, because the two sentences are one CR 614.12a choice. Three
+    payments are read: paying life (the shocklands), revealing a card of a
+    stated quality from hand (the reveal lands, whatever quality they print),
+    and beholding a quality (Theorist's Sanctum, CR 701.4a).
+    """
+    replacement = (effect.replacement or "").strip()
+    payment = _PAY_LIFE_CHOICE.search(replacement)
+    if payment:
+        return _pay_life_or_tapped(int(payment.group(1)), card_name)
+    from .cost import ComponentKind, total_cost_for_phrase
+
+    behold = _BEHOLD_CHOICE.match(replacement)
+    if behold is not None:
+        phrase = behold.group("cost")
+        cost = total_cost_for_phrase(phrase)
+        if (
+            cost is None
+            or cost.mana.symbols
+            or len(cost.components) != 1
+            or cost.components[0].kind is not ComponentKind.BEHOLD
+        ):
+            return None
+        return _behold_or_tapped(phrase, card_name)
+    reveal = _REVEAL_CHOICE.match(replacement)
+    if reveal is None:
+        return None
+    phrase = reveal.group("cost")
+    cost = total_cost_for_phrase(phrase)
+    if (
+        cost is None
+        or cost.mana.symbols
+        or len(cost.components) != 1
+        or cost.components[0].kind is not ComponentKind.REVEAL
+        or cost.components[0].variable_count
+    ):
+        return None
+    return _reveal_or_tapped(phrase, card_name)
+
+
+def _reveal_or_tapped(phrase: str, card_name: str) -> Apply:
+    """A reveal land's branch, as one CR 614.12a choice made before it enters.
+
+    With no qualifying card in hand there is nothing to reveal (CR 118.3), so
+    nobody is asked and the land enters tapped. Otherwise its controller is
+    asked whether to reveal; yes asks which card (`Game.choose_cards_to_reveal`,
+    the question a reveal cost on a spell asks) and pays the reveal, which
+    shows the card to every player and leaves it in hand (CR 701.20a-b); no
+    enters it tapped.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        from .cost import total_cost_for_phrase
+
+        who = event.card.controller if event.card is not None else None
+        cost = total_cost_for_phrase(phrase, who) if who is not None else None
+        if who is None or cost is None:
+            event.tapped = True
+            return
+        (component,) = cost.components
+        component.source = card_name
+        entering_id = event.card.id if event.card is not None else None
+        eligible = [
+            card
+            for card in game.player(who).hand
+            if card.id != entering_id
+            and (
+                component.requirement is None
+                or component.requirement.why_not(card, game, who) is None
+            )
+        ]
+        source_id = source_id_of(source)
+        if not eligible or not game.may(
+            who, phrase, source=card_name, source_id=source_id, cards=eligible
+        ):
+            event.tapped = True
+            return
+        game.choose_cards_to_reveal(component, who, source=card_name, source_id=source_id)
+        if component.why_not(game) is not None:
+            event.tapped = True
+            return
+        component.pay(game)
+
+    return apply
+
+
+def _behold_or_tapped(phrase: str, card_name: str) -> Apply:
+    """Theorist's Sanctum's own branch, as one CR 614.12a choice made before
+    it enters: "As this land enters, you may behold a Jace. If you don't,
+    this land enters tapped."
+
+    CR 701.4a's two halves both count as eligible objects here - a hand card
+    to reveal, or a battlefield permanent already controlled - and the
+    controller is asked which, if either, once at least one exists; no
+    eligible object at all enters the land tapped with nobody asked
+    (CR 118.3), the same as `_reveal_or_tapped`'s hand-only version.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        from .cost import total_cost_for_phrase
+
+        who = event.card.controller if event.card is not None else None
+        cost = total_cost_for_phrase(phrase, who) if who is not None else None
+        if who is None or cost is None:
+            event.tapped = True
+            return
+        (component,) = cost.components
+        component.source = card_name
+        entering_id = event.card.id if event.card is not None else None
+        eligible = [
+            card
+            for card in list(game.player(who).hand) + list(game.permanents_controlled_by(who))
+            if card.id != entering_id
+            and (
+                component.requirement is None
+                or component.requirement.why_not(card, game, who) is None
+            )
+        ]
+        source_id = source_id_of(source)
+        if not eligible or not game.may(
+            who, phrase, source=card_name, source_id=source_id, cards=eligible
+        ):
+            event.tapped = True
+            return
+        answer = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=who,
+                prompt=f"choose what to behold for {card_name} (CR 701.4a)",
+                source=card_name,
+                source_id=source_id,
+                amount=1,
+                cards=tuple(card.id for card in eligible),
+            )
+        )
+        by_id = {card.id: card for card in eligible}
+        component.cards = [by_id[chosen_id] for chosen_id in answer]
+        if component.why_not(game) is not None:
+            event.tapped = True
+            return
+        component.pay(game)
+
+    return apply
+
+
+# --------------------------------------------------------------------------
+# "As [this] enters, [you may] sacrifice any number of <description>. [If you
+# do, ]it enters with [<multiplier>] that many <kind> counters on it."
+# --------------------------------------------------------------------------
+#
+# CR 614.12a's choice again, the same two-sentences-as-one-choice shape
+# `_pay_life_or_tapped` reads for the shockland - just paired with an
+# ENTERS_WITH follower instead of an ENTERS_TAPPED one, and the payment is a
+# count of sacrificed permanents rather than a fixed amount of life.
+#
+# Shimatsu the Bloodcloaked ("As Shimatsu enters, sacrifice any number of
+# permanents. Shimatsu enters with that many +1/+1 counters on it.") is
+# mandatory - the sacrifice is not itself a "you may" - and the follower
+# carries no back-reference condition at all. Devouring Hellion ("As this
+# creature enters, you may sacrifice any number of creatures and/or
+# planeswalkers. If you do, it enters with twice that many +1/+1 counters on
+# it.") is worded as a choice, and its follower's condition is the "you do"
+# back-reference `_IF_YOU_DO` reads, the same way `_IF_YOU_DONT` reads the
+# shockland's "you don't". Both are read the same way underneath: CR 107.1c's
+# "any number of" already permits choosing zero on its own, so neither needs a
+# separate yes/no question before the CHOOSE_CARDS one - see
+# `_sacrifice_any_number_then_enter_with_counters`.
+
+#: "If you do" - Devouring Hellion's back-reference to its own "you may
+#: sacrifice" half, the same role `_IF_YOU_DONT` plays for the shockland's
+#: "you don't".
+_IF_YOU_DO = re.compile(r"^(?:if )?you do$", re.IGNORECASE)
+
+#: "sacrifice any number of <description>" (Shimatsu, mandatory) or "you may
+#: sacrifice any number of <description>" (Devouring Hellion, optional) - read
+#: off an `AS_ENTERS` effect's own `replacement` text. `description` is handed
+#: to `machines/effects._sacrifice_restriction`, the same untargeted-
+#: permanent-description reader CR 118.12's "you may sacrifice <restriction>.
+#: If you do, ..." clause already uses, so "permanents" and "creatures and/or
+#: planeswalkers" both read through the one shared grammar rather than a
+#: second one built here.
+_SACRIFICE_ANY_NUMBER_RE = re.compile(
+    r"^(?P<optional>you may )?sacrifice (?P<restriction>any number of .+?)\.?$", re.IGNORECASE
+)
+
+
+def _sacrifice_any_number_choice(effect: ReplacementEffect) -> tuple[str, bool] | None:
+    """`(restriction, optional)` off an `AS_ENTERS` "[you may ]sacrifice any
+    number of <description>" replacement text, or `None` when it is not that
+    shape at all. `restriction` keeps the "any number of" quantity phrase on
+    the front - `machines.effects._sacrifice_restriction` reads the quantity
+    and the description together, the same text CR 118.12's own "you may
+    sacrifice <restriction>" clause hands it.
+    """
+    match = _SACRIFICE_ANY_NUMBER_RE.match((effect.replacement or "").strip())
+    if match is None:
+        return None
+    return match.group("restriction").strip(), match.group("optional") is not None
+
+
+def _sacrifice_any_number_then_enter_with_counters(
+    restriction: "_SacrificeRestriction", counter_kind: str, multiplier: int, card_name: str
+) -> Apply:
+    """The combined CR 614.12a choice: sacrifice, then carry the count into
+    the entering permanent's own counters.
+
+    `restriction` is a `machines.effects._SacrificeRestriction`, imported for
+    typing only: `effects` already imports this module.
+
+    Runs entirely before `Game.enter_the_battlefield` puts the permanent onto
+    the battlefield (CR 614.12a), against `restriction.candidates` - the
+    controller's other permanents fitting the printed description, off the
+    *computed* board (CR 613.5), which never includes the entering permanent
+    itself: it is not in `game.battlefield` yet at this point (CR 614.12a
+    again - the choice is made *before* it enters). One `CHOOSE_CARDS`
+    question, `exact=False` (CR 107.1c's "any number of" - zero is always a
+    legal answer, and an unscripted answer defaults to none per
+    `machines/decisions.default_answer`), so neither Shimatsu's mandatory
+    sacrifice nor Devouring Hellion's "you may" wording is asked a separate
+    yes/no first - the range itself already carries the option. Each chosen
+    permanent is sacrificed (`Game.sacrifice`, CR 701.21a), and the number
+    actually sacrificed - zero included - times `multiplier` is the count
+    `_apply_self_enters` elsewhere in this module would otherwise have needed
+    a literal number for.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = event.card.controller if event.card is not None else None
+        if who is None:
+            return
+        player = game.player(who)
+        source_id = source_id_of(source)
+        candidates = restriction.candidates(game, player, source.id if source is not None else None)
+        chosen_ids: tuple[UUID, ...] = ()
+        if candidates:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=who,
+                    prompt=f"choose permanents to sacrifice as {card_name} enters",
+                    source=card_name,
+                    source_id=source_id,
+                    amount=len(candidates),
+                    exact=False,
+                    cards=tuple(candidate.id for candidate in candidates),
+                )
+            )
+            assert isinstance(answer, tuple)
+            chosen_ids = answer
+        by_id = {candidate.id: candidate for candidate in candidates}
+        chosen = [by_id[card_id] for card_id in chosen_ids]
+        for permanent in chosen:
+            game.sacrifice(permanent)
+        event.counters[counter_kind] = (
+            event.counters.get(counter_kind, 0) + len(chosen) * multiplier
+        )
+
+    return apply
+
+
 # --------------------------------------------------------------------------
 # The condition on a self "enters tapped" line (CR 614.1d)
 # --------------------------------------------------------------------------
@@ -3086,9 +3707,26 @@ EntersCondition = Callable[["Game", CardState], bool]
 _YOU_CONTROL_SUBTYPES_RE = re.compile(r"^you control (an? [A-Z][\w'-]*(?: or an? [A-Z][\w'-]*)*)$")
 _A_SUBTYPE_RE = re.compile(r"an? ([A-Z][\w'-]*)")
 
-#: "you control two or more other lands", "you control two or fewer other lands".
+#: "unless you control a planeswalker" (the fra "Annex"/"Commons" land
+#: cycle's own shape) - CR 300.1's bare card type, told apart from
+#: `_YOU_CONTROL_SUBTYPES_RE`'s subtype by the capital: Oracle text never
+#: capitalises a card type the way it always capitalises a subtype
+#: (CR 205.3), so the two shapes never collide.
+_YOU_CONTROL_CARD_TYPE_RE = re.compile(
+    r"^you control an? (?P<type>artifact|creature|enchantment|land|planeswalker)$",
+    re.IGNORECASE,
+)
+
+#: "you control two or more other lands", "you control two or fewer other lands",
+#: the battle lands' "you control two or more basic lands" (CR 205.4c), and
+#: "you control three or more other Mountains" (Dwarven Mine). A land subtype
+#: is a capitalized single word (CR 305.5), so the capital is required even
+#: under IGNORECASE - "other creatures" is a noun this cannot check.
 _YOU_CONTROL_OTHER_LANDS_RE = re.compile(
-    r"^you control (?P<count>[\w-]+) or (?P<direction>more|fewer) other lands$", re.IGNORECASE
+    rf"^you control (?P<count>{COUNT}) or (?P<direction>more|fewer) "
+    r"(?:(?P<other>other) )?(?:(?P<basic>basic) )?"
+    r"(?:lands|(?P<subtype>(?-i:[A-Z])[\w'-]*))$",
+    re.IGNORECASE,
 )
 
 #: "a player has 13 or less life" - any player at the table, not only the
@@ -3125,8 +3763,34 @@ def _controls_a_subtype(subtypes: frozenset[str]) -> EntersCondition:
     return holds
 
 
-def _controls_other_lands(count: int, at_least: bool) -> EntersCondition:
-    """ "you control [N] or more/fewer **other** lands".
+def _controls_a_card_type(card_type: Type) -> EntersCondition:
+    """`_controls_a_subtype`'s twin over CR 300.1's card types instead of
+    CR 205.3's subtypes - "you control a planeswalker", not "you control a
+    Mountain".
+    """
+
+    def holds(game: "Game", entering: CardState) -> bool:
+        controller = entering.controller
+        if controller is None:
+            return False
+        board = game.computed_board()
+        return any(
+            card_type in board.of(permanent).types
+            for permanent in game.battlefield
+            if permanent.controller == controller
+        )
+
+    return holds
+
+
+def _controls_other_lands(
+    count: int, at_least: bool, basic: bool = False, subtype_plural: str | None = None
+) -> EntersCondition:
+    """ "you control [N] or more/fewer **other** [lands | Mountains]".
+
+    `subtype_plural` is the printed plural of a land type (CR 205.3i), matched
+    against each land's computed subtypes as that word or that word plus "s" -
+    "Plains" is its own plural, "Mountains" is "Mountain" plus one.
 
     "Other" is why the entering permanent is excluded by id: CR 614.12's
     effects are read while the permanent is still on its way in
@@ -3148,6 +3812,15 @@ def _controls_other_lands(count: int, at_least: bool) -> EntersCondition:
             for permanent in game.battlefield
             if permanent.controller == controller
             and Type.LAND in board.of(permanent).types
+            # CR 205.4c: "basic" is the supertype, never a basic land type.
+            and (not basic or board.of(permanent).is_basic)
+            and (
+                subtype_plural is None
+                or any(
+                    subtype_plural in (subtype, f"{subtype}s")
+                    for subtype in board.of(permanent).subtypes
+                )
+            )
             and permanent.id != entering.id
         )
         return lands >= count if at_least else lands <= count
@@ -3206,7 +3879,56 @@ def _enters_tapped_condition(effect: ReplacementEffect) -> EntersCondition | Non
     return tapped_unless
 
 
+def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
+    """The entering object's own "enters tapped" lines (CR 614.1d) that
+    `_self_enters_modifiers` skips because it cannot read them.
+
+    Two shapes are skipped there, and both are named here from the same parse:
+    a condition none of `_read_enters_condition`'s readers claims (a count
+    of a noun it cannot check), and an "If you don't" whose
+    optional half is not a payment `_optional_enters_payment` reads. Only the
+    face that is up is read, the same CR 712.8 filter `_self_enters_modifiers`
+    applies. `hypothetical.predict_enters` reports a land with any of these
+    tapped, with a notice, rather than repeating the engine's silent untapped
+    guess.
+    """
+    up_face_name = card_state.up_face_name
+    pending_payments = 0
+    unread: list[str] = []
+    for effect in parse_replacement_effects(card_state.card):
+        if up_face_name is not None and effect.face not in (None, up_face_name):
+            continue
+        if not effect.self_replacement:
+            continue
+        if (
+            effect.kind is ReplacementKind.AS_ENTERS
+            and effect.optional
+            and _optional_enters_payment(effect, card_state.card.name) is not None
+        ):
+            pending_payments += 1
+            continue
+        if effect.kind is not ReplacementKind.ENTERS_TAPPED:
+            continue
+        condition = (effect.condition or "").strip()
+        if not condition:
+            continue
+        if _IF_YOU_DONT.match(condition):
+            if pending_payments:
+                pending_payments -= 1
+            else:
+                unread.append(effect.text)
+            continue
+        if _enters_tapped_condition(effect) is None:
+            unread.append(effect.text)
+    return unread
+
+
 def _read_enters_condition(condition: str) -> EntersCondition | None:
+    match = _YOU_CONTROL_CARD_TYPE_RE.match(condition)
+    if match is not None:
+        card_type = _CARD_TYPE_WORDS.get(match.group("type").lower())
+        return _controls_a_card_type(card_type) if card_type is not None else None
+
     match = _YOU_CONTROL_SUBTYPES_RE.match(condition)
     if match is not None:
         subtypes = frozenset(_A_SUBTYPE_RE.findall(match.group(1)))
@@ -3214,10 +3936,15 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
 
     match = _YOU_CONTROL_OTHER_LANDS_RE.match(condition)
     if match is not None:
-        count, variable = _amount_of(match.group("count"))
-        if count is None or variable:
+        count = parse_count(match.group("count"))
+        if count is None:
             return None
-        return _controls_other_lands(count, at_least=match.group("direction").lower() == "more")
+        return _controls_other_lands(
+            count,
+            at_least=match.group("direction").lower() == "more",
+            basic=match.group("basic") is not None,
+            subtype_plural=match.group("subtype"),
+        )
 
     match = _A_PLAYER_HAS_LIFE_RE.match(condition)
     if match is not None:
@@ -3263,12 +3990,14 @@ def _classify_choice(replacement_text: str) -> ChoiceKind | None:
 
 class UnwiredChoiceNotice(EngineModel):
     """A card's own sentence reads back "the chosen color/card name/creature
-    type" (CR 614.12a's choice, once made), but this wave only performs the
-    one shape that adds mana - `machines/effects.py`'s "adds an additional
-    ..." clause. Recorded instead of the card silently doing nothing, the
-    same shape `AnaphoricClauseNotice`/`ConditionalClauseNotice`/
-    `LayerNotice` already use elsewhere in this codebase for a clause this
-    read but did not perform.
+    type" (CR 614.12a's choice, once made), but this wave only performs two
+    shapes that add mana - `machines/effects.py`'s "adds an additional ..."
+    clause, and `machines/abilities.ManaAbility`'s own "{T}: Add ... mana of
+    the chosen color" printed ability (Room of Refuge, Sunken Citadel).
+    Recorded instead of the card silently doing nothing, the same shape
+    `AnaphoricClauseNotice`/`ConditionalClauseNotice`/`LayerNotice` already
+    use elsewhere in this codebase for a clause this read but did not
+    perform.
 
     Three of the pool's seven "as this enters, choose ..." cards land here:
 
@@ -3302,10 +4031,11 @@ class UnwiredChoiceNotice(EngineModel):
     its own; only the player-targeted and cost/restriction shapes needed a
     notice built here.
 
-    None of the four attempted consumers are wired this wave - CR 614.12a's
-    choice itself is (`CardState.choice`), and the one payoff this wave
-    performs end to end is the mana clause (Utopia Sprawl, Leyline of
-    Abundance, Badgermole Cub).
+    None of the four attempted consumers listed above is wired - CR
+    614.12a's choice itself is (`CardState.choice`), and the two payoffs
+    performed end to end are the "adds an additional" mana clause (Utopia
+    Sprawl, Leyline of Abundance, Badgermole Cub) and the printed "{T}: Add
+    ... mana of the chosen color" ability (Room of Refuge, Sunken Citadel).
     """
 
     source_id: UUID
@@ -3347,6 +4077,21 @@ _LAYER_HANDLED_SUBJECT_RE = re.compile(
     r"(?:has|have|gets?|gains?)\b",
     re.IGNORECASE,
 )
+#: The third shape this engine performs end to end: "{T}: Add [N] mana of
+#: the chosen color." (Room of Refuge, Sunken Citadel), CR 614.12a's choice
+#: bound straight into the mana ability itself rather than into a triggered
+#: "adds an additional" rider - `machines/abilities.ManaAbility.uses_chosen_
+#: color`, read against `CardState.choice` by both `Game.activate_ability`'s
+#: own CR 605.3b fast path and `machines/cost.py`'s auto-tap solver
+#: (`_mana_narrowings`), so a colour other than the chosen one is refused
+#: and the chosen one is the only one ever produced. Excluded here so a
+#: wired consumer stops being reported as an unwired one; "mana of the
+#: chosen color" alone (no leading "add") is left unexcluded, since nothing
+#: in the pool prints the anaphora that way without the mana verb in front
+#: of it.
+_WIRED_CHOSEN_COLOR_MANA_HINT_RE = re.compile(
+    r"\badds? (?:[a-z]+|\d+) mana of the chosen color\b", re.IGNORECASE
+)
 
 
 def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNotice]:
@@ -3366,6 +4111,7 @@ def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNo
             sentence.lower().startswith("as ")
             or _WIRED_MANA_CLAUSE_HINT_RE.search(sentence)
             or _WIRED_NAMED_COST_INCREASE_HINT_RE.search(sentence)
+            or _WIRED_CHOSEN_COLOR_MANA_HINT_RE.search(sentence)
             or _LAYER_HANDLED_SUBJECT_RE.match(sentence)
         ):
             continue
@@ -3816,8 +4562,12 @@ def _self_enters_modifiers(
         if index in consumed or not effect.self_replacement:
             continue
 
-        payment = _PAY_LIFE_CHOICE.search(effect.replacement or "")
-        if effect.kind is ReplacementKind.AS_ENTERS and effect.optional and payment:
+        choice = (
+            _optional_enters_payment(effect, card_state.card.name)
+            if effect.kind is ReplacementKind.AS_ENTERS and effect.optional
+            else None
+        )
+        if choice is not None:
             follower = next(
                 (
                     other
@@ -3833,7 +4583,7 @@ def _self_enters_modifiers(
                 performable.append(
                     (
                         f"self:{index}",
-                        _pay_life_or_tapped(int(payment.group(1)), card_state.card.name),
+                        choice,
                         f"{effect.text} {parsed[follower].text}",
                         False,
                     )
@@ -3855,6 +4605,48 @@ def _self_enters_modifiers(
             continue
 
         if effect.kind is ReplacementKind.AS_ENTERS and effect.condition is None:
+            sacrifice_choice = _sacrifice_any_number_choice(effect)
+            if sacrifice_choice is not None:
+                restriction_text, optional = sacrifice_choice
+                from .effects import _sacrifice_restriction
+
+                restriction = _sacrifice_restriction(restriction_text)
+                if restriction is not None:
+                    follower = next(
+                        (
+                            other
+                            for other, candidate in enumerate(parsed)
+                            if other > index
+                            and candidate.kind is ReplacementKind.ENTERS_WITH
+                            and candidate.counter_kind is not None
+                            and candidate.that_many_multiplier is not None
+                            and (
+                                (not optional and candidate.condition is None)
+                                or (
+                                    optional
+                                    and _IF_YOU_DO.match((candidate.condition or "").strip())
+                                )
+                            )
+                        ),
+                        None,
+                    )
+                    if follower is not None:
+                        consumed.add(follower)
+                        performable.append(
+                            (
+                                f"self:{index}",
+                                _sacrifice_any_number_then_enter_with_counters(
+                                    restriction,
+                                    parsed[follower].counter_kind,
+                                    parsed[follower].that_many_multiplier,
+                                    card_state.card.name,
+                                ),
+                                f"{effect.text} {parsed[follower].text}",
+                                False,
+                            )
+                        )
+                        continue
+
             choice_kind = _classify_choice(effect.replacement or "")
             if choice_kind is not None:
                 performable.append(
@@ -3944,7 +4736,10 @@ def _self_enters_modifiers(
             and effect.counter_kind is not None
             and amount is not None
         )
-        if effect.kind is ReplacementKind.ENTERS_TAPPED or readable_counters:
+        if (
+            effect.kind in (ReplacementKind.ENTERS_TAPPED, ReplacementKind.ENTERS_PREPARED)
+            or readable_counters
+        ):
             performable.append(
                 (f"self:{index}", _apply_self_enters(effect, amount), effect.text, False)
             )
@@ -4066,6 +4861,40 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
+    from .casting import CAST_PERMISSION, exiles_spells_cast_this_way
+
+    if (
+        record.keyword == CAST_PERMISSION
+        and event.destination is Zone.GRAVEYARD
+        and card.controller is not None
+        and exiles_spells_cast_this_way(game, card.controller)
+    ):
+        # Jaya Ballard's emblem: "If a spell cast this way would be put into
+        # your graveyard, exile it instead." - a replacement (CR 614.1a) on a
+        # spell recorded as cast under that emblem's own permission.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:cast-permission",
+                source=card,
+                label="a spell cast this way is exiled instead of put into the graveyard",
+                apply=_exile_instead,
+            )
+        )
+    if record.exile_instead_of_graveyard:
+        # Dire Fleet Daredevil's/Nita, Forum Conciliator's own rider on the
+        # "exile target ... you may cast it ..." grant (CR 604.5) - the same
+        # unconditional "any time it would leave the stack" shape flashback's
+        # own second static already gets, just recorded through a plain
+        # boolean instead of `record.keyword` since the grant names no
+        # keyword at all.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:exile_instead_of_graveyard",
+                source=card,
+                label="if that spell would be put into a graveyard, exile it instead",
+                apply=_exile_instead,
+            )
+        )
     if record.keyword is not None and record.keyword.lower() == "harmonize":
         # CR 702.180a's third static ability: "If the harmonize cost was
         # paid, exile this card instead of putting it anywhere else any
@@ -4080,9 +4909,9 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
-    from .keywords import has_rebound  # imported here: casting imports this module's siblings
+    from .keywords import has_rebound_now  # imported here: casting imports this module's siblings
 
-    if has_rebound(card.card) and record.origin_zone is Zone.HAND and event.resolving:
+    if has_rebound_now(card) and record.origin_zone is Zone.HAND and event.resolving:
         # CR 702.88a: "If this spell was cast from your hand, instead of
         # putting it into your graveyard as it resolves, exile it." A spell
         # cast from anywhere else - most pointedly from exile by its own
@@ -4163,6 +4992,8 @@ def _apply_self_enters(effect: ReplacementEffect, amount: int | None) -> Apply:
     def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
         if effect.kind is ReplacementKind.ENTERS_TAPPED:
             event.tapped = True
+        elif effect.kind is ReplacementKind.ENTERS_PREPARED:
+            event.prepared = True
         else:
             assert effect.counter_kind is not None and amount is not None
             event.counters[effect.counter_kind] = (
@@ -4407,6 +5238,138 @@ def draw_redirection_for(text: str, controller: str, target: str | None) -> Draw
     )
 
 
+class DrawReplacementKind(StrEnum):
+    """The shapes a `NextTimeDrawReplacement` can take. One variant today,
+    the same open-ended enum pattern `ShieldKind` already gives CR 615.8's
+    "next time [a source] would deal damage" shield - a new variant is a
+    schema bump, not a new stored type, the next time this pool needs one."""
+
+    #: "Instead [player] exiles the top card of their library[. They may
+    #: play it this turn.]" - Urabrask, Heretic Praetor's own second
+    #: trigger.
+    EXILE_TOP_CARD = "exile_top_card"
+
+
+class NextTimeDrawReplacement(EngineModel):
+    """One player's *next* draw this turn, replaced with something else
+    (CR 614.1a's "the next time ... would ..., instead ..." shape), rather
+    than every draw for a duration the way `DrawRedirection` reads Plagiarize's
+    "until end of turn, if ... would draw ..., instead ...".
+
+    Urabrask, Heretic Praetor prints the only one in this pool: "At the
+    beginning of each opponent's upkeep, the next time they would draw a
+    card this turn, instead they exile the top card of their library. They
+    may play it this turn." The trigger's own resolution installs this
+    record; nothing else happens when it resolves - the same division
+    `Game.create_prevention_shield` already draws for CR 615.8 ("creating the
+    shield *is* the effect").
+
+    Stored on `Game.next_time_draw_replacements` for the same reason
+    `Game.prevention_shields` and `Game.draw_redirections` are stored rather
+    than closed over: the ability that created it is off the stack by the
+    time a future draw event checks for it, and CR 514.2's cleanup step needs
+    an unused one to expire with every other "this turn" effect.
+    """
+
+    kind: DrawReplacementKind
+    label: str
+    """What the effect says, for the event trace."""
+
+    controller: str
+    """Who created it - `ApplicableEffect` needs a controller for CR 616.1's
+    ordering, and the ability that made this may be off the stack by the time
+    it fires."""
+
+    affected: str
+    """The player whose draw is replaced - Urabrask's own "they"."""
+
+    grants_play_permission: bool = False
+    """"They may play it this turn." - CR 601.3, via `Game.
+    grant_play_permission`, the same primitive Ragavan, Nimble Pilferer and
+    Emry, Lurker of the Loch already use."""
+
+    action: PlayAction = PlayAction.PLAY
+    """CR 601.1a's "play"/"cast" distinction, read off the printed permission
+    sentence - only meaningful when `grants_play_permission` is set."""
+
+    pays_mana_cost: bool = True
+    """CR 118.9: whether the permission includes "without paying its mana
+    cost" - only meaningful when `grants_play_permission` is set."""
+
+    spent: bool = False
+    """CR 614.5: applied at most once. Consumed on the very next draw event
+    for `affected`, however that draw happens."""
+
+    until_end_of_turn: bool = True
+    """CR 514.2 ends an unused one in the cleanup step, alongside every other
+    "this turn" effect."""
+
+
+def _finality_counter_effects(event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """A finality counter's replacement effect (CR 122.1h): "One or more
+    finality counters on a permanent create a single replacement effect that
+    stops the permanent from going to the graveyard. That effect is 'If this
+    permanent would be put into a graveyard from the battlefield, exile it
+    instead.'"
+
+    Gathered here rather than checked inside `Game.put_into_graveyard` so CR
+    616.1 orders it against every other graveyard replacement (Rest in Peace)
+    the way it orders any two. One effect however many counters there are,
+    keyed by the permanent, so CR 614.5 applies it once. Like a regeneration
+    shield it has no source permanent to ask, so its controller is the
+    permanent's own.
+    """
+    if event.kind is not EventKind.ZONE_CHANGE or event.destination is not Zone.GRAVEYARD:
+        return []
+    if event.origin is not Zone.BATTLEFIELD:
+        return []
+    permanent = event.card
+    if permanent is None or permanent.counter_count(Counter.FINALITY) <= 0:
+        return []
+    return [
+        ApplicableEffect(
+            key=f"finality:{permanent.id}",
+            source=None,
+            label="finality counter: exile it instead (CR 122.1h)",
+            apply=_exile_instead_of_graveyard,
+            controller_username=permanent.controller,
+        )
+    ]
+
+
+def _exile_instead_of_graveyard(
+    game: "Game", source: CardState | None, event: ReplaceableEvent
+) -> None:
+    event.destination = Zone.EXILE
+
+
+def _die_to_exile_this_turn_effects(
+    game: "Game", event: ReplaceableEvent
+) -> list[ApplicableEffect]:
+    """Essence Burn's own rider (CR 614.1a): "If that permanent would die this
+    turn, exile it instead" - one specific permanent, named by a resolved
+    spell that is long gone by the time the replacement ever fires, so the
+    marker is kept on `Game.die_to_exile_this_turn` the same way `Game.draw_
+    redirections` keeps Plagiarize's own sourceless redirection alive.
+    """
+    if event.kind is not EventKind.ZONE_CHANGE or event.destination is not Zone.GRAVEYARD:
+        return []
+    if event.origin is not Zone.BATTLEFIELD:
+        return []
+    permanent = event.card
+    if permanent is None or permanent.id not in game.die_to_exile_this_turn:
+        return []
+    return [
+        ApplicableEffect(
+            key=f"die_to_exile_this_turn:{permanent.id}",
+            source=None,
+            label="if it would die this turn, exile it instead",
+            apply=_exile_instead_of_graveyard,
+            controller_username=permanent.controller,
+        )
+    ]
+
+
 def _draw_redirection_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """The draw redirections waiting on this draw event (CR 614.1a).
 
@@ -4441,6 +5404,67 @@ def _draw_redirection_effects(game: "Game", event: ReplaceableEvent) -> list[App
     ]
 
 
+def _next_time_draw_replacement_effects(
+    game: "Game", event: ReplaceableEvent
+) -> list[ApplicableEffect]:
+    """The unspent "next time [player] would draw a card this turn, instead
+    ..." replacements waiting on this draw event (CR 614.1a, CR 614.5).
+
+    Sourceless, like `_draw_redirection_effects`: the ability that installed
+    one may be off the stack, and CR 614.6 does not care. Unlike a
+    `DrawRedirection`, this fires at most once - `replacement.spent` is set
+    inside `apply` rather than the record being removed from `Game.
+    next_time_draw_replacements`, so a player ordering several replaceable
+    effects on the same draw (CR 616.1) still sees a consistent list while
+    they choose, and the spent record is what CR 514.2's cleanup step (and
+    every later draw this turn) then skips.
+    """
+    if event.kind is not EventKind.DRAW or event.player is None:
+        return []
+
+    def applier(replacement: NextTimeDrawReplacement) -> Apply:
+        def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+            replacement.spent = True
+            # "instead they exile the top card of their library" - the
+            # event's own draw is replaced down to nothing (CR 603.2g), and a
+            # *different* zone change happens in its place.
+            event.amount = 0
+            player = game.player(replacement.affected)
+            if not player.library:
+                return
+            if replacement.kind is DrawReplacementKind.EXILE_TOP_CARD:
+                card = game.exile_permanent(player.library[0])
+                if replacement.grants_play_permission:
+                    # "They may play it this turn." (CR 601.3), the same
+                    # primitive Ragavan, Nimble Pilferer's own "you may cast
+                    # that card" already grants.
+                    game.grant_play_permission(
+                        card,
+                        replacement.affected,
+                        action=replacement.action,
+                        pays_mana_cost=replacement.pays_mana_cost,
+                        source_name=replacement.label,
+                        rule="CR 601.3",
+                        zone=card.zone,
+                    )
+
+        return apply
+
+    return [
+        ApplicableEffect(
+            key=f"next-time-draw-replacement:{index}",
+            source=None,
+            label=replacement.label,
+            apply=applier(replacement),
+            controller_username=replacement.controller,
+        )
+        for index, replacement in enumerate(game.next_time_draw_replacements)
+        if not replacement.spent
+        and replacement.affected == event.player.username
+        and event.amount > 0
+    ]
+
+
 def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """Every effect that would modify this event as it stands (CR 614.1, 616.1).
 
@@ -4457,7 +5481,10 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     found.extend(_protection_effects(game, event))
     found.extend(_shield_effects(game, event))
     found.extend(_regeneration_effects(game, event))
+    found.extend(_finality_counter_effects(event))
+    found.extend(_die_to_exile_this_turn_effects(game, event))
     found.extend(_draw_redirection_effects(game, event))
+    found.extend(_next_time_draw_replacement_effects(game, event))
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
         entering = event.card

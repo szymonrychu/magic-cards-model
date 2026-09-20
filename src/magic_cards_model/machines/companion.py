@@ -32,6 +32,7 @@ import re
 from dataclasses import dataclass
 
 from ..models.card import Card, Type, subtypes_of, types_of
+from ..numbers import parse_count
 
 #: CR 702.139a's own templating: "Companion—[Condition]." The reminder text
 #: that follows in parentheses is not part of the condition and is dropped.
@@ -83,30 +84,6 @@ class CompanionConditionResult:
 
     satisfied: bool | None
     reason: str
-
-
-_WORD_NUMBERS = {
-    "zero": 0,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-    "twenty": 20,
-    "forty": 40,
-}
-
-
-def _number(word: str) -> int | None:
-    word = word.strip().lower()
-    if word.isdigit():
-        return int(word)
-    return _WORD_NUMBERS.get(word)
 
 
 #: Kaheera's own shape: "Each creature card in your starting deck is a Cat,
@@ -248,7 +225,7 @@ def companion_condition_satisfied(
     match = _MANA_VALUE_THRESHOLD_RE.match(normalized)
     if match is not None:
         qualifying = _qualifying_cards(match.group("qualifier"), mainboard_cards)
-        number = _number(match.group("number"))
+        number = parse_count(match.group("number"), article=False)
         if qualifying is None or number is None:
             return CompanionConditionResult(
                 satisfied=None, reason=f"{card.name}'s mana-value threshold is unreadable"
@@ -271,7 +248,7 @@ def companion_condition_satisfied(
         # "... and land cards" exempts lands unconditionally (Keruga), which
         # is exactly `_qualifying_cards("nonland", ...)`'s own restriction.
         qualifying = _qualifying_cards("nonland", mainboard_cards)
-        number = _number(match.group("number"))
+        number = parse_count(match.group("number"), article=False)
         if number is None:
             return CompanionConditionResult(
                 satisfied=None, reason=f"{card.name}'s mana-value threshold is unreadable"
@@ -313,7 +290,7 @@ def companion_condition_satisfied(
 
     match = _DECK_SIZE_RE.match(normalized)
     if match is not None:
-        number = _number(match.group("number"))
+        number = parse_count(match.group("number"), article=False)
         if number is None:
             return CompanionConditionResult(
                 satisfied=None, reason=f"{card.name}'s deck-size threshold is unreadable"

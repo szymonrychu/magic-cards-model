@@ -3,8 +3,9 @@ cards. Until the end of your next turn, you may play cards exiled this way."
 
 The duration is the reason this card needed a new primitive rather than
 reusing Ugin, Eye of the Storms' or Ragavan, Nimble Pilferer's own "until end
-of turn" `PlayPermission` grant: CR 800.4m's "until the end of your next
-turn" outlives the turn it was granted on, so `PlayPermission.
+of turn" `PlayPermission` grant: CR 611.2a's "until the end of your next
+turn" (a continuous effect "lasts as long as stated by the spell or ability
+creating it") outlives the turn it was granted on, so `PlayPermission.
 until_next_turn_of` was added (mirroring `machines.layers.ContinuousEffect.
 until_next_turn_of` and `machines.casting_restrictions.CastingRuleEffect.
 until_next_turn_of`, both already built for Karn, the Great Creator's own
@@ -13,7 +14,7 @@ begin_turn_for` at the same moment those two are, rather than from `Game.
 cleanup_step`'s plain "until end of turn" sweep.
 
 CR numbers looked up with `knowledge_search(q="...", type="rules")` in the
-session that wrote this file: CR 601.3, CR 800.4m, CR 121.1 (draw).
+session that wrote this file: CR 601.3, CR 611.2a, CR 121.1 (draw).
 """
 
 from magic_cards_model.machines import Step
@@ -106,8 +107,8 @@ def test_the_permission_survives_this_turns_cleanup():
 
 
 def test_the_permission_ends_when_alices_next_turn_begins():
-    """CR 800.4m: "until that turn would have begun" - the moment alice's
-    next turn starts, not before."""
+    """CR 611.2a: the stated duration ends the moment alice's next turn
+    starts, not before."""
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain")

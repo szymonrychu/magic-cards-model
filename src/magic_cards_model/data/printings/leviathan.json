@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "bc482c8f-5645-4cf9-8e90-090c77f9dc64",
+  "oracle_id": "d8c49932-9b4f-4cb0-a7e9-4b7eb12203ee",
+  "multiverse_ids": [
+    108920
+  ],
+  "mtgo_id": 26023,
+  "mtgo_foil_id": 26024,
+  "tcgplayer_id": 14611,
+  "cardmarket_id": 14112,
+  "name": "Leviathan",
+  "lang": "en",
+  "released_at": "2006-10-06",
+  "uri": "https://api.scryfall.com/cards/bc482c8f-5645-4cf9-8e90-090c77f9dc64",
+  "scryfall_uri": "https://scryfall.com/card/tsb/23/leviathan?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:48:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.jpg?1783943280",
+    "normal": "https://cards.scryfall.io/normal/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.jpg?1783943280",
+    "large": "https://cards.scryfall.io/large/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.jpg?1783943280",
+    "png": "https://cards.scryfall.io/png/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.png?1783943280",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.jpg?1783943280",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.jpg?1783943280",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.webp?1783943280",
+    "grid": "https://cards.scryfall.io/grid/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.webp?1783943280",
+    "display": "https://cards.scryfall.io/display/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.webp?1783943280",
+    "art": "https://cards.scryfall.io/art/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.webp?1783943280",
+    "crop": "https://cards.scryfall.io/crop/front/b/c/bc482c8f-5645-4cf9-8e90-090c77f9dc64.webp?1783943280"
+  },
+  "mana_cost": "{5}{U}{U}{U}{U}",
+  "cmc": 9.0,
+  "type_line": "Creature \u2014 Leviathan",
+  "oracle_text": "Trample\nThis creature enters tapped and doesn't untap during your untap step.\nAt the beginning of your upkeep, you may sacrifice two Islands. If you do, untap this creature.\nThis creature can't attack unless you sacrifice two Islands. (This cost is paid as attackers are declared.)",
+  "power": "10",
+  "toughness": "10",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "6519be58-b8cb-4cd7-9f5b-4db23364715b",
+  "set": "tsb",
+  "set_name": "Time Spiral Timeshifted",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6519be58-b8cb-4cd7-9f5b-4db23364715b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bc482c8f-5645-4cf9-8e90-090c77f9dc64/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad8c49932-9b4f-4cb0-a7e9-4b7eb12203ee&unique=prints",
+  "collector_number": "23",
+  "digital": false,
+  "rarity": "special",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mark Tedin",
+  "artist_ids": [
+    "9ee9a9cc-c09e-486f-918b-69f80cbc4188"
+  ],
+  "illustration_id": "46a0bfad-24bf-40a1-90dd-8424c4a48ce7",
+  "border_color": "black",
+  "frame": "1997",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 25405,
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "11.08",
+    "usd_etched": null,
+    "eur": "0.28",
+    "eur_foil": "8.54",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=108920&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLeviathan",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLeviathan",
+    "edhrec": "https://edhrec.com/route/?cc=Leviathan"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F14611%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=14112&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/26023?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

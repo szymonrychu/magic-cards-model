@@ -629,6 +629,15 @@ class SpendClause(EngineModel):
     types: SortedFrozenSet[Type] = frozenset()
     """The card types the sentence printed - "creature spell" style. Whether
     the object needs one of them or all of them is `joined`'s answer."""
+    excluded_types: SortedFrozenSet[Type] = frozenset()
+    """CR 109.2's negation of a printed card type - Chandra, Chill of
+    Compliance's own "a noncreature spell". Always a conjunction regardless
+    of `joined`: "a noncreature, nonland spell" (De Morgan on "a creature or
+    land spell", the same reading `machines/effects.py`'s own
+    `_nonland_or_typed_card_matcher` already gives a comma-joined negation
+    list) means the object may be neither, and there is no printed shape
+    where a mana-spend restriction offers "not a creature, or not a land" as
+    two independent ways to satisfy it - only ever "not either"."""
     subtypes: SortedFrozenSet[str] = frozenset()
     """The subtypes the sentence printed, lowercased and singular (the printed
     word is read back to the subtype it names by `data/subtypes.py`) - plus
@@ -678,6 +687,12 @@ class SpendClause(EngineModel):
         # wrong one does, which is the fail-closed direction: a clause that
         # names a zone is not satisfied by a caller who could not say.
         if self.zone is not None and spend.zone is not self.zone:
+            return False
+        # CR 109.2: every negated type must be absent, independently of
+        # `joined` and of whatever the positive qualities below ask - "not
+        # this" is never one alternative among several the way a positive
+        # type list can be.
+        if self.excluded_types & spend.types:
             return False
 
         printed: list[tuple[frozenset[Any], frozenset[Any]]] = [
@@ -800,6 +815,77 @@ class RestrictedMana(EngineModel):
         return sum(self.amounts.values())
 
 
+# --------------------------------------------------------------------------
+# Mana that survives a step or phase ending (CR 500.5, 500.5a, 500.5b)
+# --------------------------------------------------------------------------
+#
+# CR 500.5, looked up this session: "As a step or phase ends ... any unspent
+# mana left in a player's mana pool empties. This is a turn-based action that
+# doesn't use the stack." A handful of effects replace that turn-based action
+# for the mana *they* added, keeping it past the boundary that would
+# otherwise empty it - CR 702.189a's firebending ("Until end of combat, you
+# don't lose this mana as steps and phases end") and Photon, Mighty Marvel's
+# combat-damage trigger ("Until end of turn, you don't lose this mana as
+# steps and phases end").
+#
+# Two named points cover every printed sentence this engine reads:
+#
+# - **CR 500.5a**: "Effects that last 'until end of combat' expire at the end
+#   of the combat phase, not at the beginning of the end of combat step" - so
+#   firebending's mana survives the end of combat *step* and only empties
+#   when the combat *phase* itself ends (`Game.empty_mana_pools`, called with
+#   `Step.END_OF_COMBAT` as the step that just ended).
+# - **CR 500.5b / CR 514.2**: "until end of turn" effects end in the cleanup
+#   step, "as one simultaneous event" with the marked damage clearing - so
+#   Photon's mana survives every ordinary step and phase boundary for the
+#   rest of the turn and only empties there (`Game.cleanup_step`).
+#
+# The tag is on the **mana**, the same way a CR 106.6 restriction is
+# (`RestrictedMana`'s own docstring above) - it travels with the mana in the
+# pool, is spendable exactly like ordinary mana in the meantime (nothing here
+# narrows what it may pay for), and dies with the mana once its own named
+# point is reached, never later.
+
+
+class ManaRetentionScope(StrEnum):
+    """The named point a retained mana's exemption from CR 500.5 runs to.
+
+    Every printed sentence in this pool names one of these two points. A third
+    point - Horizon Stone's differently-worded "doesn't empty ... this turn" -
+    is not read by any parser yet (`machines/effects.py`'s
+    `_KEEP_MANA_UNTIL_END_OF_TURN_RE`/`_FIREBENDING_ADD_MANA_RE` match only
+    the "you don't lose this mana as steps and phases end" phrasing), so no
+    third member exists to be silently misread.
+    """
+
+    END_OF_COMBAT = "end_of_combat"
+    """CR 500.5a: the end of the combat phase, not the end of combat step."""
+    END_OF_TURN = "end_of_turn"
+    """CR 500.5b / 514.2: the cleanup step's "until end of turn" action."""
+
+
+class RetainedMana(EngineModel):
+    """How much mana in a pool is exempt from CR 500.5's step/phase emptying
+    until `until`, one entry per distinct scope.
+
+    `RestrictedMana`/`SpendEffectMana`'s third sibling: narrows nothing about
+    what the mana may pay for (`ManaPool.payment_for` never reads this), so
+    ordinary spending doesn't need to know about it - only `ManaPool.empty`
+    does, to decide what survives a boundary. No printed source of retained
+    mana in this pool is also snow or CR 106.6-restricted, so `ManaPool.empty`
+    does not attempt to carry a colour's snow flag or restriction tag through
+    a boundary retained mana of that colour survives; a future card that
+    combines them would need that taught here.
+    """
+
+    until: ManaRetentionScope
+    amounts: dict[Color, int] = Field(default_factory=dict)
+
+    @property
+    def total(self) -> int:
+        return sum(self.amounts.values())
+
+
 class ManaPayment(EngineModel):
     """One settled way to pay a cost: what each symbol was paid with.
 
@@ -824,6 +910,11 @@ class ManaPayment(EngineModel):
     `machines/casting.Casting._move_to_the_stack`, at CR 601.2h - reads this
     to record on the spell what the mana it was paid with does to it.
     """
+    retained_spent: list[RetainedMana] = Field(default_factory=list)
+    """How much of `spend` was retained mana (CR 500.5a/500.5b), and under
+    which scope - `restricted_spent`'s third sibling, read back by `pay` so
+    spending retained mana takes it out of `ManaPool.retained` too, the same
+    way spending restricted mana takes it out of `ManaPool.restricted`."""
     life_paid: int = 0
 
     @property
@@ -841,20 +932,25 @@ class ManaPayment(EngineModel):
 
 #: (colour, came from a snow source, index into `ManaPool.restricted` or -1
 #: for mana with no CR 106.6 restriction on it, index into
-#: `ManaPool.spend_effects` or -1 for mana carrying no CR 106.6 spend effect).
+#: `ManaPool.spend_effects` or -1 for mana carrying no CR 106.6 spend effect,
+#: index into `ManaPool.retained` or -1 for mana with no CR 500.5a/500.5b
+#: retention on it).
 #:
-#: The last two slots are separate dimensions because CR 106.6 lists the
-#: restriction and the additional effect as separate things a mana ability may
-#: do, and a card may print either without the other. Nothing in this pool
-#: prints both on one mana ability, and `_buckets` says what it assumes when
-#: that changes.
-_Bucket = tuple[Color, bool, int, int]
+#: The last three slots are separate dimensions because a card may print any
+#: of CR 106.6's restriction, CR 106.6's additional effect, and CR 500.5's
+#: retention independently of the other two. Nothing in this pool prints more
+#: than one of them on the same mana ability, and `_buckets` says what it
+#: assumes when that changes.
+_Bucket = tuple[Color, bool, int, int, int]
 
 #: The `_Bucket` slot meaning "no spend restriction".
 UNRESTRICTED = -1
 
 #: The `_Bucket` slot meaning "no CR 106.6 spend effect".
 NO_SPEND_EFFECT = -1
+
+#: The `_Bucket` slot meaning "no CR 500.5a/500.5b retention".
+NOT_RETAINED = -1
 
 
 def _candidate_options(
@@ -951,6 +1047,12 @@ class ManaPool(EngineModel):
     the mana pays for whatever it could have paid for anyway - it only records
     what happens to the spell it is spent on."""
 
+    retained: list[RetainedMana] = Field(default_factory=list)
+    """The part of `floating` exempt from CR 500.5's step/phase emptying
+    until its own named point (CR 500.5a/500.5b), one entry per distinct
+    scope. Like `spend_effects` this narrows nothing about what the mana may
+    pay for - only `empty` reads it."""
+
     @property
     def total(self) -> int:
         return sum(self.floating.values())
@@ -967,9 +1069,17 @@ class ManaPool(EngineModel):
     def restricted_total(self) -> int:
         return sum(entry.total for entry in self.restricted)
 
+    @property
+    def retained_total(self) -> int:
+        return sum(entry.total for entry in self.retained)
+
     def restrictions(self) -> list[ManaRestriction]:
         """Every distinct restriction currently on mana in this pool."""
         return [entry.restriction for entry in self.restricted if entry.total]
+
+    def retentions(self) -> list[ManaRetentionScope]:
+        """Every distinct retention scope currently on mana in this pool."""
+        return [entry.until for entry in self.retained if entry.total]
 
     def add(
         self,
@@ -978,6 +1088,7 @@ class ManaPool(EngineModel):
         snow: bool = False,
         restriction: "ManaRestriction | None" = None,
         spend_effect: "ManaSpendEffect | None" = None,
+        retain_until: "ManaRetentionScope | None" = None,
     ) -> None:
         if amount < 0:
             raise ValueError("cannot add a negative amount of mana")
@@ -991,6 +1102,9 @@ class ManaPool(EngineModel):
         if spend_effect is not None and amount:
             tagged = self._effect_entry_for(spend_effect)
             tagged.amounts[color] = tagged.amounts.get(color, 0) + amount
+        if retain_until is not None and amount:
+            kept = self._retained_entry_for(retain_until)
+            kept.amounts[color] = kept.amounts.get(color, 0) + amount
         mutation_landed(self, structural=False)
 
     def add_all(
@@ -999,11 +1113,18 @@ class ManaPool(EngineModel):
         snow: bool = False,
         restriction: "ManaRestriction | None" = None,
         spend_effect: "ManaSpendEffect | None" = None,
+        retain_until: "ManaRetentionScope | None" = None,
     ) -> None:
         for color in colors:
-            self.add(color, snow=snow, restriction=restriction, spend_effect=spend_effect)
+            self.add(
+                color,
+                snow=snow,
+                restriction=restriction,
+                spend_effect=spend_effect,
+                retain_until=retain_until,
+            )
 
-    def empty(self) -> None:
+    def empty(self, *, expiring: frozenset[ManaRetentionScope] = frozenset()) -> None:
         """Empty the pool, as happens when each step and phase ends.
 
         CR 703.4q and CR 500.5: "as each step or phase ends, any unspent mana
@@ -1011,11 +1132,24 @@ class ManaPool(EngineModel):
         mana it was on, because it was never anywhere else - it is not a
         property of the source, which may still be on the battlefield, so
         there is nothing left over to carry into the next step.
+
+        `expiring` names whichever `ManaRetentionScope`s reach their own named
+        point at this exact boundary (CR 500.5a's end of the combat phase,
+        CR 500.5b/514.2's cleanup step) - retained mana tagged with one of
+        them empties too, along with everything ordinary. A scope left out of
+        `expiring` keeps its mana floating, still spendable exactly like
+        ordinary mana, until a later call names it.
         """
-        self.floating = {}
+        surviving = [entry for entry in self.retained if entry.until not in expiring]
+        floating: dict[Color, int] = {}
+        for entry in surviving:
+            for color, amount in entry.amounts.items():
+                floating[color] = floating.get(color, 0) + amount
+        self.floating = floating
         self.snow = {}
         self.restricted = []
         self.spend_effects = []
+        self.retained = surviving
 
     def _entry_for(self, restriction: ManaRestriction) -> RestrictedMana:
         for entry in self.restricted:
@@ -1034,6 +1168,16 @@ class ManaPool(EngineModel):
         entry = SpendEffectMana(effect=effect)
         announce_mutation(self)
         self.spend_effects.append(entry)
+        mutation_landed(self)
+        return entry
+
+    def _retained_entry_for(self, until: ManaRetentionScope) -> RetainedMana:
+        for entry in self.retained:
+            if entry.until == until:
+                return entry
+        entry = RetainedMana(until=until)
+        announce_mutation(self)
+        self.retained.append(entry)
         mutation_landed(self)
         return entry
 
@@ -1135,6 +1279,10 @@ class ManaPool(EngineModel):
                 marked = self._effect_entry_for(tagged.effect)
                 for color, amount in tagged.amounts.items():
                     marked.amounts[color] = max(marked.amounts.get(color, 0) - amount, 0)
+            for kept in payment.retained_spent:
+                entry = self._retained_entry_for(kept.until)
+                for color, amount in kept.amounts.items():
+                    entry.amounts[color] = max(entry.amounts.get(color, 0) - amount, 0)
         finally:
             mutation_landed(self, structural=False)
 
@@ -1146,6 +1294,9 @@ class ManaPool(EngineModel):
         for tagged in self.spend_effects:
             tagged.amounts = {color: n for color, n in tagged.amounts.items() if n > 0}
         self.spend_effects = [tagged for tagged in self.spend_effects if tagged.amounts]
+        for entry in self.retained:
+            entry.amounts = {color: n for color, n in entry.amounts.items() if n > 0}
+        self.retained = [entry for entry in self.retained if entry.amounts]
         return self
 
     # -- the search --------------------------------------------------------
@@ -1167,7 +1318,8 @@ class ManaPool(EngineModel):
         snow_spent: Counter[Color] = Counter()
         restricted_spent: dict[int, Counter[Color]] = {}
         effects_spent: dict[int, Counter[Color]] = {}
-        for (color, is_snow, slot, effect_slot), amount in spent.items():
+        retained_spent: dict[int, Counter[Color]] = {}
+        for (color, is_snow, slot, effect_slot, retained_slot), amount in spent.items():
             spend[color] += amount
             if is_snow:
                 snow_spent[color] += amount
@@ -1175,6 +1327,8 @@ class ManaPool(EngineModel):
                 restricted_spent.setdefault(slot, Counter())[color] += amount
             if effect_slot != NO_SPEND_EFFECT:
                 effects_spent.setdefault(effect_slot, Counter())[color] += amount
+            if retained_slot != NOT_RETAINED:
+                retained_spent.setdefault(retained_slot, Counter())[color] += amount
         return ManaPayment(
             options=tuple(options),
             spend=dict(spend),
@@ -1186,6 +1340,10 @@ class ManaPool(EngineModel):
             spend_effects_spent=[
                 SpendEffectMana(effect=self.spend_effects[slot].effect, amounts=dict(taken))
                 for slot, taken in sorted(effects_spent.items())
+            ],
+            retained_spent=[
+                RetainedMana(until=self.retained[slot].until, amounts=dict(taken))
+                for slot, taken in sorted(retained_spent.items())
             ],
             life_paid=life,
         )
@@ -1243,28 +1401,38 @@ class ManaPool(EngineModel):
                 for slot, tagged in enumerate(self.spend_effects)
                 if tagged.amounts.get(color, 0)
             ]
+            per_retained = [
+                (slot, entry.amounts.get(color, 0))
+                for slot, entry in enumerate(self.retained)
+                if entry.amounts.get(color, 0)
+            ]
             restricted_here = sum(count for _slot, count in per_slot)
             tagged_here = sum(count for _slot, count in per_effect)
-            # A restricted bucket and a spend-effect bucket are counted as
-            # disjoint parts of the same colour. No card in this pool prints
-            # both clauses of CR 106.6 on one mana ability; when one does, the
-            # two lists have to be crossed here instead of subtracted, and the
-            # `_Bucket` key already has the room for it.
-            unrestricted = max(amount - restricted_here - tagged_here, 0)
+            retained_here = sum(count for _slot, count in per_retained)
+            # A restricted bucket, a spend-effect bucket and a retained bucket
+            # are counted as disjoint parts of the same colour. No card in
+            # this pool prints two of CR 106.6's/CR 500.5's clauses on one
+            # mana ability; when one does, the lists have to be crossed here
+            # instead of subtracted, and the `_Bucket` key already has the
+            # room for it.
+            unrestricted = max(amount - restricted_here - tagged_here - retained_here, 0)
             snow = min(self.snow.get(color, 0), unrestricted)
             for is_snow, count in ((False, unrestricted - snow), (True, snow)):
                 if count:
-                    buckets[(color, is_snow, UNRESTRICTED, NO_SPEND_EFFECT)] = count
+                    buckets[(color, is_snow, UNRESTRICTED, NO_SPEND_EFFECT, NOT_RETAINED)] = count
             for slot, count in per_slot:
-                buckets[(color, False, slot, NO_SPEND_EFFECT)] = count
+                buckets[(color, False, slot, NO_SPEND_EFFECT, NOT_RETAINED)] = count
             for slot, count in per_effect:
-                buckets[(color, False, UNRESTRICTED, slot)] = count
+                buckets[(color, False, UNRESTRICTED, slot, NOT_RETAINED)] = count
+            for slot, count in per_retained:
+                buckets[(color, False, UNRESTRICTED, NO_SPEND_EFFECT, slot)] = count
         return dict(
             sorted(
                 buckets.items(),
                 key=lambda item: (
                     item[0][2] == UNRESTRICTED,
                     item[0][3] == NO_SPEND_EFFECT,
+                    item[0][4] != NOT_RETAINED,
                     item[0][1],
                     -item[1],
                 ),

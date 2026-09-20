@@ -169,6 +169,60 @@ def test_an_off_pool_resolving_effect_places_counters_equal_to_an_expression():
     assert hunter.counters[Counter.PLUS_ONE] == 2
 
 
+def test_drizzt_do_urden_gets_the_power_difference_in_counters():
+    """Drizzt Do'Urden: "Whenever a creature dies, if it had power greater
+    than Drizzt's power, put a number of +1/+1 counters on Drizzt equal to
+    the difference." A self-reference by the card's own printed name (CR
+    201.5), not CR 700.7's "this creature" - `trigger_effect_for`'s own
+    self-normalization retry turns "on Drizzt" into "on this permanent"
+    before `_parse_put_counters_equal_to_clause` ever sees it, and
+    `_POWER_GREATER_THAN_SELF_RE` in `machines/triggers.py` reads the
+    intervening if the same way, checking the captured name against the
+    source's own.
+
+    Craw Wurm is 6/4; Drizzt is 3/3, so the difference is three.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Drizzt Do'Urden", "Craw Wurm"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    drizzt = scenario.creature("Drizzt Do'Urden", "alice")
+    wurm = scenario.creature("Craw Wurm", "alice")
+    assert (wurm.power, drizzt.power) == (6, 3)
+
+    scenario.game.destroy(wurm)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()  # the dies trigger
+
+    assert drizzt.counters[Counter.PLUS_ONE] == 3
+    assert drizzt.power == 6
+
+
+def test_drizzt_do_urden_gets_no_counters_when_the_dying_creature_is_weaker():
+    """A dying creature with power no greater than Drizzt's own - the
+    intervening if is false, so nothing is put on Drizzt at all (CR 603.4:
+    the ability doesn't even trigger)."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Drizzt Do'Urden", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    drizzt = scenario.creature("Drizzt Do'Urden", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    assert bears.power < drizzt.power
+
+    scenario.game.destroy(bears)
+    scenario.game.put_triggers_on_stack()
+
+    assert not scenario.game.stack
+    assert drizzt.counters[Counter.PLUS_ONE] == 0
+
+
 @pytest.mark.parametrize(
     ("phrase", "x", "expected"),
     [

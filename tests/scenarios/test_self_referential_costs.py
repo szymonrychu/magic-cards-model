@@ -38,20 +38,26 @@ session that wrote this file.
 
 Two of the cards below (Seasoned Pyromancer's graveyard ability, Boseiju's
 Channel) print an activated ability that functions from a zone other than the
-battlefield. `Game.why_cannot_activate` gates every activation on
-`permanent.zone is Zone.BATTLEFIELD` (CR 113.6's flat rule - see
-`docs/engine-coverage.md`'s entries for both cards), so the full
-`begin_activating`/`activate_ability` path cannot reach them yet; that gap is
-pre-existing and out of scope here. Those two tests build and pay the
-`TotalCost` directly instead, which is enough to prove the cost itself -
-CR 118.3's question - now has an answer.
+battlefield. `Game.why_cannot_activate` used to gate every activation on
+`permanent.zone is Zone.BATTLEFIELD` unconditionally, even once its own
+CR 113.6j/113.6m zone-rule branch had already found the permanent correctly
+sitting in the zone the ability names - so the full `begin_activating`/
+`activate_ability` path could never reach either ability, and these two tests
+built and paid the `TotalCost` directly instead. Fixed (see
+`docs/engine-coverage.md`'s FRA S1 section): the flat battlefield rule now
+only applies when the ability names no zone of its own (`elif`, not two
+independent `if`s), and `Game.begin_activating`'s own `ManaSpend.activating`
+call - the second half of the same gap, `Game.computed_board` not covering a
+hand or a graveyard - reads the permanent's own printed characteristics
+off the battlefield instead of crashing on `NotOnBoard`. Both tests below now
+go through `Scenario.activate` for real, the same door the API uses.
 """
 
 import pytest
 
-from magic_cards_model.machines import CostPayment, Step
+from magic_cards_model.machines import Step
 from magic_cards_model.models import Color, Zone
-from tests.scenarios.harness import Scenario, mana_from
+from tests.scenarios.harness import Scenario
 
 # -- the exact reported case ------------------------------------------------
 
@@ -266,42 +272,39 @@ def test_seasoned_pyromancers_exile_from_graveyard_cost_is_payable():
         "Mountain", "Mountain", "Mountain", "Mountain", "Mountain"
     )
 
-    total = scenario.game.activation_cost(pyromancer, 0, "alice")
-    payment = CostPayment.for_total(total, game=scenario.game, payer="alice")
-    for mountain in mountains:
-        payment.tap_for_mana(mountain, mana_from(mountain))
-    payment.pay()
+    scenario.activate(pyromancer, *mountains)
 
     assert pyromancer.zone is Zone.EXILE
     assert pyromancer in scenario.game.exile
 
 
 def test_boseijus_channel_discards_itself_with_no_card_nominated():
-    """Boseiju, Who Endures: "Channel - {1}{G}, Discard this card: ...".
+    """Boseiju, Who Endures: "Channel - {1}{G}, Discard this card: Destroy
+    target artifact, enchantment, or nonbasic land an opponent controls. ...".
 
     "Discard this card" is `CostKind.DISCARD`, classified separately from
     `CostKind.SACRIFICE` but needing exactly the same self-reference fill-in -
     this is the test that pins the discard half of the fix. Channel functions
-    from hand (CR 701.9a: discarding always is), and `why_cannot_activate`'s
-    battlefield-only gate is a separate, documented gap
-    (`docs/engine-coverage.md`), so this builds and pays the cost directly.
+    from hand (CR 701.9a: discarding always is), and now goes through the
+    ordinary `Game.begin_activating`/`activate_ability` door - the same one
+    `Scenario.activate` and the API use - like any battlefield ability.
     """
     scenario = (
         Scenario()
         .player("alice", hand=["Boseiju, Who Endures"], battlefield=["Forest", "Mountain"])
-        .player("bob", library=["Forest"])
+        .player("bob", library=["Forest"], battlefield=["Sol Ring"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     boseiju = scenario.find("Boseiju, Who Endures", Zone.HAND)
     forest = scenario.find("Forest", Zone.BATTLEFIELD)
     mountain = scenario.find("Mountain", Zone.BATTLEFIELD)
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")
 
-    total = scenario.game.activation_cost(boseiju, 1, "alice")
-    payment = CostPayment.for_total(total, game=scenario.game, payer="alice")
-    payment.tap_for_mana(forest, mana_from(forest))
-    payment.tap_for_mana(mountain, mana_from(mountain))
-    payment.pay()
+    scenario.activate(boseiju, forest, mountain, index=1, targets=[sol_ring])
 
     assert boseiju.zone is Zone.GRAVEYARD
     assert boseiju in scenario.player("alice").graveyard
+
+    scenario.pass_until_resolved()
+    assert sol_ring.zone is Zone.GRAVEYARD

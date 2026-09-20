@@ -30,15 +30,19 @@ from ..models.card import Card, Color, Layout, Type, types_of
 from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
+from ..numbers import VariableX, count_pattern, parse_amount, parse_count
 from ..snapshot import EngineModel
 from .abilities import (
     AbilityKind,
     KeywordAbility,
     TriggerEvent,
     keyword_abilities,
+    parse_abilities,
     parse_granted_ability_lines,
 )
 from .casting_restrictions import (
+    CastingRuleKind,
+    combat_lockdown_restriction_source,
     has_sorcery_speed_flash_grant,
     restricted_from_noncreature_casting,
     sorcery_speed_restriction_source,
@@ -55,6 +59,8 @@ from .cost import (
     alternative_cost_offers,
     announce_reveal,
     apply_modifications,
+    cost_component_for_phrase,
+    mana_value_cap_for,
     place_counters_cost,
     static_free_cast_grant,
     tap_cost,
@@ -845,7 +851,73 @@ def granted_cast_options(
                 )
             if option is not None:
                 found.append(GrantedCastOption(source_name=permanent.name, option=option))
+    # CR 114.4: an emblem's abilities function in the command zone, so the
+    # caster's own emblems grant exactly as a permanent's statics do.
+    for emblem in game.emblems_of(caster):
+        for ability in parse_abilities(emblem.card):
+            if ability.kind is not AbilityKind.STATIC:
+                continue
+            option = _cast_spells_from_a_zone(
+                (ability.text or "").strip(), spell, origin_zone, game, caster
+            )
+            if option is not None:
+                found.append(GrantedCastOption(source_name=emblem.name, option=option))
     return found
+
+
+#: The label a "You may cast `<quality>` spells from your `<zone>`" grant is
+#: announced under (`Casting.use_keyword`) and recorded as (`CastRecord.
+#: keyword`) - the permission is not a keyword, so it is named for what it is.
+CAST_PERMISSION = "Cast permission"
+
+#: "You may cast instant and sorcery spells from your graveyard." (Jaya
+#: Ballard's emblem) - CR 601.3's "a rule or effect allows that player to cast
+#: it", for a quality of spell and one zone, at the spell's own normal cost
+#: and timing. The optional second sentence - "If a spell cast this way would
+#: be put into your graveyard, exile it instead." - is the replacement
+#: `machines/replacement.py` applies to a spell recorded as cast under this
+#: permission (`exiles_spells_cast_this_way`).
+_CAST_SPELLS_FROM_A_ZONE = re.compile(
+    r"^You may cast (?P<what>[\w' -]+?) spells from your (?P<zone>hand|graveyard)\."
+    r"(?P<tail>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_EXILE_SPELLS_CAST_THIS_WAY = re.compile(
+    r"if a spell cast this way would be put into your graveyard, exile it instead",
+    re.IGNORECASE,
+)
+
+
+def _cast_spells_from_a_zone(
+    text: str, spell: CardState, origin_zone: Zone, game: Any, caster: str
+) -> KeywordCastOption | None:
+    match = _CAST_SPELLS_FROM_A_ZONE.match(text)
+    if match is None:
+        return None
+    zone = _ZONE_WORDS_FOR_GRANTS.get(match.group("zone").lower())
+    if zone is None or zone is not origin_zone:
+        return None
+    if not _spell_matches_grant_filter(spell, match.group("what")):
+        return None
+    # The spell's own timing: a sorcery still waits for its controller's main
+    # phase with the stack empty (CR 307.1), an instant does not.
+    timing = CastTiming.SORCERY if Type.SORCERY in spell.types else CastTiming.ANY
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION, rule="CR 601.3", zone=zone, pays_mana_cost=True, timing=timing
+    )
+
+
+def exiles_spells_cast_this_way(game: Any, caster: str) -> bool:
+    """Whether a static ability `caster` has (an emblem's, CR 114.4) says a
+    spell cast under its permission is exiled instead of going to the
+    graveyard."""
+    for emblem in game.emblems_of(caster):
+        for ability in parse_abilities(emblem.card):
+            if ability.kind is AbilityKind.STATIC and _EXILE_SPELLS_CAST_THIS_WAY.search(
+                ability.text or ""
+            ):
+                return True
+    return False
 
 
 def _granted_option(
@@ -1054,6 +1126,32 @@ class PlayPermission(EngineModel):
     source_name: str = ""
     """The card whose ability handed this out, for the error message."""
     rule: str = "CR 601.3"
+    any_type_mana: bool = False
+    """"... and mana of any type can be spent to cast it/that spell/them" -
+    Null Summoner's, Hostage Taker's, Gonti, Lord of Luxury's, and roughly
+    three dozen other real printings' own trailing rider on this exact grant
+    shape. Read by `Casting._determine_cost`, which - only when this is set -
+    prices the payment against the total's own *mana value* (CR 202.3, every
+    colored/generic symbol collapsed to one count) rather than the printed
+    colors, so any color in the pool can pay any symbol; the spell's own
+    printed mana cost is untouched everywhere else (CR 202.3b: what a card
+    "would cost" is still what is printed)."""
+    exile_instead_of_graveyard: bool = False
+    """"If that spell would be put into a graveyard, exile it instead." -
+    Dire Fleet Daredevil's, Nita, Forum Conciliator's own rider on this exact
+    grant shape (CR 604.5). Read by `machines/replacement._stack_
+    replacements` off `CastRecord.exile_instead_of_graveyard`, which
+    `Casting.cast()` copies from here the same way it already copies
+    `flashback` onto `CastRecord.keyword`."""
+    condition: str | None = None
+    """A live board condition this permission is only usable while true -
+    Null Summoner's own "Threshold — As long as there are seven or more
+    cards in your graveyard, you may cast the exiled card". `None` for an
+    unconditional grant (every other printing this project already reads).
+    Checked by `why_not` through `Game.condition_holds`, the same reader
+    "Activate only if <condition>" (CR 602.5b) already shares - an
+    unrecognised condition refuses the cast rather than allowing it
+    unchecked, the same fail-closed default that reader already gives."""
     until_end_of_turn: bool = True
     """CR 514.2: "all 'until end of turn' and 'this turn' effects end" in the
     cleanup step. `Game.cleanup_step` drops these there."""
@@ -1111,7 +1209,7 @@ class PlayPermission(EngineModel):
     """The `TurnMachine.step` `immediate` is scoped to - meaningless unless
     `immediate` is set."""
     until_next_turn_of: str | None = None
-    """Set for CR 800.4m's "until the end of your next turn" duration (Hex
+    """Set for CR 611.2a's "until the end of your next turn" duration (Hex
     Magic) rather than a plain "until end of turn" - names whose next turn
     ends the grant, mirroring `machines.layers.ContinuousEffect.
     until_next_turn_of` and `machines.casting_restrictions.CastingRuleEffect.
@@ -1119,10 +1217,11 @@ class PlayPermission(EngineModel):
     UNTIL_YOUR_NEXT_TURN` for the identical wording elsewhere.
 
     Dropped by `Game.begin_turn_for` the instant that player's next turn
-    would begin (CR 800.4m), the same moment those other two stores drop
-    theirs - not by `expired()`'s own `granted_turns_taken` comparison, which
-    only ever measures "the turn it was granted on is over" (CR 514.2) and
-    has no notion of *whose* turn is next. A permission with this set also
+    would begin (CR 611.2a, its own stated duration), the same moment those
+    other two stores drop theirs - not by `expired()`'s own `granted_turns_
+    taken` comparison, which only ever measures "the turn it was granted on
+    is over" (CR 514.2) and has no notion of *whose* turn is next. A
+    permission with this set also
     carries `until_end_of_turn=False`, so `Game.cleanup_step`'s own "until
     end of turn" sweep leaves it alone on the turn it was granted."""
 
@@ -1194,6 +1293,22 @@ class PlayPermission(EngineModel):
                 f"{self.source_name}'s permission to {self.action.value} {card.name} lasted "
                 f"until end of turn and that turn is over (CR 514.2)"
             )
+        if self.condition is not None:
+            held = (
+                None if game is None else game.condition_holds(player, self.condition, source=card)
+            )
+            if held is None:
+                return (
+                    f'{self.source_name}\'s condition "as long as {self.condition}" is not '
+                    f"read by this engine, so the permission is refused rather than allowed "
+                    f"unchecked ({self.rule})"
+                )
+            if not held:
+                return (
+                    f"{self.source_name}'s permission to {self.action.value} {card.name} "
+                    f"only applies as long as {self.condition}, which is not true right now "
+                    f"({self.rule})"
+                )
         if action is PlayAction.PLAY and self.action is PlayAction.CAST:
             # CR 701.5b's "cast it as a spell" is narrower than CR 701.18b's
             # "play that card as a land or cast that card as a spell": a
@@ -1343,6 +1458,28 @@ _COLOR_WORDS: dict[str, Color] = {
     "green": Color.GREEN,
 }
 
+#: CR 105.2a "A monocolored object is exactly one of the five colors." and
+#: CR 105.2b "A multicolored object is two or more of the five colors." - a
+#: colour *count*, not a colour word, so a Dragonfire Blade-equipped creature
+#: ("hexproof from monocolored") is checked against the spell's own colour
+#: count rather than `_COLOR_WORDS`. Kept as its own small copy here, the same
+#: way `_split_protection_qualities` in `machines/layers.py` keeps its own
+#: rather than importing `machines/effects.py`'s `_COLOR_COUNT_WORDS`: that
+#: module imports from this one, so a reverse import would cycle.
+_COLOR_COUNT_WORDS: dict[str, Callable[[int], bool]] = {
+    "monocolored": lambda count: count == 1,
+    "multicolored": lambda count: count >= 2,
+}
+
+#: "This spell costs {1} more to cast for each target beyond the first."
+#: (Fireball, Launch the Fleet's identically-worded "Strive —" clause) -
+#: read generically off the amount rather than assuming {1}, though every
+#: real printing of this shape uses it.
+_COST_INCREASE_PER_TARGET_RE = re.compile(
+    r"costs (?P<amount>\{[^}]+\}(?:\{[^}]+\})*) more to cast for each target beyond the first",
+    re.IGNORECASE,
+)
+
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
 ADDITIONAL_COST_KEYWORDS = frozenset(
@@ -1362,6 +1499,56 @@ def has_flash(card: Card) -> bool:
     keywords.
     """
     return any(keyword.lower() == "flash" for keyword in card.keywords)
+
+
+def has_split_second(card: Card) -> bool:
+    """Whether this printing has split second (CR 702.61a), read the same
+    way `has_flash` reads its own keyword - off the printing's own Scryfall
+    `keywords`, never granted or removed by a layer."""
+    return any(keyword.lower() == "split second" for keyword in card.keywords)
+
+
+def split_second_restriction_source(game: Any) -> str | None:
+    """The name of a spell on the stack with split second, or None.
+
+    CR 702.61a: "Split second is a static ability that functions only while
+    the spell with split second is on the stack. 'Split second' means 'As
+    long as this spell is on the stack, players can't cast other spells or
+    activate abilities that aren't mana abilities.'" CR 604.5 is the general
+    permission a static ability has to apply while its own spell sits on the
+    stack - the same permission `cannot_be_countered` reads for "This spell
+    can't be countered." Every object on the stack is checked, not only the
+    top one: nothing in CR 702.61a privileges the top of a LIFO stack for a
+    condition about being "on the stack" at all.
+
+    Two ways a spell on the stack ends up with split second, one keyword
+    vocabulary: `has_split_second` reads the printing's own keyword line
+    (Ricochet Trap and friends), and `Game.controls_split_second_grant`
+    reads Samut, Tyrant of Naktamun's own "Instant and sorcery spells you
+    control have split second." group grant off the computed board
+    (CR 613.5) for the spell's controller - its own docstring names this
+    exact combination as the caller it was built for. A granted instance is
+    still an instant or sorcery spell's own split second the moment it is
+    on the stack (CR 613.1f puts a layer 6 grant on the same footing as a
+    printed line), so both are checked here rather than the printed-only
+    half alone.
+    """
+    if game is None:
+        return None
+    for obj in getattr(game, "stack", []):
+        obj_card = getattr(obj, "card", None)
+        if obj_card is not None and has_split_second(obj_card):
+            return getattr(obj, "name", None) or obj_card.name
+        if (
+            isinstance(obj, CardState)
+            and obj_card is not None
+            and {Type.INSTANT, Type.SORCERY} & set(obj_card.types)
+            and obj.controller is not None
+            and getattr(game, "controls_split_second_grant", None) is not None
+            and game.controls_split_second_grant(obj.controller)
+        ):
+            return getattr(obj, "name", None) or obj_card.name
+    return None
 
 
 def face_being_cast(card: Card, face_name: str | None) -> Any:
@@ -1557,6 +1744,51 @@ def why_cannot_cast_now(
     )
 
 
+#: A spell's own printed casting gate - "Threshold — You can't cast this
+#: spell unless there are seven or more cards in your graveyard." (Proft,
+#: Sinister Mastermind). The ability word ("Threshold") carries no rules
+#: meaning of its own (CR 207.2c) and is not part of the match; the
+#: restriction is the sentence after it. No other printed card uses this
+#: exact sentence (checked via full-text Scryfall search this session), so
+#: the shape's generality rests on `condition_holds`, the shared reader
+#: "Activate only if <condition>" (CR 602.5b) already uses across many
+#: unrelated cards, rather than on a second card proving this exact gate.
+_CANNOT_CAST_UNLESS_RE = re.compile(
+    r"you can'?t cast this spell unless (?P<condition>[^.]+)\.", re.IGNORECASE
+)
+
+
+def why_cannot_cast_self_restriction(spell: CardState, caster: str, game: Any = None) -> str | None:
+    """CR 601.2e: "The game checks to see if the proposed spell can legally
+    be cast. If the proposed spell is illegal, the game returns to the
+    moment before the casting of that spell was proposed" - a spell's own
+    printed "You can't cast this spell unless <condition>." is exactly such
+    an illegality, checked the moment the cast is proposed rather than left
+    to be discovered on resolution.
+
+    The condition is handed to `Game.condition_holds`, unread there is
+    refused rather than allowed unchecked - the same fail-closed default
+    `Game.why_cannot_activate`'s own "Activate only if" gives an unread
+    condition (CR 602.5b), not "no rule to check" treated as "no
+    restriction"."""
+    if game is None:
+        return None
+    match = _CANNOT_CAST_UNLESS_RE.search(spell.oracle_text or "")
+    if match is None:
+        return None
+    condition = match.group("condition").strip()
+    held = game.condition_holds(caster, condition, source=spell)
+    if held is None:
+        return (
+            f"{spell.name}'s casting restriction \"you can't cast this spell unless "
+            f'{condition}" is not read by this engine, so the cast is refused rather '
+            "than allowed unchecked (CR 601.2e)"
+        )
+    if not held:
+        return f"{spell.name} can't be cast: {condition} is not true right now (CR 601.2e)"
+    return None
+
+
 def why_cannot_cast_restriction(
     spell: CardState, caster: str, game: Any = None, *, face: str | None = None
 ) -> str | None:
@@ -1585,6 +1817,20 @@ def why_cannot_cast_restriction(
     """
     if game is None:
         return None
+    # CR 702.61a: checked before `spell` has moved to the stack (CR 601.2a
+    # runs after every refusal in this chain), so a split-second spell
+    # already on the stack always counts as an "other" spell here - even one
+    # sharing this one's name, which is the correct read: nothing in
+    # CR 702.61a exempts a second copy of the same card.
+    split_second_source = split_second_restriction_source(game)
+    if split_second_source is not None:
+        return (
+            f"{split_second_source} has split second: as long as it is on the stack, "
+            f"players can't cast other spells (CR 702.61a)"
+        )
+    combat_lockdown_source = combat_lockdown_restriction_source(game)
+    if combat_lockdown_source is not None:
+        return f"{combat_lockdown_source} says players can't cast spells during combat (CR 506.1)"
     types = types_being_cast(spell.card, face)
     restriction = restricted_from_noncreature_casting(game, caster)
     if restriction is not None and Type.CREATURE not in types:
@@ -1592,7 +1838,14 @@ def why_cannot_cast_restriction(
             f"{restriction.source_name} says {caster} can't cast noncreature spells "
             f"this turn (CR 611.1)"
         )
-    targeted = targeted_cant_cast_restriction(game, caster)
+    targeted = targeted_cant_cast_restriction(
+        game, caster, spell_types=types, spell_subtypes=spell.subtypes
+    )
+    if targeted is not None and targeted.kind == CastingRuleKind.SPELL_COUNT_CANT_CAST:
+        return (
+            f"{targeted.source_name} says {caster} can't cast more than {targeted.amount} "
+            f"such spell(s) each turn, and that many were already cast (CR 601.3, CR 101.2)"
+        )
     if targeted is not None:
         return f"{targeted.source_name} says {caster} can't cast spells this turn (CR 611.1)"
     prohibited_from = zone_cast_prohibition_source(game, spell.card, spell.zone, types=types)
@@ -1675,20 +1928,6 @@ _CONDITIONAL_ALTERNATIVE = re.compile(
 _OPPONENT_SPELL_COUNT_CONDITION = re.compile(
     r"^an opponent cast (?P<count>[\w-]+) or more spells this turn$", re.IGNORECASE
 )
-
-#: CR 107.1's numbers, spelled the way a card spells them.
-_NUMBER_WORDS: dict[str, int] = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
 
 #: A cost phrase that is nothing but mana, with or without the verb in front of
 #: it: Mindbreak Trap prints "pay {0}", and CR 118.5 makes that a real cost
@@ -1808,11 +2047,24 @@ class AlternativeCostOption(EngineModel):
         return self.unavailable is None
 
 
-#: CR 701.68a's own inline shape - "you may blight N" - printed inside the
-#: card's "As an additional cost to cast this spell, ..." sentence rather
-#: than as a keyword-cost line, which is why this is read off `additional_
-#: cost_phrases` rather than `_keyword`.
-_BLIGHT_PHRASE = re.compile(r"^you may blight (?P<n>\d+)$", re.IGNORECASE)
+#: CR 701.68a's own inline shape, printed inside the card's "As an additional
+#: cost to cast this spell, ..." sentence rather than as a keyword-cost line,
+#: which is why this is read off `additional_cost_phrases` rather than
+#: `_keyword`. Three forms: optional "you may blight 1" (Requiting Hex),
+#: mandatory "blight X" (Soul Immolation), and "blight 2 or pay {1}" (Wild
+#: Unraveling), where CR 601.2b's announcement picks one of the two.
+_BLIGHT_PHRASE = re.compile(
+    rf"^(?P<optional>you may )?blight {count_pattern('n', x=True, article=False)}"
+    r"(?: or pay (?P<instead>(?:\{[^{}]+\})+))?$",
+    re.IGNORECASE,
+)
+#: "X can't be greater than <bound>." - Soul Immolation's cap on its blight X.
+_X_CAP = re.compile(r"\bX can't be greater than (?P<bound>[^.]+)\.", re.IGNORECASE)
+#: The one bound read: the greatest power or toughness among creatures the
+#: caster controls.
+_GREATEST_AMONG_CREATURES = re.compile(
+    r"^the greatest (?P<stat>power|toughness) among creatures you control$", re.IGNORECASE
+)
 
 #: CR 118.8b: "Some additional costs are optional." An optional one is printed
 #: as a "you may ..." inside the additional-cost sentence - March of
@@ -1820,6 +2072,70 @@ _BLIGHT_PHRASE = re.compile(r"^you may blight (?P<n>\d+)$", re.IGNORECASE)
 #: hand", Requiting Hex's "you may blight 1" - and declining it is a legal
 #: announcement (CR 601.2b), so it is skipped rather than charged or refused.
 _OPTIONAL_ADDITIONAL_COST = re.compile(r"^you may\b", re.IGNORECASE)
+
+#: CR 601.2b's general "[cost] or pay [mana]" additional-cost shape - Silence
+#: the Echo's "sacrifice a creature or planeswalker or pay {3}", Bayou
+#: Groff's "sacrifice a creature or pay {3}", Countersculpt's "behold a Jace
+#: or pay {1}". Blight's own copy of the same tail (`_BLIGHT_PHRASE`) is
+#: tried first and this is only reached for a phrase that is not blight, so
+#: the two never disagree about a blight sentence.
+_OR_PAY_TAIL = re.compile(r"^(?P<primary>.+?) or pay (?P<mana>(?:\{[^{}]+\})+)$", re.IGNORECASE)
+
+
+def mandatory_additional_costs(
+    spell: CardState,
+    caster: str,
+    x_value: int | None,
+    *,
+    blighted: bool = False,
+    primary_alternatives: frozenset[int] = frozenset(),
+) -> list[TotalCost]:
+    """The spell's own printed "As an additional cost to cast this spell, ..."
+    sentences as fresh, unfilled `TotalCost`s (CR 118.8a, 601.2f), X
+    substituted first (CR 107.3a) and every optional one left out (CR 118.8b).
+
+    The one reading both `Casting._printed_additional_costs` (which then fills
+    the chosen objects in) and `legal_actions` (which counts whether they
+    exist) use, so the two cannot disagree about what the cost is. A
+    mandatory sentence that cannot be read raises, because CR 118.3 does not
+    let the spell be cast without paying it.
+
+    `primary_alternatives` is which of CR 601.2b's "[cost] or pay [mana]"
+    sentences (by position among `additional_cost_phrases`) are being paid
+    with their non-mana half; every other one defaults to the mana half, the
+    same default blight's own copy of this shape already uses when
+    `blighted` is left false - a caller judging affordability with no
+    objects chosen yet (`legal_actions`) always gets a single, cheap-to-
+    compute answer rather than a set of alternatives to choose between.
+    """
+    built: list[TotalCost] = []
+    for index, printed in enumerate(additional_cost_phrases(spell.card)):
+        phrase = substitute_x(printed, x_value)
+        if _OPTIONAL_ADDITIONAL_COST.match(phrase):
+            continue
+        blight = _BLIGHT_PHRASE.match(printed)
+        if blight is not None and blighted:
+            # `Casting.pay_blight` already added the blight, with its creature.
+            continue
+        if blight is not None and blight.group("instead"):
+            # CR 601.2b: "blight 2 or pay {1}" not blighted is the mana.
+            phrase = blight.group("instead")
+        elif blight is None:
+            or_pay = _OR_PAY_TAIL.match(phrase)
+            if or_pay is not None:
+                phrase = (
+                    or_pay.group("primary")
+                    if index in primary_alternatives
+                    else or_pay.group("mana")
+                )
+        cost = total_cost_for_phrase(phrase, caster)
+        if cost is None:
+            raise ValueError(
+                f"{spell.name}'s additional cost {phrase!r} could not be read, "
+                f"so it cannot be paid (CR 118.3, 601.2f)"
+            )
+        built.append(cost)
+    return built
 
 
 class CastingStep(StrEnum):
@@ -1986,6 +2302,10 @@ class Casting(EngineModel):
     tapping: list[CardState] = Field(default_factory=list)
     """The permanents chosen to pay a printed "tap ..." additional cost -
     Swallow Whole's "tap an untapped creature you control"."""
+    beholding: list[CardState] = Field(default_factory=list)
+    """The card or permanent chosen to pay a printed "behold ..." additional
+    cost (CR 701.4a) - a hand card to reveal or a battlefield permanent to
+    choose, told apart at payment time by `component.cards[0].zone`."""
     revealing: list[CardState] | None = None
     """The cards chosen to pay a printed "reveal ... from your hand" additional
     cost (CR 118.8a, CR 701.20a) - Living Destiny's "reveal a creature card
@@ -2046,6 +2366,23 @@ class Casting(EngineModel):
     """Whether this spell's blight cost was paid (CR 701.68a), set by
     `pay_blight` - read by whatever linked ability the card's own printed
     text carries ("If this spell's additional cost was paid, ...")."""
+    paying_life_for_additional_cost: frozenset[int] = Field(default_factory=frozenset)
+    """Which of CR 601.2b's "[cost] or pay [mana]" additional-cost sentences
+    (`_OR_PAY_TAIL`, indexed the same way `additional_cost_phrases` orders
+    them) the caster is paying with a life-total primary instead of the mana
+    alternative - Redirect Lightning's own "pay 5 life or pay {2}".
+
+    `_additional_cost_primary_alternatives` otherwise infers which side is
+    being paid from whether objects were nominated for the primary's own
+    `ComponentKind` pool (`sacrificing`, `discarding`, ...) - the same way
+    `sacrificing=[...]` already says "pay Fling's plain sacrifice cost" with
+    no separate flag. A life payment has no object to nominate at all, so
+    that inference always saw an empty pool and silently fell through to
+    the mana half no matter what the caster wanted - the payer could not
+    choose. This is `ComponentKind.PAY_LIFE`'s own explicit twin of that
+    object-pool inference, read the identical way `blight_paid` already
+    flags a choice with no object behind it either.
+    """
     gift_promised: bool = False
     """Whether this spell's gift was promised (CR 702.174k), set by
     `pay_gift`."""
@@ -2125,9 +2462,11 @@ class Casting(EngineModel):
         options = castable_faces(self.spell.card) if self.face is None else (self.face,)
         refusals: dict[str, str] = {}
         for option in options:
-            reason = why_cannot_cast_now(
-                self.spell, self.caster, self.game, face=option
-            ) or why_cannot_cast_restriction(self.spell, self.caster, self.game, face=option)
+            reason = (
+                why_cannot_cast_now(self.spell, self.caster, self.game, face=option)
+                or why_cannot_cast_restriction(self.spell, self.caster, self.game, face=option)
+                or why_cannot_cast_self_restriction(self.spell, self.caster, self.game)
+            )
             if reason is not None:
                 refusals[option or ""] = reason
         if len(refusals) == len(options):
@@ -2293,6 +2632,15 @@ class Casting(EngineModel):
         face = self.chosen_face
         if face is not None:
             return ManaCost.parse(face.mana_cost or "")
+        if self.spell.prepare_spell_face:
+            # CR 722.3c: this object's own normal characteristics are its
+            # prepare spell's - `card_faces[1]`, the inset frame - never the
+            # front permanent's cost the two-face fallback below would
+            # otherwise read (`CardState.mana_cost` already reads the same
+            # face; this mirrors it for the announcement's own base cost).
+            back_face = self.spell.card.back_face
+            if back_face is not None:
+                return ManaCost.parse(back_face.mana_cost or "")
         printed = self.spell.card.mana_cost or ""
         if "//" in printed and self.spell.card.card_faces:
             return ManaCost.parse(self.spell.card.card_faces[0].mana_cost or "")
@@ -2495,6 +2843,16 @@ class Casting(EngineModel):
                     return self._with_bestowed_target(
                         profile_for_text(substitute_x(face.oracle_text or "", self.x_value or None))
                     )
+            if self.spell.prepare_spell_face:
+                # CR 722.3c again: `self.spell.oracle_text` already reads
+                # `CardState.up_face` - the prepare spell's own text, Seed
+                # Suture's "Put a +1/+1 counter on target creature" rather
+                # than Emergency Phytomedic's targetless "This creature
+                # enters prepared" the plain `targeting_profile(self.spell.
+                # card)` fallback below would read instead.
+                return self._with_bestowed_target(
+                    profile_for_text(substitute_x(self.spell.oracle_text, self.x_value or None))
+                )
             # `self.modal is None` matters as much as the `{X}`: a MODAL card
             # with an X in its cost (Kozilek's Command, `{X}{C}{C}`) reaches
             # here whenever its modes have not been announced yet, and reading
@@ -2592,7 +2950,11 @@ class Casting(EngineModel):
             self.chosen_modes = [mode.text for mode in chosen]
             self.chosen_mode_numbers = [mode.number for mode in chosen]
         else:
-            chosen = list(modal.resolve(modes, entwined=entwined))
+            chosen = list(
+                modal.resolve(
+                    modes, entwined=entwined, alternative=self._alternative_mode_count(modal)
+                )
+            )
             self.chosen_modes = [mode.text for mode in chosen]
             self.chosen_mode_numbers = [mode.number for mode in chosen]
             self._charge_mode_costs(chosen)
@@ -2603,6 +2965,34 @@ class Casting(EngineModel):
         if x_value is not None:
             self.x_value = x_value
         return self.step
+
+    def _alternative_mode_count(self, modal: ModalProfile) -> bool:
+        """Whether `modal`'s "If ..., choose N instead" holds as this spell is
+        cast (CR 601.2b), read by `Game.modal_alternative_applies`.
+
+        "This spell was kicked" (Inscription of Abundance, CR 702.33d) is
+        answered from `self.kicked` directly rather than through `Game.
+        condition_holds`'s own reading of it: that reads the *finalized*
+        `CastRecord`, which `cast()` only writes once announcement is
+        complete, but CR 601.4's own worked example for this exact card is
+        that the modal choice may look ahead to a kicker payment "normally
+        made later in that rule's instructions" - `self.kicked` is exactly
+        that still-in-progress count, live while modes are being chosen.
+        """
+        if self.game is None:
+            return False
+        override = None
+        condition = (modal.alternative_condition or "").strip().rstrip(".").strip().lower()
+        if condition == "this spell was kicked":
+            override = self.kicked > 0
+        return self.game.modal_alternative_applies(
+            modal,
+            self.caster,
+            self.spell.id,
+            self.spell.name,
+            self.spell,
+            condition_override=override,
+        )
 
     def _charge_entwine(self, modal: ModalProfile | None) -> None:
         """CR 702.42a: "If you do, you pay an additional [cost]."
@@ -3110,6 +3500,19 @@ class Casting(EngineModel):
                     f"{source_name} only applies to {grant.type_word} spells, and "
                     f"{self.spell.name} is not one"
                 )
+            elif grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
+                cap = mana_value_cap_for(grant, self.game, self.caster)
+                if cap is None:
+                    unavailable = (
+                        f"{source_name}'s mana value cap "
+                        f"({grant.max_mana_value_quality!r}) is not read by this engine "
+                        "(CR 118.9)"
+                    )
+                elif self.spell.mana_value > cap:
+                    unavailable = (
+                        f"{source_name} only applies to spells with mana value {cap} or "
+                        f"less, and {self.spell.name} is {self.spell.mana_value}"
+                    )
             options.append(
                 AlternativeCostOption(
                     index=len(options),
@@ -3241,7 +3644,7 @@ class Casting(EngineModel):
                 f"{self.spell.name}'s alternative cost is offered only 'if "
                 f"{condition}', which this engine cannot read (CR 118.9)"
             )
-        needed = _NUMBER_WORDS.get(match.group("count").lower())
+        needed = parse_count(match.group("count"), article=False)
         if needed is None:
             return (
                 f"{self.spell.name}'s alternative cost asks for "
@@ -3457,14 +3860,19 @@ class Casting(EngineModel):
             raise ValueError(f"{creature.name} is not a creature, so it cannot be blighted")
         match = _BLIGHT_PHRASE.match(phrase)
         assert match is not None
-        amount = int(match.group("n"))
+        amount = parse_amount(match.group("n"))
+        if amount is None:
+            raise ValueError(f"{self.spell.name}'s blight count {match.group('n')!r} is unread")
         component = place_counters_cost(
             creature,
-            amount,
+            0 if isinstance(amount, VariableX) else amount,
             counter_kind=Counter.MINUS_ONE,
             payer=self.caster,
             description=phrase,
         )
+        # CR 107.3a: "blight X" puts the X announced at CR 601.2f
+        # (`_announce_blight_x`), not a number known yet.
+        component.variable_count = isinstance(amount, VariableX)
         self.add_additional_cost(TotalCost(components=[component]))
         self.blight_paid = True
         return self.step
@@ -3820,6 +4228,9 @@ class Casting(EngineModel):
         color = _COLOR_WORDS.get(word)
         if color is not None:
             return color in self.spell.colors
+        color_count = _COLOR_COUNT_WORDS.get(word)
+        if color_count is not None:
+            return color_count(len(self.spell.colors))
         if any(word == subtype.lower() for subtype in self.spell.subtypes):
             return True
         return any(word == supertype.lower() for supertype in self.spell.supertypes)
@@ -3882,7 +4293,11 @@ class Casting(EngineModel):
             *self.additional_costs,
             *([] if self.printed_additional_costs_charged else self._printed_additional_costs()),
         ]
-        increases = [*self.cost_increases, *(extra.mana for extra in extras)]
+        increases = [
+            *self.cost_increases,
+            *(extra.mana for extra in extras),
+            self._own_cost_increase_for_targets(),
+        ]
         reductions = list(self.cost_reductions)
         floor: int | None = None
         if self.game is not None:
@@ -3902,6 +4317,38 @@ class Casting(EngineModel):
         for extra in extras:
             components.extend(extra.components)
         return TotalCost(mana=mana, components=components)
+
+    def _own_cost_increase_for_targets(self) -> ManaCost:
+        """ "This spell costs [N] more to cast for each target beyond the
+        first." (CR 601.2f), Fireball's own printed shape - and, unnamed by
+        the card that first printed it but the same sentence word for word,
+        Launch the Fleet's "Strive — This spell costs {1} more to cast for
+        each target beyond the first." CR 207.2c: an ability word "has no
+        special rules meaning and no individual entries in the Comprehensive
+        Rules" - "strive" is one (CR 207.2c's own list), so the em-dash
+        prefix changes nothing about what the sentence after it means, and
+        the two cards' identical clauses are the same mechanic rather than
+        two.
+
+        CR 601.2's own targets-before-cost order - CR 601.2c announces
+        targets before CR 601.2f prices the spell - is what makes this
+        askable at all: `self.targets` is already announced by the time this
+        runs, so "beyond the first" of *however many targets were actually
+        chosen* is simply `len(self.targets) - 1`, floored at zero for a
+        spell targeting one thing or fewer. Dragonfire Blade's/Warrior's
+        Blades' own per-target equip discount (`machines/keywords.
+        equip_activation`) relies on the identical order for an *activated*
+        ability instead, which CR 602.2b makes CR 601.2b-i's own order for
+        casting a spell.
+        """
+        match = _COST_INCREASE_PER_TARGET_RE.search(self.spell.oracle_text or "")
+        if match is None:
+            return ManaCost()
+        extra_targets = max(0, len(self.targets) - 1)
+        if extra_targets == 0:
+            return ManaCost()
+        per_target = ManaCost.parse(match.group("amount"))
+        return ManaCost(symbols=per_target.symbols * extra_targets)
 
     def _own_cost_reduction(self) -> ManaCost:
         """What this spell's own text takes off its own cost right now
@@ -3949,6 +4396,7 @@ class Casting(EngineModel):
           because CR 118.3 does not let the spell be cast without paying it -
           charging nothing would be the very bug this method exists to fix.
         """
+        self._announce_blight_x()
         if self.printed_additional_costs_charged:
             return
         self.printed_additional_costs_charged = True
@@ -3975,6 +4423,81 @@ class Casting(EngineModel):
                 if refusal is not None:
                     raise ValueError(refusal)
 
+    def _announce_blight_x(self) -> None:
+        """CR 107.3a and CR 601.2b for "blight X": the counters a paid blight
+        puts are the X announced, and the printed cap on X - Soul Immolation's
+        "X can't be greater than the greatest toughness among creatures you
+        control" - is checked now. A cap this cannot read refuses the cast
+        rather than allow an X the card forbids (CR 118.3)."""
+        variable = [
+            component
+            for cost in self.additional_costs
+            for component in cost.components
+            if component.kind is ComponentKind.PLACE_COUNTERS and component.variable_count
+        ]
+        if not variable:
+            return
+        cap = _X_CAP.search(self.spell.card.oracle_text or "")
+        if cap is not None:
+            bound = _GREATEST_AMONG_CREATURES.match(cap.group("bound").strip())
+            if bound is None or self.game is None:
+                raise ValueError(
+                    f"{self.spell.name}'s X is capped by {cap.group(0)!r}, which this engine "
+                    "cannot read, so the cast is refused (CR 107.3a)"
+                )
+            stat = bound.group("stat").lower()
+            values = [
+                getattr(self.game.characteristics_of(state), stat) or 0
+                for state in self.game.permanents_controlled_by(self.caster)
+                if self.game.characteristics_of(state).is_creature
+            ]
+            greatest = max(values, default=0)
+            if self.x_value > greatest:
+                raise ValueError(
+                    f"X of {self.x_value} is greater than the greatest {stat} among creatures "
+                    f"{self.caster} controls ({greatest}), which {self.spell.name} forbids "
+                    "(CR 601.2b)"
+                )
+        for component in variable:
+            component.amount = self.x_value
+
+    def _additional_cost_primary_alternatives(
+        self, pools: dict[ComponentKind, list[CardState]]
+    ) -> frozenset[int]:
+        """Which of CR 601.2b's "[cost] or pay [mana]" additional-cost
+        sentences (`_OR_PAY_TAIL`) the caster is paying with their non-mana
+        half, inferred from whether objects were nominated for it - the same
+        way `sacrificing=[...]` already says "pay Fling's plain sacrifice
+        cost" without a separate flag. A phrase with no matching objects in
+        its pool defaults to the mana half, exactly like an unblighted
+        "blight N or pay {M}" already defaults to the mana (`blighted`).
+
+        A `ComponentKind.PAY_LIFE` primary (Redirect Lightning's own "pay 5
+        life or pay {2}") has no object to nominate at all, so the pool
+        inference alone could never choose it - `paying_life_for_additional_
+        cost`'s own explicit index set is read here too, and either one
+        picks the life half.
+
+        Blight's own "or pay" sentences are excluded: they are resolved by
+        `blight_paid`/`pay_blight`, never by this.
+        """
+        chosen: set[int] = set()
+        for index, printed in enumerate(additional_cost_phrases(self.spell.card)):
+            if _BLIGHT_PHRASE.match(printed) is not None:
+                continue
+            or_pay = _OR_PAY_TAIL.match(substitute_x(printed, self.x_value))
+            if or_pay is None:
+                continue
+            component = cost_component_for_phrase(or_pay.group("primary"), self.caster)
+            if component is None:
+                continue
+            if pools.get(component.kind) or (
+                component.kind is ComponentKind.PAY_LIFE
+                and index in self.paying_life_for_additional_cost
+            ):
+                chosen.add(index)
+        return frozenset(chosen)
+
     def _printed_additional_costs(self) -> list[TotalCost]:
         """The card's own additional costs as payable `TotalCost`s, built fresh
         and charged to nothing - see `_charge_printed_additional_costs`, which
@@ -3990,17 +4513,15 @@ class Casting(EngineModel):
             ComponentKind.DISCARD: list(self.discarding),
             ComponentKind.EXILE: list(self.exiling),
             ComponentKind.TAP: list(self.tapping),
+            ComponentKind.BEHOLD: list(self.beholding),
         }
-        for printed in additional_cost_phrases(self.spell.card):
-            phrase = substitute_x(printed, self.x_value)
-            if _OPTIONAL_ADDITIONAL_COST.match(phrase):
-                continue
-            cost = total_cost_for_phrase(phrase, self.caster)
-            if cost is None:
-                raise ValueError(
-                    f"{self.spell.name}'s additional cost {phrase!r} could not be read, "
-                    f"so it cannot be paid (CR 118.3, 601.2f)"
-                )
+        for cost in mandatory_additional_costs(
+            self.spell,
+            self.caster,
+            self.x_value,
+            blighted=self.blight_paid,
+            primary_alternatives=self._additional_cost_primary_alternatives(pools),
+        ):
             for component in cost.components:
                 if component.kind is ComponentKind.REVEAL:
                     filled = announce_reveal(
@@ -4071,8 +4592,26 @@ class Casting(EngineModel):
         self._refuse_unless_mana_cost_payable()
         self._lock_in_own_reduction()
 
+        payable_total = self.total_cost.assign_payer(self.caster)
+        if (
+            self.permission_used is not None
+            and self.permission_used.any_type_mana
+            and payable_total.mana.symbols
+        ):
+            # "... and mana of any type can be spent to cast it/that spell."
+            # CR 202.3b: the spell's own printed/reduced mana cost is
+            # unchanged everywhere else (`self.total_cost` itself, `Action.
+            # cost`, mana value) - this only changes what the *payment* is
+            # judged against, collapsing every colored and generic symbol
+            # into one count (`ManaCost.converted`, CR 202.3) so any color in
+            # the pool satisfies it.
+            payable_total = TotalCost(
+                mana=ManaCost.parse(f"{{{payable_total.mana.converted}}}"),
+                components=payable_total.components,
+            ).assign_payer(self.caster)
+
         self.payment = CostPayment.for_total(
-            self.total_cost.assign_payer(self.caster),
+            payable_total,
             game=self.game,
             payer=self.caster,
             # CR 106.6: the payment has to know what it is paying for, or mana
@@ -4154,7 +4693,9 @@ class Casting(EngineModel):
         modal = self.modal
         if modal is None or not modal.understood:
             return
-        minimum, maximum = modal.allowed_range(entwined=self.entwined)
+        minimum, maximum = modal.allowed_range(
+            entwined=self.entwined, alternative=self._alternative_mode_count(modal)
+        )
         chosen = len(self.chosen_mode_numbers)
         if minimum <= chosen <= maximum:
             return
@@ -4447,6 +4988,9 @@ class Casting(EngineModel):
                 if self.keyword_used is not None
                 else self._granted_flashback_keyword(),
                 keyword_cost_paid=self.keyword_cost_paid,
+                exile_instead_of_graveyard=bool(
+                    self.permission_used and self.permission_used.exile_instead_of_graveyard
+                ),
                 origin_zone=self.origin_zone,
                 face=self.face,
                 modes=list(self.chosen_mode_numbers),

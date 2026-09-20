@@ -49,6 +49,7 @@ from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, CounterKind
 from ..models.mana import (
     NO_SPEND_EFFECT,
+    NOT_RETAINED,
     UNRESTRICTED,
     ManaCost,
     ManaPayment,
@@ -67,6 +68,14 @@ from ..models.mana import (
     _demand_list,
 )
 from ..models.zone import Zone
+from ..numbers import (
+    QuantitySource,
+    VariableX,
+    count_pattern,
+    parse_amount,
+    parse_count,
+    parse_quantity,
+)
 from ..snapshot import EngineModel, announce_mutation, mutation_landed
 from .abilities import (
     ActivatedAbility,
@@ -264,6 +273,39 @@ def tappable_mana_activations(
     ]
 
 
+def life_paid_mana_activations(
+    source: CardState, game: Any = None
+) -> list[tuple[int, ActivatedAbility, int]]:
+    """Every mana ability of `source` whose cost is `{T}` plus paying a fixed
+    amount of life ("{T}, Pay 1 life: Add {U} or {R}."), each with the index
+    `Game.activated_abilities` knows it by and the life it costs.
+
+    These are what `tappable_mana_activations` leaves out on CR 118.3c's
+    ground: the player may activate one (CR 605.3a), the engine may not do it
+    for them. Nothing that pays for anything on a player's behalf reads this.
+    It exists for a what-if answer about what the player could pay
+    (`mana_candidate_scan(..., include_life_paid=True)`). Any other extra
+    cost (a sacrifice, a mana payment, a discard) is not here.
+    """
+    found: list[tuple[int, ActivatedAbility, int]] = []
+    for index, ability in enumerate(_activations_of(source, game)):
+        if ability.mana is None:
+            continue
+        kinds = [piece.kind for piece in ability.costs]
+        if kinds.count(CostKind.TAP) != 1 or len(kinds) < 2:
+            continue
+        amounts = [
+            _PHRASE_PAY_LIFE.match(piece.text.strip().rstrip("."))
+            for piece in ability.costs
+            if piece.kind is not CostKind.TAP
+        ]
+        if any(amount is None for amount in amounts):
+            continue
+        life = sum(int(amount.group("amount")) for amount in amounts if amount is not None)
+        found.append((index, ability, life))
+    return found
+
+
 def _activation_refused(
     payment: "CostPayment | _SpendContext", source: CardState, index: int
 ) -> str | None:
@@ -305,10 +347,17 @@ def _activation_refused(
 # mana", so the ability is still there and still `{T}`-activatable; it just
 # has no legal type to add.
 
-#: `among legendary creatures and planeswalkers you control` (Mox Amber). The
-#: quality is left as words for `_among_colors` to read, since the same
-#: sentence is printed with other qualities on cards outside this pool.
-_ANY_COLOR_AMONG = re.compile(r"\bamong (?P<quality>[a-z ,]+?) you control\b", re.IGNORECASE)
+#: `color among legendary creatures and planeswalkers you control` (Mox
+#: Amber). The quality is left as words for `_among_colors` to read, since
+#: the same sentence is printed with other qualities on cards outside this
+#: pool. Anchored on the word directly before "among" being "color" - not a
+#: bare search anywhere in the effect - because "among ... you control" is
+#: not always this survey: Loot, the Nexus's "one mana of that color for
+#: each different power among creatures you control" also contains the
+#: phrase, modifying the *count* rather than which colors are legal, and a
+#: bare search wrongly refused its own unrelated color as undefined by
+#: CR 106.5's restriction, which is not what that sentence is about at all.
+_ANY_COLOR_AMONG = re.compile(r"\bcolor among (?P<quality>[a-z ,]+?) you control\b", re.IGNORECASE)
 
 
 def _among_colors(
@@ -521,8 +570,15 @@ _SPEND_CAST_CLAUSE = re.compile(
 #: "activate abilities of creature sources", "activate abilities of colorless
 #: Eldrazi". The trailing "sources" is WOTC's own word for "the object the
 #: ability is on" and narrows nothing further.
+#: The "of <quality>" qualifier is optional - Boommobile's own "Spend this
+#: mana only to activate abilities." (no qualifier at all, so CR 106.6's
+#: restriction is "an activated ability", full stop) is the same bare shape
+#: `_SPEND_CAST_CLAUSE`'s own `(?P<quality>.*?)` already reads for "cast
+#: spells" with nothing narrowing it. `_spend_clause` already turns an empty
+#: quality into a `SpendClause` with every qualifier set empty - unrestricted
+#: within its purpose - so no other change is needed to read it correctly.
 _SPEND_ACTIVATE_CLAUSE = re.compile(
-    r"^activate abilities of (?P<quality>.+?)(?: sources)?$", re.IGNORECASE
+    r"^activate abilities(?: of (?P<quality>.+?)(?: sources)?)?$", re.IGNORECASE
 )
 #: A rider joined onto the restriction sentence with ", and" - the
 #: can't-be-countered half of Cavern of Souls and Delighted Halfling.
@@ -537,7 +593,6 @@ _SPEND_ACTIVATE_CLAUSE = re.compile(
 _SPEND_RIDER = ", and "
 
 _SUPERTYPE_WORDS = {supertype.value: supertype for supertype in Supertype}
-_TYPE_WORDS = {type_.value: type_ for type_ in Type}
 #: The words that join a printed list of qualifying types into one clause.
 #: MTG templates the same list three ways - "instant and sorcery spells"
 #: (Tablet of Discovery), "a Knight or Equipment spell" (Tournament Grounds),
@@ -615,6 +670,7 @@ def _spend_clause(
     where being wrong permits the wrong spells.
     """
     types: set[Type] = set()
+    excluded_types: set[Type] = set()
     subtypes: set[str] = set()
     supertypes: set[Supertype] = set()
     colorless = False
@@ -636,6 +692,14 @@ def _spend_clause(
 
         if lowered == "colorless":
             colorless = True
+        elif lowered.startswith("non") and lowered.removeprefix("non").removesuffix("s") in (
+            _TYPE_WORDS
+        ):
+            # CR 109.2's negation of a printed card type - Chandra, Chill of
+            # Compliance's own "a noncreature spell", the same "non<type>"
+            # idiom `machines/effects.py`'s own `_nonland_or_typed_card_
+            # matcher` already reads for a search/reveal quality.
+            excluded_types.add(_TYPE_WORDS[lowered.removeprefix("non").removesuffix("s")])
         elif lowered in _SUPERTYPE_WORDS:
             supertypes.add(_SUPERTYPE_WORDS[lowered])
         elif lowered.removesuffix("s") in _TYPE_WORDS:
@@ -669,6 +733,7 @@ def _spend_clause(
     return SpendClause(
         purpose=purpose,
         types=frozenset(types),
+        excluded_types=frozenset(excluded_types),
         subtypes=frozenset(subtypes),
         supertypes=frozenset(supertypes),
         joined=joined,
@@ -793,7 +858,7 @@ def _one_spend_clause(phrase: str, chosen_type: str | None) -> SpendClause | Non
 
     activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
     if activate is not None:
-        return _spend_clause(activate.group("quality"), SpendPurpose.ACTIVATE_ABILITY, None)
+        return _spend_clause(activate.group("quality") or "", SpendPurpose.ACTIVATE_ABILITY, None)
     if _SPEND_CUMULATIVE_UPKEEP_CLAUSE.match(phrase):
         # CR 702.24a's cost, not a spell or an ability: no quality to read.
         return SpendClause(purpose=SpendPurpose.PAY_CUMULATIVE_UPKEEP)
@@ -1050,7 +1115,7 @@ def triggered_mana_bonus(
             if triggered_mana_recipient(shape.recipient, controller, event) != context.payer:
                 continue
             times = (
-                triggered_mana_count(game, shape.count, controller)
+                triggered_mana_count(game, shape.count, controller, source=trigger_source)
                 if shape.count is not None
                 else 1
             )
@@ -1134,7 +1199,10 @@ _ScannedCandidate = tuple[CardState, list[list[Color]], ManaRestriction | None, 
 
 
 def _scan_mana_candidates(
-    payment: "CostPayment | _SpendContext", sources: Iterable[CardState]
+    payment: "CostPayment | _SpendContext",
+    sources: Iterable[CardState],
+    *,
+    include_life_paid: bool = False,
 ) -> list[_ScannedCandidate]:
     """The board-reading half of `_auto_tap_candidates`, with CR 106.6's
     restriction recorded but not yet judged against any particular spend.
@@ -1159,8 +1227,17 @@ def _scan_mana_candidates(
     spend disallows yields the same relative order for what remains - one
     scan, one sort, safe to filter as many times as there are spends to ask
     about.
+
+    `include_life_paid` adds `life_paid_mana_activations`' rows, sorted after
+    every free row so a plan reaches for life last, and - among those rows -
+    by the life each one costs, ascending, so a plan that does reach for life
+    reaches for the cheapest source rather than whichever one this scan found
+    first. It is off everywhere the engine pays on a player's behalf
+    (CR 118.3c).
     """
     candidates: list[_ScannedCandidate] = []
+    paying_life: set[tuple[Any, int]] = set()
+    life_cost: dict[tuple[Any, int], int] = {}
     trigger_sources = mana_trigger_sources(payment.game) if payment.payer is not None else []
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
@@ -1170,7 +1247,13 @@ def _scan_mana_candidates(
         if not can_tap_for_mana(source, payment.game):
             continue
         land_types, own_counters, has_imprinted_card = _mana_context(payment, source)
-        for index, activation in tappable_mana_activations(source, payment.game):
+        activations = tappable_mana_activations(source, payment.game)
+        if include_life_paid:
+            life_paid = life_paid_mana_activations(source, payment.game)
+            paying_life.update((source.id, index) for index, _ability, _life in life_paid)
+            life_cost.update({(source.id, index): life for index, _ability, life in life_paid})
+            activations += [(index, activation) for index, activation, _life in life_paid]
+        for index, activation in activations:
             ability = activation.mana
             if ability is None:
                 continue
@@ -1195,7 +1278,19 @@ def _scan_mana_candidates(
     # A restricted ability first among a source's own abilities, so the mana
     # that can do less is the mana spent - the same preference `ManaPool._buckets`
     # applies inside the pool, applied here to which ability is activated.
-    candidates.sort(key=lambda item: (_flexibility(item[1], item[3]), item[2] is None))
+    #
+    # Free sources sort first (`paying_life`); among life-paid ones, the
+    # cheaper life cost sorts first (`life_cost`, 0 for every free row) so a
+    # plan reaching for life at all reaches for the smallest amount, not just
+    # the first one this scan happened to find.
+    candidates.sort(
+        key=lambda item: (
+            (item[0].id, item[4]) in paying_life,
+            life_cost.get((item[0].id, item[4]), 0),
+            _flexibility(item[1], item[3]),
+            item[2] is None,
+        )
+    )
     return candidates
 
 
@@ -1217,7 +1312,11 @@ def _filter_candidate_scan(
 
 
 def mana_candidate_scan(
-    sources: Iterable[CardState], *, game: Any = None, payer: str | None = None
+    sources: Iterable[CardState],
+    *,
+    game: Any = None,
+    payer: str | None = None,
+    include_life_paid: bool = False,
 ) -> list[_ScannedCandidate]:
     """The public entry point for hoisting `_scan_mana_candidates` out of a
     loop over several costs - `legal_actions` calls this exactly once per
@@ -1229,7 +1328,11 @@ def mana_candidate_scan(
     own spend purpose - `could_pay_mana_cost` applies `_filter_candidate_scan`
     with its own `spend` against the same rows.
     """
-    return _scan_mana_candidates(_SpendContext(game=game, payer=payer, spend=None), sources)
+    return _scan_mana_candidates(
+        _SpendContext(game=game, payer=payer, spend=None),
+        sources,
+        include_life_paid=include_life_paid,
+    )
 
 
 def _withheld_mana_sources(
@@ -1552,13 +1655,16 @@ def _bucket_map(
         option, restriction = alternatives[0] if alternatives else ([], None)
         slot = _slot_for(restriction, registry)
         counts = _MultiSet(option)
-        buckets = {(color, snow, slot, NO_SPEND_EFFECT): amount for color, amount in counts.items()}
+        buckets = {
+            (color, snow, slot, NO_SPEND_EFFECT, NOT_RETAINED): amount
+            for color, amount in counts.items()
+        }
         return buckets, sum(counts.values())
 
     buckets = {}
     for option, restriction in alternatives:
         slot = _slot_for(restriction, registry)
-        buckets[(option[0], snow, slot, NO_SPEND_EFFECT)] = 1
+        buckets[(option[0], snow, slot, NO_SPEND_EFFECT, NOT_RETAINED)] = 1
     return buckets, 1
 
 
@@ -1598,7 +1704,7 @@ def _chosen_alternative(
         return list(option), restriction
     for option, restriction in alternatives:
         slot = _slot_for(restriction, registry)
-        if used.get((option[0], snow, slot, NO_SPEND_EFFECT), 0) > 0:
+        if used.get((option[0], snow, slot, NO_SPEND_EFFECT, NOT_RETAINED), 0) > 0:
             return list(option), restriction
     return [], None
 
@@ -1671,6 +1777,7 @@ def _best_flow_plan(
             {bucket for buckets in sources_map.values() for bucket in buckets},
             key=lambda bucket: (
                 bucket[2] == UNRESTRICTED,
+                bucket[4] != NOT_RETAINED,
                 bucket[1],
                 bucket[0].value,
                 bucket[2],
@@ -2019,6 +2126,13 @@ class ComponentKind(StrEnum):
     #: records the reveal on the game, and `variable_count` marks CR 107.3a's
     #: X, where `required` is the number the payer chose to reveal.
     REVEAL = "reveal"
+    #: CR 701.4a's own keyword action, "to behold a [quality]": "Reveal a
+    #: [quality] card from your hand or choose a [quality] permanent you
+    #: control on the battlefield." Two zones satisfy one component - the
+    #: chosen card is a `REVEAL` if it came from hand (CR 701.20a-b: shown,
+    #: nothing moves) and untouched if it came from the battlefield (CR
+    #: 701.4b: it is simply noted, not tapped, sacrificed, or exiled).
+    BEHOLD = "behold"
 
 
 _OBJECT_KINDS = frozenset(
@@ -2033,6 +2147,7 @@ _OBJECT_KINDS = frozenset(
         ComponentKind.EXERT,
         ComponentKind.RETURN_TO_HAND,
         ComponentKind.REVEAL,
+        ComponentKind.BEHOLD,
     }
 )
 
@@ -2072,6 +2187,19 @@ class CardRequirement(EngineModel):
     different demand and is deliberately not read as this one."""
     description: str = ""
     """The phrase this was read from, for the message when it is not met."""
+    excludes_source: bool = False
+    """Gallia, Tragic Host's own "exile *another* creature card from your
+    graveyard" - CR 601.2c calls this reading "another"/"other" already,
+    `machines/targeting.py`'s own `TargetRequirement.excludes_source` is the
+    identical concept on the targeting side, not a second name for a
+    different one. `source_id` is what this checks against; set together,
+    by `Game.activation_cost`, which is the one place that already knows
+    which permanent this cost is being paid to activate."""
+    source_id: UUID | None = None
+    """The permanent `excludes_source` excludes, filled in by `Game.
+    activation_cost` rather than by the reader that builds this
+    `CardRequirement` - the reader never sees a live board, only the
+    printed phrase."""
 
     @property
     def is_empty(self) -> bool:
@@ -2109,6 +2237,8 @@ class CardRequirement(EngineModel):
         instead of the raw printing: they already resolve which face is up
         (CR 712.8d) the way `card.card`'s front face alone does not.
         """
+        if self.excludes_source and self.source_id is not None and card.id == self.source_id:
+            return f"{self.description or 'this cost'} excludes the ability's own source"
         if game is not None and card.zone is Zone.BATTLEFIELD:
             try:
                 characteristics = game.characteristics_of(card)
@@ -2252,10 +2382,14 @@ class CostComponent(EngineModel):
     """
 
     variable_count: bool = False
-    """`ComponentKind.REVEAL` only: the printed count is CR 107.3a's X ("Reveal
-    X white cards from your hand"), so `required` is whatever the payer
-    announced - the number of cards they chose to reveal - rather than a
-    number the text fixes."""
+    """The printed count is CR 107.3a's X or "one or more", so the number is
+    whatever the payer announced or chose rather than one the text fixes. For
+    `ComponentKind.REVEAL` ("Reveal X white cards from your hand") that is
+    `required`, the number of cards they chose to reveal; for
+    `ComponentKind.PAY_LIFE` ("Pay X life") and `REMOVE_COUNTERS` ("Remove X
+    +1/+1 counters") it is `amount`; for the other object kinds it is
+    `required`, which the reader leaves at the fewest that pays - 0 for X, 1
+    for "one or more" - until `announce_count` fixes it."""
 
     source: str | None = None
     """The card whose cost this is, by name - the `Reveal.source` a paid
@@ -2310,8 +2444,40 @@ class CostComponent(EngineModel):
             ComponentKind.COLLECT_EVIDENCE: self._why_not_collect_evidence,
             ComponentKind.RETURN_TO_HAND: self._why_not_return_to_hand,
             ComponentKind.REVEAL: self._why_not_reveal,
+            ComponentKind.BEHOLD: self._why_not_behold,
         }
         return checks[self.kind](game)
+
+    def _why_not_behold(self, _game: Any) -> str | None:
+        """CR 701.4a: "Reveal a [quality] card from your hand or choose a
+        [quality] permanent you control on the battlefield." Each chosen
+        object has to be in one of those two places - owned in hand, or
+        controlled on the battlefield - the same ownership/control check
+        `_why_not_reveal`/`_why_not_controlled` already make for each half."""
+        seen: set[UUID] = set()
+        for card in self.cards:
+            if card.id in seen:
+                return (
+                    f"{card.name} is named more than once, but one object is beheld only "
+                    "once to pay a cost (CR 109.1, CR 118.3)"
+                )
+            seen.add(card.id)
+            if card.zone is Zone.HAND:
+                if self.payer is not None and card.owner is not None and card.owner != self.payer:
+                    return f"{card.name} is not in {self.payer}'s hand"
+            elif card.zone is Zone.BATTLEFIELD:
+                if (
+                    self.payer is not None
+                    and card.controller is not None
+                    and card.controller != self.payer
+                ):
+                    return f"{self.payer} does not control {card.name}"
+            else:
+                return (
+                    f"{card.name} is neither in {self.payer or 'the payer'}'s hand nor a "
+                    "permanent they control, so it cannot be beheld (CR 701.4a)"
+                )
+        return None
 
     def _why_not_reveal(self, _game: Any) -> str | None:
         """CR 118.3 for a reveal cost: every card named has to be in the
@@ -2667,6 +2833,17 @@ class CostComponent(EngineModel):
                     before = len(game.reveals)
                     game.reveal(card, source=self.source)
                     self._reveals_recorded.extend(game.reveals[before:])
+        elif self.kind is ComponentKind.BEHOLD:
+            # CR 701.4a's two halves: a hand card is revealed exactly like
+            # `REVEAL` (nothing moves, CR 701.20b); a battlefield permanent is
+            # simply chosen (CR 701.4b) and nothing happens to it at all -
+            # not tapped, not sacrificed, not exiled.
+            for card in self.cards:
+                self._remember(card)
+                if game is not None and card.zone is Zone.HAND:
+                    before = len(game.reveals)
+                    game.reveal(card, source=self.source)
+                    self._reveals_recorded.extend(game.reveals[before:])
         elif self.kind is ComponentKind.RETURN_TO_HAND:
             # CR 702.49a's own cost: the creature leaves combat as it leaves
             # the battlefield (the zone change is what ends its being an
@@ -2817,6 +2994,15 @@ class CostComponent(EngineModel):
             # Revealing moved nothing (CR 701.20b), so neither does the
             # rewind; it takes back the records the payment wrote, so an
             # attempt rewound under CR 733.1 leaves nobody knowing the cards.
+            if game is not None:
+                for record in self._reveals_recorded:
+                    if record in game.reveals:
+                        game.reveals.remove(record)
+            self._reveals_recorded = []
+        elif self.kind is ComponentKind.BEHOLD:
+            # Neither half moved anything (CR 701.4a/b), so the rewind is the
+            # same as REVEAL's: only the reveal record a hand-half payment
+            # wrote needs taking back.
             if game is not None:
                 for record in self._reveals_recorded:
                     if record in game.reveals:
@@ -3046,6 +3232,24 @@ def reveal_cost(
     )
 
 
+def behold_cost(
+    *cards: CardState,
+    payer: str | None = None,
+    required: int | None = None,
+    description: str = "",
+) -> CostComponent:
+    """Behold a quality as a cost (CR 701.4a, CR 118.1): reveal a card from
+    the payer's hand, or choose a permanent they control on the battlefield.
+    `CostComponent._why_not_behold` is the check."""
+    return CostComponent(
+        kind=ComponentKind.BEHOLD,
+        cards=list(cards),
+        required=len(cards) if required is None else required,
+        payer=payer,
+        description=description,
+    )
+
+
 def announce_reveal(
     component: CostComponent,
     revealing: Sequence[CardState] | None,
@@ -3074,6 +3278,28 @@ def announce_reveal(
         else:
             required = x_value
     return component.model_copy(update={"cards": cards, "required": required, "source": source})
+
+
+def announce_count(component: CostComponent, x_value: int, nominated: int) -> CostComponent:
+    """A variable-count component with its number fixed as the cost is paid.
+
+    CR 107.3a: an X in the cost is the `x_value` announced - life paid,
+    counters removed, or objects chosen. "One or more" is every one of the
+    `nominated` objects, and never fewer than one (CR 118.3 then refuses a
+    choice of none). A fixed count, and a reveal (`announce_reveal`), come
+    back unchanged.
+    """
+    if not component.variable_count or component.kind is ComponentKind.REVEAL:
+        return component
+    if component.kind in {
+        ComponentKind.PAY_LIFE,
+        ComponentKind.REMOVE_COUNTERS,
+        ComponentKind.PLACE_COUNTERS,
+    }:
+        return component.model_copy(update={"amount": x_value})
+    if component.required:
+        return component.model_copy(update={"required": max(component.required, nominated)})
+    return component.model_copy(update={"required": x_value})
 
 
 def cost_announces_x(cost_text: str) -> bool:
@@ -3416,6 +3642,16 @@ class CostModifierKind(StrEnum):
     `COLOR_DECREASE`. Exactly one of `applies_to_types`/`excludes_type` is
     set, matching which of the two shapes was printed."""
 
+    OPPONENT_TYPE_INCREASE = "opponent_type_increase"
+    """"[<Qualifier> s]pells your opponents cast cost `{N}` more to cast." -
+    Thalia, the Survivor's own "Noncreature spells your opponents cast cost
+    {1} more to cast.", and the unqualified "Spells your opponents cast cost
+    {1} more to cast." this same shape covers with `excludes_type` left
+    `None`. `FLAT_INCREASE`'s own mirror, scoped the other way round from
+    `COLOR_DECREASE`/`TYPE_DECREASE`: those apply only when the permanent's
+    controller *is* the caster, this only when they are not
+    (`Game.static_cost_modifiers_for`)."""
+
 
 class CostModifierEffect(EngineModel):
     """One static cost-modifying ability, read off a permanent's oracle text."""
@@ -3472,6 +3708,18 @@ _FLAT_COST_INCREASE = re.compile(
 _NAMED_COST_INCREASE = re.compile(
     r"[Ss]pells with the chosen name cost \{(?P<amount>\d+)\} more to cast\."
 )
+#: Thalia, the Survivor's tax, and Grand Arbiter Augustin IV's own
+#: unqualified "Spells your opponents cast cost {1} more to cast." - the
+#: opponent-scoped mirror of `_FLAT_COST_INCREASE`. Matched ahead of it for
+#: the same reason `_NAMED_COST_INCREASE` is: "spells ... your opponents
+#: cast cost {N} more" is not contiguous "spells cost {N} more", so the
+#: qualifier and the tax would otherwise be silently dropped rather than
+#: read, the exact DDR#978 shape this permanent's own docstring names.
+_OPPONENT_COST_INCREASE = re.compile(
+    r"(?:(?P<qualifier>Noncreature|Nonartifact|Nonland|Noninstant|Nonsorcery|"
+    r"Nonenchantment|Nonplaneswalker) )?[Ss]pells your opponents cast cost "
+    r"\{(?P<amount>\d+)\} more to cast\."
+)
 _PER_SPELL_COST_INCREASE = re.compile(
     r"Each spell a player casts costs \{(?P<amount>\d+)\} more to cast for each "
     r"other spell that player has cast this turn\."
@@ -3482,14 +3730,11 @@ _SPELL_COST_FLOOR = re.compile(
     r"costs (?P<total>\w+) mana to cast\."
 )
 
-#: The Medallion cycle's own template - one color, one flat amount.
-_COLOR_WORDS: dict[str, Color] = {
-    "white": Color.WHITE,
-    "blue": Color.BLUE,
-    "black": Color.BLACK,
-    "red": Color.RED,
-    "green": Color.GREEN,
-}
+#: The Medallion cycle's own template - one color, one flat amount. Reads
+#: through the wider `_COLOR_WORDS` defined below (with "colorless"), which
+#: this regex's own closed color alternation can never actually produce -
+#: it exists once, past `_TYPE_WORDS`, so both this and `_requirement`'s
+#: colorless-aware quality reading share one source of truth.
 _COLOR_COST_DECREASE = re.compile(
     r"(?P<color>White|Blue|Black|Red|Green) spells you cast cost \{(?P<amount>\d+)\} "
     r"less to cast\.",
@@ -3557,6 +3802,14 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
         return CostModifierEffect(
             kind=CostModifierKind.NAMED_INCREASE, amount=int(match.group("amount"))
         )
+    match = _OPPONENT_COST_INCREASE.search(text)
+    if match is not None:
+        qualifier = match.group("qualifier")
+        return CostModifierEffect(
+            kind=CostModifierKind.OPPONENT_TYPE_INCREASE,
+            amount=int(match.group("amount")),
+            excludes_type=_QUALIFIER_EXCLUDES.get(qualifier) if qualifier else None,
+        )
     match = _FLAT_COST_INCREASE.search(text)
     if match is not None:
         qualifier = match.group("qualifier")
@@ -3572,8 +3825,8 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
         )
     match = _SPELL_COST_FLOOR.search(text)
     if match is not None:
-        threshold = _count(match.group("threshold"))
-        total = _count(match.group("total"))
+        threshold = parse_count(match.group("threshold"))
+        total = parse_count(match.group("total"))
         if threshold is None or total is None:
             return None
         return CostModifierEffect(
@@ -3705,11 +3958,28 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
 #: applied to it from another effect**" - so this is read off a permanent on
 #: the battlefield rather than off the spell being cast, and the spell it
 #: applies to prints nothing about it at all.
+#:
+#: Omnipresence's own sibling narrows by mana value instead of by type:
+#: "You may cast spells with mana value less than or equal to the number of
+#: creatures you control from your hand without paying their mana costs." -
+#: the optional clause between "spells" and "from your hand" reads either a
+#: literal number ("mana value 3 or less", not printed on any pool card but
+#: the same CR 107.3a-free shape) or a live count phrased "the number of
+#: [quality] you control", read again at CR 601.2f by `mana_value_cap_for`.
 _STATIC_FREE_CAST = re.compile(
-    r"^You may cast (?P<what>[\w' -]*?spells?) from your (?P<zone>hand|graveyard) "
+    r"^You may cast (?P<what>[\w' -]*?spells?)"
+    r"(?: with mana value (?:(?P<mv_number>\d+) or less"
+    r"|less than or equal to (?P<mv_quality>.+?)))?"
+    r" from your (?P<zone>hand|graveyard) "
     r"without paying (?:its|their) mana costs?\.$",
     re.IGNORECASE,
 )
+
+#: "the number of creatures you control" - `mana_value_cap_for`'s own reading
+#: of `StaticFreeCastGrant.max_mana_value_quality`, sharing `_requirement`
+#: with every other quality this module already counts (`_PHRASE_SACRIFICE`
+#: and friends), rather than a new vocabulary just for this one card.
+_THE_NUMBER_OF_YOU_CONTROL = re.compile(r"^the number of (?P<quality>.+?) you control$")
 
 
 class StaticFreeCastGrant(EngineModel):
@@ -3732,6 +4002,16 @@ class StaticFreeCastGrant(EngineModel):
     type_word: str | None = None
     """The card type the grant is narrowed to, lowercased ("creature spells
     from your hand"), or None for every spell."""
+    max_mana_value: int | None = None
+    """A printed literal cap ("mana value 3 or less"), or None when the grant
+    prints no fixed number - either no cap at all, or `max_mana_value_quality`'s
+    live one. Exactly one of the two is ever set."""
+    max_mana_value_quality: str | None = None
+    """Omnipresence's own live cap, as the printed quality phrase ("the
+    number of creatures you control") rather than a precomputed count - this
+    is a live board read at CR 601.2f, not a fact fixed when the permanent
+    entered, so nothing here may cache a number. `mana_value_cap_for` counts
+    it against the board when the grant is actually checked."""
 
 
 def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
@@ -3748,27 +4028,49 @@ def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
         return None
     what = match.group("what").strip().lower()
     qualifier = re.sub(r"spells?$", "", what).strip()
-    return StaticFreeCastGrant(zone=zone, type_word=qualifier or None)
+    mv_number = match.group("mv_number")
+    mv_quality = match.group("mv_quality")
+    return StaticFreeCastGrant(
+        zone=zone,
+        type_word=qualifier or None,
+        max_mana_value=int(mv_number) if mv_number is not None else None,
+        max_mana_value_quality=mv_quality.strip() if mv_quality is not None else None,
+    )
+
+
+def mana_value_cap_for(
+    grant: StaticFreeCastGrant, game: Any = None, controller: str | None = None
+) -> int | None:
+    """The live mana-value cap `grant` puts on what it makes free.
+
+    `None` either when the grant carries no cap at all (an ordinary
+    Omniscience-shaped grant, `grant.max_mana_value_quality` unset - the
+    caller tells this apart from the case below by checking that field
+    itself, a printed fact rather than a computed one) or when a printed
+    quality this cannot read leaves a *live* cap unreadable - CR 118.3's
+    "cannot use what was not read", not "nothing to cap", which is why the
+    caller has to distinguish the two rather than treating both as free.
+    """
+    if grant.max_mana_value is not None:
+        return grant.max_mana_value
+    if grant.max_mana_value_quality is None:
+        return None
+    match = _THE_NUMBER_OF_YOU_CONTROL.fullmatch(grant.max_mana_value_quality.strip().lower())
+    if match is None or game is None or controller is None:
+        return None
+    requirement = _requirement(match.group("quality"))
+    if requirement is None:
+        return None
+    return sum(
+        1
+        for state in game.permanents_controlled_by(controller)
+        if requirement.why_not(state, game, controller) is None
+    )
 
 
 # --------------------------------------------------------------------------
 # Reading a printed cost phrase into something payable
 # --------------------------------------------------------------------------
-
-_COUNT_WORDS = {
-    "a": 1,
-    "an": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
 
 _COLOR_WORDS = {
     "white": Color.WHITE,
@@ -3779,7 +4081,13 @@ _COLOR_WORDS = {
     "colorless": Color.COLORLESS,
 }
 
-_PHRASE_PAY_LIFE = re.compile(r"^pay (?P<amount>\d+) life$", re.IGNORECASE)
+#: "Pay 2 life" and CR 107.3a's "Pay X life" (Krumar Initiate), whose amount is
+#: the X announced as the cost is paid.
+_PHRASE_PAY_LIFE = re.compile(rf"^pay {count_pattern('amount', x=True)} life$", re.IGNORECASE)
+#: The count of an object cost: a number, CR 107.3a's X ("Exile X cards from
+#: your graveyard", Necropolis Fiend), or "one or more" ("Sacrifice one or
+#: more artifacts", Radiant Lotus). Read back with `_cost_count`.
+_COST_COUNT = rf"(?P<count>one or more|{count_pattern(x=True)})"
 #: `Exile a black card from your hand` (Force of Will) and the self-referential
 #: `Exile this card from your graveyard` (Seasoned Pyromancer). CR 406.2 never
 #: restricts exiling to the hand, so the zone is read off the sentence rather
@@ -3790,8 +4098,15 @@ _PHRASE_PAY_LIFE = re.compile(r"^pay (?P<amount>\d+) life$", re.IGNORECASE)
 #: substituted). It sits between the noun and the zone, so it is spelled once
 #: here and shared by every phrase that can carry it.
 _MANA_VALUE_TAIL = r"(?: with mana value (?P<mana_value>\d+))?"
+#: Gallia, Tragic Host's own "exile another creature card from your
+#: graveyard" - CR 601.2c/113.6's "another"/"other" reads as a single
+#: implicit "one", excluding the ability's own source (the same concept
+#: `machines/targeting.py`'s own `TargetRequirement.excludes_source` already
+#: names on the targeting side; `_requirement`'s caller below is what
+#: actually marks `CardRequirement.excludes_source`, since `_requirement`
+#: itself never sees which permanent this cost belongs to).
 _PHRASE_EXILE = re.compile(
-    r"^exile (?:this card|(?P<count>\w+) (?P<quality>[\w ]*?)cards?)"
+    rf"^exile (?:this card|(?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ]*?)cards?)"
     + _MANA_VALUE_TAIL
     + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
     re.IGNORECASE,
@@ -3806,6 +4121,13 @@ _PHRASE_REVEAL = re.compile(
     r"^reveal (?P<count>x|\w+) (?P<quality>[\w ,]*?)cards? from your hand$",
     re.IGNORECASE,
 )
+#: CR 701.4a's keyword action as a cost: "behold a Jace" (Countersculpt,
+#: Theorist's Sanctum), "behold a Kithkin" (Kinsbaile Aspirant, off-set).
+#: "Reveal a [quality] card from your hand or choose a [quality] permanent
+#: you control on the battlefield" - one component, `ComponentKind.BEHOLD`,
+#: since CR 701.4a is a single keyword action with two ways to satisfy it,
+#: not two separate costs the way sacrifice-or-discard would be.
+_PHRASE_BEHOLD = re.compile(r"^behold (?:a|an) (?P<quality>[\w' ]+)$", re.IGNORECASE)
 _ZONE_WORDS: dict[str, Zone] = {
     "hand": Zone.HAND,
     "graveyard": Zone.GRAVEYARD,
@@ -3817,7 +4139,7 @@ _ZONE_WORDS: dict[str, Zone] = {
 #: a strict subset of this one's start, so this is tried first rather than
 #: matching the exile half and silently dropping "and pay its mana cost".
 _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
-    r"^exile (?:this card|(?P<count>\w+) (?P<quality>[\w ]*?)cards?)"
+    rf"^exile (?:this card|{count_pattern('count')} (?P<quality>[\w ]*?)cards?)"
     r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))? and pay "
     r"(?:its|their) mana cost$",
     re.IGNORECASE,
@@ -3826,14 +4148,14 @@ _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
 #: "Sacrifice an artifact, creature, or land" (Greater Gargadon) - matches as
 #: one phrase rather than being split by `_split_cost_phrase`'s own comma cut;
 #: `_requirement` is what turns the list into a `CardRequirement` disjunction.
-_PHRASE_SACRIFICE = re.compile(r"^sacrifice (?P<count>\w+) (?P<quality>[\w ,]+)$", re.IGNORECASE)
+_PHRASE_SACRIFICE = re.compile(rf"^sacrifice {_COST_COUNT} (?P<quality>[\w ,]+)$", re.IGNORECASE)
 #: `Discard a card`, `Discard a legendary card with the same name as a
 #: legendary permanent you control` (Key to the Side-Door). The same-name tail
 #: is a second demand on the *same* card - CR 201.2a's "at least one name in
 #: common" against something the payer controls - not a second card to choose,
 #: so it becomes a nested `CardRequirement` rather than another component.
 _PHRASE_DISCARD = re.compile(
-    r"^discard (?P<count>\w+) (?P<quality>[\w ]*?)cards?"
+    rf"^discard {_COST_COUNT} (?P<quality>[\w ]*?)cards?"
     r"(?: with the same name as (?:a|an) (?P<same_name>[\w ]+?) you control)?$",
     re.IGNORECASE,
 )
@@ -3846,13 +4168,15 @@ _PHRASE_DISCARD = re.compile(
 #: tapped again to pay the cost" is true whether or not the sentence says so -
 #: `CostComponent._why_not_tap` enforces it either way.
 _PHRASE_TAP = re.compile(
-    r"^tap (?P<count>\w+) (?:untapped )?(?P<quality>[\w ,]+?) you control$", re.IGNORECASE
+    rf"^tap {_COST_COUNT} (?:untapped )?(?P<quality>[\w ,]+?) you control$", re.IGNORECASE
 )
 #: `Collect evidence 6` (Detective's Phoenix's `Bestow-{R}, Collect evidence
 #: 6.`) - CR 701.59a's keyword action used as a cost. Nothing is named to
 #: choose: "any number of cards ... with total mana value N or greater" is a
 #: threshold, not a count, so this carries only N.
-_PHRASE_COLLECT_EVIDENCE = re.compile(r"^collect evidence (?P<amount>\d+)$", re.IGNORECASE)
+_PHRASE_COLLECT_EVIDENCE = re.compile(
+    rf"^collect evidence {count_pattern('amount', article=False)}$", re.IGNORECASE
+)
 #: `{Q}`, CR 107.6's untap symbol, which "in an activation cost means 'Untap
 #: this permanent.'" Umbral Mantle's granted `{3}, {Q}:` is the pool's
 #: printing. Read here rather than left to `ManaCost.parse` because it is not
@@ -3861,7 +4185,7 @@ _PHRASE_UNTAP_SYMBOL = re.compile(r"^\{Q\}$", re.IGNORECASE)
 #: `Mill a card` (Millikin's `{T}, Mill a card: Add {C}.`) - CR 701.17a's
 #: keyword action used as a cost. Nothing is chosen: the cards come off the top
 #: of the payer's own library, so this carries a count and no requirement.
-_PHRASE_MILL = re.compile(r"^mill (?P<count>\w+) cards?$", re.IGNORECASE)
+_PHRASE_MILL = re.compile(rf"^mill {count_pattern('count')} cards?$", re.IGNORECASE)
 #: `Waterbend {3}` (Flexible Waterbender) - CR 701.67a: "'Waterbend [cost]'
 #: means 'Pay [cost]. For each generic mana in that cost, you may tap an
 #: untapped artifact or creature you control rather than pay that mana.'" The
@@ -3900,13 +4224,41 @@ _PHRASE_EXERT_SELF = re.compile(
 #: caller fails closed (see `cost_component_for_phrase`'s docstring).
 _COUNTER_SELF_SUBJECT = r"this (?:creature|permanent|artifact|enchantment|planeswalker|land)"
 _PHRASE_PLACE_COUNTERS = re.compile(
-    rf"^put (?P<count>\w+) (?P<kind>[\w+/−-]+) counters? on {_COUNTER_SELF_SUBJECT}$",
+    rf"^put {count_pattern('count')} (?P<kind>[\w+/−-]+) counters? on {_COUNTER_SELF_SUBJECT}$",
     re.IGNORECASE,
 )
 _PHRASE_REMOVE_COUNTERS = re.compile(
-    rf"^remove (?P<count>\w+) (?P<kind>[\w+/−-]+) counters? from {_COUNTER_SELF_SUBJECT}$",
+    rf"^remove {_COST_COUNT} (?P<kind>[\w+/−-]+) counters? from {_COUNTER_SELF_SUBJECT}$",
     re.IGNORECASE,
 )
+
+
+#: CR 701.68a's "Blight N" as a cost - "{1}{R}, {T}, Blight 1" (Sting-Slinger),
+#: "blight X" (Soul Immolation, X already substituted when announced): N -1/-1
+#: counters on a creature the payer controls, chosen as the cost is paid.
+_PHRASE_BLIGHT = re.compile(
+    rf"^blight {count_pattern('count', x=True, article=False)}$", re.IGNORECASE
+)
+
+
+def _cost_count(word: str) -> tuple[int, bool] | None:
+    """An object cost's count as (the fewest that pays it, whether the payer
+    decides the number), or None when `word` is not a count.
+
+    A printed number is exact. CR 107.3a's X is announced as the cost is paid
+    and may be 0. "One or more" is every object the payer chooses, at least
+    one. The chosen number is filled in by `announce_count`.
+    """
+    quantity = parse_quantity(word)
+    if quantity is None:
+        return None
+    if quantity.source is QuantitySource.X:
+        return 0, True
+    if quantity.source is QuantitySource.ONE_OR_MORE:
+        return 1, True
+    if quantity.source is QuantitySource.FIXED and quantity.amount is not None:
+        return quantity.amount, False
+    return None
 
 
 def _counter_kind_word(word: str) -> str:
@@ -3921,12 +4273,6 @@ def _counter_kind_word(word: str) -> str:
     if re.fullmatch(r"[+−-]1/[+−-]1", word):
         return word.replace("−", "-")
     return word.lower()
-
-
-def _count(word: str) -> int | None:
-    if word.isdigit():
-        return int(word)
-    return _COUNT_WORDS.get(word.lower())
 
 
 #: Connector words a comma-and-"or" (or "and") list of card types leaves
@@ -3975,6 +4321,16 @@ def _requirement(quality: str) -> CardRequirement | None:
             continue
         lowered = word.lower().rstrip("s")
         if lowered in _QUALITY_CONNECTORS:
+            continue
+        if lowered == "permanent":
+            # CR 110.1 makes everything on the battlefield a permanent
+            # already, so "permanent"/"permanents" names no card type at all
+            # - the same "no restriction" reading `_controlled_requirement`
+            # already gives it on same-name comparisons, needed here too for
+            # a sacrifice cost with no type demand (Ward - Sacrifice three
+            # permanents, CR 702.21a) rather than one word away from a
+            # subtype (Greater Gargadon's "artifact, creature, or land" is
+            # the demand-bearing shape; bare "permanents" is not).
             continue
         if lowered in _COLOR_WORDS:
             colors.append(_COLOR_WORDS[lowered])
@@ -4046,18 +4402,30 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     life = _PHRASE_PAY_LIFE.match(text)
     if life is not None:
-        return pay_life_cost(int(life.group("amount")), payer, description=text)
+        amount = parse_amount(life.group("amount"))
+        if amount is None:
+            return None
+        if isinstance(amount, VariableX):
+            # CR 118.3b: players can always pay 0 life, so 0 stands until the
+            # X is announced (`Game.activation_cost`).
+            return pay_life_cost(0, payer, description=text).model_copy(
+                update={"variable_count": True}
+            )
+        return pay_life_cost(amount, payer, description=text)
 
     mill = _PHRASE_MILL.match(text)
     if mill is not None:
-        count = _count(mill.group("count"))
+        count = parse_count(mill.group("count"))
         if count is None:
             return None
         return mill_cost(count, payer, description=text)
 
     evidence = _PHRASE_COLLECT_EVIDENCE.match(text)
     if evidence is not None:
-        return collect_evidence_cost(int(evidence.group("amount")), payer, description=text)
+        amount = parse_count(evidence.group("amount"), article=False)
+        if amount is None:
+            return None
+        return collect_evidence_cost(amount, payer, description=text)
 
     if _PHRASE_UNTAP_SYMBOL.match(text):
         # CR 107.6's "Untap this permanent": the permanent is the one whose
@@ -4074,7 +4442,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     place = _PHRASE_PLACE_COUNTERS.match(text)
     if place is not None:
-        count = _count(place.group("count"))
+        count = parse_count(place.group("count"))
         if count is None:
             return None
         kind = _counter_kind_word(place.group("kind"))
@@ -4082,11 +4450,36 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     remove_counters = _PHRASE_REMOVE_COUNTERS.match(text)
     if remove_counters is not None:
-        count = _count(remove_counters.group("count"))
-        if count is None:
+        read = _cost_count(remove_counters.group("count"))
+        if read is None or (read[1] and read[0]):
+            # "Remove one or more counters" has no announced number to remove.
             return None
+        count, variable = read
         kind = _counter_kind_word(remove_counters.group("kind"))
-        return remove_counters_cost(None, count, counter_kind=kind, payer=payer, description=text)
+        component = remove_counters_cost(
+            None, count, counter_kind=kind, payer=payer, description=text
+        )
+        component.variable_count = variable
+        return component
+
+    blight = _PHRASE_BLIGHT.match(text)
+    if blight is not None:
+        amount = parse_amount(blight.group("count"))
+        if amount is None:
+            return None
+        variable = isinstance(amount, VariableX)
+        component = place_counters_cost(
+            None,
+            0 if variable else amount,
+            counter_kind=_counter_kind_word("-1/-1"),
+            payer=payer,
+            description=text,
+        )
+        # CR 701.68a: "a creature you control" - the control half is
+        # `_why_not_controlled`, the creature half this requirement.
+        component.requirement = _requirement("creature")
+        component.variable_count = variable
+        return component
 
     reveal = _PHRASE_REVEAL.match(text)
     if reveal is not None:
@@ -4096,17 +4489,26 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         if reveal.group("count").lower() == "x":
             component = reveal_cost(payer=payer, required=0, description=text, variable_count=True)
         else:
-            reveal_count = _count(reveal.group("count"))
+            reveal_count = parse_count(reveal.group("count"))
             if reveal_count is None:
                 return None
             component = reveal_cost(payer=payer, required=reveal_count, description=text)
         component.requirement = reveal_requirement
         return component
 
+    behold = _PHRASE_BEHOLD.match(text)
+    if behold is not None:
+        behold_requirement = _requirement(behold.group("quality"))
+        if behold_requirement is None:
+            return None
+        component = behold_cost(payer=payer, required=1, description=text)
+        component.requirement = behold_requirement
+        return component
+
     exile_and_pay = _PHRASE_EXILE_AND_PAY_MANA_COST.match(text)
     if exile_and_pay is not None:
         zone = _ZONE_WORDS.get((exile_and_pay.group("zone") or "graveyard").lower(), Zone.GRAVEYARD)
-        count = _count(exile_and_pay.group("count"))
+        count = parse_count(exile_and_pay.group("count"))
         requirement = _requirement(exile_and_pay.group("quality") or "")
         if count is None or requirement is None:
             return None
@@ -4117,55 +4519,70 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
     exile = _PHRASE_EXILE.match(text)
     if exile is not None:
         zone = _ZONE_WORDS.get((exile.group("zone") or "hand").lower(), Zone.HAND)
-        if exile.group("count") is None:
+        if exile.group("count") is None and exile.group("another") is None:
             # "Exile this card [from your graveyard]": CR 700.7's self-
             # reference, so there is nothing to choose - only the caller
             # knows which permanent this is, same as `_PHRASE_EXERT_SELF`.
             return exile_cost(payer=payer, required=1, description=text, zone=zone)
-        count = _count(exile.group("count"))
+        if exile.group("another") is not None:
+            # "Exile another <quality> card": CR 601.2c/113.6's "another" -
+            # a plain, implicit one, excluding the ability's own source
+            # (`Game.activation_cost` fills in which permanent that is).
+            requirement = _requirement(exile.group("quality"))
+            if requirement is None:
+                return None
+            requirement.excludes_source = True
+            component = exile_cost(payer=payer, required=1, description=text, zone=zone)
+            component.requirement = requirement
+            return component
+        read = _cost_count(exile.group("count"))
         requirement = _requirement(exile.group("quality"))
-        if count is None or requirement is None:
+        if read is None or requirement is None:
             return None
         if exile.group("mana_value") is not None:
             requirement.mana_value = int(exile.group("mana_value"))
-        component = exile_cost(payer=payer, required=count, description=text, zone=zone)
+        component = exile_cost(payer=payer, required=read[0], description=text, zone=zone)
         component.requirement = requirement
+        component.variable_count = read[1]
         return component
 
     discard = _PHRASE_DISCARD.match(text)
     if discard is not None:
-        count = _count(discard.group("count"))
+        read = _cost_count(discard.group("count"))
         requirement = _requirement(discard.group("quality"))
-        if count is None or requirement is None:
+        if read is None or requirement is None:
             return None
         if discard.group("same_name") is not None:
             same_name = _controlled_requirement(discard.group("same_name"))
             if same_name is None:
                 return None
             requirement.same_name_as = same_name
-        component = discard_cost(payer=payer, required=count, description=text)
+        component = discard_cost(payer=payer, required=read[0], description=text)
         component.requirement = requirement
+        component.variable_count = read[1]
         return component
 
     sacrifice = _PHRASE_SACRIFICE.match(text)
     if sacrifice is not None:
-        count = _count(sacrifice.group("count"))
+        read = _cost_count(sacrifice.group("count"))
         requirement = _requirement(sacrifice.group("quality"))
-        if count is None or requirement is None:
+        if read is None or requirement is None:
             return None
-        component = sacrifice_cost(payer=payer, required=count, description=text)
+        component = sacrifice_cost(payer=payer, required=read[0], description=text)
         component.requirement = requirement
+        component.variable_count = read[1]
         return component
 
     tap = _PHRASE_TAP.match(text)
     if tap is not None:
-        count = _count(tap.group("count"))
+        read = _cost_count(tap.group("count"))
         requirement = _requirement(tap.group("quality"))
-        if count is None or requirement is None:
+        if read is None or requirement is None:
             return None
         component = tap_cost(payer=payer, description=text)
-        component.required = count
+        component.required = read[0]
         component.requirement = requirement
+        component.variable_count = read[1]
         return component
 
     return None
@@ -4503,6 +4920,7 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
         snow=dict(pool.snow),
         restricted=[entry.model_copy(deep=True) for entry in pool.restricted],
         spend_effects=[tagged.model_copy(deep=True) for tagged in pool.spend_effects],
+        retained=[entry.model_copy(deep=True) for entry in pool.retained],
     )
 
 
@@ -5191,6 +5609,7 @@ class CostPayment(EngineModel):
         floating = dict(self.pool.floating)
         snow = dict(self.pool.snow)
         restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
+        retained = [entry.model_copy(deep=True) for entry in self.pool.retained]
 
         # CR 601.2h's two passes: everything else first, then the costs that
         # move objects from a library to a public zone (a mill cost).
@@ -5219,6 +5638,7 @@ class CostPayment(EngineModel):
                 self.pool.floating = floating
                 self.pool.snow = snow
                 self.pool.restricted = restricted
+                self.pool.retained = retained
             raise
 
         if life is not None:
@@ -5387,6 +5807,7 @@ class CostPayment(EngineModel):
         pool.floating = dict(self.pool.floating)
         pool.snow = dict(self.pool.snow)
         pool.restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
+        pool.retained = [entry.model_copy(deep=True) for entry in self.pool.retained]
 
     def _restore_payer_pool(self) -> None:
         """Put the payer's floating mana back the way it was before payment.
@@ -5422,6 +5843,7 @@ class CostPayment(EngineModel):
         pool.floating = dict(self._preexisting.floating)
         pool.snow = dict(self._preexisting.snow)
         pool.restricted = [entry.model_copy(deep=True) for entry in self._preexisting.restricted]
+        pool.retained = [entry.model_copy(deep=True) for entry in self._preexisting.retained]
 
     def _undo_everything(self) -> None:
         for component in reversed(self.components):

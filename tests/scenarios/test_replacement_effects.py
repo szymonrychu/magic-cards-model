@@ -466,3 +466,239 @@ def test_a_clone_with_nothing_to_copy_enters_as_itself():
     assert (clone.power, clone.toughness) == (0, 0)
     scenario.state_based_actions()
     assert clone.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# CR 614.1a: how much life is gained, read as a multiplier and an addend
+# --------------------------------------------------------------------------
+#
+# "You gain twice that much life" (Alhammarret's Archive, Boon Reflection) and
+# "you gain that much life plus 1" (Angel of Vitality, Leyline of Hope) are the
+# same replacement with a different number in it. CR 107.1b, looked up with
+# `mise run rules:find`: a calculation that "doubles" a value is exempt from
+# the zero floor, and a result is always an integer (CR 107.1).
+
+
+def _life_gain_board(*permanents: str) -> Scenario:
+    return Scenario().player("alice", battlefield=list(permanents)).player("bob")
+
+
+def test_angel_of_vitality_adds_one_to_each_life_gain():
+    """ "...you gain that much life plus 1 instead." Three becomes four."""
+    scenario = _life_gain_board("Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 3)
+
+    assert scenario.player("alice").life == 24
+
+
+def test_boon_reflection_doubles_each_life_gain():
+    """ "...you gain twice that much life instead." Three becomes six."""
+    scenario = _life_gain_board("Boon Reflection").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 3)
+
+    assert scenario.player("alice").life == 26
+
+
+def test_angel_of_vitality_adds_one_to_a_single_point_of_life():
+    """The addend is flat, not per point: one becomes two, not one plus one each."""
+    scenario = _life_gain_board("Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 1)
+
+    assert scenario.player("alice").life == 22
+
+
+def test_two_angels_of_vitality_each_add_one():
+    """CR 614.5: each effect gets one opportunity at the event, so two Angels
+    add two, and neither adds again to the event the other modified."""
+    scenario = _life_gain_board("Angel of Vitality", "Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 3)
+
+    assert scenario.player("alice").life == 25
+
+
+def test_the_angel_and_the_reflection_each_apply_exactly_once():
+    """CR 616.1 lets the affected player order the two; either order applies
+    each effect once, so three is (3 + 1) * 2 = 8 or 3 * 2 + 1 = 7 - never
+    anything that doubles or adds twice."""
+    scenario = _life_gain_board("Angel of Vitality", "Boon Reflection").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 3)
+
+    assert scenario.player("alice").life in (27, 28)
+
+
+def test_angel_of_vitality_does_not_touch_an_opponents_life_gain():
+    """ "If *you* would gain life" - Bob's gain is his own."""
+    scenario = _life_gain_board("Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("bob", 3)
+
+    assert scenario.player("bob").life == 23
+
+
+def test_gaining_no_life_is_not_an_event_the_angel_can_add_to():
+    """CR 119.3 adjusts a life total by what is gained; zero is no gain, and
+    "that much life plus 1" has no "that much" to add to."""
+    scenario = _life_gain_board("Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 0)
+
+    assert scenario.player("alice").life == 20
+
+
+# --------------------------------------------------------------------------
+# CR 614.16: how many counters are put, read as a multiplier and an addend
+# --------------------------------------------------------------------------
+#
+# Doubling Season's "twice that many", Hardened Scales' "that many plus one",
+# Vizier of Remedies' "that many ... minus one" and Winding Constrictor's "that
+# many plus one of each of those kinds" are one replacement with a number in
+# it. CR 122.6 makes an object given counters as it enters count as counters
+# "put on" it; CR 107.1b floors a subtraction at zero.
+
+
+def _counter_board(*permanents: str, bob: tuple[str, ...] = ()) -> Scenario:
+    return (
+        Scenario()
+        .player("alice", battlefield=list(permanents))
+        .player("bob", battlefield=list(bob))
+    )
+
+
+def test_hardened_scales_adds_one_to_the_counters_put_on_a_creature():
+    """ "...that many plus one +1/+1 counters are put on it instead." Two, three."""
+    scenario = _counter_board("Hardened Scales", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "+1/+1", 2)
+
+    assert bears.counter_count("+1/+1") == 3
+
+
+def test_hardened_scales_turns_a_single_counter_into_two():
+    """The addend is flat (CR 614.5): one counter becomes two."""
+    scenario = _counter_board("Hardened Scales", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "+1/+1", 1)
+
+    assert bears.counter_count("+1/+1") == 2
+
+
+def test_branching_evolution_doubles_the_counters_put_on_a_creature():
+    """ "...twice that many +1/+1 counters are put on that creature instead." """
+    scenario = _counter_board("Branching Evolution", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "+1/+1", 2)
+
+    assert bears.counter_count("+1/+1") == 4
+
+
+def test_hardened_scales_reaches_the_counters_a_creature_enters_with():
+    """CR 122.6: Kalonian Hydra's four entering counters are "put on" it."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Kalonian Hydra"], battlefield=["Hardened Scales"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    hydra = scenario.put_onto_battlefield("Kalonian Hydra")
+
+    assert hydra.counter_count("+1/+1") == 5
+
+
+def test_hardened_scales_leaves_other_kinds_of_counter_alone():
+    """ "If one or more **+1/+1** counters would be put" - a -1/-1 counter is not one."""
+    scenario = _counter_board("Hardened Scales", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "-1/-1", 1)
+
+    assert bears.counter_count("-1/-1") == 1
+
+
+def test_hardened_scales_leaves_an_opponents_creature_alone():
+    """ "...on a creature **you control**." """
+    scenario = _counter_board("Hardened Scales", bob=("Grizzly Bears",)).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.game.add_counters(bears, "+1/+1", 2)
+
+    assert bears.counter_count("+1/+1") == 2
+
+
+def test_hardened_scales_leaves_a_noncreature_permanent_alone():
+    """ "...on a **creature** you control" - an artifact that is not one is not."""
+    scenario = _counter_board("Hardened Scales", "Chalice of the Void").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chalice = scenario.creature("Chalice of the Void")
+
+    scenario.game.add_counters(chalice, "+1/+1", 2)
+
+    assert chalice.counter_count("+1/+1") == 2
+
+
+def test_winding_constrictor_adds_one_charge_counter_on_an_artifact():
+    """ "If one or more counters would be put on an artifact or creature you
+    control, that many plus one of each of those kinds of counters..." - any
+    kind, and a noncreature artifact is one of the two types it names."""
+    scenario = _counter_board("Winding Constrictor", "Chalice of the Void").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chalice = scenario.creature("Chalice of the Void")
+
+    scenario.game.add_counters(chalice, "charge", 1)
+
+    assert chalice.counter_count("charge") == 2
+
+
+def test_winding_constrictor_adds_one_of_a_minus_counter_too():
+    """ "...of each of those kinds" - a -1/-1 counter is a kind like any other."""
+    scenario = _counter_board("Winding Constrictor", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "-1/-1", 1)
+
+    assert bears.counter_count("-1/-1") == 2
+
+
+def test_winding_constrictor_leaves_a_land_alone():
+    """A land is neither an artifact nor a creature."""
+    scenario = _counter_board("Winding Constrictor", "Mountain").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mountain = scenario.creature("Mountain")
+
+    scenario.game.add_counters(mountain, "charge", 1)
+
+    assert mountain.counter_count("charge") == 1
+
+
+def test_scales_and_evolution_each_apply_exactly_once():
+    """CR 616.1 orders the two; either way each applies once to one counter:
+    (1 + 1) * 2 = 4 or 1 * 2 + 1 = 3."""
+    scenario = _counter_board("Hardened Scales", "Branching Evolution", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "+1/+1", 1)
+
+    assert bears.counter_count("+1/+1") in (3, 4)

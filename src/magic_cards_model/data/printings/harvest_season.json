@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "326b5fad-bb8d-4019-84a8-1a319a14962e",
+  "oracle_id": "ec6d52f9-1c8f-48da-951c-be8d7813c7be",
+  "multiverse_ids": [
+    508353
+  ],
+  "mtgo_id": 88031,
+  "tcgplayer_id": 231226,
+  "cardmarket_id": 535313,
+  "name": "Harvest Season",
+  "lang": "en",
+  "released_at": "2021-02-05",
+  "uri": "https://api.scryfall.com/cards/326b5fad-bb8d-4019-84a8-1a319a14962e",
+  "scryfall_uri": "https://scryfall.com/card/khc/63/harvest-season?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:38:34Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.jpg?1783928314",
+    "normal": "https://cards.scryfall.io/normal/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.jpg?1783928314",
+    "large": "https://cards.scryfall.io/large/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.jpg?1783928314",
+    "png": "https://cards.scryfall.io/png/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.png?1783928314",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.jpg?1783928314",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.jpg?1783928314",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.webp?1783928314",
+    "grid": "https://cards.scryfall.io/grid/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.webp?1783928314",
+    "display": "https://cards.scryfall.io/display/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.webp?1783928314",
+    "art": "https://cards.scryfall.io/art/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.webp?1783928314",
+    "crop": "https://cards.scryfall.io/crop/front/3/2/326b5fad-bb8d-4019-84a8-1a319a14962e.webp?1783928314"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Search your library for up to X basic land cards, where X is the number of tapped creatures you control, put those cards onto the battlefield tapped, then shuffle.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d532ef25-e52b-4276-941a-3a1c095544b0",
+  "set": "khc",
+  "set_name": "Kaldheim Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d532ef25-e52b-4276-941a-3a1c095544b0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Akhc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/khc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/326b5fad-bb8d-4019-84a8-1a319a14962e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aec6d52f9-1c8f-48da-951c-be8d7813c7be&unique=prints",
+  "collector_number": "63",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "A true reflection of nature: death fostering life.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Shreya Shetty",
+  "artist_ids": [
+    "1d175ae2-a9bd-492d-8ce0-fa07c8963c5c"
+  ],
+  "illustration_id": "31c6bb8f-8c9a-449d-8948-89a14966a40a",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 2429,
+  "penny_rank": 9067,
+  "prices": {
+    "usd": "1.13",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.58",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=508353&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHarvest%2BSeason",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHarvest%2BSeason",
+    "edhrec": "https://edhrec.com/route/?cc=Harvest+Season"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F231226%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=535313&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/88031?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

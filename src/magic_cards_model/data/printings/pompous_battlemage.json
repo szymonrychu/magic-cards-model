@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "aa0f77ac-741a-444a-8bf0-a42c644726bf",
+  "oracle_id": "33e3793c-098f-4897-88f3-9f9ce9081e0f",
+  "multiverse_ids": [],
+  "tcgplayer_id": 715911,
+  "cardmarket_id": 907299,
+  "name": "Pompous Battlemage // Improvised Act",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/aa0f77ac-741a-444a-8bf0-a42c644726bf",
+  "scryfall_uri": "https://scryfall.com/card/fra/90/pompous-battlemage-improvised-act?utm_source=api",
+  "layout": "prepare",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-08T14:36:26Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.jpg?1788878186",
+    "normal": "https://cards.scryfall.io/normal/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.jpg?1788878186",
+    "large": "https://cards.scryfall.io/large/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.jpg?1788878186",
+    "png": "https://cards.scryfall.io/png/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.png?1788878186",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.jpg?1788878186",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.jpg?1788878186",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.webp?1788878186",
+    "grid": "https://cards.scryfall.io/grid/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.webp?1788878186",
+    "display": "https://cards.scryfall.io/display/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.webp?1788878186",
+    "art": "https://cards.scryfall.io/art/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.webp?1788878186",
+    "crop": "https://cards.scryfall.io/crop/front/a/a/aa0f77ac-741a-444a-8bf0-a42c644726bf.webp?1788878186"
+  },
+  "mana_cost": "{R} // {R}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Goblin Sorcerer // Sorcery",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Prowess",
+    "Prepared"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Pompous Battlemage",
+      "mana_cost": "{R}",
+      "type_line": "Creature \u2014 Goblin Sorcerer",
+      "oracle_text": "Prowess\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+      "power": "1",
+      "toughness": "1",
+      "artist": "Justin Gerard",
+      "artist_id": "7548479e-1d37-42e1-ade0-9d88748f2f47",
+      "illustration_id": "75797d9d-2143-4ded-acee-a954479b432d"
+    },
+    {
+      "object": "card_face",
+      "name": "Improvised Act",
+      "mana_cost": "{R}",
+      "type_line": "Sorcery",
+      "oracle_text": "You may discard a card. If you do, draw a card.",
+      "artist": "Justin Gerard",
+      "artist_id": "7548479e-1d37-42e1-ade0-9d88748f2f47"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/aa0f77ac-741a-444a-8bf0-a42c644726bf/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A33e3793c-098f-4897-88f3-9f9ce9081e0f&unique=prints",
+  "collector_number": "90",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Justin Gerard",
+  "artist_ids": [
+    "7548479e-1d37-42e1-ade0-9d88748f2f47"
+  ],
+  "illustration_id": "75797d9d-2143-4ded-acee-a954479b432d",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 31872,
+  "prices": {
+    "usd": "19.80",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPompous%2BBattlemage%2B%252F%252F%2BImprovised%2BAct",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPompous%2BBattlemage%2B%252F%252F%2BImprovised%2BAct",
+    "edhrec": "https://edhrec.com/route/?cc=Pompous+Battlemage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715911%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907299&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Pompous+Battlemage&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

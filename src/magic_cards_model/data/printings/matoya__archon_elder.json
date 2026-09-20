@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "1dd61cf6-2fb5-4cff-ab00-7677ac85774c",
+  "oracle_id": "ef6c0054-3a89-4fac-b822-37c7d2514489",
+  "multiverse_ids": [],
+  "resource_id": "4009A4B25385C2DFC42DD375F273651CFAC866CAC50C198D523060760227A996",
+  "mtgo_id": 141051,
+  "arena_id": 95919,
+  "tcgplayer_id": 631081,
+  "cardmarket_id": 824944,
+  "name": "Matoya, Archon Elder",
+  "lang": "en",
+  "released_at": "2025-06-13",
+  "uri": "https://api.scryfall.com/cards/1dd61cf6-2fb5-4cff-ab00-7677ac85774c",
+  "scryfall_uri": "https://scryfall.com/card/fin/62/matoya-archon-elder?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:37:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.jpg?1783906634",
+    "normal": "https://cards.scryfall.io/normal/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.jpg?1783906634",
+    "large": "https://cards.scryfall.io/large/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.jpg?1783906634",
+    "png": "https://cards.scryfall.io/png/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.png?1783906634",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.jpg?1783906634",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.jpg?1783906634",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.webp?1783906634",
+    "grid": "https://cards.scryfall.io/grid/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.webp?1783906634",
+    "display": "https://cards.scryfall.io/display/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.webp?1783906634",
+    "art": "https://cards.scryfall.io/art/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.webp?1783906634",
+    "crop": "https://cards.scryfall.io/crop/front/1/d/1dd61cf6-2fb5-4cff-ab00-7677ac85774c.webp?1783906634"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Warlock",
+  "oracle_text": "Whenever you scry or surveil, draw a card. (Draw after you scry or surveil.)",
+  "power": "1",
+  "toughness": "4",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set": "fin",
+  "set_name": "Final Fantasy",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afin&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fin?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1dd61cf6-2fb5-4cff-ab00-7677ac85774c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aef6c0054-3a89-4fac-b822-37c7d2514489&unique=prints",
+  "collector_number": "62",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Don't you know it's rude to enter without knocking? Hmph, the youth of today...\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Luisa J. Preissler",
+  "artist_ids": [
+    "3e556986-a304-4251-9ea6-d9d1ad9eb260"
+  ],
+  "illustration_id": "608f7d45-6d58-46d6-95a6-8d4463efa4ed",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "ffxiv",
+    "universesbeyond"
+  ],
+  "edhrec_rank": 4541,
+  "penny_rank": 7837,
+  "preview": {
+    "source": "TCGplayer",
+    "source_uri": "https://tcgplayer-cdn.tcgplayer.com/product/631081_in_400x400.jpg",
+    "previewed_at": "2025-05-12"
+  },
+  "prices": {
+    "usd": "0.53",
+    "usd_foil": "0.75",
+    "usd_etched": null,
+    "eur": "0.47",
+    "eur_foil": "0.78",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMatoya%252C%2BArchon%2BElder",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMatoya%252C%2BArchon%2BElder",
+    "edhrec": "https://edhrec.com/route/?cc=Matoya%2C+Archon+Elder"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F631081%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=824944&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/141051?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

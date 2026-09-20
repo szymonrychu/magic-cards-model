@@ -1,0 +1,149 @@
+{
+  "object": "card",
+  "id": "6047b14c-91d5-4f8e-af3f-057a541e2546",
+  "oracle_id": "c1a9d60f-a469-48f9-8f1c-3ca5ae86bd64",
+  "multiverse_ids": [],
+  "tcgplayer_id": 715890,
+  "cardmarket_id": 907283,
+  "name": "Campus Crier",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/6047b14c-91d5-4f8e-af3f-057a541e2546",
+  "scryfall_uri": "https://scryfall.com/card/fra/4/campus-crier?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-08T14:35:20Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.jpg?1788878120",
+    "normal": "https://cards.scryfall.io/normal/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.jpg?1788878120",
+    "large": "https://cards.scryfall.io/large/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.jpg?1788878120",
+    "png": "https://cards.scryfall.io/png/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.png?1788878120",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.jpg?1788878120",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.jpg?1788878120",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.webp?1788878120",
+    "grid": "https://cards.scryfall.io/grid/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.webp?1788878120",
+    "display": "https://cards.scryfall.io/display/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.webp?1788878120",
+    "art": "https://cards.scryfall.io/art/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.webp?1788878120",
+    "crop": "https://cards.scryfall.io/crop/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.webp?1788878120"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Advisor",
+  "oracle_text": "{1}, Exile this card from your graveyard: Empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\u22121]: Surveil 1\" and \"[\u22123]: Draw a card.\")",
+  "power": "3",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8d1e424f-6407-4f8c-bed2-eaf148237c81",
+      "component": "token",
+      "name": "Jace",
+      "type_line": "Token Planeswalker \u2014 Jace",
+      "uri": "https://api.scryfall.com/cards/8d1e424f-6407-4f8c-bed2-eaf148237c81"
+    },
+    {
+      "object": "related_card",
+      "id": "6047b14c-91d5-4f8e-af3f-057a541e2546",
+      "component": "combo_piece",
+      "name": "Campus Crier",
+      "type_line": "Creature \u2014 Human Advisor",
+      "uri": "https://api.scryfall.com/cards/6047b14c-91d5-4f8e-af3f-057a541e2546"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6047b14c-91d5-4f8e-af3f-057a541e2546/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac1a9d60f-a469-48f9-8f1c-3ca5ae86bd64&unique=prints",
+  "collector_number": "4",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "He speaks what the futurescribes have written.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Johan Grenier",
+  "artist_ids": [
+    "465e38b8-7eed-4d22-a6d2-d3603ee0c00b"
+  ],
+  "illustration_id": "fb9ebf23-6ac6-4504-9872-e39a6bb5dc8f",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 31794,
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCampus%2BCrier",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCampus%2BCrier",
+    "edhrec": "https://edhrec.com/route/?cc=Campus+Crier"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715890%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907283&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Campus+Crier&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -326,11 +326,35 @@ class Card(ScryfallModel):
         `Casting.base_cost` already needed for an MDFC's blank top-level
         `mana_cost`: the land's own characteristics live only on `card_faces`,
         so a caller choosing which face to play (CR 712.12) has to look there.
+
+        Only a `modal_dfc` has one. CR 712.12 lets a player play "a modal
+        double-faced card" as a land, and CR 712.1 makes nonmodal (transform)
+        and meld cards different kinds: Treasure Map // Treasure Cove's land
+        back is reached only by transforming (CR 712.2), never by a land drop.
         """
+        if self.layout is not Layout.MODAL_DFC:
+            return None
         for face in self.card_faces or []:
             if face.type_line and "land" in _words_before_dash(face.type_line):
                 return face
         return None
+
+    @property
+    def prepare_spell(self) -> "CardFace | None":
+        """This card's inset "prepare spell" face, or None (CR 722.1, 722.2a).
+
+        "The inset frame of a preparation card is called a 'prepare spell.'"
+        Only a `Layout.PREPARE` card has one, and Scryfall's own shape for it
+        is the ordinary two-face `card_faces` list every other multifaced
+        layout uses - `card_faces[0]` the front (a normal permanent, cast and
+        played like any other), `card_faces[1]` the inset spell. CR 722.3:
+        "Preparation cards can't be cast using the alternative characteristics
+        found within their inset frames" - this is read only to build a
+        CR 722.3c exile copy from, never to cast the printing itself.
+        """
+        if self.layout is not Layout.PREPARE:
+            return None
+        return self.back_face
 
 
 def _words_before_dash(type_line: str) -> frozenset[str]:

@@ -125,19 +125,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 3082,
-  "penny_rank": 758,
+  "edhrec_rank": 3124,
+  "penny_rank": 764,
   "preview": {
     "source": "Wizards of the Coast",
     "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
     "previewed_at": "2019-09-04"
   },
   "prices": {
-    "usd": "0.98",
+    "usd": "0.60",
     "usd_foil": "1.19",
     "usd_etched": null,
-    "eur": "0.79",
-    "eur_foil": "1.39",
+    "eur": "0.67",
+    "eur_foil": "1.66",
     "tix": "0.03"
   },
   "related_uris": {

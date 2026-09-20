@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "ee66a06e-a461-46af-a318-550bc35de5d0",
+  "oracle_id": "d53d5d03-b180-4bdb-8801-260f8a75644d",
+  "multiverse_ids": [
+    662224
+  ],
+  "mtgo_id": 126161,
+  "arena_id": 90921,
+  "tcgplayer_id": 552653,
+  "cardmarket_id": 771533,
+  "name": "Tamiyo Meets the Story Circle",
+  "lang": "en",
+  "released_at": "2024-06-14",
+  "uri": "https://api.scryfall.com/cards/ee66a06e-a461-46af-a318-550bc35de5d0",
+  "scryfall_uri": "https://scryfall.com/card/mh3/72/tamiyo-meets-the-story-circle?utm_source=api",
+  "layout": "saga",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:54:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.jpg?1783911287",
+    "normal": "https://cards.scryfall.io/normal/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.jpg?1783911287",
+    "large": "https://cards.scryfall.io/large/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.jpg?1783911287",
+    "png": "https://cards.scryfall.io/png/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.png?1783911287",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.jpg?1783911287",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.jpg?1783911287",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.webp?1783911287",
+    "grid": "https://cards.scryfall.io/grid/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.webp?1783911287",
+    "display": "https://cards.scryfall.io/display/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.webp?1783911287",
+    "art": "https://cards.scryfall.io/art/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.webp?1783911287",
+    "crop": "https://cards.scryfall.io/crop/front/e/e/ee66a06e-a461-46af-a318-550bc35de5d0.webp?1783911287"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Enchantment \u2014 Saga",
+  "oracle_text": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI \u2014 Until your next turn, whenever a creature attacks you or a planeswalker you control, it gets -2/-0 until end of turn.\nII \u2014 Discard any number of cards, then investigate twice for each card discarded this way.\nIII \u2014 Shuffle up to three target cards from your graveyard into your library.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Investigate"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "e604b9ca-6c5a-459e-b509-955c3428530a",
+      "component": "token",
+      "name": "Clue",
+      "type_line": "Token Artifact \u2014 Clue",
+      "uri": "https://api.scryfall.com/cards/e604b9ca-6c5a-459e-b509-955c3428530a"
+    },
+    {
+      "object": "related_card",
+      "id": "ee66a06e-a461-46af-a318-550bc35de5d0",
+      "component": "combo_piece",
+      "name": "Tamiyo Meets the Story Circle",
+      "type_line": "Enchantment \u2014 Saga",
+      "uri": "https://api.scryfall.com/cards/ee66a06e-a461-46af-a318-550bc35de5d0"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set": "mh3",
+  "set_name": "Modern Horizons 3",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ee66a06e-a461-46af-a318-550bc35de5d0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad53d5d03-b180-4bdb-8801-260f8a75644d&unique=prints",
+  "collector_number": "72",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Xabi Gaztelua",
+  "artist_ids": [
+    "35b87e24-bfe0-43f4-83c3-2fa9574d6026"
+  ],
+  "illustration_id": "9c87d9e4-fb2a-41bc-a847-47a24c826df9",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 15843,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://x.com/wizards_magic/status/1793356157593038965",
+    "previewed_at": "2024-05-22"
+  },
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": "0.26",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.13",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=662224&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTamiyo%2BMeets%2Bthe%2BStory%2BCircle",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTamiyo%2BMeets%2Bthe%2BStory%2BCircle",
+    "edhrec": "https://edhrec.com/route/?cc=Tamiyo+Meets+the+Story+Circle"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552653%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=771533&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/126161?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

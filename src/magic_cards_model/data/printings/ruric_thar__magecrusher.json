@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "eed83302-dc2c-45f4-a4bd-af9da51edef5",
+  "oracle_id": "453b2b3c-7df5-4515-9565-82f603cf451b",
+  "multiverse_ids": [],
+  "tcgplayer_id": 716689,
+  "cardmarket_id": 908446,
+  "name": "Ruric Thar, Magecrusher",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/eed83302-dc2c-45f4-a4bd-af9da51edef5",
+  "scryfall_uri": "https://scryfall.com/card/fra/265/ruric-thar-magecrusher?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-14T04:05:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.jpg?1789358701",
+    "normal": "https://cards.scryfall.io/normal/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.jpg?1789358701",
+    "large": "https://cards.scryfall.io/large/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.jpg?1789358701",
+    "png": "https://cards.scryfall.io/png/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.png?1789358701",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.jpg?1789358701",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.jpg?1789358701",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.webp?1789358701",
+    "grid": "https://cards.scryfall.io/grid/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.webp?1789358701",
+    "display": "https://cards.scryfall.io/display/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.webp?1789358701",
+    "art": "https://cards.scryfall.io/art/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.webp?1789358701",
+    "crop": "https://cards.scryfall.io/crop/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.webp?1789358701"
+  },
+  "mana_cost": "{5}{G}{G}",
+  "cmc": 7.0,
+  "type_line": "Legendary Creature \u2014 Ogre Warrior",
+  "oracle_text": "This spell can't be countered.\nReach, vigilance, trample\nRuric Thar has hexproof as long as they haven't dealt combat damage yet. (They can't be the target of spells or abilities your opponents control.)",
+  "power": "7",
+  "toughness": "7",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Reach",
+    "Vigilance",
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/eed83302-dc2c-45f4-a4bd-af9da51edef5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A453b2b3c-7df5-4515-9565-82f603cf451b&unique=prints",
+  "collector_number": "265",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Can't cast spells with a broken mouth!\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Olivier Bernard",
+  "artist_ids": [
+    "11c6f325-68c2-4f2a-972d-98d2ffe6c224"
+  ],
+  "illustration_id": "f8bb891b-b90b-471c-bf1c-fed61e4ac630",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 31993,
+  "preview": {
+    "source": "Commander Radio",
+    "source_uri": "https://www.bilibili.com/video/BV1r2bV6JErQ/",
+    "previewed_at": "2026-09-10"
+  },
+  "prices": {
+    "usd": "1.99",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.36",
+    "eur_foil": "1.29",
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRuric%2BThar%252C%2BMagecrusher",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRuric%2BThar%252C%2BMagecrusher",
+    "edhrec": "https://edhrec.com/route/?cc=Ruric+Thar%2C+Magecrusher"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716689%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908446&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Ruric+Thar%2C+Magecrusher&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

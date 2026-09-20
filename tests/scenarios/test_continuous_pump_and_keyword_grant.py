@@ -37,9 +37,7 @@ in the session that wrote it.
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.machines.keywords import is_indestructible
-from magic_cards_model.machines.layers import LayerNotice
 from magic_cards_model.models import Zone
-from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
@@ -212,17 +210,14 @@ def test_a_keyword_outside_the_combat_vocabulary_is_still_granted():
     assert scenario.game.continuous_effects.layer_notices == []
 
 
-def test_more_than_one_granted_keyword_records_a_notice_and_applies_nothing():
+def test_more_than_one_granted_keyword_grants_each_of_them():
     """Aerial Maneuver: "Target creature gets +1/+1 and gains flying and first
     strike until end of turn."
 
     Flying and first strike are each modelled on their own - `_KNOWN_KEYWORDS`
-    (`machines/layers.py`) is a whitelist of exactly one bare keyword per
-    grant, precisely so "flying and first strike" is not accepted and granted
-    as one bogus ability string instead of two real ones (Aerial Maneuver is
-    the real card that whitelist's own docstring names). The whole sentence
-    fails closed the same way Adamant Will's does, even though every word in
-    it is individually understood.
+    (`machines/layers.py`) is a whitelist of bare keywords, and "flying and
+    first strike" is split into its two (`_split_and_validate_keywords`), each
+    granted as a real ability rather than one bogus ability string.
     """
     scenario = (
         Scenario()
@@ -234,18 +229,93 @@ def test_more_than_one_granted_keyword_records_a_notice_and_applies_nothing():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "alice")
     plains = scenario.untapped_sources("Plains", "Plains")
-    spell = scenario.cast_and_resolve("Aerial Maneuver", *plains, targets=[bears])
+    scenario.cast_and_resolve("Aerial Maneuver", *plains, targets=[bears])
 
     board = computed(scenario)
-    assert board.of(bears).power_toughness == (2, 2)
-    assert not has_keyword(bears, Keyword.FLYING, scenario.game)
-    assert not has_keyword(bears, Keyword.FIRST_STRIKE, scenario.game)
+    assert board.of(bears).power_toughness == (3, 3)
+    assert has_keyword(bears, Keyword.FLYING, scenario.game)
+    assert has_keyword(bears, Keyword.FIRST_STRIKE, scenario.game)
+    assert scenario.game.continuous_effects.layer_notices == []
 
-    notices = scenario.game.continuous_effects.layer_notices
-    assert notices == [
-        LayerNotice(
-            source_id=spell.id,
-            source_name="Aerial Maneuver",
-            text=card("Aerial Maneuver").oracle_text,
+
+# --------------------------------------------------------------------------
+# Dauntless Onslaught (off-pool, verified with `resolve_cards`): "Up to two
+# target creatures each get +2/+2 until end of turn." A plural subject
+# `_CONTINUOUS_PUMP_OR_KEYWORD_RE`/`_PUMP_RE` used to refuse outright - both
+# only ever recognised the singular "target creature" - so the whole spell
+# was silent even at a single legal target.
+# --------------------------------------------------------------------------
+
+
+def test_dauntless_onslaught_pumps_both_chosen_targets():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Dauntless Onslaught"],
+            battlefield=["Plains", "Plains", "Plains", "Grizzly Bears", "Watchwolf"],
         )
-    ]
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    wolf = scenario.creature("Watchwolf", "alice")
+    plains = scenario.untapped_sources("Plains", "Plains", "Plains")
+    scenario.cast_and_resolve("Dauntless Onslaught", *plains, targets=[bears, wolf])
+
+    board = computed(scenario)
+    assert board.of(bears).power_toughness == (4, 4), "a 2/2 plus +2/+2"
+    assert board.of(wolf).power_toughness == (5, 5), "a 3/3 plus +2/+2"
+
+
+def test_dauntless_onslaught_can_choose_only_one_of_its_up_to_two():
+    """CR 115.6: "up to two" allows fewer - the untargeted creature is
+    untouched."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Dauntless Onslaught"],
+            battlefield=["Plains", "Plains", "Plains", "Grizzly Bears", "Watchwolf"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    wolf = scenario.creature("Watchwolf", "alice")
+    plains = scenario.untapped_sources("Plains", "Plains", "Plains")
+    scenario.cast_and_resolve("Dauntless Onslaught", *plains, targets=[bears])
+
+    board = computed(scenario)
+    assert board.of(bears).power_toughness == (4, 4)
+    assert board.of(wolf).power_toughness == (3, 3), "never targeted, never pumped"
+
+
+# --------------------------------------------------------------------------
+# Xenagos, God of Revels (pool): "At the beginning of combat on your turn,
+# another target creature you control gains haste and gets +X/+X until end
+# of turn, where X is that creature's power." X is read once per target, off
+# that creature's own (CR 613.5 computed) power at the moment the trigger
+# resolves - `CardState.power` already gives the computed value.
+# --------------------------------------------------------------------------
+
+
+def test_xenagos_doubles_the_targets_power_and_grants_haste():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Xenagos, God of Revels", "Grizzly Bears"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Xenagos, God of Revels", [bears])
+    scenario.advance()
+    assert scenario.step is Step.BEGINNING_OF_COMBAT
+    scenario.pass_until_resolved()
+
+    board = computed(scenario)
+    assert board.of(bears).power_toughness == (4, 4), "a 2/2 plus +2/+2 (X = its own power, 2)"
+    assert has_keyword(bears, Keyword.HASTE, scenario.game)

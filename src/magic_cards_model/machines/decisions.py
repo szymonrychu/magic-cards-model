@@ -267,6 +267,18 @@ class DecisionKind(StrEnum):
     #: `default_answer`'s "back of the offered cards" is already, to the card,
     #: what `Player.keep_hand(None)` did before anyone was asked.
     CHOOSE_CARDS = "choose_cards"
+    #: "Choose any number of ... players" (CR 701.34a's own proliferate,
+    #: verbatim - `machines/effects._parse_proliferate_clause`'s own player
+    #: half) - `CHOOSE_CARDS`' twin for a CR 608.2d choice among candidate
+    #: *players* rather than cards, over `Decision.players` (a tuple of
+    #: usernames, positionally what `Decision.cards` already is for card
+    #: ids) instead of `Decision.cards`. Not `CHOOSE_TARGETS`: nothing here
+    #: is a CR 115.1 target - proliferate's own choice is CR 608.2c/608.2d
+    #: prose ("choose ... players"), never the word "target", so it carries
+    #: none of CR 601.2c's announcement-time legality machinery (no CR
+    #: 608.2b on-resolution re-check, no protection/hexproof refusal) - only
+    #: "is this a subset of what was offered, and does the count match".
+    CHOOSE_PLAYERS = "choose_players"
     #: Choose up to `target_maximum` targets out of `targets` for a spell or
     #: ability that has already been put on the stack (CR 115.1, CR 603.3d).
     #: Not `CHOOSE_CARDS`: a target may be a player (Footlight Fiend's "target
@@ -318,6 +330,28 @@ class DecisionKind(StrEnum):
     #: same "least destructive, most reversible" posture `SCRY`/`SURVEIL`'s own
     #: "keep everything on top" default already takes.
     PUT_ON_TOP_OR_BOTTOM = "put_on_top_or_bottom"
+    #: CR 700.3's own two-way pile split (Liliana of the Veil's own `-6`,
+    #: "Separate all permanents target player controls into two piles. That
+    #: player sacrifices all permanents in the pile of their choice."; Do or
+    #: Die's identical shape). Two *different* players are involved and two
+    #: *different* `Game.ask` calls happen, in order - CR 608.2c's own
+    #: unattributed "Separate ... into two piles" is CR 608.2c's resolving
+    #: controller's own instruction (confirmed against the card's official
+    #: ruling: "you put each permanent the player controls into one of the
+    #: two piles"), read the identical `CHOOSE_CARDS` way `SCRY`/`SURVEIL`
+    #: already read "which of these move" (`exact=False`, 0 up to all,
+    #: CR 700.3d's "a pile can contain zero or more objects") - "pile one" is
+    #: whatever that first answer names, "pile two" the complement among the
+    #: same qualifying set. Only the *second* choice - which whole pile the
+    #: instruction actually acts on - is this kind, asked of the player the
+    #: card names for it (Liliana's/Do or Die's own "that player", i.e. the
+    #: ability's target), a plain boolean the identical shape `PUT_ON_TOP_OR_
+    #: BOTTOM` already is: `True` for pile one (`Decision.cards`, the first
+    #: player's own choice of what to put there), `False` for its complement
+    #: - not enumerated a second time on the decision, since the chooser is a
+    #: real player who can already see every permanent the target controls
+    #: and just read off which of them `Decision.cards` names.
+    CHOOSE_PILE = "choose_pile"
     #: CR 603.3b: "If multiple abilities have triggered since the last time a
     #: player received priority, the abilities are placed on the stack in a
     #: two-part process. First, each player, in APNAP order, puts each
@@ -407,6 +441,10 @@ class Decision:
     #: The cards being looked at, for `SCRY` and `SURVEIL`, top first; the
     #: candidate cards a `CHOOSE_CARDS` answer must be a subset of.
     cards: tuple[UUID, ...] = ()
+    #: The candidate players a `CHOOSE_PLAYERS` answer must be a subset of -
+    #: `cards`' own twin, keyed by username rather than card id, since a
+    #: player has no `UUID` of their own to be named by.
+    players: tuple[str, ...] = ()
     #: A human-readable label per `cards` entry, positionally aligned, for the
     #: kinds whose ids name something no card lookup can resolve.
     #:
@@ -578,6 +616,13 @@ def default_answer(decision: Decision) -> object:
         return 0
     if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
         return True
+    if decision.kind is DecisionKind.CHOOSE_PILE:
+        # Neither pile is more "destructive" than the other here - both name
+        # the same consequence (sacrifice, destroy) - so this is an arbitrary
+        # but consistent choice, the same way `PUT_ON_TOP_OR_BOTTOM`'s own
+        # default is a documented pick rather than a claim that pile one is
+        # somehow correct for an unscripted player.
+        return True
     if decision.kind is DecisionKind.ORDER_TRIGGERS:
         # CR 603.3b's "in any order they choose" with nobody choosing: the
         # order they triggered in, which is exactly what `apnap_order` gave
@@ -616,6 +661,15 @@ def default_answer(decision: Decision) -> object:
         if decision.amount <= 0:
             return ()
         return decision.cards[len(decision.cards) - decision.amount :]
+    if decision.kind is DecisionKind.CHOOSE_PLAYERS:
+        # `CHOOSE_CARDS`' own default, over `players` instead of `cards`:
+        # every printed proliferate in the pool is CR 107.1c's "any number",
+        # so the least-destructive unscripted answer is choosing nobody.
+        if not decision.exact:
+            return ()
+        if decision.amount <= 0:
+            return ()
+        return decision.players[len(decision.players) - decision.amount :]
     if decision.kind is DecisionKind.CHOOSE_TARGETS:
         # CR 601.2c: "the player announces their choice ... for each target
         # the spell requires" - a mandatory requirement (`target_minimum` > 0)
@@ -731,9 +785,11 @@ _ANSWER_FIELD_FOR_KIND: dict[DecisionKind, str] = {
     DecisionKind.MULLIGAN: "accept",
     DecisionKind.OPENING_HAND_ACTION: "accept",
     DecisionKind.PUT_ON_TOP_OR_BOTTOM: "accept",
+    DecisionKind.CHOOSE_PILE: "accept",
     DecisionKind.PAY_ENERGY_AMOUNT: "amount",
     DecisionKind.PAY_LIFE_AMOUNT: "amount",
     DecisionKind.CHOOSE_CARDS: "card_ids",
+    DecisionKind.CHOOSE_PLAYERS: "usernames",
     DecisionKind.ORDER_TRIGGERS: "card_ids",
     DecisionKind.SCRY: "split",
     DecisionKind.SURVEIL: "split",
@@ -925,11 +981,12 @@ class Answer(EngineModel):
     reasoning: str | None = None
 
     #: `MAY`, `PAY_LIFE`, `PAY_ENERGY`, `PAY_MANA`, `MULLIGAN`,
-    #: `OPENING_HAND_ACTION`, `PUT_ON_TOP_OR_BOTTOM` - every yes/no question
-    #: this module asks, including the two that are not `Game.ask` questions
-    #: at all (`MULLIGAN`, CR 103.5) and the one whose two options are not
-    #: literally yes/no but are still a plain boolean (`PUT_ON_TOP_OR_BOTTOM`,
-    #: `True` for the top).
+    #: `OPENING_HAND_ACTION`, `PUT_ON_TOP_OR_BOTTOM`, `CHOOSE_PILE` - every
+    #: yes/no question this module asks, including the two that are not
+    #: `Game.ask` questions at all (`MULLIGAN`, CR 103.5) and the two whose
+    #: two options are not literally yes/no but are still a plain boolean
+    #: (`PUT_ON_TOP_OR_BOTTOM`, `True` for the top; `CHOOSE_PILE`, `True` for
+    #: pile one).
     accept: bool | None = None
     #: `PAY_ENERGY_AMOUNT`, `PAY_LIFE_AMOUNT` - how much was paid, 0 or more.
     amount: int | None = None
@@ -941,6 +998,10 @@ class Answer(EngineModel):
     #: 603.3b). Both are "a tuple of ids naming some of `Decision.cards`",
     #: which is why they share a field rather than each growing its own.
     card_ids: tuple[UUID, ...] | None = None
+    #: `CHOOSE_PLAYERS` - which candidate players were chosen (CR 701.34a's
+    #: own "and/or players" half). `card_ids`' own twin: a player has no
+    #: `UUID`, only a username, so this cannot share that field's type.
+    usernames: tuple[str, ...] | None = None
     #: `SCRY`, `SURVEIL` - CR 701.22a's and CR 701.25a's split of the cards
     #: looked at.
     split: CardSplit | None = None

@@ -36,11 +36,12 @@ The sub-rules this module implements, all looked up rather than remembered:
   convention is covered for free. Each mode's own cost is read into
   `Mode.cost`; `machines/casting.py`'s `choose_modes` charges it
   automatically, the same way `_charge_entwine` already does for CR 702.42a.
-  Spree (CR 702.172a) shares this same "cost before effect" shape and the
-  parenthetical-instruction reading now covers it too, but its `+`-symbol
-  bullets (CR 702.172b) are not - `BULLET` still only recognizes `•`, and no
-  Spree printing is in this pool to prove a `+` reading against real data, so
-  that half is left for whoever adds one, not guessed at here.
+  Spree (CR 702.172a) shares this same "cost before effect" shape, the
+  parenthetical-instruction reading, and now its own `+`-symbol bullets
+  (CR 702.172b) too - `_BULLET_RE` matches `+` followed by whitespace as well
+  as `•`, told apart from a loyalty ability's "+1:"/"+2:" line (CR 606.4) by
+  that same whitespace, which a loyalty symbol's immediate digit never has.
+  Proved against Smuggler's Surprise, a real printing in this pool.
 
 Deliberately not handled, each of them leaving `understood=False` rather than a
 confident wrong answer:
@@ -59,16 +60,38 @@ from collections.abc import Iterable, Sequence
 from pydantic import ConfigDict
 
 from ..models.card import Card
+from ..numbers import parse_count
 from ..snapshot import EngineModel
 
 #: The bullet WOTC prints in front of each mode.
 BULLET = "•"
+#: CR 702.172b: "Cards with the spree ability ... use a plus sign (+) rather
+#: than traditional bullet points." Spree's own bullet is always followed by
+#: whitespace before its cost ("+ {2} — Mill four cards...", Smuggler's
+#: Surprise) - never immediately by a digit and a colon the way a loyalty
+#: ability's own "+1:"/"+2:" line is (CR 606.4, Wrenn and Seven's "+1: Reveal
+#: the top four cards..."). The two shapes never collide on that whitespace,
+#: so this reads generally off any card printing either bullet rather than
+#: needing a Spree-specific keyword gate - the same "shape rule, not a
+#: keyword-name check" `_PARENTHETICAL_INSTRUCTION` already is for Tiered
+#: and Spree's shared reminder-text instruction line.
+_BULLET_RE = re.compile(rf"^(?:{re.escape(BULLET)}|\+\s+)")
 
 _INSTRUCTION = re.compile(r"^choose\b(?P<rest>.*)$", re.IGNORECASE)
 _REPEATABLE = re.compile(r"you may choose the same mode more than once", re.IGNORECASE)
 _UP_TO = re.compile(r"^\s*up to (?P<count>[\w]+)\b")
 _OR_MORE = re.compile(r"^\s*(?P<count>[\w]+)\s+or\s+(?:more|both)\b", re.IGNORECASE)
 _PLAIN = re.compile(r"^\s*(?P<count>[\w]+)\b")
+#: The instruction's second sentence: "Choose one. If you control a Wizard as
+#: you cast this spell, you may choose two instead." (Flame of Anor), "If there
+#: are four or more card types among cards in your graveyard, choose both
+#: instead." (Prophetic Titan). The condition is read by `Game.condition_holds`
+#: when the modes are chosen; "as you cast this spell" is only when (CR 601.2b).
+_ALTERNATIVE = re.compile(
+    r"\.\s*if (?P<condition>[^,]+?)(?: as you cast this spell)?,\s*"
+    r"(?P<optional>you may )?choose (?P<count>[^.]+?) instead\b",
+    re.IGNORECASE,
+)
 
 #: CR 700.2h: a mode whose effect is preceded by a cost. An optional short
 #: label (Tiered's tier name: "Fire", "Fira", "Firaga") followed by a dash,
@@ -93,19 +116,6 @@ _PARENTHETICAL_INSTRUCTION = re.compile(r"\((?P<inner>Choose\b[^()]*)\)", re.IGN
 
 _ENTWINE = re.compile(r"^Entwine\s*[-—]?\s*(?P<cost>[^(]+)", re.IGNORECASE)
 _ESCALATE = re.compile(r"^Escalate\s*[-—]?\s*(?P<cost>[^(]+)", re.IGNORECASE)
-
-_WORD_NUMBERS = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
 
 _REMINDER = re.compile(r"\([^()]*\)")
 _X = re.compile(r"(?<![\w])X(?![\w])")
@@ -149,6 +159,18 @@ class ModalProfile(EngineModel):
     #: False when the card is modal but this parser could not read its
     #: structure. Callers must not enforce anything from an unread profile.
     understood: bool = True
+    #: The condition of the instruction's "If <condition>, [you may] choose N
+    #: instead" sentence, or None when it prints none. `Game.
+    #: modal_alternative_applies` answers it as the modes are chosen.
+    alternative_condition: str | None = None
+    #: The printed alternative count ("two", "both", "one or more").
+    alternative_text: str | None = None
+    #: How many modes may be chosen while the condition holds - the printed
+    #: range widened to the alternative for "you may choose N instead", replaced
+    #: by it for a mandatory "choose N instead". None when the alternative count
+    #: was not read, which keeps the printed range and records a notice.
+    alternative_minimum: int | None = None
+    alternative_maximum: int | None = None
 
     @property
     def has_entwine(self) -> bool:
@@ -190,6 +212,7 @@ class ModalProfile(EngineModel):
         chosen: Sequence["int | str | Mode"],
         *,
         entwined: bool = False,
+        alternative: bool = False,
     ) -> tuple[Mode, ...]:
         """The modes a caster announced, checked against what the card allows.
 
@@ -199,6 +222,9 @@ class ModalProfile(EngineModel):
 
         `entwined` is CR 702.42a: paying the entwine cost lets the caster choose
         all of the modes instead of the number the instruction specifies.
+
+        `alternative` is whether the instruction's "If ..., choose N instead"
+        condition holds for this choice (`Game.modal_alternative_applies`).
         """
         modes = tuple(self.mode(spec) for spec in chosen)
 
@@ -212,7 +238,7 @@ class ModalProfile(EngineModel):
                     )
                 seen.add(mode.number)
 
-        minimum, maximum = self.allowed_range(entwined=entwined)
+        minimum, maximum = self.allowed_range(entwined=entwined, alternative=alternative)
         if len(modes) < minimum:
             raise ValueError(
                 f"too few modes: {len(modes)} chosen where the spell requires {minimum}"
@@ -223,12 +249,21 @@ class ModalProfile(EngineModel):
             )
         return modes
 
-    def allowed_range(self, *, entwined: bool = False) -> tuple[int, int]:
-        """How many modes may be chosen, entwine included (CR 702.42a)."""
+    def allowed_range(
+        self, *, entwined: bool = False, alternative: bool = False
+    ) -> tuple[int, int]:
+        """How many modes may be chosen, entwine (CR 702.42a) and a held
+        "choose N instead" condition (`alternative`) included."""
         if entwined:
             if not self.has_entwine:
                 raise ValueError("this spell has no entwine cost to pay")
             return len(self.modes), len(self.modes)
+        if (
+            alternative
+            and self.alternative_minimum is not None
+            and self.alternative_maximum is not None
+        ):
+            return self.alternative_minimum, self.alternative_maximum
         return self.minimum, self.maximum
 
 
@@ -342,7 +377,7 @@ def mode_effect_text(mode: Mode) -> str:
 
 def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
     lines = [line.strip() for line in oracle_text.splitlines()]
-    bullets = [index for index, line in enumerate(lines) if line.startswith(BULLET)]
+    bullets = [index for index, line in enumerate(lines) if _BULLET_RE.match(line)]
     if not bullets:
         return None
 
@@ -373,7 +408,7 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
             understood=False,
         )
 
-    mode_texts = [lines[index].removeprefix(BULLET).strip() for index in bullets]
+    mode_texts = [_BULLET_RE.sub("", lines[index], count=1).strip() for index in bullets]
     mode_costs: list[str | None] = []
     for text in mode_texts:
         match = _MODE_WITH_COST.match(text)
@@ -393,6 +428,7 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
     }
 
     counted = _read_counts(instruction_line, len(modes))
+    profile_kwargs.update(_read_alternative(instruction_line, len(modes), counted))
     unreadable = counted is None or _PAWPRINT.search(instruction_line) is not None
     if unreadable:
         minimum, maximum = counted or (0, 0)
@@ -421,27 +457,64 @@ def _read_counts(instruction: str, mode_count: int) -> tuple[int, int] | None:
 
     up_to = _UP_TO.match(rest)
     if up_to is not None:
-        count = _number(up_to.group("count"))
+        count = parse_count(up_to.group("count"), article=False)
         return None if count is None else (0, min(count, mode_count))
 
     or_more = _OR_MORE.match(rest)
     if or_more is not None:
-        count = _number(or_more.group("count"))
+        count = parse_count(or_more.group("count"), article=False)
         return None if count is None else (count, mode_count)
 
     plain = _PLAIN.match(rest)
     if plain is None:
         return None
-    count = _number(plain.group("count"))
+    count = parse_count(plain.group("count"), article=False)
     if count is None or count > mode_count:
         return None
     return count, count
 
 
-def _number(word: str) -> int | None:
-    if word.isdigit():
-        return int(word)
-    return _WORD_NUMBERS.get(word.lower())
+def _read_alternative(
+    instruction: str, mode_count: int, counted: tuple[int, int] | None
+) -> dict[str, str | int]:
+    """The `alternative_*` fields for an instruction's "If <condition>, [you
+    may] choose N instead" sentence, or nothing when it prints none.
+
+    The alternative count is read the way the printed one is (`_read_counts`),
+    so "two", "one or more" and "up to three" all work; "both" and "all" are
+    every mode. "Any number" (CR 601.4's own Inscription of Abundance
+    example: "its controller may choose any number of modes") is zero to
+    every mode, the same "choose any number of ..." idiom CR 701.34a
+    (proliferate) and its siblings use elsewhere - zero is a legal choice,
+    unlike "both"/"all", which is why it is not folded into that branch.
+    "You may choose two instead" of "Choose one" leaves one legal too, so the
+    range is widened rather than replaced; a mandatory "choose both instead"
+    (or "choose any number instead") replaces it. An unread count keeps only
+    the condition, which `Game.modal_alternative_applies` turns into a
+    notice.
+    """
+    match = _ALTERNATIVE.search(instruction)
+    if match is None:
+        return {}
+    text = match.group("count").strip()
+    fields: dict[str, str | int] = {
+        "alternative_condition": match.group("condition").strip(),
+        "alternative_text": text,
+    }
+    if text.lower() in ("both", "all"):
+        alternative: tuple[int, int] | None = (mode_count, mode_count)
+    elif text.lower() == "any number":
+        alternative = (0, mode_count)
+    else:
+        alternative = _read_counts(f"Choose {text}", mode_count)
+    if alternative is None or counted is None:
+        return fields
+    minimum, maximum = alternative
+    if match.group("optional"):
+        minimum, maximum = min(minimum, counted[0]), max(maximum, counted[1])
+    fields["alternative_minimum"] = minimum
+    fields["alternative_maximum"] = maximum
+    return fields
 
 
 def _keyword_cost(

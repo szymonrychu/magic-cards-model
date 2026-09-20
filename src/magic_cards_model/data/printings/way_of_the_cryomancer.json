@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "838b0efb-7398-4df9-8fdf-b8af43b47938",
+  "oracle_id": "7d32c63d-aa9e-4f5d-a3e6-51377a786009",
+  "multiverse_ids": [],
+  "tcgplayer_id": 715904,
+  "cardmarket_id": 907295,
+  "name": "Way of the Cryomancer",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/838b0efb-7398-4df9-8fdf-b8af43b47938",
+  "scryfall_uri": "https://scryfall.com/card/fra/223/way-of-the-cryomancer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-10T04:30:37Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.jpg?1789014637",
+    "normal": "https://cards.scryfall.io/normal/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.jpg?1789014637",
+    "large": "https://cards.scryfall.io/large/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.jpg?1789014637",
+    "png": "https://cards.scryfall.io/png/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.png?1789014637",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.jpg?1789014637",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.jpg?1789014637",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.webp?1789014637",
+    "grid": "https://cards.scryfall.io/grid/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.webp?1789014637",
+    "display": "https://cards.scryfall.io/display/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.webp?1789014637",
+    "art": "https://cards.scryfall.io/art/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.webp?1789014637",
+    "crop": "https://cards.scryfall.io/crop/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.webp?1789014637"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Enchantment",
+  "oracle_text": "When Way of the Cryomancer enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\u22121]: Surveil 1\" and \"[\u22123]: Draw a card.\")\nPlaneswalkers you control have \"[\u22123]: When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.\"",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/838b0efb-7398-4df9-8fdf-b8af43b47938/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7d32c63d-aa9e-4f5d-a3e6-51377a786009&unique=prints",
+  "collector_number": "223",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "echoverse",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Andrey Kuzinskiy",
+  "artist_ids": [
+    "c04ff0b2-67a1-4238-82f7-6c67de734b56"
+  ],
+  "illustration_id": "2e0aeb66-6377-465e-bbc2-57574e587ddd",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment",
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 28099,
+  "prices": {
+    "usd": "1.45",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.20",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BCryomancer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BCryomancer",
+    "edhrec": "https://edhrec.com/route/?cc=Way+of+the+Cryomancer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715904%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907295&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Way+of+the+Cryomancer&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

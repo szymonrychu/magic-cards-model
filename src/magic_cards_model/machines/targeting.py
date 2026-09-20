@@ -105,6 +105,7 @@ from magic_cards_model.phrases import with_indefinite_article
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
+from ..numbers import parse_count
 from ..serialization import SortedFrozenSet
 from ..snapshot import EngineModel
 from .abilities import AbilityKind, keyword_abilities
@@ -230,6 +231,14 @@ class TargetRequirement(EngineModel):
     or enchantment". Empty means color is not restricted at all - not "target
     colorless permanent", which this wave's cards never need and which would
     mean something different (CR 105.2c: no color, not any color)."""
+    excluded_colors: SortedFrozenSet[Color] = frozenset()
+    """Colors the target must *not* have: the "non-" of "target nonblack
+    creature" (Cradle to Grave), read the identical way `excluded_card_types`/
+    `excluded_supertypes` already read their own "non-" prefix. CR 105.2's "An
+    object can be one or more of the five colors, or it can be no color at
+    all" is what makes a colorless target satisfy this for free - it has none
+    of the excluded color either, the same way it has none of a *required*
+    one and so never satisfies `required_colors` on its own."""
     must_be_token: bool | None = None
     """True for "target token", False for "target nontoken ..." (CR 111.1)."""
     color_count: str | None = None
@@ -270,6 +279,22 @@ class TargetRequirement(EngineModel):
     Empty means the text asked for neither. More than one is a disjunction:
     "target attacking or blocking creature" takes either.
     """
+    must_have_attacked_this_turn: bool = False
+    """"target creature that attacked this turn" (Hexhaven Dueling Arena).
+    Unlike `combat_states`' live "is this creature currently attacking",
+    CR 508.1k's attacking status ends when combat does (CR 511.3, 514) -
+    this is a per-turn historical fact instead, tracked on `Game.
+    attacked_this_turn` (populated by `Game.declare_attackers`, cleared each
+    new turn the same way `permanents_left_battlefield_this_turn` is)."""
+    must_have_entered_this_turn: bool = False
+    """"target creature that entered this turn" (Mabel, Valley Hero's
+    trigger; Gallia, the Merrymaker's activated ability). The same kind of
+    per-turn historical fact `must_have_attacked_this_turn` already is, but
+    read off `CardState.turn_entered` (stamped once, the turn a permanent's
+    current incarnation reached the battlefield) compared against `Game.
+    turn.turn_number` rather than a dedicated per-turn set - every permanent
+    already remembers its own arrival turn, so nothing new has to be tracked
+    on `Game` the way `attacked_this_turn` is."""
     required_subtypes: SortedFrozenSet[str] = frozenset()
     """A bare CR 205.3m creature-type list used as the target noun itself -
     "target Vampire, Werewolf, or Zombie" (Slayer of the Wicked) - rather than
@@ -302,9 +327,12 @@ class TargetRequirement(EngineModel):
     this is read off the plain-English word, the same way `must_be_tapped` is
     read off "tapped" rather than off a rule number."""
     or_any_spell: bool = False
-    """True for a noun list whose last item is a bare "spell" reached across an
-    "or" - Aang, Swift Savior's "airbend up to one other **target creature or
-    spell**".
+    """True for a noun list, two items or more, where one of them is a bare
+    "spell" reached across an "or" - Aang, Swift Savior's "airbend up to one
+    other **target creature or spell**" (spell last) and Fatehold Charm's
+    "Return **target spell or creature** to its owner's hand" (spell first)
+    both read the identical way; only a bare, single-item "target spell"
+    keeps `zones` narrowed to the stack instead.
 
     "Target creature spell" and "target creature or spell" are two different
     restrictions and the word "or" is the only thing telling them apart. The
@@ -427,6 +455,16 @@ class TargetRequirement(EngineModel):
     unenforced - so a card this narrow reader does not know about does not
     regress from "ignored" to "the whole targeting text refuses to parse"."""
 
+    required_counter_kind: str | None = None
+    """"with a +1/+1 counter on it" in "target creature with a +1/+1 counter
+    on it" (Tomik, Orzhov Lawmage) - CR 122.1's counter kind (any single
+    word or the two printed +N/-N shapes), read the same narrow way
+    `required_keyword` reads a trailing "with <keyword>" clause
+    (`_WITH_COUNTER_RE`): this used to be exactly the unenforced "with"
+    clause `required_keyword`'s own docstring names as the reason its own
+    vocabulary stays narrow, so a target with no counter on it at all was
+    silently accepted as legal."""
+
     if_gift_promised: "TargetRequirement | None" = None
     """CR 702.174m: "If part of a spell's ability has its effect only if its
     gift was promised, and that part of the ability includes any targets, the
@@ -450,6 +488,31 @@ class TargetRequirement(EngineModel):
     never actually be promised yet (see `docs/engine-coverage.md`'s "Not
     modelled" table) - this field exists so the data is not lost the day it
     is."""
+
+    alternatives: "tuple[TargetRequirement, ...]" = ()
+    """Full independent requirements this one is OR'd with - Nissa's Defeat's
+    own "target Forest, green enchantment, or green planeswalker": a
+    compound noun list whose items do not all carry the same adjectives (a
+    bare land subtype next to two color-qualified card types). `card_types`/
+    `required_subtypes`/`required_colors` alone cannot express that: each is
+    itself only a disjunction *within* one axis (CR 205.2a's card types, CR
+    205.3's subtypes, CR 105.1's colors), so unioning "green" from the
+    second and third items into one shared `required_colors` would wrongly
+    demand it of the colorless Forest the first item names too - the same
+    kind of cross-axis disjunction `historic`'s own docstring already
+    describes for a different three-characteristic case, and the reason it
+    gets its own field rather than trying to fold into the existing ones.
+
+    A target satisfies the whole requirement when it satisfies the base
+    fields on this object *or* any one alternative's own complete `rejects`
+    check (`rejects` tries each in turn); every other field - `zones`,
+    `controller`, `comparison_*`, and the rest of the shared context that
+    is not itself part of the divergent noun list - is read only off this
+    outer object, since English prints a trailing restriction like "you
+    control" once, after the whole list, not once per item. Recursive the
+    same way `if_gift_promised` already is; an alternative's own
+    `alternatives` is always empty, so there is no deeper nesting and no
+    risk of unbounded recursion."""
 
     @property
     def optional(self) -> bool:
@@ -479,7 +542,24 @@ class TargetRequirement(EngineModel):
         spell is on - needed for `excludes_source` ("target *other* creature").
         Without it, that restriction is not checked, the same way any other
         restriction fails open when the caller cannot supply what it needs.
+
+        `alternatives` (CR 115.1's single target satisfying any one of a
+        mixed compound noun list's own independent shapes) is tried after
+        the base fields fail: this object's own reading is the first, most
+        specific candidate, and the alternatives are only extra chances,
+        never a narrowing of it.
         """
+        reason = self._rejects_without_alternatives(target, caster, game, source_id)
+        if reason is None or not self.alternatives:
+            return reason
+        for alternative in self.alternatives:
+            if alternative.rejects(target, caster, game, source_id) is None:
+                return None
+        return reason
+
+    def _rejects_without_alternatives(
+        self, target: Any, caster: str, game: Any = None, source_id: UUID | None = None
+    ) -> str | None:
         if getattr(target, "is_ability", False):
             return self._rejects_ability(target, caster)
         if isinstance(target, CardState):
@@ -540,12 +620,32 @@ class TargetRequirement(EngineModel):
             return f"{self.phrase} can only target a player, not {target.name}"
         if self.excludes_source and source_id is not None and target.id == source_id:
             return f"{self.phrase} cannot target {target.name}, which this is on"
-        if self.or_any_spell and target.zone is Zone.STACK:
-            # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
-            # second half of a two-kind noun list - see `or_any_spell`. Nothing
-            # further to check: the phrase named no type for this half.
-            return None
-        if target.zone not in self.zones:
+        # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
+        # second half of a two-kind noun list - see `or_any_spell`. The phrase
+        # names no card type or zone for this half, so those two checks are
+        # skipped for it - but a *shared* trailing clause ("target spell or
+        # permanent **with mana value 1 or greater**", Divide by Zero;
+        # "target spell or permanent **that's red or green**", Aether Gust)
+        # binds both halves of the disjunction at once and is not part of
+        # either noun's own type restriction, so a comparison or color check
+        # still runs for a spell on the stack exactly as it does for a
+        # permanent.
+        #
+        # A supertype/subtype restriction is different: Icy Reception's own
+        # "target creature or **legendary** spell" reads "legendary" as the
+        # *second* item's own leading adjective (`_read_adjectives`'
+        # per-item loop), not a trailing clause about the whole compound -
+        # but `required_supertypes`/`required_subtypes` hold one shared
+        # value for the whole requirement with no record of which disjunct
+        # it was read for, so by the time this runs there is no way to tell
+        # "legendary spell" apart from a genuinely shared "target legendary
+        # creature or spell" (a shape the pool does not print, but nothing
+        # here could rule out either way). The safe direction is the one
+        # that matches every printing actually seen: exempt the spell half,
+        # exactly as it always was, rather than assume a per-item adjective
+        # was meant to bind both.
+        spell_on_stack = self.or_any_spell and target.zone is Zone.STACK
+        if not spell_on_stack and target.zone not in self.zones:
             wanted = " or ".join(sorted(zone.value for zone in self.zones))
             return (
                 f"{self.phrase} needs a target in the {wanted}, "
@@ -564,7 +664,7 @@ class TargetRequirement(EngineModel):
                     f"{self.phrase} needs a card exiled with this permanent, "
                     f"and {target.name} is not one"
                 )
-        if self.card_types or self.excluded_card_types:
+        if not spell_on_stack and (self.card_types or self.excluded_card_types):
             current_types = set(self._current_types(target, game))
             if self.card_types and not (current_types & self.card_types):
                 wanted = " or ".join(sorted(kind.value for kind in self.card_types))
@@ -578,24 +678,33 @@ class TargetRequirement(EngineModel):
                     f"{self.phrase} cannot target {with_indefinite_article(unwanted)}, "
                     f"and {target.name} is one"
                 )
-        if self.required_supertypes and not (
-            set(self._current_supertypes(target, game)) & self.required_supertypes
+        if (
+            not spell_on_stack
+            and self.required_supertypes
+            and not (set(self._current_supertypes(target, game)) & self.required_supertypes)
         ):
             wanted = " or ".join(sorted(kind.value for kind in self.required_supertypes))
             return (
                 f"{self.phrase} needs {with_indefinite_article(wanted)} permanent, "
                 f"and {target.name} is not one"
             )
-        if self.excluded_supertypes and (
-            set(self._current_supertypes(target, game)) & self.excluded_supertypes
+        if (
+            not spell_on_stack
+            and self.excluded_supertypes
+            and (set(self._current_supertypes(target, game)) & self.excluded_supertypes)
         ):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
             return (
                 f"{self.phrase} cannot target {with_indefinite_article(unwanted)} permanent, "
                 f"and {target.name} is one"
             )
-        if self.required_subtypes and not any(
-            word.lower() in self.required_subtypes for word in self._current_subtypes(target, game)
+        if (
+            not spell_on_stack
+            and self.required_subtypes
+            and not any(
+                word.lower() in self.required_subtypes
+                for word in self._current_subtypes(target, game)
+            )
         ):
             wanted = " or ".join(sorted(self.required_subtypes))
             return (
@@ -609,6 +718,14 @@ class TargetRequirement(EngineModel):
             return (
                 f"{self.phrase} needs {with_indefinite_article(wanted)} permanent, "
                 f"and {target.name} is not one"
+            )
+        if self.excluded_colors and (
+            set(self._current_colors(target, game)) & self.excluded_colors
+        ):
+            unwanted = " or ".join(sorted(color.name.lower() for color in self.excluded_colors))
+            return (
+                f"{self.phrase} cannot target {with_indefinite_article(unwanted)} permanent, "
+                f"and {target.name} is one"
             )
         if self.color_count is not None:
             count = len(set(self._current_colors(target, game)))
@@ -638,12 +755,21 @@ class TargetRequirement(EngineModel):
         combat = self._rejects_combat_state(target, game)
         if combat is not None:
             return combat
+        attacked = self._rejects_attacked_this_turn(target, game)
+        if attacked is not None:
+            return attacked
+        entered = self._rejects_entered_this_turn(target, game)
+        if entered is not None:
+            return entered
         comparison = self._rejects_comparison(target, game, caster)
         if comparison is not None:
             return comparison
         keyword = self._rejects_required_keyword(target, game)
         if keyword is not None:
             return keyword
+        counter_kind = self._rejects_required_counter_kind(target)
+        if counter_kind is not None:
+            return counter_kind
         target_count = self._rejects_target_count(target)
         if target_count is not None:
             return target_count
@@ -722,6 +848,25 @@ class TargetRequirement(EngineModel):
             )
         return None
 
+    def _rejects_required_counter_kind(self, target: Any) -> str | None:
+        """CR 122.1: "with a `<kind>` counter on it" (Tomik, Orzhov Lawmage).
+
+        Fails open for anything with no `counters` to read - a bare `UUID`
+        or `TargetRef`, the same shape every other restriction here already
+        falls back to when the caller supplied less than a real `CardState`.
+        """
+        if self.required_counter_kind is None:
+            return None
+        counters = getattr(target, "counters", None)
+        if counters is None:
+            return None
+        if self.required_counter_kind in counters:
+            return None
+        return (
+            f"{self.phrase} needs a permanent with a {self.required_counter_kind} counter "
+            f"on it, and {target.name} has none"
+        )
+
     def _rejects_token(self, target: CardState) -> str | None:
         """CR 111.1: a token is a permanent that no card represents.
 
@@ -757,6 +902,43 @@ class TargetRequirement(EngineModel):
             return None
         wanted = " or ".join(sorted(state.value for state in self.combat_states))
         return f"{self.phrase} needs a creature that is {wanted}, and {target.name} is not"
+
+    def _rejects_attacked_this_turn(self, target: CardState, game: Any) -> str | None:
+        """ "target creature that attacked this turn" - a per-turn historical
+        fact, not `combat_states`' live one. No game, no per-turn record to
+        read: fails open the same way `_rejects_combat_state` does."""
+        if not self.must_have_attacked_this_turn:
+            return None
+        attacked = getattr(game, "attacked_this_turn", None)
+        if attacked is None:
+            return None
+        if target.id in attacked:
+            return None
+        return f"{self.phrase} needs a creature that attacked this turn, and {target.name} did not"
+
+    def _rejects_entered_this_turn(self, target: Any, game: Any) -> str | None:
+        """ "target creature that entered this turn" - read off `CardState.
+        turn_entered` against the game's own current turn number, the "turn
+        history on `Game`" this restriction is backed by. No game, no turn
+        number yet (CR 103.5/103.6's pregame steps), or a bare reference with
+        no `turn_entered` to read: fails open the same way every other
+        restriction here does when it cannot be judged. A live battlefield
+        `CardState` always carries a `turn_entered` (`CardState.turn_entered`'s
+        own docstring: stamped once, at the one choke point every route onto
+        the battlefield runs through), so `None` *there* is a determinate
+        "did not" rather than an unknown to fail open over."""
+        if not self.must_have_entered_this_turn:
+            return None
+        turn_number = getattr(getattr(game, "turn", None), "turn_number", None)
+        if turn_number is None:
+            return None
+        missing = object()
+        turn_entered = getattr(target, "turn_entered", missing)
+        if turn_entered is missing:
+            return None
+        if turn_entered == turn_number:
+            return None
+        return f"{self.phrase} needs a creature that entered this turn, and {target.name} did not"
 
     def _current_types(self, target: CardState, game: Any) -> tuple[Type, ...]:
         """This target's card types right now, layers included (CR 613.5, 613.1d).
@@ -1116,6 +1298,7 @@ class TargetingProfile(EngineModel):
         read the spell's own targeting text.
         """
         self._check_protection(targets, game)
+        self._check_shroud(targets, game)
 
         if not self.understood:
             return
@@ -1132,11 +1315,19 @@ class TargetingProfile(EngineModel):
                 f"{self.min_targets}"
             )
 
-        if self.division is not None and len(targets) > self.division.amount:
+        if (
+            self.division is not None
+            and self.division.amount is not None
+            and len(targets) > self.division.amount
+        ):
             raise ValueError(
                 f"too many targets to divide {self.division.amount} {self.division.what} among: "
                 f"each target must receive at least one (CR 601.2d)"
             )
+        # A variable ("X") division's own amount is `None` here - CR 107.3a's
+        # X is not yet a number to check against at announcement/target-
+        # selection time - so this bound is skipped and left to
+        # `check_division`'s own resolved-amount call once X is known.
 
         self._fill_slots(targets, caster, game, source_id)
 
@@ -1160,6 +1351,31 @@ class TargetingProfile(EngineModel):
             return
         for target in targets:
             refusal = refusal_of(target, self.source_card)
+            if refusal is not None:
+                raise ValueError(refusal)
+
+    def _check_shroud(self, targets: list[Any], game: Any) -> None:
+        """CR 702.18a, at announcement (CR 601.2c) rather than only at the
+        CR 608.2b recheck - `_check_protection`'s sibling, one call below it.
+
+        Needs only a `game`, unlike `_check_protection`: shroud names no
+        quality to compare a source against (CR 702.18a is unconditional -
+        "can't be the target of spells or abilities", full stop), so there is
+        nothing here a missing `source_card` would leave unchecked. This is
+        also why one shared call covers both a spell's targets
+        (`Casting.choose_targets`) and an activated or triggered ability's
+        (`Game.activate_ability`, `Game.put_triggers_on_stack`, both of which
+        already call `TargetingProfile.check`): shroud refuses the
+        controller's own ability exactly as it refuses an opponent's spell,
+        so there is no caster-specific case for a spell-only hook to carry.
+        """
+        if game is None:
+            return
+        refusal_of = getattr(game, "shroud_refusal", None)
+        if refusal_of is None:
+            return
+        for target in targets:
+            refusal = refusal_of(target)
             if refusal is not None:
                 raise ValueError(refusal)
 
@@ -1398,6 +1614,29 @@ _SELF_COST_REDUCTION_LINE = re.compile(
     r"\bThis spell costs \{\d+\} less to cast if [^.]+\.\s*", re.IGNORECASE
 )
 
+#: "This spell costs {1} more to cast for each target beyond the first."
+#: (Fireball; Launch the Fleet's identically-worded "Strive — ..." clause,
+#: the optional em-dash prefix stripped along with it since CR 207.2c gives
+#: the "Strive" ability word no rules meaning of its own) - the cost-increase
+#: twin of `_SELF_COST_REDUCTION_LINE` just above, and the identical
+#: preamble-poisoning bug: its own bare "target" is not a noun phrase at all
+#: ("beyond the first" is not a noun `_read_phrase` can read), so it used to
+#: fail the *whole* profile closed (`understood=False`) - not merely leaving
+#: this one clause unread, but silently un-enforcing every real restriction
+#: on the card. Fireball's own "any number of targets" happens to accept
+#: anything anyway, but Launch the Fleet's "any number of target creatures"
+#: does not, and a land was a legal target for it until this was stripped.
+#: `machines/casting.py`'s own `_COST_INCREASE_PER_TARGET_RE` is what
+#: actually prices the increase (CR 601.2f); this is only the same read-it-
+#: out-of-the-way fix `machines/effects.py`'s own `_COST_INCREASE_PER_TARGET_
+#: LINE_RE` already applies to the resolution text, duplicated here for the
+#: identical circular-import reason `_SELF_COST_REDUCTION_LINE` is.
+_COST_INCREASE_PER_TARGET_LINE = re.compile(
+    r"\b(?:Strive\s*—\s*)?This spell costs \{[^}]+\} more to cast for each target beyond "
+    r"the first\.\s*",
+    re.IGNORECASE,
+)
+
 #: "The copy targets that token." (Frontline Heroism, following its own
 #: "... then copy that spell.") - CR 707.10's forced retarget, stated as a
 #: declaration of what the copy now points at rather than a choice anyone
@@ -1480,21 +1719,6 @@ _ABILITY_OR_COLOR_COUNT_SPELL_RE = re.compile(
     r"^or\s+(?P<color_count>multicolored|monocolored|colorless)\s+spell$", re.IGNORECASE
 )
 
-_NUMBERS = {
-    "a": 1,
-    "an": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-
 _TYPE_NOUNS = {
     "creature": Type.CREATURE,
     "artifact": Type.ARTIFACT,
@@ -1564,7 +1788,8 @@ _CONTROL_CLAUSE = re.compile(
     re.IGNORECASE,
 )
 _ZONE_CLAUSE = re.compile(
-    r"\b(?:from|in)\s+(?:(?P<whose>your|a|an|any)\s+)?"
+    r"\b(?:from|in)\s+"
+    r"(?:(?P<whose>your|their|an? opponent'?s?|a|an|any)\s+)?"
     r"(?P<zone>graveyards|graveyard|hands|hand|libraries|library|exile)\b",
     re.IGNORECASE,
 )
@@ -1674,6 +1899,23 @@ def targeting_profile(card: Card) -> TargetingProfile:
     if profile is None:
         if modal_profile(card):
             profile = TargetingProfile(understood=False)
+        elif text and _EARTHBEND.search(_spell_text(text)):
+            # Rockalanche prints "Earthbend X, ..." directly as a sorcery's
+            # own effect, not as a permanent's triggered ability - the same
+            # CR 701.66a keyword `profile_for_text` already special-cases for
+            # an ability, needed here too so the spell announces its target
+            # at all (CR 601.2c): the word "target" is in the keyword's own
+            # rules meaning, never printed on the card, and the ordinary
+            # scan below finds nothing to read unless told. Checked against
+            # `_spell_text(text)`, not the raw text: Badgermole Cub's own
+            # "When this creature enters, earthbend 1." is a *triggered
+            # ability's* line (CR 113.1c chooses its target when the ability
+            # goes on the stack, not when the creature is cast), and
+            # `_spell_text` already strips exactly that kind of line - the
+            # bug this line guards against is the *creature spell itself*
+            # wrongly demanding a target because the word "earthbend"
+            # appears somewhere in its printed text.
+            profile = _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
         else:
             profile = _parse(text)
             profile = _with_aura_target(card, profile)
@@ -1798,6 +2040,54 @@ def profile_for_modes_with_owners(
 _EARTHBEND = re.compile(r"\bearthbend\b", re.IGNORECASE)
 _EARTHBEND_TARGET_TEXT = "target land you control"
 
+#: "up to one target nonland card of each card type from your graveyard" -
+#: Uldaros Theorix's own ETB. CR 601.2c's "an appropriate object ... for each
+#: target the spell requires" reads "of each card type" as one independent
+#: "up to one" requirement *per* CR 300.1 nonland card type, not a single
+#: requirement the ordinary word-scan below could express: the scan reads one
+#: "target ..." noun phrase into one `TargetRequirement`, and there is no
+#: single set of restrictions ("card_types={...}") that would enforce "no two
+#: chosen targets share a type" the way eight separate up-to-one slots do for
+#: free (CR 115.3 only ever compares targets *within* one requirement).
+#: Special-cased the same way Earthbend is, just above, rather than widening
+#: the scan to a shape nothing else in the pool needs.
+_UP_TO_ONE_OF_EACH_CARD_TYPE_RE = re.compile(
+    r"up to one target nonland card of each card type from your graveyard", re.IGNORECASE
+)
+#: CR 300.1's card types, minus land (the clause's own "nonland") and the
+#: substitute-deck-only types (Conspiracy, Dungeon, Phenomenon, Plane,
+#: Scheme, Vanguard) that never occupy an ordinary graveyard slot - the same
+#: restriction to real, `Type`-modelled card types every other "nonland
+#: card" reader in this engine already applies.
+_NONLAND_CARD_TYPES: tuple[Type, ...] = tuple(t for t in Type if t is not Type.LAND)
+
+
+def _up_to_one_of_each_card_type_profile() -> TargetingProfile:
+    """`_UP_TO_ONE_OF_EACH_CARD_TYPE_RE`'s shape, built directly rather than
+    through `_parse`'s own text scan: one "up to one" requirement per
+    `_NONLAND_CARD_TYPES` member, each restricted to a card in the caster's
+    own graveyard (CR 109.4/CR 108.4a's owner fallback, via `ControllerRestriction.YOU`)
+    of that one type. A type with no candidate card at announcement offers no
+    legal target for its own requirement and simply goes unfilled (CR 115.6's
+    "up to one" already allows zero), which is what lets this profile stay
+    fixed rather than depending on the graveyard's live contents.
+    """
+    requirements = tuple(
+        TargetRequirement(
+            phrase=f"up to one target nonland {card_type.value} card from your graveyard",
+            count=1,
+            minimum=0,
+            card_types=frozenset({card_type}),
+            allows_cards=True,
+            allows_players=False,
+            zones=frozenset({Zone.GRAVEYARD}),
+            controller=ControllerRestriction.YOU,
+        )
+        for card_type in _NONLAND_CARD_TYPES
+    )
+    return TargetingProfile(requirements=requirements, understood=True)
+
+
 #: CR 603.12's own wording - "checked immediately after being created" - is
 #: what draws the line: everything from "when you do" onward is a *second*
 #: triggered ability's text, not the one being profiled. Cut before the
@@ -1817,6 +2107,94 @@ _EARTHBEND_TARGET_TEXT = "target land you control"
 _REFLEXIVE_CLAUSE_TAIL = re.compile(
     r"\bwhen you do,.*$|\bwhen [^,]+ this way,.*$", re.IGNORECASE | re.DOTALL
 )
+
+#: The same two CR 603.12 templates as `_REFLEXIVE_CLAUSE_TAIL`, but capturing
+#: what comes *after* the comma instead of cutting it - the reflexively
+#: created ability's own words, read by `reflexive_consequence_text` below.
+_REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
+    r"\bwhen you do,\s*(?P<consequence>.*)$|\bwhen [^,]+ this way,\s*(?P<consequence2>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "For each opponent, `<verb phrase>` up to one target `<description>` that
+#: player controls[, ...]." - Hapatra, the Desert Frost's, Hapatra, the
+#: Desert Fang's, and Lich's Relic's own reflexive consequence, all sharing
+#: this one grammar. CR 601.2c/603.3d target *every* instance of the word
+#: "target" a spell or ability's text prints, and "for each opponent" prints
+#: one such instance per opponent (CR 102.3's "opponents are all players not
+#: on their team" - not fixed at two), which the ordinary word-scan below cannot
+#: express: it reads one `TargetRequirement` per literal "target" word in
+#: the text, and this sentence prints only one such word regardless of how
+#: many opponents there are. Special-cased ahead of that scan the same way
+#: `_EARTHBEND` already is, for the identical reason - the rule itself,
+#: not the sentence's own count words, is what says how many targets this
+#: asks for.
+_FOR_EACH_OPPONENT_TARGET_RE = re.compile(
+    r"for each opponent,.*?\bup to one target (?P<desc>.+?) that player controls\b",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def reflexive_consequence_text(text: str) -> str | None:
+    """CR 603.12's "`<action>`. When you do, `<consequence>`." (or "... this
+    way, `<consequence>`.") - the reflexive ability's own words, or `None`
+    when `text` prints neither shape.
+
+    `profile_for_text` deliberately cuts this tail away, because CR 603.3d
+    has the *reflexive* ability - not the one whose text this is - choose its
+    own target once it is created and put on the stack, a separate CR 601.2c
+    announcement from the outer trigger's. That correctly keeps the outer
+    trigger's own `TargetingProfile` from claiming a target that belongs to
+    an ability which does not exist yet. It also means a caller that wants
+    the reflexive ability's *own* targeting shape - `Game.
+    why_cannot_target_with_trigger`, so a scenario can pre-declare what CR
+    603.12 reflexively creates for Earthbender Ascension's own Landfall
+    ("... put a quest counter on this enchantment. When you do, if it has
+    four or more quest counters on it, put a +1/+1 counter on target creature
+    you control.") - needs the tail `profile_for_text` throws away, read back
+    out here instead of re-deriving the same cut twice.
+    """
+    match = _REFLEXIVE_CLAUSE_CONSEQUENCE_RE.search(text)
+    if match is None:
+        return None
+    consequence = match.group("consequence") or match.group("consequence2") or ""
+    return consequence.strip()
+
+
+def _for_each_opponent_profile(text: str) -> TargetingProfile | None:
+    """`_FOR_EACH_OPPONENT_TARGET_RE`'s shape, or `None` if this is not it.
+
+    One target per opponent, each independently optional (CR 115.6's "up to
+    one") - not a fixed count `TargetRequirement.count` can hold, since the
+    number of opponents is game state `profile_for_text` cannot see (it
+    reads text alone). `unbounded=True` (CR 107.1c's own "no stated
+    maximum" shape) covers any player count without needing to know it in
+    advance, and `distinct_controllers=True` is what stops two of those
+    unbounded slots from being filled by the same opponent's own two
+    permanents instead of two different opponents' one each - the
+    per-target legality check (`controller=OPPONENT`) and the cross-target
+    one already exist for Run Away Together's "controlled by different
+    players"; this reuses both rather than inventing a per-opponent-count
+    mechanism of its own.
+    """
+    match = _FOR_EACH_OPPONENT_TARGET_RE.search(text)
+    if match is None:
+        return None
+    description = match.group("desc").strip()
+    base = permanent_description(description)
+    if base is None:
+        return None
+    requirement = base.model_copy(
+        update={
+            "phrase": f"target {description} an opponent controls",
+            "count": 0,
+            "minimum": 0,
+            "unbounded": True,
+            "distinct_controllers": True,
+            "controller": ControllerRestriction.OPPONENT,
+        }
+    )
+    return TargetingProfile(requirements=(requirement,))
 
 
 def profile_for_text(text: str) -> TargetingProfile:
@@ -1854,6 +2232,11 @@ def profile_for_text(text: str) -> TargetingProfile:
     text = _REFLEXIVE_CLAUSE_TAIL.sub("", text)
     if _EARTHBEND.search(text):
         return _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
+    if _UP_TO_ONE_OF_EACH_CARD_TYPE_RE.search(text):
+        return _up_to_one_of_each_card_type_profile()
+    for_each_opponent = _for_each_opponent_profile(text)
+    if for_each_opponent is not None:
+        return for_each_opponent
     return _parse(_REMINDER.sub("", text), spell_only=False)
 
 
@@ -1863,6 +2246,23 @@ def profile_for_text(text: str) -> TargetingProfile:
 #: judged. Bounded to a few words so a sentence that merely contains an em
 #: dash is left alone.
 _ABILITY_WORD_PREFIX = re.compile(r"^[A-Z][^—\n]{0,40}?\s+—\s+")
+
+#: CR 714.2's own chapter symbol: "{rN1}, {rN2}—[Effect]" (CR 714.2c),
+#: written out by Scryfall as one or more Roman numerals (CR 714.2a: "the
+#: numeral I represents 1, II represents 2, III represents 3, and so on"),
+#: comma-joined when a Saga shares one chapter ability across several
+#: numbers, then an em dash. "A chapter symbol is a keyword ability that
+#: represents a triggered ability" (CR 714.2), so an entire chapter line is
+#: excluded the same way a printed "When ..."/"Whenever ..."/"At ..." line
+#: already is below - unlike `_ABILITY_WORD_PREFIX`, which only strips its
+#: own prefix off a line the rest of which stays in the spell's own text,
+#: since an ability word never turns the sentence after it into a separate
+#: object with its own targets the way a chapter ability does (CR 603.3d: a
+#: chapter ability, like any triggered ability, chooses its own targets
+#: when it goes on the stack, not when the Saga is cast). Bounded to four
+#: Roman-numeral characters per number so an ordinary capitalised word
+#: before a real em dash is never mistaken for one.
+_CHAPTER_SYMBOL_LINE = re.compile(r"^[IVX]{1,4}(?:,\s*[IVX]{1,4})*\s*—")
 
 
 def _spell_text(oracle_text: str) -> str:
@@ -1875,6 +2275,8 @@ def _spell_text(oracle_text: str) -> str:
     lines: list[str] = []
     for line in oracle_text.splitlines():
         stripped = _REMINDER.sub("", line).strip()
+        if _CHAPTER_SYMBOL_LINE.match(stripped):
+            continue
         # CR 207.2c: "An ability word appears in italics at the beginning of
         # some abilities ... they have no special rules meaning", and CR 207.2d
         # says the same of a flavor word. Scryfall prints both as "<Word> — "
@@ -1963,6 +2365,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _QUOTED_SPAN.sub("", text)
     text = _RETARGETING.sub("", text)
     text = _SELF_COST_REDUCTION_LINE.sub("", text)
+    text = _COST_INCREASE_PER_TARGET_LINE.sub("", text)
     text = _COPY_TARGETS_DECLARATION.sub("", text)
     text = _TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE.sub("", text)
     text = _SINGLE_TARGET_RESTRICTION.sub(_SINGLE_TARGET_PLACEHOLDER, text)
@@ -2060,19 +2463,12 @@ def _read_division(text: str) -> Division | None:
             doubled = _DOUBLED_IF_X_AT_LEAST_RE.search(text)
             threshold = int(doubled.group("threshold")) if doubled else None
             return Division(amount=None, what="damage", doubled_if_x_at_least=threshold)
-        amount = _count_word(word)
+        amount = parse_count(word)
         return None if amount is None else Division(amount=amount, what="damage")
-    amount = _count_word(match.group("counters").lower())
+    amount = parse_count(match.group("counters").lower())
     if amount is None:
         return None
     return Division(amount=amount, what=f"{match.group('kind')} counters")
-
-
-def _count_word(word: str) -> int | None:
-    """A number written as a word, or as a digit once X has been substituted."""
-    if word.isdigit():
-        return int(word)
-    return _NUMBERS.get(word)
 
 
 def _read_count(prefix: str) -> tuple[int, int | None, bool] | None:
@@ -2108,25 +2504,90 @@ def _read_count(prefix: str) -> tuple[int, int | None, bool] | None:
     count "other", which is not a number, and the whole phrase falls back to
     a mandatory exactly-one. `_excludes_source` is what actually reads the
     word; this function only has to stop it from breaking the count.
+
+    "one, two, or three target creatures" - Arc Lightning, Inferno Titan, and
+    21 other Modern cards CR 601.2d divides this way - is a longer list than
+    the two-number "one or two" shape above, read by `_read_numeric_list`
+    over every word, not just the last three: a version of this reader that
+    only looked at the tail end used to read "two, or three" out of the full
+    list and silently drop the leading "one", pinning the floor at two
+    instead of one (Arc Lightning could not legally be cast at a single
+    target even though the card's own text lists "one" first).
+
+    `prefix` is everything before this "target", which for an activated or
+    loyalty ability still carries its own printed cost - Liliana of the
+    Veil's own "-2: Target player sacrifices a creature." (CR 118 costs
+    never contain the word "target", so nothing is lost by cutting them
+    off). A cost's number is not a target count: CR 601.2b pays or
+    announces the cost, CR 601.2c chooses targets, two different questions
+    that happen to share one sentence purely by how the card is printed.
+    Trimmed to the text after the last cost-terminating colon (or the last
+    sentence break) before tokenizing, so "-3: Target creature ..." and
+    "{3}: Target creature ..." both read the plain, unmarked "target
+    creature" as CR 115.1's own default of exactly one, the same as a "{T}:"
+    or "{1}{U}:" cost already did by accident (a non-numeric trailing token
+    such as "t" used to push the cost's own digit out of the scan's last
+    three words) - this makes that safe by construction instead of by luck.
     """
-    words = [w for w in re.findall(r"[\w'-]+", prefix.lower()) if w not in _SOURCE_EXCLUDING]
-    words = words[-3:]
+    boundary = max(prefix.rfind(":"), prefix.rfind("."), prefix.rfind(";"))
+    if boundary != -1:
+        prefix = prefix[boundary + 1 :]
+    all_words = [w for w in re.findall(r"[\w'-]+", prefix.lower()) if w not in _SOURCE_EXCLUDING]
+    words = all_words[-3:]
     if words[-3:] == ["any", "number", "of"]:
         return 0, None, False
     if len(words) >= 3 and words[-3] == "up" and words[-2] == "to":
         if words[-1] == "x":
             return 0, None, True
-        count = _count_word(words[-1])
+        count = parse_count(words[-1])
         return None if count is None else (0, count, False)
-    if len(words) >= 3 and words[-2] == "or":
-        fewest, most = _count_word(words[-3]), _count_word(words[-1])
-        if fewest is not None and most is not None:
-            return (fewest, most, False) if fewest <= most else None
+    numeric_list = _read_numeric_list(all_words)
+    if numeric_list is not None:
+        fewest, most = numeric_list
+        return fewest, most, False
     if words and words[-1] == "x":
         return 0, None, True
-    if words and words[-1] not in {"a", "an"} and (count := _count_word(words[-1])) is not None:
+    if words and words[-1] not in {"a", "an"} and (count := parse_count(words[-1])) is not None:
         return count, count, False
     return 1, 1, False
+
+
+def _read_numeric_list(words: list[str]) -> tuple[int, int] | None:
+    """The count list at the very end of `words` - "one, two, or three"
+    (commas are not word characters, so `re.findall(r"[\\w'-]+", ...)`
+    already tokenizes that as `["one", "two", "or", "three"]` with no comma
+    of its own to read) or the plain two-item "one or two" - as (fewest,
+    most).
+
+    CR 601.2d always prints a division's choices in ascending order, so the
+    first number in the list is the floor and the last is the ceiling. Reads
+    backward from the word right before a trailing "or" (or the Oxford
+    "and/or", which tokenizes as the two words "and", "or"), consuming
+    countable words one at a time and stopping at the first word that is not
+    one - which is what lets this run against the *whole* prefix rather than
+    a fixed-width window: whatever sits further back (an "among", a verb, an
+    unrelated word) simply is not a count and ends the scan on its own.
+
+    `None` when the end of `words` is not at least two counts joined by
+    "or"/"and or" - a single trailing count, or a phrase that happens to end
+    in an unrelated "... or <something>" that is not itself a number.
+    """
+    if len(words) < 3 or words[-2] != "or":
+        return None
+    last = parse_count(words[-1])
+    if last is None:
+        return None
+    index = len(words) - 3
+    if index >= 0 and words[index] == "and":
+        index -= 1
+    counts = [last]
+    while index >= 0 and (count := parse_count(words[index])) is not None:
+        counts.append(count)
+        index -= 1
+    if len(counts) < 2:
+        return None
+    fewest, most = counts[-1], counts[0]
+    return (fewest, most) if fewest <= most else None
 
 
 #: "up to one **other** target creature", "exile **another** target permanent":
@@ -2219,6 +2680,102 @@ def _read_subtype_list(noun_phrase: str) -> tuple[list[str], str] | None:
             return None
     display = ", ".join(raw_items[:-1] + [f"or {raw_items[-1]}"])
     return [item.lower() for item in raw_items], display
+
+
+def _read_one_compound_item(raw_item: list[str], lower_item: list[str]) -> dict[str, object] | None:
+    """One item of a mixed compound noun list - "Forest", "green
+    enchantment", "green planeswalker" - as its own fully independent
+    card-type/subtype/color reading, or `None` when this item's own shape is
+    not one of the ones `_read_compound_target_alternatives` reads.
+
+    Deliberately narrow: a leading run of color words, then exactly one
+    trailing noun that is a CR 300.1 card type, a CR 305.6 basic land type
+    standing alone (the elided "land" the same way a bare creature type
+    elides "creature"), or a bare CR 205.3m creature type. Nothing this
+    parser does not already know how to read elsewhere is guessed at here;
+    an item with more than that (its own adjectives, a further noun, a
+    supertype) returns `None` and the whole compound reading is abandoned in
+    favor of the ordinary merge below.
+    """
+    index = 0
+    colors: set[Color] = set()
+    while index < len(lower_item) and lower_item[index] in _COLOR_WORDS:
+        colors.add(_COLOR_WORDS[lower_item[index]])
+        index += 1
+    remaining_raw = raw_item[index:]
+    remaining_lower = lower_item[index:]
+    if len(remaining_lower) != 1:
+        return None
+    word = remaining_lower[0]
+    singular = word[:-1] if word.endswith("s") and word[:-1] in _ALL_NOUNS else word
+    if singular in _TYPE_NOUNS:
+        return {
+            "card_types": frozenset({_TYPE_NOUNS[singular]}),
+            "required_subtypes": frozenset(),
+            "required_colors": frozenset(colors),
+        }
+    if remaining_raw[0] in BASIC_LAND_TYPES:
+        # CR 305.6's five basic land types, standing in for the elided noun
+        # "land" - Nissa's Defeat's own "target Forest" among its own
+        # compound list, the land-subtype twin of the creature-type elision
+        # `_is_bare_subtype_word` reads below.
+        return {
+            "card_types": frozenset({Type.LAND}),
+            "required_subtypes": frozenset({word}),
+            "required_colors": frozenset(colors),
+        }
+    if _is_bare_subtype_word(remaining_raw[0], word):
+        return {
+            "card_types": frozenset({Type.CREATURE}),
+            "required_subtypes": frozenset({word}),
+            "required_colors": frozenset(colors),
+        }
+    return None
+
+
+def _read_compound_target_alternatives(
+    words: list[str], raw_words: list[str]
+) -> list[dict[str, object]] | None:
+    """A comma/"or"/"and"-joined noun list whose items do not all carry the
+    same adjectives - Nissa's Defeat's own "target Forest, green
+    enchantment, or green planeswalker": one bare land subtype beside two
+    color-qualified card types. The ordinary noun-list loop in `_read_phrase`
+    merges every item's own adjectives into one shared set, which is correct
+    only when every item actually shares them (Liliana's Defeat's "target
+    black creature or black planeswalker" does; this does not) - seeing
+    `TargetRequirement.alternatives`'s own docstring for why that is wrong
+    here specifically.
+
+    `words`/`raw_words` are the *whole* tokenized noun phrase, exactly as
+    `_read_phrase`'s own loop receives them - this is tried only when nothing
+    trails the noun list at all (checked by the caller, since a trailing
+    "you control"/comparison clause is read once for the whole compound, not
+    per item, and this reader has no way to tell such a tail apart from a
+    fourth list item). Returns one dict per item (each shaped like
+    `_read_one_compound_item`'s own return), or `None` when any item is not
+    that shape, or there are fewer than two - the caller falls back to the
+    ordinary merge exactly as before this reader existed.
+    """
+    raw_items: list[list[str]] = [[]]
+    lower_items: list[list[str]] = [[]]
+    for raw, lowered in zip(raw_words, words, strict=True):
+        if lowered in {"or", "and", ","}:
+            raw_items.append([])
+            lower_items.append([])
+            continue
+        raw_items[-1].append(raw)
+        lower_items[-1].append(lowered)
+    raw_items = [item for item in raw_items if item]
+    lower_items = [item for item in lower_items if item]
+    if len(raw_items) < 2:
+        return None
+    specs: list[dict[str, object]] = []
+    for raw_item, lower_item in zip(raw_items, lower_items, strict=True):
+        spec = _read_one_compound_item(raw_item, lower_item)
+        if spec is None:
+            return None
+        specs.append(spec)
+    return specs
 
 
 def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetRequirement | None:
@@ -2326,6 +2883,12 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     # it to tell Aeronaut Cavalry's bare "Soldier" (CR 205.3m, elided
     # "creature") apart from an ordinary lower-case English noun the way
     # `_read_subtype_list` already does for its own two-or-more-item list.
+    # Read *before* tokenization, not after: the counter-kind spelling
+    # ("+1/+1", "-1/-1") uses "+"/"/" characters the word tokenizer below
+    # does not keep, so a clause extracted from the already-tokenized `rest`
+    # the way `required_keyword`'s own plain-word vocabulary safely is would
+    # never see the literal symbols to match against.
+    required_counter_kind, noun_phrase = _extract_required_counter_kind(noun_phrase)
     raw_words = re.findall(r"[\w'-]+|,", noun_phrase)
     words = re.findall(r"[\w'-]+|,", noun_phrase.lower())
     if not words:
@@ -2354,9 +2917,21 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     nouns_read = 0
     noun_end = index
     or_any_spell = False
+    #: Whether a bare "spell" was read as the *very first* noun-list token -
+    #: decided only once the whole noun list is in (see the `spell_seen`
+    #: handling right after the loop below), since at that point there is no
+    #: way yet to tell "target spell" alone (`zones` stays {STACK}) apart
+    #: from "target spell or creature" (Fatehold Charm, `or_any_spell`).
+    #: "spell" anywhere *after* the first token already has `after_conjunction`
+    #: (just below) to decide it immediately - see the branch itself.
+    spell_seen = False
     #: Whether the token just skipped was a noun-list conjunction. "Target
     #: creature spell" and "target creature or spell" differ by this word and
-    #: by nothing else - see `TargetRequirement.or_any_spell`.
+    #: by nothing else - see `TargetRequirement.or_any_spell`. Left `True`
+    #: across an intervening per-item adjective (Icy Reception's "creature or
+    #: **legendary** spell" - CR 205.4a's supertype word sits between the "or"
+    #: and the noun it belongs to), since the adjective is part of the same
+    #: item as the noun that follows it, not a fresh item of its own.
     after_conjunction = False
 
     while index < len(words):
@@ -2392,15 +2967,30 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             allows_cards = True
         elif singular in _SPELL_NOUNS:
             allows_cards = True
-            if nouns_read and after_conjunction:
-                # "... or spell" - the second item of a two-kind noun list, not
-                # the noun a preceding "creature" was qualifying. CR 112.1 puts
-                # it on the stack and names no type for it; `or_any_spell` is
-                # how the two halves stay separate restrictions rather than
-                # collapsing into one conjunction. `zones` is left alone, so
-                # the first half keeps whatever zone it named.
+            if nouns_read == 0:
+                # "spell" is the very first noun-list token - either the
+                # whole list ("target spell" alone) or the first item of a
+                # two-kind list ("target spell or creature", Fatehold
+                # Charm). Deferred - see `spell_seen` just below the loop.
+                spell_seen = True
+            elif after_conjunction:
+                # "spell" reached across an "or"/"and" from an earlier item -
+                # "target creature or spell" (Aang, Swift Savior), or, with a
+                # per-item adjective of its own in between, "target creature
+                # or legendary spell" (Icy Reception). CR 112.1's "A spell is
+                # a card on the stack" of no particular card type, alongside
+                # whatever the earlier item(s) already restricted `card_types`
+                # to - the same two-kind disjunction `or_any_spell` exists for,
+                # decided immediately here since a *later* item's own noun is
+                # never itself ambiguous the way the very first one is.
                 or_any_spell = True
             else:
+                # "spell" glued directly onto a preceding type word within
+                # the *same* item, no conjunction between them - "target
+                # creature spell or planeswalker spell" (Subtlety). Every
+                # item here names a spell of some card type, not a permanent,
+                # so this is CR 112.1's plain "spell on the stack"
+                # restriction regardless of how many such items there are.
                 zones = {Zone.STACK}
         elif singular in _PLAYER_NOUNS:
             allows_players = True
@@ -2412,6 +3002,27 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
                 excludes_source = True
             index += 1
             continue
+        elif raw_words[index] in BASIC_LAND_TYPES and (
+            index + 1 >= len(words) or words[index + 1] in {"or", "and", ","}
+        ):
+            # CR 305.6's five basic land types, standing in for the elided
+            # noun "land" - Nissa's Defeat's own "target Forest, green
+            # enchantment, or green planeswalker": "Forest" prints no
+            # following noun at all, the same elision `_is_bare_subtype_word`
+            # reads for a creature type, but explicitly excluded from that
+            # branch (see its own docstring) since a land subtype is not an
+            # elided *creature*. Read at any position in a noun list, not
+            # only the first, since the five basic land types are a small,
+            # fully enumerable, unambiguous set - unlike CR 205.3m's
+            # hundreds of creature types, there is no real English word this
+            # could be confused with. The lookahead (end of words, or
+            # another list item) keeps "target Forest you control" and
+            # "target Forest card in your graveyard" from swallowing a real
+            # following noun the way `_is_bare_subtype_word`'s own docstring
+            # already guards against for creature types.
+            required_subtypes.add(word)
+            card_types.add(Type.LAND)
+            allows_cards = True
         elif nouns_read == 0 and _is_bare_subtype_word(raw_words[index], word):
             # Aeronaut Cavalry's "another target Soldier you control" - CR
             # 205.3m's creature-type word standing alone as the target noun,
@@ -2452,6 +3063,24 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         adjectives.must_be_token = True
         noun_end += 1
 
+    if spell_seen:
+        # "spell" was the very first noun-list token. Exactly one noun total
+        # ("target spell") is CR 112.1's spell on the stack and nothing else,
+        # so `zones` narrows to it the way it always has. More than one
+        # ("target spell or creature", Fatehold Charm) is CR 115.1's
+        # either-or between a stack object of no particular type and a
+        # permanent-type restriction that keeps its own default `zones`
+        # ({BATTLEFIELD}) - `or_any_spell` is what lets a spell on the stack
+        # satisfy the requirement too, without narrowing `zones` itself and
+        # silently refusing every permanent. "spell" reached *after* the
+        # first token ("target creature or spell", Aang, Swift Savior; other
+        # shapes too) was already decided immediately inside the loop, by
+        # `after_conjunction`.
+        if nouns_read > 1:
+            or_any_spell = True
+        else:
+            zones = {Zone.STACK}
+
     rest = " ".join(words[noun_end:])
     controller = ControllerRestriction.ANY
 
@@ -2459,6 +3088,10 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     # exactly like a mana-value bound and is not one (see
     # `_COLORS_OF_MANA_SPENT_CONDITION`).
     rest = _COLORS_OF_MANA_SPENT_CONDITION.sub("", rest).strip()
+
+    # Same reason, for CR 613.4b's own effect verb rather than a restriction -
+    # see `_SETS_BASE_POWER_TOUGHNESS_EFFECT`.
+    rest = _SETS_BASE_POWER_TOUGHNESS_EFFECT.sub("", rest).strip()
 
     comparison = _extract_comparison(rest)
     if comparison is _COMPARISON_UNREADABLE:
@@ -2485,6 +3118,10 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     required_keyword, rest = _extract_required_keyword(rest)
 
+    attacked_this_turn, rest = _extract_attacked_this_turn(rest)
+
+    entered_this_turn, rest = _extract_entered_this_turn(rest)
+
     color_presence, rest = _extract_color_presence(rest)
     color_count = adjectives.color_count
     if color_presence:
@@ -2495,6 +3132,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             # which one wins.
             return None
         color_count = "colored"
+
+    trailing_colors, rest = _extract_color_disjunction(rest)
 
     if not nouns_read:
         # Nothing but adjectives: "target token you control". CR 111.1 makes a
@@ -2528,6 +3167,14 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             whose = zone_match.group("whose")
             if whose is not None and whose.lower() == "your":
                 controller = ControllerRestriction.YOU
+            elif whose is not None and ("opponent" in whose.lower() or whose.lower() == "their"):
+                # "from an opponent's graveyard" (Dire Fleet Daredevil),
+                # "in their graveyard" - CR 109.5's "you"/"your" is the
+                # default the bare "a"/"an"/"any" forms already read as no
+                # restriction at all; this is the other side of that same
+                # distinction, read the same way `_CONDITION_CONTROLS_N`'s
+                # own "an opponent controls" already is.
+                controller = ControllerRestriction.OPPONENT
             # "... other than a basic land card" (Surgical Extraction) - a
             # compound-noun exclusion on the bare "target card" itself, past
             # the zone clause. Read here rather than by `_Adjectives`, which
@@ -2548,18 +3195,66 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     ):
         return None
 
+    # A mixed compound noun list - Nissa's Defeat's own "target Forest, green
+    # enchantment, or green planeswalker" - whose items do not all carry the
+    # same color. Read only when there genuinely is a per-item divergence:
+    # a uniform list ("target black creature or black planeswalker",
+    # "target artifact or enchantment") is left to the ordinary merge above
+    # exactly as before this reader existed, so nothing already passing
+    # changes representation for no reason. See `_read_compound_target_
+    # alternatives` and `TargetRequirement.alternatives`.
+    compound_card_types = frozenset(card_types)
+    compound_required_subtypes = frozenset(required_subtypes)
+    compound_alternatives: tuple[TargetRequirement, ...] = ()
+    if nouns_read >= 2:
+        compound_items = _read_compound_target_alternatives(words[:noun_end], raw_words[:noun_end])
+        if (
+            compound_items is not None
+            and len({item["required_colors"] for item in compound_items}) > 1
+        ):
+            first, *rest_items = compound_items
+            compound_card_types = first["card_types"]  # type: ignore[assignment]
+            compound_required_subtypes = first["required_subtypes"]  # type: ignore[assignment]
+            compound_required_colors = first["required_colors"]
+            compound_alternatives = tuple(
+                TargetRequirement(
+                    phrase="target "
+                    + " or ".join(
+                        sorted(kind.value for kind in item["card_types"])  # type: ignore[arg-type]
+                    ),
+                    card_types=item["card_types"],  # type: ignore[arg-type]
+                    required_subtypes=item["required_subtypes"],  # type: ignore[arg-type]
+                    required_colors=item["required_colors"],  # type: ignore[arg-type]
+                    allows_cards=allows_cards,
+                    zones=frozenset(zones),
+                    controller=controller,
+                )
+                for item in rest_items
+            )
+        else:
+            compound_required_colors = frozenset(adjectives.required_colors)
+    else:
+        compound_required_colors = frozenset(adjectives.required_colors)
+
+    # A trailing "that's `<color>` or `<color>`" (Refute Destiny, Terminal
+    # Criticism) restricts the whole compound noun at once, the same way a
+    # leading color adjective would - unioned in here rather than earlier so
+    # it survives whichever of the two branches above ran.
+    compound_required_colors = compound_required_colors | trailing_colors
+
     return TargetRequirement(
         phrase=" ".join(["target", *(word for word in words[:noun_end] if word != ",")]),
         count=count,
         minimum=minimum,
         unbounded=unbounded,
         variable_count=variable,
-        card_types=frozenset(card_types),
-        required_subtypes=frozenset(required_subtypes),
+        card_types=compound_card_types,
+        required_subtypes=compound_required_subtypes,
         excluded_card_types=frozenset(adjectives.excluded_types) | extra_excluded_types,
         required_supertypes=frozenset(adjectives.required_supertypes),
         excluded_supertypes=frozenset(adjectives.excluded_supertypes) | extra_excluded_supertypes,
-        required_colors=frozenset(adjectives.required_colors),
+        required_colors=compound_required_colors,
+        excluded_colors=frozenset(adjectives.excluded_colors),
         allows_cards=allows_cards,
         allows_players=allows_players,
         opponent_only=opponent_only and not allows_cards,
@@ -2573,6 +3268,9 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         color_count=color_count,
         historic=adjectives.historic,
         combat_states=frozenset(adjectives.combat_states),
+        must_have_attacked_this_turn=attacked_this_turn,
+        must_have_entered_this_turn=entered_this_turn,
+        alternatives=compound_alternatives,
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,
         comparison_value=comparison_value,
@@ -2580,6 +3278,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         comparison_x_definition=comparison_x_definition,
         distinct_controllers=distinct_controllers,
         required_keyword=required_keyword,
+        required_counter_kind=required_counter_kind,
     )
 
 
@@ -2641,6 +3340,7 @@ class _Adjectives:
         self.required_supertypes: set[Supertype] = set()
         self.excluded_supertypes: set[Supertype] = set()
         self.required_colors: set[Color] = set()
+        self.excluded_colors: set[Color] = set()
         self.combat_states: set[CombatState] = set()
         self.must_be_tapped: bool | None = None
         self.must_be_token: bool | None = None
@@ -2673,6 +3373,8 @@ class _Adjectives:
             self.excluded_types.add(excluded)
         elif (excluded_super := _negated_supertype(word)) is not None:
             self.excluded_supertypes.add(excluded_super)
+        elif (excluded_color := _negated_color(word)) is not None:
+            self.excluded_colors.add(excluded_color)
         else:
             return False
         self.read += 1
@@ -2702,6 +3404,28 @@ def _negated_supertype(word: str) -> Supertype | None:
     if not word.startswith("non") or len(word) <= 3:
         return None
     return _SUPERTYPE_NOUNS.get(word[3:].lstrip("-"))
+
+
+def _negated_color(word: str) -> Color | None:
+    """The color a "non-" adjective rules out, if it is one - "target
+    nonblack creature" (Cradle to Grave), "target nonwhite creature"
+    (Sunlance). Read the identical way `_negated_type`/`_negated_supertype`
+    already are, against `_COLOR_WORDS` (CR 105.1's five colors) rather than
+    `_TYPE_NOUNS`/`_SUPERTYPE_NOUNS`.
+
+    CR 105.2's "An object can be one or more of the five colors, or it can be
+    no color at all" is why this is a genuinely different check from
+    `required_colors`' own membership test, not merely its logical opposite
+    spelled differently: a colorless object satisfies *neither* a required
+    color nor an excluded one, since it has none of any color to begin with.
+    `TargetRequirement.rejects`' own set-intersection checks for both fields
+    already get this right without special-casing colorless at all - an
+    empty `_current_colors(target, game)` set intersects nothing, so the
+    excluded-color check never rejects it.
+    """
+    if not word.startswith("non") or len(word) <= 3:
+        return None
+    return _COLOR_WORDS.get(word[3:].lstrip("-"))
 
 
 def _read_adjectives(words: list[str]) -> tuple[_Adjectives, int]:
@@ -2741,6 +3465,7 @@ def _is_adjective(word: str) -> bool:
         or word in {"multicolored", "monocolored", "colorless"}
         or _negated_type(word) is not None
         or _negated_supertype(word) is not None
+        or _negated_color(word) is not None
     )
 
 
@@ -2930,6 +3655,24 @@ _COLORS_OF_MANA_SPENT_CONDITION = re.compile(
 )
 
 
+#: CR 613.4b: "has base power and toughness N/N" sets the target's own base
+#: power and toughness - Multiply by Zero's "Target creature **has base power
+#: and toughness 0/0** until end of turn" and Perfected Theory's own two
+#: modes. This is the resolving effect itself, not a restriction on what may
+#: be targeted, and it sits directly after the noun with nothing else between
+#: (no "with"/"you control" clause a real restriction would need) - but
+#: `_COMPARISON_ATTEMPT` cannot tell that apart from "target creature with
+#: toughness 0" on sight, because tokenizing "0/0" ahead of this reader drops
+#: the "/" and leaves "toughness" directly in front of a bare digit, which is
+#: exactly `_COMPARISON_CLAUSE`'s own shape for a real bound. Stripped out
+#: whole - the whole tail is the effect's own verb phrase, not a further
+#: target restriction - before the comparison scan ever sees it, the same way
+#: `_COLORS_OF_MANA_SPENT_CONDITION` is read out of the way just above.
+_SETS_BASE_POWER_TOUGHNESS_EFFECT = re.compile(
+    r"\bhas base power and toughness\b.*$", re.IGNORECASE
+)
+
+
 #: "Choose two target creatures **controlled by different players**" (Run Away
 #: Together). Anchored at the start of what is left after the noun, where an
 #: ordinary "you control" clause would sit - the two are alternatives, and this
@@ -2946,27 +3689,105 @@ def _extract_distinct_controllers(rest: str) -> tuple[bool, str]:
     return True, rest[match.end() :].strip()
 
 
-#: A trailing "with `<keyword>`" clause - "target creature you don't control
-#: with flying" (Kraul Harpooner). Deliberately a small, explicit vocabulary
-#: rather than "with (?P<keyword>.+)$": an unrecognised "with" clause (a
-#: counter, "with the highest power", CR 205.2a shapes this reader is not
-#: meant to reach) is left exactly as unenforced as it always was, rather
-#: than newly failing the whole phrase closed - only a *recognised* keyword
-#: gains enforcement here.
+#: A "with `<keyword>`" clause modifying the noun - "target creature you
+#: don't control with flying" (Kraul Harpooner). Deliberately a small,
+#: explicit vocabulary rather than "with (?P<keyword>.+)": an unrecognised
+#: "with" clause (a counter, "with the highest power", CR 205.2a shapes this
+#: reader is not meant to reach) is left exactly as unenforced as it always
+#: was, rather than newly failing the whole phrase closed - only a
+#: *recognised* keyword gains enforcement here.
+#:
+#: Not anchored to the end of the string: Kraul Harpooner's own "with flying"
+#: happens to sit at a sentence boundary ("...with flying. This creature
+#: gets..."), but Tomik, Orzhov Lawmage's "target creature with a +1/+1
+#: counter on it gains flying until end of turn." keeps the restriction and
+#: the resolving verb in one sentence, so a trailing `$` never matched there
+#: at all - `_extract_required_keyword`/`_extract_required_counter_kind`
+#: below splice the clause out of wherever it sits instead.
 _WITH_KEYWORD_RE = re.compile(
     r"\bwith\s+(?P<keyword>flying|reach|trample|menace|haste|vigilance|"
-    r"first strike|double strike|defender|deathtouch|lifelink)$",
+    r"first strike|double strike|defender|deathtouch|lifelink)\b",
     re.IGNORECASE,
 )
 
+#: "with a `<kind>` counter on it" - Tomik, Orzhov Lawmage's own "target
+#: creature with a +1/+1 counter on it". `_WITH_KEYWORD_RE`'s own docstring
+#: names a counter clause as exactly the "with" shape it deliberately leaves
+#: unread; this is that shape's own reader, CR 122.1's counter-kind grammar
+#: (a bare word, or one of the two +N/-N power/toughness spellings) rather
+#: than "with `<word>`" in general. See `_WITH_KEYWORD_RE`'s docstring for why
+#: this is not anchored to the end of the string either.
+_WITH_COUNTER_RE = re.compile(
+    r"\bwith an? (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|them)\b", re.IGNORECASE
+)
+
+#: A small, deliberately narrow vocabulary of resolution verbs that always
+#: mark the end of a target's own restrictive clauses and the start of what
+#: the ability actually does to it - Tomik's "gains", a mass-pump's "gets",
+#: a land turning into a creature's "becomes" (Jolrael, Voice of Zhalfir's
+#: own shape), "loses". Confining a "with `<restriction>`" search to the text
+#: *before* the first one of these, rather than the whole remaining sentence,
+#: is what tells Tomik's "target creature with a +1/+1 counter on it gains
+#: flying ..." (the counter clause restricts the target) apart from
+#: Jolrael's "target land ... becomes ... a Bird creature with flying and
+#: haste ..." (the keyword there describes what the target *becomes*, not a
+#: restriction on what may be targeted) - the same distinction CR 608.2c's
+#: printed order already draws between an instruction's target and what it
+#: goes on to do. Without this cut, dropping `_WITH_KEYWORD_RE`'s old
+#: end-anchor made "with flying" match Jolrael's *effect* text and wrongly
+#: refuse every land without flying already on it as an illegal target.
+#:
+#: "`<verb>` `<destination>` the battlefield" joins the same vocabulary for
+#: the identical reason, one preposition later: Persist's "Return target
+#: nonlegendary creature card from your graveyard **to the battlefield**
+#: with a -1/-1 counter on it." and Daydream's "..., then return that card
+#: **to the battlefield** under its owner's control with a +1/+1 counter on
+#: it." both put their own counter clause after this phrase, describing the
+#: counter the return is about to place - CR 122.2 has already stripped any
+#: the card carried before it changed zones, so a graveyard or exiled card
+#: never has one to be restricted by. No target's own restrictive clause in
+#: the pool ever contains "to the battlefield" (a target is described by what
+#: it *is*, never by where an effect is about to move it), so this is a safe
+#: general cutoff, not a card-specific one - proven on Makeshift Mannequin's
+#: differently-worded, differently-named ("mannequin") counter of the same
+#: shape.
+_TARGET_CLAUSE_VERB_RE = re.compile(
+    r"\b(?:gains?|gets?|becomes?|loses?|(?:to|onto)\s+the\s+battlefield)\b", re.IGNORECASE
+)
+
+
+def _before_target_clause_verb(text: str) -> str:
+    """The prefix of `text` up to (not including) the first resolution verb
+    `_TARGET_CLAUSE_VERB_RE` recognises - the scope a "with `<restriction>`"
+    search is confined to, so it never reaches into what the ability *does*
+    once its target is chosen."""
+    match = _TARGET_CLAUSE_VERB_RE.search(text)
+    return text if match is None else text[: match.start()]
+
 
 def _extract_required_keyword(rest: str) -> tuple[str | None, str]:
-    """Read a trailing "with `<keyword>`" clause out of `rest` (CR 702), or
-    leave it untouched when there is none - see `_WITH_KEYWORD_RE`."""
-    match = _WITH_KEYWORD_RE.search(rest)
+    """Read a "with `<keyword>`" clause out of `rest` (CR 702), spliced out
+    from wherever it sits ahead of the resolving verb, or leave `rest`
+    untouched when there is none - see `_WITH_KEYWORD_RE`."""
+    match = _WITH_KEYWORD_RE.search(_before_target_clause_verb(rest))
     if match is None:
         return None, rest
-    return match.group("keyword").lower(), rest[: match.start()].strip()
+    remainder = (rest[: match.start()] + " " + rest[match.end() :]).strip()
+    return match.group("keyword").lower(), remainder
+
+
+def _extract_required_counter_kind(rest: str) -> tuple[str | None, str]:
+    """Read a "with a `<kind>` counter on it" clause out of `rest`
+    (CR 122.1), spliced out from wherever it sits ahead of the resolving
+    verb, or leave `rest` untouched when there is none - see
+    `_WITH_COUNTER_RE`. `kind` is normalised the identical way `machines/
+    effects._counter_kind` already normalises a printed counter word:
+    lower-cased, the two power/toughness spellings kept literal."""
+    match = _WITH_COUNTER_RE.search(_before_target_clause_verb(rest))
+    if match is None:
+        return None, rest
+    remainder = (rest[: match.start()] + " " + rest[match.end() :]).strip()
+    return match.group("kind").lower(), remainder
 
 
 #: "target permanent that's one or more colors" (Devourer of Destiny, Ugin,
@@ -2985,6 +3806,79 @@ def _extract_color_presence(rest: str) -> tuple[bool, str]:
     """Read a trailing "that's one or more colors" clause out of `rest`
     (CR 105.2), or leave it untouched when there is none."""
     match = _COLOR_PRESENCE_RE.search(rest)
+    if match is None:
+        return False, rest
+    return True, (rest[: match.start()] + rest[match.end() :]).strip()
+
+
+#: "target creature or planeswalker **that's green or blue**" (Refute
+#: Destiny), "target creature or planeswalker **that's blue or red**"
+#: (Terminal Criticism) - CR 105.1's five colors, read as a trailing relative
+#: clause the identical way `_COLOR_PRESENCE_RE` reads "that's one or more
+#: colors" just above, rather than as a leading adjective
+#: (`_Adjectives.required_colors`'s own "target black creature" shape): the
+#: restriction here sits after a *compound* noun ("creature or planeswalker")
+#: and applies to the whole disjunction at once, not to either noun alone.
+#: One color alone ("that's green") is read the identical way; the trailing
+#: "(?:,?\s+or\s+...)?" group is simply absent then.
+_COLOR_DISJUNCTION_RE = re.compile(
+    r"\bthat'?s\s+(?P<colors>(?:white|blue|black|red|green)"
+    r"(?:,\s*(?:white|blue|black|red|green))*"
+    r"(?:,?\s+or\s+(?:white|blue|black|red|green))?)\b",
+    re.IGNORECASE,
+)
+
+
+def _extract_color_disjunction(rest: str) -> tuple[frozenset[Color], str]:
+    """Read a trailing "that's `<color>`[, `<color>`...] or `<color>`" clause
+    out of `rest` (CR 105.1), or leave it untouched (returning an empty set)
+    when there is none - see `_COLOR_DISJUNCTION_RE`. The returned colors feed
+    `TargetRequirement.required_colors`, whose membership check is already an
+    "any of these" disjunction - exactly what "green or blue" means."""
+    match = _COLOR_DISJUNCTION_RE.search(rest)
+    if match is None:
+        return frozenset(), rest
+    words = re.findall(r"[a-z]+", match.group("colors").lower())
+    colors = frozenset(_COLOR_WORDS[word] for word in words if word in _COLOR_WORDS)
+    return colors, (rest[: match.start()] + rest[match.end() :]).strip()
+
+
+#: "target creature that attacked this turn" (Hexhaven Dueling Arena) - a
+#: trailing relative clause read the same way `_COLOR_PRESENCE_RE` reads
+#: "that's one or more colors": stripped out, and remembered as a flag rather
+#: than left for the rest of the parser to choke on.
+_ATTACKED_THIS_TURN_RE = re.compile(r"\bthat attacked this turn\b", re.IGNORECASE)
+
+
+def _extract_attacked_this_turn(rest: str) -> tuple[bool, str]:
+    """Read a trailing "that attacked this turn" clause out of `rest`, or
+    leave it untouched when there is none."""
+    match = _ATTACKED_THIS_TURN_RE.search(rest)
+    if match is None:
+        return False, rest
+    return True, (rest[: match.start()] + rest[match.end() :]).strip()
+
+
+#: "target creature that entered this turn" (Mabel, Valley Hero's trigger;
+#: Gallia, the Merrymaker's activated ability) - a per-turn historical fact
+#: ("this turn" always means the current turn, regardless of how many times
+#: control of the permanent or of priority has changed; no single CR number
+#: states this generally - CR 500.1's turn structure is the closest numbered
+#: rule, and this comment does not claim it says more than that), read the
+#: identical way `_ATTACKED_THIS_TURN_RE` reads its own "that
+#: attacked this turn": stripped out here, enforced at
+#: `_rejects_entered_this_turn` against the turn number `CardState.
+#: turn_entered` already carries (`Game.turn.turn_number` is the "turn
+#: history on `Game`" this checks it against - no separate per-turn set is
+#: needed the way `Game.attacked_this_turn` is, since every permanent already
+#: remembers the turn it arrived).
+_ENTERED_THIS_TURN_RE = re.compile(r"\bthat entered this turn\b", re.IGNORECASE)
+
+
+def _extract_entered_this_turn(rest: str) -> tuple[bool, str]:
+    """Read a trailing "that entered this turn" clause out of `rest`, or
+    leave it untouched when there is none."""
+    match = _ENTERED_THIS_TURN_RE.search(rest)
     if match is None:
         return False, rest
     return True, (rest[: match.start()] + rest[match.end() :]).strip()

@@ -111,53 +111,38 @@ import functools
 import re
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import Field
 
 from ..models.card import Card, Color, Type, subtypes_of, types_of
+from ..models.card_state import CardState
 from ..models.zone import Zone
+from ..numbers import COUNT, count_pattern, parse_count, where_x_pattern
 from ..snapshot import EngineModel
+
+if TYPE_CHECKING:
+    from ..models.game import Game
 
 # --------------------------------------------------------------------------
 # Mana abilities (CR 605)
 # --------------------------------------------------------------------------
 
-#: The number words a printed "Add ..." can put in front of "mana", and what
-#: each is worth. Magic spells its counts out - "Add five mana in any
-#: combination of colors" (Cascading Cataracts), "Add four mana in any
-#: combination of colors" (Baxter Building) - and stops well short of ten, so
-#: the vocabulary is the numbers rather than the handful the first printings
-#: read here happened to need. "a" is the article standing in for one, which is
-#: how the singular is templated ("Add a mana of any color" does not print, but
-#: "a" reaches the shared `_COUNT` alternation through the same table).
-_ANY_COLOR_COUNTS = {
-    "a": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-#: The alternation those words make, longest first so a word that is a prefix
-#: of another can never win the match short. Every "Add <count> mana ..."
-#: pattern below is built from this one string, so a count word is learned
-#: once rather than once per shape.
-_COUNT = "|".join(sorted(_ANY_COLOR_COUNTS, key=len, reverse=True))
 
 _SYMBOL = re.compile(r"\{([WUBRGC])\}")
-#: "Add one mana of any color." (Cavern of Souls, Delighted Halfling) and
-#: "Add two mana of any one color." (Shang-Chi, Master of Kung Fu). The second
-#: shape adds more than one mana and requires them all to be the same colour,
-#: which is what "any **one** color" says; the count is kept so `resolve` adds
-#: that many rather than always one.
-_ANY_COLOR = re.compile(rf"(?P<count>{_COUNT}) mana of any (?:one )?color", re.IGNORECASE)
+#: "Add one mana of any color." (Cavern of Souls, Delighted Halfling), "Add
+#: two mana of any one color." (Shang-Chi, Master of Kung Fu), and "Add X
+#: mana of any one color, where X is ..." (Seance Board, Woodland
+#: Weavemaster): the second and third shapes add more than one mana and
+#: require them all to be the same colour, which is what "any **one** color"
+#: says. `count` matches CR 107.3's X too, in which case `where_x` carries the
+#: printed definition, read back by `_read_mana_count`; the count is kept so
+#: `resolve` adds that many rather than always one.
+_ANY_COLOR = re.compile(
+    rf"{count_pattern('count', x=True)} mana of any (?:one )?color{where_x_pattern()}",
+    re.IGNORECASE,
+)
 #: "Add two mana in any combination of colors." (Interdimensional Web Watch and
 #: Smokebraider, both in the pool and both played in
 #: `tests/scenarios/test_mana_spend_restrictions.py`). The same amount as
@@ -165,9 +150,11 @@ _ANY_COLOR = re.compile(rf"(?P<count>{_COUNT}) mana of any (?:one )?color", re.I
 #: one color" makes every mana the same colour, "any combination of colors"
 #: chooses each one independently.
 #: CR 106.1a's five colors are the universe for both; colorless is a type and
-#: not a color (CR 106.1b), so neither reaches it.
+#: not a color (CR 106.1b), so neither reaches it. `count`/`where_x` read the
+#: same way `_ANY_COLOR`'s do.
 _ANY_COLOR_COMBINATION = re.compile(
-    rf"(?P<count>{_COUNT}) mana in any combination of colors", re.IGNORECASE
+    rf"{count_pattern('count', x=True)} mana in any combination of colors{where_x_pattern()}",
+    re.IGNORECASE,
 )
 #: Nykthos, Shrine to Nyx: "Choose a color. Add an amount of mana of that
 #: color equal to your devotion to that color." Still a mana ability under
@@ -178,6 +165,17 @@ _ANY_COLOR_COMBINATION = re.compile(
 #: until the ability is actually activated.
 _DEVOTION_AMOUNT = re.compile(
     r"^an amount of mana of that color equal to your devotion to that color$", re.IGNORECASE
+)
+#: Loot, the Nexus: "Choose a color. Add one mana of that color for each
+#: different power among creatures you control." The same "Choose a color"
+#: preamble and "that color" reference `_DEVOTION_AMOUNT` already reads for
+#: Nykthos, with a board count in place of devotion - "for each
+#: <count-expression>" rather than "where X is <count-expression>", read
+#: through the identical `_mana_count_expression_readable`/`resolve_mana_
+#: count_expression` pair so any future "... of that color for each ..."
+#: printing is answered the same way, not only this one card's own count.
+_CHOSEN_COLOR_FOR_EACH_RE = re.compile(
+    r"^one mana of that color for each (?P<expression>.+)$", re.IGNORECASE
 )
 #: The sentence that precedes it. CR 605.1a says nothing about a mana
 #: ability having only one sentence, and this one is simply where the colour
@@ -207,7 +205,7 @@ _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 #: CR 106.1a has five colors of mana, CR 106.1b six *types*, colorless
 #: included. So Reflecting Pool can copy a Wastes and Exotic Orchard cannot.
 _COULD_PRODUCE = re.compile(
-    rf"(?P<count>{_COUNT}) mana of any (?P<kind>type|color) that a land "
+    rf"(?P<count>{COUNT}) mana of any (?P<kind>type|color) that a land "
     r"(?P<whose>you control|an opponent controls) could produce",
     re.IGNORECASE,
 )
@@ -218,11 +216,117 @@ _COULD_PRODUCE = re.compile(
 #: five colors, so colorless is never an answer. Until the choice is known
 #: the ability's type is undefined and CR 106.5 makes it produce no mana -
 #: see `ManaAbility.effective`.
-_CHOSEN_COLOR_MANA = re.compile(rf"(?P<count>{_COUNT}) mana of the chosen color", re.IGNORECASE)
+_CHOSEN_COLOR_MANA = re.compile(rf"(?P<count>{COUNT}) mana of the chosen color", re.IGNORECASE)
 
 #: `Add {G}, {R}, or {W}` is a choice; `Add {C}{C}` is both at once. The comma
 #: is what separates them in WOTC templating.
 _CHOICE_SEPARATOR = re.compile(r",|\bor\b")
+
+#: "this creature's power" (Kami of Whispered Hopes, Woodland Weavemaster) -
+#: the one "where X is ..." shape that names a characteristic of the source
+#: itself rather than a board count. CR 613.5: the *computed* value, so a
+#: continuous effect that has pumped the source by the time the mana ability
+#: resolves is read, not the printed number - `Game.power_of`/`toughness_of`
+#: already answer that. Mirrors `_FIREBENDING_X_IS_POWER_RE` in
+#: `machines/effects.py`, which reads the identical clause for Firebending's
+#: own "add N {R}" (CR 702.189a) - kept separate because that one X is read
+#: as a triggered ability resolves, off `AbilityOnStack`, not as a mana
+#: ability resolves, off a tapped permanent.
+_SELF_CHARACTERISTIC_RE = re.compile(
+    r"^this (?:creature|permanent|artifact|land|source)'?s (?P<characteristic>power|toughness)$",
+    re.IGNORECASE,
+)
+#: "the number of soul counters on this artifact" (Seance Board) - CR 122.1's
+#: counters on the ability's own source, any kind a card invents included
+#: (`models/card_state.CounterKind`'s own "or any string a card invents").
+_SELF_COUNTERS_ON_RE = re.compile(
+    r"^the number of (?P<kind>[a-z]+) counters on this \w+$", re.IGNORECASE
+)
+
+
+def _mana_count_expression_readable(expression: str) -> bool:
+    """Whether `resolve_mana_count_expression` can answer this "where X is
+    ..." text, checked without a board so `_read_mana_count` can fail the
+    whole mana ability closed - the same way an unreadable count word already
+    does - on a definition this parser will never be able to answer, rather
+    than accepting the ability now and discovering the gap only once a
+    player taps it.
+    """
+    stripped = expression.strip().rstrip(".")
+    if _SELF_CHARACTERISTIC_RE.fullmatch(stripped) or _SELF_COUNTERS_ON_RE.fullmatch(stripped):
+        return True
+    # Lazy: `machines/effects.py` imports this module for `parse_mana_abilities`
+    # and friends, so importing it back at module scope would cycle. The
+    # counted-board shapes `count_expression` reads ("the number of Shrines
+    # you control", Sanctum of Fruitful Harvest) are pure text -> callable, no
+    # board needed to ask whether one exists.
+    from .effects import count_expression
+
+    return count_expression(stripped) is not None
+
+
+def resolve_mana_count_expression(
+    game: "Game", controller: str, source: CardState, expression: str
+) -> int:
+    """The board-derived count a mana ability's "where X is ..." definition
+    asks for, read at the moment the ability resolves (CR 605.3b: immediately,
+    so this is the only time that matters) - Woodland Weavemaster's "this
+    creature's power", Seance Board's "the number of soul counters on this
+    artifact" (CR 122.1), or one of `effects.count_expression`'s board-count
+    shapes (Sanctum of Fruitful Harvest's "the number of Shrines you
+    control"). CR 107.1b: a result that would be negative is 0 instead - only
+    reachable here through a pumped-negative power/toughness, since a counter
+    count and every `count_expression` shape are already non-negative.
+
+    Only ever called with an `expression` `_mana_count_expression_readable`
+    has already accepted, so this does not itself fail closed - `Game.
+    activate_ability` would have refused the activation earlier if the parser
+    had not been able to read the definition at all.
+    """
+    stripped = expression.strip().rstrip(".")
+    characteristic = _SELF_CHARACTERISTIC_RE.fullmatch(stripped)
+    if characteristic is not None:
+        wants_power = characteristic.group("characteristic").lower() == "power"
+        value = game.power_of(source) if wants_power else game.toughness_of(source)
+        return max(value, 0) if value is not None else 0
+    counters = _SELF_COUNTERS_ON_RE.fullmatch(stripped)
+    if counters is not None:
+        return max(source.counter_count(counters.group("kind").lower()), 0)
+    from .effects import count_expression
+
+    reader = count_expression(stripped)
+    assert reader is not None, (
+        f"{expression!r} was accepted as readable but count_expression refused it"
+    )
+    return max(reader(game, controller), 0)
+
+
+def _read_mana_count(match: "re.Match[str]") -> tuple[int, str | None] | None:
+    """The `(any_color_count, any_color_count_expression)` a mana-count regex
+    captured - `_ANY_COLOR`'s or `_ANY_COLOR_COMBINATION`'s own `count`/
+    `where_x` groups - or `None` when the count cannot be read at all: an
+    unknown word, or CR 107.3's X with no "where X is ..." definition this
+    module or `effects.count_expression` can answer (`_parse_effect` fails
+    the whole ability closed on either, the same as it always has for an
+    unread word).
+
+    A printed number reads as `(count, None)`. A readable X reads as
+    `(1, expression)` - `1` is a placeholder never used for anything:
+    `ManaAbility.resolve` takes the real count from `count=`, computed by
+    `Game.activate_ability` calling `resolve_mana_count_expression` once a
+    board exists to read it, mirroring `amount_from_devotion`'s own
+    placeholder `any_color_count` of 1.
+    """
+    word = match.group("count")
+    if word.lower() == "x":
+        where_x = match.groupdict().get("where_x")
+        if where_x is None or not _mana_count_expression_readable(where_x):
+            return None
+        return 1, where_x.strip()
+    count = parse_count(word)
+    if count is None:
+        return None
+    return count, None
 
 
 class CouldProduce(StrEnum):
@@ -493,6 +597,16 @@ class ManaAbility(EngineModel):
     #: `produces`, `tests/scenarios/harness.mana_from` - gets one mana of the
     #: chosen colour, which is the shape of the answer if not its size.
     amount_from_devotion: bool = False
+    #: The raw "where X is ..." definition, when the count is CR 107.3's X
+    #: rather than a printed number - Seance Board's "the number of soul
+    #: counters on this artifact", Woodland Weavemaster's "this creature's
+    #: power". `any_color_count` stays at its default 1, the same placeholder
+    #: `amount_from_devotion` already uses: the real count is only knowable
+    #: from the board at the moment of activation, read by
+    #: `resolve_mana_count_expression` and passed to `resolve` as `count`, the
+    #: same argument devotion already takes it through. `None` for every
+    #: ability whose count is a printed number or CR 700.5's devotion.
+    any_color_count_expression: str | None = None
     #: The raw trailing sentence, when the ability's text has one beyond
     #: "Add ..." and its own recognised conditional/spend-restriction
     #: clauses, but this parser could not classify it as a known rider shape.
@@ -715,15 +829,19 @@ class ManaAbility(EngineModel):
         if any_color:
             if chosen_colors is None:
                 raise ValueError("this ability adds any colour; pass the colour chosen")
-            # `count` is CR 700.5's devotion for `amount_from_devotion`, which
-            # nothing on this object can work out for itself - see that field's
-            # own docstring. Zero is a real answer (no permanent with a mana
-            # symbol of that colour) and produces no mana at all, which
-            # CR 605.2 already allows: "A mana ability remains a mana ability
-            # even if the game state doesn't allow it to produce mana."
+            # `count` is CR 700.5's devotion for `amount_from_devotion`, or a
+            # `resolve_mana_count_expression` answer for
+            # `any_color_count_expression` - neither is anything on this
+            # object can work out for itself, see those fields' own
+            # docstrings. Zero is a real answer (no permanent with a mana
+            # symbol of that colour, no counters yet) and produces no mana at
+            # all, which CR 605.2 already allows: "A mana ability remains a
+            # mana ability even if the game state doesn't allow it to produce
+            # mana."
             wanted = (
                 max(count, 0)
-                if self.amount_from_devotion and count is not None
+                if (self.amount_from_devotion or self.any_color_count_expression is not None)
+                and count is not None
                 else self.any_color_count
             )
             if single is not None:
@@ -839,13 +957,26 @@ def _parse_effect(effect: str) -> ManaAbility | None:
             any_color_count=1,
             amount_from_devotion=True,
         )
+    chosen_color_for_each = _CHOSEN_COLOR_FOR_EACH_RE.fullmatch(effect.strip().rstrip("."))
+    if chosen_color_for_each:
+        expression = chosen_color_for_each.group("expression").strip()
+        if not _mana_count_expression_readable(expression):
+            return None
+        return ManaAbility(
+            options=[[color] for color in _COLORS],
+            any_color=True,
+            any_color_count=1,
+            any_color_count_expression=expression,
+        )
     # Before `_ANY_COLOR`: "one mana of any color that a land an opponent
     # controls could produce" opens with `_ANY_COLOR`'s own words, and reading
     # it as a plain any-colour ability is what made Exotic Orchard tap for red
     # off a Plains. CR 106.7's survey is the whole meaning of the sentence.
     could_produce = _COULD_PRODUCE.search(effect)
     if could_produce:
-        count = _ANY_COLOR_COUNTS[could_produce.group("count").lower()]
+        count = parse_count(could_produce.group("count"))
+        if count is None:
+            return None
         # CR 106.1a: five colors of mana. CR 106.1b: six *types*, colorless
         # included. Reflecting Pool says "type" and so can copy a colorless
         # source; Exotic Orchard says "color" and cannot.
@@ -871,7 +1002,9 @@ def _parse_effect(effect: str) -> ManaAbility | None:
     # either regex from silently reordering them.
     chosen = _CHOSEN_COLOR_MANA.search(effect)
     if chosen:
-        count = _ANY_COLOR_COUNTS[chosen.group("count").lower()]
+        count = parse_count(chosen.group("count"))
+        if count is None:
+            return None
         return ManaAbility(
             options=[[color] * count for color in _COLORS],
             any_color_count=count,
@@ -880,21 +1013,29 @@ def _parse_effect(effect: str) -> ManaAbility | None:
 
     combination = _ANY_COLOR_COMBINATION.search(effect)
     if combination:
-        count = _ANY_COLOR_COUNTS[combination.group("count").lower()]
+        read = _read_mana_count(combination)
+        if read is None:
+            return None
+        count, expression = read
         return ManaAbility(
             options=[[color] * count for color in _COLORS],
             any_color=True,
             any_color_count=count,
             any_color_mixed=True,
+            any_color_count_expression=expression,
         )
 
     any_color = _ANY_COLOR.search(effect)
     if any_color:
-        count = _ANY_COLOR_COUNTS[any_color.group("count").lower()]
+        read = _read_mana_count(any_color)
+        if read is None:
+            return None
+        count, expression = read
         return ManaAbility(
             options=[[color] * count for color in _COLORS],
             any_color=True,
             any_color_count=count,
+            any_color_count_expression=expression,
         )
 
     # A choice reads `{G}, {R}, or {W}`; a multiple reads `{C}{C}`.
@@ -1194,7 +1335,7 @@ class TriggerWord(StrEnum):
 class TriggerEvent(StrEnum):
     """The common trigger shapes, recognised off the condition text.
 
-    Only these twenty-two are recognised; every other condition leaves `event`
+    Only these twenty-five are recognised; every other condition leaves `event`
     None with `condition` still holding the printed text.
     """
 
@@ -1321,6 +1462,22 @@ class TriggerEvent(StrEnum):
     #: `TriggeredAbility.chapter`, the same way a keyword ability's expansion
     #: carries no printed condition either.
     LORE_COUNTERS_ADDED = "lore_counters_added"
+    #: CR 701.22a's scry and CR 701.25a's surveil, watched together the way
+    #: every printing in the pool asks for it - "Whenever you scry or
+    #: surveil, ..." (Denzilore Fatehold, Matoya, Archon Elder) - never one
+    #: without the other. CR 701.22b/701.25c both say plainly that scrying or
+    #: surveilling for 0 "is not a scry/surveil event" at all, so `Game.scry`/
+    #: `Game.surveil` emit this only once `count > 0`.
+    SCRY_OR_SURVEIL = "scry_or_surveil"
+    #: CR 606.3: "A player may activate a loyalty ability of a permanent
+    #: they control any time they have priority and the stack is empty,
+    #: during a main phase of their turn." Ajani Unrelenting's own "Whenever
+    #: you activate a loyalty ability, ..." and Gideon the Oathless's
+    #: "Whenever an opponent activates a loyalty ability, ..." are two of the
+    #: printings in the pool. Emitted by `Game.activate_ability`, the one
+    #: place CR 606.3's own activation happens, right where `loyalty_
+    #: activations` already records the once-per-turn count.
+    LOYALTY_ABILITY_ACTIVATED = "loyalty_ability_activated"
 
 
 class CostKind(StrEnum):
@@ -1353,7 +1510,20 @@ class Cost(EngineModel):
 #: "a minus sign followed by a number or an X" is the `−X` form. Scryfall prints
 #: the minus as U+2212; the ASCII hyphen is accepted too. Brace-wrapped `{0}` is
 #: a mana symbol and never matches - the classification checks it first.
-_LOYALTY_SYMBOL = re.compile(r"^\+(?P<plus>\d+)$|^[−-](?P<minus>\d+|[Xx])$|^0$")
+#:
+#: The brackets are optional. A planeswalker's own printed ability line never
+#: carries them (Jace, Reality Sculptor's own oracle text reads "+1: Empower
+#: Jace X, ..."), but CR 107.7's symbol *is* bracketed, and Scryfall's own
+#: oracle text keeps the brackets whenever the identical ability is quoted
+#: inside another card's granted-ability text - Sanctum Lurker's own
+#: "Planeswalkers you control have '[+2]: This planeswalker deals ...'",
+#: Ichormoon Gauntlet's off-set "'[0]: Proliferate' and '[−12]: Take an extra
+#: turn ...'". Without this, `_classify_cost` read every granted loyalty
+#: ability's own bracketed cost as `CostKind.OTHER`, and `Game.activation_
+#: cost` raised trying to build a cost for the literal text "[+2]" - every
+#: quoted grant in the pool broke the moment its own ability was activated,
+#: not just Sanctum Lurker's.
+_LOYALTY_SYMBOL = re.compile(r"^\[?(?:\+(?P<plus>\d+)|[−-](?P<minus>\d+|[Xx])|0)\]?$")
 
 
 class LoyaltyCost(EngineModel):
@@ -1445,8 +1615,19 @@ class ActivationCostReduction(EngineModel):
     amount: int
     #: The quality's own words, as printed - "legendary creature". Read
     #: generically off a CR 205.4a supertype and/or CR 205.2a card type by
-    #: `Game.activation_cost_reduction_for`; no card name involved.
-    quality: str
+    #: `Game.activation_cost_reduction_for`; no card name involved. `None`
+    #: when `target_quality` is set instead - exactly one of the two is ever
+    #: set, matching which of the two printed shapes this sentence is.
+    quality: str | None = None
+    #: Dragonfire Blade's own shape: "This ability costs {1} less to
+    #: activate for each color of the creature it targets." and Warrior's
+    #: Blades' "... for each +1/+1 counter on the creature it targets." -
+    #: what is counted on the ability's own *target* rather than among
+    #: permanents its controller controls. Kept as the printed words ("color",
+    #: "+1/+1 counter") and read generically by
+    #: `machines/keywords.target_cost_reduction_amount`, the same "read the
+    #: phrase, don't guess a table" approach `quality` above already takes.
+    target_quality: str | None = None
 
 
 #: "This ability costs {N} less to activate for each <quality> you control."
@@ -1457,6 +1638,51 @@ _TRAILING_ACTIVATION_COST_REDUCTION_RE = re.compile(
     r"(?P<quality>.+?) you control\.?$",
     re.IGNORECASE,
 )
+
+#: The target-scoped sibling: "... for each color of the creature it
+#: targets." (Dragonfire Blade) and "... for each +1/+1 counter on the
+#: creature it targets." (Warrior's Blades) - "of" for a characteristic
+#: count, "on" for a counter count, and the object word itself left open
+#: ("creature" is the only one printed in the pool, but nothing here assumes
+#: it - `permanent`/`artifact` would read the same way).
+_TRAILING_TARGET_COST_REDUCTION_RE = re.compile(
+    r"^this ability costs \{(?P<amount>\d+)\} less to activate for each "
+    r"(?P<what>.+?) (?:on|of) the \w+ it targets\.?$",
+    re.IGNORECASE,
+)
+
+#: `target_cost_reduction_amount`'s own reading of a "<kind> counter[s]"
+#: phrase - the counter half of `ActivationCostReduction.target_quality`.
+_TARGET_COUNTER_PHRASE_RE = re.compile(r"^(?P<kind>[\w+/−-]+) counters?$", re.IGNORECASE)
+
+
+def target_cost_reduction_amount(
+    reduction: ActivationCostReduction, target: Any, game: Any = None
+) -> int | None:
+    """How many of `reduction.target_quality` are on `target` right now, or
+    `None` when the printed phrase is not one this reads (CR 601.2f via CR
+    602.2b, counted at the ability's own target rather than among permanents
+    its controller controls - `Game.activation_cost_reduction_for`'s sibling).
+
+    Two shapes read: a bare "color"/"colors" (Dragonfire Blade), counted off
+    the target's *computed* colours (CR 613.5) when a live `game` is given -
+    a static ability could still be changing them - and a plain-English
+    "<kind> counters?" (Warrior's Blades' "+1/+1 counter"), counted directly
+    off the target `CardState`'s own counters (CR 122.1; a counter kind is
+    never itself a layer-6 characteristic, so there is no computed board to
+    prefer here). Anything else returns `None` rather than a guess, the same
+    fail-closed default `Game.activation_cost_reduction_for` already gives an
+    unread "you control" quality.
+    """
+    phrase = (reduction.target_quality or "").strip().lower()
+    if phrase in ("color", "colors"):
+        colors = game.characteristics_of(target).colors if game is not None else target.colors
+        return len(colors)
+    match = _TARGET_COUNTER_PHRASE_RE.fullmatch(phrase)
+    if match is not None:
+        kind = match.group("kind").replace("−", "-")
+        return target.counter_count(kind)
+    return None
 
 
 def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCostReduction | None]:
@@ -1473,13 +1699,21 @@ def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCost
     sentences = [s for s in re.split(r"(?<=\.)\s+", effect.strip()) if s]
     if not sentences:
         return effect, None
-    match = _TRAILING_ACTIVATION_COST_REDUCTION_RE.match(sentences[-1].strip())
-    if match is None:
-        return effect, None
-    reduction = ActivationCostReduction(
-        amount=int(match.group("amount")), quality=match.group("quality").strip()
-    )
-    return " ".join(sentences[:-1]).strip(), reduction
+    last = sentences[-1].strip()
+    match = _TRAILING_ACTIVATION_COST_REDUCTION_RE.match(last)
+    if match is not None:
+        reduction = ActivationCostReduction(
+            amount=int(match.group("amount")), quality=match.group("quality").strip()
+        )
+        return " ".join(sentences[:-1]).strip(), reduction
+    target_match = _TRAILING_TARGET_COST_REDUCTION_RE.match(last)
+    if target_match is not None:
+        reduction = ActivationCostReduction(
+            amount=int(target_match.group("amount")),
+            target_quality=target_match.group("what").strip(),
+        )
+        return " ".join(sentences[:-1]).strip(), reduction
+    return effect, None
 
 
 class ActivatedAbility(BaseAbility):
@@ -1531,6 +1765,17 @@ class ActivatedAbility(BaseAbility):
     #: clause parser in `machines/effects.py` was ever meant to read. `None`
     #: for every ordinary activated ability, Class or not.
     class_level_target: int | None = None
+    #: CR 702.177a: "Exhaust — [Cost]: [Effect]" means "[Cost]: [Effect].
+    #: Activate only once." Set when the CR 207.2c-shaped prefix this line
+    #: was stripped of (`ability_word`, `_ABILITY_WORD`'s own em-dash form -
+    #: the same shape Channel's "Channel — {1}{G}, ..." uses) is literally
+    #: the word "Exhaust", the actual CR 702 keyword, read the same way
+    #: `_parse_keyword_cost`/`_parse_keyword_parameter` already recognise a
+    #: keyword by its printed name rather than by a lookup table.
+    #: `Game.activate_ability` reads this to record the permanent, never-
+    #: cleared-per-turn activation (`Game.exhausted`) CR 602.5b's "Activate
+    #: only once each turn" cannot express.
+    exhaust: bool = False
 
 
 class TriggeredAbility(BaseAbility):
@@ -1608,6 +1853,16 @@ class KeywordAbility(BaseAbility):
     #: mana - `Evoke—Exile a black card from your hand.` - and the two are
     #: worth telling apart, because only the em-dash form needs a sentence read.
     em_dash: bool = False
+    #: A trailing "This ability costs [N] less to activate for each
+    #: [quality] ..." sentence sharing this keyword's own paragraph (CR
+    #: 607.2h: two abilities can share one printed paragraph) - Warrior's
+    #: Blades' and Dragonfire Blade's own "Equip [N]. This ability costs
+    #: [M] less ..." lines. Split off by `_parse_line` before keyword
+    #: matching runs, the same way `ActivatedAbility.cost_reduction` is
+    #: split off an activated ability's own effect text, so the trailing
+    #: sentence's full stop cannot disqualify the line from
+    #: `_parse_keywords`'s "no full stop" rule.
+    cost_reduction: ActivationCostReduction | None = None
 
 
 class UnparsedAbility(BaseAbility):
@@ -1731,8 +1986,13 @@ def parse_granted_ability_lines(texts: Sequence[str]) -> list[Ability]:
 #: "choose two —", "choose one or more —" - the header of a bulleted modal
 #: list. Anchored on the trailing em dash Scryfall prints, so an ordinary
 #: sentence that happens to contain the word "choose" ("Choose target
-#: creature.") never matches.
-_MODAL_INSTRUCTION_TAIL = re.compile(r"choose\b.*[-—]\s*$", re.IGNORECASE)
+#: creature.") never matches. The instruction may end in its own second
+#: sentence instead - "choose one. If there are four or more card types among
+#: cards in your graveyard, choose both instead." (Prophetic Titan) - which is
+#: still the header of the bullets under it.
+_MODAL_INSTRUCTION_TAIL = re.compile(
+    r"choose\b.*(?:[-—]|\bchoose [^.]+ instead\.)\s*$", re.IGNORECASE
+)
 
 
 def _merge_modal_bullet_lines(lines: list[str]) -> list[str]:
@@ -1823,27 +2083,174 @@ def keyword_ability(card: Card, keyword: str) -> KeywordAbility | None:
     return None
 
 
-#: Some printings template a self-reference as the card's own name rather
-#: than CR 700.7's "this [something]" - The Filigree Sylex's "Put an oil
-#: counter on The Filigree Sylex.", Grist, the Hunger Tide's own "put a
-#: loyalty counter on Grist" (the short form before the comma), and Ruby,
-#: Daring Tracker's "Ruby gets +2/+2 until end of turn." CR 201.5: "Text that
-#: refers to the object it's on by name means just that particular object" -
-#: the same reference CR 700.7's "this [something]" makes, just spelled
-#: differently, so this rewrites either wording to "this permanent" once,
-#: ahead of every shape-specific parser in `machines/effects.py` and
-#: `machines/layers.py`, letting both read a self-named sentence the same way
-#: they already read "this creature"/"this permanent" rather than needing a
-#: second copy of every shape keyed on a literal name.
-def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
+#: The lookbehind `self_normalized_effect_text` guards every substitution
+#: with - see that function's own docstring for why "Empower Jace X" must
+#: never be misread as a self-reference to a planeswalker named Jace.
+_EMPOWER_KEYWORD_LOOKBEHIND = r"(?<!(?i:empower ))"
+
+#: A candidate self-name is never a match when what follows it in the text is
+#: the start of a *different*, longer capitalized name - "Hanweir" inside "a
+#: creature named Hanweir Garrison" (another card's own full name, `\s+[A-Z]`)
+#: or "meld them into Hanweir, the Writhing Township" (a third card's, its
+#: own comma-epithet shape - `,\s*(?:the\s+)?[A-Z]`, skipping the lowercase
+#: epithet word the way `self_reference_names`' own epithet candidates read
+#: past it for *this* card). The comma branch only refuses a comma directly
+#: followed by a capitalized continuation (with an optional "the" between
+#: them) - never a bare trailing comma on its own, which is ordinary English
+#: punctuation an in-sentence self-reference is free to sit in front of (The
+#: Millennium Calendar's own "... on The Millennium Calendar, sacrifice
+#: it ..." must still normalize).
+#:
+#: The third branch (`['’]s\s+[A-Z]`) is the identical guard applied to a
+#: *possessive* continuation: Ajani Resolute's own "-4" creates a token named
+#: "Ajani's Pridemate" (CR 111.3, the token's own fixed name - a different,
+#: longer proper noun that merely starts with this card's own short name),
+#: which used to normalize into "this permanent's Pridemate" with nothing to
+#: stop it. A capitalized word right after the apostrophe is what marks a
+#: longer name continuing, exactly as a capital right after a bare space
+#: already does for the first branch; a *lowercase* continuation is this
+#: card genuinely possessing something of its own and stays refused by
+#: nothing here - Fblthp, Impossibly Lost's own "Fblthp's owner shuffles him
+#: into their library" still normalizes to "this permanent's owner ...".
+#: Both the straight and the typographic apostrophe are read, matching every
+#: other possessive this module already reads either way.
+#:
+#: Applied to every candidate uniformly, not only a bare-short one: by the
+#: time a shorter candidate's turn comes (`self_reference_names`' longest-
+#: first order), every occurrence that really was this card naming itself
+#: has already been consumed by a longer candidate, so anything this
+#: lookahead still refuses was never this card to begin with.
+_LONGER_NAME_CONTINUATION_LOOKAHEAD = r"(?!,\s*(?:the\s+)?[A-Z]|\s+[A-Z]|['’]s\s+[A-Z])"
+
+
+def self_reference_pattern(name: str) -> str:
+    """The regex `self_normalized_effect_text` and
+    `machines/triggers._self_referential` both match a self-reference
+    candidate with - one word-bounded, empower-guarded
+    (`_EMPOWER_KEYWORD_LOOKBEHIND`), longer-name-guarded
+    (`_LONGER_NAME_CONTINUATION_LOOKAHEAD`) pattern shared so the two never
+    drift into reading CR 201.5/201.5c self-reference differently."""
+    return (
+        rf"{_EMPOWER_KEYWORD_LOOKBEHIND}\b{re.escape(name)}\b{_LONGER_NAME_CONTINUATION_LOOKAHEAD}"
+    )
+
+
+#: Epithet-boundary words CR 201.5c's shortened names split on: "`<Name>` the
+#: `<Epithet>`" (Liliana the Repentant) and "`<Name>` of `<Epithet>`" (Kiora of
+#: Fire and Ashes, Koth of the Homestead) both call themselves by their first
+#: word alone. Never itself a candidate (`self_reference_names`'s own "never
+#: shorten to a bare article" guard) - a name that *starts* with one of these
+#: words (`The Millennium Calendar`) must never contribute its own leading
+#: "The"/"Of" as though it were a short form of itself.
+_EPITHET_BOUNDARY_WORDS = ("the", "of")
+
+
+def self_reference_names(card_name: str, *, legendary: bool = True) -> tuple[str, ...]:
+    """Every string CR 201.5/201.5c lets `card_name`'s own printed text use to
+    mean itself, longest first: the full name, the face before a `//`, the
+    short form before a comma (Grist, the Hunger Tide -> Grist), and - only
+    for a legendary permanent (`legendary=True`, the default a caller with no
+    supertype to check keeps) - an epithet short form for a no-comma legend
+    (`<Name> the/of <Epithet>` -> `<Name>`) and a bare short form for a plain
+    two-word name with no comma or epithet word at all (`Ajani Resolute` ->
+    `Ajani`, CR 201.5c).
+
+    **The epithet and bare-short forms are a legendary-permanent
+    convention.** Every printing this module has ever seen use either shape
+    to name itself is a legendary creature or planeswalker (CR 201.5c gives
+    a character its own "call sign"); a non-legendary card's first word is
+    an ordinary English or Magic vocabulary word far more often than it is
+    the card naming itself - Eldrazi Temple's "cast colorless **Eldrazi**
+    spells" names CR 205.3m's creature type, Thopter Assembly's "create ...
+    **Thopter** artifact creature tokens" names the token's own type, and
+    Fire Magic's own Tiered mode labels ("**Fire** — {0} — ...") are CR
+    700.2h's own modal cost-tier names - none of the three is this card
+    naming itself, and all three used to be rewritten to "this permanent" as
+    though they were. `legendary=False` from a caller that knows the card's
+    own supertypes (CR 205.4a) turns both shapes off; the full name and the
+    comma-shortened short form stay available regardless, since CR 201.5's
+    plain "refers to the object it's on by name" and Oracle's own comma
+    convention are not legendary-only the way the epithet and bare-word
+    shortenings are.
+
+    Longest first is what lets a caller building a find-and-replace out of
+    this win the race a shorter candidate would otherwise lose: "Aerid
+    Konstrari" has to replace the whole two-word name before its own shorter
+    "Aerid" candidate ever gets a turn, or "When Aerid Konstrari enters"
+    becomes "When this permanent Konstrari enters" instead of "When this
+    permanent enters" (`self_normalized_effect_text`). `_self_referential`
+    (`machines/triggers.py`) only needs membership, where order does not
+    matter, but reuses the same ordered tuple rather than keeping a second
+    copy of this logic.
+
+    The epithet and bare-short forms are both narrowed on purpose, the same
+    way and for the same reason: "Hanweir Battlements"'s own text names two
+    *other* cards sharing its first word ("a creature named Hanweir
+    Garrison", "meld them into Hanweir, the Writhing Township") - treating
+    "Hanweir" as *this* card's own short name would rewrite both into
+    nonsense, since neither reference is this card naming itself. Requiring a
+    genuine CR 201.5c shape - an epithet word right after the first word, or
+    *no* second name segment at all (a bare two-word name) - is what tells
+    "Liliana the Repentant"/"Kiora of Fire and Ashes"/"Ajani Resolute" apart
+    from "Search for Azcanta" and "Hanweir Battlements", whose own second
+    words are an ordinary noun, not an epithet boundary and not the whole of
+    a two-word name search would ever need to shorten. The bare-short form
+    also refuses to shorten to a bare article, preposition, or conjunction on
+    its own (`_EPITHET_BOUNDARY_WORDS` plus `a`/`an`) - a name that itself
+    *starts* with one of those words ("The Millennium Calendar") must never
+    contribute its own leading word as though it meant the whole card.
+    """
     front = card_name.split("//")[0].strip()
     candidates = {card_name, front}
     if "," in front:
         candidates.add(front.split(",", 1)[0].strip())
+    words = front.split(" ")
+    if legendary and (
+        len(words) >= 3
+        and words[1].lower() in _EPITHET_BOUNDARY_WORDS
+        or (
+            len(words) == 2
+            and "," not in front
+            and words[0].lower() not in (*_EPITHET_BOUNDARY_WORDS, "a", "an")
+        )
+    ):
+        candidates.add(words[0].strip())
+    return tuple(sorted((name for name in candidates if name), key=len, reverse=True))
+
+
+def self_normalized_effect_text(card_name: str, effect_text: str, *, legendary: bool = True) -> str:
+    """`effect_text` with every CR 201.5/201.5c self-reference to `card_name`
+    rewritten to CR 700.7's own "this permanent" - The Filigree Sylex's "Put
+    an oil counter on The Filigree Sylex.", Grist, the Hunger Tide's own "put
+    a loyalty counter on Grist" (the short form before the comma), Ruby,
+    Daring Tracker's "Ruby gets +2/+2 until end of turn.", and Ajani
+    Resolute's own bare "put a loyalty counter on Ajani." are all the same
+    reference CR 700.7's "this [something]" makes, just spelled differently -
+    rewritten once here, ahead of every shape-specific parser in
+    `machines/effects.py` and `machines/layers.py`, so both read a
+    self-named sentence the same way they already read "this creature"/"this
+    permanent" rather than needing a second copy of every shape keyed on a
+    literal name.
+
+    "Empower Jace N" (CR 701.71a) names a fixed keyword-action target, never
+    the source's own identity, even when the source's own short name happens
+    to collide with it - Jace, Reality Sculptor's own "+1: Empower Jace X,
+    where X is the number of Islands you control." is not "+1: Empower this
+    permanent X, ..." (CR 201.5 self-reference is about the object using its
+    own name to mean itself; the empower token is never the object the
+    ability is printed on). A future "empower `<name>`" keyword sharing a
+    planeswalker's own short name would hit the identical collision, so the
+    guard is on the keyword phrase, not on the literal word "Jace".
+
+    `legendary` (default `True`, preserving this function's own long-
+    standing behaviour for a caller with no supertype to check) gates
+    `self_reference_names`' own epithet and bare-two-word shortenings -
+    see that function's docstring for why those two are a legendary-only
+    convention and the full/comma-shortened forms are not.
+    """
     normalized = effect_text
-    for name in candidates:
-        if name:
-            normalized = re.sub(rf"\b{re.escape(name)}\b", "this permanent", normalized)
+    for name in self_reference_names(card_name, legendary=legendary):
+        normalized = re.sub(self_reference_pattern(name), "this permanent", normalized)
     return normalized
 
 
@@ -1853,6 +2260,7 @@ def layer_readable_sentences(
     *,
     static_only: bool = False,
     card_name: str | None = None,
+    legendary: bool = True,
 ) -> list[str]:
     """`_layer_readable_sentences_uncached`, memoised - see that for what the
     sentences are.
@@ -1864,17 +2272,27 @@ def layer_readable_sentences(
     own, so no caller can edit what the next one reads.
     """
     return list(
-        _layer_readable_sentences_memo(text, tuple(known_keywords or ()), static_only, card_name)
+        _layer_readable_sentences_memo(
+            text, tuple(known_keywords or ()), static_only, card_name, legendary
+        )
     )
 
 
 @functools.lru_cache(maxsize=16384)
 def _layer_readable_sentences_memo(
-    text: str | None, known_keywords: tuple[str, ...], static_only: bool, card_name: str | None
+    text: str | None,
+    known_keywords: tuple[str, ...],
+    static_only: bool,
+    card_name: str | None,
+    legendary: bool,
 ) -> tuple[str, ...]:
     return tuple(
         _layer_readable_sentences_uncached(
-            text, list(known_keywords), static_only=static_only, card_name=card_name
+            text,
+            list(known_keywords),
+            static_only=static_only,
+            card_name=card_name,
+            legendary=legendary,
         )
     )
 
@@ -1885,6 +2303,7 @@ def _layer_readable_sentences_uncached(
     *,
     static_only: bool = False,
     card_name: str | None = None,
+    legendary: bool = True,
 ) -> list[str]:
     """Every sentence of `text` this module's own line classifier says a
     continuous effect (CR 611.2, CR 611.3) could plausibly come from.
@@ -1970,12 +2389,55 @@ def _layer_readable_sentences_uncached(
                 body = ability.effect
             if not body:
                 continue
-            for sentence in re.split(r"(?<=\.)\s+", body.strip()):
+            for sentence in _split_top_level_sentences(body.strip()):
                 sentence = sentence.strip()
                 if sentence:
                     if card_name:
-                        sentence = self_normalized_effect_text(card_name, sentence)
+                        sentence = self_normalized_effect_text(
+                            card_name, sentence, legendary=legendary
+                        )
                     sentences.append(sentence)
+    return sentences
+
+
+def _split_top_level_sentences(body: str) -> list[str]:
+    """Split `body` on its own top-level ". " boundaries - "top-level" now
+    actually meaning it, rather than a bare `re.split(r"(?<=\\.)\\s+", ...)`
+    that could not tell a sentence-ending period from one sitting inside a
+    quoted granted ability (CR 113.10a).
+
+    Way of the Deathbringer's own "Planeswalkers you control have '[-2]: You
+    may sacrifice a creature. If you do, create a 4/4 green Beast creature
+    token with trample.'" is *one* granted ability, not two: CR 608.2c's own
+    instruction is one paragraph, but the quoted text it grants is free to
+    contain as many sentences of its own as the granted ability needs, and
+    those inner periods must never end the outer sentence around them - the
+    bare regex split used to cut this exact line in half, at "creature.",
+    leaving `_parse_static_layer_sentence` two unreadable fragments instead
+    of the one whole grant it can actually read. Tracked with a simple quote-
+    depth toggle rather than a full grammar, since CR 113.10a's own quoting
+    is never nested (a granted ability's text cannot itself contain a further
+    quoted ability grant in this pool).
+    """
+    sentences: list[str] = []
+    start = 0
+    in_quotes = False
+    length = len(body)
+    index = 0
+    while index < length:
+        char = body[index]
+        if char == '"':
+            in_quotes = not in_quotes
+        elif char == "." and not in_quotes and (index + 1 >= length or body[index + 1].isspace()):
+            sentences.append(body[start : index + 1])
+            index += 1
+            while index < length and body[index].isspace():
+                index += 1
+            start = index
+            continue
+        index += 1
+    if start < length:
+        sentences.append(body[start:])
     return sentences
 
 
@@ -2246,6 +2708,34 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
         return list(chapter_abilities)
 
     keyword_abilities = _parse_keywords(text, keywords, common)
+    if not keyword_abilities:
+        # A keyword-cost line sharing its paragraph with a trailing "This
+        # ability costs [N] less ..." sentence (CR 607.2h: two abilities, one
+        # paragraph) fails `_parse_keywords`'s own "no full stop in the line"
+        # rule on the *first* try, because the reduction sentence's full stop
+        # is still in `text` - Warrior's Blades' and Dragonfire Blade's own
+        # "Equip [N]. This ability costs [M] less ..." lines. Retried once
+        # with that sentence split off; a retry that still finds no keyword
+        # changes nothing; a retry with more than one line does not happen at
+        # all, since `_parse_keywords` never yields more than one entry for a
+        # single em-dash/parameter keyword-cost line to begin with.
+        stripped, reduction = _split_off_trailing_cost_reduction(text)
+        if reduction is not None:
+            # `_split_off_trailing_cost_reduction` only ever removes a full
+            # *sentence*, so the sentence before it keeps its own full stop -
+            # "Equip {3}." - which `_parse_keywords` reads as disqualifying
+            # all over again (a period anywhere bars a keyword line). The
+            # bare param/cost form ("Equip {1}") never carries one to begin
+            # with, so this strip only ever removes the one this split left.
+            stripped = stripped.rstrip(".")
+            retried = _parse_keywords(stripped, keywords, {**common, "text": stripped})
+            if retried:
+                keyword_abilities = [
+                    ability.model_copy(update={"cost_reduction": reduction})
+                    if isinstance(ability, KeywordAbility)
+                    else ability
+                    for ability in retried
+                ]
     if keyword_abilities:
         return keyword_abilities
 
@@ -2490,13 +2980,49 @@ _INTERVENING_IF_CAST_THIS_TURN_BOUNDARY = re.compile(
     r"if\s(?P<clause>.+?\byou(?:'ve| have) cast this turn)\s*,\s*", re.IGNORECASE
 )
 
+#: "Whenever you cast an artifact, instant, or sorcery spell, `<effect>`."
+#: (Jin-Gitaxias, Progress Tyrant) - a comma-separated type list *inside* the
+#: trigger condition itself, ahead of the comma that actually separates the
+#: condition from the effect (CR 603.1's own "[trigger condition], [effect]"
+#: template). `_split_top_level`'s naive first-top-level-comma cut has no way
+#: to tell "artifact," (mid-list) from the real boundary, and sliced this
+#: condition down to "you cast an artifact", leaving "instant, or sorcery
+#: spell" sitting in front of the effect text instead - the same class of
+#: defect `_INTERVENING_IF_CAST_THIS_TURN_BOUNDARY` above already exists to
+#: fix on the intervening-*if* side. Captured whole, including the trailing
+#: comma, so `_parse_triggered` can cut there directly instead of re-running
+#: the naive split over ground this regex has already covered.
+_CAST_TYPE_LIST_CONDITION_BOUNDARY = re.compile(
+    r"^(?P<condition>(?:you|target player|each player|an? opponent|a player) "
+    r"casts? an? [a-z]+(?:,\s*[a-z]+)*(?:,)?\s+or\s+[a-z]+ spells?)\s*,\s*",
+    re.IGNORECASE,
+)
+
 #: CR 603.2h's own trailing restriction, in either the rule's own wording
 #: ("Do this only once each turn") or Caretaker's Talent's paraphrase ("This
 #: ability triggers only once each turn") - both always the ability's last
-#: sentence.
+#: sentence. The named `quote` group is Kwia Vigorbloom's own shape: "... with
+#: '{T}, Sacrifice this token: Add three mana of any one color.' This ability
+#: triggers only once each turn." - the quoted token ability's own closing
+#: quote mark sits between its sentence-ending period and the trailer,
+#: straight or curly, so the bare `\.\s*` this used to be would never match
+#: and the whole restriction sentence stayed stuck in `effect`, taking the
+#: entire clause down as unreadable (CR 608.2c) instead of being read as
+#: CR 603.2h's own once-per-turn limiter. `_strip_once_per_turn_trailer`
+#: below restores that closing quote mark rather than deleting it along with
+#: the trailer - it is the quoted ability's own punctuation, not the
+#: trailer's.
 _ONCE_PER_TURN_TRAILER = re.compile(
-    r"\.\s*(?:do this|this ability triggers) only once each turn\.?\s*$", re.IGNORECASE
+    r"\.(?P<quote>[\"'“”‘’]?)\s*"
+    r"(?:do this|this ability triggers) only once each turn\.?\s*$",
+    re.IGNORECASE,
 )
+
+
+def _strip_once_per_turn_trailer(text: str) -> str:
+    """`text` with `_ONCE_PER_TURN_TRAILER` cut off, its own closing quote
+    mark (if any) put back - see that pattern's own docstring."""
+    return _ONCE_PER_TURN_TRAILER.sub(lambda m: "." + m.group("quote"), text)
 
 
 #: Ruby, Daring Tracker's shape: "Whenever Ruby attacks **while** you control
@@ -2522,12 +3048,19 @@ def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
     word = TriggerWord(match.group(1).lower())
     body = text[match.end() :]
 
-    parts = _split_top_level(body)
-    if len(parts) < 2:
-        # `[Trigger condition], [effect]` needs a comma to separate them.
-        return None
+    type_list_boundary = _CAST_TYPE_LIST_CONDITION_BOUNDARY.match(body)
+    if type_list_boundary is not None:
+        condition = type_list_boundary.group("condition")
+        rest = body[type_list_boundary.end() :].strip()
+        if not rest:
+            return None
+    else:
+        parts = _split_top_level(body)
+        if len(parts) < 2:
+            # `[Trigger condition], [effect]` needs a comma to separate them.
+            return None
 
-    condition, rest = parts[0], ", ".join(parts[1:])
+        condition, rest = parts[0], ", ".join(parts[1:])
 
     intervening_if: str | None = None
     while_match = _CONDITION_WHILE_CLAUSE.search(condition)
@@ -2560,7 +3093,7 @@ def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
             rest = ", ".join(clause_parts[1:])
 
     once_per_turn = False
-    stripped = _ONCE_PER_TURN_TRAILER.sub("", rest).strip()
+    stripped = _strip_once_per_turn_trailer(rest).strip()
     if stripped != rest.strip():
         once_per_turn = True
         rest = stripped
@@ -2591,8 +3124,20 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # CR 701.9a. Checked ahead of "cast"/"sacrific" below, neither of which
     # this phrase contains, again only for grouping with the other
     # special-action-shaped conditions above.
-    if re.search(r"\bdiscards? (?:a card|one or more cards)\b", lowered):
+    if re.search(r"\bdiscards? (?:a card|one or more cards|this card)\b", lowered):
         return TriggerEvent.DISCARDS_A_CARD
+    # CR 701.22a/701.25a, watched together - see `TriggerEvent.SCRY_OR_
+    # SURVEIL`'s own docstring. Checked ahead of nothing in particular; the
+    # word "scry"/"surveil" never collides with another condition shape.
+    if re.search(r"\b(?:scry|surveil)s?\b", lowered):
+        return TriggerEvent.SCRY_OR_SURVEIL
+    # CR 606.2. "you activate" (Ajani Unrelenting) and "an opponent
+    # activates" (Gideon the Oathless) inflect the verb differently, so both
+    # forms are read. Checked ahead of nothing else in this pool - CR 602.2
+    # targeting triggers are ward's/Loki's own "becomes the target" shape,
+    # matched separately above.
+    if re.search(r"\bactivates? a loyalty ability\b", lowered):
+        return TriggerEvent.LOYALTY_ABILITY_ACTIVATED
     # "enter" (no s) is the plural-subject form printed on "Whenever one or
     # more tokens you control enter" (Caretaker's Talent) - the same
     # singular/plural split `\battacks?\b` already reads for "attacks" versus
@@ -2625,6 +3170,12 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
         return TriggerEvent.TAPPED_FOR_MANA
     if re.search(r"\bblocks\b|\bbecomes blocked\b", lowered):
         return TriggerEvent.BLOCKS
+    # CR 606.3. "you activate a loyalty ability" (Ajani Unrelenting) / "an
+    # opponent activates a loyalty ability" (Gideon the Oathless) - checked
+    # ahead of no other verb here, since "activate" appears in no other
+    # condition shape this reads.
+    if re.search(r"\bactivates? a loyalty ability\b", lowered):
+        return TriggerEvent.LOYALTY_ABILITY_ACTIVATED
     if re.search(r"\bcasts?\b", lowered):
         return TriggerEvent.CAST_SPELL
     # "Whenever you draw a card" / "Whenever an opponent draws a card" - the
@@ -2639,10 +3190,18 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
         return TriggerEvent.IS_SACRIFICED
     if re.search(r"\bgain(?:s)? life\b", lowered):
         return TriggerEvent.GAINS_LIFE
-    # "Whenever Ragavan deals combat damage to a player" - one event kind for
-    # combat and noncombat; the matcher reads the "combat" word off the
-    # condition and `GameEvent.combat` off the event.
-    if re.search(r"\bdeals (?:combat )?damage\b", lowered):
+    # "Whenever Ragavan deals combat damage to a player" (the dealer) and
+    # "Whenever this creature is dealt damage"/"one or more opponents are
+    # dealt noncombat damage" (the recipient, CR 120.1's passive voice) are
+    # both this one event - the matcher reads "combat"/"noncombat" and
+    # active/passive voice off the condition, `GameEvent.combat` and
+    # `target_id` vs `subject_id` off the event. `machines/triggers.
+    # condition_matches`'s own DEALS_DAMAGE branch reads the same words
+    # ("is dealt" vs "deals") to pick `GameEvent.target_id`/`player` over
+    # `subject_id`.
+    if re.search(
+        r"\bdeals (?:combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b", lowered
+    ):
         return TriggerEvent.DEALS_DAMAGE
     # Aerie Worshippers prints "Whenever this creature becomes untapped".
     if "becomes untapped" in lowered:
@@ -2661,6 +3220,27 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
 #: (Boseiju, Otawara) and the one Waker of Waves prints with no ability word at
 #: all; neither name appears here, only the cost's own words.
 _DISCARDS_ITSELF = re.compile(r"^discard this (?:card|permanent)$", re.IGNORECASE)
+
+#: The same CR 113.6j shape, one zone over: "Exile this card from your
+#: graveyard" (Campus Crier's own "{1}, Exile this card from your graveyard:
+#: Empower Jace 2.", Seasoned Pyromancer) can never be paid on the
+#: battlefield either, so the ability functions only where the cost can be
+#: paid. `machines/cost.cost_component_for_phrase` already reads the same
+#: sentence for *payment* (its own `_PHRASE_EXILE`); this is the zone-
+#: permission half CR 113.6j asks for, read off the identical words rather
+#: than a card-specific row. Generalises `_DISCARDS_ITSELF`'s own shape past
+#: the hand: Emrakul, the Exigent Doom's "{3}, Exile this card from your
+#: hand: ..." reaches the same `Zone.HAND` answer through this one regex too
+#: (the "hand" branch), rather than a second, hand-only pattern.
+_EXILES_ITSELF_FROM_ZONE = re.compile(
+    r"^exile this (?:card|permanent) from (?:your|their) (?P<zone>hand|graveyard|library)$",
+    re.IGNORECASE,
+)
+_EXILE_ZONE_WORDS: dict[str, Zone] = {
+    "hand": Zone.HAND,
+    "graveyard": Zone.GRAVEYARD,
+    "library": Zone.LIBRARY,
+}
 
 #: CR 113.6m: "An ability whose cost or effect specifies that it moves the
 #: object it's on out of a particular zone functions only in that zone, unless
@@ -2705,6 +3285,12 @@ def _activated_ability_zone(
         piece.kind is CostKind.DISCARD and _DISCARDS_ITSELF.match(piece.text) for piece in costs
     ):
         return Zone.HAND, "CR 113.6j"
+    for piece in costs:
+        if piece.kind is not CostKind.OTHER:
+            continue
+        match = _EXILES_ITSELF_FROM_ZONE.match(piece.text)
+        if match is not None:
+            return _EXILE_ZONE_WORDS[match.group("zone").lower()], "CR 113.6j"
     if _RETURNS_ITSELF_FROM_GRAVEYARD.search(effect):
         return Zone.GRAVEYARD, "CR 113.6m"
     if instructions and _ACTIVATE_ONLY_IF_SUSPENDED.search(instructions):
@@ -2778,6 +3364,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
             )
 
     zone, zone_rule = _activated_ability_zone(costs, effect_text, instructions)
+    exhaust = (common.get("ability_word") or "").lower() == "exhaust"
 
     return ActivatedAbility(
         **common,
@@ -2790,6 +3377,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         zone=zone,
         zone_rule=zone_rule,
         cost_reduction=cost_reduction,
+        exhaust=exhaust,
     )
 
 
@@ -2845,7 +3433,7 @@ _TRIGGERED_MANA_CHOSEN_RE = re.compile(r"^one mana of (?:the chosen|that) color$
 #: "one mana of any color" (Fertile Ground) and "two mana in any combination
 #: of colors" (Market Festival): one colour chosen per mana (CR 105.1).
 _TRIGGERED_MANA_ANY_COLOR_RE = re.compile(
-    r"^(?P<count>one|two|three|\d+) mana (?:of any color|in any combination of colors)$",
+    rf"^(?P<count>{COUNT}) mana (?:of any color|in any combination of colors)$",
     re.IGNORECASE,
 )
 #: "one mana of any type that land produced" (Zendikar Resurgent, Mirari's
@@ -2854,7 +3442,6 @@ _TRIGGERED_MANA_ANY_COLOR_RE = re.compile(
 _TRIGGERED_MANA_PRODUCED_TYPE_RE = re.compile(
     r"^one mana of any type that (?:[a-z]+ )*?[a-z]+ produced$", re.IGNORECASE
 )
-_TRIGGERED_MANA_COUNTS = {"one": 1, "two": 2, "three": 3}
 #: "<mana> for each <phrase>" (Elvish Guidance's "{G} for each Elf on the
 #: battlefield"): the mana, that many times, counted as it is added
 #: (CR 608.2h).
@@ -2872,6 +3459,24 @@ _TRIGGERED_MANA_SPEND_ONLY_RE = re.compile(r"^spend this mana only\b.*$", re.IGN
 _MANA_COUNT_PHRASE_RE = re.compile(
     r"^(?P<word>[A-Za-z]+) (?P<scope>on the battlefield|you control)$", re.IGNORECASE
 )
+#: "charge counter on this enchantment" (Gardenize) - CR 122.1's counters on
+#: the triggered mana ability's own source, the self-referential sibling
+#: `parse_mana_count`'s two board-scan scopes do not cover: this counts
+#: nothing on the battlefield at all, only what is already on the permanent
+#: whose ability this is. Kept separate from `parse_mana_count`'s own
+#: `(scope, card_type, subtype)` return shape rather than folded into it,
+#: since there is no board scan to describe - `triggered_mana_count` checks
+#: this first and only falls through to `parse_mana_count` when it misses.
+_SELF_COUNTER_MANA_COUNT_RE = re.compile(
+    r"^(?P<kind>[a-z][a-z '/+-]*?) counters? on this [a-z]+$", re.IGNORECASE
+)
+
+
+def self_counter_mana_count(phrase: str) -> str | None:
+    """The counter kind `_SELF_COUNTER_MANA_COUNT_RE` reads off a "for each"
+    phrase, lowercased (`CardState.counter_count`'s own key), or `None`."""
+    match = _SELF_COUNTER_MANA_COUNT_RE.fullmatch(phrase.strip().rstrip("."))
+    return match.group("kind").lower() if match else None
 
 
 def parse_mana_count(phrase: str) -> tuple[str, Type | None, str] | None:
@@ -2935,7 +3540,7 @@ def _parse_add_mana_sentence(sentence: str) -> TriggeredManaShape | None:
     for_each = _TRIGGERED_MANA_FOR_EACH_RE.fullmatch(mana)
     if for_each is not None:
         count = for_each.group("phrase").strip()
-        if parse_mana_count(count) is None:
+        if parse_mana_count(count) is None and self_counter_mana_count(count) is None:
             return None
         mana = for_each.group("mana").strip()
     common = {"recipient": recipient, "optional": optional, "count": count}
@@ -2946,7 +3551,7 @@ def _parse_add_mana_sentence(sentence: str) -> TriggeredManaShape | None:
     any_color = _TRIGGERED_MANA_ANY_COLOR_RE.fullmatch(mana)
     if any_color is not None:
         word = any_color.group("count").lower()
-        amount = _TRIGGERED_MANA_COUNTS.get(word) or (int(word) if word.isdigit() else 0)
+        amount = parse_count(word) or 0
         return TriggeredManaShape(any_color=amount, **common) if amount else None
     symbols = _TRIGGERED_MANA_SYMBOLS_RE.findall(mana)
     round_trip = "".join(f"{{{symbol}}}" for symbol in symbols)

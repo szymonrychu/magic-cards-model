@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "04e64af7-cca1-499e-8951-f386e84c8b5b",
+  "oracle_id": "c21fafaf-4510-4752-a501-606ae68e6699",
+  "multiverse_ids": [],
+  "tcgplayer_id": 717915,
+  "cardmarket_id": 909963,
+  "name": "Primal Witchstalker",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/04e64af7-cca1-499e-8951-f386e84c8b5b",
+  "scryfall_uri": "https://scryfall.com/card/fra/144/primal-witchstalker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-17T11:34:10Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.jpg?1789644850",
+    "normal": "https://cards.scryfall.io/normal/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.jpg?1789644850",
+    "large": "https://cards.scryfall.io/large/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.jpg?1789644850",
+    "png": "https://cards.scryfall.io/png/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.png?1789644850",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.jpg?1789644850",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.jpg?1789644850",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.webp?1789644850",
+    "grid": "https://cards.scryfall.io/grid/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.webp?1789644850",
+    "display": "https://cards.scryfall.io/display/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.webp?1789644850",
+    "art": "https://cards.scryfall.io/art/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.webp?1789644850",
+    "crop": "https://cards.scryfall.io/crop/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.webp?1789644850"
+  },
+  "mana_cost": "{1}{B}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Wolf",
+  "oracle_text": "Menace (This creature can't be blocked except by two or more creatures.)\nWhen this creature enters, mill four cards. When you do, return target land card from your graveyard to the battlefield tapped. (To mill four cards, put the top four cards of your library into your graveyard.)",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "B",
+    "G"
+  ],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [
+    "Menace",
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/04e64af7-cca1-499e-8951-f386e84c8b5b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac21fafaf-4510-4752-a501-606ae68e6699&unique=prints",
+  "collector_number": "144",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kaitlyn McCulley",
+  "artist_ids": [
+    "e73cd0fc-6bf8-431c-bfcd-44e4ce3ad87b"
+  ],
+  "illustration_id": "3884222b-24cb-4228-962f-a69cbc135864",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "prices": {
+    "usd": "1.99",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPrimal%2BWitchstalker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPrimal%2BWitchstalker",
+    "edhrec": "https://edhrec.com/route/?cc=Primal+Witchstalker"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717915%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909963&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Primal+Witchstalker&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

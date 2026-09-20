@@ -26,6 +26,16 @@ run = ["uv run ruff format .", "uv run ruff check --fix ."]
 description = "Run the test suite"
 run = "uv run pytest"
 
+# The S1 dispatch-chain winner fingerprint (engine-modularization plan) is
+# gated in `tests/test_dispatch_fingerprint.py` against the committed
+# `tests/dispatch_fingerprint_baseline.json`. This is the one documented way
+# to regenerate that baseline - after a real split (S2-S5) that changes which
+# parser wins on purpose, or after the pool/parsers move once this branch is
+# merged behind the remaining Reality Fracture branches.
+[tasks."dispatch:fingerprint"]
+description = "Regenerate tests/dispatch_fingerprint_baseline.json"
+run = "uv run python scripts/dispatch_fingerprint.py --write"
+
 # The Dockerfiles live in ../magic-cards-model-api because this engine is a
 # path dependency of it, so both images are built from there. These just
 # delegate - do not duplicate the build logic here.

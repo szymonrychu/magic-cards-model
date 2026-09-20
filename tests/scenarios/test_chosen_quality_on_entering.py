@@ -289,6 +289,41 @@ def test_the_mana_clauses_own_choice_never_gets_an_unwired_notice():
     assert not any(notice.source_id == sprawl.id for notice in scenario.game.unwired_choice_notices)
 
 
+def test_the_chosen_color_mana_ability_never_gets_an_unwired_notice():
+    """Room of Refuge's own "{T}: Add one mana of the chosen color." is the
+    second consumer this wave builds end to end (`ManaAbility.uses_chosen_
+    color`, bound against `CardState.choice`) - it must never show up in
+    `unwired_choice_notices` just because the phrase appears on the card,
+    the identical false positive `test_the_mana_clauses_own_choice_never_
+    gets_an_unwired_notice` already guards for Utopia Sprawl's own "adds an
+    additional" shape.
+    """
+    scenario = Scenario().player("alice", hand=["Room of Refuge"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose("R", source="Room of Refuge")
+
+    land = scenario.play_land("Room of Refuge", "alice")
+
+    assert land.choice == Choice(kind=ChoiceKind.COLOR, value="R")
+    assert not any(notice.source_id == land.id for notice in scenario.game.unwired_choice_notices)
+
+
+def test_sunken_citadels_own_chosen_color_mana_abilities_never_get_an_unwired_notice():
+    """Off-set proof: Sunken Citadel, real, non-fra, not the reported card,
+    printing the identical shape on *two* mana abilities at once (a plain
+    "Add one mana of the chosen color" and a restricted "Add two mana of the
+    chosen color. Spend this mana only to activate abilities of land
+    sources.") - both must stay clear of the notice list."""
+    scenario = Scenario().player("alice", hand=["Sunken Citadel"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose("G", source="Sunken Citadel")
+
+    land = scenario.play_land("Sunken Citadel", "alice")
+
+    assert land.choice == Choice(kind=ChoiceKind.COLOR, value="G")
+    assert not any(notice.source_id == land.id for notice in scenario.game.unwired_choice_notices)
+
+
 def test_unwired_choice_notice_is_importable_and_shaped_as_documented():
     """A narrow smoke test on the notice's own shape, so a refactor that
     silently drops a field is caught here rather than only in the assertions

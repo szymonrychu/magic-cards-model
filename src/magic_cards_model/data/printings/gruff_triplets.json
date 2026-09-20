@@ -1,0 +1,160 @@
+{
+  "object": "card",
+  "id": "f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634",
+  "oracle_id": "32de1b70-f993-4423-b0ef-0762c2b4d1b1",
+  "multiverse_ids": [
+    629673
+  ],
+  "mtgo_id": 116682,
+  "arena_id": 86879,
+  "tcgplayer_id": 513344,
+  "cardmarket_id": 729557,
+  "name": "Gruff Triplets",
+  "lang": "en",
+  "released_at": "2023-09-08",
+  "uri": "https://api.scryfall.com/cards/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634",
+  "scryfall_uri": "https://scryfall.com/card/woe/172/gruff-triplets?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:58:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.jpg?1783915082",
+    "normal": "https://cards.scryfall.io/normal/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.jpg?1783915082",
+    "large": "https://cards.scryfall.io/large/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.jpg?1783915082",
+    "png": "https://cards.scryfall.io/png/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.png?1783915082",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.jpg?1783915082",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.jpg?1783915082",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.webp?1783915082",
+    "grid": "https://cards.scryfall.io/grid/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.webp?1783915082",
+    "display": "https://cards.scryfall.io/display/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.webp?1783915082",
+    "art": "https://cards.scryfall.io/art/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.webp?1783915082",
+    "crop": "https://cards.scryfall.io/crop/front/f/8/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634.webp?1783915082"
+  },
+  "mana_cost": "{3}{G}{G}{G}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Satyr Warrior",
+  "oracle_text": "Trample\nWhen this creature enters, if it isn't a token, create two tokens that are copies of it.\nWhen this creature dies, put a number of +1/+1 counters equal to its power on each creature you control named Gruff Triplets.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f48f7bd4-c12d-48a7-b39f-36033636e5c7",
+      "component": "combo_piece",
+      "name": "Gruff Triplets",
+      "type_line": "Creature \u2014 Satyr Warrior",
+      "uri": "https://api.scryfall.com/cards/f48f7bd4-c12d-48a7-b39f-36033636e5c7"
+    },
+    {
+      "object": "related_card",
+      "id": "f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c",
+      "component": "token",
+      "name": "Copy",
+      "type_line": "Token",
+      "uri": "https://api.scryfall.com/cards/f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set": "woe",
+  "set_name": "Wilds of Eldraine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/woe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f8760ab9-ac76-4e2e-b82f-0ee2a6dc5634/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A32de1b70-f993-4423-b0ef-0762c2b4d1b1&unique=prints",
+  "collector_number": "172",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Fajareka Setiawan",
+  "artist_ids": [
+    "0cc534e0-be18-4cb1-8521-50fabd0dac6f"
+  ],
+  "illustration_id": "01489436-9107-4fb3-b4bc-5429d6de4fd2",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 5265,
+  "penny_rank": 7387,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://twitter.com/Magic30th_TOKYO/status/1693578702662049915",
+    "previewed_at": "2023-08-21"
+  },
+  "prices": {
+    "usd": "0.37",
+    "usd_foil": "0.45",
+    "usd_etched": null,
+    "eur": "0.43",
+    "eur_foil": "0.74",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629673&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGruff%2BTriplets",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGruff%2BTriplets",
+    "edhrec": "https://edhrec.com/route/?cc=Gruff+Triplets"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F513344%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=729557&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/116682?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

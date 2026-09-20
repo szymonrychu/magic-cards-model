@@ -112,19 +112,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 4352,
+  "edhrec_rank": 4389,
   "preview": {
     "source": "Wizards of the Coast",
     "source_uri": "https://magic.wizards.com/en/news/card-preview/latest-developments-new-necro-still-potent",
     "previewed_at": "2024-05-24"
   },
   "prices": {
-    "usd": "2.67",
-    "usd_foil": "4.61",
+    "usd": "3.34",
+    "usd_foil": "4.66",
     "usd_etched": null,
-    "eur": "2.49",
-    "eur_foil": "4.58",
-    "tix": "1.17"
+    "eur": "2.41",
+    "eur_foil": "3.90",
+    "tix": "0.20"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=662254&printed=false",

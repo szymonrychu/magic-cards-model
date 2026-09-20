@@ -324,9 +324,9 @@ def test_an_unaffordable_cast_is_still_enumerated_and_carries_no_plan():
     assert action.pays_with == ()
 
 
-def test_an_unannounced_x_carries_no_plan():
-    """CR 107.3a: X is announced as part of casting, so there is no cost to
-    plan against yet and the verdict is `UNKNOWN`."""
+def test_an_unannounced_x_is_planned_at_its_minimum():
+    """CR 107.3a: X is announced as part of casting, and CR 107.1b makes 0 a
+    legal announcement, so the cast is judged and planned at X=0: {G}."""
     scenario = (
         Scenario()
         .player("alice", hand=["Green Sun's Zenith"], battlefield=["Forest"] * 4)
@@ -336,9 +336,9 @@ def test_an_unannounced_x_carries_no_plan():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     action = _cast_action(scenario, "Green Sun's Zenith")
-    assert action.affordable is Affordability.UNKNOWN
-    assert action.unaffordable_reason == "X has not been announced yet (CR 107.3a)"
-    assert action.pays_with == ()
+    assert action.affordable is Affordability.YES
+    assert action.unaffordable_reason is None
+    assert [entry.name for entry in action.pays_with] == ["Forest"]
 
 
 def test_an_unknown_widened_out_of_a_no_still_carries_no_plan():

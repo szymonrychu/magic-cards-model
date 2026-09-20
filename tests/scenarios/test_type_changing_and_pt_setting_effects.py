@@ -91,7 +91,7 @@ def _activate_karn(scenario: Scenario, target_name: str):
 
 
 def _until_bob_has_had_a_turn(scenario: Scenario) -> None:
-    """Advance to bob's turn - still inside "until alice's next turn" (CR 800.4m)."""
+    """Advance to bob's turn - still inside "until alice's next turn" (CR 611.2a)."""
     while scenario.turn.active_player != "bob":
         scenario.advance()
 
@@ -151,12 +151,12 @@ def test_the_value_is_read_off_the_targeted_object_not_a_constant():
 
 
 # --------------------------------------------------------------------------
-# Duration: "until your next turn" (CR 800.4m)
+# Duration: "until your next turn" (CR 611.2a)
 # --------------------------------------------------------------------------
 
 
 def test_the_effect_is_present_through_the_opponents_turn():
-    """CR 800.4m: the duration outlasts the rest of the turn it was made in,
+    """CR 611.2a: the duration outlasts the rest of the turn it was made in,
     and the turn(s) in between - it is not "until end of turn"."""
     scenario = _karn_and_artifact("Trinisphere")
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -170,8 +170,8 @@ def test_the_effect_is_present_through_the_opponents_turn():
 
 
 def test_the_effect_ends_when_alices_own_next_turn_begins():
-    """CR 800.4m: "will last until that turn would have begun" - alice's own
-    next turn, specifically, not merely "a" next turn."""
+    """CR 611.2a: the effect lasts as long as stated - "until alice's next
+    turn", specifically, not merely "a" next turn."""
     scenario = _karn_and_artifact("Trinisphere")
     scenario.start_at(Step.PRECOMBAT_MAIN)
     trinisphere = _activate_karn(scenario, "Trinisphere")

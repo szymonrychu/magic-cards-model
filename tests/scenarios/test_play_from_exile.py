@@ -67,7 +67,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import PlayAction, why_cannot_cast_from
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Color, Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
@@ -451,3 +451,152 @@ def test_ragavans_permission_ends_with_the_turn():
 
     assert bolt.zone is Zone.EXILE
     assert scenario.game.play_permission_for(bolt, "alice") is None
+
+
+# -- Bard Class: "exile the top N cards ... you may play them this turn" --
+#
+# A third shape, ability-side like Ragavan's own but reading a printed
+# *count* rather than Ragavan's fixed one card: Bard Class's own level 3
+# ability, "Whenever you cast a legendary spell, exile the top two cards of
+# your library. You may play them this turn." (verified with `resolve_cards`
+# against `tests/fixtures/cards/bard_class.json`, added with `scripts/
+# add_card.py`). `_parse_exile_antecedent`'s own `_EXILE_TOP_OF_YOUR_LIBRARY_
+# RE` used to read only "the top card" (Experimental Synthesizer's own
+# singular); Bonehoard Dracosaur and Ardent Dustspeaker print the identical
+# "top two" sentence but wrap it in extra riders (a land/nonland bonus, an
+# optional graveyard cost) this wave's own family does not reach, so Bard
+# Class - a real card `class_level` already lets a scenario reach directly,
+# with nothing else printed alongside the sentence - is what proves the
+# antecedent's own count generally rather than against one specific
+# card's whole, more complex text.
+
+
+def test_bard_class_level_3_exiles_the_top_two_cards_with_play_permission():
+    """CR 716.2a's level-gated ability, reached by setting `class_level`
+    directly the way `test_class_levels.py` already does rather than paying
+    through two level-ups - CR 716.2b: level is not itself a copiable or
+    otherwise event-derived characteristic, so setting it is exactly what a
+    live game's own two activations would have left behind.
+
+    "You may play them this turn" (CR 514.2's cleanup, not "until end of
+    turn") is `_PLAY_PERMISSION_RE`'s trailing-duration form, and "play" -
+    not "cast" - is CR 601.1a's broader verb: `PlayAction.PLAY` reaches a
+    land found among the exiled two the way `PlayAction.CAST` could not.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ragavan, Nimble Pilferer"],
+            battlefield=["Bard Class", "Mountain"],
+            library=["Lightning Bolt", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bard = scenario.find("Bard Class", Zone.BATTLEFIELD, "alice")
+    bard.class_level = 3
+    (mountain,) = scenario.untapped_sources("Mountain")
+
+    scenario.cast_onto_stack("Ragavan, Nimble Pilferer", mountain)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()  # the level 3 trigger: exile the top two
+    scenario.pass_until_resolved()  # Ragavan himself, now alone on the stack
+
+    bolt = scenario.find("Lightning Bolt", Zone.EXILE, "alice")
+    forest = scenario.find("Forest", Zone.EXILE, "alice")
+    assert scenario.player("alice").library == []
+
+    for card in (bolt, forest):
+        permission = scenario.game.play_permission_for(card, "alice")
+        assert permission is not None
+        assert permission.player == "alice"
+        assert permission.action is PlayAction.PLAY
+        assert permission.pays_mana_cost is True
+
+    # Bob has no permission of his own over either card.
+    assert scenario.game.play_permission_for(bolt, "bob") is None
+
+
+# -- Dire Fleet Daredevil: "mana of any type can be spent to cast that spell" -
+
+
+def _daredevil_board() -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Dire Fleet Daredevil"],
+            battlefield=["Mountain", "Mountain", "Forest"],
+        )
+        .player("bob", graveyard=["Lightning Bolt"])
+    )
+
+
+def _cast_daredevil(scenario, target) -> None:
+    """Cast the creature (no targets of its own), then answer its ETB
+    trigger's own "exile target instant or sorcery card ..." target."""
+    sources = scenario.untapped_sources("Mountain", "Mountain", username="alice")
+    scenario.will_choose_targets(target, username="alice", source="Dire Fleet Daredevil")
+    scenario.cast_and_resolve("Dire Fleet Daredevil", *sources, username="alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+
+def test_dire_fleet_daredevil_exiles_the_targeted_card_and_grants_the_permission():
+    scenario = _daredevil_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "bob")
+
+    _cast_daredevil(scenario, bolt)
+
+    assert bolt.zone is Zone.EXILE
+    permission = scenario.game.play_permission_for(bolt, "alice")
+    assert permission is not None
+    assert permission.any_type_mana is True
+
+
+def test_dire_fleet_daredevils_permission_lets_any_color_of_mana_pay_it():
+    """ "... and mana of any type can be spent to cast that spell." Lightning
+    Bolt's printed cost is still {R} (CR 202.3b - what a card costs never
+    changes), but a green source pays it under this permission."""
+    scenario = _daredevil_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "bob")
+    _cast_daredevil(scenario, bolt)
+
+    casting = scenario.cast("Lightning Bolt", username="alice", from_zone=Zone.EXILE)
+    casting.use_permission()
+    casting.choose_targets(["bob"])
+    assert str(casting.total_cost.mana) == "{R}"
+
+    (forest,) = scenario.untapped_sources("Forest", username="alice")
+    payment = casting.begin_paying()
+    payment.tap_for_mana(forest, [Color.GREEN])
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.player("bob").life == 17
+
+
+def test_without_the_permission_lightning_bolt_still_needs_red_mana():
+    """The override belongs to the permission, not to the card - cast
+    normally (from bob's own hand, say), green mana still cannot pay {R}."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Forest"])
+        .player("alice")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Lightning Bolt", username="bob", targets=["alice"])
+    (forest,) = scenario.untapped_sources("Forest", username="bob")
+    payment = casting.begin_paying()
+
+    with pytest.raises(ValueError, match="cannot pay"):
+        payment.tap_for_mana(forest, [Color.GREEN])
+        payment.pay()

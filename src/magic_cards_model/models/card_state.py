@@ -188,6 +188,10 @@ class Counter(StrEnum):
       stun counter on it would become untapped, instead remove a stun counter
       from it.'" `untap` is where that replacement lives, since every route
       to untapping passes through it.
+    - `finality` stops the permanent reaching a graveyard (CR 122.1h): "If
+      this permanent would be put into a graveyard from the battlefield, exile
+      it instead." `machines/replacement.py`'s `_finality_counter_effects` is
+      that replacement effect.
     - `charge` is the common named counter with no rules of its own.
     - `time` sits on a card in exile with suspend (CR 702.62a, 702.62b) or a
       permanent with vanishing/fading (CR 702.63a, 702.32a); "at the beginning
@@ -208,6 +212,7 @@ class Counter(StrEnum):
     ENERGY = "energy"
     EXPERIENCE = "experience"
     STUN = "stun"
+    FINALITY = "finality"
     TIME = "time"
     CHARGE = "charge"
 
@@ -719,6 +724,37 @@ class CardState(EngineModel):
     ignored by every reader once the card leaves the stack (CR 709.2: "only
     one card" everywhere else), since nothing reads either field there.
     """
+    prepared: bool = False
+    """CR 722.3a's "prepared" designation on a permanent with a prepare spell.
+
+    "Prepared is a designation that acts as a marker which rules and effects
+    can identify. A permanent can't gain this designation unless it has a
+    prepare spell. Additionally, a permanent can't gain this designation if
+    the permanent already has it." `Game.become_prepared`/`become_unprepared`
+    are the only writers, and both are idempotent for exactly that second
+    sentence's reason. Meaningless off the battlefield - nothing here clears
+    it on its own when a permanent leaves, since `Game.become_unprepared` is
+    what a permanent leaving the battlefield calls, alongside removing the
+    linked exile copy `prepared_copy_id` names (CR 722.3c: the copy persists
+    "for as long as the prepared permanent remains on the battlefield and has
+    the prepared designation").
+    """
+    prepared_copy_id: UUID | None = None
+    """The id of this permanent's own CR 722.3c exile copy, while `prepared`
+    is set - `None` otherwise. Sits on the *permanent*, not on the copy: the
+    copy is a `CardState` of its own in `Game.exile`, found by this id, whose
+    `prepare_spell_face` (below) is what gives it the prepare spell's own
+    characteristics rather than the permanent's."""
+    prepare_spell_face: bool = False
+    """True only on a CR 722.3c exile copy: its `up_face` (and therefore
+    `name`/`types`/`oracle_text`/`mana_cost`/`power`/`toughness`) reads
+    `Card.back_face` - the inset "prepare spell" - rather than the front
+    face's own characteristics, matching 722.3c's "Those characteristics
+    become the copy's normal characteristics." Also the flag `TriggerEvent`
+    reading checks for CR 722.3d's "cast a prepared spell": "If a prepare
+    spell is copied, the copy is also a prepare spell" is why `Game.copy_spell`
+    carries this flag onto any further copy of one of these, rather than
+    only setting it where the exile copy is first minted."""
     meld_result: Card | None = None
     """The combined back face's printed characteristics (CR 712.8g), while
     this `CardState` is one half of a melded permanent - the surviving,
@@ -834,6 +870,18 @@ class CardState(EngineModel):
     target's own share is dropped rather than handed to whoever is left
     (CR 608.2b already reads targets that way; this mirrors it for shares).
     """
+    target_amounts: list[int] | None = None
+    """One entry per entry of `targets`, in the same order, for a "`<source>`
+    deals `<n>` damage to `<phrase1>` and `<m>` damage to `<phrase2>`"
+    instruction whose two halves name *different* amounts
+    (`machines/effects._merge_split_damage_clauses`) -
+    `AbilityOnStack.target_amounts`'s own twin mirrored here for the
+    identical CR 602.2b reason `division` already is. Unlike `division`, this
+    is never a player announcement: the amounts are fixed on the printed
+    card, so it is computed and stamped on as resolution begins rather than
+    carried from CR 601.2c/d announcement. `None` for the ordinary
+    single-amount case and for the equal-amount case, which never needed a
+    per-target answer."""
     summoning_sick: bool = True
     """True until its controller's turn begins with it already there.
 
@@ -964,6 +1012,23 @@ class CardState(EngineModel):
     Cleared by `move_to`, which is CR 702.47e: "The spell loses any splice
     changes once it leaves the stack for any reason."
     """
+
+    granted_rebound: bool = False
+    """Whether an effect gave *this spell* rebound (CR 702.88, CR 702.88a)
+    for this cast, printed on a different card than the one being cast -
+    Ojer Pakpatiq, Deepest Epoch's own "Whenever you cast an instant spell
+    from your hand, it gains rebound." Rebound is normally a static ability
+    printed on the spell itself, which `machines.keywords.has_rebound` reads
+    straight off `Card.keywords` - a spell it was never printed on has
+    nothing there for that to find, so `Game._has_rebound_now` reads this
+    flag as well, wherever `has_rebound` alone used to be asked about a
+    spell on the stack (CR 614.12: a granted static ability "functions" the
+    same as a printed one for as long as it applies).
+
+    Cleared by `move_to`, the same "a spell's own additions don't survive
+    leaving the stack" rule `spliced_text` already follows (CR 702.47e's
+    reasoning generalises: nothing keeps a one-shot grant once the object it
+    was granted to stops being this stack visit's object)."""
 
     granted_ability_texts: tuple[str, ...] = ()
     """Ability lines given to *this object specifically*, printed exactly as
@@ -1290,6 +1355,16 @@ class CardState(EngineModel):
             # `CardFace`'s own fields (see `meld_result`'s docstring), so it
             # is handed back exactly as a real face would be.
             return self.meld_result
+        if self.prepare_spell_face:
+            # CR 722.3c: "Those characteristics become the copy's normal
+            # characteristics" - this copy's own `Card.back_face` (the inset
+            # "prepare spell") is read the same as any other face everywhere
+            # off it, not only on the battlefield or stack, since the copy has
+            # no other object to fall back to the way a transformed permanent
+            # falls back to its front face off the battlefield.
+            back_face = self.card.back_face
+            if back_face is not None:
+                return back_face
         land_face = self._land_face
         if land_face is not None:
             return land_face
@@ -1551,6 +1626,17 @@ class CardState(EngineModel):
             from .mana import ManaCost
 
             return float(ManaCost.parse(land_face.mana_cost or "").converted)
+        if self.prepare_spell_face:
+            # Unlike a transformed back face (CR 202.3b's stated exception),
+            # CR 722.3c gives this copy the prepare spell's characteristics as
+            # its *normal* characteristics outright, with no "calculated as
+            # though" carve-back to the front face's cost - so this reads the
+            # inset face's own mana cost, the same as `mana_cost` above does.
+            back_face = self.card.back_face
+            if back_face is not None:
+                from .mana import ManaCost
+
+                return float(ManaCost.parse(back_face.mana_cost or "").converted)
         return self.card.cmc
 
     @property
@@ -2072,6 +2158,9 @@ class CardState(EngineModel):
             # the zone of a spell already on the stack; every move off it, to
             # any zone, takes the text away.
             self.spliced_text = ()
+            # CR 702.47e's own reasoning generalises to any one-shot grant a
+            # spell picked up only for this stack visit.
+            self.granted_rebound = False
         # CR 704.8 / CR 603.10a: an ability that looks back in time needs the
         # counters the object had as it left, and CR 122.2 has just taken them
         # away. Persist is the card in the pool that asks (CR 702.79a).

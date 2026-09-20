@@ -1,0 +1,149 @@
+{
+  "object": "card",
+  "id": "40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd",
+  "oracle_id": "12cc800c-c7be-4811-8207-fd01a99cc892",
+  "multiverse_ids": [],
+  "tcgplayer_id": 692996,
+  "cardmarket_id": 905786,
+  "name": "Chandra, Torch of Defiance",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd",
+  "scryfall_uri": "https://scryfall.com/card/fra/244/chandra-torch-of-defiance?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-02T06:08:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.jpg?1788329325",
+    "normal": "https://cards.scryfall.io/normal/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.jpg?1788329325",
+    "large": "https://cards.scryfall.io/large/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.jpg?1788329325",
+    "png": "https://cards.scryfall.io/png/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.png?1788329325",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.jpg?1788329325",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.jpg?1788329325",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.webp?1788329325",
+    "grid": "https://cards.scryfall.io/grid/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.webp?1788329325",
+    "display": "https://cards.scryfall.io/display/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.webp?1788329325",
+    "art": "https://cards.scryfall.io/art/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.webp?1788329325",
+    "crop": "https://cards.scryfall.io/crop/front/4/0/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd.webp?1788329325"
+  },
+  "mana_cost": "{2}{R}{R}",
+  "cmc": 4.0,
+  "type_line": "Legendary Planeswalker \u2014 Chandra",
+  "oracle_text": "+1: Exile the top card of your library. You may cast that card. If you don't, Chandra deals 2 damage to each opponent.\n+1: Add {R}{R}.\n\u22123: Chandra deals 4 damage to target creature.\n\u22127: You get an emblem with \"Whenever you cast a spell, this emblem deals 5 damage to any target.\"",
+  "loyalty": "4",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "R"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "1913788b-36d3-4488-a744-71e52b1ecb5c",
+      "component": "combo_piece",
+      "name": "Chandra, Torch of Defiance",
+      "type_line": "Legendary Planeswalker \u2014 Chandra",
+      "uri": "https://api.scryfall.com/cards/1913788b-36d3-4488-a744-71e52b1ecb5c"
+    },
+    {
+      "object": "related_card",
+      "id": "5fdc53ba-e023-4ee4-bb14-fd8c52955ee9",
+      "component": "combo_piece",
+      "name": "Chandra, Torch of Defiance Emblem",
+      "type_line": "Emblem \u2014 Chandra",
+      "uri": "https://api.scryfall.com/cards/5fdc53ba-e023-4ee4-bb14-fd8c52955ee9"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A12cc800c-c7be-4811-8207-fd01a99cc892&unique=prints",
+  "collector_number": "244",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kieran Yanner",
+  "artist_ids": [
+    "aa7e89ed-d294-4633-9057-ce04dacfcfa4"
+  ],
+  "illustration_id": "a4309b19-227c-49d8-8202-ce1fb6befa3d",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1554,
+  "prices": {
+    "usd": "15.64",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.93",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChandra%252C%2BTorch%2Bof%2BDefiance",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DChandra%252C%2BTorch%2Bof%2BDefiance",
+    "edhrec": "https://edhrec.com/route/?cc=Chandra%2C+Torch+of+Defiance"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F692996%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=905786&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Chandra%2C+Torch+of+Defiance&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

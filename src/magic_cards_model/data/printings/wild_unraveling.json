@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "01522fec-9136-4fa6-91a3-370a8bb08b42",
+  "oracle_id": "dd1a4219-437b-494f-ae0e-1d3181ffcd63",
+  "multiverse_ids": [],
+  "resource_id": "7F0F1821C2C5899FEC4D7163C20FBA8EBE5A9777C1759B4F4F9EF71880B3414F",
+  "mtgo_id": 146555,
+  "arena_id": 98403,
+  "tcgplayer_id": 671649,
+  "cardmarket_id": 865754,
+  "name": "Wild Unraveling",
+  "lang": "en",
+  "released_at": "2026-01-23",
+  "uri": "https://api.scryfall.com/cards/01522fec-9136-4fa6-91a3-370a8bb08b42",
+  "scryfall_uri": "https://scryfall.com/card/ecl/84/wild-unraveling?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:01:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.jpg?1783904474",
+    "normal": "https://cards.scryfall.io/normal/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.jpg?1783904474",
+    "large": "https://cards.scryfall.io/large/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.jpg?1783904474",
+    "png": "https://cards.scryfall.io/png/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.png?1783904474",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.jpg?1783904474",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.jpg?1783904474",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.webp?1783904474",
+    "grid": "https://cards.scryfall.io/grid/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.webp?1783904474",
+    "display": "https://cards.scryfall.io/display/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.webp?1783904474",
+    "art": "https://cards.scryfall.io/art/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.webp?1783904474",
+    "crop": "https://cards.scryfall.io/crop/front/0/1/01522fec-9136-4fa6-91a3-370a8bb08b42.webp?1783904474"
+  },
+  "mana_cost": "{U}{U}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "As an additional cost to cast this spell, blight 2 or pay {1}. (To blight 2, put two -1/-1 counters on a creature you control.)\nCounter target spell.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Blight"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "5d293ad8-a749-4725-bd5c-c4e1db828bd0",
+  "set": "ecl",
+  "set_name": "Lorwyn Eclipsed",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/5d293ad8-a749-4725-bd5c-c4e1db828bd0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aecl&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ecl?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/01522fec-9136-4fa6-91a3-370a8bb08b42/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Add1a4219-437b-494f-ae0e-1d3181ffcd63&unique=prints",
+  "collector_number": "84",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "As wild magic ripped into his arm, the path that was once so clear became shadowed by his own fear.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jabari Weathers",
+  "artist_ids": [
+    "9ee86fec-e268-452c-af59-90360958923a"
+  ],
+  "illustration_id": "e15cd817-1d9f-4e31-8397-cceded85b836",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12507,
+  "penny_rank": 2747,
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.08",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWild%2BUnraveling",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWild%2BUnraveling",
+    "edhrec": "https://edhrec.com/route/?cc=Wild+Unraveling"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671649%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=865754&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/146555?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

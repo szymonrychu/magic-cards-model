@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "2733a3cf-624a-430c-97c3-1c521c9a4d57",
+  "oracle_id": "7126be80-cebc-4868-b39d-8b215410f575",
+  "multiverse_ids": [],
+  "tcgplayer_id": 709810,
+  "name": "Selenia, the Cursed Heart",
+  "lang": "en",
+  "released_at": "2026-11-09",
+  "uri": "https://api.scryfall.com/cards/2733a3cf-624a-430c-97c3-1c521c9a4d57",
+  "scryfall_uri": "https://scryfall.com/card/mbc/50/selenia-the-cursed-heart?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-08-03T12:12:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.jpg?1785759125",
+    "normal": "https://cards.scryfall.io/normal/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.jpg?1785759125",
+    "large": "https://cards.scryfall.io/large/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.jpg?1785759125",
+    "png": "https://cards.scryfall.io/png/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.png?1785759125",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.jpg?1785759125",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.jpg?1785759125",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.webp?1785759125",
+    "grid": "https://cards.scryfall.io/grid/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.webp?1785759125",
+    "display": "https://cards.scryfall.io/display/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.webp?1785759125",
+    "art": "https://cards.scryfall.io/art/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.webp?1785759125",
+    "crop": "https://cards.scryfall.io/crop/front/2/7/2733a3cf-624a-430c-97c3-1c521c9a4d57.webp?1785759125"
+  },
+  "mana_cost": "{4}{W}{B}",
+  "cmc": 6.0,
+  "type_line": "Legendary Creature \u2014 Angel Warrior",
+  "oracle_text": "Flying, lifelink\nIf you would gain life, you gain twice that much life instead.\nWhen Selenia dies, create a legendary black Aura Curse enchantment token named Selenia's Curse attached to target opponent. The token has enchant player and \"If enchanted player would lose life, they lose twice that much life instead.\"",
+  "power": "2",
+  "toughness": "5",
+  "colors": [
+    "B",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Lifelink"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a4135564-9f37-4aaf-963a-90666f843e0d",
+  "set": "mbc",
+  "set_name": "Mystery Booster Commander Edition",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/a4135564-9f37-4aaf-963a-90666f843e0d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ambc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mbc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2733a3cf-624a-430c-97c3-1c521c9a4d57/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7126be80-cebc-4868-b39d-8b215410f575&unique=prints",
+  "collector_number": "50",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Quinton Hoover",
+  "artist_ids": [
+    "1a2db619-92a5-431a-822b-101cdcc5bd5d"
+  ],
+  "illustration_id": "c95f9d4f-134f-4afc-99f3-b0958bf22220",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 22243,
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSelenia%252C%2Bthe%2BCursed%2BHeart",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSelenia%252C%2Bthe%2BCursed%2BHeart",
+    "edhrec": "https://edhrec.com/route/?cc=Selenia%2C+the+Cursed+Heart"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709810%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Selenia%2C+the+Cursed+Heart&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Selenia%2C+the+Cursed+Heart&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

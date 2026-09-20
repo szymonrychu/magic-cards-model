@@ -107,14 +107,14 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 768,
-  "penny_rank": 394,
+  "edhrec_rank": 777,
+  "penny_rank": 391,
   "prices": {
-    "usd": "0.32",
+    "usd": "0.34",
     "usd_foil": "0.41",
     "usd_etched": null,
-    "eur": "0.30",
-    "eur_foil": "0.30",
+    "eur": "0.20",
+    "eur_foil": "0.36",
     "tix": "0.04"
   },
   "related_uris": {

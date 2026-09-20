@@ -407,9 +407,31 @@ class PlayedScenario:
         return [state.name for state in self.game.battlefield]
 
     def find(self, name: str, zone: Zone, username: str | None = None) -> CardState:
-        """The first copy of `name` in `zone`. Raises if it is not there."""
+        """The first copy of `name` in `zone`, narrowed to `username` when
+        given. Raises if it is not there.
+
+        A shared zone (battlefield, stack, exile, ...) holds every player's
+        objects in one list (CR 110.1), so `username` has to filter it the
+        same way `player(username).cards_in(zone)` already does for a
+        per-player zone below - CR 108.4a's `controller_or_owner` fallback
+        (the controller where CR 109.4 gives an object one, the owner
+        otherwise) is what "whose" means there. Without this, `username` was
+        silently ignored for every shared zone: `find("Mountain", Zone.
+        BATTLEFIELD, username="bob")` on a board where alice also controls a
+        Mountain returned whichever of the two the shared list happened to
+        list first - alice's, tapped or not, never necessarily bob's own
+        untapped one - a wrong-object bug a caller had no way to see short of
+        checking identity by hand.
+        """
         if zone in self.game.shared_zones:
             candidates = self.game.shared_zones[zone]
+            if username is not None:
+                candidates = [
+                    state
+                    for state in candidates
+                    if getattr(state, "controller_or_owner", getattr(state, "controller", None))
+                    == username
+                ]
         else:
             candidates = self.player(username).cards_in(zone)
 
@@ -681,6 +703,24 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.PUT_ON_TOP_OR_BOTTOM, top, username, source, times)
 
+    def will_choose_pile(
+        self,
+        pile_one: bool = True,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next CR 700.3 pile choice (Liliana of the Veil's own
+        `-6`, Do or Die) - the *second* of the mechanic's two questions, put
+        to whichever player the card names for it (the ability's own
+        target), not to the ability's controller who divided the piles.
+        `pile_one` names the answer: `True` for pile one
+        (`Decision.cards`, the dividing player's own choice of what to put
+        there), `False` for its complement.
+        """
+        self._queue(DecisionKind.CHOOSE_PILE, pile_one, username, source, times)
+
     def will_pay_the_energy(
         self,
         paid: bool = True,
@@ -788,6 +828,25 @@ class PlayedScenario:
         already does.
         """
         self._queue(DecisionKind.CHOOSE_CARDS, tuple(c.id for c in cards), username, source, times)
+
+    def will_choose_players(
+        self,
+        *players: Player | str,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next `CHOOSE_PLAYERS` question with exactly these
+        players - `will_choose_cards`' own twin, for CR 701.34a's own
+        proliferate ("choose any number of ... players ...") and any future
+        card sharing the same CR 608.2d player-choice shape."""
+        self._queue(
+            DecisionKind.CHOOSE_PLAYERS,
+            tuple(p if isinstance(p, str) else p.username for p in players),
+            username,
+            source,
+            times,
+        )
 
     def will_choose_targets(
         self,
@@ -1128,6 +1187,7 @@ class PlayedScenario:
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
+        tapping_for_cost: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
         targets: list[Target] | None = None,
         color: Color | Sequence[Color] | str | None = None,
@@ -1157,6 +1217,15 @@ class PlayedScenario:
         only after the total cost has been determined, so it lands on the open
         `CostPayment` rather than on the cost - which is why it is applied here
         and not passed to `begin_activating`.
+
+        `tapping_for_cost` is a different thing with an unavoidably similar
+        name: the permanents chosen to pay a printed "Tap `<count>` untapped
+        `<quality>` you control" additional cost (Persistent Petitioners'
+        "Tap four untapped Advisors you control", Merchant's Dockhand's "Tap
+        X untapped artifacts you control") - CR 601.2b's own choice, made as
+        the activation is announced, the same moment `sacrificing`/
+        `discarding`/`exiling` are. Passed straight to `begin_activating`,
+        never to an open `CostPayment` the way `tapping` is.
         """
         controller = username or self.game.controller_of(source).username
         payment = self.game.begin_activating(
@@ -1167,6 +1236,7 @@ class PlayedScenario:
             discarding=discarding,
             exiling=exiling,
             revealing=revealing,
+            tapping=tapping_for_cost,
             x_value=x_value,
             targets=targets,
         )
@@ -1269,6 +1339,7 @@ class PlayedScenario:
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
+        beholding: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
     ) -> Casting:
         """Begin casting a card, returning the casting machine mid-announcement.
@@ -1276,17 +1347,25 @@ class PlayedScenario:
         Targets may be permanents, players, or usernames, mixed freely - a
         Bolt aimed at a face is `targets=["bob"]`.
 
-        `sacrificing`, `discarding`, `exiling` and `tapping` are the objects
-        chosen to pay the card's own printed "As an additional cost to cast
-        this spell, ..." sentence (CR 601.2b, CR 118.8a) - the creature Fling
-        throws, the two cards Cathartic Reunion discards, the creature Swallow
-        Whole taps. `Casting` reads the sentence itself at CR 601.2f and takes
-        the objects from these lists in the order the sentences print; the same
-        vocabulary `Game.activation_cost` uses for an activated ability's
-        object costs.
+        `sacrificing`, `discarding`, `exiling`, `tapping` and `beholding` are
+        the objects chosen to pay the card's own printed "As an additional
+        cost to cast this spell, ..." sentence (CR 601.2b, CR 118.8a) - the
+        creature Fling throws, the two cards Cathartic Reunion discards, the
+        creature Swallow Whole taps, the hand card or battlefield permanent
+        Countersculpt beholds. `Casting` reads the sentence itself at
+        CR 601.2f and takes the objects from these lists in the order the
+        sentences print; the same vocabulary `Game.activation_cost` uses for
+        an activated ability's object costs.
         """
         player = self.player(username)
-        spell = self.find(name, from_zone, player.username)
+        # A shared zone (exile chief among them) can hold a card the caster
+        # neither owns nor controls - Ragavan's own steal-and-cast, Dire
+        # Fleet Daredevil's, Null Summoner's Threshold grant - so `find`'s
+        # own owner/controller filter is the wrong question to ask it here;
+        # only a per-player zone (hand, graveyard, library) is scoped to the
+        # caster at all.
+        find_username = None if from_zone in self.game.shared_zones else player.username
+        spell = self.find(name, from_zone, find_username)
         casting = Casting(
             spell=spell,
             caster=player.username,
@@ -1296,6 +1375,7 @@ class PlayedScenario:
             discarding=list(discarding or []),
             exiling=list(exiling or []),
             tapping=list(tapping or []),
+            beholding=list(beholding or []),
             revealing=None if revealing is None else list(revealing),
         )
         if targets is not None:
@@ -1319,6 +1399,7 @@ class PlayedScenario:
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
+        beholding: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
     ) -> CardState:
         """Cast a spell and leave it on the stack, unresolved.
@@ -1329,8 +1410,8 @@ class PlayedScenario:
         `auto=True` pays with `auto_pay` instead of `sources` - the same
         auto-tap path the API takes when a player gives no `--sources`.
 
-        `sacrificing`/`discarding`/`exiling`/`tapping` pay the card's printed
-        additional cost - see `cast`.
+        `sacrificing`/`discarding`/`exiling`/`tapping`/`beholding` pay the
+        card's printed additional cost - see `cast`.
         """
         casting = self.cast(
             name,
@@ -1341,6 +1422,7 @@ class PlayedScenario:
             discarding=discarding,
             exiling=exiling,
             tapping=tapping,
+            beholding=beholding,
             revealing=revealing,
         )
         payment = casting.begin_paying()
@@ -1381,6 +1463,7 @@ class PlayedScenario:
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
+        beholding: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
     ) -> CardState:
         """The whole path for a spell nobody responds to.
@@ -1390,8 +1473,8 @@ class PlayedScenario:
         themselves rather than call this. `auto=True` pays with `auto_pay`
         instead - see `cast_onto_stack`.
 
-        `sacrificing`/`discarding`/`exiling`/`tapping` pay the card's printed
-        additional cost - see `cast`.
+        `sacrificing`/`discarding`/`exiling`/`tapping`/`beholding` pay the
+        card's printed additional cost - see `cast`.
         """
         self.cast_onto_stack(
             name,
@@ -1404,6 +1487,7 @@ class PlayedScenario:
             discarding=discarding,
             exiling=exiling,
             tapping=tapping,
+            beholding=beholding,
             revealing=revealing,
         )
         return self.resolve_top()

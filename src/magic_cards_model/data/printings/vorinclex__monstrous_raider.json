@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "92613468-205e-488b-930d-11908477e9f8",
+  "oracle_id": "5a3fdf5a-bff8-4896-b288-3f43f9a72d9b",
+  "multiverse_ids": [
+    503815
+  ],
+  "mtgo_id": 87741,
+  "arena_id": 75246,
+  "tcgplayer_id": 230135,
+  "cardmarket_id": 529502,
+  "name": "Vorinclex, Monstrous Raider",
+  "lang": "en",
+  "released_at": "2021-02-05",
+  "uri": "https://api.scryfall.com/cards/92613468-205e-488b-930d-11908477e9f8",
+  "scryfall_uri": "https://scryfall.com/card/khm/199/vorinclex-monstrous-raider?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:36:42Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/2/92613468-205e-488b-930d-11908477e9f8.jpg?1783928202",
+    "normal": "https://cards.scryfall.io/normal/front/9/2/92613468-205e-488b-930d-11908477e9f8.jpg?1783928202",
+    "large": "https://cards.scryfall.io/large/front/9/2/92613468-205e-488b-930d-11908477e9f8.jpg?1783928202",
+    "png": "https://cards.scryfall.io/png/front/9/2/92613468-205e-488b-930d-11908477e9f8.png?1783928202",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/2/92613468-205e-488b-930d-11908477e9f8.jpg?1783928202",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/2/92613468-205e-488b-930d-11908477e9f8.jpg?1783928202",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/2/92613468-205e-488b-930d-11908477e9f8.webp?1783928202",
+    "grid": "https://cards.scryfall.io/grid/front/9/2/92613468-205e-488b-930d-11908477e9f8.webp?1783928202",
+    "display": "https://cards.scryfall.io/display/front/9/2/92613468-205e-488b-930d-11908477e9f8.webp?1783928202",
+    "art": "https://cards.scryfall.io/art/front/9/2/92613468-205e-488b-930d-11908477e9f8.webp?1783928202",
+    "crop": "https://cards.scryfall.io/crop/front/9/2/92613468-205e-488b-930d-11908477e9f8.webp?1783928202"
+  },
+  "mana_cost": "{4}{G}{G}",
+  "cmc": 6.0,
+  "type_line": "Legendary Creature \u2014 Phyrexian Praetor",
+  "oracle_text": "Trample, haste\nIf you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters on that permanent or player instead.\nIf an opponent would put one or more counters on a permanent or player, they put half that many of each of those kinds of counters on that permanent or player instead, rounded down.",
+  "power": "6",
+  "toughness": "6",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Haste",
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "43057fad-b1c1-437f-bc48-0045bce6d8c9",
+  "set": "khm",
+  "set_name": "Kaldheim",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/43057fad-b1c1-437f-bc48-0045bce6d8c9",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Akhm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/khm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/92613468-205e-488b-930d-11908477e9f8/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5a3fdf5a-bff8-4896-b288-3f43f9a72d9b&unique=prints",
+  "collector_number": "199",
+  "digital": false,
+  "rarity": "mythic",
+  "watermark": "phyrexian",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "a6b1b146-a0ec-4f42-9892-6edfd338ab8c",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1250,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.twitch.tv/videos/864684586",
+    "previewed_at": "2021-01-07"
+  },
+  "prices": {
+    "usd": "54.20",
+    "usd_foil": "55.66",
+    "usd_etched": null,
+    "eur": "35.04",
+    "eur_foil": "42.68",
+    "tix": "0.17"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=503815&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVorinclex%252C%2BMonstrous%2BRaider",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVorinclex%252C%2BMonstrous%2BRaider",
+    "edhrec": "https://edhrec.com/route/?cc=Vorinclex%2C+Monstrous+Raider"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F230135%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=529502&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/87741?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

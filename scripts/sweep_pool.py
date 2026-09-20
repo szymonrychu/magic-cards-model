@@ -75,6 +75,7 @@ already is.
 """
 
 import argparse
+import operator
 import re
 import sys
 from collections import defaultdict
@@ -92,6 +93,7 @@ from magic_cards_model.machines.abilities import (  # noqa: E402
     AbilityKind,
     ActivatedAbility,
     TriggeredAbility,
+    _strip_reminder,
     keyword_abilities,
     parse_abilities,
     parse_mana_abilities,
@@ -105,16 +107,23 @@ from magic_cards_model.machines.casting import (  # noqa: E402
 )
 from magic_cards_model.machines.combat import Keyword, is_attack_requirement_line  # noqa: E402
 from magic_cards_model.machines.cost import (  # noqa: E402
+    additional_cost_phrases,
     cost_announces_x,
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
 )
 from magic_cards_model.machines.effects import (  # noqa: E402
+    _compose_layer_effect_with_remainder_for_ability_mode,
+    _parse_where_x_is_continuous_effect,
     activated_effect_for,
     create_continuous_effect,
     create_continuous_effect_of_ability,
     effect_for,
+    modal_trigger_profile,
+    mode_effect_body,
+    parse_mixed_effect,
     parse_mode_effect,
+    reads_as_transforms_line,
     resolve_modal_spell,
     trigger_effect_for,
 )
@@ -123,8 +132,13 @@ from magic_cards_model.machines.layers import (  # noqa: E402
     looks_like_unparsed_layer_effect,
     parsed_layer_effects,
 )
-from magic_cards_model.machines.modes import modal_profile  # noqa: E402
+from magic_cards_model.machines.modes import modal_profile, substitute_x  # noqa: E402
 from magic_cards_model.machines.objects_as_costs import has_improvise  # noqa: E402
+from magic_cards_model.machines.replacement import (  # noqa: E402
+    ENTERS_KINDS,
+    _self_enters_modifiers,
+    parse_replacement_effects,
+)
 from magic_cards_model.machines.targeting import profile_for_text  # noqa: E402
 from magic_cards_model.machines.triggers import (  # noqa: E402
     _ENTERS_TAPPED_RE as _CONDITION_ENTERS_TAPPED_RE,
@@ -136,11 +150,15 @@ from magic_cards_model.machines.triggers import (  # noqa: E402
     _ENTERS_WITH_COUNTER_RE as _CONDITION_ENTERS_WITH_COUNTER_RE,
 )
 from magic_cards_model.machines.triggers import (  # noqa: E402
+    _POWER_OR_TOUGHNESS_QUALIFIER as _CONDITION_POWER_OR_TOUGHNESS_QUALIFIER_RE,
+)
+from magic_cards_model.machines.triggers import (  # noqa: E402
     _STATE_COUNTER_TRIGGER_RE,
     GameEvent,
     TriggerEvent,
     _unread_trigger_events,
     condition_matches,
+    is_batched_attack_condition,
 )
 from magic_cards_model.machines.triggers import (  # noqa: E402
     _required_entering_subtype as _condition_required_entering_subtype,
@@ -153,7 +171,8 @@ from magic_cards_model.machines.triggers import (  # noqa: E402
 )
 from magic_cards_model.models import CardState, Game, Player, Zone  # noqa: E402
 from magic_cards_model.models.card import Card, Layout, Type, types_of  # noqa: E402
-from magic_cards_model.models.card_state import Counters  # noqa: E402
+from magic_cards_model.models.card_state import Counters, TargetRef  # noqa: E402
+from magic_cards_model.numbers import parse_count  # noqa: E402
 
 #: Keywords that need no code because they change what a card *is*, not what the
 #: engine has to do. Each is inert in the sense that the rules attach no action
@@ -209,6 +228,17 @@ ABILITY_WORDS = frozenset(
         "revolt",
         "undergrowth",
         "domain",
+        # fra-final-audit batch A item 2: Reality Fracture's "Threshold —
+        # <condition>." (Barbarian Ring, Werebear, Loot the Anomaly, Null
+        # Summoner, Proft Sinister Mastermind). `machines/casting.py`'s own
+        # `_CANNOT_CAST_UNLESS_RE` comment: "The ability word ('Threshold')
+        # carries no rules meaning of its own (CR 207.2c) and is not part
+        # of the match; the restriction is the sentence after it." The
+        # labelled clause is a cast restriction, an "Activate only if"
+        # activation gate, or a static conditional pump depending on the
+        # card - each already read by its own unrelated, generic parser,
+        # not by any code keyed on the word "Threshold" itself.
+        "threshold",
     }
 )
 
@@ -359,6 +389,48 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if any(k.lower() == "companion" for k in printing.keywords):
         found["companion"] = "machines/companion.py, models/game.py (bring_companion_to_hand)"
 
+    # fra-final-audit batch A item 2: four more keywords with real, named
+    # machinery of their own that no branch above happens to ask about -
+    # named here by hand, the same way suspend/fuse/companion are above.
+
+    # Prepared (CR 722, Reality Fracture) is a permanent's own designation,
+    # not a `KeywordCastOption` or an additional cost: `Game.become_prepared`/
+    # `become_unprepared` track the exile copy and the cast permission it
+    # grants (CR 722.3d), off `machines/replacement.py`'s `ENTERS_PREPARED`
+    # replacement effect. `tests/scenarios/test_prepare.py` proves it live.
+    if any(k.lower() == "prepared" for k in printing.keywords):
+        found["prepared"] = "models/game.py (become_prepared/become_unprepared, CR 722)"
+
+    # Behold (CR 701.4a) is a keyword action used inside an additional
+    # cost's own printed phrase ("behold a Jace"), not a `KeywordCastOption`
+    # either - `machines/cost.py`'s `behold_cost`/`_PHRASE_BEHOLD` is the
+    # real machinery, reached through `Casting`'s ordinary additional-cost
+    # reading rather than through anything this sweep otherwise asks about.
+    # `tests/scenarios/test_behold.py` proves it live.
+    if any(k.lower() == "behold" for k in printing.keywords):
+        found["behold"] = "machines/cost.py (behold_cost, CR 701.4a)"
+
+    # Exhaust (CR 702.177a) is "activate only once", enforced by
+    # `Game.exhausted` gating `activate_ability`/`legal_actions` off
+    # `ActivatedAbility.exhaust` - a runtime restriction with no
+    # `KeywordCastOption`/`ADDITIONAL_COST_KEYWORDS`/`TIMING_KEYWORDS` shape
+    # at all. `tests/scenarios/test_exhaust.py` proves it live.
+    if any(k.lower() == "exhaust" for k in printing.keywords):
+        found["exhaust"] = "models/game.py (Game.exhausted, ActivatedAbility.exhaust, CR 702.177a)"
+
+    # Proliferate (CR 701.34a) is a keyword action read off a spell's,
+    # trigger's, or activated ability's own resolution text by
+    # `machines/effects._parse_proliferate_clause`, dispatched the ordinary
+    # way through `effect_for`/`trigger_effect_for`/`activated_effect_for` -
+    # but this sweep's keyword report never asked that dispatch chain about
+    # a keyword *name*, only about a fixed set of machine-specific branches,
+    # so a card whose only rules text is the bare word "Proliferate." (or
+    # whose clause is otherwise fully read) still reported the keyword
+    # itself as unexecuted. `tests/scenarios/test_proliferate.py` proves it
+    # live.
+    if any(k.lower() == "proliferate" for k in printing.keywords):
+        found["proliferate"] = "machines/effects.py (_parse_proliferate_clause, CR 701.34a)"
+
     return found
 
 
@@ -471,6 +543,7 @@ _NOTICE_STAND_IN_NAMES = frozenset(
         "damage_then_group_grant_notice_only",
         "control_replacement_notice_only",
         "search_description_notice_only",
+        "layer_effect_with_remainder_notice",
     }
 )
 
@@ -526,7 +599,7 @@ def _worse(a: str, b: str) -> str:
     return min((a, b), key=lambda category: _SEVERITY[category])
 
 
-def _layer_category(printing: Card) -> str | None:
+def _layer_category(printing: Card, ability_text: str | None = None) -> str | None:
     """Handled/notice for this card's own continuous-effect text (CR 611.2,
     CR 611.3), read exactly the way the battlefield sweep
     (`machines/layers.effects_for`) reads it: `LAYER_EFFECTS` first, then
@@ -538,7 +611,27 @@ def _layer_category(printing: Card) -> str | None:
     sweep's business at all, the same way a combat restriction or a cost
     modifier is not `machines/layers.py`'s. Only a genuine near-miss on one of
     those four shapes counts as a gap here.
+
+    `ability_text` is the resolving ability's own, already X-substituted text
+    - `machines/effects.create_continuous_effect_of_ability` passes exactly
+    this to `ContinuousEffects.create` at real resolution now (Chatterfang,
+    Squirrel General's "Sacrifice X Squirrels: Target creature gets +X/-X
+    until end of turn", X announced in plain English rather than as a bare
+    `{X}` mana symbol). Reading the card's own raw, unsubstituted text instead
+    - the fallback below - cannot ever match a bare, non-numeric "X" the way
+    `parsed_layer_effects` reads a pump's magnitude, so an activated ability
+    with this shape scored SILENT here even once the real engine read it
+    correctly; passing the same substituted text this sweep already computes
+    for `activated_effect_for` keeps the two readings in step.
     """
+    if ability_text is not None:
+        if parsed_layer_effects(ability_text, card_name=printing.name):
+            return HANDLED
+        if looks_like_unparsed_layer_effect(
+            ability_text, static_only=False, card_name=printing.name
+        ):
+            return NOTICE
+        return None
     # `front_oracle_text`, not the top-level field: a `transform` or
     # `modal_dfc` printing leaves `oracle_text` null and puts each face's text
     # on `card_faces`, so reading the top-level field scored eleven
@@ -648,6 +741,86 @@ def missed_layer_shape(text: str) -> str | None:
     return None
 
 
+def _self_enters_line_category(printing: Card, text: str) -> str | None:
+    """Whether one static-ability paragraph carrying a CR 614.12 "enters"
+    replacement shape (`ENTERS_KINDS` - "[this] enters with ...", "as [this]
+    enters, ...", "[this] enters tapped", "... enters as a copy of ...") is
+    one `machines/replacement.py`'s own `_self_enters_modifiers` really
+    performs - asked of the *production* function itself, the same
+    throwaway-real-permanent technique `_condition_can_fire` above already
+    uses for a triggered ability's condition, rather than re-deriving what
+    each shape means here and risking drifting from what the engine actually
+    does. Before this, every card whose only static line was this shape came
+    back `STATIC_UNAUDITED` regardless of whether the engine reads it at all
+    - Walking Ballista's "This creature enters with X +1/+1 counters on it."
+    and Steam Vents' "As this land enters, you may pay 2 life. If you don't,
+    it enters tapped." included, both fully handled and neither credited.
+
+    `None` when `text`'s own paragraph carries no self-referential
+    `ENTERS_KINDS` clause at all - the caller falls through to its next
+    check, same as every other row in `_static_ability_category`. Otherwise
+    `HANDLED` when `_self_enters_modifiers`, run against one throwaway
+    permanent as it enters, produces a performable entry whose own label text
+    covers every self-referential `ENTERS_KINDS` sentence this paragraph
+    parses into - `STATIC_UNAUDITED` (via `None`) for anything this cannot
+    confirm, a board-state condition this synthetic single-permanent board
+    cannot decide included, since guessing either way would not be honest.
+    """
+    effects = parse_replacement_effects(printing)
+    self_kinds = [
+        effect
+        for effect in effects
+        if effect.kind in ENTERS_KINDS
+        and effect.self_replacement
+        # `.raw` is "the whole ability paragraph as printed, reminder text
+        # included" (`ReplacementEffect`'s own docstring), and `_static_
+        # ability_category`'s own `text` argument is `parse_abilities`'s
+        # line with the reminder already stripped by the identical `_strip_
+        # reminder` used here - comparing the two on equal footing this way
+        # is what makes a match possible at all regardless of how many
+        # sentences the paragraph holds.
+        #
+        # Comparing against `.text` alone ("the one sentence this effect was
+        # parsed from") instead broke every *multi*-sentence paragraph:
+        # Blood Crypt's "As this land enters, you may pay 2 life. If you
+        # don't, it enters tapped." parses into two effects, each `.text`
+        # only its own half of the sentence, so neither ever equalled the
+        # whole two-sentence `text` and both silently missed this match - 18
+        # pool cards' worth of shocklands, Port Town, Sunken Citadel and
+        # their like moved from `HANDLED` to `STATIC_UNAUDITED` this way,
+        # with nothing about their actual runtime behaviour having changed.
+        # Comparing against bare `.raw` (the shape before that regression)
+        # broke the opposite case instead: every reminder-carrying
+        # single-sentence paragraph ("enters prepared", CR 722.3a's own
+        # reminder printed right after it) failed to match because `.raw`
+        # still carried the reminder `text` did not. Stripping the reminder
+        # off `.raw` before comparing answers both at once.
+        and _strip_reminder(effect.raw)[0] == text.strip()
+    ]
+    if not self_kinds:
+        return None
+    try:
+        game = Game(
+            players=[Player(username="sweep_you"), Player(username="sweep_opp")],
+            schema_version=Game.CURRENT_SCHEMA_VERSION,
+        )
+        state = _synthetic_permanent(
+            printing, controller="sweep_you", token=False, tapped=False, counter_kind=None
+        )
+        state.bind_to_game(game)
+        performable = _self_enters_modifiers(game, state)
+    except Exception:
+        # A printing this throwaway board cannot stage (a face this sweep's
+        # own synthesis does not model, say) is left unaudited rather than
+        # guessed at either way - the same fail-open-to-"don't know" posture
+        # `_probe_cards` already takes.
+        return None
+    labels = " ".join(label for _suffix, _apply, label, _copy in performable)
+    if all(effect.text.strip() in labels for effect in self_kinds):
+        return HANDLED
+    return None
+
+
 def _static_ability_category(printing: Card, text: str) -> str:
     """One static line of a permanent (CR 604.2, CR 113.3d), judged the way
     the battlefield sweep judges it - per line, not per card.
@@ -689,34 +862,107 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if is_attack_requirement_line(text, printing.name):
         # CR 508.1d: `Game.declare_attackers` enforces it.
         return HANDLED
+    if reads_as_transforms_line(text):
+        # CR 712.20: `effects.transform_permanent` applies it as it transforms.
+        return HANDLED
+    self_enters = _self_enters_line_category(printing, text)
+    if self_enters is not None:
+        return self_enters
     return STATIC_UNAUDITED
 
 
 def _modal_category(printing: Card) -> str:
     """Handled/notice/silent for a modal spell, mirroring `resolve_modal_spell`
     mode by mode: it runs whichever chosen mode's text `parse_mode_effect`
-    reads and appends a `ModeNotice` for one it cannot, per mode - so a card
-    with at least one readable mode is "handled" (some chosen mode really does
-    something), and one where every mode is unreadable is "notice" rather than
-    "silent", because choosing *any* mode of it always leaves a `ModeNotice`
-    behind. An unrecognised modal structure (`understood=False`) never reaches
-    `resolve_modal_spell`'s per-mode loop at all and is silent with no notice.
+    reads and appends a `ModeNotice` for one it cannot, per mode.
+
+    **The worst mode wins**, the identical rule `classify_card` already
+    applies across a whole card's clauses (see its own docstring): CR 700.2a
+    lets a player choose *any* mode, with no rule that the chosen one has to
+    be the readable one, so a card is only genuinely `HANDLED` when *every*
+    one of its modes would actually do something if chosen - Vraska's Final
+    Mercy's own mode 2 ("lose 2 life. Empower Jace 6.") is a legal choice
+    that currently does nothing, and scoring the card `HANDLED` on the
+    strength of mode 1 alone hid that the same way Territorial Kavu's
+    working attack trigger used to hide its own dead characteristic-defining
+    ability. A card where *no* mode reads is still `NOTICE` rather than
+    `SILENT`, because choosing any mode of it leaves a `ModeNotice` behind.
+    An unrecognised modal structure (`understood=False`) never reaches
+    `resolve_modal_spell`'s per-mode loop at all and is silent with no
+    notice.
     """
     modal = modal_profile(printing)
     if modal is None or not modal.understood or not modal.modes:
         return SILENT
-    if any(parse_mode_effect(mode, 0) is not None for mode in modal.modes):
+    if all(parse_mode_effect(mode, 0) is not None for mode in modal.modes):
         return HANDLED
     return NOTICE
 
 
-def _dispatch_category(effect: object, printing: Card) -> str:
+def _modal_trigger_category(effect_text: str) -> str | None:
+    """`_modal_category`'s own worst-mode rule, for a modal *triggered*
+    ability's "choose one/one or both -" tail (CR 700.2, CR 603.3c -
+    Fateshaper Aspirant, Yuriko, Hope from the Shadows) rather than a modal
+    spell's.
+
+    `None` when `effect_text` is not this shape at all - `_dispatch_
+    category`'s cue to fall through to its ordinary identity-based
+    dispatch. `_resolve_modal_triggered_ability_clause`'s own closure has no
+    fixed identity to compare against the way `resolve_modal_spell` does (a
+    fresh closure is built on every call), so without this a modal
+    triggered ability's *whole* ability fell to `_dispatch_category`'s
+    default `HANDLED` the moment `trigger_effect_for` returned any non-`None`
+    callable at all - true the instant *one* mode read, wrong for every
+    other mode beside it, the identical "best mode wins" defect
+    `_modal_category` itself was fixed for.
+
+    Each mode is tried through the exact three-reader fallback chain
+    `_resolve_modal_triggered_ability_clause` itself runs, in the same
+    order - `parse_mixed_effect`, then `_compose_layer_effect_with_
+    remainder_for_ability_mode`, then `_parse_where_x_is_continuous_effect`
+    - not `parse_mixed_effect` alone. Yuriko, Hope from the Shadows' mode 1
+    ("... where X is the number of cards in your graveyard.") is CR 107.3f's
+    own X, unreadable to `parse_mixed_effect` (there is no substituted
+    value for it to read) and only readable to the third fallback - calling
+    just the first misreported a mode the engine genuinely runs
+    (`tests/scenarios/test_modal_mode_composition.py::
+    test_yuriko_mode_one_shrinks_by_the_graveyard_count`) as unhandled.
+    """
+    profile = modal_trigger_profile(effect_text)
+    if profile is None:
+        return None
+    if all(_first_reading(mode_effect_body(mode)) is not None for mode in profile.modes):
+        return HANDLED
+    return NOTICE
+
+
+def _first_reading(mode_text: str) -> object | None:
+    """The first of `_resolve_modal_triggered_ability_clause`'s own three
+    fallback readers, in its own order, that reads `mode_text` - or `None`
+    when none of them do. Factored out so `_modal_trigger_category` can
+    never drift from the real dispatch's fallback order."""
+    for reader in (
+        parse_mixed_effect,
+        _compose_layer_effect_with_remainder_for_ability_mode,
+        _parse_where_x_is_continuous_effect,
+    ):
+        result = reader(mode_text)
+        if result is not None:
+            return result
+    return None
+
+
+def _dispatch_category(effect: object, printing: Card, ability_text: str | None = None) -> str:
     """What actually happens if `effect` - what a real dispatcher just
     returned for this card - runs: a real effect, a fail-closed notice, or
     nothing at all. `effect` is always the literal object `effect_for`,
     `trigger_effect_for` or `activated_effect_for` returned, so this never
     re-derives what those functions already decided - it only reads the
     shape of their answer.
+
+    `ability_text` is forwarded to `_layer_category` unchanged - see that
+    function's own docstring for why an activated ability's X-substituted
+    text, not the card's raw printed one, is what the real engine reads.
     """
     if effect is None:
         return SILENT
@@ -725,7 +971,7 @@ def _dispatch_category(effect: object, printing: Card) -> str:
         # path - `looks_like_unparsed_layer_effect`'s own regex is a superset
         # of the one that routed here in the first place - but SILENT is the
         # right default if it ever did, not an optimistic HANDLED.
-        return _layer_category(printing) or SILENT
+        return _layer_category(printing, ability_text) or SILENT
     if effect is resolve_modal_spell:
         return _modal_category(printing)
     if getattr(effect, "__name__", "") in _NOTICE_STAND_IN_NAMES:
@@ -822,6 +1068,69 @@ def _cards_by_type() -> dict[Type, tuple[Card, ...]]:
     return {card_type: tuple(cards) for card_type, cards in index.items()}
 
 
+def _numeric_stat(value: str | None) -> int | None:
+    """A creature's printed power/toughness (CR 208.1) as a plain int, or
+    `None` for a variable one ("*", "1+*") this closure cannot compare
+    numerically - Scryfall (and this engine's own `Card.power`/`.toughness`)
+    keeps both as strings for exactly that reason."""
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
+@cache
+def _cards_by_power_or_toughness(stat: str, direction: str, threshold: int) -> tuple[Card, ...]:
+    """A handful of real creature printings whose power and/or toughness
+    actually satisfies this exact numeric comparison (CR 208.1) - what
+    `_probe_cards` reaches for on top of `_cards_by_type`'s own capped,
+    stat-blind first five creatures, which are never guaranteed to include
+    one small or large enough to matter. Tetsuko Umezawa, Pursuer's own
+    "with power or toughness 1 or less blocks" is not satisfied by any of
+    `_cards_by_type()[Type.CREATURE]`'s first five real printings and never
+    would be, since that cache is built with no stat in mind at all -
+    `test_tetsuko_umezawa_pursuer_condition_now_fires` is the regression
+    this closure exists to fix.
+    """
+    compare = operator.le if direction == "less" else operator.ge
+    found: list[Card] = []
+    for printing in pool().values():
+        if Type.CREATURE not in printing.types:
+            continue
+        values = []
+        if stat != "toughness":
+            power = _numeric_stat(printing.power)
+            if power is not None:
+                values.append(power)
+        if stat != "power":
+            toughness = _numeric_stat(printing.toughness)
+            if toughness is not None:
+                values.append(toughness)
+        if any(compare(value, threshold) for value in values):
+            found.append(printing)
+            if len(found) >= 5:
+                break
+    return tuple(found)
+
+
+def _power_or_toughness_probe_cards(condition: str) -> list[Card]:
+    """Real creature printings matching `condition`'s own "with power [or
+    toughness] N or less/greater" qualifier (the same regex `machines.
+    triggers._power_or_toughness_qualifier_holds` reads at resolution time),
+    or an empty list when the condition names no such qualifier at all."""
+    match = _CONDITION_POWER_OR_TOUGHNESS_QUALIFIER_RE.search(condition.lower())
+    if match is None:
+        return []
+    threshold = parse_count(match.group("count"), article=False)
+    if threshold is None:
+        return []
+    return list(
+        _cards_by_power_or_toughness(match.group("stat"), match.group("direction"), threshold)
+    )
+
+
 def _probe_cards(printing: Card, condition: str, *, entering: bool) -> list[Card] | None:
     """Real printings plausible enough to stand in for whatever permanent
     `condition` names, or `None` when this closure has no probe for a named
@@ -853,6 +1162,11 @@ def _probe_cards(printing: Card, condition: str, *, entering: bool) -> list[Card
         if not found and card_type not in printing.types:
             return None
         candidates.extend(found)
+    # Tetsuko Umezawa, Pursuer's own "with power or toughness 1 or less
+    # blocks" needs a probe small enough to satisfy that qualifier, which
+    # the plain type/subtype candidates above are never guaranteed to
+    # include - see `_power_or_toughness_probe_cards`'s own docstring.
+    candidates.extend(_power_or_toughness_probe_cards(condition))
     seen: set[str] = set()
     unique: list[Card] = []
     for candidate in candidates:
@@ -925,6 +1239,10 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     """
     if ability.event not in _SYNTHESIZABLE_EVENTS:
         return None
+    if ability.event is TriggerEvent.ATTACKS and is_batched_attack_condition(ability.condition):
+        # "one or more <description> attack" counts a declared attack, which
+        # this closure's synthetic board has none of - no occurrence to try.
+        return None
     entering = ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
     probes = _probe_cards(printing, ability.condition, entering=entering)
     if probes is None:
@@ -975,6 +1293,17 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
             subject_subtypes=tuple(subject.subtypes) if subject is not None else None,
             related_id=subject.id if subject is not None else None,
             player=player,
+            # CR 506.5/506.6: a lone attacker (nothing else declared this
+            # combat, and so also nothing else attacking the same defending
+            # player) is an entirely ordinary board state, reachable in a
+            # real game every time only one creature attacks - which is
+            # exactly what every synthetic probe here already is, one
+            # subject at a time. Jiang Yanggu, Alone's and Agents of
+            # S.H.I.E.L.D.'s own "attacks [a player] alone" conditions would
+            # otherwise never be tried true at all, since nothing here
+            # simulates a whole combat to derive these two flags from.
+            attacking_alone=ability.event is TriggerEvent.ATTACKS,
+            attacking_player_alone=ability.event is TriggerEvent.ATTACKS,
         )
 
     for host in source_variants:
@@ -983,7 +1312,18 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
         # against each tapped variant of the literal host object, not a twin.
         if condition_matches(game, ability, host, controller, event_for(host)):
             return True
+    # CR 303.4b/303.4m: "enchanted [object]" reads `source.attached_to`
+    # (Ferocity of the Hunt's own "When enchanted creature dies, ..."),
+    # which nothing above ever sets - bound here, one candidate at a time, so
+    # a DIES condition naming "enchanted" is tried the one way it can
+    # actually be satisfied: the dying subject really is what this Aura is
+    # attached to.
+    enchanted_dies = ability.event is TriggerEvent.DIES and "enchanted" in ability.condition.lower()
     for subject in states:
+        if enchanted_dies:
+            # `attached_to` is read off `attachment` (CR 301.5a) - not a
+            # plain field of its own.
+            source.attachment = TargetRef.to_card(subject)
         if condition_matches(game, ability, source, controller, event_for(subject)):
             return True
     # CR 508.3d's own playerwide "you attack" event - no subject at all.
@@ -1007,6 +1347,15 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
 _QUOTED_SPAN_RE = re.compile(r'"[^"]*"')
 
 
+#: `machines/effects.py`'s `_compose_layer_effect_with_remainder*` family
+#: names its two closures identically across all four of its spell/ability/
+#: mode variants - see `_is_sentinel_effect`'s own note on why they join the
+#: sentinel set below rather than being asked the quoted-text question.
+_LAYER_COMPOSED_NAMES = frozenset(
+    {"layer_and_remainder_effect", "layer_effect_with_remainder_notice"}
+)
+
+
 def _is_sentinel_effect(effect: object) -> bool:
     """Whether `effect` is one of `_dispatch_category`'s three named stand-
     ins (`create_continuous_effect`, `create_continuous_effect_of_ability`,
@@ -1018,12 +1367,25 @@ def _is_sentinel_effect(effect: object) -> bool:
     `trigger_effect_for` itself returns for that one string, but not the
     independent, whole-card verdict `_dispatch_category` actually reports -
     so the quoted-text closure must never ask about a sentinel's own
-    dispatch answer, only ever about an ordinary callable's."""
-    return effect in (
+    dispatch answer, only ever about an ordinary callable's.
+
+    A closure `_compose_layer_effect_with_remainder`/its three siblings
+    build - `layer_and_remainder_effect` or `layer_effect_with_remainder_
+    notice`, named by `_LAYER_COMPOSED_NAMES` - is the identical situation
+    one level up: its own layer half is still the same `create_continuous_
+    effect`/`_of_ability` sentinel underneath, whose verdict on a quoted span
+    is `_layer_category`'s to give, and its composed remainder half (an
+    ordinary clause, never one carrying its own quoted ability text in this
+    pool) does not depend on the layer sentence's quote either. Matched by
+    name rather than identity, since a fresh closure is built on every call.
+    """
+    if effect in (
         create_continuous_effect,
         create_continuous_effect_of_ability,
         resolve_modal_spell,
-    )
+    ):
+        return True
+    return getattr(effect, "__name__", "") in _LAYER_COMPOSED_NAMES
 
 
 def _blank_quoted_spans(text: str) -> str:
@@ -1082,7 +1444,7 @@ def _effect_matched_inside_quotes(dispatch: Callable[[str], object], text: str) 
 _X_PROBE_VALUES: tuple[int, ...] = (0, 3)
 
 
-def _x_candidates(cost_or_mana_cost: str | None) -> tuple[int | None, ...]:
+def _x_candidates(cost_or_mana_cost: str | None, *additional: str) -> tuple[int | None, ...]:
     """Every X value `classify_card` should try for one clause.
 
     Mirrors `models/game.py`'s own gate for a real resolution
@@ -1092,8 +1454,51 @@ def _x_candidates(cost_or_mana_cost: str | None) -> tuple[int | None, ...]:
     (CR 107.3a) - unless that cost has an X in it, `{X}` or Martyr of Sands's
     bare "Reveal X white cards", in which case every value in
     `_X_PROBE_VALUES` is tried.
+
+    `additional` is zero or more further cost phrases to check the same way -
+    a spell's own printed additional cost (CR 118.8a), which is not part of
+    `mana_cost` at all. Soul Immolation's "As an additional cost to cast this
+    spell, blight X" announces X with no `{X}` anywhere in its `{3}{R}{R}`
+    mana cost; checking `mana_cost` alone scored its own damage sentence
+    SILENT even once `Game.resolve_top` read the real engine's X correctly
+    (`models/game.py`'s own matching widened check, right beside this one).
     """
-    if cost_or_mana_cost and cost_announces_x(cost_or_mana_cost):
+    texts = (cost_or_mana_cost, *additional)
+    if any(text and cost_announces_x(text) for text in texts):
+        return _X_PROBE_VALUES
+    return (None,)
+
+
+def _etb_x_candidates(printing: Card, ability: TriggeredAbility) -> tuple[int | None, ...]:
+    """Every X value `classify_clauses` should try for one enters-the-
+    battlefield trigger's own effect text - CR 107.3m's gate, mirrored from
+    `Game._effect_of` exactly: the ability's event is `ENTERS_THE_
+    BATTLEFIELD`, its effect text carries a bare "X", and the permanent's
+    own mana cost carries `{X}` (CR 107.3a).
+
+    Fblthp, Knows the Way's own "search your library for up to X basic land
+    cards" is unreadable to `trigger_effect_for` with a literal "X" left in
+    it - the identical gap `_x_candidates` already closes for a spell face's
+    own resolution text and `activated_effect_for` closes for an activated
+    ability's announced X, but nothing here asked the same question of a
+    triggered ability before this.
+
+    Narrower than `_x_candidates`'s own `cost_announces_x` gate on purpose:
+    a card that defines X in its own text instead (CR 107.3f - Craterhoof
+    Behemoth's "where X is the number of creatures you control", Yuriko,
+    Hope from the Shadows' identical shape) has no `{X}` in its own mana
+    cost at all, so this never substitutes into it. `Game._effect_of`'s own
+    gate is `"{X}" in (source.mana_cost or "")`, not the broader `cost_
+    announces_x` an additional-cost phrase can also satisfy, because CR
+    107.3m is scoped to "a value of X chosen for any of its costs" -
+    exactly what a bare `{X}` in the mana cost already answers.
+    """
+    if (
+        ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+        and ability.effect
+        and re.search(r"\bX\b", ability.effect)
+        and "{X}" in (printing.mana_cost or "")
+    ):
         return _X_PROBE_VALUES
     return (None,)
 
@@ -1136,6 +1541,18 @@ def _spell_faces(printing: Card) -> list[SpellFace]:
     - **Layout.MODAL_DFC** (CR 712.12): a land face is played as a CR 305.1
       special action, never cast, so it is dropped here; the remaining
       face(s) are returned by their own name/text/cost the same way.
+    - **Layout.PREPARE** (CR 722): the front face is an ordinary permanent
+      and is cast normally, but the inset "prepare spell" (CR 722.2a,
+      `card_faces[1]`) is never directly cast either - CR 722.3c's exile
+      copy is what actually gets cast. Both are still returned here as
+      probeable faces, the same as SPLIT's two castable halves: a classifier
+      artifact this stream's survey flagged - reading the printing's blank
+      top-level fields left the inset spell's own clause misfiled as a
+      *static ability of the creature front*, so it was never dispatched as
+      a spell at all and every prepare card's inset spell text read
+      `static_unaudited` regardless of whether a real parser existed for it.
+      The front is still an ordinary permanent (`is_permanent=True`); the
+      inset spell reads its own type line, same as every other face here.
     - **everything else** (a single-faced card, or a `transform` card whose
       only directly castable face is the front, CR 712.8a): one face, using
       `front_oracle_text` (already the right fallback for a blank top-level
@@ -1164,6 +1581,16 @@ def _spell_faces(printing: Card) -> list[SpellFace]:
             )
             for face in faces
             if Type.LAND not in types_of(face.type_line or "")
+        ]
+    if printing.layout is Layout.PREPARE and faces:
+        return [
+            SpellFace(
+                face.name,
+                face.oracle_text or "",
+                face.mana_cost,
+                bool(set(types_of(face.type_line or "")) & _PERMANENT_TYPES),
+            )
+            for face in faces
         ]
     front = printing.front_face
     name = front.name if front is not None else printing.name
@@ -1221,10 +1648,12 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
       never called for one in a real game either.
     - a **permanent spell's resolution** (CR 608.3a: "it becomes a permanent
       and enters the battlefield under the control of the spell's
-      controller"). There is no resolution text to run, so a `None` from
-      `effect_for` is correct and is dropped rather than recorded as a dead
-      clause - the permanent's own abilities are judged below, one by one. A
-      permanent face that *does* get an effect keeps it: the credit is real.
+      controller"). There is no resolution text to run, and
+      `models/game.py::_resolve_top` never calls `effect_for` for one
+      (fra-final-audit batch A item 1) - so `effect_for` is never even
+      *asked* about a permanent face here, and nothing it might have parsed
+      is ever credited. A permanent's own abilities are judged below, one by
+      one, from the battlefield.
     - a **mana ability** (CR 605.1a) never goes on the stack at all
       (`Game.activate_ability`), so it is skipped rather than misreported as
       silent - the keyword/mana report already covers it.
@@ -1240,10 +1669,41 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
     """
     clauses: list[ClauseOutcome] = []
     is_permanent = bool(set(printing.types) & _PERMANENT_TYPES)
+    # CR 722.4: "In every zone, a preparation card has only its normal
+    # characteristics" - the inset prepare spell (CR 722.2a) is never one of
+    # the front permanent's own abilities. `parse_abilities(printing)` below
+    # still returns a `TriggeredAbility`/`StaticAbility` for the inset face's
+    # printed text (an instant or sorcery's own resolution text parses as a
+    # bare `AbilityKind.STATIC` line when nothing marks it triggered or
+    # activated, `machines/abilities.py`'s own default) - the other classifier
+    # artifact the FRA S2 survey flagged: the inset spell's already-`handled`
+    # `[spell]` clause above was being scored again here as an unaudited
+    # static ability of the creature, so the card's worst-clause verdict
+    # (`classify_card`) read `static_unaudited` even when every real clause
+    # was `handled`.
+    prepare_spell_face_name = (
+        printing.prepare_spell.name if printing.prepare_spell is not None else None
+    )
 
     if not printing.is_land:
         for face in _spell_faces(printing):
-            x_candidates = _x_candidates(face.mana_cost)
+            if face.is_permanent:
+                # CR 608.3a - a resolving permanent spell only becomes a
+                # permanent and enters the battlefield; there is no
+                # resolution text to run, and `models/game.py::_resolve_top`
+                # never calls `effect_for` for one (fra-final-audit batch A
+                # item 1). `effect_for` is a pure text parser with no idea
+                # whether the object it is reading is a permanent - it can
+                # and does parse *something* out of a permanent's raw
+                # printed text (a triggered ability's own body, a static
+                # line) purely by shape, and crediting that parse used to
+                # read as "the credit is real". It never was: the engine
+                # does not run this dispatch for a permanent face at all, so
+                # whatever it returns is not a clause and is always dropped.
+                # The permanent's own triggered/activated/static abilities
+                # are judged on their own below, from the battlefield.
+                continue
+            x_candidates = _x_candidates(face.mana_cost, *additional_cost_phrases(printing))
             effects = [
                 effect_for(face.name, face.text, x_value=x_value) for x_value in x_candidates
             ]
@@ -1262,13 +1722,6 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 )
             ):
                 category = QUOTED_EFFECT
-            if face.is_permanent and category not in (HANDLED, NOTICE):
-                # CR 608.3a - a permanent spell's resolution has no text to
-                # run, so "no effect" is the correct answer for one and is not
-                # a clause at all. Its own abilities are judged below. A
-                # permanent face that *does* produce an effect or a notice
-                # keeps the credit: that part is real.
-                continue
             clauses.append(ClauseOutcome(category, face.text, "spell"))
 
     activated_index = 0
@@ -1295,7 +1748,19 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 activated_effect_for(printing.name, index, ability.effect, x_value=x_value)
                 for x_value in x_candidates
             ]
-            categories = [_dispatch_category(effect, printing) for effect in activated_effects]
+            # The same substituted text `create_continuous_effect_of_ability`
+            # itself now passes to `ContinuousEffects.create` at a real
+            # resolution (see `_layer_category`'s own docstring) - computed
+            # per X candidate so a pump/keyword-grant judged here is judged
+            # on the number that would actually be on the stack.
+            ability_texts = [
+                substitute_x(ability.text, x_value) if x_value is not None else None
+                for x_value in x_candidates
+            ]
+            categories = [
+                _dispatch_category(effect, printing, text)
+                for effect, text in zip(activated_effects, ability_texts, strict=True)
+            ]
             category = _best(categories)
             if (
                 x_candidates == (None,)
@@ -1309,6 +1774,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 category = QUOTED_EFFECT
             clauses.append(ClauseOutcome(category, ability.text, "activated"))
         elif isinstance(ability, TriggeredAbility) and is_permanent:
+            if prepare_spell_face_name is not None and ability.face == prepare_spell_face_name:
+                continue  # CR 722.4 - see this function's own docstring above.
             # Gated on `is_permanent` the same way the static branch below
             # already is, and for the identical reason: `trigger_effect_for`
             # is called from exactly one place in the real engine,
@@ -1346,10 +1813,24 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             ):
                 clauses.append(ClauseOutcome(SILENT, ability.text, "triggered (unread condition)"))
                 continue
-            effect = trigger_effect_for(printing.name, ability.event, ability.effect)
-            category = _dispatch_category(effect, printing)
+            x_candidates = _etb_x_candidates(printing, ability)
+            trigger_effects = [
+                trigger_effect_for(printing.name, ability.event, ability.effect, x_value=x_value)
+                for x_value in x_candidates
+            ]
+            effect = trigger_effects[0]
+            modal_category = _modal_trigger_category(ability.effect)
+            if modal_category is not None:
+                category = modal_category
+            else:
+                categories = [_dispatch_category(e, printing) for e in trigger_effects]
+                category = _best(categories)
+            # As with the spell face above: a trigger carrying both CR
+            # 107.3m's substitution and a quoted span is not in this pool,
+            # so that combination is left untested rather than guessed at.
             if (
-                category == HANDLED
+                x_candidates == (None,)
+                and category == HANDLED
                 and not _is_sentinel_effect(effect)
                 and _effect_matched_inside_quotes(
                     lambda text, event=ability.event: trigger_effect_for(
@@ -1363,6 +1844,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 category = UNMATCHABLE_CONDITION
             clauses.append(ClauseOutcome(category, ability.text, "triggered"))
         elif ability.kind is AbilityKind.STATIC and is_permanent:
+            if prepare_spell_face_name is not None and ability.face == prepare_spell_face_name:
+                continue  # CR 722.4 - see this function's own docstring above.
             clauses.append(
                 ClauseOutcome(
                     _static_ability_category(printing, ability.text), ability.text, "static"

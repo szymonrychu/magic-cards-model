@@ -64,6 +64,7 @@ enumerating every legal subset or permutation of it.
   battles, not a wider multiplayer-attack-target menu.
 """
 
+import re
 from collections.abc import Iterable
 from typing import Any, NamedTuple
 
@@ -75,7 +76,7 @@ from ..models.action import (
     SpliceOption,
     TargetSlot,
 )
-from ..models.card import Card, Layout, Type
+from ..models.card import Layout, Type
 from ..models.card_state import CardState
 from ..models.mana import ManaCost, ManaSpend
 from ..models.player import Player
@@ -89,6 +90,7 @@ from .casting import (
     adventure_face,
     granted_cast_options,
     keyword_cast_options,
+    mandatory_additional_costs,
     marker_cast_options,
     play_permissions_on,
     splice_candidates,
@@ -107,6 +109,7 @@ from .cost import (
     _ScannedCandidate,
     _SpendContext,
     _withheld_mana_sources,
+    additional_cost_phrases,
     mana_ability_index,
     mana_candidate_scan,
     plan_mana_payment,
@@ -141,6 +144,7 @@ _BOOLEAN_DECISION_KINDS = frozenset(
         DecisionKind.PAY_ENERGY,
         DecisionKind.PAY_MANA,
         DecisionKind.PUT_ON_TOP_OR_BOTTOM,
+        DecisionKind.CHOOSE_PILE,
         DecisionKind.MULLIGAN,
         DecisionKind.OPENING_HAND_ACTION,
     }
@@ -202,10 +206,25 @@ def _mana_affordability(
     return Affordability.NO, reason, None
 
 
-def _candidate_pool_for(game: Any, payer: str, component: CostComponent) -> list[CardState] | None:
+def _candidate_pool_for(
+    game: Any, payer: str, component: CostComponent, excluding: Any = None
+) -> list[CardState] | None:
     """Where `component`'s still-unchosen objects would come from, or `None`
     when this is not one of the shapes judged here (see `_component_
-    affordability`'s own `UNKNOWN` fallback)."""
+    affordability`'s own `UNKNOWN` fallback).
+
+    `excluding` is the id of the spell being cast: CR 601.2a moves it to the
+    stack before CR 601.2h pays anything, so it can never pay its own cost -
+    Force of Will alone in hand has no blue card to exile."""
+    pool = _unfiltered_candidate_pool(game, payer, component)
+    if pool is None or excluding is None:
+        return pool
+    return [card for card in pool if card.id != excluding]
+
+
+def _unfiltered_candidate_pool(
+    game: Any, payer: str, component: CostComponent
+) -> list[CardState] | None:
     kind = component.kind
     if kind in (ComponentKind.DISCARD, ComponentKind.REVEAL):
         return list(game.player(payer).hand)
@@ -236,6 +255,8 @@ def _candidate_pool_for(game: Any, payer: str, component: CostComponent) -> list
         ComponentKind.TAP,
         ComponentKind.UNTAP,
         ComponentKind.EXERT,
+        # "Blight N": a creature the payer controls (CR 701.68a).
+        ComponentKind.PLACE_COUNTERS,
     ):
         pool = game.permanents_controlled_by(payer)
         if kind is ComponentKind.TAP:
@@ -247,7 +268,7 @@ def _candidate_pool_for(game: Any, payer: str, component: CostComponent) -> list
 
 
 def _component_affordability(
-    game: Any, payer: str, component: CostComponent
+    game: Any, payer: str, component: CostComponent, excluding: Any = None
 ) -> tuple[bool | None, str | None]:
     """Whether one non-mana `CostComponent` could be paid, without actually
     choosing anything to pay it with.
@@ -267,7 +288,7 @@ def _component_affordability(
     if len(component.cards) >= component.required:
         refusal = component.why_not(game)
         return refusal is None, refusal
-    pool = _candidate_pool_for(game, payer, component)
+    pool = _candidate_pool_for(game, payer, component, excluding)
     if pool is None:
         return None, (
             f"{component.description or component.kind.value} affordability is not judged "
@@ -295,6 +316,7 @@ def _cost_affordability(
     candidate_scan: list[_ScannedCandidate],
     *,
     spend: ManaSpend | None = None,
+    excluding: Any = None,
 ) -> tuple[Affordability, str | None, tuple[ManaPlanEntry, ...]]:
     """The combined affordability of a `TotalCost`'s mana and every
     non-mana component, worst answer wins (`NO` over `UNKNOWN` over `YES`),
@@ -309,7 +331,7 @@ def _cost_affordability(
     status, reason, plan = _mana_affordability(game, payer, total.mana, spend, candidate_scan)
     reasons = [reason] if reason else []
     for component in total.components:
-        ok, component_reason = _component_affordability(game, payer, component)
+        ok, component_reason = _component_affordability(game, payer, component, excluding)
         if ok is False:
             status = Affordability.NO
         elif ok is None and status is not Affordability.NO:
@@ -464,6 +486,11 @@ def _target_slots(
     )
 
 
+#: An X standing alone in a printed additional cost ("pay X life"), the
+#: variable CR 107.3a has the caster announce.
+_A_LONE_X = re.compile(r"\bX\b")
+
+
 def _cast_action(
     game: Any,
     player: str,
@@ -479,7 +506,12 @@ def _cast_action(
 ) -> Action:
     modal = modal_profile(card.card)
     modes = tuple(mode.text for mode in modal.modes) if modal is not None else ()
-    x_range = (0, None) if "{X}" in (card.card.mana_cost or "") and modal is None else None
+    # CR 107.3a: X is announced for an {X} in the mana cost and for an X in
+    # an additional cost alike (Toxic Deluge's "pay X life").
+    announces_x = "{X}" in (card.card.mana_cost or "") or any(
+        _A_LONE_X.search(phrase) for phrase in additional_cost_phrases(card.card)
+    )
+    x_range = (0, None) if announces_x and modal is None else None
     # CR 709.3b/715.3b: the row is about one face, so the phrase it reports
     # has to be that face's own. `announcement_profile` took no face and fell
     # through to `targeting_profile(card)`, which reads the *front* half - so
@@ -494,10 +526,32 @@ def _cast_action(
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )
+    # CR 601.2f / 118.9d: the total cost is this row's mana or alternative
+    # cost plus every mandatory additional cost, read by the same helper the
+    # cast itself charges them with.
+    #
+    # X has not been announced yet (CR 107.3a), so the row is judged at the
+    # cheapest legal announcement: CR 107.1b makes 0 a legal choice, and the
+    # engine reads no printed minimum. A larger X only adds generic mana or
+    # more of the same payment ("pay X life"), so a cost unpayable at X=0 is
+    # unpayable at every X, and one payable at X=0 is a castable spell.
+    x_value = 0 if announces_x else None
+    try:
+        extras = mandatory_additional_costs(card, player, x_value)
+    except ValueError as refusal:
+        extras, unpayable = [], unpayable or str(refusal)
+    # `judged_total` is the X=0 stand-in `_cost_affordability` is asked about
+    # below - never what a caller reads back. A larger X only adds generic
+    # mana or more of the same additional payment, so a cost unpayable at
+    # X=0 is unpayable at every X, and this is judged, never displayed.
+    judged_mana = total.mana.with_x(0) if total.mana.x_count else total.mana
+    judged_components = list(total.components)
+    for extra in extras:
+        judged_mana = judged_mana.plus(extra.mana.with_x(0)) if extra.mana.symbols else judged_mana
+        judged_components.extend(extra.components)
+    judged_total = TotalCost(mana=judged_mana, components=judged_components)
     pays_with: tuple[ManaPlanEntry, ...] = ()
-    if x_range is not None:
-        affordable, reason = Affordability.UNKNOWN, "X has not been announced yet (CR 107.3a)"
-    elif unpayable is not None:
+    if unpayable is not None:
         # CR 118.6: a card with no mana symbols at all (Living End, Ancestral
         # Vision) has an unpayable cost, and CR 118.6 itself is explicit that
         # attempting to *pay* one is illegal - `Game.cast` would refuse with
@@ -507,10 +561,38 @@ def _cast_action(
         affordable, reason = Affordability.NO, unpayable
     else:
         affordable, reason, pays_with = _cost_affordability(
-            game, player, total, candidate_scan, spend=spend
+            game, player, judged_total, candidate_scan, spend=spend, excluding=card.id
         )
         affordable, reason = _widen_for_object_costs(game, player, card, affordable, reason)
-    cost_str, mana_cost_str = _cost_strings(total)
+    # The displayed cost is a different question from the judged one (CR
+    # 107.3a: nobody has announced X yet), so it keeps the printed X exactly
+    # as `total` already carried it - `judged_total`'s X=0 stand-in never
+    # reaches `Action.cost`/`mana_cost`. A mandatory additional cost is
+    # folded in the same way, except one whose own phrase contains the
+    # unannounced X: its amount cannot be shown resolved (that would claim a
+    # value nobody chose) nor literally as "X" (a life payment, the only
+    # shape CR 118.8a's additional costs take here, carries a concrete
+    # amount), so it is the one case left out of the string - the honest,
+    # smallest reading, and the one the cost showed before this row counted
+    # mandatory additional costs at all.
+    try:
+        shown_extras = extras if not announces_x else mandatory_additional_costs(card, player, None)
+    except ValueError:
+        shown_extras = []
+    shown_mana = total.mana
+    shown_components = list(total.components)
+    for extra in shown_extras:
+        shown_mana = shown_mana.plus(extra.mana) if extra.mana.symbols else shown_mana
+        # The unannounced X of "pay X life" / "blight X" is read now
+        # (`CostComponent.variable_count`), no longer an unreadable phrase
+        # that dropped the extra, so it is left out here instead. A reveal of
+        # X cards shows as it always did.
+        shown_components.extend(
+            component
+            for component in extra.components
+            if not component.variable_count or component.kind is ComponentKind.REVEAL
+        )
+    cost_str, mana_cost_str = _cost_strings(TotalCost(mana=shown_mana, components=shown_components))
     return Action(
         kind=ActionKind.CAST,
         player=player,
@@ -583,11 +665,11 @@ def _why_cannot_cast_face(
     )
 
 
-def _base_cost_options(card: Card) -> list[tuple[str | None, ManaCost]]:
-    """Every face this card could announce a plain cast for (CR 709.3's
-    split-card choice, CR 715.3's Adventure), as `(face name to record via
-    `spell_face`, or None for the plain front-face cast, that face's own
-    mana cost)`.
+def _base_cost_options(card: CardState) -> list[tuple[str | None, ManaCost]]:
+    """Every face this object could announce a plain cast for (CR 709.3's
+    split-card choice, CR 715.3's Adventure, CR 722.3c's prepare-spell
+    copy), as `(face name to record via `spell_face`, or None for the plain
+    front-face cast, that face's own mana cost)`.
 
     A split card's `card.mana_cost` is both halves joined by `" // "` -
     `Wear // Tear` is `"{1}{R} // {W}"` - and `ManaCost.parse` reads a split
@@ -604,19 +686,32 @@ def _base_cost_options(card: Card) -> list[tuple[str | None, ManaCost]]:
     top-level `mana_cost` is the same joined string - and its Adventure half
     (`adventure_face`) is the second option, recorded the way `Casting.
     cast_as_adventure` records it.
+
+    **CR 722.3c's exile copy is checked first**, ahead of every other shape:
+    "that copy has only the characteristics of that permanent's prepare
+    spell", which is `Card.prepare_spell` (`card_faces[1]`'s inset frame),
+    never the front permanent's whole-card cost the fallback below would
+    otherwise report. A single option, no choice offered, the same way
+    `Casting.base_cost` reads it unconditionally once `prepare_spell_face`
+    is set - CR 722.3 forbids a prepare spell from also being split or
+    Adventure, so this never races either of those two branches.
     """
-    faces = card.card_faces or []
-    if card.layout is Layout.SPLIT and faces:
+    if card.prepare_spell_face:
+        prepare_face = card.card.prepare_spell
+        if prepare_face is not None:
+            return [(None, ManaCost.parse(prepare_face.mana_cost or ""))]
+    faces = card.card.card_faces or []
+    if card.card.layout is Layout.SPLIT and faces:
         return [(face.name, ManaCost.parse(face.mana_cost or "")) for face in faces]
-    if card.layout is Layout.ADVENTURE and faces:
+    if card.card.layout is Layout.ADVENTURE and faces:
         options: list[tuple[str | None, ManaCost]] = [
             (None, ManaCost.parse(faces[0].mana_cost or ""))
         ]
-        inset = adventure_face(card)
+        inset = adventure_face(card.card)
         if inset is not None:
             options.append((inset.name, ManaCost.parse(inset.mana_cost or "")))
         return options
-    return [(None, ManaCost.parse(card.mana_cost or ""))]
+    return [(None, ManaCost.parse(card.card.mana_cost or ""))]
 
 
 def _splice_options_for(game: Any, player: str, card: CardState) -> tuple[SpliceOption, ...]:
@@ -663,7 +758,7 @@ def _permission_cast_actions(
         if permission.why_not(card, player, game, action=PlayAction.CAST) is not None:
             continue
         if permission.pays_mana_cost:
-            for face_name, mana in _base_cost_options(card.card):
+            for face_name, mana in _base_cost_options(card):
                 # CR 709.3a/715.3a: both of CR 601.3's questions belong to the
                 # *named* face - see the plain-hand branch in `_cast_actions`
                 # for what the face-blind versions of these calls reported.
@@ -728,7 +823,7 @@ def _cast_actions(
 
     if zone is Zone.HAND:
         if why_cannot_cast_from(card, player, Zone.HAND, game) is None:
-            for face_name, mana in _base_cost_options(card.card):
+            for face_name, mana in _base_cost_options(card):
                 # CR 709.3a/715.3a: "only the chosen half is evaluated to see
                 # if it can be cast", and CR 601.3e makes that substitution
                 # cover CR 117.1a's timing and CR 611.1's prohibitions alike -
@@ -784,7 +879,7 @@ def _cast_actions(
         # option enumerates faces at all (CR 709.3a/715.3a/601.3e) and once
         # for the card otherwise.
         if option.pays_mana_cost:
-            for face_name, mana in _base_cost_options(card.card):
+            for face_name, mana in _base_cost_options(card):
                 if _why_cannot_cast_face(game, player, card, face_name) is not None:
                     continue
                 actions.append(
@@ -1548,6 +1643,17 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
         minimum = decision.amount if decision.exact else 0
         return [build(decision_candidates=decision.cards, x_range=(minimum, decision.amount))]
 
+    if decision.kind is DecisionKind.CHOOSE_PLAYERS:
+        # `CHOOSE_CARDS`' own twin, over `decision.players` instead of
+        # `decision.cards` - CR 701.34a's "choose any number of ... players"
+        # is `exact=False` on every printing in the pool, so `minimum` is 0
+        # exactly as `Decision.default_answer`'s own "choose nobody" already
+        # treats it.
+        minimum = decision.amount if decision.exact else 0
+        return [
+            build(decision_player_candidates=decision.players, x_range=(minimum, decision.amount))
+        ]
+
     if decision.kind is DecisionKind.CHOOSE_TARGETS:
         maximum = (
             decision.target_maximum
@@ -1590,7 +1696,38 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
     if decision.kind in (DecisionKind.SCRY, DecisionKind.SURVEIL):
         return [build(decision_candidates=decision.cards, x_range=(0, len(decision.cards)))]
 
-    return []  # pragma: no cover - every DecisionKind is handled above
+    return []  # pragma: no cover - _DECISION_ANSWER_KINDS below makes this unreachable
+
+
+#: Every `DecisionKind` `decision_answers` has a branch for, kept in sync with
+#: the `if`/`elif` chain above by the `assert` right below it - CR 701.34a's
+#: own `CHOOSE_PLAYERS` reached the function's final `return []` with no
+#: branch of its own once, offering *no* legal action for a genuinely pending
+#: decision and hanging the game; nothing short of checking every member of
+#: the enum against the branches actually written catches that again. Mirrors
+#: `machines/decisions.py`'s own `_ANSWER_FIELD_FOR_KIND` assertion for the
+#: identical reason.
+_DECISION_ANSWER_KINDS = frozenset(
+    {
+        DecisionKind.DECLARE_ATTACKERS,
+        DecisionKind.DECLARE_BLOCKERS,
+        *_BOOLEAN_DECISION_KINDS,
+        DecisionKind.PAY_ENERGY_AMOUNT,
+        DecisionKind.PAY_LIFE_AMOUNT,
+        DecisionKind.CHOOSE_A_QUALITY,
+        DecisionKind.CHOOSE_A_MODE,
+        DecisionKind.CHOOSE_CARDS,
+        DecisionKind.CHOOSE_PLAYERS,
+        DecisionKind.CHOOSE_TARGETS,
+        DecisionKind.ASSIGN_COMBAT_DAMAGE,
+        DecisionKind.ORDER_TRIGGERS,
+        DecisionKind.SCRY,
+        DecisionKind.SURVEIL,
+    }
+)
+assert set(DecisionKind) == _DECISION_ANSWER_KINDS, (
+    "every DecisionKind needs a decision_answers branch - see _DECISION_ANSWER_KINDS"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -1599,13 +1736,23 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
 
 
 def legal_actions(
-    game: Any, player: str, *, pending: PendingDecision | None = None
+    game: Any,
+    player: str,
+    *,
+    pending: PendingDecision | None = None,
+    include_life_paid_mana: bool = False,
 ) -> list[Action]:
     """Every legal action `player` could take right now.
 
     See the module docstring for what "legal" means here (never gated on
     affordability), what a pending `Decision` does to the answer, and what is
     deliberately not enumerated.
+
+    `include_life_paid_mana` judges affordability as if `player` also
+    activated their "{T}, Pay N life: Add ..." mana abilities themselves
+    (`cost.life_paid_mana_activations`, CR 605.3a), which auto-tap never does
+    for them (CR 118.3c). It does not check whether the life paid is lethal;
+    `machines/hypothetical.py` does that on a copy. Off by default.
 
     Mutates nothing a caller can observe through `Game.model_dump_json`:
     every predicate this calls (`why_cannot_*`, `could_pay_mana_cost`,
@@ -1625,11 +1772,17 @@ def legal_actions(
     asks about; a caller already holding a scope on this game shares that one.
     """
     with board_snapshot(game):
-        return _legal_actions(game, player, pending=pending)
+        return _legal_actions(
+            game, player, pending=pending, include_life_paid_mana=include_life_paid_mana
+        )
 
 
 def _legal_actions(
-    game: Any, player: str, *, pending: PendingDecision | None = None
+    game: Any,
+    player: str,
+    *,
+    pending: PendingDecision | None = None,
+    include_life_paid_mana: bool = False,
 ) -> list[Action]:
     """`legal_actions`, inside its board snapshot."""
     if game.is_over:
@@ -1645,7 +1798,9 @@ def _legal_actions(
     if not game.is_in_game(player):
         return []
 
-    candidate_scan = mana_candidate_scan(game.battlefield, game=game, payer=player)
+    candidate_scan = mana_candidate_scan(
+        game.battlefield, game=game, payer=player, include_life_paid=include_life_paid_mana
+    )
     actions: list[Action] = [
         Action(
             kind=ActionKind.PASS_PRIORITY,

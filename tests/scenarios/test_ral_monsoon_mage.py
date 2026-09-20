@@ -243,11 +243,12 @@ def test_plus_one_grants_a_temporary_cost_reduction():
 
 
 def test_plus_one_discount_is_gone_by_the_controllers_own_next_turn():
-    """CR 800.4m: an "until your next turn" effect "will last until that turn
-    would have begun" - so by the time alice is back in her own precombat
-    main a full turn cycle later, the +1's discount must be gone and Wrenn's
-    Resolve (printed {1}{R}, verified with `resolve_cards`) costs its full
-    price again, with no other reducer on the board."""
+    """CR 611.2a: an "until your next turn" effect lasts as long as stated,
+    ending the moment that stated turn begins - so by the time alice is back
+    in her own precombat main a full turn cycle later, the +1's discount must
+    be gone and Wrenn's Resolve (printed {1}{R}, verified with
+    `resolve_cards`) costs its full price again, with no other reducer on the
+    board."""
     scenario = (
         Scenario()
         .player(

@@ -117,6 +117,20 @@ TURN_ORDER: tuple[Step, ...] = (
     Step.CLEANUP,
 )
 
+COMBAT_PHASE_STEPS: tuple[Step, ...] = (
+    Step.BEGINNING_OF_COMBAT,
+    Step.DECLARE_ATTACKERS,
+    Step.DECLARE_BLOCKERS,
+    Step.COMBAT_DAMAGE,
+    Step.END_OF_COMBAT,
+)
+"""One combat phase's own five steps (CR 500.1, CR 506.1), in order.
+
+`Game.insert_extra_phase`/`TurnMachine.insert_extra_phase` (CR 500.8) reuses
+this exact tuple for "an additional combat phase" (Aggravated Assault's own
+text) - a repeated occurrence of the same steps needs no new `Step` members,
+since nothing here assumes any one of them happens only once a turn."""
+
 PREGAME_ORDER: tuple[Step, ...] = (
     Step.MULLIGAN,
     Step.PREGAME_ACTIONS,
@@ -225,6 +239,24 @@ class TurnMachine(EngineModel):
     activation counts.
     """
 
+    turns_taken_by: dict[str, int] = Field(
+        default_factory=lambda data: (
+            {data["players"][data["active_index"]]: 1} if data["turns_taken"] else {}
+        )
+    )
+    """How many of their own turns each player has begun, extra ones included.
+
+    CR 102.1: "The active player is the player whose turn it is", so the entry
+    for the active player goes up as each turn of theirs begins, normal or extra
+    (CR 500.7), and reads N for the whole of their Nth turn. Neither
+    `turn_number` (rounds, blind to extra turns) nor `turns_taken` (every
+    player's turns) answers that, and it cannot be derived after the fact: an
+    extra turn leaves no record once `extra_turns` is popped. A player with no
+    turn begun yet has no entry; `own_turns_taken` reads that as 0. Empty in the
+    pregame (CR 103.8's first turn has not begun). A machine built directly at
+    turn 1 is already in its active player's first turn, hence the default.
+    """
+
     extra_turns: list[str] = Field(default_factory=list)
     """Extra turns waiting to be taken, in the order they were created (CR 500.7).
 
@@ -239,6 +271,46 @@ class TurnMachine(EngineModel):
 
     taking_extra_turn: bool = False
     """Whether the turn now in progress is an extra one (CR 500.7)."""
+
+    extra_phase_queue: list[Step] = Field(default_factory=list)
+    """Steps still to run before the ordinary `TURN_ORDER` walk resumes,
+    queued by `insert_extra_phase` (CR 500.8).
+
+    CR 500.8: "Some effects can add phases to a turn. They do this by adding
+    the phases directly after the specified phase. If multiple extra phases
+    are created after the same phase, the most recently created phase will
+    occur first." Aggravated Assault's own "After this main phase, there is
+    an additional combat phase followed by an additional main phase" adds
+    the phase after whichever main phase it resolves during - the *current*
+    one, always, for every card in the pool printed this way - so this is a
+    flat queue of individual steps rather than a stack of whole phases keyed
+    to an anchor point: `advance` always serves this queue before it ever
+    looks at `TURN_ORDER` again, which is exactly "directly after" the
+    phase in progress when the steps were queued. A second `insert_extra_
+    phase` call while steps are still queued prepends its own steps ahead of
+    what is already there, which is what makes the most-recently-created one
+    run first - including Aggravated Assault's own headline combo, a second
+    activation *during* the additional main phase itself: at that moment
+    `extra_phase_queue` is already empty again but `resume_index` (below)
+    has not been consumed yet, so the new steps are the only thing queued
+    and run immediately, ahead of the still-owed return to the turn's own
+    real combat phase."""
+
+    resume_index: int | None = None
+    """Where in `TURN_ORDER` to continue once `extra_phase_queue` drains, or
+    `None` when nothing is queued.
+
+    Needed because `self.step`'s own value cannot answer this: an additional
+    combat phase reuses `COMBAT_PHASE_STEPS`' own `Step` members and an
+    additional main phase reuses `Step.POSTCOMBAT_MAIN` (CR 505.1a), both of
+    which also appear later in `TURN_ORDER` at their own ordinary position -
+    `TURN_ORDER.index(self.step)` cannot tell "the extra occurrence, still
+    owing a return" from "the turn's own real occurrence, nothing further
+    owed" apart once the two share a step value. `insert_extra_phase` sets
+    this only the first time (`is None`), from the position right after the
+    phase in progress when it was called - a later call, however deeply
+    nested, leaves the original return point alone and only adds to the
+    queue in front of it."""
 
     order_index: int | None = None
     """Where the round-the-table rotation stands, when that is not `active_index`.
@@ -349,6 +421,19 @@ class TurnMachine(EngineModel):
         """
         return self.step not in NO_PRIORITY and self.step not in PREGAME_STEPS
 
+    def own_turns_taken(self, player: str) -> int:
+        """How many of their own turns `player` has begun, this one included.
+
+        CR 102.1 makes a turn the active player's own; CR 500.7's extra turns
+        count. 0 before the player's first turn, and for everyone in the pregame.
+        """
+        return self.turns_taken_by.get(player, 0)
+
+    def _begin_own_turn(self) -> None:
+        """Count a turn of the active player's as it begins (CR 102.1, 500.7)."""
+        player = self.active_player
+        self.turns_taken_by[player] = self.turns_taken_by.get(player, 0) + 1
+
     @property
     def is_first_turn(self) -> bool:
         return self.turn_number == 1
@@ -404,6 +489,7 @@ class TurnMachine(EngineModel):
         self.step = Step.MULLIGAN
         self.turn_number = 0
         self.turns_taken = 0
+        self.turns_taken_by = {}
         return self.step
 
     def begin_first_turn(self) -> Step:
@@ -421,6 +507,7 @@ class TurnMachine(EngineModel):
         self.step = Step.UNTAP
         self.turn_number = 1
         self.turns_taken = 1
+        self.turns_taken_by = {self.active_player: 1}
         return self.step
 
     def advance(self) -> Step:
@@ -428,7 +515,17 @@ class TurnMachine(EngineModel):
 
         In the pregame the sequence is `PREGAME_ORDER`'s, and falling off its end
         begins the first turn rather than passing one.
+
+        CR 500.8's queued extra-phase steps (`extra_phase_queue`) are served
+        before `TURN_ORDER` is ever consulted again - that is what "directly
+        after the [current] phase" means: the ordinary walk is paused, not
+        replaced, and resumes exactly where it left off once the queue runs
+        dry.
         """
+        if self.extra_phase_queue:
+            self.step = self.extra_phase_queue.pop(0)
+            return self.step
+
         if self.step in PREGAME_STEPS:
             index = PREGAME_ORDER.index(self.step)
             if index + 1 < len(PREGAME_ORDER):
@@ -436,12 +533,49 @@ class TurnMachine(EngineModel):
                 return self.step
             return self.begin_first_turn()
 
-        index = TURN_ORDER.index(self.step)
-        if index + 1 < len(TURN_ORDER):
-            self.step = TURN_ORDER[index + 1]
+        if self.resume_index is not None:
+            # The queue just ran dry - resume exactly where the ordinary
+            # walk would have gone next when it was paused, not wherever
+            # `self.step`'s own value happens to sit in `TURN_ORDER` (see
+            # `resume_index`'s own docstring for why that would be
+            # ambiguous once an extra phase reuses a `Step` that also
+            # occurs later in the turn).
+            next_index = self.resume_index
+            self.resume_index = None
+        else:
+            next_index = TURN_ORDER.index(self.step) + 1
+
+        if next_index < len(TURN_ORDER):
+            self.step = TURN_ORDER[next_index]
         else:
             self.begin_next_turn()
         return self.step
+
+    # -- extra phases (CR 500.8) --------------------------------------------
+
+    def insert_extra_phase(self, steps: tuple[Step, ...]) -> None:
+        """Add a phase's steps directly after the phase in progress (CR 500.8).
+
+        `steps` is the added phase's own steps in order - `COMBAT_PHASE_
+        STEPS` for "an additional combat phase", or `(Step.POSTCOMBAT_MAIN,)`
+        for "an additional main phase" (CR 505.1a: every main phase but the
+        turn's first is a postcombat one, which an additional main phase
+        always is, whichever phase it followed - so it is `Step.
+        POSTCOMBAT_MAIN` here without needing to ask which main phase it
+        came after).
+
+        Prepended, not appended: CR 500.8's own "If multiple extra phases
+        are created after the same phase, the most recently created phase
+        will occur first" is what makes a second call's steps run before an
+        earlier call's steps still waiting in the queue.
+
+        `resume_index` is set only the first time (see its own docstring) -
+        a nested call, made while an earlier extra phase is still in
+        progress or still queued, leaves the original return point alone.
+        """
+        if self.resume_index is None:
+            self.resume_index = TURN_ORDER.index(self.step) + 1
+        self.extra_phase_queue = list(steps) + self.extra_phase_queue
 
     def begin_next_turn(self) -> None:
         """Pass the turn to the next player still in the game (CR 500.1, 800.4).
@@ -465,6 +599,7 @@ class TurnMachine(EngineModel):
             self.order_index = rotation
             self.active_index = self.players.index(extra)
             self.taking_extra_turn = True
+            self._begin_own_turn()
             self._begin_player_control()
             return
 
@@ -477,6 +612,7 @@ class TurnMachine(EngineModel):
             if self.active_player not in self.departed:
                 break
         self.order_index = None
+        self._begin_own_turn()
         self._begin_player_control()
 
     # -- extra turns (CR 500.7) --------------------------------------------

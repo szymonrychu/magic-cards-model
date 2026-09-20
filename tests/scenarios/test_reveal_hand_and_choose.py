@@ -240,3 +240,158 @@ def test_thought_knot_seer_leaving_gives_the_card_back_with_a_fresh_draw():
     scenario.pass_until_resolved()
 
     assert [state.name for state in bob.hand] == ["Forest", "Mountain"]
+
+
+# --------------------------------------------------------------------------
+# A counted choice: "you choose two cards from it, then that player discards
+# those cards" (Gruesome Discovery), behind a morbid "instead"
+# --------------------------------------------------------------------------
+#
+# Gruesome Discovery: "Target player discards two cards. / Morbid - If a
+# creature died this turn, instead that player reveals their hand, you choose
+# two cards from it, then that player discards those cards."
+#
+# Looked up with `mise run rules:find` in the session that wrote these:
+#
+# - CR 207.2c - morbid is an ability word: "no special rules meaning".
+# - CR 700.4 - "The term dies means 'is put into a graveyard from the
+#   battlefield.'" An exiled creature did not die.
+# - CR 614.1a - "Effects that use the word 'instead' are replacement effects."
+# - CR 609.3 - "If an effect attempts to do something impossible, it does only
+#   as much as possible." A one-card hand gives up its one card.
+# - CR 701.9b - "By default, effects that cause a player to discard a card
+#   allow the affected player to choose ... Some effects, however, ... allow
+#   another player to choose" - the morbid half is that override, the first
+#   sentence is not.
+
+GRUESOME = "Gruesome Discovery"
+
+
+def _gruesome_board(bob_hand: list[str]) -> Scenario:
+    return (
+        Scenario()
+        .player("alice", hand=[GRUESOME], battlefield=["Swamp"] * 4 + ["Grizzly Bears"])
+        .player("bob", hand=bob_hand)
+    )
+
+
+def test_without_morbid_the_target_discards_two_of_their_own_choice():
+    """No creature died: the first sentence applies, and bob - the player
+    discarding - chooses the two (CR 701.9b's default)."""
+    scenario = _gruesome_board(["Lightning Bolt", "Forest", "Mountain"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    forest = scenario.find("Forest", Zone.HAND, "bob")
+    mountain = scenario.find("Mountain", Zone.HAND, "bob")
+    scenario.will_discard(forest, mountain, username="bob")
+
+    scenario.cast_and_resolve(GRUESOME, *scenario.untapped_sources(*["Swamp"] * 4), targets=["bob"])
+
+    assert [card.name for card in bob.hand] == ["Lightning Bolt"]
+    (choose,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS]
+    assert choose.player == "bob"
+    assert choose.amount == 2
+
+
+def test_with_morbid_the_caster_chooses_two_cards_from_the_revealed_hand():
+    """A creature died this turn: the whole hand is revealed and alice - not
+    bob - picks two, of any kind (the sentence names no quality)."""
+    scenario = _gruesome_board(["Lightning Bolt", "Forest", "Mountain"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    forest = scenario.find("Forest", Zone.HAND, "bob")
+    scenario.game.destroy(scenario.creature("Grizzly Bears", "alice"))
+    scenario.will_choose_cards(bolt, forest, username="alice")
+
+    scenario.cast_and_resolve(GRUESOME, *scenario.untapped_sources(*["Swamp"] * 4), targets=["bob"])
+
+    assert [card.name for card in bob.hand] == ["Mountain"]
+    assert bolt.zone is Zone.GRAVEYARD and forest.zone is Zone.GRAVEYARD
+    (choose,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS]
+    assert choose.player == "alice"
+    assert choose.amount == 2
+    assert len(choose.cards) == 3
+
+
+def test_with_morbid_a_one_card_hand_gives_up_its_only_card():
+    """CR 609.3: two is asked for, one exists - the choice is of one."""
+    scenario = _gruesome_board(["Lightning Bolt"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    scenario.game.destroy(scenario.creature("Grizzly Bears", "alice"))
+
+    scenario.cast_and_resolve(GRUESOME, *scenario.untapped_sources(*["Swamp"] * 4), targets=["bob"])
+
+    assert bolt.zone is Zone.GRAVEYARD
+    (choose,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS]
+    assert choose.player == "alice"
+    assert choose.amount == 1
+
+
+def test_an_exiled_creature_did_not_die_so_morbid_is_off():
+    """CR 700.4: exile is not dying - the first sentence applies and bob
+    chooses."""
+    scenario = _gruesome_board(["Lightning Bolt", "Forest", "Mountain"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.exile_permanent(scenario.creature("Grizzly Bears", "alice"))
+
+    scenario.cast_and_resolve(GRUESOME, *scenario.untapped_sources(*["Swamp"] * 4), targets=["bob"])
+
+    assert len(scenario.player("bob").hand) == 1
+    (choose,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS]
+    assert choose.player == "bob"
+
+
+def test_a_creature_that_died_last_turn_does_not_turn_on_morbid():
+    """ "This turn": a death on alice's previous turn is not counted once a
+    new turn has begun."""
+    scenario = _gruesome_board(["Lightning Bolt", "Forest", "Mountain"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.destroy(scenario.creature("Grizzly Bears", "alice"))
+    scenario.start_at(Step.CLEANUP)
+    scenario.advance()  # bob's turn begins
+    scenario.start_at(Step.CLEANUP)
+    scenario.advance()  # alice's next turn
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.cast_and_resolve(GRUESOME, *scenario.untapped_sources(*["Swamp"] * 4), targets=["bob"])
+
+    (choose,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS]
+    assert choose.player == "bob"
+
+
+# -- Solve for Disappointment: a compound "nonland permanent card" quality --
+
+
+def test_a_compound_nonland_permanent_quality_excludes_lands_and_instants_alike():
+    """Solve for Disappointment: "Target opponent reveals their hand. You
+    choose a nonland permanent card from it. That player discards that
+    card." CR 110.4a's "permanent card" - artifact, battle, creature,
+    enchantment, land, or planeswalker - combined with `_nonland_or_typed_
+    card_matcher`'s own negation reads as "a permanent card that is not a
+    land": Forest is excluded for being a land, Lightning Bolt (an instant,
+    never a permanent card at all per CR 110.4a) is excluded too, and
+    Grizzly Bears (a nonland permanent card) is the only legal choice.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Solve for Disappointment"], battlefield=["Swamp", "Swamp"])
+        .player("bob", hand=["Lightning Bolt", "Forest", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "bob")
+
+    scenario.will_discard(bears, username="alice")
+
+    scenario.cast_and_resolve(
+        "Solve for Disappointment", *scenario.untapped_sources("Swamp", "Swamp"), targets=["bob"]
+    )
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert len(bob.hand) == 2
+    (choose,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS]
+    assert choose.player == "alice"
+    assert choose.amount == 1

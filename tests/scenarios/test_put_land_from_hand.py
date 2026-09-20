@@ -128,6 +128,83 @@ def test_cultivator_colossus_stops_when_declined_partway():
     )
 
 
+# -- "any number of" (CR 107.1c), and more than one land at once ------------
+#
+# Wrenn and Seven's loyalty 0 is the same instruction as Arboreal Grazer's
+# trigger with a wider printed quantity: "Put any number of land cards from
+# your hand onto the battlefield tapped." The old regex matched only the
+# article "a", so this whole ability - loyalty cost paid, nothing else
+# happening - silently did nothing.
+
+
+def test_wrenn_and_seven_puts_any_number_of_lands_from_hand():
+    """CR 107.1c: "any number" permits zero up to the highest number the
+    effect allows - here, every land actually in hand."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mountain", "Swamp", "Lightning Bolt"],
+            battlefield=["Wrenn and Seven"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wrenn = scenario.find("Wrenn and Seven", Zone.BATTLEFIELD, "alice")
+    mountain = scenario.find("Mountain", Zone.HAND, "alice")
+    swamp = scenario.find("Swamp", Zone.HAND, "alice")
+
+    scenario.will_choose_cards(mountain, swamp, source="Wrenn and Seven")
+    scenario.activate(wrenn, index=1)  # the "0" ability
+    scenario.resolve_top()
+
+    assert mountain.zone is Zone.BATTLEFIELD
+    assert swamp.zone is Zone.BATTLEFIELD
+    assert mountain.tapped and swamp.tapped, "CR 614.1c: the sentence says tapped"
+    alice = scenario.player("alice")
+    assert [c.name for c in alice.hand] == ["Lightning Bolt"], (
+        "only the land cards moved - the non-land stayed in hand"
+    )
+
+
+def test_wrenn_and_seven_choosing_fewer_than_all_lands_is_legal():
+    """ "Any number" also legally means fewer than every land available -
+    CR 107.1c's floor is zero, not "as many as possible"."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mountain", "Swamp"],
+            battlefield=["Wrenn and Seven"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wrenn = scenario.find("Wrenn and Seven", Zone.BATTLEFIELD, "alice")
+    mountain = scenario.find("Mountain", Zone.HAND, "alice")
+
+    scenario.will_choose_cards(mountain, source="Wrenn and Seven")
+    scenario.activate(wrenn, index=1)
+    scenario.resolve_top()
+
+    assert mountain.zone is Zone.BATTLEFIELD
+    swamp = scenario.find("Swamp", Zone.HAND, "alice")
+    assert swamp.zone is Zone.HAND, "declining Swamp is a legal answer, not a forced take"
+
+
+def test_wrenn_and_seven_with_no_lands_in_hand_asks_nothing():
+    scenario = (
+        Scenario().player("alice", hand=["Lightning Bolt"], battlefield=["Wrenn and Seven"]).build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wrenn = scenario.find("Wrenn and Seven", Zone.BATTLEFIELD, "alice")
+
+    scenario.activate(wrenn, index=1)
+    scenario.resolve_top()
+
+    assert scenario.game.decisions.asked == []
+
+
 def test_cultivator_colossus_stops_with_no_land_left_in_hand():
     scenario = (
         Scenario()

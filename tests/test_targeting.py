@@ -169,10 +169,18 @@ def test_a_spell_with_no_targets_refuses_one():
 
 
 def test_text_the_parser_cannot_read_is_not_checked():
-    """Fail open: an unreadable restriction must not become a false rejection."""
+    """Fail open: an unreadable restriction must not become a false rejection.
+
+    "Nonblack" used to be this test's own example - `_negated_color` now
+    reads it (see `tests/scenarios/test_excluded_color_adjectives.py`), so
+    this needs an example that is still genuinely unread: a comparison
+    attempted against something other than a plain number or X (CR 107.1a),
+    which `_COMPARISON_CLAUSE` cannot finish reading and
+    `_extract_comparison` returns `_COMPARISON_UNREADABLE` for.
+    """
     from magic_cards_model.machines.targeting import _parse
 
-    unreadable = _parse("Destroy target nonblack creature.")
+    unreadable = _parse("Destroy target creature with power greater than its toughness.")
 
     assert not unreadable.understood
     unreadable.check(["bob"], caster="alice")  # no exception
@@ -616,4 +624,57 @@ def test_a_genuine_second_target_is_not_collapsed_by_the_gift_reading(name: str)
     assert the_profile.understood
     assert len(the_profile.requirements) == 2
     assert the_profile.min_targets == 2
+
+
+# --------------------------------------------------------------------------
+# A loyalty or activation cost's own number is not a target count (CR 118,
+# CR 601.2b/602.2b) - `Game._activation_target_text` hands `profile_for_text`
+# the ability's whole printed text, cost prefix included, so a "target"
+# phrase that opens the very first sentence after the cost's colon used to
+# have that colon's own preceding number read as its count instead of the
+# default "exactly one" CR 115.1 gives an unmarked "target creature"/"target
+# player". Liliana of the Veil's own "-2: Target player sacrifices a
+# creature." is the reported case; Teferi, Master of Time's "-3: Target
+# creature you don't control phases out." is the off-set proof - a
+# different card, a different magnitude, and a different effect, sharing
+# only the shape that exposed the bug.
+# --------------------------------------------------------------------------
+
+
+def test_a_loyalty_costs_own_number_is_not_read_as_a_target_count():
+    """Liliana of the Veil's "-2:" used to leave `_read_count` reading the
+    "2" off the cost as though the ability read "2 target players" -
+    `TargetRequirement.count`/`minimum` came back 2 for a plainly singular
+    "target player", and the too-few-targets check then refused a legal
+    single-target activation outright."""
+    the_profile = profile_for_text("−2: Target player sacrifices a creature.")
+
+    (requirement,) = the_profile.requirements
+    assert requirement.phrase == "target player"
+    assert requirement.count == 1
+    assert requirement.minimum == 1
+    assert the_profile.min_targets == 1
+
+
+def test_a_larger_loyalty_cost_is_not_read_as_a_target_count_either():
+    """Teferi, Master of Time's own "-3:" - a different magnitude, a
+    different card, and a different effect than Liliana's "-2:", to prove
+    this is `_read_count`'s own general fix and not one pinned to "2"."""
+    the_profile = profile_for_text("−3: Target creature you don't control phases out.")
+
+    (requirement,) = the_profile.requirements
+    assert requirement.phrase == "target creature"
+    assert requirement.count == 1
+    assert requirement.minimum == 1
+
+
+def test_a_generic_mana_activation_costs_number_is_not_read_as_a_target_count():
+    """The identical bug, off a `{N}:` mana cost rather than a loyalty one -
+    both tokenize to a bare digit immediately before "target" once the cost's
+    own colon is crossed, so both need the same fix."""
+    the_profile = profile_for_text("{3}: Target creature gets -2/-2 until end of turn.")
+
+    (requirement,) = the_profile.requirements
+    assert requirement.count == 1
+    assert requirement.minimum == 1
     assert all(requirement.if_gift_promised is None for requirement in the_profile.requirements)

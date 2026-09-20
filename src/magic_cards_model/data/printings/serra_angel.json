@@ -70,7 +70,7 @@
     "pioneer": "legal",
     "modern": "legal",
     "legacy": "legal",
-    "pauper": "not_legal",
+    "pauper": "legal",
     "vintage": "legal",
     "penny": "legal",
     "commander": "legal",
@@ -79,7 +79,7 @@
     "brawl": "legal",
     "competitivebrawl": "legal",
     "alchemy": "legal",
-    "paupercommander": "not_legal",
+    "paupercommander": "legal",
     "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "legal",
@@ -130,13 +130,13 @@
   "promo_types": [
     "setextension"
   ],
-  "edhrec_rank": 9411,
-  "penny_rank": 12378,
+  "edhrec_rank": 9438,
+  "penny_rank": 12454,
   "prices": {
-    "usd": "0.25",
+    "usd": "0.24",
     "usd_foil": null,
     "usd_etched": null,
-    "eur": null,
+    "eur": "0.20",
     "eur_foil": null,
     "tix": null
   },

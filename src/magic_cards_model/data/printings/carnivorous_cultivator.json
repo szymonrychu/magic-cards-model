@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45",
+  "oracle_id": "db655c5a-06f6-42bc-8180-d9ca1c1d939a",
+  "multiverse_ids": [],
+  "tcgplayer_id": 717027,
+  "cardmarket_id": 909242,
+  "name": "Carnivorous Cultivator // Enroot",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45",
+  "scryfall_uri": "https://scryfall.com/card/fra/100/carnivorous-cultivator-enroot?utm_source=api",
+  "layout": "prepare",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-14T11:39:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.jpg?1789385967",
+    "normal": "https://cards.scryfall.io/normal/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.jpg?1789385967",
+    "large": "https://cards.scryfall.io/large/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.jpg?1789385967",
+    "png": "https://cards.scryfall.io/png/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.png?1789385967",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.jpg?1789385967",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.jpg?1789385967",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.webp?1789385967",
+    "grid": "https://cards.scryfall.io/grid/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.webp?1789385967",
+    "display": "https://cards.scryfall.io/display/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.webp?1789385967",
+    "art": "https://cards.scryfall.io/art/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.webp?1789385967",
+    "crop": "https://cards.scryfall.io/crop/front/7/9/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45.webp?1789385967"
+  },
+  "mana_cost": "{1}{G} // {G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Elf Warlock // Sorcery",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Prepared",
+    "Deathtouch"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Carnivorous Cultivator",
+      "mana_cost": "{1}{G}",
+      "type_line": "Creature \u2014 Elf Warlock",
+      "oracle_text": "Deathtouch\nThis creature enters prepared.\nWhenever this creature deals combat damage to a player, return target land card from your graveyard to your hand.",
+      "power": "2",
+      "toughness": "3",
+      "artist": "Martina Fa\u010dkov\u00e1",
+      "artist_id": "6338124e-8e53-498d-8bf9-93a55db2f61c",
+      "illustration_id": "a0b36cb6-9786-4098-b908-49eb76478c2a"
+    },
+    {
+      "object": "card_face",
+      "name": "Enroot",
+      "mana_cost": "{G}",
+      "type_line": "Sorcery",
+      "oracle_text": "Search your library for a land card, put it into your graveyard, then shuffle.",
+      "artist": "Martina Fa\u010dkov\u00e1",
+      "artist_id": "6338124e-8e53-498d-8bf9-93a55db2f61c"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/79dd5c54-5ea5-47b5-8f9b-50ed57a5ea45/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adb655c5a-06f6-42bc-8180-d9ca1c1d939a&unique=prints",
+  "collector_number": "100",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Martina Fa\u010dkov\u00e1",
+  "artist_ids": [
+    "6338124e-8e53-498d-8bf9-93a55db2f61c"
+  ],
+  "illustration_id": "a0b36cb6-9786-4098-b908-49eb76478c2a",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 30358,
+  "prices": {
+    "usd": "14.95",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "9.25",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCarnivorous%2BCultivator%2B%252F%252F%2BEnroot",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCarnivorous%2BCultivator%2B%252F%252F%2BEnroot",
+    "edhrec": "https://edhrec.com/route/?cc=Carnivorous+Cultivator"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717027%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909242&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Carnivorous+Cultivator&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

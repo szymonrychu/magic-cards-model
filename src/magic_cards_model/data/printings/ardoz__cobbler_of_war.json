@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "2a012f05-0009-42cf-8a69-07140b2a2aef",
+  "oracle_id": "bcd5e175-2ef0-48f4-b9bd-14383dd234e0",
+  "multiverse_ids": [
+    589583
+  ],
+  "mtgo_id": 137770,
+  "tcgplayer_id": 450945,
+  "cardmarket_id": 686337,
+  "name": "Ardoz, Cobbler of War",
+  "lang": "en",
+  "released_at": "2022-12-02",
+  "uri": "https://api.scryfall.com/cards/2a012f05-0009-42cf-8a69-07140b2a2aef",
+  "scryfall_uri": "https://scryfall.com/card/j22/29/ardoz-cobbler-of-war?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:06:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.jpg?1783919185",
+    "normal": "https://cards.scryfall.io/normal/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.jpg?1783919185",
+    "large": "https://cards.scryfall.io/large/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.jpg?1783919185",
+    "png": "https://cards.scryfall.io/png/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.png?1783919185",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.jpg?1783919185",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.jpg?1783919185",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.webp?1783919185",
+    "grid": "https://cards.scryfall.io/grid/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.webp?1783919185",
+    "display": "https://cards.scryfall.io/display/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.webp?1783919185",
+    "art": "https://cards.scryfall.io/art/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.webp?1783919185",
+    "crop": "https://cards.scryfall.io/crop/front/2/a/2a012f05-0009-42cf-8a69-07140b2a2aef.webp?1783919185"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Goblin Shaman",
+  "oracle_text": "Haste\nWhenever Ardoz or another creature you control enters, that creature gets +2/+0 until end of turn.\n{3}{R}: Create a 1/1 red Goblin creature token with haste. Activate only as a sorcery.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Haste"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "0c7f299e-4774-4e8b-bb0e-db27d57d2621",
+      "component": "token",
+      "name": "Goblin",
+      "type_line": "Token Creature \u2014 Goblin",
+      "uri": "https://api.scryfall.com/cards/0c7f299e-4774-4e8b-bb0e-db27d57d2621"
+    },
+    {
+      "object": "related_card",
+      "id": "2a012f05-0009-42cf-8a69-07140b2a2aef",
+      "component": "combo_piece",
+      "name": "Ardoz, Cobbler of War",
+      "type_line": "Legendary Creature \u2014 Goblin Shaman",
+      "uri": "https://api.scryfall.com/cards/2a012f05-0009-42cf-8a69-07140b2a2aef"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "247df475-e4ce-4e5e-9317-11892d2211e0",
+  "set": "j22",
+  "set_name": "Jumpstart 2022",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/247df475-e4ce-4e5e-9317-11892d2211e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aj22&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/j22?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2a012f05-0009-42cf-8a69-07140b2a2aef/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abcd5e175-2ef0-48f4-b9bd-14383dd234e0&unique=prints",
+  "collector_number": "29",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kev Walker",
+  "artist_ids": [
+    "f366a0ee-a0cd-466d-ba6a-90058c7a31a6"
+  ],
+  "illustration_id": "304c9c83-79d6-4774-ad05-f697009dea26",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10224,
+  "prices": {
+    "usd": "5.41",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "5.19",
+    "eur_foil": null,
+    "tix": "0.14"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=589583&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArdoz%252C%2BCobbler%2Bof%2BWar",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArdoz%252C%2BCobbler%2Bof%2BWar",
+    "edhrec": "https://edhrec.com/route/?cc=Ardoz%2C+Cobbler+of+War"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F450945%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=686337&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/137770?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
