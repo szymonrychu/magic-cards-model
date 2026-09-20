@@ -1487,6 +1487,105 @@ ADDITIONAL_COST_KEYWORDS = frozenset(
 )
 
 
+#: Each keyword of `ADDITIONAL_COST_KEYWORDS` that prints its own cost on its
+#: own line, with the rule that defines it and whether CR 601.2b's
+#: announcement may name it more than once. Blight is absent because CR
+#: 701.68a is printed inside the card's "As an additional cost ..." sentence
+#: rather than as a keyword line (`_BLIGHT_PHRASE`), and so is read below off
+#: `additional_cost_phrases` with every other printed optional cost.
+#:
+#: Repeatable is the keyword's own rule, never a guess: CR 702.33a's kicker
+#: is "You may pay an additional [cost] as you cast this spell", CR 702.33c's
+#: multikicker and CR 702.56a's replicate both add "any number of times".
+_OPTIONAL_COST_KEYWORDS: tuple[tuple[str, str, bool], ...] = (
+    ("kicker", "CR 702.33a", False),
+    ("multikicker", "CR 702.33c", True),
+    ("replicate", "CR 702.56a", True),
+    ("offspring", "CR 702.175a", False),
+    ("gift", "CR 702.174a", False),
+)
+
+
+class OptionalAdditionalCost(EngineModel):
+    """One optional additional cost a spell's controller may announce as they
+    cast it (CR 601.2b, CR 118.8b).
+
+    CR 601.2b: "If the spell has alternative or additional costs that will be
+    paid as it's being cast such as buyback or kicker costs ..., the player
+    announces their intentions to pay any or all of those costs". CR 118.8b:
+    "Some additional costs are optional."
+
+    This is the **mechanic**, not a keyword: kicker, multikicker, replicate,
+    offspring and gift each print theirs as a keyword line, and CR 701.68a's
+    blight and March of Otherworldly Light's pitch each print theirs inside
+    the card's own "As an additional cost to cast this spell, you may ..."
+    sentence. Both readings land here, so a caller enumerating what a seat
+    may announce asks one question rather than one per keyword.
+
+    Carried across to `models.action.AdditionalCostOption` by
+    `legal_actions`, the same way `SpliceCandidate` is carried to
+    `SpliceOption` - strings only on the far side, never a live `Card`.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    keyword: str | None
+    """The canonical keyword, lower-case, or `None` for a cost printed as a
+    sentence rather than as a keyword line."""
+    cost: str
+    """The cost exactly as printed - `{1}{C}`, `a Food`, `you may blight 1`."""
+    rule: str
+    repeatable: bool = False
+    """CR 702.33c / CR 702.56a's "any number of times"."""
+    understood: bool = True
+    """False when the cost is printed and optional but nothing here can
+    charge it, so a seat is told the option exists and told this engine
+    cannot take it, rather than being quietly shown nothing (CR 118.8b).
+    Buyback, bargain and casualty are not read as additional costs at all and
+    so never reach this; what does are the "you may ..." sentences
+    `additional_cost_phrases` returns that `Casting` has no `pay_*` for."""
+
+
+def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
+    """Every optional additional cost `card` prints for CR 601.2b's
+    announcement, keyword lines and "you may ..." sentences alike.
+
+    The single place that question is answered: `legal_actions` reads it to
+    tell a seat the option exists at all, and `Game._announce_optional_costs`
+    reads it to offer the same options to a cast the engine is making on a
+    player's behalf (CR 608.2g). Two enumerations would be free to drift, and
+    the reported defect was exactly one surface knowing about kicker while
+    the other did not.
+    """
+    found: list[OptionalAdditionalCost] = []
+    for keyword, rule, repeatable in _OPTIONAL_COST_KEYWORDS:
+        ability = _keyword(card, keyword)
+        if ability is None:
+            continue
+        # CR 702.174a's gift has no resource behind it - "you may choose an
+        # opponent" - so what it prints after the keyword is the promise
+        # ("a Food"), read off `parameter`, not a cost off `cost`.
+        printed = ability.cost or ability.parameter
+        if not printed:
+            continue
+        found.append(
+            OptionalAdditionalCost(keyword=keyword, cost=printed, rule=rule, repeatable=repeatable)
+        )
+    for phrase in additional_cost_phrases(card):
+        if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:
+            continue
+        blight = _BLIGHT_PHRASE.match(phrase)
+        found.append(
+            OptionalAdditionalCost(
+                keyword="blight" if blight is not None else None,
+                cost=phrase,
+                rule="CR 701.68a" if blight is not None else "CR 118.8b",
+                understood=blight is not None,
+            )
+        )
+    return found
+
+
 def has_flash(card: Card) -> bool:
     """Whether this printing has flash (CR 702.8a).
 

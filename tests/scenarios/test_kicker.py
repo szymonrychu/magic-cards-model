@@ -31,7 +31,11 @@ caused; `_strip_keyword_ability_lines` fixes both) - both are exercised end to e
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting import optional_additional_costs
+from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.models import Zone
+from magic_cards_model.models.action import ActionKind
+from tests.cards import pool
 from tests.scenarios.harness import Scenario, mana_from
 
 
@@ -179,3 +183,276 @@ def test_a_kicked_burst_lightning_deals_the_kicked_amount_instead():
     scenario.resolve_top()
 
     assert bob.life == 16
+
+
+# -- the option has to reach a seat, not only a caller driving `Casting` ------
+#
+# CR 601.2b: "If the spell has alternative or additional costs that will be
+# paid as it's being cast such as buyback or kicker costs (see rules 118.8 and
+# 118.9), the player announces their intentions to pay any or all of those
+# costs". CR 118.8b: "Some additional costs are optional." An announcement a
+# seat is never told about cannot be made, so the two surfaces this library
+# owes its consumers - `legal_actions` (what may I do) and `Game.cast` (do it,
+# atomically) - are where kicker was actually missing: every test above drives
+# `Casting` by hand, which no seat does.
+
+
+def _lands(scenario, username: str = "alice"):
+    return scenario.game.permanents_controlled_by(username)
+
+
+def _tapped(scenario, username: str = "alice") -> int:
+    return len([source for source in _lands(scenario, username) if source.tapped])
+
+
+def _cast_action(scenario, name: str, username: str = "alice"):
+    actions = [
+        action
+        for action in legal_actions(scenario.game, username)
+        if action.kind is ActionKind.CAST
+        and action.card_id == scenario.find(name, Zone.HAND, username).id
+    ]
+    assert len(actions) == 1, actions
+    return actions[0]
+
+
+def test_a_kickers_cost_is_offered_on_the_cast_action():
+    """The reported bug: Sowing Mycospawn cast with kicker, and the seat was
+    never presented with the option to pay it (CR 601.2b, CR 702.33a)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Sowing Mycospawn"], battlefield=["Wastes"] * 8)
+        .player("bob", battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    action = _cast_action(scenario, "Sowing Mycospawn")
+
+    assert [(option.keyword, option.cost) for option in action.additional_cost_options] == [
+        ("kicker", "{1}{C}")
+    ]
+    assert action.additional_cost_options[0].rule == "CR 702.33a"
+    assert action.additional_cost_options[0].repeatable is False
+
+
+def test_the_atomic_cast_can_pay_the_kicker():
+    """CR 702.33d: `Game.cast` is the whole CR 601.2 sequence as one action,
+    so the kicker announcement has to be sayable there or a seat can want it
+    and still not get it."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Sowing Mycospawn"], battlefield=["Forest"] + ["Wastes"] * 5)
+        .player("bob", battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spawn = scenario.find("Sowing Mycospawn", Zone.HAND, "alice")
+
+    spell = scenario.game.cast(spawn, "alice", kicker=1, mana_sources=_lands(scenario))
+
+    assert spell.zone is Zone.STACK
+    assert scenario.game.cast_record(spell).kicked == 1
+    # CR 118.8a: additional, so the kicker's {1}{C} is charged on top of the
+    # printed {3}{G} - six sources, not four.
+    assert _tapped(scenario) == 6
+
+
+def test_an_unkicked_atomic_cast_is_still_the_default():
+    """CR 118.8b: optional. Saying nothing pays nothing."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Sowing Mycospawn"], battlefield=["Forest"] + ["Wastes"] * 5)
+        .player("bob", battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spawn = scenario.find("Sowing Mycospawn", Zone.HAND, "alice")
+
+    spell = scenario.game.cast(spawn, "alice", mana_sources=_lands(scenario))
+
+    assert scenario.game.cast_record(spell).kicked == 0
+    assert _tapped(scenario) == 4
+
+
+# -- generality: the fix is CR 601.2b's mechanic, not the word "Kicker" -------
+
+
+def test_multikicker_is_offered_as_a_repeatable_option():
+    """Everflowing Chalice, neither the reported card nor in its deck:
+    CR 702.33c's multikicker is a different keyword, a different cost shape
+    ({2} generic against Sowing Mycospawn's {1}{C}), on an artifact with no
+    targets and a printed mana cost of {0} - and it may be paid any number of
+    times."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Everflowing Chalice"], battlefield=["Island"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    action = _cast_action(scenario, "Everflowing Chalice")
+
+    assert [(option.keyword, option.cost) for option in action.additional_cost_options] == [
+        ("multikicker", "{2}")
+    ]
+    assert action.additional_cost_options[0].repeatable is True
+    assert action.additional_cost_options[0].rule == "CR 702.33c"
+
+
+def test_multikicker_can_be_paid_more_than_once_through_the_atomic_cast():
+    """CR 702.33c/702.33d: "it may be kicked multiple times"."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Everflowing Chalice"], battlefield=["Island"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chalice = scenario.find("Everflowing Chalice", Zone.HAND, "alice")
+
+    spell = scenario.game.cast(chalice, "alice", kicker=2, mana_sources=_lands(scenario))
+
+    assert scenario.game.cast_record(spell).kicked == 2
+    assert _tapped(scenario) == 4
+
+
+def test_a_second_kicker_payment_is_refused_for_plain_kicker_through_the_atomic_cast():
+    """CR 702.33a against CR 702.33c: plain kicker is paid once or not at all,
+    and the atomic cast refuses rather than charging twice."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Sowing Mycospawn"], battlefield=["Forest"] + ["Wastes"] * 8)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spawn = scenario.find("Sowing Mycospawn", Zone.HAND, "alice")
+
+    with pytest.raises(ValueError, match="plain kicker"):
+        scenario.game.cast(spawn, "alice", kicker=2, mana_sources=_lands(scenario))
+
+    assert spawn.zone is Zone.HAND
+    assert all(source.untapped for source in _lands(scenario))
+
+
+def test_a_replicate_cost_is_offered_the_same_way():
+    """CR 702.56a is CR 601.2b's same optional additional cost with another
+    keyword on it, so it rides the same enumeration rather than a second
+    one - Gigadrowse, a third card and a third cost shape ({U})."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Gigadrowse"], battlefield=["Island"] * 6)
+        .player("bob", battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    action = _cast_action(scenario, "Gigadrowse")
+
+    assert [(option.keyword, option.cost) for option in action.additional_cost_options] == [
+        ("replicate", "{U}")
+    ]
+    assert action.additional_cost_options[0].repeatable is True
+
+
+def test_a_card_with_no_optional_additional_cost_offers_none():
+    """The other side of it: nothing invented where nothing is printed."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    assert _cast_action(scenario, "Lightning Bolt").additional_cost_options == ()
+
+
+def test_an_optional_printed_cost_this_engine_cannot_charge_says_so_out_loud():
+    """CR 118.8b's optional additional cost is not always a keyword: March of
+    Otherworldly Light prints "As an additional cost to cast this spell, you
+    may exile any number of white cards from your hand", and nothing in
+    `Casting` can charge that. It is still a printed, optional announcement a
+    seat is entitled to know about (CR 601.2b), so the row is enumerated with
+    `understood=False` - the same loud fail-closed shape CR 106.6's
+    `Action.restriction_understood` already uses - rather than silently
+    omitted, which is what would leave a seat to find out by experiment."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["March of Otherworldly Light"], battlefield=["Plains"] * 4)
+        .player("bob", battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    (option,) = _cast_action(scenario, "March of Otherworldly Light").additional_cost_options
+
+    assert option.keyword is None
+    assert option.cost == "you may exile any number of white cards from your hand"
+    assert option.understood is False
+
+
+#: Every optional additional cost the pool prints that `Casting` has no way to
+#: charge, by card name. A printing added later that opens a new unreadable
+#: shape fails the sweep below rather than quietly failing closed in a game,
+#: and one the enumerator has since learned to charge fails it too rather than
+#: outliving its reason.
+KNOWN_UNCHARGEABLE_OPTIONAL_COSTS = {"March of Otherworldly Light"}
+
+
+def test_every_optional_additional_cost_in_the_pool_is_enumerated():
+    """The mechanic, swept rather than named: every printing in the pool
+    carrying one of CR 601.2b's optional additional costs is enumerated by
+    `optional_additional_costs`, with the keyword's own CR rule and CR
+    702.33c/702.56a's "any number of times" read off the keyword rather than
+    guessed - and the set nothing can charge is exactly the known one, in
+    both directions."""
+    enumerated: dict[str, list] = {}
+    for name, card in pool().items():
+        options = optional_additional_costs(card)
+        if options:
+            enumerated[name] = options
+
+    # Every printing whose Scryfall keywords name one of the family is read.
+    by_keyword = {
+        name: {keyword.lower() for keyword in card.keywords}
+        & {"kicker", "multikicker", "replicate", "offspring", "gift"}
+        for name, card in pool().items()
+    }
+    for name, keywords in by_keyword.items():
+        if not keywords:
+            continue
+        assert name in enumerated, f"{name} prints {keywords} and was not enumerated"
+        assert {option.keyword for option in enumerated[name]} >= keywords
+
+    assert {
+        name
+        for name, options in enumerated.items()
+        if any(not option.understood for option in options)
+    } == KNOWN_UNCHARGEABLE_OPTIONAL_COSTS
+
+    rules = {
+        option.keyword: (option.rule, option.repeatable)
+        for options in enumerated.values()
+        for option in options
+    }
+    assert rules == {
+        "kicker": ("CR 702.33a", False),
+        "multikicker": ("CR 702.33c", True),
+        "replicate": ("CR 702.56a", True),
+        "offspring": ("CR 702.175a", False),
+        "gift": ("CR 702.174a", False),
+        "blight": ("CR 701.68a", False),
+        None: ("CR 118.8b", False),
+    }

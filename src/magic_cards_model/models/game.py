@@ -24,7 +24,6 @@ from ..machines.abilities import (
     TriggeredAbility,
     TriggerEvent,
     granted_mana_abilities,
-    keyword_ability,
     one_named_color,
     parse_abilities,
     parse_mana_abilities,
@@ -48,6 +47,7 @@ from ..machines.casting import (
     keyword_cast_options,
     mana_value_cap_for,
     marker_cast_options,
+    optional_additional_costs,
     play_permissions_on,
     spell_has_type_word,
     split_second_restriction_source,
@@ -5650,31 +5650,40 @@ class Game(EngineModel):
         self, casting: Casting, card: CardState, caster: str, taken: set[UUID]
     ) -> None:
         """CR 601.2b's optional additional costs, read off the keywords that
-        print them and the "you may" additional-cost sentence that blights."""
+        print them and the "you may" additional-cost sentence that blights.
+
+        The keywords come from `optional_additional_costs`, the same
+        enumeration `legal_actions` fills `Action.additional_cost_options`
+        from, so what a seat is *told* it may announce and what the engine
+        offers a cast it makes on that seat's behalf cannot drift apart."""
+        printed = {option.keyword: option for option in optional_additional_costs(card.card)}
         for keyword, pay in (
             ("kicker", casting.pay_kicker),
             ("multikicker", casting.pay_kicker),
             ("replicate", casting.pay_replicate),
         ):
-            ability = keyword_ability(card.card, keyword)
-            if ability is None or not ability.cost:
+            option = printed.get(keyword)
+            if option is None:
                 continue
-            repeats = 1 if keyword == "kicker" else self.REPEATED_ADDITIONAL_COST_BOUND
+            # CR 702.33a's plain kicker is announced once; CR 702.33c's
+            # multikicker and CR 702.56a's replicate are "any number of
+            # times", bounded so a cost of nothing cannot loop.
+            repeats = self.REPEATED_ADDITIONAL_COST_BOUND if option.repeatable else 1
             for _ in range(repeats):
-                extra = total_cost_for_phrase(ability.cost, caster)
+                extra = total_cost_for_phrase(option.cost, caster)
                 if extra is None or not self._offer_additional_cost(
                     casting, card, caster, keyword, extra, taken
                 ):
                     break
                 pay(1, choosing=self._choose_cost_objects(extra, caster, card, taken))
-        offspring = keyword_ability(card.card, "offspring")
-        if offspring is not None and offspring.cost:
+        offspring = printed.get("offspring")
+        if offspring is not None:
             extra = total_cost_for_phrase(offspring.cost, caster)
             if extra is not None and self._offer_additional_cost(
                 casting, card, caster, "offspring", extra, taken
             ):
                 casting.pay_offspring()
-        if keyword_ability(card.card, "gift") is not None:
+        if "gift" in printed:
             opponents = [p.username for p in self.players_in_game if p.username != caster]
             promised = self.ask(
                 Decision(
@@ -14250,6 +14259,8 @@ class Game(EngineModel):
         improvise: Sequence[CardState] | None = None,
         mana_sources: Sequence[CardState | tuple[CardState, Sequence[Color]]] | None = None,
         splice: Sequence[UUID] | None = None,
+        kicker: int = 0,
+        replicate: int = 0,
         offspring: bool = False,
         blight: CardState | None = None,
         gift: str | None = None,
@@ -14312,6 +14323,18 @@ class Game(EngineModel):
         behalf (CR 601.2g) - a bare source lets the engine choose what colour
         it makes, a `(source, colors)` pair pins it.
 
+        `kicker` and `replicate` are CR 601.2b's optional additional costs, as a
+        count of announcements rather than a bool, because CR 702.33c's
+        multikicker and CR 702.56a's replicate may each be announced "any
+        number of times" while CR 702.33a's plain kicker may not (`pay_kicker`
+        refuses a second announcement rather than charging for it). `kicker`
+        covers multikicker too, which CR 702.33c makes a variant of kicker
+        and not a second keyword - "A multikicker cost is a kicker cost".
+        They join `offspring`, `blight` and `gift` as this method's whole
+        CR 601.2b announcement; `machines/casting.optional_additional_costs`
+        is what tells a caller which of them a given card actually prints,
+        and `Action.additional_cost_options` is that same answer enumerated.
+
         `splice` is CR 702.47a: card ids, never names, matching `Action.
         splice_options`' own `SpliceOption.card_id` - this library's actions
         are ids only, and a caller holding two copies of the same splice card
@@ -14346,6 +14369,10 @@ class Game(EngineModel):
                 casting.choose_targets(list(targets))
             for card_id in splice or ():
                 casting.splice_by_id(card_id)
+            if kicker:
+                casting.pay_kicker(kicker)
+            if replicate:
+                casting.pay_replicate(replicate)
             if offspring:
                 casting.pay_offspring()
             if blight is not None:

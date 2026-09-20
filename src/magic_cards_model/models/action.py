@@ -159,6 +159,52 @@ class SpliceOption(EngineModel):
     unresolved cost variance either."""
 
 
+class AdditionalCostOption(EngineModel):
+    """One optional additional cost this `CAST` action's spell may be cast
+    with (CR 601.2b, CR 118.8b) - Sowing Mycospawn's `Kicker {1}{C}`,
+    Everflowing Chalice's `Multikicker {2}`, Gigadrowse's `Replicate {U}`.
+
+    CR 601.2b: "If the spell has alternative or additional costs that will
+    be paid as it's being cast such as buyback or kicker costs ..., the
+    player announces their intentions to pay any or all of those costs".
+    CR 118.8b: "Some additional costs are optional."
+
+    Like `SpliceOption`, and unlike `spell_face`/`alternative_cost`, this is
+    not a family of mutually exclusive `Action`s: CR 118.8a lets any number
+    of additional costs apply to one cast, so the row carries the whole
+    space a seat may announce from and the announcement itself is made on
+    the cast (`Game.cast(kicker=..., offspring=..., ...)`).
+
+    It is deliberately *not* folded into `Action.cost`. CR 118.8d: "Additional
+    costs don't change a spell's mana cost, only what its controller has to
+    pay to cast it" - and nobody has announced this one yet, so adding it to
+    the displayed cost would claim a choice that has not been made, exactly
+    the reason an unannounced `{X}` is left alone there too.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    keyword: str | None
+    """The keyword printing it, lower-case (`kicker`, `multikicker`,
+    `replicate`, `offspring`, `gift`, `blight`), or `None` for a cost printed
+    as an "As an additional cost to cast this spell, you may ..." sentence
+    with no keyword on it."""
+    cost: str
+    """The cost exactly as printed: `{1}{C}`, `a Food`, `you may blight 1`."""
+    rule: str
+    """The CR rule that defines this cost - CR 702.33a for kicker, CR 702.33c
+    for multikicker, and so on."""
+    repeatable: bool = False
+    """CR 702.33c's multikicker and CR 702.56a's replicate may be announced
+    "any number of times"; plain kicker (CR 702.33a) and offspring may not."""
+    understood: bool = True
+    """`False` is the loud "this engine cannot charge this cost" case, the
+    same shape `restriction_understood` already uses for CR 106.6: the option
+    is printed and optional, so a seat is told it exists rather than shown
+    nothing, and told in the same breath that announcing it is not available
+    here. Failing closed out loud, never a silent omission."""
+
+
 class ManaPlanEntry(EngineModel):
     """One tap in the plan `Action.pays_with` carries: which permanent, which
     of its mana abilities, what that adds, and CR 106.6's restriction on the
@@ -331,6 +377,10 @@ class Action(EngineModel):
     overwhelming majority of casts, which have no card in hand whose splice
     ability names this spell's own type or subtype (CR 702.47a's
     "[quality]")."""
+    additional_cost_options: tuple[AdditionalCostOption, ...] = ()
+    """`CAST` only: CR 601.2b's optional additional costs printed on this
+    spell, which a seat announces as it casts. Empty for a spell that prints
+    none - see `AdditionalCostOption`."""
     color_options: tuple[Color, ...] = ()
     """`ACTIVATE_MANA` only: every colour `Game.activate_ability`'s own
     `color=` would accept for this mana ability right now (CR 605.1a),
