@@ -6260,7 +6260,14 @@ class Game(EngineModel):
                     record = self.cast_record_of(source)
                     if record is not None:
                         effect_text = substitute_x(effect_text, record.x_value)
-            return trigger_effect_for(ability.source_name, ability.ability.event, effect_text)
+            trigger_source = ability.source(self)
+            trigger_source_card = getattr(trigger_source, "card", None)
+            legendary = trigger_source_card is not None and (
+                Supertype.LEGENDARY in trigger_source_card.supertypes
+            )
+            return trigger_effect_for(
+                ability.source_name, ability.ability.event, effect_text, legendary=legendary
+            )
         if isinstance(ability.ability, ActivatedAbility):
             if ability.ability.class_level_target is not None:
                 # CR 716.2a's own mechanical half - "This Class's level
@@ -6297,8 +6304,17 @@ class Game(EngineModel):
                 # `x_value`, so an ordinary ability's bare "X" in its rules
                 # text (CR 107.3f) is never mistaken for this one.
                 x_value = ability.x_value if cost_announces_x(ability.ability.cost) else None
+                activated_source = ability.source(self)
+                activated_source_card = getattr(activated_source, "card", None)
+                legendary = activated_source_card is not None and (
+                    Supertype.LEGENDARY in activated_source_card.supertypes
+                )
                 return activated_effect_for(
-                    ability.source_name, index, ability.ability.effect, x_value=x_value
+                    ability.source_name,
+                    index,
+                    ability.ability.effect,
+                    x_value=x_value,
+                    legendary=legendary,
                 )
         return None
 

@@ -163,3 +163,71 @@ def test_an_ordinary_possessive_self_reference_still_normalizes():
     )
 
     assert normalized == "this permanent's owner shuffles him into their library."
+
+
+# --------------------------------------------------------------------------
+# CR 201.5c's shortened self-reference is a legendary-permanent convention -
+# every case above is a legendary creature or planeswalker. A non-legendary
+# two-word name's own first word is an ordinary English/Magic vocabulary
+# word far more often than it is a genuine self-reference, and the bare
+# "two words, no comma, no epithet -> shorten to the first word" branch used
+# to fire regardless, corrupting every one of these.
+# --------------------------------------------------------------------------
+
+
+def test_eldrazi_temple_does_not_shorten_eldrazi_to_itself():
+    """The reported defect: Eldrazi Temple's own "Spend this mana only to
+    cast colorless Eldrazi spells" names CR 205.3m's creature type, not
+    itself - "Eldrazi" must not become "this permanent"."""
+    temple = card("Eldrazi Temple")
+
+    assert "Eldrazi" not in self_reference_names(temple.name, legendary=False)
+    normalized = self_normalized_effect_text(temple.name, temple.oracle_text, legendary=False)
+
+    assert "colorless Eldrazi spells" in normalized
+    assert "abilities of colorless Eldrazi" in normalized
+    assert "this permanent" not in normalized
+
+
+def test_thopter_assembly_does_not_shorten_thopter_to_itself():
+    """The reported defect: Thopter Assembly's own "create five 1/1
+    colorless Thopter artifact creature tokens" names the token's own
+    creature type, not itself."""
+    assembly = card("Thopter Assembly")
+
+    assert "Thopter" not in self_reference_names(assembly.name, legendary=False)
+    normalized = self_normalized_effect_text(assembly.name, assembly.oracle_text, legendary=False)
+
+    assert "colorless Thopter artifact creature tokens" in normalized
+    assert "this permanent" not in normalized
+
+
+def test_fire_magic_does_not_shorten_fire_to_itself():
+    """The reported defect: Fire Magic's own Tiered mode labels ("Fire",
+    "Fira", "Firaga") are CR 702.166a's own additional-cost tier names, not
+    this card naming itself - only the card's own *full* printed name
+    ("Fire Magic") is a genuine self-reference."""
+    fire_magic = card("Fire Magic")
+
+    assert "Fire" not in self_reference_names(fire_magic.name, legendary=False)
+    normalized = self_normalized_effect_text(
+        fire_magic.name, fire_magic.oracle_text, legendary=False
+    )
+
+    assert "• Fire — {0} — this permanent deals 1 damage" in normalized
+    assert "• Fira — {2} — this permanent deals 2 damage" in normalized
+    assert "• Firaga — {5} — this permanent deals 3 damage" in normalized
+
+
+def test_goblin_warchief_does_not_shorten_goblin_to_itself():
+    """Off-set generality proof: Goblin Warchief, real, non-fra, not one of
+    the three reported cards - "Goblin spells you cast cost {1} less to
+    cast." names the creature type, not itself, on a plain two-word
+    non-legendary creature."""
+    warchief = card("Goblin Warchief")
+
+    assert "Goblin" not in self_reference_names(warchief.name, legendary=False)
+    normalized = self_normalized_effect_text(warchief.name, warchief.oracle_text, legendary=False)
+
+    assert normalized == warchief.oracle_text
+    assert "this permanent" not in normalized

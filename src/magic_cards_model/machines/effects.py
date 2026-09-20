@@ -33961,6 +33961,7 @@ def trigger_effect_for(
     effect_text: str | None = None,
     *,
     x_value: int | None = None,
+    legendary: bool = True,
 ) -> AbilityEffect | None:
     """The effect of a card's trigger on `event`, or None if it is not scripted.
 
@@ -34043,7 +34044,9 @@ def trigger_effect_for(
         # pump clause spelled with the card's own name instead of CR 700.7's
         # "this creature" fell through every clause parser and resolved
         # silently.
-        return _ability_effect_or_notice(_self_normalized_effect_text(card_name, effect_text))
+        return _ability_effect_or_notice(
+            _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
+        )
     if len(entries) == 1 and not entries[0][0]:
         return entries[0][1]
     return _dispatch_by_printed_text(entries)
@@ -34082,7 +34085,12 @@ _self_normalized_effect_text = self_normalized_effect_text
 
 
 def activated_effect_for(
-    card_name: str, index: int, effect_text: str | None = None, *, x_value: int | None = None
+    card_name: str,
+    index: int,
+    effect_text: str | None = None,
+    *,
+    x_value: int | None = None,
+    legendary: bool = True,
 ) -> AbilityEffect | None:
     """The effect of a card's activated ability at `index`, or a parsed one.
 
@@ -34119,7 +34127,7 @@ def activated_effect_for(
     if effect_text is None:
         return None
     effect_text = _TRAILING_ACTIVATION_TIMING_RESTRICTION_RE.sub("", effect_text).strip()
-    effect_text = _self_normalized_effect_text(card_name, effect_text)
+    effect_text = _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
     if x_value is not None:
         substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))
         if substituted is not None:

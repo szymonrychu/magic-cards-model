@@ -994,15 +994,31 @@ _MANA_VALUE_EQUALS_COUNTERS = re.compile(
 )
 
 
-def _self_referential(condition: str, source_name: str) -> bool:
+def _is_legendary_source(source: CardState) -> bool:
+    """Whether `source`'s own printed card carries CR 205.4a's Legendary
+    supertype - the printed fact `self_reference_names`' epithet and
+    bare-two-word shortenings are gated on, not the computed board (CR
+    613.5): Oracle's own shortened-self-reference convention is a property
+    of how a card is *templated*, fixed at print time, not something a
+    continuous effect making a permanent legendary this turn should turn on
+    for it.
+    """
+    card = getattr(source, "card", None)
+    return card is not None and Supertype.LEGENDARY in card.supertypes
+
+
+def _self_referential(condition: str, source_name: str, *, legendary: bool = True) -> bool:
     """Whether `condition` refers to its own source (CR 700.7, 201.5, 201.5c) -
     "this creature"/"this permanent" and friends, or the source's own name in
     any of the shortened forms `machines/abilities.self_reference_names`
-    reads: the short form before a comma ("Whenever Ragavan deals..."), a
-    no-comma legend's own epithet short form (Kiora of Fire and Ashes' own
-    "When Kiora enters" - CR 201.5's short name of a no-comma "of" legend, not
-    read as self before this), and a bare two-word name's own short form
-    (Ajani Resolute's own "Ajani").
+    reads: the short form before a comma ("Whenever Ragavan deals..."), and -
+    only for a legendary source (`legendary`, default `True` for a caller
+    with no supertype to check) - a no-comma legend's own epithet short form
+    (Kiora of Fire and Ashes' own "When Kiora enters" - CR 201.5's short name
+    of a no-comma "of" legend, not read as self before this) and a bare
+    two-word name's own short form (Ajani Resolute's own "Ajani") - see
+    `self_reference_names`'s own docstring for why those two shapes are a
+    legendary-only convention.
 
     Reads through `self_reference_pattern`'s shared, word-bounded,
     longer-name-guarded regex rather than a plain substring test, so a
@@ -1022,7 +1038,7 @@ def _self_referential(condition: str, source_name: str) -> bool:
     # lookahead to the difference.
     return any(
         re.search(self_reference_pattern(name), condition) is not None
-        for name in self_reference_names(source_name)
+        for name in self_reference_names(source_name, legendary=legendary)
     )
 
 
@@ -1207,7 +1223,40 @@ def _cast_spell_targets_condition_holds(
 
 def _required_subtype(condition: str) -> str | None:
     match = _OTHER_SUBTYPE.search(condition)
-    return match.group(1) if match else None
+    if match is not None:
+        return match.group(1)
+    return _required_dying_subtype(condition)
+
+
+#: A subtype named as a DIES condition's own plain subject (CR 205.3m,
+#: CR 712.8f), outside the "other `<X>`s you control" shape `_OTHER_SUBTYPE`
+#: already reads - Ygra, Eater of All's own "a Food is put into a graveyard
+#: from the battlefield" (CR 700.4's own wording for "dies"). The same
+#: capitalization discriminator `_ENTERING_SUBTYPE` already relies on: Oracle
+#: templating capitalizes a subtype and never a card-type word, so "a
+#: creature dies" (no subtype at all) and "a nontoken creature you control
+#: dies" (Lightning Coils - "nontoken" is lowercase and "creature" is a card
+#: type, not a subtype) never match this.
+_DYING_SUBTYPE = re.compile(
+    r"^(?:an?|another|one or more) (?:nontoken )?(?P<subtype>[A-Z][A-Za-z]*?)(?P<plural_s>s?)"
+    r"(?: you control| an opponent controls)?"
+    r" (?:dies\b|die\b|is put into a graveyard from the battlefield\b|"
+    r"are put into a graveyard from the battlefield\b)"
+)
+
+
+def _required_dying_subtype(condition: str) -> str | None:
+    """The subtype `_DYING_SUBTYPE` names, or `None` - `_required_entering_
+    subtype`'s own reading, mirrored for a DIES condition's subject rather
+    than an ENTERS_THE_BATTLEFIELD one."""
+    match = _DYING_SUBTYPE.match(condition.strip())
+    if match is None:
+        return None
+    subtype, plural_s = match.group("subtype"), match.group("plural_s")
+    whole = subtype + plural_s
+    from .layers import BASIC_LAND_TYPES
+
+    return whole if whole in BASIC_LAND_TYPES else subtype
 
 
 #: "a Mountain you control enters" (Valakut, the Molten Pinnacle) - a *subtype*
@@ -1651,11 +1700,13 @@ _TOKEN_WORD = re.compile(r"\btokens?\b")
 _SELF_OR_OTHER_ENTERS_TAIL = r" or (?P<other>(?:an?|another) .+ enters?)$"
 
 
-def _self_or_other_enters_match(condition: str, source_name: str) -> re.Match[str] | None:
+def _self_or_other_enters_match(
+    condition: str, source_name: str, *, legendary: bool = True
+) -> re.Match[str] | None:
     generic = re.match(rf"^this [a-z]+{_SELF_OR_OTHER_ENTERS_TAIL}", condition, re.IGNORECASE)
     if generic is not None:
         return generic
-    for name in self_reference_names(source_name):
+    for name in self_reference_names(source_name, legendary=legendary):
         named = re.match(rf"^{self_reference_pattern(name)}{_SELF_OR_OTHER_ENTERS_TAIL}", condition)
         if named is not None:
             return named
@@ -1796,7 +1847,7 @@ def condition_matches(
             )
 
     lowered = condition.lower()
-    mine = _self_referential(condition, source.name)
+    mine = _self_referential(condition, source.name, legendary=_is_legendary_source(source))
 
     if ability.event is None:
         # A condition `machines/abilities._trigger_event` could not read at
@@ -1812,7 +1863,9 @@ def condition_matches(
     if ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD:
         if not _entry_qualifier_matches(game, condition, event):
             return False
-        either = _self_or_other_enters_match(condition, source.name)
+        either = _self_or_other_enters_match(
+            condition, source.name, legendary=_is_legendary_source(source)
+        )
         if mine and either is None:
             return event.subject_id == source.id
         if either is not None:
@@ -1917,6 +1970,21 @@ def condition_matches(
             and _subtype_matches(event.subject_subtypes, subtype)
         ):
             return False
+        # CR 111.1's token, read the identical way `ENTERS_THE_BATTLEFIELD`
+        # already reads it above (Weapons Manufacturing's own "nontoken", and
+        # the plain Caretaker's Talent/Belladonna Took "token" without it) -
+        # this branch used to skip both, so Lightning Coils' own "a nontoken
+        # creature you control dies" charged its counter off a token
+        # creature's death too, exactly what "nontoken" is printed to
+        # exclude.
+        if _NONTOKEN_WORD.search(lowered):
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if subject is None or getattr(subject, "token", False):
+                return False
+        elif _TOKEN_WORD.search(lowered):
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if not (subject is not None and getattr(subject, "token", False)):
+                return False
         power_or_toughness = _power_or_toughness_qualifier_holds(game, condition, event.subject_id)
         return power_or_toughness is None or power_or_toughness
 
@@ -2568,7 +2636,7 @@ def _unread_condition_matches(
     in for a condition it cannot read.
     """
     condition = ability.condition.lower().strip()
-    mine = _self_referential(ability.condition, source.name)
+    mine = _self_referential(ability.condition, source.name, legendary=_is_legendary_source(source))
 
     match = _COUNTERS_PUT_CONDITION.match(condition)
     if match is not None:
@@ -2991,7 +3059,9 @@ def _cast_record_for_clause(
     missing record into a fail-closed `InterveningIfNotice` rather than a
     silent, wrong-object-shaped true.
     """
-    if event is not None and not _self_referential(ability.condition, source.name):
+    if event is not None and not _self_referential(
+        ability.condition, source.name, legendary=_is_legendary_source(source)
+    ):
         subject = game.find_by_id(event.subject_id) if event.subject_id else None
         if subject is None:
             return None
@@ -3349,6 +3419,14 @@ def intervening_if_holds(
     if another_spell is not None:
         return another_spell
 
+    didnt_cast = _didnt_cast_spell_this_turn_holds(game, clause, source)
+    if didnt_cast is not None:
+        return didnt_cast
+
+    drawn_count = _drawn_card_count_holds(game, clause, source)
+    if drawn_count is not None:
+        return drawn_count
+
     self_tapped = _source_tapped_holds(clause, source)
     if self_tapped is not None:
         return self_tapped
@@ -3680,6 +3758,80 @@ def _another_spell_cast_this_turn_holds(
     return any(state.id != source.id for state in cast)
 
 
+#: "you didn't cast a spell this turn" (Edgar, Moonlit Sovereign; Nightpack
+#: Ambusher) and "that player didn't cast a spell this turn" (Impatience -
+#: the same clause read with the third-person subject a per-player "at the
+#: beginning of each player's end step" ability prints) - CR 601.2i's
+#: already-tracked `Game.spells_cast_this_turn`, negated.
+#: `_spells_cast_this_turn_holds` below only ever reads the positive "you've
+#: cast N or more spells this turn" form; this is its negated twin, over the
+#: identical field.
+_DIDNT_CAST_SPELL_THIS_TURN = re.compile(
+    r"^(?:you|that player) (?:didn'?t|did not) cast a spell this turn$"
+)
+
+
+def _didnt_cast_spell_this_turn_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """`_DIDNT_CAST_SPELL_THIS_TURN`'s shape, or `None` if the clause is not
+    it.
+
+    "You"/"that player" is the ability's own controller (CR 109.5's default,
+    absent an explicit "that player" bound to a different per-player
+    trigger) - the same fallback `_spells_cast_this_turn_holds` already uses
+    for its positive form, over the identical `Game.spells_cast_this_turn`
+    list CR 601.2i keeps.
+    """
+    if _DIDNT_CAST_SPELL_THIS_TURN.match(clause) is None:
+        return None
+    controller = source.controller or game.active_player.username
+    cast = game.spells_cast_this_turn.get(controller, [])
+    return len(cast) == 0
+
+
+#: "you've drawn N or more cards this turn" (Lyra, Tolarian Archangel) and
+#: the wider family it belongs to - Lake-town Toymaker's own "if you've
+#: drawn two or more cards this turn", the identical clause a dozen "as long
+#: as you've drawn ... cards this turn" static abilities print (Evangel of
+#: Synthesis, Eyekite, Messenger Hawk, and others - read elsewhere as a
+#: static condition, not here). A general count comparison over CR 121.2's
+#: individual draws this turn (`Game.cards_drawn_this_turn`, incremented once
+#: per card drawn), the same four comparison words `_COUNTER_COUNT_CLAUSE`/
+#: `_CONTROLLED_SUBTYPE_COUNT` already read for a counter or subtype count -
+#: `_COUNTER_COMPARISONS` (below) is the shared answer all three read.
+_DRAWN_CARD_COUNT_CLAUSE = re.compile(
+    r"^you(?:'ve| have) drawn "
+    rf"(?:(?P<comparison>fewer than|more than|at least|exactly) (?P<count>{COUNT})"
+    rf"|(?P<suffix_count>{COUNT}) or (?P<direction>more|fewer))"
+    r" cards? this turn$"
+)
+
+
+def _drawn_card_count_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """`_DRAWN_CARD_COUNT_CLAUSE`'s shape, or `None` if the clause is not it.
+
+    Answered from `Game.cards_drawn_this_turn` - the same running per-player
+    draw count `_NTH_DRAW_CONDITION`'s own ordinal reading already uses for
+    "you draw your Nth card in a turn"'s triggered shape; this is the
+    intervening-*if* twin, over a comparison rather than an exact ordinal.
+    """
+    match = _DRAWN_CARD_COUNT_CLAUSE.match(clause)
+    if match is None:
+        return None
+    if match.group("suffix_count") is not None:
+        count_word, comparison = match.group("suffix_count"), match.group("direction")
+    else:
+        count_word, comparison = match.group("count"), match.group("comparison")
+    wanted = parse_count(count_word, article=False)
+    if wanted is None:
+        return None
+    controller = source.controller or game.active_player.username
+    drawn = getattr(game, "cards_drawn_this_turn", None)
+    if not isinstance(drawn, dict):
+        return None
+    on_turn = drawn.get(controller, 0)
+    return _COUNTER_COMPARISONS[comparison](on_turn, wanted)
+
+
 def _spells_cast_this_turn_holds(game: "Game", clause: str, source: CardState) -> bool | None:
     """`_SPELLS_CAST_THIS_TURN`'s shape, or `None` if the clause is not it.
 
@@ -3940,7 +4092,13 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
         for split in _expand_attacks_or_blocks(ability):
             for enters_split in _expand_enters_or_attacks(split):
                 for leaves_split in _expand_enters_or_leaves(enters_split):
-                    expanded.extend(_expand_enters_or_dies(leaves_split, card.name))
+                    expanded.extend(
+                        _expand_enters_or_dies(
+                            leaves_split,
+                            card.name,
+                            legendary=Supertype.LEGENDARY in card.supertypes,
+                        )
+                    )
     return expanded + keyword_triggered_abilities(card)
 
 
@@ -4069,7 +4227,9 @@ def _expand_enters_or_leaves(ability: TriggeredAbility) -> list[TriggeredAbility
 _ENTERS_OR_DIES_RE = re.compile(r"^(?P<subject>.+?) enters or dies$", re.IGNORECASE)
 
 
-def _expand_enters_or_dies(ability: TriggeredAbility, card_name: str) -> list[TriggeredAbility]:
+def _expand_enters_or_dies(
+    ability: TriggeredAbility, card_name: str, *, legendary: bool = True
+) -> list[TriggeredAbility]:
     """One ability whose condition is `_ENTERS_OR_DIES_RE`'s shape becomes
     two: CR 603.6a's enters-the-battlefield ability and CR 700.4/603.10a's
     dies one, each self-referential and each a `TriggeredAbility` in its own
@@ -4091,7 +4251,7 @@ def _expand_enters_or_dies(ability: TriggeredAbility, card_name: str) -> list[Tr
         return [ability]
     subject = match.group("subject")
     if not re.fullmatch(r"this [a-z]+", subject, re.IGNORECASE) and subject not in (
-        self_reference_names(card_name)
+        self_reference_names(card_name, legendary=legendary)
     ):
         return [ability]
     return [
