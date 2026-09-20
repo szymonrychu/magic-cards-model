@@ -19,16 +19,22 @@ import magic_cards_model
 POOL = pathlib.Path(magic_cards_model.__file__).parent / "data" / "printings"
 HEADERS = {"User-Agent": "magic-cards-model/0.1", "Accept": "*/*"}
 
+#: Seconds any single Scryfall call may block for. `urlopen` with no timeout
+#: waits forever on a socket that connects and then stops sending, and
+#: `tests/test_survey_cards.py` reaches Scryfall on purpose - so an unbounded
+#: read hangs `mise run test` itself rather than just this script.
+FETCH_TIMEOUT = 20.0
+
 
 def slugify(name: str) -> str:
     front = name.split("//")[0].strip().lower()
     return "".join(c if c.isalnum() else "_" for c in front).strip("_")
 
 
-def fetch(name: str) -> dict:
+def fetch(name: str, timeout: float = FETCH_TIMEOUT) -> dict:
     url = "https://api.scryfall.com/cards/named?exact=" + urllib.parse.quote(name)
     request = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(request) as response:
+    with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.load(response)
 
 

@@ -13,8 +13,10 @@ or, for the not-found and live-fetch cases, a real call to Scryfall itself.
 import csv
 import io
 import json
+import urllib.error
 
 import pytest
+from scripts import add_card, survey_cards
 from scripts.survey_cards import (
     FIXTURES_DIR,
     HANDLED,
@@ -115,14 +117,22 @@ def test_a_fixture_pool_card_is_read_from_the_pool_not_fetched(tmp_path):
 def test_a_card_not_in_the_fixture_pool_is_cached_but_the_pool_is_untouched(tmp_path):
     """A live Scryfall fetch is written only to the survey's own cache
     directory, never to `tests/fixtures/cards` - running a survey must never
-    change what the scenario-test suite sees."""
+    change what the scenario-test suite sees.
+
+    Like the not-found test above this one genuinely needs the network, so a
+    transport failure is skipped rather than reported as the tool writing to
+    the wrong place.
+    """
     name = "Krosan Tusker"
     fixture_path = FIXTURES_DIR / "krosan_tusker.json"
     assert not fixture_path.exists(), (
         "test picked a card that is already a fixture; pick a different one"
     )
 
-    printing = fetch_printing(name, tmp_path)
+    try:
+        printing = fetch_printing(name, tmp_path)
+    except OSError as exc:
+        pytest.skip(f"Scryfall unreachable, so the live-fetch path is untestable here: {exc}")
     assert printing.name == name
 
     cached = list(tmp_path.glob("*.json"))
@@ -217,3 +227,44 @@ def test_a_permanents_unaudited_static_reaches_the_survey_as_its_own_category(tm
     assert result.found
     assert result.category == "static_unaudited"
     assert result.category != NO_RULES_TEXT
+
+
+def test_the_scryfall_fetch_is_bounded_so_a_stalled_socket_cannot_hang_the_suite(monkeypatch):
+    """`urllib.request.urlopen` with no `timeout` blocks forever on a socket
+    that connects and then stops sending. Two tests in this file reach
+    Scryfall on purpose, so an unbounded read is not a script-only concern:
+    it hangs `mise run test` itself, with no failure and no summary line. A
+    full-suite run stalled that way for sixteen minutes inside `ssl.read`
+    before it was interrupted, which is why the bound is pinned here rather
+    than left to the caller.
+    """
+    seen = {}
+
+    def fake_urlopen(request, *args, **kwargs):
+        seen["timeout"] = kwargs.get("timeout", args[1] if len(args) > 1 else None)
+        return io.StringIO(json.dumps({"name": "Krosan Tusker"}))
+
+    monkeypatch.setattr(add_card.urllib.request, "urlopen", fake_urlopen)
+    add_card.fetch("Krosan Tusker")
+
+    assert isinstance(seen["timeout"], (int, float)), "the fetch must pass a socket timeout"
+    assert seen["timeout"] > 0
+
+
+def test_a_transport_failure_is_not_reported_as_a_name_scryfall_does_not_know(
+    tmp_path, monkeypatch
+):
+    """`CardNotFound` means Scryfall answered and said no. A timeout or a
+    reset connection is the opposite - no answer at all - and folding it into
+    the same exception makes `survey_one` file a real card as `not_found`,
+    and makes the live-fetch tests below pass or fail on the network rather
+    than on the tool. A transport failure propagates as the `OSError` it is.
+    """
+
+    def unreachable(name):
+        raise urllib.error.URLError(TimeoutError("timed out"))
+
+    monkeypatch.setattr(survey_cards, "fetch", unreachable)
+
+    with pytest.raises(OSError):
+        fetch_printing("Krosan Tusker", tmp_path)

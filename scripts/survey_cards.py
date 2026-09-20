@@ -96,12 +96,14 @@ def fetch_printing(name: str, cache_dir: Path, rate_limit: float = 0.12) -> Card
     if cache_path.exists():
         return Card.model_validate(_load_json(cache_path))
 
+    # Only an answer from Scryfall is a CardNotFound. A timeout or a reset
+    # connection is no answer at all, and folding it in here filed a real card
+    # as `not_found` - so a transport failure propagates as the OSError it is
+    # and `main` fails the whole survey closed rather than mislabelling it.
     try:
         data = fetch(name)
     except urllib.error.HTTPError as error:
         raise CardNotFound(f"{error.code} {error.reason}") from error
-    except urllib.error.URLError as error:
-        raise CardNotFound(str(error.reason)) from error
 
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_path.write_text(json.dumps(data, indent=2) + "\n")
@@ -293,7 +295,11 @@ def main(argv: list[str]) -> int:
         print("--csv and --json are mutually exclusive", file=sys.stderr)
         return 1
 
-    results = survey(names, args.cache_dir)
+    try:
+        results = survey(names, args.cache_dir)
+    except OSError as error:
+        print(f"could not reach Scryfall: {error}", file=sys.stderr)
+        return 1
 
     if args.csv:
         write_csv(results, sys.stdout)
