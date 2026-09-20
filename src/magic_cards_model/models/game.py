@@ -7,7 +7,7 @@ from contextlib import AbstractContextManager, contextmanager
 from dataclasses import replace
 from enum import StrEnum
 from random import Random
-from typing import Annotated, Any, ClassVar, Literal
+from typing import Annotated, Any, ClassVar, Literal, NamedTuple
 from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
 from pydantic import ConfigDict, Field, PrivateAttr, model_validator
@@ -1228,6 +1228,21 @@ class KnownCard(EngineModel):
     source: str | None
     turn: int
     carried: bool
+
+
+class UntapStepRule(NamedTuple):
+    """What one player's untap step would do, before any of it is done.
+
+    `Game.untap_step_rule`'s answer: `skipped` is CR 614.10's verdict for the
+    whole step, and `permanents` are the permanents CR 502.3 would untap (the
+    ones already untapped included - untapping them changes nothing, and
+    leaving them out would make the list disagree with the batch the step
+    actually hands to `Player.untap_all`). A skipped step untaps nothing, so
+    `permanents` is empty whenever `skipped` is true.
+    """
+
+    skipped: bool
+    permanents: list[CardState]
 
 
 def _illegal_option_refusal(decision: Decision) -> str:
@@ -3599,6 +3614,57 @@ class Game(EngineModel):
             for subtype in board.of(state).subtypes
         )
 
+    def untap_step_rule(self, username: str) -> UntapStepRule:
+        """Which permanents this player would untap at their untap step.
+
+        The one place the "what untaps" rule lives. `_untap_step_impl` reads
+        it and then does the untapping; any other reader that needs to know
+        what the next untap step would do - a mana hypothetical looking a turn
+        ahead - asks this rather than keeping a second copy of the filter,
+        which is the only way the two cannot drift apart.
+
+        A **question, not a move**: it mutates nothing and emits nothing. It
+        does not spend the skip it reports, does not untap anything, and
+        raises no CR 502.3 untap event. The caller does all three, afterwards.
+
+        Two rules, in the order the step applies them:
+
+        - **CR 614.10**: "Skip [something]" is "Instead of doing [something],
+          do nothing", so a pending skip is the verdict for the whole step and
+          the permanent list is empty - nothing untaps, and no permanent is
+          reported as untapping.
+        - **CR 502.3**: "the active player determines which permanents they
+          control will untap ... Normally, all of a player's permanents untap,
+          but effects can keep one or more of a player's permanents from
+          untapping." The permanents this player controls, less the ones
+          carrying the "doesn't untap during its controller's untap step"
+          line, read off the computed board (CR 613.5: the layer system is
+          applied "continually and automatically") rather than printed text.
+
+        **The one thing this rule does not cover: stun counters (CR 122.1d).**
+        A stun counter is a replacement effect on the untap itself - "If a
+        permanent with a stun counter on it would become untapped, instead
+        remove a stun counter from it" - and it is spent inside
+        `CardState.untap`, where every route to untapping passes. It is
+        deliberately not part of this filter, because this filter answers
+        which permanents the step *attempts* to untap and CR 122.1d replaces
+        the attempt rather than removing the permanent from the batch. A
+        caller that reads this function and does not go on through
+        `Player.untap_all` therefore **over-reports a stunned permanent as
+        untapping**, and must consume `CardState.counter_count(Counter.STUN)`
+        itself if it needs the real answer.
+        """
+        if self.players_skipping_next_untap.get(username, 0) > 0:
+            return UntapStepRule(skipped=True, permanents=[])
+        return UntapStepRule(
+            skipped=False,
+            permanents=[
+                state
+                for state in self.permanents_controlled_by(username)
+                if not self.characteristics_of(state).has_ability(DOESNT_UNTAP_TEXT)
+            ],
+        )
+
     def untap_step(self) -> None:
         """Untap everything the active player controls (CR 502.3).
 
@@ -3628,28 +3694,23 @@ class Game(EngineModel):
         """The rest of `untap_step` - see its own docstring for why it is split out."""
         active = self.active_player
         self.begin_turn_for(active.username)
-        remaining = self.players_skipping_next_untap.get(active.username, 0)
-        if remaining > 0:
+        # `untap_step_rule` is the rule itself - the CR 614.10 skip verdict and
+        # the CR 502.3 batch, with CR 122.1d's stun counter deliberately left
+        # to `CardState.untap` (see its docstring). It reads; this method is
+        # the only place that then writes: spending the skip, untapping, and
+        # emitting.
+        verdict = self.untap_step_rule(active.username)
+        if verdict.skipped:
             # CR 614.10: "skip [something]" replaces the step with nothing -
             # nothing untaps and no BECOMES_UNTAPPED event fires, exactly as
             # if the step never happened.
+            remaining = self.players_skipping_next_untap[active.username]
             if remaining > 1:
                 self.players_skipping_next_untap[active.username] = remaining - 1
             else:
                 del self.players_skipping_next_untap[active.username]
             return
-        controlled = self.permanents_controlled_by(active.username)
-        # CR 122.1d's stun counter is `CardState.untap`'s own business (every
-        # route to untapping passes through it); a static "doesn't untap"
-        # grant (Traxos, Scourge Eternal; Infinite Coursework) is CR 613.5's
-        # instead - read off the computed board, which `untap_all` has no
-        # access to - so it is filtered out here, before the batch untap
-        # rather than inside it.
-        untappable = [
-            state
-            for state in controlled
-            if not self.characteristics_of(state).has_ability(DOESNT_UNTAP_TEXT)
-        ]
+        untappable = verdict.permanents
         tapped = [state for state in untappable if state.tapped]
         active.untap_all(untappable)
         for state in tapped:
