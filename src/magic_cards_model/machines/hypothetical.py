@@ -13,7 +13,9 @@ land sequencing without a parallel rules model of its own:
   `Affordability`, and whether any of them is payable - now, or with
   `assuming_land` on the battlefield.
 - `payability_matrix(game, player, cards, lands)` - both of the above for many
-  cards and lands at once, as one batch (see "Batching" below).
+  cards and lands at once, as one batch (see "Batching" below), and with
+  `assuming_untapped=True` the same batch answered a land drop ahead (see
+  "Assuming untapped" below).
 
 **All of them run the real engine on a decoded copy.** The copy is
 `Game.model_validate(game.model_dump(mode="json"))`, the same round trip every
@@ -72,6 +74,25 @@ affordable from the floating mana. `Payability.life_paid` is the life the
 cheapest payable option costs, and a notice names each ability. Any other
 extra cost (a sacrifice, a mana payment) is not activated: a card left
 unpayable names each such source in a notice instead.
+
+**Assuming untapped.** `payability_matrix(..., assuming_untapped=True)` answers
+every question on a board where `player`'s untap step has already happened.
+What untaps is not decided here: `Game.untap_step_rule` is the one place that
+rule lives (CR 614.10's skip verdict for the whole step, then CR 502.3's "the
+active player determines which permanents they control will untap", less the
+permanents an effect keeps from untapping), and the untapping goes through
+`Player.untap_all`, so CR 122.1d's stun counter and CR 701.43a's exert are
+spent inside `CardState.untap` exactly as the real step spends them. The
+hypothetical and the step therefore cannot answer differently.
+
+It models the mana and nothing else. No card is drawn, no upkeep trigger
+resolves, no turn or phase advances, nothing the opponent does in between is
+accounted for, no event is emitted, and no permanent another player controls
+is touched - `untap_step_rule` is asked about one player. The caller's game is
+not mutated: the untapping happens on the same decoded copy every other board
+here is built on. Every `Payability` answered this way carries a notice saying
+all of that, because one row read on its own would otherwise look like a
+prediction of the next turn, which it is not.
 
 **What "assuming" does not check.** It does not ask whether the land could be
 played this turn (CR 305.2's land drop) or how it would get from the library to
@@ -525,6 +546,61 @@ def _now(game: "Game") -> _Settled:
     return _settle(lambda: (_decoded_copy(game), None, []))
 
 
+#: The sentence every answer under `assuming_untapped` carries, so a reader
+#: who sees only one `Payability` still knows what it is and is not.
+_ASSUMING_UNTAPPED_NOTICE = (
+    "assuming untapped: this is a mana hypothetical about permanents untapping, not a "
+    "prediction of the next turn - it does not draw a card, does not resolve an upkeep "
+    "trigger, does not advance the turn, and does not account for anything the opponent "
+    "does in between"
+)
+
+
+def _untapped_copy(game: "Game", player: str) -> tuple["Game", tuple[str, ...]]:
+    """A copy of `game` with `player`'s untap step already taken, and one
+    notice saying what that moved.
+
+    The rule is not re-implemented here. `Game.untap_step_rule` is the one
+    place it lives - CR 614.10's skip verdict for the whole step, then
+    CR 502.3's "the active player determines which permanents they control
+    will untap", less the permanents an effect keeps from untapping - and the
+    untapping itself goes through `Player.untap_all`, exactly as
+    `Game._untap_step_impl` does. That second half is not decoration: the rule
+    deliberately leaves CR 122.1d's stun counter and CR 701.43a's exert to
+    `CardState.untap`, where every route to untapping passes, so a caller that
+    read the rule and untapped the batch itself would report a stunned or
+    exerted permanent as untapping. Going through `untap_all` is what makes
+    this hypothetical and the real step give the same answer.
+
+    Nothing else about the step is taken: no `BECOMES_UNTAPPED` event is
+    emitted, the skip is read and not spent, and no turn or phase moves. The
+    caller's `game` is untouched - `_decoded_copy` is the same round trip
+    every other board here is built on.
+    """
+    copy = _decoded_copy(game)
+    verdict = copy.untap_step_rule(player)
+    if verdict.skipped:
+        return copy, (
+            f"assuming untapped: {player} skips their next untap step (CR 614.10), "
+            f"so nothing untaps and this is the board as it stands",
+        )
+    was_tapped = [state for state in verdict.permanents if state.tapped]
+    copy.player(player).untap_all(verdict.permanents)
+    # Named from what actually untapped rather than from the batch, so a
+    # permanent whose untap was replaced (CR 122.1d, CR 701.43a) is not
+    # claimed as untapped by a notice the board disagrees with.
+    untapped = [state.name for state in was_tapped if not state.tapped]
+    if not untapped:
+        return copy, (
+            f"assuming untapped: nothing {player} controls would untap, "
+            f"so this is the board as it stands",
+        )
+    return copy, (
+        f"assuming untapped: {', '.join(untapped)} untap for {player}; "
+        f"every other permanent is left exactly as it is now",
+    )
+
+
 class _CardOptions(NamedTuple):
     """One card's options on one board, with what judging them added."""
 
@@ -802,21 +878,41 @@ def payability_matrix(
     player: str,
     cards: Sequence[CardState | UUID],
     lands: Sequence[CardState | UUID],
+    *,
+    assuming_untapped: bool = False,
 ) -> PayabilityMatrix:
     """`payability` for every card in `cards` now and with each land in
     `lands` assumed, and `predict_enters` for each land, as one batch. Every
     answer is the one the single call gives; a card is never asked about with
     itself as the land. Mutates nothing. See the module docstring.
 
+    `assuming_untapped=True` answers all of it on a board where `player`'s
+    untap step has already happened: the permanents `Game.untap_step_rule`
+    says would untap, untapped through `Player.untap_all`. It is the one
+    question a seat looking a land drop ahead needs. **What it models** is the
+    mana: which of `player`'s permanents are untapped and therefore available
+    to pay. **What it does not model** is the rest of the turn - no card is
+    drawn, no upkeep trigger resolves, no turn or phase advances, nothing the
+    opponent does in between is accounted for, and no permanent anybody else
+    controls is touched. Every `Payability` it answers says so in its own
+    `notices`, so a row read on its own cannot be mistaken for a prediction.
+
+    The default answers byte for byte what the call without it answers.
+
     Raises `ValueError` as `payability` and `predict_enters` do.
     """
+    hypothetical_notices: tuple[str, ...] = ()
+    if assuming_untapped:
+        game, what_untapped = _untapped_copy(game, player)
+        hypothetical_notices = (_ASSUMING_UNTAPPED_NOTICE, *what_untapped)
     targets = [_card(game, card) for card in cards]
     target_ids = {target.id for target in targets}
 
     now = _now(game)
     now_options = _options_by_card(now.board, player, target_ids)
     answers_now = tuple(
-        _answer(target.id, now_options[target.id], None, now.notices) for target in targets
+        _answer(target.id, now_options[target.id], None, (*hypothetical_notices, *now.notices))
+        for target in targets
     )
 
     # Two library copies of one printing are the same question only because
@@ -854,7 +950,12 @@ def payability_matrix(
         if prediction.card_id != land.id:
             prediction = prediction.model_copy(update={"card_id": land.id})
         column = tuple(
-            _answer(target.id, options[target.id], prediction, evaluated.notices)
+            _answer(
+                target.id,
+                options[target.id],
+                prediction,
+                (*hypothetical_notices, *evaluated.notices),
+            )
             for target in targets
             if target.id != land.id
         )
