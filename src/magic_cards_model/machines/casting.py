@@ -4313,14 +4313,16 @@ class Casting(EngineModel):
         the two cards' identical clauses are the same mechanic rather than
         two.
 
-        CR 602.2b's targets-before-cost order (the same order Dragonfire
-        Blade's/Warrior's Blades' own per-target equip discount already
-        relies on, `machines/keywords.equip_activation`) is what makes this
-        askable at all: `self.targets` is already announced (CR 601.2c) by
-        the time CR 601.2f prices the spell, so "beyond the first" of
-        *however many targets were actually chosen* is simply
-        `len(self.targets) - 1`, floored at zero for a spell targeting one
-        thing or fewer.
+        CR 601.2's own targets-before-cost order - CR 601.2c announces
+        targets before CR 601.2f prices the spell - is what makes this
+        askable at all: `self.targets` is already announced by the time this
+        runs, so "beyond the first" of *however many targets were actually
+        chosen* is simply `len(self.targets) - 1`, floored at zero for a
+        spell targeting one thing or fewer. Dragonfire Blade's/Warrior's
+        Blades' own per-target equip discount (`machines/keywords.
+        equip_activation`) relies on the identical order for an *activated*
+        ability instead, which CR 602.2b makes CR 601.2b-i's own order for
+        casting a spell.
         """
         match = _COST_INCREASE_PER_TARGET_RE.search(self.spell.oracle_text or "")
         if match is None:

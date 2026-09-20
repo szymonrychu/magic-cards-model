@@ -2121,8 +2121,8 @@ _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
 #: Desert Fang's, and Lich's Relic's own reflexive consequence, all sharing
 #: this one grammar. CR 601.2c/603.3d target *every* instance of the word
 #: "target" a spell or ability's text prints, and "for each opponent" prints
-#: one such instance per opponent (CR 102.2's "each other player in the
-#: game" - not fixed at two), which the ordinary word-scan below cannot
+#: one such instance per opponent (CR 102.3's "opponents are all players not
+#: on their team" - not fixed at two), which the ordinary word-scan below cannot
 #: express: it reads one `TargetRequirement` per literal "target" word in
 #: the text, and this sentence prints only one such word regardless of how
 #: many opponents there are. Special-cased ahead of that scan the same way
@@ -2929,7 +2929,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     #: creature spell" and "target creature or spell" differ by this word and
     #: by nothing else - see `TargetRequirement.or_any_spell`. Left `True`
     #: across an intervening per-item adjective (Icy Reception's "creature or
-    #: **legendary** spell" - CR 700.6's supertype word sits between the "or"
+    #: **legendary** spell" - CR 205.4a's supertype word sits between the "or"
     #: and the noun it belongs to), since the adjective is part of the same
     #: item as the noun that follows it, not a fresh item of its own.
     after_conjunction = False
@@ -3860,10 +3860,12 @@ def _extract_attacked_this_turn(rest: str) -> tuple[bool, str]:
 
 
 #: "target creature that entered this turn" (Mabel, Valley Hero's trigger;
-#: Gallia, the Merrymaker's activated ability) - CR 603.6d's per-turn
-#: historical fact ("this turn" always means the current turn, regardless of
-#: how many times control of the permanent or of priority has changed),
-#: read the identical way `_ATTACKED_THIS_TURN_RE` reads its own "that
+#: Gallia, the Merrymaker's activated ability) - a per-turn historical fact
+#: ("this turn" always means the current turn, regardless of how many times
+#: control of the permanent or of priority has changed; no single CR number
+#: states this generally - CR 500.1's turn structure is the closest numbered
+#: rule, and this comment does not claim it says more than that), read the
+#: identical way `_ATTACKED_THIS_TURN_RE` reads its own "that
 #: attacked this turn": stripped out here, enforced at
 #: `_rejects_entered_this_turn` against the turn number `CardState.
 #: turn_entered` already carries (`Game.turn.turn_number` is the "turn
