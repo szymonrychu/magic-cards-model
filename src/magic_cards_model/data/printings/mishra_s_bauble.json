@@ -103,19 +103,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 1106,
+  "edhrec_rank": 1103,
   "preview": {
     "source": "Draftaholics Anonymous",
     "source_uri": "https://twitter.com/DraftaholicsMTG/status/1286200932393353216",
     "previewed_at": "2020-07-23"
   },
   "prices": {
-    "usd": "2.40",
-    "usd_foil": "3.02",
+    "usd": "2.89",
+    "usd_foil": "3.23",
     "usd_etched": null,
-    "eur": "2.20",
-    "eur_foil": "2.70",
-    "tix": "16.00"
+    "eur": "2.01",
+    "eur_foil": "2.63",
+    "tix": "14.91"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489947&printed=false",

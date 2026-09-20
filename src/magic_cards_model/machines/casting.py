@@ -2366,6 +2366,23 @@ class Casting(EngineModel):
     """Whether this spell's blight cost was paid (CR 701.68a), set by
     `pay_blight` - read by whatever linked ability the card's own printed
     text carries ("If this spell's additional cost was paid, ...")."""
+    paying_life_for_additional_cost: frozenset[int] = Field(default_factory=frozenset)
+    """Which of CR 601.2b's "[cost] or pay [mana]" additional-cost sentences
+    (`_OR_PAY_TAIL`, indexed the same way `additional_cost_phrases` orders
+    them) the caster is paying with a life-total primary instead of the mana
+    alternative - Redirect Lightning's own "pay 5 life or pay {2}".
+
+    `_additional_cost_primary_alternatives` otherwise infers which side is
+    being paid from whether objects were nominated for the primary's own
+    `ComponentKind` pool (`sacrificing`, `discarding`, ...) - the same way
+    `sacrificing=[...]` already says "pay Fling's plain sacrifice cost" with
+    no separate flag. A life payment has no object to nominate at all, so
+    that inference always saw an empty pool and silently fell through to
+    the mana half no matter what the caster wanted - the payer could not
+    choose. This is `ComponentKind.PAY_LIFE`'s own explicit twin of that
+    object-pool inference, read the identical way `blight_paid` already
+    flags a choice with no object behind it either.
+    """
     gift_promised: bool = False
     """Whether this spell's gift was promised (CR 702.174k), set by
     `pay_gift`."""
@@ -4455,6 +4472,12 @@ class Casting(EngineModel):
         its pool defaults to the mana half, exactly like an unblighted
         "blight N or pay {M}" already defaults to the mana (`blighted`).
 
+        A `ComponentKind.PAY_LIFE` primary (Redirect Lightning's own "pay 5
+        life or pay {2}") has no object to nominate at all, so the pool
+        inference alone could never choose it - `paying_life_for_additional_
+        cost`'s own explicit index set is read here too, and either one
+        picks the life half.
+
         Blight's own "or pay" sentences are excluded: they are resolved by
         `blight_paid`/`pay_blight`, never by this.
         """
@@ -4466,7 +4489,12 @@ class Casting(EngineModel):
             if or_pay is None:
                 continue
             component = cost_component_for_phrase(or_pay.group("primary"), self.caster)
-            if component is not None and pools.get(component.kind):
+            if component is None:
+                continue
+            if pools.get(component.kind) or (
+                component.kind is ComponentKind.PAY_LIFE
+                and index in self.paying_life_for_additional_cost
+            ):
                 chosen.add(index)
         return frozenset(chosen)
 
