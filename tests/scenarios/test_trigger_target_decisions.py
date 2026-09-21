@@ -242,6 +242,16 @@ def test_no_legal_target_removes_the_trigger_from_the_stack():
     bob controls no creature at all, so the ETB trigger is never placed on
     the stack in the first place, not placed with an empty target list, which
     is what CR 603.3d explicitly rules out.
+
+    The notice says *that* outcome, not the optional one: an "up to one"
+    requirement with nothing to point at (CR 115.6, White Orchid Phantom in
+    `test_unparsed_trigger_targets.py`) leaves the ability on the stack
+    choosing nothing, while this one takes the ability off the stack
+    entirely. Two different things happened to the board, so they are two
+    different `TargetingNoticeKind` values - a reader told only "nothing was
+    a legal target" cannot tell which of the two it is looking at, and every
+    surface downstream (the browser's toast, an agent's own reading) has to
+    guess.
     """
     scenario = (
         Scenario()
@@ -258,7 +268,7 @@ def test_no_legal_target_removes_the_trigger_from_the_stack():
     assert scenario.pending_triggers == [], "nor is it waiting to be placed later"
 
     (notice,) = scenario.game.targeting_notices
-    assert notice.kind is TargetingNoticeKind.NO_LEGAL_TARGET
+    assert notice.kind is TargetingNoticeKind.MANDATORY_TARGET_MISSING
     assert notice.source_name == "Ravenous Chupacabra"
 
 

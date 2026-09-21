@@ -136,6 +136,13 @@ def test_no_legal_target_is_logged_differently_from_unparsed():
 
     (notice,) = scenario.game.targeting_notices
     assert notice.kind is TargetingNoticeKind.NO_LEGAL_TARGET
+    assert notice.kind is not TargetingNoticeKind.MANDATORY_TARGET_MISSING, (
+        "'up to one' with nothing to point at is CR 115.6 working as printed and "
+        "the ability still goes on the stack; a *mandatory* requirement with "
+        "nothing to point at takes the ability off the stack (CR 603.3d, "
+        "test_trigger_target_decisions.py). The two outcomes are not the same "
+        "notice."
+    )
     assert notice.source_name == "White Orchid Phantom"
 
     while not scenario.game.stack_is_empty:
