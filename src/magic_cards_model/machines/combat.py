@@ -40,6 +40,7 @@ damage walks through here - `declare_blockers` takes them in that order.
 """
 
 import re
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -442,7 +443,161 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
         # text the way the defender check above is.
         return f"{creature.name} can't attack this turn (CR 508.1c)"
 
-    return _defender_refusal(game, defender, active)
+    return _defender_refusal(game, defender, active) or group_attack_restriction_refusal(
+        game, creature, defender
+    )
+
+
+#: CR 508.1c: a permanent's static "can't attack" restriction on creatures in
+#: general rather than on itself - Ensnaring Bridge's "Creatures with power
+#: greater than the number of cards in your hand can't attack.", Reverence's
+#: "Creatures with power 2 or less can't attack you.", Peacekeeper's
+#: "Creatures can't attack." The power qualifier and the "you" scope are both
+#: optional parts of the one template.
+_GROUP_CANT_ATTACK_RE = re.compile(
+    r"creatures(?: with power (?P<comparison>[^.]+?))? can't attack(?P<you> you)?\.?",
+    re.IGNORECASE,
+)
+
+#: The power comparison inside that template: "N or less"/"N or greater", or
+#: "less/greater than <bound>", where the bound is a number or a count
+#: `effects.count_expression` reads ("the number of cards in your hand").
+_POWER_COMPARISON_RE = re.compile(
+    r"(?:(?P<number>\d+) or (?P<direction>less|greater)"
+    r"|(?P<strict>less|greater) than (?P<bound>.+))",
+    re.IGNORECASE,
+)
+
+
+@dataclass(frozen=True)
+class GroupAttackRestriction:
+    """One parsed "creatures [with power <comparison>] can't attack [you]"
+    sentence (CR 508.1c)."""
+
+    sentence: str
+    #: "less_or_equal", "greater_or_equal", "less", "greater", or None for no
+    #: power qualifier at all.
+    operator: str | None = None
+    #: A printed bound, or None when `bound_expression` supplies it.
+    bound: int | None = None
+    bound_expression: str | None = None
+    #: "can't attack you": only attacks on the restriction's controller.
+    only_attacks_on_controller: bool = False
+
+
+def parse_group_attack_restriction(sentence: str) -> GroupAttackRestriction | None:
+    """Read one static sentence into a `GroupAttackRestriction`, or None when
+    it is not that template or its comparison cannot be evaluated."""
+    text = sentence.strip()
+    match = _GROUP_CANT_ATTACK_RE.fullmatch(text)
+    if match is None:
+        return None
+    only_you = match.group("you") is not None
+    comparison = match.group("comparison")
+    if comparison is None:
+        return GroupAttackRestriction(sentence=text, only_attacks_on_controller=only_you)
+    power = _POWER_COMPARISON_RE.fullmatch(comparison.strip())
+    if power is None:
+        return None
+    if power.group("number") is not None:
+        return GroupAttackRestriction(
+            sentence=text,
+            operator=f"{power.group('direction').lower()}_or_equal",
+            bound=int(power.group("number")),
+            only_attacks_on_controller=only_you,
+        )
+    bound_text = power.group("bound").strip()
+    operator = power.group("strict").lower()
+    if bound_text.isdigit():
+        return GroupAttackRestriction(
+            sentence=text,
+            operator=operator,
+            bound=int(bound_text),
+            only_attacks_on_controller=only_you,
+        )
+    # Imported here: `machines/effects.py` imports this module at load time.
+    from .effects import count_expression
+
+    if count_expression(bound_text) is None:
+        return None
+    return GroupAttackRestriction(
+        sentence=text,
+        operator=operator,
+        bound_expression=bound_text,
+        only_attacks_on_controller=only_you,
+    )
+
+
+def is_group_attack_restriction_line(line: str) -> bool:
+    """Whether a static line is one `group_attack_restriction_refusal` enforces."""
+    return any(
+        parse_group_attack_restriction(sentence) is not None
+        for sentence in layer_readable_sentences(line)
+    )
+
+
+def _power_restricted(restriction: GroupAttackRestriction, power: int, bound: int) -> bool:
+    if restriction.operator == "less_or_equal":
+        return power <= bound
+    if restriction.operator == "greater_or_equal":
+        return power >= bound
+    if restriction.operator == "less":
+        return power < bound
+    return power > bound
+
+
+def group_attack_restriction_refusal(
+    game: "Game", creature: CardState, defender: TargetRef
+) -> str | None:
+    """Why a battlefield permanent's static group restriction stops this
+    creature attacking this defender, or None (CR 508.1c).
+
+    Read off the computed board at the moment asked (CR 611.3a, 613.5), so a
+    pump, a draw or a discard before the declaration all count, and a
+    permanent that lost the ability or left the battlefield restricts nothing
+    (CR 604.2). "You"/"your" is the restricting permanent's controller
+    (CR 109.5), whoever controls the creature.
+    """
+    board = game.computed_board()
+    for source in game.battlefield:
+        source_characteristics = board.of(source)
+        controller = source_characteristics.controller
+        for ability in source_characteristics.abilities:
+            if "can't attack" not in ability.lower():
+                continue
+            for sentence in layer_readable_sentences(ability):
+                restriction = parse_group_attack_restriction(sentence)
+                if restriction is None:
+                    continue
+                if restriction.only_attacks_on_controller and not (
+                    defender.is_player and defender.username == controller
+                ):
+                    continue
+                detail = ""
+                if restriction.operator is not None:
+                    power = board.of(creature).power
+                    if power is None:
+                        continue
+                    bound = restriction.bound
+                    if bound is None:
+                        from .effects import count_expression
+
+                        reader = count_expression(restriction.bound_expression or "")
+                        if reader is None:
+                            continue
+                        bound = reader(game, controller)
+                    if not _power_restricted(restriction, power, bound):
+                        continue
+                    detail = f" (its power is {power}"
+                    if restriction.bound_expression is not None:
+                        detail += f"; {restriction.bound_expression} of {controller} is {bound}"
+                    detail += ")"
+                target = f" {controller}" if restriction.only_attacks_on_controller else ""
+                return (
+                    f"{creature.name} can't attack{target}: {source.name} "
+                    f'says "{restriction.sentence}"{detail} (CR 508.1c)'
+                )
+    return None
 
 
 def _defender_refusal(game: "Game", defender: TargetRef, active: str) -> str | None:

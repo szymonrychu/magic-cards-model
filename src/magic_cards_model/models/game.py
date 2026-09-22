@@ -13576,6 +13576,12 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             self._refuse_unobeyed_attack_requirements(attacks)
             self._refuse_illegal_attacker_caps(attacks)
+            # CR 508.1: an illegal declaration returns the game to the moment
+            # before it, so every attacker is judged before any one taps.
+            for creature, defender in attacks:
+                refusal = combat_rules.attack_refusal(self, creature, self.attack_target(defender))
+                if refusal is not None:
+                    raise ValueError(refusal)
             registered = [
                 (
                     creature,

@@ -105,7 +105,11 @@ from magic_cards_model.machines.casting import (  # noqa: E402
     adventure_face,
     keyword_cast_options,
 )
-from magic_cards_model.machines.combat import Keyword, is_attack_requirement_line  # noqa: E402
+from magic_cards_model.machines.combat import (  # noqa: E402
+    Keyword,
+    is_attack_requirement_line,
+    is_group_attack_restriction_line,
+)
 from magic_cards_model.machines.cost import (  # noqa: E402
     additional_cost_phrases,
     cost_announces_x,
@@ -861,6 +865,9 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return SILENT
     if is_attack_requirement_line(text, printing.name):
         # CR 508.1d: `Game.declare_attackers` enforces it.
+        return HANDLED
+    if is_group_attack_restriction_line(text):
+        # CR 508.1c: `combat.group_attack_restriction_refusal` enforces it.
         return HANDLED
     if reads_as_transforms_line(text):
         # CR 712.20: `effects.transform_permanent` applies it as it transforms.
