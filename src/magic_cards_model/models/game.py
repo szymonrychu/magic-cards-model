@@ -99,6 +99,7 @@ from ..machines.cost import (
     tap_cost,
     total_cost_for_phrase,
     untap_cost,
+    why_payer_cannot_use,
 )
 from ..machines.decisions import (
     CardSplit,
@@ -17285,11 +17286,12 @@ class Game(EngineModel):
         (cards, mana, and so on) to pay costs for that player." So a controller
         making their victim cast a spell has to find the mana on the victim's
         own board; their own lands are not available for it.
+
+        The same question `CostPayment.tap_for_mana` and the auto-tap scans ask
+        of every source (`cost.why_payer_cannot_use`), so this answer and a real
+        payment cannot disagree.
         """
-        owner = self.controller_of(source).username
-        if owner == controlled:
-            return None
-        return f"{source.name} is {owner}'s, so it cannot pay a cost for {controlled} (CR 723.5a)"
+        return why_payer_cannot_use(source, controlled, self)
 
     # -- extra turns (CR 500.7) --------------------------------------------
 

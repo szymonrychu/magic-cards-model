@@ -175,7 +175,7 @@ def test_an_opponents_graveyard_cannot_be_delved():
     casting = scenario.cast("Treasure Cruise")
     payment = casting.begin_paying()
 
-    with pytest.raises(ValueError, match="does not control"):
+    with pytest.raises(ValueError, match="in bob.s graveyard, not alice.s"):
         delve(payment, casting.spell, theirs[0])
 
     assert theirs[0].zone is Zone.GRAVEYARD

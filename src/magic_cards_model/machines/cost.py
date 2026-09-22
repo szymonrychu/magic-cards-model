@@ -147,6 +147,44 @@ def can_tap_for_mana(source: CardState, game: Any = None) -> bool:
     return not source.summoning_sick or has_keyword(source, Keyword.HASTE)
 
 
+def why_payer_cannot_use(source: CardState, payer: str | None, game: Any = None) -> str | None:
+    """Why `payer` may not spend `source` on a cost of theirs, or None.
+
+    CR 602.2: "Only an object's controller ... can activate its activated
+    ability", and CR 605.3 sends a mana ability through the same rule. So a
+    mana source pays only for its controller. CR 723.5a is the one twist: a
+    player controlling another player makes that player's choices, but the
+    payment is still the controlled player's and "can use only that player's
+    resources", so the controller's own permanents are refused too - and the
+    refusal names that rule, since it is the one the seat is running into.
+
+    `payer` None (a payment with nobody named) and a source with no
+    controller at all are not judged: there is nobody to compare.
+    """
+    if payer is None:
+        return None
+    controller = source.controller
+    if game is not None and source.zone is Zone.BATTLEFIELD and controller is not None:
+        controller = game.controller_of(source).username
+    if controller is None or controller == payer:
+        return None
+    if (
+        game is not None
+        and getattr(game, "turn", None) is not None
+        and game.is_controlling_player(controller, payer)
+    ):
+        return (
+            f"{source.name} is {controller}'s, and {controller} is deciding for "
+            f"{payer}: the controller of another player can use only that "
+            f"player's resources to pay their costs (CR 723.5a)"
+        )
+    return (
+        f"{payer} does not control {source.name} ({controller} does), so {payer} "
+        "cannot activate its mana ability: only an object's controller can "
+        "activate its activated abilities (CR 602.2, CR 605.3)"
+    )
+
+
 def is_snow_source(source: CardState, game: Any = None) -> bool:
     """Whether mana from this permanent is snow mana (CR 106.3, 205.4g).
 
@@ -1242,7 +1280,7 @@ def _scan_mana_candidates(
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
             continue
-        if payment.payer is not None and source.controller not in (None, payment.payer):
+        if why_payer_cannot_use(source, payment.payer, payment.game) is not None:
             continue
         if not can_tap_for_mana(source, payment.game):
             continue
@@ -1363,7 +1401,7 @@ def _withheld_mana_sources(
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
             continue
-        if payment.payer is not None and source.controller not in (None, payment.payer):
+        if why_payer_cannot_use(source, payment.payer, payment.game) is not None:
             continue
         if not can_tap_for_mana(source, payment.game):
             continue
@@ -5313,7 +5351,11 @@ class CostPayment(EngineModel):
         one place a caller with an explicit, hand-picked source list (a
         scenario's `pay_with`, a player choosing their own sources instead of
         `auto_tap`) reaches the pool, and `auto_tap` itself is not the only
-        path in. CR 712.8d/712.8e/712.8f give a double-faced permanent only
+        path in. That includes whose `source` is: only its controller may
+        activate its mana ability (CR 602.2, CR 605.3), and a controlled
+        player's cost is paid from their own board (CR 723.5a) - see
+        `why_payer_cannot_use`, which the auto-tap candidate scans share.
+        CR 712.8d/712.8e/712.8f give a double-faced permanent only
         the characteristics of the face that's up, so `produces` must be
         something a `{T}`-including mana ability *of that face* could
         actually make right now (`parse_mana_abilities` already reads only
@@ -5344,6 +5386,9 @@ class CostPayment(EngineModel):
         """The rest of `tap_for_mana` - see its own docstring for why it is
         split out."""
         self._require_open()
+        refusal = why_payer_cannot_use(source, self.payer, self.game)
+        if refusal is not None:
+            raise ValueError(refusal)
         if not can_tap_for_mana(source, self.game):
             raise ValueError(
                 f"{source.name} has not been under {source.controller or 'its controller'}'s "

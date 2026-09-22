@@ -122,7 +122,7 @@ class ObjectOffer(EngineModel):
                 f"objects in the {self.zone.value} ({self.rule})"
             )
         if self.yours_only and not _belongs_to(card, payer, game):
-            return f"{payer} does not control {card.name}, so it cannot pay for {self.keyword}"
+            return self._not_yours(card, payer, game)
         if self.excluding is not None and card.id == self.excluding:
             return (
                 f"{card.name} cannot crew itself: {self.rule} taps "
@@ -138,6 +138,38 @@ class ObjectOffer(EngineModel):
                 f"untapped {self.noun.removeprefix('a ').removeprefix('an ')}"
             )
         return None
+
+    def _not_yours(self, card: CardState, payer: str, game: Any = None) -> str:
+        """The refusal for another player's object, naming the rule that bars it.
+
+        On the battlefield the keyword's own "you control" is the rule, unless
+        the object's controller is deciding for `payer` right now: then it is
+        CR 723.5a, "can use only that player's resources ... to pay costs for
+        that player", that the seat is running into. Off the battlefield the
+        question is whose zone the card is in ("**your** graveyard").
+        """
+        if card.zone is not Zone.BATTLEFIELD:
+            return (
+                f"{card.name} is in {card.owner}'s {card.zone.value}, not {payer}'s, "
+                f"so it cannot pay for {self.keyword} ({self.rule})"
+            )
+        controller = card.controller
+        if game is not None:
+            try:
+                controller = game.controller_of(card).username
+                if game.is_controlling_player(controller, payer):
+                    return (
+                        f"{card.name} is {controller}'s, and {controller} is deciding "
+                        f"for {payer}: the controller of another player can use only "
+                        f"that player's resources to pay their costs, so it cannot pay "
+                        f"for {self.keyword} (CR 723.5a)"
+                    )
+            except (KeyError, AttributeError, AssertionError):
+                pass
+        return (
+            f"{payer} does not control {card.name}, so it cannot pay for "
+            f"{self.keyword} ({self.rule})"
+        )
 
     @property
     def noun(self) -> str:
