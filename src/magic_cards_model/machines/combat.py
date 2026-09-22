@@ -530,10 +530,20 @@ def parse_group_attack_restriction(sentence: str) -> GroupAttackRestriction | No
 
 def is_group_attack_restriction_line(line: str) -> bool:
     """Whether a static line is one `group_attack_restriction_refusal` enforces."""
-    return any(
-        parse_group_attack_restriction(sentence) is not None
-        for sentence in layer_readable_sentences(line)
-    )
+    return bool(_static_group_attack_restrictions(line))
+
+
+def _static_group_attack_restrictions(line: str) -> list[GroupAttackRestriction]:
+    """The restrictions one ability line states as a *static* ability (CR
+    604.1). An activated or triggered line's effect is a resolving ability's
+    one-shot continuous effect (CR 611.2), never a standing restriction, so
+    `static_only` keeps its cost or trigger condition from being stripped
+    and the rest applied permanently."""
+    return [
+        restriction
+        for sentence in layer_readable_sentences(line, static_only=True)
+        if (restriction := parse_group_attack_restriction(sentence)) is not None
+    ]
 
 
 def _power_restricted(restriction: GroupAttackRestriction, power: int, bound: int) -> bool:
@@ -565,10 +575,7 @@ def group_attack_restriction_refusal(
         for ability in source_characteristics.abilities:
             if "can't attack" not in ability.lower():
                 continue
-            for sentence in layer_readable_sentences(ability):
-                restriction = parse_group_attack_restriction(sentence)
-                if restriction is None:
-                    continue
+            for restriction in _static_group_attack_restrictions(ability):
                 if restriction.only_attacks_on_controller and not (
                     defender.is_player and defender.username == controller
                 ):
@@ -1417,11 +1424,10 @@ def unobeyed_attack_requirement(game: "Game", declared: set[UUID]) -> CardState 
     if game.turn is None:
         return None
     active = game.turn.active_player
-    defenders = [
-        TargetRef.coerce(player.username)
-        for player in game.players_in_game
-        if player.username != active
-    ]
+    # Every defender, planeswalkers and battles included: a restriction that
+    # only protects a player ("can't attack you") leaves the requirement
+    # obeyable against that player's planeswalker.
+    defenders = attackable_defenders(game, active)
     for creature in attack_requirement_holders(game, active):
         if creature.id in declared:
             continue

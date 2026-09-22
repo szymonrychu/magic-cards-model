@@ -13545,21 +13545,30 @@ class Game(EngineModel):
                     "against it"
                 )
 
-    def _required_attack_declaration(self, active: str) -> list[tuple[UUID, str]]:
+    def _required_attack_declaration(self, active: str) -> list[tuple[UUID, UUID | str]]:
         """The fewest attackers that obey every requirement that can be obeyed
-        (CR 508.1d), each attacking the first opponent in turn order - what an
+        (CR 508.1d), each attacking the first defender it legally can - an
+        opponent in turn order, else a planeswalker or battle - what an
         unscripted seat declares instead of nobody."""
-        opponent = next(
-            (player.username for player in self.players_in_game if player.username != active),
-            None,
-        )
-        if opponent is None:
-            return []
-        return [
-            (creature.id, opponent)
-            for creature in combat_rules.attack_requirement_holders(self, active)
-            if self.why_cannot_attack(creature, opponent) is None
-        ]
+        defenders = combat_rules.attackable_defenders(self, active)
+        declaration: list[tuple[UUID, UUID | str]] = []
+        for creature in combat_rules.attack_requirement_holders(self, active):
+            defender = next(
+                (
+                    ref
+                    for ref in defenders
+                    if combat_rules.attack_refusal(self, creature, ref) is None
+                ),
+                None,
+            )
+            if defender is None:
+                continue
+            target: UUID | str | None = (
+                defender.username if defender.is_player else defender.card_id
+            )
+            if target is not None:
+                declaration.append((creature.id, target))
+        return declaration
 
     def declare_attackers(self, attacks: list[tuple[CardState, "Targetable | str"]]) -> None:
         """Declare a whole attack at once, in order (CR 508.1, 508.2b).
@@ -13578,6 +13587,16 @@ class Game(EngineModel):
             self._refuse_illegal_attacker_caps(attacks)
             # CR 508.1: an illegal declaration returns the game to the moment
             # before it, so every attacker is judged before any one taps.
+            # CR 508.1a-b: each chosen creature attacks one player,
+            # planeswalker, or battle, so naming one twice is illegal.
+            seen: set[UUID] = set()
+            for creature, _defender in attacks:
+                if creature.id in seen:
+                    raise ValueError(
+                        f"{creature.name} is declared as an attacker more than once "
+                        "(CR 508.1a, 508.1b)"
+                    )
+                seen.add(creature.id)
             for creature, defender in attacks:
                 refusal = combat_rules.attack_refusal(self, creature, self.attack_target(defender))
                 if refusal is not None:

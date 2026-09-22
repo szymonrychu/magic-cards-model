@@ -366,3 +366,84 @@ def test_blazing_archon_leaves_its_controllers_planeswalker_attackable():
 
     scenario.attack_with(giant, defending=jace)
     assert scenario.attackers() == [giant]
+
+
+# --------------------------------------------------------------------------
+# Composing with requirements across every defender (CR 508.1d)
+# --------------------------------------------------------------------------
+
+
+def _brigand_against_reverence(*bob: str) -> Scenario:
+    """Alice's Goblin Brigand (2/2, "attacks each combat if able")
+    against bob's Reverence, plus whatever else bob controls."""
+    return (
+        Scenario()
+        .player("alice", battlefield=["Goblin Brigand"])
+        .player("bob", battlefield=["Reverence", *bob])
+    )
+
+
+def test_a_must_attack_creature_restricted_from_the_player_must_attack_the_planeswalker():
+    """CR 508.1d: Reverence stops the 2/2 attacking bob, but not bob's Jace
+    Beleren, so attacking Jace is a requirement that can be obeyed, and
+    declaring nobody obeys fewer requirements than possible."""
+    scenario = _brigand_against_reverence("Jace Beleren").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    brigand = scenario.creature("Goblin Brigand")
+    jace = scenario.find("Jace Beleren", Zone.BATTLEFIELD, "bob")
+
+    with pytest.raises(ValueError, match=r"CR 508\.1d"):
+        scenario.attack_with()
+    scenario.attack_with(brigand, defending=jace)
+    assert scenario.attackers() == [brigand]
+
+
+def test_an_unscripted_seat_sends_the_must_attack_creature_at_the_planeswalker():
+    """The default declaration obeys the requirement through the one
+    defender the restriction leaves open."""
+    scenario = _brigand_against_reverence("Jace Beleren").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    brigand = scenario.creature("Goblin Brigand")
+    jace = scenario.find("Jace Beleren", Zone.BATTLEFIELD, "bob")
+
+    scenario.game.declare_attackers_step()
+
+    assert scenario.attackers() == [brigand]
+    attack = scenario.game.combat.attack_by(brigand.id)
+    assert attack is not None and attack.defender.card_id == jace.id
+
+
+def test_with_no_planeswalker_the_restricted_must_attack_creature_may_stay_home():
+    """Negative control: with nothing but bob to attack, Reverence leaves
+    the requirement unobeyable, so declaring nobody is legal."""
+    scenario = _brigand_against_reverence().build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    scenario.attack_with()
+    assert scenario.attackers() == []
+
+
+# --------------------------------------------------------------------------
+# A declaration is judged whole (CR 508.1)
+# --------------------------------------------------------------------------
+
+
+def test_naming_the_same_creature_twice_declares_nothing():
+    """CR 508.1a-b: each chosen creature attacks one player, planeswalker or
+    battle, so naming one twice is illegal - and the whole declaration is,
+    leaving the first copy neither tapped nor attacking."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears"])
+        .player("bob", battlefield=["Jace Beleren"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears")
+    jace = scenario.find("Jace Beleren", Zone.BATTLEFIELD, "bob")
+
+    with pytest.raises(ValueError, match="more than once"):
+        scenario.game.declare_attackers([(bears, "bob"), (bears, jace)])
+
+    assert scenario.attackers() == []
+    assert bears.untapped

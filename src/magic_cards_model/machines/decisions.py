@@ -1499,7 +1499,7 @@ def _ask_declaration(
     player: str,
     prompt: str,
     attackers: tuple[UUID, ...] = (),
-    default: Sequence[tuple[UUID, str]] = (),
+    default: Sequence[tuple[UUID, UUID | str]] = (),
 ) -> list[tuple["CardState | UUID", "CardState | TargetRef | UUID | str"]]:
     """Put a combat declaration to one player, and return what they declared.
 
@@ -1563,7 +1563,7 @@ def ask_attackers(
     player: str,
     *,
     prompt: str = "declare attackers",
-    default: Sequence[tuple[UUID, str]] = (),
+    default: Sequence[tuple[UUID, UUID | str]] = (),
 ) -> list[tuple["CardState | UUID", "CardState | TargetRef | UUID | str"]]:
     """Put CR 703.4i's declaration to the active player (CR 508.1).
 
