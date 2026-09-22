@@ -607,3 +607,21 @@ def test_abilities_of_kind_filters():
 
     assert len(triggered) == 2
     assert all(a.kind is AbilityKind.TRIGGERED for a in triggered)
+
+
+def test_a_while_condition_with_a_comma_side_if_still_parses_as_a_trigger():
+    """A "while" intervening clause (CR 603.4, printed in the condition) next
+    to a comma-side "if" has no printing yet (Scryfall, 2026-09-22), so this
+    reads the line through `parse_granted_ability_lines`, the path a granted
+    quoted ability takes. It must not vanish: the "while" clause is the
+    intervening *if*, and the comma-side "if" stays in the effect text for
+    the effect reader to judge, as before compound splitting."""
+    from magic_cards_model.machines.abilities import TriggeredAbility, parse_granted_ability_lines
+
+    (ability,) = parse_granted_ability_lines(
+        ["Whenever this creature attacks while saddled, if you control an artifact, draw a card."]
+    )
+    assert isinstance(ability, TriggeredAbility)
+    assert ability.condition == "this creature attacks"
+    assert ability.intervening_if == "saddled"
+    assert ability.effect == "if you control an artifact, draw a card."

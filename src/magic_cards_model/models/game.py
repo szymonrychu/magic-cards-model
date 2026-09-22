@@ -2148,12 +2148,14 @@ class Game(EngineModel):
     turn" intervening *if* clauses. Cleared when a new turn begins."""
 
     cards_drawn_in_own_draw_step: dict[str, int] = Field(default_factory=dict)
-    """How many cards each player has drawn during their own draw step this
-    turn (CR 504.1's turn-based draw and anything drawn after it in that
+    """How many cards each player has drawn during the draw step in progress,
+    their own (CR 504.1's turn-based draw and anything drawn after it in that
     step), counted in `draw_cards` alongside `cards_drawn_this_turn`. Answers
     Orcish Bowmasters' "except the first one they draw in each of their draw
-    steps" (`machines/triggers.condition_matches`). Cleared when a new turn
-    begins; each turn has one draw step."""
+    steps" (`machines/triggers.condition_matches`). Cleared as every draw
+    step begins (`_note_step_began`), not per turn: CR 500.8 can add a whole
+    beginning phase (CR 501.1: untap, upkeep, draw), and so a second draw
+    step, to one turn. Also cleared when a new turn begins."""
 
     cards_drawn_this_turn: dict[str, int] = Field(default_factory=dict)
     """How many cards each player has actually drawn this turn, keyed by the
@@ -3180,7 +3182,10 @@ class Game(EngineModel):
     battlefield or stack (Cityscape Leveler, Orcish Bowmasters, Voice of
     Resurgence) triggers on events it silently ignored before; `Game` gained
     `cards_drawn_in_own_draw_step`; and the anaphoric "Its controller ..."
-    sentence now runs for a legal target the destroy failed to move.
+    sentence now runs for a legal target the destroy failed to move. Same
+    bump: `once_per_turn_triggers` is keyed on the ability's printed text
+    rather than its condition, and `cards_drawn_in_own_draw_step` is reset
+    per draw step.
     """
 
     @model_validator(mode="before")
@@ -17505,6 +17510,7 @@ class Game(EngineModel):
         previous_turns_taken = self.turn.turns_taken
         previous_step = self.turn.step
         step = self.turn.advance()
+        self._note_step_began(step)
 
         if self.automatic_turn_based_actions and previous_step is Step.DECLARE_ATTACKERS:
             # CR 508.8: "If no creatures are declared as attackers or put onto
@@ -17630,6 +17636,13 @@ class Game(EngineModel):
         self.sync_priority_with_step()
         return step
 
+    def _note_step_began(self, step: Step) -> None:
+        """Per-step bookkeeping for a step that has just begun: a draw step
+        starts `cards_drawn_in_own_draw_step` over (CR 500.8/501.1 can put
+        more than one in a turn)."""
+        if step is Step.DRAW:
+            self.cards_drawn_in_own_draw_step = {}
+
     def advance_to(self, step: Step) -> Step:
         """Move the turn marker forward through every boundary up to `step`.
 
@@ -17657,7 +17670,7 @@ class Game(EngineModel):
             raise ValueError(f"{step} already passed this turn, currently at {self.turn.step}")
         while self.turn.step is not step:
             previous_step = self.turn.step
-            self.turn.advance()
+            self._note_step_began(self.turn.advance())
             # CR 500.5a, the same reading `_advance_past_checks` uses above:
             # firebending's "until end of combat" mana expires exactly when
             # the combat phase this boundary just left behind ends.

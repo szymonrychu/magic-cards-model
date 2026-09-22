@@ -3094,6 +3094,10 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
 
         condition, rest = parts[0], ", ".join(parts[1:])
 
+    # The effect text as printed, before any comma-side "if" is lifted out:
+    # a condition carrying its own "while" clause keeps this one (see below).
+    printed_rest = rest
+    comma_if_unreadable = False
     intervening_if: str | None = None
     if rest.lower().startswith("if "):
         # `_FIRST_SPELL_THIS_TURN_WITH_BOUNDARY` first: Alania, Divergent
@@ -3110,41 +3114,45 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
         if boundary is not None:
             intervening_if = boundary.group("clause").strip()
             rest = rest[boundary.end() :].strip()
-            if not rest:
-                return None
+            comma_if_unreadable = not rest
         else:
             clause_parts = _split_top_level(rest)
             if len(clause_parts) < 2:
-                return None
-            intervening_if = clause_parts[0][len("if ") :].strip()
-            rest = ", ".join(clause_parts[1:])
+                comma_if_unreadable = True
+            else:
+                intervening_if = clause_parts[0][len("if ") :].strip()
+                rest = ", ".join(clause_parts[1:])
 
     once_per_turn = False
     stripped = _strip_once_per_turn_trailer(rest).strip()
     if stripped != rest.strip():
         once_per_turn = True
         rest = stripped
+        printed_rest = _strip_once_per_turn_trailer(printed_rest).strip()
 
     abilities: list[TriggeredAbility] = []
     for half_word, half in _split_compound_condition(word, condition):
         # The "while" clause belongs to the one condition it is printed in
-        # (Autarch Mammoth's "whenever it attacks while saddled"), and the
-        # comma-side "if" to the whole ability; a condition carrying both is
-        # not a shape any printing uses.
-        half_if = intervening_if
+        # (Autarch Mammoth's "whenever it attacks while saddled") and is that
+        # condition's intervening *if* (CR 603.4); a condition with one keeps
+        # the printed effect text, comma-side "if" and all, exactly as the
+        # parser read it before compound splitting (no printing carries both
+        # yet). Every other condition takes the comma-side "if".
+        half_if, half_effect = intervening_if, rest
         while_match = _CONDITION_WHILE_CLAUSE.search(half)
         if while_match is not None:
-            if half_if is not None:
-                return None
             half_if = half[while_match.end() :].strip()
             half = half[: while_match.start()].strip()
+            half_effect = printed_rest
+        elif comma_if_unreadable:
+            return None
         abilities.append(
             TriggeredAbility(
                 **common,
                 word=half_word,
                 condition=half,
                 intervening_if=half_if,
-                effect=rest,
+                effect=half_effect,
                 event=_trigger_event(half),
                 once_per_turn=once_per_turn,
             )

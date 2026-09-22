@@ -4728,10 +4728,13 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             # controller has not yet taken the indicated action that
             # turn" - Caretaker's Talent's own "This ability triggers
             # only once each turn." `key` pairs the source with the
-            # ability's own printed condition, so a permanent with more
-            # than one once-per-turn trigger is tracked separately for
-            # each.
-            key = f"{source.id}:{ability.condition}"
+            # ability's printed text, so a permanent with more than one
+            # once-per-turn trigger is tracked separately for each, while
+            # the conditions of one CR 603.1b compound (MACH-1's "When
+            # MACH-1 enters and whenever you gain life") - split into one
+            # `TriggeredAbility` each, all sharing that text - share one
+            # budget, because the restriction is on the ability.
+            key = f"{source.id}:{ability.text}"
             fired = game.once_per_turn_triggers.get(key, 0)
             if fired > 0:
                 continue

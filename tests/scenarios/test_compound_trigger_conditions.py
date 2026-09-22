@@ -433,3 +433,75 @@ def test_bowmasters_ignores_its_controllers_own_draws():
     scenario.start_at(Step.UPKEEP)
     scenario.draw(1, "alice")
     assert scenario.pending_triggers == [] and scenario.game.stack_is_empty
+
+
+# -- CR 603.2h across the halves: one ability, one budget ------------------
+
+
+def test_a_once_each_turn_compound_triggers_once_across_both_of_its_conditions():
+    """MACH-1, Swooping Scoundrel: "When MACH-1 enters and whenever you gain
+    life, surveil 1. This ability triggers only once each turn." CR 603.2h
+    limits the *ability*, and both conditions are that one ability - having
+    fired on entering, it does not fire again on a life gain that turn."""
+    scenario = (
+        Scenario()
+        .player("alice", library=["Island"] * 3, hand=["MACH-1, Swooping Scoundrel"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("MACH-1, Swooping Scoundrel", "alice")
+    assert len(scenario.game.stack) + len(scenario.pending_triggers) == 1, "the enters half fired"
+    scenario.pass_until_resolved()
+
+    scenario.game.gain_life("alice", 2)
+    assert scenario.pending_triggers == [] and scenario.game.stack_is_empty
+
+
+def test_the_once_each_turn_compound_fires_off_its_other_condition_when_that_comes_first():
+    """The control: with the enters half never having fired this turn, the
+    life-gain half fires once, and a second gain that turn does not."""
+    scenario = (
+        Scenario()
+        .player("alice", library=["Island"] * 3, battlefield=["MACH-1, Swooping Scoundrel"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 2)
+    assert len(scenario.game.stack) + len(scenario.pending_triggers) == 1
+    scenario.pass_until_resolved()
+    scenario.game.gain_life("alice", 2)
+    assert scenario.pending_triggers == [] and scenario.game.stack_is_empty
+
+
+# -- Bowmasters: the exception is per draw step, not per turn ---------------
+
+
+def test_bowmasters_exception_restarts_in_an_additional_beginning_phases_draw_step():
+    """CR 501.1: a beginning phase is untap, upkeep, draw; CR 500.8 adds a
+    phase directly after the one in progress. No printing in the fixture pool
+    creates an additional beginning phase (Sphinx of the Second Sun does, off
+    pool, and its clause is not parsed), so the phase is added through the
+    engine's own `TurnMachine.insert_extra_phase`, the same call the
+    additional-combat parsers make. The first card drawn in that second draw
+    step is again "the first one they draw" in that draw step."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", library=["Island"] * 5)
+        .player("alice", battlefield=["Orcish Bowmasters"])
+        .build()
+    )
+    scenario.start_at(Step.DRAW)
+    scenario.draw(1, "bob")
+    scenario.game.turn.insert_extra_phase((Step.UNTAP, Step.UPKEEP, Step.DRAW))
+    steps = []
+    while not steps or steps[-1] is not Step.DRAW:
+        steps.append(scenario.advance())
+    assert steps == [Step.UNTAP, Step.UPKEEP, Step.DRAW], "the added phase follows the draw step"
+    assert scenario.pending_triggers == [] and scenario.game.stack_is_empty
+
+    scenario.draw(1, "bob")
+    assert scenario.pending_triggers == [] and scenario.game.stack_is_empty
