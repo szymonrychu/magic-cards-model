@@ -8336,7 +8336,9 @@ def put_counters_on_ability_targets(
 # characteristic read (CR 613.4, CR 613.5), not a count of anything.
 _COUNTER_EACH_GROUP_RE = re.compile(
     rf"^put (?P<n>{COUNT}|x) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
-    rf"(?P<other>other )?(?P<group>[a-z]+) you control{where_x_pattern('expr')}\.?$",
+    rf"(?P<other>other )?"
+    r"(?:(?P<color>white|blue|black|red|green|colorless|monocolored|multicolored) )?"
+    rf"(?P<group>[a-z]+) you control{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
 
@@ -8464,6 +8466,16 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     kind = match.group("kind").lower()
     group = match.group("group")
     excludes_source = match.group("other") is not None
+    color_word = (match.group("color") or "").lower()
+
+    def color_matches(colors: tuple[Color, ...]) -> bool:
+        if not color_word:
+            return True
+        if color_word in _COLOR_COUNT_WORDS:
+            return _COLOR_COUNT_WORDS[color_word](len(colors))
+        color = _HAND_EXILE_COLOR_WORDS[color_word]
+        return not colors if color is None else color in colors
+
     n_text = match.group("n").lower()
     expr = match.group("expr")
     reader: AmountReader | None = None
@@ -8504,6 +8516,11 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
                 continue
             chars = board.of(permanent)
             if chars.controller != controller:
+                continue
+            # CR 105.2c: "colorless" (Titans' Vanguard's "each colorless
+            # creature you control"), or a color / CR 105.2a-b color count,
+            # read off the computed board like the type below.
+            if not color_matches(chars.colors):
                 continue
             if group.lower() == "creature":
                 if not chars.is_creature:
@@ -19785,17 +19802,14 @@ def _parse_anaphoric_clause_pair(
             game.destroy(target)
         else:
             game.exile_permanent(target)
-        if target.zone is Zone.BATTLEFIELD:
-            # The move never happened, so the second sentence has nothing to
-            # refer back to (CR 608.2c: one instruction, not two independent
-            # ones). `target` was filtered to the battlefield above, and
-            # neither verb's replacement path (`put_into_graveyard`'s
-            # destination is always graveyard or exile) can land it back
-            # there, so still being on the battlefield here only happens
-            # when the move itself was refused outright: CR 702.12b's
-            # indestructible refuses `destroy`, and CR 111.8 refuses either
-            # verb for a token that has already left the battlefield once.
-            return
+        # A legal target the first verb failed to move - CR 702.12b's
+        # indestructible refusing `destroy` - still has a controller for "its
+        # controller" to name, so the second sentence runs regardless (CR
+        # 608.2b: a legal target "will resolve normally"). The printed
+        # rulings for this exact templating say so: Beast Within (2021-03-19)
+        # "If the target is legal but not destroyed (most likely because it
+        # has indestructible), its controller does create a Beast token", and
+        # Assassin's Trophy (2024-02-02) the same for its search.
         second_clause(game, referent, power, source, source_id_of(stack_object))
 
     return effect

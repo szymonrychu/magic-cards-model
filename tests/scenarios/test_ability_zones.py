@@ -180,30 +180,28 @@ def test_chalice_does_not_trigger_off_an_opponents_response_while_still_a_spell(
     assert scenario.pending_triggers == []
 
 
-# -- Cityscape Leveler: the compound-condition trap -------------------------
+# -- Cityscape Leveler: one ability, two conditions, two zones -------------
 
 
-def test_cityscape_leveler_is_not_granted_stack_rights():
+def test_cityscape_levelers_two_trigger_conditions_function_in_their_own_zones():
     """Cityscape Leveler prints "When you cast this spell and whenever this
     creature attacks, destroy up to one target nonland permanent." as one
-    sentence. `machines/abilities.py` collapses the compound condition into a
-    single ability, and because "attacks" is checked ahead of "cast" in
-    `_trigger_event`, it is filed under `TriggerEvent.ATTACKS` - but the
-    condition *string* still contains the substring "this spell" as leftover
-    text from the cast half.
-
-    A zone gate that keyed off that substring, rather than off the ability's
-    own parsed event, would have handed this ATTACKS-typed ability stack
-    rights it has no business having. It must not.
+    ability with two trigger conditions (CR 603.1b). `machines/abilities.py`
+    reads it as one `TriggeredAbility` per condition, so CR 113.6k's "Other
+    trigger conditions of the same triggered ability may function in
+    different zones" falls out: the cast half from the stack, the attack half
+    from the battlefield - and neither carries the other's text, which is
+    what once tempted a substring zone gate into granting the attack half
+    stack rights.
     """
     scenario = Scenario().player("alice", battlefield=["Cityscape Leveler"]).player("bob").build()
     leveler = scenario.creature("Cityscape Leveler", "alice")
-    (ability,) = [
-        a for a in triggered_abilities_of(leveler.card) if a.event is TriggerEvent.ATTACKS
-    ]
-    assert "this spell" in ability.condition.lower()  # the leftover text is really there
+    cast, attack = triggered_abilities_of(leveler.card)
+    assert (cast.event, attack.event) == (TriggerEvent.CAST_SPELL, TriggerEvent.ATTACKS)
+    assert "this spell" not in attack.condition.lower()
 
-    assert zones_ability_functions_in(ability, leveler) == frozenset({Zone.BATTLEFIELD})
+    assert zones_ability_functions_in(cast, leveler) == frozenset({Zone.STACK})
+    assert zones_ability_functions_in(attack, leveler) == frozenset({Zone.BATTLEFIELD})
 
 
 # -- the hazard list: every one of these must still fire --------------------

@@ -2147,6 +2147,14 @@ class Game(EngineModel):
     `_first_spell_this_turn_holds`'s "first [type] spell you've cast this
     turn" intervening *if* clauses. Cleared when a new turn begins."""
 
+    cards_drawn_in_own_draw_step: dict[str, int] = Field(default_factory=dict)
+    """How many cards each player has drawn during their own draw step this
+    turn (CR 504.1's turn-based draw and anything drawn after it in that
+    step), counted in `draw_cards` alongside `cards_drawn_this_turn`. Answers
+    Orcish Bowmasters' "except the first one they draw in each of their draw
+    steps" (`machines/triggers.condition_matches`). Cleared when a new turn
+    begins; each turn has one draw step."""
+
     cards_drawn_this_turn: dict[str, int] = Field(default_factory=dict)
     """How many cards each player has actually drawn this turn, keyed by the
     player who drew them.
@@ -2648,7 +2656,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 34
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 35
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3165,6 +3173,14 @@ class Game(EngineModel):
     older snapshot's decode fills in unchanged (`False`/`()`), which is
     exactly the "same shape, different meaning if left undetected" case
     this field exists to catch rather than trust to a silent default.
+
+    Bumped 34 -> 35: CR 603.1b compound trigger conditions ("When you cast
+    this spell and whenever this creature attacks") now parse into one
+    `TriggeredAbility` per condition, so a card already on a decoded
+    battlefield or stack (Cityscape Leveler, Orcish Bowmasters, Voice of
+    Resurgence) triggers on events it silently ignored before; `Game` gained
+    `cards_drawn_in_own_draw_step`; and the anaphoric "Its controller ..."
+    sentence now runs for a legal target the destroy failed to move.
     """
 
     @model_validator(mode="before")
@@ -10148,6 +10164,10 @@ class Game(EngineModel):
                     self.cards_drawn_this_turn[player.username] = (
                         self.cards_drawn_this_turn.get(player.username, 0) + 1
                     )
+                    if self._is_draw_step_draw(player):
+                        self.cards_drawn_in_own_draw_step[player.username] = (
+                            self.cards_drawn_in_own_draw_step.get(player.username, 0) + 1
+                        )
                     self.emit(
                         GameEvent(
                             event=TriggerEvent.DRAWS_A_CARD,
@@ -17556,6 +17576,7 @@ class Game(EngineModel):
             self.creatures_died_this_turn = 0
             self.ability_resolutions_this_turn = {}
             self.cards_drawn_this_turn = {}
+            self.cards_drawn_in_own_draw_step = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
             self.life_gained_amount_this_turn = {}

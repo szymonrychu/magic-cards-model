@@ -2748,7 +2748,7 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
 
     triggered = _parse_triggered(text, common)
     if triggered is not None:
-        return [triggered]
+        return list(triggered)
 
     activated = _parse_activated(text, common)
     if activated is not None:
@@ -3040,7 +3040,39 @@ def _strip_once_per_turn_trailer(text: str) -> str:
 _CONDITION_WHILE_CLAUSE = re.compile(r"\bwhile\b", re.IGNORECASE)
 
 
-def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
+#: CR 603.1b: "A triggered ability may have more than one trigger condition".
+#: The printed joint is "[condition] and when[ever] [condition]" ahead of the
+#: one comma that starts the shared effect - Cityscape Leveler's "When you cast
+#: this spell and whenever this creature attacks", Eldrazi Repurposer's "When
+#: you cast this spell and when this creature dies", Voice of Resurgence's
+#: "Whenever an opponent casts a spell during your turn and when this creature
+#: dies". Only "when"/"whenever" are joints: "and at" also opens ordinary
+#: condition text ("... and at least ...").
+_COMPOUND_CONDITION_JOINT = re.compile(r"\s+and\s+(when(?:ever)?)\s+", re.IGNORECASE)
+
+
+def _split_compound_condition(word: TriggerWord, condition: str) -> list[tuple[TriggerWord, str]]:
+    """Each trigger condition of a CR 603.1b compound, with its own leading
+    word - one entry, unchanged, for an ordinary single condition."""
+    halves: list[tuple[TriggerWord, str]] = []
+    start = 0
+    for joint in _COMPOUND_CONDITION_JOINT.finditer(condition):
+        halves.append((word, condition[start : joint.start()].strip()))
+        word = TriggerWord(joint.group(1).lower())
+        start = joint.end()
+    halves.append((word, condition[start:].strip()))
+    if any(not half for _, half in halves):
+        return [(halves[0][0], condition)]
+    return halves
+
+
+def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
+    """The triggered ability `text` prints, as one `TriggeredAbility` per
+    trigger condition (CR 603.1b) - every entry shares the printed `text`,
+    the intervening *if*, and the effect, so a compound triggers the one
+    effect on each of its events, and each condition keeps its own zone
+    (CR 113.6k: "Other trigger conditions of the same triggered ability may
+    function in different zones")."""
     match = _TRIGGER.match(text)
     if match is None:
         return None
@@ -3063,12 +3095,7 @@ def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
         condition, rest = parts[0], ", ".join(parts[1:])
 
     intervening_if: str | None = None
-    while_match = _CONDITION_WHILE_CLAUSE.search(condition)
-    if while_match is not None:
-        intervening_if = condition[while_match.end() :].strip()
-        condition = condition[: while_match.start()].strip()
-
-    if intervening_if is None and rest.lower().startswith("if "):
+    if rest.lower().startswith("if "):
         # `_FIRST_SPELL_THIS_TURN_WITH_BOUNDARY` first: Alania, Divergent
         # Storm's own intervening *if* is itself a comma-separated list -
         # "if it's the first instant spell, the first sorcery spell, or the
@@ -3098,15 +3125,31 @@ def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
         once_per_turn = True
         rest = stripped
 
-    return TriggeredAbility(
-        **common,
-        word=word,
-        condition=condition,
-        intervening_if=intervening_if,
-        effect=rest,
-        event=_trigger_event(condition),
-        once_per_turn=once_per_turn,
-    )
+    abilities: list[TriggeredAbility] = []
+    for half_word, half in _split_compound_condition(word, condition):
+        # The "while" clause belongs to the one condition it is printed in
+        # (Autarch Mammoth's "whenever it attacks while saddled"), and the
+        # comma-side "if" to the whole ability; a condition carrying both is
+        # not a shape any printing uses.
+        half_if = intervening_if
+        while_match = _CONDITION_WHILE_CLAUSE.search(half)
+        if while_match is not None:
+            if half_if is not None:
+                return None
+            half_if = half[while_match.end() :].strip()
+            half = half[: while_match.start()].strip()
+        abilities.append(
+            TriggeredAbility(
+                **common,
+                word=half_word,
+                condition=half,
+                intervening_if=half_if,
+                effect=rest,
+                event=_trigger_event(half),
+                once_per_turn=once_per_turn,
+            )
+        )
+    return abilities
 
 
 def _trigger_event(condition: str) -> TriggerEvent | None:

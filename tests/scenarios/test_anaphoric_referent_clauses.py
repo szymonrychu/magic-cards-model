@@ -196,13 +196,11 @@ def test_assassins_trophy_destroys_and_lets_the_targets_controller_search():
 
 
 def test_cityscape_leveler_destroys_and_the_targets_controller_creates_a_powerstone():
-    """Control for the indestructible regression below: against a destructible
+    """Control for the indestructible case below: against a destructible
     target, "Its controller creates a tapped Powerstone token." still runs.
 
-    `Cityscape Leveler`'s "when you cast this spell" half is filed under
-    `TriggerEvent.ATTACKS` (see `test_ability_zones.py`'s compound-condition
-    trap), so the ability only ever fires off an attack in this engine, not a
-    cast - this test attacks with it rather than casting it.
+    The attack half of `Cityscape Leveler`'s compound condition; the cast
+    half is `test_compound_trigger_conditions.py`'s.
     """
     scenario = (
         Scenario()
@@ -224,22 +222,22 @@ def test_cityscape_leveler_destroys_and_the_targets_controller_creates_a_powerst
     ]
 
 
-# -- The adversarial-review defect: the second sentence must not run when ---
-# -- the first sentence's destroy/exile was refused outright ----------------
+# -- A legal target that survives the first sentence still has a controller -
+#
+# Superseded 2026-09-22: this block used to assert the opposite (no search, no
+# token when indestructible refused the destroy). The printed rulings for the
+# identical templating say otherwise - Assassin's Trophy (2024-02-02): "If the
+# target permanent is a legal target but isn't destroyed, most likely because
+# it has indestructible, its controller may search their library."; Beast
+# Within (2021-03-19): "If the target is legal but not destroyed ..., its
+# controller does create a Beast token." CR 608.2b: a legal target "will
+# resolve normally", and CR 702.12b refuses only the destroy itself.
 
 
-def test_assassins_trophy_does_not_destroy_indestructible_ulamog_and_offers_no_search():
+def test_assassins_trophy_does_not_destroy_indestructible_ulamog_but_still_offers_the_search():
     """`Destroy target permanent an opponent controls. Its controller may
     search their library for a basic land card...`, aimed at an indestructible
-    permanent.
-
-    CR 702.12b refuses the destroy outright - Ulamog stays on the
-    battlefield, nothing died, nothing moved. The optional search is the
-    *anaphoric second half of the same instruction* (CR 608.2c), not an
-    independent clause, so with nothing for "its controller" to refer back
-    to, it must not even be offered: taking a search that was never legally
-    on the table would fetch a land off a destroy that never happened.
-    """
+    permanent: Ulamog stays, and its controller may still search."""
     scenario = (
         Scenario()
         .player("alice", hand=["Assassin's Trophy"], battlefield=["Forest", "Swamp"])
@@ -254,23 +252,13 @@ def test_assassins_trophy_does_not_destroy_indestructible_ulamog_and_offers_no_s
     scenario.cast_and_resolve("Assassin's Trophy", *sources, targets=[ulamog])
 
     assert ulamog.zone is Zone.BATTLEFIELD, "indestructible can't be destroyed (CR 702.12b)"
-    assert [state.card.name for state in scenario.player("bob").library] == [
-        "Plains",
-        "Island",
-    ], "no destroy happened, so there is nothing for the search to refer back to"
-    assert "Plains" not in scenario.battlefield_names()
+    assert "Plains" in scenario.battlefield_names(), "the target was legal, so bob searches"
 
 
-def test_cityscape_leveler_does_not_destroy_indestructible_ulamog_and_grants_no_token():
+def test_cityscape_leveler_does_not_destroy_indestructible_ulamog_but_still_grants_the_token():
     """`... destroy up to one target nonland permanent. Its controller
     creates a tapped Powerstone token.`, aimed at an indestructible
-    permanent - the mandatory twin of the Assassin's Trophy case above.
-
-    Unlike the optional search, this second sentence has no decision to
-    refuse: without the guard, an indestructible target would hand its
-    controller a free Powerstone off a destroy that never happened, no
-    choice involved.
-    """
+    permanent - the mandatory twin of the Assassin's Trophy case above."""
     scenario = (
         Scenario()
         .player("alice", battlefield=["Cityscape Leveler"])
@@ -286,9 +274,9 @@ def test_cityscape_leveler_does_not_destroy_indestructible_ulamog_and_grants_no_
     scenario.pass_until_resolved()
 
     assert ulamog.zone is Zone.BATTLEFIELD, "indestructible can't be destroyed (CR 702.12b)"
-    assert "Powerstone Token" not in [
+    assert "Powerstone Token" in [
         state.name for state in scenario.game.permanents_controlled_by("bob")
-    ], "no destroy happened, so there is nothing for the token clause to refer back to"
+    ], "the target was legal, so its controller still creates the token"
 
 
 # -- A `*` power creature: the LKI snapshot has to read the computed value --

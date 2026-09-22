@@ -1716,6 +1716,27 @@ def _self_or_other_enters_match(
 _LEGENDARY_WORD = re.compile(r"\blegendary\b")
 
 
+#: Orcish Bowmasters' "whenever an opponent draws a card except the first one
+#: they draw in each of their draw steps" - CR 504.1's turn-based draw (or
+#: whichever card is first drawn in that step, if that one was replaced away,
+#: CR 603.2g) does not count.
+_EXCEPT_FIRST_DRAW_STEP_DRAW = re.compile(
+    r"\bexcept the first one (?:they|you) draws? in each of (?:their|your) draw steps\b"
+)
+
+
+def _is_first_own_draw_step_draw(game: "Game", player: str | None) -> bool:
+    """Whether the draw being dispatched is the first card `player` has drawn
+    in their own draw step this turn (`Game.cards_drawn_in_own_draw_step`,
+    counted before the draw event is emitted)."""
+    turn = getattr(game, "turn", None)
+    if player is None or turn is None:
+        return False
+    if turn.step is not Step.DRAW or turn.active_player != player:
+        return False
+    return game.cards_drawn_in_own_draw_step.get(player, 0) == 1
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -2267,6 +2288,10 @@ def condition_matches(
         return True
 
     if ability.event is TriggerEvent.DRAWS_A_CARD:
+        if _EXCEPT_FIRST_DRAW_STEP_DRAW.search(lowered) and _is_first_own_draw_step_draw(
+            game, event.player
+        ):
+            return False
         if "an opponent" in lowered:
             return event.player is not None and event.player != controller
         return _controller_clause_holds(condition, controller, event.player)
@@ -2842,15 +2867,13 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     # functions in all zones it can trigger from." A cast-trigger that names
     # "this spell" can only occur while the object is a spell on the stack -
     # once it resolves and becomes a permanent it is never "cast" again - so it
-    # functions there instead of the battlefield default. Gated on the literal
-    # phrase, not on `ability.event` being CAST_SPELL alone: Cityscape
-    # Leveler's compound "When you cast this spell and whenever this creature
-    # attacks" collapses to a single ATTACKS-typed ability whose condition
-    # string still contains "this spell" as leftover text, and an ATTACKS
-    # ability has no business on the stack regardless of what substring
-    # survived the collapse - so this branch is reached only when the parsed
-    # event itself is CAST_SPELL, never for an ability the parser filed under
-    # a different event.
+    # functions there instead of the battlefield default. Gated on the parsed
+    # event as well as the phrase: a CR 603.1b compound such as Cityscape
+    # Leveler's "When you cast this spell and whenever this creature attacks"
+    # is one `TriggeredAbility` per condition (`machines/abilities.
+    # _split_compound_condition`), and CR 113.6k's own "Other trigger
+    # conditions of the same triggered ability may function in different
+    # zones" keeps the attack half on the battlefield.
     if ability.event is TriggerEvent.CAST_SPELL and "this spell" in lowered:
         return frozenset({Zone.STACK})
 
