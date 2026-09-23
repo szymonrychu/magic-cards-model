@@ -1899,6 +1899,22 @@ _MASS_SUBJECT_RE = re.compile(
 _MASS_SUBTYPE_SUBJECT_RE = re.compile(
     r"^(?![Cc]reatures?\b)(?P<subtype>[A-Z][a-z]+) (?P<whose>you control|your opponents control)\b"
 )
+#: "Creatures you control with power `<n>` or greater gain `<keyword(s)>`
+#: until end of turn." (Smuggler's Surprise's third Spree mode: "gain
+#: hexproof and indestructible"; Gustrider Exuberant's own sacrifice
+#: ability: "gain flying") - `_MASS_SUBJECT_RE`'s bare "creatures you
+#: control" subject narrowed by a power filter. CR 611.2c: "the set of
+#: objects [a one-shot effect] affects is determined when that continuous
+#: effect begins to exist" - so the filter is read **once**, here, against
+#: the board as it stands right now (`_mass_creature_group_targets`), the
+#: same fixed-set-now convention the plain mass subject already gets; a
+#: creature whose power changes later in the turn, or that enters after
+#: this resolves, is never swept in or dropped.
+_MASS_POWER_FILTER_RE = re.compile(
+    rf"^(?P<other>other )?creatures (?P<whose>you control|your opponents control) "
+    rf"with power {count_pattern('power', article=False)} or greater\b",
+    re.IGNORECASE,
+)
 #: The trailing computed-magnitude clause - "..., where X is <expr>." - split
 #: off so the rest of the sentence can be handed to `machines/layers.py`'s
 #: parser once "X" is replaced by a literal number.
@@ -1941,6 +1957,33 @@ def _mass_creature_group_targets(
             for permanent in game.battlefield
             if base_selector(board.of(permanent), board.characteristics)
             and any(word.lower() == subtype for word in board.of(permanent).subtypes)
+        ]
+    power_filter_match = _MASS_POWER_FILTER_RE.match(text.strip())
+    if power_filter_match is not None:
+        # Smuggler's Surprise / Gustrider Exuberant's own "with power N or
+        # greater" - read **before** the plain-prefix `startswith` chain
+        # below, which would otherwise treat this filtered subject as if it
+        # read the bare "creatures you control" (a startswith match) and
+        # silently drop the power restriction, sweeping in every creature
+        # rather than only the big ones.
+        minimum_power = parse_count(power_filter_match.group("power"), article=False)
+        if minimum_power is None:
+            return None
+        base_selector = (
+            other_creatures_controlled_by(source_id, controller)
+            if power_filter_match.group("other")
+            else (
+                creatures_controlled_by(controller)
+                if power_filter_match.group("whose") == "you control"
+                else creatures_controlled_by_opponents_of(controller)
+            )
+        )
+        board = game.computed_board()
+        return [
+            permanent
+            for permanent in game.battlefield
+            if base_selector(board.of(permanent), board.characteristics)
+            and (board.of(permanent).power or 0) >= minimum_power
         ]
     opening = text.strip().lower()
     if opening.startswith("other creatures you control"):
@@ -2051,11 +2094,23 @@ def _run_mass_pump(
     # layers.py` a second subject grammar it would then have to keep in step
     # with `_MASS_SUBTYPE_SUBJECT_RE` above.
     subtype_match = _MASS_SUBTYPE_SUBJECT_RE.match(literal.strip())
-    parseable = (
-        "creatures " + literal.strip()[subtype_match.start("whose") :]
-        if subtype_match is not None
-        else literal
-    )
+    power_filter_match = _MASS_POWER_FILTER_RE.match(literal.strip())
+    if power_filter_match is not None:
+        # The same rewrite, for a "with power N or greater" filter instead
+        # of a subtype: `targets` already carries only the creatures that
+        # met it (`_mass_creature_group_targets` above), so the filter
+        # phrase itself is stripped before `machines/layers.py` ever sees
+        # the sentence - its own `_MASS_PUMP_UNTIL_EOT_RE` knows the bare
+        # "creatures you control"/"other creatures you control" subject, not
+        # this one.
+        prefix = "other creatures " if power_filter_match.group("other") else "creatures "
+        parseable = (
+            prefix + power_filter_match.group("whose") + literal.strip()[power_filter_match.end() :]
+        )
+    elif subtype_match is not None:
+        parseable = "creatures " + literal.strip()[subtype_match.start("whose") :]
+    else:
+        parseable = literal
     # `parsed_layer_effects` reads `_effect_sentences`, which needs a real
     # sentence terminator to recognise anything at all - fine for a whole,
     # unsplit ability effect (still carries its own printed period), but
@@ -5125,9 +5180,15 @@ def _parse_search_clause(clause: str, *, for_spell: bool) -> TargetedClause | No
     return _build_search_clause(match, for_spell=for_spell)
 
 
-#: "Search your library for `<quality>` card[s], reveal it, then shuffle and
-#: put that card on top [of your library]." - Loyal Tutor's own shape, the
-#: classic Mystical Tutor family. A fourth search destination beside
+#: "Search your library for `<quality>` card[s][, reveal it,] then shuffle
+#: and put that card on top [of your library]." - Loyal Tutor's own shape,
+#: the classic Mystical Tutor family, widened for Insatiable Avarice's own
+#: first Spree mode ("Search your library for a card, then shuffle and put
+#: that card on top."), which prints no reveal at all - CR 701.23e's reveal
+#: is its own instruction, not implied by the search, so a card that omits
+#: it simply never turns the found card face up (Ainok Guide's own second
+#: mode still prints "reveal it" and is unaffected: `reveal` only fires when
+#: the clause actually names it). A fourth search destination beside
 #: `_SEARCH_AND_PUT_RE`'s hand/battlefield pair: CR 701.24a's shuffle happens
 #: to the *remaining* library before the find goes back, not after (the
 #: found card is already removed from the library by `Game.search_library`
@@ -5143,7 +5204,8 @@ _SEARCH_REVEAL_SHUFFLE_TOP_RE = re.compile(
     r"(?:(?P<quality>.+?) )?card(?:s)?"
     r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
-    r", reveal (?:it|them|that card|those cards), then shuffle(?: (?:your|their) library)? "
+    r"(?P<reveal>, reveal (?:it|them|that card|those cards))?, then shuffle"
+    r"(?: (?:your|their) library)? "
     r"and put (?:it|them|that card|those cards) on top(?: of (?:your|their) library)?\.?$",
     re.IGNORECASE,
 )
@@ -5164,6 +5226,7 @@ def _parse_search_reveal_shuffle_top_clause(
         return None
     matches, description = described
     optional = bool((match.group("subject") or "").strip())
+    reveal = bool(match.group("reveal"))
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -5185,8 +5248,9 @@ def _parse_search_reveal_shuffle_top_clause(
             source=source,
             source_id=source_id,
         )
-        for state in found:
-            game.reveal(state, source=source)
+        if reveal:
+            for state in found:
+                game.reveal(state, source=source)
         game.put_cards_into_library(found, to_bottom=False)
 
     return effect
@@ -29780,16 +29844,24 @@ def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
 
 #: Replicate (the sorcery half of Repudiate // Replicate): "Create a token
 #: that's a copy of target creature you control." (CR 707.2, CR 111.13's
-#: "created" token, not CR 111.13's exempt copy-of-a-spell). Deliberately not
-#: `_parse_token_clause`'s job - that parser bails out on any "copy of"
-#: phrase by name (see `test_repudiates_copy_clause_fails_closed`, which
-#: checks the *combined* split-card printing's blank top-level text and stays
-#: true either way) because it has no target-resolution step at all; this one
-#: does, reusing `token_copy_of` the same way `_parse_city_blessing_token_
-#: copy_clause` below reuses it for Ocelot Pride's anaphoric "it" instead of
-#: a real target.
+#: "created" token, not CR 111.13's exempt copy-of-a-spell), and Three Steps
+#: Ahead's own second Spree mode: "Create a token that's a copy of target
+#: artifact or creature you control." - the identical shape with a two-word
+#: "artifact or creature" target description in place of the bare "creature"
+#: `phrase` only used to read literally; `machines/targeting.py` is what
+#: actually resolves either description (`_targets_understood` below only
+#: asks whether that module read it), so widening the noun phrase costs
+#: nothing here beyond recognising it. Deliberately not `_parse_token_
+#: clause`'s job - that parser bails out on any "copy of" phrase by name (see
+#: `test_repudiates_copy_clause_fails_closed`, which checks the *combined*
+#: split-card printing's blank top-level text and stays true either way)
+#: because it has no target-resolution step at all; this one does, reusing
+#: `token_copy_of` the same way `_parse_city_blessing_token_copy_clause`
+#: below reuses it for Ocelot Pride's anaphoric "it" instead of a real
+#: target.
 _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
-    r"^create a token that'?s a copy of (?P<phrase>target creature you control)\.?$",
+    r"^create a token that'?s a copy of "
+    r"(?P<phrase>target [a-z]+(?: or [a-z]+)? you control)\.?$",
     re.IGNORECASE,
 )
 
@@ -34418,6 +34490,31 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # that card on top" as two fragments neither of which is a clause
         # `_parse_mixed_clause` can read alone.
         return [search_reveal_shuffle_top]
+    mill_then_take_from_milled_run = _mill_then_may_take_from_milled_runner(text)
+    if mill_then_take_from_milled_run is not None:
+        # Read whole, ahead of the comma/clause split, for the identical
+        # bare-"and" reason `search_reveal_shuffle_top` just above is:
+        # Smuggler's Surprise's own first Spree mode, "Mill four cards. You
+        # may put up to two creature and/or land cards from among the
+        # milled cards into your hand.", carries a bare " and " inside its
+        # own quality list (`_MILL_THEN_MAY_TAKE_FROM_MILLED_RE`'s "and/or"
+        # widening) that `_CLAUSE_SEPARATOR` cuts clean through. This also
+        # gives the runner its first path from a *mode's* own text at all -
+        # `_parse_mill_then_may_take_from_milled`/`_ability` were reachable
+        # only from the whole-card dispatchers (`_spell_effect_or_notice`/
+        # `_ability_effect_or_notice`) before this, never from
+        # `parse_mixed_effect_for_spell`/`parse_mixed_effect`, which is all
+        # `parse_mode_effect` ever calls.
+        def mill_then_take_from_milled_whole(game: "Game", stack_object: "StackObject") -> None:
+            player = game.controller_of(stack_object)
+            source = (
+                stack_object.name  # type: ignore[union-attr]
+                if for_spell
+                else stack_object.source_name  # type: ignore[union-attr]
+            )
+            mill_then_take_from_milled_run(game, player, source, source_id_of(stack_object))
+
+        return [mill_then_take_from_milled_whole]
     reveal_two_outside_opponent_chooses = _parse_reveal_two_outside_opponent_chooses_clause(
         text, for_spell=for_spell
     )
@@ -34462,6 +34559,23 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # shape, and this raw `text` (unlike the whole-text parsers' own
         # `whole`) was never stripped before reaching here.
         return [create_continuous_effect]  # type: ignore[list-item]
+    mass_pump_group_whole = _parse_mass_pump_group_clause(
+        " ".join(text.strip().split()), for_spell=for_spell
+    )
+    if mass_pump_group_whole is not None:
+        # Read whole for the identical bare-"and" reason as the two blocks
+        # above: Smuggler's Surprise's own third Spree mode, "Creatures you
+        # control with power 4 or greater gain hexproof and indestructible
+        # until end of turn.", carries a bare " and " between its two
+        # granted keywords that `_CLAUSE_SEPARATOR` cuts clean through,
+        # leaving "... gain hexproof" and "indestructible until end of
+        # turn." as two fragments neither of which `_parse_mixed_clause`
+        # can read alone - a single-keyword grant with no such "and"
+        # (Gustrider Exuberant's "gain flying") already survived the split
+        # intact and reaches this same reader one step later, in the
+        # ordinary per-clause dispatch `_parse_mass_pump_group_clause`
+        # itself already documents.
+        return [mass_pump_group_whole]
     # Riveteers Charm's own mode one ("... with the greatest mana value
     # among creatures and planeswalkers they control.") is a single sentence
     # whose own internal "and" the ordinary clause split would still cut
@@ -38693,7 +38807,13 @@ def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | Non
 #: of" carry their own (CR 107.1c) and print no "you may" at all.
 _MILL_THEN_MAY_TAKE_FROM_MILLED_RE = re.compile(
     rf"^mill (?P<mill_n>{COUNT}) cards?\.\s*"
-    rf"(?P<may>you may )?put {quantity_pattern('take_n')} (?P<group>[a-z]+) cards? "
+    rf"(?P<may>you may )?put {quantity_pattern('take_n')} "
+    # A single-word quality (Rapid Rescue's "a permanent card") or an
+    # "and/or"/"or"-joined pair of them (Smuggler's Surprise's own first
+    # Spree mode: "creature and/or land cards") - CR 205.3's "and/or" reads
+    # as an inclusive or, the same list `_parse_card_group_alternatives`
+    # already reads for `_parse_mill_that_many_then_take_from_among_them`.
+    r"(?P<group>[a-z]+(?: (?:and/or|or) [a-z]+)*) cards? "
     r"from among the milled cards "
     r"(?P<dest>into your hand|onto the battlefield)"
     r"\.(?:\s*you gain (?P<life>\d+) life\.?)?$",
@@ -38725,7 +38845,10 @@ def _mill_then_may_take_from_milled_runner(
         return None
     if quantity.exact and match.group("may") is None:
         return None
-    predicate = _parse_card_group_qualifier(match.group("group"))
+    group_text = match.group("group")
+    predicate = _parse_card_group_qualifier(group_text) or _parse_card_group_alternatives(
+        group_text.replace(" and/or ", " or ")
+    )
     if predicate is None:
         return None
     destination = match.group("dest").lower()

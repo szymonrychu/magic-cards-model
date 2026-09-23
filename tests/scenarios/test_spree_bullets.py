@@ -74,10 +74,20 @@ def test_smugglers_surprise_charges_the_sum_of_every_chosen_modes_cost():
     assert casting.total_cost.mana == ManaCost.parse("{7}{G}{G}")
 
 
-def test_smugglers_surprise_second_mode_resolves_while_the_others_fail_closed():
-    """Mode 2 - "You may put up to two creature cards from your hand onto
-    the battlefield" - is read; modes 1 and 3 are not yet, and each records
-    its own `ModeNotice` (CR 101.3 does not licence dropping mode 2 for it).
+def test_smugglers_surprise_all_three_modes_resolve_together():
+    """All three modes are read (T16 closed the last two): mode 1's own
+    "mill four. You may put up to two creature and/or land cards from among
+    the milled cards into your hand" (`_mill_then_may_take_from_milled_
+    runner`, widened for the "and/or" quality), mode 2's own "put up to two
+    creature cards from your hand onto the battlefield", and mode 3's own
+    "creatures you control with power 4 or greater gain hexproof and
+    indestructible until end of turn" (the power-filtered mass-pump group
+    grant) - no `ModeNotice` left for any of them.
+
+    The queued `will_choose_cards` answers are matched in resolution order
+    (CR 700.2a: modes run in the order printed) - mode 1's own mill-choice
+    decision first (declined, so the milled Mountains stay in the
+    graveyard), then mode 2's own battlefield-choice decision.
     """
     scenario = (
         Scenario()
@@ -92,6 +102,7 @@ def test_smugglers_surprise_second_mode_resolves_while_the_others_fail_closed():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     sources = scenario.untapped_sources(*(["Forest"] * 9))
     bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    scenario.will_choose_cards(username="alice", source="Smuggler's Surprise")
     scenario.will_choose_cards(bears, username="alice", source="Smuggler's Surprise")
 
     casting = scenario.cast("Smuggler's Surprise")
@@ -106,8 +117,11 @@ def test_smugglers_surprise_second_mode_resolves_while_the_others_fail_closed():
         "mode 2's own put-onto-the-battlefield ran"
     )
     assert bears not in alice.hand
-    notice_modes = {notice.mode_number for notice in scenario.game.mode_notices}
-    assert notice_modes == {1, 3}, "modes 1 and 3 fail closed with a notice, not silence"
+    assert len(alice.library) == 0, "mode 1's own mill ran (CR 701.17a)"
+    assert len([c for c in alice.graveyard if c.name == "Mountain"]) == 4, (
+        "the milled Mountains stayed in the graveyard - the mill-choice decision was declined"
+    )
+    assert not scenario.game.mode_notices, "every mode now reads; none is left unread"
 
 
 def test_three_steps_ahead_counters_a_spell_and_loots_in_the_same_cast():

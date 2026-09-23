@@ -346,8 +346,21 @@ def substitute_x(text: str, x_value: int | None) -> str:
 def mode_rules_text(mode: Mode, x_value: int | None = None) -> str:
     """One mode's text, prepared for a parser that reads rules templates.
 
-    Two things get in the way of reading a mode the way a whole card is read:
+    Three things get in the way of reading a mode the way a whole card is
+    read:
 
+    - CR 700.2h's own cost prefix (Tiered's tier label and cost, Spree's
+      cost) is not part of the instruction at all - it is what was already
+      paid to choose this mode (CR 601.2f) - so it is stripped the same way
+      `mode_effect_text` strips it for a resolution-time reader. Left in,
+      its own brace-delimited digit reads as if it were a printed target
+      count: Metamorphic Blast's second mode, "{3} — Target player draws
+      two cards.", used to hand the word-scan below the literal text
+      "{3} — Target player draws two cards." and it read the cost's "3" as
+      "target player" needing three targets, not one - a Spree/Tiered mode
+      whose printed cost happens to differ from its own target count (every
+      one of them but a lucky coincidence) could never be cast with a legal
+      target list at all.
     - Text in quotes is an ability being granted to something else, not
       instructions to follow now. Kozilek's Command's first mode makes tokens
       with `"Sacrifice this token: Add {C}."` - the colon inside those quotes
@@ -362,7 +375,7 @@ def mode_rules_text(mode: Mode, x_value: int | None = None) -> str:
     needs the mode's actual effect, quoted ability included, wants
     `substitute_x` on the mode's own unblanked text instead.
     """
-    text = _blank_quotes(mode.text)
+    text = _blank_quotes(mode_effect_text(mode))
     return substitute_x(text, x_value)
 
 

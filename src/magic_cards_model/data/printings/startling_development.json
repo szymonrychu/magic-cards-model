@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "a12680db-957f-48c1-9062-2edd9115ba26",
+  "oracle_id": "8747ca90-ac1d-45fd-89fe-aac385cd66b4",
+  "multiverse_ids": [
+    479588
+  ],
+  "mtgo_id": 80145,
+  "arena_id": 71135,
+  "tcgplayer_id": 212806,
+  "cardmarket_id": 455168,
+  "name": "Startling Development",
+  "lang": "en",
+  "released_at": "2020-04-24",
+  "uri": "https://api.scryfall.com/cards/a12680db-957f-48c1-9062-2edd9115ba26",
+  "scryfall_uri": "https://scryfall.com/card/iko/68/startling-development?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:24:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.jpg?1783931069",
+    "normal": "https://cards.scryfall.io/normal/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.jpg?1783931069",
+    "large": "https://cards.scryfall.io/large/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.jpg?1783931069",
+    "png": "https://cards.scryfall.io/png/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.png?1783931069",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.jpg?1783931069",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.jpg?1783931069",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.webp?1783931069",
+    "grid": "https://cards.scryfall.io/grid/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.webp?1783931069",
+    "display": "https://cards.scryfall.io/display/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.webp?1783931069",
+    "art": "https://cards.scryfall.io/art/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.webp?1783931069",
+    "crop": "https://cards.scryfall.io/crop/front/a/1/a12680db-957f-48c1-9062-2edd9115ba26.webp?1783931069"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Until end of turn, target creature becomes a blue Serpent with base power and toughness 4/4.\nCycling {1} ({1}, Discard this card: Draw a card.)",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Cycling"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set": "iko",
+  "set_name": "Ikoria: Lair of Behemoths",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aiko&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/iko?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a12680db-957f-48c1-9062-2edd9115ba26/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8747ca90-ac1d-45fd-89fe-aac385cd66b4&unique=prints",
+  "collector_number": "68",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Remarkably, dinner continued with no further interruptions.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Simon Dominic",
+  "artist_ids": [
+    "b0e80135-db5a-4b88-a0bc-815a0e94faa1"
+  ],
+  "illustration_id": "e73771b4-9cd0-4a4e-b001-326dbdcd3894",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21440,
+  "penny_rank": 7026,
+  "prices": {
+    "usd": "0.20",
+    "usd_foil": "0.22",
+    "usd_etched": null,
+    "eur": "0.14",
+    "eur_foil": "0.13",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=479588&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStartling%2BDevelopment",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStartling%2BDevelopment",
+    "edhrec": "https://edhrec.com/route/?cc=Startling+Development"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212806%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=455168&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/80145?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

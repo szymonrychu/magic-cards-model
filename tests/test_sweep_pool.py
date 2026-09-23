@@ -1403,13 +1403,15 @@ def test_tiered_registration_is_conditioned_on_the_profile_being_understood(monk
 
 
 def test_legal_cards_failing_closed_lists_a_legal_notice_card_as_a_gap():
-    """Insatiable Avarice (Spree, legal in all three target formats)
-    classifies `NOTICE` because some of its modes are unread - the owner rule
-    says a legal card resting on a notice is a gap, not a clean pass, so it
-    must be listed. Metamorphic Blast, once the other example, reads both
-    modes since T05 (`test_changeling.py`) and so is no longer one."""
-    gaps = dict(legal_cards_failing_closed(["Insatiable Avarice", "Metamorphic Blast"]))
-    assert "Insatiable Avarice" in gaps
+    """Final Showdown (Spree, legal in all three target formats) classifies
+    `NOTICE` because two of its three modes are unread - the owner rule says
+    a legal card resting on a notice is a gap, not a clean pass, so it must
+    be listed. Metamorphic Blast, once the other example, reads both modes
+    since T05 (`test_changeling.py`); Insatiable Avarice, the example before
+    that, reads both its own modes since T16 (`test_search_put_on_top.py`)
+    and so is no longer one either."""
+    gaps = dict(legal_cards_failing_closed(["Final Showdown", "Metamorphic Blast"]))
+    assert "Final Showdown" in gaps
     assert "Metamorphic Blast" not in gaps
 
 
@@ -1439,11 +1441,11 @@ def test_report_effects_prints_the_legal_gap_section():
 
     buffer = io.StringIO()
     with redirect_stdout(buffer):
-        report_effects(["Insatiable Avarice", "Metamorphic Blast", "Lightning Bolt"])
+        report_effects(["Final Showdown", "Metamorphic Blast", "Lightning Bolt"])
     output = buffer.getvalue()
     assert "Legal cards (Modern/Pioneer/Standard) failing closed with a notice" in output
-    assert "Insatiable Avarice" in output
-    # Metamorphic Blast reads both modes since T05, so only Avarice is left.
+    assert "Final Showdown" in output
+    # Metamorphic Blast reads both modes since T05, so only Final Showdown is left.
     assert "1 legal card(s) failing closed" in output
 
 
