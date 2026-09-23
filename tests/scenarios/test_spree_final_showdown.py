@@ -440,6 +440,20 @@ def test_crush_underfoot_the_giant_is_the_source_of_the_damage():
     assert angel.damage == 3
 
 
+def test_crush_underfoot_targeting_the_chosen_giant_deals_the_damage_to_itself():
+    """Nothing excludes the chosen Giant from being the target: one-sided
+    damage, so the Giant deals damage equal to its power to itself."""
+    scenario = _crush_board(["Hill Giant"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.creature("Hill Giant", "alice")
+
+    scenario.cast_and_resolve(
+        "Crush Underfoot", *scenario.untapped_sources("Mountain", "Mountain"), targets=[giant]
+    )
+
+    assert giant.zone is Zone.GRAVEYARD, "3 damage from itself kills the 3/3 Giant"
+
+
 def test_crush_underfoot_offers_only_giants_you_control():
     scenario = _crush_board(["Hill Giant", "Grizzly Bears"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)

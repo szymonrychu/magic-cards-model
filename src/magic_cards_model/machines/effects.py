@@ -24053,11 +24053,8 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
             amount = game.power_of(dealer) or 0
             if amount <= 0:
                 return
-            referent_ids = {referent.id for referent in referents}
             for target in game.resolve_targets(stack_object):
-                if isinstance(target, CardState) and (
-                    target.id in referent_ids or target.zone is not Zone.BATTLEFIELD
-                ):
+                if isinstance(target, CardState) and target.zone is not Zone.BATTLEFIELD:
                     continue
                 game.deal_damage(target, amount, source=dealer)
 
