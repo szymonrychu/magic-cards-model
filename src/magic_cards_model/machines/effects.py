@@ -15440,15 +15440,15 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     list left for `is_modal_text` to trip over.
 
     A mode whose own text is a CR 611.2 layer shape (a pump, a keyword
-    grant, a base P/T set) that `parse_mixed_effect_for_spell` does not cover
-    on its own - Perfected Theory's "Target creature has base power and
-    toughness 1/1 until end of turn.", Charge the Sanctum's "Creatures you
-    control get +2/+0 until end of turn." - falls to
-    `_compose_layer_effect_with_remainder_for_mode` last, the mode-scoped
-    twin of the whole-card fallback `_spell_effect_or_notice` itself uses:
-    `parse_mixed_effect_for_spell` alone never reached `_is_layer_effect_
-    text` at all for a mode, since that fallback lived only in the whole-card
-    dispatcher, one level above where a mode is ever read.
+    grant, a base P/T set) - Perfected Theory's "Target creature has base
+    power and toughness 1/1 until end of turn.", Charge the Sanctum's
+    "Creatures you control get +2/+0 until end of turn.", Witherbloom
+    Command's "Target creature gets -3/-1 until end of turn." - goes to
+    `_compose_layer_effect_with_remainder_for_mode`, the mode-scoped twin of
+    the whole-card fallback `_spell_effect_or_notice` itself uses, *ahead of*
+    `parse_mixed_effect_for_spell`: that dispatcher reads a pump as the bare
+    `create_continuous_effect` sentinel, which builds off the whole modal
+    card's text and so created nothing for the chosen mode.
     """
     text = _strip_non_effect_preamble(substitute_x(mode_effect_text(mode), x_value)).strip()
     if not text:
@@ -15456,6 +15456,12 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     token_for_player = _parse_target_player_token_mode(text)
     if token_for_player is not None:
         return token_for_player
+    # Ahead of `_parse_target_player_mode`: "Target player mills three cards,
+    # then you return ..." names a second subject ("you") for its second
+    # instruction, which that reader would wrongly run against the target.
+    mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(text)
+    if mill_then_return_to_hand is not None:
+        return mill_then_return_to_hand
     player_subject = _parse_target_player_mode(text)
     if player_subject is not None:
         return player_subject
@@ -15466,10 +15472,16 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     select_from_top = _parse_select_from_top_spell_clause(text)
     if select_from_top is not None:
         return select_from_top
-    mixed = parse_mixed_effect_for_spell(text)
-    if mixed is not None:
-        return mixed
-    return _compose_layer_effect_with_remainder_for_mode(text)
+    # A genuine layer sentence goes to the mode-scoped composer ahead of the
+    # per-clause dispatcher: `parse_mixed_effect_for_spell` reads "Target
+    # creature gets -3/-1 until end of turn." (Witherbloom Command's third
+    # mode) as the bare `create_continuous_effect` sentinel, which builds its
+    # effect off the *whole* card's text - for a modal card, a bulleted list
+    # `LAYER_EFFECTS` does not read, so the mode silently did nothing.
+    layer_mode = _compose_layer_effect_with_remainder_for_mode(text)
+    if layer_mode is not None:
+        return layer_mode
+    return parse_mixed_effect_for_spell(text)
 
 
 class ModeNotice(EngineModel):
@@ -19449,9 +19461,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     mill_then_play = _parse_mill_then_play_that_card(effect_text)
     if mill_then_play is not None:
         return mill_then_play
-    mill_then_may_return_to_hand = _parse_mill_then_may_return_to_hand_clause(effect_text)
-    if mill_then_may_return_to_hand is not None:
-        return mill_then_may_return_to_hand
+    mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(effect_text)
+    if mill_then_return_to_hand is not None:
+        return mill_then_return_to_hand
     conditional_token_count = _parse_conditional_token_count_on_sacrificed(effect_text)
     if conditional_token_count is not None:
         return conditional_token_count
@@ -21788,6 +21800,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     mill_then_take_from_milled = _parse_mill_then_may_take_from_milled(effect_text)
     if mill_then_take_from_milled is not None:
         return mill_then_take_from_milled
+    mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(effect_text)
+    if mill_then_return_to_hand is not None:
+        return mill_then_return_to_hand
     draw_then_discard_unless = _parse_draw_then_discard_unless(effect_text)
     if draw_then_discard_unless is not None:
         return draw_then_discard_unless
@@ -39529,19 +39544,32 @@ def _parse_card_group_qualifier(phrase: str) -> Callable[[CardState], bool] | No
     nonland = lowered.startswith("nonland ")
     if nonland:
         lowered = lowered.removeprefix("nonland ").strip()
+    # A bare printed subtype names a card group as well as a card type does -
+    # Fell Gravship's "a creature or Spacecraft card" (CR 205.3). Only a
+    # single word the subtype vocabulary knows, never a guess.
+    required_subtype: str | None = None
     if lowered in ("permanent", "permanents"):
         types = frozenset(_PERMANENT_CARD_TYPES)
     else:
         card_type = _singular_card_type(lowered)
         if card_type is None:
-            return None
-        types = frozenset({card_type})
+            if nonland or " " in lowered:
+                return None
+            required_subtype = _singular_subtype_for_count_expression(lowered)
+            if required_subtype is None:
+                return None
+            types = frozenset()
+        else:
+            types = frozenset({card_type})
 
     def matches(state: CardState) -> bool:
         card = state.card
         if nonland and Type.LAND in card.types:
             return False
-        if not (types & set(card.types)):
+        if required_subtype is not None:
+            if required_subtype not in {subtype.lower() for subtype in state.subtypes}:
+                return False
+        elif not (types & set(card.types)):
             return False
         # `CardState.subtypes` rather than the printing's type line: a
         # changeling card is every creature type in every zone (CR 604.3).
@@ -41697,34 +41725,56 @@ def _parse_mill_then_play_that_card(text: str) -> AbilityEffect | None:
 
 
 # --------------------------------------------------------------------------
-# "Mill N cards, then you may return <description> from your graveyard to
-# your hand." (Overlord of the Balemurk)
+# "<player> mill(s) N cards, then [you] [may] return <description> from your
+# graveyard to your hand."
 # --------------------------------------------------------------------------
 #
 # The hand-destination twin of `_MILL_THEN_MAY_RETURN_CREATURE_RE` above,
 # with the candidate description read by `_parse_card_group_alternatives`
-# rather than hard-coded to a creature with a mana value bound - Overlord of
-# the Balemurk names "a non-Avatar creature card or a planeswalker card",
-# which is two descriptions and a subtype negation neither of which that
-# regex reads.
+# rather than hard-coded to a creature with a mana value bound. One reader
+# for every form the sentence is printed in:
+#
+#   Overlord of the Balemurk  "mill four cards, then you may return a
+#                             non-Avatar creature card or a planeswalker card
+#                             from your graveyard to your hand" (optional)
+#   Takenuma, Abandoned Mire  "Mill three cards, then return a creature or
+#                             planeswalker card from your graveyard to your
+#                             hand." (mandatory; a Channel ability)
+#   Inspiration from Beyond   "... then return an instant or sorcery card ..."
+#                             (mandatory; a spell)
+#   Witherbloom Command       "Target player mills three cards, then you return
+#                             a land card from your graveyard to your hand."
+#                             (a mode; the mill is the *targeted* player's,
+#                             the return is the controller's own)
 
-_MILL_THEN_MAY_RETURN_TO_HAND_RE = re.compile(
-    rf"^mill (?P<n>{COUNT}) cards?, then you may return (?P<group>.+?) "
+_MILL_THEN_RETURN_TO_HAND_RE = re.compile(
+    rf"^(?:(?P<subject>target player|you) )?mills? (?P<n>{COUNT}) cards?, "
+    r"then (?:you )?(?P<may>may )?return (?P<group>.+?) "
     r"from your graveyard to your hand\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
 
-def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | None:
-    """`_MILL_THEN_MAY_RETURN_TO_HAND_RE`'s shape - Overlord of the
-    Balemurk's own "enters or attacks" trigger.
+def _parse_mill_then_return_to_hand_clause(text: str) -> TargetedClause | None:
+    """`_MILL_THEN_RETURN_TO_HAND_RE`'s shape, for a spell, a mode, or an
+    activated or triggered ability alike - the effect reads only
+    `Game.controller_of` and the stack object's own targets, both of which
+    every stack object has.
 
-    The candidate pool is read *after* the mill, so a card this same
-    resolution just put into the graveyard is itself eligible: CR 701.17a
-    puts the milled cards there and nothing in the sentence excludes them.
-    `Game.may` is only asked once a legal candidate exists (CR 608.2d).
+    CR 608.2c: the instructions run in the order written, so the candidate
+    pool is read *after* the mill, and a card this same resolution just put
+    into the graveyard (CR 701.17a) is itself eligible - nothing in the
+    sentence excludes it. The card is chosen as the effect is applied, never
+    targeted (CR 608.2d), and only from the controller's own graveyard ("you
+    return ... from your graveyard") even when a *target player* did the
+    milling. With no candidate nothing is asked (CR 608.2d: no legal option
+    to choose). A printed "may" asks `Game.may` first; without it one card is
+    returned whenever one can be.
+
+    "Target player" mills each still-legal target (CR 608.2b); an illegal one
+    mills nothing, and the return - which never involved it - still happens.
     """
-    match = _MILL_THEN_MAY_RETURN_TO_HAND_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    match = _MILL_THEN_RETURN_TO_HAND_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
     count = parse_count(match.group("n"))
@@ -41733,18 +41783,31 @@ def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | Non
     predicate = _parse_card_group_alternatives(match.group("group"))
     if predicate is None:
         return None
+    targets_a_player = (match.group("subject") or "").lower() == "target player"
+    optional = match.group("may") is not None
 
-    def effect(game: "Game", ability: AbilityOnStack) -> None:
-        controller = game.controller_of(ability)
-        _mill(game, controller, count)
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        source_id = source_id_of(stack_object)
+        if targets_a_player:
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, Player):
+                    _mill(game, target, count)
+        else:
+            _mill(game, controller, count)
         candidates = [state for state in list(controller.graveyard) if predicate(state)]
         if not candidates:
             return
-        if not game.may(
+        if optional and not game.may(
             controller,
             "return a card from your graveyard to your hand",
-            source=ability.source_name,
-            source_id=source_id_of(ability),
+            source=source_name,
+            source_id=source_id,
         ):
             return
         chosen_ids = game.ask(
@@ -41752,8 +41815,8 @@ def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | Non
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=controller.username,
                 prompt="choose a card to return to your hand",
-                source=ability.source_name,
-                source_id=source_id_of(ability),
+                source=source_name,
+                source_id=source_id,
                 amount=1,
                 cards=tuple(state.id for state in candidates),
             )
