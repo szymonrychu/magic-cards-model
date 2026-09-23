@@ -1388,14 +1388,15 @@ def test_legal_cards_failing_closed_lists_a_legal_notice_card_as_a_gap():
 
 
 def test_legal_cards_failing_closed_excludes_an_out_of_format_notice_card():
-    """Frenzied Gorespawn (goad) is not_legal in Modern, Pioneer or Standard
-    and also classifies `NOTICE` - the owner rule does not apply to it, so it
-    must not be reported as a gap even when it is in the input list."""
-    printing = card("Frenzied Gorespawn")
+    """Bank Job is not_legal in Modern, Pioneer or Standard and also
+    classifies `NOTICE` - the owner rule does not apply to it, so it must not
+    be reported as a gap even when it is in the input list. (Frenzied
+    Gorespawn was the example until T11 read its goad clause.)"""
+    printing = card("Bank Job")
     assert not in_target_formats(printing)
     assert classify_card(printing)[0] == NOTICE
-    gaps = dict(legal_cards_failing_closed(["Frenzied Gorespawn"]))
-    assert "Frenzied Gorespawn" not in gaps
+    gaps = dict(legal_cards_failing_closed(["Bank Job"]))
+    assert "Bank Job" not in gaps
 
 
 def test_legal_cards_failing_closed_excludes_a_handled_card():
