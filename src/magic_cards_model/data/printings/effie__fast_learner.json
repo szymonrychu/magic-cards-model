@@ -1,0 +1,128 @@
+{
+  "object": "card",
+  "id": "d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b",
+  "oracle_id": "b0509fea-4850-4434-95f6-733fcfdd03bd",
+  "multiverse_ids": [],
+  "arena_id": 95355,
+  "name": "Effie, Fast Learner",
+  "lang": "en",
+  "released_at": "2024-10-15",
+  "uri": "https://api.scryfall.com/cards/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b",
+  "scryfall_uri": "https://scryfall.com/card/ydsk/19/effie-fast-learner?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:19:50Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.jpg?1783909190",
+    "normal": "https://cards.scryfall.io/normal/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.jpg?1783909190",
+    "large": "https://cards.scryfall.io/large/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.jpg?1783909190",
+    "png": "https://cards.scryfall.io/png/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.png?1783909190",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.jpg?1783909190",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.jpg?1783909190",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.webp?1783909190",
+    "grid": "https://cards.scryfall.io/grid/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.webp?1783909190",
+    "display": "https://cards.scryfall.io/display/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.webp?1783909190",
+    "art": "https://cards.scryfall.io/art/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.webp?1783909190",
+    "crop": "https://cards.scryfall.io/crop/front/d/0/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b.webp?1783909190"
+  },
+  "mana_cost": "{1}{G}{W}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Survivor",
+  "oracle_text": "Enlist\nSurvival \u2014 At the beginning of your second main phase, if Effie is tapped, put a +1/+1 counter on each tapped creature you control. Then seek a Survivor card with mana value less than or equal to the number of tapped creatures you control.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [
+    "Seek",
+    "Survival",
+    "Enlist"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b451dcad-db03-4ebd-9155-6cafe0240f66",
+  "set": "ydsk",
+  "set_name": "Alchemy: Duskmourn",
+  "set_type": "alchemy",
+  "set_uri": "https://api.scryfall.com/sets/b451dcad-db03-4ebd-9155-6cafe0240f66",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aydsk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ydsk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d0f6f30f-82f7-4f29-a3fd-467cc8ff8b6b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab0509fea-4850-4434-95f6-733fcfdd03bd&unique=prints",
+  "collector_number": "19",
+  "digital": true,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Elizabeth Peir\u00f3",
+  "artist_ids": [
+    "154beecd-b9b8-4795-950c-de8de7434c43"
+  ],
+  "illustration_id": "2902ab31-fe0f-4105-9335-4a26a3a293da",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "arena",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEffie%252C%2BFast%2BLearner",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEffie%252C%2BFast%2BLearner",
+    "edhrec": "https://edhrec.com/route/?cc=Effie%2C+Fast+Learner"
+  }
+}

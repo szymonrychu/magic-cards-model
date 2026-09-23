@@ -2855,7 +2855,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 52
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 53
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3560,6 +3560,7 @@ class Game(EngineModel):
     only a single creature other than itself" trigger condition) is a wholly
     new mechanic no pool printing used before it existed to write it - the
     bump rule's own carve-out - so it needs no bump of its own.
+
     Bumped 51 -> 52 (F1T11 integration): `Game` gained `player_subject_split_
     notices` and `CastingRuleEffect` gained `excluded_source_id` (T5/G2b's
     "You and `<group>` gain `<keyword(s)>` until end of turn" subject split and
@@ -3590,6 +3591,24 @@ class Game(EngineModel):
     already-pooled card's resolution - only Ivy, a new fixture this session
     added - so it needs no bump of its own; Frontline Heroism's copy-
     targeting fix was already bumped at its own, earlier merge.)
+
+    Bumped 52 -> 53 (F2T18 integration): no field changed, but
+    `machines/triggers.py`'s
+    `_ATTACKS_OR_BLOCKS_RE`/`_ENTERS_OR_LEAVES_RE`-style self-reference
+    widened from a fixed ten-phrase list (`_SELF_PHRASES`) to every CR 205.2a
+    card type and CR 205.3 subtype the pool's own vocabulary knows
+    (`_self_reference_type_words`), and `_ATTACKS_OR_BLOCKS_RE`/`_ENTERS_OR_
+    ATTACKS_RE` took an open "this `<kind>`" the way `_ENTERS_OR_LEAVES_RE`
+    already did rather than a literal "creature" - both a `machines/
+    triggers.py` condition match, the bump rule's second bullet by name.
+    Smuggler's Copter, already in the pool, is exactly the state this
+    changes: a version-52 board reads its "this Vehicle attacks or blocks"
+    condition as naming no self-reference at all (a bare, unrecognised
+    subtype word `_types_match` used to fall through as "no restriction" on),
+    so the same recorded stack could fire the trigger off an opponent's
+    unrelated attacker; decoded at 53 it correctly fires only for Copter's
+    own attack or block. A version-52 snapshot with that trigger already
+    pending is refused rather than resolved into that different outcome.
     """
 
     @model_validator(mode="before")

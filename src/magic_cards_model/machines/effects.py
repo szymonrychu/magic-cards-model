@@ -9027,9 +9027,19 @@ def put_counters_on_ability_targets(
 # creature's power" adds a magnitude read off the source itself - not
 # `count_expression`'s "the number of ..." shape, since this is a plain
 # characteristic read (CR 613.4, CR 613.5), not a count of anything.
+#
+# An optional leading "tapped"/"untapped" - Aang and La, Ocean's Fury's own
+# attack trigger, "put a +1/+1 counter on each tapped creature you control" -
+# is CR 110.5's status, read off the permanent's own live `tapped` field
+# rather than the computed board `color`/`group` reads below: CR 110.5a says
+# status "is not a characteristic", so it is never something a layer effect
+# (CR 613.5) could have changed as of resolution the way a granted color or
+# type can. Effie, Fast Learner (off-pool, not legal in any target format)
+# proves the word is read generally rather than fitted to Aang's own card.
 _COUNTER_EACH_GROUP_RE = re.compile(
     rf"^put (?P<n>{COUNT}|x) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
     rf"(?P<other>other )?"
+    r"(?:(?P<tap_state>tapped|untapped) )?"
     r"(?:(?P<color>white|blue|black|red|green|colorless|monocolored|multicolored) )?"
     rf"(?P<group>[a-z]+) you control{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
@@ -9152,6 +9162,12 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     control" - excludes the ability's own source (CR 109.2) from the group,
     the same "other" every targeted clause in this file already reads for a
     single target.
+
+    An optional leading "tapped"/"untapped" - Aang and La, Ocean's Fury's own
+    "put a +1/+1 counter on each tapped creature you control" - is CR 110.5's
+    status, read off `CardState.tapped` directly rather than through `board`
+    (CR 110.5a: status is not a characteristic, so it is never a layer
+    effect's business the way the color/group check below is).
     """
     match = _COUNTER_EACH_GROUP_RE.fullmatch(text.strip())
     if match is None:
@@ -9159,6 +9175,7 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     kind = match.group("kind").lower()
     group = match.group("group")
     excludes_source = match.group("other") is not None
+    tap_state = (match.group("tap_state") or "").lower()
     color_word = (match.group("color") or "").lower()
 
     def color_matches(colors: tuple[Color, ...]) -> bool:
@@ -9209,6 +9226,10 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
                 continue
             chars = board.of(permanent)
             if chars.controller != controller:
+                continue
+            if tap_state == "tapped" and not permanent.tapped:
+                continue
+            if tap_state == "untapped" and permanent.tapped:
                 continue
             # CR 105.2c: "colorless" (Titans' Vanguard's "each colorless
             # creature you control"), or a color / CR 105.2a-b color count,

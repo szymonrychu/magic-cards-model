@@ -397,3 +397,96 @@ def test_gruff_triplets_dies_trigger_counters_its_own_token_copies():
 
     assert all(copy.counter_count(Counter.PLUS_ONE) == 3 for copy in copies)
     assert all(copy.power == 6 for copy in copies)
+
+
+# --------------------------------------------------------------------------
+# "... on each tapped/untapped creature you control" - a CR 110.5 status
+# filter on `_COUNTER_EACH_GROUP_RE`'s group noun, general to any group word
+# the clause already reads (a card type or a subtype), proven here on a card
+# type ("creature"). Aang and La, Ocean's Fury's own attack trigger is the
+# reported shape; Effie, Fast Learner - a real printing outside the deck pool
+# and not legal in Modern, Pioneer or Standard - proves it is the tap-state
+# word doing the work, not anything specific to Aang's own card.
+# --------------------------------------------------------------------------
+
+
+def test_effies_survival_puts_a_counter_on_each_tapped_creature_she_controls():
+    """Effie, Fast Learner (off-pool proof, not the reported card): "put a
+    +1/+1 counter on each tapped creature you control" - an untapped creature
+    alice controls is skipped, a tapped one is not, and an opponent's tapped
+    creature never counts (CR 110.5's status belongs to the permanent, "you
+    control" is still CR 109.5's own read)."""
+    effect = _parse_put_counters_on_group_clause(
+        "put a +1/+1 counter on each tapped creature you control"
+    )
+    assert effect is not None
+
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Effie, Fast Learner", "Grizzly Bears", "Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    effie = scenario.creature("Effie, Fast Learner", "alice")
+    tapped_bear, untapped_bear = scenario.creatures(
+        "Grizzly Bears", "Grizzly Bears", username="alice"
+    )
+    bobs_bear = scenario.creature("Grizzly Bears", "bob")
+    effie.tapped = True
+    tapped_bear.tapped = True
+    bobs_bear.tapped = True
+
+    stand_in_ability = parse_abilities(card("Effie, Fast Learner"))[-1]  # unread by this effect
+    ability = AbilityOnStack(
+        kind=AbilityKind.TRIGGERED,
+        ability=stand_in_ability,
+        source_id=effie.id,
+        source_name="Effie, Fast Learner",
+        controller="alice",
+    )
+    effect(scenario.game, ability)
+
+    assert effie.counter_count(Counter.PLUS_ONE) == 1, "Effie herself is tapped and a creature"
+    assert tapped_bear.counter_count(Counter.PLUS_ONE) == 1
+    assert untapped_bear.counter_count(Counter.PLUS_ONE) == 0
+    assert bobs_bear.counter_count(Counter.PLUS_ONE) == 0, "not alice's to put a counter on"
+
+
+def test_aang_and_las_attack_trigger_counters_every_tapped_creature_alice_controls():
+    """Aang and La, Ocean's Fury's own printed trigger, driven through a live
+    game: CR 701.27a transforms Aang, CR 712.8e gives the back face's own
+    abilities (CR 109.3), and attacking taps the attacker itself (CR 508.1a)
+    before the trigger it causes ever resolves - so Aang and La counts
+    itself along with any other tapped creature alice controls, and not her
+    own untapped one."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Aang, Swift Savior", "Grizzly Bears", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    aang = scenario.find("Aang, Swift Savior", Zone.BATTLEFIELD)
+    tapped_bear, untapped_bear = scenario.creatures(
+        "Grizzly Bears", "Grizzly Bears", username="alice"
+    )
+    aang.transform()
+    assert aang.name == "Aang and La, Ocean's Fury"
+    aang.summoning_sick = False
+    tapped_bear.tapped = True
+
+    scenario.attack_with(aang)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Aang and La, Ocean's Fury's triggered ability"]
+    scenario.resolve_top()
+
+    assert aang.counter_count(Counter.PLUS_ONE) == 1, "attacking taps Aang and La itself"
+    assert tapped_bear.counter_count(Counter.PLUS_ONE) == 1
+    assert untapped_bear.counter_count(Counter.PLUS_ONE) == 0
