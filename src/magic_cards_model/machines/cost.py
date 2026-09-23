@@ -3768,6 +3768,13 @@ class CostModifierEffect(EngineModel):
     A spell qualifies when it has that subtype (CR 205.3), which a changeling
     spell always does for a creature type (CR 702.73a)."""
 
+    condition: str | None = None
+    """A trailing "as long as `<condition>`" (Gran-Gran's "... as long as
+    there are three or more Lesson cards in your graveyard"): the effect
+    applies only while `Game.condition_holds` answers true for the source's
+    controller (CR 604.2, CR 611.3a - read each time a cost is determined,
+    never locked in). `None` for an unconditional effect."""
+
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
     "Noncreature": Type.CREATURE,
@@ -3881,6 +3888,12 @@ _COST_MODIFIER_SIGNAL = re.compile(r"more to cast|would cost .* mana to cast")
 _COST_DECREASE_SIGNAL = re.compile(r"spells you cast cost \{\d+\} less to cast", re.IGNORECASE)
 
 
+#: A static cost modifier's trailing condition - Gran-Gran's "Noncreature
+#: spells you cast cost {1} less to cast as long as there are three or more
+#: Lesson cards in your graveyard."
+_AS_LONG_AS_TAIL = re.compile(r"^(?P<base>.+?) as long as (?P<condition>[^.]+)\.?$", re.DOTALL)
+
+
 def cost_modifier_effect(text: str) -> CostModifierEffect | None:
     """Read one static cost-modifying sentence off a permanent's oracle text.
 
@@ -3889,7 +3902,29 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
     is `looks_like_unparsed_cost_modifier`'s job, kept separate so a numeral
     this engine cannot read (an out-of-range word, say) is reported rather
     than silently treated as "no effect here".
+
+    A sentence that is a recognised shape followed by "as long as
+    `<condition>`" reads as that shape with `condition` set, provided
+    `condition_is_readable` recognises the condition - an unreadable one
+    leaves the whole sentence unread (and so reported), never applied
+    unconditionally.
     """
+    from ..models.game import condition_is_readable
+
+    effect = _unconditional_cost_modifier_effect(text)
+    if effect is not None:
+        return effect
+    tail = _AS_LONG_AS_TAIL.fullmatch(text.strip())
+    if tail is None or not condition_is_readable(tail.group("condition")):
+        return None
+    base = _unconditional_cost_modifier_effect(f"{tail.group('base').strip()}.")
+    if base is None:
+        return None
+    return base.model_copy(update={"condition": tail.group("condition").strip()})
+
+
+def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
+    """`cost_modifier_effect`'s recognised shapes, with no condition."""
     match = _NAMED_COST_INCREASE.search(text)
     if match is not None:
         return CostModifierEffect(

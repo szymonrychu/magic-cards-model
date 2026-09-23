@@ -750,6 +750,50 @@ class SelfIfControls(SelectorBase):
         return controller == self.username
 
 
+class ControlledCountRequirement(EngineModel):
+    """One "you control N or more `<quality>`" test on the board: permanents
+    the source's controller controls with this `name` (CR 201.2), card type
+    or subtype, at least `threshold` of them."""
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str | None = None
+    card_type: Type | None = None
+    subtype: str | None = None
+    threshold: int = 1
+
+    def holds(self, username: str | None, board: Board) -> bool:
+        count = sum(
+            1
+            for other in board.values()
+            if other.controller == username
+            and (self.name is None or other.name == self.name)
+            and (self.card_type is None or self.card_type in other.types)
+            and (
+                self.subtype is None
+                or any(each.lower() == self.subtype.lower() for each in other.subtypes)
+            )
+        )
+        return count >= self.threshold
+
+
+class SelfIfControlsCounted(SelectorBase):
+    """ "As long as you control eight or more permanents named Phoenix Fleet
+    Airship, this Vehicle is ..." / "... and you control an Army, Grond is
+    ..." - `Only`'s identity test plus every `ControlledCountRequirement`,
+    re-asked on every CR 613.5 computation (CR 611.3a)."""
+
+    kind: Literal["self_if_controls_counted"] = "self_if_controls_counted"
+    card_id: UUID
+    username: str | None = None
+    requirements: tuple[ControlledCountRequirement, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.card_id == self.card_id and all(
+            requirement.holds(self.username, board) for requirement in self.requirements
+        )
+
+
 class CreaturesControlledByWhereToughnessExceedsPower(SelectorBase):
     """ "Each creature you control with toughness greater than its power
     assigns combat damage equal to its toughness rather than its power."
@@ -949,6 +993,7 @@ Selector = Annotated[
     | OtherNonAuraEnchantments
     | QualifiedCreatures
     | SelfIfControls
+    | SelfIfControlsCounted
     | CreaturesControlledByWhereToughnessExceedsPower
     | CreaturesControlledByWherePowerOrToughnessAtMost
     | SelfIfPowerNegative
@@ -5991,7 +6036,38 @@ _TURN_FACT_CONDITION_PHRASES: dict[str, tuple[str, str]] = {
         "dealt_noncombat_damage",
         "opponent",
     ),
+    # CR 701.21a, recorded by `Game.sacrifice` (Goblin Blast-Runner).
+    "you sacrificed a permanent this turn": ("sacrificed_permanent", "you"),
 }
+
+#: "As long as `<condition>`, this `<object>` is an artifact creature." -
+#: Phoenix Fleet Airship ("you control eight or more permanents named Phoenix
+#: Fleet Airship") and Grond, the Gatebreaker ("it's your turn and you control
+#: an Army"), each self-reference already rewritten to "this permanent" by
+#: `self_normalized_effect_text` (CR 201.5). The type phrase is added in layer
+#: 4 (CR 613.1d), keeping every type already there (CR 205.1b).
+_CONDITIONAL_SELF_TYPE_CHANGE_RE = re.compile(
+    r"^as long as (?P<condition>[^,]+), this [a-z]+ is an? "
+    r"(?P<types>(?:[a-z]+ )*creature)\.?$",
+    re.IGNORECASE,
+)
+_ITS_YOUR_TURN_RE = re.compile(r"it(?:'s| is) your turn", re.IGNORECASE)
+_YOU_CONTROL_N_NAMED_RE = re.compile(
+    rf"you control (?P<count>{COUNT}) or more permanents named (?P<name>.+)",
+    re.IGNORECASE,
+)
+_YOU_CONTROL_AN_RE = re.compile(r"you control an? (?P<word>[a-z'-]+)", re.IGNORECASE)
+
+
+#: "This creature gets +2/+0 and has menace as long as you sacrificed a
+#: permanent this turn." (Goblin Blast-Runner) - the trailing order of
+#: `_TURN_FACT_GATED_SELF_RE`, with a pump (CR 613.4c) and optional keywords,
+#: behind one of `_TURN_FACT_CONDITION_PHRASES`.
+_TURN_FACT_GATED_SELF_PUMP_RE = re.compile(
+    r"^this (?:creature|permanent|token) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?P<rest>(?: and has [^.]+?)?) as long as (?P<condition>[^,.]+?)\.?$",
+    re.IGNORECASE,
+)
 
 #: "As long as you've scried or surveilled this turn, this creature can
 #: attack as though it didn't have defender." (Surveillance Phantasm); "As
@@ -7287,6 +7363,134 @@ def _graveyard_card_count_gated_self_static_builder(
     return builder
 
 
+def _conditional_self_type_change_builder(
+    types: tuple[Type, ...],
+    your_turn_only: bool,
+    requirements: tuple[tuple[str, object, int], ...],
+    *,
+    line: str,
+) -> EffectBuilder:
+    """`_CONDITIONAL_SELF_TYPE_CHANGE_RE`'s shape. "It's your turn" is read
+    off `LayerContext.active_player` at build time; every "you control"
+    count lives in `SelfIfControlsCounted`, re-asked against the board being
+    computed. A name of "this permanent" is the card's own (CR 201.5), taken
+    from the source as the effect is built."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if your_turn_only and context.active_player != source.controller:
+            return []
+        built: list[ControlledCountRequirement] = []
+        for kind, value, threshold in requirements:
+            if kind == "name":
+                name = source.name if value == "this permanent" else str(value)
+                built.append(ControlledCountRequirement(name=name, threshold=threshold))
+            elif kind == "type":
+                assert isinstance(value, Type)
+                built.append(ControlledCountRequirement(card_type=value, threshold=threshold))
+            else:
+                built.append(ControlledCountRequirement(subtype=str(value), threshold=threshold))
+        selector = SelfIfControlsCounted(
+            card_id=source.id, username=source.controller, requirements=tuple(built)
+        )
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: is {card_type.value} as long as its condition holds",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=AddType(card_type=card_type),
+            )
+            for card_type in types
+        ]
+
+    return builder
+
+
+def _conditional_self_type_change(sentence: str) -> EffectBuilder | None:
+    """`_CONDITIONAL_SELF_TYPE_CHANGE_RE` read whole, or `None`: every part
+    of the condition (joined by "and") and every type word must read."""
+    match = _CONDITIONAL_SELF_TYPE_CHANGE_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    types: list[Type] = []
+    for word in match.group("types").split():
+        card_type = _card_type_word(word)
+        if card_type is None:
+            return None
+        types.append(card_type)
+    your_turn_only = False
+    requirements: list[tuple[str, object, int]] = []
+    for part in re.split(r"\s+and\s+", match.group("condition").strip()):
+        if _ITS_YOUR_TURN_RE.fullmatch(part):
+            your_turn_only = True
+        elif named := _YOU_CONTROL_N_NAMED_RE.fullmatch(part):
+            threshold = parse_count(named.group("count"), article=False)
+            if threshold is None:
+                return None
+            requirements.append(("name", named.group("name").strip(), threshold))
+        elif control_a := _YOU_CONTROL_AN_RE.fullmatch(part):
+            word = control_a.group("word")
+            card_type = _card_type_word(word)
+            if card_type is not None:
+                requirements.append(("type", card_type, 1))
+            elif word.lower() in {each.lower() for each in subtype_vocabulary()}:
+                requirements.append(("subtype", word, 1))
+            else:
+                return None
+        else:
+            return None
+    return _conditional_self_type_change_builder(
+        tuple(types), your_turn_only, tuple(requirements), line=sentence
+    )
+
+
+def _turn_fact_gated_self_pump_builder(
+    fact: tuple[str, str], power: int, toughness: int, granted: list[str], *, line: str
+) -> EffectBuilder:
+    """`_TURN_FACT_GATED_SELF_PUMP_RE`'s shape - Goblin Blast-Runner's "+2/+0
+    and has menace as long as you sacrificed a permanent this turn".
+
+    The fact is read off `LayerContext.turn_facts` at build time, the choice
+    `_graveyard_card_count_gated_self_static_builder` makes for its own
+    trailing condition: `effects_for` reruns on every CR 613.5 computation,
+    so the pump is on exactly while the fact holds (CR 604.2, CR 611.3a) and
+    gone once a new turn clears it.
+    """
+    fact_name, subject = fact
+    pump = _graveyard_card_count_gated_self_static_builder(0, power, toughness, granted, line=line)
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        holds = (
+            context.has_turn_fact(fact_name, source.controller)
+            if subject == "you"
+            else context.has_turn_fact_for_opponent(fact_name, source.controller)
+        )
+        if not holds:
+            return []
+        return [
+            effect.model_copy(
+                update={
+                    "description": effect.description.replace("at threshold", "(turn condition)")
+                }
+            )
+            for effect in pump(source, timestamp, targets, context)
+        ]
+
+    return builder
+
+
 def _self_gated_by_controlling_keyword_grant_builder(
     keywords: list[str], *, card_type: Type | None, subtype: str | None, line: str
 ) -> EffectBuilder:
@@ -8339,6 +8543,20 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _self_gated_by_controlling_keyword_grant_builder(
             keywords, card_type=card_type, subtype=match.group("subtype"), line=sentence
         )
+    conditional_type_change = _conditional_self_type_change(sentence)
+    if conditional_type_change is not None:
+        return conditional_type_change
+    if match := _TURN_FACT_GATED_SELF_PUMP_RE.fullmatch(sentence):
+        fact = _TURN_FACT_CONDITION_PHRASES.get(match.group("condition").strip().lower())
+        granted = _split_gated_grants(re.sub(r"^\s*and\s+", ", ", match.group("rest")))
+        if fact is not None and granted is not None:
+            return _turn_fact_gated_self_pump_builder(
+                fact,
+                int(match.group("power")),
+                int(match.group("toughness")),
+                granted,
+                line=sentence,
+            )
     if match := _TURN_FACT_GATED_SELF_RE.fullmatch(sentence):
         fact = _TURN_FACT_CONDITION_PHRASES.get(match.group("condition").strip().lower())
         if fact is None:

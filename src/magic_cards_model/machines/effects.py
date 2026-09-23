@@ -112,6 +112,7 @@ from .abilities import (
     TriggerEvent,
     _parse_line,
     keyword_abilities,
+    legendary_self_pronoun_normalized,
     parse_abilities,
     parse_triggered_mana,
     self_normalized_effect_text,
@@ -8390,7 +8391,9 @@ _FREE_ALTERNATIVE_COST_LINE_RE = re.compile(
 #: spell unless its controller pays ..." down with it, since this dispatcher
 #: only ever reads what a spell *does*, not what it costs.
 _SELF_COST_REDUCTION_LINE_RE = re.compile(
-    r"^This spell costs \{\d+\} less to cast if [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
+    r"^(?:[A-Za-z' ]+ \u2014 )?This spell costs \{\d+\} less to cast (?:if|as long as) "
+    r"[^.]+\.\s*",
+    re.IGNORECASE | re.MULTILINE,
 )
 
 #: The other self-discount template, tied to an additional cost rather than a
@@ -19587,6 +19590,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
+    condition_instead = _parse_condition_instead_clause_for_ability(effect_text)
+    if condition_instead is not None:
+        return condition_instead
     composed = _compose_layer_effect_with_remainder_for_ability(effect_text)
     if composed is not None:
         return composed
@@ -23153,6 +23159,113 @@ def _parse_if_target_card_quality_rider_clause_pair(
         antecedent(game, stack_object)
         if qualifies:
             rider(game, stack_object)
+
+    return effect
+
+
+#: "If it was a `<quality>` card, `<A>`." / "Otherwise, `<B>`." - the two
+#: sentences after an instruction that moved a target card, looking back at
+#: it: Cling to Dust ("Exile target card from a graveyard. If it was a
+#: creature card, you gain 3 life. Otherwise, you draw a card.") and Klothys,
+#: God of Destiny's first-main-phase trigger ("... If it was a land card, add
+#: {R} or {G}. Otherwise, you gain 2 life and Klothys deals 2 damage to each
+#: opponent.").
+_IF_IT_WAS_A_QUALITY_CARD_RE = re.compile(
+    r"^if it was an? (?P<quality>[^,]+?) card, (?P<then>.+?)\.?$", re.IGNORECASE
+)
+_OTHERWISE_BRANCH_RE = re.compile(r"^otherwise, (?P<otherwise>.+?)\.?$", re.IGNORECASE)
+
+#: "add {R} or {G}" - one mana of one of the listed types, the player's choice
+#: as the ability resolves (CR 608.2d). A non-mana triggered ability's own
+#: mana instruction (Klothys's land branch); `_parse_mana_adding_trigger`
+#: reads only a fixed list of symbols.
+_ADD_ONE_OF_LISTED_MANA_RE = re.compile(
+    r"^add (?P<first>\{[WUBRGC]\})(?P<middle>(?:, \{[WUBRGC]\})*),? or (?P<last>\{[WUBRGC]\})\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_add_one_of_listed_mana_clause(text: str) -> TargetedClause | None:
+    """`_ADD_ONE_OF_LISTED_MANA_RE`'s shape, on an ability only: the mana goes
+    into the resolving ability's controller's pool, one of the listed types,
+    chosen as it resolves (`_choose_mana_color`)."""
+    match = _ADD_ONE_OF_LISTED_MANA_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    symbols = f"{match.group('first')}{match.group('middle')}{match.group('last')}"
+    options = tuple(
+        dict.fromkeys(Color(letter.upper()) for letter in _MANA_SYMBOL_RE.findall(symbols))
+    )
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        player = stack_object.controller
+        color = _choose_mana_color(
+            game,
+            player,
+            stack_object,
+            options,
+            "add " + " or ".join(f"{{{option.value}}}" for option in options),
+        )
+        game.mana_pool_receiving(player).add(color)
+
+    return effect
+
+
+def _if_it_was_branch(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """One branch of `_parse_if_it_was_quality_card_otherwise_triple`, read
+    whole (a branch may itself be several instructions joined by "and")."""
+    branch = parse_mixed_effect_for_spell(text) if for_spell else parse_mixed_effect(text)
+    if branch is not None:
+        return branch  # type: ignore[return-value]
+    if for_spell:
+        return None
+    return _parse_add_one_of_listed_mana_clause(text)
+
+
+def _parse_if_it_was_quality_card_otherwise_triple(
+    first: str, second: str, third: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`<antecedent naming target card>`. If it was a `<quality>` card, `<A>`.
+    Otherwise, `<B>`.
+
+    One CR 608.2c instruction: the antecedent runs, then exactly one branch.
+    "It was" is the card the antecedent acted on, as it was before the move:
+    CR 608.2h - "if it's no longer in that zone, or if the effect has moved
+    it from a public zone to a hidden zone, the effect uses the object's last
+    known information" - so the quality is read before the antecedent runs,
+    once. With its target illegal the spell or ability does not resolve at
+    all (CR 608.2b), and neither branch runs.
+
+    The quality is `_nonland_or_typed_card_matcher`'s vocabulary; each branch
+    is whatever `parse_mixed_effect(_for_spell)` reads, or, on an ability,
+    "add {X} or {Y}" (`_parse_add_one_of_listed_mana_clause`). Any part
+    unreadable refuses the whole triple.
+    """
+    condition = _IF_IT_WAS_A_QUALITY_CARD_RE.fullmatch(second.strip())
+    otherwise = _OTHERWISE_BRANCH_RE.fullmatch(third.strip())
+    if condition is None or otherwise is None or "target" not in first.lower():
+        return None
+    matches_quality = _nonland_or_typed_card_matcher(condition.group("quality"))
+    if matches_quality is None:
+        return None
+    antecedent = _parse_mixed_clause(first, for_spell=for_spell)
+    if antecedent is None:
+        return None
+    then_branch = _if_it_was_branch(condition.group("then").strip(), for_spell=for_spell)
+    else_branch = _if_it_was_branch(otherwise.group("otherwise").strip(), for_spell=for_spell)
+    if then_branch is None or else_branch is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        referents = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
+        ]
+        if not referents:
+            return
+        qualifies = any(matches_quality(card) for card in referents)
+        antecedent(game, stack_object)
+        (then_branch if qualifies else else_branch)(game, stack_object)
 
     return effect
 
@@ -31533,9 +31646,12 @@ def _parse_add_any_combination_mana_clause(
 #: `intervening_if_holds`'s "it isn't a token" clause above already checked
 #: the same referent) - not a target, so no `_targets_understood` gate is
 #: needed the way `_parse_create_token_copy_of_target_clause` below needs one.
+#: CR 700.7's "this `<something>`" names the same source - Phoenix Fleet
+#: Airship's "create a token that's a copy of this Vehicle", Scute Swarm's
+#: "... a copy of this creature instead".
 _SELF_COPY_TOKEN_RE = re.compile(
     rf"^create (?P<n>{COUNT}) "
-    r"(?:tokens that are copies|token that(?:'s| is) a copy) of it\.?$",
+    r"(?:tokens that are copies|token that(?:'s| is) a copy) of (?:it|this [a-z]+)\.?$",
     re.IGNORECASE,
 )
 
@@ -32790,6 +32906,62 @@ def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
             held = False
         chosen = alternative if held else base
         chosen(game, spell)
+
+    return effect
+
+
+def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffect | None:
+    """`_parse_condition_instead_clause`'s shape on an activated or triggered
+    ability: "`<base>`. If `<condition>`, `<alternative>` instead." - Mine
+    Worker's "{T}: You gain 1 life. If you control creatures named Power
+    Plant Worker and Tower Worker, you gain 3 life instead." and Zimone,
+    Quandrix Prodigy's "{4}, {T}: Draw a card. If you control eight or more
+    lands, draw two cards instead."
+
+    CR 614.1a: "instead" replaces the base instruction whole - exactly one of
+    the two runs. The condition is `Game.condition_holds`', read as the
+    ability resolves (CR 608.2h) about its controller, and gated at parse
+    time by `condition_is_readable`, so an unread condition leaves the whole
+    ability unread rather than guessed false. A base that is a continuous
+    effect (Power Plant Worker's "+2/+2 until end of turn") is left to
+    `_compose_layer_effect_with_remainder_for_ability`, which already reads
+    its counter upgrade.
+    """
+    from ..models.game import condition_is_readable
+
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _CONDITION_INSTEAD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    condition_text = (match.group("condition_leading") or match.group("condition_elided")).strip()
+    if not condition_is_readable(condition_text):
+        return None
+    base_text = match.group("base").strip()
+    if is_genuine_resolution_layer_sentence(_as_sentence(base_text)):
+        return None
+    alternative_text = (
+        match.group("alternative_leading")
+        or match.group("alternative_trailing")
+        or match.group("alternative_elided")
+    )
+    assert alternative_text is not None
+    base = parse_mixed_effect(base_text)
+    alternative = parse_mixed_effect(alternative_text.strip())
+    if base is None or alternative is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        controller = game.controller_of(ability).username
+        held = game.condition_holds(controller, condition_text, source)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=ability.source_id, source_name=ability.source_name, text=whole
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            held = False
+        (alternative if held else base)(game, ability)
 
     return effect
 
@@ -37472,6 +37644,16 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # same reason every whole-text try above it is - see `_parse_shared_
         # subject_clauses`'s own docstring for the fail-open this closes.
         return shared_subject_clauses
+    effect_sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if len(effect_sentences) == 3:
+        # Cling to Dust's "... If it was a creature card, ... Otherwise, ..."
+        # - three sentences, one instruction, read whole; its escape line is
+        # a keyword, not part of the resolution, so it is stripped first.
+        if_it_was = _parse_if_it_was_quality_card_otherwise_triple(
+            *effect_sentences, for_spell=for_spell
+        )
+        if if_it_was is not None:
+            return [if_it_was]
     sentences = _plain_resolution_sentences(text)
     if len(sentences) == 2:
         # Tried whole, ahead of the comma/and clause split, for the same
@@ -38795,9 +38977,17 @@ def trigger_effect_for(
         # pump clause spelled with the card's own name instead of CR 700.7's
         # "this creature" fell through every clause parser and resolved
         # silently.
-        return _ability_effect_or_notice(
-            _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
-        )
+        normalized = _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
+        named = _ability_effect_or_notice(normalized)
+        if named is not None or not legendary:
+            return named
+        # Hydro-Man, Fluid Felon's own "he gets +1/+1 until end of turn." - a
+        # legend's gendered pronoun as the sentence's subject is the card
+        # itself (`legendary_self_pronoun_normalized`).
+        pronoun = legendary_self_pronoun_normalized(normalized)
+        if pronoun == normalized:
+            return None
+        return _ability_effect_or_notice(pronoun)
     if len(entries) == 1 and not entries[0][0]:
         return entries[0][1]
     return _dispatch_by_printed_text(entries)

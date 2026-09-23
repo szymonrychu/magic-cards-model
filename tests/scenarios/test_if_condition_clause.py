@@ -42,7 +42,6 @@ that wrote this file:
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.effects import AnaphoricClauseNotice
 from magic_cards_model.models import Zone
 
 from .harness import Scenario
@@ -157,16 +156,26 @@ def test_peppersmoke_draws_a_card_with_a_faerie():
 
 
 # ---------------------------------------------------------------------------
-# Cling to Dust - an "if" this engine genuinely cannot read (an anaphoric
-# reference to the object the clause itself just moved, not a board
-# condition) stays a notice, not a new, silently-wrong "handled".
+# Cling to Dust - an anaphoric "if" (the object the clause itself just
+# moved, not a board condition) is not this reader's to answer.
 # ---------------------------------------------------------------------------
 
 
-def test_cling_to_dust_unreadable_condition_stays_a_notice_not_silently_run():
+def test_cling_to_dust_anaphoric_if_is_its_own_reader_not_this_one():
+    """Cling to Dust's "If it was a creature card" is not a board condition
+    this reader answers - it is read whole, with its "Otherwise" sentence, by
+    `_parse_if_it_was_quality_card_otherwise_triple`
+    (`test_if_it_was_a_type_card_otherwise.py`). Opt is not a creature card,
+    so the exile happens and the "Otherwise" draw runs, with no notice."""
     scenario = (
         Scenario()
-        .player("alice", hand=["Cling to Dust"], battlefield=["Swamp"], graveyard=["Opt"])
+        .player(
+            "alice",
+            hand=["Cling to Dust"],
+            battlefield=["Swamp"],
+            graveyard=["Opt"],
+            library=["Swamp"],
+        )
         .player("bob")
         .build()
     )
@@ -179,15 +188,11 @@ def test_cling_to_dust_unreadable_condition_stays_a_notice_not_silently_run():
     (swamp,) = scenario.untapped_sources("Swamp")
     scenario.cast_and_resolve("Cling to Dust", swamp, targets=[opt])
 
-    # CR 608.2c: no notion of running half an effect - the exile and the
-    # unread "if" are one instruction, so the whole thing fails closed and
-    # Opt never leaves the graveyard.
-    assert opt.zone is Zone.GRAVEYARD
+    assert opt.zone is Zone.EXILE
     assert alice.life == life_before
-    assert len(alice.hand) == hand_before - 1
-    notices = scenario.game.anaphoric_clause_notices
-    assert len(notices) == 1
-    assert isinstance(notices[0], AnaphoricClauseNotice)
+    assert len(alice.hand) == hand_before, "Cling to Dust left, one card drawn"
+    assert scenario.game.anaphoric_clause_notices == []
+    assert scenario.game.conditional_clause_notices == []
 
 
 # ---------------------------------------------------------------------------

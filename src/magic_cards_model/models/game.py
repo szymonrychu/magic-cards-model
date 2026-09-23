@@ -30,6 +30,7 @@ from ..machines.abilities import (
     parse_mana_abilities,
     parse_triggered_mana,
     resolve_mana_count_expression,
+    self_reference_names,
 )
 from ..machines.casting import (
     _BLIGHT_PHRASE,
@@ -434,8 +435,13 @@ _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
 #: `condition_holds` does not recognise is read as false, the same fail-
 #: closed default an activation restriction gets, rather than a reduction
 #: applied on a guess.
+#: "As long as" is the same gate worded as a duration - Drag to the Roots'
+#: "This spell costs {2} less to cast as long as there are four or more card
+#: types among cards in your graveyard." - read the same way, as the cost is
+#: determined.
 _COSTS_LESS_IF_CONDITION_RE = re.compile(
-    r"this spell costs \{(?P<amount>\d+)\} less to cast if (?P<condition>[^.]+)\.",
+    r"this spell costs \{(?P<amount>\d+)\} less to cast (?:if|as long as) "
+    r"(?P<condition>[^.]+)\.",
     re.IGNORECASE,
 )
 
@@ -518,22 +524,6 @@ _AFFINITY_SUBTYPES: dict[str, str] = {
     "mountains": "Mountain",
     "forests": "Forest",
 }
-
-#: Gran-Gran's conditional discount, the one shape in the pool that is neither
-#: a flat static decrease (the Medallion cycle, which `cost_modifier_effect`
-#: already reads) nor a per-count self-discount: "Noncreature spells you cast
-#: cost {1} less to cast as long as there are three or more Lesson cards in
-#: your graveyard." (text confirmed with `resolve_cards` this session). It is
-#: another permanent's static ability, so it is read in
-#: `static_cost_modifiers_for` rather than in `cost_reduction_for`, and it is
-#: all-or-nothing: the graveyard count is a gate, not a multiplier.
-_COSTS_LESS_WHILE_GRAVEYARD_COUNT_RE = re.compile(
-    r"(?P<excludes>non)?(?P<type>creature|artifact|enchantment|instant|sorcery|land) "
-    r"spells you cast cost \{(?P<amount>\d+)\} less to cast as long as there are "
-    rf"(?P<count>{count_pattern(article=False)}) or more "
-    r"(?P<subtype>[A-Za-z' -]+?) cards in your graveyard",
-    re.IGNORECASE,
-)
 
 #: Ral, Monsoon Mage's own back-face intrinsic (CR 306.5b's own "additional"
 #: shape, layered on top of the printed loyalty number rather than replacing
@@ -680,6 +670,38 @@ _A_QUALITY = re.compile(r"an? (?P<quality>.+)", re.IGNORECASE)
 #: pattern rather than a widening of that one.
 _CONDITION_CONTROLS_NAMED_PAIR = re.compile(
     r"you control creatures named (?P<first>.+?) and (?P<second>.+)", re.IGNORECASE
+)
+#: Beza, the Bounding Spring's four trailing conditions, Sunset Revelry's three
+#: leading ones and Ticket Tortoise's intervening if (CR 603.4): "an opponent
+#: controls more lands than you", "an opponent has more life than you", "an
+#: opponent controls more creatures than you", "an opponent has more cards in
+#: hand than you". "An opponent" is any one of them (CR 102.3), and "more" is
+#: strict - a tie is not more. The permanent noun is `_permanent_quality`'s
+#: phrase, read off the computed board (CR 613.5) like every other count here.
+_CONDITION_OPPONENT_COMPARISON = re.compile(
+    r"an opponent (?:controls (?P<direction>more|fewer) (?P<quality>.+?)"
+    r"|has (?P<stat_direction>more|fewer) (?P<stat>life|cards in (?:their )?hand)) than you",
+    re.IGNORECASE,
+)
+#: Hydro-Man, Fluid Felon's intervening if, "if Hydro-Man is a creature", and
+#: Flywheel Racer's "Activate only if this permanent is a creature" - the
+#: condition's own source being a creature right now, on the computed board
+#: (CR 613.5): a Vehicle is one only while crewed (CR 301.7), and Hydro-Man is
+#: not one while his own ability has made him a land. The subject is the
+#: source itself - CR 700.7's "this <something>", "it", or the card's own name
+#: (CR 201.5, `self_reference_names`); anything naming some other object
+#: ("enchanted creature", "target ...") is not this shape.
+_CONDITION_SELF_IS_A_CREATURE = re.compile(
+    r"(?!(?:enchanted|equipped|target|that|another|each|an?|the) )"
+    r"(?P<subject>[^,.]+?) is (?:still )?an? creature",
+    re.IGNORECASE,
+)
+#: Phoenix Fleet Airship's intervening if and Goblin Blast-Runner's "as long
+#: as": "you sacrificed a permanent this turn" (CR 701.21a), read off
+#: `permanents_sacrificed_this_turn`, which only `sacrifice` writes and a new
+#: turn clears.
+_CONDITION_SACRIFICED_THIS_TURN = re.compile(
+    r"you sacrificed (?:a permanent|one or more permanents) this turn", re.IGNORECASE
 )
 #: Diamond City: "two or more creatures entered the battlefield under your
 #: control this turn."
@@ -852,6 +874,9 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_CONTROLS_N,
     _CONDITION_CONTROLS_A,
     _CONDITION_CONTROLS_NAMED_PAIR,
+    _CONDITION_OPPONENT_COMPARISON,
+    _CONDITION_SELF_IS_A_CREATURE,
+    _CONDITION_SACRIFICED_THIS_TURN,
     _CONDITION_ENTERED_THIS_TURN,
     _CONDITION_TYPES_AMONG_GRAVEYARD,
     _CONDITION_GRAVEYARD_CARDS,
@@ -872,6 +897,21 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_CREATURE_DIED_THIS_TURN,
     _CONDITION_NOT_CAST_FROM_HAND,
 )
+
+
+def _names_the_source(subject: str, source: CardState) -> bool:
+    """Whether a condition's `subject` is its own source: CR 700.7's "this
+    `<something>`", a legend's own "he"/"she", or one of the names CR 201.5
+    lets its text call itself by (`self_reference_names`). A bare "it" is
+    not read as the source - in a rider it is the object an earlier
+    instruction named."""
+    words = subject.strip().lower()
+    if words in ("he", "she") or re.fullmatch(r"this [a-z]+", words):
+        return True
+    legendary = "legendary" in (source.card.type_line or "").lower()
+    return any(
+        words == name.lower() for name in self_reference_names(source.name, legendary=legendary)
+    )
 
 
 def condition_is_readable(condition: str) -> bool:
@@ -13646,6 +13686,11 @@ class Game(EngineModel):
             self.permanents_sacrificed_this_turn[sacrificer] = (
                 self.permanents_sacrificed_this_turn.get(sacrificer, 0) + 1
             )
+            # The same fact as a turn fact, which is what a static ability's
+            # "as long as you sacrificed a permanent this turn" reads off
+            # `LayerContext` (Goblin Blast-Runner) - the layer engine sees
+            # `turn_facts`, never the counter above.
+            self.record_turn_fact("sacrificed_permanent", sacrificer)
         # CR 613.5: the sacrificed permanent's characteristics for this event
         # are the computed ones (a land animated by earthbend is a creature
         # only there), taken while it is still on the battlefield above.
@@ -16838,13 +16883,14 @@ class Game(EngineModel):
                 # steps after CR 601.2a moved the spell being cast off it -
                 # so flashing back one of exactly three Lessons leaves two and
                 # gets no discount.
-                gated = _COSTS_LESS_WHILE_GRAVEYARD_COUNT_RE.search(text)
-                if gated is not None:
-                    if self._gated_discount_applies(gated, spell, permanent, caster):
-                        decreases.append(ManaCost.parse(f"{{{int(gated.group('amount'))}}}"))
-                    continue
 
                 effect = cost_modifier_effect(text)
+                if effect is not None and effect.condition is not None:
+                    # Gran-Gran's "as long as <condition>" (CR 611.3a): read
+                    # now, about the permanent's own controller - "your".
+                    owner = permanent.controller or caster
+                    if not self.condition_holds(owner, effect.condition, permanent):
+                        continue
                 if effect is None:
                     if (
                         looks_like_unparsed_cost_modifier(text)
@@ -16938,60 +16984,6 @@ class Game(EngineModel):
                 decreases.append(ManaCost.parse(f"{{{grant.amount}}}"))
 
         return increases, decreases, floor
-
-    def _gated_discount_applies(
-        self,
-        gated: "re.Match[str]",
-        spell: CardState,
-        source: CardState,
-        caster: str,
-    ) -> bool:
-        """Whether a `_COSTS_LESS_WHILE_GRAVEYARD_COUNT_RE` line discounts this
-        spell right now - Gran-Gran's "Noncreature spells you cast cost {1}
-        less to cast as long as there are three or more Lesson cards in your
-        graveyard."
-
-        Three gates, all of which have to hold:
-
-        - **whose spell** - "spells *you* cast" is controller-scoped, the same
-          way `CostModifierKind.COLOR_DECREASE`/`TYPE_DECREASE` already are, so
-          the permanent's controller has to be the caster;
-        - **which spells** - "Noncreature" excludes the named type (CR 205.2b:
-          an object with more than one card type "satisf[ies] the criteria for
-          any effect that applies to any of their card types", so an artifact
-          creature is a creature spell and gets nothing);
-        - **the gate itself** - "three or more `<X>` cards in your graveyard",
-          counted against the caster's graveyard as it stands. The count is a
-          gate, not a multiplier: four Lessons discount exactly as much as
-          three do.
-
-        The counted noun is matched against both card types (CR 205.2a) and
-        subtypes (CR 205.3) - "Lesson" is a subtype of an instant or sorcery
-        card, and the same sentence would read "creature cards" on a card that
-        printed one.
-        """
-        if source.controller is not None and source.controller != caster:
-            return False
-
-        named = gated.group("type").lower()
-        spell_type = next((t for t in Type if t.value.lower() == named), None)
-        if spell_type is not None:
-            has_type = spell_type in spell.types
-            if bool(gated.group("excludes")) == has_type:
-                return False
-
-        needed = parse_count(gated.group("count"), article=False)
-        if not needed:
-            return False
-
-        noun = gated.group("subtype").strip().lower()
-        counted = 0
-        for card_state in self.player(caster).graveyard:
-            subtypes = {subtype.lower() for subtype in card_state.subtypes}
-            types = {card_type.value.lower() for card_type in card_state.types}
-            if noun in subtypes or noun in types:
-                counted += 1
-        return counted >= needed
 
     def determine_total_cost(self, casting: object) -> CostPayment:
         """CR 601.2f: work out the reduction now, then lock the total cost in.
@@ -17462,6 +17454,44 @@ class Game(EngineModel):
             second = match.group("second").strip().lower()
             names = {state.name.lower() for state in controlled}
             return first in names and second in names
+
+        if match := _CONDITION_OPPONENT_COMPARISON.fullmatch(text):
+            more = (match.group("direction") or match.group("stat_direction")).lower() == "more"
+            if match.group("quality") is not None:
+                quality = _permanent_quality(match.group("quality"))
+                if quality is None:
+                    return None
+
+                def measure(username: str) -> int:
+                    return sum(
+                        1
+                        for state in self.permanents_controlled_by(username)
+                        if quality(board.of(state))
+                    )
+
+            elif match.group("stat").lower() == "life":
+
+                def measure(username: str) -> int:
+                    return self.player(username).life
+
+            else:
+
+                def measure(username: str) -> int:
+                    return len(self.player(username).hand)
+
+            mine = measure(controller)
+            return any(
+                (measure(opponent.username) > mine) if more else (measure(opponent.username) < mine)
+                for opponent in opponents
+            )
+
+        if match := _CONDITION_SELF_IS_A_CREATURE.fullmatch(text):
+            if source is None or not _names_the_source(match.group("subject"), source):
+                return None
+            return source.zone is Zone.BATTLEFIELD and board.of(source).is_creature
+
+        if _CONDITION_SACRIFICED_THIS_TURN.fullmatch(text):
+            return self.permanents_sacrificed_this_turn.get(controller, 0) > 0
 
         if match := _CONDITION_ENTERED_THIS_TURN.fullmatch(text):
             needed = parse_count(match.group("count"))

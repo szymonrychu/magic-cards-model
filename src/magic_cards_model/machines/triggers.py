@@ -3669,6 +3669,32 @@ def _opponent_cast_color_holds(game: "Game", clause: str, source: CardState) -> 
     return game.condition_holds(controller, clause, source)
 
 
+def _opponent_comparison_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """Ticket Tortoise's own intervening if: "if an opponent controls more
+    lands than you" - the comparison `Game.condition_holds` reads for Beza,
+    the Bounding Spring's and Sunset Revelry's plain "if"s
+    (`_CONDITION_OPPONENT_COMPARISON`), asked by CR 603.4 as the event occurs
+    and again as the ability resolves. `None` for any other clause."""
+    from ..models.game import _CONDITION_OPPONENT_COMPARISON
+
+    if _CONDITION_OPPONENT_COMPARISON.fullmatch(clause) is None:
+        return None
+    return game.condition_holds(controller_of_source(game, source), clause, source)
+
+
+def _self_is_a_creature_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """Hydro-Man, Fluid Felon's own intervening if: "if Hydro-Man is a
+    creature" - `Game.condition_holds`' `_CONDITION_SELF_IS_A_CREATURE`, the
+    source on the computed board (CR 613.5), asked by CR 603.4 as the event
+    occurs and again as the ability resolves. `None` for any other clause,
+    including one whose subject is not this source."""
+    from ..models.game import _CONDITION_SELF_IS_A_CREATURE
+
+    if _CONDITION_SELF_IS_A_CREATURE.fullmatch(clause) is None:
+        return None
+    return game.condition_holds(controller_of_source(game, source), clause, source)
+
+
 def _you_control_a_holds(game: "Game", clause: str, source: CardState) -> bool | None:
     """Birthing Ritual's own intervening if: "if you control a creature" -
     the "you control a(n) `<quality>`" board fact `Game.condition_holds`
@@ -3714,8 +3740,7 @@ def intervening_if_holds(
     (`_counter_count_holds`, CR 122.1), Vengevine's ordinal "it's the second
     creature spell you cast this turn" (`_ordinal_spell_cast_this_turn_holds`),
     and Phoenix Fleet Airship's "you sacrificed a permanent this turn"
-    (`_sacrificed_this_turn_holds`, CR 701.21a - read, but unanswerable until
-    something records the sacrifices, so it still fails closed).
+    (`_sacrificed_this_turn_holds`, CR 701.21a).
 
     The mana/kicker/cast clauses all read
     `Game.cast_record` - see `_cast_record_for_clause` for whose record "it"
@@ -4024,6 +4049,14 @@ def intervening_if_holds(
     if you_control_a is not None:
         return you_control_a
 
+    opponent_comparison = _opponent_comparison_holds(game, clause, source)
+    if opponent_comparison is not None:
+        return opponent_comparison
+
+    self_is_a_creature = _self_is_a_creature_holds(game, clause, source)
+    if self_is_a_creature is not None:
+        return self_is_a_creature
+
     return _fail_closed(game, ability, source)
 
 
@@ -4125,34 +4158,19 @@ def _ordinal_spell_cast_this_turn_holds(
     return position == ordinal
 
 
-#: Phoenix Fleet Airship's clause: "you sacrificed a permanent this turn"
-#: (CR 701.21a's sacrifice, asked about the turn rather than about one event).
-_SACRIFICED_THIS_TURN_CLAUSE = re.compile(r"^you sacrificed a permanent this turn$")
-
-
 def _sacrificed_this_turn_holds(game: "Game", clause: str, source: CardState) -> bool | None:
-    """CR 603.4's clause as "did this player sacrifice anything this turn".
+    """Phoenix Fleet Airship's clause: "you sacrificed a permanent this turn"
+    (CR 701.21a's sacrifice, asked about the turn rather than about one
+    event) - `Game.condition_holds`' `_CONDITION_SACRIFICED_THIS_TURN`, read
+    off `Game.permanents_sacrificed_this_turn`. A bounced or destroyed
+    permanent left the battlefield without ever being sacrificed, which is
+    why `permanents_left_battlefield_this_turn` cannot answer this. `None`
+    for any other clause."""
+    from ..models.game import _CONDITION_SACRIFICED_THIS_TURN
 
-    CR 701.21a: "To sacrifice a permanent, its controller moves it from the
-    battlefield directly to its owner's graveyard" - a distinct action from
-    the death it causes, which is why `Game.permanents_left_battlefield_this_
-    turn` cannot answer this: a bounced or destroyed permanent left the
-    battlefield without ever being sacrificed, and reading that counter here
-    would fire the Airship on a turn nothing was sacrificed at all.
-
-    Nothing in `models/game.py` records the sacrifices themselves yet, so the
-    answer is unknown and this returns `None` - which sends the caller to
-    `_fail_closed`, recording the gap rather than guessing. `Game.sacrifice`
-    keeping a per-turn, per-controller record (the shape read here) is all
-    this needs to become a real answer.
-    """
-    if _SACRIFICED_THIS_TURN_CLAUSE.match(clause) is None:
+    if _CONDITION_SACRIFICED_THIS_TURN.fullmatch(clause) is None:
         return None
-    sacrificed = getattr(game, "permanents_sacrificed_this_turn", None)
-    if not isinstance(sacrificed, dict):
-        return None
-    controller = source.controller or game.active_player.username
-    return bool(sacrificed.get(controller))
+    return game.condition_holds(controller_of_source(game, source), clause, source)
 
 
 #: Command the Stage's "an opponent was dealt noncombat damage last turn"

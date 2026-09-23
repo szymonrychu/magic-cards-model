@@ -2290,6 +2290,20 @@ def self_normalized_effect_text(card_name: str, effect_text: str, *, legendary: 
     return normalized
 
 
+#: A legendary card's own gendered subject pronoun opening an effect
+#: sentence - Hydro-Man, Fluid Felon's "he gets +1/+1 until end of turn."
+_LEGENDARY_SELF_PRONOUN_RE = re.compile(r"^(?:he|she) (?=\w)", re.IGNORECASE)
+
+
+def legendary_self_pronoun_normalized(sentence: str) -> str:
+    """`sentence` with a leading "he"/"she" rewritten to CR 700.7's "this
+    permanent". Called only for a legendary card's own triggered or activated
+    ability: Oracle text uses "he"/"she" only for the legend it is printed
+    on, the same self-reference CR 201.5c's shortened name makes (Hydro-Man,
+    Fluid Felon's "if Hydro-Man is a creature, he gets +1/+1")."""
+    return _LEGENDARY_SELF_PRONOUN_RE.sub("this permanent ", sentence, count=1)
+
+
 def layer_readable_sentences(
     text: str | None,
     known_keywords: list[str] | None = None,
@@ -2432,6 +2446,8 @@ def _layer_readable_sentences_uncached(
                         sentence = self_normalized_effect_text(
                             card_name, sentence, legendary=legendary
                         )
+                        if legendary and not isinstance(ability, StaticAbility):
+                            sentence = legendary_self_pronoun_normalized(sentence)
                     sentences.append(sentence)
     return sentences
 
