@@ -213,6 +213,7 @@ from .replacement import (
 from .targeting import (
     COMPARISON_CLAUSE_PATTERN,
     ControllerRestriction,
+    RetargetScope,
     permanent_description,
     profile_for_text,
     spell_profile_for_text,
@@ -38411,6 +38412,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     choose_new_targets = _parse_choose_new_targets_clause(clause, for_spell=for_spell)
     if choose_new_targets is not None:
         return choose_new_targets
+    change_target = _parse_change_target_clause(clause, for_spell=for_spell)
+    if change_target is not None:
+        return change_target
     put_from_hand_into_library = _parse_put_cards_from_hand_into_library_clause(
         clause, for_spell=for_spell
     )
@@ -42606,17 +42610,89 @@ def _parse_choose_new_targets_clause(clause: str, *, for_spell: bool) -> Targete
         if not targeted:
             return
         subject = targeted[0]
-        if not isinstance(subject, CardState):
-            # An `AbilityOnStack` is a legal target of this text too, but
-            # `offer_new_targets_for_copy` reads `CardState.oracle_text` for
-            # the requirements to re-choose against, so an ability is left
-            # alone rather than half-handled.
-            return
         source_name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if isinstance(subject, AbilityOnStack):
+            # `offer_new_targets_for_copy` reads a card's printed text, so an
+            # ability's own targets are re-chosen through `Game.change_targets`
+            # instead - CR 115.7d's "any number of the targets", each left
+            # alone at will, behind the same "you may".
+            game.change_targets(
+                subject,
+                game.controller_of(stack_object).username,
+                scope=RetargetScope.ANY,
+                optional=True,
+                source_name=source_name,
+                source_id=source_id_of(stack_object),
+            )
+            return
+        if not isinstance(subject, CardState):
+            return
         game.offer_new_targets_for_copy(
             subject,
             game.controller_of(stack_object).username,
             source_name=source_name,
+            source_id=source_id_of(stack_object),
+        )
+
+    return effect
+
+
+#: CR 115.7a/115.7b/115.7c: "[You may] change the target of target <noun>
+#: [with a single target] [to this creature]." - Bolt Bend, Redirect
+#: Lightning and Ricochet Trap ("the target", CR 115.7a), Hydroelectric
+#: Specimen ("you may ... to this creature"), Spellskite ("a target ... to
+#: this creature", CR 115.7b). The noun and its "with a single target"
+#: restriction (CR 115.9a) are the targeting requirement
+#: `machines/targeting.py` reads; this reads only the change itself.
+_CHANGE_TARGET_RE = re.compile(
+    r"^(?P<may>you may )?change (?P<scope>the|a|any) targets?(?:\(s\))? of target [^.]+?"
+    r"(?: to (?P<to>this (?:creature|permanent|artifact|enchantment|land)))?\.?$",
+    re.IGNORECASE,
+)
+
+_RETARGET_SCOPES = {"the": RetargetScope.ALL, "a": RetargetScope.ONE, "any": RetargetScope.ANY}
+
+
+def _parse_change_target_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_CHANGE_TARGET_RE`'s shape: change the target(s) of this object's own
+    single target, a spell or ability on the stack, through
+    `Game.change_targets`.
+
+    The object changed is taken through `Game.resolve_targets`, so one that has
+    already left the stack (CR 608.2b) is simply not there to change. "to this
+    creature" names the resolving ability's own source, and only while it is
+    still on the battlefield - gone, it is no longer "this creature" to move a
+    target onto, and CR 115.7a leaves the original target unchanged.
+    """
+    match = _CHANGE_TARGET_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    scope = _RETARGET_SCOPES[match.group("scope").lower()]
+    optional = match.group("may") is not None
+    to_self = match.group("to") is not None
+    if to_self and for_spell:
+        # "this creature" on a spell names nothing on the battlefield.
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targeted = game.resolve_targets(stack_object)
+        if not targeted:
+            return
+        subject = targeted[0]
+        if not isinstance(subject, (CardState, AbilityOnStack)):
+            return
+        destination: CardState | None = None
+        if to_self:
+            destination = stack_object.source(game)  # type: ignore[union-attr]
+            if destination is None or destination.zone is not Zone.BATTLEFIELD:
+                return
+        game.change_targets(
+            subject,
+            game.controller_of(stack_object).username,
+            scope=scope,
+            to=destination,
+            optional=optional,
+            source_name=stack_object.name if for_spell else stack_object.source_name,  # type: ignore[union-attr]
             source_id=source_id_of(stack_object),
         )
 

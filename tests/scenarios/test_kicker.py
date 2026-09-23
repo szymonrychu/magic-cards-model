@@ -443,16 +443,19 @@ def test_every_optional_additional_cost_in_the_pool_is_enumerated():
     } == KNOWN_UNCHARGEABLE_OPTIONAL_COSTS
 
     rules = {
-        option.keyword: (option.rule, option.repeatable)
+        (option.keyword, option.rule, option.repeatable)
         for options in enumerated.values()
         for option in options
     }
     assert rules == {
-        "kicker": ("CR 702.33a", False),
-        "multikicker": ("CR 702.33c", True),
-        "replicate": ("CR 702.56a", True),
-        "offspring": ("CR 702.175a", False),
-        "gift": ("CR 702.174a", False),
-        "blight": ("CR 701.68a", False),
-        None: ("CR 118.8b", False),
+        ("kicker", "CR 702.33a", False),
+        ("multikicker", "CR 702.33c", True),
+        ("replicate", "CR 702.56a", True),
+        ("offspring", "CR 702.175a", False),
+        ("gift", "CR 702.174a", False),
+        ("blight", "CR 701.68a", False),
+        (None, "CR 118.8b", False),
+        # Redirect Lightning's "pay 5 life or pay {2}": which half is paid is
+        # CR 601.2b's announcement (`life_or_mana_additional_costs`).
+        (None, "CR 601.2b", False),
     }

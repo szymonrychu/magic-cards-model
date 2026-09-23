@@ -127,6 +127,21 @@ class ControllerRestriction(StrEnum):
     NOT_YOU = "not_you"
 
 
+class RetargetScope(StrEnum):
+    """How many of a stack object's targets a CR 115.7 effect may change.
+
+    - `ALL`: "change the target(s)" (CR 115.7a) - every target changes to
+      another legal target, or none of them does.
+    - `ONE`: "change a target" (CR 115.7b) - exactly one of them.
+    - `ANY`: "change any targets" (CR 115.7c) and "choose new targets"
+      (CR 115.7d) - any number of them, each left alone at will.
+    """
+
+    ALL = "all"
+    ONE = "one"
+    ANY = "any"
+
+
 class ComparisonAttribute(StrEnum):
     """What "with mana value N or less" is comparing (CR 202.3, CR 208.1, CR 208.2).
 
@@ -1871,6 +1886,14 @@ _TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE = re.compile(
 #: whole second requirement, and Bolt Bend asked for two targets, which no
 #: announcement could ever satisfy.
 _SINGLE_TARGET_RESTRICTION = re.compile(r"\bwith a single target\b", re.IGNORECASE)
+
+#: "target spell or ability" (Bolt Bend, Redirect Lightning, Deflecting Swat,
+#: Spellskite) - one requirement that CR 115.2(b) lets reach either kind of
+#: stack object, a spell or an ability (CR 113.1c makes an ability on the
+#: stack an object). Read by `_read_phrase` as the plain "spell" requirement
+#: widened to abilities, so it used to be read as "target spell" alone and an
+#: ability could never be chosen.
+_SPELL_OR_ABILITY = re.compile(r"^\s*spell or ability\b", re.IGNORECASE)
 _SINGLE_TARGET_PLACEHOLDER = "\x01"
 
 #: CR 601.2d's two templates, the amount and what is being divided.
@@ -3087,6 +3110,21 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     reader knows has been taken off - the ordinary target scan tolerates a
     trailing tail it does not read, `permanent_description` must not.
     """
+    spell_or_ability = _SPELL_OR_ABILITY.match(suffix)
+    if spell_or_ability is not None:
+        # CR 115.2(b)/CR 113.1c: "target spell or ability" reaches both kinds
+        # of stack object. Read as the plain "spell" requirement first, so
+        # every rider after it ("with a single target", a controller clause)
+        # lands exactly where it did, then widened to abilities as well.
+        base = _read_phrase(prefix, " spell" + suffix[spell_or_ability.end() :], strict=strict)
+        if base is None or not base.allows_cards:
+            return None
+        return base.model_copy(
+            update={
+                "phrase": base.phrase.replace("spell", "spell or ability", 1),
+                "allows_abilities": True,
+            }
+        )
     split = _split_type_or_closed_subtype_card(suffix)
     if split is not None:
         # See `_split_type_or_closed_subtype_card`'s own docstring: read the

@@ -361,3 +361,41 @@ def test_landfall_fires_when_an_mdfcs_land_face_is_played():
     scenario.pass_until_resolved()
 
     assert [state.card.name for state in scenario.player("alice").graveyard] == ["Mountain"]
+
+
+def test_hydroelectric_laboratory_enters_untapped_for_three_life():
+    """Hydroelectric Specimen // Hydroelectric Laboratory's land face: "As
+    this land enters, you may pay 3 life. If you don't, it enters tapped."
+    Paid, it enters untapped and taps for {U} at once."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Hydroelectric Specimen"], library=["Island"])
+        .player("bob", library=["Island"])
+        .build()
+    )
+    _to_main(scenario)
+    scenario.will_pay_the_life(True)
+
+    laboratory = scenario.play_land("Hydroelectric Specimen")
+
+    assert laboratory.name == "Hydroelectric Laboratory"
+    assert laboratory.untapped
+    assert scenario.player("alice").life == 17
+    scenario.activate(laboratory)
+    assert scenario.player("alice").mana_pool.floating == {Color.BLUE: 1}
+
+
+def test_hydroelectric_laboratory_enters_tapped_when_the_life_is_refused():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Hydroelectric Specimen"], library=["Island"])
+        .player("bob", library=["Island"])
+        .build()
+    )
+    _to_main(scenario)
+    scenario.will_pay_the_life(False)
+
+    laboratory = scenario.play_land("Hydroelectric Specimen")
+
+    assert laboratory.tapped
+    assert scenario.player("alice").life == 20

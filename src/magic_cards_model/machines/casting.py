@@ -51,6 +51,7 @@ from .casting_restrictions import (
 )
 from .cost import (
     ComponentKind,
+    CostComponent,
     CostPayment,
     CostStep,
     StaticFreeCastGrant,
@@ -1875,6 +1876,13 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
                 understood=blight is not None,
             )
         )
+    printed = additional_cost_phrases(card)
+    for index, _ in life_or_mana_additional_costs(card):
+        # Not optional as a whole - one half or the other is paid - but which
+        # half is CR 601.2b's announcement, and a life half has no object to
+        # nominate, so a seat is told the choice exists here and makes it with
+        # `Game.cast(pay_life_for_additional_cost=True)`.
+        found.append(OptionalAdditionalCost(keyword=None, cost=printed[index], rule="CR 601.2b"))
     return found
 
 
@@ -2471,6 +2479,30 @@ _OPTIONAL_ADDITIONAL_COST = re.compile(r"^you may\b", re.IGNORECASE)
 #: tried first and this is only reached for a phrase that is not blight, so
 #: the two never disagree about a blight sentence.
 _OR_PAY_TAIL = re.compile(r"^(?P<primary>.+?) or pay (?P<mana>(?:\{[^{}]+\})+)$", re.IGNORECASE)
+
+
+def life_or_mana_additional_costs(card: Card) -> list[tuple[int, CostComponent]]:
+    """CR 601.2b's "pay N life or pay {M}" additional-cost sentences
+    (Redirect Lightning's "pay 5 life or pay {2}") - each one's position among
+    `additional_cost_phrases` (the index `Casting.paying_life_for_additional_
+    cost` takes) and its life half as an unpaid `CostComponent`.
+
+    Read with the same `_OR_PAY_TAIL` every other "[cost] or pay [mana]"
+    sentence goes through, keeping only those whose non-mana half is a life
+    payment: that half has no object to nominate, so it is the one the caster
+    has to *announce* rather than imply by choosing objects.
+    """
+    found: list[tuple[int, CostComponent]] = []
+    for index, printed in enumerate(additional_cost_phrases(card)):
+        if _BLIGHT_PHRASE.match(printed) is not None:
+            continue
+        or_pay = _OR_PAY_TAIL.match(printed)
+        if or_pay is None:
+            continue
+        component = cost_component_for_phrase(or_pay.group("primary"))
+        if component is not None and component.kind is ComponentKind.PAY_LIFE:
+            found.append((index, component))
+    return found
 
 
 def mandatory_additional_costs(

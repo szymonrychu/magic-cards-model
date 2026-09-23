@@ -35,6 +35,7 @@ from ..machines.abilities import (
 from ..machines.casting import (
     _BLIGHT_PHRASE,
     _OPTIONAL_ADDITIONAL_COST,
+    _OR_PAY_TAIL,
     AlternativeCostOption,
     AlternativeCostSource,
     Casting,
@@ -49,6 +50,7 @@ from ..machines.casting import (
     has_quality,
     hexproof_abilities_in,
     keyword_cast_options,
+    life_or_mana_additional_costs,
     mana_value_cap_for,
     marker_cast_options,
     optional_additional_costs,
@@ -222,7 +224,9 @@ from ..machines.replacement import (
     apply_replacements,
 )
 from ..machines.targeting import (
+    RetargetScope,
     TargetingProfile,
+    TargetRequirement,
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
@@ -652,10 +656,16 @@ _CONDITION_CONTROLS_N = re.compile(
     r"(?P<quality>.+)",
     re.IGNORECASE,
 )
-#: Fanatic of Rhonas's Ferocious: "you control a creature with power 4 or
-#: greater."
+#: Fanatic of Rhonas's Ferocious and Bolt Bend's discount: "you control a
+#: creature with power 4 or greater."; Baxter Building's "you control a
+#: creature with toughness 4 or greater." - one "a(n) <quality> with
+#: <power|toughness> N or greater" shape, the quality read by
+#: `_permanent_quality` and the stat off the computed characteristics (CR
+#: 208.1: power and toughness "can be modified or set ... by effects").
 _CONDITION_POWER = re.compile(
-    r"you control a creature with power (?P<power>\d+) or greater", re.IGNORECASE
+    r"you control an? (?P<quality>[a-z' -]+?) with "
+    r"(?P<stat>power|toughness) (?P<power>\d+) or greater",
+    re.IGNORECASE,
 )
 #: Flame of Anor's "you control a Wizard", Soul Transfer's "you control an
 #: artifact and an enchantment" - one or more "a(n) <quality>" joined by "and".
@@ -6013,6 +6023,10 @@ class Game(EngineModel):
             if _OPTIONAL_ADDITIONAL_COST.match(phrase):
                 continue
             cost = total_cost_for_phrase(phrase, caster)
+            if cost is None and _OR_PAY_TAIL.match(phrase) is not None:
+                # CR 601.2b's "[cost] or pay [mana]": the mana half is always a
+                # way to pay it, and mana is not counted here (see above).
+                continue
             if cost is None or not self._cost_objects_available(cost, caster, taken):
                 return False
         return True
@@ -6589,6 +6603,28 @@ class Game(EngineModel):
         at CR 601.2f. Not enough objects raises (CR 118.3)."""
         if not additional_cost_phrases(card.card):
             return
+        chosen_life: set[int] = set()
+        for index, component in life_or_mana_additional_costs(card.card):
+            # CR 601.2b: which half of "pay N life or pay {M}" is announced
+            # now; the life half is offered as an illegal "yes" when the life
+            # total cannot cover it (CR 119.4, CR 608.2d).
+            component.payer = caster
+            if self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=f"pay {component.amount} life rather than mana for {card.name}'s "
+                    "additional cost (CR 601.2b)",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=component.why_not(self) is None,
+                    # Unasked, the mana half is paid - the same default an
+                    # announcement that never names the life half gets.
+                    default_may=False,
+                )
+            ):
+                chosen_life.add(index)
+        casting.paying_life_for_additional_cost = frozenset(chosen_life)
         pools = {
             ComponentKind.SACRIFICE: casting.sacrificing,
             ComponentKind.DISCARD: casting.discarding,
@@ -6986,6 +7022,264 @@ class Game(EngineModel):
                     update={"mode_targets": mode_targets}
                 )
         return copy
+
+    def change_targets(
+        self,
+        subject: "CardState | AbilityOnStack",
+        chooser: str,
+        *,
+        scope: RetargetScope,
+        to: "CardState | None" = None,
+        optional: bool = False,
+        source_name: str = "",
+        source_id: str | None = None,
+    ) -> bool:
+        """CR 115.7: change the target(s) of a spell or ability on the stack.
+
+        `scope` is how many may change (`RetargetScope`): CR 115.7a's "change
+        the target(s)" is all or none, CR 115.7b's "change a target" exactly
+        one, CR 115.7c/115.7d's "change any targets"/"choose new targets" any
+        number. `to` is "... to this creature" (Hydroelectric Specimen,
+        Spellskite): the one object a changed target may become. `optional`
+        is the effect's own "you may", asked (CR 608.2d) only once a legal
+        change actually exists - CR 115.7a: "If a target can't be changed to
+        another legal target, the original target is unchanged", so there is
+        nothing to ask about otherwise.
+
+        Every new target must be *another* target (CR 115.7a), legal for the
+        requirement the old one filled, judged from the changed object's own
+        controller - the same `TargetRequirement.rejects` plus shroud,
+        hexproof and protection checks an announcement makes (CR 601.2c) -
+        and must not name one object twice for one instance of "target"
+        (CR 115.3). CR 115.7e: only the final set is evaluated, which is why
+        each target is judged against the other targets as they will stand.
+        CR 115.7f: a division is never touched.
+
+        Returns whether anything changed. `chooser` answers every question -
+        the player the effect names, not the changed object's controller.
+        """
+        profile = self._stack_object_profile(subject)
+        if not profile.understood or not profile.requirements or not subject.targets:
+            return False
+        owner = (
+            subject.controller
+            if isinstance(subject, AbilityOnStack)
+            else self.controller_of(subject).username
+        )
+        slots = self._target_slots(profile, subject, owner)
+        if slots is None:
+            return False
+        refs = list(subject.targets)
+        candidates = [
+            thing
+            for thing in ([to] if to is not None else self.targetable_objects())
+            if thing is not None
+        ]
+
+        def legal_at(position: int, current: list[TargetRef]) -> list[Any]:
+            return [
+                thing
+                for thing in candidates
+                if self._legal_retarget(thing, position, current, slots, owner, subject)
+            ]
+
+        eligible = [position for position in range(len(refs)) if legal_at(position, refs)]
+        if scope is RetargetScope.ALL and len(eligible) != len(refs):
+            return False
+        if not eligible:
+            return False
+        if optional and not self.may(
+            self.player(chooser),
+            f"change the target of {subject.name}",
+            source=source_name,
+            source_id=source_id,
+        ):
+            return False
+
+        def choose(position: int, current: list[TargetRef], minimum: int) -> TargetRef | None:
+            legal = legal_at(position, current)
+            if not legal:
+                return None
+            if to is not None and minimum:
+                return TargetRef.coerce(to)
+            chosen = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_TARGETS,
+                    player=chooser,
+                    prompt=f"choose a new target for {subject.name} (was {current[position]})",
+                    source=source_name,
+                    source_id=source_id,
+                    targets=tuple(TargetRef.coerce(thing) for thing in legal),
+                    target_maximum=1,
+                    target_minimum=minimum,
+                )
+            )
+            assert isinstance(chosen, (list, tuple))
+            return TargetRef.coerce(chosen[0]) if chosen else None
+
+        updated = list(refs)
+        if scope is RetargetScope.ONE:
+            position = eligible[0]
+            distinct = list(dict.fromkeys(refs[index] for index in eligible))
+            if len(distinct) > 1:
+                picked = self.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_TARGETS,
+                        player=chooser,
+                        prompt=f"choose which target of {subject.name} to change",
+                        source=source_name,
+                        source_id=source_id,
+                        targets=tuple(distinct),
+                        target_maximum=1,
+                        target_minimum=1,
+                    )
+                )
+                assert isinstance(picked, (list, tuple))
+                position = next(index for index in eligible if refs[index] == picked[0])
+            new = choose(position, updated, 1)
+            if new is None:
+                return False
+            updated[position] = new
+        else:
+            minimum = 1 if scope is RetargetScope.ALL else 0
+            for position in eligible:
+                new = choose(position, updated, minimum)
+                if new is None:
+                    if scope is RetargetScope.ALL:
+                        # CR 115.7a: "If all the targets aren't changed to other
+                        # legal targets, none of them are changed."
+                        return False
+                    continue
+                updated[position] = new
+        if updated == refs and all(
+            a.zone_change_stamp == b.zone_change_stamp for a, b in zip(updated, refs, strict=True)
+        ):
+            return False
+        self._write_retargeted(subject, refs, updated)
+        return True
+
+    def _stack_object_profile(self, subject: "CardState | AbilityOnStack") -> TargetingProfile:
+        """The targeting requirements a stack object's targets were chosen
+        against: a spell's own resolution profile, or an ability's own text
+        with its announced X substituted - the same two readings `legal_target`
+        rechecks with at resolution (CR 608.2b)."""
+        if isinstance(subject, AbilityOnStack):
+            text = (
+                substitute_x(subject.ability.text, subject.x_value)
+                if isinstance(subject.ability, ActivatedAbility)
+                and cost_announces_x(subject.ability.cost)
+                else subject.ability.text
+            )
+            return profile_for_text(text)
+        return self._resolution_profile(subject)
+
+    def _target_slots(
+        self,
+        profile: TargetingProfile,
+        subject: "CardState | AbilityOnStack",
+        owner: str,
+    ) -> "list[TargetRequirement] | None":
+        """Which requirement ("instance of the word 'target'", CR 115.3) each
+        of `subject`'s targets fills, in target order.
+
+        Placed the way `TargetingProfile._fill_slots` places an announcement:
+        each target takes the first open requirement that accepts it. A target
+        that is no longer legal anywhere (CR 115.7a leaves it in place "even if
+        the original target is itself illegal by then") falls back to the
+        first open requirement of its kind, judged off its bare reference.
+        """
+        source_ref = subject.source_id if isinstance(subject, AbilityOnStack) else subject.id
+        fixed = [
+            requirement
+            for requirement in profile.requirements
+            if not requirement.unbounded
+            for _ in range(requirement.count)
+        ]
+        unbounded = [requirement for requirement in profile.requirements if requirement.unbounded]
+        placed: list[TargetRequirement] = []
+        for ref in subject.targets:
+            live = self.resolve_target(ref)
+            slot: TargetRequirement | None = None
+            for probe in [thing for thing in (live, ref) if thing is not None]:
+                for index, requirement in enumerate(fixed):
+                    if requirement.rejects(probe, owner, self, source_ref) is None:
+                        slot = fixed.pop(index)
+                        break
+                else:
+                    slot = next(
+                        (
+                            requirement
+                            for requirement in unbounded
+                            if requirement.rejects(probe, owner, self, source_ref) is None
+                        ),
+                        None,
+                    )
+                if slot is not None:
+                    break
+            if slot is None:
+                return None
+            placed.append(slot)
+        return placed
+
+    def _legal_retarget(
+        self,
+        thing: Any,
+        position: int,
+        current: list[TargetRef],
+        slots: "list[TargetRequirement]",
+        owner: str,
+        subject: "CardState | AbilityOnStack",
+    ) -> bool:
+        """Whether `thing` may replace `current[position]` (CR 115.7a/115.7e)."""
+        if thing is None or thing is subject or getattr(thing, "id", None) == subject.id:
+            # CR 115.5: a spell or ability on the stack is an illegal target
+            # for itself.
+            return False
+        new = TargetRef.coerce(thing)
+        if new == current[position]:
+            return False
+        source_ref = subject.source_id if isinstance(subject, AbilityOnStack) else subject.id
+        if slots[position].rejects(thing, owner, self, source_ref) is not None:
+            return False
+        if any(
+            index != position and slots[index] is slots[position] and other == new
+            for index, other in enumerate(current)
+        ):
+            return False
+        source_card = self._source_card_of(subject)
+        if not isinstance(thing, AbilityOnStack):
+            if source_card is not None and self.protection_refusal(thing, source_card) is not None:
+                return False
+            if self.shroud_refusal(thing) is not None:
+                return False
+            if self.hexproof_refusal(thing, owner, subject) is not None:
+                return False
+        return True
+
+    def _write_retargeted(
+        self,
+        subject: "CardState | AbilityOnStack",
+        before: list[TargetRef],
+        after: list[TargetRef],
+    ) -> None:
+        """Store a changed target list, keeping a modal spell's per-mode slices
+        (`CastRecord.mode_targets`, CR 700.2f) in step with it."""
+        subject.targets = list(after)
+        if not isinstance(subject, CardState):
+            return
+        record = self.cast_record(subject)
+        if not record.mode_targets:
+            return
+        replacements = [(old, new) for old, new in zip(before, after, strict=True) if old != new]
+        mode_targets = [list(slice_) for slice_ in record.mode_targets]
+        for old, new in replacements:
+            for slice_ in mode_targets:
+                if old in slice_:
+                    slice_[slice_.index(old)] = new
+                    break
+        self.cast_records[subject.zone_change_stamp] = record.model_copy(
+            update={"mode_targets": mode_targets}
+        )
 
     #: How many triggered mana abilities may resolve inline, back to back, off
     #: one activation before the engine calls it a CR 104.4b loop. There is no
@@ -16222,6 +16516,7 @@ class Game(EngineModel):
         blight: CardState | None = None,
         gift: str | None = None,
         harmonize_creature: CardState | None = None,
+        pay_life_for_additional_cost: bool = False,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -16300,6 +16595,12 @@ class Game(EngineModel):
         splice cost into `additional_costs` changes the total cost CR 601.2f
         determines (`Casting._splice_card` nulls the announcement's own stale
         `payment` for exactly that reason).
+
+        `pay_life_for_additional_cost` is CR 601.2b's announcement of which
+        half of a "pay N life or pay {M}" additional cost is paid (Redirect
+        Lightning): the life half when set, the mana half otherwise
+        (`life_or_mana_additional_costs`). Set on a card that prints no such
+        sentence it is refused, rather than silently ignored.
         """
         self._refuse_if_over()
         origin_zone = card.zone
@@ -16338,6 +16639,16 @@ class Game(EngineModel):
                 casting.pay_gift(gift)
             if (keyword or "").lower() == "harmonize":
                 casting.pay_harmonize(harmonize_creature)
+            if pay_life_for_additional_cost:
+                life_halves = life_or_mana_additional_costs(card.card)
+                if not life_halves:
+                    raise ValueError(
+                        f"{card.name} has no 'pay N life or pay {{M}}' additional cost to pay "
+                        "with life (CR 601.2b)"
+                    )
+                casting.paying_life_for_additional_cost = frozenset(
+                    index for index, _ in life_halves
+                )
             payment = casting.determine_cost(x_value=x_value)
             if division is not None:
                 casting.announce_division(division)
@@ -17492,11 +17803,15 @@ class Game(EngineModel):
 
         if match := _CONDITION_POWER.fullmatch(text):
             threshold = int(match.group("power"))
+            stat_quality = _permanent_quality(match.group("quality"))
+            if stat_quality is None:
+                return None
+            attribute = match.group("stat").lower()
             return any(
-                board.of(state).is_creature
-                and board.of(state).power is not None
-                and board.of(state).power >= threshold
-                for state in controlled
+                stat_quality(chars)
+                and (value := getattr(chars, attribute)) is not None
+                and value >= threshold
+                for chars in (board.of(state) for state in controlled)
             )
 
         if match := _CONDITION_CONTROLS_N.fullmatch(text):
