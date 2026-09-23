@@ -2700,10 +2700,20 @@ _SUBJECT_NOUN = r"(?:creature or planeswalker|creature|permanent)"
 #: "target `<noun>`" case does - the prefix costs this parser nothing beyond
 #: recognising the sentence, same reasoning as the adjective slot below.
 _UP_TO_ONE_PREFIX = r"(?:up to one )?"
+#: The qualifier a "target"/"another target"/plural-target subject may carry
+#: between "target" and its noun - a single bare word (Psychotic Fury's own
+#: "target **multicolored** creature"), a hyphenated one-word creature type
+#: (CR 205.3m, looked up this session: "Assembly-Worker" is one word, not
+#: two, and hyphenated), or the rule's one genuine two-word creature type,
+#: "Time Lord" (Tegan Jovanka's own "target **attacking historic** creature"
+#: is two adjectives, not a creature type, but the same shape). Lazy, so it
+#: never reaches past the qualifier into the noun, "you control", or a verb
+#: that happens to also be lowercase words.
+_QUALIFIER = r"(?: [a-z][a-z-]*)*?"
 _SUBJECT = (
-    rf"(?:{_UP_TO_ONE_PREFIX}target(?: [a-z]+)? {_SUBJECT_NOUN}(?: you control)?"
+    rf"(?:{_UP_TO_ONE_PREFIX}target{_QUALIFIER} {_SUBJECT_NOUN}(?: you control)?"
     rf"|this creature|this permanent"
-    rf"|another target(?: [a-z]+)? {_SUBJECT_NOUN}(?: you control)?)"
+    rf"|another target{_QUALIFIER} {_SUBJECT_NOUN}(?: you control)?)"
 )
 
 #: A plural target subject - "up to two target creatures" (Dauntless
@@ -2712,7 +2722,7 @@ _SUBJECT = (
 #: Extraordinaire, Campsite Cuisine) - read with the plural verb ("get",
 #: "each get", "gain"). CR 601.2c/603.3d already fixed how many and which
 #: were targeted; the builders below apply to every resolved target.
-_PLURAL_TARGET_SUBJECT = rf"(?:up to )?(?:\d+|{COUNT}) target(?: [a-z]+)? creatures"
+_PLURAL_TARGET_SUBJECT = rf"(?:up to )?(?:\d+|{COUNT}) target{_QUALIFIER} creatures"
 _PLURAL_PUMP_SUBJECT = rf"{_PLURAL_TARGET_SUBJECT}(?: each)?"
 
 #: Xenagos, God of Revels' own reversed order: "another target creature you
@@ -2770,7 +2780,7 @@ _TARGETED_LOSES_ALL_ABILITIES_RE = re.compile(
 #: `_SUBJECT` admits it: this parser recognises the shape, it does not
 #: re-derive what was legally targeted.
 _TARGET_AND_SAME_NAME_PUMP_RE = re.compile(
-    r"^target(?: [a-z]+)? creature and all other creatures with the same name as "
+    rf"^target{_QUALIFIER} creature and all other creatures with the same name as "
     r"that creature get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn\.?$",
     re.IGNORECASE,
 )

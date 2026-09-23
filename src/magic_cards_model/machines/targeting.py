@@ -306,6 +306,18 @@ class TargetRequirement(EngineModel):
     or enchantment"). Lower-cased for a case-insensitive match against
     `CardState.subtypes`."""
 
+    excluded_subtypes: SortedFrozenSet[str] = frozenset()
+    """CR 205.3m creature types the target must *not* have: the "non-" of
+    "target non-Human creature" (Fight as One's own second mode; CR 702.140a's
+    mutate reminder text prints the identical phrase). Read the same "non-" of
+    `excluded_card_types`/`excluded_supertypes`/`excluded_colors` already
+    read for their own vocabularies, but the negated word keeps its hyphen
+    ("non-Human", not "nonHuman") the way a *positive* hyphenated creature
+    type does (Assembly-Worker) - Oracle's own templating difference between
+    a card type/supertype/color prefix (fused: "noncreature", "nonbasic",
+    "nonblack") and a creature-type prefix (hyphenated). Lower-cased the same
+    way `required_subtypes` is."""
+
     allows_cards: bool = True
     allows_players: bool = False
     allows_abilities: bool = False
@@ -710,6 +722,19 @@ class TargetRequirement(EngineModel):
             return (
                 f"{self.phrase} needs {with_indefinite_article(wanted)}, "
                 f"and {target.name} is not one"
+            )
+        if (
+            not spell_on_stack
+            and self.excluded_subtypes
+            and any(
+                word.lower() in self.excluded_subtypes
+                for word in self._current_subtypes(target, game)
+            )
+        ):
+            unwanted = " or ".join(sorted(self.excluded_subtypes))
+            return (
+                f"{self.phrase} cannot target {with_indefinite_article(unwanted)}, "
+                f"and {target.name} is one"
             )
         if self.required_colors and not (
             set(self._current_colors(target, game)) & self.required_colors
@@ -2955,7 +2980,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             allows_players=True,
             excludes_source=excludes_source,
         )
-    adjectives, index = _read_adjectives(words)
+    adjectives, index = _read_adjectives(raw_words, words)
     card_types: set[Type] = set()
     required_subtypes: set[str] = set()
     allows_players = False
@@ -2994,7 +3019,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             index += 1
             after_conjunction = True
             continue
-        if nouns_read and adjectives.take(word):
+        if nouns_read and adjectives.take(raw_words[index], word):
             # Each item in an Oxford-comma (or plain "or"/"and") noun list may
             # carry its own leading adjective - Boseiju's "nonbasic" belongs
             # only to "land", the third item in "artifact, enchantment, or
@@ -3300,6 +3325,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         variable_count=variable,
         card_types=compound_card_types,
         required_subtypes=compound_required_subtypes,
+        excluded_subtypes=frozenset(adjectives.excluded_subtypes),
         excluded_card_types=frozenset(adjectives.excluded_types) | extra_excluded_types,
         required_supertypes=frozenset(adjectives.required_supertypes),
         excluded_supertypes=frozenset(adjectives.excluded_supertypes) | extra_excluded_supertypes,
@@ -3391,6 +3417,7 @@ class _Adjectives:
         self.excluded_supertypes: set[Supertype] = set()
         self.required_colors: set[Color] = set()
         self.excluded_colors: set[Color] = set()
+        self.excluded_subtypes: set[str] = set()
         self.combat_states: set[CombatState] = set()
         self.must_be_tapped: bool | None = None
         self.must_be_token: bool | None = None
@@ -3399,8 +3426,15 @@ class _Adjectives:
         self.excludes_source = False
         self.read = 0
 
-    def take(self, word: str) -> bool:
-        """Read one word as an adjective, or say it is not one."""
+    def take(self, raw: str, word: str) -> bool:
+        """Read one word as an adjective, or say it is not one.
+
+        `raw` keeps its original capitalization alongside `word`'s lower-cased
+        form - `_negated_subtype`, like `_is_bare_subtype_word` it is built
+        on, needs the capitalization to tell "non-Human" (CR 205.3m,
+        CR 702.140a's own mutate wording) apart from an ordinary lower-case
+        English word that merely starts with "non-".
+        """
         if word in _TAPPED_ADJECTIVES:
             self.must_be_tapped = _TAPPED_ADJECTIVES[word]
         elif word in _COMBAT_ADJECTIVES:
@@ -3425,6 +3459,8 @@ class _Adjectives:
             self.excluded_supertypes.add(excluded_super)
         elif (excluded_color := _negated_color(word)) is not None:
             self.excluded_colors.add(excluded_color)
+        elif (excluded_subtype := _negated_subtype(raw, word)) is not None:
+            self.excluded_subtypes.add(excluded_subtype)
         else:
             return False
         self.read += 1
@@ -3478,7 +3514,34 @@ def _negated_color(word: str) -> Color | None:
     return _COLOR_WORDS.get(word[3:].lstrip("-"))
 
 
-def _read_adjectives(words: list[str]) -> tuple[_Adjectives, int]:
+def _negated_subtype(raw: str, word: str) -> str | None:
+    """The CR 205.3m creature type a "non-" adjective rules out, if it is one -
+    "Target non-Human creature you control" (Fight as One's own second mode;
+    CR 702.140a's mutate reminder text: "targets a non-Human creature").
+
+    Read the same "non-" prefix `_negated_type`/`_negated_supertype`/
+    `_negated_color` already read for their own vocabularies, but against
+    `_is_bare_subtype_word`'s capitalized-word check rather than a small
+    closed dictionary - CR 205.3m's creature-type list runs into the
+    hundreds, the same reason `_is_bare_subtype_word` itself does not
+    enumerate one. The difference from its three siblings is the hyphen:
+    Oracle fuses a negated card type, supertype, or color directly onto the
+    prefix ("noncreature", "nonbasic", "nonblack"), but keeps a negated
+    creature type hyphenated ("non-Human", "non-Zombie") the same way a
+    *positive* hyphenated creature type is (Assembly-Worker) - so this reads
+    `raw` after splitting on that hyphen, not `word` after stripping "non"
+    the way its siblings do.
+    """
+    if not word.startswith("non-") or len(raw) <= 4:
+        return None
+    tail_raw = raw[4:]
+    tail_word = word[4:]
+    if _is_bare_subtype_word(tail_raw, tail_word):
+        return tail_word
+    return None
+
+
+def _read_adjectives(raw_words: list[str], words: list[str]) -> tuple[_Adjectives, int]:
     """The leading adjectives, and where the noun starts after them.
 
     "attacking or blocking creature" is one run of two: the conjunction is
@@ -3490,10 +3553,16 @@ def _read_adjectives(words: list[str]) -> tuple[_Adjectives, int]:
     each two restrictions on one noun (CR 110.4's permanent types, CR 111.1's
     tokens), and every one of them applies - the adjectives accumulate on
     `_Adjectives` exactly as they do with no comma between them.
+
+    `raw_words` runs parallel to `words`, index for index, keeping the
+    original capitalization `_Adjectives.take` needs to read a negated
+    creature type ("non-Human") apart from an ordinary word - the same
+    `raw_words`/`words` split `_read_phrase`'s own noun-reading loop already
+    keeps, for the identical reason.
     """
     adjectives = _Adjectives()
     index = 0
-    while index < len(words) and adjectives.take(words[index]):
+    while index < len(words) and adjectives.take(raw_words[index], words[index]):
         index += 1
         joined = index + 1
         if (
