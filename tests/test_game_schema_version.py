@@ -510,6 +510,32 @@ def test_a_snapshot_written_before_the_s05_bump_is_refused() -> None:
         Game.model_validate(dumped)
 
 
+#: The last version before S09's linked-exile fields: `ExileAnnotation.
+#: linked_permanent_stamp` (CR 400.7's "which object" for a CR 607.2a link),
+#: `GameEvent.origin_exile_annotation` (the pile a played card came out of),
+#: and an activated `AbilityOnStack` now carrying `source_stamp`.
+_SCHEMA_VERSION_BEFORE_LINKED_EXILE_STAMPS = 55
+
+
+def test_the_linked_exile_bump_moved_the_version_past_fifty_five() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_LINKED_EXILE_STAMPS
+
+
+def test_a_snapshot_written_before_the_linked_exile_stamps_is_refused() -> None:
+    """A version-55 dump is refused rather than decoded as current: its
+    linked exile piles carry no object stamp, so a Keen-Eyed Curator that
+    left and came back would count its earlier self's pile again, and a
+    pending Voltaic Visionary trigger would have no pile to read."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_LINKED_EXILE_STAMPS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_LINKED_EXILE_STAMPS}",
+    ):
+        Game.model_validate(dumped)
+
+
 def _a_game_with_a_pending_dies_trigger_and_a_cant_be_countered_grant() -> Game:
     """A real board carrying both of T5's/T9's own reachable-but-unbumped
     state at once, played to the point that matters rather than hand-built:

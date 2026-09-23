@@ -3977,12 +3977,57 @@ def exile_ability_targets(game: "Game", ability: AbilityOnStack) -> None:
                 # CR 607.2a: the object's other ability refers to "the exiled
                 # card", and only to a card this ability exiled - so the card
                 # is marked as exiled with the ability's source.
-                exiled.exile_annotation = ExileAnnotation(
-                    marker=ExileMarker.LINKED,
-                    owner=exiled.owner,
-                    turn_exiled=game.turn.turns_taken if game.turn is not None else None,
-                    linked_permanent_id=ability.source_id,
-                )
+                exiled.exile_annotation = linked_exile_annotation(game, ability, exiled)
+
+
+def linked_exile_annotation(
+    game: "Game", ability: AbilityOnStack, card: CardState
+) -> ExileAnnotation:
+    """The CR 607.2a link a card exiled by `ability` carries back to the
+    object the ability came from: its id and - CR 400.7 - which incarnation
+    of it (`AbilityOnStack.source_stamp`), so a permanent that left and came
+    back does not read its earlier self's pile."""
+    return ExileAnnotation(
+        marker=ExileMarker.LINKED,
+        owner=card.owner,
+        turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+        linked_permanent_id=ability.source_id,
+        linked_permanent_stamp=ability.source_stamp,
+    )
+
+
+#: An instruction to exile (CR 607.2a's "instructs a player to exile one or
+#: more cards") somewhere in an ability's own text.
+_EXILE_INSTRUCTION_RE = re.compile(r"\bexiles?\b", re.IGNORECASE)
+
+
+def link_cards_exiled_during(
+    game: "Game", ability: AbilityOnStack, exiled_before: set[UUID]
+) -> None:
+    """CR 607.2a / CR 406.6 for every exile an ability's resolution made:
+    when the object has "an activated or triggered ability printed on it that
+    instructs a player to exile one or more cards and an ability printed on
+    it that refers either to 'the exiled cards' or to cards 'exiled with
+    [this object]'", the cards the first one exiled are the second one's pile.
+
+    `Game._resolve_ability` calls this once the effect has run, with the ids
+    that were already in exile beforehand. Whatever is newly in exile and was
+    not given a pile of its own by the effect (`exile_annotation is None`) is
+    linked to the ability's source - Voltaic Visionary's "Exile the top card
+    of your library", Pyxis of Pandemonium's "Each player exiles the top card
+    of their library face down" - with no per-parser wiring: which clause did
+    the exiling is irrelevant to the structural test CR 607.2a states. A
+    face-down card keeps having no characteristics (`CardState.has_no_
+    characteristics`: a bare `LINKED` link grants no play)."""
+    if ability.source_id is None or not _EXILE_INSTRUCTION_RE.search(ability.ability.text or ""):
+        return
+    if not _source_reads_its_exiled_cards(game, ability):
+        return
+    for card in game.exile:
+        if not isinstance(card, CardState) or card.id in exiled_before:
+            continue
+        if card.exile_annotation is None and card.zone is Zone.EXILE:
+            card.exile_annotation = linked_exile_annotation(game, ability, card)
 
 
 #: CR 607.2a's second ability: "refers either to 'the exiled cards' or to
@@ -9429,6 +9474,209 @@ _POSSIBILITY_STORM_TAIL_RE = re.compile(
     r"library in a random order\.?$",
     re.IGNORECASE,
 )
+
+
+# --------------------------------------------------------------------------
+# Reading a permanent's own CR 607.2a pile: "cards exiled with this <object>"
+# --------------------------------------------------------------------------
+
+#: "you may cast `<spell>` from among cards [you own] exiled with this
+#: `<object>`[ without paying its mana cost]" - a resolution-time cast (CR
+#: 608.2g) out of the source's own linked pile (CR 607.2a). Boiling Rock
+#: Rioter's attack trigger ("you may cast an Ally spell from among cards you
+#: own exiled with this creature" - the mana cost is paid, only the timing is
+#: granted) and Kaho, Minamo Historian's "{X}, {T}: You may cast a spell with
+#: mana value X from among cards exiled with Kaho without paying its mana
+#: cost." (the name normalised to "this permanent"). The spell description is
+#: CR 205's type/subtype words (`_quality_matcher`), optionally bounded by an
+#: exact mana value - "X" is the activation's announced X (CR 107.3a).
+_CAST_FROM_LINKED_EXILE_RE = re.compile(
+    r"^you may cast an? (?:(?P<quality>.+?) )?spell(?: with mana value (?P<mv>\d+|x))? "
+    r"from among cards (?P<own>you own )?exiled with (?:this \w+|it)"
+    r"(?P<free> without paying its mana cost)?\.?$",
+    re.IGNORECASE,
+)
+
+#: Pyxis of Pandemonium's "Each player turns face up all cards they own exiled
+#: with this artifact, then puts all permanent cards among them onto the
+#: battlefield." CR 406.3's face-down pile, CR 607.2a-linked to the object,
+#: turned over by its owner and its permanent cards (CR 110.4a) put onto the
+#: battlefield under that same player's control (CR 110.2a).
+_TURN_LINKED_FACE_UP_THEN_PUT_PERMANENTS_RE = re.compile(
+    r"^each player turns face up all cards they own exiled with this \w+, "
+    r"then puts all permanent cards among them onto the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+#: CR 110.4a: "an artifact, battle, creature, enchantment, land, or
+#: planeswalker card."
+_LINKED_PERMANENT_CARD_TYPES = frozenset(
+    {Type.ARTIFACT, Type.BATTLE, Type.CREATURE, Type.ENCHANTMENT, Type.LAND, Type.PLANESWALKER}
+)
+
+
+#: "search your library for up to `<n>` `<quality>` cards, exile them, then
+#: shuffle" - Kaho, Minamo Historian's enters trigger, the exiling half of its
+#: linked pair (CR 607.2a; `link_cards_exiled_during` links what it exiles).
+#: CR 701.23b: a search for cards with a stated quality may find fewer than
+#: asked, down to none - "up to" says so outright. Ugin, Eye of the Storms'
+#: "any number of" form, which prints a permission after it, is read with that
+#: permission by `_parse_exile_then_play_permission_clauses` instead.
+_SEARCH_UP_TO_AND_EXILE_RE = re.compile(
+    rf"^search your library for up to (?P<n>{COUNT}) (?P<quality>.+?) cards?, "
+    r"exile (?:it|them), then shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+def _search_up_to_and_exile_effect(match: re.Match[str]) -> AbilityEffect | None:
+    """`_SEARCH_UP_TO_AND_EXILE_RE`'s search, then exile (CR 701.23a, CR
+    701.24a's shuffle by `Game.search_library` itself)."""
+    quality = match.group("quality")
+    count = parse_count(match.group("n"))
+    if count is None or not _search_quality_is_readable(quality):
+        return None
+    matches = _quality_matcher(quality)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        found = game.search_library(
+            player,
+            matches,
+            count=count,
+            optional=True,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        )
+        for card in found:
+            game.exile_permanent(card)
+
+    return effect
+
+
+def _linked_pile(game: "Game", ability: AbilityOnStack) -> list[CardState]:
+    """The cards exiled with the object this ability came from (CR 607.2a) -
+    that incarnation of it (CR 400.7, `AbilityOnStack.source_stamp`), which
+    is still the right pile when the source was sacrificed to pay for the
+    ability (CR 113.7a)."""
+    if ability.source_id is None:
+        return []
+    return game.cards_exiled_with(ability.source_id, ability.source_stamp)
+
+
+def _parse_linked_exile_clause(text: str) -> AbilityEffect | None:
+    """`_CAST_FROM_LINKED_EXILE_RE`, `_TURN_LINKED_FACE_UP_THEN_PUT_
+    PERMANENTS_RE` or `_SEARCH_UP_TO_AND_EXILE_RE`, read off the whole
+    ability text."""
+    stripped = " ".join(text.split())
+    match = _CAST_FROM_LINKED_EXILE_RE.fullmatch(stripped)
+    if match is not None:
+        return _cast_from_linked_exile_effect(match)
+    if _TURN_LINKED_FACE_UP_THEN_PUT_PERMANENTS_RE.fullmatch(stripped):
+        return _turn_linked_face_up_then_put_permanents
+    match = _SEARCH_UP_TO_AND_EXILE_RE.fullmatch(stripped)
+    if match is not None:
+        return _search_up_to_and_exile_effect(match)
+    return None
+
+
+def _cast_from_linked_exile_effect(match: re.Match[str]) -> AbilityEffect | None:
+    """`_CAST_FROM_LINKED_EXILE_RE`'s cast.
+
+    CR 608.2d: the "may" is offered only when a legal choice exists - a card
+    in the pile that fits the description, that the caster owns when the
+    text says "you own", is face up (CR 406.3b: a face-down card can be cast
+    only if its caster may look at it, and nothing here lets them), and that
+    `Game.can_cast_during_resolution` finds castable. Then `DecisionKind.
+    CHOOSE_CARDS` for which one, the order Knowledge Pool's own free cast
+    already uses, and `Game.cast_during_resolution` casts it (CR 608.2g) -
+    paying its mana cost unless the text waives it."""
+    quality = match.group("quality")
+    if quality is not None and not _card_description_is_readable(quality):
+        return None
+    matches_quality = _quality_matcher(quality) if quality is not None else None
+    mv_word = match.group("mv")
+    own = match.group("own") is not None
+    free = match.group("free") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        caster = game.controller_of(ability).username
+        mana_value: int | None = None
+        if mv_word is not None:
+            mana_value = int(mv_word) if mv_word.isdigit() else (ability.x_value or 0)
+        candidates = [
+            card
+            for card in _linked_pile(game, ability)
+            if card.face_up
+            and not card.card.is_land
+            and (not own or card.owner == caster)
+            and (matches_quality is None or matches_quality(card))
+            and (mana_value is None or (card.card.cmc or 0) == mana_value)
+            and game.can_cast_during_resolution(card, caster)
+        ]
+        described = "a spell" if quality is None else with_indefinite_article(f"{quality} spell")
+        cost_words = " without paying its mana cost" if free else ""
+        taken = game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=caster,
+                prompt=(
+                    f"cast {described} from among cards exiled with {ability.source_name}"
+                    f"{cost_words}"
+                ),
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                affirmative_is_legal=bool(candidates),
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        if not taken:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=caster,
+                prompt=f"choose a card to cast{cost_words}",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        chosen = {card.id: card for card in candidates}[chosen_ids[0]]
+        game.cast_during_resolution(
+            chosen,
+            caster,
+            source_name=ability.source_name,
+            rule="CR 608.2g",
+            pays_mana_cost=not free,
+        )
+
+    return effect
+
+
+def _turn_linked_face_up_then_put_permanents(game: "Game", ability: AbilityOnStack) -> None:
+    """`_TURN_LINKED_FACE_UP_THEN_PUT_PERMANENTS_RE`'s effect.
+
+    Each player, in APNAP order (CR 101.4), turns face up the cards they own
+    in the pile; then each puts the permanent cards among their own onto the
+    battlefield - CR 110.2a puts each under the player who put it there, its
+    owner. Cards that are not permanent cards stay in exile, face up now."""
+    pile = _linked_pile(game, ability)
+    players = _players_in_apnap_order(game)
+    for player in players:
+        for card in pile:
+            if card.owner == player.username and card.zone is Zone.EXILE:
+                card.face_up = True
+    for player in players:
+        for card in pile:
+            if (
+                card.owner == player.username
+                and card.zone is Zone.EXILE
+                and _LINKED_PERMANENT_CARD_TYPES.intersection(card.types)
+            ):
+                game.put_onto_battlefield(card, player.username)
 
 
 def _exile_cast_spell_or_none(
@@ -18824,6 +19072,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     cast_from_hand_then_exile = _parse_cast_from_hand_then_exile_clause(effect_text)
     if cast_from_hand_then_exile is not None:
         return cast_from_hand_then_exile
+    linked_exile = _parse_linked_exile_clause(effect_text)
+    if linked_exile is not None:
+        return linked_exile
     flashback_grant = _parse_grant_flashback_clause(effect_text)
     if flashback_grant is not None:
         return flashback_grant
@@ -20953,19 +21204,15 @@ def _merge_each_player_clauses(
                 # by CR 607.2a's own structural test, no keyword or per-step
                 # wiring needed.
                 #
-                # `if card.exile_annotation is None and card.face_up` guards
-                # two things at once: it leaves alone anything a step already
-                # annotated for its own reason (none does today, but a future
-                # step should not be overwritten), and - load-bearing - it
-                # skips Pyxis of Pandemonium's own face-down exile from this
-                # same regex (`_EACH_PLAYER_EXILES_TOP_RE`'s `face_down`
-                # branch). `CardState.has_no_characteristics` (CR 406.3a) is
-                # `face_down and exile_annotation is None` exactly *because*
-                # Pyxis's own "play a card exiled with Pyxis" second ability
-                # is not built yet (`docs/engine-coverage.md`) - annotating
-                # that card here would give it a name, a type line and a mana
-                # value it is not supposed to have, breaking DDR#956's ruling
-                # (`test_judge_face_down_exile.py`) for a link nothing reads.
+                # `if card.exile_annotation is None and card.face_up` leaves
+                # alone anything a step already annotated for its own reason,
+                # and leaves a face-down card (Pyxis of Pandemonium's own
+                # "exiles the top card of their library face down") to
+                # `link_cards_exiled_during`, which links it with a bare
+                # `ExileMarker.LINKED` - a marker `CardState.has_no_
+                # characteristics` still treats as no characteristics
+                # (CR 406.3a, DDR#956's ruling in `test_judge_face_down_
+                # exile.py`) until Pyxis's second ability turns it face up.
                 for card in game.exile[before:]:
                     if card.exile_annotation is None and card.face_up:
                         card.exile_annotation = ExileAnnotation(

@@ -455,6 +455,12 @@ class ExileMarker(StrEnum):
     for what "with this permanent" means once the permanent itself is gone."""
 
 
+#: The markers that mean "exiled *with* a specific permanent" (CR 607.2a) -
+#: the set `Game.cards_imprinted_on` has always read, shared with
+#: `ExileAnnotation.links_to`.
+_LINKED_EXILE_MARKERS = frozenset({ExileMarker.IMPRINTED, ExileMarker.HIDEAWAY, ExileMarker.LINKED})
+
+
 class ChoiceKind(StrEnum):
     """What kind of thing an "as [this] enters, choose ..." effect names.
 
@@ -562,6 +568,30 @@ class ExileAnnotation(EngineModel):
     stale is the same land leaving and returning to the battlefield while its
     old exiled card is still sitting there unclaimed, which is the same
     "same id, new object" approximation the rest of this model already makes."""
+    linked_permanent_stamp: UUID | None = None
+    """The linked permanent's `CardState.zone_change_stamp` at the time it
+    exiled this card - which *object* `linked_permanent_id` names (CR 400.7).
+
+    CR 607.2a's reader "refers only to cards in the exile zone that were put
+    there as a result of an instruction to exile them in the first ability",
+    and the first ability belonged to one object: a permanent that left the
+    battlefield and came back is "a new object with no memory of, or relation
+    to, its previous existence" (CR 400.7), so its own linked ability finds
+    none of the cards its earlier self exiled. `None` for a link written
+    without an object to read one from; `links_to` then matches on the id
+    alone, the approximation the docstring above describes."""
+
+    def links_to(self, permanent_id: UUID, stamp: UUID | None) -> bool:
+        """Whether this is a CR 607.2a "exiled with" link to the object
+        `permanent_id`/`stamp` names. A `None` on either side cannot tell two
+        incarnations apart, so it matches on the id alone."""
+        if self.marker not in _LINKED_EXILE_MARKERS or self.linked_permanent_id != permanent_id:
+            return False
+        return (
+            self.linked_permanent_stamp is None
+            or stamp is None
+            or self.linked_permanent_stamp == stamp
+        )
 
 
 class CardState(EngineModel):
@@ -1399,7 +1429,9 @@ class CardState(EngineModel):
         it even though the whole table watched it go there.
 
         Scoped to a card in **no pile that grants permission to play it** -
-        `exile_annotation is None` - and that is an approximation the rule's
+        `exile_annotation is None`, or only CR 607.2a's bare `ExileMarker.
+        LINKED` "exiled with" link, which grants nothing - and that is an
+        approximation the rule's
         own second sentence is what would replace. CR 601.3f: "Some effects
         allow a player to cast a spell with certain qualities from among
         face-down cards in exile. A player may begin to cast such a spell only
@@ -1418,7 +1450,14 @@ class CardState(EngineModel):
         so a card exiled face down with no pile of its own has its
         characteristics again the moment something moves it.
         """
-        return self.zone is Zone.EXILE and self.face_down and self.exile_annotation is None
+        if self.zone is not Zone.EXILE or not self.face_down:
+            return False
+        # CR 607.2a's bare link (`ExileMarker.LINKED`) is not a pile that
+        # grants a play: Pyxis of Pandemonium's face-down cards are "exiled
+        # with" it and still have no characteristics until it turns them
+        # face up (CR 406.3).
+        annotation = self.exile_annotation
+        return annotation is None or annotation.marker is ExileMarker.LINKED
 
     @property
     def _land_face(self) -> Any:

@@ -5872,9 +5872,18 @@ _ALL_COLORS_RE = re.compile(
 #: graveyard every time the board is computed (CR 613.5), so no stored
 #: `Duration` is involved at all: when the condition is false the sweep simply
 #: produces no effect.
+#:
+#: The pile counted is the only thing the two printings of this shape differ
+#: in: delirium's "cards in your graveyard", or Keen-Eyed Curator's "cards
+#: exiled with this creature" - CR 607.2a's linked pile, the cards this very
+#: object's own exile ability put there ("As long as there are four or more
+#: card types among cards exiled with this creature, it gets +4/+4 and has
+#: trample."), where the subject is the pronoun "it" rather than "this
+#: creature" again.
 _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE = re.compile(
-    r"^as long as there are (?P<count>[a-z]+) or more card types among cards in your "
-    r"graveyard, this (?:creature|permanent|token) gets (?P<power>[+-]\d+)/"
+    r"^as long as there are (?P<count>[a-z]+) or more card types among cards "
+    r"(?:in your graveyard|(?P<linked>exiled with this \w+)), "
+    r"(?:this (?:creature|permanent|token)|it) gets (?P<power>[+-]\d+)/"
     r"(?P<toughness>[+-]\d+)(?P<rest>.*?)\.?$",
     re.IGNORECASE,
 )
@@ -7132,6 +7141,25 @@ def _graveyard_card_types_gated_self_static_builder(
     )
 
 
+def _linked_exile_card_types_gated_self_static_builder(
+    threshold: int, power: int, toughness: int, granted: list[str], *, line: str
+) -> EffectBuilder:
+    """`_GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE`'s linked-exile pile -
+    Keen-Eyed Curator. The same gated pump and grant as delirium, counted over
+    the cards exiled with this object (CR 607.2a, `LayerContext.cards_
+    exiled_with`) rather than a graveyard. CR 205.2a's card types, so an
+    artifact creature counts for two; a face-down card has none (CR 406.3a)."""
+    return _graveyard_count_gated_self_static_builder(
+        threshold,
+        power,
+        toughness,
+        granted,
+        line=line,
+        count_fn=count_card_types,
+        pile=lambda source, context: context.cards_exiled_with(source),
+    )
+
+
 def _graveyard_count_gated_self_static_builder(
     threshold: int,
     power: int,
@@ -7140,6 +7168,7 @@ def _graveyard_count_gated_self_static_builder(
     *,
     line: str,
     count_fn: Callable[[Iterable[CardState]], int],
+    pile: Callable[[CardState, LayerContext], Iterable[CardState]] | None = None,
 ) -> EffectBuilder:
     """A static pump/grant whose condition is some count over the controller's
     own graveyard - Dragon's Rage Channeler's *delirium* (`count_card_types`)
@@ -7167,7 +7196,8 @@ def _graveyard_count_gated_self_static_builder(
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        if count_fn(context.graveyard_of(source.controller)) < threshold:
+        cards = context.graveyard_of(source.controller) if pile is None else pile(source, context)
+        if count_fn(cards) < threshold:
             return []
         effects: list[ContinuousEffect] = []
         if power or toughness:
@@ -8211,6 +8241,14 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         granted = _split_gated_grants(match.group("rest"))
         if granted is None:
             return None
+        if match.group("linked") is not None:
+            return _linked_exile_card_types_gated_self_static_builder(
+                threshold,
+                int(match.group("power")),
+                int(match.group("toughness")),
+                granted,
+                line=sentence,
+            )
         return _graveyard_card_types_gated_self_static_builder(
             threshold,
             int(match.group("power")),
@@ -8776,6 +8814,23 @@ class LayerContext(EngineModel):
         if controller is None:
             return 0
         return self.unspent_mana_by_controller.get(controller, {}).get(color, 0)
+
+    #: The shared exile zone (CR 406.1) - a fourth thing the layer engine
+    #: never sees on the battlefield. Keen-Eyed Curator's "As long as there
+    #: are four or more card types among cards exiled with this creature"
+    #: counts only the cards linked to that one object (CR 607.2a), read
+    #: through `cards_exiled_with`.
+    exile: tuple[CardState, ...] = ()
+
+    def cards_exiled_with(self, source: CardState) -> tuple[CardState, ...]:
+        """The cards exiled with `source` - this incarnation of it (CR 607.2a,
+        CR 400.7; `ExileAnnotation.links_to`)."""
+        return tuple(
+            card
+            for card in self.exile
+            if card.exile_annotation is not None
+            and card.exile_annotation.links_to(source.id, source.zone_change_stamp)
+        )
 
     def graveyard_of(self, controller: str | None) -> tuple[CardState, ...]:
         """The graveyard a static ability's own controller sees, or none if

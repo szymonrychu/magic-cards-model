@@ -157,6 +157,7 @@ from ..machines.effects import (
     apply_gift_if_promised,
     devotion_to,
     effect_for,
+    link_cards_exiled_during,
     modal_trigger_profile,
     mode_effect_body,
     trigger_effect_for,
@@ -2315,6 +2316,13 @@ class Game(EngineModel):
         default_factory=dict
     )
     _opened_payments: dict[str, CostPayment] = PrivateAttr(default_factory=dict)
+    _activation_source_stamps: dict[str, UUID] = PrivateAttr(default_factory=dict)
+    """The source's `zone_change_stamp` as `begin_activating` opened each
+    payment - before a cost that moves the source (Pyxis of Pandemonium's own
+    "Sacrifice this artifact") made it a new object (CR 400.7). Read once by
+    `activate_ability` into `AbilityOnStack.source_stamp`, so the ability
+    remembers the object it was activated from (CR 113.7a), the object whose
+    linked pile it reads (CR 607.2a)."""
     """The payment `begin_activating` opened, keyed like `activations`, for
     `activate_ability` to read back which objects the cost actually moved
     once it is paid (CR 602.2b) - "`<verb>` this way" on the resolving
@@ -2877,7 +2885,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 55
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 56
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3648,6 +3656,18 @@ class Game(EngineModel):
     mana value, taken as it was paid), and `DelayedEffectSpec`'s new
     `transform_subject` kind. Activated abilities now also record their
     `source_stamp` (CR 400.7), which moves `resolution_key`.
+
+    Bumped 55 -> 56 (S09, linked "exiled with this" piles): `ExileAnnotation`
+    gained `linked_permanent_stamp` (CR 400.7: which incarnation of the
+    permanent a CR 607.2a link names) and `GameEvent` gained
+    `origin_exile_annotation` (the pile a played card came out of, for "When
+    you play a card exiled with this creature") - fields added to models
+    reachable from `Game`'s dump, the bump rule's first bullet. An activated
+    `AbilityOnStack` now carries `source_stamp` too, and every ability that
+    exiles for a source with a linked reader now links what it exiled
+    (`machines/effects.link_cards_exiled_during`) - Keen-Eyed Curator, Voltaic
+    Visionary, Pyxis of Pandemonium and Boiling Rock Rioter, all already in
+    the pool, resolve differently from a version-55 board, the second bullet.
     """
 
     @model_validator(mode="before")
@@ -5093,6 +5113,7 @@ class Game(EngineModel):
                 player=controller,
                 amount=int(mana_value),
                 origin_zone=origin_zone,
+                origin_exile_annotation=record.exile_annotation if record is not None else None,
             )
         )
         # CR 117.3c gives priority straight back to the caster, so this is the
@@ -5874,7 +5895,12 @@ class Game(EngineModel):
             if len(legal) < modal.allowed_range(alternative=alternative)[0]:
                 return False
         else:
-            profile = profile_for_text(text)
+            # Spell-scoped (CR 115.1a-b): a permanent spell's own activated or
+            # triggered abilities target nothing as it is cast (CR 113.1c) -
+            # Boiling Rock Rioter's "Exile target card from a graveyard" is
+            # not a target its creature spell needs. `Casting.targeting` reads
+            # the spell the same way when the cast is actually made.
+            profile = spell_profile_for_text(text, card.card if option is None else None)
             if (
                 profile.understood
                 and profile.requirements
@@ -6088,9 +6114,27 @@ class Game(EngineModel):
             return None
         land.face_up = True
         self.lands_played[username] = self.lands_played.get(username, 0) + 1
+        played = self._land_play_event(land, username)
         with self._id_allocator_scope():
             self.enter_the_battlefield(land, username, was_cast=False)
+            self.emit(played)
         return land
+
+    def _land_play_event(self, land: CardState, username: str) -> GameEvent:
+        """`ExtraTriggerEvent.PLAYS_LAND` for `land`, built before the land
+        moves: CR 400.7 makes it a new object on the battlefield, so the zone
+        and exile pile it was played out of have to be read now."""
+        return GameEvent(
+            event=ExtraTriggerEvent.PLAYS_LAND,
+            subject_id=land.id,
+            subject_name=land.name,
+            subject_controller=username,
+            subject_card=land.card,
+            subject_types=land.types,
+            player=username,
+            origin_zone=land.zone,
+            origin_exile_annotation=land.exile_annotation if land.zone is Zone.EXILE else None,
+        )
 
     def cast_during_resolution(
         self,
@@ -6135,11 +6179,14 @@ class Game(EngineModel):
         pay; the timing is still the resolving trigger's (CR 608.2g), and the
         permission still never outlives this call.
 
-        `pays_mana_cost` is CR 707.12's plain "you may cast the copy" (Jacob
-        Frye, Nashi, Moon's Legacy): the cast "follows the rules for casting
-        spells", so with no "without paying its mana cost" the mana cost is
-        owed (CR 601.2f) and paid from untapped sources the same way a
-        resolution cast's other owed mana is (`_pay_resolution_cast_mana`).
+        `pays_mana_cost` is a plain "you may cast `<card>`" or "you may cast
+        the copy" with no cost waived at all - CR 707.12 (Jacob Frye, Nashi,
+        Moon's Legacy), Boiling Rock Rioter's attack trigger, Kaho's paid
+        branch: the resolving effect grants only the timing (CR 608.2g), and
+        the spell's own mana cost is owed (CR 601.2f-h) and paid from untapped
+        sources the same way a resolution cast's other owed mana is
+        (`_pay_resolution_cast_mana`), an X in it chosen by the caster (CR
+        107.3a).
 
         Returns `None`, with the card back where it was, when the cast is not
         legal: no option qualifies, a mandatory announcement has no legal
@@ -6197,6 +6244,11 @@ class Game(EngineModel):
                     casting.use_triggered_alternative_cost(keyword or "", alternative_cost)
                     x_value = self._announce_alternative_cost_x(card, caster, alternative_cost)
                     casting.x_value = x_value
+                elif pays_mana_cost and card.mana_cost:
+                    printed = total_cost_for_phrase(card.mana_cost, caster)
+                    if printed is not None:
+                        x_value = self._announce_alternative_cost_x(card, caster, printed)
+                        casting.x_value = x_value
                 if face is not None:
                     if card.card.layout is Layout.SPLIT:
                         casting.cast_as_split_half(face)
@@ -7052,7 +7104,11 @@ class Game(EngineModel):
                     )
                     effect = self._effect_of(ability)
                     if effect is not None:
+                        exiled_before = {card.id for card in self.exile}
                         effect(self, ability)
+                        # CR 607.2a: what this ability exiled is "exiled with"
+                        # its source for the source's other linked ability.
+                        link_cards_exiled_during(self, ability, exiled_before)
                     else:
                         self._note_unread_trigger(ability)
         except Exception:
@@ -13933,13 +13989,22 @@ class Game(EngineModel):
         order (`Game.exile_permanent`/`exile_top_of_library` append), not any
         particular game-meaningful order - nothing in the pool asks for one.
         """
+        return self.cards_exiled_with(permanent_id, None)
+
+    def cards_exiled_with(self, permanent_id: UUID, stamp: UUID | None) -> list[CardState]:
+        """Every card exiled with the object `permanent_id`/`stamp` names
+        (CR 607.2a), in the shared exile zone's own order.
+
+        `cards_imprinted_on` is this with no stamp - the id alone. A reader
+        that knows which incarnation of its source it belongs to passes that
+        object's `zone_change_stamp` (or `AbilityOnStack.source_stamp`), and
+        then a card an earlier incarnation exiled is not one of its own (CR
+        400.7) - see `ExileAnnotation.links_to`."""
         return [
             card
             for card in self.exile
             if (annotation := card.exile_annotation) is not None
-            and annotation.marker
-            in (ExileMarker.IMPRINTED, ExileMarker.HIDEAWAY, ExileMarker.LINKED)
-            and annotation.linked_permanent_id == permanent_id
+            and annotation.links_to(permanent_id, stamp)
         ]
 
     def meld(self, source: CardState, partner: CardState, result_card: Card) -> CardState:
@@ -14553,6 +14618,9 @@ class Game(EngineModel):
             active_player=self.turn.active_player if self.turn is not None else None,
             turn_facts={fact: frozenset(players) for fact, players in self.turn_facts.items()},
             combat_damage_dealt_this_turn=frozenset(self.combat_damage_dealt_this_turn_by),
+            # CR 607.2a: Keen-Eyed Curator's "card types among cards exiled
+            # with this creature" counts a pile in the shared exile zone.
+            exile=tuple(self.exile),
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a
@@ -16252,8 +16320,12 @@ class Game(EngineModel):
         # (CR 614.1c), which `enter_the_battlefield` applies on the way in.
         # The player who played the land keeps priority, so this is the CR 603.3
         # window.
+        played = self._land_play_event(land, username)
         with self._id_allocator_scope():
             self.enter_the_battlefield(land, username, was_cast=False)
+            # CR 601.1a: playing a land is playing a card - Voltaic
+            # Visionary's "When you play a card exiled with this creature".
+            self.emit(played)
             self.put_triggers_on_stack()
         return land
 
@@ -18539,6 +18611,7 @@ class Game(EngineModel):
         if announced is not None:
             self._announced_targets[key] = (announced, payment)
         self._opened_payments[key] = payment
+        self._activation_source_stamps[key] = permanent.zone_change_stamp
         return payment
 
     def apply_mana_ability_rider(
@@ -18640,6 +18713,12 @@ class Game(EngineModel):
             entry = self._announced_targets.pop(handoff, None)
             opened = self._opened_payments.pop(handoff, None)
             paid = opened if opened is not None and opened.step is CostStep.PAID else None
+            opened_stamp = self._activation_source_stamps.pop(handoff, None)
+            source_stamp = (
+                opened_stamp
+                if paid is not None and opened_stamp is not None
+                else permanent.zone_change_stamp
+            )
             if paid is not None and paid.waterbend_generic is not None:
                 # CR 701.67c: "An ability that triggers whenever a player
                 # waterbends triggers whenever that player pays a waterbend
@@ -18886,10 +18965,11 @@ class Game(EngineModel):
                 ability=ability,
                 source_id=permanent.id,
                 source_name=permanent.name,
-                # CR 400.7: which object the source was as it was activated,
-                # so "return this creature to its owner's hand" leaves a
-                # permanent that has since left and come back alone.
-                source_stamp=permanent.zone_change_stamp,
+                # CR 400.7: which object the source was as it was activated
+                # (taken before any cost moved it), so "return this creature
+                # to its owner's hand" leaves a permanent that has since left
+                # and come back alone.
+                source_stamp=source_stamp,
                 controller=controller,
                 targets=[TargetRef.coerce(target) for target in targets or []],
                 x_value=x_value,

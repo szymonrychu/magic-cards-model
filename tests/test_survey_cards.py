@@ -41,29 +41,14 @@ def test_a_card_that_works_classifies_as_handled(tmp_path):
 
 
 def test_a_genuinely_dead_card_classifies_as_silent(tmp_path):
-    """Keen-Eyed Curator is `test_sweep_pool.py`'s own control for a still-open
-    gap: "As long as there are four or more card types among cards exiled with
-    this creature, it gets +4/+4 and has trample." is a condition
-    `machines/layers.py` does not read - `LayerContext` carries graveyards, not
-    the cards exiled with a particular permanent - so the bonus happens nowhere.
+    """Gavony Dawnguard is `test_sweep_pool.py`'s own control for a still-open
+    gap: its day/night text (CR 731) has no subsystem to read it.
 
-    Rancor stood here until "Enchanted creature ..." joined "Equipped creature
-    ..." in `machines/layers._ATTACHED_CREATURE_STATIC_RE`; it is `handled`
-    today, and `tests/scenarios/test_attached_creature_statics.py` is what pins
-    that. This test needs a card that is genuinely dead, so it names one.
-
-    This test used to name Grand Arbiter Augustin IV and assert
-    `no_rules_text`, on the reading that a permanent's static line was not
-    something the classifier judged at all. That is the defect
-    `scripts/sweep_pool.has_rules_text` no longer has: a permanent's static
-    ability (CR 604.2) is now judged, and lands in `silent`,
-    `static_unaudited`, `notice` or `handled` like anything else. Grand
-    Arbiter itself is `handled` today (`machines/cost.py` reads all three of
-    its lines, including the opponent-scoped tax `CostModifierKind.
-    OPPONENT_TYPE_INCREASE` closed for the S10 survey, 2026-09-19), which is
-    why it is no longer the dead-card control anywhere.
+    Keen-Eyed Curator stood here until S09 read its linked-exile threshold
+    static; Rancor and Grand Arbiter Augustin IV before it, closed the same
+    way.
     """
-    result = survey_one("Keen-Eyed Curator", tmp_path)
+    result = survey_one("Gavony Dawnguard", tmp_path)
     assert result.found
     assert result.category == SILENT
 

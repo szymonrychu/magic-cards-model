@@ -60,7 +60,7 @@ from pydantic import ConfigDict, Field
 from ..data.subtypes import subtype_vocabulary
 from ..ids import new_id
 from ..models.card import Card, Color, Layout, Supertype, Type
-from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
+from ..models.card_state import CardState, ChoiceKind, Counter, ExileAnnotation, TargetRef
 from ..models.token import TokenState
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count, parse_ordinal
@@ -232,6 +232,15 @@ class ExtraTriggerEvent(StrEnum):
     #: `machines/combat.combat_damage_step`, once per player dealt combat
     #: damage in the step, and only when some was actually dealt (CR 603.2g).
     COMBAT_DAMAGE_TO_PLAYERS = "combat_damage_to_players"
+    #: CR 305.1 / CR 305.2a: a player played a land - the special action from
+    #: a hand, or a land played from another zone under a permission, or one
+    #: played during a resolution. `GameEvent.player` is who played it and
+    #: `GameEvent.origin_exile_annotation` the exile pile it was played out
+    #: of, if any. CR 601.1a makes "playing a card" either this or a cast
+    #: (`TriggerEvent.CAST_SPELL`), which is how Voltaic Visionary's "When
+    #: you play a card exiled with this creature" watches both.
+    #: **Emitted by:** `Game.play_land`, `Game._play_land_during_resolution`.
+    PLAYS_LAND = "plays_land"
 
 
 class GameEvent(EngineModel):
@@ -389,6 +398,14 @@ class GameEvent(EngineModel):
     hand" the same as a cast from hand, and a card whose own free cast comes
     from exile (Knowledge Pool's second ability) would re-trigger itself
     forever. `None` for an event this field was never populated for."""
+
+    origin_exile_annotation: ExileAnnotation | None = None
+    """For a `TriggerEvent.CAST_SPELL` or `ExtraTriggerEvent.PLAYS_LAND`
+    event of a card played out of exile, the pile it was in - captured before
+    CR 400.7's move to the stack or the battlefield cleared it (`CastRecord.
+    exile_annotation` for a cast). Voltaic Visionary's "When you play a card
+    exiled with this creature" reads CR 607.2a's link off it. `None` for a
+    card played from anywhere else."""
 
     target_id: UUID | None = None
     """For a `TriggerEvent.DEALS_DAMAGE` event whose target is a permanent
@@ -572,8 +589,10 @@ class AbilityOnStack(EngineModel):
     controller: str
     source_stamp: UUID | None = None
     """The source's `CardState.zone_change_stamp` when the ability triggered,
-    so a recheck on resolution reads the object it came from (CR 113.7a: "if
-    the source is no longer in the zone it's expected to be in at that time,
+    or - for an activated ability - as its activation began, before a cost
+    could move the source (`Game.begin_activating`), so a recheck on
+    resolution reads the object it came from (CR 113.7a: "if the source is
+    no longer in the zone it's expected to be in at that time,
     its last known information is used"; CR 608.2h) rather than whatever new
     object the card has since become (CR 400.7). `None` for an ability that
     records no source object."""
@@ -2904,6 +2923,11 @@ _LAST_TIME_COUNTER_CONDITION = re.compile(r"^the last time counter is removed fr
 #: this condition only ever arrives from that expansion.
 _REVEALED_THIS_WAY_CONDITION = re.compile(r"^you reveal this card this way$")
 
+#: Voltaic Visionary's "When you play a card exiled with this creature" - CR
+#: 601.1a's "play" (a land played or a spell cast) of a card out of this
+#: object's own CR 607.2a pile.
+_PLAY_A_CARD_EXILED_WITH_CONDITION = re.compile(r"^you play a card exiled with this \w+$")
+
 #: The Millennium Calendar's "you untap one or more permanents during your
 #: untap step" - `ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP`.
 _UNTAPPED_DURING_UNTAP_STEP_CONDITION = re.compile(
@@ -2981,6 +3005,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP})
     if _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(lowered):
         return frozenset({ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS})
+    if _PLAY_A_CARD_EXILED_WITH_CONDITION.match(lowered):
+        return frozenset({TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND})
     bending = _bending_events_named(lowered)
     if bending:
         return bending
@@ -3124,6 +3150,21 @@ def _unread_condition_matches(
             # the condition to be about, so it does not trigger.
             return False
         return any(color.value == chosen.value for color in event.mana_added)
+
+    if _PLAY_A_CARD_EXILED_WITH_CONDITION.match(condition):
+        # CR 601.1a: "Playing a card" means playing it as a land or casting it
+        # as a spell. "You" is this
+        # ability's controller, and the card has to have come out of *this*
+        # object's own CR 607.2a pile - the annotation the play event carries
+        # from before CR 400.7 wiped it, matched against this incarnation of
+        # the source (a Visionary that left and came back reads nothing its
+        # earlier self exiled).
+        if event.event not in (TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND):
+            return False
+        if event.player != controller:
+            return False
+        annotation = event.origin_exile_annotation
+        return annotation is not None and annotation.links_to(source.id, source.zone_change_stamp)
 
     if _UNTAPPED_DURING_UNTAP_STEP_CONDITION.match(condition):
         # CR 502.3: only the active player untaps in their untap step, so

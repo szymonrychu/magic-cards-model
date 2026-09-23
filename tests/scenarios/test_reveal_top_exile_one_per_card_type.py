@@ -249,7 +249,11 @@ def test_an_exiled_land_counts_toward_four_but_is_never_offered_as_the_cast():
 
     (cast_question,) = [q for q in _portent_questions(scenario) if "without paying" in q.prompt]
     assert forest.id not in cast_question.cards
-    assert len(cast_question.cards) == 3
+    # CR 303.4a: Rancor's Aura spell requires a target creature and there is
+    # none on this board, so it is no more castable than the Forest.
+    rancor = scenario.find("Rancor", Zone.HAND, "alice")
+    assert rancor.id not in cast_question.cards
+    assert len(cast_question.cards) == 2
     assert forest.zone is Zone.HAND
     assert _names(alice.hand) == ["Forest", "Grizzly Bears", "Rancor", "Sol Ring"]
 

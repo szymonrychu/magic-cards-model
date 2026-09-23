@@ -71,30 +71,16 @@ def test_a_card_that_works_classifies_as_handled():
 
 
 def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
-    """Keen-Eyed Curator's "As long as there are four or more card types among
-    cards exiled with this creature, it gets +4/+4 and has trample." is a
-    still-open gap: `machines/layers._GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE`
-    reads the delirium-shaped twin of this sentence, but nothing in
-    `LayerContext` knows which cards were exiled *with a particular permanent*,
-    so the whole bonus happens nowhere. Fixing the classifier must never make a
+    """Gavony Dawnguard's day/night text (CR 731) has no subsystem to read it,
+    so the card still does nothing - fixing the classifier must never make a
     genuinely-dead card look alive: this is the control for that.
 
-    (Rancor stood here while "Enchanted creature ..." was unreadable. It is
-    read now - see `tests/scenarios/test_attached_creature_statics.py` - so it
-    would be a control that controls nothing.)
-
-    (Grand Arbiter Augustin IV used to be this control, on the reading that
-    its cost-modifier statics reached no notice at all. All three of its
-    lines are now read by `machines/cost.cost_modifier_effect` - see
-    `test_grand_arbiters_three_cost_modifier_statics_are_all_handled` - so it
-    would be a control that controls nothing. Four earlier examples of the
-    identical kind had already been closed the same way: March of
-    Otherworldly Light's two-sentence additional-cost preamble, Blood
-    Artist's back-to-back "target player loses 1 life and you gain 1 life"
-    clauses, History of Benalia's Saga chapters, and Rancor's "Enchanted
-    creature ..." static above.)
+    (Keen-Eyed Curator stood here until S09 read its "card types among cards
+    exiled with this creature" static - `tests/scenarios/test_linked_exile_
+    card_type_threshold.py` pins it. Rancor and Grand Arbiter Augustin IV
+    stood here earlier and were closed the same way.)
     """
-    category, _ = classify_card(card("Keen-Eyed Curator"))
+    category, _ = classify_card(card("Gavony Dawnguard"))
     assert category == SILENT
 
 
@@ -284,11 +270,8 @@ def test_the_x_probes_are_the_one_place_the_best_answer_wins():
         # you control get +1/+1." is read now - the colour negation is one of
         # the qualifiers `_QUALIFIED_CREATURE_SUBJECT` learned - and
         # `tests/scenarios/test_qualified_anthems.py` pins it.
-        (
-            "Keen-Eyed Curator",
-            "As long as there are four or more card types among cards exiled "
-            "with this creature, it gets +4/+4 and has trample.",
-        ),
+        # Keen-Eyed Curator used to stand here; S09 reads its linked-exile
+        # threshold static now (`test_linked_exile_card_type_threshold.py`).
         # Bloodghast used to stand here. Its landfall trigger ("you may return
         # this card from your graveyard to the battlefield") is read now, so
         # the card's worst clause is its unaudited static one and it reports
