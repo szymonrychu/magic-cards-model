@@ -4487,7 +4487,9 @@ not depend on the api repo. The carrier is therefore engine-native: the
 scenario harness's own builder arguments plus the sweep's recipe, as JSON.
 
 **Replayable.** `tests.golden.load(path)` returns a `Golden`;
-`build_board()` builds the recorded board through the harness, `replay()`
+`build_board()` builds the recorded board plus the recipe's staging (source
+primed: face, Class level, Aura, intervening-if counters; target spell cast)
+through the harness, `replay()`
 plays the recorded recipe through the real engine and returns the record
 (equal to the file while behaviour is unchanged; `tests/test_golden_snapshots.py`
 replays three). `mise run golden:replay <file>` prints a golden and its replay.

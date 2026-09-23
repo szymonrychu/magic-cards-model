@@ -14,7 +14,7 @@ import json
 
 import pytest
 
-from tests.golden import GOLDEN_DIR, diff, dumps, golden_path, load, slug
+from tests.golden import GOLDEN_DIR, _counters, diff, dumps, golden_path, load, slug
 from tests.scenarios.harness import PlayedScenario
 
 #: A targeted cast trigger, an enters trigger and an activation - the
@@ -101,3 +101,34 @@ def test_a_war_golden_builds_the_board_after_its_bloody_turn(card, family, numbe
     built = golden.build_board()
 
     assert built.step is Step.POSTCOMBAT_MAIN, "the war turn ends in the postcombat main"
+
+
+def _on_battlefield(built: PlayedScenario, name: str):
+    return next(state for state in built.game.battlefield if state.name == name)
+
+
+def test_a_golden_builds_its_source_primed_for_an_intervening_if():
+    """Lightning Coils' upkeep trigger checks "if this artifact has five or
+    more charge counters on it" (CR 603.4): the built board carries them."""
+    built = load(golden_path("Lightning Coils", "triggered", 1)).build_board()
+
+    assert _counters(_on_battlefield(built, "Lightning Coils").counters).get("charge", 0) >= 5
+
+
+def test_a_golden_builds_its_class_at_the_level_the_ability_unlocks_at():
+    """Wizard Class' "whenever you draw a card" is a level 3 ability (CR 716.2a)."""
+    built = load(golden_path("Wizard Class", "triggered", 1)).build_board()
+
+    assert _on_battlefield(built, "Wizard Class").class_level == 3
+
+
+def test_a_golden_builds_the_spell_its_ability_targets_on_the_stack():
+    """Spellskite's "change the target of target spell or ability" needs a
+    spell to aim at (CR 115.1): the built board has it on the stack, and the
+    activation itself has not happened yet."""
+    built = load(golden_path("Spellskite", "activated", 0)).build_board()
+
+    assert built.game.stack, "the target spell was cast before the activation"
+    assert all(getattr(item, "source_name", None) != "Spellskite" for item in built.game.stack), (
+        "the board is the one the activation is made on, not after it"
+    )

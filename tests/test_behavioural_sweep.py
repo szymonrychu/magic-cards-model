@@ -230,9 +230,25 @@ class _Staging:
     #: The last board `_board` built, in the scenario harness's own words -
     #: the golden's `board`.
     board: dict[str, Any] | None = None
+    #: Set by `staged_board`: stop the case at the board its event is
+    #: raised on (or its ability activated on) and hand that board back.
+    halt: bool = False
 
 
 _STAGING = _Staging()
+
+
+class _Halt(Exception):  # noqa: N818 - control flow, not an error
+    """`staged_board`'s stop: the fully staged board of a recorded recipe."""
+
+    def __init__(self, scenario: PlayedScenario) -> None:
+        super().__init__("staged")
+        self.scenario = scenario
+
+
+def _halt_here(scenario: PlayedScenario) -> None:
+    if _STAGING.halt:
+        raise _Halt(scenario)
 
 
 def _board(
@@ -2327,6 +2343,7 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
                 except (_Unavailable, ValueError) as unavailable:
                     tried.append(f"{variant} {attempt.__name__}: unavailable: {unavailable}")
                     continue
+                _halt_here(scenario)
                 advance = attempt.__name__ in _ADVANCING
                 found = _drive(scenario, case, source_id, advance=advance)
                 if found is None:
@@ -2743,6 +2760,7 @@ def run_activation_case(case: Case, only: dict[str, Any] | None = None) -> Outco
                     continue
                 _stack_material(scenario)
                 _prepare(scenario, source, ability)
+                _halt_here(scenario)
                 game = scenario.game
                 labels = golden.Labels(game)
                 before = None
@@ -2837,6 +2855,7 @@ def _run_off_zone(
             game = scenario.game
             _stack_material(scenario)
             _prepare(scenario, state, ability)
+            _halt_here(scenario)
             action = _action_for(
                 scenario, ALICE, ActionKind.ACTIVATE_OFF_ZONE, state.id, ability_index=index
             )
@@ -3014,6 +3033,26 @@ def case_named(card: str, family: str, number: int) -> Case:
         if case.card == card and case.number == number:
             return case
     raise KeyError(f"no {family} case #{number} for {card!r} in the sweep")
+
+
+def staged_board(case: Case, recipe: dict[str, Any]) -> PlayedScenario:
+    """The board one recorded recipe of `case` raises its event on (the
+    loader's `Golden.build_board`): the recorded board built, then the
+    recipe's own staging - the source primed (its face, Class level, Aura
+    attachment, counters an intervening "if" asks for), the material a
+    "target spell" aims at cast - stopping before the ability is activated
+    or, for a trigger, where the recipe hands the board to the driver."""
+    _STAGING.halt = True
+    try:
+        if case.kind == "activated":
+            outcome = run_activation_case(case, only=recipe)
+        else:
+            outcome = run_trigger_case(case, only=recipe)
+    except _Halt as halted:
+        return halted.scenario
+    finally:
+        _STAGING.halt = False
+    raise AssertionError(f"{case.id}: the recorded recipe no longer stages: {outcome.detail}")
 
 
 def replay(case: Case, recipe: dict[str, Any]) -> dict[str, Any]:

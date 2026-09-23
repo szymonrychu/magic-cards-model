@@ -36,7 +36,8 @@ test id with a unified diff. Regenerate with `mise run golden:update`
 diff in the commit; never edit a golden by hand.
 
 A golden is also a scenario: `load(path)` gives a `Golden` whose
-`build_board()` builds the recorded board through the harness, and whose
+`build_board()` builds the recorded board and the recipe's staging (source
+primed, target spell cast) through the harness, and whose
 `replay()` plays the recorded recipe through the real engine and returns the
 record it produces - equal to the file while the engine behaves the same.
 `mise run golden:replay <path>` prints a golden and its replay side by side.
@@ -399,15 +400,20 @@ class Golden:
     recorded: dict[str, Any]
 
     def build_board(self) -> Any:
-        """The recorded board, built through the sweep's own board builder:
-        each seat from its `Scenario().player(...)` arguments, the
-        predefined tokens created, the game started at the recorded step,
-        the tapped and entering material staged and the busy or war turn
-        played - the state the recipe's event is raised on."""
+        """The recorded board with the recipe's staging applied, through the
+        sweep's own builder: each seat from its `Scenario().player(...)`
+        arguments, the predefined tokens, the recorded step, the tapped and
+        entering material, the busy or war turn, then the source primed (its
+        face, Class level, Aura attachment, the counters an intervening "if"
+        asks for) and a "target spell" aim cast. An activation's board stops
+        just before the activation; a trigger's where the recipe hands it to
+        the driver - before the event for a recipe that plays turns forward
+        (`staged`, `entered`, `run`), just after the recipe's own action
+        otherwise, its trigger waiting to be put on the stack (CR 603.3)."""
         from tests import test_behavioural_sweep as sweep
 
         case = sweep.case_named(self.card, self.family, self.number)
-        return sweep.build_recorded(self.board, case)
+        return sweep.staged_board(case, self.recipe)
 
     def replay(self) -> dict[str, Any]:
         """Play the recorded recipe through the real engine and return the
