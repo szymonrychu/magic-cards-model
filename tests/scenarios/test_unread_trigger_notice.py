@@ -13,22 +13,28 @@ nothing.
 A trigger whose effect is read records nothing: the notice is for the gap, not
 for every resolution.
 
-Coiling Oracle ("When this creature enters, reveal the top card of your
-library. If it's a land card, put it onto the battlefield. Otherwise, put that
-card into your hand.") is a pool printing whose enters trigger no parser reads
-yet. Dress Down's enters trigger ("draw a card") is read.
+Beza, the Bounding Spring ("When Beza enters, create a Treasure token if an
+opponent controls more lands than you. You gain 4 life if an opponent has more
+life than you. Create two 1/1 blue Fish creature tokens if an opponent
+controls more creatures than you. Draw a card if an opponent has more cards in
+hand than you.") is a pool printing whose enters trigger no parser reads yet:
+each of its four clauses conditions a grant on comparing a stat against every
+opponent's, a shape this wave's `_LOOK_TOP_CARD_CONDITIONAL_RE` widening does
+not touch and does not close. Dress Down's enters trigger ("draw a card") is
+read.
 
 CR numbers read with `mise run rules:find` in the session that wrote this
 file: 603.2, 113.7a.
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
 from tests.scenarios.harness import PlayedScenario, Scenario
 
-ORACLE_EFFECT = (
-    "reveal the top card of your library. If it's a land card, put it onto the "
-    "battlefield. Otherwise, put that card into your hand."
+BEZA_EFFECT = (
+    "create a Treasure token if an opponent controls more lands than you. You "
+    "gain 4 life if an opponent has more life than you. Create two 1/1 blue "
+    "Fish creature tokens if an opponent controls more creatures than you. "
+    "Draw a card if an opponent has more cards in hand than you."
 )
 
 
@@ -43,29 +49,33 @@ def test_an_unread_trigger_records_a_notice_as_it_resolves_and_moves_nothing():
         .manual_turn_based_actions()
         .player(
             "alice",
-            hand=["Coiling Oracle"],
-            battlefield=["Forest", "Island"],
-            library=["Lightning Bolt", "Forest"],
+            hand=["Beza, the Bounding Spring"],
+            battlefield=["Plains", "Plains", "Forest", "Forest"],
         )
         .player("bob")
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    top = scenario.top_of_library(1, "alice")[0]
 
-    oracle = scenario.cast_and_resolve(
-        "Coiling Oracle", *scenario.untapped_sources("Forest", "Island")
+    beza = scenario.cast_and_resolve(
+        "Beza, the Bounding Spring",
+        *scenario.untapped_sources("Plains", "Plains", "Forest", "Forest"),
     )
-    assert scenario.stack_names() == ["Coiling Oracle's triggered ability"]
+    assert scenario.stack_names() == ["Beza, the Bounding Spring's triggered ability"]
     assert scenario.game.unmodeled_trigger_effect_notices == []
 
     resolve_stack(scenario)
 
     (notice,) = scenario.game.unmodeled_trigger_effect_notices
-    assert notice.source_id == oracle.id
-    assert notice.source_name == "Coiling Oracle"
-    assert notice.text == ORACLE_EFFECT
-    assert top.zone is Zone.LIBRARY
+    assert notice.source_id == beza.id
+    assert notice.source_name == "Beza, the Bounding Spring"
+    assert notice.text == BEZA_EFFECT
+    # None of the four conditional grants happened: no Treasure, no life
+    # gained, no Fish tokens, no card drawn.
+    assert "Treasure" not in scenario.battlefield_names()
+    assert "Fish" not in scenario.battlefield_names()
+    assert scenario.player("alice").life == 20
+    assert scenario.player("alice").hand == []
 
 
 def test_a_trigger_whose_effect_is_read_records_no_notice():

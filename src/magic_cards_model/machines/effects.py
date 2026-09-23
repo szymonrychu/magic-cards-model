@@ -16069,33 +16069,56 @@ def _parse_select_from_top_spell_clause(text: str) -> Effect | None:
     return effect
 
 
-#: "Look at the top card of your library. If it's a <kind> card, you may put it
-#: <somewhere>. Otherwise, put it <somewhere else>." - Fecund Greenshell, the
-#: family's one-card cousin: the same look (CR 401.2) and the same CR 608.2d
-#: "you may", but the branch is decided by the card that turns up rather than
-#: by choosing among several candidates, so there is nothing to `CHOOSE_CARDS`
-#: between. "Otherwise" is the *card* failing the condition, not the player
-#: declining the may - a declined may leaves the card on top of the library,
-#: which is why the two branches are kept apart here.
+#: "Look at/Reveal the top card of your library. If it's a <kind> card, [you
+#: may ]put it/that card/the card <somewhere>. Otherwise, put it/that card/the
+#: card <somewhere else>." (or the "If you don't put the card onto the
+#: battlefield, put it <somewhere else>." else-arm) - Fecund Greenshell's own
+#: "look at ... you may ... Otherwise, ..." is the narrowest member; Coiling
+#: Oracle reveals instead of looking and the put is mandatory (no "you may");
+#: Risen Reef looks and offers the "you may", but phrases its else-arm as an
+#: anaphoric "If you don't put the card onto the battlefield" rather than a
+#: bare "Otherwise"; Skyward Eye Prophets prints the identical mandatory
+#: shape as Coiling Oracle on a `{T}:` activated ability instead of an enters
+#: trigger. None of them choose among several candidates, so there is nothing
+#: to `CHOOSE_CARDS` between - the branch is decided by the one card that
+#: turns up.
+#:
+#: The two else-arm spellings are not interchangeable trivia: "Otherwise" is
+#: the *card* failing the condition, so a declined "you may" leaves the card
+#: exactly where CR 401.2/701.20b keep it, on top of the library (Fecund
+#: Greenshell) - while Risen Reef's anaphoric "If you don't put the card onto
+#: the battlefield, put it ..." is CR 118.12's own "[Do something]. If you
+#: don't, [do something else]", so *declining* the "you may" runs that
+#: else-arm immediately instead of leaving the card be. `decline_runs_else`
+#: tells the two apart.
+#:
+#: CR 701.20a vs CR 701.20e is a real visibility split, not a wording choice:
+#: "reveal" shows the card to every player, "look at" shows it only to the
+#: ability's controller. `verb` picks which of `Game.reveal`/`Game.look` the
+#: effect below calls.
 _LOOK_TOP_CARD_CONDITIONAL_RE = re.compile(
-    r"^look at the top card of your library\. "
+    r"^(?P<verb>look at|reveal) the top card of your library\. "
     r"if it's an? (?P<kind>permanent|land|creature|artifact|enchantment|instant|sorcery"
-    r"|planeswalker) card, you may put it "
+    r"|planeswalker) card, (?P<may>you may )?put it "
     r"(?P<dest>onto the battlefield tapped|onto the battlefield|into your hand"
     r"|into your graveyard)\. "
-    r"otherwise, put it (?P<other>into your hand|into your graveyard"
-    r"|on the bottom of your library)\.?$",
+    r"(?:otherwise, put (?:it|that card|the card)"
+    r"|(?P<decline_runs_else>if you don't put the card onto the battlefield, put it)) "
+    r"(?P<other>into your hand|into your graveyard|on the bottom of your library)\.?$",
     re.IGNORECASE,
 )
 
 
 def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     """`_LOOK_TOP_CARD_CONDITIONAL_RE`'s shape - Fecund Greenshell's own
-    enters trigger, verified with `resolve_cards`.
+    enters trigger, and Coiling Oracle's, Risen Reef's, and Skyward Eye
+    Prophets's, all verified with `resolve_cards`.
 
-    An empty library means there is no top card to look at, so every branch is
-    impossible and the whole instruction is ignored (CR 609.3's "does only as
-    much as possible", CR 101.3's ignored impossible part).
+    An empty library means there is no top card to look at or reveal, so
+    every branch is impossible and the whole instruction is ignored (CR
+    609.3's "does only as much as possible", CR 101.3's ignored impossible
+    part) - no `Game.look`/`Game.reveal` call either, since CR 701.20 has
+    nothing to show.
     """
     match = _LOOK_TOP_CARD_CONDITIONAL_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
@@ -16103,6 +16126,9 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     predicate = _SELECT_FROM_TOP_KINDS.get(match.group("kind").lower())
     if predicate is None:
         return None
+    reveals_to_all = match.group("verb").lower() == "reveal"
+    optional = match.group("may") is not None
+    decline_runs_else = match.group("decline_runs_else") is not None
     destination = match.group("dest").lower()
     otherwise = match.group("other").lower()
     noun = f"{match.group('kind').lower()} card"
@@ -16122,15 +16148,34 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
         if not player.library:
             return
         top = player.library[0]
+        # CR 701.20a/701.20e: showing the card is not a zone change, and it
+        # still happens even down the "otherwise" branch - the card was
+        # looked at or revealed before its type was ever checked.
+        if reveals_to_all:
+            game.reveal(top, source=ability.source_name)
+        else:
+            game.look(top, ability.controller, source=ability.source_name)
         if predicate(top):
-            if game.may(
-                player,
-                f"put {with_indefinite_article(noun)} {destination}",
-                source=ability.source_name,
-                source_id=source_id_of(ability),
-            ):
+            if optional:
+                if game.may(
+                    player,
+                    f"put {with_indefinite_article(noun)} {destination}",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                ):
+                    move(game, player, top, destination)
+                    return
+                # CR 118.12: only the anaphoric "If you don't put the card
+                # onto the battlefield" else-arm (Risen Reef) fires on a
+                # decline. A bare "Otherwise" (Fecund Greenshell) is the
+                # *card* failing the condition, not the player's choice, so
+                # declining leaves it exactly where CR 401.2/701.20b already
+                # keep it - on top of the library, untouched.
+                if not decline_runs_else:
+                    return
+            else:
                 move(game, player, top, destination)
-            return
+                return
         move(game, player, top, otherwise)
 
     return effect
