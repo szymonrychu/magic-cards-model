@@ -4134,3 +4134,35 @@ kinds, an existing `GameEvent` field now filled for enters events).
 
 Proof printings added: Heraldic Banner, Hall of Triumph, Order of the Stars,
 Warg Rider, Arvad the Cursed, Always Watching, Heroes' Podium.
+## S24: count-driven amounts over permanents
+
+Honden of Infinite Rage, Ben-Ben, Akki Hermit, Nissa, Ascended Animist and
+Eluge, the Shoreless Sea were silent; Inscription of Abundance, Outcaster
+Greenblade and Sisay, Weatherlight Captain failed closed with a notice. Every
+clause of all seven now sweeps `handled`. One-shot counts are read as the
+spell or ability resolves (CR 608.2h), static and characteristic-defining
+counts on every board computation (CR 611.3a, 613.5), off the board as layer
+4 leaves it, so a flooded or dual land counts by its computed subtypes. CR
+numbers verified with `mise run rules:find`: 105.1, 105.2, 107.1b, 107.2,
+107.3c, 118.7b, 118.7c, 120.3c, 120.7, 122.1, 201.5, 205.1b, 205.3i, 205.4a,
+305.6, 306.5c, 400.7, 601.2f, 601.2i, 604.3, 604.3a, 606.4, 608.2c, 608.2h,
+611.2b, 611.2c, 611.3a, 613.1d, 613.4a, 613.4c, 613.5, 700.2a, 700.2d, 700.7,
+702.33d, 702.150a, 704.5f.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "deals damage to `<target>` equal to `<expr>`" (amount after the target), spell or ability, amount read at resolution; the source deals it (CR 120.7) | `effects._DAMAGE_TARGET_EQUAL_TO_EXPR_RE`, `damage_ability_targets_equal_to_expression` | Honden of Infinite Rage, Ben-Ben (untapped Mountains) | Koth, Fire of Resistance -3; Omnath, Locus of the Roil ETB | `test_subtype_count_amounts.py` |
+| "`<player>` gains/loses X life, where X is `<expr>`" / "... life equal to `<expr>`", "they control" read for the targeted player | `effects._parse_counted_life_change_clause` (in `parse_clause_effect`) | Inscription of Abundance mode 2 | Villainous Wrath | `test_greatest_power_life.py` |
+| a mode whose text defines X ("where X is ...") keeps it (CR 107.3c) instead of taking the announced X | `effects.parse_mode_effect` | Inscription of Abundance | Villainous Wrath (non-modal) | `test_greatest_power_life.py` |
+| "X/X ... token, where X is `<self>`'s loyalty" (CR 306.5c; last known information if gone, CR 608.2h) | `effects._OBJECT_CHARACTERISTIC_RE` loyalty term, `_x_sized_token_clause` via `source_or_last_known` | Nissa, Ascended Animist +1 | none exists (Scryfall 2026-09-23); see MEMORY.md | `test_loyalty_sized_token.py` |
+| until end of turn "`<group>` get +N/+M for each `<count>`" (duration-first too), count fixed at resolution | `effects._MASS_PUMP_FOR_EACH_RE` in `_parse_mass_pump_clause`; "basic land type among lands you control" singular in `_COUNT_BASIC_LAND_TYPES_RE` | Nissa, Ascended Animist -7 | Tromp the Domains | `test_subtype_count_amounts.py` |
+| static "this creature gets +N/+M for each `<subtype>` you control" | `layers._controlled_count_factory`, `CountPermanentsWithSubtypeControlledBy` | Outcaster Greenblade | Hold the Gates (team form) | `test_subtype_count_amounts.py` |
+| static "`<group>` get +N/+M for each `<qualifier>` you control [and have `<keywords>`]" | `layers._ANTHEM_PER_COUNT_RE` | - | Hold the Gates | `test_subtype_count_amounts.py` |
+| static "gets +N/+M for each color among [other] `<group>` you control" (CR 105.2) | `layers._SELF_PUMP_PER_COLOR_AMONG_RE`, `CountColorsAmongControlledBy` | Sisay, Weatherlight Captain | Earthen Ally | `test_colour_count_static.py` |
+| CDA "power and toughness are each equal to the number of `<subtype>`s you control" | `layers._QUALIFIER_COUNT_CDA_RE` + `_controlled_count_factory` | Eluge, the Shoreless Sea | Dungrove Elder | `test_flood_counters.py` |
+| CDA "... equal to [twice] the number of `<type>[ and <type>]` cards in your graveyard" | `layers._GRAVEYARD_CARD_COUNT_CDA_RE` | - | Melek, Reforged Researcher | `test_flood_counters.py` |
+| "put a `<kind>` counter on target `<permanent>`. It's/That land is a `<subtype>` in addition to its other types for as long as it has a `<kind>` counter on it" (CR 613.1d, 611.2b; ends for good when the counter goes) | `effects._merge_counter_then_subtype_while_counter_clauses`, `layers.HasCounter`, `ContinuousEffects.active` pruning | Eluge's enters/attacks trigger | Aquitect's Will | `test_flood_counters.py` |
+| "Whenever `<name>` enters or attacks" names itself (CR 201.5) | `triggers._expand_enters_or_attacks(card_name=...)` | Eluge | - (same split as Primeval Titan's "this creature") | `test_flood_counters.py` |
+| "The first `<type>[ or <type>]` spell you cast each turn costs {N}/{C} (or {1}) less to cast [for each `<count>`]" (CR 601.2f, 118.7b-c) | `cost._FIRST_SPELL_EACH_TURN_COST_DECREASE`, `Game._counted_type_decrease` | Eluge | Melek, Reforged Researcher | `test_flood_counters.py` |
+| "`<Types>` spells you cast cost {N} less to cast for each `<count>`" | `cost._TYPE_COST_DECREASE` "for each" tail | - | Mindsplice Apparatus | `test_flood_counters.py` |
+| "for each `<qualifier>` you control with a `<kind>` counter on it" | `effects._QUALIFIER_YOU_CONTROL_RE` counter filter | Eluge (cost count) | Armorcraft Judge | `test_flood_counters.py` |

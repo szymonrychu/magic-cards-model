@@ -80,7 +80,7 @@ import functools
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import IntEnum, StrEnum
-from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, cast
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal, NamedTuple, cast
 from uuid import UUID
 
 from pydantic import ConfigDict, Field, PrivateAttr, model_validator
@@ -536,6 +536,65 @@ class CountOtherCreaturesLikeThatOne(CountBase):
         )
 
 
+class CountPermanentsWithSubtypeControlledBy(CountBase):
+    """How many permanents with one subtype (CR 205.3) a player controls -
+    Outcaster Greenblade's "for each Desert you control", Hold the Gates'
+    "for each Gate you control", Eluge, the Shoreless Sea's "the number of
+    Islands you control". Read off the board as the asking sublayer sees it
+    (CR 613.5), so a land that became an Island in layer 4 (CR 613.1d) - a
+    flooded land, a Blood Moon'd one - already counts by 7a/7c.
+    `subtype` is stored lowercased.
+    """
+
+    kind: Literal["permanents_with_subtype_controlled_by"] = "permanents_with_subtype_controlled_by"
+    username: str | None = None
+    subtype: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return sum(
+            1
+            for other in board.values()
+            if other.controller == self.username
+            and any(word.lower() == self.subtype for word in other.subtypes)
+        )
+
+
+class CountColorsAmongControlledBy(CountBase):
+    """How many colors (CR 105.1) are among a group of permanents a player
+    controls - Sisay, Weatherlight Captain's "for each color among other
+    legendary permanents you control", Earthen Ally's "for each color among
+    Allies you control". CR 105.2: a color counts once however many of the
+    permanents share it. `excludes_self` is "other": the object being
+    modified (`chars`) is left out. `card_type`/`subtype`/`supertype` narrow
+    the group; all `None` is every permanent.
+    """
+
+    kind: Literal["colors_among_controlled_by"] = "colors_among_controlled_by"
+    username: str | None = None
+    excludes_self: bool = False
+    card_type: Type | None = None
+    subtype: str | None = None
+    supertype: Supertype | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        colors: set[Color] = set()
+        for other in board.values():
+            if other.controller != self.username:
+                continue
+            if self.excludes_self and other.card_id == chars.card_id:
+                continue
+            if self.card_type is not None and self.card_type not in other.types:
+                continue
+            if self.supertype is not None and self.supertype not in other.supertypes:
+                continue
+            if self.subtype is not None and not any(
+                word.lower() == self.subtype for word in other.subtypes
+            ):
+                continue
+            colors.update(other.colors)
+        return len(colors)
+
+
 #: How many of something an effect counts, judged against one object and the
 #: board as it stands in that sublayer (CR 613.5).
 Count = Annotated[
@@ -545,7 +604,9 @@ Count = Annotated[
     | CountLandsControlledBy
     | CountPermanentsControlledBy
     | CountCreaturesWithSubtypesControlledBy
-    | CountBasicLandTypesAmongLandsControlledBy,
+    | CountBasicLandTypesAmongLandsControlledBy
+    | CountPermanentsWithSubtypeControlledBy
+    | CountColorsAmongControlledBy,
     Field(discriminator="kind"),
 ]
 
@@ -1522,6 +1583,9 @@ class ConditionBase(EngineModel):
 
     model_config = ConfigDict(frozen=True)
 
+    #: Whether the condition could turn true again after turning false.
+    can_restart: ClassVar[bool] = False
+
     def holds_in(self, game: Game) -> bool:
         raise NotImplementedError
 
@@ -1547,8 +1611,36 @@ class RemainsOnBattlefield(ConditionBase):
         return permanent.zone is Zone.BATTLEFIELD and permanent.zone_change_stamp == self.stamp
 
 
+class HasCounter(ConditionBase):
+    """ "For as long as it has a `<kind>` counter on it" (CR 611.2b) - Eluge,
+    the Shoreless Sea's and Aquitect's Will's flooded land. The same
+    `zone_change_stamp` guard as `RemainsOnBattlefield`: a land that left and
+    came back is a new object (CR 400.7) the duration never covered. Once
+    false the duration has ended for good - `ContinuousEffects.active` drops
+    the effect then, so a counter put back later does not restart it.
+    """
+
+    #: Unlike a zone stamp, a counter can come back - so once false this
+    #: duration is dropped at once (`ContinuousEffects.active`), not left to
+    #: be re-asked.
+    can_restart: ClassVar[bool] = True
+
+    kind: Literal["has_counter"] = "has_counter"
+    card_id: UUID
+    stamp: UUID
+    counter: str
+
+    def holds_in(self, game: Game) -> bool:
+        permanent = game.find_by_id(self.card_id)
+        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        if permanent.zone_change_stamp != self.stamp:
+            return False
+        return permanent.counters[self.counter] > 0
+
+
 #: Whether a "for as long as" duration is still running (CR 611.2b).
-Condition = RemainsOnBattlefield
+Condition = Annotated[RemainsOnBattlefield | HasCounter, Field(discriminator="kind")]
 
 
 class OffBattlefieldCharacteristics(NamedTuple):
@@ -3109,7 +3201,33 @@ def _singular_subtype_word(word: str) -> str | None:
         _IRREGULAR_SUBTYPE_PLURALS.get(lowered, lowered),
         lowered.removesuffix("s"),
     ]
+    if lowered.endswith("ies"):
+        # "Allies" -> "ally" (Earthen Ally's "each color among Allies").
+        candidates.append(lowered.removesuffix("ies") + "y")
     return next((candidate for candidate in candidates if candidate in vocabulary), None)
+
+
+#: A controller-relative board count's factory: the controller is only known
+#: when the effect is built, so a reader hands back how to make the `Count`.
+ControlledCountFactory = Callable[[str | None], "Count"]
+
+
+def _controlled_count_factory(qualifier: str) -> ControlledCountFactory | None:
+    """ "artifacts" / "Deserts" / "Islands" - the `<qualifier>` of "for each
+    `<qualifier>` you control" or "the number of `<qualifier>` you control" -
+    as a factory for the `Count` of that many permanents a player controls: a
+    CR 205.2a card type first, else a CR 205.3 subtype `subtype_vocabulary`
+    knows. `None` for anything else, so the caller fails closed.
+    """
+    card_type = _card_type_word(qualifier)
+    if card_type is not None:
+        return lambda username: count_permanents_controlled_by(username, card_type)
+    subtype = _singular_subtype_word(qualifier)
+    if subtype is None:
+        return None
+    return lambda username: CountPermanentsWithSubtypeControlledBy(
+        username=username, subtype=subtype
+    )
 
 
 def _self_pump_per_graveyard_card_builder(
@@ -3220,9 +3338,53 @@ _SELF_PUMP_PER_CONTROLLED_PERMANENT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This creature gets +1/+1 for each color among other legendary permanents
+#: you control." (Sisay, Weatherlight Captain, her name already rewritten to
+#: "this permanent"), "This creature gets +1/+0 for each color among Allies you
+#: control." (Earthen Ally) - a count of CR 105.1's colors among a group of the
+#: controller's permanents rather than of the permanents themselves.
+_SELF_PUMP_PER_COLOR_AMONG_RE = re.compile(
+    r"^this (?:creature|token|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each "
+    r"colou?r among (?P<other>other )?(?P<qualifier>[a-z]+(?: [a-z]+)?) you control\.?$",
+    re.IGNORECASE,
+)
+
+#: The supertype words a color-among group may open with (CR 205.4a).
+_SUPERTYPE_WORDS: dict[str, Supertype] = {member.value.lower(): member for member in Supertype}
+
+
+def _colors_among_count_factory(
+    qualifier: str, *, excludes_self: bool
+) -> ControlledCountFactory | None:
+    """ "legendary permanents" / "permanents" / "Allies" / "creatures" - the
+    group `_SELF_PUMP_PER_COLOR_AMONG_RE` counts colors among, as a
+    `CountColorsAmongControlledBy` factory: an optional supertype word, then
+    "permanents" (every permanent), a card type, or a subtype. `None` for
+    anything else."""
+    words = qualifier.lower().split()
+    supertype = _SUPERTYPE_WORDS.get(words[0]) if len(words) == 2 else None
+    if len(words) == 2 and supertype is None:
+        return None
+    noun = words[-1]
+    card_type: Type | None = None
+    subtype: str | None = None
+    if noun != "permanents":
+        card_type = _card_type_word(noun)
+        if card_type is None:
+            subtype = _singular_subtype_word(noun)
+            if subtype is None:
+                return None
+    return lambda username: CountColorsAmongControlledBy(
+        username=username,
+        excludes_self=excludes_self,
+        card_type=card_type,
+        subtype=subtype,
+        supertype=supertype,
+    )
+
 
 def _self_pump_per_controlled_permanent_builder(
-    power: int, toughness: int, card_type: Type
+    power: int, toughness: int, qualifier: str, count: ControlledCountFactory
 ) -> EffectBuilder:
     """`_SELF_PUMP_PER_CONTROLLED_PERMANENT_RE`'s shape - the Urza's Saga
     Construct token's own pump.
@@ -3247,17 +3409,14 @@ def _self_pump_per_controlled_permanent_builder(
         return [
             ContinuousEffect(
                 description=(
-                    f"{source.name}: {power:+d}/{toughness:+d} for each "
-                    f"{card_type.value} controlled"
+                    f"{source.name}: {power:+d}/{toughness:+d} for each {qualifier} controlled"
                 ),
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.MODIFY,
                 timestamp=timestamp,
                 source_id=source.id,
                 selector=_only(source.id),
-                modification=modify_power_toughness_per(
-                    count_permanents_controlled_by(source.controller, card_type), power, toughness
-                ),
+                modification=modify_power_toughness_per(count(source.controller), power, toughness),
             )
         ]
 
@@ -3574,6 +3733,19 @@ _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
 _EACH_ANTHEM_RE = re.compile(
     rf"^{_EACH_QUALIFIED_CREATURE_SUBJECT} gets "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
+    re.IGNORECASE,
+)
+
+#: "Creatures you control get +0/+1 for each Gate you control and have
+#: vigilance." (Hold the Gates) - `_ANTHEM_RE`'s pump scaled by a live count of
+#: a card type or subtype the controller controls (CR 611.3a: counted afresh
+#: on every CR 613.5 computation), with `_ANTHEM_AND_KEYWORD_GRANT_RE`'s
+#: optional keyword grant riding along.
+_ANTHEM_PER_COUNT_RE = re.compile(
+    rf"^{_QUALIFIED_CREATURE_SUBJECT} get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each (?P<each>[a-z]+) you control"
+    r"(?: and (?:have|has) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))?\.?$",
     re.IGNORECASE,
 )
 
@@ -5215,11 +5387,16 @@ def _anthem_and_keyword_grant_builder(
     whose: str,
     line: str,
     qualifiers: CreatureQualifiers | None = None,
+    per: tuple[str, ControlledCountFactory] | None = None,
 ) -> EffectBuilder:
     """ "[Qualified subject] get +N/+N and have <keyword(s)>." - `_anthem_
     builder`'s pump plus `_indefinite_keyword_grant_builder`'s keywords, one
     ability landing in both sublayer 7c (CR 613.4c) and layer 6 (CR 613.1f)
     over the same live selector (CR 611.3a).
+
+    `per` is `_ANTHEM_PER_COUNT_RE`'s "for each `<qualifier>` you control":
+    the printed word and the factory of the count the pump is multiplied by,
+    built for the source's controller and counted live off the board.
     """
 
     def builder(
@@ -5230,16 +5407,22 @@ def _anthem_and_keyword_grant_builder(
     ) -> list[ContinuousEffect]:
         selector, subject = _creature_group(source, other=other, whose=whose, qualifiers=qualifiers)
         gate = qualifiers.gate_words if qualifiers is not None else ""
+        pump = f"{power:+d}/{toughness:+d}"
+        modification: Modification = modify_power_toughness(power, toughness)
+        if per is not None:
+            word, count = per
+            pump = f"{pump} for each {word} you control"
+            modification = modify_power_toughness_per(count(source.controller), power, toughness)
         effects = [
             ContinuousEffect(
-                description=f"{source.name}: {gate}{subject} get {power:+d}/{toughness:+d}",
+                description=f"{source.name}: {gate}{subject} get {pump}",
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.MODIFY,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=line,
                 selector=selector,
-                modification=modify_power_toughness(power, toughness),
+                modification=modification,
             )
         ]
         effects.extend(
@@ -6761,10 +6944,15 @@ _QUALIFIER_COUNT_CDA_RE = re.compile(
 )
 
 
-def _qualifier_count_cda_builder(line: str, card_type: Type) -> EffectBuilder:
+def _qualifier_count_cda_builder(
+    line: str, qualifier: str, count: ControlledCountFactory
+) -> EffectBuilder:
     """`_QUALIFIER_COUNT_CDA_RE`'s shape - CR 604.3a's characteristic-
     defining ability, sublayer 7a (CR 613.4a), the same "set, not add" shape
-    `_basic_land_type_count_cda_builder` right above already is.
+    `_basic_land_type_count_cda_builder` right above already is. `qualifier`
+    is a card type (Crusader of Odric's "creatures") or a subtype (Eluge, the
+    Shoreless Sea's "Islands", Dungrove Elder's "Forests"), counted live off
+    the board, so a land that became an Island in layer 4 counts in 7a.
     """
 
     def builder(
@@ -6776,8 +6964,7 @@ def _qualifier_count_cda_builder(line: str, card_type: Type) -> EffectBuilder:
         return [
             ContinuousEffect(
                 description=(
-                    f"{source.name}: P/T equal to the number of "
-                    f"{card_type.value}s its controller controls"
+                    f"{source.name}: P/T equal to the number of {qualifier} its controller controls"
                 ),
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.CHARACTERISTIC_DEFINING,
@@ -6786,9 +6973,57 @@ def _qualifier_count_cda_builder(line: str, card_type: Type) -> EffectBuilder:
                 source_ability=_source_line_for(source, line),
                 characteristic_defining=True,
                 selector=_only(source.id),
-                modification=define_power_toughness(
-                    count_permanents_controlled_by(source.controller, card_type)
-                ),
+                modification=define_power_toughness(count(source.controller)),
+            )
+        ]
+
+    return builder
+
+
+#: "This permanent's power and toughness are each equal to twice the number
+#: of instant and sorcery cards in your graveyard." (Melek, Reforged
+#: Researcher) - a CR 604.3a characteristic-defining ability counting card
+#: types in the controller's own graveyard (a card with any of the named types
+#: counts once), optionally doubled ("twice", CR 107.1's plain arithmetic).
+_GRAVEYARD_CARD_COUNT_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s power and toughness are each equal to "
+    r"(?P<twice>twice )?the number of "
+    r"(?P<types>[a-z]+(?:(?:,\s*| and | or | and/or )[a-z]+)*) cards in your graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+def _graveyard_card_count_cda_builder(
+    line: str, card_types: tuple[Type, ...], multiplier: int
+) -> EffectBuilder:
+    """`_GRAVEYARD_CARD_COUNT_CDA_RE`'s shape. The graveyard is not on the
+    board the layer engine threads through, so the count is read off
+    `context.graveyard_of` when the effect is built - which `effects_for` does
+    on every CR 613.5 computation, the same live-recompute a `FixedCount`
+    already gives Tarmogoyf."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        counted = multiplier * sum(
+            1
+            for card in context.graveyard_of(source.controller)
+            if any(card_type in card.types for card_type in card_types)
+        )
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {counted}/{counted} from cards in your graveyard",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                characteristic_defining=True,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=define_power_toughness(FixedCount(value=counted)),
             )
         ]
 
@@ -8476,11 +8711,28 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("power")), int(match.group("toughness")), batch_size
         )
     if match := _SELF_PUMP_PER_CONTROLLED_PERMANENT_RE.fullmatch(sentence):
-        card_type = _card_type_word(match.group("qualifier"))
-        if card_type is None:
+        # A card type (the Urza's Saga Construct's "artifact") or a subtype
+        # (Outcaster Greenblade's "Desert").
+        count = _controlled_count_factory(match.group("qualifier"))
+        if count is None:
             return None
         return _self_pump_per_controlled_permanent_builder(
-            int(match.group("power")), int(match.group("toughness")), card_type
+            int(match.group("power")),
+            int(match.group("toughness")),
+            match.group("qualifier").lower(),
+            count,
+        )
+    if match := _SELF_PUMP_PER_COLOR_AMONG_RE.fullmatch(sentence):
+        count_colors = _colors_among_count_factory(
+            match.group("qualifier"), excludes_self=match.group("other") is not None
+        )
+        if count_colors is None:
+            return None
+        return _self_pump_per_controlled_permanent_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            f"color among {match.group('other') or ''}{match.group('qualifier').lower()}",
+            count_colors,
         )
     if match := _SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE.fullmatch(sentence):
         return _self_pump_per_other_creature_named_builder(
@@ -8499,6 +8751,25 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         if keywords is None:
             return None
         return _keyword_grant_builder(keywords)
+    if match := _ANTHEM_PER_COUNT_RE.fullmatch(sentence):
+        count = _controlled_count_factory(match.group("each"))
+        keywords = (
+            _split_and_validate_keywords(match.group("keywords"))
+            if match.group("keywords") is not None
+            else []
+        )
+        if count is None or keywords is None:
+            return None
+        return _anthem_and_keyword_grant_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            keywords,
+            other=match.group("other") is not None,
+            whose=match.group("whose").lower(),
+            line=sentence,
+            qualifiers=qualifiers_from_subject(match),
+            per=(match.group("each").lower(), count),
+        )
     if match := _ANTHEM_AND_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
@@ -8739,9 +9010,18 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     if _BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE.fullmatch(sentence):
         return _basic_land_type_count_power_only_cda_builder(sentence)
     if match := _QUALIFIER_COUNT_CDA_RE.fullmatch(sentence):
-        card_type = _card_type_word(match.group("qualifier"))
-        if card_type is not None:
-            return _qualifier_count_cda_builder(sentence, card_type)
+        count = _controlled_count_factory(match.group("qualifier"))
+        if count is not None:
+            return _qualifier_count_cda_builder(sentence, match.group("qualifier").lower(), count)
+    if match := _GRAVEYARD_CARD_COUNT_CDA_RE.fullmatch(sentence):
+        words = re.split(r",\s*|\s+and/or\s+|\s+and\s+|\s+or\s+", match.group("types"))
+        card_types = [_card_type_word(word) for word in words if word]
+        if card_types and all(card_type is not None for card_type in card_types):
+            return _graveyard_card_count_cda_builder(
+                sentence,
+                tuple(card_type for card_type in card_types if card_type is not None),
+                2 if match.group("twice") else 1,
+            )
     if match := _CREATURE_SUBTYPE_COUNT_CDA_RE.fullmatch(sentence):
         words = re.split(r",\s*|\s+and/or\s+|\s+and\s+|\s+or\s+", match.group("subtypes"))
         subtypes = [_singular_subtype_word(word) for word in words if word]
@@ -10416,8 +10696,21 @@ class ContinuousEffects(EngineModel):
         return any(effect.layer is Layer.CONTROL for effect in self.active(game))
 
     def active(self, game: Game | None = None) -> list[ContinuousEffect]:
-        """The stored effects whose duration is still running (CR 611.2b)."""
-        return [effect for effect in self.effects if effect.holds(game)]
+        """The stored effects whose duration is still running (CR 611.2b).
+
+        A "for as long as" effect whose condition could turn true again
+        (`HasCounter`) is dropped here and now rather than at cleanup
+        (`end_the_turn`): CR 611.2b's duration does not begin again, so a
+        counter put back must not revive it.
+        """
+        running = [effect for effect in self.effects if effect.holds(game)]
+        if game is not None and len(running) != len(self.effects):
+            self.effects = [
+                effect
+                for effect in self.effects
+                if effect in running or effect.condition is None or not effect.condition.can_restart
+            ]
+        return running
 
     def end_the_turn(self, game: Game | None = None) -> list[ContinuousEffect]:
         """End every "until end of turn" effect (CR 514.2, CR 703.4p).

@@ -3792,6 +3792,25 @@ class CostModifierEffect(EngineModel):
     controller (CR 604.2, CR 611.3a - read each time a cost is determined,
     never locked in). `None` for an unconditional effect."""
 
+    first_each_turn: bool = False
+    """`TYPE_DECREASE` only: "The first `<type>` spell you cast each turn"
+    (Eluge, the Shoreless Sea; Melek, Reforged Researcher) - the decrease
+    applies only while the caster has cast no earlier spell of those types
+    this turn (`Game.spells_cast_this_turn`; the spell being cast is not in
+    it yet, CR 601.2f coming before CR 601.2i)."""
+
+    colored: Color | None = None
+    """`TYPE_DECREASE` only: a colored decrease, "costs {U} (or {1}) less" -
+    `amount` of that color per unit (CR 118.7b-c turn it into generic when the
+    cost has not enough of that color; the "(or {1})" is only that reminder).
+    `None` for the ordinary generic "{N} less"."""
+
+    per_each: str | None = None
+    """`TYPE_DECREASE` only: a "for each `<count>`" tail (Eluge's "for each
+    land you control with a flood counter on it", Mindsplice Apparatus's "for
+    each oil counter on this artifact") - the decrease is multiplied by that
+    count, read afresh each time a cost is determined."""
+
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
     "Noncreature": Type.CREATURE,
@@ -3876,7 +3895,25 @@ _TYPE_WORDS: dict[str, Type] = {
 _TYPE_COST_DECREASE = re.compile(
     r"\b(?P<types>(?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker|Land)"
     r"(?: and (?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker|Land))?) "
-    r"spells you cast cost \{(?P<amount>\d+)\} less to cast\.",
+    r"spells you cast cost \{(?P<amount>\d+)\} less to cast"
+    # Mindsplice Apparatus: "... for each oil counter on this artifact."
+    r"(?: for each (?P<each>[^.]+))?\.",
+    re.IGNORECASE,
+)
+
+#: "The first instant or sorcery spell you cast each turn costs {3} less to
+#: cast." (Melek, Reforged Researcher), "The first creature spell you cast each
+#: turn costs {2} less to cast." (Conduit of Ruin's shape) and "The first
+#: instant or sorcery spell you cast each turn costs {U} (or {1}) less to cast
+#: for each land you control with a flood counter on it." (Eluge, the
+#: Shoreless Sea) - a `TYPE_DECREASE` limited to the caster's first spell of
+#: the named types this turn, generic or one colored symbol per unit, with an
+#: optional "for each" count.
+_FIRST_SPELL_EACH_TURN_COST_DECREASE = re.compile(
+    r"^The first (?P<types>(?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker)"
+    r"(?: or (?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker))?) spell you cast "
+    r"each turn costs \{(?P<symbol>\d+|[WUBRG])\}(?: \(or \{1\}\))? less to cast"
+    r"(?: for each (?P<each>[^.]+))?\.$",
     re.IGNORECASE,
 )
 
@@ -3993,15 +4030,33 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
             amount=int(match.group("amount")),
             excludes_type=_QUALIFIER_EXCLUDES[match.group("qualifier")],
         )
+    match = _FIRST_SPELL_EACH_TURN_COST_DECREASE.fullmatch(text.strip())
+    if match is not None:
+        words = [word.strip().lower() for word in match.group("types").split(" or ")]
+        types = tuple(_TYPE_WORDS[word] for word in words if word in _TYPE_WORDS)
+        each = match.group("each")
+        if types and (each is None or _for_each_count_is_readable(each)):
+            symbol = match.group("symbol")
+            colored = None if symbol.isdigit() else _SYMBOL_COLORS[symbol.upper()]
+            return CostModifierEffect(
+                kind=CostModifierKind.TYPE_DECREASE,
+                amount=int(symbol) if symbol.isdigit() else 1,
+                applies_to_types=types,
+                first_each_turn=True,
+                colored=colored,
+                per_each=each.strip() if each is not None else None,
+            )
     match = _TYPE_COST_DECREASE.search(text)
     if match is not None:
         words = [word.strip().lower() for word in match.group("types").split(" and ")]
         types = tuple(_TYPE_WORDS[word] for word in words if word in _TYPE_WORDS)
-        if types:
+        each = match.group("each")
+        if types and (each is None or _for_each_count_is_readable(each)):
             return CostModifierEffect(
                 kind=CostModifierKind.TYPE_DECREASE,
                 amount=int(match.group("amount")),
                 applies_to_types=types,
+                per_each=each.strip() if each is not None else None,
             )
     match = _SUBTYPE_COST_DECREASE.search(text)
     if match is not None:
@@ -4013,6 +4068,25 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
                 applies_to_subtype=subtype,
             )
     return None
+
+
+#: A colored mana symbol's letter to its `Color` (CR 107.4a).
+_SYMBOL_COLORS: dict[str, Color] = {
+    "W": Color.WHITE,
+    "U": Color.BLUE,
+    "B": Color.BLACK,
+    "R": Color.RED,
+    "G": Color.GREEN,
+}
+
+
+def _for_each_count_is_readable(phrase: str) -> bool:
+    """Whether `machines/effects.py`'s "for each" reader knows `phrase` - a
+    cost decrease with an unreadable count is not read at all (so it fails
+    closed as a notice) rather than applied with no multiplier."""
+    from .effects import _for_each_multiplier
+
+    return _for_each_multiplier(phrase) is not None
 
 
 class CostModifierNotice(EngineModel):

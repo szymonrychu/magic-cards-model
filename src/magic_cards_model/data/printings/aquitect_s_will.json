@@ -1,0 +1,128 @@
+{
+  "object": "card",
+  "id": "3c4273f6-bcce-4761-80ef-14cd4fc4bb19",
+  "oracle_id": "d02befcb-3e2c-4cfe-a913-9bb648e5bb2c",
+  "multiverse_ids": [
+    438442
+  ],
+  "tcgplayer_id": 149167,
+  "cardmarket_id": 312137,
+  "name": "Aquitect's Will",
+  "lang": "en",
+  "released_at": "2017-10-24",
+  "uri": "https://api.scryfall.com/cards/3c4273f6-bcce-4761-80ef-14cd4fc4bb19",
+  "scryfall_uri": "https://scryfall.com/card/ddt/2/aquitects-will?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:40:19Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.jpg?1783935619",
+    "normal": "https://cards.scryfall.io/normal/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.jpg?1783935619",
+    "large": "https://cards.scryfall.io/large/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.jpg?1783935619",
+    "png": "https://cards.scryfall.io/png/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.png?1783935619",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.jpg?1783935619",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.jpg?1783935619",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.webp?1783935619",
+    "grid": "https://cards.scryfall.io/grid/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.webp?1783935619",
+    "display": "https://cards.scryfall.io/display/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.webp?1783935619",
+    "art": "https://cards.scryfall.io/art/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.webp?1783935619",
+    "crop": "https://cards.scryfall.io/crop/front/3/c/3c4273f6-bcce-4761-80ef-14cd4fc4bb19.webp?1783935619"
+  },
+  "mana_cost": "{U}",
+  "cmc": 1.0,
+  "type_line": "Kindred Sorcery \u2014 Merfolk",
+  "oracle_text": "Put a flood counter on target land. That land is an Island in addition to its other types for as long as it has a flood counter on it. If you control a Merfolk, draw a card.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "c77df674-0ef5-47d9-ab22-56a6e1dc901c",
+  "set": "ddt",
+  "set_name": "Duel Decks: Merfolk vs. Goblins",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/c77df674-0ef5-47d9-ab22-56a6e1dc901c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addt&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddt?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3c4273f6-bcce-4761-80ef-14cd4fc4bb19/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad02befcb-3e2c-4cfe-a913-9bb648e5bb2c&unique=prints",
+  "collector_number": "2",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"You may want to hold your breath.\"\n\u2014Kellyg, merrow aquitect",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Dimitar Marinski",
+  "artist_ids": [
+    "ad53afd6-d00f-4bc8-98ec-deab3f6aec50"
+  ],
+  "illustration_id": "fa665c41-ceb6-4fad-a78f-4d99cd326421",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 6965,
+  "penny_rank": 6659,
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.19",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=438442&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAquitect%2527s%2BWill",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAquitect%2527s%2BWill",
+    "edhrec": "https://edhrec.com/route/?cc=Aquitect%27s+Will"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F149167%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=312137&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Aquitect%27s+Will&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

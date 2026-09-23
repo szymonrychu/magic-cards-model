@@ -4914,7 +4914,9 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
     expanded: list[TriggeredAbility] = []
     for ability in printed:
         for split in _expand_attacks_or_blocks(ability):
-            for enters_split in _expand_enters_or_attacks(split):
+            for enters_split in _expand_enters_or_attacks(
+                split, card.name, legendary=Supertype.LEGENDARY in card.supertypes
+            ):
                 for leaves_split in _expand_enters_or_leaves(enters_split):
                     expanded.extend(
                         _expand_enters_or_dies(
@@ -4977,7 +4979,9 @@ def _expand_attacks_or_blocks(ability: TriggeredAbility) -> list[TriggeredAbilit
 _ENTERS_OR_ATTACKS_RE = re.compile(r"^this (?P<kind>[a-z]+) enters or attacks$", re.IGNORECASE)
 
 
-def _expand_enters_or_attacks(ability: TriggeredAbility) -> list[TriggeredAbility]:
+def _expand_enters_or_attacks(
+    ability: TriggeredAbility, card_name: str | None = None, *, legendary: bool = True
+) -> list[TriggeredAbility]:
     """One ability whose condition is `_ENTERS_OR_ATTACKS_RE`'s shape becomes
     two: the same printed effect, once watching CR 603.6a's entering event and
     once watching CR 508.3c's attack, each a `TriggeredAbility` in its own
@@ -4987,7 +4991,15 @@ def _expand_enters_or_attacks(ability: TriggeredAbility) -> list[TriggeredAbilit
 
     Every other printed ability passes through unchanged, singleton-wrapped.
     """
-    match = _ENTERS_OR_ATTACKS_RE.match(ability.condition.strip())
+    condition = ability.condition.strip()
+    match = _ENTERS_OR_ATTACKS_RE.match(condition)
+    if match is None and card_name is not None:
+        # CR 201.5: "Whenever Eluge enters or attacks" names itself - read as
+        # CR 700.7's "this permanent", the same rewrite
+        # `abilities.self_normalized_effect_text` gives an effect.
+        for name in self_reference_names(card_name, legendary=legendary):
+            condition = re.sub(self_reference_pattern(name), "this permanent", condition)
+        match = _ENTERS_OR_ATTACKS_RE.match(condition)
     if match is None:
         return [ability]
     kind = match.group("kind").lower()

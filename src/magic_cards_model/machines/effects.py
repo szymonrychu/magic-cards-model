@@ -170,6 +170,7 @@ from .layers import (
     ContinuousEffect,
     ContinuousEffects,
     Duration,
+    HasCounter,
     Layer,
     LayerContext,
     LayerNotice,
@@ -1086,7 +1087,11 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
 #: readers already are, so a land that has *become* a basic type through a
 #: continuous effect still counts.
 _COUNT_BASIC_LAND_TYPES_RE = re.compile(
-    r"^(?:the )?number of basic land types among lands you control$", re.IGNORECASE
+    # The singular "basic land type among lands you control" is the same count
+    # spelled as a "for each" (Tromp the Domains' "+1/+1 for each basic land
+    # type among lands you control").
+    r"^(?:the )?(?:number of )?basic land types? among lands you control$",
+    re.IGNORECASE,
 )
 #: Tam, the Possibility's own X definition: "the number of planeswalker
 #: types among planeswalkers you control." CR 205.3j: "Planeswalkers have
@@ -1487,8 +1492,13 @@ def _greatest_mana_value_among_cards_in_your_graveyard(
 #: different referent - `_read_referent_power_expression`/`_is_referent_
 #: power_expression` above are the narrower "that <type>'s power" shape read
 #: off a *different* object a clause names, which this is not.
+#: "loyalty" is Nissa, Ascended Animist's own "where X is Nissa's loyalty"
+#: (the name already rewritten to "this permanent" by
+#: `self_normalized_effect_text`): CR 306.5c's loyalty is the planeswalker's
+#: loyalty counters on the battlefield, and CR 608.2h's last known
+#: information once it has left.
 _OBJECT_CHARACTERISTIC_RE = re.compile(
-    r"^(?:its|this [a-z]+'s) (?P<characteristic>power|toughness)$", re.IGNORECASE
+    r"^(?:its|this [a-z]+'s) (?P<characteristic>power|toughness|loyalty)$", re.IGNORECASE
 )
 
 
@@ -1555,7 +1565,19 @@ def _amount_term(term: str) -> AmountReader | None:
         # that can't be determined (the object has already left the
         # battlefield, or a `*` characteristic-defining ability has nothing
         # to compute from).
-        wants_power = match.group("characteristic").lower() == "power"
+        characteristic = match.group("characteristic").lower()
+        if characteristic == "loyalty":
+
+            def read_object_loyalty(
+                _game: "Game", _controller: str, obj: CardState | None, _x: int
+            ) -> int:
+                if obj is None:
+                    return 0
+                counters = obj.counters if obj.zone is Zone.BATTLEFIELD else obj.last_known_counters
+                return counters[Counter.LOYALTY]
+
+            return read_object_loyalty
+        wants_power = characteristic == "power"
 
         def read_object_characteristic(
             game: "Game", _controller: str, obj: CardState | None, _x: int
@@ -2112,9 +2134,37 @@ def _mass_creature_group_targets(
     ]
 
 
+#: A mass pump's magnitude, read once at resolution: `(game, controller,
+#: source_id) -> int`.
+MassPumpMagnitude = Callable[["Game", str, str | None], int]
+
+#: "Until end of turn, creatures you control ..." (Nissa, Ascended Animist's
+#: -7, Tromp the Domains) - the duration printed first, moved to the end so
+#: the sentence reads the way every other mass pump here is templated.
+_MASS_PUMP_DURATION_FIRST_RE = re.compile(r"^until end of turn,\s*(?P<rest>.+?)\.?$", re.IGNORECASE)
+#: "get +1/+1 for each Forest you control" inside a mass pump (Nissa's -7) -
+#: the pump scaled by a count taken once as it resolves (CR 608.2h), read by
+#: `_for_each_multiplier`. The count ends where the sentence's next predicate
+#: ("and gain ...") or its duration begins.
+_MASS_PUMP_FOR_EACH_RE = re.compile(
+    r"\bget (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each (?P<each>.+?)"
+    r"(?= and gain | until end of turn)",
+    re.IGNORECASE,
+)
+#: The scaled placeholder `_MASS_PUMP_FOR_EACH_RE` leaves in a template -
+#: "+1*X" - substituted with the per-unit amount times the count.
+_SCALED_X_RE = re.compile(r"(?P<unit>[+-]\d+)\*x", re.IGNORECASE)
+
+
+def _substitute_mass_pump_magnitude(template: str, magnitude: int) -> str:
+    """ "+X/+X" and "+N*X" placeholders written out for `magnitude`."""
+    literal = re.sub(r"\+x/\+x", f"{magnitude:+d}/{magnitude:+d}", template, flags=re.IGNORECASE)
+    return _SCALED_X_RE.sub(lambda m: f"{int(m.group('unit')) * magnitude:+d}", literal)
+
+
 def _parse_mass_pump_clause(
     effect_text: str,
-) -> tuple[str, Callable[["Game", str], int] | None, str] | None:
+) -> tuple[str, MassPumpMagnitude | None, str] | None:
     """The mass-pump sentence, as a template with a literal "+N/+N" already in
     it (`magnitude_expr` is `None`) or with "+X/+X" still in it and a
     `count_expression` to resolve it later (`magnitude_expr` is not `None`),
@@ -2147,28 +2197,47 @@ def _parse_mass_pump_clause(
     sentences = _plain_resolution_sentences(effect_text)
     text = sentences[0].strip() if sentences else effect_text.strip()
     remainder = " ".join(sentences[1:]) if len(sentences) > 1 else ""
+    # A duration-first sentence is only claimed when the rest is a pump or
+    # grant `machines/layers.py` reads (checked below) - "Until end of turn,
+    # creatures you control gain "{1}: ..."" (Grand Evolution's chapter III)
+    # belongs to the quoted-grant reader, not here.
+    if duration_first := _MASS_PUMP_DURATION_FIRST_RE.fullmatch(text):
+        text = f"{duration_first.group('rest')} until end of turn."
     if _MASS_SUBJECT_RE.match(text) is None and _MASS_SUBTYPE_SUBJECT_RE.match(text) is None:
         return None
     if Duration.UNTIL_END_OF_TURN not in text.lower():
         return None
     where_match = _WHERE_X_IS_RE.search(text)
-    if where_match is None:
-        template, magnitude_expr = text, None
-    else:
-        magnitude_expr = count_expression(where_match.group("expr"))
-        if magnitude_expr is None:
+    for_each = _MASS_PUMP_FOR_EACH_RE.search(text)
+    magnitude_expr: MassPumpMagnitude | None
+    if where_match is not None:
+        counted = count_expression(where_match.group("expr"))
+        if counted is None:
             return None
+        magnitude_expr = lambda game, controller, _source_id: counted(game, controller)  # noqa: E731
         template = text[: where_match.start()].rstrip(", ").rstrip(".") + "."
         if "+x/+x" not in template.lower():
             return None
-    if _MASS_WHOLE_BOARD_SUBJECT_RE.match(template) is not None:
+    elif for_each is not None:
+        multiplier = _for_each_multiplier(for_each.group("each"))
+        if multiplier is None:
+            return None
+        magnitude_expr = multiplier
+        template = (
+            text[: for_each.start()]
+            + f"get {for_each.group('power')}*X/{for_each.group('toughness')}*X"
+            + text[for_each.end() :]
+        )
+    else:
+        template, magnitude_expr = text, None
+    if duration_first is not None or _MASS_WHOLE_BOARD_SUBJECT_RE.match(template) is not None:
         # "All creatures ..." / "Creatures that are <colour> ..." (Glistening
         # Deluge) are claimed here only when the rest is a pump or grant
         # `machines/layers.py` reads: the same subject also opens sentences
         # that are no pump at all ("All creatures lose all abilities until
         # end of turn.", Final Showdown), which must keep failing closed
         # where they always have rather than pass as read.
-        probe = re.sub(r"\+x/\+x", "+1/+1", template, flags=re.IGNORECASE)
+        probe = _substitute_mass_pump_magnitude(template, 1)
         if parsed_layer_effects(_mass_pump_parseable(probe)) is None:
             return None
     return template, magnitude_expr, remainder
@@ -2227,7 +2296,7 @@ def _run_mass_pump(
     source: CardState,
     controller: str,
     template: str,
-    magnitude_expr: Callable[["Game", str], int] | None,
+    magnitude_expr: MassPumpMagnitude | None,
 ) -> None:
     """Resolve one mass-pump clause: substitute its magnitude (if it has one),
     fix the group of creatures it affects, and hand the literal sentence to
@@ -2245,8 +2314,9 @@ def _run_mass_pump(
     """
     literal = template
     if magnitude_expr is not None:
-        magnitude = magnitude_expr(game, controller)
-        literal = re.sub(r"\+x/\+x", f"{magnitude:+d}/{magnitude:+d}", literal, flags=re.IGNORECASE)
+        literal = _substitute_mass_pump_magnitude(
+            literal, magnitude_expr(game, controller, str(source.id))
+        )
     targets = _mass_creature_group_targets(game, controller, source.id, literal)
     if not targets:
         return
@@ -4641,6 +4711,27 @@ def damage_ability_targets(amount: int) -> AbilityEffect:
     return effect
 
 
+def damage_ability_targets_equal_to_expression(reader: "AmountReader") -> AbilityEffect:
+    """An activated or triggered ability dealing damage "equal to `<expr>`" -
+    Honden of Infinite Rage's "deals damage to any target equal to the number
+    of Shrines you control", Ben-Ben, Akki Hermit's "... equal to the number of
+    untapped Mountains you control". The ability-side twin of
+    `deal_damage_equal_to_expression`: `reader` is `amount_expression`'s
+    general reader, evaluated once as the ability resolves (CR 608.2h), for the
+    ability's controller, with the source as "it"/"this `<noun>`" and the
+    ability's own announced X. The source deals the damage, as in
+    `damage_ability_targets` (CR 120.7).
+    """
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        amount = max(reader(game, ability.controller, source, ability.x_value), 0)
+        for target in game.resolve_targets(ability):
+            game.deal_damage(target, amount, source=source)
+
+    return effect
+
+
 def become_prepared_ability_targets(game: "Game", ability: AbilityOnStack) -> None:
     """CR 722.3a: give the prepared designation to each permanent this
     ability still legally targets - Hexhaven Dueling Arena's own "Target
@@ -6944,6 +7035,83 @@ _GAIN_LIFE_RE = re.compile(
 _LOSE_LIFE_RE = re.compile(
     rf"you loses? (?P<n>{COUNT}) life(?: for each (?P<each>.+))?", re.IGNORECASE
 )
+#: A life total changed by a counted amount: "Target player gains X life,
+#: where X is the greatest power among creatures they control" (Inscription
+#: of Abundance), "Target opponent loses life equal to the number of
+#: creatures they control" (Villainous Wrath) - reached here with the target
+#: subject already stripped by `_TARGET_PLAYER_OR_OPPONENT_VERB_RE`, so the
+#: verb is third person - and the first-person "you gain X life, where X is
+#: ..." / "you gain life equal to ..." of a resolving spell's own controller.
+#: The amount is `amount_expression`'s.
+_COUNTED_LIFE_CHANGE_RE = re.compile(
+    r"^(?P<you>you )?(?P<verb>gain|gains|lose|loses) "
+    r"(?:x life,? where x is (?P<where>.+)|life equal to (?P<equal>.+))$",
+    re.IGNORECASE,
+)
+#: "they control" / "that player controls" inside a third-person clause's
+#: amount - the player the clause is about (the targeted player named at the
+#: start of the sentence), rewritten to the "you control"
+#: `count_expression` reads for whichever player the amount is asked about.
+_THEY_CONTROL_RE = re.compile(r"\b(?:they|that player) controls?\b", re.IGNORECASE)
+#: "you"/"your" inside an amount.
+_YOU_OR_YOUR_RE = re.compile(r"\byour?\b", re.IGNORECASE)
+#: "its ..." / "that creature's ..." / "the sacrificed creature's ..." - an
+#: amount read off an object named elsewhere in the sentence.
+_ANAPHORIC_OBJECT_TERM_RE = re.compile(r"\b(?:its|that \w+'s|the \w+ \w+'s)\b", re.IGNORECASE)
+
+
+def _parse_counted_life_change_clause(clause: str) -> ClauseEffect | None:
+    """`_COUNTED_LIFE_CHANGE_RE`'s shape, or `None`.
+
+    The clause's player is whoever the dispatcher runs it for: the resolving
+    object's controller for "you gain ...", the chosen target for "target
+    player gains ..." (`_TARGET_PLAYER_OR_OPPONENT_VERB_RE`). A third-person
+    verb's "they control" is that player's board; a third-person clause whose
+    amount says "you"/"your" names the *controller*, a different player this
+    `ClauseEffect` is not handed, so it is refused (fails closed) rather than
+    counted off the wrong board. A first-person clause cannot say "they".
+
+    The amount is read once, as the clause is carried out (CR 608.2h), and a
+    negative result is 0 (CR 107.1b, inside `amount_expression`).
+    """
+    match = _COUNTED_LIFE_CHANGE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    verb = match.group("verb").lower()
+    third_person = verb.endswith("s")
+    if third_person == bool(match.group("you")):
+        return None
+    expression = (match.group("where") or match.group("equal")).strip()
+    if _ANAPHORIC_OBJECT_TERM_RE.search(expression):
+        # "you gain life equal to its toughness" (Momentous Fall) names an
+        # object an earlier clause chose - an anaphora (CR 608.2c) this
+        # single-clause reader has no referent for, never this effect's own
+        # source. Left to the readers that carry the referent.
+        return None
+    if third_person:
+        if _YOU_OR_YOUR_RE.search(expression):
+            return None
+        expression = _THEY_CONTROL_RE.sub("you control", expression)
+    elif _THEY_CONTROL_RE.search(expression):
+        return None
+    reader = amount_expression(expression)
+    if reader is None:
+        return None
+    gains = verb.startswith("gain")
+
+    def counted_life_change(
+        game: "Game", player: Player, source: str, source_id: str | None
+    ) -> None:
+        obj = game.find_by_id(UUID(source_id)) if source_id is not None else None
+        amount = reader(game, player.username, obj, 0)
+        if gains:
+            game.gain_life(player, amount)
+        else:
+            player.lose_life(amount)
+
+    return counted_life_change
+
+
 #: "You gain hexproof until your next turn." (Blossoming Calm), and the
 #: player half of "You and permanents you control gain hexproof from blue and
 #: from black until end of turn." (Veil of Summer, once its compound subject is
@@ -7393,9 +7561,14 @@ _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
 #: expression`) the same way `count_expression`'s own "number of `<qualifier>`
 #: you control" reads it, plus the bare word "permanent(s)" for no type
 #: filter at all (CR 110.1).
+#: "... with a `<kind>` counter on it" narrows the count to permanents
+#: carrying at least one counter of that kind (CR 122.1) - Armorcraft Judge's
+#: "for each creature you control with a +1/+1 counter on it", Eluge, the
+#: Shoreless Sea's "for each land you control with a flood counter on it".
 _QUALIFIER_YOU_CONTROL_RE = re.compile(
     rf"^(?P<other>other )?(?P<qualifier>[a-z]+) you control"
-    rf"(?: with (?P<attr>power|toughness|mana value) (?P<n>{COUNT}) or (?P<dir>greater|less))?$",
+    rf"(?: with (?P<attr>power|toughness|mana value) (?P<n>{COUNT}) or (?P<dir>greater|less)"
+    r"| with (?:an?|one or more) (?P<counter>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|them))?$",
     re.IGNORECASE,
 )
 
@@ -7427,6 +7600,7 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
     attr = match.group("attr")
     bound = parse_count(match.group("n")) if match.group("n") else None
     greater = match.group("dir") == "greater" if match.group("dir") else None
+    counter = _counter_kind(match.group("counter")) if match.group("counter") else None
 
     def count(game: "Game", controller: str, source_id: str | None) -> int:
         board = game.computed_board()
@@ -7444,6 +7618,8 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
                     word.lower() == subtype for word in chars.subtypes
                 ):
                     continue
+            if counter is not None and not permanent.counters[counter]:
+                continue
             if attr is not None:
                 if attr == "power":
                     value = chars.numeric_power
@@ -7983,6 +8159,10 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             player.lose_life(total)
 
         return lose_life
+
+    counted_life = _parse_counted_life_change_clause(clause)
+    if counted_life is not None:
+        return counted_life
 
     if match := _EACH_OPPONENT_LOSES_LIFE_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
@@ -9475,6 +9655,83 @@ def _parse_copy_cast_spell_clause(text: str) -> AbilityEffect | None:
         )
 
     return effect
+
+
+#: "It's an Island in addition to its other types for as long as it has a
+#: flood counter on it." (Eluge, the Shoreless Sea) / "That land is an Island
+#: ..." (Aquitect's Will) - the rider on a "put a `<kind>` counter on target
+#: `<permanent>`" instruction just before it: the targeted permanent gains a
+#: subtype (CR 205.1b) for exactly as long as it keeps that kind of counter
+#: (CR 611.2b).
+_SUBTYPE_WHILE_COUNTER_RIDER_RE = re.compile(
+    r"^(?:it's|it is|that (?:land|permanent|creature|artifact)(?:'s| is)) an? "
+    r"(?P<subtype>[A-Z][A-Za-z'-]*) in addition to its other types for as long as it has "
+    r"an? (?P<kind>[a-z]+|\+1/\+1|-1/-1) counter on it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_counter_then_subtype_while_counter_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "Put a flood counter on target land. It's an Island in addition to its
+    other types for as long as it has a flood counter on it." - the counter
+    (CR 122.1) and then, on each target that got it, a layer 4 type-adding
+    effect (CR 613.1d, CR 205.1b) whose "for as long as" duration (CR 611.2b)
+    is the counter itself (`HasCounter`), not the source: it outlasts Eluge,
+    and ends for good the moment the last such counter comes off. A basic
+    land type brings its intrinsic mana ability along (CR 305.6,
+    `add_subtype`). The rider must name the same counter kind the first
+    clause puts, or this is not the shape.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    put = _COUNTER_TARGET_RE.fullmatch(clauses[index].strip())
+    rider = _SUBTYPE_WHILE_COUNTER_RIDER_RE.fullmatch(clauses[index + 1].strip())
+    if put is None or rider is None or put.group("each") is not None:
+        return None
+    kind = _counter_kind(put.group("kind"))
+    if _counter_kind(rider.group("kind")) != kind:
+        return None
+    amount = parse_count(put.group("n"))
+    if amount is None or not _targets_understood(put.group("phrase"), count_agnostic=True):
+        return None
+    subtype = next(
+        (word for word in subtype_vocabulary() if word == rider.group("subtype").lower()), None
+    )
+    if subtype is None:
+        return None
+    printed = rider.group("subtype").capitalize()
+    mana_ability = BASIC_LAND_TYPES.get(printed)
+    put_counters = put_counters_on_ability_targets(kind, amount)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        put_counters(game, stack_object)
+        source = source_id_of(stack_object)
+        store = continuous_effects(game)
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{target.name} is {with_indefinite_article(printed)} in addition to "
+                        f"its other types while it has a {kind} counter"
+                    ),
+                    layer=Layer.TYPE,
+                    timestamp=store.tick(),
+                    source_id=UUID(source) if source is not None else None,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=add_subtype(printed, mana_ability),
+                    duration=Duration.FOR_AS_LONG_AS,
+                    condition=HasCounter(
+                        card_id=target.id, stamp=target.zone_change_stamp, counter=str(kind)
+                    ),
+                ),
+                game,
+            )
+
+    return 2, effect
 
 
 def _merge_tap_target_then_no_untap_clauses(
@@ -13052,6 +13309,18 @@ _DAMAGE_EQUAL_TO_EXPR_TARGET_RE = re.compile(
     r"(?P<phrase>any target|.*target.+)\.?$",
     re.IGNORECASE,
 )
+#: The same amount printed after the target instead of before it: "deals
+#: damage to any target equal to the number of Shrines you control" (Honden
+#: of Infinite Rage), "deals damage to target attacking creature equal to the
+#: number of untapped Mountains you control" (Ben-Ben, Akki Hermit), "deals
+#: damage to target creature equal to the number of Mountains you control"
+#: (Koth, Fire of Resistance). `expr` is read by `amount_expression`, so every
+#: count it knows - subtype, card type, tapped/untapped status - reads here.
+_DAMAGE_TARGET_EQUAL_TO_EXPR_RE = re.compile(
+    rf"^{_UNQUOTED_PREFIX}\bdeals? damage to "
+    r"(?P<phrase>any target|[^.]*?\btargets?\b[^.]*?) equal to (?P<expr>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
 #: Burst Lightning: "<Source> deals N damage to any target. If this spell was
 #: kicked, it deals M damage instead." CR 702.33a/d's kicker, read at
 #: resolution off `Game.cast_record(spell).kicked` the same way
@@ -14843,6 +15112,15 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         return _damage_ability_targets_equal_to(counter_reader)
 
+    if (
+        (match := _DAMAGE_TARGET_EQUAL_TO_EXPR_RE.fullmatch(clause))
+        and (reader := amount_expression(match.group("expr"))) is not None
+        and _targets_understood(match.group("phrase"), allow_player_targets=True)
+    ):
+        if for_spell:
+            return deal_damage_equal_to_expression(reader)
+        return damage_ability_targets_equal_to_expression(reader)
+
     if match := _DAMAGE_TARGET_RE.fullmatch(clause):
         # CR 601.2d's division is triggered only by the card's own printed
         # word "divided" - `_DIVIDED_DAMAGE_RE` reads that shape, and this
@@ -15451,7 +15729,9 @@ def _x_sized_token_clause(zero_sized: str, size_reader: AmountReader) -> Targete
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
         if isinstance(stack_object, AbilityOnStack):
-            source, x_value = stack_object.source(game), stack_object.x_value
+            # CR 608.2h: a size read off the source uses its last known
+            # information once it has left its zone.
+            source, x_value = stack_object.source_or_last_known(game), stack_object.x_value
         else:
             source, x_value = stack_object, 0
         size = size_reader(game, controller, source, x_value)
@@ -15884,7 +16164,13 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     `create_continuous_effect` sentinel, which builds off the whole modal
     card's text and so created nothing for the chosen mode.
     """
-    text = _strip_non_effect_preamble(substitute_x(mode_effect_text(mode), x_value)).strip()
+    raw = mode_effect_text(mode)
+    # CR 107.3c: an X the mode's own text defines ("... gains X life, where X
+    # is the greatest power among creatures they control") is that value, not
+    # the caster's announced one - left in place for the "where X is" reader.
+    if _WHERE_X_IS_INLINE_RE.search(raw) is None:
+        raw = substitute_x(raw, x_value)
+    text = _strip_non_effect_preamble(raw).strip()
     if not text:
         return None
     token_for_player = _parse_target_player_token_mode(text)
@@ -40165,6 +40451,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _parse_scry_or_untap_if_not_starting_player_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_counter_then_subtype_while_counter_clauses(
             clauses, index, for_spell=for_spell
         )
         if merged is not None:

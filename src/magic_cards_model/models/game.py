@@ -84,6 +84,7 @@ from ..machines.combat import (
 from ..machines.cost import (
     ComponentKind,
     CostComponent,
+    CostModifierEffect,
     CostModifierKind,
     CostModifierNotice,
     CostPayment,
@@ -17483,7 +17484,9 @@ class Game(EngineModel):
                     elif effect.applies_to_types is not None and any(
                         t in spell.types for t in effect.applies_to_types
                     ):
-                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                        decrease = self._counted_type_decrease(effect, permanent, spell, caster)
+                        if decrease is not None:
+                            decreases.append(decrease)
                     elif effect.applies_to_subtype is not None and any(
                         subtype.lower() == effect.applies_to_subtype for subtype in spell.subtypes
                     ):
@@ -17501,6 +17504,45 @@ class Game(EngineModel):
                 decreases.append(ManaCost.parse(f"{{{grant.amount}}}"))
 
         return increases, decreases, floor
+
+    def _counted_type_decrease(
+        self,
+        effect: CostModifierEffect,
+        permanent: CardState,
+        spell: CardState,
+        caster: str,
+    ) -> ManaCost | None:
+        """One `TYPE_DECREASE` naming the spell's types, as the cost it takes
+        off (CR 601.2f), or `None` when it takes nothing off this spell.
+
+        "The first `<types>` spell you cast each turn" (`first_each_turn`) is
+        the caster's first spell of those types this turn: the spell being
+        cast is not in `spells_cast_this_turn` yet (CR 601.2f comes before
+        CR 601.2i records it), so any earlier one there means this is not the
+        first. A "for each" count (`per_each`) is read now, for the
+        permanent's controller, and multiplies the decrease. A colored
+        decrease (`colored`, "{U} (or {1})") is that many of the color; CR
+        118.7b-c already turn what the cost has no {U} for into generic when
+        `ManaCost.minus` applies it.
+        """
+        if effect.first_each_turn and any(
+            any(card_type in earlier.types for card_type in effect.applies_to_types or ())
+            for earlier in self.spells_cast_this_turn.get(caster, [])
+        ):
+            return None
+        units = effect.amount
+        if effect.per_each is not None:
+            from ..machines.effects import _for_each_multiplier
+
+            count = _for_each_multiplier(effect.per_each)
+            if count is None:
+                return None
+            units *= count(self, permanent.controller or caster, str(permanent.id))
+        if units <= 0:
+            return None
+        if effect.colored is not None:
+            return ManaCost.parse(f"{{{effect.colored.value}}}" * units)
+        return ManaCost.parse(f"{{{units}}}")
 
     def determine_total_cost(self, casting: object) -> CostPayment:
         """CR 601.2f: work out the reduction now, then lock the total cost in.
