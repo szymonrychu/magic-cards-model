@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "108a0b92-2134-4776-a2f7-da92050f1b21",
+  "oracle_id": "bbee7921-19c9-4c70-8462-f16e7e9c25db",
+  "multiverse_ids": [],
+  "resource_id": "80A24C315504C18D4197FEB70A2CA0CD65006E4A8E390E897C4E620DF424B7B0",
+  "mtgo_id": 152543,
+  "arena_id": 105073,
+  "tcgplayer_id": 697052,
+  "cardmarket_id": 891576,
+  "name": "Pet Avengers",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/108a0b92-2134-4776-a2f7-da92050f1b21",
+  "scryfall_uri": "https://scryfall.com/card/msh/178/pet-avengers?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:15Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.jpg?1783902915",
+    "normal": "https://cards.scryfall.io/normal/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.jpg?1783902915",
+    "large": "https://cards.scryfall.io/large/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.jpg?1783902915",
+    "png": "https://cards.scryfall.io/png/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.png?1783902915",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.jpg?1783902915",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.jpg?1783902915",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.webp?1783902915",
+    "grid": "https://cards.scryfall.io/grid/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.webp?1783902915",
+    "display": "https://cards.scryfall.io/display/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.webp?1783902915",
+    "art": "https://cards.scryfall.io/art/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.webp?1783902915",
+    "crop": "https://cards.scryfall.io/crop/front/1/0/108a0b92-2134-4776-a2f7-da92050f1b21.webp?1783902915"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Dragon Cat Dog Bird Frog Hero",
+  "oracle_text": "Reach\nPower-up \u2014 {6}{G}: Put a +1/+1 counter on this creature and create a 3/2 white Hero creature token with vigilance. (Activate each power-up ability only once. Reduce the cost by its mana cost if it entered this turn.)",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Power-up",
+    "Reach"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "e4a64831-eec5-4fc9-8904-19523af3ca42",
+      "component": "token",
+      "name": "Hero",
+      "type_line": "Token Creature \u2014 Hero",
+      "uri": "https://api.scryfall.com/cards/e4a64831-eec5-4fc9-8904-19523af3ca42"
+    },
+    {
+      "object": "related_card",
+      "id": "108a0b92-2134-4776-a2f7-da92050f1b21",
+      "component": "combo_piece",
+      "name": "Pet Avengers",
+      "type_line": "Creature \u2014 Dragon Cat Dog Bird Frog Hero",
+      "uri": "https://api.scryfall.com/cards/108a0b92-2134-4776-a2f7-da92050f1b21"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/108a0b92-2134-4776-a2f7-da92050f1b21/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abbee7921-19c9-4c70-8462-f16e7e9c25db&unique=prints",
+  "collector_number": "178",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"Lockheed! Hairball! Lockjaw! Redwing! To me!\"\n\u2014Throg",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Leesha Hannigan",
+  "artist_ids": [
+    "0c5d1acd-714b-4e7a-b7bf-e3450b305337"
+  ],
+  "illustration_id": "24e385f9-9781-42ea-b48e-d4a684e9dee9",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 20106,
+  "prices": {
+    "usd": "0.20",
+    "usd_foil": "0.23",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.07",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPet%2BAvengers",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPet%2BAvengers",
+    "edhrec": "https://edhrec.com/route/?cc=Pet+Avengers"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697052%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891576&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152543?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

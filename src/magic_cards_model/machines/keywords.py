@@ -65,6 +65,7 @@ from .abilities import (
 )
 from .combat import has_keyword
 from .cost import (
+    ComponentKind,
     CostModifierNotice,
     CostPayment,
     CostStep,
@@ -124,6 +125,9 @@ class KeywordRule(StrEnum):
     TRANSMUTE = "CR 702.53a"
     PARADIGM = "CR 702.192a"
     IMPENDING = "CR 702.176a"
+    BATTLE_CRY = "CR 702.91a"
+    OUTLAST = "CR 702.107a"
+    POWER_UP = "CR 702.193a"
 
 
 def executes(keyword: str) -> bool:
@@ -279,6 +283,29 @@ def executes(keyword: str) -> bool:
         # Bridgeworks Battle's "It fights up to one target creature you don't
         # control.").
         "fight",
+        # CR 702.91a-b. A triggered ability, "Whenever this creature attacks,
+        # each other attacking creature gets +1/+0 until end of turn.", each
+        # printed instance triggering separately (CR 702.91b) through the
+        # same per-instance loop every other `_TRIGGER_EXPANSIONS` entry
+        # already shares - `_battle_cry_ability`/`_battle_cry_effect` below.
+        "battle cry",
+        # CR 702.107a. An activated ability the keyword line expands to -
+        # "[Cost], {T}: Put a +1/+1 counter on this creature. Activate only
+        # as a sorcery." - through the same synthetic-`KeywordActivation`
+        # shape equip and cycling already use: `outlast_activation`/
+        # `_outlast_effect` below.
+        "outlast",
+        # CR 702.193a-b. Unlike every keyword above, Power-up's own line
+        # already parses as an ordinary printed `ActivatedAbility` (CR
+        # 602.1's "[Cost]: [Effect]" shape, with "Power-up" read as the
+        # em-dash prefix the same way Exhaust's is) and its effect clause
+        # already resolves through the generic activated-ability path - what
+        # was missing is CR 702.193a's own "Activate this ability only once"
+        # and CR 702.193b's entered-this-turn cost reduction, both read off
+        # `ActivatedAbility.power_up` by `Game.why_cannot_activate`,
+        # `Game.activate_ability` and `Game.activation_cost`
+        # (`machines/abilities.py`, `models/game.py`).
+        "power-up",
     }
 
 
@@ -565,6 +592,27 @@ def _impending_ability(ability: KeywordAbility) -> TriggeredAbility:
         intervening_if="this permanent's impending cost was paid and it has a time counter on it",
         effect="remove a time counter from it",
         event=TriggerEvent.BEGINNING_OF_STEP,
+    )
+
+
+def _battle_cry_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.91a: "Battle cry" means "Whenever this creature attacks, each
+    other attacking creature gets +1/+0 until end of turn.""
+
+    CR 702.91b: "If a creature has multiple instances of battle cry, each
+    triggers separately" - the same per-printed-instance shape ward,
+    prowess and every other `_TRIGGER_EXPANSIONS` entry already have for
+    free, since `keyword_triggered_abilities` builds one `TriggeredAbility`
+    per `KeywordAbility` this module found (one per printed line), not one
+    per card.
+    """
+    return _expansion(
+        ability,
+        keyword="battle cry",
+        word=TriggerWord.WHENEVER,
+        condition="this creature attacks",
+        effect="each other attacking creature gets +1/+0 until end of turn",
+        event=TriggerEvent.ATTACKS,
     )
 
 
@@ -885,6 +933,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "hideaway": _single(_hideaway_ability),
     "suspend": _suspend_abilities,
     "impending": _single(_impending_ability),
+    "battle cry": _single(_battle_cry_ability),
 }
 
 
@@ -1084,6 +1133,26 @@ class KeywordActivation(EngineModel):
             )
         if self.zone is Zone.BATTLEFIELD and self.card.controller not in (None, self.player):
             return f"{self.player} does not control {self.card.name}"
+        if (
+            self.zone is Zone.BATTLEFIELD
+            and self.game is not None
+            and any(
+                component.kind is ComponentKind.TAP and self.card in component.cards
+                for component in self.cost.components
+            )
+            and not self.game.can_activate_tap_ability(self.card)
+        ):
+            # CR 602.5a / 302.6: a `{T}` in the activation cost needs the
+            # permanent to have been controlled since its controller's most
+            # recent turn began - the same restriction `Game.why_cannot_
+            # activate` already enforces for a printed activated ability, read
+            # here because a `KeywordActivation`'s own cost (outlast's own
+            # "[Cost], {T}") never reaches that method at all.
+            return (
+                f"{self.card.name} has not been under {self.player}'s control since their "
+                f"most recent turn began, so its {self.keyword} ability cannot be activated "
+                "(CR 602.5a, CR 302.6)"
+            )
         if self.zone is not Zone.BATTLEFIELD and self.game is not None:
             if self.zone in self.game.shared_zones:
                 # CR 406 (via `Game.shared_zones`): exile is one shared pile,
@@ -1826,6 +1895,93 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
         equipment.attach_to(creature)
         return creature
     return None
+
+
+# --------------------------------------------------------------------------
+# Outlast (CR 702.107)
+# --------------------------------------------------------------------------
+
+#: CR 702.107a's expansion of "Outlast [cost]", after the colon.
+OUTLAST_EFFECT = "Put a +1/+1 counter on this creature."
+
+
+def has_outlast(card: Card) -> bool:
+    """Whether this card prints an outlast ability (CR 702.107a)."""
+    return _keyword(card, "outlast") is not None
+
+
+def outlast_abilities(card: Card) -> list[KeywordAbility]:
+    """Every outlast ability printed on this card, in printed order (CR 702.107a)."""
+    return [
+        ability for ability in keyword_abilities(card) if ability.canonical.lower() == "outlast"
+    ]
+
+
+def outlast_activation(
+    game: Any, creature: CardState, player: str, index: int = 0
+) -> KeywordActivation:
+    """Build the activation for a creature's outlast ability (CR 702.107a).
+
+    "Outlast is an activated ability. 'Outlast [cost]' means '[Cost], {T}:
+    Put a +1/+1 counter on this creature. Activate only as a sorcery.'" The
+    same synthetic-`KeywordActivation` shape equip and cycling already use
+    (`_synthetic_ability`): `_keyword_cost` reads the keyword's own printed
+    cost parameter - mana only, the only shape outlast is ever printed with -
+    and the `{T}` half of "[Cost], {T}" is appended here the same way
+    cycling appends its own "Discard this card" cost piece (CR 702.29a).
+
+    CR 602.5a's summoning-sickness half - a creature with `{T}` in an
+    activation cost can't activate it unless it has been controlled since
+    its controller's most recent turn began - is not one of `KeywordActivation.
+    why_not`'s own checks: equip's and cycling's costs never carry `{T}`, so
+    nothing before outlast ever exercised that gap. `why_not` now reads it
+    generally, off any battlefield-zone activation whose cost taps its own
+    card, through `Game.can_activate_tap_ability` - the same method
+    `Game.why_cannot_activate` already calls for a printed `{T}` ability.
+    """
+    printed = outlast_abilities(creature.card)
+    if index >= len(printed):
+        raise ValueError(
+            f"{creature.name} has no outlast ability number {index} ({KeywordRule.OUTLAST})"
+        )
+    ability = printed[index]
+    cost = _keyword_cost(ability, player)
+    if cost is None:
+        raise ValueError(
+            f"{creature.name}'s outlast cost {ability.cost!r} could not be read, "
+            f"so it cannot be paid"
+        )
+    cost = TotalCost(
+        mana=cost.mana,
+        components=[*cost.components, tap_cost(creature, payer=player, description="{T}")],
+    )
+    return KeywordActivation(
+        card=creature,
+        player=player,
+        keyword=ability.canonical,
+        rule=str(KeywordRule.OUTLAST),
+        zone=Zone.BATTLEFIELD,
+        cost=cost,
+        sorcery_only=True,
+        ability=_synthetic_ability(
+            ability, cost_text=f"{ability.cost or ''}, {{T}}".strip(", "), effect=OUTLAST_EFFECT
+        ),
+        game=game,
+    )
+
+
+def _outlast_effect(activation: KeywordActivation) -> int | None:
+    """CR 702.107a's effect: "Put a +1/+1 counter on this creature."
+
+    `Game.add_counters` is CR 122.1/122.6's own replaceable event (a
+    Doubling Season doubles this the same way it doubles any other counter
+    placement), so this needs no counter-placement logic of its own.
+    """
+    game = activation.game
+    creature = activation.card
+    if creature.zone is not Zone.BATTLEFIELD:
+        return None
+    return game.add_counters(creature, Counter.PLUS_ONE, 1)
 
 
 # --------------------------------------------------------------------------
@@ -3975,6 +4131,45 @@ def _impending_effect(game: Any, ability: AbilityOnStack) -> int | None:
     return source.remove_counters(Counter.TIME, 1)
 
 
+def _battle_cry_effect(game: Any, ability: AbilityOnStack) -> None:
+    """CR 702.91a's effect: "each other attacking creature gets +1/+0 until
+    end of turn."
+
+    Untargeted (CR 702.91a prints no "target"), so the set it applies to is
+    fixed here, at resolution, the same way any other resolving ability's own
+    continuous effect is fixed "when it begins" (CR 611.2c) - `game.
+    attacking_creatures()` read *now* is exactly that set: a creature that
+    left combat earlier in the same priority window is already off it, and a
+    creature put onto the battlefield attacking afterwards was never part of
+    it, because this only ever runs once, here. One `ContinuousEffect` per
+    other attacker (the same "loop and add one per object" shape
+    `_untap_and_apply_control_sentences` and friends already use for a
+    multi-target sentence) rather than a shared dynamic selector, since a
+    dynamic "attacking creatures" filter would incorrectly keep pumping (or
+    stop pumping) a creature whose attacking status changes after this
+    resolves - exactly what CR 611.2c's fixed-set rule forbids.
+    """
+    source = ability.source(game)
+    if source is None:
+        return
+    store = game.continuous_effects
+    timestamp = store.tick()
+    for creature in game.attacking_creatures():
+        if creature.id == source.id:
+            continue  # CR 702.91a: "each OTHER attacking creature".
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name}'s battle cry: {creature.name} gets +1/+0",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=_only(creature.id),
+                modification=modify_power_toughness(1, 0),
+            )
+        )
+
+
 #: What one keyword's triggered ability does when it resolves, by keyword.
 #: `Game._effect_of` has to consult this before the card-name registry - see
 #: `docs/engine-coverage.md` for the hook.
@@ -3991,6 +4186,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "suspend": _suspend_effect,
     "impending": _impending_effect,
     "mobilize": _mobilize_effect,
+    "battle cry": _battle_cry_effect,
 }
 
 
@@ -4046,6 +4242,7 @@ KEYWORD_EFFECTS: dict[str, Callable[[KeywordActivation], Any]] = {
     "station": _station_effect,
     "ninjutsu": _ninjutsu_effect,
     "commander ninjutsu": _ninjutsu_effect,
+    "outlast": _outlast_effect,
 }
 
 

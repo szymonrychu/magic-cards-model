@@ -1776,6 +1776,18 @@ class ActivatedAbility(BaseAbility):
     #: cleared-per-turn activation (`Game.exhausted`) CR 602.5b's "Activate
     #: only once each turn" cannot express.
     exhaust: bool = False
+    #: CR 702.193a: "Power-up — [Cost]: [Effect]" means "[Cost]: [Effect]. If
+    #: this permanent entered this turn, this ability's cost is reduced by
+    #: this permanent's mana cost. Activate this ability only once." Read off
+    #: the printed em-dash prefix exactly the way `exhaust` above is - Power-up
+    #: is a real CR 702 keyword, not a CR 207.2c ability word, but WOTC prints
+    #: it in the same "Word — cost: effect." shape, so the same parser branch
+    #: sees it. `Game.why_cannot_activate`/`Game.activate_ability` reuse the
+    #: same `exhausted` bookkeeping `exhaust` already reads (CR 702.193a's
+    #: "Activate this ability only once" is exhaust's own "Activate only
+    #: once", word for word), and `Game.activation_cost` reads this flag to
+    #: apply the entered-this-turn discount (CR 702.193b, CR 118.7).
+    power_up: bool = False
 
 
 class TriggeredAbility(BaseAbility):
@@ -3449,7 +3461,9 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
             )
 
     zone, zone_rule = _activated_ability_zone(costs, effect_text, instructions)
-    exhaust = (common.get("ability_word") or "").lower() == "exhaust"
+    ability_word = (common.get("ability_word") or "").lower()
+    exhaust = ability_word == "exhaust"
+    power_up = ability_word == "power-up"
 
     return ActivatedAbility(
         **common,
@@ -3463,6 +3477,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         zone_rule=zone_rule,
         cost_reduction=cost_reduction,
         exhaust=exhaust,
+        power_up=power_up,
     )
 
 

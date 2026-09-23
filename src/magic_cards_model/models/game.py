@@ -2396,13 +2396,17 @@ class Game(EngineModel):
 
     exhausted: set[str] = Field(default_factory=set)
     """Which abilities have been activated at all, ever, keyed the same way
-    as `activations` - CR 702.177a's Exhaust: "'[Cost]: [Effect]' means
-    '[Cost]: [Effect]. Activate only once.'" Never cleared on a new turn,
-    unlike `activations` - the whole point of the keyword is that it is not a
-    per-turn limit. A key is naturally never reused by a different object:
-    `permanent.id` is minted fresh whenever an object enters the battlefield
-    (CR 400.7), so a card that leaves and returns is not exhausted by what
-    its earlier self did."""
+    as `activations` (`Game._activation_key`) - CR 702.177a's Exhaust:
+    "'[Cost]: [Effect]' means '[Cost]: [Effect]. Activate only once.'" -
+    and CR 702.193a's Power-up, the same "Activate this ability only once"
+    in different words. Never cleared on a new turn, unlike `activations` -
+    the whole point of either keyword is that it is not a per-turn limit. A
+    key is naturally never reused by a different object: `_activation_key`
+    folds in `permanent.zone_change_stamp`, which a fresh CR 400.7 object
+    always gets (unlike `permanent.id`, which is stable across an ordinary
+    zone change - see `CardState`'s own "same id, new object" note), so a
+    card that leaves and returns is not exhausted by what its earlier self
+    did."""
 
     loyalty_activations: dict[str, int] = Field(default_factory=dict)
     """How often a loyalty ability of each permanent has been activated this
@@ -15916,6 +15920,13 @@ class Game(EngineModel):
         if ability.exhaust and self._activation_key(permanent, index) in self.exhausted:
             return f"{permanent.name}'s exhaust ability has already been activated (CR 702.177a)"
 
+        if ability.power_up and self._activation_key(permanent, index) in self.exhausted:
+            # CR 702.193a: "Activate this ability only once" - the exact same
+            # never-cleared-per-turn restriction exhaust's own "Activate only
+            # once" (CR 702.177a) already reads, so it reuses `exhausted`
+            # rather than a second set (see `ActivatedAbility.power_up`).
+            return f"{permanent.name}'s power-up ability has already been activated (CR 702.193a)"
+
         if ability.mana is None:
             # CR 702.61a: "As long as this spell is on the stack, players
             # can't cast other spells or activate abilities that aren't mana
@@ -16419,7 +16430,37 @@ class Game(EngineModel):
         component.cards = [by_id[card_id] for card_id in answer]
 
     def _activation_key(self, permanent: CardState, index: int) -> str:
-        return f"{permanent.id}:{index}"
+        """The key `activations`/`exhausted` key an ability's bookkeeping by.
+
+        `permanent.id` alone is not enough: `CardState.id` is stable across
+        an ordinary zone change (the "same id, new object" approximation
+        `CardState`'s own module docstring documents), so a permanent that
+        leaves the battlefield and comes back is the *same* id. CR 400.7 says
+        it is a *new object* all the same, so `zone_change_stamp` - the field
+        that actually changes on every move (`move_to`) - is folded in too:
+        `exhausted`'s own CR 702.177a/CR 702.193a "activate only once" is
+        about this particular incarnation of the permanent, not the id that
+        happens to persist underneath it, and `activations`' own per-turn
+        count reads the same way (harmlessly, since it is cleared every turn
+        regardless).
+        """
+        return f"{permanent.id}:{permanent.zone_change_stamp}:{index}"
+
+    def _entered_this_turn(self, permanent: CardState) -> bool:
+        """Whether this permanent arrived on the battlefield this turn.
+
+        `CardState.turn_entered` is the turn-number stamp `Game.
+        enter_the_battlefield` writes once, per CR 702.131's own "entered
+        this turn" shape (see that field's docstring); this is the plain
+        equality check against the game's current turn, shared by every
+        caller that only needs the yes/no answer - `activation_cost`'s own
+        CR 702.193b discount among them.
+        """
+        return (
+            permanent.turn_entered is not None
+            and self.turn is not None
+            and permanent.turn_entered == self.turn.turn_number
+        )
 
     def _activation_count(self, permanent: CardState, index: int) -> int:
         return self.activations.get(self._activation_key(permanent, index), 0)
@@ -16708,6 +16749,19 @@ class Game(EngineModel):
                         if printed:
                             mana = increase(mana, ManaCost.parse(printed))
                 components.append(component)
+
+        if ability.power_up and self._entered_this_turn(permanent):
+            # CR 702.193a-b: "If this permanent entered this turn, this
+            # ability's cost is reduced by this permanent's mana cost."
+            # CR 702.193b/118.7: generic mana in the permanent's mana cost
+            # reduces generic mana in the activation cost, colored/colorless
+            # mana reduces mana of the same type with any excess spilling
+            # into generic - exactly what `ManaCost.minus` already implements
+            # (CR 118.7a-d), so the permanent's own printed mana cost is
+            # simply subtracted, unreduced by anything else that might also
+            # be discounting it (CR 601.2f's reductions are cumulative, not
+            # exclusive of one another).
+            mana = mana.minus(ManaCost.for_card(permanent.card))
 
         if ability.cost_reduction is not None:
             # CR 601.2f, applied to an activated ability's own cost via CR
@@ -17264,6 +17318,12 @@ class Game(EngineModel):
                 # battlefield). `key` is already `permanent.id`-scoped, so an
                 # object that leaves and returns (CR 400.7's new object) gets
                 # a fresh id and is not exhausted by its own past self.
+                self.exhausted.add(key)
+            if ability.power_up:
+                # CR 702.193a's own "Activate this ability only once" - the
+                # same bookkeeping as exhaust just above, reused rather than
+                # duplicated (see `why_cannot_activate`'s matching check and
+                # `ActivatedAbility.power_up`'s own docstring).
                 self.exhausted.add(key)
             if ability.loyalty is not None:
                 # CR 606.3's once-per-turn rule is per permanent: having activated
