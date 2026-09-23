@@ -31206,9 +31206,41 @@ def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str
     if not bare_noun:
         return None
     anaphor = re.compile(rf"\bthat\s+{re.escape(bare_noun)}\b", re.IGNORECASE)
-    if not anaphor.search(alternative_text):
+    if anaphor.search(alternative_text):
+        return anaphor.sub(match.group("phrase"), alternative_text, count=1)
+    # The pronoun form, "it", as the alternative's own subject - You're Not
+    # Alone's "If you control three or more creatures, it gets +4/+4 until
+    # end of turn instead" - refers back to the same fixed target. Only the
+    # leading subject is swapped: an "it" further in names something the
+    # alternative itself introduced, not the base clause's target.
+    pronoun = re.compile(r"^it\b", re.IGNORECASE)
+    if pronoun.match(alternative_text.strip()):
+        return pronoun.sub(match.group("phrase"), alternative_text.strip(), count=1)
+    return None
+
+
+def _instead_branch_effect(branch_text: str) -> Effect | None:
+    """One branch of a CR 614.1a base-or-alternative pair, read as its own
+    instruction.
+
+    A branch that is itself one whole CR 611.2 layer sentence - Colossal
+    Growth's base "Target creature gets +3/+3 until end of turn" and its
+    kicked alternative "target creature gets +4/+4 and gains trample and
+    haste until end of turn" - is built from *that branch's own text*
+    (`_create_continuous_effect_for_mode_text`), never through the bare
+    `create_continuous_effect` sentinel: the sentinel re-reads the spell's
+    whole printed text, which is the base sentence whichever branch was
+    chosen, so the resolved alternative's own amount and keywords never
+    applied. Every other branch reads through `parse_mixed_effect_for_spell`
+    as before.
+    """
+    parsed = parse_mixed_effect_for_spell(branch_text)
+    if parsed is None:
         return None
-    return anaphor.sub(match.group("phrase"), alternative_text, count=1)
+    sentence = _as_sentence(branch_text)
+    if is_genuine_resolution_layer_sentence(sentence):
+        return _create_continuous_effect_for_mode_text(sentence)
+    return parsed
 
 
 def _resolve_instead_alternative(base_text: str, alternative_text: str) -> Effect | None:
@@ -31221,12 +31253,12 @@ def _resolve_instead_alternative(base_text: str, alternative_text: str) -> Effec
     readings works, which - CR 608.2c - fails the whole card closed rather
     than running half of it.
     """
-    alternative = parse_mixed_effect_for_spell(alternative_text)
+    alternative = _instead_branch_effect(alternative_text)
     if alternative is not None:
         return alternative
     substituted = _anaphoric_target_substitution(base_text, alternative_text)
     if substituted is not None:
-        resolved = parse_mixed_effect_for_spell(substituted)
+        resolved = _instead_branch_effect(substituted)
         if resolved is not None:
             return resolved
     if re.search(r"\btarget\b", alternative_text, re.IGNORECASE):
@@ -31272,7 +31304,7 @@ def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     if not condition_is_readable(condition_text):
         return None
     base_text = match.group("base")
-    base = parse_mixed_effect_for_spell(base_text)
+    base = _instead_branch_effect(base_text)
     if base is None:
         return None
     alternative_text = (
