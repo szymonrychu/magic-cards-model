@@ -661,7 +661,9 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # reader splits out (`hexproof_abilities_in`), never on the keyword
     # alone. `tests/scenarios/test_hexproof_abilities.py` proves it live.
     if any(k.lower() == "hexproof from" for k in printing.keywords):
-        _, qualities = hexproof_abilities_in(printing.front_oracle_text.splitlines())
+        _, qualities = hexproof_abilities_in(
+            printing.front_oracle_text.splitlines(), keyword_lines_only=False
+        )
         if qualities:
             found["hexproof from"] = "models/game.py (Game.hexproof_refusal, CR 702.11d)"
 

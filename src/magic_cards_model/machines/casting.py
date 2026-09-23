@@ -1610,7 +1610,9 @@ _COLOR_COUNT_WORDS: dict[str, Callable[[int], bool]] = {
 }
 
 
-def hexproof_abilities_in(lines: Iterable[str]) -> tuple[bool, list[str]]:
+def hexproof_abilities_in(
+    lines: Iterable[str], *, keyword_lines_only: bool = True
+) -> tuple[bool, list[str]]:
     """Whether these ability lines carry plain hexproof, and every quality
     they carry hexproof from (CR 702.11b, CR 702.11d, CR 702.11f).
 
@@ -1623,13 +1625,27 @@ def hexproof_abilities_in(lines: Iterable[str]) -> tuple[bool, list[str]]:
     CR 702.11f splits "from A and from B" (and the list form "from A, B, and
     C") into one ability per quality; CR 702.11h makes a repeated quality
     redundant, so each appears once.
+
+    Only a CR 702.1 keyword line - "only the name of the ability", no
+    sentence - is hexproof the object itself has. A statement that merely
+    mentions the word is a static ability (CR 604.1) granting or removing it
+    elsewhere: Kaito, Bane of Nightmares' "During your turn, ... he's a 3/4
+    Ninja creature and has hexproof.", Asceticism's "Creatures you control
+    have hexproof.", Shadowspear's "... lose hexproof ...". Whatever such a
+    statement does grant reaches the permanent as its own keyword line on the
+    computed board (layer 6), which this then reads. `keyword_lines_only=False`
+    is for the card-support audit, which asks what qualities a printing
+    mentions at all.
     """
     plain = False
     qualities: list[str] = []
     for line in lines:
         # Reminder text spells the ability out again in a form that would be
         # parsed as a second, wrong copy of it (CR 207.2).
-        for match in _HEXPROOF_ABILITY.finditer(_REMINDER_TEXT.sub("", line)):
+        text = _REMINDER_TEXT.sub("", line).strip()
+        if keyword_lines_only and (":" in text or "." in text):
+            continue
+        for match in _HEXPROOF_ABILITY.finditer(text):
             raw = match.group("qualities")
             if raw is None:
                 plain = True
