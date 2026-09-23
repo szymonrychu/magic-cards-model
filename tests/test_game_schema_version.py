@@ -607,3 +607,59 @@ def test_round_trip_preserves_a_pending_dies_trigger_and_the_cant_be_countered_g
         state for state in decoded.player("alice").library if state.name == "Murderous Rider"
     ]
     assert decoded_rider, "the decoded trigger must still find and move its own dead incarnation"
+
+
+#: The version stamped before `PlayPermission` gained `until_next_end_step_of`
+#: ("until your next end step", Riveteers Charm's second mode).
+_SCHEMA_VERSION_BEFORE_NEXT_END_STEP_PERMISSIONS = 56
+
+
+def _a_game_with_a_next_end_step_permission() -> Game:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Riveteers Charm"],
+            battlefield=["Swamp", "Mountain", "Forest"],
+            library=["Forest", "Island", "Swamp"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Riveteers Charm")
+    casting.choose_modes([2])
+    scenario.pay_with(
+        casting.begin_paying(), *scenario.untapped_sources("Swamp", "Mountain", "Forest")
+    )
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    return scenario.game
+
+
+def test_a_next_end_step_permission_round_trips_at_the_current_version() -> None:
+    game = _a_game_with_a_next_end_step_permission()
+    assert {p.until_next_end_step_of for p in game.play_permissions} == {"alice"}
+
+    dumped = game.model_dump(mode="json")
+    decoded = Game.model_validate(dumped)
+
+    assert decoded.model_dump(mode="json") == dumped
+    assert {p.until_next_end_step_of for p in decoded.play_permissions} == {"alice"}
+
+
+def test_a_snapshot_written_before_next_end_step_permissions_is_refused() -> None:
+    """A version-56 dump has no `until_next_end_step_of` on any permission;
+    decoded as current it would read as a permission with no end-step bound
+    at all - one that silently outlives its own printed duration."""
+    dumped = _a_game_with_a_next_end_step_permission().model_dump(mode="json")
+    for permission in dumped["play_permissions"]:
+        del permission["until_next_end_step_of"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NEXT_END_STEP_PERMISSIONS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NEXT_END_STEP_PERMISSIONS}",
+    ):
+        Game.model_validate(dumped)

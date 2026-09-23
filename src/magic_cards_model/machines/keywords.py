@@ -3383,6 +3383,46 @@ prowess_bonus: tuple[int, int] = (1, 1)
 
 
 # --------------------------------------------------------------------------
+# "Exile cards from the top of your library until ..." - the shared process
+# --------------------------------------------------------------------------
+
+
+def exile_until(
+    game: Any,
+    owner: Any,
+    stop: Callable[[CardState, list[CardState]], bool],
+    *,
+    source_name: str | None,
+) -> list[CardState]:
+    """Exile `owner`'s library from the top, one card at a time, until `stop`
+    says the card just exiled ends the process - the first half every
+    "exile cards from the top of your library until you exile ..." sentence
+    shares: cascade's (CR 702.85a), discover's (CR 701.57a), Territorial
+    Bruntar's "until you exile a nonland card" and Improvisation Capstone's
+    "until you exile cards with total mana value 4 or greater".
+
+    `stop(card, exiled)` sees the card just exiled and everything exiled so
+    far (that card included, last), so a stop condition over one card and one
+    over the running total are the same shape. Each card goes through CR
+    406.2's door into the one shared exile zone, face up (CR 406.3), and so
+    is revealed to every player on the way (CR 701.20a). A library that runs
+    out first simply ends the process with everything exiled and no card
+    having stopped it - nothing here raises for it.
+
+    Returns every card exiled, in order.
+    """
+    exiled: list[CardState] = []
+    while owner.library:
+        state = owner.library[0]
+        game.exile_cards([state])
+        game.reveal(state, source=source_name)
+        exiled.append(state)
+        if stop(state, exiled):
+            break
+    return exiled
+
+
+# --------------------------------------------------------------------------
 # Cascade (CR 702.85)
 # --------------------------------------------------------------------------
 
@@ -3396,6 +3436,12 @@ class CascadeResult(EngineModel):
     """Everything exiled on the way, the hit included, in the order exiled."""
     hit: CardState | None = None
     """The nonland card with a lesser mana value, or None if the library ran out."""
+
+
+def _is_nonland_below(state: CardState, bound: float) -> bool:
+    """A nonland card whose mana value is less than `bound` - cascade's hit
+    (CR 702.85a) and, with `bound` one past N, discover's (CR 701.57a)."""
+    return not state.card.is_land and state.card.cmc < bound
 
 
 def has_cascade(card: Card) -> bool:
@@ -3471,23 +3517,16 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
         threshold = spell.card.cmc
 
         result = CascadeResult()
-        while owner.library:
-            state = owner.library[0]
-            # CR 400.1's shared exile zone, through CR 406.2's door. This used
-            # to be `owner.move(state, Zone.EXILE)` followed by the append
-            # below, which put every cascaded card in two zones at once: the
-            # real exile zone and a pile of the caster's own that nothing ever
-            # emptied, so a card bottomed at the end of this ability was still
-            # listed as exiled by that player forever after.
-            game.exile_cards([state])
-            # Exiled face up (CR 406.3), so every card on the way is shown to
-            # all players (CR 701.20a). A card bottomed below changes zones
-            # into a reordered library (CR 400.7, CR 701.20d): nobody knows it.
-            game.reveal(state, source=spell.name)
-            result.exiled.append(state)
-            if not state.card.is_land and state.card.cmc < threshold:
-                result.hit = state
-                break
+        # A card bottomed below changes zones into a reordered library
+        # (CR 400.7, CR 701.20d): nobody knows it any more.
+        result.exiled = exile_until(
+            game,
+            owner,
+            lambda state, _: _is_nonland_below(state, threshold),
+            source_name=spell.name,
+        )
+        if result.exiled and _is_nonland_below(result.exiled[-1], threshold):
+            result.hit = result.exiled[-1]
 
         cast_hit = False
         if result.hit is not None:
@@ -3620,17 +3659,14 @@ def discover(
         owner = game.player(controller)
 
         result = DiscoverResult()
-        while owner.library:
-            state = owner.library[0]
-            # CR 400.1's one shared exile zone, through CR 406.2's door - see
-            # `cascade`'s own comment on why this is `exile_cards` plus an
-            # append rather than `owner.move(state, Zone.EXILE)`.
-            game.exile_cards([state])
-            game.reveal(state, source=source_name)  # CR 406.3, CR 701.20a
-            result.exiled.append(state)
-            if not state.card.is_land and state.card.cmc <= n:
-                result.hit = state
-                break
+        result.exiled = exile_until(
+            game,
+            owner,
+            lambda state, _: _is_nonland_below(state, n + 1),
+            source_name=source_name,
+        )
+        if result.exiled and _is_nonland_below(result.exiled[-1], n + 1):
+            result.hit = result.exiled[-1]
 
         cast_hit = False
         if result.hit is not None:

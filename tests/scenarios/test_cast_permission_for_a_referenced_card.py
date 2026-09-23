@@ -194,9 +194,11 @@ def test_silas_renn_grants_the_same_permission_from_a_combat_damage_trigger():
     assert scenario.resolve_top().zone is Zone.BATTLEFIELD
 
 
-def test_an_unreadable_permission_fails_closed_with_a_notice():
-    """Territorial Bruntar's antecedent is not read, so no permission can name a
-    card - and the ability says so instead of resolving to nothing."""
+def test_an_exile_until_antecedent_names_the_card_it_stopped_on():
+    """Territorial Bruntar's antecedent used to be unread, leaving this
+    permission to fail closed with a notice. It is read now
+    (`test_exile_until_cast.py` owns the mechanic): "that card" is the
+    nonland card the process stopped on, and nothing is left unmodeled."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -215,10 +217,10 @@ def test_an_unreadable_permission_fails_closed_with_a_notice():
     scenario.game.put_triggers_on_stack()
     scenario.pass_until_resolved()
 
-    notices = scenario.game.unmodeled_trigger_effect_notices
-    assert [notice.source_name for notice in notices] == ["Territorial Bruntar"]
-    assert "you may cast that card this turn" in notices[0].text.lower()
-    assert scenario.game.play_permissions == []
+    assert scenario.game.unmodeled_trigger_effect_notices == []
+    stone = scenario.find("Mind Stone", Zone.EXILE, "alice")
+    assert scenario.game.play_permission_for(stone, "alice") is not None
+    assert len(scenario.game.play_permissions) == 1
 
 
 def test_an_exiled_top_card_of_your_own_library_may_be_played_until_end_of_turn():

@@ -55,6 +55,7 @@ travel.
 
 import re
 from collections.abc import Callable, Iterable, Sequence
+from enum import StrEnum
 from random import Random
 from typing import TYPE_CHECKING, Literal, NamedTuple
 from uuid import UUID
@@ -10098,7 +10099,9 @@ def _parse_counter_each_creature_with_counter_clause(
     return effect
 
 
-def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
+def _parse_put_counters_on_group_clause(
+    text: str, *, for_spell: bool = False
+) -> AbilityEffect | None:
     """ "Put N <kind> counter(s) on each <group> you control." - the group-wide
     twin of `_COUNTER_TARGET_RE`'s "on target X" below.
 
@@ -10129,9 +10132,17 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     status, read off `CardState.tapped` directly rather than through `board`
     (CR 110.5a: status is not a characteristic, so it is never a layer
     effect's business the way the color/group check below is).
+
+    `for_spell=True` is the same sentence resolving as a spell (Germination
+    Practicum, Basri's Solidarity): "you" is the spell's controller, and only
+    a fixed count with no "other" is read - a resolving spell is not a
+    permanent on the battlefield to be "other" than or to read its own power
+    off.
     """
     match = _COUNTER_EACH_GROUP_RE.fullmatch(text.strip())
     if match is None:
+        return None
+    if for_spell and (match.group("other") is not None or match.group("n").lower() == "x"):
         return None
     kind = match.group("kind").lower()
     group = match.group("group")
@@ -10158,7 +10169,36 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     else:
         fixed_amount = parse_count(n_text)
 
+    def place(game: "Game", controller: str, amount: int, excluded: UUID | None) -> None:
+        board = game.computed_board()
+        for permanent in game.battlefield:
+            if excluded is not None and permanent.id == excluded:
+                continue
+            chars = board.of(permanent)
+            if chars.controller != controller:
+                continue
+            if tap_state == "tapped" and not permanent.tapped:
+                continue
+            if tap_state == "untapped" and permanent.tapped:
+                continue
+            # CR 105.2c: "colorless" (Titans' Vanguard's "each colorless
+            # creature you control"), or a color / CR 105.2a-b color count,
+            # read off the computed board like the type below.
+            if not color_matches(chars.colors):
+                continue
+            if group.lower() == "creature":
+                if not chars.is_creature:
+                    continue
+            elif group not in chars.subtypes:
+                continue
+            game.add_counters(permanent, kind, amount)
+
     def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if isinstance(ability, CardState):
+            # A resolving spell: a fixed count, never "other" (see above).
+            if fixed_amount:
+                place(game, game.controller_of(ability).username, fixed_amount, None)
+            return
         source = ability.source(game)
         if source is None:
             return
@@ -10180,29 +10220,7 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
             amount = max(reader(game, ability.controller, source, ability.x_value), 0)
         if amount <= 0:
             return
-        controller = ability.controller
-        board = game.computed_board()
-        for permanent in game.battlefield:
-            if excludes_source and permanent.id == source.id:
-                continue
-            chars = board.of(permanent)
-            if chars.controller != controller:
-                continue
-            if tap_state == "tapped" and not permanent.tapped:
-                continue
-            if tap_state == "untapped" and permanent.tapped:
-                continue
-            # CR 105.2c: "colorless" (Titans' Vanguard's "each colorless
-            # creature you control"), or a color / CR 105.2a-b color count,
-            # read off the computed board like the type below.
-            if not color_matches(chars.colors):
-                continue
-            if group.lower() == "creature":
-                if not chars.is_creature:
-                    continue
-            elif group not in chars.subtypes:
-                continue
-            game.add_counters(permanent, kind, amount)
+        place(game, ability.controller, amount, source.id if excludes_source else None)
 
     return effect
 
@@ -19458,9 +19476,6 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reanimate_gains_then_bounce = _parse_return_target_from_graveyard_gains_then_bounce(effect_text)
     if reanimate_gains_then_bounce is not None:
         return reanimate_gains_then_bounce
-    exile_top_then_play = _parse_exile_top_then_play_until_next_turn(effect_text)
-    if exile_top_then_play is not None:
-        return exile_top_then_play
     mill_then_play = _parse_mill_then_play_that_card(effect_text)
     if mill_then_play is not None:
         return mill_then_play
@@ -30218,8 +30233,10 @@ class UnmodeledTriggerEffectNotice(EngineModel):
 #: permission over. Granting nothing, or guessing at an object, is the silent
 #: half-run the notice exists to prevent.
 _CAST_PERMISSION_CLAUSE_RE = re.compile(
-    r"^(?:until end of turn, )?you may (?:cast|play) (?:it|that card|those cards|them)"
-    r"(?: without paying (?:its|their) mana costs?)?(?: this turn)?$",
+    r"^(?:(?:until end of turn|until the end of your next turn|until your next end step), )?"
+    r"you may (?:cast|play) (?:it|that card|those cards|them)"
+    r"(?: without paying (?:its|their) mana costs?)?"
+    r"(?: this turn| until the end of your next turn| until your next end step)?$",
     re.IGNORECASE,
 )
 
@@ -30918,13 +30935,55 @@ def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect
 #: this sentence as its own clause (the same mid-sentence ", and" boundary
 #: it already splits everywhere else), so this pattern never actually sees
 #: it and does not try to match it inline.
+#:
+#: Two longer durations are printed on the same sentence, either way round
+#: too: "Until the end of your next turn, you may play those cards" (Cori
+#: Mountain Monastery, Burning Curiosity, Reckless Impulse) and "Until your
+#: next end step, you may play those cards" (Riveteers Charm) / "You may play
+#: it until your next end step" (Haste Magic). CR 611.2a: each lasts exactly
+#: as long as stated - `_permission_duration` names which one was printed,
+#: and every reader of this pattern either honours that name or refuses it.
 _PLAY_PERMISSION_RE = re.compile(
-    r"^(?P<leading>until end of turn, )?(?:you|they|that player) may (?P<action>cast|play) "
+    r"^(?P<leading>(?:until end of turn|until the end of your next turn"
+    r"|until your next end step), )?"
+    r"(?:you|they|that player) may (?P<action>cast|play) "
     r"(?P<subject>it|that card|those cards|them)"
     r"(?P<free> without paying (?:its|their) mana costs?)?"
-    r"(?P<trailing> this turn| for as long as it remains exiled)?$",
+    r"(?P<trailing> this turn| for as long as it remains exiled"
+    r"| until the end of your next turn| until your next end step)?$",
     re.IGNORECASE,
 )
+
+
+class PermissionDuration(StrEnum):
+    """Which duration a `_PLAY_PERMISSION_RE` sentence printed (CR 611.2a)."""
+
+    THIS_TURN = "this turn"
+    """"Until end of turn"/"this turn" - CR 514.2's cleanup."""
+    NEXT_TURN = "the end of your next turn"
+    """Until the cleanup of the controller's own next turn."""
+    NEXT_END_STEP = "your next end step"
+    """Until the controller's next end step begins."""
+    WHILE_EXILED = "as long as it remains exiled"
+    """No turn-bounded duration at all (CR 400.7 ends it)."""
+
+
+def _permission_duration(match: re.Match[str]) -> PermissionDuration | None:
+    """The one duration a `_PLAY_PERMISSION_RE` match printed, or `None` when
+    it printed none or two."""
+    leading = (match.group("leading") or "").strip().rstrip(",").lower()
+    trailing = (match.group("trailing") or "").strip().lower()
+    if bool(leading) == bool(trailing):
+        return None
+    phrase = leading or trailing
+    if phrase in ("until end of turn", "this turn"):
+        return PermissionDuration.THIS_TURN
+    if phrase == "until the end of your next turn":
+        return PermissionDuration.NEXT_TURN
+    if phrase == "until your next end step":
+        return PermissionDuration.NEXT_END_STEP
+    return PermissionDuration.WHILE_EXILED
+
 
 #: "Choose target <quality> card in your graveyard" - Emry, Lurker of the
 #: Loch's tap ability and Silas Renn, Seeker Adept's combat damage trigger. The
@@ -31139,6 +31198,212 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
     return None
 
 
+#: "exile cards from the top of your library until you exile a <quality> card"
+#: (Territorial Bruntar's "a nonland card") and "... until you exile cards with
+#: total mana value N or greater" (Improvisation Capstone) - the two stop
+#: conditions `machines/keywords.exile_until` is given here. Cascade and
+#: discover are the same process with their own keyword-defined stop.
+_EXILE_UNTIL_QUALITY_RE = re.compile(
+    r"^exile cards from the top of your library until you exile an? "
+    r"(?P<quality>[\w' ,-]+?) card$",
+    re.IGNORECASE,
+)
+_EXILE_UNTIL_TOTAL_MANA_VALUE_RE = re.compile(
+    r"^exile cards from the top of your library until you exile cards with total "
+    r"mana value (?P<n>\d+) or greater$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_until_antecedent(clause: str) -> "tuple[ExileAntecedent, bool] | None":
+    """The exile-until process as an antecedent (CR 607.1) for the sentence
+    after it, plus whether it names more than one card.
+
+    - "until you exile a <quality> card": the antecedent is the one card that
+      stopped the process ("that card", singular). A library that runs out
+      first stopped on nothing, so there is nothing to name. The cards exiled
+      on the way are named by nothing and stay in exile (CR 406.1).
+    - "until you exile cards with total mana value N or greater": the
+      antecedent is every card exiled ("them", plural) - the total is over all
+      of them (CR 202.3's mana value; a land's is 0).
+    """
+    from .keywords import exile_until
+
+    stripped = clause.strip().rstrip(".")
+    if match := _EXILE_UNTIL_QUALITY_RE.fullmatch(stripped):
+        quality = match.group("quality")
+        if not _search_quality_is_readable(quality):
+            return None
+        matches = _quality_matcher(quality)
+
+        def exile_until_quality(game: "Game", stack_object: "StackObject") -> list[CardState]:
+            owner = game.controller_of(stack_object)
+            exiled = exile_until(
+                game,
+                owner,
+                lambda state, _: matches(state),
+                source_name=stack_object.name,
+            )
+            return [exiled[-1]] if exiled and matches(exiled[-1]) else []
+
+        return exile_until_quality, False
+
+    if match := _EXILE_UNTIL_TOTAL_MANA_VALUE_RE.fullmatch(stripped):
+        threshold = int(match.group("n"))
+
+        def exile_until_total(game: "Game", stack_object: "StackObject") -> list[CardState]:
+            owner = game.controller_of(stack_object)
+            return exile_until(
+                game,
+                owner,
+                lambda _, exiled: sum(state.card.cmc for state in exiled) >= threshold,
+                source_name=stack_object.name,
+            )
+
+        return exile_until_total, True
+
+    return None
+
+
+#: "You may cast any number of spells from among them without paying their
+#: mana costs." - Improvisation Capstone's second sentence. CR 607.1: "them"
+#: is whatever the sentence before it exiled. CR 608.2g: the casts happen
+#: during the resolution (the card's own ruling: "You can't wait to cast them
+#: later in the turn. Timing restrictions based on the cards' types are
+#: ignored."), CR 107.1c's "any number" includes none, and CR 118.9's
+#: "without paying" leaves X at 0 (CR 107.3b).
+_CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE = re.compile(
+    r"^you may cast any number of spells from among them without paying their mana costs\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_exile_then_cast_any_number_free_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> "tuple[int, TargetedClause] | None":
+    """A plural exiling clause, then `_CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE`,
+    as one CR 608.2c instruction. Cards not cast stay in exile - nothing
+    printed moves them (CR 406.1)."""
+    if index + 1 >= len(clauses):
+        return None
+    if _CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+    antecedent = (
+        _spell_safe_exile_antecedent(clauses[index])
+        if for_spell
+        else (
+            _parse_exile_antecedent(clauses[index]) or _parse_exile_until_antecedent(clauses[index])
+        )
+    )
+    if antecedent is None:
+        return None
+    exile, exiles_many = antecedent
+    if not exiles_many:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        caster = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        found = exile(game, stack_object)
+        _offer_free_casts_from_among(
+            game,
+            found,
+            caster,
+            source_name=source_name,
+            source_id=source_id_of(stack_object),
+            play=False,
+        )
+
+    return 2, effect
+
+
+def _offer_free_casts_from_among(
+    game: "Game",
+    cards: list[CardState],
+    caster: str,
+    *,
+    source_name: str,
+    source_id: str | None,
+    play: bool,
+) -> None:
+    """CR 608.2g's "you may [play lands and] cast [any number of] spells from
+    among <cards> without paying their mana costs", one card at a time until
+    none is left that can legally be taken or the caster declines (CR 107.1c,
+    CR 608.2d). `play=True` offers lands too (Gix's "play lands and cast
+    spells"); otherwise a land is never offered, since a land is never cast
+    (CR 305.9).
+
+    A land's own resolution-time legality (CR 305.2b) has no public reader
+    outside `Game.may_cast_during_resolution` itself, so every land among the
+    remaining cards is offered and its real legality enforced there, per
+    card, when chosen. A nonland card is pre-filtered by
+    `can_cast_during_resolution` (CR 601.2c's targets, CR 700.2a's modes,
+    CR 118.3's cost).
+    """
+    remaining = [card for card in cards if card.zone is Zone.EXILE]
+    while remaining:
+        legal = [
+            card
+            for card in remaining
+            if (play and card.card.is_land)
+            or (not card.card.is_land and game.can_cast_during_resolution(card, caster))
+        ]
+        if not legal:
+            break
+        taken = game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=caster,
+                prompt=(
+                    f"{'play a land or cast a spell' if play else 'cast a spell'} from among "
+                    f"the cards {source_name} exiled, without paying its mana cost"
+                ),
+                source=source_name,
+                source_id=source_id,
+                affirmative_is_legal=True,
+                cards=tuple(card.id for card in legal),
+            )
+        )
+        if not taken:
+            break
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=caster,
+                prompt=(
+                    f"choose a card to {'play or cast' if play else 'cast'} "
+                    f"without paying its mana cost"
+                ),
+                source=source_name,
+                source_id=source_id,
+                amount=1,
+                cards=tuple(card.id for card in legal),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {card.id: card for card in legal}
+        chosen = by_id[chosen_ids[0]]
+        remaining.remove(chosen)
+        if not play:
+            # Already chosen above: cast it, with no second "you may".
+            game.cast_during_resolution(chosen, caster, source_name=source_name, rule="CR 608.2g")
+            continue
+        game.may_cast_during_resolution(
+            chosen,
+            caster,
+            prompt=f"play or cast {chosen.name} without paying its mana cost",
+            source=source_name,
+            source_id=source_id,
+            source_name=source_name,
+            rule="CR 608.2g",
+            play=True,
+        )
+
+
 #: "exile target instant or sorcery card from an opponent's graveyard" (Dire
 #: Fleet Daredevil) - the exiling clause's own verb performs the move, unlike
 #: `_parse_chosen_target_card_antecedent`'s "choose target ... card", which
@@ -31240,13 +31505,54 @@ _EXILE_INSTEAD_OF_GRAVEYARD_RE = re.compile(
 )
 
 
+#: "If <condition>, exile the top N cards instead." - Burning Curiosity's own
+#: "If this spell's additional cost was paid, exile the top three cards
+#: instead.", printed *between* the exile it replaces and the permission
+#: sentence whose "those cards" (CR 607.1) then names whichever set was
+#: really exiled. CR 614.1a: "instead" replaces the earlier instruction whole.
+#: The condition is any `Game.condition_holds` reads (`condition_is_readable`
+#: gates it at parse time), not the additional cost by name.
+_EXILE_TOP_INSTEAD_RE = re.compile(
+    rf"^if (?P<condition>[^,]+), exile the top (?P<n>{COUNT}) cards? instead$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_top_instead_clause(
+    clause: str,
+) -> "tuple[str, ExileAntecedent] | None":
+    """`_EXILE_TOP_INSTEAD_RE`'s condition and the alternative exile, or `None`."""
+    from ..models.game import condition_is_readable
+
+    match = _EXILE_TOP_INSTEAD_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None or not condition_is_readable(match.group("condition")):
+        return None
+    alternative = _parse_exile_antecedent(f"exile the top {match.group('n')} cards of your library")
+    if alternative is None:
+        return None
+    return match.group("condition").strip(), alternative[0]
+
+
+def _spell_safe_exile_antecedent(clause: str) -> "tuple[ExileAntecedent, bool] | None":
+    """The exiling clauses a resolving *spell* can name its own permission
+    over: the controller's own top N (`_EXILE_TOP_OF_YOUR_LIBRARY_RE` without
+    "that many", which reads an ability's own count channel) and the
+    exile-until process. Ragavan's "that player" needs a trigger's own event
+    and Ugin's search names an ability as the searcher, so both stay
+    ability-only."""
+    match = _EXILE_TOP_OF_YOUR_LIBRARY_RE.fullmatch(clause.strip())
+    if match is not None and match.group("that_many") is None:
+        return _parse_exile_antecedent(clause)
+    return _parse_exile_until_antecedent(clause)
+
+
 def _parse_exile_then_play_permission_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> "tuple[int, TargetedClause] | None":
-    """ "[exile or choose some cards]. Until end of turn, you may cast/play
+    """ "[exile or choose some cards]. <duration>, you may cast/play
     them[, and mana of any type can be spent to cast it][. If that spell
     would be put into a graveyard, exile it instead.]" - however many
-    clauses `split_effect_clauses` cut the whole instruction into (2 to 4),
+    clauses `split_effect_clauses` cut the whole instruction into (2 to 5),
     read here as one CR 608.2c instruction rather than as independent
     clauses, matching `_merge_each_player_clauses`'s own `(consumed, effect)`
     return shape for a merge wider than a fixed pair.
@@ -31261,33 +31567,57 @@ def _parse_exile_then_play_permission_clauses(
     notion of running half an instruction, and this project's paragraph-
     atomic rule says the same.
 
-    Ability-only (`for_spell=False`): every printing carrying this shape is a
-    triggered or loyalty ability, `_parse_exile_antecedent`'s Ragavan shape
-    needs an `AbilityOnStack.event` to resolve "that player" against, and a
-    resolving spell has no `source_name` to name the granting effect by.
+    The duration is whichever one the permission sentence printed
+    (`_permission_duration`, CR 611.2a): "this turn"/"until end of turn",
+    "until the end of your next turn" (`PlayPermission.expires_end_of_next_
+    turn`), "until your next end step" (`PlayPermission.until_next_end_step_
+    of`) or "for as long as it remains exiled".
+
+    An "If <condition>, exile the top N cards instead." clause between the
+    exile and the permission (Burning Curiosity, `_EXILE_TOP_INSTEAD_RE`)
+    swaps the exile for the larger one when the condition holds as the
+    instruction resolves (CR 608.2c), and the permission then names what was
+    really exiled.
+
+    A spell reaches this with the antecedents `_spell_safe_exile_antecedent`
+    reads - the impulse spells (Reckless Impulse, Burning Curiosity, Haste
+    Magic) and modes (Riveteers Charm) - or a chosen target card; an ability
+    with every antecedent `_parse_exile_antecedent` and its siblings read.
     """
     if index + 1 >= len(clauses):
         return None
-    permission = _PLAY_PERMISSION_RE.fullmatch(clauses[index + 1].strip().rstrip(","))
+    instead: tuple[str, ExileAntecedent] | None = None
+    permission_index = index + 1
+    if index + 2 < len(clauses):
+        instead = _parse_exile_top_instead_clause(clauses[index + 1])
+        if instead is not None:
+            permission_index = index + 2
+    permission = _PLAY_PERMISSION_RE.fullmatch(clauses[permission_index].strip().rstrip(","))
     if permission is None:
         return None
-    if bool(permission.group("leading")) == bool(permission.group("trailing")):
+    duration = _permission_duration(permission)
+    if duration is None:
         # No duration, or both: not the sentence this reads.
         return None
     antecedent = _parse_chosen_target_card_antecedent(clauses[index])
     if antecedent is None:
-        if for_spell:
-            return None
-        antecedent = _parse_exile_target_card_antecedent(clauses[index])
+        antecedent = (
+            _spell_safe_exile_antecedent(clauses[index])
+            if for_spell
+            else (
+                _parse_exile_target_card_antecedent(clauses[index])
+                or _parse_exile_until_leaves_battlefield_antecedent(clauses[index])
+                or _parse_exile_antecedent(clauses[index])
+                or _parse_exile_until_antecedent(clauses[index])
+            )
+        )
     if antecedent is None:
-        if for_spell:
-            return None
-        antecedent = _parse_exile_until_leaves_battlefield_antecedent(clauses[index])
-    if antecedent is None:
-        if for_spell:
-            return None
-        antecedent = _parse_exile_antecedent(clauses[index])
-    if antecedent is None:
+        return None
+    if (
+        instead is not None
+        and _EXILE_TOP_OF_YOUR_LIBRARY_RE.fullmatch(clauses[index].strip()) is None
+    ):
+        # "exile the top N cards instead" replaces only an exile of the top.
         return None
     exile, exiles_many = antecedent
     plural = permission.group("subject").lower() in _PLURAL_PERMISSION_SUBJECTS
@@ -31297,13 +31627,8 @@ def _parse_exile_then_play_permission_clauses(
         return None
     action = PlayAction.PLAY if permission.group("action").lower() == "play" else PlayAction.CAST
     free = permission.group("free") is not None
-    # "for as long as it remains exiled" carries no turn-bounded duration -
-    # `PlayPermission.names` already refuses once the card's own
-    # `zone_change_stamp` changes (CR 400.7), which is exactly what leaving
-    # exile does.
-    remains_exiled = "exiled" in (permission.group("trailing") or "").lower()
 
-    consumed = 2
+    consumed = permission_index - index + 1
     any_type_mana = False
     if index + consumed < len(clauses) and _ANY_TYPE_MANA_STANDALONE_RE.fullmatch(
         clauses[index + consumed].strip()
@@ -31325,7 +31650,26 @@ def _parse_exile_then_play_permission_clauses(
             if isinstance(stack_object, CardState)
             else stack_object.source_name
         )
-        for card in exile(game, stack_object):
+        chosen_exile = exile
+        if instead is not None:
+            condition, alternative = instead
+            source = stack_object if isinstance(stack_object, CardState) else None
+            held = game.condition_holds(controller, condition, source)
+            if held is None:
+                notice = ConditionalClauseNotice(
+                    source_id=(
+                        stack_object.id
+                        if isinstance(stack_object, CardState)
+                        else stack_object.source_id
+                    ),
+                    source_name=source_name,
+                    text=f"If {condition}, exile the top cards instead",
+                )
+                if notice not in game.conditional_clause_notices:
+                    game.conditional_clause_notices.append(notice)
+            elif held:
+                chosen_exile = alternative
+        for card in chosen_exile(game, stack_object):
             game.grant_play_permission(
                 card,
                 controller,
@@ -31335,7 +31679,11 @@ def _parse_exile_then_play_permission_clauses(
                 rule="CR 601.3",
                 zone=card.zone,
                 any_type_mana=any_type_mana,
-                until_end_of_turn=not remains_exiled,
+                until_end_of_turn=duration is PermissionDuration.THIS_TURN,
+                expires_end_of_next_turn=duration is PermissionDuration.NEXT_TURN,
+                until_next_end_step_of=(
+                    controller if duration is PermissionDuration.NEXT_END_STEP else None
+                ),
                 exile_instead_of_graveyard=exile_instead,
             )
 
@@ -31396,7 +31744,8 @@ def _parse_next_time_draw_replacement_pair(
     permission = _PLAY_PERMISSION_RE.fullmatch(second.strip())
     if permission is None:
         return None
-    if bool(permission.group("leading")) == bool(permission.group("trailing")):
+    if _permission_duration(permission) is not PermissionDuration.THIS_TURN:
+        # `NextTimeDrawReplacement` grants only a this-turn permission.
         return None
     if permission.group("subject").lower() in _PLURAL_PERMISSION_SUBJECTS:
         # One card exiled; the permission's pronoun must be singular.
@@ -31458,7 +31807,12 @@ def _play_permission_action(text: str) -> PlayAction | None:
     "that card" (either `_PLAY_PERMISSION_RE`'s own durationed shape or
     `_MAY_CAST_OR_PLAY_THAT_CARD_BARE_RE`'s bare one), or `None`."""
     match = _PLAY_PERMISSION_RE.fullmatch(text)
-    if match is not None and match.group("subject").lower() == "that card":
+    if (
+        match is not None
+        and match.group("subject").lower() == "that card"
+        and _permission_duration(match)
+        not in (PermissionDuration.NEXT_TURN, PermissionDuration.NEXT_END_STEP)
+    ):
         return PlayAction.PLAY if match.group("action").lower() == "play" else PlayAction.CAST
     match = _MAY_CAST_OR_PLAY_THAT_CARD_BARE_RE.fullmatch(text)
     if match is not None:
@@ -35021,77 +35375,6 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
     return 4, effect
 
 
-#: "Exile the top two cards of your library. Until the end of your next turn,
-#: you may play those cards." - Wrenn's Resolve and Reckless Impulse print the
-#: identical sentence word for word (verified against both pool printings),
-#: so one parser, generalized on the count, covers both rather than a second
-#: name-keyed row. `PlayAction.PLAY` rather than `.CAST`: CR 601.1a's "playing
-#: a card" covers a land found among the exiled cards, which "you may play"
-#: (not "you may cast") is broad enough to reach.
-#: `count` is optional: "Exile the top card of your library." (Blazing
-#: Crescendo) names no count word at all for the singular, the same implicit
-#: "one" every other singular "target creature"/"a card" phrase in this file
-#: already reads without a literal word for it - `parse_count` below defaults
-#: to 1 when the group did not match.
-_EXILE_TOP_N_CARDS_RE = re.compile(
-    rf"^exile the top (?:(?P<count>{COUNT}) )?cards? of your library\.?$", re.IGNORECASE
-)
-_UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE = re.compile(
-    r"^until the end of your next turn, you may play (?:those cards|that card)\.?$",
-    re.IGNORECASE,
-)
-
-
-def _merge_exile_top_then_play_until_next_turn_clauses(
-    clauses: list[str], index: int, *, for_spell: bool
-) -> tuple[int, TargetedClause] | None:
-    """Wrenn's Resolve's/Reckless Impulse's whole text, as one CR 608.2c
-    instruction - the second sentence's "those cards" is CR 607.1 anaphora
-    back to whatever the first sentence just exiled, so splitting them would
-    either grant a permission over nothing or run the exile and drop the
-    permission, stranding cards in exile their controller could never
-    legally use.
-
-    Spell-only (both printings are sorceries). The permission is
-    `expires_end_of_next_turn=True` (see `PlayPermission`'s own docstring) -
-    a strictly longer window than the plain `until_end_of_turn` grant
-    `_parse_exile_then_play_permission_pair`'s ability-side "until end of
-    turn" shape uses. Nothing in either printing says what happens to a card
-    left unplayed once the permission lapses (unlike cascade's own "put the
-    exiled cards on the bottom", CR 702.85a), so it is left exactly where
-    CR 514.2 leaves any other expired grant: sitting in exile, forever.
-    """
-    if not for_spell or index + 1 >= len(clauses):
-        return None
-    exile_match = _EXILE_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
-    if exile_match is None:
-        return None
-    if not _UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE.fullmatch(clauses[index + 1].strip()):
-        return None
-    count_word = exile_match.group("count")
-    count = parse_count(count_word) if count_word is not None else 1
-    if count is None:
-        return None
-
-    def effect(game: "Game", spell: CardState) -> None:
-        player = game.controller_of(spell)
-        top = list(player.library[:count])
-        for card in top:
-            exiled = game.exile_permanent(card)
-            game.grant_play_permission(
-                exiled,
-                player.username,
-                action=PlayAction.PLAY,
-                pays_mana_cost=True,
-                source_name=spell.name,
-                rule="CR 601.3",
-                until_end_of_turn=False,
-                expires_end_of_next_turn=True,
-            )
-
-    return 2, effect
-
-
 #: "Exile the top eight cards of your library. You may cast instant and
 #: sorcery spells from among them this turn without paying their mana
 #: costs." - Ral, Monsoon Mage's own −8. Generalized on the count and on the
@@ -35099,7 +35382,7 @@ def _merge_exile_top_then_play_until_next_turn_clauses(
 #: "Instant and sorcery spells you cast cost {1} less to cast." - a card
 #: found among the exiled batch is only offered the grant if it carries one
 #: of the named types, unlike Ugin, Eye of the Storms' −11 (any colorless
-#: nonland card) or `_merge_exile_top_then_play_until_next_turn_clauses`
+#: nonland card) or `_parse_exile_then_play_permission_clauses`
 #: (every card, no type filter at all).
 #:
 #: Matched against the *whole, unsplit* text (like `_parse_choose_name_
@@ -35121,8 +35404,8 @@ def _parse_exile_top_then_cast_types_free_this_turn_whole_text(
 ) -> Effect | None:
     """Ral, Monsoon Mage's whole −8, as one CR 608.2c instruction - "them" in
     the second sentence is CR 607.1 anaphora back to the first sentence's own
-    exile, the same reason `_merge_exile_top_then_play_until_next_turn_
-    clauses` reads its own pair together rather than splitting them.
+    exile, the same reason `_parse_exile_then_play_permission_clauses`
+    reads its own pair together rather than splitting them.
 
     Ability-only (no spell in the pool prints this shape). CR 118.9's "without
     paying their mana costs" is `pays_mana_cost=False`; the ordinary
@@ -35205,23 +35488,7 @@ def _parse_exile_top_then_play_during_resolution_whole_text(
     if count is None:
         return None
 
-    def candidates(game: "Game", cards: list[CardState], exiler: str) -> list[CardState]:
-        # A land's own resolution-time legality (CR 305.2b/305.3) has no
-        # public reader outside `Game.may_cast_during_resolution` itself, so
-        # every land among the remaining cards is offered and the real
-        # legality is enforced there, per card, when it is actually chosen
-        # (CR 608.2d never lets an illegal "yes" through even so). A nonland
-        # card is pre-filtered by `can_cast_during_resolution` (CR 601.2c's
-        # targets, CR 700.2a's modes, CR 118.3's cost) the same way the
-        # imprint-cast family right above already does.
-        return [
-            card
-            for card in cards
-            if card.card.is_land or game.can_cast_during_resolution(card, exiler)
-        ]
-
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        exiler = ability.controller
         opponent = next(
             (target for target in game.resolve_targets(ability) if isinstance(target, Player)),
             None,
@@ -35231,52 +35498,14 @@ def _parse_exile_top_then_play_during_resolution_whole_text(
         top = list(opponent.library[:count])
         if not top:
             return
-        remaining = list(game.exile_cards(top))
-        while remaining:
-            legal = candidates(game, remaining, exiler)
-            if not legal:
-                break
-            decision = game.ask(
-                Decision(
-                    kind=DecisionKind.MAY,
-                    player=exiler,
-                    prompt=(
-                        f"play a land or cast a spell from among the cards "
-                        f"{ability.source_name} exiled, without paying its mana cost"
-                    ),
-                    source=ability.source_name,
-                    source_id=source_id_of(ability),
-                    affirmative_is_legal=True,
-                    cards=tuple(card.id for card in legal),
-                )
-            )
-            if not decision:
-                break
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=exiler,
-                    prompt="choose a card to play or cast without paying its mana cost",
-                    source=ability.source_name,
-                    source_id=source_id_of(ability),
-                    amount=1,
-                    cards=tuple(card.id for card in legal),
-                )
-            )
-            assert isinstance(chosen_ids, tuple)
-            by_id = {card.id: card for card in legal}
-            chosen = by_id[chosen_ids[0]]
-            remaining.remove(chosen)
-            game.may_cast_during_resolution(
-                chosen,
-                exiler,
-                prompt=f"play or cast {chosen.name} without paying its mana cost",
-                source=ability.source_name,
-                source_id=source_id_of(ability),
-                source_name=ability.source_name,
-                rule="CR 608.2g",
-                play=True,
-            )
+        _offer_free_casts_from_among(
+            game,
+            list(game.exile_cards(top)),
+            ability.controller,
+            source_name=ability.source_name,
+            source_id=source_id_of(ability),
+            play=True,
+        )
 
     return effect
 
@@ -36732,6 +36961,13 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if each_player_may_discard_hand_draw is not None:
         return each_player_may_discard_hand_draw
+    if for_spell:
+        # "Put two +1/+1 counters on each creature you control." as a spell
+        # (Germination Practicum, Basri's Solidarity) - the ability-side read
+        # below, with "you" the spell's own controller.
+        spell_counters_on_group = _parse_put_counters_on_group_clause(clause, for_spell=True)
+        if spell_counters_on_group is not None:
+            return spell_counters_on_group  # type: ignore[return-value]
     if not for_spell:
         # "Put a +1/+1 counter on this creature." was reachable only as a
         # *whole* ability's effect (`_ability_effect_or_notice`), never as one
@@ -37906,9 +38142,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             parsed.append(effect)
             index += consumed
             continue
-        merged = _merge_exile_top_then_play_until_next_turn_clauses(
-            clauses, index, for_spell=for_spell
-        )
+        merged = _merge_exile_then_cast_any_number_free_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
@@ -41818,67 +42052,13 @@ def _parse_return_target_from_graveyard_gains_then_bounce(text: str) -> AbilityE
 # Exiling the top of your library and being allowed to play it
 # --------------------------------------------------------------------------
 #
-# Two shapes, both CR 601.3's "a rule or effect allows that player to cast
-# it" granted over specific cards for a stated window, and both already
-# served by `Game.grant_play_permission`:
-#
-# - Interdimensional Web Watch: "exile the top two cards of your library.
-#   Until the end of your next turn, you may play those cards."
-# - Tablet of Discovery: "mill a card. You may play that card this turn."
-#   Not an exile at all - the card is in the graveyard (CR 701.17a), which is
-#   the zone the permission has to name.
-#
-# Both are read whole: "those cards"/"that card" is anaphoric (CR 700.7) for
-# what the first sentence just moved, and neither sentence is readable alone.
-
-_EXILE_TOP_THEN_PLAY_UNTIL_NEXT_TURN_RE = re.compile(
-    rf"^exile the top (?P<n>{COUNT}) cards? of your library\.\s*"
-    r"until the end of your next turn, you may play (?:those|that) cards?\.?$",
-    re.IGNORECASE | re.DOTALL,
-)
-
-
-def _parse_exile_top_then_play_until_next_turn(text: str) -> AbilityEffect | None:
-    """`_EXILE_TOP_THEN_PLAY_UNTIL_NEXT_TURN_RE`'s shape - Interdimensional
-    Web Watch's own enters trigger.
-
-    `PlayAction.PLAY` rather than `CAST`, because the sentence says "play":
-    CR 601.3's permission is what lets a card be cast, and a land among the
-    exiled cards is played as a special action instead, which only the wider
-    word reaches. `expires_end_of_next_turn` is the "until the end of your
-    next turn" window (`PlayPermission.expires_end_of_next_turn`'s own
-    docstring), with `until_end_of_turn=False` so the ordinary same-turn
-    sweep leaves it alone.
-    """
-    match = _EXILE_TOP_THEN_PLAY_UNTIL_NEXT_TURN_RE.fullmatch(text.strip())
-    if match is None:
-        return None
-    count = parse_count(match.group("n"))
-    if count is None:
-        return None
-
-    def effect(game: "Game", ability: AbilityOnStack) -> None:
-        controller = game.controller_of(ability)
-        exiled = list(controller.library[:count])
-        # "Exile the top two cards" is one instruction, so one `exile_cards`
-        # batch into CR 400.1's shared exile zone (CR 406.2). The old
-        # `Player.move` plus append put each card in two zones at once.
-        game.exile_cards(exiled)
-        for state in exiled:
-            game.grant_play_permission(
-                state,
-                controller.username,
-                action=PlayAction.PLAY,
-                pays_mana_cost=True,
-                source_name=ability.source_name,
-                zone=Zone.EXILE,
-                rule="CR 601.3",
-                until_end_of_turn=False,
-                expires_end_of_next_turn=True,
-            )
-
-    return effect
-
+# Tablet of Discovery: "mill a card. You may play that card this turn." - CR
+# 601.3's "a rule or effect allows that player to cast it" granted over a
+# card that is not in exile at all: the card is in the graveyard (CR
+# 701.17a), which is the zone the permission has to name. Read whole: "that
+# card" is anaphora for what the first sentence just moved, and neither
+# sentence is readable alone. (Interdimensional Web Watch's exile-top form is
+# `_parse_exile_then_play_permission_clauses`'s, with every other duration.)
 
 _MILL_THEN_PLAY_THAT_CARD_RE = re.compile(
     rf"^mill (?P<n>{COUNT}) cards?\.\s*you may play (?:that|those) cards?\s+this turn\.?$",

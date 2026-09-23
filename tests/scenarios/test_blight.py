@@ -13,8 +13,8 @@ additional cost was paid" clause would read the same way.
 `Casting.pay_blight` (the cost itself) is proved a second time on Burning
 Curiosity - a sorcery, not an instant, and a different card entirely -
 outside the deck pool and outside this wave's brief. Burning Curiosity's own
-bonus ("exile the top three cards instead") is a CR 608.2c "instead"
-replacement shape this wave does not read; see docs/engine-coverage.md.
+"exile the top three cards instead" bonus is covered by
+`test_optional_blight_instead.py`.
 """
 
 from magic_cards_model.machines import Step

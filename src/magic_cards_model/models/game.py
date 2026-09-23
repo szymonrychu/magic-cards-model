@@ -864,6 +864,16 @@ _CONDITION_CREATURE_DIED_THIS_TURN = re.compile(r"a creature died this turn", re
 _CONDITION_NOT_CAST_FROM_HAND = re.compile(
     r"this spell wasn'?t cast from (?:your )?hand", re.IGNORECASE
 )
+#: "this spell's additional cost was paid" - Burning Curiosity's "If this
+#: spell's additional cost was paid, exile the top three cards instead." and
+#: Cinder Strike's "... instead if this spell's additional cost was paid."
+#: (CR 118.8b's optional additional cost, read as the instruction resolves,
+#: CR 608.2c) - `CastRecord.optional_additional_cost_paid`, which names
+#: no keyword, the same reading `machines/effects._parse_if_additional_cost_
+#: paid_clause` already gives the non-"instead" form.
+_CONDITION_ADDITIONAL_COST_PAID = re.compile(
+    r"this spell'?s additional cost was paid", re.IGNORECASE
+)
 
 #: Every shape `condition_holds` reads, in the same order it tries them -
 #: kept as one tuple, rather than re-deriving it, so `condition_is_readable`
@@ -896,6 +906,7 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_LIBRARY_EMPTY_RE,
     _CONDITION_CREATURE_DIED_THIS_TURN,
     _CONDITION_NOT_CAST_FROM_HAND,
+    _CONDITION_ADDITIONAL_COST_PAID,
 )
 
 
@@ -2925,7 +2936,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 56
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 57
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3708,6 +3719,15 @@ class Game(EngineModel):
     (`machines/effects.link_cards_exiled_during`) - Keen-Eyed Curator, Voltaic
     Visionary, Pyxis of Pandemonium and Boiling Rock Rioter, all already in
     the pool, resolve differently from a version-55 board, the second bullet.
+
+    Bumped 56 -> 57 (S12, impulse exile and exile-until casts):
+    `PlayPermission` gained `until_next_end_step_of` ("until your next end
+    step", Riveteers Charm) - a field added to a model reachable from
+    `Game.play_permissions`, the bump rule's first bullet. Cori Mountain
+    Monastery, Burning Curiosity, Riveteers Charm, Territorial Bruntar,
+    Improvisation Capstone and Germination Practicum, all already in the
+    pool, now resolve where a version-56 board resolved them to nothing,
+    the second bullet.
     """
 
     @model_validator(mode="before")
@@ -4714,6 +4734,10 @@ class Game(EngineModel):
                     and permission.owner_next_turn_started
                     and self.turn.active_player == permission.player
                 )
+                # A Riveteers Charm grant whose end step has come and gone
+                # (the pointer reached cleanup without `_note_step_began`
+                # seeing the end step begin).
+                and not permission.reached_next_end_step(self)
             ]
             # CR 514.2's same sentence, for Jace's Machinations' own "until
             # end of turn" instant-speed loyalty-activation grant.
@@ -15808,6 +15832,7 @@ class Game(EngineModel):
         any_type_mana: bool = False,
         condition: str | None = None,
         exile_instead_of_graveyard: bool = False,
+        until_next_end_step_of: str | None = None,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -15848,6 +15873,10 @@ class Game(EngineModel):
         passing this should also pass `until_end_of_turn=False`, so
         `Game.cleanup_step`'s ordinary same-turn sweep leaves it alone.
 
+        `until_next_end_step_of` is "until your next end step" (Riveteers
+        Charm) - see `PlayPermission.until_next_end_step_of`. Like
+        `until_next_turn_of`, passing it forces `until_end_of_turn=False`.
+
         `flashback=True` is CR 702.34a's grant handed out as a permission
         rather than read off a printed keyword line - Past in Flames' and the
         spell Flashback's "... gains flashback ... equal to its mana cost" -
@@ -15867,7 +15896,9 @@ class Game(EngineModel):
                 flashback=flashback,
                 source_name=source_name,
                 rule=rule,
-                until_end_of_turn=until_end_of_turn and until_next_turn_of is None,
+                until_end_of_turn=until_end_of_turn
+                and until_next_turn_of is None
+                and until_next_end_step_of is None,
                 granted_turns_taken=None if turn is None else int(turn.turns_taken),
                 immediate=immediate,
                 granted_step=None if turn is None else turn.step,
@@ -15876,6 +15907,7 @@ class Game(EngineModel):
                 any_type_mana=any_type_mana,
                 condition=condition,
                 exile_instead_of_graveyard=exile_instead_of_graveyard,
+                until_next_end_step_of=until_next_end_step_of,
             )
             self.play_permissions.append(permission)
             return permission
@@ -17649,6 +17681,12 @@ class Game(EngineModel):
                 return None
             record = self.cast_record(source)
             return record.is_copy or record.origin_zone is not Zone.HAND
+
+        if _CONDITION_ADDITIONAL_COST_PAID.fullmatch(text):
+            # Read off `source`, the resolving spell; no spell, no answer.
+            if source is None:
+                return None
+            return self.cast_record(source).optional_additional_cost_paid
 
         return None
 
@@ -19639,6 +19677,15 @@ class Game(EngineModel):
         more than one in a turn)."""
         if step is Step.DRAW:
             self.cards_drawn_in_own_draw_step = {}
+        if step is Step.END_STEP:
+            # "Until your next end step" (CR 611.2a's stated duration) ends
+            # the moment the named player's end step begins - see
+            # `PlayPermission.until_next_end_step_of`.
+            self.play_permissions = [
+                permission
+                for permission in self.play_permissions
+                if not permission.reached_next_end_step(self)
+            ]
 
     def advance_to(self, step: Step) -> Step:
         """Move the turn marker forward through every boundary up to `step`.

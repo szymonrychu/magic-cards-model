@@ -1363,6 +1363,18 @@ class PlayPermission(EngineModel):
     carries `until_end_of_turn=False`, so `Game.cleanup_step`'s own "until
     end of turn" sweep leaves it alone on the turn it was granted."""
 
+    until_next_end_step_of: str | None = None
+    """Set for "until your next end step" (Riveteers Charm's second mode,
+    Haste Magic) - names whose end step ends the grant. CR 611.2a: the
+    effect "lasts as long as stated", and what is stated is the *beginning*
+    of that player's next end step, not a cleanup: the grant is gone the
+    moment that step begins (`Game._note_step_began`, and `expired` below for
+    a game whose pointer was moved without that hook). An opponent's end
+    step never ends it, and an end step that had already begun when the
+    grant was made (`granted_turns_taken`/`granted_step`) is not the "next"
+    one. Carries `until_end_of_turn=False`, so `Game.cleanup_step`'s CR 514.2
+    sweep leaves it alone on the turn it was granted."""
+
     bottom_if_unused: bool = False
     """Always `False` now, kept because consumers read it. Cascade used to set
     it for a hit left in exile under a permission; cascade now casts the hit
@@ -1387,11 +1399,29 @@ class PlayPermission(EngineModel):
             # `Game.begin_turn_for`/`Game.cleanup_step`'s job, per
             # `expires_end_of_next_turn`'s own docstring.
             return False
+        if self.until_next_end_step_of is not None:
+            return self.reached_next_end_step(game)
         if not self.until_end_of_turn or self.granted_turns_taken is None:
             return False
         if turn is None:
             return False
         return int(turn.turns_taken) != self.granted_turns_taken
+
+    def reached_next_end_step(self, game: Any = None) -> bool:
+        """Whether the end step `until_next_end_step_of` names has begun: that
+        player is active, the turn is in its end step (or past it, in
+        cleanup), and that end step is not one the grant was made during."""
+        turn = getattr(game, "turn", None)
+        if self.until_next_end_step_of is None or turn is None:
+            return False
+        if turn.active_player != self.until_next_end_step_of:
+            return False
+        if turn.step not in (Step.END_STEP, Step.CLEANUP):
+            return False
+        granted_in_this_ending_phase = self.granted_turns_taken == int(
+            turn.turns_taken
+        ) and self.granted_step in (Step.END_STEP, Step.CLEANUP)
+        return not granted_in_this_ending_phase
 
     def why_not(
         self,
@@ -1426,6 +1456,12 @@ class PlayPermission(EngineModel):
                     f"{self.source_name}'s permission to {self.action.value} {card.name} was "
                     f"CR 117.2e's own resolution-instructed window, not a standing grant, and "
                     f"the game has since moved past the step it was granted in"
+                )
+            if self.until_next_end_step_of is not None:
+                return (
+                    f"{self.source_name}'s permission to {self.action.value} {card.name} lasted "
+                    f"until {self.until_next_end_step_of}'s next end step, which has begun "
+                    f"(CR 611.2a)"
                 )
             return (
                 f"{self.source_name}'s permission to {self.action.value} {card.name} lasted "
