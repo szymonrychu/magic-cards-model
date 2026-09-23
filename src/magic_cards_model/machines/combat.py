@@ -754,20 +754,25 @@ def declare_attacker(game: "Game", creature: CardState, defender: TargetRef) -> 
 
 
 class EvasionNotice(EngineModel):
-    """One attacker whose own "can't be blocked" restriction text could not be
-    read into a block refusal (CR 509.1a).
+    """One permanent whose own "can't be blocked" *or* "can't block" text
+    could not be fully read into a block refusal (CR 509.1a-b).
 
-    Unlike flying (CR 702.9b), reach (CR 702.17b), or landwalk (CR 702.14c), a
-    plain "can't be blocked" restriction carries no keyword name of its own -
-    it is read straight off the attacker's oracle text by
-    `evasion_restriction_refusal`, and only the two shapes that function reads
-    are enforced. A sentence that opens the same way ("<subject> can't be
-    blocked ...") but is not one of them is not silently treated as no
-    restriction at all: `looks_like_unparsed_evasion_restriction` catches it
-    and `block_refusal` records one of these instead, the same "unreadable is
-    not the same as no effect" record `LayerNotice`, `TargetingNotice`,
-    `InterveningIfNotice`, `ModeNotice`, and `AnaphoricClauseNotice` already
-    keep for their own gaps.
+    Unlike flying (CR 702.9b), reach (CR 702.17b), or landwalk (CR 702.14c),
+    neither restriction carries a keyword name of its own - each is read
+    straight off the permanent's own oracle text, the attacker's by
+    `evasion_restriction_refusal` and the blocker's by
+    `self_block_restriction_refusal`, and only the shapes those two functions
+    read are enforced. A sentence that opens the same way ("<subject> can't be
+    blocked ..." or "<subject> can't block ...") but is not one of the read
+    shapes is not silently treated as no restriction at all:
+    `looks_like_unparsed_evasion_restriction` and
+    `looks_like_unparsed_self_block_restriction` catch it and `block_refusal`
+    records one of these instead, the same "unreadable is not the same as no
+    effect" record `LayerNotice`, `TargetingNotice`, `InterveningIfNotice`,
+    `ModeNotice`, and `AnaphoricClauseNotice` already keep for their own gaps.
+    One list serves both directions because they are the same rule's two
+    mirror-image halves (CR 509.1a's "can't be blocked" and CR 509.1b's
+    "can't block"), read by the same fail-closed discipline.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -775,12 +780,38 @@ class EvasionNotice(EngineModel):
     source_id: UUID | None
     source_name: str
     text: str
-    """The attacker's own oracle text, for whoever reads the notice later."""
+    """The permanent's own oracle text, for whoever reads the notice later."""
+
+
+def _self_reference_alternatives(state: CardState) -> tuple[str, ...]:
+    """Every way `state`'s own oracle text could name itself in a
+    self-restriction sentence, longest first so a regex alternation tries the
+    most specific match: the generic "this creature"/"this token", the full
+    printed name, the short name before a comma (CR 201.4's legendary
+    short-name convention - "April O'Neil can't be blocked ..." on a card
+    printed "April O'Neil, Kunoichi Trainee" - the same self-reference
+    `machines/triggers.py`'s `_self_referential` already reads), and - Zurgo
+    Bellstriker's own templating, "Zurgo can't block creatures with power 2
+    or greater." on a card with no comma at all - the bare first word of a
+    comma-less name.
+
+    `state.name` already reads the up face (CR 712.8d/712.8f) - same family
+    as `effect_for`'s fix for a modal-DFC/transform permanent's raw,
+    "Front // Back"-combined `card.name`.
+    """
+    name = state.name
+    words = name.split()
+    candidates = {"this creature", "this token", name, name.split(",")[0].strip()}
+    if len(words) > 1 and "," not in name:
+        candidates.add(words[0])
+    return tuple(
+        sorted((candidate for candidate in candidates if candidate), key=len, reverse=True)
+    )
 
 
 def _evasion_restriction_sentences(attacker: CardState, game: "Game | None" = None) -> list[str]:
     """Self-referential "can't be blocked" sentences the attacker has *now*
-    (CR 509.1a): the subject must be "this creature" or the card's own name
+    (CR 509.1a): the subject must be one of `_self_reference_alternatives`
     (CR 509.1a's restriction is on the attacker itself; nothing in the pool
     grants "can't be blocked" to *another* creature the way Akroma's Memorial
     grants protection, so that shape is not read here - see
@@ -799,18 +830,16 @@ def _evasion_restriction_sentences(attacker: CardState, game: "Game | None" = No
     battlefield has only what is printed on it), so the printing's own text is
     the answer - which is what every caller used before.
 
-    A legendary permanent's own text names itself by its short name, the part
-    before the comma - "April O'Neil can't be blocked ..." on a card printed
-    "April O'Neil, Kunoichi Trainee" - the same self-reference
-    `machines/triggers.py`'s `_self_referential` already reads.
+    A sentence also counts here when it reads "can't block or be blocked by
+    <description>" rather than "can't be blocked" outright - Realm of Koh's
+    Spirit token's own compound restriction, whose "be blocked by" half is a
+    second, independent evasion restriction sharing one description with its
+    "can't block" half (`_self_block_restriction_sentences` reads that half).
     """
-    # `attacker.name`/`attacker.oracle_text` already read the up face (CR
-    # 712.8d/712.8f); `card.name`/`card.oracle_text` are the raw Scryfall
-    # fields, null (`oracle_text`) or combined "Front // Back" (`name`) for a
-    # modal-DFC/transform permanent - same family as `effect_for`'s fix.
-    short_name = attacker.name.split(",")[0].strip()
+    subjects = _self_reference_alternatives(attacker)
     subject = re.compile(
-        rf"^(?:this creature|{re.escape(short_name)})\b.*can't be blocked\b",
+        rf"^(?:{'|'.join(re.escape(name) for name in subjects)})\b"
+        rf".*(?:can't be blocked\b|can't block or be blocked by\b)",
         re.IGNORECASE,
     )
     sentences = _computed_ability_sentences(attacker, game)
@@ -874,6 +903,115 @@ _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE = re.compile(
     r"can't be blocked by creatures with power (?P<power>\d+) or less\.?$", re.IGNORECASE
 )
 
+#: Realm of Koh's Spirit token: "can't block or be blocked by <description>."
+#: - one shared description restricting both halves of the compound: the
+#: "be blocked by" half is an evasion restriction read here, and the "can't
+#: block" half feeds `_parse_self_block_restriction` below.
+_CANT_BLOCK_OR_BE_BLOCKED_BY_RE = re.compile(
+    r"can't block or be blocked by (?P<description>.+?)\.?$", re.IGNORECASE
+)
+
+#: A bare card-type adjective inside a creature description - Hinterland
+#: Drake's "artifact creatures". Only the types the pool actually needs are
+#: read; an adjective this does not recognise, and is not a "non-<subtype>"
+#: exclusion either, leaves the whole description unparsed rather than
+#: guessed at.
+_CREATURE_DESCRIPTION_TYPE_WORDS: dict[str, "Type"] = {
+    "artifact": Type.ARTIFACT,
+    "enchantment": Type.ENCHANTMENT,
+}
+
+#: One creature description inside a "can't block <description>" or "can't
+#: block or be blocked by <description>" sentence (CR 509.1a-b): an optional
+#: leading adjective - a recognised card-type word, a bare creature subtype
+#: ("Spirit"), or a "non-<subtype>" exclusion (Realm of Koh's token's own
+#: "non-Spirit") - followed by "creature(s)", with an optional trailing power
+#: comparison (Zurgo Bellstriker's "with power 2 or greater" - the same "N or
+#: less"/"N or greater" shape `_POWER_COMPARISON_RE` already reads for CR
+#: 508.1c's group attack restriction).
+_CREATURE_DESCRIPTION_RE = re.compile(
+    r"^(?:(?P<adjective>[a-z][a-z'-]*)\s+)?creatures?"
+    r"(?:\s+with\s+power\s+(?P<power_number>\d+)\s+or\s+(?P<power_direction>less|greater))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@dataclass(frozen=True)
+class _CreatureDescriptionMatcher:
+    """A parsed creature description (see `_CREATURE_DESCRIPTION_RE`), ready
+    to judge one candidate creature against it (CR 613.5: computed, not
+    printed)."""
+
+    required_type: "Type | None" = None
+    required_subtype: str | None = None
+    excluded_subtype: str | None = None
+    power_operator: str | None = None
+    power_bound: int | None = None
+
+    def matches(self, game: "Game", candidate: CardState) -> bool:
+        characteristics = game.characteristics_of(candidate)
+        if characteristics is None:
+            return False
+        if self.required_type is not None and self.required_type not in characteristics.types:
+            return False
+        subtypes_lower = {subtype.lower() for subtype in characteristics.subtypes}
+        if (
+            self.required_subtype is not None
+            and self.required_subtype.lower() not in subtypes_lower
+        ):
+            return False
+        if self.excluded_subtype is not None and self.excluded_subtype.lower() in subtypes_lower:
+            return False
+        if self.power_operator is not None:
+            power = game.power_of(candidate)
+            if power is None:
+                return False
+            if self.power_operator == "greater_or_equal" and power < (self.power_bound or 0):
+                return False
+            if self.power_operator == "less_or_equal" and power > (self.power_bound or 0):
+                return False
+        return True
+
+
+def _parse_creature_description(description: str) -> "_CreatureDescriptionMatcher | None":
+    """Read a creature description - "artifact creatures", "non-Spirit
+    creatures", "creatures with power 2 or greater" - into a matcher, or
+    None when it is not this closed grammar. That None is the fail-closed
+    signal for whichever "can't block ..." sentence it came from: a
+    description this cannot judge is never silently treated as "matches
+    nothing"."""
+    match = _CREATURE_DESCRIPTION_RE.fullmatch(description.strip())
+    if match is None:
+        return None
+    power_operator: str | None = None
+    power_bound: int | None = None
+    if match.group("power_number") is not None:
+        power_bound = int(match.group("power_number"))
+        power_operator = (
+            "greater_or_equal"
+            if match.group("power_direction").lower() == "greater"
+            else "less_or_equal"
+        )
+    adjective = (match.group("adjective") or "").strip()
+    if not adjective:
+        return _CreatureDescriptionMatcher(power_operator=power_operator, power_bound=power_bound)
+    lowered = adjective.lower()
+    if lowered.startswith("non-"):
+        excluded = adjective[len("non-") :].strip()
+        if not excluded:
+            return None
+        return _CreatureDescriptionMatcher(
+            excluded_subtype=excluded, power_operator=power_operator, power_bound=power_bound
+        )
+    type_word = _CREATURE_DESCRIPTION_TYPE_WORDS.get(lowered)
+    if type_word is not None:
+        return _CreatureDescriptionMatcher(
+            required_type=type_word, power_operator=power_operator, power_bound=power_bound
+        )
+    return _CreatureDescriptionMatcher(
+        required_subtype=adjective, power_operator=power_operator, power_bound=power_bound
+    )
+
 
 def evasion_restriction_refusal(
     game: "Game", attacker: CardState, blocker: CardState
@@ -883,12 +1021,23 @@ def evasion_restriction_refusal(
 
     Read straight off the attacker's own oracle text rather than off
     `Keyword`: unlike flying or menace, this restriction has no keyword name of
-    its own, so nothing in this module's vocabulary can name it. Only the two
-    shapes above are read; a sentence that looks like an attempt at a third is
-    caught by `looks_like_unparsed_evasion_restriction` instead of silently
-    doing nothing.
+    its own, so nothing in this module's vocabulary can name it. The plain
+    shape, the power-qualified shape, and the "can't block or be blocked by
+    <description>" compound's evasion half are read; a sentence that looks
+    like an attempt at another shape is caught by
+    `looks_like_unparsed_evasion_restriction` instead of silently doing
+    nothing.
     """
     for sentence in _evasion_restriction_sentences(attacker, game):
+        compound = _CANT_BLOCK_OR_BE_BLOCKED_BY_RE.search(sentence)
+        if compound is not None:
+            description = compound.group("description")
+            matcher = _parse_creature_description(description)
+            if matcher is not None and matcher.matches(game, blocker):
+                return (
+                    f'{attacker.name} can\'t be blocked by {description}: "{sentence}" (CR 509.1a)'
+                )
+            continue
         if match := _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence):
             threshold = int(match.group("power"))
             blocker_power = game.power_of(blocker)
@@ -907,7 +1056,7 @@ def looks_like_unparsed_evasion_restriction(
     attacker: CardState, game: "Game | None" = None
 ) -> bool:
     """True if some self-referential sentence of the attacker's abilities reads
-    like a "can't be blocked" restriction but is not one of the two shapes
+    like a "can't be blocked" restriction but is not one of the shapes
     `evasion_restriction_refusal` reads - the fail-closed signal `block_refusal`
     turns into an `EvasionNotice` rather than a block that silently goes through
     unrestricted.
@@ -916,21 +1065,237 @@ def looks_like_unparsed_evasion_restriction(
     restriction the layer system has removed does not leave a notice behind
     claiming something was missed.
     """
-    return any(
-        _CANT_BE_BLOCKED_RE.search(sentence) is None
-        and _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence) is None
-        for sentence in _evasion_restriction_sentences(attacker, game)
+    for sentence in _evasion_restriction_sentences(attacker, game):
+        compound = _CANT_BLOCK_OR_BE_BLOCKED_BY_RE.search(sentence)
+        if compound is not None:
+            if _parse_creature_description(compound.group("description")) is None:
+                return True
+            continue
+        if (
+            _CANT_BE_BLOCKED_RE.search(sentence) is None
+            and _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence) is None
+        ):
+            return True
+    return False
+
+
+# -- the blocker's own "can't block" restriction (CR 509.1b) ----------------
+
+
+#: Changeling Outcast: "This creature can't block and can't be blocked." -
+#: the "can't block" half is unconditional here; the "can't be blocked" half
+#: is independently read by `_CANT_BE_BLOCKED_RE` via
+#: `evasion_restriction_refusal` (its tail already matches this compound).
+_CANT_BLOCK_AND_CANT_BE_BLOCKED_RE = re.compile(
+    r"can't block and can't be blocked\.?$", re.IGNORECASE
+)
+
+#: Felhide Brawler, Howlpack Wolf, Marauding Boneslasher: "can't block unless
+#: you control another <type>[ or <type>]." - a real, repeated template
+#: (owner decision, 2026-09-23: every legal printing sharing it is enforced,
+#: not left as a notice).
+_CANT_BLOCK_UNLESS_CONTROL_ANOTHER_RE = re.compile(
+    r"can't block unless you control another (?P<types>[a-z][a-z\s]*?)\.?$", re.IGNORECASE
+)
+
+#: Craven Hulk: "can't block alone." - only makes sense against the finished
+#: block declaration (CR 509.1b), the same way menace only makes sense there
+#: - `declaration_refusal` enforces it (via `self_block_alone_refusal`), not
+#: this per-(blocker, attacker) reader.
+_CANT_BLOCK_ALONE_RE = re.compile(r"can't block alone\.?$", re.IGNORECASE)
+
+#: Bloodghast, Carrion Feeder: "can't block." - unconditional, nothing after
+#: "block" but the period.
+_CANT_BLOCK_PLAIN_RE = re.compile(r"can't block\.\s*$", re.IGNORECASE)
+
+#: Zurgo Bellstriker, Hinterland Drake: "can't block <description>." - a
+#: qualified restriction, judged against the attacker with
+#: `_parse_creature_description`.
+_CANT_BLOCK_DESCRIPTION_RE = re.compile(r"can't block (?P<description>.+?)\.?$", re.IGNORECASE)
+
+
+def _parse_type_list(text: str) -> tuple[str, ...] | None:
+    """Read "Minotaur" or "Wolf or Werewolf" into the creature types any one
+    of which satisfies "unless you control another <type>" - a disjunction,
+    the same "or" reading `TargetRequirement.required_subtypes` already gives
+    a bare type list elsewhere. None when a word is not a plain type name -
+    the fail-closed signal for the sentence that named it.
+    """
+    parts = [part.strip() for part in re.split(r"\s+or\s+", text.strip(), flags=re.IGNORECASE)]
+    parts = [part for part in parts if part]
+    if not parts or any(not re.fullmatch(r"[A-Za-z][A-Za-z'-]*", part) for part in parts):
+        return None
+    return tuple(parts)
+
+
+def _controls_another_of(game: "Game", subject: CardState, types: tuple[str, ...]) -> bool:
+    """Whether `subject`'s controller controls another creature with any of
+    `types` among its computed subtypes (CR 613.5) - Felhide Brawler's own
+    "you control another Minotaur"."""
+    controller = game.controller_of(subject).username
+    wanted = {creature_type.lower() for creature_type in types}
+    for other in game.permanents_controlled_by(controller):
+        if other.id == subject.id:
+            continue
+        characteristics = game.characteristics_of(other)
+        if characteristics is None or not characteristics.is_creature:
+            continue
+        if wanted & {subtype.lower() for subtype in characteristics.subtypes}:
+            return True
+    return False
+
+
+@dataclass(frozen=True)
+class _SelfBlockRestriction:
+    """One parsed self "can't block ..." sentence (CR 509.1b), ready to judge
+    against one particular attacker (`refusal`)."""
+
+    sentence: str
+    kind: str
+    """"unconditional", "description", "unless_control_another", or "alone"."""
+    description: str | None = None
+    description_matcher: "_CreatureDescriptionMatcher | None" = None
+    types: tuple[str, ...] | None = None
+
+    def refusal(self, game: "Game", blocker: CardState, attacker: CardState) -> str | None:
+        if self.kind == "unconditional":
+            return f'{blocker.name} can\'t block: "{self.sentence}" (CR 509.1b)'
+        if self.kind == "description":
+            assert self.description_matcher is not None
+            if self.description_matcher.matches(game, attacker):
+                return (
+                    f'{blocker.name} can\'t block {self.description}: "{self.sentence}" (CR 509.1b)'
+                )
+            return None
+        if self.kind == "unless_control_another":
+            assert self.types is not None
+            if not _controls_another_of(game, blocker, self.types):
+                return f'{blocker.name} can\'t block: "{self.sentence}" (CR 509.1b)'
+            return None
+        # "alone": enforced by `declaration_refusal` against the finished
+        # declaration, not one (blocker, attacker) pair - the same reason
+        # menace is not read here either.
+        return None
+
+
+def _parse_self_block_restriction(sentence: str) -> "_SelfBlockRestriction | None":
+    """Read one self "can't block ..." sentence into a `_SelfBlockRestriction`,
+    or None when it matches none of the shapes read here - the fail-closed
+    signal `block_refusal` turns into an `EvasionNotice`.
+    """
+    text = sentence.strip()
+
+    if _CANT_BLOCK_AND_CANT_BE_BLOCKED_RE.search(text):
+        return _SelfBlockRestriction(sentence=text, kind="unconditional")
+
+    if match := _CANT_BLOCK_OR_BE_BLOCKED_BY_RE.search(text):
+        description = match.group("description")
+        matcher = _parse_creature_description(description)
+        if matcher is None:
+            return None
+        return _SelfBlockRestriction(
+            sentence=text, kind="description", description=description, description_matcher=matcher
+        )
+
+    if match := _CANT_BLOCK_UNLESS_CONTROL_ANOTHER_RE.search(text):
+        types = _parse_type_list(match.group("types"))
+        if types is None:
+            return None
+        return _SelfBlockRestriction(sentence=text, kind="unless_control_another", types=types)
+
+    if _CANT_BLOCK_ALONE_RE.search(text):
+        return _SelfBlockRestriction(sentence=text, kind="alone")
+
+    if _CANT_BLOCK_PLAIN_RE.search(text):
+        return _SelfBlockRestriction(sentence=text, kind="unconditional")
+
+    if match := _CANT_BLOCK_DESCRIPTION_RE.search(text):
+        description = match.group("description")
+        matcher = _parse_creature_description(description)
+        if matcher is None:
+            return None
+        return _SelfBlockRestriction(
+            sentence=text, kind="description", description=description, description_matcher=matcher
+        )
+
+    return None
+
+
+def _self_block_restriction_sentences(state: CardState, game: "Game | None" = None) -> list[str]:
+    """Self-referential "can't block ..." sentences `state` has *now*
+    (CR 509.1b), read the same layer-aware way `_evasion_restriction_sentences`
+    reads the attacker's "can't be blocked" (CR 613.5) - a layer 6 ability
+    loss (Dress Down) removes this restriction too, and a layer 6 grant adds
+    it even to a printing with no restriction of its own (CR 506.4a: not
+    retroactively removing an already-declared block is a property of when
+    this is read, at declaration, not of anything special here)."""
+    subjects = _self_reference_alternatives(state)
+    subject = re.compile(
+        rf"^(?:{'|'.join(re.escape(name) for name in subjects)})\b.*can't block\b",
+        re.IGNORECASE,
     )
+    sentences = _computed_ability_sentences(state, game)
+    return [sentence for sentence in sentences if subject.search(sentence)]
+
+
+def self_block_restriction_refusal(
+    game: "Game", blocker: CardState, attacker: CardState
+) -> str | None:
+    """Why the blocker's own "can't block" text refuses this attacker, or
+    None (CR 509.1b): "The defending player checks each creature they
+    control to see whether it's affected by any restrictions (effects that
+    say a creature can't block, or that it can't block unless some condition
+    is met)."
+    """
+    for sentence in _self_block_restriction_sentences(blocker, game):
+        parsed = _parse_self_block_restriction(sentence)
+        if parsed is None:
+            continue
+        refusal = parsed.refusal(game, blocker, attacker)
+        if refusal is not None:
+            return refusal
+    return None
+
+
+def looks_like_unparsed_self_block_restriction(
+    blocker: CardState, game: "Game | None" = None
+) -> bool:
+    """True if some self-referential sentence of the blocker's abilities
+    reads like a "can't block" restriction but is not one of the shapes
+    `self_block_restriction_refusal` reads - the fail-closed signal
+    `block_refusal` turns into an `EvasionNotice` rather than a block that
+    silently goes through unrestricted."""
+    return any(
+        _parse_self_block_restriction(sentence) is None
+        for sentence in _self_block_restriction_sentences(blocker, game)
+    )
+
+
+def self_block_alone_refusal(
+    game: "Game", blocker: CardState, total_blockers_this_combat: int
+) -> str | None:
+    """Craven Hulk's "can't block alone.": only makes sense against the
+    finished block declaration (CR 509.1b), the same way menace only makes
+    sense there, so `declaration_refusal` calls this once per blocker in the
+    finished declaration rather than `block_refusal` calling it per pair."""
+    if total_blockers_this_combat != 1:
+        return None
+    for sentence in _self_block_restriction_sentences(blocker, game):
+        if _CANT_BLOCK_ALONE_RE.search(sentence):
+            return f'{blocker.name} can\'t block alone: "{sentence}" (CR 509.1b)'
+    return None
 
 
 def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | None:
     """Why this creature cannot block that attacker, or None (CR 509.1a-b).
 
     Covers the base requirements, who the attacker is attacking (CR 802.4a),
-    and the evasion abilities that need nothing but the attacker and the
-    blocker to decide: flying (CR 702.9b), reach (CR 702.17b), and a plain
-    "can't be blocked" restriction read off the attacker's own text
-    (CR 509.1a).
+    and the evasion/restriction abilities that need nothing but the attacker
+    and the blocker to decide: flying (CR 702.9b), reach (CR 702.17b), the
+    attacker's own "can't be blocked" text (CR 509.1a), and the blocker's own
+    "can't block" text (CR 509.1b). "Can't block alone" (Craven Hulk) is the
+    one shape that needs the whole finished declaration, so it is read by
+    `declaration_refusal`/`self_block_alone_refusal` instead.
     """
     attacker = game.find_by_id(attack.attacker_id)
     if attacker is None or attacker.zone is not Zone.BATTLEFIELD:
@@ -965,6 +1330,20 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
                 source_id=attacker.id,
                 source_name=attacker.name,
                 text=attacker.oracle_text,
+            )
+        )
+
+    self_restriction = self_block_restriction_refusal(game, blocker, attacker)
+    if self_restriction is not None:
+        return self_restriction
+    if looks_like_unparsed_self_block_restriction(blocker, game) and not any(
+        notice.source_id == blocker.id for notice in game.evasion_notices
+    ):
+        game.evasion_notices.append(
+            EvasionNotice(
+                source_id=blocker.id,
+                source_name=blocker.name,
+                text=blocker.oracle_text,
             )
         )
 
@@ -1018,20 +1397,31 @@ def declaration_refusal(game: "Game", declared: dict[UUID, list[CardState]]) -> 
     Some restrictions only make sense against the finished declaration rather
     than one blocker at a time - menace is the plain example, since a single
     blocker on a creature with menace is illegal but two are fine
-    (CR 702.111b). Each creature may block only one attacker (CR 509.1a).
+    (CR 702.111b). "Can't block alone" (Craven Hulk) is the same kind of
+    restriction (CR 509.1b): whether one blocker is the *only* one blocking
+    this combat is a fact about the whole declaration, not about the
+    (blocker, attacker) pair `block_refusal` is asked about. Each creature
+    may block only one attacker (CR 509.1a).
     """
     seen: set[UUID] = set()
+    all_blockers: list[CardState] = []
     for attacker_id, blockers in declared.items():
         for blocker in blockers:
             if blocker.id in seen:
                 return f"{blocker.name} cannot block more than one attacker"
             seen.add(blocker.id)
+            all_blockers.append(blocker)
 
         attacker = game.find_by_id(attacker_id)
         if attacker is None:
             continue
         if has_keyword(attacker, Keyword.MENACE, game) and 0 < len(blockers) < 2:
             return f"{attacker.name} has menace and cannot be blocked by fewer than two creatures"
+
+    for blocker in all_blockers:
+        refusal = self_block_alone_refusal(game, blocker, len(all_blockers))
+        if refusal is not None:
+            return refusal
     return None
 
 

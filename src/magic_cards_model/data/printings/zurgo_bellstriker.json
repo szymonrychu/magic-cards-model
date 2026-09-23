@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "bbac6d75-59ab-4d7d-87ae-46875abf8cc7",
+  "oracle_id": "46808926-d95b-4313-89d1-6bdfe13fcb77",
+  "multiverse_ids": [
+    394748
+  ],
+  "mtgo_id": 56050,
+  "mtgo_foil_id": 56051,
+  "tcgplayer_id": 96469,
+  "cardmarket_id": 273131,
+  "name": "Zurgo Bellstriker",
+  "lang": "en",
+  "released_at": "2015-03-27",
+  "uri": "https://api.scryfall.com/cards/bbac6d75-59ab-4d7d-87ae-46875abf8cc7",
+  "scryfall_uri": "https://scryfall.com/card/dtk/169/zurgo-bellstriker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:29:43Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.jpg?1783938583",
+    "normal": "https://cards.scryfall.io/normal/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.jpg?1783938583",
+    "large": "https://cards.scryfall.io/large/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.jpg?1783938583",
+    "png": "https://cards.scryfall.io/png/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.png?1783938583",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.jpg?1783938583",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.jpg?1783938583",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.webp?1783938583",
+    "grid": "https://cards.scryfall.io/grid/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.webp?1783938583",
+    "display": "https://cards.scryfall.io/display/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.webp?1783938583",
+    "art": "https://cards.scryfall.io/art/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.webp?1783938583",
+    "crop": "https://cards.scryfall.io/crop/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.webp?1783938583"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Legendary Creature \u2014 Orc Warrior",
+  "oracle_text": "Zurgo can't block creatures with power 2 or greater.\nDash {1}{R} (You may cast this spell for its dash cost. If you do, it gains haste, and it's returned from the battlefield to its owner's hand at the beginning of the next end step.)",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Dash"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "7e72625f-f320-4552-a719-d11e2f1853bd",
+  "set": "dtk",
+  "set_name": "Dragons of Tarkir",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/7e72625f-f320-4552-a719-d11e2f1853bd",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adtk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dtk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bbac6d75-59ab-4d7d-87ae-46875abf8cc7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A46808926-d95b-4313-89d1-6bdfe13fcb77&unique=prints",
+  "collector_number": "169",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "kolaghan",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jason Rainville",
+  "artist_ids": [
+    "6ed7e669-579b-443d-b223-e5cbcb2a7483"
+  ],
+  "illustration_id": "288d4d5e-2b76-4b58-bbf8-afcdc873270f",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 15683,
+  "penny_rank": 567,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "0.88",
+    "usd_etched": null,
+    "eur": "0.71",
+    "eur_foil": "3.58",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=394748&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DZurgo%2BBellstriker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DZurgo%2BBellstriker",
+    "edhrec": "https://edhrec.com/route/?cc=Zurgo+Bellstriker"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F96469%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=273131&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/56050?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
