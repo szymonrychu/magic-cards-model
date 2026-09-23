@@ -2051,7 +2051,7 @@ def why_cannot_cast_now(
         return game.why_game_is_over()
     if game is None:
         return None
-    types = types_being_cast(spell.card, face)
+    types = spell.types_as_a_spell(types_being_cast(spell.card, face))
     permission = usable_play_permission(game, spell, caster)
     if permission is not None and permission.immediate:
         return None
@@ -2171,7 +2171,7 @@ def why_cannot_cast_restriction(
     combat_lockdown_source = combat_lockdown_restriction_source(game)
     if combat_lockdown_source is not None:
         return f"{combat_lockdown_source} says players can't cast spells during combat (CR 506.1)"
-    types = types_being_cast(spell.card, face)
+    types = spell.types_as_a_spell(types_being_cast(spell.card, face))
     restriction = restricted_from_noncreature_casting(game, caster)
     if restriction is not None and Type.CREATURE not in types:
         return (

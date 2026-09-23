@@ -4339,7 +4339,9 @@ def _spells_cast_this_turn_holds(game: "Game", clause: str, source: CardState) -
         wanted_types.add(card_type)
     if not wanted_types:
         return None
-    matching = sum(1 for state in cast if wanted_types & set(state.card.types))
+    matching = sum(
+        1 for state in cast if wanted_types & set(state.types_as_a_spell(state.card.types))
+    )
     return matching >= wanted
 
 

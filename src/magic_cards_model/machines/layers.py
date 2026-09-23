@@ -80,7 +80,7 @@ import functools
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import IntEnum, StrEnum
-from typing import TYPE_CHECKING, Annotated, Literal, cast
+from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, cast
 from uuid import UUID
 
 from pydantic import ConfigDict, Field, PrivateAttr, model_validator
@@ -1451,6 +1451,108 @@ class RemainsOnBattlefield(ConditionBase):
 Condition = RemainsOnBattlefield
 
 
+class OffBattlefieldCharacteristics(NamedTuple):
+    """What "As long as `<this>` isn't on the battlefield, it's a `<P/T>`
+    `<subtype...>` `<type...>` in addition to its other types" adds to the
+    object it is printed on - Grist, the Hunger Tide's "it's a 1/1 Insect
+    creature".
+
+    CR 113.6c: "An ability that states which zones it doesn't function in
+    functions everywhere except for the specified zones, even outside the game
+    and before the game begins." CR 205.1b: "in addition to its other types"
+    keeps every prior card type and subtype. It is not a characteristic-
+    defining ability - CR 604.3a's fifth criterion excludes one that sets a
+    value "only if certain conditions" are met - so it is never a copiable
+    value either (CR 707.2): `printed_characteristics` leaves it out, and
+    `off_battlefield_characteristics_of` puts it back for the object itself.
+    """
+
+    types: tuple[Type, ...]
+    subtypes: tuple[str, ...]
+    power: int | None
+    toughness: int | None
+
+
+_OFF_BATTLEFIELD_CHARACTERISTICS_RE = re.compile(
+    r"^as long as this [a-z]+ (?:isn't|is not) on the battlefield, "
+    r"(?:it's|it is) (?:an? )?(?:(?P<power>\d+)/(?P<toughness>\d+) )?"
+    r"(?P<words>[a-z][a-z -]*?) in addition to its other types\.?$",
+    re.IGNORECASE,
+)
+
+
+@functools.cache
+def off_battlefield_characteristics(
+    oracle_text: str, card_name: str, legendary: bool = True
+) -> OffBattlefieldCharacteristics | None:
+    """`OffBattlefieldCharacteristics` read off `oracle_text`, or `None`.
+
+    The self-reference is normalised first (`self_normalized_effect_text`,
+    CR 201.5/201.5c: "Grist" is Grist, the Hunger Tide's own short name), so
+    the shape is read as CR 700.7's "this `<object>`" whatever name it prints.
+    Every word of the granted type phrase must be a CR 205.2a card type or a
+    CR 205.3 subtype, or nothing is read at all - an unrecognised word is a
+    different sentence, not a narrower grant. Memoised on the text: it is
+    asked on every type read of every card outside the battlefield.
+    """
+    if (
+        "on the battlefield" not in oracle_text
+        or "in addition to its other types" not in oracle_text
+    ):
+        return None
+    for line in _ability_lines(oracle_text):
+        normalized = self_normalized_effect_text(
+            card_name, re.sub(r"\s*\([^)]*\)", "", line).strip(), legendary=legendary
+        )
+        match = _OFF_BATTLEFIELD_CHARACTERISTICS_RE.fullmatch(normalized)
+        if match is None:
+            continue
+        types: list[Type] = []
+        subtypes: list[str] = []
+        for word in match.group("words").split():
+            lowered = word.lower()
+            if lowered in {card_type.value for card_type in Type}:
+                types.append(Type(lowered))
+            elif lowered in subtype_vocabulary():
+                subtypes.append(word)
+            else:
+                return None
+        power = match.group("power")
+        toughness = match.group("toughness")
+        return OffBattlefieldCharacteristics(
+            types=tuple(types),
+            subtypes=tuple(subtypes),
+            power=int(power) if power is not None else None,
+            toughness=int(toughness) if toughness is not None else None,
+        )
+    return None
+
+
+def off_battlefield_characteristics_of(state: CardState) -> Characteristics:
+    """An object's characteristics anywhere but the battlefield:
+    `printed_characteristics` plus CR 113.6c's off-battlefield grant
+    (`CardState.off_battlefield_characteristics`) where it carries one.
+
+    `Game.characteristics_of`'s answer for an object off the battlefield. The
+    grant is layered on here rather than inside `printed_characteristics`
+    because that function is also CR 707.2's copiable values, which the grant
+    is not part of.
+    """
+    printed = printed_characteristics(state)
+    grant = state.off_battlefield_characteristics
+    if grant is None:
+        return printed
+    return printed.model_copy(
+        update={
+            "types": printed.types + tuple(t for t in grant.types if t not in printed.types),
+            "subtypes": printed.subtypes
+            + tuple(s for s in grant.subtypes if s not in printed.subtypes),
+            "power": grant.power if grant.power is not None else printed.power,
+            "toughness": grant.toughness if grant.toughness is not None else printed.toughness,
+        }
+    )
+
+
 def printed_characteristics(
     state: CardState, counters: Mapping[str, int] | None = None
 ) -> Characteristics:
@@ -1527,7 +1629,9 @@ def printed_characteristics(
         mana_value=state.mana_value,
         controller=state.stored_controller,
         supertypes=tuple(state.supertypes),
-        types=tuple(state.types),
+        # `printed_types`, not `types`: CR 113.6c's off-battlefield grant is
+        # not a copiable value (CR 707.2) - see `off_battlefield_characteristics_of`.
+        types=tuple(state.printed_types),
         # The type line only: changeling's creature types are its CDA's
         # layer 4 contribution (`_changeling_effects`), not a printed value.
         subtypes=tuple(state.printed_subtypes),
@@ -9000,7 +9104,7 @@ def _boneyard_wurm(
         "Boneyard Wurm's power and toughness are each equal to the number of "
         "creature cards in your graveyard."
     )
-    creatures = sum(1 for card in context.graveyard_of(source.controller) if card.card.is_creature)
+    creatures = sum(1 for card in context.graveyard_of(source.controller) if card.is_creature)
     return [
         ContinuousEffect(
             description=(

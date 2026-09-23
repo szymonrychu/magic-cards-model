@@ -3118,7 +3118,7 @@ def each_player_exiles_sacrifices_and_returns_creatures(game: "Game", spell: Car
     """
     exiled_by_player: dict[str, list[CardState]] = {}
     for player in game.players_in_game:
-        creatures = [state for state in list(player.graveyard) if state.card.is_creature]
+        creatures = [state for state in list(player.graveyard) if state.is_creature]
         exiled_by_player[player.username] = [game.exile_permanent(state) for state in creatures]
 
     for player in game.players_in_game:
@@ -12462,7 +12462,7 @@ def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect
     def effect(game: "Game", spell: CardState) -> None:
         controller = game.controller_of(spell)
         looked = list(controller.library[:n])
-        creatures = [state for state in looked if state.card.is_creature]
+        creatures = [state for state in looked if state.is_creature]
         chosen: CardState | None = None
         if creatures and game.may(
             controller.username,
@@ -16317,7 +16317,7 @@ def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | No
         candidates = [
             state
             for state in player.cards_in(Zone.GRAVEYARD)
-            if Type.CREATURE in state.card.types and (state.card.cmc or 0) <= ceiling
+            if Type.CREATURE in state.types and (state.card.cmc or 0) <= ceiling
         ]
         if not candidates:
             return
@@ -16482,13 +16482,13 @@ def _parse_return_cards_from_your_graveyard_clause(
 _SELECT_FROM_TOP_KINDS: dict[str, Callable[[CardState], bool]] = {
     "": lambda state: True,
     "permanent": lambda state: state.is_permanent,
-    "land": lambda state: Type.LAND in state.card.types,
-    "creature": lambda state: Type.CREATURE in state.card.types,
-    "artifact": lambda state: Type.ARTIFACT in state.card.types,
-    "enchantment": lambda state: Type.ENCHANTMENT in state.card.types,
-    "instant": lambda state: Type.INSTANT in state.card.types,
-    "sorcery": lambda state: Type.SORCERY in state.card.types,
-    "planeswalker": lambda state: Type.PLANESWALKER in state.card.types,
+    "land": lambda state: Type.LAND in state.types,
+    "creature": lambda state: Type.CREATURE in state.types,
+    "artifact": lambda state: Type.ARTIFACT in state.types,
+    "enchantment": lambda state: Type.ENCHANTMENT in state.types,
+    "instant": lambda state: Type.INSTANT in state.types,
+    "sorcery": lambda state: Type.SORCERY in state.types,
+    "planeswalker": lambda state: Type.PLANESWALKER in state.types,
 }
 
 _SELECT_FROM_TOP_RE = re.compile(
@@ -16568,7 +16568,7 @@ def _select_from_top_runner(
             excluded.append(card_type)
 
         def predicate(state: CardState, excluded: tuple[Type, ...] = tuple(excluded)) -> bool:
-            return not any(card_type in state.card.types for card_type in excluded)
+            return not any(card_type in state.types for card_type in excluded)
 
         kind_word = negated
     else:
@@ -24486,9 +24486,10 @@ def _parse_exile_target_card_reflexive_creature_counter(text: str) -> AbilityEff
     Cauldron's `{T}` ability.
 
     CR 400.7/CR 700.4: whether the exiled object "is a creature card" is read
-    off its own printed card type, not the battlefield's layer 6 (it never
-    reaches the battlefield at all), so `Type.CREATURE in target.card.types`
-    is checked on the object `game.exile_permanent` just moved.
+    off the card itself, not the battlefield's layer 6 (it never reaches the
+    battlefield at all), so `Type.CREATURE in target.types` - CR 113.6c's
+    off-battlefield grant included - is checked on the object
+    `game.exile_permanent` is about to move.
     """
     match = _EXILE_TARGET_REFLEXIVE_CREATURE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
@@ -24504,7 +24505,7 @@ def _parse_exile_target_card_reflexive_creature_counter(text: str) -> AbilityEff
         for target in game.resolve_targets(ability):
             if not isinstance(target, CardState):
                 continue
-            is_creature = Type.CREATURE in target.card.types
+            is_creature = Type.CREATURE in target.types
             game.exile_permanent(target)
             if is_creature:
                 exiled_a_creature = True
@@ -40311,7 +40312,7 @@ def _parse_each_player_sacrifices_then_mass_reanimate(text: str) -> AbilityEffec
         source_id = source.id if source is not None else None
         before: dict[str, list[CardState]] = {
             player.username: [
-                state for state in list(player.graveyard) if Type.CREATURE in state.card.types
+                state for state in list(player.graveyard) if Type.CREATURE in state.types
             ]
             for player in game.players_in_game
         }

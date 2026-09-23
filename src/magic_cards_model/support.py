@@ -99,6 +99,7 @@ from magic_cards_model.machines.effects import (
 from magic_cards_model.machines.layers import (
     LAYER_EFFECTS,
     looks_like_unparsed_layer_effect,
+    off_battlefield_characteristics,
     parsed_layer_effects,
 )
 from magic_cards_model.machines.modes import modal_profile, substitute_x
@@ -141,7 +142,14 @@ from magic_cards_model.machines.triggers import (
     _required_types as _condition_required_types,
 )
 from magic_cards_model.models import CardState, Game, Player, Zone
-from magic_cards_model.models.card import Card, Layout, Legality, Type, types_of
+from magic_cards_model.models.card import (
+    Card,
+    Layout,
+    Legality,
+    Supertype,
+    Type,
+    types_of,
+)
 from magic_cards_model.models.card_state import Counters, TargetRef
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.snapshot import EngineModel
@@ -1683,6 +1691,16 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return NOTICE
     if looks_like_unparsed_cost_modifier(text):
         return NOTICE
+    if (
+        off_battlefield_characteristics(
+            text, printing.name, Supertype.LEGENDARY in printing.supertypes
+        )
+        is not None
+    ):
+        # CR 113.6c: "As long as `<this>` isn't on the battlefield, it's a
+        # ..." - `CardState.types`/`.subtypes`/`.power`/`.toughness` apply it
+        # in every zone but the battlefield (Grist, the Hunger Tide).
+        return HANDLED
     copy_clause = _enters_as_copy_line_category(printing, text)
     if copy_clause is not None:
         return copy_clause

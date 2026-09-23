@@ -3340,7 +3340,7 @@ def prowess_triggers(game: Any, spell: CardState) -> list[CardState]:
     skip it forever. One `computed_board()` is hoisted for the whole
     `game.battlefield` scan rather than recomputed per candidate.
     """
-    if Type.CREATURE in spell.card.types:
+    if Type.CREATURE in spell.types_as_a_spell(spell.card.types):
         return []
     controller = spell.controller or game.active_player.username
     board = game.computed_board()

@@ -1240,6 +1240,14 @@ class CardState(EngineModel):
     an unbounded recursion; with it, the inner read takes the printed branch,
     which is the value layer 7a itself starts from (CR 613.4a).
     """
+    _entering_battlefield: bool = PrivateAttr(default=False)
+    """Set by `Game.put_onto_battlefield` while it asks CR 614.12's
+    replacement effects about this object: "check the characteristics of the
+    permanent as it would exist on the battlefield". While it is set the
+    object answers as it will on the battlefield, so CR 113.6c's
+    off-battlefield grant (`off_battlefield_characteristics`) is already
+    gone - a Grist coming in from exile is not a "creature [that] would
+    enter". Never persisted: it only spans one call."""
 
     def bind_to_game(self, game: Any) -> None:
         """Tell this object which game computes its characteristics (CR 613.5).
@@ -1494,7 +1502,57 @@ class CardState(EngineModel):
         return up_face.name if up_face is not None else None
 
     @property
+    def off_battlefield_characteristics(self) -> Any:
+        """CR 113.6c's "As long as `<this>` isn't on the battlefield, it's a
+        ..." grant (`machines/layers.OffBattlefieldCharacteristics`), or
+        `None` - on the battlefield, while entering it (CR 614.12, see
+        `_entering_battlefield`), face down (CR 708.2) or with no
+        characteristics at all (CR 406.3a), and for every object that prints
+        no such ability."""
+        if (
+            self.zone is Zone.BATTLEFIELD
+            or self._entering_battlefield
+            or self.face_down_characteristics is not None
+            or self.has_no_characteristics
+        ):
+            return None
+        return self._off_battlefield_grant
+
+    @property
+    def _off_battlefield_grant(self) -> Any:
+        """`off_battlefield_characteristics` whatever zone this is in."""
+        from ..machines.layers import off_battlefield_characteristics
+
+        return off_battlefield_characteristics(
+            self.oracle_text, self.name, Supertype.LEGENDARY in self.supertypes
+        )
+
+    def types_as_a_spell(self, types: Iterable[Type]) -> tuple[Type, ...]:
+        """`types` - a spell's own card types, read off `Card` or a cast face
+        (CR 601.3e) by the caller - plus what CR 113.6c's off-battlefield
+        grant adds. A spell is never on the battlefield, so the grant always
+        applies to one, including when a caller asks about a spell after it
+        has resolved into a permanent ("creature spells cast this turn")."""
+        base = tuple(types)
+        if self.face_down_characteristics is not None:
+            return base
+        grant = self._off_battlefield_grant
+        return base if grant is None else _with_granted(base, grant.types)
+
+    @property
     def types(self) -> tuple[Type, ...]:
+        """`printed_types` plus, anywhere but the battlefield, CR 113.6c's
+        off-battlefield grant (`off_battlefield_characteristics`, CR 205.1b's
+        "in addition to its other types") - Grist, the Hunger Tide is a
+        creature card in a graveyard and a creature spell on the stack."""
+        return self._types_with(self.off_battlefield_characteristics)
+
+    def _types_with(self, grant: Any) -> tuple[Type, ...]:
+        printed = self.printed_types
+        return printed if grant is None else _with_granted(printed, grant.types)
+
+    @property
+    def printed_types(self) -> tuple[Type, ...]:
         """This object's card types (CR 205.2a, CR 708.2).
 
         Read off `up_face`'s own type line when there is a face (CR 712.8d,
@@ -1541,9 +1599,14 @@ class CardState(EngineModel):
         type-setting effect can override it (CR 613.3); a battlefield reader
         asks the computed board, never this.
         """
+        return self._subtypes_with(self.off_battlefield_characteristics)
+
+    def _subtypes_with(self, grant: Any) -> tuple[str, ...]:
         printed = self.printed_subtypes
+        if grant is not None:
+            printed = _with_granted(printed, grant.subtypes)
         if self.face_down_characteristics is None and has_changeling(self.oracle_text):
-            return with_every_creature_type(self.types, printed)
+            return with_every_creature_type(self._types_with(grant), printed)
         return printed
 
     @property
@@ -1867,6 +1930,9 @@ class CardState(EngineModel):
             # still apply on top, in sublayer 7c (CR 613.4c).
             base = self.face_down_characteristics.toughness
             return base + self.counters.power_toughness_modifier
+        grant = self.off_battlefield_characteristics
+        if grant is not None and grant.toughness is not None:
+            return grant.toughness + self.counters.power_toughness_modifier  # CR 113.6c
         up_face = self.up_face
         printed = _as_number(up_face.toughness if up_face is not None else self.card.toughness)
         return None if printed is None else printed + self.counters.power_toughness_modifier
@@ -1906,6 +1972,9 @@ class CardState(EngineModel):
         if self.face_down_characteristics is not None:
             base = self.face_down_characteristics.power
             return base + self.counters.power_toughness_modifier
+        grant = self.off_battlefield_characteristics
+        if grant is not None and grant.power is not None:
+            return grant.power + self.counters.power_toughness_modifier  # CR 113.6c
         up_face = self.up_face
         printed = _as_number(up_face.power if up_face is not None else self.card.power)
         return None if printed is None else printed + self.counters.power_toughness_modifier
@@ -2255,8 +2324,13 @@ class CardState(EngineModel):
         types = None if computed is None else tuple(computed.types)
         subtypes = None if computed is None else tuple(computed.subtypes)
         self.last_known_colors = None if colors == self.colors else colors
-        self.last_known_types = None if types == self.types else types
-        self.last_known_subtypes = None if subtypes == self.subtypes else subtypes
+        # Compared against what the object will answer *off* the battlefield,
+        # CR 113.6c's grant included: a Grist that was only a planeswalker
+        # here is a creature card in the graveyard, and CR 603.10a's look-back
+        # has to see the planeswalker.
+        grant = self._off_battlefield_grant
+        self.last_known_types = None if types == self._types_with(grant) else types
+        self.last_known_subtypes = None if subtypes == self._subtypes_with(grant) else subtypes
 
     def move_to(self, zone: Zone) -> None:
         """Move to another zone, resetting the state a card loses on the way.
@@ -2818,6 +2892,11 @@ def counter_state_based_actions(permanents: Iterable[CardState]) -> list[CardSta
     permanents = list(permanents)
     annihilate_counters_on(permanents)
     return planeswalkers_with_zero_loyalty(permanents)
+
+
+def _with_granted[T](have: tuple[T, ...], granted: Iterable[T]) -> tuple[T, ...]:
+    """`have` plus every `granted` value not already in it (CR 205.1b)."""
+    return have + tuple(value for value in granted if value not in have)
 
 
 def _as_number(printed: str | None) -> int | None:

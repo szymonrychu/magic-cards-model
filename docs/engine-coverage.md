@@ -3787,3 +3787,42 @@ predates this task in the shared wave branch. The pool-wide silent count is
 The dispatch fingerprint (`tests/dispatch_fingerprint_baseline.json`) is
 unchanged - `_parse_you_and_group_gain_clause` is still the winning parser
 for this clause shape; only what it does internally changed.
+
+## S04: characteristics that exist only off the battlefield (CR 113.6c)
+
+"As long as `<this>` isn't on the battlefield, it's a `<P/T>` `<subtype>`
+`<type>` in addition to its other types." (Grist, the Hunger Tide). CR 113.6c:
+an ability that names the zones it doesn't function in "functions everywhere
+except for the specified zones, even outside the game". Not a CDA (CR 604.3a's
+fifth criterion: it sets values "only if certain conditions" hold), so it is
+not a copiable value either (CR 707.2).
+
+| Piece | Where | What |
+|---|---|---|
+| Reader | `machines/layers.off_battlefield_characteristics` | Parses the template per line after self-name normalisation; every granted word must be a CR 205.2a type or CR 205.3 subtype. Memoised on text. |
+| Object | `CardState.types`/`.subtypes`/`.printed_power`/`.printed_toughness` | Add the grant in every zone but the battlefield (CR 205.1b additive). `printed_types` is the grant-free type line. |
+| Spell | `CardState.types_as_a_spell` | Adds the grant to a spell's cast-face types regardless of where the object is now: `why_cannot_cast_now`/`why_cannot_cast_restriction` (casting.py), the noncreature cost tax (`Game`), prowess (`keywords.py`), "N `<type>` spells cast this turn" (`triggers.py`). |
+| Board | `layers.off_battlefield_characteristics_of`, `Game.characteristics_of` | Off the battlefield: `printed_characteristics` (copiable values, grant-free) plus the grant. |
+| Entering | `CardState._entering_battlefield`, `Game.put_onto_battlefield` | CR 614.12: replacement effects see the permanent "as it would exist on the battlefield" - Containment Priest does not exile a Grist coming in from exile. |
+| Look-back | `CardState.remember_last_known_power_toughness` | LKI types/subtypes are compared against the off-battlefield answer, so a Grist that died as a planeswalker keeps `last_known_types == (PLANESWALKER,)` (CR 603.10a). |
+| Card filters | `effects.py` | Graveyard/library/exile creature-card readers (`_SELECT_FROM_TOP_KINDS`, Tyvar's return, mass exile/reanimate, look-at-top creature, Agatha's Soul Cauldron's reflexive check) and Boneyard Wurm's CDA (`layers.py`) read `CardState.types`, not `Card.types`. |
+
+Proof: `tests/scenarios/test_off_battlefield_characteristics.py` - one
+zone/filter pair per test on real printings that are not Grist and not in the
+deck pool: Essence Scatter (stack, may target) and Negate (stack, may not),
+Thalia, Guardian of Thraben (no tax), Soul-Scar Mage (no prowess), Duress
+(hand, cannot take), Grisly Salvage (library, offered), Raise Dead (graveyard
+target), Boneyard Wurm (graveyard count), The Darkness Crystal (exile target,
+enters as a planeswalker only), Containment Priest (CR 614.12), plus Grist's
+own +1 (milled Grist is an Insect card) and -5 (graveyard Grists count,
+including one that went to 0 paying for it).
+
+**No second printing carries the template.** Scryfall, 2026-09-23:
+`o:"isn't on the battlefield"` returns Grist and Falkenrath Gorger ("Each
+Vampire creature card you own that isn't on the battlefield has madness" - an
+ability grant to other cards, not this shape); `o:"on the battlefield, it's"`
+returns Grist and Invasion of Zendikar // Awakened Skyclave (whose "As long as
+Awakened Skyclave is on the battlefield, it's a land" is the opposite zone
+condition). As with D1 (Bound), the reader is proven on the listed card and
+the widened readers on the second printings above, each a different
+zone/filter pair.

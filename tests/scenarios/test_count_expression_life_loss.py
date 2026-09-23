@@ -17,7 +17,7 @@ from tests.scenarios.harness import Scenario
 
 
 def grist_board(*, graveyard: list[str] | None = None) -> Scenario:
-    """Alice with Grist already in play, bumped to 5 loyalty for the -5, and
+    """Alice with Grist already in play, bumped to 6 loyalty for the -5, and
     whatever graveyard the test wants. Bob is the one opponent."""
     return (
         Scenario()
@@ -28,7 +28,10 @@ def grist_board(*, graveyard: list[str] | None = None) -> Scenario:
 
 def _activate_minus_five(scenario: Scenario):
     grist = scenario.find("Grist, the Hunger Tide", Zone.BATTLEFIELD)
-    scenario.game.add_counters(grist, Counter.LOYALTY, 2)  # 3 printed -> 5, enough for -5
+    # 3 printed -> 6: Grist survives its own -5. From 5 it would drop to 0
+    # and go to the graveyard first (CR 704.5i), where it is a creature
+    # card too (CR 113.6c) and would count itself.
+    scenario.game.add_counters(grist, Counter.LOYALTY, 3)
     scenario.activate(grist, index=2)
     scenario.resolve_top()
 

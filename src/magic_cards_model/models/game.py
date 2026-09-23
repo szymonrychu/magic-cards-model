@@ -195,8 +195,8 @@ from ..machines.layers import (
     additional_land_plays,
     count_card_types,
     grant_ability,
+    off_battlefield_characteristics_of,
     only_this_incarnation,
-    printed_characteristics,
     spend_effect_effects,
 )
 from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
@@ -8516,7 +8516,14 @@ class Game(EngineModel):
                 was_cast=was_cast,
             )
             card_state.controller = controller
-            apply_replacements(self, event)
+            # CR 614.12: which replacement applies is judged on the permanent
+            # "as it would exist on the battlefield" - so CR 113.6c's
+            # off-battlefield grant is already gone while they are asked.
+            card_state._entering_battlefield = True  # noqa: SLF001
+            try:
+                apply_replacements(self, event)
+            finally:
+                card_state._entering_battlefield = False  # noqa: SLF001
 
             if event.destination is not Zone.BATTLEFIELD:
                 self._take_out_of_every_zone(card_state)
@@ -14404,18 +14411,22 @@ class Game(EngineModel):
         that object *currently is*, a question only a permanent has - so an
         object anywhere else (a graveyard-zone CR 113.6m ability's own
         source, an exiled card, one still in a library or hand) falls back
-        to `printed_characteristics`, the same layer-1 starting point every
-        computed board itself begins from, with no continuous effect able to
-        reach it there to begin with (CR 611.1, 613.1a: an effect that could
-        apply "as long as" or "for as long as" a permanent condition holds
-        needs a permanent to hold it). Grim Repriser's and Proctor of
+        to `off_battlefield_characteristics_of` - `printed_characteristics`,
+        the same layer-1 starting point every computed board itself begins
+        from, with no continuous effect able to reach it there to begin with
+        (CR 611.1, 613.1a: an effect that could apply "as long as" or "for as
+        long as" a permanent condition holds needs a permanent to hold it),
+        plus the one ability that functions *only* off the battlefield, CR
+        113.6c's "as long as this isn't on the battlefield" grant. Grim Repriser's and Proctor of
         Potential's own graveyard-zone activation is what first needed this:
         `CostPayment.for_total`'s own `ManaSpend.activating` call asks for
         this unconditionally, for every activation, not only a battlefield
         one.
         """
         if permanent.zone is not Zone.BATTLEFIELD:
-            return printed_characteristics(permanent)
+            # CR 113.6c: plus an "as long as this isn't on the battlefield"
+            # grant, which applies exactly here (Grist, the Hunger Tide).
+            return off_battlefield_characteristics_of(permanent)
         return self.computed_board().of(permanent)
 
     def power_of(self, permanent: CardState) -> int | None:
@@ -16604,7 +16615,7 @@ class Game(EngineModel):
                 elif effect.kind is CostModifierKind.FLAT_INCREASE:
                     if (
                         effect.excludes_type is not None
-                        and effect.excludes_type in spell.card.types
+                        and effect.excludes_type in spell.types_as_a_spell(spell.card.types)
                     ):
                         continue
                     increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
@@ -16617,7 +16628,7 @@ class Game(EngineModel):
                         continue
                     if (
                         effect.excludes_type is not None
-                        and effect.excludes_type in spell.card.types
+                        and effect.excludes_type in spell.types_as_a_spell(spell.card.types)
                     ):
                         continue
                     increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
