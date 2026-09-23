@@ -21075,6 +21075,11 @@ _RIDER_CANT_BE_BLOCKED_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} can'?t be blocked this turn$", re.IGNORECASE
 )
 
+#: "Goad it." / "Goad them." / "Goad that creature." - Oceanus Dragon's own
+#: rider after its tap (CR 701.15a): the goader is the resolving object's
+#: controller, the objects are whatever the antecedent sentence acted on.
+_RIDER_GOAD_RE = re.compile(rf"^goad {_OBJECT_ANAPHOR}$", re.IGNORECASE)
+
 #: "Untap it." - Tethermage's Advantage's own rider, after its pump. CR
 #: 701.18a: "To untap a permanent means to remove the tapped status from it."
 _RIDER_UNTAP_RE = re.compile(rf"^untap {_OBJECT_ANAPHOR}$", re.IGNORECASE)
@@ -21199,6 +21204,18 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
                 )
 
         return cant_be_blocked
+
+    if _RIDER_GOAD_RE.fullmatch(rider):
+
+        def goad_rider(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            goader = game.controller_of(stack_object).username
+            for referent in referents:
+                if referent.zone is Zone.BATTLEFIELD:
+                    game.goad(referent, goader)
+
+        return goad_rider
 
     if _RIDER_UNTAP_RE.fullmatch(rider):
 
@@ -24301,6 +24318,97 @@ def _parse_counter_each_creature_target_player_clause(
             game.add_counters(permanent, kind, amount)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Goad (CR 701.15)
+# --------------------------------------------------------------------------
+#
+# CR 701.15a: "Certain spells and abilities can goad a creature. Until the
+# next turn of the controller of that spell or ability, that creature is
+# goaded." The goader is always the resolving object's controller, and
+# `Game.goad` records it (CR 701.15d's repeat no-op included). Three printed
+# subjects, each read here or in the object-anaphor riders below:
+#
+# - a target phrase, any count: "Goad target creature." (Glóin, Dwarf
+#   Emissary), "Goad up to two target creatures." - vetted by
+#   `_targets_understood`, the grammar every other targeted verb here uses;
+# - a group: "Goad all creatures you don't control." (Disrupt Decorum),
+#   "goad each creature target player controls." (Geode Rager), "Goad all
+#   creatures your opponents control." - `_GOAD_GROUP_RE`;
+# - an anaphor for an earlier sentence's object: "Tap target creature an
+#   opponent controls. Goad it." (Oceanus Dragon) - `_RIDER_GOAD_RE`.
+_GOAD_TARGET_RE = re.compile(
+    r"^goad (?P<phrase>(?:up to \S+ |another )?target .+?)\.?$", re.IGNORECASE
+)
+_GOAD_GROUP_RE = re.compile(
+    r"^goad (?:each creature|all creatures)"
+    r"(?: (?P<whose>you control|you don'?t control|your opponents control|an opponent controls"
+    r"|target (?:player|opponent) controls))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _goad_group_member(
+    game: "Game", goader: str, whose: str, targeted: str | None, permanent: CardState
+) -> bool:
+    """Whether `permanent`'s controller fits the group's controller words."""
+    controller = game.controller_of(permanent).username
+    if whose == "":
+        return True
+    if whose == "you control":
+        return controller == goader
+    if whose.startswith("target"):
+        return controller == targeted
+    # "you don't control" / "your opponents control" / "an opponent
+    # controls": in a game without teams every other player is an opponent
+    # (CR 102.3), so the three read the same set.
+    return controller != goader
+
+
+def _parse_goad_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Goad `<target phrase>`." or "Goad each creature / all creatures
+    `<whose>`." - see the banner above."""
+    text = clause.strip()
+    if match := _GOAD_GROUP_RE.fullmatch(text):
+        whose = re.sub(r"don'?t", "don't", (match.group("whose") or "").lower())
+        if whose.startswith("target") and not _targets_understood(
+            whose.removesuffix(" controls"), allow_player_targets=True
+        ):
+            return None
+
+        def goad_group(game: "Game", stack_object: "StackObject") -> None:
+            goader = game.controller_of(stack_object).username
+            targeted: str | None = None
+            if whose.startswith("target"):
+                players = [
+                    target
+                    for target in game.resolve_targets(stack_object)
+                    if isinstance(target, Player)
+                ]
+                if not players:
+                    return
+                targeted = players[0].username
+            board = game.computed_board()
+            for permanent in list(game.battlefield):
+                if board.of(permanent).is_creature and _goad_group_member(
+                    game, goader, whose, targeted, permanent
+                ):
+                    game.goad(permanent, goader)
+
+        return goad_group
+    if match := _GOAD_TARGET_RE.fullmatch(text):
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+
+        def goad_targets(game: "Game", stack_object: "StackObject") -> None:
+            goader = game.controller_of(stack_object).username
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                    game.goad(target, goader)
+
+        return goad_targets
+    return None
 
 
 #: "Create `<n>` `<token description>` token[s]." with no "you may" at all -
@@ -33366,6 +33474,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     untap_all_group = _parse_untap_all_group_clause(clause, for_spell=for_spell)
     if untap_all_group is not None:
         return untap_all_group
+    goad = _parse_goad_clause(clause, for_spell=for_spell)
+    if goad is not None:
+        return goad
     additional_combat_and_main_phase = _parse_additional_combat_and_main_phase_clause(clause)
     if additional_combat_and_main_phase is not None:
         return additional_combat_and_main_phase  # type: ignore[return-value]

@@ -800,6 +800,16 @@ class CardState(EngineModel):
     count, which a static ability's own +1/+1 grant could otherwise have
     changed since. `None` while `monstrous` is `False`; both are cleared
     together."""
+    goaded_by: list[str] = Field(default_factory=list)
+    """CR 701.15b's "goaded" designation: the players who goaded this
+    permanent, in the order they did, each at most once (CR 701.15d: "the
+    same player goading it again has no effect"). Each entry is also its own
+    expiry: CR 701.15a's "until the next turn of the controller of that spell
+    or ability" is that player's next turn, so `Game.begin_turn_for` drops
+    exactly that player's entry and leaves the others (CR 701.15c). Not a
+    copiable value (CR 701.15b), so nothing copies it; `Game.goad` is the one
+    writer and `Game._note_left_battlefield` clears it, since the object that
+    comes back is a new one (CR 400.7)."""
     meld_result: Card | None = None
     """The combined back face's printed characteristics (CR 712.8g), while
     this `CardState` is one half of a melded permanent - the surviving,

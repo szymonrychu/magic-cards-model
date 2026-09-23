@@ -2695,7 +2695,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 42
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 43
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3283,6 +3283,10 @@ class Game(EngineModel):
     monstrous has no record of it - the designation would silently vanish,
     any "as long as monstrous" static would stop applying, and a repeat
     Monstrosity activation would put counters on it a second time.
+    Bumped 42 -> 43: `CardState` gained `goaded_by` (CR 701.15, Goad). A
+    version-42 dump has no record of which creatures are goaded or by whom,
+    and a default of "nobody" would silently drop every standing attack
+    requirement a goad created.
     """
 
     @model_validator(mode="before")
@@ -4282,6 +4286,12 @@ class Game(EngineModel):
         """
         for permanent in self.permanents_controlled_by(username):
             permanent.summoning_sick = False
+        # CR 701.15a: a goad lasts "until the next turn of the controller of
+        # that spell or ability" - this player's goads end now, and only
+        # theirs (CR 701.15c: another goader's requirements stand).
+        for permanent in self.battlefield:
+            if username in permanent.goaded_by:
+                permanent.goaded_by = [p for p in permanent.goaded_by if p != username]
         self.continuous_effects.end_for_next_turn(username)
         # Jace, Reality Sculptor's own `-3`: a delayed trigger's own "until
         # your next turn" ends the same instant the continuous-effect and
@@ -7776,6 +7786,8 @@ class Game(EngineModel):
         # Fanatic's own sacrifice cost) asks whether it had infect or wither
         # as it last existed, grants included.
         permanent.last_known_keywords = keywords_as_it_exists(permanent, self)
+        # CR 400.7: whatever comes back is a new object, never goaded.
+        permanent.goaded_by = []
         if permanent.prepared:
             # CR 722.3c: the exile copy persists "for as long as the prepared
             # permanent remains on the battlefield and has the prepared
@@ -14257,14 +14269,11 @@ class Game(EngineModel):
         obeyed without disobeying any restrictions, the declaration of
         attackers is illegal." Checked on the whole declaration, before any
         creature is declared, so a refused one taps nothing."""
-        skipped = combat_rules.unobeyed_attack_requirement(
-            self, {creature.id for creature, _defender in attacks}
+        unobeyed = combat_rules.unobeyed_attack_requirement(
+            self, {creature.id: self.attack_target(defender) for creature, defender in attacks}
         )
-        if skipped is not None:
-            raise ValueError(
-                f"{skipped.name} attacks each combat if able and can attack, so a "
-                "declaration without it obeys fewer requirements than it could (CR 508.1d)"
-            )
+        if unobeyed is not None:
+            raise ValueError(f"{unobeyed.reason} (CR 508.1d)")
 
     def _refuse_illegal_attacker_caps(
         self, attacks: "Sequence[tuple[CardState, Targetable | str]]"
@@ -14305,20 +14314,14 @@ class Game(EngineModel):
 
     def _required_attack_declaration(self, active: str) -> list[tuple[UUID, UUID | str]]:
         """The fewest attackers that obey every requirement that can be obeyed
-        (CR 508.1d), each attacking the first defender it legally can - an
-        opponent in turn order, else a planeswalker or battle - what an
-        unscripted seat declares instead of nobody."""
-        defenders = combat_rules.attackable_defenders(self, active)
+        (CR 508.1d), each attacking the defender that obeys the most of its
+        requirements (a goaded creature: a player other than its goader when
+        one exists), ties going to an opponent in turn order, else a
+        planeswalker or battle - what an unscripted seat declares instead of
+        nobody."""
         declaration: list[tuple[UUID, UUID | str]] = []
         for creature in combat_rules.attack_requirement_holders(self, active):
-            defender = next(
-                (
-                    ref
-                    for ref in defenders
-                    if combat_rules.attack_refusal(self, creature, ref) is None
-                ),
-                None,
-            )
+            defender, _obeyed = combat_rules.most_obedient_attack(self, creature)
             if defender is None:
                 continue
             target: UUID | str | None = (
@@ -14623,6 +14626,16 @@ class Game(EngineModel):
         return None
 
     # -- CR 722: preparation cards -----------------------------------------
+
+    def goad(self, creature: CardState, goader: str) -> None:
+        """CR 701.15a: `goader` (the controller of the goading spell or
+        ability) goads `creature` until `goader`'s next turn. CR 701.15d: "Once
+        a player has goaded a creature, the same player goading it again has
+        no effect" - a repeat is a no-op, so it adds no requirement. Only a
+        permanent can carry the designation (CR 701.15b)."""
+        if creature.zone is not Zone.BATTLEFIELD or goader in creature.goaded_by:
+            return
+        creature.goaded_by.append(goader)
 
     def become_prepared(self, permanent: CardState) -> CardState | None:
         """CR 722.3a: give `permanent` the prepared designation.

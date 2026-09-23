@@ -127,7 +127,9 @@ from magic_cards_model.machines.effects import (  # noqa: E402
     _parse_explores_clause,
     _parse_explores_then_conditional_mass_destroy,
     _parse_monstrosity_clause,
+    _parse_goad_clause,
     _parse_recruit_clause,
+    _parse_referent_object_clause,
     _parse_where_x_is_continuous_effect,
     activated_effect_for,
     create_continuous_effect,
@@ -731,6 +733,28 @@ def executed_keywords(printing: Card) -> dict[str, str]:
                     "machines/effects.py "
                     "(_parse_counter_then_recruit_by_mana_value_pair, CR 701.70a)"
                 )
+                break
+
+    # Goad (CR 701.15a) is a keyword action with three printed subjects - a
+    # target phrase and a creature group (`machines/effects._parse_goad_
+    # clause`), or an object anaphor after an earlier sentence ("Goad it.",
+    # `_parse_referent_object_clause`). Gated on one of those actually
+    # reading one of *this* card's clauses, the same per-card discipline
+    # endure/recruit above use. `tests/scenarios/test_goad.py` proves it live,
+    # the CR 508.1d attack requirement included.
+    if any(k.lower() == "goad" for k in printing.keywords):
+        for ability in parse_abilities(printing):
+            text = getattr(ability, "effect", None) or ability.text
+            for_spell = ability.kind is AbilityKind.STATIC
+            if any(
+                clause.lower().startswith("goad")
+                and (
+                    _parse_goad_clause(clause, for_spell=for_spell) is not None
+                    or _parse_referent_object_clause(clause) is not None
+                )
+                for clause in split_effect_clauses(text)
+            ):
+                found["goad"] = "machines/effects.py (_parse_goad_clause, CR 701.15a)"
                 break
 
     # Ascend (CR 702.131a/b: "If [any time] you control ten or more

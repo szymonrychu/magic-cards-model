@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "1c5974dd-78fc-4bfb-8678-72041c797584",
+  "oracle_id": "3969d1d6-0aed-4fa8-aa09-d9be50576fb4",
+  "multiverse_ids": [
+    567611
+  ],
+  "tcgplayer_id": 273556,
+  "cardmarket_id": 661935,
+  "name": "Geode Rager",
+  "lang": "en",
+  "released_at": "2022-06-10",
+  "uri": "https://api.scryfall.com/cards/1c5974dd-78fc-4bfb-8678-72041c797584",
+  "scryfall_uri": "https://scryfall.com/card/clb/794/geode-rager?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:00:23Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.jpg?1783922423",
+    "normal": "https://cards.scryfall.io/normal/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.jpg?1783922423",
+    "large": "https://cards.scryfall.io/large/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.jpg?1783922423",
+    "png": "https://cards.scryfall.io/png/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.png?1783922423",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.jpg?1783922423",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.jpg?1783922423",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.webp?1783922423",
+    "grid": "https://cards.scryfall.io/grid/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.webp?1783922423",
+    "display": "https://cards.scryfall.io/display/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.webp?1783922423",
+    "art": "https://cards.scryfall.io/art/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.webp?1783922423",
+    "crop": "https://cards.scryfall.io/crop/front/1/c/1c5974dd-78fc-4bfb-8678-72041c797584.webp?1783922423"
+  },
+  "mana_cost": "{4}{R}{R}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "First strike\nLandfall \u2014 Whenever a land you control enters, goad each creature target player controls. (Until your next turn, those creatures attack each combat if able and attack a player other than you if able.)",
+  "power": "4",
+  "toughness": "3",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Goad",
+    "First strike",
+    "Landfall"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5e4c3fe8-fd57-4b20-ad56-c03790a16cea",
+  "set": "clb",
+  "set_name": "Commander Legends: Battle for Baldur's Gate",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/5e4c3fe8-fd57-4b20-ad56-c03790a16cea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aclb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/clb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1c5974dd-78fc-4bfb-8678-72041c797584/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3969d1d6-0aed-4fa8-aa09-d9be50576fb4&unique=prints",
+  "collector_number": "794",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Its crystalline core refracts light into chaos.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Caio Monteiro",
+  "artist_ids": [
+    "d5053eb6-af72-47a0-b6e8-023cc3b9aefb"
+  ],
+  "illustration_id": "fee060a6-e102-4b1a-9b90-2657a37cc376",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 2918,
+  "prices": {
+    "usd": "1.47",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "2.00",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=567611&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGeode%2BRager",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGeode%2BRager",
+    "edhrec": "https://edhrec.com/route/?cc=Geode+Rager"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F273556%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=661935&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Geode+Rager&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

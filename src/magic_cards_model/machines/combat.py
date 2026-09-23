@@ -40,6 +40,7 @@ damage walks through here - `declare_blockers` takes them in that order.
 """
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
@@ -1910,44 +1911,140 @@ def is_attack_requirement_line(line: str, name: str) -> bool:
     return subject in ("", "this creature", "this permanent", name.lower())
 
 
+def _own_attack_requirement_count(game: "Game", creature: CardState) -> int:
+    """How many "attacks each combat if able" lines the creature carries on
+    the computed board (CR 613.5) - each one a requirement (CR 508.1d)."""
+    characteristics = game.characteristics_of(creature)
+    return sum(
+        1 for line in characteristics.abilities if is_attack_requirement_line(line, creature.name)
+    )
+
+
 def attack_requirement_holders(game: "Game", player: str) -> list[CardState]:
-    """The creatures `player` controls that a requirement says attack each
-    combat if able (CR 508.1d), read off the computed board (CR 613.5)."""
+    """The creatures `player` controls that some requirement says attack
+    (CR 508.1d): an "attacks each combat if able" line on the computed board
+    (CR 613.5), or the goaded designation (CR 701.15b)."""
     board = game.computed_board()
     holders: list[CardState] = []
     for creature in game.permanents_controlled_by(player):
-        characteristics = board.of(creature)
-        if not characteristics.is_creature:
+        if not board.of(creature).is_creature:
             continue
-        if any(
-            is_attack_requirement_line(line, creature.name) for line in characteristics.abilities
-        ):
+        if creature.goaded_by or _own_attack_requirement_count(game, creature):
             holders.append(creature)
     return holders
 
 
-def unobeyed_attack_requirement(game: "Game", declared: set[UUID]) -> CardState | None:
-    """A creature whose requirement a declaration of `declared` disobeys
-    although it could be obeyed, or `None` (CR 508.1d).
+def attack_requirements_obeyed(
+    game: "Game", creature: CardState, defender: TargetRef | None
+) -> int:
+    """How many of `creature`'s attack requirements it obeys attacking
+    `defender` (`None`: not attacking at all) - CR 508.1d's count, per creature.
 
-    Each requirement read here binds only its own creature, and CR 508.1a/c's
-    checks are per creature, so the maximum number obeyable is every holder
-    that could attack at all: a declaration leaving one of those out obeys
-    fewer than the maximum. A creature that cannot attack - tapped, summoning
-    sick without haste, under a restriction - carries no obeyable requirement.
+    Each "attacks each combat if able" line is one requirement. Each goader
+    adds two (CR 701.15b, 701.15c): "attacks each combat if able", obeyed by
+    any attack, and "attacks a player other than [the goader] if able",
+    obeyed only by attacking a player who is not that goader - never by
+    attacking a planeswalker or battle, and never by attacking the goader.
+    `goaded_by` holds each goader once (CR 701.15d), so a repeat goad adds
+    nothing here.
+    """
+    if defender is None:
+        return 0
+    goaders = creature.goaded_by
+    obeyed = _own_attack_requirement_count(game, creature) + len(goaders)
+    if defender.is_player:
+        obeyed += sum(1 for goader in goaders if goader != defender.username)
+    return obeyed
+
+
+def most_obedient_attack(game: "Game", creature: CardState) -> tuple[TargetRef | None, int]:
+    """The defender `creature` could legally attack that obeys the most of its
+    requirements, and that count - `(None, 0)` when it cannot attack at all
+    (tapped, summoning sick, under a restriction: CR 508.1d counts only what
+    can be obeyed "without disobeying any restrictions"). Ties go to the first
+    defender in `attackable_defenders`' own order, an opponent in turn order
+    first. Every defender is tried, planeswalkers and battles included: a
+    restriction that only protects a player ("can't attack you") leaves the
+    "attacks each combat" requirement obeyable against that player's
+    planeswalker."""
+    assert game.turn is not None
+    best: TargetRef | None = None
+    best_count = 0
+    for defender in attackable_defenders(game, game.turn.active_player):
+        if attack_refusal(game, creature, defender) is not None:
+            continue
+        count = attack_requirements_obeyed(game, creature, defender)
+        if best is None or count > best_count:
+            best, best_count = defender, count
+    return best, best_count
+
+
+@dataclass(frozen=True)
+class UnobeyedAttackRequirement:
+    """A creature whose requirements a declaration obeys fewer of than it
+    could, and the reason, naming each requirement (CR 508.1d)."""
+
+    creature: CardState
+    reason: str
+
+
+def _requirement_wording(game: "Game", creature: CardState) -> str:
+    parts: list[str] = []
+    if _own_attack_requirement_count(game, creature):
+        parts.append("attacks each combat if able")
+    for goader in creature.goaded_by:
+        parts.append(
+            f"is goaded by {goader} (CR 701.15b: it attacks each combat if able and "
+            f"attacks a player other than {goader} if able)"
+        )
+    return " and ".join(parts)
+
+
+def _defender_wording(game: "Game", defender: TargetRef) -> str:
+    if defender.is_player:
+        return str(defender.username)
+    found = game.find_by_id(defender.card_id) if defender.card_id is not None else None
+    return found.name if isinstance(found, CardState) else "that defender"
+
+
+def unobeyed_attack_requirement(
+    game: "Game", declared: Mapping[UUID, TargetRef]
+) -> UnobeyedAttackRequirement | None:
+    """A creature whose requirements the declaration `declared` (each
+    attacker's id mapped to what it attacks) obeys fewer of than it could, or
+    `None` (CR 508.1d).
+
+    CR 508.1d compares the declaration's total obeyed requirements to the
+    maximum obeyable. Every requirement read here binds only its own creature,
+    and CR 508.1a/c's checks are per creature, so the maximum is each
+    holder's own best attack (`most_obedient_attack`) summed: a declaration
+    is short of it exactly when some holder obeys fewer than its own best -
+    left home, or sent at a defender that obeys less (a goaded creature
+    attacking its goader while another player could be attacked). In a
+    two-player game the goader is the only player, so "a player other than"
+    the goader cannot be obeyed and attacking the goader is the maximum.
     No "can't attack unless a player pays" cost is modelled, so CR 508.1d's
     unpaid-cost clause has nothing to exempt.
     """
     if game.turn is None:
         return None
-    active = game.turn.active_player
-    # Every defender, planeswalkers and battles included: a restriction that
-    # only protects a player ("can't attack you") leaves the requirement
-    # obeyable against that player's planeswalker.
-    defenders = attackable_defenders(game, active)
-    for creature in attack_requirement_holders(game, active):
-        if creature.id in declared:
+    for creature in attack_requirement_holders(game, game.turn.active_player):
+        chosen = declared.get(creature.id)
+        best_defender, best = most_obedient_attack(game, creature)
+        obeyed = attack_requirements_obeyed(game, creature, chosen)
+        if best_defender is None or obeyed >= best:
             continue
-        if any(attack_refusal(game, creature, defender) is None for defender in defenders):
-            return creature
+        wording = _requirement_wording(game, creature)
+        if chosen is None:
+            reason = (
+                f"{creature.name} {wording} and can attack, so a declaration without it "
+                "obeys fewer requirements than it could"
+            )
+        else:
+            reason = (
+                f"{creature.name} {wording}; attacking {_defender_wording(game, chosen)} "
+                f"obeys {obeyed} of its requirements, attacking "
+                f"{_defender_wording(game, best_defender)} would obey {best}"
+            )
+        return UnobeyedAttackRequirement(creature, reason)
     return None

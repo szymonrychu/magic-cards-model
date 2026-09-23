@@ -1606,7 +1606,7 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
         nobody_is_legal = not (
             decision.kind is DecisionKind.DECLARE_ATTACKERS
             and game is not None
-            and unobeyed_attack_requirement(game, set()) is not None
+            and unobeyed_attack_requirement(game, {}) is not None
         )
         nobody = [build(decision_option="declare_nobody")] if nobody_is_legal else []
         return [*pair_actions, *nobody]
