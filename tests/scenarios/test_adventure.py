@@ -488,3 +488,65 @@ def test_another_adventurer_cards_adventure_half_reads_its_own_text():
 
     assert bears.zone is Zone.GRAVEYARD
     assert scenario.player("alice").life == 18, "Swift End's own rider"
+
+
+# -- the exile a real resolution makes --------------------------------------
+
+
+def test_a_resolved_adventure_is_exiled_in_the_adventured_pile_without_help():
+    """CR 715.3d, as the resolution itself performs it: "its controller exiles
+    it. For as long as that card remains exiled, that player may play it." The
+    tests above apply `exile_adventured` by hand; a real game has no such
+    hand, so the stack replacement has to leave the card in the adventured
+    pile itself, or the creature half can never be cast from there.
+
+    Found by the behavioural sweep (`tests/test_behavioural_sweep.py`): no
+    "cast a spell from exile" trigger could be raised through an Adventure.
+    """
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Bonecrusher Giant")
+    casting.cast_as_adventure()
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain"))
+    scenario.put_on_stack(casting)
+    giant = scenario.resolve_top()
+
+    assert giant.zone is Zone.EXILE
+    assert giant.exile_annotation is not None
+    assert giant.exile_annotation.marker is ExileMarker.ADVENTURED
+    assert giant.exile_annotation.owner == "alice"
+
+    creature = scenario.cast("Bonecrusher Giant", from_zone=Zone.EXILE)
+    creature.use_keyword("Adventure")
+    scenario.pay_with(
+        creature.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+    )
+    scenario.put_on_stack(creature)
+    assert scenario.resolve_top().zone is Zone.BATTLEFIELD
+
+
+def test_another_adventurers_resolved_adventure_is_marked_too():
+    """The same replacement on a different adventurer (Murderous Rider's Swift
+    End, which also costs its caster 2 life): the pile is the rule's, not the
+    card's."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Murderous Rider"], battlefield=["Swamp"] * 3)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Murderous Rider")
+    casting.cast_as_adventure()
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Swamp", "Swamp", "Swamp"))
+    scenario.put_on_stack(casting)
+    rider = scenario.resolve_top()
+
+    assert rider.zone is Zone.EXILE
+    assert rider.exile_annotation is not None
+    assert rider.exile_annotation.marker is ExileMarker.ADVENTURED

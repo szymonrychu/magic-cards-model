@@ -1585,6 +1585,11 @@ class ReplaceableEvent:
     #: True when the permanent got here by resolving as a spell. Containment
     #: Priest asks (CR 601.2 defines what casting is).
     was_cast: bool = True
+    #: The exile pile (CR 406.4) a replacement that sends the card to exile
+    #: also puts it in - CR 715.3d's adventured pile, whose "that player may
+    #: play it" is read off this marker afterwards. `Game.put_into_graveyard`
+    #: annotates the card once it has actually arrived in exile.
+    exile_marker: ExileMarker | None = None
     #: True while combat damage is being dealt (CR 510.2).
     combat: bool = False
     #: True for the draw an active player takes as the draw step's turn-based
@@ -1780,6 +1785,13 @@ def _to_graveyard(event: ReplaceableEvent) -> bool:
 def _exile_instead(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
     """ "...exile it instead" - the card goes to exile and never reaches a graveyard."""
     event.destination = Zone.EXILE
+
+
+def _exile_adventured_instead(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+    """CR 715.3d: "its controller exiles it. For as long as that card remains
+    exiled, that player may play it" - exiled into the adventured pile."""
+    event.destination = Zone.EXILE
+    event.exile_marker = ExileMarker.ADVENTURED
 
 
 def _shuffle_into_library_instead(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
@@ -5506,7 +5518,7 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 key=f"{card.id}:adventure",
                 source=card,
                 label="a spell cast as an Adventure is exiled instead (CR 715.3d)",
-                apply=_exile_instead,
+                apply=_exile_adventured_instead,
             )
         )
     if event.resolving and event.destination is Zone.GRAVEYARD:

@@ -43,6 +43,7 @@ from ..machines.casting import (
     PlayAction,
     PlayPermission,
     _printed_alternative_total_cost,
+    annotate_exile,
     castable_faces,
     face_being_cast,
     grant_suspend_haste,
@@ -14338,6 +14339,9 @@ class Game(EngineModel):
             elif event.destination is Zone.EXILE:
                 card_state.move_to(Zone.EXILE)
                 self.exile.append(card_state)
+                if event.exile_marker is not None:
+                    # CR 715.3d: the controller exiled it, and may play it.
+                    annotate_exile(card_state, event.exile_marker, card_state.controller, self)
             elif event.destination is Zone.LIBRARY:
                 # Green Sun's Zenith's own "Shuffle [this] into its owner's
                 # library" (`machines/replacement.py`'s `_stack_replacements`
