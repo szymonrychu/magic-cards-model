@@ -873,6 +873,23 @@ _CONDITION_LIBRARY_EMPTY_RE = re.compile(r"your library has no cards in it", re.
 #: reader that asks `condition_holds` - not only the "instead" shape - reads
 #: it the same way.
 _CONDITION_CREATURE_DIED_THIS_TURN = re.compile(r"a creature died this turn", re.IGNORECASE)
+#: Lagomos, Hand of Hatred's "five or more creatures died this turn" - the
+#: counted form of the morbid condition above, over the same per-turn count
+#: of CR 700.4 deaths.
+_CONDITION_CREATURES_DIED_THIS_TURN = re.compile(
+    rf"{count_pattern('count')} or more creatures died this turn", re.IGNORECASE
+)
+#: Minas Tirith's "you attacked with two or more creatures this turn" and
+#: Temple of Civilization's "three or more" - creatures declared as
+#: attackers (CR 508.1) this turn, `Game.attacked_this_turn`.
+_CONDITION_ATTACKED_WITH_N = re.compile(
+    rf"you attacked with {count_pattern('count')} or more creatures this turn", re.IGNORECASE
+)
+#: Temple of Cyclical Time's "it has no time counters on it" - the source's
+#: own counters (CR 122.1), the zero form of `_CONDITION_SELF_COUNTERS`.
+_CONDITION_SELF_NO_COUNTERS = re.compile(
+    r"(?:it|this \w+) has no (?P<kind>[\w+/-]+) counters on it", re.IGNORECASE
+)
 #: Twinned Vision's own "this spell wasn't cast from your hand" / "... from
 #: hand" - CR 601.2a's own "from where it is to the stack" cast-from zone,
 #: read off the resolving spell's own `CastRecord` (`source`). Also moved
@@ -18219,6 +18236,27 @@ class Game(EngineModel):
 
         if _CONDITION_LIBRARY_EMPTY_RE.fullmatch(text):
             return len(self.player(controller).library) == 0
+
+        if match := _CONDITION_CREATURES_DIED_THIS_TURN.fullmatch(text):
+            needed = parse_count(match.group("count"))
+            if needed is None:
+                return None
+            return self.creatures_died_this_turn >= needed
+
+        if match := _CONDITION_ATTACKED_WITH_N.fullmatch(text):
+            needed = parse_count(match.group("count"))
+            if needed is None:
+                return None
+            # Only the active player declares attackers (CR 508.1), so this
+            # turn's attackers were all declared by whoever's turn it is.
+            if self.active_player.username != controller:
+                return False
+            return len(self.attacked_this_turn) >= needed
+
+        if match := _CONDITION_SELF_NO_COUNTERS.fullmatch(text):
+            if source is None:
+                return None
+            return source.counter_count(match.group("kind").lower()) == 0
 
         if _CONDITION_CREATURE_DIED_THIS_TURN.fullmatch(text):
             # Morbid (an ability word, CR 207.2c - "no special rules
