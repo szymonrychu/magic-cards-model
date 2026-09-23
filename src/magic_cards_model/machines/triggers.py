@@ -51,11 +51,13 @@ import operator
 import re
 from collections.abc import Sequence
 from enum import StrEnum
+from functools import cache
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
 
+from ..data.subtypes import subtype_vocabulary
 from ..ids import new_id
 from ..models.card import Card, Color, Layout, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
@@ -966,20 +968,69 @@ def is_ability(item: Any) -> bool:
 # Matching an event against printed trigger conditions
 # --------------------------------------------------------------------------
 
-#: How a card refers to itself in modern templating. Older printings say the
-#: card's own name instead, which `_self_referential` also accepts.
-_SELF_PHRASES = (
-    "this creature",
-    "this permanent",
-    "this artifact",
-    "this enchantment",
-    "this aura",
-    "this land",
-    "this planeswalker",
-    "this spell",
-    "this card",
-    "this token",
-)
+#: The non-type words modern templating also uses to mean "this object
+#: itself" - CR 608.2b's own "spell" for an object on the stack, CR 110.1's
+#: "permanent", and "card"/"token", none of which is one of CR 205.2a's card
+#: types (`Type`) or a printed subtype (`subtype_vocabulary`) but every one
+#: of which still names the source and nothing else.
+_SELF_REFERENCE_EXTRA_WORDS = frozenset({"permanent", "spell", "card", "token"})
+
+
+@cache
+def _self_reference_type_words() -> frozenset[str]:
+    """Every word "this " can be followed by and still mean *itself*
+    (CR 700.7, CR 201.5c) - not a fixed list of examples the way
+    `_SELF_PHRASES` used to be, which had no entry for Smuggler's Copter's
+    own "this Vehicle" (CR 205.3g) until this file was told to add one card
+    at a time. Built instead from the same data every other subtype reader
+    in this codebase already shares: CR 205.2a's card types (`Type`) and
+    every printed CR 205.3 subtype (`subtype_vocabulary`, the flat artifact/
+    battle/creature/enchantment/land/planeswalker/spell-type set `layers.py`
+    and `replacement.py` already read off `data/subtypes.json`), plus the
+    handful of non-type self-reference words `_SELF_REFERENCE_EXTRA_WORDS`
+    names. A card's own subtype line is never consulted here - the point of
+    reading "this Vehicle" as self-referential is that it is CR 700.7's
+    templating convention for *any* Vehicle naming itself, not a fact about
+    one particular printing.
+    """
+    return (
+        frozenset(member.value for member in Type)
+        | subtype_vocabulary()
+        | _SELF_REFERENCE_EXTRA_WORDS
+    )
+
+
+#: "this " followed by the word(s) that say what it is - one word ("this
+#: artifact") or CR 205.3m's own two-word creature type ("this Time Lord").
+#: Matched here and checked against `_self_reference_type_words` rather than
+#: matched by a fixed alternation, so a *new* subtype needs no edit to this
+#: file, and "this way"/"this turn"/"this ability" - none of them a type or
+#: subtype word - are never mistaken for a self-reference the way a bare
+#: "this " substring test would read them.
+_SELF_REFERENCE_WORD_RE = re.compile(r"\bthis ([a-z]+(?: [a-z]+)?)\b")
+
+
+def _has_self_reference_type_word(condition: str) -> bool:
+    """Whether `condition` (already lowercased by the caller) names its own
+    source through "this `<type or subtype word>`" (CR 700.7).
+
+    `_SELF_REFERENCE_WORD_RE` greedily grabs up to two words after "this ",
+    to catch a two-word subtype ("this Time Lord") - so a condition whose
+    "this `<word>`" is immediately followed by another word of its own
+    ("this Vehicle attacks") is checked both as that two-word span and, when
+    the span itself names nothing, as its first word alone; either reading
+    naming a type or subtype word is enough.
+    """
+    words = _self_reference_type_words()
+    for match in _SELF_REFERENCE_WORD_RE.finditer(condition):
+        phrase = match.group(1)
+        if phrase in words:
+            return True
+        first_word = phrase.split(" ", 1)[0]
+        if first_word in words:
+            return True
+    return False
+
 
 _TYPE_WORDS: dict[str, Type] = {
     "artifact": Type.ARTIFACT,
@@ -1069,7 +1120,7 @@ def _self_referential(condition: str, source_name: str, *, legendary: bool = Tru
     mistaken for this source naming itself.
     """
     lowered = condition.lower()
-    if any(phrase in lowered for phrase in _SELF_PHRASES):
+    if _has_self_reference_type_word(lowered):
         return True
     # Case-sensitive, like `self_normalized_effect_text`'s own substitution:
     # Oracle templating always spells a card's own name (and its shortened
@@ -4395,8 +4446,12 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
 #: recognises in the condition and stops there, so a compound "attacks or
 #: blocks" condition is read as `TriggerEvent.ATTACKS` alone and the "or
 #: blocks" half is silently dropped - a real game where Elder Gargaroth
-#: blocks and never attacks would never see its own trigger.
-_ATTACKS_OR_BLOCKS_RE = re.compile(r"^this creature attacks or blocks$", re.IGNORECASE)
+#: blocks and never attacks would never see its own trigger. "this
+#: `<kind>`" is read the same open way `_ENTERS_OR_LEAVES_RE` already reads
+#: it, not pinned to "creature" - Smuggler's Copter's and Getaway Car's own
+#: "this Vehicle attacks or blocks" is the identical compound shape on a
+#: different self-reference noun (CR 700.7).
+_ATTACKS_OR_BLOCKS_RE = re.compile(r"^this (?P<kind>[a-z]+) attacks or blocks$", re.IGNORECASE)
 
 
 def _expand_attacks_or_blocks(ability: TriggeredAbility) -> list[TriggeredAbility]:
@@ -4409,14 +4464,16 @@ def _expand_attacks_or_blocks(ability: TriggeredAbility) -> list[TriggeredAbilit
 
     Every other printed ability passes through unchanged, singleton-wrapped.
     """
-    if not _ATTACKS_OR_BLOCKS_RE.match(ability.condition.strip()):
+    match = _ATTACKS_OR_BLOCKS_RE.match(ability.condition.strip())
+    if match is None:
         return [ability]
+    kind = match.group("kind").lower()
     return [
         ability.model_copy(
-            update={"condition": "this creature attacks", "event": TriggerEvent.ATTACKS}
+            update={"condition": f"this {kind} attacks", "event": TriggerEvent.ATTACKS}
         ),
         ability.model_copy(
-            update={"condition": "this creature blocks", "event": TriggerEvent.BLOCKS}
+            update={"condition": f"this {kind} blocks", "event": TriggerEvent.BLOCKS}
         ),
     ]
 
@@ -4429,8 +4486,9 @@ def _expand_attacks_or_blocks(ability: TriggeredAbility) -> list[TriggeredAbilit
 #: BATTLEFIELD` alone and the "or attacks" half is silently dropped - a real
 #: Primeval Titan that attacks without ever having triggered on entry (cast
 #: with haste, or already on the battlefield when this engine first sees it)
-#: would never see its own attack trigger.
-_ENTERS_OR_ATTACKS_RE = re.compile(r"^this creature enters or attacks$", re.IGNORECASE)
+#: would never see its own attack trigger. "this `<kind>`", the identical
+#: open read `_ATTACKS_OR_BLOCKS_RE` takes just above.
+_ENTERS_OR_ATTACKS_RE = re.compile(r"^this (?P<kind>[a-z]+) enters or attacks$", re.IGNORECASE)
 
 
 def _expand_enters_or_attacks(ability: TriggeredAbility) -> list[TriggeredAbility]:
@@ -4443,17 +4501,19 @@ def _expand_enters_or_attacks(ability: TriggeredAbility) -> list[TriggeredAbilit
 
     Every other printed ability passes through unchanged, singleton-wrapped.
     """
-    if not _ENTERS_OR_ATTACKS_RE.match(ability.condition.strip()):
+    match = _ENTERS_OR_ATTACKS_RE.match(ability.condition.strip())
+    if match is None:
         return [ability]
+    kind = match.group("kind").lower()
     return [
         ability.model_copy(
             update={
-                "condition": "this creature enters",
+                "condition": f"this {kind} enters",
                 "event": TriggerEvent.ENTERS_THE_BATTLEFIELD,
             }
         ),
         ability.model_copy(
-            update={"condition": "this creature attacks", "event": TriggerEvent.ATTACKS}
+            update={"condition": f"this {kind} attacks", "event": TriggerEvent.ATTACKS}
         ),
     ]
 

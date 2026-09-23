@@ -7256,6 +7256,42 @@ def _optional_clause(
     return effect
 
 
+def _parse_you_may_clause(clause: str) -> tuple[str, ClauseEffect, bool | None] | None:
+    """`clause`'s `"you may "` prefix peeled off, as its own three parts: the
+    printed prompt text, the *unwrapped* inner effect, and the `Game.may`
+    default that belongs with it - `_parse_optional_player_clause` wraps
+    these three into one asked-and-run `ClauseEffect` for every ordinary
+    caller; `_merge_may_then_if_you_do_clauses` asks the same question
+    itself instead, so CR 118.12's "if you do" can gate its own consequence
+    on the very choice this question returns rather than re-asking it.
+
+    `None` for anything not shaped "you may `<clause>`", or whose inner
+    clause `parse_clause_effect` cannot read - fail-closed stays in force
+    either way.
+    """
+    match = _YOU_MAY_RE.match(clause)
+    if match is None:
+        return None
+    inner_text = match.group("clause").strip()
+    # "You may gain 1 life" drops the "you" the way "you may draw a
+    # card" drops "you" before "draw" - `_DRAW_RE` reads past an absent
+    # "you" with `(?:you )?`, but `_GAIN_LIFE_RE`/`_LOSE_LIFE_RE` require
+    # it, so a clause that fails without it is retried with it restored
+    # before being given up on.
+    inner = parse_clause_effect(inner_text) or parse_clause_effect(f"you {inner_text}")
+    if inner is None:
+        return None
+    # "You may shuffle." is the one optional clause this parser reads
+    # whose unscripted answer is not "take it": shuffling ends whatever
+    # look or order the clauses above it just fixed (CR 701.20d), so the
+    # engine-wide "take it" convention would silently undo a rigged
+    # library on every unscripted Ponder-shaped cast. Declining is the
+    # same "leave the order alone" posture `SCRY`/`SURVEIL`'s own
+    # defaults already take - see `Decision.default_may`.
+    default = False if _SHUFFLE_RE.fullmatch(inner_text.rstrip(".")) else None
+    return inner_text, inner, default
+
+
 def _parse_optional_player_clause(clause: str) -> ClauseEffect | None:
     """`clause`, or its `"you may "` prefix peeled off and wrapped optional.
 
@@ -7273,24 +7309,9 @@ def _parse_optional_player_clause(clause: str) -> ClauseEffect | None:
         # engine has to ask, so this is read before the generic "you may"
         # strip below would otherwise wrap it in one.
         return parse_clause_effect(clause)
-    if match := _YOU_MAY_RE.match(clause):
-        inner_text = match.group("clause").strip()
-        # "You may gain 1 life" drops the "you" the way "you may draw a
-        # card" drops "you" before "draw" - `_DRAW_RE` reads past an absent
-        # "you" with `(?:you )?`, but `_GAIN_LIFE_RE`/`_LOSE_LIFE_RE` require
-        # it, so a clause that fails without it is retried with it restored
-        # before being given up on.
-        inner = parse_clause_effect(inner_text) or parse_clause_effect(f"you {inner_text}")
-        if inner is None:
-            return None
-        # "You may shuffle." is the one optional clause this parser reads
-        # whose unscripted answer is not "take it": shuffling ends whatever
-        # look or order the clauses above it just fixed (CR 701.20d), so the
-        # engine-wide "take it" convention would silently undo a rigged
-        # library on every unscripted Ponder-shaped cast. Declining is the
-        # same "leave the order alone" posture `SCRY`/`SURVEIL`'s own
-        # defaults already take - see `Decision.default_may`.
-        default = False if _SHUFFLE_RE.fullmatch(inner_text.rstrip(".")) else None
+    you_may = _parse_you_may_clause(clause)
+    if you_may is not None:
+        inner_text, inner, default = you_may
         return _optional_clause(inner, inner_text, default=default)
     # "You draw a card and gain 2 life." (Surgical Precision, Vigorbloom
     # Charm) - `split_effect_clauses`'s own bare-"and" cut leaves the second
@@ -31697,6 +31718,62 @@ def _merge_counted_if_you_do_clauses(
     return 2, effect
 
 
+def _merge_may_then_if_you_do_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """CR 118.12's general shape: "You may `<clause>`. If you do,
+    `<clause>`." - Smuggler's Copter's own attack/block trigger ("you may
+    draw a card. If you do, discard a card.") and Riddlesmith's identical
+    cast trigger.
+
+    A catch-all over `_parse_you_may_clause`'s own optional-clause reading
+    (any action `parse_clause_effect` already understands) paired with a
+    plain `parse_clause_effect` consequence, tried only after every other
+    "you may `<verb>`. If you do, ..." merger in this loop - the discard-
+    flavoured `_merge_may_discard_if_you_do_clauses`, the counted
+    `_merge_counted_if_you_do_clauses`, and (earlier still in the dispatch
+    that calls this one, `_ability_effect_or_notice`/`_spell_effect_or_
+    notice`) the whole-text sacrifice, energy and mana readers - so none of
+    those more specific shapes' own fingerprint winners change: each of
+    them still catches its own cards before this ever sees the clause.
+
+    CR 118.12: "The 'If [a player] does...' clause checks whether the
+    player chose to pay an optional cost ..., regardless of what events
+    actually occurred." That is read literally here - the `Game.may`
+    question is asked exactly once, by this merger itself rather than
+    through `_parse_optional_player_clause`'s own wrapped effect (which
+    would ask it a second time with no way to read the first answer back),
+    and the consequence runs whenever the answer is "yes", never re-checked
+    against whatever the accepted action actually did (an empty library on
+    Smuggler's Copter's own "you may draw a card" still discards, exactly
+    as paper Magic does).
+    """
+    if index + 1 >= len(clauses):
+        return None
+    you_may = _parse_you_may_clause(clauses[index].strip())
+    if you_may is None:
+        return None
+    inner_text, inner, default = you_may
+    if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
+    if if_match is None:
+        return None
+    consequence = parse_clause_effect(if_match.group("consequence").strip())
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if not game.may(
+            player, inner_text, source=source, source_id=source_id_of(stack_object), default=default
+        ):
+            return
+        inner(game, player, source, source_id_of(stack_object))
+        consequence(game, player, source, source_id_of(stack_object))
+
+    return 2, effect
+
+
 #: "Choose a color." then "Target player adds three mana of the chosen color
 #: for each artifact sacrificed this way." (Radiant Lotus) - CR 608.2d's
 #: choice, then CR 106.4's add, the second sentence naming the first's
@@ -35027,6 +35104,16 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_counted_if_you_do_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        # G5's general merger, tried only once every more specific "you may
+        # <verb>. If you do, ..." shape above (and, earlier in the dispatch
+        # that calls this loop, the whole-text sacrifice/energy/mana
+        # readers) has already had first refusal - see its own docstring.
+        merged = _merge_may_then_if_you_do_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
