@@ -15923,8 +15923,16 @@ class Game(EngineModel):
                 # player controls are declared as attackers" - once for the
                 # whole declaration, not once per attacker, so this is its own
                 # subject-less event alongside each creature's own ATTACKS
-                # event above.
-                self.emit(GameEvent(event=TriggerEvent.ATTACKS, player=self.active_player.username))
+                # event above. Its `amount` is how many were declared -
+                # the "that many" a batched attack trigger reads (Screaming
+                # Swarm's "mills that many cards").
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.ATTACKS,
+                        player=self.active_player.username,
+                        amount=len(attacks),
+                    )
+                )
             self.put_triggers_on_stack()
 
     def can_block(self, blocker: CardState, attacker: CardState) -> bool:

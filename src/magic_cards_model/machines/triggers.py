@@ -5540,11 +5540,29 @@ _DEFENDER_OPPONENT_RE = re.compile(
 )
 
 
+#: Screaming Swarm's "you attack with one or more creatures" - the same
+#: batched declaration as "one or more creatures you control attack", said
+#: from the attacking player's side (CR 508.3d).
+_YOU_ATTACK_WITH_ONE_OR_MORE_RE = re.compile(
+    r"^you attack with one or more (?P<description>.+?)$", re.IGNORECASE
+)
+
+
+def _batched_attack_match(condition: str) -> "re.Match[str] | None":
+    """`_ONE_OR_MORE_ATTACK_RE` over `condition`, with "you attack with one
+    or more X" read as its equivalent "one or more X you control attack"."""
+    text = condition.strip()
+    you_attack = _YOU_ATTACK_WITH_ONE_OR_MORE_RE.fullmatch(text)
+    if you_attack is not None:
+        text = f"one or more {you_attack.group('description')} you control attack"
+    return _ONE_OR_MORE_ATTACK_RE.fullmatch(text)
+
+
 def is_batched_attack_condition(condition: str) -> bool:
     """Whether `condition` is "one or more `<description>` attack[
-    `<defender>`]" - one trigger for a whole declaration
-    (`batched_attackers`)."""
-    return _ONE_OR_MORE_ATTACK_RE.fullmatch(condition.strip()) is not None
+    `<defender>`]" (or "you attack with one or more `<description>`") - one
+    trigger for a whole declaration (`batched_attackers`)."""
+    return _batched_attack_match(condition) is not None
 
 
 def _defender_controller_of(game: "Game", attacker: CardState) -> str | None:
@@ -5574,7 +5592,7 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
     control" read here as the attackers' own controller), or it names a
     defender phrase this reader does not recognise (`_DEFENDER_OPPONENT_RE`)
     - fail closed rather than ignore an unread qualifier."""
-    match = _ONE_OR_MORE_ATTACK_RE.fullmatch(condition.strip())
+    match = _batched_attack_match(condition)
     if match is None:
         return None
     from .targeting import permanent_description
