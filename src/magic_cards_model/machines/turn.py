@@ -577,6 +577,26 @@ class TurnMachine(EngineModel):
             self.resume_index = TURN_ORDER.index(self.step) + 1
         self.extra_phase_queue = list(steps) + self.extra_phase_queue
 
+    def add_second_combat_damage_step(self) -> None:
+        """Queue CR 510.4's second combat damage step, directly after the first.
+
+        Called while `self.step` is still the first-strike occurrence of
+        `Step.COMBAT_DAMAGE`, before `advance()` moves the pointer past it -
+        CR 510.4: "After that step, instead of proceeding to the end of
+        combat step, the phase gets a second combat damage step." Mirrors
+        `insert_extra_phase` exactly (a second `Step.COMBAT_DAMAGE` is, for
+        this queue's purposes, an extra phase of one step): `resume_index` is
+        set only the first time, so an additional combat phase's (CR 500.8)
+        own first-strike step queuing its second step here leaves that
+        phase's own already-recorded return point alone, and the step is
+        prepended so whatever is already queued ahead of it - the same
+        additional combat's own `Step.END_OF_COMBAT`, still waiting its turn -
+        runs *after* this second occurrence rather than before it.
+        """
+        if self.resume_index is None:
+            self.resume_index = TURN_ORDER.index(self.step) + 1
+        self.extra_phase_queue = [Step.COMBAT_DAMAGE] + self.extra_phase_queue
+
     def begin_next_turn(self) -> None:
         """Pass the turn to the next player still in the game (CR 500.1, 800.4).
 

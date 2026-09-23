@@ -405,6 +405,28 @@ class CombatMachine(EngineModel):
     blockers_declared: bool = False
     damage_steps_done: int = 0
     first_strike_step_happened: bool = False
+    first_strike_damage_step: bool = False
+    """Whether the combat damage step now in progress is CR 510.4's
+    first-strike step - the read `Game.is_first_strike_damage_step` exposes.
+
+    Unlike `first_strike_step_happened` (sticky for the rest of combat, CR
+    510.4's own signal that a second step is owed), this flips back to False
+    once the second step begins, which is what tells the two occurrences of
+    `Step.COMBAT_DAMAGE` apart while the game sits paused between them.
+    """
+    first_strike_step_ids: list[UUID] = Field(default_factory=list)
+    """The attackers and blockers that had first strike or double strike as
+    the first-strike step began (CR 510.4's "as the first combat damage step
+    began").
+
+    Snapshotted once, when that step begins, rather than re-read live in the
+    second step: CR 702.7c and CR 702.4c-d both turn on what a creature *had
+    then*, not on what it has now, so a creature that struck once and later
+    lost the ability it struck with must not strike again, and one that never
+    struck must strike in the second step even if it is granted first strike
+    in between (`deals_damage_this_step` reads this list rather than asking
+    `has_keyword` a second time for the second step).
+    """
     attacked_this_combat: bool = False
     """Whether anybody attacked this combat, either way CR 508.8 counts.
 
@@ -456,6 +478,8 @@ class CombatMachine(EngineModel):
         self.blockers_declared = False
         self.damage_steps_done = 0
         self.first_strike_step_happened = False
+        self.first_strike_damage_step = False
+        self.first_strike_step_ids = []
         self.attacked_this_combat = False
 
 
@@ -1509,14 +1533,35 @@ def deals_damage_this_step(
     layer 6 makes the extra step happen (CR 510.4) and one removed by Humility
     stops it.
 
-    In a first-strike step, only first strikers and double strikers assign. In
-    the step after one, the double strikers assign again alongside everything
-    that has neither ability.
+    In a first-strike step, only first strikers and double strikers assign -
+    read live, since the step has not happened yet and nothing has snapshotted
+    who qualifies.
+
+    In the step after a first-strike step, CR 702.7c and CR 702.4c-d turn on
+    what a creature *had as the first step began*, not on what it has now:
+    `combat.first_strike_step_ids` is that snapshot, taken once by
+    `combat_damage_step` below. A creature outside it never struck in the
+    first step and strikes now regardless of its current keywords (CR 702.7c's
+    permissive half - granting first strike in the window doesn't move it out
+    of "never struck"); one inside it struck already and only strikes again if
+    it currently has double strike (CR 702.7c's restrictive half, CR 702.4c-d).
+    Reading `has_keyword` live for this question instead - `double or not
+    first` alone - is exactly the bug this snapshot exists to avoid: a first
+    striker that already struck and then loses first strike with no double
+    strike would read `not first` as true and strike again.
+
+    With no first-strike step this combat, there is only ever one step and
+    this branch's own live reading is the whole answer: a creature with
+    neither ability assigns (`not first` alone would already say so), and one
+    granted first or double strike after the *only* step already ran gets no
+    second step to matter in.
     """
     first = has_keyword(state, Keyword.FIRST_STRIKE, game)
     double = has_keyword(state, Keyword.DOUBLE_STRIKE, game)
     if first_strike_step:
         return first or double
+    if game is not None and game.combat.first_strike_step_happened:
+        return state.id not in game.combat.first_strike_step_ids or double
     return double or not first
 
 
@@ -1531,6 +1576,15 @@ def combat_damage_step(game: "Game") -> list[tuple["Targetable", int]]:
     first_strike_step = combat.damage_steps_done == 0 and needs_first_strike_step(game)
     if first_strike_step:
         combat.first_strike_step_happened = True
+        combat.first_strike_damage_step = True
+        combat.first_strike_step_ids = [
+            state.id
+            for state in combatants(game)
+            if has_keyword(state, Keyword.FIRST_STRIKE, game)
+            or has_keyword(state, Keyword.DOUBLE_STRIKE, game)
+        ]
+    else:
+        combat.first_strike_damage_step = False
 
     assignments: list[tuple[CardState, Targetable, int]] = []
     # CR 702.19b: lethal damage takes into account "damage from other creatures

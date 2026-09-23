@@ -3853,7 +3853,12 @@ class Game(EngineModel):
           player, in turn order (CR 802.4), which creatures block
           (`declare_blockers_step`).
         - **CR 703.4k / 510.1** - the combat damage step deals the assigned
-          damage.
+          damage. Exactly one `combat_damage_step()` per occurrence of the
+          step - CR 510.4's second occurrence is its own step, with its own
+          beginning and its own turn-based action, queued by
+          `_advance_past_checks` rather than run twice in a row here
+          (`Game.combat_damage()` is the two-step helper for a caller driving
+          combat manually, outside this automatic path).
         - **CR 703.4n / 514.1** - the cleanup step discards down to maximum hand
           size.
         - **CR 703.4p / 514.2** - then removes all damage marked on permanents.
@@ -3881,7 +3886,7 @@ class Game(EngineModel):
         elif step is Step.DECLARE_BLOCKERS:
             self.declare_blockers_step()
         elif step is Step.COMBAT_DAMAGE:
-            self.combat_damage()
+            self.combat_damage_step()
         elif step is Step.CLEANUP:
             self.cleanup_step()
 
@@ -14158,6 +14163,32 @@ class Game(EngineModel):
         """Whether combat takes two damage steps rather than one (CR 510.4)."""
         return combat_rules.needs_first_strike_step(self)
 
+    @property
+    def is_first_strike_damage_step(self) -> bool:
+        """Whether the game is paused in CR 510.4's first-strike damage step.
+
+        CR 510.4: "If at least one attacking or blocking creature has first
+        strike ... or double strike ... as the combat damage step begins, the
+        only creatures that assign combat damage in that step are those with
+        first strike or double strike. After that step, instead of proceeding
+        to the end of combat step, the phase gets a second combat damage
+        step." CR 506.1: "There are two combat damage steps if any attacking
+        or blocking creature has first strike ... or double strike."
+
+        Both occurrences of the combat phase are the same `Step.COMBAT_DAMAGE`
+        (there is no separate `Step` for the first-strike one - see
+        `machines/turn.py`'s `TurnMachine.add_second_combat_damage_step`), so
+        this - `turn.step` plus `combat.first_strike_damage_step`'s own
+        per-occurrence flag - is the read that tells them apart. This is the
+        read `magic_cards_model_api` consumes to show which of the two a
+        paused game is sitting in.
+        """
+        return (
+            self.turn is not None
+            and self.turn.step is Step.COMBAT_DAMAGE
+            and self.combat.first_strike_damage_step
+        )
+
     def combat_damage_step(self) -> list[tuple[Targetable, int]]:
         """Run one combat damage step, returning what was assigned (CR 510).
 
@@ -14177,6 +14208,15 @@ class Game(EngineModel):
         One step normally; two when anything in combat has first strike or
         double strike, with state-based actions between them - which is what
         stops a creature killed by first strike from striking back.
+
+        The manual-path helper for a scenario driving combat by hand: it runs
+        both steps back to back with no priority round between them, unlike
+        the automatic path (`turn_based_actions`/`_advance_past_checks`),
+        which runs one `combat_damage_step()` per occurrence of
+        `Step.COMBAT_DAMAGE` and gives CR 510.3's priority round its own turn
+        in between. `combat.first_strike_damage_step` ends up False either
+        way once this returns - the second `combat_damage_step()` call sets
+        it, the same as it does on the automatic path's second occurrence.
         """
         assigned = self.combat_damage_step()
         if self.combat.first_strike_step_happened and self.combat.damage_steps_done < 2:
@@ -18025,6 +18065,19 @@ class Game(EngineModel):
         assert self.turn is not None
         previous_turns_taken = self.turn.turns_taken
         previous_step = self.turn.step
+        if (
+            self.automatic_turn_based_actions
+            and previous_step is Step.COMBAT_DAMAGE
+            and self.combat.first_strike_damage_step
+        ):
+            # CR 510.4: queued before the pointer leaves the first-strike
+            # step, so the second occurrence of `Step.COMBAT_DAMAGE` is what
+            # `self.turn.advance()` walks into next rather than
+            # `Step.END_OF_COMBAT`. Only the automatic path queues it - a
+            # caller driving combat by hand uses `Game.combat_damage()`,
+            # which stays the two-step helper and never sets this flag true
+            # across an `advance()` boundary.
+            self.turn.add_second_combat_damage_step()
         step = self.turn.advance()
         self._note_step_began(step)
 
