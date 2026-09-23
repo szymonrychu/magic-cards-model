@@ -11742,24 +11742,61 @@ def _parse_destroy_two_targets_clause(effect_text: str) -> Effect | None:
     match = _DESTROY_TWO_TARGETS_RE.fullmatch(whole)
     if match is None:
         return None
-    phrase = match.group("phrase")
-    if _TRAILING_DURATION_RE.search(phrase):
+    if not _two_battlefield_targets_understood(match.group("phrase"), up_to_one=False):
         return None
+    return destroy_ability_targets  # type: ignore[return-value]
+
+
+def _two_battlefield_targets_understood(phrase: str, *, up_to_one: bool) -> bool:
+    """Exactly two single-permanent `TargetRequirement`s in `phrase`, each one
+    `_targets_understood` would accept on its own. `up_to_one` also admits
+    CR 115.6's "up to one target" (minimum zero) on either of them."""
+    if _TRAILING_DURATION_RE.search(phrase):
+        return False
     profile = profile_for_text(phrase)
     if not profile.understood or len(profile.requirements) != 2:
-        return None
+        return False
+    minimums = (0, 1) if up_to_one else (1,)
     for requirement in profile.requirements:
         if _UNENFORCED_CONDITIONAL_RE.search(requirement.phrase) and (
             requirement.comparison_attribute is None
         ):
-            return None
+            return False
         if requirement.zones != frozenset({Zone.BATTLEFIELD}):
-            return None
+            return False
         if requirement.allows_players or requirement.unbounded:
-            return None
-        if requirement.minimum != 1 or requirement.maximum != 1:
-            return None
-    return destroy_ability_targets  # type: ignore[return-value]
+            return False
+        if requirement.minimum not in minimums or requirement.maximum != 1:
+            return False
+    return True
+
+
+#: "Tap/Untap [up to one ]target X and [up to one ]target Y." - Kiora, Master
+#: of the Depths' +1 ("Untap up to one target creature and up to one target
+#: land."). `_DESTROY_TWO_TARGETS_RE`'s shape with the tap/untap verbs: two
+#: instances of "target" in one instruction (CR 115.3), each chosen on its
+#: own, which `_CLAUSE_SEPARATOR`'s bare-"and" split would otherwise cut into
+#: a verbless "up to one target land" fragment. `tap_ability_targets`/
+#: `untap_ability_targets` already act on every target still legal
+#: (CR 608.2b), so nothing new happens at resolution.
+_TAP_UNTAP_TWO_TARGETS_RE = re.compile(
+    r"^(?P<verb>tap|untap) (?P<phrase>(?:up to one )?target [^.]+? and "
+    r"(?:up to one )?target [^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_tap_untap_two_targets_clause(effect_text: str) -> Effect | None:
+    """`_TAP_UNTAP_TWO_TARGETS_RE`'s shape, on a spell or an ability - both
+    resolve through the same stack-object-generic target effects."""
+    match = _TAP_UNTAP_TWO_TARGETS_RE.fullmatch(_strip_non_effect_preamble(effect_text).strip())
+    if match is None:
+        return None
+    if not _two_battlefield_targets_understood(match.group("phrase"), up_to_one=True):
+        return None
+    if match.group("verb").lower() == "tap":
+        return tap_ability_targets
+    return untap_ability_targets
 
 
 #: "Exile target player's graveyard." (Bojuka Bog, Tormod's Crypt) - checked
@@ -18975,6 +19012,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     emblem_then = _parse_get_an_emblem_then_clause(effect_text)
     if emblem_then is not None:
         return emblem_then
+    tap_untap_two_targets = _parse_tap_untap_two_targets_clause(effect_text)
+    if tap_untap_two_targets is not None:
+        return tap_untap_two_targets
     emblem = _parse_get_an_emblem_clause(effect_text)
     if emblem is not None:
         return emblem
@@ -21433,6 +21473,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     destroy_two_targets = _parse_destroy_two_targets_clause(effect_text)
     if destroy_two_targets is not None:
         return destroy_two_targets
+    tap_untap_two_targets = _parse_tap_untap_two_targets_clause(effect_text)
+    if tap_untap_two_targets is not None:
+        return tap_untap_two_targets
     if _CONTROL_REPLACEMENT_RE.fullmatch(whole):
 
         def control_replacement_notice_only(game: "Game", spell: CardState) -> None:
@@ -33980,6 +34023,13 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
     count = parse_count(reveal_match.group("count"))
     if count is None:
         return None
+    if _PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE.fullmatch(clauses[index + 2].strip()) is None:
+        return None
+    # Tried first: "a creature card and/or a land card" would otherwise read
+    # below as one pick of the unreadable quality "creature card and/or a land".
+    one_of_each_kind = _reveal_take_one_of_each_kind(clauses[index + 1], count)
+    if one_of_each_kind is not None:
+        return one_of_each_kind
     take_match = _MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE.fullmatch(clauses[index + 1].strip())
     if take_match is None:
         return None
@@ -33990,8 +34040,6 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
     if not _search_quality_is_readable(quality):
         return None
     matches = _quality_matcher(quality)
-    if _PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE.fullmatch(clauses[index + 2].strip()) is None:
-        return None
     article = "an" if quality[:1].lower() in "aeiou" else "a"
     if quantity.source is QuantitySource.ANY_NUMBER:
         take_noun = f"any number of {quality} cards"
@@ -34064,6 +34112,84 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
         for state in revealed:
             if state not in chosen:
                 game.put_into_graveyard(state)
+
+    return 3, effect
+
+
+#: "you may put a `<kind>` card[, a `<kind>` card,] and/or a `<kind>` card from
+#: among them into your hand" - Kiora, Master of the Depths' -2. Not
+#: `_MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE`'s one pick of "a creature or
+#: land card": one optional pick *per named kind*, from the same revealed
+#: cards.
+_MAY_PUT_ONE_OF_EACH_KIND_FROM_AMONG_THEM_INTO_HAND_RE = re.compile(
+    r"^you may put (?P<kinds>an? [^,]+? card(?:, an? [^,]+? card)*,? and/or an? .+? card) "
+    r"from among them into your hand$",
+    re.IGNORECASE,
+)
+_ONE_OF_EACH_KIND_SEPARATOR_RE = re.compile(r",? and/or |, ", re.IGNORECASE)
+
+
+def _reveal_take_one_of_each_kind(clause: str, count: int) -> tuple[int, TargetedClause] | None:
+    """`_MAY_PUT_ONE_OF_EACH_KIND_FROM_AMONG_THEM_INTO_HAND_RE` inside
+    `_merge_reveal_top_to_hand_rest_to_graveyard_clauses`' run.
+
+    Each named kind is its own CR 608.2d "you may", asked only while a
+    revealed card of that kind is still on the table, so no question has no
+    legal answer. A card of two named kinds (Dryad Arbor, a creature land)
+    is one card: once taken for one pick it is no longer "from among them"
+    for the next. Every card is revealed first (CR 701.20a); the rest go to
+    the graveyard.
+    """
+    match = _MAY_PUT_ONE_OF_EACH_KIND_FROM_AMONG_THEM_INTO_HAND_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    kinds: list[tuple[str, Callable[[CardState], bool]]] = []
+    for part in _ONE_OF_EACH_KIND_SEPARATOR_RE.split(match.group("kinds")):
+        kind_match = re.fullmatch(r"an? (?P<quality>.+?) card", part.strip(), re.IGNORECASE)
+        if kind_match is None:
+            return None
+        quality = kind_match.group("quality")
+        if not _search_quality_is_readable(quality):
+            return None
+        kinds.append((with_indefinite_article(f"{quality} card"), _quality_matcher(quality)))
+    if len(kinds) < 2:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        source_id = source_id_of(stack_object)
+        revealed = list(player.library[:count])
+        for state in revealed:
+            game.reveal(state, source=source)
+        remaining = list(revealed)
+        taken: list[CardState] = []
+        for noun, matches in kinds:
+            candidates = [state for state in remaining if matches(state)]
+            if not candidates or not game.may(
+                player,
+                f"put {noun} from among them into your hand",
+                source=source,
+                source_id=source_id,
+                cards=candidates,
+            ):
+                continue
+            chosen = _choose_one_card(
+                game,
+                player,
+                candidates,
+                prompt=f"choose {noun} to put into your hand",
+                source=source,
+                source_id=source_id,
+            )
+            remaining.remove(chosen)
+            taken.append(chosen)
+        for state in taken:
+            player.move(state, Zone.HAND)
+        for state in remaining:
+            game.put_into_graveyard(state)
 
     return 3, effect
 
