@@ -25,6 +25,20 @@ session that wrote this file:
   that many cards from the top of their library into their graveyard."
 - **CR 701.22a** - scry.
 - **CR 701.25a** - surveil.
+- **CR 207.2c** - "An ability word appears in italics at the beginning of
+  some abilities. Ability words are similar to keywords in that they tie
+  together cards that have similar functionality, but they have no special
+  rules meaning and no individual entries in the Comprehensive Rules." -
+  `_prepare_effect_clauses`'s ability-word strip, and the closed list
+  (`_ABILITY_WORDS`) that keeps it off a same-shaped CR 702 keyword label.
+- **CR 702.139a** - "Companion is a keyword ability that functions outside
+  the game. It's written as 'Companion—[Condition].'" - the CR 702 keyword
+  the ability-word strip must never touch, since "companion" is not on CR
+  207.2c's own list.
+- **CR 702.11f** - "'Hexproof from [quality A] and from [quality B]' is
+  shorthand for 'hexproof from [quality A]' and 'hexproof from [quality
+  B]'; it behaves as two separate hexproof abilities." - one clause, not two,
+  so `split_effect_clauses`'s bare "and" split must not cut it in half.
 """
 
 from magic_cards_model.machines import AbilityKind, TriggerEvent, abilities_of_kind
@@ -32,6 +46,7 @@ from magic_cards_model.machines.effects import (
     ACTIVATED_EFFECTS,
     EFFECTS,
     TRIGGER_EFFECTS,
+    _prepare_effect_clauses,
     activated_effect_for,
     effect_for,
     parse_clause_effect,
@@ -320,3 +335,133 @@ def test_no_card_has_a_registry_entry_that_would_shadow_the_player_effect_parser
     ]
     for key in newly_unlocked_activated:
         assert key not in ACTIVATED_EFFECTS
+
+
+# --------------------------------------------------------------------------
+# CR 207.2c ability-word strip + the "and" splitter guard - T0
+# --------------------------------------------------------------------------
+
+
+def test_galvanic_blasts_metalcraft_label_is_stripped():
+    """Galvanic Blast: "Metalcraft — Galvanic Blast deals 4 damage instead if
+    you control three or more artifacts." CR 207.2c: an ability word "[has]
+    no special rules meaning" - it is a label glued to the clause, not part
+    of the instruction, so `_prepare_effect_clauses`'s second clause must not
+    carry it. Compared against the printing's own em dash, not a hyphen.
+    """
+    clauses = _prepare_effect_clauses(card("Galvanic Blast").oracle_text)
+    assert clauses is not None
+    assert len(clauses) == 2
+    assert "Metalcraft — " not in clauses[1]
+    assert (
+        clauses[1] == "Galvanic Blast deals 4 damage instead if you control three or more artifacts"
+    )
+
+
+def test_brimstone_volleys_morbid_label_is_stripped():
+    """Brimstone Volley: the same shape as Galvanic Blast, a different
+    ability word and a different condition - proof this is the mechanic
+    (CR 207.2c), not a Galvanic Blast special case.
+    """
+    clauses = _prepare_effect_clauses(card("Brimstone Volley").oracle_text)
+    assert clauses is not None
+    assert len(clauses) == 2
+    assert "Morbid — " not in clauses[1]
+    assert clauses[1] == "Brimstone Volley deals 5 damage instead if a creature died this turn"
+
+
+def test_a_modal_spells_choose_one_label_never_reaches_the_strip():
+    """Abrade: "Choose one —" (CR 700.2). `_prepare_effect_clauses` bails on
+    `is_modal_text` before it ever strips an ability-word label, so a modal
+    card is refused outright rather than having "Choose one" read as a label
+    and its bullets read as one linear list of clauses.
+    """
+    assert _prepare_effect_clauses(card("Abrade").oracle_text) is None
+
+
+def test_a_ward_dash_lines_unspaced_em_dash_is_never_read_as_an_ability_word():
+    """Vein Ripper: "Ward—Sacrifice a creature." CR 702's own keyword-cost
+    template carries no space around the em dash -
+    `abilities._ABILITY_WORD`'s own docstring: "the em dash carries no space
+    on either side, which is what tells this apart from a CR 207.2c ability
+    word" - so this line's label is never even a candidate for the strip.
+    """
+    lines = card("Vein Ripper").oracle_text.split("\n")
+    (ward_line,) = [line for line in lines if line.startswith("Ward")]
+    assert ward_line == "Ward—Sacrifice a creature."
+    assert _prepare_effect_clauses(ward_line) == [ward_line.rstrip(".")]
+
+
+def test_yorions_companion_label_is_never_stripped():
+    """Yorion, Sky Nomad: "Companion — Your starting deck contains ..." -
+    CR 702.139a's own keyword ability, not a CR 207.2c ability word (see the
+    module docstring). `_ABILITY_WORDS` is CR 207.2c's own closed list, and
+    "companion" is not on it, so - unlike Galvanic Blast's "Metalcraft — "
+    above, which is a real ability word - this label survives
+    `_prepare_effect_clauses` untouched. Proves the guard the requirement
+    asked for: a line whose label is a CR 702 keyword is never stripped.
+    """
+    clauses = _prepare_effect_clauses(card("Yorion, Sky Nomad").oracle_text)
+    assert clauses is not None
+    assert clauses[0].startswith("Companion — ")
+
+
+def test_veil_of_summers_third_sentence_keeps_the_hexproof_clause_whole():
+    """Veil of Summer: "You and permanents you control gain hexproof from
+    blue and from black until end of turn." Two "and"s, neither a CR 608.2c
+    clause boundary - the first joins a compound subject ("You and
+    permanents you control"), the second is CR 702.11f's own "from
+    [quality A] and from [quality B]" shorthand for two hexproof abilities,
+    not two instructions.
+    """
+    third_sentence = card("Veil of Summer").oracle_text.split(". ")[2]
+    assert third_sentence == (
+        "You and permanents you control gain hexproof from blue and from black until end of turn"
+    )
+    assert split_effect_clauses(third_sentence) == [third_sentence]
+
+
+def test_doctor_dooms_activated_ability_still_splits_on_a_plain_and():
+    """Doctor Doom, Unrivaled: "You draw a card and lose 1 life." - a bare
+    player subject followed by two verbs, not the compound-subject shape the
+    new guard protects (that guard only fires for "you and <group noun
+    phrase>" immediately after the subject, never for "you <verb> and
+    <verb>"). This is the "discard a card and lose 2 life" shape the guard
+    must never touch.
+    """
+    ability = abilities_of_kind(card("Doctor Doom, Unrivaled"), AbilityKind.ACTIVATED)[0]
+    first_sentence = ability.effect.split(". ")[0]
+    assert first_sentence == "You draw a card and lose 1 life"
+    assert split_effect_clauses(first_sentence) == ["You draw a card", "lose 1 life"]
+
+
+def test_unholy_heats_existing_delirium_reader_still_matches_after_the_strip():
+    """Unholy Heat: "Unholy Heat deals 2 damage to target creature or
+    planeswalker. Delirium — Unholy Heat deals 6 damage instead if there are
+    four or more card types among cards in your graveyard." An existing
+    reader (`_parse_delirium_damage_instead_clause`) already matched this
+    whole text *with* the "Delirium — " label baked into its own regex; the
+    new strip now removes that label upstream, in `_spell_effect_or_notice`'s
+    own `whole`, before that reader ever runs. Regression coverage for
+    exactly that interaction: `effect_for` must still return the delirium-
+    aware effect, not fall through to a generic notice.
+    """
+    text = card("Unholy Heat").oracle_text
+    effect = effect_for("Unholy Heat", text)
+    assert effect is not None
+    assert effect.__qualname__.startswith("delirium_damage")
+
+
+def test_fatal_pushs_existing_revolt_reader_still_matches_after_the_strip():
+    """Fatal Push: "Destroy target creature if it has mana value 2 or less.
+    Revolt — Destroy that creature if it has mana value 4 or less instead if
+    a permanent left the battlefield under your control this turn." Same
+    interaction as Unholy Heat above, for `_parse_revolt_destroy_or_exile_
+    clause`: the new strip removes "Revolt — " before this existing reader's
+    own regex ever sees the text, so its label must be optional now, not
+    required.
+    """
+    text = card("Fatal Push").oracle_text
+    effect = effect_for("Fatal Push", text)
+    assert effect is not None
+    assert effect.__name__ == "destroy_ability_targets"

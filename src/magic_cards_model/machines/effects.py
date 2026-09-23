@@ -103,6 +103,7 @@ from ..numbers import (
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
+    _ABILITY_WORD,
     AbilityKind,
     ActivatedAbility,
     TriggeredAbility,
@@ -2541,10 +2542,18 @@ def delirium_damage(normal: int, with_delirium: int) -> Effect:
 #: future card sharing this exact template - with a different pair of damage
 #: amounts - reads for free; `normal`/`with_delirium` are read through
 #: `numbers.COUNT` rather than pinned to Unholy Heat's own "2"/"6".
+#:
+#: The label itself is optional here, not required: `_prepare_effect_
+#: clauses`'s own ability-word strip (CR 207.2c, `_strip_ability_word_
+#: labels`) already removes "Delirium — " from `whole` before this ever
+#: sees it, the same way `_COUNTER_INSTEAD_IF_POWER_RE` already treats
+#: Stubborn Denial's own "Ferocious — " as optional - kept optional rather
+#: than dropped outright so this still matches text that reached it some
+#: other way, unstripped.
 _DELIRIUM_DAMAGE_INSTEAD_RE = re.compile(
     rf"^(?P<name>.+?) deals {count_pattern('normal', article=False)} damage to target "
     r"(?P<targets>[^.]+)\.\s*"
-    rf"delirium\s*(?:—|-)\s*(?P=name) deals {count_pattern('with_delirium', article=False)} "
+    rf"(?:delirium\s*(?:—|-)\s*)?(?P=name) deals {count_pattern('with_delirium', article=False)} "
     r"damage instead if there are four or more card types among cards in your graveyard\.?$",
     re.IGNORECASE,
 )
@@ -6900,6 +6909,36 @@ _CLAUSE_SEPARATOR = re.compile(r"\.\s+|\n+|,?\s+\bthen\b\s+|\s+\band\b\s+", re.I
 _EXCLUSION_LIST_AND_RE = re.compile(r"other than [^.\n]+", re.IGNORECASE)
 _AND_SENTINEL = "\x00and\x00"
 
+#: "You and permanents you control gain hexproof ..." (Veil of Summer) - a
+#: compound *subject* joined by "and", not two CR 608.2c instructions. The
+#: left side of this particular "and" is a bare player subject with no verb
+#: of its own yet ("You"), and the right side opens a plural group noun
+#: phrase ("permanents you control") that shares the verb still to come.
+#: Splitting there would cut the subject in half and leave a bare "You" with
+#: nothing to do, the same way `_EXCLUSION_LIST_AND_RE` protects an
+#: exclusion list's "and" from being read as a second instruction.
+#:
+#: Anchored to the start of the clause (start of text, right after a
+#: sentence-ending ". ", or right after a line break) so it only fires when
+#: "you and" itself opens the subject - the shape this guard exists for -
+#: and never masks a genuine two-instruction "and" that happens to follow
+#: "you" somewhere later in a sentence.
+_PLAYER_GROUP_SUBJECT_AND_RE = re.compile(
+    r"(?:\A|(?<=\.\s)|(?<=\n))you and (?=(?:permanents|creatures|players?)\s+you\s+control\b)",
+    re.IGNORECASE,
+)
+
+#: CR 702.11f: "'Hexproof from [quality A] and from [quality B]' is
+#: shorthand for 'hexproof from [quality A]' and 'hexproof from [quality
+#: B]'; it behaves as two separate hexproof abilities" - one clause, not two
+#: CR 608.2c instructions in sequence (Veil of Summer: "hexproof from blue
+#: and from black"). CR 702.16g reads protection's own "from [quality A] and
+#: from [quality B]" list the identical way, so this is bound to the shared
+#: "from ... and from ..." shape rather than to either keyword's own name.
+#: Bounded to the line so it cannot reach across a sentence boundary into an
+#: unrelated later instruction.
+_QUALITY_LIST_AND_FROM_RE = re.compile(r"\bfrom\s+[^.\n]*?\s+and\s+from\b", re.IGNORECASE)
+
 #: A "then" standing at the **head** of its own sentence - "Look at the top
 #: five cards ... Then put the rest on the bottom of your library." (Ancient
 #: Stirrings), "earthbend 2. Then search your library ..." (Earthbender
@@ -6947,6 +6986,18 @@ def split_effect_clauses(text: str) -> list[str]:
     # order. Masked across the split and restored after, so the separator
     # stays the simple thing it is.
     masked = _EXCLUSION_LIST_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), text)
+    # "You and permanents you control gain hexproof ..." - a compound subject,
+    # not two instructions (see `_PLAYER_GROUP_SUBJECT_AND_RE`'s docstring).
+    # Same replace-in-place idiom as `_EXCLUSION_LIST_AND_RE` above, so the
+    # restore below (a plain "and" -> " and " swap) round-trips it exactly.
+    masked = _PLAYER_GROUP_SUBJECT_AND_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
+    # "hexproof from blue and from black" (CR 702.11f/702.16g) - one clause,
+    # not two instructions.
+    masked = _QUALITY_LIST_AND_FROM_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
     split = (
         _LEADING_THEN_RE.sub("", clause.strip()).replace(_AND_SENTINEL, " and ")
         for clause in _CLAUSE_SEPARATOR.split(masked)
@@ -7207,6 +7258,138 @@ def _strip_keyword_ability_lines(text: str) -> str:
     return "\n".join(line for line in lines if not _is_keyword_ability_line(line))
 
 
+#: CR 207.2c's own closed list: "The ability words are adamant, addendum,
+#: alliance, battalion, bloodrush, celebration, channel, chroma, cohort,
+#: constellation, converge, council's dilemma, coven, delirium, descend 4,
+#: descend 8, disappear, domain, eerie, eminence, enrage, fateful hour,
+#: fathomless descent, ferocious, flurry, formidable, grandeur, hellbent,
+#: heroic, imprint, infusion, inspired, join forces, kinship, landfall,
+#: lieutenant, magecraft, metalcraft, morbid, opus, pack tactics, paradox,
+#: parley, radiance, raid, rally, renew, repartee, revolt, secret council,
+#: spell mastery, strive, survival, sweep, tempting offer, threshold,
+#: undergrowth, valiant, vivid, void, and will of the council." Looked up in
+#: this session with `mise run rules:find 207.2`.
+#:
+#: The rule goes on to say an ability word "[has] no special rules meaning
+#: and no individual entries in the Comprehensive Rules" - which is exactly
+#: what makes this list also the proof that a same-shaped CR 702 *keyword*
+#: label is never one of these. Companion (CR 702.139a: "Companion is a
+#: keyword ability ... written as 'Companion—[Condition]'") prints with the
+#: identical spaced em dash a real ability word does (Yorion, Sky Nomad:
+#: "Companion — Your starting deck contains ..."), but "companion" is absent
+#: from this list, and CR 702.139a very much is an "individual entry in the
+#: Comprehensive Rules" - so the two vocabularies are disjoint by
+#: construction, not by a per-card guess. Channel and Imprint (Boseiju, Who
+#: Endures's "Channel — {1}{G}, Discard this card: ..."; Isochron Scepter's
+#: "Imprint — When this artifact enters, ...") *are* on this list - CR 207.2c
+#: is explicit that they carry no rule of their own beyond being an ability
+#: word, so stripping their label here is correct, not a gap.
+_ABILITY_WORDS = frozenset(
+    {
+        "adamant",
+        "addendum",
+        "alliance",
+        "battalion",
+        "bloodrush",
+        "celebration",
+        "channel",
+        "chroma",
+        "cohort",
+        "constellation",
+        "converge",
+        "council's dilemma",
+        "coven",
+        "delirium",
+        "descend 4",
+        "descend 8",
+        "disappear",
+        "domain",
+        "eerie",
+        "eminence",
+        "enrage",
+        "fateful hour",
+        "fathomless descent",
+        "ferocious",
+        "flurry",
+        "formidable",
+        "grandeur",
+        "hellbent",
+        "heroic",
+        "imprint",
+        "infusion",
+        "inspired",
+        "join forces",
+        "kinship",
+        "landfall",
+        "lieutenant",
+        "magecraft",
+        "metalcraft",
+        "morbid",
+        "opus",
+        "pack tactics",
+        "paradox",
+        "parley",
+        "radiance",
+        "raid",
+        "rally",
+        "renew",
+        "repartee",
+        "revolt",
+        "secret council",
+        "spell mastery",
+        "strive",
+        "survival",
+        "sweep",
+        "tempting offer",
+        "threshold",
+        "undergrowth",
+        "valiant",
+        "vivid",
+        "void",
+        "will of the council",
+    }
+)
+
+
+def _strip_ability_word_labels(text: str) -> str:
+    """Strip a line-leading CR 207.2c ability word off every line of `text`.
+
+    "Metalcraft — Galvanic Blast deals 4 damage instead if you control three
+    or more artifacts." is one instruction with a label glued to the front of
+    it, not two - CR 207.2c says the word itself "[has] no special rules
+    meaning", so the clause underneath is exactly "Galvanic Blast deals 4
+    damage instead if you control three or more artifacts." once the label is
+    gone. `machines/abilities.py` already strips the identical label shape
+    off an *ability* line (`_parse_line`); this is the spell-text twin,
+    reusing that module's own `_ABILITY_WORD` regex rather than a second copy
+    of it.
+
+    Guarded by `_ABILITY_WORDS`, CR 207.2c's own closed list: a label that is
+    not on it is left alone, which is what keeps a same-shaped CR 702 keyword
+    (Companion) from being misread as a bare label and having its own cost or
+    restriction text corrupted. See `_ABILITY_WORDS`'s docstring for why
+    membership in that list is a sound test rather than a guess.
+
+    Applied per line, after `_strip_keyword_ability_lines` has already
+    dropped whichever lines are nothing but a keyword (that check only
+    matches a line with no " —" in it - see `_is_keyword_ability_line` -
+    so it never sees an ability-word line to begin with, and running this
+    first would strip the label and make a genuine multi-word ability line
+    such as "Threshold — Whenever ~ attacks, ..." look like a bare keyword
+    line once "Threshold — " were gone).
+    """
+    lines = text.split("\n")
+    stripped: list[str] = []
+    for line in lines:
+        match = _ABILITY_WORD.match(line)
+        if match is not None:
+            label = match.group(1).strip().replace("’", "'").lower()
+            if label in _ABILITY_WORDS:
+                line = line[match.end() :]
+        stripped.append(line)
+    return "\n".join(stripped)
+
+
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it."""
     text = _ADDITIONAL_COST_LINE_RE.sub("", text)
@@ -7224,7 +7407,11 @@ def _strip_non_effect_preamble(text: str) -> str:
     # already gone - "Improvise (Your artifacts can help cast this spell. ...)"
     # carries two full stops inside the parenthetical and would fail the
     # no-full-stop test with them still attached.
-    return _strip_keyword_ability_lines(text)
+    text = _strip_keyword_ability_lines(text)
+    # CR 207.2c: an ability word is a label, not an instruction (see
+    # `_ABILITY_WORDS`). Last, so it sees the same already-shape-checked
+    # lines `_strip_keyword_ability_lines` did.
+    return _strip_ability_word_labels(text)
 
 
 #: A plain sentence boundary - a full stop (or ! or ?) followed by
@@ -19590,9 +19777,17 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
 #: ..." clause in this file already uses - the conditional part of "if it has
 #: mana value N or less" is enforced entirely by the targeting layer, not by
 #: this effect.
+#:
+#: The label itself is optional here, not required: `_prepare_effect_
+#: clauses`'s own ability-word strip (CR 207.2c, `_strip_ability_word_
+#: labels`) already removes "Revolt — " from `whole` before this ever sees
+#: it, the same way `_COUNTER_INSTEAD_IF_POWER_RE` already treats Stubborn
+#: Denial's own "Ferocious — " as optional - kept optional rather than
+#: dropped outright so this still matches text that reached it some other
+#: way, unstripped.
 _REVOLT_DESTROY_OR_EXILE_RE = re.compile(
     r"^(?P<verb>destroy|exile) (?P<phrase>target .+?) if it has mana value \d+ or less\."
-    r"\s*revolt\s*[—-]\s*(?P=verb) that .+? if it has mana value \d+ or less instead if a "
+    r"\s*(?:revolt\s*[—-]\s*)?(?P=verb) that .+? if it has mana value \d+ or less instead if a "
     r"permanent left the battlefield under your control this turn\.?$",
     re.IGNORECASE | re.DOTALL,
 )
