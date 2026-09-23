@@ -9550,6 +9550,7 @@ class Game(EngineModel):
         rest_in_random_order: bool = False,
         moved_amount: int | None = None,
         moved_exact: bool = False,
+        asked_of: Player | str | None = None,
     ) -> tuple[list[CardState], list[CardState]]:
         """Look at the top `count` cards and split them into two groups, the
         same CR 608.2d question `scry` and `surveil` already ask (CR 701.22a,
@@ -9644,9 +9645,22 @@ class Game(EngineModel):
         freedom - `moved_exact=False`, or fewer forced than were looked at -
         is still asked; a client that cannot answer meaningfully is the
         defect this guards against, not the freedom to choose.
+
+        `asked_of` is who makes the split choice and gains the CR 701.20e
+        knowledge, when that is not `player` itself - Architects of Will's
+        "look at the top three cards of *target player's* library, then put
+        them back in any order" is the controller doing the looking and the
+        ordering, over a library that belongs to somebody else entirely (the
+        official ruling: "You look at the cards, not the targeted player.").
+        `player` still names whose library is read and rewritten - `_look_at_
+        top`, `put_back_epoch`, and the final `library.remove` below all stay
+        keyed to it - only the question and the knowledge move to `asked_of`.
+        `None` (the default) keeps both roles on `player`, exactly as every
+        caller before this parameter existed already behaved.
         """
         if isinstance(player, str):
             player = self.player(player)
+        chooser = self.player(asked_of) if isinstance(asked_of, str) else (asked_of or player)
         if count <= 0:
             return [], []
 
@@ -9654,7 +9668,7 @@ class Game(EngineModel):
         if not looked_at:
             return [], []
         amount = len(looked_at) if moved_amount is None else min(moved_amount, len(looked_at))
-        pending_looks = self._look_before_choosing(player, looked_at, source)
+        pending_looks = self._look_before_choosing(chooser, looked_at, source)
         if moved_exact and amount == len(looked_at):
             # CR 608.2d: with the library this short, every card looked at is
             # the only legal `moved` - nothing is left to choose, so nothing
@@ -9664,7 +9678,7 @@ class Game(EngineModel):
             asked = self.ask(
                 Decision(
                     kind=DecisionKind.SCRY,
-                    player=player.username,
+                    player=chooser.username,
                     prompt=prompt or f"look at the top {count} card(s)",
                     source=source,
                     source_id=source_id,
@@ -9681,7 +9695,7 @@ class Game(EngineModel):
         self._end_looks(pending_looks)
         put_back_epoch = player.library_epoch + (0 if rest_in_random_order else 1)
         for state in looked_at:
-            self._record_shown(state, [player.username], source, library_epoch=put_back_epoch)
+            self._record_shown(state, [chooser.username], source, library_epoch=put_back_epoch)
         library = player.library
         for state in looked_at:
             if state in library:

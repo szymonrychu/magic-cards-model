@@ -8,9 +8,14 @@ an `UnmodeledTriggerEffectNotice`; a spell now records the same notice, on the
 same `Game.unmodeled_trigger_effect_notices` list, with the spell's own id,
 name and whole printed text (none of it ran).
 
-Ponder ("Look at the top three cards of your library, then put them back in any
-order. You may shuffle. / Draw a card.") is the vehicle: it still has no reader
-after the look-top fixes that closed Stock Up and Planar Genesis.
+Strix Serenade ("Counter target artifact, creature, or planeswalker spell. Its
+controller creates a 2/2 blue Bird creature token with flying.") is the
+vehicle: Ponder, this test's own vehicle before the look-top-and-put-back wave
+(`tests/scenarios/test_look_at_top_and_put_back.py`) gave it a reader, has one
+now, so it can no longer stand for "unread". Strix Serenade's own clause
+combines a counter with a token grant for the countered spell's controller - a
+shape this wave's look/shuffle readers never touch - and still has no reader
+anywhere in `src/`.
 
 Not every `None` is a gap, and the notice must not fire for these:
 
@@ -30,28 +35,36 @@ from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 
-def test_an_unread_sorcery_records_a_notice_naming_its_whole_text():
+def test_an_unread_instant_records_a_notice_naming_its_whole_text():
     scenario = (
         Scenario()
-        .player(
-            "alice",
-            hand=["Ponder"],
-            library=["Forest", "Island", "Swamp", "Mountain"],
-            battlefield=["Island"],
-        )
-        .player("bob")
+        .player("alice", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("bob", hand=["Strix Serenade"], battlefield=["Island"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    ponder = scenario.cast_and_resolve("Ponder", *scenario.untapped_sources("Island"))
+    bears = scenario.cast_onto_stack(
+        "Grizzly Bears",
+        *scenario.untapped_sources("Forest", "Forest", username="alice"),
+        username="alice",
+    )
+    scenario.pass_priority("alice")
 
-    assert ponder.zone is Zone.GRAVEYARD
+    serenade = scenario.cast_and_resolve(
+        "Strix Serenade",
+        *scenario.untapped_sources("Island", username="bob"),
+        username="bob",
+        targets=[bears],
+    )
+
+    assert serenade.zone is Zone.GRAVEYARD
+    assert bears.zone is Zone.STACK, "an unread 'counter' clause counters nothing"
     assert scenario.game.unmodeled_trigger_effect_notices == [
         UnmodeledTriggerEffectNotice(
-            source_id=ponder.id,
-            source_name="Ponder",
-            text=ponder.oracle_text,
+            source_id=serenade.id,
+            source_name="Strix Serenade",
+            text=serenade.oracle_text,
         )
     ]
 

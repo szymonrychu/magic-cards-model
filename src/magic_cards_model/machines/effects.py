@@ -6104,6 +6104,12 @@ _SURVEIL_RE = re.compile(rf"surveils? (?P<n>{AMOUNT}){where_x_pattern()}", re.IG
 #: Command's third-person mode) - `scr(?:y|ies)` reads both conjugations.
 #: "Scry X, where X is `<expr>`" (Oath of Jace) reads the same way.
 _SCRY_RE = re.compile(rf"scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
+#: "shuffle" (Ponder's, Pondering Mage's own "You may shuffle.") or "shuffle
+#: your library" - CR 701.24a's action alone, with nothing else attached. A
+#: search's own mandatory shuffle reads through `Game.search_library`
+#: instead, never through here; this is only the bare, optional verb a "you
+#: may" clause wraps (`_parse_optional_player_clause`).
+_SHUFFLE_RE = re.compile(r"^shuffle(?: your library)?$", re.IGNORECASE)
 #: "you may pay any amount of life" (Necrodominance) - CR 119.4's variable
 #: payment, zero upward. The "may" is the amount itself (paying 0 is not
 #: paying), so it is one question (`Game.pay_any_amount_of_life`), never a
@@ -6893,6 +6899,15 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         return lambda game, player, source, source_id: game.scry(
             player, reader(game, player.username), source=source, source_id=source_id
         )
+
+    if _SHUFFLE_RE.fullmatch(clause):
+        # CR 701.24a. Always wrapped by `_parse_optional_player_clause`'s
+        # "you may" (no printed card in the pool shuffles unconditionally
+        # here - that shape goes through `_BARE_SHUFFLES_RE`'s own "each
+        # player ..." family instead), so `Game.may`'s own default - take it -
+        # decides the unscripted case, the same as every other optional
+        # clause this parser reads.
+        return lambda game, player, source, source_id: game.shuffle_library(player)
 
     if match := _UNTAP_ALL_QUALIFIER_RE.fullmatch(clause):
         nonland = match.group("nonland") is not None
@@ -30939,6 +30954,112 @@ def _merge_look_top_reveal_to_hand_clauses(
 
 
 # --------------------------------------------------------------------------
+# "Look at the top N cards of your library, then put them back in any
+# order." - Ponder, Index, Pondering Mage's own ETB trigger - and its target
+# variant, "... of target player's library, ..." (Architects of Will). Only
+# CR 401.4's free arrangement, past that: no reveal, no hand, no bottom - the
+# whole looked-at set goes straight back on top in whatever order the
+# chooser answers. `Game.look_at_top_and_split`'s own generic split question
+# still carries it: `moved_amount=0` pins the "moved" half to empty (nothing
+# ever leaves), which leaves `rest` as the entire looked-at set and its
+# `top_order` as the free arrangement CR 401.4 grants.
+# --------------------------------------------------------------------------
+
+#: "look at the top <count> cards of your library" or "... of target
+#: player's library" (Architects of Will). `_CLAUSE_SEPARATOR`'s own ", then "
+#: cut already split this away from "put them back in any order" below, so
+#: this clause is read on its own.
+_LOOK_AT_TOP_N_LIBRARY_RE = re.compile(
+    rf"^look at the top (?P<count>{COUNT}) cards? of "
+    r"(?P<subject>your|target player'?s) library$",
+    re.IGNORECASE,
+)
+#: "put them back in any order" - Ponder's own second half of the same
+#: sentence, and Architects of Will's identical tail over a different
+#: library. "It" is `_LOOK_AT_TOP_N_LIBRARY_RE`'s own singular cousin, unused
+#: by anything currently in the pool but read the same way `_PUT_IT_OR_
+#: THEM_INTO_YOUR_HAND_RE` already reads "it"/"them" for the reveal-to-hand
+#: family, rather than being fitted only to the two-or-more-card wording the
+#: pool happens to print today.
+_PUT_THEM_BACK_IN_ANY_ORDER_RE = re.compile(r"^put (?:it|them) back in any order$", re.IGNORECASE)
+
+
+def _merge_look_top_put_back_any_order_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "Look at the top N cards of your library, then put them back in any
+    order" - two clauses, read as one: the count named by the first is
+    exactly the set the second re-orders, with nothing moved anywhere else.
+
+    CR 608.2d's split question is `Game.look_at_top_and_split`'s own, asked
+    with `moved_amount=0` so the "moved" half is never a legal choice beyond
+    empty (CR 608.2d: "can't choose an option that's illegal") - the whole
+    looked-at set is always `rest`, and its `top_order` is the free
+    arrangement CR 401.4 grants ("the owner of those cards may arrange them
+    in any order"). Declining (the unscripted default, `CardSplit()`) keeps
+    the cards in the order they were looked at, which is what makes a rigged
+    library stay rigged when a scenario asks for nothing else.
+
+    "Target player's library" (Architects of Will) reads the library of a
+    resolved player target, but the controller is still who looks, orders,
+    and learns (the official ruling: "You look at the cards, not the
+    targeted player.") - `Game.look_at_top_and_split`'s own `asked_of` is
+    exactly that split, added for this reader.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    look_match = _LOOK_AT_TOP_N_LIBRARY_RE.fullmatch(clauses[index].strip())
+    if look_match is None:
+        return None
+    count = parse_count(look_match.group("count"))
+    if count is None:
+        return None
+    if _PUT_THEM_BACK_IN_ANY_ORDER_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+    targeted = look_match.group("subject").lower().startswith("target")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if targeted:
+            players = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+            # CR 608.2b: a target gone by resolution drops out; nothing left
+            # to look at is nothing done, the same "no event" CR 609.3 gives
+            # every other library-count effect a short library exhausts.
+            if not players:
+                return
+            (subject,) = players
+        else:
+            subject = controller
+
+        moved, rest = game.look_at_top_and_split(
+            subject,
+            count,
+            source=source,
+            prompt=f"look at the top {count} card(s), then put them back in any order",
+            moved_label="not moved",
+            kept_label="top of the library, in any order",
+            moved_amount=0,
+            asked_of=controller,
+            source_id=source_id_of(stack_object),
+        )
+        assert not moved, "moved_amount=0: nothing is ever a legal 'moved' answer"
+        library = subject.library
+        for position, state in enumerate(rest):
+            library.insert(position, state)
+        if rest:
+            # CR 701.20d: the looked-at cards are reordered; the cards below
+            # them keep their own order (CR 401.2).
+            subject.note_library_changed(placed=rest)
+
+    return 2, effect
+
+
+# --------------------------------------------------------------------------
 # "Reveal the top N cards of your library. You may put a <quality> card from
 # among them into your hand. Put the rest into your graveyard." - Malevolent
 # Rumble, Grisly Salvage, Satyr Wayfinder: one anaphoric run of three clauses,
@@ -33659,6 +33780,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_reveal_to_hand_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_look_top_put_back_any_order_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
