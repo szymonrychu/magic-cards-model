@@ -2433,6 +2433,15 @@ class Game(EngineModel):
     so a departure event its move did not stamp with types still carries
     them - `emit` fills `subject_types`/`subject_subtypes` from here. Not
     persisted: it is read within the same move that wrote it."""
+    _returning_together: list[tuple[GameEvent, GameEvent]] | None = PrivateAttr(default=None)
+    """The departure events of permanents returned to hand inside
+    `returning_together`, raised together once the last of them has moved
+    (CR 603.10a). `None` outside one. Not persisted: the block opens and
+    closes within one resolving effect or one cost payment."""
+    _returned_to_hand_batch: tuple[GameEvent, ...] = PrivateAttr(default=())
+    """The `LEAVES_BATTLEFIELD_TO_HAND` events being raised right now as one
+    event (`returned_to_hand_batch`). Empty outside `_announce_returns`. Not
+    persisted: read only while those events are being raised."""
     _entering_together: list[CardState] | None = PrivateAttr(default=None)
     """Permanents put onto the battlefield inside `entering_together`, whose
     enters events wait for the last of them (CR 603.6a). `None` outside one.
@@ -7642,8 +7651,22 @@ class Game(EngineModel):
 
                 def become_level(game: "Game", stack_object: "AbilityOnStack") -> None:
                     permanent = stack_object.source(game)
-                    if permanent is not None:
-                        permanent.class_level = target
+                    if permanent is None or permanent.class_level == target:
+                        return
+                    permanent.class_level = target
+                    # CR 716.2a: "This Class's level becomes N" is the event
+                    # a "When this Class becomes level N" trigger watches.
+                    game.emit(
+                        GameEvent(
+                            event=ExtraTriggerEvent.CLASS_BECOMES_LEVEL,
+                            subject_id=permanent.id,
+                            subject_name=permanent.name,
+                            subject_controller=permanent.controller,
+                            subject_card=permanent.card,
+                            player=permanent.controller,
+                            amount=target,
+                        )
+                    )
 
                 return become_level
             index = self._activated_index(ability)
@@ -7934,6 +7957,17 @@ class Game(EngineModel):
                 gone = self.find_by_id(event.subject_id)
                 if isinstance(gone, CardState) and gone not in sources:
                     sources = [*sources, gone]
+            elif event.event is TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND:
+                # CR 603.10a: every permanent returned by this one event looks
+                # back, itself included, though each is in a hand by now.
+                for returned in self._returned_to_hand_batch or (event,):
+                    gone = (
+                        self.find_by_id(returned.subject_id)
+                        if returned.subject_id is not None
+                        else None
+                    )
+                    if isinstance(gone, CardState) and gone not in sources:
+                        sources = [*sources, gone]
 
             triggered = triggers_for(self, event, sources)
             if event.event is TriggerEvent.ENTERS_THE_BATTLEFIELD and self._etb_triggers_suppressed(
@@ -12122,6 +12156,53 @@ class Game(EngineModel):
             )
         )
 
+    @property
+    def returned_to_hand_batch(self) -> tuple[GameEvent, ...]:
+        """Every permanent returned to hand by the event now being raised, as
+        its `LEAVES_BATTLEFIELD_TO_HAND` event, in the order they moved.
+
+        CR 603.10a: a leaves-the-battlefield ability looks back in time, so
+        each permanent returned by one event sees every other one - its own
+        source included, already in a hand - and CR 603.2c's plural "one or
+        more ... are returned" triggers once for all of them. Empty while no
+        such event is being raised."""
+        return self._returned_to_hand_batch
+
+    @contextmanager
+    def returning_together(self) -> Iterator[None]:
+        """Every permanent returned to hand inside the block leaves as one event.
+
+        One instruction returning several permanents - Marang River Regent's
+        "return up to two other target nonland permanents", a cost returning
+        two lands - is one event (CR 603.2c), and each of them looks back at
+        the others (CR 603.10a), which it only can if no departure is raised
+        until the last of them has moved. A nested block joins the outer one.
+        """
+        if self._returning_together is not None:
+            yield
+            return
+        self._returning_together = []
+        try:
+            yield
+        finally:
+            returned, self._returning_together = self._returning_together, None
+        self._announce_returns(returned)
+
+    def _announce_returns(self, returned: list[tuple[GameEvent, GameEvent]]) -> None:
+        """Raise the departure events of one return-to-hand event (CR 603.6c)."""
+        if not returned:
+            return
+        self._returned_to_hand_batch = tuple(to_hand for to_hand, _ in returned)
+        try:
+            for to_hand, departure in returned:
+                self.emit(to_hand)
+                # CR 603.6c: the generic departure, alongside the destination-
+                # specific event just above - see `Game.put_into_graveyard`'s
+                # matching emit for why both fire.
+                self.emit(departure)
+        finally:
+            self._returned_to_hand_batch = ()
+
     def return_to_hand(self, permanent: CardState) -> CardState:
         """Return a permanent to its owner's hand (CR 701.19a is "return").
 
@@ -12142,36 +12223,43 @@ class Game(EngineModel):
             if move_refused(permanent, Zone.HAND) is not None:
                 return permanent
             was_on_battlefield = permanent in self.battlefield
+            # CR 603.10a: who controlled it as it last existed on the
+            # battlefield - "another nonland permanent you control is
+            # returned" asks about then, not about the hand it lands in.
+            controller = permanent.controller
             if was_on_battlefield:
                 self._note_left_battlefield(permanent)
             self._take_out_of_every_zone(permanent)
             self.combat.remove(permanent.id)  # CR 506.4
-            self._owner_of(permanent).add(permanent, Zone.HAND)
+            owner = self._owner_of(permanent)
+            owner.add(permanent, Zone.HAND)
             self._accompany_meld_partner(permanent, Zone.HAND)
             if was_on_battlefield:
-                self.emit(
-                    GameEvent(
-                        event=TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND,
-                        subject_id=permanent.id,
-                        subject_name=permanent.name,
-                        subject_controller=permanent.controller,
-                        subject_card=permanent.card,
-                        player=permanent.controller,
-                    )
+                left = self._left_battlefield_characteristics.get(permanent.id)
+                to_hand = GameEvent(
+                    event=TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=controller,
+                    subject_card=permanent.card,
+                    subject_types=left.types if left is not None else None,
+                    subject_subtypes=left.subtypes if left is not None else None,
+                    # Whose hand it went to: its owner's (CR 108.3) - the
+                    # "your hand" of Azorius Aethermage's condition.
+                    player=owner.username,
                 )
-                # CR 603.6c: the generic departure, alongside the destination-
-                # specific event just above - see `Game.put_into_graveyard`'s
-                # matching emit for why both fire.
-                self.emit(
-                    GameEvent(
-                        event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
-                        subject_id=permanent.id,
-                        subject_name=permanent.name,
-                        subject_controller=permanent.controller,
-                        subject_card=permanent.card,
-                        player=permanent.controller,
-                    )
+                departure = GameEvent(
+                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=controller,
+                    subject_card=permanent.card,
+                    player=controller,
                 )
+                if self._returning_together is not None:
+                    self._returning_together.append((to_hand, departure))
+                else:
+                    self._announce_returns([(to_hand, departure)])
             return permanent
 
     def put_cards_into_library(
@@ -18299,6 +18387,37 @@ class Game(EngineModel):
         by_id = {state.id: state for state in eligible}
         component.cards = [by_id[card_id] for card_id in answer]
 
+    def _choose_permanents_to_return(
+        self, component: CostComponent, payer: str, source: CardState
+    ) -> None:
+        """Ask `payer` which permanents a printed "Return a land you control
+        to its owner's hand" cost returns (CR 601.2h via CR 602.2b). Offered:
+        the permanents `payer` controls that meet the requirement - "another"
+        leaves the source out. Too few to offer leaves the component short,
+        and it refuses to be paid (CR 118.3)."""
+        eligible = [
+            state
+            for state in self.permanents_controlled_by(payer)
+            if component.requirement is None
+            or component.requirement.why_not(state, self, payer) is None
+        ]
+        if len(eligible) < component.required:
+            return
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=payer,
+                prompt=f"choose what to return for {component.description!r}",
+                source=source.name,
+                source_id=source_id_of(source),
+                amount=component.required,
+                cards=tuple(state.id for state in eligible),
+                default_cards=tuple(state.id for state in eligible[: component.required]),
+            )
+        )
+        by_id = {state.id: state for state in eligible}
+        component.cards = [by_id[card_id] for card_id in answer if card_id in by_id]
+
     def _activation_key(self, permanent: CardState, index: int) -> str:
         """The key `activations`/`exhausted` key an ability's bookkeeping by.
 
@@ -19000,6 +19119,13 @@ class Game(EngineModel):
                 and component.requirement is not None
             ):
                 self._choose_permanent_for_counters(component, controller, permanent)
+                continue
+            if (
+                component.kind is ComponentKind.RETURN_TO_HAND
+                and not component.cards
+                and component.requirement is not None
+            ):
+                self._choose_permanents_to_return(component, controller, permanent)
                 continue
             if component.kind is not ComponentKind.REVEAL:
                 continue

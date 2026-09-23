@@ -279,8 +279,10 @@ def test_the_x_probes_are_the_one_place_the_best_answer_wins():
         # the card's worst clause is its unaudited static one and it reports
         # `STATIC_UNAUDITED` rather than `SILENT` - which is the tool telling
         # the truth, not a regression, but it no longer exercises this case.
-        # Caretaker's Talent has the same shape and is still silent outright.
-        ("Caretaker's Talent", "Creature tokens you control get +2/+2."),
+        # Caretaker's Talent used to stand here; its only silent clause was
+        # the level 2 "becomes level" trigger, read now (S19,
+        # `tests/scenarios/test_class_level_triggers.py`), and its static
+        # anthem reads handled.
         ("Caged Sun", "Creatures you control of the chosen color get +1/+1."),
     ],
 )
@@ -592,14 +594,16 @@ def test_tetsuko_umezawa_pursuers_power_or_toughness_condition_now_fires():
     assert classify_card(card("Tetsuko Umezawa, Pursuer"))[0] != UNMATCHABLE_CONDITION
 
 
-def test_caretakers_talents_unread_condition_is_not_reclassified():
+def test_an_unread_condition_is_not_reclassified():
     """`ability.event is None` (CR 603.2's condition this module cannot read
     at all, `docs/engine-coverage.md`'s own documented gap) is a different,
     pre-existing hole - `classify_clauses` must keep reporting it through the
     `"triggered (unread condition)"` source it already has, not fold it into
     the new `UNMATCHABLE_CONDITION` bucket this closure adds.
     """
-    by_source = {c.source: c.category for c in classify_clauses(card("Caretaker's Talent"))}
+    # Caretaker's Talent stood here until S19 read its "When this Class
+    # becomes level 2"; Gavony Dawnguard's day/night condition is still unread.
+    by_source = {c.source: c.category for c in classify_clauses(card("Gavony Dawnguard"))}
     assert by_source["triggered (unread condition)"] == SILENT
 
 

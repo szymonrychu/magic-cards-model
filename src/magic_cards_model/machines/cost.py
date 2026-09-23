@@ -2614,7 +2614,18 @@ class CostComponent(EngineModel):
         declared, and a creature "remains blocked even if all the creatures
         blocking it are removed from combat" (`Attack.blocked`). Checked
         against the live combat, since nothing prints "unblocked" on a card.
+
+        A component carrying a `requirement` is the other shape, read off a
+        printed activation cost by `cost_component_for_phrase` - Tameshi,
+        Reality Architect's "Return a land you control to its owner's hand":
+        a permanent the payer controls that meets the requirement (checked by
+        `why_not` itself), and nothing about combat.
         """
+        if self.requirement is not None:
+            for card in self.cards:
+                if card.zone is not Zone.BATTLEFIELD:
+                    return f"{card.name} is not on the battlefield, so it cannot be returned"
+            return self._why_not_controlled()
         for card in self.cards:
             if card.zone is not Zone.BATTLEFIELD:
                 return f"{card.name} is not on the battlefield, so it is not attacking"
@@ -2888,10 +2899,16 @@ class CostComponent(EngineModel):
             # the battlefield (the zone change is what ends its being an
             # attacker), through `Game.return_to_hand` rather than a bare
             # zone move so a leaves-the-battlefield trigger still sees it.
-            for card in self.cards:
-                self._remember(card)
-                if game is not None:
-                    game.return_to_hand(card)
+            if game is not None:
+                # One cost returning several permanents is one event (CR
+                # 603.2c), so they leave together.
+                with game.returning_together():
+                    for card in self.cards:
+                        self._remember(card)
+                        game.return_to_hand(card)
+            else:
+                for card in self.cards:
+                    self._remember(card)
         elif self.kind is ComponentKind.UNTAP:
             for card in self.cards:
                 self._remember(card)
@@ -4319,6 +4336,14 @@ _PHRASE_TAP = re.compile(
     r"you control$",
     re.IGNORECASE,
 )
+#: `Return a land you control to its owner's hand` (Tameshi, Reality
+#: Architect's activation cost) - CR 118.3's object cost with a quality and a
+#: count, the same shape as `_PHRASE_SACRIFICE`, paid by `Game.return_to_hand`.
+_PHRASE_RETURN_TO_HAND = re.compile(
+    rf"^return (?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ,]+?) you control "
+    r"to (?:its owner's hand|their owner's hand|their owners' hands)$",
+    re.IGNORECASE,
+)
 #: `Collect evidence 6` (Detective's Phoenix's `Bestow-{R}, Collect evidence
 #: 6.`) - CR 701.59a's keyword action used as a cost. Nothing is named to
 #: choose: "any number of cards ... with total mana value N or greater" is a
@@ -4726,6 +4751,18 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         component = sacrifice_cost(payer=payer, required=read[0], description=text)
         component.requirement = requirement
         component.variable_count = read[1]
+        return component
+
+    returning = _PHRASE_RETURN_TO_HAND.match(text)
+    if returning is not None:
+        another = returning.group("another") is not None
+        read = (1, False) if another else _cost_count(returning.group("count"))
+        requirement = _requirement(returning.group("quality"))
+        if read is None or requirement is None or read[1]:
+            return None
+        requirement.excludes_source = another
+        component = return_to_hand_cost(payer=payer, required=read[0], description=text)
+        component.requirement = requirement
         return component
 
     tap = _PHRASE_TAP.match(text)

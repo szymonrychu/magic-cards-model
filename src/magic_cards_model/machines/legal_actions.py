@@ -267,6 +267,10 @@ def _unfiltered_candidate_pool(
         if kind is ComponentKind.UNTAP:
             return [card for card in pool if card.tapped]
         return pool
+    if kind is ComponentKind.RETURN_TO_HAND and component.requirement is not None:
+        # A printed "Return a land you control to its owner's hand" cost -
+        # not ninjutsu's unblocked attacker, which carries no requirement.
+        return game.permanents_controlled_by(payer)
     return None
 
 

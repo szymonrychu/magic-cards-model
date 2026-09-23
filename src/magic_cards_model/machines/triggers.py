@@ -52,7 +52,7 @@ import re
 from collections.abc import Sequence
 from enum import StrEnum
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal, NamedTuple
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
@@ -241,6 +241,13 @@ class ExtraTriggerEvent(StrEnum):
     #: you play a card exiled with this creature" watches both.
     #: **Emitted by:** `Game.play_land`, `Game._play_land_during_resolution`.
     PLAYS_LAND = "plays_land"
+    #: CR 716.2a: a class level bar's ability, resolving, makes "This Class's
+    #: level become N" - the event a "When this Class becomes level N"
+    #: trigger printed under that bar watches. `GameEvent.subject_id` is the
+    #: Class, `GameEvent.amount` the level it became. **Emitted by:** the
+    #: level bar's resolution in `Game._effect_of`, and only when the
+    #: level actually changed.
+    CLASS_BECOMES_LEVEL = "class_becomes_level"
 
 
 class GameEvent(EngineModel):
@@ -2934,6 +2941,143 @@ _UNTAPPED_DURING_UNTAP_STEP_CONDITION = re.compile(
     r"^you untap one or more permanents during your untap step$"
 )
 
+#: A permanent returned from the battlefield to a hand - `TriggerEvent.
+#: LEAVES_BATTLEFIELD_TO_HAND`, a leaves-the-battlefield event (CR 603.6c).
+#: Azorius Aethermage's "a permanent is returned to your hand", Tameshi,
+#: Reality Architect's "one or more noncreature permanents are returned to
+#: hand", Justice, Vance Astrovik's "another nonland permanent you control is
+#: returned to its owner's hand": a subject (read by `_returned_subject`),
+#: whose hand, and an optional "from the battlefield" that only says out loud
+#: what "permanent" already means.
+_RETURNED_TO_HAND_CONDITION = re.compile(
+    r"^(?P<subject>.+?) (?:is|are) returned to "
+    r"(?P<hand>your hand|hand|its owner's hand|their owner's hand|their owners' hands)"
+    r"(?: from the battlefield)?$"
+)
+
+#: The subject of `_RETURNED_TO_HAND_CONDITION`, split into its quantifier
+#: and its description.
+_RETURNED_SUBJECT = re.compile(
+    r"^(?:(?P<plural>one or more)|(?P<another>another)|an?)"
+    r" (?P<description>.+)$"
+)
+_RETURNED_CONTROLLER = re.compile(r"^(?P<types>.+?)(?: (?P<controller>you control))?$")
+#: The words a returned-subject description may be built from - a card type
+#: or its negation (CR 205.2a), and "permanent". Anything else (a subtype, a
+#: colour, "token") is not read, so the whole condition stays unread rather
+#: than matching more than it says.
+_RETURNED_DESCRIPTION_WORD = re.compile(
+    r"^(?:non-?)?(?:"
+    + "|".join(_plural_type_word_pattern(word) for word in _TYPE_WORDS)
+    + r"|permanents?)$"
+)
+
+
+class _ReturnedSubject(NamedTuple):
+    """What `_RETURNED_SUBJECT` read: whether the condition is the plural
+    "one or more" (CR 603.2c: one trigger per event), whether it excludes its
+    own source ("another"), the type words, the controller clause, and whose
+    hand."""
+
+    plural: bool
+    another: bool
+    types: str
+    controller: str | None
+    hand: str
+
+
+def _returned_subject(condition: str) -> _ReturnedSubject | None:
+    """`condition` read as a returned-to-hand condition, or None."""
+    match = _RETURNED_TO_HAND_CONDITION.match(condition)
+    if match is None:
+        return None
+    subject = _RETURNED_SUBJECT.match(match.group("subject"))
+    if subject is None:
+        return None
+    description = _RETURNED_CONTROLLER.match(subject.group("description"))
+    if description is None:
+        return None
+    words = description.group("types").replace(",", " ").split()
+    if not words or any(
+        _RETURNED_DESCRIPTION_WORD.match(word) is None for word in words if word != "or"
+    ):
+        return None
+    return _ReturnedSubject(
+        plural=subject.group("plural") is not None,
+        another=subject.group("another") is not None,
+        types=" ".join(words),
+        controller=description.group("controller"),
+        hand=match.group("hand"),
+    )
+
+
+def _returned_event_described(
+    read: _ReturnedSubject,
+    source: CardState,
+    controller: str,
+    event: GameEvent,
+) -> bool:
+    """Whether one returned-to-hand `event` is what `read` describes, for an
+    ability of `source` controlled by `controller`."""
+    if event.event is not TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND:
+        return False
+    if read.another and event.subject_id == source.id:
+        return False
+    if not _types_match(event.subject_types, read.types):
+        return False
+    # "your hand": the hand is its owner's (CR 108.3), which the event carries
+    # as `player`; "its owner's hand" and bare "hand" are anybody's.
+    if read.hand == "your hand" and event.player != controller:
+        return False
+    # "you control": control as it last existed on the battlefield (CR
+    # 603.10a's look-back), captured before the move.
+    return read.controller != "you control" or event.subject_controller == controller
+
+
+def _returned_to_hand_matches(
+    game: "Game",
+    ability: TriggeredAbility,
+    source: CardState,
+    controller: str,
+    event: GameEvent,
+    read: _ReturnedSubject,
+) -> bool:
+    """`_RETURNED_TO_HAND_CONDITION` against one returned permanent's event.
+
+    CR 603.10a: a leaves-the-battlefield ability looks back in time, so every
+    permanent returned by the same event is asked, the source included even
+    though it is already in a hand (Azorius Aethermage's ruling: it triggers
+    for its own return) - `Game.returned_to_hand_batch` is that event, and a
+    source off the battlefield is heard only if it is one of them.
+
+    CR 603.2c: the singular "a permanent is returned" triggers once per
+    permanent the event moved; the plural "one or more ... are returned"
+    triggers once for the whole event, so only the first described permanent
+    in the batch answers for it.
+    """
+    batch = game.returned_to_hand_batch or (event,)
+    if source.zone is not Zone.BATTLEFIELD and source.id not in {
+        returned.subject_id for returned in batch
+    }:
+        return False
+    if not _returned_event_described(read, source, controller, event):
+        return False
+    if not read.plural:
+        return True
+    first = next(
+        returned
+        for returned in (*batch, event)
+        if _returned_event_described(read, source, controller, returned)
+    )
+    return first.subject_id == event.subject_id
+
+
+#: CR 716.2a: "[Cost]: Level N - [Abilities]" means "[Cost]: This Class's
+#: level becomes N ..." - Caretaker's Talent's, Stormchaser's Talent's and
+#: Wizard Class's "When this Class becomes level 2". Self-referential: the
+#: level is the Class's own (CR 716.2b).
+_CLASS_BECOMES_LEVEL_CONDITION = re.compile(r"^(?P<subject>.+?) becomes level (?P<level>\d+)$")
+
 #: CR 701.67c's own words, "whenever a player waterbends", read off however
 #: the condition actually names the bending verbs - a bare "you waterbend"
 #: (nothing printed prints this alone yet, but CR 701.67c's rule is written
@@ -3007,6 +3151,10 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS})
     if _PLAY_A_CARD_EXILED_WITH_CONDITION.match(lowered):
         return frozenset({TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND})
+    if _returned_subject(lowered) is not None:
+        return frozenset({TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND})
+    if _CLASS_BECOMES_LEVEL_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.CLASS_BECOMES_LEVEL})
     bending = _bending_events_named(lowered)
     if bending:
         return bending
@@ -3202,6 +3350,23 @@ def _unread_condition_matches(
             return False
         return bool(batched_combat_damage_sources(game, ability.condition, controller, event))
 
+    returned = _returned_subject(condition)
+    if returned is not None:
+        return _returned_to_hand_matches(game, ability, source, controller, event, returned)
+
+    match = _CLASS_BECOMES_LEVEL_CONDITION.match(condition)
+    if match is not None:
+        # CR 716.2a: the level of *this* Class, and exactly that level - a
+        # level 3 bar resolving is not this Class becoming level 2 again.
+        return (
+            event.event is ExtraTriggerEvent.CLASS_BECOMES_LEVEL
+            and event.subject_id == source.id
+            and event.amount == int(match.group("level"))
+            and _self_referential(
+                match.group("subject"), source.name, legendary=_is_legendary_source(source)
+            )
+        )
+
     bending_events = _bending_events_named(condition)
     if bending_events:
         # CR 701.67c: "whenever a player waterbends" - "you", so the event's
@@ -3361,6 +3526,11 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     # `sources` for.
     if ability.event in _LOOK_BACK_EVENTS:
         return frozenset({Zone.BATTLEFIELD, source.zone})
+    if ability.event is None and _returned_subject(lowered) is not None:
+        # CR 603.10a's look-back for a returned-to-hand condition the parser
+        # left unread: the source returned by the same event is in a hand
+        # already. `_returned_to_hand_matches` hears it only then.
+        return frozenset({Zone.BATTLEFIELD, Zone.HAND})
 
     # CR 113.6m: "An ability whose cost or effect specifies that it moves the
     # object it's on out of a particular zone functions only in that zone,

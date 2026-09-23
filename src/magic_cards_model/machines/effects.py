@@ -9215,9 +9215,10 @@ def return_ability_targets_to_hand(game: "Game", stack_object: "StackObject") ->
     here - a battlefield-only filter used to silently drop every
     graveyard-or-exile return card's whole effect.
     """
-    for target in game.resolve_targets(stack_object):
-        if isinstance(target, CardState):
-            game.return_to_hand(target)
+    with game.returning_together():  # CR 603.2c: one instruction, one event
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState):
+                game.return_to_hand(target)
 
 
 def return_ability_targets_to_battlefield(game: "Game", stack_object: "StackObject") -> None:
@@ -11597,8 +11598,9 @@ def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
         )
         assert isinstance(chosen_ids, tuple)
         by_id = {state.id: state for state in candidates}
-        for card_id in chosen_ids:
-            game.return_to_hand(by_id[card_id])
+        with game.returning_together():  # CR 603.2c: one instruction, one event
+            for card_id in chosen_ids:
+                game.return_to_hand(by_id[card_id])
 
     return effect
 
@@ -22045,9 +22047,10 @@ def _parse_choose_targets_then_return_to_hand_pair(text: str) -> Effect | None:
         return None
 
     def effect(game: "Game", spell: CardState) -> None:
-        for target in game.resolve_targets(spell):
-            if isinstance(target, CardState):
-                game.return_to_hand(target)
+        with game.returning_together():  # CR 603.2c: one instruction, one event
+            for target in game.resolve_targets(spell):
+                if isinstance(target, CardState):
+                    game.return_to_hand(target)
 
     return effect
 
@@ -28557,9 +28560,10 @@ def _parse_for_each_opponent_return_to_hand_clause(
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        for target in game.resolve_targets(stack_object):
-            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                game.return_to_hand(target)
+        with game.returning_together():  # CR 603.2c: one instruction, one event
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                    game.return_to_hand(target)
 
     return effect
 
@@ -42125,9 +42129,10 @@ def _parse_mass_return_to_hand_clause(clause: str, *, for_spell: bool) -> Target
             }:
                 continue
             chosen.append(permanent)
-        for permanent in chosen:
-            if permanent.zone is Zone.BATTLEFIELD:
-                game.return_to_hand(permanent)
+        with game.returning_together():  # CR 603.2c: one instruction, one event
+            for permanent in chosen:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.return_to_hand(permanent)
 
     return effect
 
