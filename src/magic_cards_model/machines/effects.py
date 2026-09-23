@@ -6064,6 +6064,30 @@ _DISCARD_A_CARD_RE = re.compile(
     rf"(?:(?P<quality>[a-z]+) )?cards?$",
     re.IGNORECASE,
 )
+# G3: "exile(s) N [quality] card(s) from your/their graveyard" - Relic of
+# Progenitus's "Target player exiles a card from their graveyard.", Merrow
+# Bonegnawer's identically-worded tap ability, and Curse of Oblivion's own
+# upkeep trigger ("that player exiles two cards from their graveyard.").
+# Modelled on `_DISCARD_A_CARD_RE`/`_discard_cards` directly above: the same
+# COUNT-plus-optional-quality grammar, over the acting player's own
+# graveyard instead of their hand. By the time a `ClauseEffect` this reader
+# returns actually runs, `player` is already whichever player the sentence's
+# own subject named - "target player" (`_TARGET_PLAYER_CLAUSE_RE`), "each
+# player"/"each opponent" (`_EACH_PLAYER_HEAD_RE`), or "that player" (CR
+# 607.1's own triggered-ability anaphora, see `_parse_that_player_clause`
+# below) - every one of those subjects already delegates its own rest-of-
+# sentence to `parse_clause_effect`, so this one reader closes all of them
+# at once rather than needing a fresh regex per subject the way the sacrifice
+# and life-total families under `_ANAPHORIC_SUBJECT_RE` had to.
+#
+# No quality word is exercised by any of this wave's own proof cards, but
+# the slot is read the same optional way `_DISCARD_A_CARD_RE`'s is (Chandra,
+# Chill of Compliance's own "exile a nonland card" shape, for instance,
+# would already be readable through it if that clause ever reaches here).
+_EXILE_CARDS_FROM_OWN_GRAVEYARD_RE = re.compile(
+    rf"^exiles? (?P<n>{COUNT})\s+(?:(?P<quality>[a-z]+) )?cards? from (?:your|their) graveyard$",
+    re.IGNORECASE,
+)
 # "Discard your hand." (Behold the Beyond, second person, addressed to the
 # caster) and "discards their hand"/"discards his or her hand" (the same
 # verb, third person - Reforge the Soul's "Each player discards their hand,
@@ -6584,6 +6608,57 @@ def _discard_cards(
     return discarded
 
 
+def _exile_cards_from_graveyard(
+    game: "Game",
+    player: Player,
+    count: int,
+    source: str,
+    *,
+    source_id: str | None,
+    predicate: Callable[[CardState], bool] | None = None,
+) -> list[CardState]:
+    """CR 608.2d: `player` exiles `count` cards of their own choice from
+    their own graveyard. There is no CR 701.9b-style subrule naming who
+    chooses for an *exile* the way discard's own explicit text does for a
+    discard - this reads the choice off CR 608.2d's general rule instead,
+    the same "the player announces these [choices] while applying the
+    effect" that already backs every other CR 608.2d choice in this file.
+    `player` is always the one the *sentence's own subject* names (the
+    targeted player, or CR 607.1's "that player" anaphora back to a
+    triggered ability's own condition) - never the resolving spell's or
+    ability's controller, exactly the distinction `_discard_cards` already
+    keeps for a discard aimed at someone else.
+
+    A graveyard shorter than `count` (or, with `predicate`, a matching-card
+    pool shorter than `count`) is not a violation - CR 609.3, "if an effect
+    attempts to do something impossible, it does only as much as possible":
+    every card (matching, if narrowed) goes, the same floor `_discard_cards`
+    already applies to a short hand.
+    """
+    pool = [card for card in player.graveyard if predicate is None or predicate(card)]
+    needed = min(count, len(pool))
+    if needed <= 0:
+        game.record_count(0)
+        return []
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=f"exile {needed} card(s) from your graveyard",
+            source=source,
+            amount=needed,
+            cards=tuple(state.id for state in pool),
+            source_id=source_id,
+            exact=True,
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    by_id = {state.id: state for state in pool}
+    exiled = game.exile_cards([by_id[card_id] for card_id in chosen_ids])
+    game.record_count(len(exiled))
+    return exiled
+
+
 def _mill(game: "Game", player: Player, count: int) -> list[CardState]:
     """CR 701.17a, routed through `Game.put_into_graveyard` the way
     `Game.surveil` moves its own graveyard-bound cards - so a replacement
@@ -6844,6 +6919,27 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             source_id=source_id,
             exact=exact,
             predicate=predicate,
+        )
+
+    if match := _EXILE_CARDS_FROM_OWN_GRAVEYARD_RE.fullmatch(clause):
+        quality_word = match.group("quality")
+        exile_predicate: Callable[[CardState], bool] | None = None
+        if quality_word is not None:
+            exile_predicate = _nonland_or_typed_card_matcher(quality_word) or _quality_matcher(
+                quality_word
+            )
+            if exile_predicate is None:
+                return None
+        amount = parse_count(match.group("n"))
+        if amount is None:
+            return None
+        return lambda game, player, source, source_id: _exile_cards_from_graveyard(
+            game,
+            player,
+            amount,
+            source,
+            source_id=source_id,
+            predicate=exile_predicate,
         )
 
     if _DISCARD_HAND_RE.fullmatch(clause):
@@ -33526,6 +33622,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counter_on_trigger_subject = _parse_counter_on_trigger_subject_clause(clause)
         if counter_on_trigger_subject is not None:
             return counter_on_trigger_subject
+        that_player = _parse_that_player_clause(clause, for_spell=for_spell)
+        if that_player is not None:
+            return that_player
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         # Last resort: a "you may" over a board instruction rather than over
@@ -36819,6 +36918,59 @@ def _parse_that_player_sacrifices_of_their_choice_clause(
         for permanent in chosen:
             if permanent.zone is Zone.BATTLEFIELD:
                 game.sacrifice(permanent)
+
+    return effect
+
+
+#: "That player `<rest>`." - CR 607.1's own within-one-ability anaphora back
+#: to whichever specific player a triggered ability's own condition just
+#: fired for (`GameEvent.player`), the identical subject
+#: `_THAT_PLAYER_SACRIFICES_OF_THEIR_CHOICE_RE` and `_THEY_GAIN_OR_LOSE_
+#: LIFE_RE` already read for their own one hand-written verb apiece. Curse
+#: of Oblivion's own "At the beginning of enchanted player's upkeep, that
+#: player exiles two cards from their graveyard" is the shape that exposed
+#: the gap a fresh one-off regex per verb would leave standing: neither of
+#: those two readers know "exiles", and a third bespoke copy of the same
+#: `ability.event.player` plumbing for one more verb is exactly the
+#: per-card-shaped pattern this project's own "target the mechanic" rule
+#: bans. This reader is the general form instead - whatever `<rest>` is,
+#: `parse_clause_effect` already reads it (this wave's own graveyard-exile
+#: clause among them), so every present and future verb printed after
+#: "that player" is closed by the one reader that already understands it,
+#: not by a fresh table row.
+#:
+#: Tried only as the dispatcher's own last resort (see its call site,
+#: mirroring where `_parse_optional_player_clause` is tried last for a
+#: plain "you"-subject clause): every more specific "that player ..." shape
+#: above - the sacrifice and life-total ones among them - keeps first claim
+#: on the clauses it already reads correctly, so this never changes their
+#: behaviour.
+_THAT_PLAYER_CLAUSE_RE = re.compile(r"^that player (?P<rest>.+)$", re.IGNORECASE | re.DOTALL)
+
+
+def _parse_that_player_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_THAT_PLAYER_CLAUSE_RE`'s shape. Ability-only: a resolving spell has
+    no `ability.event` to resolve "that player" against, the same
+    restriction every other event-anaphora reader in this family already
+    states."""
+    if for_spell:
+        return None
+    match = _THAT_PLAYER_CLAUSE_RE.match(clause.strip())
+    if match is None:
+        return None
+    rest = match.group("rest").strip()
+    clause_effect = parse_clause_effect(rest) or parse_clause_effect(f"you {rest}")
+    if clause_effect is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.player is None:
+            return
+        player = game.player(event.player)
+        clause_effect(game, player, ability.source_name, source_id_of(ability))
 
     return effect
 
