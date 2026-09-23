@@ -72,3 +72,32 @@ def test_every_golden_names_the_ability_the_sweep_ran():
         assert golden.ability, path
         assert golden.recipe["variant"] in ("quiet", "busy", "lonely", "war"), path
         assert "delta" in golden.recorded, path
+
+
+@pytest.mark.parametrize(
+    ("card", "family", "number"),
+    [("Arclight Phoenix", "triggered", 0), ("Baxter Building", "activated", 0)],
+)
+def test_a_busy_golden_builds_the_board_after_its_eventful_turn(card, family, number):
+    golden = load(golden_path(card, family, number))
+    assert golden.board["busy_turn"], "the golden records a busy turn"
+
+    built = golden.build_board()
+
+    cast = built.game.spells_cast_this_turn.get("alice", [])
+    assert len(cast) >= 3, "the busy turn's spells were cast before the action"
+
+
+@pytest.mark.parametrize(
+    ("card", "family", "number"),
+    [("Lagomos, Hand of Hatred", "activated", 0), ("Minas Tirith", "activated", 0)],
+)
+def test_a_war_golden_builds_the_board_after_its_bloody_turn(card, family, number):
+    from magic_cards_model.machines import Step
+
+    golden = load(golden_path(card, family, number))
+    assert golden.board["war_turn"], "the golden records a war turn"
+
+    built = golden.build_board()
+
+    assert built.step is Step.POSTCOMBAT_MAIN, "the war turn ends in the postcombat main"

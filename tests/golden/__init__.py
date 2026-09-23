@@ -399,32 +399,15 @@ class Golden:
     recorded: dict[str, Any]
 
     def build_board(self) -> Any:
-        """The recorded board, built through the scenario harness: each seat
-        from its `Scenario().player(...)` arguments, the predefined tokens
-        created, the game started at the recorded step and the tapped
-        material tapped - the state the recipe's event is raised on."""
-        from magic_cards_model.machines import Step
-        from magic_cards_model.models import Zone
-        from magic_cards_model.models.token import create_predefined_tokens
-        from tests.scenarios.harness import Scenario
+        """The recorded board, built through the sweep's own board builder:
+        each seat from its `Scenario().player(...)` arguments, the
+        predefined tokens created, the game started at the recorded step,
+        the tapped and entering material staged and the busy or war turn
+        played - the state the recipe's event is raised on."""
+        from tests import test_behavioural_sweep as sweep
 
-        scenario = Scenario()
-        for username in self.board["order"]:
-            scenario.player(username, **self.board["players"][username])
-        played = scenario.build()
-        for name, owner in self.board["tokens"]:
-            create_predefined_tokens(played.game, name, owner)
-        if self.board["step"] is not None:
-            played.start_at(Step(self.board["step"]))
-        for name, owner in self.board["tapped"]:
-            for state in played.game.battlefield:
-                if state.name == name and _owner(state) == owner and not state.tapped:
-                    state.tapped = True
-                    break
-        for name, owner in self.board["entering"]:
-            state = next(s for s in played.game.player(owner).cards_in(Zone.HAND) if s.name == name)
-            played.game.put_onto_battlefield(state, owner)
-        return played
+        case = sweep.case_named(self.card, self.family, self.number)
+        return sweep.build_recorded(self.board, case)
 
     def replay(self) -> dict[str, Any]:
         """Play the recorded recipe through the real engine and return the

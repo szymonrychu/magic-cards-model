@@ -314,27 +314,6 @@ def _board(
         },
     }
     order = [ALICE, BOB] if active == ALICE else [BOB, ALICE]
-    scenario = Scenario()
-    for username in order:
-        scenario.player(username, **seats[username])
-    # Every id the board mints, and every shuffle after it (`Game.game_uid`),
-    # is pinned by the case, the variant and the board's own contents, so
-    # the same attempt builds the same game on every run - what makes its
-    # golden stable - while two different boards never share an id (a cost
-    # requirement's `source_id` read on one board must not name a card on
-    # another).
-    contents = json.dumps([order, seats, tokens], sort_keys=True)
-    case_id = _STAGING.case.id if _STAGING.case else ""
-    seed = f"behavioural-sweep:{case_id}:{variant}:{contents}"
-    minted = itertools.count()
-    token = install_id_allocator(lambda: uuid5(NAMESPACE_OID, f"{seed}:{next(minted)}"))
-    try:
-        played = scenario.build()
-        played.game.game_uid = uuid5(NAMESPACE_OID, seed)
-        for name, owner in tokens:
-            create_predefined_tokens(played.game, name, owner)
-    finally:
-        reset_id_allocator(token)
     _STAGING.board = {
         "variant": variant,
         "order": order,
@@ -348,22 +327,62 @@ def _board(
         and step in (Step.PRECOMBAT_MAIN, Step.POSTCOMBAT_MAIN),
         "war_turn": variant == WAR and busy and step is Step.PRECOMBAT_MAIN and active == ALICE,
     }
+    return build_recorded(_STAGING.board, _STAGING.case, before)
+
+
+def build_recorded(
+    board: dict[str, Any],
+    case: Case | None,
+    before: Callable[[PlayedScenario], Any] | None = None,
+) -> PlayedScenario:
+    """Build a board from its record (`_board`'s, and a golden's `board`):
+    the seats, the predefined tokens, the step, the tapped and entering
+    material, and the busy or war turn played before the case's event.
+    `before` stages the source on the built board before anything is
+    played."""
+    order, seats, tokens = board["order"], board["players"], board["tokens"]
+    scenario = Scenario()
+    for username in order:
+        scenario.player(username, **seats[username])
+    # Every id the board mints, and every shuffle after it (`Game.game_uid`),
+    # is pinned by the case, the variant and the board's own contents, so
+    # the same attempt builds the same game on every run - what makes its
+    # golden stable - while two different boards never share an id (a cost
+    # requirement's `source_id` read on one board must not name a card on
+    # another).
+    contents = json.dumps([order, seats, tokens], sort_keys=True)
+    case_id = case.id if case else ""
+    seed = f"behavioural-sweep:{case_id}:{board['variant']}:{contents}"
+    minted = itertools.count()
+    token = install_id_allocator(lambda: uuid5(NAMESPACE_OID, f"{seed}:{next(minted)}"))
+    try:
+        played = scenario.build()
+        played.game.game_uid = uuid5(NAMESPACE_OID, seed)
+        for name, owner in tokens:
+            create_predefined_tokens(played.game, name, owner)
+    finally:
+        reset_id_allocator(token)
     if before is not None:
         before(played)
+    step = Step(board["step"]) if board["step"] is not None else None
     if step is not None:
         played.start_at(step)
     # Tapped after the untap step `start_at` runs (CR 502.3), or it would be
     # untapped again before anything asked about it.
-    for name, owner in tapped_material:
+    for name, owner in board["tapped"]:
         _last(played, name, Zone.BATTLEFIELD, owner).tapped = True
     if step is not None:
-        for name, owner in entering:
+        for name, owner in board["entering"]:
             state = _last(played, name, Zone.HAND, owner)
             played.game.put_onto_battlefield(state, owner)
-        if variant == BUSY and busy and step in (Step.PRECOMBAT_MAIN, Step.POSTCOMBAT_MAIN):
-            _busy_turn(played)
-        if variant == WAR and busy and step is Step.PRECOMBAT_MAIN and active == ALICE:
-            _war_turn(played)
+        saved, _STAGING.case = _STAGING.case, case
+        try:
+            if board["busy_turn"]:
+                _busy_turn(played)
+            if board["war_turn"]:
+                _war_turn(played)
+        finally:
+            _STAGING.case = saved
     return played
 
 
