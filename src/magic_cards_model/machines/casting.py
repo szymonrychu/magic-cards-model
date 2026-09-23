@@ -1471,6 +1471,109 @@ _COLOR_COUNT_WORDS: dict[str, Callable[[int], bool]] = {
     "multicolored": lambda count: count >= 2,
 }
 
+
+def hexproof_abilities_in(lines: Iterable[str]) -> tuple[bool, list[str]]:
+    """Whether these ability lines carry plain hexproof, and every quality
+    they carry hexproof from (CR 702.11b, CR 702.11d, CR 702.11f).
+
+    Read off ability *text*, never off Scryfall's flattened `keywords` array:
+    that array lists a bare "Hexproof" alongside "Hexproof from" on
+    Nevinyrral, Urborg Tyrant, whose only printed hexproof is "Hexproof from
+    artifacts, creatures, and enchantments". Trusting it granted CR 702.11b's
+    full hexproof to a permanent that never had it.
+
+    CR 702.11f splits "from A and from B" (and the list form "from A, B, and
+    C") into one ability per quality; CR 702.11h makes a repeated quality
+    redundant, so each appears once.
+    """
+    plain = False
+    qualities: list[str] = []
+    for line in lines:
+        # Reminder text spells the ability out again in a form that would be
+        # parsed as a second, wrong copy of it (CR 207.2).
+        for match in _HEXPROOF_ABILITY.finditer(_REMINDER_TEXT.sub("", line)):
+            raw = match.group("qualities")
+            if raw is None:
+                plain = True
+                continue
+            for quality in hexproof_qualities_in(raw):
+                if quality not in qualities:
+                    qualities.append(quality)
+    return plain, qualities
+
+
+#: "You have hexproof." (Leyline of Sanctity, Aegis of the Gods), "You have
+#: shroud." (True Believer, Ivory Mask) - a static ability granting its
+#: controller CR 702.11c's hexproof or CR 702.18a's shroud "or player", with
+#: CR 702.11d's "from [quality]" read too. Matched after reminder text is gone.
+_PLAYER_KEYWORD_GRANT_LINE = re.compile(
+    r"^you have (?P<keyword>hexproof|shroud)(?: from (?P<qualities>[^.;]+))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def player_keyword_grant_of_line(line: str) -> tuple[str, list[str]] | None:
+    """The player hexproof or shroud a static line grants its controller -
+    ("hexproof", []) for plain hexproof, ("hexproof", [qualities]) for CR
+    702.11d's variant, ("shroud", []) - or None for any other line."""
+    match = _PLAYER_KEYWORD_GRANT_LINE.fullmatch(_REMINDER_TEXT.sub("", line).strip())
+    if match is None:
+        return None
+    keyword = match.group("keyword").lower()
+    raw = match.group("qualities")
+    if keyword == "shroud":
+        return ("shroud", []) if raw is None else None
+    return keyword, [] if raw is None else hexproof_qualities_in(raw)
+
+
+def hexproof_qualities_in(raw: str) -> list[str]:
+    """CR 702.11f's shorthand, split: "blue and from black" -> blue, black;
+    "artifacts, creatures, and enchantments" -> each of the three."""
+    qualities: list[str] = []
+    for part in _QUALITY_SEPARATOR.split(raw):
+        quality = _QUALITY_PREFIX.sub("", part.strip().strip(",.").strip()).strip()
+        if quality and quality not in qualities:
+            qualities.append(quality)
+    return qualities
+
+
+def has_quality(
+    quality: str,
+    *,
+    colors: Iterable[Color],
+    types: Iterable[Type],
+    subtypes: Iterable[str] = (),
+    supertypes: Iterable[object] = (),
+) -> bool:
+    """Whether an object with these characteristics is of the stated quality
+    (CR 702.11d's "[quality] spells" and "[quality] sources").
+
+    A quality "is usually a color ... but can be any characteristic value or
+    information" (CR 702.16a, protection's own wording for the same idea).
+    Card types, subtypes and supertypes are stated in the plural on the card
+    ("hexproof from creatures"), so the trailing "s" comes off first; a colour
+    count ("monocolored") is CR 105.2a/105.2b's. Anything else comes back
+    False and is not enforced.
+    """
+    word = quality.strip().lower().removesuffix("s")
+    color_list = list(colors)
+    try:
+        card_type = Type(word)
+    except ValueError:
+        card_type = None
+    if card_type is not None:
+        return card_type in tuple(types)
+    color = _COLOR_WORDS.get(word)
+    if color is not None:
+        return color in color_list
+    color_count = _COLOR_COUNT_WORDS.get(word)
+    if color_count is not None:
+        return color_count(len(color_list))
+    if any(word == subtype.lower() for subtype in subtypes):
+        return True
+    return any(word == str(supertype).lower() for supertype in supertypes)
+
+
 #: "This spell costs {1} more to cast for each target beyond the first."
 #: (Fireball, Launch the Fleet's identically-worded "Strive —" clause) -
 #: read generically off the amount rather than assuming {1}, though every
@@ -4194,11 +4297,10 @@ class Casting(EngineModel):
                 raise ValueError(f"{self.spell.name} is an illegal target for itself (CR 115.5)")
             if isinstance(target, TargetRef) and target.card_id == self.spell.id:
                 raise ValueError(f"{self.spell.name} is an illegal target for itself (CR 115.5)")
-        self.targeting.check(chosen, self.caster, game=self.game)
+        # CR 702.11b/702.11d: hexproof is judged inside `check`, with this
+        # spell as the source whose quality "hexproof from" asks about.
+        self.targeting.check(chosen, self.caster, game=self.game, source=self.spell)
         for target in chosen:
-            refusal = self._hexproof_refusal(target)
-            if refusal is not None:
-                raise ValueError(refusal)
             refusal = self._enchant_refusal(target)
             if refusal is not None:
                 raise ValueError(refusal)
@@ -4278,126 +4380,20 @@ class Casting(EngineModel):
         return why_cannot_enchant(self.spell, target, self.caster, self.game)
 
     def _hexproof_refusal(self, target: Any) -> str | None:
-        """Why hexproof stops this spell targeting that, or None (CR 702.11b).
+        """Why hexproof stops this spell targeting that, or None (CR 702.11).
 
-        CR 702.11a: "Hexproof is a static ability." CR 702.11b: "'Hexproof' on a
-        permanent means 'This permanent can't be the target of spells or
-        abilities your opponents control.'" So it is about *who* is casting,
-        not about what: the controller's own spells target it happily.
-
-        CR 702.11d's variant is read too: "'Hexproof from [quality]' on a
-        permanent means 'This permanent can't be the target of [quality] spells
-        your opponents control...'" - which refuses a spell of that quality and
-        leaves every other spell alone. CR 702.11f makes the printed list form
-        shorthand for several such abilities: "'Hexproof from [quality A] and
-        from [quality B]' is shorthand for 'hexproof from [quality A]' and
-        'hexproof from [quality B]'; it behaves as two separate hexproof
-        abilities."
-
-        The abilities are read off the permanent's own text, never off
-        Scryfall's flattened `keywords` array: that array lists a bare
-        "Hexproof" *alongside* "Hexproof from" on Nevinyrral, Urborg Tyrant,
-        whose only printed hexproof is "Hexproof from artifacts, creatures, and
-        enchantments". Trusting it granted CR 702.11b's full hexproof to a
-        permanent that never had it and refused a Lightning Bolt the card
-        plainly allows.
-
-        A quality this engine cannot read - anything that is not a card type,
-        subtype, supertype, or colour - is not enforced, the same fail-open
-        choice `Game.protection_refusal` makes for CR 702.16b; see
-        `docs/engine-coverage.md`. Nor is hexproof on a player (CR 702.11c):
-        `Player` has no text to read it off.
-
-        A `Casting` without a game cannot say who controls the target, so
-        nothing is checked there.
+        Delegates to `Game.hexproof_refusal`, the one hexproof vocabulary every
+        targeting path shares - a spell's announcement, an activated or
+        triggered ability's, and CR 608.2b's recheck - with this spell as the
+        object whose quality CR 702.11d judges ("[quality] spells your
+        opponents control"). `TargetingProfile.check` already calls the same
+        method during `_check_targets`; this stays as the direct question for
+        a caller holding a `Casting`. A `Casting` without a game cannot say who
+        controls the target, so nothing is checked there.
         """
-        if self.game is None or not isinstance(target, CardState):
+        if self.game is None:
             return None
-        if target.zone is not Zone.BATTLEFIELD:
-            # CR 702.11b speaks of a permanent, and a permanent is on the
-            # battlefield (CR 110.1).
-            return None
-        plain, qualities = self._hexproof_abilities(target)
-        if not plain and not qualities:
-            return None
-        if self.game.controller_of(target).username == self.caster:
-            return None
-        if plain:
-            return (
-                f"{target.name} has hexproof, so {self.caster} - an opponent of its "
-                f"controller - cannot target it (CR 702.11b)"
-            )
-        for quality in qualities:
-            if self._spell_has_quality(quality):
-                return (
-                    f"{target.name} has hexproof from {quality}, so {self.caster} - an "
-                    f"opponent of its controller - cannot target it with "
-                    f"{self.spell.name} (CR 702.11d)"
-                )
-        return None
-
-    def _hexproof_abilities(self, target: CardState) -> tuple[bool, list[str]]:
-        """Whether `target` has plain hexproof, and every quality it has
-        hexproof from (CR 702.11b, CR 702.11d, CR 702.11f).
-
-        Read off the permanent's ability *text*, the same way
-        `Game._effective_protection_qualities` reads protection's: the computed
-        board when there is one, so a hexproof granted in layer 6 counts and one
-        Humility took away does not (CR 613.5), and the object's own text
-        otherwise. Either way a face-down permanent has no text at all
-        (CR 702.37c, CR 708.2) and so has neither ability.
-        """
-        lines: list[str]
-        characteristics = None
-        try:
-            characteristics = self.game.characteristics_of(target)
-        except (AttributeError, KeyError):
-            characteristics = None
-        if characteristics is not None:
-            lines = list(characteristics.abilities)
-        else:
-            lines = target.oracle_text.splitlines()
-        plain = False
-        qualities: list[str] = []
-        for line in lines:
-            # Reminder text spells the ability out again in a form that would
-            # be parsed as a second, wrong copy of it (CR 207.2).
-            for match in _HEXPROOF_ABILITY.finditer(_REMINDER_TEXT.sub("", line)):
-                raw = match.group("qualities")
-                if raw is None:
-                    plain = True
-                    continue
-                for part in _QUALITY_SEPARATOR.split(raw):
-                    quality = _QUALITY_PREFIX.sub("", part.strip().strip(",.").strip()).strip()
-                    if quality and quality not in qualities:
-                        qualities.append(quality)
-        return plain, qualities
-
-    def _spell_has_quality(self, quality: str) -> bool:
-        """Whether this spell is of the stated quality (CR 702.11d).
-
-        A quality "is usually a color ... but can be any characteristic value or
-        information" (CR 702.16a, protection's own wording for the same idea).
-        Card types, subtypes, and supertypes are stated in the plural on the
-        card ("hexproof from creatures"), so the trailing "s" comes off first.
-        Anything else comes back False and is not enforced.
-        """
-        word = quality.strip().lower().removesuffix("s")
-        try:
-            card_type = Type(word)
-        except ValueError:
-            card_type = None
-        if card_type is not None:
-            return card_type in self.spell.types
-        color = _COLOR_WORDS.get(word)
-        if color is not None:
-            return color in self.spell.colors
-        color_count = _COLOR_COUNT_WORDS.get(word)
-        if color_count is not None:
-            return color_count(len(self.spell.colors))
-        if any(word == subtype.lower() for subtype in self.spell.subtypes):
-            return True
-        return any(word == supertype.lower() for supertype in self.spell.supertypes)
+        return self.game.hexproof_refusal(target, self.caster, self.spell)
 
     # -- CR 601.2f-h: the total cost, and paying it ------------------------
 

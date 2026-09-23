@@ -10,7 +10,8 @@ spells target it happily - which is the first corner case here.
 
 The refusal belongs at CR 601.2c, as the targets are announced, so an illegal
 target is never chosen and the caster keeps their card. CR 702.11c's hexproof on
-a player is not modelled; see `docs/engine-coverage.md`.
+a player is `test_player_hexproof_shroud.py`'s, and hexproof against abilities
+is `test_hexproof_abilities.py`'s.
 
 CR 702.11d's "hexproof from [quality]" is the second half of this file:
 "'Hexproof from [quality]' is a variant of the hexproof ability. 'Hexproof from
@@ -331,4 +332,70 @@ def test_its_own_controller_can_still_target_it_with_a_monocolored_spell():
     (mountain,) = scenario.untapped_sources("Mountain", username="alice")
 
     scenario.cast_and_resolve("Lightning Bolt", mountain, targets=[bears])
+    assert bears.damage == 3
+
+
+# -- CR 608.2b: hexproof gained after targeting ------------------------------
+#
+# CR 608.2b: "Other changes to the game state may cause a target to no longer
+# be legal". Blossoming Defense ("Target creature you control gets +2/+2 and
+# gains hexproof until end of turn.") cast in response to an opponent's spell
+# makes that spell's only target illegal by the time it resolves.
+
+
+def test_a_spell_whose_target_gains_hexproof_in_response_does_not_resolve():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Blossoming Defense"], battlefield=["Grizzly Bears", "Forest"])
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.pass_priority("alice")
+    scenario.cast_onto_stack(
+        "Lightning Bolt",
+        *scenario.untapped_sources("Mountain", username="bob"),
+        username="bob",
+        targets=[bears],
+    )
+    scenario.pass_priority("bob")
+    scenario.cast_onto_stack(
+        "Blossoming Defense", *scenario.untapped_sources("Forest"), targets=[bears]
+    )
+
+    scenario.resolve_top()  # Blossoming Defense: bears gain hexproof
+    bolt = scenario.game.stack[-1]
+    assert scenario.game.spell_fizzles(bolt)
+    scenario.resolve_top()  # Lightning Bolt, now without a legal target
+
+    assert bears.damage == 0
+    assert scenario.find("Lightning Bolt", Zone.GRAVEYARD, "bob").zone is Zone.GRAVEYARD
+
+
+def test_hexproof_gained_in_response_does_not_stop_its_controllers_own_spell():
+    """The controller's own spell keeps its target: CR 702.11b names only
+    opponents, so the recheck leaves alice's Bolt legal."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Lightning Bolt", "Blossoming Defense"],
+            battlefield=["Grizzly Bears", "Forest", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.cast_onto_stack(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[bears]
+    )
+    scenario.cast_onto_stack(
+        "Blossoming Defense", *scenario.untapped_sources("Forest"), targets=[bears]
+    )
+    scenario.resolve_top()
+    scenario.resolve_top()
     assert bears.damage == 3

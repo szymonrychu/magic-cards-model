@@ -440,7 +440,8 @@ def _target_candidates(
 
     The per-target half of `TargetingProfile.check`: `TargetRequirement.
     rejects`, plus CR 702.16b's protection refusal when the profile knows its
-    source card. CR 115.5 makes a spell an illegal target for itself, so a
+    source card, and the shroud (CR 702.18a) and hexproof (CR 702.11) refusals
+    printed on the target. CR 115.5 makes a spell an illegal target for itself, so a
     cast leaves its own card out; an activated ability is a different object
     from its source, so a permanent may be a candidate for its own ability
     unless the phrase says "other" (`excludes_source`, checked by `rejects`).
@@ -450,6 +451,8 @@ def _target_candidates(
     pool = game.targetable_objects()
     source_card = getattr(profile, "source_card", None)
     refusal_of = getattr(game, "protection_refusal", None) if source_card is not None else None
+    shroud_of = getattr(game, "shroud_refusal", None)
+    hexproof_of = getattr(game, "hexproof_refusal", None)
     found: list[tuple[Any, list[Any]]] = []
     for requirement in profile.requirements:
         legal = [
@@ -458,6 +461,8 @@ def _target_candidates(
             if not (source_is_spell and thing is source)
             and requirement.rejects(thing, player, game, source.id) is None
             and (refusal_of is None or refusal_of(thing, source_card) is None)
+            and (shroud_of is None or shroud_of(thing) is None)
+            and (hexproof_of is None or hexproof_of(thing, player, source) is None)
         ]
         found.append((requirement, legal))
     return found

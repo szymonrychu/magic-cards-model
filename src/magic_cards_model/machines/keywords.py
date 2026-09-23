@@ -2541,7 +2541,7 @@ def off_battlefield_activation(
 
     profile = profile_for_text(ability.text)
     if profile.understood and profile.requirements:
-        profile.check(list(targets or []), player, game)
+        profile.check(list(targets or []), player, game, source=card)
 
     cost = game.activation_cost(
         card, source_index, player, sacrificing=sacrificing, discarding=discarding

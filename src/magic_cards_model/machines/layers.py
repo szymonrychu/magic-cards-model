@@ -723,16 +723,30 @@ class SelfIfControls(SelectorBase):
     username: str | None = None
     card_type: Type | None = None
     subtype: str | None = None
+    color: Color | None = None
+    """Knight of Grace's "a black permanent": the matching permanent's
+    computed colour (CR 105.2)."""
+    controlled_by: Literal["you", "any", "opponent"] = "you"
+    """Whose permanents are looked at: "you control" (the default), "any
+    player controls" (Knight of Grace) or "an opponent controls"."""
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         if chars.card_id != self.card_id:
             return False
         return any(
-            other.controller == self.username
+            self._controller_matches(other.controller)
             and (self.card_type is None or self.card_type in other.types)
             and (self.subtype is None or self.subtype in other.subtypes)
+            and (self.color is None or self.color in other.colors)
             for other in board.values()
         )
+
+    def _controller_matches(self, controller: str | None) -> bool:
+        if self.controlled_by == "any":
+            return True
+        if self.controlled_by == "opponent":
+            return controller is not None and controller != self.username
+        return controller == self.username
 
 
 class CreaturesControlledByWhereToughnessExceedsPower(SelectorBase):
@@ -2189,10 +2203,19 @@ def self_if_controls(
     *,
     card_type: Type | None = None,
     subtype: str | None = None,
+    color: Color | None = None,
+    controlled_by: Literal["you", "any", "opponent"] = "you",
 ) -> Selector:
     """ "This creature has vigilance as long as you control a Jace
     planeswalker." - see `SelfIfControls` for the board condition."""
-    return SelfIfControls(card_id=card_id, username=username, card_type=card_type, subtype=subtype)
+    return SelfIfControls(
+        card_id=card_id,
+        username=username,
+        card_type=card_type,
+        subtype=subtype,
+        color=color,
+        controlled_by=controlled_by,
+    )
 
 
 def creatures_controlled_by_toughness_exceeds_power(username: str | None) -> Selector:
@@ -5500,6 +5523,18 @@ _SELF_CONTROLS_KEYWORD_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This creature gets +1/+0 as long as any player controls a black
+#: permanent." (Knight of Grace; Knight of Malice's "a white permanent") - a
+#: self pump (CR 613.4c) behind CR 611.3a's live board condition, asked of
+#: every player's permanents ("any player"), the controller's ("you") or the
+#: opponents' ("an opponent"), matched by computed colour and/or card type.
+_SELF_PUMP_WHILE_CONTROLS_RE = re.compile(
+    r"^this (?:creature|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"as long as (?P<who>any player|you|an opponent) controls? an? "
+    r"(?:(?P<color>white|blue|black|red|green) )?(?P<noun>[a-z]+)\.?$",
+    re.IGNORECASE,
+)
+
 #: The two turn-fact conditions this shape recognises, each already tracked by
 #: `Game.record_turn_fact`/`turn_fact_holds` (`models/game.py`) for the
 #: identical "Activate only if ..." restriction - reused here rather than
@@ -6807,6 +6842,48 @@ def _self_gated_by_controlling_keyword_grant_builder(
     return builder
 
 
+def _self_pump_while_controls_builder(
+    power: int,
+    toughness: int,
+    *,
+    card_type: Type | None,
+    color: Color | None,
+    controlled_by: Literal["you", "any", "opponent"],
+    line: str,
+) -> EffectBuilder:
+    """`_SELF_PUMP_WHILE_CONTROLS_RE`'s pump: sublayer 7c (CR 613.4c), gated
+    by `SelfIfControls` so the board condition is re-asked on every CR 613.5
+    computation (CR 611.3a) - the pump ends the moment the last matching
+    permanent leaves."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {power:+d}/{toughness:+d} while a permanent matches",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=self_if_controls(
+                    source.id,
+                    source.controller,
+                    card_type=card_type,
+                    color=color,
+                    controlled_by=controlled_by,
+                ),
+                modification=modify_power_toughness(power, toughness),
+            )
+        ]
+
+    return builder
+
+
 def _group_assigns_damage_as_toughness_builder(*, line: str) -> EffectBuilder:
     """Ghalta the Immovable's "Each creature you control with toughness
     greater than its power assigns combat damage equal to its toughness
@@ -7114,7 +7191,7 @@ KNOWN_KEYWORDS = _KNOWN_KEYWORDS
 #: The quality word itself (a colour here, but CR 702.16a/CR 702.11d both
 #: allow "any characteristic value or information") is read only at
 #: enforcement time (`Game._effective_protection_qualities`,
-#: `casting._hexproof_abilities`) and is not validated here - the same
+#: `Game.hexproof_abilities`) and is not validated here - the same
 #: fail-open choice this project already makes for a printed protection/
 #: hexproof line whose quality it cannot read, rather than refusing the
 #: whole grant over one word neither of those functions will recognise
@@ -7745,6 +7822,23 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             keywords,
             line=sentence,
             description="during your turn",
+        )
+    if match := _SELF_PUMP_WHILE_CONTROLS_RE.fullmatch(sentence):
+        noun = match.group("noun").lower()
+        pumped_type = None if noun == "permanent" else _card_type_word(noun)
+        color_word = match.group("color")
+        if (noun != "permanent" and pumped_type is None) or (
+            pumped_type is None and color_word is None
+        ):
+            return None
+        who = match.group("who").lower()
+        return _self_pump_while_controls_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            card_type=pumped_type,
+            color=_COLOR_WORDS[color_word.lower()] if color_word else None,
+            controlled_by="any" if who == "any player" else "you" if who == "you" else "opponent",
+            line=sentence,
         )
     if match := _SELF_CONTROLS_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))

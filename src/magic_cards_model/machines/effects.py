@@ -114,7 +114,12 @@ from .abilities import (
     parse_triggered_mana,
     self_normalized_effect_text,
 )
-from .casting import PlayAction, annotate_exile, remove_suspend_time_counter
+from .casting import (
+    PlayAction,
+    annotate_exile,
+    hexproof_qualities_in,
+    remove_suspend_time_counter,
+)
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
 from .cost import cost_announces_x, is_snow_source, spend_restriction
@@ -5981,6 +5986,22 @@ _GAIN_LIFE_RE = re.compile(
 _LOSE_LIFE_RE = re.compile(
     rf"you loses? (?P<n>{COUNT}) life(?: for each (?P<each>.+))?", re.IGNORECASE
 )
+#: "You gain hexproof until your next turn." (Blossoming Calm), and the
+#: player half of "You and permanents you control gain hexproof from blue and
+#: from black until end of turn." (Veil of Summer, once its compound subject is
+#: split): a player-subject grant of CR 702.11c's hexproof, CR 702.11d's
+#: "hexproof from [quality]" (CR 702.11f's "from A and from B" list read as
+#: one ability per quality), or CR 702.18a's shroud "or player", for CR
+#: 611.2a's stated duration. "gain", never "gains": `_parse_optional_player_
+#: clause` retries a subject-less clause with "you" restored, and a bare
+#: "gains hexproof until end of turn" is always a permanent's grant cut off
+#: from its subject (Blossoming Defense's "... and gains hexproof"), not the
+#: player's.
+_PLAYER_GAINS_HEXPROOF_RE = re.compile(
+    r"you gain (?P<keyword>hexproof|shroud)(?: from (?P<qualities>.+?))?"
+    r" until (?P<duration>end of turn|your next turn)",
+    re.IGNORECASE,
+)
 #: "Each opponent loses N life." - Cauldron Familiar's own enters trigger,
 #: the flat-number twin of `_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE`'s counted
 #: amount. CR 119.3 adjusts a life total directly, and unlike CR 119.2's
@@ -6522,6 +6543,32 @@ def _mill(game: "Game", player: Player, count: int) -> list[CardState]:
     return milled
 
 
+def _player_gains_hexproof_clause(match: re.Match[str]) -> ClauseEffect | None:
+    """`_PLAYER_GAINS_HEXPROOF_RE`'s clause: record the grant on the player
+    through `Game.grant_player_hexproof`/`grant_player_shroud`, which keep it
+    on `Player.targeting_grants` and end it at CR 611.2a's stated boundary."""
+    keyword = match.group("keyword").lower()
+    raw = match.group("qualities")
+    qualities = tuple(hexproof_qualities_in(raw)) if raw is not None else ()
+    if raw is not None and (keyword == "shroud" or not qualities):
+        return None
+    duration = (
+        Duration.UNTIL_END_OF_TURN
+        if match.group("duration").lower() == "end of turn"
+        else Duration.UNTIL_YOUR_NEXT_TURN
+    )
+
+    def gain(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        if keyword == "shroud":
+            game.grant_player_shroud(player.username, duration=duration, source_name=source)
+        else:
+            game.grant_player_hexproof(
+                player.username, qualities, duration=duration, source_name=source
+            )
+
+    return gain
+
+
 def parse_clause_effect(clause: str) -> ClauseEffect | None:
     """One clause of an effect with nobody to ask a question of: a plain life
     total change, an energy grant, a draw, a mill, a surveil or a scry.
@@ -6562,6 +6609,9 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             game.gain_life(player, total)
 
         return gain_life
+
+    if match := _PLAYER_GAINS_HEXPROOF_RE.fullmatch(clause):
+        return _player_gains_hexproof_clause(match)
 
     if match := _ADDITIONAL_LAND_PLAY_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))

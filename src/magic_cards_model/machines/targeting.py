@@ -1268,7 +1268,13 @@ class TargetingProfile(EngineModel):
         )
 
     def check(
-        self, targets: list[Any], caster: str, game: Any = None, source_id: UUID | None = None
+        self,
+        targets: list[Any],
+        caster: str,
+        game: Any = None,
+        source_id: UUID | None = None,
+        *,
+        source: Any = None,
     ) -> None:
         """Raise if this set of targets could not legally be announced (CR 601.2c).
 
@@ -1295,10 +1301,16 @@ class TargetingProfile(EngineModel):
         CR 702.16b is checked first and separately, because it is the one
         restriction here that is printed on the *target* rather than on the
         spell: a protected target is refused whether or not this parser could
-        read the spell's own targeting text.
+        read the spell's own targeting text. Shroud (CR 702.18a) and hexproof
+        (CR 702.11) are printed on the target too, and are checked beside it.
+
+        `source` is the object whose quality CR 702.11d's "hexproof from"
+        judges - the spell itself for a cast (`Casting._check_targets`), or an
+        ability's source; when it is not given, `source_id` is looked up.
         """
         self._check_protection(targets, game)
         self._check_shroud(targets, game)
+        self._check_hexproof(targets, caster, game, source, source_id)
 
         if not self.understood:
             return
@@ -1376,6 +1388,44 @@ class TargetingProfile(EngineModel):
             return
         for target in targets:
             refusal = refusal_of(target)
+            if refusal is not None:
+                raise ValueError(refusal)
+
+    def _check_hexproof(
+        self,
+        targets: list[Any],
+        caster: str,
+        game: Any,
+        source: Any,
+        source_id: UUID | None,
+    ) -> None:
+        """CR 702.11, at announcement - `_check_shroud`'s sibling, one call below it.
+
+        Asks `Game.hexproof_refusal`, the one hexproof vocabulary shared with
+        `Game.legal_target`'s CR 608.2b recheck and with the candidate lists a
+        live `CHOOSE_TARGETS` question offers. Unlike shroud it needs the
+        `caster` - CR 702.11b's "your opponents control" - and, for CR
+        702.11d's "hexproof from [quality]", the object whose quality is
+        judged: the spell, or the ability's source. That is `source` when the
+        caller has it, else whatever `source_id` names; with neither, only
+        plain hexproof is decided (a quality nothing can be compared against
+        is not enforced, the same fail-open `_check_protection` takes).
+
+        Being here is what reaches every path at once: a spell's targets
+        (`Casting._check_targets`), an activated ability's
+        (`Game._announce_activation_targets`, `off_battlefield_activation`,
+        `equip_activation`) and a triggered ability's
+        (`Game.why_cannot_target_with_trigger`).
+        """
+        if game is None:
+            return
+        refusal_of = getattr(game, "hexproof_refusal", None)
+        if refusal_of is None:
+            return
+        if source is None and source_id is not None:
+            source = game.find_by_id(source_id)
+        for target in targets:
+            refusal = refusal_of(target, caster, source)
             if refusal is not None:
                 raise ValueError(refusal)
 

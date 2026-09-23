@@ -976,6 +976,24 @@ class CardState(EngineModel):
     """The toughness this object had the last time it left the battlefield
     (CR 608.2h). `last_known_power`'s other half, taken at the same instant."""
 
+    last_known_colors: tuple[Color, ...] | None = None
+    """The colours this object had the last time it left the battlefield
+    (CR 608.2h), when a continuous effect made them differ from the printing.
+
+    `last_known_power`'s sibling for the question CR 702.11d and CR 702.16b ask
+    of an ability's *source*: "abilities ... from [quality] sources". CR 608.2b
+    has an ability whose source "has left the zone it was in" use "its last
+    known information", so the quality is read here rather than off the
+    printing. `None` when the printing already is the answer."""
+
+    last_known_types: tuple[Type, ...] | None = None
+    """The card types this object had the last time it left the battlefield
+    (CR 608.2h) - `last_known_colors`' other half, taken at the same instant."""
+
+    last_known_subtypes: tuple[str, ...] | None = None
+    """The subtypes this object had the last time it left the battlefield
+    (CR 608.2h) - taken with `last_known_colors`."""
+
     last_known_counters: Counters = Field(default_factory=Counters)
     """The counters this object had the last time it changed zones (CR 704.8).
 
@@ -2109,6 +2127,15 @@ class CardState(EngineModel):
         toughness = None if computed is None else computed.toughness
         self.last_known_power = None if power == self.printed_power else power
         self.last_known_toughness = None if toughness == self.printed_toughness else toughness
+        # The same snapshot for the qualities an ability's source is judged by
+        # once it has gone (CR 608.2b, CR 702.11d) - recorded only where a
+        # continuous effect made them differ from the printing.
+        colors = None if computed is None else tuple(computed.colors)
+        types = None if computed is None else tuple(computed.types)
+        subtypes = None if computed is None else tuple(computed.subtypes)
+        self.last_known_colors = None if colors == self.colors else colors
+        self.last_known_types = None if types == self.types else types
+        self.last_known_subtypes = None if subtypes == self.subtypes else subtypes
 
     def move_to(self, zone: Zone) -> None:
         """Move to another zone, resetting the state a card loses on the way.
@@ -2139,6 +2166,9 @@ class CardState(EngineModel):
             # cannot be taken from here.
             self.last_known_power = None
             self.last_known_toughness = None
+            self.last_known_colors = None
+            self.last_known_types = None
+            self.last_known_subtypes = None
         self.zone_change_stamp = new_id()
         self.zone = zone
         if not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):

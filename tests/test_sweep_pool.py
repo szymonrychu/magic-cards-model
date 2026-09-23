@@ -1449,3 +1449,42 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
         "Toxic",
         "Waterbend",
     }
+
+
+# -- CR 702.11d: "Hexproof from" has an execution path ----------------------
+
+
+@pytest.mark.parametrize(
+    "name", ["Knight of Grace", "Knight of Malice", "Nevinyrral, Urborg Tyrant"]
+)
+def test_hexproof_from_is_executed_by_the_shared_hexproof_check(name: str) -> None:
+    """`Game.hexproof_refusal` enforces CR 702.11d for spells and abilities
+    (`tests/scenarios/test_hexproof_abilities.py`), so the keyword is not
+    ignored."""
+    assert "Hexproof from" not in ignored_keywords(card(name))
+
+
+@pytest.mark.parametrize(
+    "name", ["Leyline of Sanctity", "Aegis of the Gods", "True Believer", "Ivory Mask"]
+)
+def test_a_player_hexproof_or_shroud_static_line_is_handled(name: str) -> None:
+    """ "You have hexproof." / "You have shroud." are read by
+    `Game.player_hexproof`/`Game.player_has_shroud`
+    (`tests/scenarios/test_player_hexproof_shroud.py`)."""
+    statics = {
+        c.text.split(".")[0]: c.category
+        for c in classify_clauses(card(name))
+        if c.source == "static"
+    }
+    grant = next(text for text in statics if text.startswith("You have"))
+    assert statics[grant] == HANDLED
+
+
+def test_knight_of_graces_conditional_pump_is_handled() -> None:
+    """ "This creature gets +1/+0 as long as any player controls a black
+    permanent." is read by `machines/layers.py`
+    (`tests/scenarios/test_hexproof_abilities.py`)."""
+    statics = [
+        c.category for c in classify_clauses(card("Knight of Grace")) if c.source == "static"
+    ]
+    assert statics == [HANDLED]

@@ -104,7 +104,9 @@ from magic_cards_model.machines.casting import (  # noqa: E402
     TIMING_KEYWORDS,
     adventure_face,
     has_split_second,
+    hexproof_abilities_in,
     keyword_cast_options,
+    player_keyword_grant_of_line,
 )
 from magic_cards_model.machines.combat import (  # noqa: E402
     Keyword,
@@ -403,7 +405,8 @@ def executed_keywords(printing: Card) -> dict[str, str]:
             # Flash: `machines/casting.why_cannot_cast_now` reads it (CR 702.8a).
             found[lowered] = "machines/casting.py (timing)"
         elif lowered in TARGET_LEGALITY_KEYWORDS:
-            # Hexproof: `Casting.choose_targets` refuses the announcement.
+            # Hexproof: `Game.hexproof_refusal`, reached from
+            # `TargetingProfile.check` for spells and abilities alike.
             found[lowered] = "machines/casting.py (target legality)"
         elif lowered in ADDITIONAL_COST_KEYWORDS:
             # Kicker: `Casting.pay_kicker` charges it (CR 702.33a, CR 118.8a).
@@ -605,6 +608,19 @@ def executed_keywords(printing: Card) -> dict[str, str]:
             "models/game.py (Game.shroud_refusal), "
             "machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a)"
         )
+
+    # Hexproof from (CR 702.11d: "This permanent can't be the target of
+    # [quality] spells your opponents control or abilities your opponents
+    # control from [quality] sources.") is enforced by `Game.hexproof_refusal`
+    # - the one hexproof check `TargetingProfile.check`, the live candidate
+    # lists and `Game.legal_target`'s CR 608.2b recheck all ask. It is
+    # registered only when the printed text really carries a quality the
+    # reader splits out (`hexproof_abilities_in`), never on the keyword
+    # alone. `tests/scenarios/test_hexproof_abilities.py` proves it live.
+    if any(k.lower() == "hexproof from" for k in printing.keywords):
+        _, qualities = hexproof_abilities_in(printing.front_oracle_text.splitlines())
+        if qualities:
+            found["hexproof from"] = "models/game.py (Game.hexproof_refusal, CR 702.11d)"
 
     # Split second (CR 702.61a: "As long as this spell is on the stack,
     # players can't cast other spells or activate abilities that aren't mana
@@ -1445,6 +1461,11 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return NOTICE
     if missed_layer_shape(text) is not None:
         return SILENT
+    if player_keyword_grant_of_line(text) is not None:
+        # CR 702.11c / CR 702.18a "or player": `Game.player_hexproof` and
+        # `Game.player_has_shroud` read "You have hexproof." / "You have
+        # shroud." off the battlefield on every targeting check.
+        return HANDLED
     if is_attack_requirement_line(text, printing.name):
         # CR 508.1d: `Game.declare_attackers` enforces it.
         return HANDLED

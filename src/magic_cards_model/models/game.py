@@ -44,11 +44,14 @@ from ..machines.casting import (
     face_being_cast,
     grant_suspend_haste,
     granted_cast_options,
+    has_quality,
+    hexproof_abilities_in,
     keyword_cast_options,
     mana_value_cap_for,
     marker_cast_options,
     optional_additional_costs,
     play_permissions_on,
+    player_keyword_grant_of_line,
     spell_has_type_word,
     split_second_restriction_source,
     static_free_cast_grants,
@@ -262,7 +265,7 @@ from .card_state import (
     planeswalkers_with_zero_loyalty,
 )
 from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect
-from .player import Player
+from .player import Player, PlayerTargetingGrant
 from .token import TokenDefinition, TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
 
@@ -2660,7 +2663,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 36
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 37
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3197,6 +3200,18 @@ class Game(EngineModel):
     no zone at all at the moment the question is asked (CR 603.3b comes one
     step before CR 603.3 puts anything on the stack), so a client reading a
     paused game previously had no way to name it or point at its source.
+
+    Bumped 36 -> 37: `Player` gained `targeting_grants` (CR 702.11c/702.11d/
+    702.18a's player hexproof and shroud from a resolved effect, with its CR
+    611.2a duration) and `CardState` gained `last_known_colors`/`types`/
+    `subtypes` (CR 608.2b's last known information for an ability's source).
+    Behaviour changed on state that can already exist too: hexproof now
+    refuses abilities as well as spells and is rechecked at CR 608.2b, a
+    "You have hexproof."/"You have shroud." permanent now protects its
+    controller, "You gain hexproof ..." clauses now resolve, and Knight of
+    Grace's "+1/+0 as long as any player controls a black permanent" now
+    applies - so a version-36 snapshot is refused rather than replayed into a
+    different game.
     """
 
     @model_validator(mode="before")
@@ -4155,6 +4170,14 @@ class Game(EngineModel):
                 for effect in self.casting_rule_effects
                 if effect.duration is not Duration.UNTIL_END_OF_TURN
             ]
+            # CR 514.2's same sentence, for a player's "until end of turn"
+            # hexproof or shroud (CR 702.11c, CR 702.18a).
+            for player in self.players:
+                player.targeting_grants = [
+                    grant
+                    for grant in player.targeting_grants
+                    if grant.duration is not Duration.UNTIL_END_OF_TURN
+                ]
             return discarded
 
     def remove_all_damage(self) -> None:
@@ -4199,6 +4222,17 @@ class Game(EngineModel):
                 and effect.until_next_turn_of == username
             )
         ]
+        # Blossoming Calm's "You gain hexproof until your next turn": the
+        # player grant ends at the same moment (CR 611.2a).
+        for player in self.players:
+            player.targeting_grants = [
+                grant
+                for grant in player.targeting_grants
+                if not (
+                    grant.duration is Duration.UNTIL_YOUR_NEXT_TURN
+                    and grant.until_next_turn_of == username
+                )
+            ]
         # Two different "next turn" permissions expire off this same hook, and
         # they are not the same shape. Hex Magic's own "Until the end of your
         # next turn, you may play cards exiled this way" (CR 611.2a again) is
@@ -7133,6 +7167,11 @@ class Game(EngineModel):
                 candidates.append(item)
         if profile.requirements and any(r.allows_players for r in profile.requirements):
             candidates.extend(self.players)
+        # CR 702.18a and CR 702.11: printed on the *target*, so the
+        # requirement's own `rejects` cannot see them - asked here, of the same
+        # `shroud_refusal`/`hexproof_refusal` `TargetingProfile.check` uses, so
+        # a live question never offers what the announcement would refuse.
+        source = self.find_by_id(source_id) if source_id is not None else None
         return [
             candidate
             for candidate in candidates
@@ -7140,6 +7179,8 @@ class Game(EngineModel):
                 requirement.rejects(candidate, controller, self, source_id) is None
                 for requirement in profile.requirements
             )
+            and self.shroud_refusal(candidate) is None
+            and self.hexproof_refusal(candidate, controller, source) is None
         ]
 
     def choose_trigger_targets(self, card_name: str, targets: list[object]) -> None:
@@ -10781,6 +10822,17 @@ class Game(EngineModel):
             # protection just above - a granted shroud makes an already-legal
             # target illegal by the time it would resolve.
             return None
+        spell_controller = (
+            spell.controller
+            if isinstance(spell, AbilityOnStack)
+            else self.controller_of(spell).username
+        )
+        if self.hexproof_refusal(thing, spell_controller, spell) is not None:
+            # CR 702.11b/702.11c/702.11d, the same recheck again: hexproof
+            # gained in response (Blossoming Defense, Blossoming Calm) makes
+            # the target illegal. An ability's source is read with its last
+            # known information if it has left (CR 608.2b).
+            return None
 
         if isinstance(spell, AbilityOnStack):
             # `x_value` substituted first, the same reason `activate_ability`
@@ -11018,6 +11070,10 @@ class Game(EngineModel):
                 for thing in pool
                 if not (thing is source and source.zone is not Zone.STACK)
                 and requirement.rejects(thing, caster, self, source.id) is None
+                # Printed on the target (CR 702.18a, CR 702.11), so asked of
+                # the same refusals `TargetingProfile.check` uses.
+                and self.shroud_refusal(thing) is None
+                and self.hexproof_refusal(thing, caster, source) is None
             )
             result.append(legal)
         return tuple(result)
@@ -11164,7 +11220,23 @@ class Game(EngineModel):
                 )
         return None
 
-    def shroud_refusal(self, target: "Targetable | AbilityOnStack") -> str | None:
+    def _targeted_thing(self, target: Any) -> Any:
+        """A target as the object or player it names: a username becomes the
+        `Player`, a `TargetRef` or id the object it points at. Anything else is
+        returned unchanged - the refusals below read only a `CardState` or a
+        `Player` and let every other shape through."""
+        if isinstance(target, str):
+            try:
+                return self.player(target)
+            except KeyError:
+                return target
+        if isinstance(target, TargetRef):
+            return self.resolve_target(target) or target
+        if isinstance(target, UUID):
+            return self.find_by_id(target) or target
+        return target
+
+    def shroud_refusal(self, target: Any) -> str | None:
         """Why shroud stops this target being targeted at all, or None (CR 702.18).
 
         CR 702.18a: "Shroud is a static ability. 'Shroud' means 'This
@@ -11175,18 +11247,20 @@ class Game(EngineModel):
         against - CR 702.18b's redundancy rule is the only thing that varies
         with *how many* instances there are, never with who is asking.
 
-        Read off `has_keyword`, the same computed-board reader every other
-        keyword check in this module already uses (`Game._untap_step_impl`'s
-        haste check, `combat.py`'s evasion checks): a permanent's printed
-        "Shroud" line and one granted in layer 6 (CR 613.1f) are the same
-        keyword to that reader, so a spell-granted shroud is refused exactly
-        like a printed one with no separate code path.
-
-        A **player** target is not modelled - `Player` carries no ability
-        text to read CR 702.18a's "or player" off, the same documented gap
-        `protection_refusal`'s hexproof-on-player sibling leaves for CR
-        702.11c; see `docs/engine-coverage.md`.
+        A permanent's shroud is read off `has_keyword`, the computed-board
+        reader, so a printed "Shroud" line and one granted in layer 6 (CR
+        613.1f) are the same keyword. A **player's** is `player_has_shroud`:
+        a static "You have shroud." on a permanent they control, or an
+        effect's grant on `Player.targeting_grants`.
         """
+        target = self._targeted_thing(target)
+        if isinstance(target, Player):
+            if not self.player_has_shroud(target):
+                return None
+            return (
+                f"{target.username} has shroud, so they can't be the target of spells "
+                f"or abilities (CR 702.18a)"
+            )
         if not isinstance(target, CardState):
             return None
         if target.zone is not Zone.BATTLEFIELD:
@@ -11199,6 +11273,262 @@ class Game(EngineModel):
             f"{target.name} has shroud, so it can't be the target of spells or "
             f"abilities (CR 702.18a)"
         )
+
+    def hexproof_refusal(self, target: Any, source_controller: str, source: Any) -> str | None:
+        """Why hexproof stops `source_controller`'s spell or ability targeting
+        this, or None (CR 702.11).
+
+        CR 702.11b: "'Hexproof' on a permanent means 'This permanent can't be
+        the target of spells or abilities your opponents control.'" CR
+        702.11c says the same of a player. CR 702.11d: "'Hexproof from
+        [quality]' on a permanent means 'This permanent can't be the target of
+        [quality] spells your opponents control or abilities your opponents
+        control from [quality] sources.'" CR 702.11f makes "from A and from B"
+        two abilities and CR 702.11h makes repeats redundant.
+
+        The one hexproof vocabulary: `TargetingProfile.check` asks it at
+        announcement for spells and for activated and triggered abilities
+        alike, `_legal_target_candidates` and `legal_actions` filter live
+        candidates through it, and `legal_target` asks it again at CR 608.2b's
+        resolution recheck - so hexproof gained in response makes a target
+        illegal.
+
+        `source` is what "[quality]" is judged on: the spell (a `CardState` on
+        the stack, or about to be), or an ability - an `AbilityOnStack`, or its
+        source object - whose source is read with computed characteristics on
+        the battlefield and its last known information once it has left
+        (CR 113.7a, CR 608.2b); see `_quality_characteristics_of`. With no
+        `source`, only plain hexproof is decided.
+
+        The exception is for the target's own controller only: CR 702.11b's
+        "your opponents".
+        """
+        target = self._targeted_thing(target)
+        if isinstance(target, Player):
+            plain, qualities = self.player_hexproof(target)
+            protected = target.username
+            pronoun = "them"
+            rule_plain = "CR 702.11c"
+        elif isinstance(target, CardState):
+            if target.zone is not Zone.BATTLEFIELD:
+                # CR 702.11b speaks of a permanent, and a permanent is on the
+                # battlefield (CR 110.1).
+                return None
+            plain, qualities = self.hexproof_abilities(target)
+            protected = self.controller_of(target).username
+            pronoun = "it"
+            rule_plain = "CR 702.11b"
+        else:
+            return None
+        if not plain and not qualities:
+            return None
+        if protected == source_controller:
+            return None
+        name = target.username if isinstance(target, Player) else target.name
+        if plain:
+            return (
+                f"{name} has hexproof, so {source_controller} - an opponent of its "
+                f"controller - cannot target {pronoun} ({rule_plain})"
+            )
+        characteristics = self._quality_characteristics_of(source)
+        if characteristics is None:
+            return None
+        colors, types, subtypes, supertypes, source_name = characteristics
+        for quality in qualities:
+            if has_quality(
+                quality, colors=colors, types=types, subtypes=subtypes, supertypes=supertypes
+            ):
+                return (
+                    f"{name} has hexproof from {quality}, so {source_controller} - an "
+                    f"opponent of its controller - cannot target {pronoun} with "
+                    f"{source_name} (CR 702.11d)"
+                )
+        return None
+
+    def _quality_characteristics_of(
+        self, source: Any
+    ) -> tuple[tuple[Color, ...], tuple[Type, ...], tuple[str, ...], tuple[Any, ...], str] | None:
+        """The colours, types, subtypes and supertypes CR 702.11d judges
+        `source` by, and its name for a refusal message.
+
+        - An `AbilityOnStack` is judged by its source (CR 113.7: "the object
+          that generated it"), found by id or, once it has ceased to exist,
+          by `source_last_known`.
+        - A permanent on the battlefield: its computed characteristics
+          (CR 613.5), so a colour or type an effect changed counts.
+        - A spell on the stack, or a card about to be cast: the object as it
+          is there.
+        - An object that has left the battlefield: its last known
+          information (CR 113.7a, CR 608.2b) - the `last_known_*` snapshot
+          `CardState.remember_last_known_power_toughness` took as it left,
+          where a continuous effect made it differ from the printing.
+        - A bare `Card`: its printing.
+        """
+        if isinstance(source, AbilityOnStack):
+            ability_name = source.name
+            source = source.source_or_last_known(self)
+            if source is None:
+                return None
+            characteristics = self._quality_characteristics_of(source)
+            if characteristics is None:
+                return None
+            return (*characteristics[:4], ability_name)
+        if isinstance(source, Card):
+            return (
+                tuple(source.colors),
+                tuple(source.types),
+                tuple(source.subtypes),
+                tuple(source.supertypes),
+                source.name,
+            )
+        if not isinstance(source, CardState):
+            return None
+        if source.zone is Zone.BATTLEFIELD:
+            computed = self.characteristics_of(source)
+            return (
+                tuple(computed.colors),
+                tuple(computed.types),
+                tuple(computed.subtypes),
+                tuple(computed.supertypes),
+                source.name,
+            )
+        return (
+            source.last_known_colors if source.last_known_colors is not None else source.colors,
+            source.last_known_types if source.last_known_types is not None else source.types,
+            (
+                source.last_known_subtypes
+                if source.last_known_subtypes is not None
+                else source.subtypes
+            ),
+            tuple(source.supertypes),
+            source.name,
+        )
+
+    def hexproof_abilities(self, target: CardState) -> tuple[bool, list[str]]:
+        """Whether this permanent has plain hexproof, and every quality it has
+        hexproof from (CR 702.11b, CR 702.11d, CR 702.11f, CR 702.11h).
+
+        Read off the permanent's ability text on the computed board, so a
+        hexproof granted in layer 6 (Blossoming Defense, Dragonfire Blade)
+        counts and one an effect removed does not (CR 613.5); off the object's
+        own text when it has no computed board. A face-down permanent has no
+        text at all (CR 708.2) and so has neither.
+        """
+        try:
+            lines = list(self.characteristics_of(target).abilities)
+        except KeyError:
+            lines = target.oracle_text.splitlines()
+        return hexproof_abilities_in(lines)
+
+    def _player_static_keyword_grants(self, player: Player) -> list[tuple[str, list[str]]]:
+        """Every "You have hexproof." / "You have shroud." (and "hexproof from
+        [quality]") line on a permanent `player` controls, read fresh off the
+        computed board each time so the grant ends with its permanent (CR
+        604.2) and an ability an effect removed grants nothing (CR 613.1f) -
+        the same fresh read `player_protection_qualities` makes for Runed Halo.
+        """
+        grants: list[tuple[str, list[str]]] = []
+        board = self.computed_board()
+        for permanent in self.battlefield:
+            if self.controller_of(permanent).username != player.username:
+                continue
+            try:
+                lines = board.of(permanent).abilities
+            except KeyError:
+                lines = tuple(permanent.oracle_text.splitlines())
+            for line in lines:
+                grant = player_keyword_grant_of_line(line)
+                if grant is not None:
+                    grants.append(grant)
+        return grants
+
+    def player_hexproof(self, player: Player) -> tuple[bool, list[str]]:
+        """Whether this player has plain hexproof, and every quality they have
+        hexproof from (CR 702.11c, CR 702.11d, CR 702.11h) - static grants
+        from permanents they control, plus effect grants on
+        `Player.targeting_grants`."""
+        plain = False
+        qualities: list[str] = []
+        sources = [
+            (keyword, list(found)) for keyword, found in self._player_static_keyword_grants(player)
+        ]
+        sources.extend(
+            (grant.keyword, [] if grant.quality is None else [grant.quality])
+            for grant in player.targeting_grants
+        )
+        for keyword, found in sources:
+            if keyword != "hexproof":
+                continue
+            if not found:
+                plain = True
+            for quality in found:
+                if quality not in qualities:
+                    qualities.append(quality)
+        return plain, qualities
+
+    def player_has_shroud(self, player: Player) -> bool:
+        """CR 702.18a's "or player": a static "You have shroud." on a permanent
+        they control, or an effect grant on `Player.targeting_grants`."""
+        if any(grant.keyword == "shroud" for grant in player.targeting_grants):
+            return True
+        return any(keyword == "shroud" for keyword, _ in self._player_static_keyword_grants(player))
+
+    def grant_player_hexproof(
+        self,
+        username: str,
+        qualities: Sequence[str] = (),
+        *,
+        duration: Duration,
+        source_name: str,
+    ) -> None:
+        """Give a player hexproof (CR 702.11c), or hexproof from each of
+        `qualities` (CR 702.11d, one ability per quality per CR 702.11f), for
+        `duration` (CR 611.2a).
+
+        The call a resolving "you gain hexproof [from ...] until ..." clause
+        makes. `Duration.UNTIL_END_OF_TURN` ends in `cleanup_step` (CR 514.2);
+        `Duration.UNTIL_YOUR_NEXT_TURN` ends as `username`'s next turn begins
+        (`begin_turn_for`) - "your" is the grant's own controller, the player
+        receiving it.
+        """
+        self._grant_player_keyword(
+            username,
+            [("hexproof", quality) for quality in qualities] or [("hexproof", None)],
+            duration=duration,
+            source_name=source_name,
+        )
+
+    def grant_player_shroud(self, username: str, *, duration: Duration, source_name: str) -> None:
+        """Give a player shroud (CR 702.18a's "or player") for `duration`."""
+        self._grant_player_keyword(
+            username, [("shroud", None)], duration=duration, source_name=source_name
+        )
+
+    def _grant_player_keyword(
+        self,
+        username: str,
+        grants: Sequence[tuple[Literal["hexproof", "shroud"], str | None]],
+        *,
+        duration: Duration,
+        source_name: str,
+    ) -> None:
+        if duration not in (Duration.UNTIL_END_OF_TURN, Duration.UNTIL_YOUR_NEXT_TURN):
+            raise ValueError(
+                f"a player grant lasts until end of turn or until your next turn, not {duration}"
+            )
+        player = self.player(username)
+        for keyword, quality in grants:
+            player.targeting_grants.append(
+                PlayerTargetingGrant(
+                    keyword=keyword,
+                    quality=quality,
+                    duration=duration,
+                    until_next_turn_of=(
+                        username if duration is Duration.UNTIL_YOUR_NEXT_TURN else None
+                    ),
+                    source_name=source_name,
+                )
+            )
 
     def _player_protection_refusal(self, target: Player, source: "Card") -> str | None:
         """Why a *player's* protection stops `source` targeting them (CR 702.16b).

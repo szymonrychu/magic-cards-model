@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "f2b2f381-86a2-42ac-b694-dcde437d574f",
+  "oracle_id": "c5bfc1b9-a55d-4608-a6f7-bb62cb8dc3c6",
+  "multiverse_ids": [
+    380364
+  ],
+  "mtgo_id": 52256,
+  "mtgo_foil_id": 52257,
+  "tcgplayer_id": 82245,
+  "cardmarket_id": 266643,
+  "name": "Aegis of the Gods",
+  "lang": "en",
+  "released_at": "2014-05-02",
+  "uri": "https://api.scryfall.com/cards/f2b2f381-86a2-42ac-b694-dcde437d574f",
+  "scryfall_uri": "https://scryfall.com/card/jou/1/aegis-of-the-gods?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:44:23Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.jpg?1783939463",
+    "normal": "https://cards.scryfall.io/normal/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.jpg?1783939463",
+    "large": "https://cards.scryfall.io/large/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.jpg?1783939463",
+    "png": "https://cards.scryfall.io/png/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.png?1783939463",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.jpg?1783939463",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.jpg?1783939463",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.webp?1783939463",
+    "grid": "https://cards.scryfall.io/grid/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.webp?1783939463",
+    "display": "https://cards.scryfall.io/display/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.webp?1783939463",
+    "art": "https://cards.scryfall.io/art/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.webp?1783939463",
+    "crop": "https://cards.scryfall.io/crop/front/f/2/f2b2f381-86a2-42ac-b694-dcde437d574f.webp?1783939463"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Enchantment Creature \u2014 Human Soldier",
+  "oracle_text": "You have hexproof. (You can't be the target of spells or abilities your opponents control.)",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "204d2dca-1887-4721-9558-164aa7bbeb4f",
+  "set": "jou",
+  "set_name": "Journey into Nyx",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/204d2dca-1887-4721-9558-164aa7bbeb4f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ajou&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/jou?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f2b2f381-86a2-42ac-b694-dcde437d574f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac5bfc1b9-a55d-4608-a6f7-bb62cb8dc3c6&unique=prints",
+  "collector_number": "1",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Athreos cares little for the other gods' conflict with mortals. He is concerned only with safe passage for the dead.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Yefim Kligerman",
+  "artist_ids": [
+    "ff99b721-ae13-4822-af0d-868ba7ee62d9"
+  ],
+  "illustration_id": "5dccb699-479a-4c2d-bbb5-974826ec4313",
+  "border_color": "black",
+  "frame": "2003",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 7483,
+  "penny_rank": 3975,
+  "prices": {
+    "usd": "1.01",
+    "usd_foil": "4.33",
+    "usd_etched": null,
+    "eur": "1.04",
+    "eur_foil": "3.77",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=380364&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAegis%2Bof%2Bthe%2BGods",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAegis%2Bof%2Bthe%2BGods",
+    "edhrec": "https://edhrec.com/route/?cc=Aegis+of+the+Gods"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F82245%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=266643&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/52256?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -26,10 +26,8 @@ Two shapes, each a real printing:
   `shroud_refusal` check as the printed line, proving the enforcement is not
   keyed to "printed" vs "granted" at all.
 
-Player shroud (CR 702.18a also names a player) is not modelled, the same
-documented gap `test_hexproof.py`/`docs/engine-coverage.md` already leaves
-for CR 702.11c's hexproof on a player - `Player` has no ability text to read
-it off.
+Player shroud (CR 702.18a also names a player) is
+`test_player_hexproof_shroud.py`'s.
 
 Every CR number here was verified with `mise run rules:find 702.18` in the
 session that wrote this file.

@@ -2,11 +2,12 @@
 
 from collections.abc import Callable, Iterable, Mapping
 from random import Random
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import AfterValidator, ConfigDict, Field
 
+from ..machines.layers import Duration
 from ..snapshot import EngineModel
 from .card import Card
 from .card_state import CardState, Counter, CounterKind, Counters
@@ -17,6 +18,24 @@ from .zone import Zone, refuse_shared_zone
 
 POISON_TO_LOSE = 10
 """CR 704.5c: ten or more poison counters and the player loses the game."""
+
+
+class PlayerTargetingGrant(EngineModel):
+    """One hexproof or shroud ability an effect gave a player, with how long
+    it lasts (CR 702.11c, CR 702.11d, CR 702.18a, CR 611.2a).
+
+    `quality` is set only for CR 702.11d's "hexproof from [quality]"; plain
+    hexproof and shroud leave it `None`. `until_next_turn_of` names whose next
+    turn ends a `Duration.UNTIL_YOUR_NEXT_TURN` grant - the "your" of the
+    printed text, the grant's own controller."""
+
+    model_config = ConfigDict(frozen=True)
+
+    keyword: Literal["hexproof", "shroud"]
+    quality: str | None = None
+    duration: Duration = Duration.UNTIL_END_OF_TURN
+    until_next_turn_of: str | None = None
+    source_name: str = ""
 
 
 class PlayerZones(dict[Zone, list[CardState]]):
@@ -152,6 +171,18 @@ class Player(EngineModel):
     A permanent's protection is read off its text by `Game.protection_qualities`
     and `Game._effective_protection_qualities`; a player has no text, so a
     grant is recorded here instead, by `gain_protection_from`."""
+
+    targeting_grants: list[PlayerTargetingGrant] = Field(default_factory=list)
+    """Hexproof and shroud this *player* was given by a resolved spell or
+    ability (CR 702.11c, CR 702.11d, CR 702.18a's "or player", CR 611.2a).
+
+    One entry per ability: CR 702.11f makes "hexproof from blue and from
+    black" two abilities, so it is two entries. A static grant ("You have
+    hexproof.") is not recorded here - it is read fresh off the battlefield by
+    `Game.player_hexproof`/`Game.player_has_shroud`, so it ends with its
+    permanent (CR 604.2). `Game.cleanup_step` drops the "until end of turn"
+    entries (CR 514.2) and `Game.begin_turn_for` the "until your next turn"
+    ones (CR 611.2a)."""
 
     mana_pool: ManaPool = Field(default_factory=ManaPool)
     zones: PerPlayerZones = Field(
