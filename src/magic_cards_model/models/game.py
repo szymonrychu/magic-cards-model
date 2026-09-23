@@ -2793,7 +2793,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 47
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 48
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3418,6 +3418,18 @@ class Game(EngineModel):
     `pending_triggers`, so a version-46 snapshot holding such a trigger would
     decode with the stamp `None` and resolve as "nothing found" where it used
     to move the card - it is refused rather than resolved differently.
+
+    Bumped 47 -> 48 (G7): a "`<SUBJ>` `<verb1>`, `<verb2>`, and `<verb3>`"
+    shared-subject verb list is newly carried across every item instead of
+    only its first, and `_parse_optional_player_clause`'s own "you " retry
+    no longer silently attributes an orphaned later item to the resolving
+    ability's controller. Archon of Cruelty's own trigger went from a no-op
+    to a real edict/discard/life-loss; Arbiter of Woe's "each opponent
+    discards a card and loses 2 life" now costs the opponent the life
+    instead of the controller. A paused game with either trigger already on
+    the stack, or one holding either permanent, would resolve that trigger
+    differently, so a version-47 snapshot is refused rather than replayed
+    into a different game.
     """
 
     @model_validator(mode="before")

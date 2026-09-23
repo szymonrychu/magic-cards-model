@@ -31218,11 +31218,78 @@ def _parse_target_player_shuffles_clause(clause: str, *, for_spell: bool) -> Tar
 #: the identical thing, so the same reader takes either. The description is
 #: `machines/targeting.permanent_description`, the same target grammar
 #: `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE` already reuses.
+#:
+#: "Target opponent" reads identically (G7): CR 701.21a does not care
+#: whether the target is narrowed to an opponent or left as any player, and
+#: Archon of Cruelty's own trigger ("target opponent sacrifices a creature
+#: or planeswalker of their choice, ...") is the card that exposed this half
+#: being unread - the regex only ever matched the literal word "player".
 _TARGET_PLAYER_SACRIFICES_RE = re.compile(
-    rf"^target player sacrifices (?P<n>{COUNT}) (?P<description>.+?)"
+    rf"^(?P<who>target (?:player|opponent)) sacrifices (?P<n>{COUNT}) (?P<description>.+?)"
     r"(?: of their choice)?(?P<tail> with [^.]+?)?\.?$",
     re.IGNORECASE,
 )
+
+#: The bare verb, subject already stripped - "sacrifices a creature or
+#: planeswalker of their choice" - read the identical way `_DISCARD_A_CARD_
+#: RE`/`_discard_cards` already are: as one item of a `_parse_shared_
+#: subject_clauses` verb list (G7), whose own subject (already carried by
+#: that reader) supplies the player this runs against. Deliberately kept out
+#: of `parse_clause_effect` itself: that function is the shared bare-verb
+#: vocabulary many unrelated callers already reuse, and widening it here
+#: would risk changing how some other card's own unrelated "sacrifice" text
+#: (a cost line, "sacrifice this creature") reads; this private matcher is
+#: reached only from the one caller that means this shape.
+_BARE_SACRIFICE_OF_CHOICE_RE = re.compile(
+    rf"^sacrifices? (?P<n>{COUNT}) (?P<description>.+?)"
+    r"(?: of (?:your|their) choice)?(?P<tail> with [^.]+?)?$",
+    re.IGNORECASE,
+)
+
+
+def _sacrifice_of_choice_clause_effect(
+    description: str, count: int, wanted_words: str
+) -> ClauseEffect:
+    """One player's own CR 701.21a/608.2d choice among their own permanents
+    matching `description` - the body both `_parse_target_player_sacrifices_
+    clause` (over whichever player `resolve_targets` hands it) and
+    `_parse_bare_sacrifice_of_choice_clause` (over whichever player G7's
+    subject-carry pass hands it) run, factored out once so the two share the
+    identical "no impossible choice"/CR 608.2d floor rather than keeping two
+    copies of it.
+    """
+    requirement = permanent_description(description)
+    assert requirement is not None
+
+    def effect(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(player.username)
+            if requirement.rejects(permanent, player.username, game) is None
+        ]
+        if not candidates:
+            return
+        if len(candidates) <= count:
+            chosen = candidates
+        else:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"sacrifice {wanted_words}",
+                    source=source,
+                    amount=count,
+                    cards=tuple(permanent.id for permanent in candidates),
+                    source_id=source_id,
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in candidates}
+            chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+        for permanent in chosen:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.sacrifice(permanent)
+
+    return effect
 
 
 def _parse_target_player_sacrifices_clause(
@@ -31237,7 +31304,7 @@ def _parse_target_player_sacrifices_clause(
     match = _TARGET_PLAYER_SACRIFICES_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    if not _targets_understood("target player", allow_player_targets=True):
+    if not _targets_understood(match.group("who"), allow_player_targets=True):
         return None
     count = parse_count(match.group("n"))
     description = match.group("description").strip()
@@ -31247,40 +31314,15 @@ def _parse_target_player_sacrifices_clause(
     if requirement is None or count is None or count < 1:
         return None
     wanted_words = with_indefinite_article(description) if count == 1 else f"{count} {description}"
+    per_player = _sacrifice_of_choice_clause_effect(description, count, wanted_words)
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = (
             stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
         )
         for target in game.resolve_targets(stack_object):
-            if not isinstance(target, Player):
-                continue
-            candidates = [
-                permanent
-                for permanent in game.permanents_controlled_by(target.username)
-                if requirement.rejects(permanent, target.username, game) is None
-            ]
-            if not candidates:
-                continue
-            if len(candidates) <= count:
-                chosen = candidates
-            else:
-                chosen_ids = game.ask(
-                    Decision(
-                        kind=DecisionKind.CHOOSE_CARDS,
-                        player=target.username,
-                        prompt=f"sacrifice {wanted_words}",
-                        source=source,
-                        amount=count,
-                        cards=tuple(permanent.id for permanent in candidates),
-                        source_id=source_id_of(stack_object),
-                    )
-                )
-                by_id = {permanent.id: permanent for permanent in candidates}
-                chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
-            for permanent in chosen:
-                if permanent.zone is Zone.BATTLEFIELD:
-                    game.sacrifice(permanent)
+            if isinstance(target, Player):
+                per_player(game, target, source, source_id_of(stack_object))
 
     return effect
 
@@ -31359,6 +31401,23 @@ def _parse_target_player_may_search_named_card_clause(
             )
 
     return effect
+
+
+def _parse_bare_sacrifice_of_choice_clause(part: str) -> ClauseEffect | None:
+    """`_BARE_SACRIFICE_OF_CHOICE_RE`'s shape - one verb phrase of a G7
+    `_parse_shared_subject_clauses` list, already stripped of its subject."""
+    match = _BARE_SACRIFICE_OF_CHOICE_RE.fullmatch(part.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    description = match.group("description").strip()
+    if match.group("tail") is not None:
+        description = f"{description}{match.group('tail')}"
+    requirement = permanent_description(description)
+    if requirement is None or count is None or count < 1:
+        return None
+    wanted_words = with_indefinite_article(description) if count == 1 else f"{count} {description}"
+    return _sacrifice_of_choice_clause_effect(description, count, wanted_words)
 
 
 #: "Separate all `<quality>` target player controls into two piles.
@@ -34873,6 +34932,260 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     return effect
 
 
+#: G7: "`<SUBJ>` `<verb1>`[, `<verb2>`, ...][,] and `<verbN>`." - one CR
+#: 608.2c instruction naming several actions for a single subject that
+#: `_CLAUSE_SEPARATOR`'s own bare "and"/comma split has no notion is shared:
+#: split apart, only the *first* fragment still carries the subject, and
+#: every later one is an orphaned bare verb phrase.
+#:
+#: `SUBJ` is one of five shapes:
+#: - "target opponent"/"target player" - CR 115.1: the target is announced
+#:   once, when the ability or spell is put on the stack, and every later
+#:   item in the list names that identical player, never a fresh target.
+#:   `Game.resolve_targets` is safe to call again for each item - it re-reads
+#:   the same fixed `spell.targets`/`ability.targets` list every time (CR
+#:   608.2b's own legality recheck), never asks a new targeting question.
+#: - "each opponent"/"each player" - CR 101.4's own APNAP order; every item
+#:   of the list runs against one player before the next player's turn
+#:   comes, matching CR 608.2c's "in the order written" read per player.
+#: - "you" - the resolving spell's or ability's own controller.
+#:
+#: Archon of Cruelty's own trigger ("target opponent sacrifices a creature
+#: or planeswalker of their choice, discards a card, and loses 3 life. You
+#: draw a card and gain 3 life.") is two of these in a row, one per subject -
+#: the reported card, and the one that exposed the bug below. Dusk Mangler
+#: ("each opponent sacrifices a creature of their choice, discards a card,
+#: and loses 4 life.") is the "each opponent" shape with three items.
+#:
+#: **The fail-open this closes**: before this reader existed, an orphaned
+#: fragment like "loses 3 life" reached `_parse_mixed_clause`'s own last
+#: resort, `_parse_optional_player_clause`, whose generic "you " retry
+#: exists for a *genuinely* subjectless sentence ("You gain 2 life, draw two
+#: cards" - the subject really is "you", just printed once). That retry has
+#: no memory of what the true subject actually was a clause or two back, so
+#: for Arbiter of Woe ("each opponent discards a card and loses 2 life")
+#: it silently ran "you loses 2 life" against the resolving ability's own
+#: *controller* - the wrong player entirely, with no notice, sweep-visible
+#: as "handled" only because something ran, not because the something was
+#: right. This reader is tried first, whole, ahead of the ordinary split
+#: (see its call site in `_parse_mixed_clauses`), so for every sentence
+#: shaped like this the true subject is read directly off the sentence and
+#: carried to every item in its list - the blind "you" retry is never
+#: reached for these sentences at all.
+_SHARED_SUBJECT_RE = re.compile(
+    r"^(?P<subject>target opponent|target player|each opponent|each player|you)\s+(?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _split_shared_subject_verb_parts(rest: str) -> list[str] | None:
+    """`rest` (everything after `SUBJ`) split at its own list boundaries -
+    "sacrifices a creature, discards a card, and loses 3 life" into three
+    verb phrases, the same "A, B, and C" grammar `_parse_comma_chained_
+    player_clause` already splits for a plain "you" subject, generalised to
+    also split the one bare " and " a two-item list carries with no comma at
+    all ("discards a card and loses 2 life").
+
+    `None` for anything that is not genuinely a list of two or more items: a
+    lone verb phrase is left for the more specific single-clause readers
+    that already read it correctly (`_parse_target_player_sacrifices_
+    clause`, `_EACH_OPPONENT_DISCARDS_RE`, and the rest), never claimed by
+    this more general reader.
+    """
+    parts = [part.strip() for part in re.split(r",\s*(?:and\s+)?|\s+and\s+", rest) if part.strip()]
+    if len(parts) < 2:
+        return None
+    return parts
+
+
+def _parse_bare_shared_subject_verb_clause(part: str) -> ClauseEffect | None:
+    """One item of a `_SHARED_SUBJECT_RE` list, read as a verb phrase with no
+    subject of its own - the identical bare vocabulary `_parse_optional_
+    player_clause`'s own "you " retry already reads (`parse_clause_effect`,
+    tried bare and then with "you " restored), plus the sacrifice-of-choice
+    edict (`_BARE_SACRIFICE_OF_CHOICE_RE`) that shared vocabulary does not
+    carry - see that regex's own docstring for why it stays private to this
+    caller rather than widening `parse_clause_effect` itself.
+    """
+    return (
+        _parse_bare_sacrifice_of_choice_clause(part)
+        or parse_clause_effect(part)
+        or parse_clause_effect(f"you {part}")
+    )
+
+
+def _group_shared_subject_parts(
+    subject: str, parts: list[str]
+) -> list[tuple[str, list[str]]] | None:
+    """`parts` (already subject-stripped off the sentence's own head)
+    regrouped by *effective* subject: a run of items that carry no subject
+    of their own inherits `subject` (the sentence's leading one, or the
+    most recent restatement), and an item that restates one of the same
+    five shapes (`_SHARED_SUBJECT_RE`, reused here for one item at a time
+    rather than the whole sentence) opens a new run from itself onward,
+    with that subject word stripped before the verb phrase is read.
+
+    This is what Blood Artist's own "target player loses 1 life **and you**
+    gain 1 life." needs: the second item is not an orphaned bare verb at
+    all, it names its own subject explicitly, and a different one from the
+    first item's "target player" - `_split_shared_subject_verb_parts` alone
+    has no way to tell "you gain 1 life" (self-contained) apart from an
+    orphaned "gain 1 life" fragment by shape, so every item is re-checked
+    against the identical vocabulary the sentence's own head already reads,
+    rather than blindly run against the previous item's carried subject.
+
+    Returns groups in order, each `(effective_subject, [verb phrases])`, or
+    `None` if a restated subject leaves no verb phrase behind (a malformed
+    "and you." with nothing after it).
+    """
+    groups: list[tuple[str, list[str]]] = []
+    current_subject = subject
+    current_parts: list[str] = []
+    for part in parts:
+        restated = _SHARED_SUBJECT_RE.fullmatch(part)
+        if restated is not None:
+            if current_parts:
+                groups.append((current_subject, current_parts))
+            current_subject = restated.group("subject").lower()
+            current_parts = [restated.group("rest").strip()]
+        else:
+            current_parts.append(part)
+    if not current_parts:
+        return None
+    groups.append((current_subject, current_parts))
+    return groups
+
+
+def _shared_subject_group_effect(
+    subject: str, clause_effects: list[ClauseEffect], *, for_spell: bool
+) -> TargetedClause | None:
+    """One `_group_shared_subject_parts` group's own `subject`, turned into
+    a `TargetedClause` that runs every one of `clause_effects` against
+    whichever player(s) that subject names."""
+
+    def run_for_player(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        for clause_effect in clause_effects:
+            clause_effect(game, player, source, source_id)
+
+    if subject == "you":
+
+        def you_effect(game: "Game", stack_object: "StackObject") -> None:
+            player = game.controller_of(stack_object)
+            source = (
+                stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+            )
+            run_for_player(game, player, source, source_id_of(stack_object))
+
+        return you_effect
+
+    if subject in ("target opponent", "target player"):
+        if not _targets_understood(subject, allow_player_targets=True):
+            return None
+
+        def target_effect(game: "Game", stack_object: "StackObject") -> None:
+            source = (
+                stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+            )
+            # CR 608.2b: the target - chosen once, when this spell or ability
+            # was put on the stack - is re-checked for legality here, the
+            # same recheck every other targeted reader already gets from
+            # `resolve_targets`. A player target essentially never becomes
+            # illegal mid-resolution (nothing between this ability's own
+            # clauses can remove a player from the game), so every item of
+            # the list runs against that same, still-legal player.
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, Player):
+                    run_for_player(game, target, source, source_id_of(stack_object))
+
+        return target_effect
+
+    # "each opponent" / "each player" (CR 101.4's own APNAP order).
+    opponents_only = subject == "each opponent"
+
+    def each_effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        controller_username = game.controller_of(stack_object).username
+        for player in _players_in_apnap_order(game):
+            if opponents_only and player.username == controller_username:
+                continue
+            run_for_player(game, player, source, source_id_of(stack_object))
+
+    return each_effect
+
+
+def _parse_shared_subject_sentence(sentence: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SHARED_SUBJECT_RE`'s shape for one whole sentence, or `None`.
+
+    Fail-closed per sentence, the same CR 608.2c "no partial run of the
+    instruction" posture every other clause parser in this module already
+    takes: every item of the list must itself parse, or the whole sentence
+    stays unread rather than running some of its actions and silently
+    dropping the rest.
+    """
+    stripped = sentence.strip().rstrip(".").strip()
+    match = _SHARED_SUBJECT_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    subject = match.group("subject").lower()
+    parts = _split_shared_subject_verb_parts(match.group("rest").strip())
+    if parts is None:
+        return None
+    groups = _group_shared_subject_parts(subject, parts)
+    if groups is None:
+        return None
+    group_effects: list[TargetedClause] = []
+    for group_subject, group_parts in groups:
+        clause_effects = [_parse_bare_shared_subject_verb_clause(part) for part in group_parts]
+        if any(effect is None for effect in clause_effects):
+            return None
+        verified_effects = [effect for effect in clause_effects if effect is not None]
+        group_effect = _shared_subject_group_effect(
+            group_subject, verified_effects, for_spell=for_spell
+        )
+        if group_effect is None:
+            return None
+        group_effects.append(group_effect)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for group_effect in group_effects:
+            group_effect(game, stack_object)
+
+    return effect
+
+
+def _parse_shared_subject_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
+    """Every sentence of `text` read through `_parse_shared_subject_sentence`,
+    or `None` the moment one is not that shape.
+
+    Requiring *every* sentence of the whole ability/spell text to match is
+    deliberate: a card mixing a genuine shared-subject list with some other,
+    unrelated sentence this reader does not cover falls through to the rest
+    of `_parse_mixed_clauses` untouched (its own per-clause dispatch, and the
+    narrower single-shape mergers already there), rather than this reader
+    consuming half the text and leaving the rest for something else to
+    re-discover.
+
+    Tried only after every more specific whole-text merger already in
+    `_parse_mixed_clauses` has had first refusal (see this function's own
+    call site) - `_parse_target_player_draws_and_loses_life_clause`'s own
+    two-item list among them keeps its own wording/decision-prompt exactly
+    as before, since this more general reader never reaches a sentence that
+    one already claimed.
+    """
+    sentences = _plain_resolution_sentences(text)
+    if not sentences:
+        return None
+    effects: list[TargetedClause] = []
+    for sentence in sentences:
+        effect = _parse_shared_subject_sentence(sentence, for_spell=for_spell)
+        if effect is None:
+            return None
+        effects.append(effect)
+    return effects
+
+
 def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
     """Every clause of `text`, or `None` the moment one clause (or one
     anaphoric pair of clauses) matches nothing this wave reads.
@@ -35082,6 +35395,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if greatest_mv_sacrifice_whole is not None:
         return [greatest_mv_sacrifice_whole]
+    shared_subject_clauses = _parse_shared_subject_clauses(text, for_spell=for_spell)
+    if shared_subject_clauses is not None:
+        # G7: read whole, ahead of the comma/"and" clause split, for the
+        # same reason every whole-text try above it is - see `_parse_shared_
+        # subject_clauses`'s own docstring for the fail-open this closes.
+        return shared_subject_clauses
     sentences = _plain_resolution_sentences(text)
     if len(sentences) == 2:
         # Tried whole, ahead of the comma/and clause split, for the same
