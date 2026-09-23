@@ -397,8 +397,24 @@ def _exiles_itself_by_name(text: str, permanent: "CardState") -> bool:
     substring search - a cost line naming some *other* object by name (a
     hypothetical "Exile a card named `<X>`") is a different shape entirely and
     must not be waved through as if it referred to `permanent`.
+
+    CR 700.7's type-word self-reference is the same cost on a permanent:
+    Relic of Progenitus's "Exile this artifact", Brittle Effigy's too.
+    `_PHRASE_EXILE` reads the common type words itself; this is the fallback
+    for the ones it does not (battle, Equipment, Vehicle, Aura), reached only
+    when `cost_component_for_phrase` returned nothing.
     """
-    return text.strip().rstrip(".").lower() == f"exile {permanent.name.lower()}"
+    lowered = text.strip().rstrip(".").lower()
+    if _EXILE_THIS_PERMANENT.fullmatch(lowered):
+        return True
+    return lowered == f"exile {permanent.name.lower()}"
+
+
+#: "Exile this <permanent type word>" (CR 700.7) as a cost.
+_EXILE_THIS_PERMANENT = re.compile(
+    r"exile this (?:artifact|creature|enchantment|land|permanent|planeswalker|battle"
+    r"|equipment|vehicle|aura)"
+)
 
 
 #: CR 601.2f cost reduction of the shape Emrakul, the Promised End prints.
