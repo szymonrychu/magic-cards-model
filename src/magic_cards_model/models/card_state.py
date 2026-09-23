@@ -768,6 +768,38 @@ class CardState(EngineModel):
     spell is copied, the copy is also a prepare spell" is why `Game.copy_spell`
     carries this flag onto any further copy of one of these, rather than
     only setting it where the exile copy is first minted."""
+    monstrous: bool = False
+    """CR 701.37b's "monstrous" designation, put there by the Monstrosity
+    keyword action (CR 701.37a): "'Monstrosity N' means 'If this permanent
+    isn't monstrous, put N +1/+1 counters on it and it becomes monstrous.'"
+
+    "Monstrous is a designation that has no rules meaning other than to act
+    as a marker that the monstrosity action and other spells and abilities
+    can identify. Only permanents can be or become monstrous. Once a
+    permanent becomes monstrous, it stays monstrous until it leaves the
+    battlefield. Monstrous is neither an ability nor part of the permanent's
+    copiable values." The "neither an ability nor copiable" half is why this
+    lives here as a plain designation field, the same as `prepared` below,
+    rather than as a granted ability or a `Card`-level characteristic: a
+    fresh `CardState` built by a copy effect (`token_copy_of`, a "becomes a
+    copy of target" continuous effect) never sets this field, so a copy of a
+    monstrous permanent is simply not monstrous, with no exclusion logic
+    anywhere needed to make that true. `Game.become_monstrous` is the only
+    writer; `Game._note_left_battlefield` clears it (and `monstrous_x`) for
+    every route a permanent leaves the battlefield by, which is CR 701.37b's
+    "stays monstrous until it leaves the battlefield" - there is no
+    "becomes unmonstrous" effect anywhere in the rules to call a separate
+    unsetter for, unlike `prepared`'s own `become_unprepared`."""
+    monstrous_x: int | None = None
+    """CR 701.37c: "If a permanent's ability instructs a player to
+    'monstrosity X,' other abilities of that permanent may also refer to X.
+    The value of X in those abilities is equal to the value of X as that
+    permanent became monstrous." The N (or X) `Game.become_monstrous` put
+    counters on this permanent with, kept so a later reader - a triggered
+    ability's own "X" - can answer without re-deriving it from the counter
+    count, which a static ability's own +1/+1 grant could otherwise have
+    changed since. `None` while `monstrous` is `False`; both are cleared
+    together."""
     meld_result: Card | None = None
     """The combined back face's printed characteristics (CR 712.8g), while
     this `CardState` is one half of a melded permanent - the surviving,

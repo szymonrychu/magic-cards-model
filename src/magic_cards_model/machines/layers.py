@@ -5726,6 +5726,24 @@ _TURN_FACT_GATED_SELF_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "As long as this creature is monstrous, it has hexproof and
+#: indestructible." (Fleecemane Lion) - CR 701.37b's own designation, read
+#: directly off `CardState.monstrous` rather than through `LayerContext`:
+#: unlike the turn-fact conditions above, this one already lives on the
+#: object itself, so the condition callable below just reads `source.
+#: monstrous` and needs no context lookup at all. CR 611.3a's live
+#: reevaluation applies the same way it does to every static ability here -
+#: `effects_for` reruns on every CR 613.5 computation, so the grant is on
+#: exactly while the designation holds and switches off the instant CR
+#: 701.37b's own "until it leaves the battlefield" clears it, with no stored
+#: `Duration` needed.
+_SELF_MONSTROUS_GATED_RE = re.compile(
+    r"^as long as this (?:creature|permanent) is monstrous, "
+    r"it (?:has|have) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+
 #: "Ruric Thar has hexproof as long as they haven't dealt combat damage yet."
 #: - the card's own name is already rewritten to "this permanent" by
 #: `self_normalized_effect_text` before this is reached, and "they" is this
@@ -8076,6 +8094,16 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             keywords,
             line=sentence,
             description="before it deals combat damage",
+        )
+    if match := _SELF_MONSTROUS_GATED_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _context_gated_self_static_builder(
+            lambda source, context: source.monstrous,
+            keywords,
+            line=sentence,
+            description="while monstrous",
         )
     if _GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
         return _group_assigns_damage_as_toughness_builder(line=sentence)

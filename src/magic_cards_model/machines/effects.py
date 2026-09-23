@@ -9630,6 +9630,135 @@ def _parse_endure_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: CR 701.37a: "'Monstrosity N' means 'If this permanent isn't monstrous, put
+#: N +1/+1 counters on it and it becomes monstrous.'" A keyword action (CR
+#: 701), read off the activated ability's own printed effect text the same
+#: way `_ENDURE_RE`/`_ADAPT_RE` are - never keyed to a card name, so any
+#: printing whose activation cost ends in the words "Monstrosity N" reads the
+#: same way. `\d+` rather than a bare `X` is the same deliberate choice
+#: `_ENDURE_RE`'s own docstring explains: `activated_effect_for` already
+#: substitutes an announced X (CR 107.3a) into the text before trying this,
+#: so Polukranos, World Eater's own "{X}{X}{G}: Monstrosity X." is read as a
+#: real number by the time this ever sees it.
+_MONSTROSITY_RE = re.compile(r"^monstrosity (?P<n>\d+)\.?$", re.IGNORECASE)
+
+
+def _parse_monstrosity_clause(text: str) -> AbilityEffect | None:
+    """CR 701.37a's "Monstrosity N" - see `_MONSTROSITY_RE`.
+
+    `Game.become_monstrous` is the whole of CR 701.37a-c: it puts the
+    counters (`Game.add_counters`, CR 122.6, replacement effects included),
+    sets the `monstrous`/`monstrous_x` designation, and raises the
+    `TriggerEvent.BECOMES_MONSTROUS` event - or, on an already-monstrous
+    permanent, silently does none of that (CR 701.37a's own second refusal).
+    Either way the *activation* stays legal, since CR 701.37a is the effect
+    of the ability resolving, not a cost or a timing restriction on
+    activating it - a second "Monstrosity N" activation is simply an
+    ability that resolves and, this time, does nothing (CR 101.3), the same
+    silent-no-op shape `Game.become_prepared`'s own second refusal already
+    gives CR 722.3a's identical "can't gain this designation if it already
+    has it".
+    """
+    match = _MONSTROSITY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    amount = int(match.group("n"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.become_monstrous(source, amount)
+
+    return effect
+
+
+#: Polukranos, World Eater's own "becomes monstrous" trigger: CR 601.2d's
+#: ordinary divided damage, immediately followed by CR 701.14a's own "deals
+#: damage equal to its power" retaliation from every creature the division
+#: actually reached - one CR 608.2c instruction across two sentences
+#: ("those creatures" is CR 400.7's anaphora back to the first sentence's own
+#: resolved targets), read the same "whole, unsplit text" way
+#: `_parse_x_damage_divided_and_doubled_clause` already reads Shatterskull
+#: Smashing's own two-sentence divided-damage shape. `phrase` is read the
+#: same general way `_DIVIDED_DAMAGE_RE` reads its own target-list phrase -
+#: `_targets_understood` vets it, not a literal string - so a differently
+#: restricted printing of the identical mechanic ("... creatures an opponent
+#: controls", "... creatures you don't control") reads exactly the same way,
+#: not just the reported card's own "your opponents control". Matched
+#: against `_self_normalized_effect_text`'s own "this permanent" rewrite of
+#: the card's printed name (CR 700.7), the same normalisation `trigger_
+#: effect_for`'s own fallback already tries once the raw, still-self-named
+#: text fails every other reader.
+_DIVIDED_DAMAGE_THEN_RETALIATE_RE = re.compile(
+    r"^(?:it|this (?:creature|permanent)) deals (?P<n>\d+|x) damage divided as you choose "
+    r"among (?P<phrase>.+?)\.\s*"
+    r"each of those creatures deals damage equal to its power to "
+    r"(?:it|this (?:creature|permanent))\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _deal_divided_damage_then_retaliate_shares(
+    game: "Game", ability: "AbilityOnStack", total: int
+) -> None:
+    """Pay out `total` damage divided among `ability.targets` (CR 601.2d, CR
+    608.2b), then have every creature that division actually reached deal
+    damage back to the source equal to its own power (CR 701.14a) -
+    `_DIVIDED_DAMAGE_THEN_RETALIATE_RE`'s own resolution half.
+
+    Simultaneous with itself the way `_fight` already is: no zone recheck
+    between the two payouts, since state-based actions are not performed
+    until the whole ability has finished resolving (CR 704.3) - a creature
+    the first payout reduces to lethal damage still deals its own retaliation
+    damage back before anything checks whether it should already be dead.
+    "Those creatures" is only the creatures the division actually reached -
+    a target CR 608.2b removed before the first payout was never dealt
+    damage and never retaliates either, the same restriction a `None` from
+    `game.legal_target` already enforces for the first half.
+    """
+    chosen = len(ability.targets)
+    if chosen == 0 or total <= 0:
+        return
+    source = ability.source_or_last_known(game)
+    shares = _divided_damage_shares(total, chosen, ability.division)
+    retaliators: list[CardState] = []
+    for reference, share in zip(ability.targets, shares, strict=True):
+        target = game.legal_target(ability, reference)
+        if target is not None and share > 0:
+            game.deal_damage(target, share, source=source)
+            retaliators.append(target)
+    if source is None:
+        return
+    for creature in retaliators:
+        power = game.power_of(creature) or 0
+        if power > 0:
+            game.deal_damage(source, power, source=creature)
+
+
+def _parse_divided_damage_then_retaliate_clause(text: str) -> AbilityEffect | None:
+    """`_DIVIDED_DAMAGE_THEN_RETALIATE_RE`'s shape, or `None`."""
+    match = _DIVIDED_DAMAGE_THEN_RETALIATE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    n = match.group("n")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if n.lower() == "x":
+            total = ability.event.amount if ability.event is not None else None
+            if total is None:
+                total = ability.x_value
+        else:
+            total = int(n)
+        if total is None or total <= 0:
+            return
+        _deal_divided_damage_then_retaliate_shares(game, ability, total)
+
+    return effect
+
+
 #: "Untap this creature." (Devoted Druid) - CR 701.26b's untap with no target
 #: at all, the source's own cost-side counter placement having already been
 #: paid by `cost.py`'s `PLACE_COUNTERS` component by the time this runs.
@@ -17398,6 +17527,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     until_your_next_turn_attack_pump = _parse_until_your_next_turn_attack_pump_clause(effect_text)
     if until_your_next_turn_attack_pump is not None:
         return until_your_next_turn_attack_pump
+    divided_damage_then_retaliate = _parse_divided_damage_then_retaliate_clause(effect_text)
+    if divided_damage_then_retaliate is not None:
+        return divided_damage_then_retaliate
     attacks_alone_this_turn_counters_and_keywords = (
         _parse_attacks_alone_this_turn_counters_and_keywords_clause(effect_text)
     )
@@ -17622,6 +17754,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     endure = _parse_endure_clause(effect_text)
     if endure is not None:
         return endure
+    monstrosity = _parse_monstrosity_clause(effect_text)
+    if monstrosity is not None:
+        return monstrosity
     # Tried against the whole, unsplit text - "copy that spell. You may
     # choose new targets for the copy." has a bare period joining its two
     # sentences, which `_prepare_effect_clauses` cuts into two separate

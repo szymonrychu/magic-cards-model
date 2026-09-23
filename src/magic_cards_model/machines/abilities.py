@@ -1478,6 +1478,15 @@ class TriggerEvent(StrEnum):
     #: place CR 606.3's own activation happens, right where `loyalty_
     #: activations` already records the once-per-turn count.
     LOYALTY_ABILITY_ACTIVATED = "loyalty_ability_activated"
+    #: CR 701.37a: the Monstrosity keyword action's own "and it becomes
+    #: monstrous" half. Printed as "When [this creature] becomes monstrous,
+    #: ..." (Polukranos, World Eater; Arbor Colossus) - `Game.become_monstrous`
+    #: is the only place this fires, and only on the "wasn't monstrous
+    #: already" branch CR 701.37a itself gates the whole action on, so a
+    #: second Monstrosity activation on an already-monstrous permanent never
+    #: raises a second one of these. `GameEvent.amount` carries the N (or X)
+    #: it became monstrous with (CR 701.37c).
+    BECOMES_MONSTROUS = "becomes_monstrous"
 
 
 class CostKind(StrEnum):
@@ -3300,6 +3309,12 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
         r"\bdeals (?:combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b", lowered
     ):
         return TriggerEvent.DEALS_DAMAGE
+    # CR 701.37a: "When [this creature] becomes monstrous" (Polukranos, World
+    # Eater; Arbor Colossus). Checked ahead of the "becomes untapped"/
+    # "becomes tapped" pair below only because it shares their "becomes ..."
+    # shape and nothing else - "monstrous" never collides with either word.
+    if "becomes monstrous" in lowered:
+        return TriggerEvent.BECOMES_MONSTROUS
     # Aerie Worshippers prints "Whenever this creature becomes untapped".
     if "becomes untapped" in lowered:
         return TriggerEvent.BECOMES_UNTAPPED

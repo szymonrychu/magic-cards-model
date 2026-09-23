@@ -126,6 +126,7 @@ from magic_cards_model.machines.effects import (  # noqa: E402
     _parse_endure_clause,
     _parse_explores_clause,
     _parse_explores_then_conditional_mass_destroy,
+    _parse_monstrosity_clause,
     _parse_recruit_clause,
     _parse_where_x_is_continuous_effect,
     activated_effect_for,
@@ -518,6 +519,26 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # output either. Named here by hand, the same way suspend is above.
     if any(k.lower() == "fuse" for k in printing.keywords):
         found["fuse"] = "machines/casting.py (Casting.cast_fused, CR 702.102)"
+
+    # Monstrosity (CR 701.37a: "'Monstrosity N' means 'If this permanent
+    # isn't monstrous, put N +1/+1 counters on it and it becomes
+    # monstrous.'") is a keyword *action* read straight out of an activated
+    # ability's own effect text by `_parse_monstrosity_clause`, the same way
+    # Endure and Adapt are above - never a `KeywordCastOption` (it changes
+    # nothing about how the ability is cast) and never one of `machines/
+    # keywords.py`'s cost:effect expansions (its cost is whatever the card
+    # prints, not derived from the keyword name). `substitute_x(..., 1)`
+    # mirrors what `activated_effect_for` does with a real announced X at
+    # runtime, so a "Monstrosity X" printing (Polukranos, World Eater) reads
+    # as registered the same way a fixed "Monstrosity N" one does.
+    if any(k.lower() == "monstrosity" for k in printing.keywords):
+        for ability in parse_abilities(printing):
+            effect_text = getattr(ability, "effect", None)
+            if effect_text is None:
+                continue
+            if _parse_monstrosity_clause(substitute_x(effect_text, 1)) is not None:
+                found["monstrosity"] = "machines/effects.py (_parse_monstrosity_clause, CR 701.37a)"
+                break
 
     # Unearth (CR 702.84a) and transmute (CR 702.53a) are activated abilities
     # that function off the battlefield (CR 113.6j/113.6m), same as cycling -

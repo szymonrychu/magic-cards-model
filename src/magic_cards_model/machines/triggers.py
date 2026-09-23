@@ -2421,6 +2421,13 @@ def condition_matches(
     if ability.event in (TriggerEvent.BECOMES_TAPPED, TriggerEvent.BECOMES_UNTAPPED):
         return mine and event.subject_id == source.id
 
+    if ability.event is TriggerEvent.BECOMES_MONSTROUS:
+        # CR 701.37a. Every printing in the pool - Polukranos, World Eater;
+        # Arbor Colossus - prints only the self-referential "When [this
+        # creature] becomes monstrous, ...", so only that form is read, the
+        # same narrowing `BECOMES_TAPPED`/`BECOMES_UNTAPPED` apply above.
+        return mine and event.subject_id == source.id
+
     if ability.event is TriggerEvent.TAPPED_FOR_MANA:
         # CR 106.12a. "Whenever enchanted Forest is tapped for mana" (Utopia
         # Sprawl) asks about the land the Aura is attached to, not the Aura

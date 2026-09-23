@@ -2695,7 +2695,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 41
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 42
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3274,6 +3274,15 @@ class Game(EngineModel):
     at the top N cards of your library, then put them back in any order"
     plus its optional shuffle are newly read, so a paused game asking that
     question, or holding such an ability, would resume differently.
+
+    Bumped 41 -> 42: `CardState` gained `monstrous`/`monstrous_x` (CR
+    701.37a-c's Monstrosity keyword action and its own designation), and the
+    Monstrosity action, the `TriggerEvent.BECOMES_MONSTROUS` trigger, and the
+    "as long as ... is monstrous" static condition are all newly read. A
+    version-41 snapshot holding a permanent that had already become
+    monstrous has no record of it - the designation would silently vanish,
+    any "as long as monstrous" static would stop applying, and a repeat
+    Monstrosity activation would put counters on it a second time.
     """
 
     @model_validator(mode="before")
@@ -6607,6 +6616,30 @@ class Game(EngineModel):
                     record = self.cast_record_of(source)
                     if record is not None:
                         effect_text = substitute_x(effect_text, record.x_value)
+            # CR 701.37c: "If a permanent's ability instructs a player to
+            # 'monstrosity X,' other abilities of that permanent may also
+            # refer to X. The value of X in those abilities is equal to the
+            # value of X as that permanent became monstrous." Polukranos,
+            # World Eater's own "it deals X damage divided ..." trigger is
+            # exactly this - a bare "X" with no "where X is ..." clause of
+            # its own, so it has to come from somewhere else, the same shape
+            # CR 107.3m's ETB branch above reads off a spell's own cast
+            # record. Here the somewhere else is the `GameEvent` `Game.
+            # become_monstrous` emitted to raise this very trigger:
+            # `ability.event.amount` is the N (or X) it became monstrous
+            # with, already resolved to a real number by the time the
+            # permanent triggered at all (CR 701.37a's own "put N +1/+1
+            # counters on it" already spent it), so substituting the literal
+            # digit here needs no separate `CastRecord` lookup the way a
+            # cast spell's own X does.
+            if (
+                ability.ability.event is TriggerEvent.BECOMES_MONSTROUS
+                and effect_text
+                and re.search(r"\bX\b", effect_text)
+                and ability.event is not None
+                and ability.event.amount is not None
+            ):
+                effect_text = substitute_x(effect_text, ability.event.amount)
             trigger_source = ability.source(self)
             trigger_source_card = getattr(trigger_source, "card", None)
             legendary = trigger_source_card is not None and (
@@ -7750,6 +7783,19 @@ class Game(EngineModel):
             # permanent itself leaves, so this is the one choke point every
             # route off the battlefield already reaches.
             self.become_unprepared(permanent)
+        if permanent.monstrous:
+            # CR 701.37b: "Once a permanent becomes monstrous, it stays
+            # monstrous until it leaves the battlefield." There is no
+            # "becomes unmonstrous" effect anywhere in the rules to call a
+            # dedicated unsetter from (unlike `prepared`'s own
+            # `become_unprepared`, which real cards do invoke directly) - the
+            # designation's only end is this one, so it is cleared right
+            # here, the same choke point every route off the battlefield
+            # already reaches. A blink (exile then return) leaves through
+            # here and comes back as a new object with no memory of it
+            # (CR 400.7), so a blinked monstrous permanent is not monstrous.
+            permanent.monstrous = False
+            permanent.monstrous_x = None
         controller = permanent.controller
         if controller is None:
             return
@@ -14675,6 +14721,61 @@ class Game(EngineModel):
         self.play_permissions = [
             permission for permission in self.play_permissions if permission.card_id != copy_id
         ]
+
+    def become_monstrous(self, permanent: CardState, amount: int) -> bool:
+        """CR 701.37a: "Monstrosity N" means "If this permanent isn't
+        monstrous, put N +1/+1 counters on it and it becomes monstrous."
+
+        Both refusals CR 701.37a states are silent no-ops, not errors - the
+        activation that reads this is still legal either way (CR 701.37a is
+        the *effect*, not a cost or a timing restriction; nothing in CR 602
+        stops a permanent's controller activating a Monstrosity ability a
+        second time): a permanent not on the battlefield any more by the
+        time this resolves (CR 608.2a's own "the source is gone" case) gets
+        nothing, and CR 701.37b's own second sentence - "Once a permanent
+        becomes monstrous, it stays monstrous until it leaves the
+        battlefield" - is what makes an already-monstrous permanent's second
+        Monstrosity activation add no further counters and raise no second
+        `TriggerEvent.BECOMES_MONSTROUS`, the same shape `become_prepared`
+        above already gives CR 722.3a's identical "can't gain this
+        designation if it already has it".
+
+        Counters go through `Game.add_counters` (CR 122.6, replacement
+        effects included - Doubling Season doubles a Monstrosity N the same
+        way it doubles any other counter placement), and `monstrous`/
+        `monstrous_x` are set only once the counters have actually landed,
+        so a caller checking `permanent.monstrous` afterwards is checking
+        the real outcome, not the printed N. CR 701.37c's own "other
+        abilities of that permanent may also refer to X" is `monstrous_x`,
+        read back by `_effect_for`'s own `BECOMES_MONSTROUS` branch below and
+        by the emitted `GameEvent.amount` a triggered ability's own `event`
+        carries.
+
+        Returns whether the permanent became monstrous just now.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        if permanent.monstrous:
+            return False
+        with self._id_allocator_scope():
+            if amount > 0:
+                self.add_counters(permanent, Counter.PLUS_ONE, amount)
+            permanent.monstrous = True
+            permanent.monstrous_x = amount
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.BECOMES_MONSTROUS,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=permanent.controller,
+                    subject_card=permanent.card,
+                    subject_types=permanent.types,
+                    subject_subtypes=permanent.subtypes,
+                    player=permanent.controller,
+                    amount=amount,
+                )
+            )
+        return True
 
     # -- permission to play a card from somewhere else (CR 601.3) ----------
 
