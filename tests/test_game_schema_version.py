@@ -393,3 +393,38 @@ def test_a_snapshot_written_before_battles_seven_and_eight_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATTLES_SEVEN_AND_EIGHT}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before flow 3's integration wave fixed three
+#: already-reachable dispatch bugs: `machines.combat.block_refusal` never
+#: read a blocker's own "can't block" text (CR 509.1b, Bloodghast blocking
+#: illegally), `declare_blockers_step` skipped `Combat.declare_blockers`
+#: entirely on a fully unblocked attack (`Combat.blockers_declared` staying
+#: falsely `False` for CR 509.1h's "unblocked creature" checks), and
+#: `Game._state_based_actions_once` never called
+#: `annihilate_counters_on` at all (CR 704.5q's pairwise +1/+1/-1/-1 removal
+#: sat unreachable in `models/card_state.py`, exercised only by the scenario
+#: harness). No field was added - the bump rule's second bullet, like
+#: "Bumped 44 -> 45" above.
+_SCHEMA_VERSION_BEFORE_FLOW_THREE_BLOCK_TAP_AND_ANNIHILATE_FIXES = 50
+
+
+def test_a_snapshot_written_before_flow_three_integration_is_refused() -> None:
+    """A version-50 dump can hold Bloodghast mid-combat with an illegal block
+    already nodded through, a fully unblocked attack whose
+    `Combat.blockers_declared` never got set, or a permanent already carrying
+    both +1/+1 and -1/-1 counters that the engine's own state-based-action
+    loop had never annihilated; decoded as current, each of those reads a
+    board CR 509.1b/509.1h/704.5q say cannot exist. Refused instead."""
+    assert (
+        Game.CURRENT_SCHEMA_VERSION
+        > _SCHEMA_VERSION_BEFORE_FLOW_THREE_BLOCK_TAP_AND_ANNIHILATE_FIXES
+    )
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_FLOW_THREE_BLOCK_TAP_AND_ANNIHILATE_FIXES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_FLOW_THREE_BLOCK_TAP_AND_ANNIHILATE_FIXES}",
+    ):
+        Game.model_validate(dumped)

@@ -2855,7 +2855,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 50
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 51
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3530,6 +3530,36 @@ class Game(EngineModel):
     snapshot paused after combat damage this turn has no record of it, so
     Morsel Theft's prowl cost would be refused on a board where it is legal -
     refused rather than decoded into that different game.
+
+    Bumped 50 -> 51 (flow 3's integration wave): no field was added, but three
+    already-reachable dispatch paths resolve differently now, the bump rule's
+    second bullet exactly, like "Bumped 44 -> 45" above. **Blocks**:
+    `machines.combat.block_refusal` gained a blocker-side reader for the
+    blocker's own "can't block" text (CR 509.1b) - Bloodghast, a real pool
+    printing, could declare an illegal block before this; and
+    `declare_blockers_step` now calls `Combat.declare_blockers` even when
+    nobody blocks (CR 509.1's turn-based action runs regardless), so
+    `Combat.blockers_declared` no longer sits falsely `False` after a fully
+    unblocked attack reached through `turn_based_actions`/`advance` - which
+    CR 509.1h's "unblocked creature" checks (sneak, ninjutsu's return cost)
+    read directly. **Annihilation**: `Game._state_based_actions_once` now
+    calls `annihilate_counters_on` itself (CR 704.5q's pairwise +1/+1/-1/-1
+    removal), which previously lived only in `models/card_state.py` with no
+    `Game` caller at all - a decoded permanent already carrying both counter
+    kinds was never swept by the engine's own state-based-action loop.
+    **Tapping**: `machines/effects.py`'s tap-target effects call
+    `CardState.tap_if_untapped` rather than the strict `tap` (CR 701.26a:
+    "Only untapped permanents can be tapped" is silent on an already-tapped
+    one, not a refusal), so a version-50 snapshot paused mid-resolution of an
+    effect targeting an already-tapped permanent would have raised where the
+    current build does nothing and continues. **Copies** and **cleanup** are
+    not part of this bump: CR 707.10e's illegal-specified-copy-target refusal
+    was already covered at "Bumped 39 -> 40" above (the same commit that
+    added `CastRecord.is_copy`), and the owed-cleanup machinery at "Bumped 48
+    -> 49"; this wave's own copy work (Ivy, Gleeful Spellthief's "targets
+    only a single creature other than itself" trigger condition) is a wholly
+    new mechanic no pool printing used before it existed to write it - the
+    bump rule's own carve-out - so it needs no bump of its own.
     """
 
     @model_validator(mode="before")
