@@ -20447,6 +20447,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=True)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
+    mandatory_sacrifice_then_return = _parse_mandatory_sacrifice_then_return_to_hand_clause(
+        effect_text, for_spell=True
+    )
+    if mandatory_sacrifice_then_return is not None:
+        return mandatory_sacrifice_then_return
     may_exile_self_and_named_copies = _parse_may_exile_self_and_named_copies_if_you_do_clause(
         effect_text
     )
@@ -23331,6 +23336,178 @@ def _is_referent_power_expression(expr: str) -> bool:
     """
     lowered = expr.strip().rstrip(".").strip().lower()
     return lowered == "its power" or bool(re.fullmatch(r"that [a-z]+'s power", lowered))
+
+
+#: "the number of colors that `<anaphor>` was" - Bound's own X definition
+#: (Bound // Determined). CR 400.7's anaphora over CR 105.2's colour count,
+#: printed the same two ways `_is_referent_power_expression` above reads for
+#: a power: a bare "it" and "that `<type>`" - here followed by "was" rather
+#: than possessive "'s", since the sentence reads "colors that `<X>` was",
+#: not "`<X>`'s colors". Verified this session: no other card, legal or not,
+#: prints this exact past-tense anaphora over a colour count (`mise exec --
+#: uv run python scripts/add_card.py` plus a live Scryfall
+#: `o:/number of colors.{0,40}was/` search turned up only Bound and Jared
+#: Carthalion, and the latter is legal in none of Standard, Pioneer, or
+#: Modern) - see `docs/engine-coverage.md`'s row for the documented proof
+#: exemption this earns, the same kind D2/T12 already carries for Veil of
+#: Summer's player hexproof-from.
+_REFERENT_COLOR_COUNT_EXPRESSION_RE = re.compile(
+    r"^the number of colou?rs (?:that [a-z]+|it) was$", re.IGNORECASE
+)
+
+
+def _is_referent_color_count_expression(expr: str) -> bool:
+    """Whether `expr` - the tail of a "where X is `<expr>`" clause - is
+    exactly a departed object's colour count, `_REFERENT_COLOR_COUNT_
+    EXPRESSION_RE`'s shape."""
+    lowered = " ".join(expr.strip().rstrip(".").strip().split()).lower()
+    return bool(_REFERENT_COLOR_COUNT_EXPRESSION_RE.fullmatch(lowered))
+
+
+def _referent_color_count(referent: CardState) -> int:
+    """CR 105.2/202.2's colour count, fixed at CR 608.2h's moment: a
+    departed object's colours are read off `CardState.last_known_colors`
+    when a continuous effect made them differ from the printing while it was
+    still a permanent, or off `CardState.colors` (its printed/current
+    colours) when none ever did - `remember_last_known_power_toughness`'s
+    own `None`-when-unchanged convention, the identical fallback
+    `Game._quality_characteristics_of` already reads for CR 702.11d's
+    hexproof-from qualities off a departed source.
+    """
+    colors = (
+        referent.last_known_colors if referent.last_known_colors is not None else referent.colors
+    )
+    return len(colors)
+
+
+#: "Sacrifice `<restriction>`. Return `<quantity>` cards from your graveyard
+#: to your hand, where X is `<expr>`. [Exile this card.]" - Bound's own whole
+#: effect (Bound // Determined), generalised past its own printed wording:
+#: the sacrifice restriction is `_sacrifice_restriction`'s general "a
+#: `<type>`"/"another `<type>`"/counted-subtype grammar (not hardcoded to
+#: "creature"), the returned quantity is `parse_quantity`'s ("up to X", "up
+#: to `<n>`", a fixed count), and the magnitude expression is read through
+#: `_is_referent_color_count_expression` - so a future printing sharing the
+#: shape with a different sacrificed type or exact count reads for free. The
+#: trailing "Exile this card"/"Exile this spell"/"Exile it" is optional and,
+#: when present, is CR 201.5's reference to this very spell (the same
+#: "Exile <this>" shape `_parse_reveal_from_outside_the_game_into_hand_
+#: clause`'s own Burning Wish family already reads on a resolving spell) -
+#: CR 608.2n's own default graveyard step never runs for it.
+#:
+#: Read whole, ahead of the comma/period split: the second sentence's "that
+#: `<type>`"/"it" is CR 400.7 anaphora back to what the first sentence just
+#: sacrificed, and no per-clause parser sees far enough back to answer it -
+#: the same reason `_DRAW_AND_GAIN_OFF_SACRIFICED_RE` above is read whole
+#: rather than split.
+_MANDATORY_SACRIFICE_THEN_RETURN_TO_HAND_RE = re.compile(
+    rf"^sacrifice (?P<restriction>[^.]+)\.\s*"
+    rf"return {quantity_pattern('quantity')} cards? from your graveyard to your hand"
+    rf"{where_x_pattern('expr')}\.\s*"
+    r"(?P<exile>exile (?:this card|this spell|it)\.?)?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_mandatory_sacrifice_then_return_to_hand_clause(
+    text: str, *, for_spell: bool
+) -> Effect | None:
+    """`_MANDATORY_SACRIFICE_THEN_RETURN_TO_HAND_RE`'s shape - Bound's own
+    whole effect.
+
+    Spell-only: "Exile this card" (CR 201.5) names the resolving spell
+    itself, which only a spell still on the stack has occasion to say about
+    itself.
+
+    CR 701.21a's sacrifice has no failure mode among the player's own
+    permanents, but CR 609.3 ("If an effect attempts to do something
+    impossible, it does only as much as possible") governs the case this
+    reader's own restriction can leave empty: no legal permanent to
+    sacrifice at all. Nothing is sacrificed, the second sentence's anaphora
+    has no referent, and CR 107.2 answers a magnitude that can't be
+    determined with zero - X is 0 and nothing is returned, rather than the
+    whole effect failing closed.
+
+    The returned cards are chosen freely from the whole graveyard (CR
+    608.2d) up to X, including the very permanent the first sentence just
+    sacrificed - it is sitting right there in the graveyard by the time this
+    second sentence runs. "Up to" always permits choosing fewer, including
+    none.
+    """
+    if not for_spell:
+        return None
+    match = _MANDATORY_SACRIFICE_THEN_RETURN_TO_HAND_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    restriction = _sacrifice_restriction(match.group("restriction"))
+    if restriction is None:
+        return None
+    quantity = parse_quantity(match.group("quantity"))
+    if quantity is None:
+        return None
+    expr = match.group("expr")
+    if quantity.source is QuantitySource.X:
+        if expr is None or not _is_referent_color_count_expression(expr):
+            return None
+    elif expr is not None:
+        # A fixed/ranged count printing its own unrelated "where X is ..."
+        # tail is not this shape - fail closed rather than ignoring it.
+        return None
+    exiles_self = match.group("exile") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        source_name = spell.name
+        source_id = source_id_of(spell)
+        candidates = restriction.candidates(game, controller, spell.id)
+        sacrificed: CardState | None = None
+        if candidates:
+            chosen = _choose_permanents_to_sacrifice(
+                game,
+                controller,
+                restriction,
+                candidates,
+                source_name=source_name,
+                source_id=source_id,
+            )
+            if chosen:
+                sacrificed = chosen[0]
+                game.sacrifice(sacrificed)
+        if quantity.source is QuantitySource.X:
+            wanted_max = 0 if sacrificed is None else _referent_color_count(sacrificed)
+        else:
+            wanted_max = quantity.amount or 0
+        pool = list(controller.graveyard)
+        wanted = min(wanted_max, len(pool))
+        if wanted > 0:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=(
+                        "choose a card to return to your hand"
+                        if wanted == 1
+                        else f"choose up to {wanted} cards to return to your hand"
+                    ),
+                    source=source_name,
+                    source_id=source_id,
+                    amount=wanted,
+                    exact=False,
+                    cards=tuple(state.id for state in pool),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {state.id: state for state in pool}
+            for card_id in chosen_ids:
+                state = by_id.get(card_id)
+                if state is not None and state.zone is Zone.GRAVEYARD:
+                    game.return_to_hand(state)
+        if exiles_self:
+            game.exile_cards([spell])
+
+    return effect
 
 
 def _parse_x_magnitude_body(body: str) -> Callable[["Game", Player, int], None] | None:

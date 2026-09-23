@@ -8729,6 +8729,7 @@
       "_parse_condition_instead_clause",
       "_parse_gift_promised_return_instead_clause",
       "_parse_conditional_sacrifice_clause",
+      "_parse_mandatory_sacrifice_then_return_to_hand_clause",
       "_parse_may_exile_self_and_named_copies_if_you_do_clause",
       "_parse_target_get_energy_pay_damage",
       "_parse_x_energy_pay_destroy_by_mana_value",
