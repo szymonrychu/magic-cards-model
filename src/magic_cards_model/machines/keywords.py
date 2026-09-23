@@ -112,6 +112,7 @@ class KeywordRule(StrEnum):
     DREDGE = "CR 702.52a"
     MOBILIZE = "CR 702.181a"
     MADNESS = "CR 702.35a"
+    MIRACLE = "CR 702.94a"
     MORPH = "CR 702.37a"
     DISGUISE = "CR 702.168a"
     INDESTRUCTIBLE = "CR 702.12b"
@@ -192,6 +193,13 @@ def executes(keyword: str) -> bool:
         # and the end step trigger is `_impending_ability`/`_impending_effect`
         # here.
         "impending",
+        # CR 702.94a. A static ability linked to a triggered one (CR 603.11,
+        # CR 607.2h): the reveal-as-drawn question is `Game._offer_miracle_
+        # reveal`, asked from `Game.draw_cards`; the linked trigger is
+        # `_miracle_ability`/`_miracle_effect` here, and the cast it makes is
+        # `Game.cast_during_resolution` with the miracle cost as the
+        # alternative cost (CR 608.2g, CR 118.9).
+        "miracle",
         # CR 702.73a. A characteristic-defining ability that works in every
         # zone (CR 604.3): off the battlefield it is `CardState.subtypes`
         # (`models/card.with_every_creature_type`), on the battlefield it is
@@ -856,6 +864,30 @@ def _madness_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _miracle_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.94a's *second* ability. Miracle is a static ability linked to a
+    triggered one (CR 603.11, CR 607.2h).
+
+    "'Miracle [cost]' means 'You may reveal this card from your hand as you
+    draw it if it's the first card you've drawn this turn. When you reveal
+    this card this way, you may cast it by paying [cost] rather than its mana
+    cost.'" The static half is the reveal question `Game.draw_cards` asks;
+    this is the trigger it links to, which functions in the hand
+    (`machines/triggers.zones_ability_functions_in`) and fires only off the
+    reveal that static ability made (`ExtraTriggerEvent.
+    REVEALED_FOR_MIRACLE`).
+    """
+    printed = ability.cost or ""
+    return _expansion(
+        ability,
+        keyword="miracle",
+        word=TriggerWord.WHEN,
+        condition="you reveal this card this way",
+        effect=f"you may cast it by paying {printed} rather than its mana cost",
+        event=None,
+    )
+
+
 def _hideaway_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.75a: "Hideaway N" means "When this permanent enters, look at the
     top N cards of your library. Exile one of them face down and put the rest
@@ -972,6 +1004,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "firebending": _single(_firebending_ability),
     "evoke": _single(_evoke_ability),
     "madness": _single(_madness_ability),
+    "miracle": _single(_miracle_ability),
     "hideaway": _single(_hideaway_ability),
     "suspend": _suspend_abilities,
     "impending": _single(_impending_ability),
@@ -4193,6 +4226,57 @@ def _madness_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     return source
 
 
+def miracle_cost(card: Card, payer: str = "") -> TotalCost | None:
+    """This card's miracle cost, or None if it has no miracle (CR 702.94a)."""
+    ability = _keyword(card, "miracle")
+    if ability is None:
+        return None
+    return _keyword_cost(ability, payer)
+
+
+def has_miracle(card: Card) -> bool:
+    return _keyword(card, "miracle") is not None
+
+
+def _miracle_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
+    """CR 702.94a's linked trigger resolving: "you may cast it by paying
+    [cost] rather than its mana cost."
+
+    "It" is the card the static ability revealed - that object and no other
+    (CR 607.2h). A card that left its owner's hand since is a new object
+    (CR 400.7), so there is nothing left to cast: the trigger does nothing,
+    and nobody is asked. Otherwise the controller is asked one `MAY`, and a
+    yes casts the card while this trigger resolves (CR 608.2g) - timing
+    ignored, the miracle cost announced as the alternative cost (CR 118.9,
+    CR 601.2b), any X in it chosen then (CR 107.3a). Declining, or a cast
+    that turns out illegal (no legal target, mana that cannot be paid - CR
+    601.2), leaves the card in hand. Returns the spell, or None.
+    """
+    source = ability.source(game)
+    if (
+        source is None
+        or source.zone is not Zone.HAND
+        or source.zone_change_stamp != ability.source_stamp
+    ):
+        return None
+    caster = ability.controller
+    cost = miracle_cost(source.card, caster)
+    if cost is None:
+        game._note_unread_trigger(ability)  # noqa: SLF001
+        return None
+    return game.may_cast_during_resolution(
+        source,
+        caster,
+        prompt=f"cast {source.name} by paying its miracle cost {cost} (CR 702.94a)",
+        source=source.name,
+        source_id=source_id_of(source),
+        source_name=source.name,
+        rule=KeywordRule.MIRACLE.value,
+        keyword="Miracle",
+        alternative_cost=cost,
+    )
+
+
 #: "the top N cards" inside `_hideaway_ability`'s own generated effect text,
 #: read back to recover N without threading a second copy of it through
 #: `AbilityOnStack`.
@@ -4436,6 +4520,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "replicate": _replicate_effect,
     "ward": _ward_effect,
     "madness": _madness_effect,
+    "miracle": _miracle_effect,
     "hideaway": _hideaway_effect,
     "evoke": _evoke_effect,
     "suspend": _suspend_effect,

@@ -164,6 +164,7 @@ from ..machines.keywords import (
     aura_state_based_actions,
     equipment_state_based_actions,
     grant_the_citys_blessing,
+    has_miracle,
     has_paradigm,
     has_rebound_now,
     has_suspend,
@@ -2703,7 +2704,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 44
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 45
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3301,6 +3302,15 @@ class Game(EngineModel):
     sneak is newly a way to cast Michelangelo's Technique and every other
     pool printing with it, so a spell of theirs on the stack would resolve
     differently.
+
+    Bumped 44 -> 45: miracle (CR 702.94). No field was added, but existing
+    state now plays differently, the bump rule's second bullet: the turn's
+    first draw of a card with miracle asks its drawer a new reveal question
+    (`Game._offer_miracle_reveal`), so a version-44 tape replaying such a
+    draw would read one answer short; `machines/triggers.ExtraTriggerEvent`
+    gained `REVEALED_FOR_MIRACLE`, a value a version-44 build cannot decode on
+    a pending or stacked trigger; and "Put all creatures on the bottom of
+    their owners' libraries" is newly read (Terminus). Refused instead.
     """
 
     @model_validator(mode="before")
@@ -5606,6 +5616,7 @@ class Game(EngineModel):
         keyword: str | None = None,
         mana_value_below: float | None = None,
         play: bool = False,
+        alternative_cost: TotalCost | None = None,
     ) -> CardState | None:
         """A resolving "you may cast/play <card> without paying its mana cost"
         (CR 608.2d, CR 608.2g): one `MAY`, legal only when the cast or play is
@@ -5613,6 +5624,8 @@ class Game(EngineModel):
 
         `play=True` is the wider "play" (CR 601.1a): a land card is played,
         never cast (CR 305.9), through `_play_land_during_resolution`.
+        `alternative_cost` is the "by paying [cost] rather than its mana cost"
+        form instead (miracle, CR 702.94a) - see `cast_during_resolution`.
         Returns the spell or land, or `None` when nothing was cast or played.
         """
         is_land = play and card.card.is_land
@@ -5643,6 +5656,7 @@ class Game(EngineModel):
             rule=rule,
             keyword=keyword,
             mana_value_below=mana_value_below,
+            alternative_cost=alternative_cost,
         )
 
     def _can_play_land_during_resolution(self, username: str) -> bool:
@@ -5678,6 +5692,7 @@ class Game(EngineModel):
         rule: str,
         keyword: str | None = None,
         mana_value_below: float | None = None,
+        alternative_cost: TotalCost | None = None,
     ) -> CardState | None:
         """CR 608.2g: cast `card` without paying its mana cost while the
         resolving spell or ability that allows it is still resolving - the one
@@ -5702,6 +5717,14 @@ class Game(EngineModel):
         and puts the spell on the stack without `retain_priority`. `keyword`
         labels the `CastRecord` (Rebound, Paradigm, Suspend).
 
+        `alternative_cost` replaces "without paying its mana cost" with "by
+        paying [cost] rather than its mana cost" - miracle's trigger (CR
+        702.94a). It is announced as the spell's alternative cost (CR 118.9,
+        CR 601.2b), and an X in it is the caster's to choose (CR 107.3a),
+        asked as a `CHOOSE_A_QUALITY` over the values the caster's mana could
+        pay; the timing is still the resolving trigger's (CR 608.2g), and the
+        permission still never outlives this call.
+
         Returns `None`, with the card back where it was, when the cast is not
         legal: no option qualifies, a mandatory announcement has no legal
         choice (CR 601.2c), or a cost cannot be paid (CR 118.3, CR 601.2h).
@@ -5722,7 +5745,9 @@ class Game(EngineModel):
             card,
             caster,
             action=PlayAction.CAST,
-            pays_mana_cost=False,
+            # An alternative cost is announced on the casting itself below;
+            # the permission then only waives timing (CR 608.2g), not the cost.
+            pays_mana_cost=alternative_cost is not None,
             source_name=source_name,
             rule=rule,
             zone=card.zone,
@@ -5731,6 +5756,7 @@ class Game(EngineModel):
         )
         casting: Casting | None = None
         payment: CostPayment | None = None
+        x_value = 0
         try:
             face = options[0]
             if len(options) > 1:
@@ -5751,6 +5777,10 @@ class Game(EngineModel):
             with self._id_allocator_scope():
                 casting = Casting(spell=card, caster=caster, origin_zone=card.zone, game=self)
                 casting.use_permission()
+                if alternative_cost is not None:
+                    casting.use_triggered_alternative_cost(keyword or "", alternative_cost)
+                    x_value = self._announce_alternative_cost_x(card, caster, alternative_cost)
+                    casting.x_value = x_value
                 if face is not None:
                     if card.card.layout is Layout.SPLIT:
                         casting.cast_as_split_half(face)
@@ -5763,7 +5793,7 @@ class Game(EngineModel):
                 targets = self._announce_resolution_targets(casting, card, caster, chosen_modes)
                 if targets:
                     casting.choose_targets(targets)
-                payment = casting.determine_cost(x_value=0)
+                payment = casting.determine_cost(x_value=x_value)
                 if payment.shortfall:
                     self._pay_resolution_cast_mana(casting, payment, card, caster)
                 payment.pay()
@@ -5786,6 +5816,41 @@ class Game(EngineModel):
             ]
         self.put_on_stack(state, caster)
         return state
+
+    #: The highest X `_announce_alternative_cost_x` ever offers - far past any
+    #: board's mana, and a stop for a cost the search could otherwise chase.
+    ALTERNATIVE_COST_X_BOUND: ClassVar[int] = 99
+
+    def _announce_alternative_cost_x(self, card: CardState, caster: str, cost: TotalCost) -> int:
+        """CR 107.3a: "the controller of that spell ... chooses and announces
+        the value of X as part of casting the spell" - here for an X in the
+        alternative cost a resolving trigger offers (Entreat the Angels'
+        Miracle {X}{W}{W}). The options are every X the caster's floating mana
+        and untapped sources could pay (CR 118.3, CR 608.2d: an impossible
+        option is not offered), 0 always among them; no question is asked
+        when the cost has no X."""
+        if not cost.mana.x_count:
+            return 0
+        sources = self._mana_sources_while_resolving(self.player(caster))
+        highest = 0
+        while highest < self.ALTERNATIVE_COST_X_BOUND and (
+            plan_mana_payment(cost.mana.with_x(highest + 1), sources, game=self, payer=caster)
+            is not None
+        ):
+            highest += 1
+        options = tuple(str(value) for value in range(highest + 1))
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=caster,
+                prompt=f"choose X for {card.name}'s {cost} (CR 107.3a)",
+                source=card.name,
+                source_id=source_id_of(card),
+                options=options,
+                quality="x",
+            )
+        )
+        return int(str(answer))
 
     def _pay_resolution_cast_mana(
         self, casting: Casting, payment: CostPayment, card: CardState, caster: str
@@ -10614,6 +10679,11 @@ class Game(EngineModel):
                         self.cards_drawn_in_own_draw_step[player.username] = (
                             self.cards_drawn_in_own_draw_step.get(player.username, 0) + 1
                         )
+                    if self.cards_drawn_this_turn[player.username] == 1:
+                        # CR 702.94a: "as you draw it if it's the first card
+                        # you've drawn this turn" - asked here, mid-draw, and
+                        # only for this one card (CR 121.2).
+                        self._offer_miracle_reveal(player, card)
                     self.emit(
                         GameEvent(
                             event=TriggerEvent.DRAWS_A_CARD,
@@ -10625,6 +10695,81 @@ class Game(EngineModel):
                         )
                     )
             return drawn
+
+    def _offer_miracle_reveal(self, player: Player, card: CardState) -> None:
+        """CR 702.94a's static ability: "You may reveal this card from your
+        hand as you draw it if it's the first card you've drawn this turn."
+
+        One `MAY`, asked of the drawing player only, naming the card
+        (`Decision.card`). Declining reveals nothing - no `Reveal` record, so
+        nobody else learns the card (CR 402.3) - and nothing triggers, because
+        the linked trigger only answers a reveal this ability made (CR 603.11,
+        CR 607.2h). An unscripted player declines (`Decision.default_may`):
+        revealing gives away hidden information, which is not an engine's to
+        give on a player's behalf.
+
+        Revealing records the reveal (CR 701.20a; `revealed_for_miracle` is
+        how long it lasts, CR 702.94b) and triggers the linked ability, which
+        waits in `pending_triggers` for the next time a player would receive
+        priority (CR 603.3) - a draw in the middle of a resolving spell puts it
+        on the stack only once that spell has finished.
+        """
+        if card.zone is not Zone.HAND or not has_miracle(card.card):
+            return
+        revealed = self.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=player.username,
+                prompt=(
+                    f"reveal {card.name} as you draw it, the first card you've drawn this "
+                    f"turn, for its miracle ability (CR 702.94a)"
+                ),
+                source=card.name,
+                source_id=source_id_of(card),
+                card=card.id,
+                cards=(card.id,),
+                default_may=False,
+            )
+        )
+        if not revealed:
+            return
+        self.reveal(card, source=card.name)
+        event = GameEvent(
+            event=ExtraTriggerEvent.REVEALED_FOR_MIRACLE,
+            subject_id=card.id,
+            subject_name=card.name,
+            subject_controller=player.username,
+            subject_card=card.card,
+            player=player.username,
+        )
+        self.pending_triggers.extend(triggers_for(self, event, [card]))
+
+    def revealed_for_miracle(self, card_state: CardState) -> bool:
+        """Whether `card_state` is being played revealed under CR 702.94b:
+        "they play with that card revealed until that card leaves their hand,
+        that ability resolves, or that ability otherwise leaves the stack."
+
+        Computed, not stored: the card is revealed exactly while it is still
+        the same object in hand (CR 400.7: `zone_change_stamp`) and its miracle
+        trigger - the one that reveal set off - is still waiting to go on the
+        stack, on it, or resolving. CR 701.20a's "if that ability isn't put
+        onto the stack the next time a player would receive priority, the card
+        ceases to be revealed" falls out the same way: a trigger that never
+        reaches the stack is in none of those places.
+        """
+        if card_state.zone is not Zone.HAND:
+            return False
+        waiting = [*self.pending_triggers, *self.stack]
+        if self.resolving is not None:
+            waiting.append(self.resolving)
+        return any(
+            getattr(item, "state_class", None) == "AbilityOnStack"
+            and isinstance(item.ability, TriggeredAbility)
+            and (item.ability.keyword or "").lower() == "miracle"
+            and item.source_id == card_state.id
+            and item.source_stamp == card_state.zone_change_stamp
+            for item in waiting
+        )
 
     def _is_draw_step_draw(self, player: Player) -> bool:
         """Whether this is the active player's draw-step draw (CR 504.1, 703.4d)."""

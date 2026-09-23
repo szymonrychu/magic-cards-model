@@ -208,6 +208,14 @@ class ExtraTriggerEvent(StrEnum):
     EARTHBENDS = "earthbends"
     FIREBENDS = "firebends"
     AIRBENDS = "airbends"
+    #: CR 702.94a's linked trigger: "When you reveal this card this way, you
+    #: may cast it by paying [cost] rather than its mana cost." CR 607.2h
+    #: links it to miracle's static ability, so only a reveal *that ability*
+    #: made is this event - never a reveal some other effect asked for.
+    #: `GameEvent.subject_id` is the revealed card, `GameEvent.player` the
+    #: player who drew and revealed it. **Emitted by:** `Game.draw_cards`,
+    #: through `Game._offer_miracle_reveal`, and nowhere else.
+    REVEALED_FOR_MIRACLE = "revealed_for_miracle"
 
 
 class GameEvent(EngineModel):
@@ -2701,6 +2709,11 @@ _NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card (?:in
 #: word, and the only text on Lotus Bloom that resembles it is reminder text.
 _LAST_TIME_COUNTER_CONDITION = re.compile(r"^the last time counter is removed from this card$")
 
+#: CR 702.94a's second ability, as `machines/keywords._miracle_ability` writes
+#: it out: "you reveal this card this way". Miracle prints it as one word, so
+#: this condition only ever arrives from that expansion.
+_REVEALED_THIS_WAY_CONDITION = re.compile(r"^you reveal this card this way$")
+
 #: The Millennium Calendar's "you untap one or more permanents during your
 #: untap step" - `ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP`.
 _UNTAPPED_DURING_UNTAP_STEP_CONDITION = re.compile(
@@ -2772,6 +2785,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.MANA_ADDED})
     if _LAST_TIME_COUNTER_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED})
+    if _REVEALED_THIS_WAY_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.REVEALED_FOR_MIRACLE})
     if _UNTAPPED_DURING_UNTAP_STEP_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP})
     bending = _bending_events_named(lowered)
@@ -2937,6 +2952,16 @@ def _unread_condition_matches(
             and event.subject_id == source.id
         )
 
+    if _REVEALED_THIS_WAY_CONDITION.match(condition):
+        # CR 702.94a / CR 607.2h: "this card ... this way" - the source
+        # itself, revealed by its own miracle ability, by the player who drew
+        # it ("you").
+        return (
+            event.event is ExtraTriggerEvent.REVEALED_FOR_MIRACLE
+            and event.subject_id == source.id
+            and event.player == controller
+        )
+
     bending_events = _bending_events_named(condition)
     if bending_events:
         # CR 701.67c: "whenever a player waterbends" - "you", so the event's
@@ -3079,6 +3104,12 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     # CR 702.62a scopes the sentence to the pair, not to either one.
     if ability.keyword is not None and ability.keyword.lower() == "suspend":
         return frozenset({Zone.EXILE})
+
+    # CR 702.94a: miracle's static ability reveals the card "from your hand
+    # as you draw it", and its linked trigger is about that card in that
+    # hand - the only zone the reveal can happen in.
+    if ability.keyword is not None and ability.keyword.lower() == "miracle":
+        return frozenset({Zone.HAND})
 
     # CR 603.10a: dies, is-sacrificed, countered, and leaves-the-battlefield
     # triggers look back at the object as it existed immediately beforehand,

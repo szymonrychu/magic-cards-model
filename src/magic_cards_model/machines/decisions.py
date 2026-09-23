@@ -535,8 +535,11 @@ class Decision:
     #: 1 life stops being an option rather than becoming a rules violation.
     affirmative_is_legal: bool = True
     #: `MAY` only: overrides `default_answer`'s engine-wide "take it" for this
-    #: one question. `None` (every caller but one) leaves that convention in
-    #: force. `Game.may`'s own "you may shuffle" clause is the exception - the
+    #: one question. `None` (every caller but two) leaves that convention in
+    #: force. The second is miracle's reveal (CR 702.94a, `Game._offer_
+    #: miracle_reveal`): revealing a card from a hand gives away hidden
+    #: information (CR 402.3), so an unscripted player keeps it hidden.
+    #: `Game.may`'s own "you may shuffle" clause is the first - the
     #: shuffle ends whatever look or order the cards above it just fixed (CR
     #: 701.20d: reordering the library un-reveals it), so an unscripted answer
     #: there defaults to declining, the same "leave the look's order alone"

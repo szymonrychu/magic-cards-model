@@ -3659,6 +3659,28 @@ class Casting(EngineModel):
         attack = self.game.combat.attack_by(component.cards[0].id)
         self.returned_creature_defender = attack.defender
 
+    def use_triggered_alternative_cost(self, keyword: str, cost: TotalCost) -> CastingStep:
+        """CR 601.2b: announce the alternative cost a resolving triggered
+        ability offers - miracle's "you may cast it by paying [cost] rather
+        than its mana cost" (CR 702.94a).
+
+        Not `use_keyword`: that is for a keyword whose *static* ability lets
+        the card be cast whenever its timing allows, and miracle offers its
+        cost only while its own trigger resolves (CR 608.2g) - there is no
+        `KeywordCastOption` for it to find, on purpose, so the cost is never on
+        offer at priority. The trigger hands the cost in; this records it the
+        way `use_keyword` records a keyword's (`keyword_used`,
+        `keyword_cost_paid`) and announces it through `choose_alternative_cost`
+        (CR 118.9, one alternative cost only - CR 118.9a).
+        """
+        return self._refusing(lambda: self._use_triggered_alternative_cost(keyword, cost))
+
+    def _use_triggered_alternative_cost(self, keyword: str, cost: TotalCost) -> CastingStep:
+        self.choose_alternative_cost(cost.model_copy(deep=True))
+        self.keyword_used = keyword
+        self.keyword_cost_paid = True
+        return self.step
+
     def use_permission(self) -> CastingStep:
         """CR 601.2b: announce that this spell is being cast under a
         `PlayPermission` some effect handed out (CR 601.3).

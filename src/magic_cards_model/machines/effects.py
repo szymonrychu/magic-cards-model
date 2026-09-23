@@ -18634,6 +18634,60 @@ def _parse_exile_each_clause(sentence: str) -> TargetedClause | None:
     return effect
 
 
+#: "Put each/all <qualifier> on the bottom of their owners' libraries." -
+#: Terminus's whole sentence, the library twin of `_EXILE_EACH_RE` sharing its
+#: qualifier grammar (`_parse_mass_destroy_predicate`): CR 205.2a's card types
+#: read the same whichever zone the sweep sends the permanents to.
+_PUT_EACH_ON_BOTTOM_RE = re.compile(
+    r"^put (?:each|all) (?P<rest>.+?) on the bottom of their owners' libraries\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_put_each_on_bottom_clause(sentence: str) -> TargetedClause | None:
+    """ "Put each/all <qualifier> on the bottom of their owners' libraries."
+
+    One instruction, applied to a candidate set snapshotted before anything
+    moves (CR 608.2f, the same snapshot `_exile_matching` takes). Each card
+    goes into its own owner's library (CR 401.1, `Game.put_cards_into_
+    library`), and CR 401.4 - "If an effect puts two or more cards in a
+    specific position in a library at the same time, the owner of those
+    cards may arrange them in any order" - is asked of each owner, for that
+    owner's cards, through `Game.ask_library_bottom_order`, in APNAP order
+    (CR 101.4). A token put there ceases to exist as a state-based action
+    (CR 704.5d).
+    """
+    match = _PUT_EACH_ON_BOTTOM_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    predicate = _parse_mass_destroy_predicate(match.group("rest"))
+    if predicate is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        candidates = [
+            permanent for permanent in list(game.battlefield) if predicate(game, permanent, source)
+        ]
+        by_owner: dict[str, list[CardState]] = {}
+        for permanent in candidates:
+            by_owner.setdefault(permanent.owner or permanent.controller or "", []).append(permanent)
+        ordered: list[CardState] = []
+        for player in _players_in_apnap_order(game):
+            owned = by_owner.get(player.username, [])
+            ordered.extend(
+                game.ask_library_bottom_order(
+                    player,
+                    owned,
+                    source=getattr(source, "name", None),
+                    source_id=source_id_of(source) if source is not None else None,
+                )
+            )
+        game.put_cards_into_library(ordered, to_bottom=True)
+
+    return effect
+
+
 #: "Untap all <qualifier> you control." - Emrakul, the Exigent Doom's own cast
 #: trigger ("untap all lands you control"), Aggravated Assault's activated
 #: ability ("untap all creatures you control"). The same "all <type
@@ -33911,6 +33965,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     exile_each = _parse_exile_each_clause(clause)
     if exile_each is not None:
         return exile_each
+    put_each_on_bottom = _parse_put_each_on_bottom_clause(clause)
+    if put_each_on_bottom is not None:
+        return put_each_on_bottom
     untap_all_you_control = _parse_untap_all_you_control_clause(clause)
     if untap_all_you_control is not None:
         return untap_all_you_control
