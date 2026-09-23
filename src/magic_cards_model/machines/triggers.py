@@ -1799,6 +1799,25 @@ _CAST_ORIGIN_ZONE_RE = re.compile(
 )
 
 
+#: "from anywhere other than your hand" (Vega, the Watcher; Shadow of the
+#: Goblin): every origin but the one zone named - the complement of the
+#: `_CAST_ORIGIN_ZONE_RE` reading.
+_CAST_ORIGIN_EXCLUDED_ZONE_RE = re.compile(
+    r"\bfrom anywhere other than (?:their|your|his or her) "
+    r"(?P<zone>hand|graveyard|library)\b",
+    re.IGNORECASE,
+)
+
+
+def _excluded_cast_origin_zone(condition: str) -> Zone | None:
+    """The one zone a "from anywhere other than [zone]" condition rules out,
+    or `None` when it names no such exclusion."""
+    match = _CAST_ORIGIN_EXCLUDED_ZONE_RE.search(condition)
+    if match is None:
+        return None
+    return _CAST_ORIGIN_ZONE_WORDS[match.group("zone").lower()]
+
+
 def _required_cast_origin_zone(condition: str) -> Zone | None:
     """The zone a "cast a ... spell from [zone]" condition restricts the cast
     to, or `None` when the condition names no origin at all - which is what a
@@ -1824,6 +1843,9 @@ def _origin_zone_matches(origin_zone: Zone | None, condition: str) -> bool:
     fall back to, kept on the permissive side rather than refusing a
     legitimate trigger over missing data.
     """
+    excluded = _excluded_cast_origin_zone(condition)
+    if excluded is not None:
+        return origin_zone is not None and origin_zone is not excluded
     required = _required_cast_origin_zone(condition)
     if required is None:
         return True
@@ -3042,6 +3064,14 @@ _REVEALED_THIS_WAY_CONDITION = re.compile(r"^you reveal this card this way$")
 #: object's own CR 607.2a pile.
 _PLAY_A_CARD_EXILED_WITH_CONDITION = re.compile(r"^you play a card exiled with this \w+$")
 
+#: CR 601.1a's "play" spelled out as its two halves: "you play a land or
+#: cast a spell [from anywhere other than your hand]" (Shadow of the Goblin) -
+#: a land played (CR 116.2a) or a spell cast (CR 601.2), by the named player,
+#: from the named origin if there is one.
+_PLAY_A_LAND_OR_CAST_CONDITION = re.compile(
+    r"^(?P<who>you|an opponent|a player) plays? a land or casts? a spell(?P<origin> from .+)?$"
+)
+
 #: The Millennium Calendar's "you untap one or more permanents during your
 #: untap step" - `ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP`.
 _UNTAPPED_DURING_UNTAP_STEP_CONDITION = re.compile(
@@ -3298,6 +3328,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS})
     if _PLAY_A_CARD_EXILED_WITH_CONDITION.match(lowered):
         return frozenset({TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND})
+    if _PLAY_A_LAND_OR_CAST_CONDITION.match(lowered):
+        return frozenset({TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND})
     if _returned_subject(lowered) is not None:
         return frozenset({TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND})
     if _CLASS_BECOMES_LEVEL_CONDITION.match(lowered):
@@ -3454,6 +3486,21 @@ def _unread_condition_matches(
             # the condition to be about, so it does not trigger.
             return False
         return any(color.value == chosen.value for color in event.mana_added)
+
+    play_or_cast = _PLAY_A_LAND_OR_CAST_CONDITION.match(condition.lower().strip())
+    if play_or_cast is not None:
+        # CR 601.1a: playing a card is playing it as a land (CR 116.2a) or
+        # casting it as a spell (CR 601.2). Both events carry the zone the
+        # card was played out of (`GameEvent.origin_zone`), which is what a
+        # "from ..." restriction reads (CR 603.2: it is part of the event).
+        if event.event not in (TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND):
+            return False
+        who = play_or_cast.group("who")
+        if who == "you" and event.player != controller:
+            return False
+        if who == "an opponent" and (event.player is None or event.player == controller):
+            return False
+        return _origin_zone_matches(event.origin_zone, play_or_cast.group("origin") or "")
 
     if _PLAY_A_CARD_EXILED_WITH_CONDITION.match(condition):
         # CR 601.1a: "Playing a card" means playing it as a land or casting it

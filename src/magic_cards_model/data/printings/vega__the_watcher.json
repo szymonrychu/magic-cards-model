@@ -1,0 +1,147 @@
+{
+  "object": "card",
+  "id": "28fced7f-3078-4a54-8f76-0ef14c732e97",
+  "oracle_id": "95e66851-7aff-4559-91b4-6b8a95c6e1f8",
+  "multiverse_ids": [
+    503849
+  ],
+  "mtgo_id": 87809,
+  "arena_id": 75280,
+  "tcgplayer_id": 230177,
+  "cardmarket_id": 530372,
+  "name": "Vega, the Watcher",
+  "lang": "en",
+  "released_at": "2021-02-05",
+  "uri": "https://api.scryfall.com/cards/28fced7f-3078-4a54-8f76-0ef14c732e97",
+  "scryfall_uri": "https://scryfall.com/card/khm/233/vega-the-watcher?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:36:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.jpg?1783928189",
+    "normal": "https://cards.scryfall.io/normal/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.jpg?1783928189",
+    "large": "https://cards.scryfall.io/large/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.jpg?1783928189",
+    "png": "https://cards.scryfall.io/png/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.png?1783928189",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.jpg?1783928189",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.jpg?1783928189",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.webp?1783928189",
+    "grid": "https://cards.scryfall.io/grid/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.webp?1783928189",
+    "display": "https://cards.scryfall.io/display/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.webp?1783928189",
+    "art": "https://cards.scryfall.io/art/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.webp?1783928189",
+    "crop": "https://cards.scryfall.io/crop/front/2/8/28fced7f-3078-4a54-8f76-0ef14c732e97.webp?1783928189"
+  },
+  "mana_cost": "{1}{W}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Bird Spirit",
+  "oracle_text": "Flying\nWhenever you cast a spell from anywhere other than your hand, draw a card.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "43057fad-b1c1-437f-bc48-0045bce6d8c9",
+  "set": "khm",
+  "set_name": "Kaldheim",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/43057fad-b1c1-437f-bc48-0045bce6d8c9",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Akhm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/khm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/28fced7f-3078-4a54-8f76-0ef14c732e97/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A95e66851-7aff-4559-91b4-6b8a95c6e1f8&unique=prints",
+  "collector_number": "233",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "One eye sees the past, one the present, and one the future\u2014and none can be deceived.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Paul Scott Canavan",
+  "artist_ids": [
+    "c19bfb77-5099-4f7c-8585-6eaf367712c9"
+  ],
+  "illustration_id": "8693eb45-bd8c-44c5-9b6d-358c330d7306",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2720,
+  "penny_rank": 10682,
+  "preview": {
+    "source": "TappyToeClaws",
+    "source_uri": "https://twitter.com/TappyToeClaws/status/1347969752485023745",
+    "previewed_at": "2021-01-09"
+  },
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "1.62",
+    "usd_etched": null,
+    "eur": "0.19",
+    "eur_foil": "0.49",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=503849&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVega%252C%2Bthe%2BWatcher",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVega%252C%2Bthe%2BWatcher",
+    "edhrec": "https://edhrec.com/route/?cc=Vega%2C+the+Watcher"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F230177%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=530372&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/87809?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

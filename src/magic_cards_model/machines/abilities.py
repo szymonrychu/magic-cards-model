@@ -3365,6 +3365,13 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # condition shape this reads.
     if re.search(r"\bactivates? a loyalty ability\b", lowered):
         return TriggerEvent.LOYALTY_ABILITY_ACTIVATED
+    # CR 601.1a's "play" spelled out - "you play a land or cast a spell"
+    # (Shadow of the Goblin) watches two events, a land played and a spell
+    # cast, so it is left to `machines/triggers._unread_trigger_events`,
+    # ahead of the plain "cast" reading below, which would demand a land
+    # *spell* no cast ever is.
+    if re.search(r"\bplays? a land or casts? a spell\b", lowered):
+        return None
     if re.search(r"\bcasts?\b", lowered):
         return TriggerEvent.CAST_SPELL
     # "Whenever you draw a card" / "Whenever an opponent draws a card" - the
