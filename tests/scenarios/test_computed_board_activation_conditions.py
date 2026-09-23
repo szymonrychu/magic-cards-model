@@ -319,14 +319,17 @@ def test_xerex_strobe_knight_counts_the_spells_you_cast_this_turn():
 
 
 def test_an_unread_activation_restriction_refuses_and_says_so():
-    """Lagomos's "five or more creatures died this turn" is not a shape this
-    engine reads. Refusing, with the restriction named, is the fail-closed
-    answer; allowing it would be a silent guess."""
+    """A restriction `condition_holds` cannot read answers None, and refusing
+    with the restriction named is the fail-closed answer; allowing it would
+    be a silent guess. Lagomos's "five or more creatures died this turn" was
+    the pool's example until it became read
+    (`test_activation_restriction_turn_history.py`); no pool printing prints
+    an unread one any more, so the reader's own None is what is pinned, and
+    Lagomos is now refused because its restriction is *not met*."""
     scenario = _gated(["Lagomos, Hand of Hatred"])
     lagomos = scenario.find("Lagomos, Hand of Hatred", Zone.BATTLEFIELD)
 
+    assert scenario.game.condition_holds("alice", "the moon is full", lagomos) is None
     reason = scenario.why_cannot_activate(lagomos, 0)
-
     assert reason is not None
-    assert "creatures died this turn" in reason
-    assert "not read" in reason
+    assert "not met" in reason
