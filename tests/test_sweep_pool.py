@@ -1422,7 +1422,7 @@ def test_report_effects_prints_the_legal_gap_section():
 def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     """The acceptance check for the whole rewrite: with every ability word,
     flavor word, format exclusion and registration above in place, the
-    in-format pool's own unexecuted-keyword list is exactly the thirteen
+    in-format pool's own unexecuted-keyword list is exactly the
     genuinely unbuilt CR 701/702 keywords - the pre-existing false
     positives (ability words, flavor words, Partner/Choose a Background,
     the seven now-registered built keywords (T01's six plus T02's Waterbend),
@@ -1441,13 +1441,11 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
         "Cumulative upkeep",
         "Discover",
         "Explore",
-        "Infect",
         "Miracle",
         "Monstrosity",
         "Outlast",
         "Power-up",
         "Sneak",
-        "Toxic",
     }
 
 

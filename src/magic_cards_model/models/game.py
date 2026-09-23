@@ -73,6 +73,8 @@ from ..machines.combat import (
     KeywordLineNotice,
     UndefinedPowerNotice,
     has_keyword,
+    keywords_as_it_exists,
+    source_had_keyword,
 )
 from ..machines.cost import (
     ComponentKind,
@@ -2663,7 +2665,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 37
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 38
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3212,6 +3214,17 @@ class Game(EngineModel):
     Grace's "+1/+0 as long as any player controls a black permanent" now
     applies - so a version-36 snapshot is refused rather than replayed into a
     different game.
+
+    Bumped 37 -> 38: infect, wither and toxic (CR 702.90, 702.80, 702.164)
+    now change what damage does - `Game.deal_damage` gives poison and -1/-1
+    counters instead of life loss and marked damage (CR 120.3b, 120.3d), and
+    `combat._deal_combat_damage` adds toxic's poison (CR 120.3g). Glistener
+    Elf, Blightsteel Colossus and Myr Convert were already printings a decoded
+    battlefield could hold, so the same board resolves combat differently
+    (the bump rule's second bullet). `CardState` also gained
+    `last_known_keywords`, CR 702.90d's last known information (first
+    bullet), and "gets N poison counters" and "a creature you control becomes
+    the target of a spell" are newly read clauses on Venerated Rotpriest.
     """
 
     @model_validator(mode="before")
@@ -7520,6 +7533,11 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        # CR 702.90d / 702.80b: the same last instant for its keywords - an
+        # ability of this permanent that deals damage after it has gone (Mogg
+        # Fanatic's own sacrifice cost) asks whether it had infect or wither
+        # as it last existed, grants included.
+        permanent.last_known_keywords = keywords_as_it_exists(permanent, self)
         if permanent.prepared:
             # CR 722.3c: the exile copy persists "for as long as the prepared
             # permanent remains on the battlefield and has the prepared
@@ -11678,7 +11696,9 @@ class Game(EngineModel):
 
     # -- damage and life ---------------------------------------------------
 
-    def _apply_damage_to_permanent(self, permanent: CardState, amount: int) -> None:
+    def _apply_damage_to_permanent(
+        self, permanent: CardState, amount: int, *, as_counters: bool = False
+    ) -> None:
         """What damage does to a permanent, by what the permanent is (CR 120.3).
 
         CR 120.3 opens with "Damage may have **one or more** of the following
@@ -11694,6 +11714,13 @@ class Game(EngineModel):
           involved. The only state-based action here is the one *after* it -
           CR 306.9 / CR 704.5i put a planeswalker at 0 loyalty into its owner's
           graveyard, which `check_state_based_actions` already does.
+        - **CR 120.3d** - "Damage dealt to a creature by a source with wither
+          and/or infect causes that source's controller to put that many -1/-1
+          counters on that creature." `as_counters` is that source question,
+          answered by `deal_damage`; the counters go through `add_counters`,
+          because CR 120.4c processes damage into its results "as modified by
+          replacement effects that interact with those results (such as ...
+          counters)".
         - **CR 120.3e** - "Damage dealt to a creature by a source with neither
           wither nor infect causes that much damage to be marked on that
           creature." Marking is the *creature* result, which is why it is not
@@ -11729,7 +11756,10 @@ class Game(EngineModel):
             if present > 0:
                 permanent.remove_counters(Counter.LOYALTY, min(amount, present))
         if Type.CREATURE in types:
-            permanent.mark_damage(amount)
+            if as_counters:
+                self.add_counters(permanent, Counter.MINUS_ONE, amount)
+            else:
+                permanent.mark_damage(amount)
 
     def deal_damage(
         self, target: Targetable, amount: int, *, source: "CardState | None" = None
@@ -11755,12 +11785,14 @@ class Game(EngineModel):
           the stated quality to a permanent or player with protection is
           prevented."
 
+        - **CR 120.3b / 120.3d** - infect and wither turn the damage's results
+          into poison and -1/-1 counters, read off the source (see below).
+
         It is optional because CR 120.2b's "the spell or ability will specify
-        which object deals that damage" is a fact the caller holds, and not
-        every caller passes it yet: `machines/combat.py` and
-        `machines/effects.py` still call this with a target and a number, so
-        their damage arrives anonymous and the three rules above do not fire for
-        it. See `docs/engine-coverage.md`.
+        which object deals that damage" is a fact the caller holds; every
+        permanent or spell that deals damage in `machines/combat.py`,
+        `machines/effects.py` and here passes it. Anonymous damage is what a
+        caller with no source object has left.
 
         Prevention and replacement effects get first refusal (CR 615.1, 616.1).
         CR 615.1a: "Effects that use the word 'prevent' are prevention effects.
@@ -11784,10 +11816,22 @@ class Game(EngineModel):
             if not event.happens or event.amount <= 0:
                 return 0
 
+            # CR 120.3's results depend on "the characteristics of the
+            # damage's source": infect and wither are read here, inside the
+            # damage event, not as replacements of it (CR 120.4c). By last
+            # known information once the source has left the battlefield
+            # (CR 702.90d, 702.80b), from any zone (CR 702.90e, 702.80c).
+            infect = source is not None and source_had_keyword(source, Keyword.INFECT, self)
+            wither = source is not None and source_had_keyword(source, Keyword.WITHER, self)
             if isinstance(target, Player):
-                self.deal_damage_to_player(target, event.amount)
+                if infect:
+                    # CR 120.3b / 702.90b: poison counters, and no life lost -
+                    # so no CR 119.3 life-loss event either.
+                    self.add_player_counters(target, Counter.POISON, event.amount)
+                else:
+                    self.deal_damage_to_player(target, event.amount)
             else:
-                self._apply_damage_to_permanent(target, event.amount)
+                self._apply_damage_to_permanent(target, event.amount, as_counters=infect or wither)
             # CR 613.5: the source's characteristics for this event are the
             # computed ones while it is still a permanent - a land animated
             # by earthbend is a creature only there - and the printed type

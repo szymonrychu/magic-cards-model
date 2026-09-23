@@ -2067,12 +2067,20 @@ def keywords_in_lines(lines: list[str], known: list[str]) -> set[str]:
     `known` is the vocabulary to match against, because there is no keyword
     table in this module: the caller says which keywords it cares about.
     """
-    found: set[str] = set()
-    for line in lines:
-        for ability in _parse_line(line, list(known), face=""):
-            if isinstance(ability, KeywordAbility):
-                found.add(ability.canonical.lower())
-    return found
+    return {ability.canonical.lower() for ability in keyword_abilities_in_lines(lines, known)}
+
+
+def keyword_abilities_in_lines(lines: list[str], known: list[str]) -> list[KeywordAbility]:
+    """Every CR 702 keyword ability these lines carry, one per instance, with
+    its parameter and count - `keywords_in_lines` keeps only the names, which
+    is not enough for a keyword whose instances add up (CR 702.164b's total
+    toxic value)."""
+    return [
+        ability
+        for line in lines
+        for ability in _parse_line(line, list(known), face="")
+        if isinstance(ability, KeywordAbility)
+    ]
 
 
 def keyword_ability(card: Card, keyword: str) -> KeywordAbility | None:

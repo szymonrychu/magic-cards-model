@@ -2292,9 +2292,22 @@ def condition_matches(
         #   asked there - "a player or permanent" is every legal target of an
         #   ability - so the whole question is who controls the targeting
         #   object and whether it is a spell or an ability.
+        #
+        # - the object-subject one, which names *what* was targeted by type
+        #   and controller: Venerated Rotpriest's "Whenever a creature you
+        #   control becomes the target of a spell". Its "you control" is the
+        #   targeted object's, so only the part after "the target of" is left
+        #   for the targeting object's own controller check below.
         if mine:
             if event.subject_id != source.id:
                 return False
+        elif (object_subject := _OBJECT_TARGET_SUBJECT.match(lowered.strip())) is not None:
+            if not _targeted_object_matches(
+                game, object_subject.group("subject"), event, source, controller
+            ):
+                return False
+            lowered = object_subject.group("by")
+            condition = lowered
         elif not _target_subject_matches(condition):
             return False
         if not _targeting_object_matches(game, condition, event):
@@ -2509,6 +2522,42 @@ def condition_matches(
 #: "you control" in such a condition can attach either to the target or to the
 #: targeting object and reading it wrong fires a trigger that should not fire.
 _ANY_TARGET_SUBJECT = re.compile(r"^(?:a player or permanent|a permanent or player)\b")
+
+
+#: A becomes-target condition whose subject is an object described by type
+#: and controller (CR 115.1's "object(s) ... the spell or ability will
+#: affect"): "a creature you control", "another permanent an opponent
+#: controls". `by` is the rest - "a spell", "a spell or ability an opponent
+#: controls" - which is about the targeting object, not the targeted one.
+_OBJECT_TARGET_SUBJECT = re.compile(
+    r"^(?P<subject>(?:a|an|another) (?:[a-z]+ )*?"
+    r"(?:creature|permanent|artifact|enchantment|land|planeswalker)"
+    r"(?: you control| an opponent controls)?) becomes the target of (?P<by>.+)$"
+)
+
+
+def _targeted_object_matches(
+    game: "Game", subject: str, event: GameEvent, source: CardState, controller: str
+) -> bool:
+    """Whether the object a becomes-target event names fits `subject`'s type
+    and controller words, read off the computed board (CR 613.5) - the
+    targeted object is a permanent, so an animated land is a creature there
+    and nowhere else."""
+    if event.subject_id is None:
+        return False
+    if subject.startswith("another ") and event.subject_id == source.id:
+        return False
+    targeted = game.find_by_id(event.subject_id)
+    if targeted is None:
+        return False
+    types = (
+        game.characteristics_of(targeted).types
+        if targeted.zone is Zone.BATTLEFIELD
+        else targeted.types
+    )
+    return _types_match(tuple(types), subject) and _controller_clause_holds(
+        subject, controller, event.subject_controller
+    )
 
 
 def _target_subject_matches(condition: str) -> bool:

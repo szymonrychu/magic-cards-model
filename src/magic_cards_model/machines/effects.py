@@ -415,7 +415,7 @@ def _deal_divided_damage_shares(
     chosen = len(spell.targets)
     if chosen == 0 or total <= 0:
         return
-    source = spell if isinstance(spell, CardState) else spell.source(game)
+    source = spell if isinstance(spell, CardState) else spell.source_or_last_known(game)
     shares = _divided_damage_shares(total, chosen, spell.division, even_split=even_split)
     for reference, share in zip(spell.targets, shares, strict=True):
         target = game.legal_target(spell, reference)
@@ -3358,7 +3358,7 @@ def damage_each_opponent(amount: int) -> AbilityEffect:
     """
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
+        source = ability.source_or_last_known(game)
         for opponent in _opponents(game, ability.controller):
             game.deal_damage(opponent, amount, source=source)
 
@@ -3395,7 +3395,7 @@ def damage_to_controller(amount: int) -> AbilityEffect:
     """
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
+        source = ability.source_or_last_known(game)
         game.deal_damage(game.player(ability.controller), amount, source=source)
 
     return effect
@@ -3449,7 +3449,7 @@ def damage_each_player(amount: int) -> AbilityEffect:
     """
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
+        source = ability.source_or_last_known(game)
         for player in game.players_in_game:
             game.deal_damage(player, amount, source=source)
 
@@ -3512,7 +3512,7 @@ def _parse_damage_that_player_clause(text: str, *, for_spell: bool) -> AbilityEf
         username = event.player or event.subject_controller
         if username is None:
             return
-        game.deal_damage(game.player(username), amount, source=ability.source(game))
+        game.deal_damage(game.player(username), amount, source=ability.source_or_last_known(game))
 
     return effect
 
@@ -3548,7 +3548,9 @@ def _parse_damage_each_creature_except_tokens_you_control_clause(
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         source = (
-            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)  # type: ignore[union-attr]
         )
         board = game.computed_board()
         for permanent in list(game.battlefield):
@@ -3573,7 +3575,7 @@ def damage_each_creature(amount: int) -> AbilityEffect:
     """
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
+        source = ability.source_or_last_known(game)
         board = game.computed_board()
         for creature in list(game.battlefield):
             if Type.CREATURE in board.of(creature).types:
@@ -3657,7 +3659,7 @@ def damage_the_attacked_player(amount: int) -> AbilityEffect:
             return
         target = game.resolve_target(event.defender)
         if target is not None:
-            game.deal_damage(target, amount, source=ability.source(game))
+            game.deal_damage(target, amount, source=ability.source_or_last_known(game))
 
     return effect
 
@@ -3676,7 +3678,7 @@ def damage_the_other_combatant(amount: int) -> AbilityEffect:
         other_id = event.related_id if event.subject_id == ability.source_id else event.subject_id
         other = game.find_by_id(other_id) if other_id is not None else None
         if other is not None and other.zone is Zone.BATTLEFIELD:
-            game.deal_damage(other, amount, source=ability.source(game))
+            game.deal_damage(other, amount, source=ability.source_or_last_known(game))
 
     return effect
 
@@ -4276,7 +4278,7 @@ def damage_ability_targets(amount: int) -> AbilityEffect:
     """
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
+        source = ability.source_or_last_known(game)
         for target in game.resolve_targets(ability):
             game.deal_damage(target, amount, source=source)
 
@@ -6013,6 +6015,11 @@ _EACH_OPPONENT_LOSES_LIFE_RE = re.compile(
 )
 # CR 107.14: "The energy symbol is {E}. It represents one energy counter."
 _ENERGY_RE = re.compile(r"(?:you )?gets? (?P<e>(?:\{e\})+)", re.IGNORECASE)
+# CR 122.1f: poison counters are a kind a player gets - "you get a poison
+# counter" (Phyrexian Vatmother), "target opponent gets a poison counter"
+# (Venerated Rotpriest, through `_TARGET_PLAYER_OR_OPPONENT_VERB_RE`), "gets
+# two poison counters". Ten of them lose the game (CR 704.5c).
+_POISON_COUNTERS_RE = re.compile(rf"(?:you )?gets? (?P<n>{COUNT}) poison counters?", re.IGNORECASE)
 # CR 121.1/121.2: drawing, one card at a time. The "you" is often left
 # implicit - a triggered or activated ability's effect just says "Draw a
 # card." The optional "for each `<expr>`" tail folds in Kaito, Bane of
@@ -6739,6 +6746,12 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         amount = len(re.findall(r"\{e\}", match.group("e"), re.IGNORECASE))
         return lambda game, player, source, source_id: game.add_player_counters(
             player, Counter.ENERGY, amount
+        )
+
+    if match := _POISON_COUNTERS_RE.fullmatch(clause):
+        poison = parse_count(match.group("n"))
+        return lambda game, player, source, source_id: game.add_player_counters(
+            player, Counter.POISON, poison
         )
 
     if match := _DRAW_RE.fullmatch(clause):
@@ -11832,7 +11845,7 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
         ):
             amount *= 2
 
-        source = ability.source(game)
+        source = ability.source_or_last_known(game)
         for target in game.resolve_targets(ability):
             game.deal_damage(target, amount, source=source)
 
@@ -12495,7 +12508,7 @@ def _deal_damage_for_each(
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         amount = amount_fn(game, controller.username)
-        source = stack_object if for_spell else stack_object.source(game)  # type: ignore[union-attr]
+        source = stack_object if for_spell else stack_object.source_or_last_known(game)  # type: ignore[union-attr]
         for target in game.resolve_targets(stack_object):
             game.deal_damage(target, amount, source=source)
 
@@ -12542,7 +12555,7 @@ def _damage_each_opponent_for_expression(
     """`damage_each_opponent`'s twin for a "where X is <expr>" amount."""
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
+        source = ability.source_or_last_known(game)
         amount = amount_fn(game, ability.controller)
         for opponent in _opponents(game, ability.controller):
             game.deal_damage(opponent, amount, source=source)
@@ -12559,7 +12572,7 @@ def _damage_each_creature_for_expression(
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         amount = amount_fn(game, controller.username)
-        source = stack_object if for_spell else stack_object.source(game)  # type: ignore[union-attr]
+        source = stack_object if for_spell else stack_object.source_or_last_known(game)  # type: ignore[union-attr]
         board = game.computed_board()
         for creature in list(game.battlefield):
             if Type.CREATURE in board.of(creature).types:
@@ -18345,7 +18358,11 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
         types.add(card_type)
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)
+        )
         controller = game.controller_of(stack_object).username
         x_value = stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0
         amount = reader(game, controller, source, x_value)
@@ -18511,7 +18528,9 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
 
         def opponents_effect(game: "Game", stack_object: "StackObject") -> None:
             source = (
-                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+                stack_object
+                if isinstance(stack_object, CardState)
+                else stack_object.source_or_last_known(game)
             )
             controller = game.controller_of(stack_object).username
             amount = max(amount_of(game, controller), 0)  # CR 608.2h, once
@@ -18545,7 +18564,9 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
 
         def controller_scoped_effect(game: "Game", stack_object: "StackObject") -> None:
             source = (
-                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+                stack_object
+                if isinstance(stack_object, CardState)
+                else stack_object.source_or_last_known(game)
             )
             controller = game.controller_of(stack_object).username
             amount = max(amount_of(game, controller), 0)  # CR 608.2h, once
@@ -18573,7 +18594,11 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)
+        )
         amount = max(amount_of(game, game.controller_of(stack_object).username), 0)
         if amount <= 0:
             return
@@ -23612,7 +23637,11 @@ def _parse_choose_target_owner_may_top_else_bottom_clause(
         game.put_cards_into_library([card], to_bottom=not put_on_top)
         if put_on_top:
             game.deal_damage(
-                owner, amount, source=stack_object if isinstance(stack_object, CardState) else None
+                owner,
+                amount,
+                source=stack_object
+                if isinstance(stack_object, CardState)
+                else stack_object.source_or_last_known(game),
             )
 
     return effect
@@ -23924,7 +23953,7 @@ def _parse_if_control_colored_permanent_damage_clause(
         amount = count_fn(game, controller.username)
         if amount <= 0:
             return
-        source = ability.source(game)
+        source = ability.source_or_last_known(game)
         for target in game.resolve_targets(ability):
             game.deal_damage(target, amount, source=source)
 
@@ -27783,7 +27812,7 @@ def _parse_damage_to_that_spells_controller_clause(text: str) -> AbilityEffect |
         if spell is None:
             return
         controller = game.controller_of(spell)
-        game.deal_damage(controller, amount, source=ability.source(game))
+        game.deal_damage(controller, amount, source=ability.source_or_last_known(game))
 
     return effect
 

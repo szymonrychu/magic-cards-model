@@ -50,11 +50,12 @@ from pydantic import ConfigDict, Field
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..models.card import Type
-from ..models.card_state import CardState, TargetRef
+from ..models.card_state import CardState, Counter, TargetRef
 from ..models.zone import Zone
 from ..snapshot import EngineModel
 from .abilities import (
     TriggerEvent,
+    keyword_abilities_in_lines,
     keywords_in_lines,
     layer_readable_sentences,
     unread_keyword_tokens,
@@ -96,6 +97,17 @@ class Keyword(StrEnum):
     #: CR 702.14a-c: the five basic landwalks. Landwalk is an evasion ability
     #: (CR 702.14b) whose name carries the land type it looks for, so the
     #: members are spelled out rather than derived.
+    #: CR 702.90a-c / CR 120.3b, 120.3d: damage from a source with infect
+    #: gives a player poison counters and a creature -1/-1 counters. Read by
+    #: `Game.deal_damage` for every damage event, combat or not.
+    INFECT = "infect"
+    #: CR 702.80a / CR 120.3d: damage from a source with wither puts -1/-1
+    #: counters on a creature rather than marking damage.
+    WITHER = "wither"
+    #: CR 702.164a-c / CR 120.3g: "toxic N" - combat damage to a player also
+    #: gives poison counters equal to the creature's total toxic value
+    #: (`total_toxic_value`), applied in `_deal_combat_damage`.
+    TOXIC = "toxic"
     PLAINSWALK = "plainswalk"
     ISLANDWALK = "islandwalk"
     SWAMPWALK = "swampwalk"
@@ -212,6 +224,55 @@ def has_keyword(state: CardState, keyword: Keyword | str, game: "Game | None" = 
     # text at all (CR 702.37c, CR 708.2), so it has none of the printing's
     # keywords however plainly the card says them.
     return any(printed.lower() == wanted for printed in state.keywords)
+
+
+def source_had_keyword(state: CardState, keyword: Keyword | str, game: "Game") -> bool:
+    """Whether a damage source has a keyword, by last known information once
+    it has left the battlefield (CR 702.90d, CR 702.80b).
+
+    "If an object is no longer in the zone it's expected to be in as an effect
+    causes it to deal damage, its last known information is used to determine
+    whether it had infect" - `CardState.last_known_keywords` is that snapshot,
+    taken by `Game._note_left_battlefield` while the layer system still
+    answered for the permanent. With no snapshot the object is where it deals
+    damage from - a spell on the stack, a card in a hand or graveyard - and
+    its own keywords answer (CR 702.90e, 702.80c: the rules "function no
+    matter what zone an object ... deals damage from").
+    """
+    if state.zone is not Zone.BATTLEFIELD and state.last_known_keywords is not None:
+        return str(keyword).lower() in state.last_known_keywords
+    return has_keyword(state, keyword, game)
+
+
+def keywords_as_it_exists(state: CardState, game: "Game") -> tuple[str, ...]:
+    """Every keyword the layer system leaves this permanent with, lowercased
+    and sorted - the snapshot `CardState.last_known_keywords` stores."""
+    computed = _computed_keywords(state, game)
+    if computed is None:
+        computed = {printed.lower() for printed in state.keywords}
+    return tuple(sorted(computed))
+
+
+def total_toxic_value(state: CardState, game: "Game") -> int:
+    """CR 702.164b: "A creature's total toxic value is the sum of all N values
+    of toxic abilities that creature has."
+
+    Read off the computed ability lines (CR 613.5), so a printed "Toxic 1"
+    and a granted one (Prosthetic Injector's "has toxic 1") are two
+    instances and add up, and one taken away in layer 6 is gone.
+    """
+    characteristics = game.characteristics_of(state) if state.zone is Zone.BATTLEFIELD else None
+    lines = (
+        list(characteristics.abilities)
+        if characteristics is not None
+        else [line for line in state.oracle_text.splitlines() if line.strip()]
+    )
+    vocabulary = _reading_vocabulary(state, (Keyword.TOXIC.value,))
+    return sum(
+        ability.count or 0
+        for ability in keyword_abilities_in_lines(lines, vocabulary)
+        if ability.canonical.lower() == Keyword.TOXIC.value
+    )
 
 
 class KeywordLineNotice(EngineModel):
@@ -1172,6 +1233,18 @@ def _deal_combat_damage(game: "Game", source: CardState, target: "Targetable", a
         # CR 702.15b / CR 120.3f, and CR 702.15e keeps each source's life gain
         # a separate event, which is why this is inside the per-source loop.
         game.gain_life(game.controller_of(source), dealt)
+    # Imported here: `models.player` imports `machines.layers`, which imports
+    # this module.
+    from ..models.player import Player
+
+    if isinstance(target, Player):
+        # CR 702.164c / CR 120.3g: combat damage dealt to a player by a
+        # creature with toxic gives that player poison counters equal to its
+        # total toxic value, "in addition to the damage's other results" -
+        # so after infect's own poison, and only for damage actually dealt.
+        toxic = total_toxic_value(source, game)
+        if toxic > 0:
+            game.add_player_counters(target, Counter.POISON, toxic)
     return dealt
 
 

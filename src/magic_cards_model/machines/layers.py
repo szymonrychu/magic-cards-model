@@ -7207,6 +7207,17 @@ _QUALIFIED_KEYWORD_RE = re.compile(
 #: mistaken for the separator between two different keywords the way a
 #: single upfront `re.split` on "and" already was.
 _BARE_KEYWORD_ITEM_RE = re.compile(r"^([a-z]+(?: [a-z]+)?)(?:,\s*|\s+and\s+|$)", re.IGNORECASE)
+#: A keyword written with its number (CR 702.164a: "It is written 'toxic N,'
+#: where N is a number") - Prosthetic Injector's "has toxic 1", Necrogen
+#: Communion's "has toxic 2". Tried before `_BARE_KEYWORD_ITEM_RE`, whose one-
+#: or-two-word item has no room for a digit. Granted as "Toxic 1", the same
+#: line a printed instance is, so `combat.total_toxic_value` sums the two.
+_NUMBERED_KEYWORD_ITEM_RE = re.compile(
+    r"^(?P<keyword>[a-z]+) (?P<n>\d+)(?:,\s*|\s+and\s+|$)", re.IGNORECASE
+)
+#: The keywords `_NUMBERED_KEYWORD_ITEM_RE` may grant: the ones written with
+#: an N that some machine reads the N of.
+_KNOWN_NUMBERED_KEYWORDS = frozenset({Keyword.TOXIC.value})
 
 
 def _split_and_validate_keywords(raw: str) -> list[str] | None:
@@ -7243,6 +7254,11 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
             for quality in _split_protection_qualities(qualified.group("qualities")):
                 result.append(f"{keyword} from {quality}")
             remaining = remaining[qualified.end() :].strip()
+            continue
+        numbered = _NUMBERED_KEYWORD_ITEM_RE.match(remaining)
+        if numbered is not None and numbered.group("keyword").lower() in _KNOWN_NUMBERED_KEYWORDS:
+            result.append(f"{numbered.group('keyword').capitalize()} {numbered.group('n')}")
+            remaining = remaining[numbered.end() :].strip()
             continue
         bare = _BARE_KEYWORD_ITEM_RE.match(remaining)
         if bare is None:

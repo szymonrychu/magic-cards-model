@@ -994,6 +994,20 @@ class CardState(EngineModel):
     """The subtypes this object had the last time it left the battlefield
     (CR 608.2h) - taken with `last_known_colors`."""
 
+    last_known_keywords: tuple[str, ...] | None = None
+    """The keywords this object had, lowercased, the last time it left the
+    battlefield (CR 702.90d, CR 702.80b). `last_known_power`'s sibling for
+    abilities: "If an object is no longer in the zone it's expected to be in
+    as an effect causes it to deal damage, its last known information is used
+    to determine whether it had infect" - and wither the same. A Mogg Fanatic
+    given infect by Tainted Strike and sacrificed to its own ability is a
+    card in a graveyard with no infect printed by the time the ability
+    resolves; the layer-6 grant is only remembered here.
+
+    `None` for an object that has never left the battlefield, and reset by
+    `move_to` on any move that does not start there, as the P/T snapshot is.
+    """
+
     last_known_counters: Counters = Field(default_factory=Counters)
     """The counters this object had the last time it changed zones (CR 704.8).
 
@@ -2169,6 +2183,7 @@ class CardState(EngineModel):
             self.last_known_colors = None
             self.last_known_types = None
             self.last_known_subtypes = None
+            self.last_known_keywords = None
         self.zone_change_stamp = new_id()
         self.zone = zone
         if not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):

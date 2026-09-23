@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "dfb81cb1-ac56-4803-a962-359854a447df",
+  "oracle_id": "83bf5610-a798-4508-88d2-c60d96f60d23",
+  "multiverse_ids": [
+    602613
+  ],
+  "mtgo_id": 106381,
+  "arena_id": 83783,
+  "tcgplayer_id": 478809,
+  "cardmarket_id": 693404,
+  "name": "Bilious Skulldweller",
+  "lang": "en",
+  "released_at": "2023-02-10",
+  "uri": "https://api.scryfall.com/cards/dfb81cb1-ac56-4803-a962-359854a447df",
+  "scryfall_uri": "https://scryfall.com/card/one/83/bilious-skulldweller?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:47:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.jpg?1783918051",
+    "normal": "https://cards.scryfall.io/normal/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.jpg?1783918051",
+    "large": "https://cards.scryfall.io/large/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.jpg?1783918051",
+    "png": "https://cards.scryfall.io/png/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.png?1783918051",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.jpg?1783918051",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.jpg?1783918051",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.webp?1783918051",
+    "grid": "https://cards.scryfall.io/grid/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.webp?1783918051",
+    "display": "https://cards.scryfall.io/display/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.webp?1783918051",
+    "art": "https://cards.scryfall.io/art/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.webp?1783918051",
+    "crop": "https://cards.scryfall.io/crop/front/d/f/dfb81cb1-ac56-4803-a962-359854a447df.webp?1783918051"
+  },
+  "mana_cost": "{B}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Phyrexian Insect",
+  "oracle_text": "Deathtouch\nToxic 1 (Players dealt combat damage by this creature also get a poison counter.)",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Toxic",
+    "Deathtouch"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "40255bfa-0004-45f1-a31b-17d385f09a95",
+      "component": "combo_piece",
+      "name": "Poison Counter",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/40255bfa-0004-45f1-a31b-17d385f09a95"
+    },
+    {
+      "object": "related_card",
+      "id": "dfb81cb1-ac56-4803-a962-359854a447df",
+      "component": "combo_piece",
+      "name": "Bilious Skulldweller",
+      "type_line": "Creature \u2014 Phyrexian Insect",
+      "uri": "https://api.scryfall.com/cards/dfb81cb1-ac56-4803-a962-359854a447df"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "04bef644-343f-4230-95ee-255f29aa67a2",
+  "set": "one",
+  "set_name": "Phyrexia: All Will Be One",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/04bef644-343f-4230-95ee-255f29aa67a2",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aone&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/one?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/dfb81cb1-ac56-4803-a962-359854a447df/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A83bf5610-a798-4508-88d2-c60d96f60d23&unique=prints",
+  "collector_number": "83",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Watch your footing around here. Anything you might step on probably has teeth.\"\n\u2014Kara Vrist, resistance spymaster",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Svetlin Velinov",
+  "artist_ids": [
+    "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
+  ],
+  "illustration_id": "f080b738-e670-48c5-96c2-0fb960f9cfc8",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4538,
+  "penny_rank": 4364,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://mobile.twitter.com/mtgjp/status/1615907030551924736",
+    "previewed_at": "2023-01-18"
+  },
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.46",
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": "0.30",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=602613&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBilious%2BSkulldweller",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBilious%2BSkulldweller",
+    "edhrec": "https://edhrec.com/route/?cc=Bilious+Skulldweller"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F478809%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=693404&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/106381?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
