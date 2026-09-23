@@ -8,14 +8,16 @@ an `UnmodeledTriggerEffectNotice`; a spell now records the same notice, on the
 same `Game.unmodeled_trigger_effect_notices` list, with the spell's own id,
 name and whole printed text (none of it ran).
 
-Flame Sweep ("Flame Sweep deals 2 damage to each creature except for
-creatures you control with flying.") is the vehicle. Ponder was the first, until
-the look-top-and-put-back wave (`tests/scenarios/test_look_at_top_and_put_back.py`)
-gave it a reader; Strix Serenade was the second, until S14's counterspell riders
-(`tests/scenarios/test_counter_controller_creates.py`) read its "Its controller
-creates" rider. Flame Sweep's "except for creatures you control with flying"
-exclusion is outside the one exclusion the mass-damage reader knows ("except
-for tokens you control"), so it still has no reader.
+The vehicle is chosen, not named. Ponder was the first, until the
+look-top-and-put-back wave gave it a reader; Strix Serenade the second, until
+S14's counterspell riders read it; Flame Sweep would have been the third, and
+the owner rule (every Modern, Pioneer and Standard card fully supported) means
+any in-format card is only waiting its turn. So `_unread_spell` picks, from
+the real printings in the pool, an instant or sorcery that exists in none of
+those three formats (`support.in_target_formats`) and that `card_support`
+reports silent with `effect_for` reading nothing - an ante card or
+Shahrazad's subgame, rules this engine is not asked to play. It fails with a
+clear message only if the pool has no such card left.
 
 Not every `None` is a gap, and the notice must not fire for these:
 
@@ -28,34 +30,84 @@ Every CR number above was read in full with `mise run rules:find` in the
 session that wrote this file.
 """
 
+import re
+
+import pytest
+
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.effects import UnmodeledTriggerEffectNotice
-from magic_cards_model.models import Zone
+from magic_cards_model.machines.effects import UnmodeledTriggerEffectNotice, effect_for
+from magic_cards_model.models import Card, Zone
+from magic_cards_model.support import card_support, in_target_formats
+from tests.cards import pool
 from tests.scenarios.harness import Scenario
 
+_BASIC_FOR = {"W": "Plains", "U": "Island", "B": "Swamp", "R": "Mountain", "G": "Forest"}
 
-def test_an_unread_sorcery_records_a_notice_naming_its_whole_text():
+
+def _lands_paying(mana_cost: str) -> list[str] | None:
+    """Basic lands that pay `mana_cost` exactly - generic mana out of the
+    first coloured symbol's basic - or `None` for any symbol a basic can't
+    simply pay (X, hybrid, Phyrexian, colourless, snow)."""
+    symbols = re.findall(r"\{([^}]+)\}", mana_cost)
+    coloured = [symbol for symbol in symbols if symbol in _BASIC_FOR]
+    if not coloured:
+        return None
+    lands: list[str] = []
+    for symbol in symbols:
+        if symbol in _BASIC_FOR:
+            lands.append(_BASIC_FOR[symbol])
+        elif symbol.isdigit():
+            lands.extend([_BASIC_FOR[coloured[0]]] * int(symbol))
+        else:
+            return None
+    return lands
+
+
+def _unread_spell() -> tuple[Card, list[str]]:
+    """The first (by name) out-of-format, untargeted, single-faced instant or
+    sorcery in the pool that no parser reads, with the lands that pay for it."""
+    seen: set[str] = set()
+    for _, printing in sorted(pool().items()):
+        if printing.name in seen:
+            continue
+        seen.add(printing.name)
+        if in_target_formats(printing) or printing.card_faces or printing.keywords:
+            continue
+        if not {"Instant", "Sorcery"} & set(printing.type_line.split()):
+            continue
+        text = printing.oracle_text or ""
+        if not text.strip() or "target" in text.lower():
+            continue
+        lands = _lands_paying(printing.mana_cost or "")
+        if lands is None:
+            continue
+        if effect_for(printing.name, text) is not None:
+            continue
+        if card_support(printing).status != "silent":
+            continue
+        return printing, lands
+    pytest.fail(
+        "no out-of-format, untargeted instant or sorcery in the pool is still unread: "
+        "add a real printing of one (an ante card, a subgame) with scripts/add_card.py"
+    )
+
+
+def test_an_unread_spell_records_a_notice_naming_its_whole_text():
+    printing, lands = _unread_spell()
     scenario = (
-        Scenario()
-        .player("alice", hand=["Flame Sweep"], battlefield=["Mountain"] * 3)
-        .player("bob", battlefield=["Grizzly Bears"])
-        .build()
+        Scenario().player("alice", hand=[printing.name], battlefield=lands).player("bob").build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    bears = scenario.creature("Grizzly Bears", username="bob")
 
-    sweep = scenario.cast_and_resolve(
-        "Flame Sweep", *scenario.untapped_sources(*["Mountain"] * 3), username="alice"
-    )
+    spell = scenario.cast_and_resolve(printing.name, *scenario.untapped_sources(*lands))
 
-    assert sweep.zone is Zone.GRAVEYARD
-    assert bears.zone is Zone.BATTLEFIELD
-    assert bears.damage == 0, "an unread damage clause deals nothing"
+    assert spell.zone is Zone.GRAVEYARD
+    assert [player.life for player in scenario.game.players] == [20, 20]
     assert scenario.game.unmodeled_trigger_effect_notices == [
         UnmodeledTriggerEffectNotice(
-            source_id=sweep.id,
-            source_name="Flame Sweep",
-            text=sweep.oracle_text,
+            source_id=spell.id,
+            source_name=printing.name,
+            text=spell.oracle_text,
         )
     ]
 
