@@ -7380,6 +7380,20 @@ class Game(EngineModel):
             )
             return None if profile.min_targets > 0 else []
 
+        minimum = min(profile.min_targets, len(candidates))
+        across = any(r.distinct_controllers for r in profile.requirements)
+        if any(r.one_per_opponent for r in profile.requirements):
+            # CR 601.2c: one target per opponent with a legal choice. Each
+            # controller's first candidate leads, so the default answer (the
+            # first `target_minimum` offered) is already one per opponent.
+            firsts: dict[str, Targetable | AbilityOnStack] = {}
+            for candidate in candidates:
+                owner = getattr(candidate, "controller_or_owner", None)
+                if isinstance(owner, str):
+                    firsts.setdefault(owner, candidate)
+            leading = list(firsts.values())
+            candidates = leading + [c for c in candidates if c not in leading]
+            minimum = len(leading)
         decision = Decision(
             kind=DecisionKind.CHOOSE_TARGETS,
             player=controller,
@@ -7388,10 +7402,16 @@ class Game(EngineModel):
             source_id=source_id_of(source_id),
             targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
             target_maximum=profile.max_targets,
-            target_minimum=min(profile.min_targets, len(candidates)),
+            target_minimum=minimum,
         )
         chosen = self.ask(decision)
         assert isinstance(chosen, (list, tuple))
+        if across:
+            # `ask` checks each target and the count; a rule across targets
+            # ("controlled by different players", one per opponent) is
+            # `TargetingProfile.check`'s, judged on the objects themselves.
+            by_id = {TargetRef.coerce(c): c for c in candidates}
+            profile.check([by_id.get(ref, ref) for ref in chosen], controller, self, source_id)
         return list(chosen)
 
     def _legal_target_candidates(

@@ -17814,6 +17814,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     for_each_opponent_tap = _parse_for_each_opponent_tap_clause(effect_text, for_spell=False)
     if for_each_opponent_tap is not None:
         return for_each_opponent_tap
+    goad_then_counters = _parse_goad_for_each_opponent_then_counters_clause(
+        effect_text, for_spell=False
+    )
+    if goad_then_counters is not None:
+        return goad_then_counters
     for_each_opponent_counters = _parse_for_each_opponent_counters_clause(
         effect_text, for_spell=False
     )
@@ -24337,14 +24342,26 @@ def _parse_counter_each_creature_target_player_clause(
 #   "goad each creature target player controls." (Geode Rager), "Goad all
 #   creatures your opponents control." - `_GOAD_GROUP_RE`;
 # - an anaphor for an earlier sentence's object: "Tap target creature an
-#   opponent controls. Goad it." (Oceanus Dragon) - `_RIDER_GOAD_RE`.
+#   opponent controls. Goad it." (Oceanus Dragon) - `_RIDER_GOAD_RE`;
+# - a trigger's player anaphor: "goad each creature that player controls."
+#   (Marisi, Breaker of the Coil) - the player the trigger's event names
+#   (CR 400.7), read off `ability.event` the way `_DAMAGE_THAT_PLAYER_RE` is;
+# - one target per opponent: "for each opponent, goad [up to one] target
+#   creature that player/opponent controls." (Frenzied Gorespawn, Havoc
+#   Eater) - `_GOAD_FOR_EACH_OPPONENT_RE`, targeted through
+#   `targeting._for_each_opponent_profile` (CR 601.2c).
+_GOAD_FOR_EACH_OPPONENT_RE = re.compile(
+    r"^for each opponent, goad (?P<up_to>up to one )?target (?P<desc>.+?) "
+    r"that (?:player|opponent) controls\.?$",
+    re.IGNORECASE,
+)
 _GOAD_TARGET_RE = re.compile(
     r"^goad (?P<phrase>(?:up to \S+ |another )?target .+?)\.?$", re.IGNORECASE
 )
 _GOAD_GROUP_RE = re.compile(
     r"^goad (?:each creature|all creatures)"
     r"(?: (?P<whose>you control|you don'?t control|your opponents control|an opponent controls"
-    r"|target (?:player|opponent) controls))?\.?$",
+    r"|target (?:player|opponent) controls|that player controls))?\.?$",
     re.IGNORECASE,
 )
 
@@ -24358,7 +24375,7 @@ def _goad_group_member(
         return True
     if whose == "you control":
         return controller == goader
-    if whose.startswith("target"):
+    if whose.startswith("target") or whose == "that player controls":
         return controller == targeted
     # "you don't control" / "your opponents control" / "an opponent
     # controls": in a game without teams every other player is an opponent
@@ -24377,10 +24394,18 @@ def _parse_goad_clause(clause: str, *, for_spell: bool) -> TargetedClause | None
         ):
             return None
 
+        if whose == "that player controls" and for_spell:
+            return None
+
         def goad_group(game: "Game", stack_object: "StackObject") -> None:
             goader = game.controller_of(stack_object).username
             targeted: str | None = None
-            if whose.startswith("target"):
+            if whose == "that player controls":
+                event = getattr(stack_object, "event", None)
+                targeted = None if event is None else event.player or event.subject_controller
+                if targeted is None:
+                    return
+            elif whose.startswith("target"):
                 players = [
                     target
                     for target in game.resolve_targets(stack_object)
@@ -24397,18 +24422,67 @@ def _parse_goad_clause(clause: str, *, for_spell: bool) -> TargetedClause | None
                     game.goad(permanent, goader)
 
         return goad_group
+    if match := _GOAD_FOR_EACH_OPPONENT_RE.fullmatch(text):
+        if not _targets_understood(
+            _for_each_opponent_target_phrase(match.group("desc")), count_agnostic=True
+        ):
+            return None
+        return _goad_resolved_targets
     if match := _GOAD_TARGET_RE.fullmatch(text):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
 
-        def goad_targets(game: "Game", stack_object: "StackObject") -> None:
-            goader = game.controller_of(stack_object).username
-            for target in game.resolve_targets(stack_object):
-                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                    game.goad(target, goader)
-
-        return goad_targets
+        return _goad_resolved_targets
     return None
+
+
+def _goad_resolved_targets(game: "Game", stack_object: "StackObject") -> list[CardState]:
+    """Goad each of the resolving object's still-legal targets (CR 608.2b),
+    returning the creatures goaded."""
+    goader = game.controller_of(stack_object).username
+    goaded: list[CardState] = []
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+            game.goad(target, goader)
+            goaded.append(target)
+    return goaded
+
+
+#: `_GOAD_FOR_EACH_OPPONENT_RE`'s sentence and a rider counting what it
+#: goaded: "Put X +1/+1 counters on this creature, where X is the total power
+#: of creatures goaded this way." (Havoc Eater). "Goaded this way" is CR
+#: 400.7 anaphora for the first sentence's own targets, so it is read whole.
+_GOAD_FOR_EACH_OPPONENT_THEN_COUNTERS_RE = re.compile(
+    r"^for each opponent, goad (?:up to one )?target (?P<desc>.+?) "
+    r"that (?:player|opponent) controls\.\s*"
+    r"put x (?P<kind>\+1/\+1|[a-z]+) counters? on this \w+, "
+    r"where x is the total power of creatures goaded this way\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_goad_for_each_opponent_then_counters_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_GOAD_FOR_EACH_OPPONENT_THEN_COUNTERS_RE`'s shape - see the banner."""
+    match = _GOAD_FOR_EACH_OPPONENT_THEN_COUNTERS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(
+        _for_each_opponent_target_phrase(match.group("desc")), count_agnostic=True
+    ):
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        goaded = _goad_resolved_targets(game, stack_object)
+        board = game.computed_board()
+        amount = sum(max(board.of(creature).power or 0, 0) for creature in goaded)
+        source = stack_object.source(game) if isinstance(stack_object, AbilityOnStack) else None
+        if amount > 0 and source is not None and source.zone is Zone.BATTLEFIELD:
+            game.add_counters(source, kind, amount)
+
+    return effect
 
 
 #: "Create `<n>` `<token description>` token[s]." with no "you may" at all -

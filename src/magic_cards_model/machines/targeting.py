@@ -457,6 +457,16 @@ class TargetRequirement(EngineModel):
     a `TargetRef`), like every other restriction here that needs more than the
     caller supplied."""
 
+    one_per_opponent: bool = False
+    """"For each opponent, goad target creature that player controls."
+    (Frenzied Gorespawn) - the mandatory twin of `_for_each_opponent_profile`'s
+    "up to one". The text prints one "target" per opponent (CR 601.2c: "In
+    some cases, the number of targets will be defined by the spell's text"),
+    so each opponent who controls a legal choice must have one chosen; an
+    opponent with none gets none, and CR 603.3d removes the ability only when
+    no opponent has one. Enforced in `TargetingProfile.check` when a `game`
+    is given, since which opponents have a legal choice is game state."""
+
     required_keyword: str | None = None
     """"with flying" in "target creature you don't control with flying"
     (Kraul Harpooner) - a trailing keyword-ability clause, read off the same
@@ -1367,6 +1377,38 @@ class TargetingProfile(EngineModel):
         # `check_division`'s own resolved-amount call once X is known.
 
         self._fill_slots(targets, caster, game, source_id)
+        self._check_one_per_opponent(targets, caster, game, source_id)
+
+    def _check_one_per_opponent(
+        self, targets: list[Any], caster: str, game: Any, source_id: UUID | None
+    ) -> None:
+        """`TargetRequirement.one_per_opponent`: every opponent who controls
+        a legal choice has one of the announced targets (CR 601.2c)."""
+        battlefield = getattr(game, "battlefield", None)
+        if battlefield is None:
+            return
+        chosen: set[str] = set()
+        for target in targets:
+            found = getattr(target, "controller_or_owner", None) or getattr(
+                target, "controller", None
+            )
+            if found is not None:
+                chosen.add(str(found))
+        for requirement in self.requirements:
+            if not requirement.one_per_opponent:
+                continue
+            owed = {
+                str(permanent.controller_or_owner)
+                for permanent in battlefield
+                if requirement.rejects(permanent, caster, game, source_id) is None
+            }
+            missing = sorted(owed - chosen)
+            if missing:
+                raise ValueError(
+                    f"{requirement.phrase} needs one target for each opponent, and "
+                    f"{', '.join(missing)} controls a legal one no target was chosen "
+                    f"from (CR 601.2c)"
+                )
 
     def _check_protection(self, targets: list[Any], game: Any) -> None:
         """CR 702.16b, at announcement (CR 601.2c) rather than only at the
@@ -2191,21 +2233,23 @@ _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
-#: "For each opponent, `<verb phrase>` up to one target `<description>` that
-#: player controls[, ...]." - Hapatra, the Desert Frost's, Hapatra, the
-#: Desert Fang's, and Lich's Relic's own reflexive consequence, all sharing
-#: this one grammar. CR 601.2c/603.3d target *every* instance of the word
-#: "target" a spell or ability's text prints, and "for each opponent" prints
-#: one such instance per opponent (CR 102.3's "opponents are all players not
-#: on their team" - not fixed at two), which the ordinary word-scan below cannot
-#: express: it reads one `TargetRequirement` per literal "target" word in
-#: the text, and this sentence prints only one such word regardless of how
-#: many opponents there are. Special-cased ahead of that scan the same way
+#: "For each opponent, `<verb phrase>` [up to one] target `<description>`
+#: that player/opponent controls[, ...]." - Hapatra, the Desert Frost's,
+#: Hapatra, the Desert Fang's, Lich's Relic's own reflexive consequence and
+#: Frenzied Gorespawn's goad, all sharing this one grammar. CR 601.2c/603.3d
+#: target *every* instance of the word "target" a spell or ability's text
+#: prints, and "for each opponent" prints one such instance per opponent (CR
+#: 102.3's "opponents are all players not on their team" - not fixed at two),
+#: which the ordinary word-scan below cannot express: it reads one
+#: `TargetRequirement` per literal "target" word in the text, and this
+#: sentence prints only one such word regardless of how many opponents there
+#: are. Special-cased ahead of that scan the same way
 #: `_EARTHBEND` already is, for the identical reason - the rule itself,
 #: not the sentence's own count words, is what says how many targets this
 #: asks for.
 _FOR_EACH_OPPONENT_TARGET_RE = re.compile(
-    r"for each opponent,.*?\bup to one target (?P<desc>.+?) that player controls\b",
+    r"for each opponent,[^.]*?\b(?P<up_to>up to one )?target (?P<desc>[^.]+?) "
+    r"that (?:player|opponent) controls\b",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -2259,13 +2303,15 @@ def _for_each_opponent_profile(text: str) -> TargetingProfile | None:
     base = permanent_description(description)
     if base is None:
         return None
+    mandatory = match.group("up_to") is None
     requirement = base.model_copy(
         update={
             "phrase": f"target {description} an opponent controls",
             "count": 0,
-            "minimum": 0,
+            "minimum": 1 if mandatory else 0,
             "unbounded": True,
             "distinct_controllers": True,
+            "one_per_opponent": mandatory,
             "controller": ControllerRestriction.OPPONENT,
         }
     )

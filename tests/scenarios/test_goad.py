@@ -37,7 +37,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines import combat as combat_rules
 from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
-from magic_cards_model.models.card_state import TargetRef
+from magic_cards_model.models.card_state import Counter, TargetRef
 from tests.scenarios.harness import Scenario
 
 GLOIN = "Glóin, Dwarf Emissary"
@@ -428,3 +428,154 @@ def test_oceanus_dragon_taps_its_target_and_goads_it():
     assert bears.tapped
     assert bears.goaded_by == ["alice"]
     assert scenario.creature("Hill Giant", "bob").goaded_by == []
+
+
+def test_marisi_goads_each_creature_the_damaged_player_controls():
+    """ "goad each creature that player controls" - "that player" is the
+    player the trigger's combat damage was dealt to, not every opponent."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Marisi, Breaker of the Coil", "Serra Angel"],
+            library=list(LIBRARY),
+        )
+        .player("bob", battlefield=["Grizzly Bears", "Hill Giant"], library=list(LIBRARY))
+        .player("carol", battlefield=["Hill Giant"], library=list(LIBRARY))
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    marisi = scenario.creature("Marisi, Breaker of the Coil", "alice")
+    scenario.attack_with(marisi, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _resolve_everything(scenario)
+
+    assert scenario.creature("Grizzly Bears", "bob").goaded_by == ["alice"]
+    assert scenario.creature("Hill Giant", "bob").goaded_by == ["alice"]
+    assert scenario.creature("Hill Giant", "carol").goaded_by == []
+    assert scenario.creature("Serra Angel", "alice").goaded_by == []
+
+
+def _gorespawn_board(*, carol: bool = False):
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Frenzied Gorespawn"], library=list(LIBRARY))
+        .player("bob", battlefield=["Grizzly Bears", "Hill Giant"], library=list(LIBRARY))
+    )
+    if carol:
+        scenario = scenario.player("carol", battlefield=["Hill Giant"], library=list(LIBRARY))
+    scenario = scenario.build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_frenzied_gorespawn_goads_its_one_target_in_two_player():
+    scenario = _gorespawn_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_targets(bears, source="Frenzied Gorespawn")
+
+    scenario.put_onto_battlefield("Frenzied Gorespawn", "alice")
+    _resolve_everything(scenario)
+
+    assert bears.goaded_by == ["alice"]
+    assert scenario.creature("Hill Giant", "bob").goaded_by == []
+
+
+def test_frenzied_gorespawns_target_is_mandatory():
+    scenario = _gorespawn_board()
+    scenario.will_choose_targets(source="Frenzied Gorespawn")
+
+    with pytest.raises(ValueError, match=r"CR 601\.2c"):
+        scenario.put_onto_battlefield("Frenzied Gorespawn", "alice")
+        _resolve_everything(scenario)
+
+
+def test_frenzied_gorespawn_targets_one_creature_of_each_opponent():
+    scenario = _gorespawn_board(carol=True)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    giant = scenario.creature("Hill Giant", "carol")
+    scenario.will_choose_targets(bears, giant, source="Frenzied Gorespawn")
+
+    scenario.put_onto_battlefield("Frenzied Gorespawn", "alice")
+    _resolve_everything(scenario)
+
+    assert bears.goaded_by == ["alice"]
+    assert giant.goaded_by == ["alice"]
+    assert scenario.creature("Hill Giant", "bob").goaded_by == []
+
+
+def test_frenzied_gorespawn_refuses_two_targets_of_one_opponent():
+    scenario = _gorespawn_board(carol=True)
+    scenario.will_choose_targets(
+        scenario.creature("Grizzly Bears", "bob"),
+        scenario.creature("Hill Giant", "bob"),
+        source="Frenzied Gorespawn",
+    )
+
+    with pytest.raises(ValueError, match=r"CR 601\.2c"):
+        scenario.put_onto_battlefield("Frenzied Gorespawn", "alice")
+        _resolve_everything(scenario)
+
+
+def test_frenzied_gorespawn_refuses_skipping_an_opponent_with_a_creature():
+    scenario = _gorespawn_board(carol=True)
+    scenario.will_choose_targets(
+        scenario.creature("Grizzly Bears", "bob"), source="Frenzied Gorespawn"
+    )
+
+    with pytest.raises(ValueError, match=r"CR 601\.2c"):
+        scenario.put_onto_battlefield("Frenzied Gorespawn", "alice")
+        _resolve_everything(scenario)
+
+
+def test_the_unscripted_seat_goads_one_creature_of_each_opponent():
+    scenario = _gorespawn_board(carol=True)
+
+    scenario.put_onto_battlefield("Frenzied Gorespawn", "alice")
+    _resolve_everything(scenario)
+
+    goaded = [
+        permanent.controller
+        for permanent in scenario.game.battlefield
+        if permanent.goaded_by == ["alice"]
+    ]
+    assert sorted(goaded) == ["bob", "carol"]
+
+
+def test_havoc_eater_goads_up_to_one_creature_that_opponent_controls():
+    """ "goad up to one target creature that opponent controls", then X
+    +1/+1 counters where X is the total power of creatures goaded this way."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Havoc Eater"], library=list(LIBRARY))
+        .player("bob", battlefield=["Grizzly Bears", "Hill Giant"], library=list(LIBRARY))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_choose_targets(giant, source="Havoc Eater")
+
+    scenario.put_onto_battlefield("Havoc Eater", "alice")
+    _resolve_everything(scenario)
+
+    assert giant.goaded_by == ["alice"]
+    assert scenario.creature("Grizzly Bears", "bob").goaded_by == []
+    assert scenario.creature("Havoc Eater", "alice").counter_count(Counter.PLUS_ONE) == 3
+
+
+def test_havoc_eater_may_goad_nothing():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Havoc Eater"], library=list(LIBRARY))
+        .player("bob", battlefield=["Grizzly Bears"], library=list(LIBRARY))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_targets(source="Havoc Eater")
+
+    scenario.put_onto_battlefield("Havoc Eater", "alice")
+    _resolve_everything(scenario)
+
+    assert scenario.creature("Grizzly Bears", "bob").goaded_by == []
+    assert scenario.creature("Havoc Eater", "alice").counter_count(Counter.PLUS_ONE) == 0
