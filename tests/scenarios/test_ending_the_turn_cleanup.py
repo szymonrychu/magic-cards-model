@@ -275,15 +275,30 @@ def test_724_1f_then_724_1d_another_cleanup_step_runs_before_the_turn_ends():
     own recursion pays off "another cleanup step" (CR 514.3a's exact words)
     by running `cleanup_step` a second time, rather than the game silently
     rolling into the next turn with a second, never-run cleanup owed.
+
+    The proof that a *second* `cleanup_step` genuinely ran, not merely that
+    the flags it leaves behind look tidy: damage marked on Grizzly Bears
+    inside the reopened window (CR 514.3a's own "players may cast spells and
+    activate abilities", staged here directly the same way the helper above
+    stages Finks's lethal damage) sits on a creature CR 514.2's *first* wipe
+    never touched, since it is marked only after that first cleanup already
+    ran. Only a real second `cleanup_step` removes it; a build that merely
+    resets `cleanup_owed`/priority without re-running CR 514.1/514.2 - which
+    passes every other assertion below - would leave it marked.
     """
     scenario = (
         Scenario()
-        .player("alice", hand=["Time Stop"], battlefield=["Kitchen Finks"] + ["Island"] * 6)
+        .player(
+            "alice",
+            hand=["Time Stop"],
+            battlefield=["Kitchen Finks", "Grizzly Bears"] + ["Island"] * 6,
+        )
         .player("bob")
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     alice_life_before = scenario.player("alice").life
+    bears = scenario.creature("Grizzly Bears", "alice")
     _time_stop_catching_a_lethal_kitchen_finks(scenario)
 
     scenario.pass_until_resolved()  # Persist resolves: Finks returns with a -1/-1 counter
@@ -292,6 +307,11 @@ def test_724_1f_then_724_1d_another_cleanup_step_runs_before_the_turn_ends():
     )
     new_finks = scenario.find("Kitchen Finks", Zone.BATTLEFIELD, "alice")
     assert new_finks.counters["-1/-1"] == 1
+
+    # Staged in the reopened window, after the first cleanup's own CR 514.2
+    # wipe already ran - nonlethal on a 2/2, so no state-based death hides
+    # whether the second cleanup ever gets to it.
+    bears.mark_damage(1)
 
     scenario.pass_until_resolved()  # the gain-life trigger resolves
 
@@ -303,6 +323,10 @@ def test_724_1f_then_724_1d_another_cleanup_step_runs_before_the_turn_ends():
         "CR 514.3a: nothing left pending, so this cleanup step grants no more priority"
     )
     assert scenario.game.cleanup_owed is False
+    assert bears.damage == 0, (
+        "CR 514.2's wipe ran a second time - proof cleanup_step actually ran again, "
+        "not merely that the owed/priority bookkeeping looks settled"
+    )
 
 
 def test_724_1d_ending_the_turn_again_during_a_reopened_cleanup_begins_a_new_one():
