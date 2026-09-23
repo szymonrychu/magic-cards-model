@@ -34,12 +34,17 @@ Every rule cited here was read whole this session with `mise run rules:find`:
   remove a stun counter from it.'"
 
 Every printing here is a real Scryfall printing from `tests/fixtures/cards`
-(`src/magic_cards_model/data/printings`). Gigadrowse, Hammers of Moradin and
-Vizier of Tumbling Sands are legal in Modern (Hammers and Vizier in Pioneer
-too); Hapatra, the Desert Frost and Infinite Coursework are off the deck pool
-and off every one of Modern/Pioneer/Standard, kept only because each is
-already this codebase's own canonical example for the template its parser
-reads (`_parse_for_each_opponent_tap_then_stun_clause`'s and
+(`src/magic_cards_model/data/printings`). Gigadrowse and Vizier of Tumbling
+Sands are legal in Modern (Vizier in Pioneer too). Hammers of Moradin,
+Hapatra, the Desert Frost and Infinite Coursework are off the deck pool and
+off every one of Modern/Pioneer/Standard - Hammers is a Commander Legends:
+Battle for Baldur's Gate exclusive, legal only in legacy, vintage, commander,
+oathbreaker, duel and tlr (Scryfall legalities checked this session; it is
+*not* Modern- or Pioneer-legal despite carrying the plain "for each opponent,
+tap" template `_parse_for_each_opponent_tap_clause` reads). Hapatra and
+Infinite Coursework are kept off-format only because each is already this
+codebase's own canonical example for the template its parser reads
+(`_parse_for_each_opponent_tap_then_stun_clause`'s and
 `_parse_tap_enchanted_then_unprepared_clause`'s own docstrings), so no
 in-format printing carries either shape.
 """
@@ -47,8 +52,30 @@ in-format printing carries either shape.
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.delayed import anaphoric_delayed_trigger
 from magic_cards_model.models.card_state import Counter
+from tests.cards import card
 
 from .harness import Scenario
+
+# -- guard: the legality claims this file's docstring makes must be true ---
+# A prior version of this file claimed Hammers of Moradin was Modern- and
+# Pioneer-legal; it is a Commander Legends: Battle for Baldur's Gate
+# exclusive (legal only in legacy/vintage/commander/oathbreaker/duel/tlr, per
+# Scryfall, checked this session). This pins the corrected claim to the
+# fixture data itself so it cannot drift back to being wrong unnoticed.
+
+
+def test_legality_claims_in_this_files_docstring_are_accurate():
+    gigadrowse = card("Gigadrowse").legalities
+    vizier = card("Vizier of Tumbling Sands").legalities
+    hammers = card("Hammers of Moradin").legalities
+
+    assert gigadrowse.modern == "legal"
+    assert vizier.modern == "legal"
+    assert vizier.pioneer == "legal"
+    assert hammers.modern != "legal", "Hammers of Moradin is not Modern-legal"
+    assert hammers.pioneer != "legal", "Hammers of Moradin is not Pioneer-legal"
+    assert hammers.standard != "legal", "Hammers of Moradin is not Standard-legal"
+
 
 # -- (h) CardState.tap_if_untapped itself, on a real board -----------------
 
