@@ -8759,7 +8759,9 @@ class Game(EngineModel):
             self.continuous_effects.note(self.battlefield)
 
             for kind, amount in event.counters.items():
-                self.add_counters(card_state, kind, amount)
+                # CR 122.6a: no effect here names a putter, so it is the
+                # entering object's controller.
+                self.add_counters(card_state, kind, amount, putter=card_state.controller)
 
             if event.loyalty_reduction:
                 # CR 702.150a (compleated): "minus two for each" of the
@@ -11597,7 +11599,9 @@ class Game(EngineModel):
                 return f"{username} can't gain life: {source.name} says so (CR 119.7, CR 611.1)"
         return None
 
-    def add_counters(self, permanent: CardState, kind: str, amount: int = 1) -> int:
+    def add_counters(
+        self, permanent: CardState, kind: str, amount: int = 1, *, putter: str | None = None
+    ) -> int:
         """Put counters on a permanent, replacement effects included (CR 122.1).
 
         CR 122.6: "Some spells and abilities refer to counters being put on an
@@ -11606,13 +11610,19 @@ class Game(EngineModel):
         battlefield" - so both routes reach the same replaceable event, which is
         what lets Doubling Season double a Kalonian Hydra's four printed counters
         as it arrives.
+
+        `putter` is who puts them; unnamed, `_counter_putter` answers it.
         """
         with self._id_allocator_scope():
             if amount <= 0:
                 return permanent.counter_count(kind)
 
             event = ReplaceableEvent(
-                kind=EventKind.ADD_COUNTERS, card=permanent, counter_kind=kind, amount=amount
+                kind=EventKind.ADD_COUNTERS,
+                card=permanent,
+                counter_kind=kind,
+                amount=amount,
+                putter=putter or self._counter_putter(permanent.controller),
             )
             apply_replacements(self, event)
             if event.amount <= 0:
@@ -11682,7 +11692,11 @@ class Game(EngineModel):
                 return player.counter_count(kind)
 
             event = ReplaceableEvent(
-                kind=EventKind.ADD_COUNTERS, player=player, counter_kind=kind, amount=amount
+                kind=EventKind.ADD_COUNTERS,
+                player=player,
+                counter_kind=kind,
+                amount=amount,
+                putter=self._counter_putter(player.username),
             )
             apply_replacements(self, event)
             if event.amount <= 0:
@@ -11690,6 +11704,15 @@ class Game(EngineModel):
             new_total = player.add_counters(kind, event.amount)
             self._emit_player_counters_put(player, str(kind), event.amount)
             return new_total
+
+    def _counter_putter(self, fallback: str | None) -> str | None:
+        """Who is putting counters right now: the controller of the resolving
+        spell or ability, which follows its instructions (CR 608.2c). Outside
+        a resolution (a cost, a turn-based action) `fallback` - the recipient's
+        controller, CR 122.6a's default."""
+        if self.resolving is not None and self.resolving.controller:
+            return self.resolving.controller
+        return fallback
 
     def _emit_player_counters_put(self, player: Player, kind: str, amount: int) -> None:
         """CR 122.6's "counters being put on ... an object that's given

@@ -1536,6 +1536,11 @@ class ReplaceableEvent:
     amount: int = 0
     #: The counter kind being placed, for `ADD_COUNTERS`.
     counter_kind: str | None = None
+    #: The player putting the counters, for `ADD_COUNTERS` - the controller
+    #: of the resolving spell or ability (CR 608.2c), or the entering
+    #: object's controller when nothing specifies one (CR 122.6a). What an
+    #: active-voice "If you would put ... counters" reads.
+    putter: str | None = None
     #: Counters the entering permanent will arrive with (CR 614.1c), summed by
     #: kind. `Game` places them after the permanent is on the battlefield, which
     #: raises its own `ADD_COUNTERS` event - CR 616.1g's "event contained within
@@ -3113,6 +3118,7 @@ def read_counter_amount(effect: ReplacementEffect) -> "CounterAmountReplacement 
         counter_kind=event_kind,
         types=None if types is None else tuple(sorted(types)),
         you_control=subject_match.group("you_control") is not None,
+        you_put=active_voice,
         multiplier=multiplier,
         addend=addend,
     )
@@ -5802,11 +5808,11 @@ class CounterAmountReplacement(EngineModel):
     subject>` [you control], put that many plus N ... instead" (Prairie Dog).
 
     CR 122.6: counters an object is given as it enters count as counters put
-    on it, so both routes reach `EventKind.ADD_COUNTERS`. The event does not
-    record which player's effect is putting the counters, so the active voice
-    is read the way its "on a creature you control" already narrows it - see
-    `MEMORY.md`. `types` `None` is "a permanent"; `counter_kind` `None` is any
-    kind. CR 107.1b floors the result at zero.
+    on it, so both routes reach `EventKind.ADD_COUNTERS`. `you_put` is the
+    active voice's "you would put": the event's `putter` must be the
+    effect's controller, so an opponent's effect putting counters on your
+    creature is left alone. `types` `None` is "a permanent"; `counter_kind`
+    `None` is any kind. CR 107.1b floors the result at zero.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -5815,6 +5821,7 @@ class CounterAmountReplacement(EngineModel):
     counter_kind: str | None = None
     types: tuple[Type, ...] | None = None
     you_control: bool = False
+    you_put: bool = False
     multiplier: int = 1
     addend: int = 0
 
@@ -5825,6 +5832,8 @@ class CounterAmountReplacement(EngineModel):
         if card is None:
             return False
         if self.you_control and card.controller != controller:
+            return False
+        if self.you_put and event.putter != controller:
             return False
         if self.counter_kind is not None and (
             (event.counter_kind or "").strip().lower() != self.counter_kind

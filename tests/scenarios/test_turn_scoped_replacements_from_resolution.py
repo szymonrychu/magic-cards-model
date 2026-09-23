@@ -27,7 +27,7 @@ wrote this file.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card_state import Counter
+from magic_cards_model.models.card_state import CardState, Counter
 from magic_cards_model.models.game import Game
 from tests.scenarios.harness import Scenario
 
@@ -325,3 +325,60 @@ def test_prairie_dogs_effect_ends_with_the_turn():
     scenario.game.add_counters(bears, Counter.PLUS_ONE, 1)
 
     assert bears.counter_count(Counter.PLUS_ONE) == 1
+
+
+def _grim_affliction_board(caster: str) -> Scenario:
+    """Two alice Bears, one already carrying a +1/+1 counter, and Grim
+    Affliction ("Put a -1/-1 counter on target creature, then proliferate.")
+    in `caster`'s hand."""
+    alice_hand = ["Grim Affliction"] if caster == "alice" else []
+    bob_hand = ["Grim Affliction"] if caster == "bob" else []
+    return (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[
+                "Prairie Dog",
+                "Grizzly Bears",
+                "Grizzly Bears",
+                *(["Plains"] * 5),
+                *(["Swamp"] * 3),
+            ],
+            hand=alice_hand,
+        )
+        .player("bob", battlefield=["Swamp"] * 3, hand=bob_hand)
+    )
+
+
+def _proliferate_onto_second_bears(scenario, caster: str) -> CardState:
+    first, second = scenario.creatures("Grizzly Bears", "Grizzly Bears", username="alice")
+    second.add_counters(Counter.PLUS_ONE, 1)
+    _activate_prairie_dog(scenario)
+    if caster == "bob":
+        scenario.pass_priority("alice")
+    sources = scenario.untapped_sources("Swamp", "Swamp", "Swamp", username=caster)
+    scenario.will_choose_cards(second, source="Grim Affliction", username=caster)
+    scenario.cast_and_resolve("Grim Affliction", *sources, username=caster, targets=[first])
+    return second
+
+
+def test_prairie_dog_ignores_counters_an_opponent_puts_on_your_creature():
+    """ "If you would put": the +1 answers only counters alice herself puts.
+    Bob's Grim Affliction proliferating alice's Bears is bob putting the
+    counter (CR 701.34a), so it arrives as one, not two."""
+    scenario = _grim_affliction_board("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    second = _proliferate_onto_second_bears(scenario, "bob")
+
+    assert second.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_prairie_dog_adds_one_to_your_own_proliferate():
+    """The same proliferate cast by alice is alice putting the counter."""
+    scenario = _grim_affliction_board("alice").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    second = _proliferate_onto_second_bears(scenario, "alice")
+
+    assert second.counter_count(Counter.PLUS_ONE) == 3
