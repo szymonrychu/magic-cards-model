@@ -211,7 +211,8 @@ def test_exactly_the_life_total_can_be_paid():
 def test_the_cast_action_tells_the_seat_the_choice_exists():
     """CR 601.2b: the caster announces which half. `legal_actions` names it on
     the cast action, printed as the card prints it, so a seat can announce
-    it rather than only ever paying the default."""
+    it rather than only ever paying the default - under a keyword it can
+    name back, since a keyword-less option has nothing a seat can send."""
     scenario = redirect_board("Mountain", "Mountain", "Mountain")
     bob_bolts_alice(scenario)
 
@@ -221,6 +222,7 @@ def test_the_cast_action_tells_the_seat_the_choice_exists():
 
     (option,) = action.additional_cost_options
     assert option.cost == "pay 5 life or pay {2}"
+    assert option.keyword == "pay life"
     assert option.understood
     assert option.rule == "CR 601.2b"
 

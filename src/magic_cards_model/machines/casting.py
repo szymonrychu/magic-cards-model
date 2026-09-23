@@ -1839,6 +1839,13 @@ class OptionalAdditionalCost(EngineModel):
     `additional_cost_phrases` returns that `Casting` has no `pay_*` for."""
 
 
+#: The name a seat announces the life half of a "pay N life or pay {M}"
+#: additional cost by (CR 601.2b). Not a keyword ability - the sentence prints
+#: none - but the handle `OptionalAdditionalCost.keyword` carries, so the
+#: option is never a keyword-less entry a seat has no way to name back.
+PAY_LIFE_KEYWORD = "pay life"
+
+
 def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
     """Every optional additional cost `card` prints for CR 601.2b's
     announcement, keyword lines and "you may ..." sentences alike.
@@ -1880,9 +1887,12 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
     for index, _ in life_or_mana_additional_costs(card):
         # Not optional as a whole - one half or the other is paid - but which
         # half is CR 601.2b's announcement, and a life half has no object to
-        # nominate, so a seat is told the choice exists here and makes it with
+        # nominate, so a seat is told the choice exists here, under
+        # `PAY_LIFE_KEYWORD` so it has a name to send back, and makes it with
         # `Game.cast(pay_life_for_additional_cost=True)`.
-        found.append(OptionalAdditionalCost(keyword=None, cost=printed[index], rule="CR 601.2b"))
+        found.append(
+            OptionalAdditionalCost(keyword=PAY_LIFE_KEYWORD, cost=printed[index], rule="CR 601.2b")
+        )
     return found
 
 
