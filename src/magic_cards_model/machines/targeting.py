@@ -2516,7 +2516,11 @@ def _spell_text(oracle_text: str) -> str:
         # `_read_revolt_mana_value_override` matches on "Revolt — ..." and
         # would lose Fatal Push's wider number if the word were cut here.
         without_word = _ABILITY_WORD_PREFIX.sub("", stripped)
-        if not stripped or ":" in stripped or _TRIGGER.match(without_word):
+        # A colon inside a quoted grant is the *token's* activated ability
+        # (CR 111.3), not this line's own cost - Spawning Breath's "deals 1
+        # damage to any target. Create a 0/1 ... token. It has "Sacrifice
+        # this token: Add {C}."" is still the spell's own line.
+        if not stripped or ":" in _QUOTED_SPAN.sub("", stripped) or _TRIGGER.match(without_word):
             continue
         lines.append(stripped)
     return "\n".join(lines)

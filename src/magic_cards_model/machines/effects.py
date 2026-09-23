@@ -12053,7 +12053,7 @@ def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
     # docstring above) means doing the same trim here - `_TOKEN_CLAUSE_RE`'s
     # own trailing `\.?` never gets the chance to, since its greedy DOTALL
     # `tail` group is satisfied first and simply absorbs the period instead.
-    stripped = _strip_non_effect_preamble(text).strip().rstrip(".")
+    stripped = _fold_following_token_grant(_strip_non_effect_preamble(text).strip()).rstrip(".")
     if _has_period_outside_quotes(stripped):
         return None
     return _parse_token_clause(stripped, for_spell=False) or _parse_named_token_clause(
@@ -15453,6 +15453,116 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
 
 
 # --------------------------------------------------------------------------
+# Token creation (wave 4): lists of different tokens, and a following-sentence
+# grant
+# --------------------------------------------------------------------------
+#
+# Two templates every token parser above misses, both CR 111.3 ("The spell or
+# ability that creates a token may define the values of any number of
+# characteristics for the token"):
+#
+# - one "create" naming a *list* of different tokens - "Create a 2/1 white and
+#   black Inkling creature token with flying, a 3/2 red and white Spirit
+#   creature token, and a 4/4 blue and red Elemental creature token." (Mascot
+#   Exhibition, Bestial Menace, Trostani's Summoner). `_CLAUSE_SEPARATOR` only
+#   cuts on the final "and", so the first piece reaches `_parse_token_clause`
+#   with a second token glued onto the first one's "with" tail and nothing is
+#   created at all.
+# - a token's quoted ability printed as the *next* sentence - "Create a 1/1
+#   colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add
+#   {C}."" (Warping Wail, Blisterpod, Spawning Breath). CR 608.2c: "later text
+#   on the card may modify the meaning of earlier text" - the "It has" sentence
+#   is part of the token's definition, identical in meaning to the "token with
+#   "<ability>"" shape `_parse_token_tail` already reads, not an instruction of
+#   its own.
+
+#: The following-sentence grant: a token noun phrase ending its sentence, then
+#: "It has"/"They have"/"Those tokens have" and one quoted ability (straight or
+#: curly double quotes). `head` keeps the token noun and any "with <keywords>"
+#: tail already printed on it, so the quoted ability can be folded in beside
+#: them.
+_TOKEN_FOLLOWING_GRANT_RE = re.compile(
+    r"(?P<noun>\btokens?\b)(?:\s+with\s+(?P<tail>[^.\"“”]+?))?\.\s+"
+    r"(?:it has|they have|those tokens have|each of them has)\s+"
+    r"(?P<quoted>[\"“][^\"“”]+[\"”])\.?",
+    re.IGNORECASE,
+)
+
+
+def _fold_following_token_grant(text: str) -> str:
+    """`text` with every "... token. It has "<ability>"" rewritten to the
+    single-sentence "... token with "<ability>"" CR 608.2c says it means, so
+    every token reader (`_parse_token_clause`, `_parse_target_player_token_
+    mode`, the list reader below) sees the ability on the token it belongs to.
+
+    A token that already carries a "with <keywords>" tail keeps it, the quoted
+    ability joined after an "and" - the "reach and "<ability>"" shape
+    `_parse_token_tail` already reads (Wrenn and Seven). Text without the
+    shape comes back unchanged.
+    """
+
+    def fold(match: re.Match[str]) -> str:
+        tail = match.group("tail")
+        with_part = f"{tail.strip()} and " if tail else ""
+        return f"{match.group('noun')} with {with_part}{match.group('quoted')}"
+
+    return _TOKEN_FOLLOWING_GRANT_RE.sub(fold, text)
+
+
+#: Where one item of a token list ends and the next begins: a comma (the
+#: serial "and" optional) or a bare "and", followed by the next item's own
+#: count word (CR 701.7a's "the specified number of tokens"). A colour pair's
+#: "white and black" and a keyword list's "flying and vigilance" never have a
+#: count word after the "and", so neither is a boundary.
+_TOKEN_LIST_BOUNDARY_RE = re.compile(
+    rf",\s+(?:and\s+)?(?={COUNT}\s)|\s+and\s+(?={COUNT}\s)", re.IGNORECASE
+)
+#: A quoted span, masked while the list is split so a granted ability's own
+#: commas and "and"s are never mistaken for a list boundary.
+_QUOTED_SPAN_RE = re.compile(r"[\"“][^\"“”]*[\"”]")
+
+
+def _parse_token_list_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Create <item>, <item>, and <item>." - one CR 701.7a instruction naming
+    several different tokens, each item read by `_parse_token_clause` on its
+    own so its "with" tail (CR 111.3) stays on that item alone.
+
+    Read only when the whole text is that one sentence and every item is a
+    token `_parse_token_clause` reads; anything else returns `None` and falls
+    through to the ordinary per-clause path, so one unreadable item fails the
+    whole instruction closed rather than creating part of the list.
+    """
+    stripped = _fold_following_token_grant(_strip_non_effect_preamble(text).strip()).rstrip(".")
+    if not re.match(r"^(?:you )?create\s", stripped, re.IGNORECASE):
+        return None
+    if _has_period_outside_quotes(stripped):
+        return None
+    quoted: list[str] = []
+
+    def mask(match: re.Match[str]) -> str:
+        quoted.append(match.group(0))
+        return f"\x00{len(quoted) - 1}\x00"
+
+    masked = _QUOTED_SPAN_RE.sub(mask, stripped)
+    items = _TOKEN_LIST_BOUNDARY_RE.split(masked)
+    if len(items) < 2:
+        return None
+    clauses: list[TargetedClause] = []
+    for item in items:
+        restored = re.sub(r"\x00(\d+)\x00", lambda m: quoted[int(m.group(1))], item.strip())
+        clause = _parse_token_clause(restored, for_spell=for_spell)
+        if clause is None:
+            return None
+        clauses.append(clause)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for clause in clauses:
+            clause(game, stack_object)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
 # Modal spells (CR 700.2): one chosen mode's own effect
 # --------------------------------------------------------------------------
 #
@@ -15499,24 +15609,35 @@ def _parse_target_player_token_mode(text: str) -> Effect | None:
     every other token-creating card - CR 111.3's "This becomes the token's
     'text'" applies exactly the same to a token a target player creates as to
     one the caster creates.
+
+    The descriptor goes through `_token_definition_from_words`, so a
+    predefined token named by its bare name reads too - Prismari Command's
+    "Target player creates a Treasure token." (CR 111.10a), Ashling's
+    Command's "creates two Treasure tokens" - and a leading "tapped" is the
+    same rider `_parse_token_clause` reads (Verdant Command's "creates two
+    tapped 1/1 green Squirrel creature tokens"). CR 111.2 makes the targeted
+    player the owner and controller either way.
     """
-    match = _TARGET_PLAYER_TOKEN_RE.fullmatch(text.strip())
+    match = _TARGET_PLAYER_TOKEN_RE.fullmatch(_fold_following_token_grant(text.strip()))
     if match is None:
         return None
     if "copy of" in text.lower():
         return None  # CR 707.2 copying needs copiable values this wave does not read.
     count = parse_count(match.group("n"))
     words = match.group("desc").strip().split()
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
     if not words:
         return None
-    definition = _parse_generic_token_descriptor(words, match.group("tail"))
+    definition = _token_definition_from_words(" ".join(words), match.group("tail"))
     if definition is None:
         return None
 
     def effect(game: "Game", spell: CardState) -> None:
         for target in game.resolve_targets(spell):
             if isinstance(target, Player):
-                create_tokens(game, definition, target.username, count)
+                create_tokens(game, definition, target.username, count, tapped=tapped)
 
     return effect
 
@@ -38678,6 +38799,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     together, so this has to see the paragraph whole before anything splits
     it.
     """
+    # CR 608.2c: a token's "It has "<ability>"" sentence is part of the token
+    # the sentence before it created, folded into one token clause first.
+    text = _fold_following_token_grant(text)
+    token_list = _parse_token_list_clause(text, for_spell=for_spell)
+    if token_list is not None:
+        return [token_list]
     explores_whole_text = _parse_explores_clause(text, for_spell=for_spell)
     if explores_whole_text is not None:
         # Read whole, ahead of the comma/clause split, for the same reason

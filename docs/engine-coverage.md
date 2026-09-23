@@ -1548,6 +1548,26 @@ per-card table below and "Trigger conditions the matcher cannot read" above;
 Voice of Victory's identical second half is presumably reachable the same way
 but has not been proven directly.
 
+**Token lists, target-player token modes, and the following-sentence grant
+(S17, 2026-09-23).** Three templates the readers above missed, all closed in
+`machines/effects.py` with no card-name row:
+
+| Template | Reader | Listed card | Proof printings |
+|---|---|---|---|
+| "Create a `<A>` token, a `<B>` token, and a `<C>` token." (CR 701.7a, each item's own "with" tail CR 111.3) | `_parse_token_list_clause`, tried whole ahead of the clause split in `_parse_mixed_clauses` | Mascot Exhibition | Bestial Menace (spell), Trostani's Summoner (enters trigger, tails on first and last items) |
+| "Target player creates `<predefined or tapped token>`." (CR 111.2, CR 111.10a) | `_parse_target_player_token_mode` now reads through `_token_definition_from_words` and the "tapped" rider | Prismari Command | Ashling's Command ("two Treasure tokens"), Verdant Command (tapped Squirrels) |
+| "Create `<token>`. It has "`<ability>`"." (CR 608.2c, CR 111.3) | `_fold_following_token_grant` rewrites it to "token with "`<ability>`"" before any token reader runs | Warping Wail | Spawning Breath (spell, after a damage sentence), Blisterpod (dies trigger) |
+
+The list reader only reads a text that is exactly one "create" sentence; a
+list followed by another sentence (A Killer Among Us) still goes through the
+ordinary split, where a three-item list fails closed. `machines/targeting.
+_spell_text` now ignores a colon inside a quoted grant when deciding whether a
+line is an activated ability, so Spawning Breath's "any target" is announced
+(the token's "Sacrifice this token: Add {C}." used to drop the whole line).
+Tests: `tests/scenarios/test_multi_token_sentences.py`,
+`test_target_player_creates_token.py`,
+`test_token_with_following_quoted_ability.py`.
+
 ## Count-agnostic targeting (wave 2 continued)
 
 `_targets_understood` required `minimum == maximum == 1`, so CR 115.6's "up to
