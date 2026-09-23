@@ -1675,9 +1675,6 @@ KNOWN_ENGINE_GAPS: dict[str, str] = {
     "Illuminated Folio #0 [activated]": (
         "cost 'Reveal two cards from your hand that share a color' cannot be built"
     ),
-    "Tameshi, Reality Architect #0 [activated]": (
-        "cost 'Return a land you control to its owner's hand' cannot be built"
-    ),
     "The Filigree Sylex #2 [activated]": (
         "cost 'Remove ten oil counters from among permanents you control and "
         "sacrifice The Filigree Sylex' cannot be built"
