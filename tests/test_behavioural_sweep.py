@@ -1682,17 +1682,101 @@ KNOWN_ENGINE_GAPS: dict[str, str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Events and preconditions the sweep has no driver for yet - reviewed, keyed
+# by event kind plus the precondition that kind's attempts cannot set up,
+# never by card. Each is `xfail(strict=True)`: the day a driver lands (BEH2)
+# the cases pass, the strict xpass fails, and the entry has to go. A new card
+# matching an entry is covered by the same reason; a card that matches one
+# and already executes shows up as that strict xpass instead of hiding here.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class DriverGap:
+    kind: str
+    #: What has to happen that no attempt for `kind` can make happen.
+    event: str
+    #: Matched against the clause text; empty matches every clause of `kind`.
+    precondition: str = ""
+    #: A keyword the source must have (how it is turned face up, say).
+    keyword: str | None = None
+
+    def covers(self, case: Case) -> bool:
+        if case.kind != self.kind:
+            return False
+        if self.keyword is not None and self.keyword not in case.printing.keywords:
+            return False
+        return re.search(self.precondition, case.text, re.IGNORECASE) is not None
+
+    @property
+    def reason(self) -> str:
+        return f"sweep has no driver for {self.event} yet; BEH2 adds it"
+
+
+SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
+    DriverGap(
+        "enters_the_battlefield",
+        "a creature entering from its owner's graveyard",
+        r"entered from your graveyard",
+    ),
+    DriverGap(
+        "enters_the_battlefield",
+        "an instant or sorcery spell with a single target on the stack",
+        r"target instant or sorcery spell with a single target",
+    ),
+    DriverGap(
+        "enters_the_battlefield",
+        "an opponent controlling more lands (intervening if, CR 603.4)",
+        r", if an opponent controls more lands than you",
+    ),
+    DriverGap("class_becomes_level", "a Class gaining a level (CR 716.2a)"),
+    DriverGap(
+        "beginning_of_step",
+        "the source holding a counter threshold (intervening if, CR 603.4)",
+        r"if (?:this|~) \w+ has \w+ or more \w+ counters on it",
+    ),
+    DriverGap(
+        "turned_face_up",
+        "a disguised permanent turned face up (CR 702.168)",
+        keyword="Disguise",
+    ),
+    DriverGap(
+        "cast_spell",
+        "a land played or a spell cast from outside the hand",
+        r"from anywhere other than your hand",
+    ),
+    DriverGap(
+        "leaves_battlefield_to_hand",
+        "a noncreature permanent returned to hand",
+        r"noncreature permanents? (?:is|are) returned",
+    ),
+    DriverGap(
+        "activated",
+        "an artifact spell of the controller's on the stack to target",
+        r"target artifact spell you control",
+    ),
+    DriverGap(
+        "activated",
+        "a creature blocking or blocked by the source",
+        r"blocking or blocked by",
+    ),
+)
+
+
+def _driver_gap(case: Case) -> DriverGap | None:
+    return next((gap for gap in SWEEP_DRIVER_GAPS if gap.covers(case)), None)
+
+
 def _params(cases: tuple[Case, ...]) -> list[Any]:
-    return [
-        pytest.param(
-            case,
-            id=case.id,
-            marks=[pytest.mark.xfail(strict=True, reason=KNOWN_ENGINE_GAPS[case.id])]
-            if case.id in KNOWN_ENGINE_GAPS
-            else [],
-        )
-        for case in cases
-    ]
+    params = []
+    for case in cases:
+        reason = KNOWN_ENGINE_GAPS.get(case.id)
+        if reason is None and (gap := _driver_gap(case)) is not None:
+            reason = gap.reason
+        marks = [pytest.mark.xfail(strict=True, reason=reason)] if reason else []
+        params.append(pytest.param(case, id=case.id, marks=marks))
+    return params
 
 
 # ---------------------------------------------------------------------------
@@ -1703,8 +1787,12 @@ _REPORT: dict[str, Counter[str]] = {"triggered": Counter(), "activated": Counter
 
 
 def _reported(case: Case, outcome: str) -> str:
-    if case.id in KNOWN_ENGINE_GAPS and outcome != "executed":
+    if outcome == "executed":
+        return outcome
+    if case.id in KNOWN_ENGINE_GAPS:
         return "known engine gap (xfail)"
+    if _driver_gap(case) is not None:
+        return "no sweep driver yet (xfail)"
     return outcome
 
 
