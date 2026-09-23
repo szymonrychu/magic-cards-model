@@ -110,7 +110,7 @@ from ..serialization import SortedFrozenSet
 from ..snapshot import EngineModel
 from .abilities import AbilityKind, keyword_abilities
 from .combat import has_keyword
-from .layers import BASIC_LAND_TYPES
+from .layers import BASIC_LAND_TYPES, CLOSED_SUBTYPE_LISTS
 from .modes import Mode, modal_profile, mode_rules_text
 
 # --------------------------------------------------------------------------
@@ -142,11 +142,25 @@ class ComparisonAttribute(StrEnum):
 
 
 class ComparisonOperator(StrEnum):
-    """ "or less", "or greater", or a bare equality (CR 107.1a's ordinary numbers)."""
+    """ "or less", "or greater", a bare equality, or a strict "less/greater
+    than" with no "or equal to" (CR 107.1a's ordinary numbers either way).
+
+    Nahiri, the Unforgiving's own 0 ability - "Exile target creature or
+    Equipment card with mana value **less than** Nahiri's loyalty ..." - prints
+    a strict inequality, not "or less": a target whose mana value equals
+    Nahiri's current loyalty is not legal. `LESS_OR_EQUAL`/`GREATER_OR_EQUAL`
+    cannot express that (subtracting one from the bound would be wrong once
+    the bound is a `ComparisonCount` rather than a printed number - `<` and
+    `<=` are different relations, not the same relation shifted by one), so
+    `LESS_THAN`/`GREATER_THAN` are their own operators rather than a special
+    case of the "or equal" ones.
+    """
 
     LESS_OR_EQUAL = "le"
     GREATER_OR_EQUAL = "ge"
     EQUAL = "eq"
+    LESS_THAN = "lt"
+    GREATER_THAN = "gt"
 
 
 class ComparisonCount(StrEnum):
@@ -174,6 +188,30 @@ class ComparisonCount(StrEnum):
     """"the number of cards in its controller's graveyard" - counted in the
     graveyard of the *target's* controller, which for a card with no
     controller at all is its owner instead (CR 108.4a, CR 109.4)."""
+
+    SOURCE_LOYALTY = "source_loyalty"
+    """"`<Name>`'s loyalty", where `<Name>` is a capitalized possessive read
+    generically rather than compared against anything - CR 201.5: "text that
+    refers to the object it's on by name means just that particular object,"
+    the same self-reference `TargetRequirement.exiled_with_source` already
+    reads for "exiled with `<name>`" (see its own docstring). Nahiri, the
+    Unforgiving's 0 ability prints exactly this on its own activated ability,
+    "... with mana value less than Nahiri's loyalty ..." - CR 306.5c: "The
+    loyalty of a planeswalker on the battlefield is equal to the number of
+    loyalty counters on it," which moves as the ability's own +1/0 abilities
+    (and combat damage) add or remove counters, so it is counted fresh at
+    every `rejects` call the same way `CONTROLLERS_GRAVEYARD_CARDS` is,
+    never fixed once. Read off *any* capitalized name immediately before
+    "'s loyalty" (`_COMPARISON_CLAUSE`'s own `source_loyalty` group), not
+    literally against the card's own printed name: the parser has no reach
+    into the card's identity at this point (`_CACHE` in `targeting_profile`
+    keys purely on oracle text - see its own docstring), and a loyalty
+    ability's only planeswalker with a meaningful, trackable "current
+    loyalty" to compare against is the one the ability is printed on, so the
+    self-reference is unambiguous by construction rather than by checking a
+    name. Resolved in `TargetRequirement._counted_bound` off the requirement's
+    own `source_id` (`Game.find_by_id`), never off `target` - it is the
+    *ability's* loyalty, not the target's own."""
 
 
 class CombatState(StrEnum):
@@ -796,7 +834,7 @@ class TargetRequirement(EngineModel):
         entered = self._rejects_entered_this_turn(target, game)
         if entered is not None:
             return entered
-        comparison = self._rejects_comparison(target, game, caster)
+        comparison = self._rejects_comparison(target, game, caster, source_id)
         if comparison is not None:
             return comparison
         keyword = self._rejects_required_keyword(target, game)
@@ -1033,7 +1071,11 @@ class TargetRequirement(EngineModel):
         return target.card.colors
 
     def _rejects_comparison(
-        self, target: CardState, game: Any, caster: str | None = None
+        self,
+        target: CardState,
+        game: Any,
+        caster: str | None = None,
+        source_id: UUID | None = None,
     ) -> str | None:
         """ "with mana value N or less" and its power/toughness relatives.
 
@@ -1060,13 +1102,20 @@ class TargetRequirement(EngineModel):
         `game` to compute layers from for a battlefield permanent, refuses the
         target - the same choice every other unanswerable restriction in this
         file makes.
+
+        `source_id` is the id of the permanent this requirement's own ability
+        is on - `rejects`' own copy of it, threaded down here for
+        `ComparisonCount.SOURCE_LOYALTY` ("Nahiri's loyalty"), which needs
+        *that* permanent's current loyalty (CR 306.5c), never the target's.
+        Without it that one count is unevaluable and refuses the target, the
+        same as every other restriction this method cannot answer.
         """
         if self.comparison_attribute is None:
             return None
         label = self.comparison_attribute.value.replace("_", " ")
         comparison_value = self.comparison_value
         if comparison_value is None and self.comparison_count is not None:
-            comparison_value = self._counted_bound(target, game)
+            comparison_value = self._counted_bound(target, game, source_id)
         if comparison_value is None and self.comparison_x_definition is not None:
             comparison_value = self._defined_x(game, caster)
         if self.comparison_value_if_revolt is not None and caster is not None:
@@ -1109,35 +1158,52 @@ class TargetRequirement(EngineModel):
             f"and {target.name} does not have it"
         )
 
-    def _counted_bound(self, target: CardState, game: Any) -> int | None:
+    def _counted_bound(
+        self, target: CardState, game: Any, source_id: UUID | None = None
+    ) -> int | None:
         """The number a `comparison_count` names, right now, or None if it
         cannot be counted from what the caller supplied.
 
         Drown in the Loch's "the number of cards in its controller's graveyard"
-        is the only shape so far. "Its controller" is the *target's* - CR 108.4a
+        is the *target's* own count - "its controller" is CR 108.4a's, which
         sends the question to the owner instead only for a card that has no
         controller at all (CR 109.4: "only objects on the stack or on the
-        battlefield have a controller"), which is what `controller_or_owner`
-        already answers for a card sitting in a graveyard or hand.
+        battlefield have a controller"), what `controller_or_owner` already
+        answers for a card sitting in a graveyard or hand.
+
+        Nahiri, the Unforgiving's "Nahiri's loyalty" is a different shape:
+        the count belongs to the *ability's source*, not the target, so it is
+        read off `source_id` (`Game.find_by_id`) rather than off `target` at
+        all - CR 306.5c: "The loyalty of a planeswalker on the battlefield is
+        equal to the number of loyalty counters on it," `CardState.loyalty`'s
+        own reading of that rule.
 
         None here means the restriction is unevaluable, and `_rejects_comparison`
         then refuses the target rather than waving it through - the same
         fail-closed choice it already makes for an unbound X.
         """
-        if self.comparison_count is not ComparisonCount.CONTROLLERS_GRAVEYARD_CARDS:
-            return None
-        controller = getattr(target, "controller_or_owner", None) or target.controller
-        if controller is None:
-            return None
-        player_of = getattr(game, "player", None)
-        if player_of is None:
-            return None
-        try:
-            player = player_of(str(controller))
-        except (KeyError, ValueError):
-            return None
-        graveyard = getattr(player, "graveyard", None)
-        return None if graveyard is None else len(graveyard)
+        if self.comparison_count is ComparisonCount.CONTROLLERS_GRAVEYARD_CARDS:
+            controller = getattr(target, "controller_or_owner", None) or target.controller
+            if controller is None:
+                return None
+            player_of = getattr(game, "player", None)
+            if player_of is None:
+                return None
+            try:
+                player = player_of(str(controller))
+            except (KeyError, ValueError):
+                return None
+            graveyard = getattr(player, "graveyard", None)
+            return None if graveyard is None else len(graveyard)
+        if self.comparison_count is ComparisonCount.SOURCE_LOYALTY:
+            if source_id is None:
+                return None
+            find_by_id = getattr(game, "find_by_id", None)
+            if find_by_id is None:
+                return None
+            source = find_by_id(source_id)
+            return None if source is None else source.loyalty
+        return None
 
     def _defined_x(self, game: Any, caster: str | None) -> int | None:
         """`comparison_x_definition` counted for `caster` right now (CR 107.3c),
@@ -1159,9 +1225,17 @@ class TargetRequirement(EngineModel):
             return value <= comparison_value
         if self.comparison_operator is ComparisonOperator.GREATER_OR_EQUAL:
             return value >= comparison_value
+        if self.comparison_operator is ComparisonOperator.LESS_THAN:
+            return value < comparison_value
+        if self.comparison_operator is ComparisonOperator.GREATER_THAN:
+            return value > comparison_value
         return value == comparison_value
 
     def _comparison_words(self, comparison_value: int) -> str:
+        if self.comparison_operator is ComparisonOperator.LESS_THAN:
+            return f"less than {comparison_value}"
+        if self.comparison_operator is ComparisonOperator.GREATER_THAN:
+            return f"greater than {comparison_value}"
         suffix = {
             ComparisonOperator.LESS_OR_EQUAL: "or less",
             ComparisonOperator.GREATER_OR_EQUAL: "or greater",
@@ -1852,6 +1926,35 @@ _TYPE_NOUNS = {
     "instant": Type.INSTANT,
     "sorcery": Type.SORCERY,
 }
+
+#: Every subtype word CR 205.3g/h/i/k/q close off as its own card type's -
+#: artifact types (Equipment, Vehicle, ...), enchantment types, land types,
+#: the instant/sorcery spell types, and the battle type - reversed onto the
+#: `Type` each one belongs to. Read from `machines/layers.py`'s own
+#: `CLOSED_SUBTYPE_LISTS` rather than a second, drifting copy of the same
+#: enumeration. Deliberately excludes CR 205.3m's creature types (in the
+#: hundreds, never enumerated here - see `_is_bare_subtype_word`'s own
+#: docstring) and CR 205.3j's planeswalker types (the same shape, no closed
+#: list): those stay unrecognised outside the shapes already read elsewhere.
+_CLOSED_LIST_TYPE_OF: dict[str, Type] = {
+    subtype.lower(): card_type
+    for card_type, subtypes in CLOSED_SUBTYPE_LISTS.items()
+    for subtype in subtypes
+}
+
+#: "target creature or Equipment card ..." (Nahiri, the Unforgiving) - a
+#: two-item noun list whose first item is an ordinary CR 300.1 card type and
+#: whose second is a bare CR 205.3g/h/i/k/q subtype word standing in for its
+#: own elided type, the same elision `_is_bare_subtype_word` already reads
+#: for a *lone* subtype (Greasefang, Okiba Boss's "target Vehicle card") -
+#: here as the second half of an "or" instead of the whole noun. See
+#: `_split_type_or_closed_subtype_card`'s own docstring for why this cannot
+#: be merged into the ordinary noun-list loop's single `card_types`/
+#: `required_subtypes` pair.
+_TYPE_OR_CLOSED_SUBTYPE_CARD_RE = re.compile(
+    r"^\s*(?P<first>[a-z]+)\s+or\s+(?P<subtype>[A-Z][A-Za-z]*)\s+(?P<noun>card|permanent)\b"
+)
+
 #: CR 105.1: "there are five colors in the Magic game: white, blue, black,
 #: red, and green." Read as a leading adjective, the same as a card type or
 #: supertype adjective - "target black or red permanent" (Celestial Purge).
@@ -2902,12 +3005,84 @@ def _read_compound_target_alternatives(
     return specs
 
 
+def _split_type_or_closed_subtype_card(
+    text: str,
+) -> tuple[str, str, str, Type, str] | None:
+    """ "target creature or Equipment card ..." (Nahiri, the Unforgiving): the
+    first item is a plain CR 300.1 card type, the second a bare CR
+    205.3g/h/i/k/q subtype word eliding its own type the way a lone "target
+    Vehicle card" (Greasefang, Okiba Boss) already does.
+
+    Equipment is an artifact subtype, never a creature one (CR 301.5), so
+    merging the two items into a single `card_types`/`required_subtypes` pair
+    the way an ordinary shared-adjective noun list does (`target black
+    creature or black planeswalker`) would be wrong two different ways: it
+    would make `card_types` read "creature or artifact" (fine on its own),
+    but `required_subtypes` would then demand the target carry the
+    "equipment" subtype *too* - `_rejects_card`'s subtype check is an "any
+    of these" gate, but it still applies on top of the type check, not
+    instead of it, so a plain Grizzly Bears would wrongly fail for not being
+    an Equipment. CR 115.1's target is satisfied by *either* half, so the two
+    are genuinely disjunctive - `_read_phrase` reads the first half as the
+    ordinary noun phrase and turns the second into a full, independent
+    `TargetRequirement.alternatives` entry instead.
+
+    Returns `(first_word, noun_word, subtype_word, subtype_type, reduced_text)`
+    where `reduced_text` is `text` with the "or `<Subtype>`" clause spliced
+    out, so the caller reads the rest of the phrase (zone, comparison,
+    controller, ...) exactly the ordinary way, once, for the first half alone.
+    `None` when this is not that shape, or the capitalized word is not one of
+    the CR's own *closed* subtype lists (`_CLOSED_LIST_TYPE_OF`) - a creature
+    type here ("target creature or Soldier card") still fails open exactly as
+    it always has, since CR 205.3m's list is never enumerated.
+    """
+    match = _TYPE_OR_CLOSED_SUBTYPE_CARD_RE.match(text)
+    if match is None:
+        return None
+    first_word = match.group("first").lower()
+    if first_word not in _TYPE_NOUNS:
+        return None
+    subtype_type = _CLOSED_LIST_TYPE_OF.get(match.group("subtype").lower())
+    if subtype_type is None:
+        return None
+    noun_word = match.group("noun").lower()
+    subtype_word = match.group("subtype").lower()
+    reduced_text = f"{first_word} {noun_word}{text[match.end() :]}"
+    return first_word, noun_word, subtype_word, subtype_type, reduced_text
+
+
 def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetRequirement | None:
     """Turn one "target ..." phrase into a requirement, or None if unreadable.
 
     `strict` also refuses a phrase with words left over once every clause this
     reader knows has been taken off - the ordinary target scan tolerates a
-    trailing tail it does not read, `permanent_description` must not."""
+    trailing tail it does not read, `permanent_description` must not.
+    """
+    split = _split_type_or_closed_subtype_card(suffix)
+    if split is not None:
+        # See `_split_type_or_closed_subtype_card`'s own docstring: read the
+        # first half ordinarily (recursing on the reduced text), then wrap
+        # its result with the second half as a full independent alternative
+        # (`TargetRequirement.alternatives`, CR 115.1) rather than merging
+        # the two into one `card_types`/`required_subtypes` pair.
+        first_word, noun_word, subtype_word, subtype_type, reduced_suffix = split
+        base = _read_phrase(prefix, reduced_suffix, strict=strict)
+        if base is None:
+            return None
+        alternative = base.model_copy(
+            update={
+                "phrase": f"target {subtype_word} {noun_word}",
+                "card_types": frozenset({subtype_type}),
+                "required_subtypes": frozenset({subtype_word}),
+                "alternatives": (),
+            }
+        )
+        return base.model_copy(
+            update={
+                "phrase": f"{base.phrase} or {subtype_word} {noun_word}",
+                "alternatives": base.alternatives + (alternative,),
+            }
+        )
     excludes_source = _excludes_source(prefix)
     counted = _read_count(prefix)
     if counted is None:
@@ -3686,12 +3861,20 @@ _COMPARISON_ATTEMPT = re.compile(
 #: why only counts knowable at CR 601.2c may live here.
 _COMPARISON_COUNTS = {
     "controllers_graveyard": ComparisonCount.CONTROLLERS_GRAVEYARD_CARDS,
+    "source_loyalty": ComparisonCount.SOURCE_LOYALTY,
 }
 
 #: The comparison itself, once `_COMPARISON_ATTEMPT` says one is being made.
 #: Order inside the alternation matters: "N or less/greater" and the spelled-
 #: out "less/greater than or equal to N" are tried before the bare "N" so a
-#: qualified number is never misread as an unqualified one.
+#: qualified number is never misread as an unqualified one. The strict
+#: "less/greater than `<Name>`'s loyalty" branch (Nahiri, the Unforgiving) is
+#: tried after the "... or equal to ..." branches for the same reason, even
+#: though the two cannot actually collide (nothing here ends in "'s
+#: loyalty" for a plain number): `.+?` is non-greedy so it stops at the
+#: *first* "'s loyalty" it finds, never swallowing a trailing clause past it
+#: (see `ComparisonCount.SOURCE_LOYALTY`'s own docstring for why the name
+#: itself is never checked against anything).
 _COMPARISON_CLAUSE = re.compile(
     r"\b(?P<attr>mana value|converted mana cost|power or toughness|power|toughness)\b"
     r"\s+(?:is\s+)?"
@@ -3701,6 +3884,7 @@ _COMPARISON_CLAUSE = re.compile(
     r"(?P<controllers_graveyard>its controller'?s? graveyard)\b"
     r"|less than or equal to\s+(?P<le_num>x|\d+)\b"
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
+    r"|(?P<strict_dir>less|greater) than (?P<source_loyalty>.+?)'s loyalty\b"
     r"|equal to\s+(?P<eq_num>x|\d+)\b"
     r"|(?P<bare_num>x|\d+)\b"
     r")",
@@ -3768,6 +3952,25 @@ def _extract_comparison(
             ComparisonOperator.LESS_OR_EQUAL
             if match.group("count_dir").lower() == "less"
             else ComparisonOperator.GREATER_OR_EQUAL
+        )
+        count = next(
+            kind
+            for group, kind in _COMPARISON_COUNTS.items()
+            if match.group(group) is not None  # noqa: B023 - `match` is not reassigned
+        )
+        return attribute, operator, None, count, rest[: match.start()] + rest[match.end() :]
+    if match.group("strict_dir") is not None:
+        # "less/greater than `<Name>`'s loyalty" (Nahiri, the Unforgiving) -
+        # a strict inequality (CR 107.1a's plain English "less than", not "or
+        # less") against a count this parser reads off the game rather than
+        # off the card, exactly like `count_dir` just above; see
+        # `ComparisonOperator.LESS_THAN`'s own docstring for why it is a
+        # distinct operator rather than `LESS_OR_EQUAL` with the bound
+        # shifted by one.
+        operator = (
+            ComparisonOperator.LESS_THAN
+            if match.group("strict_dir").lower() == "less"
+            else ComparisonOperator.GREATER_THAN
         )
         count = next(
             kind

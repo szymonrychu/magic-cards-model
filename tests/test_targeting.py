@@ -677,4 +677,92 @@ def test_a_generic_mana_activation_costs_number_is_not_read_as_a_target_count():
     (requirement,) = the_profile.requirements
     assert requirement.count == 1
     assert requirement.minimum == 1
+
+
+# --------------------------------------------------------------------------
+# "target X with mana value less than `<source>`'s loyalty" (Nahiri, the
+# Unforgiving's 0 ability): a strict, self-referential comparison mixed with
+# a "creature or `<closed-list subtype>` card" compound noun list.
+# --------------------------------------------------------------------------
+
+
+def _nahiri_zero_ability_text() -> str:
+    """The exact text `scripts/sweep_pool.py`'s own `targeting_gaps` reads -
+    `ability.effect` when parsing filled it (the cost-stripped line),
+    `ability.text` otherwise."""
+    from magic_cards_model.machines import parse_abilities
+
+    for ability in parse_abilities(card("Nahiri, the Unforgiving")):
+        text = getattr(ability, "effect", None) or ability.text
+        if "Exile target creature" in text:
+            return text
+    raise AssertionError("Nahiri, the Unforgiving's 0 ability text was not found")
+
+
+def test_nahiris_loyalty_comparison_is_understood():
+    """Nahiri, the Unforgiving's 0 ability used to be `sweep_pool.py
+    --targeting`'s one unreadable phrase in the whole pool:
+    `_COMPARISON_CLAUSE` only read "... or equal to ..." comparisons, never a
+    bare "less than", so "mana value less than Nahiri's loyalty" hit
+    `_COMPARISON_UNREADABLE` and failed the whole phrase closed.
+    """
+    from magic_cards_model.machines.targeting import (
+        ComparisonAttribute,
+        ComparisonCount,
+        ComparisonOperator,
+    )
+
+    the_profile = profile_for_text(_nahiri_zero_ability_text())
+
+    assert the_profile.understood
+    (requirement,) = the_profile.requirements
+    assert requirement.comparison_attribute is ComparisonAttribute.MANA_VALUE
+    assert requirement.comparison_operator is ComparisonOperator.LESS_THAN
+    assert requirement.comparison_count is ComparisonCount.SOURCE_LOYALTY
+    assert requirement.zones == frozenset({Zone.GRAVEYARD})
+    assert requirement.card_types == frozenset({Type.CREATURE})
+
+
+def test_nahiris_equipment_half_is_read_as_a_disjunction_not_a_merge():
+    """ "creature or Equipment card": CR 115.1's target is satisfied by
+    *either* half, and Equipment is an artifact subtype (CR 301.5), never a
+    creature one - merging the two halves into one `card_types`/
+    `required_subtypes` pair would wrongly demand every legal target
+    (including a plain creature) also carry the "equipment" subtype, since
+    `TargetRequirement._rejects_card`'s subtype check is an "any of these"
+    gate applied *on top of* the type check, not instead of it. Only
+    `TargetRequirement.alternatives` expresses the real disjunction.
+    """
+    the_profile = profile_for_text(_nahiri_zero_ability_text())
+
+    (requirement,) = the_profile.requirements
+    (alternative,) = requirement.alternatives
+    assert alternative.card_types == frozenset({Type.ARTIFACT})
+    assert alternative.required_subtypes == frozenset({"equipment"})
+    assert alternative.zones == frozenset({Zone.GRAVEYARD})
+    assert alternative.comparison_operator is requirement.comparison_operator
+    assert alternative.comparison_count is requirement.comparison_count
+
+
+def test_a_different_planeswalkers_own_loyalty_comparison_also_parses():
+    """Proof this is a general reading of CR 201.5's self-reference and of
+    CR 205.3g's closed artifact-type list, not a string match against
+    "Nahiri" or "Equipment": a different name, a different closed-list
+    subtype (Vehicle, not Equipment), and "greater than" instead of "less
+    than" all still parse."""
+    from magic_cards_model.machines.targeting import ComparisonCount, ComparisonOperator
+
+    the_profile = profile_for_text(
+        "0: Exile target creature or Vehicle card with mana value "
+        "greater than Squee's loyalty from your graveyard."
+    )
+
+    assert the_profile.understood
+    (requirement,) = the_profile.requirements
+    assert requirement.comparison_operator is ComparisonOperator.GREATER_THAN
+    assert requirement.comparison_count is ComparisonCount.SOURCE_LOYALTY
+    assert requirement.card_types == frozenset({Type.CREATURE})
+    (alternative,) = requirement.alternatives
+    assert alternative.card_types == frozenset({Type.ARTIFACT})
+    assert alternative.required_subtypes == frozenset({"vehicle"})
     assert all(requirement.if_gift_promised is None for requirement in the_profile.requirements)

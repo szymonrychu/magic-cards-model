@@ -1033,7 +1033,7 @@ _ARTIFACT_TYPES = frozenset(
     }
 )  # fmt: skip
 _SPELL_TYPES = frozenset({"Adventure", "Arcane", "Lesson", "Omen", "Trap"})
-_CLOSED_SUBTYPE_LISTS: dict[Type, frozenset[str]] = {
+CLOSED_SUBTYPE_LISTS: dict[Type, frozenset[str]] = {
     Type.ARTIFACT: _ARTIFACT_TYPES,
     Type.ENCHANTMENT: frozenset(
         {
@@ -1092,7 +1092,7 @@ class RemoveType(ModificationBase):
     subtypes: Avatar and Horror are creature types, and no enchantment type.
 
     A subtype is kept when some type the object still has lists it. A remaining
-    type whose list is not spelled out in `_CLOSED_SUBTYPE_LISTS` - a kindred,
+    type whose list is not spelled out in `CLOSED_SUBTYPE_LISTS` - a kindred,
     which shares creature types (CR 205.3m), or a planeswalker - keeps every
     subtype rather than guessing which of them it correlates with.
     """
@@ -1104,11 +1104,11 @@ class RemoveType(ModificationBase):
         if self.card_type not in chars.types:
             return chars
         remaining = tuple(kind for kind in chars.types if kind is not self.card_type)
-        removed_list = _CLOSED_SUBTYPE_LISTS.get(self.card_type)
+        removed_list = CLOSED_SUBTYPE_LISTS.get(self.card_type)
 
         def kept(subtype: str) -> bool:
             for kind in remaining:
-                listed = _CLOSED_SUBTYPE_LISTS.get(kind)
+                listed = CLOSED_SUBTYPE_LISTS.get(kind)
                 if listed is None or subtype in listed:
                     return True
             return removed_list is not None and subtype not in removed_list
