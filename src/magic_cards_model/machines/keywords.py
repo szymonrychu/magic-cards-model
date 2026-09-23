@@ -2390,9 +2390,9 @@ def _ninjutsu_effect(activation: KeywordActivation) -> CardState | None:
     if defender is not None:
         from ..models.token import _put_onto_the_battlefield_attacking
 
-        # CR 508.4, via the same primitive `machines/effects.py` already
-        # reuses for Sneak's identical "tapped and attacking" shape: it is
-        # annotated for a `TokenState`, but everything it reads -
+        # CR 508.4, via the same primitive `Game._sneak_defender_of`'s caller
+        # uses for sneak's identical "tapped and attacking" shape (CR 702.190b):
+        # it is annotated for a `TokenState`, but everything it reads -
         # `is_creature`, `controller`, `id` - is `CardState`'s, and CR 508.4
         # draws no distinction between a token and a card entering this way.
         _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]

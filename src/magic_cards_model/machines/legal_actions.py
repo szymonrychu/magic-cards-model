@@ -86,6 +86,7 @@ from ..snapshot import board_snapshot
 from .abilities import printed_production
 from .casting import (
     AlternativeCostSource,
+    CastTiming,
     MarkedExile,
     PlayAction,
     adventure_face,
@@ -913,7 +914,15 @@ def _cast_actions(
                         splice_options=splice_options,
                     )
                 )
-        elif _why_cannot_cast_face(game, player, card, None) is None:
+        elif (
+            # CR 702.190a's window is the option's own timing, already
+            # answered by `option.why_not` above; CR 117.1a's ordinary timing
+            # is exactly what it overrides, so only CR 611.1's prohibitions
+            # are left to ask.
+            why_cannot_cast_restriction(card, player, game, face=None)
+            if option.timing is CastTiming.OWN_DECLARE_BLOCKERS
+            else _why_cannot_cast_face(game, player, card, None)
+        ) is None:
             total = option.cost if option.cost is not None else TotalCost()
             actions.append(
                 _cast_action(

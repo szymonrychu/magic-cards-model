@@ -1440,7 +1440,8 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     through unexecuted. Discover is off it as of T09 (`machines/keywords.
     discover`, reached through `effects._parse_discover_clause`). Monstrosity
     is off it as of T10 (`Game.become_monstrous`, reached through
-    `effects._parse_monstrosity_clause`)."""
+    `effects._parse_monstrosity_clause`). Sneak is off it as of T13
+    (`machines/casting.keyword_cast_options`, CR 702.190a)."""
     from scripts.sweep_pool import in_target_formats
 
     names = [name for name in pool() if in_target_formats(card(name))]
@@ -1451,7 +1452,6 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     assert set(by_keyword) == {
         "Compleated",
         "Miracle",
-        "Sneak",
     }
 
 

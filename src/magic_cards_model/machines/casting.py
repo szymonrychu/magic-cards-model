@@ -62,9 +62,11 @@ from .cost import (
     cost_component_for_phrase,
     mana_value_cap_for,
     place_counters_cost,
+    return_to_hand_cost,
     static_free_cast_grant,
     tap_cost,
     total_cost_for_phrase,
+    why_not_unblocked,
 )
 from .decisions import source_id_of
 from .keywords import (
@@ -99,6 +101,13 @@ class CastTiming(StrEnum):
 
     ANY = "any"
     SORCERY = "sorcery"
+    #: CR 702.190a's sneak: "Any time you could cast an instant during your
+    #: declare blockers step" - the caster's own turn, `Step.DECLARE_BLOCKERS`,
+    #: with priority, stack empty or not (CR 117.1a's instant half). Unlike
+    #: `ANY`, this is a *window*: it both opens that step to a card whose own
+    #: type would not allow it (a sorcery, a creature without flash) and shuts
+    #: every other moment to this option.
+    OWN_DECLARE_BLOCKERS = "own_declare_blockers"
 
 
 class KeywordCastOption(EngineModel):
@@ -149,6 +158,12 @@ class KeywordCastOption(EngineModel):
     answer this: the question here is whether *this card* was one of them, and
     who discarded it. `CardState.discarded_by`/`discarded_on_turn` are that
     record, written by `machines/keywords.discard`, and `why_not` reads both."""
+    returns_unblocked_creature: bool = False
+    """True when the cost includes "returning an unblocked creature you
+    control to its owner's hand" (CR 702.190a's sneak). The option is then
+    unavailable while the caster controls no unblocked creature (CR 509.1h),
+    and `cost` carries a `ComponentKind.RETURN_TO_HAND` component the caster
+    fills with the creature chosen (CR 601.2b's `choosing`)."""
     understood: bool = True
     """False when the keyword's printed cost could not be read into something
     payable. The option is still reported, so a sweep can see the gap."""
@@ -241,7 +256,60 @@ class KeywordCastOption(EngineModel):
                 f"{self.keyword} can only be used as a sorcery: {caster}'s main phase, "
                 f"with the stack empty ({self.rule})"
             )
+        if self.timing is CastTiming.OWN_DECLARE_BLOCKERS and game is not None:
+            refusal = _why_not_in_own_declare_blockers_step(game, caster, self)
+            if refusal is not None:
+                return refusal
+        if (
+            self.returns_unblocked_creature
+            and game is not None
+            and not any(
+                why_not_unblocked(game, permanent) is None
+                for permanent in game.permanents_controlled_by(caster)
+            )
+        ):
+            return (
+                f"{caster} controls no unblocked creature to return to its owner's hand, "
+                f"so {spell.name} cannot be cast with {self.keyword} ({self.rule}, "
+                f"CR 509.1h)"
+            )
         return None
+
+
+def _why_not_in_own_declare_blockers_step(
+    game: Any, caster: str, option: KeywordCastOption
+) -> str | None:
+    """CR 702.190a's window: "Any time you could cast an instant during your
+    declare blockers step".
+
+    Three conditions, one per word: **your** (the caster is the active
+    player), **declare blockers step** (`Step.DECLARE_BLOCKERS`, not the
+    declare attackers step before it nor the combat damage step after), and
+    **any time you could cast an instant** (CR 117.1a: "any time they have
+    priority", so the stack need not be empty). CR 611.1's "can cast spells
+    only any time they could cast a sorcery" (Teferi, Time Raveler) takes the
+    instant half away as well, so it refuses here too.
+    """
+    turn = getattr(game, "turn", None)
+    if turn is None:
+        return None
+    if turn.active_player != caster or turn.step is not Step.DECLARE_BLOCKERS:
+        return (
+            f"{option.keyword} can only be used during {caster}'s own declare blockers "
+            f"step ({option.rule})"
+        )
+    if not turn.grants_priority:
+        return (
+            f"{option.keyword} can only be used when {caster} could cast an instant "
+            f"({option.rule}, CR 117.1a)"
+        )
+    restricting_source = sorcery_speed_restriction_source(game, caster)
+    if restricting_source is not None:
+        return (
+            f"{restricting_source} restricts {caster} to casting spells only any time "
+            f"they could cast a sorcery, and it is not (CR 117.1a, CR 611.1)"
+        )
+    return None
 
 
 def _describe_keyword_cost(option: KeywordCastOption) -> str:
@@ -501,6 +569,42 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             zone=Zone.HAND,
             cost=cost,
             pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
+    if canonical == "sneak":
+        # CR 702.190a: "'Sneak [cost]' means 'Any time you could cast an
+        # instant during your declare blockers step, you may cast this spell
+        # by paying [cost] and returning an unblocked creature you control to
+        # its owner's hand rather than paying this spell's mana cost.'" An
+        # alternative cost (CR 118.9) from the hand, the zone a card is cast
+        # from by default, whose return half is the same
+        # `ComponentKind.RETURN_TO_HAND` ninjutsu pays (CR 702.49a). Its
+        # timing is its own window, for every card type alike. CR 702.190b's
+        # tapped-and-attacking half is `Game`'s, on resolution.
+        mana = total_cost_for_phrase(printed) if printed else None
+        cost = (
+            TotalCost(
+                mana=mana.mana,
+                components=[
+                    *mana.components,
+                    return_to_hand_cost(
+                        required=1,
+                        description="Return an unblocked creature you control to its owner's hand",
+                    ),
+                ],
+            )
+            if mana is not None
+            else None
+        )
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.190a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            timing=CastTiming.OWN_DECLARE_BLOCKERS,
+            returns_unblocked_creature=True,
             understood=cost is not None,
         )
 
@@ -2449,6 +2553,26 @@ class Casting(EngineModel):
     "your opponents can't cast noncreature spells this turn", Bonecrusher
     Giant's creature half is legal while Stomp is not.
     """
+    timing_refusals_unless_window: dict[str, str] = Field(default_factory=dict)
+    """CR 117.1a refusals `model_post_init` set aside because a keyword whose
+    own timing is a window (`CastTiming.OWN_DECLARE_BLOCKERS`, CR 702.190a's
+    sneak) is open right now, keyed like `face_cast_refusals`.
+
+    The window is permission for *that* keyword's cast only: a sorcery with
+    sneak is castable during its caster's declare blockers step by sneak and
+    by nothing else. The keyword is not announced until `use_keyword`, after
+    the proposal, so the refusal is held here and `cast()` raises it unless
+    the keyword actually used was the one that opened the window."""
+    keyword_opens_window: bool = False
+    """Whether `keyword_used`'s option carries a timing window of its own
+    (`CastTiming.OWN_DECLARE_BLOCKERS`) - what lets `cast()` drop a held
+    `timing_refusals_unless_window` entry."""
+    returned_creature_defender: TargetRef | None = None
+    """The player, planeswalker or battle the creature returned to pay a
+    sneak cost was attacking (CR 702.190b), read as the creature is chosen
+    (CR 601.2b) - once CR 601.2h's return has moved it, it is out of combat
+    (CR 506.4) and `Combat.attack_by` has nothing left to say. Copied onto
+    `CastRecord.sneak_defender` as the spell becomes cast."""
     fuse: bool = False
     """True once `cast_fused` has announced both halves of a split card with
     fuse as one spell (CR 702.102a). `self.face` still names the left half
@@ -2664,8 +2788,18 @@ class Casting(EngineModel):
         options = castable_faces(self.spell.card) if self.face is None else (self.face,)
         refusals: dict[str, str] = {}
         for option in options:
+            timing = why_cannot_cast_now(self.spell, self.caster, self.game, face=option)
+            if timing is not None:
+                window_refusal = self._timing_window_refusal()
+                if window_refusal is None:
+                    # A timing window is open (CR 702.190a); `cast()` raises
+                    # `timing` unless that window's own keyword is used.
+                    self.timing_refusals_unless_window[option or ""] = timing
+                    timing = None
+                elif window_refusal:
+                    timing = f"{timing}; and {window_refusal}"
             reason = (
-                why_cannot_cast_now(self.spell, self.caster, self.game, face=option)
+                timing
                 or why_cannot_cast_restriction(self.spell, self.caster, self.game, face=option)
                 or why_cannot_cast_self_restriction(self.spell, self.caster, self.game)
             )
@@ -2688,6 +2822,30 @@ class Casting(EngineModel):
             # method call on the object the caller gets back.
             with self.game._id_allocator_scope():
                 self._move_to_the_stack()
+
+    def _timing_window_refusal(self) -> str | None:
+        """Whether a keyword with its own timing window lets this card be cast
+        right now though CR 117.1a would not: None if one does, the first
+        window keyword's own refusal if none does, and `""` if the card has no
+        such keyword at all.
+
+        Asked at the proposal, before CR 601.2a's move, which is the moment
+        CR 601.3 asks its question about.
+        """
+        windows = [
+            option
+            for option in keyword_cast_options(self.spell.card)
+            if option.timing is CastTiming.OWN_DECLARE_BLOCKERS and option.zone is self.origin_zone
+        ]
+        if not windows:
+            return ""
+        reasons = [
+            option.why_not(self.spell, self.caster, self.game, origin=self.origin_zone)
+            for option in windows
+        ]
+        if any(reason is None for reason in reasons):
+            return None
+        return next(reason for reason in reasons if reason is not None)
 
     # -- CR 601.2a: the card is on the stack from here on ------------------
 
@@ -3434,6 +3592,7 @@ class Casting(EngineModel):
         self._enter_modes()
         self.keyword_used = option.keyword
         self.keyword_cost_paid = not option.pays_mana_cost
+        self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
         if option.keyword.lower() == "bestow":
             # CR 702.103b: "As a spell cast bestowed is put onto the stack, it
             # becomes an Aura enchantment and gains enchant creature." CR 601.2a
@@ -3470,7 +3629,35 @@ class Casting(EngineModel):
                 component.cards = remaining[: component.required]
                 remaining = remaining[component.required :]
         self.choose_alternative_cost(cost)
+        if option.returns_unblocked_creature:
+            self._note_returned_creature_defender(option)
         return self.step
+
+    def _note_returned_creature_defender(self, option: KeywordCastOption) -> None:
+        """CR 702.190a/b: check the creature chosen to return, and remember
+        what it is attacking before paying the cost takes it out of combat.
+
+        CR 601.2b is where the chosen object is named and CR 601.2h where it
+        is returned; the defender has to be read between the two, which is
+        here. The creature is checked now as well so a wrong choice is refused
+        with its own reason rather than at payment.
+        """
+        assert self.alternative_cost is not None
+        component = next(
+            component
+            for component in self.alternative_cost.components
+            if component.kind is ComponentKind.RETURN_TO_HAND
+        )
+        if not component.cards:
+            raise ValueError(
+                f"{option.keyword} needs an unblocked creature {self.caster} controls chosen "
+                f"to return to its owner's hand ({option.rule})"
+            )
+        reason = component.why_not(self.game)
+        if reason is not None:
+            raise ValueError(reason)
+        attack = self.game.combat.attack_by(component.cards[0].id)
+        self.returned_creature_defender = attack.defender
 
     def use_permission(self) -> CastingStep:
         """CR 601.2b: announce that this spell is being cast under a
@@ -4992,6 +5179,18 @@ class Casting(EngineModel):
                 return
             raise ValueError(self._unclaimed_zone_permission_message())
 
+    def _refuse_unless_timing_window_claimed(self) -> None:
+        """CR 117.1a's refusal, set aside at the proposal because a timing
+        window was open (`timing_refusals_unless_window`), comes back unless
+        the keyword that opened it is the one this cast used - the same
+        "permission has to be claimed" reading `_refuse_unless_allowed_from_
+        its_zone` makes of a zone permission."""
+        if self.keyword_opens_window:
+            return
+        refusal = self.timing_refusals_unless_window.get(self.face or "")
+        if refusal is not None:
+            raise ValueError(refusal)
+
     def _unclaimed_zone_permission_message(self) -> str:
         """Name what CR 601.2b needed this announcement to claim, the way
         `use_alternative_cost` already names its own options ("name it: ...")
@@ -5093,6 +5292,7 @@ class Casting(EngineModel):
         self._refuse_unless_targets_announced()
         self._refuse_if_x_changed_since_targets()
         self._refuse_unless_allowed_from_its_zone()
+        self._refuse_unless_timing_window_claimed()
 
         self._advance_to(CastingStep.CAST)
         self._turn_face_down_if_cast_that_way()
@@ -5189,6 +5389,7 @@ class Casting(EngineModel):
                 # you've begun since it was foretold" off `turn_exiled`, a
                 # number nothing else on the record can answer for.
                 exile_annotation=self.announced_exile_annotation,
+                sneak_defender=self.returned_creature_defender,
                 additional_cost_cards=[
                     card.id
                     for extra in self.additional_costs

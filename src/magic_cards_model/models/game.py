@@ -1437,6 +1437,14 @@ class CastRecord(EngineModel):
     id up with `Game.find_by_id`, which still finds it wherever paying the
     cost moved it (a sacrifice to the graveyard, an exile cost to exile)."""
 
+    sneak_defender: TargetRef | None = None
+    """The player, planeswalker or battle the creature returned to pay this
+    spell's sneak cost was attacking (CR 702.190b), copied from `Casting.
+    returned_creature_defender`. `None` unless the sneak cost was paid. The
+    creature is out of combat by the time the spell resolves (CR 506.4), so
+    this is the only place that answer survives to CR 702.190b's "It will be
+    attacking the same player, planeswalker, or battle"."""
+
     card_id: UUID | None = None
     """The `CardState.id` of the card this record describes, so every record
     for a card can be forgotten at once (`Game.forget_cast_record`) after the
@@ -2695,7 +2703,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 43
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 44
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3283,10 +3291,16 @@ class Game(EngineModel):
     monstrous has no record of it - the designation would silently vanish,
     any "as long as monstrous" static would stop applying, and a repeat
     Monstrosity activation would put counters on it a second time.
+
     Bumped 42 -> 43: `CardState` gained `goaded_by` (CR 701.15, Goad). A
     version-42 dump has no record of which creatures are goaded or by whom,
     and a default of "nobody" would silently drop every standing attack
     requirement a goad created.
+
+    Bumped 43 -> 44: `CastRecord` gained `sneak_defender` (CR 702.190b), and
+    sneak is newly a way to cast Michelangelo's Technique and every other
+    pool printing with it, so a spell of theirs on the stack would resolve
+    differently.
     """
 
     @model_validator(mode="before")
@@ -4440,6 +4454,7 @@ class Game(EngineModel):
         gift_chosen_player: str | None = None,
         additional_cost_cards: list[UUID] | None = None,
         is_copy: bool = False,
+        sneak_defender: TargetRef | None = None,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
 
@@ -4499,6 +4514,7 @@ class Game(EngineModel):
             additional_cost_cards=list(additional_cost_cards or []),
             card_id=spell.id,
             is_copy=is_copy,
+            sneak_defender=sneak_defender,
         )
         self.forget_cast_record(spell)
         self.cast_records[spell.zone_change_stamp] = record
@@ -5012,12 +5028,18 @@ class Game(EngineModel):
                     return spell
             else:
                 attachment = None
+            sneak_defender = self._sneak_defender_of(spell)
             self.enter_the_battlefield(
                 spell,
                 spell.controller or self.active_player.username,
+                tapped=sneak_defender is not None,
                 was_cast=True,
                 attach_to=attachment,
             )
+            if sneak_defender is not None and spell.zone is Zone.BATTLEFIELD:
+                from .token import _put_onto_the_battlefield_attacking
+
+                _put_onto_the_battlefield_attacking(self, spell, sneak_defender)
             self._apply_mana_spend_effects(spell)
             self._create_resolution_delayed_triggers(spell)
             # Deliberately *not* popped here, unlike the graveyard-bound branch
@@ -5130,6 +5152,23 @@ class Game(EngineModel):
             )
             self.pending_triggers.append(ability)
             return ability
+
+    def _sneak_defender_of(self, spell: CardState) -> "TargetRef | None":
+        """CR 702.190b: "A permanent spell whose sneak cost was paid enters the
+        battlefield tapped and attacking (see rule 506.3a). It will be
+        attacking the same player, planeswalker, or battle as the creature
+        that was returned to its owner's hand to pay the sneak cost."
+
+        The defender that creature had, off the spell's `CastRecord`, or
+        `None` when the sneak cost was not paid. CR 506.3a and CR 508.4a's
+        exemptions (a noncreature permanent, a defender no longer there) are
+        `models/token._put_onto_the_battlefield_attacking`'s, the same
+        primitive ninjutsu (CR 702.49c) enters attacking through.
+        """
+        record = self.cast_record_of(spell)
+        if record is None or not record.keyword_cost_paid:
+            return None
+        return record.sneak_defender
 
     def _create_resolution_delayed_triggers(self, spell: CardState) -> None:
         """Delayed triggered abilities a resolving permanent spell creates (CR 603.7a).
@@ -15267,7 +15306,7 @@ class Game(EngineModel):
             if alternative_cost is not None:
                 casting.use_alternative_cost(alternative_cost, choosing=choosing)
             elif keyword:
-                casting.use_keyword(keyword)
+                casting.use_keyword(keyword, choosing=choosing)
             elif permitted:
                 casting.use_permission()
             if modes:

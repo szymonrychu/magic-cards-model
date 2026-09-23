@@ -2153,10 +2153,10 @@ class ComponentKind(StrEnum):
     #: checked against that threshold rather than against a `required` count.
     COLLECT_EVIDENCE = "collect_evidence"
     #: CR 702.49a's own cost clause: "Return an unblocked attacking creature
-    #: you control to its owner's hand." Ninjutsu's own cost, not shared with
-    #: any other keyword this pool prints - `_why_not_return_to_hand` checks
-    #: "unblocked attacking", the one restriction no existing object cost
-    #: (SACRIFICE, DISCARD, EXILE) reads.
+    #: you control to its owner's hand." Ninjutsu's cost, and sneak's
+    #: (CR 702.190a, "returning an unblocked creature you control to its
+    #: owner's hand") - `_why_not_return_to_hand` checks "unblocked", the one
+    #: restriction no existing object cost (SACRIFICE, DISCARD, EXILE) reads.
     RETURN_TO_HAND = "return_to_hand"
     #: CR 701.20a's reveal, as a cost (CR 118.1): "Reveal X white cards from
     #: your hand" (Martyr of Sands), "reveal a creature card from your hand"
@@ -2604,13 +2604,16 @@ class CostComponent(EngineModel):
         return None
 
     def _why_not_return_to_hand(self, game: Any) -> str | None:
-        """CR 702.49a's "Return an unblocked attacking creature you control
-        to its owner's hand" - Ninjutsu's own cost restriction.
+        """ "Return an unblocked [attacking] creature you control to its
+        owner's hand" - ninjutsu's cost (CR 702.49a) and sneak's (CR 702.190a).
 
-        CR 509.1h/CR 506.4a are what "unblocked" means: an attacking
-        creature with no blocker assigned to it, checked against the live
-        `Combat` rather than the card's own printed text, since nothing
-        prints "unblocked" on a card.
+        CR 509.1h is what "unblocked" means: "An attacking creature with one
+        or more creatures declared as blockers for it becomes a blocked
+        creature; one with no creatures declared as blockers for it becomes
+        an unblocked creature" - so nothing is unblocked before blockers are
+        declared, and a creature "remains blocked even if all the creatures
+        blocking it are removed from combat" (`Attack.blocked`). Checked
+        against the live combat, since nothing prints "unblocked" on a card.
         """
         for card in self.cards:
             if card.zone is not Zone.BATTLEFIELD:
@@ -2620,11 +2623,9 @@ class CostComponent(EngineModel):
                 return controlled
             if game is None:
                 return "returning an attacking creature needs a game to check combat"
-            attack = game.combat.attack_by(card.id) if game.combat is not None else None
-            if attack is None:
-                return f"{card.name} is not attacking, so it cannot pay this cost (CR 702.49a)"
-            if attack.blockers:
-                return f"{card.name} is blocked, so it cannot pay this cost (CR 702.49a)"
+            reason = why_not_unblocked(game, card)
+            if reason is not None:
+                return reason
         return None
 
     def _evidence_to_exile(self, game: Any) -> list[CardState]:
@@ -3348,6 +3349,27 @@ def cost_announces_x(cost_text: str) -> bool:
     return re.search(r"\bX\b", cost_text or "") is not None
 
 
+def why_not_unblocked(game: Any, card: CardState) -> str | None:
+    """Why `card` is not an unblocked creature right now, or None (CR 509.1h).
+
+    Shared by the return-to-hand cost check and by sneak's own availability
+    (`machines/casting.KeywordCastOption.why_not`), so both ask the one
+    question the same way.
+    """
+    combat = getattr(game, "combat", None)
+    attack = combat.attack_by(card.id) if combat is not None else None
+    if attack is None:
+        return f"{card.name} is not attacking, so it is not an unblocked creature (CR 509.1h)"
+    if attack.blocked or attack.blockers:
+        return f"{card.name} is blocked, so it is not an unblocked creature (CR 509.1h)"
+    if not combat.blockers_declared:
+        return (
+            f"blockers have not been declared yet, so {card.name} is not an unblocked "
+            f"creature (CR 509.1h)"
+        )
+    return None
+
+
 def return_to_hand_cost(
     *cards: CardState,
     payer: str | None = None,
@@ -3355,7 +3377,8 @@ def return_to_hand_cost(
     description: str = "",
 ) -> CostComponent:
     """Return an unblocked attacking creature to its owner's hand as a cost
-    (CR 702.49a's ninjutsu). `_why_not_return_to_hand` is the check."""
+    (CR 702.49a's ninjutsu, CR 702.190a's sneak). `_why_not_return_to_hand`
+    is the check."""
     return CostComponent(
         kind=ComponentKind.RETURN_TO_HAND,
         cards=list(cards),
