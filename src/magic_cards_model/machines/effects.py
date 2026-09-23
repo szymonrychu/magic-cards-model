@@ -16192,6 +16192,11 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     select_from_top = _parse_select_from_top_spell_clause(text)
     if select_from_top is not None:
         return select_from_top
+    # Mastermind's Acquisition's second mode - the whole-text wish reader
+    # `_spell_effect_or_notice` runs, which a mode never reaches.
+    put_from_outside = _parse_put_from_outside_the_game_into_hand_spell(text)
+    if put_from_outside is not None:
+        return put_from_outside
     # A genuine layer sentence goes to the mode-scoped composer ahead of the
     # per-clause dispatcher: `parse_mixed_effect_for_spell` reads "Target
     # creature gets -3/-1 until end of turn." (Witherbloom Command's third
@@ -22955,6 +22960,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     reveal_from_outside_into_hand = _parse_reveal_from_outside_the_game_into_hand_clause(whole)
     if reveal_from_outside_into_hand is not None:
         return reveal_from_outside_into_hand
+    put_from_outside_into_hand = _parse_put_from_outside_the_game_into_hand_spell(whole)
+    if put_from_outside_into_hand is not None:
+        return put_from_outside_into_hand
     exile_hand_draw_then_play = _parse_exile_hand_draw_then_play_until_next_turn_clause(whole)
     if exile_hand_draw_then_play is not None:
         return exile_hand_draw_then_play
@@ -41639,6 +41647,66 @@ _OUTSIDE_THE_GAME_FETCH_RE = re.compile(
 _LOOKS_LIKE_OUTSIDE_THE_GAME_RE = re.compile(r"\bfrom outside the game\b", re.IGNORECASE)
 
 
+#: North Wind Avatar's "you may put a card you own from outside the game into
+#: your hand" and Mastermind's Acquisition's mode "Put a card you own from
+#: outside the game into your hand." - the unrevealed, any-card wish
+#: (CR 108.3b, CR 400.11b): no quality and no reveal, so the card arrives
+#: hidden.
+_PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE = re.compile(
+    r"^(?P<may>you may )?put a card you own from outside the game into your hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _put_from_outside_the_game_into_hand(
+    game: "Game", controller: Player, optional: bool, source: str, source_id: object
+) -> None:
+    """Perform `_PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`: the controller
+    chooses one card they own outside the game (CR 108.3b), if they have any
+    and - for "you may" - want to, and it goes to their hand (CR 400.11b)."""
+    candidates = controller.owned_outside_the_game()
+    if not candidates:
+        return
+    if optional and not game.may(
+        controller,
+        "put a card you own from outside the game into your hand",
+        source=source,
+        source_id=source_id,
+    ):
+        return
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller.username,
+            prompt="choose a card you own from outside the game",
+            source=source,
+            source_id=source_id,
+            amount=1,
+            cards=tuple(state.id for state in candidates),
+            card_labels=tuple(state.name for state in candidates),
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    by_id = {state.id: state for state in candidates}
+    for card_id in chosen_ids:
+        controller.bring_into_the_game(by_id[card_id], Zone.HAND)
+
+
+def _parse_put_from_outside_the_game_into_hand_spell(effect_text: str) -> Effect | None:
+    """The spell (or spell mode) form of `_PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`."""
+    match = _PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    optional = match.group("may") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        _put_from_outside_the_game_into_hand(
+            game, game.controller_of(spell), optional, spell.name, source_id_of(spell)
+        )
+
+    return effect
+
+
 def _parse_outside_the_game_fetch(effect_text: str) -> AbilityEffect | None:
     """Karn's `−2` shape, or a notice for a near miss, or None.
 
@@ -41665,6 +41733,20 @@ def _parse_outside_the_game_fetch(effect_text: str) -> AbilityEffect | None:
       resolves, by its controller, and an option that is illegal or impossible
       cannot be chosen.
     """
+    put = _PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(" ".join(effect_text.split()))
+    if put is not None:
+        optional = put.group("may") is not None
+
+        def put_into_hand(game: "Game", ability: AbilityOnStack) -> None:
+            _put_from_outside_the_game_into_hand(
+                game,
+                game.player(ability.controller),
+                optional,
+                ability.source_name,
+                source_id_of(ability),
+            )
+
+        return put_into_hand
     match = _OUTSIDE_THE_GAME_FETCH_RE.match(" ".join(effect_text.split()))
     if match is None:
         if _LOOKS_LIKE_OUTSIDE_THE_GAME_RE.search(effect_text):
