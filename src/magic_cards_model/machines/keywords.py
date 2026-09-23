@@ -3259,6 +3259,29 @@ def ward_cost(card: Card, payer: str) -> TotalCost | None:
     return _keyword_cost(ability, payer)
 
 
+def ward_cost_of_trigger(
+    ability: AbilityOnStack, permanent: CardState, payer: str
+) -> TotalCost | None:
+    """The cost of the one ward ability `ability` is (CR 702.21a), read off
+    that ability rather than off the printing whenever it was *granted*.
+
+    A granted ward ("becomes a 7/7 blue Giant creature with ward {3}", Hall of
+    Storm Giants; "Permanents you control with counters on them have ward
+    {1}", Innkeeper's Talent) is not on the permanent's printed card at all,
+    so asking the card found no ward and the trigger countered the targeting
+    spell without ever offering the payment. The granted line ("Ward {3}")
+    is what `granted_keyword_triggered_abilities` expanded, and it is the
+    ability's own `raw`; a printed ward's `raw` still carries its reminder
+    text and is not a bare keyword line, so it falls back to the printing
+    exactly as before - which is also where CR 702.21b's resolution-time X is
+    read.
+    """
+    granted = granted_keyword_ability(ability.ability.raw) if ability.ability.raw else None
+    if granted is not None and granted.canonical.lower() == "ward":
+        return _keyword_cost(granted, payer)
+    return ward_cost(permanent.card, payer)
+
+
 def is_ward_trigger(item: Any) -> bool:
     """Whether a stack object is a ward ability (CR 702.21a)."""
     if not isinstance(item, AbilityOnStack):
@@ -3291,7 +3314,7 @@ def ward_triggers(game: Any, spell: Any) -> list[WardTrigger]:
         permanent = item.source(game)
         if permanent is None:
             continue
-        cost = ward_cost(permanent.card, payer)
+        cost = ward_cost_of_trigger(item, permanent, payer)
         if cost is None:
             continue
         views.append(
@@ -4378,7 +4401,7 @@ def _ward_effect(game: Any, ability: AbilityOnStack) -> bool:
         return True
     payer = getattr(targeting, "controller", None) or game.active_player.username
     permanent = ability.source(game)
-    cost = ward_cost(permanent.card, payer) if permanent is not None else None
+    cost = ward_cost_of_trigger(ability, permanent, payer) if permanent is not None else None
     if cost is not None and game.may_pay_unless_cost(
         payer, cost, source=ability.source_name, source_id=source_id_of(ability)
     ):

@@ -369,7 +369,7 @@ def test_jolraels_animation_substitutes_x_and_biomancy_reads_its_copy_clause():
     """DDR#980, the provable half: which parser reads which sentence.
 
     Jolrael's animation is a shape `machines/layers.py` reads -
-    `_TARGET_ANIMATION_RE`, layer 4 for the types (CR 613.1d), layer 5 for the
+    `_ANIMATION_RE`, layer 4 for the types (CR 613.1d), layer 5 for the
     colours (CR 613.1e), layer 6 for the keywords (CR 613.1f) and sublayer 7b
     for the P/T (CR 613.4b) - but only once the "X/X ... where X is the number
     of cards in your hand" tail has been turned into a literal.

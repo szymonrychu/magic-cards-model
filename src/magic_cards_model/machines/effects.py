@@ -626,7 +626,7 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
     `LAYER_EFFECTS` row that builds a CR 611.2b "for as long as" condition.
     """
     source = ability.source(game)
-    if source is None or source.zone is not Zone.BATTLEFIELD:
+    if source is None:
         return
     # `x_value` substituted in first when the ability's own printed cost
     # announces one (CR 107.3a, announced before targets are chosen -
@@ -654,6 +654,14 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
     )
     profile = profile_for_text(ability_text)
     requires_target = profile.understood and bool(profile.requirements)
+    # CR 113.7a: "Once activated or triggered, an ability exists on the stack
+    # independently of its source. Destruction or removal of the source after
+    # that time won't affect the ability." A targeted ability still animates
+    # or pumps what it targeted after its source is gone (Nissa, Who Shakes
+    # the World destroyed in response to her own +1); only an ability that
+    # affects its source itself has nothing left to affect.
+    if not requires_target and source.zone is not Zone.BATTLEFIELD:
+        return
     targets = game.resolve_card_targets(ability) if requires_target else [source]
     if not targets:
         return
@@ -4636,7 +4644,12 @@ _SEARCH_AND_PUT_RE = re.compile(
     # owns), so a card whose cost genuinely announces X is unaffected: the
     # unsubstituted pass still reads nothing here and the retry still runs.
     r"search (?:your|their) library for "
-    rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<n_x>[xX])|(?P<that_many>that many)) "
+    # CR 107.1c's "any number of" (Nissa, Who Shakes the World's -8, Sarkhan
+    # Unbroken's -8) is a count with no ceiling but the library itself;
+    # `_read_search_count` reads it as the library's size at resolution, and
+    # CR 701.23b already lets the searcher stop anywhere from zero up.
+    rf"(?:(?P<any_number>any number of )|(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<n_x>[xX])"
+    r"|(?P<that_many>that many)) )"
     # The quality is optional: CR 701.23d names "a card" as its own kind of
     # search - "If a player is searching a hidden zone simply for a quantity of
     # cards, such as 'a card' or 'three cards,' that player must find that many
@@ -5196,6 +5209,10 @@ def _read_search_count(match: re.Match[str]) -> Callable[["Game", str], int | No
     a bare "X" with no such tail is left to the caller's `{X}` substitution.
     """
     groups = match.groupdict()
+    if groups.get("any_number"):
+        # CR 107.1c: "any positive number or zero" - bounded only by what the
+        # library holds when the search is made.
+        return lambda game, controller: len(game.player(controller).library)
     if groups.get("that_many"):
         return lambda game, _controller: that_many(game)
     if groups.get("n_x"):
@@ -16165,6 +16182,23 @@ def _parse_event_subject_pump_clause(effect_text: str) -> AbilityEffect | None:
     return effect
 
 
+def _layer_sentences_come_last(sentences: Sequence[str]) -> bool:
+    """True when every genuine layer sentence of an ability follows every
+    other sentence - the printed order `_compose_layer_effect_with_
+    remainder_for_ability` then keeps (CR 608.2c)."""
+    layer_positions = [
+        index
+        for index, sentence in enumerate(sentences)
+        if is_genuine_resolution_layer_sentence(sentence)
+    ]
+    other_positions = [
+        index
+        for index, sentence in enumerate(sentences)
+        if not is_genuine_resolution_layer_sentence(sentence)
+    ]
+    return bool(layer_positions and other_positions) and min(layer_positions) > max(other_positions)
+
+
 def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> AbilityEffect | None:
     """The ability-side twin of `_compose_layer_effect_with_remainder`, for
     `_ability_effect_or_notice`'s own `_is_layer_effect_text` fallback."""
@@ -16225,6 +16259,19 @@ def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> Abilit
 
     remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=False)
     if remainder_effect is not None:
+        if _layer_sentences_come_last(sentences):
+            # CR 608.2c: "The controller of the spell or ability follows its
+            # instructions in the order written." Nissa, Who Shakes the
+            # World's +1 puts its counters on "target noncreature land" and
+            # untaps it *before* "It becomes a 0/0 Elemental creature": run
+            # the other way round, the land is already a creature when the
+            # counter instruction checks its target, gets none, and dies a
+            # 0/0 (CR 704.5f).
+            def remainder_then_layer_effect(game: "Game", ability: AbilityOnStack) -> None:
+                remainder_effect(game, ability)
+                create_continuous_effect_of_ability(game, ability)
+
+            return remainder_then_layer_effect
 
         def layer_and_remainder_effect(game: "Game", ability: AbilityOnStack) -> None:
             create_continuous_effect_of_ability(game, ability)
@@ -17965,6 +18012,107 @@ def _parse_counters_more_if_subtype_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "you may `<instruction>`. If you do, `<animation>`." - Wall of
+#: Resurgence's, Noyan Dar, Roil Shaper's and Cyclone Sire's "you may put three
+#: +1/+1 counters on target land you control. If you do, that land becomes a
+#: 0/0 Elemental creature with haste that's still a land." The consequence is
+#: a continuous effect (`machines/layers.py`'s animation shape, read through
+#: `is_genuine_resolution_layer_sentence`), which no player-clause "if you do"
+#: merger can run; the instruction is any clause `parse_mixed_effect` reads.
+_MAY_THEN_IF_YOU_DO_LAYER_RE = re.compile(
+    r"^you may (?P<action>.+?)\.\s*if you do, (?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_then_if_you_do_layer_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_THEN_IF_YOU_DO_LAYER_RE`'s shape.
+
+    CR 608.2d: the "you may" is the controller's choice as the ability
+    resolves; "if you do" (CR 608.2c) runs the continuous effect only when
+    that choice was yes. The consequence names the earlier instruction's
+    target by anaphora ("that land"), so it applies to the ability's own
+    targets (CR 608.2b rechecks them) - and, CR 113.7a, whether or not the
+    ability's source is still on the battlefield.
+    """
+    match = _MAY_THEN_IF_YOU_DO_LAYER_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    consequence = match.group("consequence").strip()
+    if not is_genuine_resolution_layer_sentence(consequence):
+        return None
+    action_text = match.group("action").strip()
+    action = parse_mixed_effect(action_text[0].upper() + action_text[1:] + ".")
+    if action is None:
+        return None
+    consequence_sentence = consequence[0].upper() + consequence[1:] + "."
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if not game.may(
+            game.controller_of(ability),
+            action_text,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        action(game, ability)
+        targets = game.resolve_card_targets(ability)
+        if source is None or not targets:
+            return
+        continuous_effects(game).create(
+            source,
+            targets=targets,
+            context=layer_context_for(game, game.controller_of(ability)),
+            ability_text=consequence_sentence,
+            game=game,
+        )
+
+    return effect
+
+
+#: "You get an emblem with "`<ability>`." `<more instructions>`" - CR 114.2's
+#: emblem followed by further text in the same ability: Nissa, Who Shakes the
+#: World's -8 ("... Search your library for any number of Forest cards, put
+#: them onto the battlefield tapped, then shuffle.") and Kiora, Master of the
+#: Depths' -8 ("... Then create three 8/8 blue Octopus creature tokens."). The
+#: quoted ability ends in its own full stop *inside* the closing quote, so the
+#: clause splitter never sees a sentence boundary there and the whole
+#: paragraph reached `_GET_AN_EMBLEM_RE` as one quote; this reads the quote
+#: off the front and hands the rest to the ordinary dispatch, in printed order
+#: (CR 608.2c).
+_GET_AN_EMBLEM_THEN_RE = re.compile(
+    r"""^(?P<who>you|they) gets? an emblem with ["“](?P<text>[^"”]+)["”]\.?\s+(?P<rest>\S.*)$""",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_get_an_emblem_then_clause(text: str) -> AbilityEffect | None:
+    """`_GET_AN_EMBLEM_THEN_RE`'s shape: the emblem, then everything after it
+    read by `_ability_effect_or_notice` - or `None` when that remainder does
+    not read, so the paragraph is never half-run (CR 608.2c)."""
+    match = _GET_AN_EMBLEM_THEN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    quoted = match.group("text")
+    rest = _LEADING_THEN_WORD_RE.sub("", match.group("rest").strip())
+    rest = rest[0].upper() + rest[1:]
+    remainder = _ability_effect_or_notice(rest)
+    if remainder is None or getattr(remainder, "__name__", "").endswith("_notice_only"):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        _get_emblem(game, game.controller_of(ability), quoted, ability.source_name)
+        remainder(game, ability)
+
+    return effect
+
+
+#: A leading "Then " on the instruction that follows an emblem (Kiora,
+#: Master of the Depths) - sequencing only (CR 608.2c).
+_LEADING_THEN_WORD_RE = re.compile(r"^then,?\s+", re.IGNORECASE)
+
+
 def _parse_get_an_emblem_clause(text: str) -> AbilityEffect | None:
     """Jaya Ballard's -8, read whole (the quoted abilities contain full stops
     the clause splitter would cut at)."""
@@ -18821,6 +18969,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     add_one_mana_of_any_color = _parse_add_one_mana_of_any_color_trigger(effect_text)
     if add_one_mana_of_any_color is not None:
         return add_one_mana_of_any_color
+    may_then_if_you_do_layer = _parse_may_then_if_you_do_layer_clause(effect_text)
+    if may_then_if_you_do_layer is not None:
+        return may_then_if_you_do_layer
+    emblem_then = _parse_get_an_emblem_then_clause(effect_text)
+    if emblem_then is not None:
+        return emblem_then
     emblem = _parse_get_an_emblem_clause(effect_text)
     if emblem is not None:
         return emblem
