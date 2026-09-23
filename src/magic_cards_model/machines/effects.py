@@ -6276,6 +6276,124 @@ def _merge_surveil_then_if_quality_to_hand_clauses(
     return 2, effect
 
 
+#: "for each card you put on top of your library, you draw a card" -
+#: Starving Revenant's own ETB, the surveil's *kept* half rather than
+#: `_SURVEIL_THEN_IF_PUT_QUALITY_TO_HAND_RE`'s graveyard-bound half. CR
+#: 701.25a's own "the rest on top of your library" is exactly `CardSplit.
+#: top_order`, which `Game.surveil` always fills (never `None`, unlike a
+#: bare `look_at_top_and_split` caller that lets the order stay implicit),
+#: so counting it needs no fallback to "N minus how many moved".
+_SURVEIL_THEN_FOR_EACH_ON_TOP_DRAW_A_CARD_RE = re.compile(
+    r"^for each card you put on top of your library, you draw a card$", re.IGNORECASE
+)
+
+
+def _merge_surveil_then_for_each_on_top_draw_and_lose_life_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_SURVEIL_RE` followed by `_SURVEIL_THEN_FOR_EACH_ON_TOP_DRAW_A_CARD_RE`
+    and `_YOU_LOSE_LIFE_RE` (Starving Revenant's own three sentences once
+    `_prepare_effect_clauses` has split "you draw a card and you lose 3
+    life" at its own top-level "and") - a three-way merge for the identical
+    CR 608.2c reason `_merge_surveil_then_if_quality_to_hand_clauses` merges
+    two: "for each card you put on top" has no meaning apart from how many
+    the surveil that ran a moment earlier actually kept there, which only
+    the live `CardSplit` it returned can answer.
+
+    Each kept card draws one card and loses the life separately (CR 608.2c's
+    own "in the order written", one iteration of "you draw a card and you
+    lose `<n>` life" per card), so a "whenever you draw a card" trigger this
+    same permanent or another one carries - Starving Revenant's own descend
+    8 - fires once per card kept, exactly as many times as the surveil kept
+    cards on top, never once for the batch.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    surveil_match = _SURVEIL_RE.fullmatch(clauses[index].strip())
+    if surveil_match is None:
+        return None
+    reader = _amount_reader(surveil_match.group("n"), surveil_match.group("where_x"))
+    if reader is None:
+        return None
+    if not _SURVEIL_THEN_FOR_EACH_ON_TOP_DRAW_A_CARD_RE.fullmatch(clauses[index + 1].strip()):
+        return None
+    lose_match = _YOU_LOSE_LIFE_RE.fullmatch(clauses[index + 2].strip().rstrip("."))
+    if lose_match is None:
+        return None
+    life_per_card = int(lose_match.group("life"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        split = game.surveil(
+            player, reader(game, player.username), source=source, source_id=source_id
+        )
+        for _ in split.top_order:
+            game.draw_cards(player, 1)
+            player.lose_life(life_per_card)
+
+    return 3, effect
+
+
+#: "Reveal the top card of your library and put that card into your hand.
+#: You lose life equal to that card's mana value." - the Dark Confidant
+#: template (CR 202.3's mana value), Pain Seer's own Inspired trigger.
+#: `_prepare_effect_clauses` cuts the first sentence's own "and" the same
+#: way it cuts every other one, so this reads as three clauses rather than
+#: two.
+_REVEAL_TOP_CARD_OF_LIBRARY_BARE_RE = re.compile(
+    r"^reveal the top card of your library$", re.IGNORECASE
+)
+_PUT_THAT_CARD_INTO_YOUR_HAND_BARE_RE = re.compile(r"^put that card into your hand$", re.IGNORECASE)
+_YOU_LOSE_LIFE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE = re.compile(
+    r"^you lose life equal to that card'?s mana value$", re.IGNORECASE
+)
+
+
+def _merge_reveal_top_hand_lose_life_equal_to_mana_value_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_REVEAL_TOP_CARD_OF_LIBRARY_BARE_RE`, `_PUT_THAT_CARD_INTO_YOUR_HAND_
+    BARE_RE`, then `_YOU_LOSE_LIFE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE` - a
+    three-way merge for the identical CR 608.2c reason the surveil merges
+    above are: "that card" (CR 608.2c anaphora) is whichever card the first
+    sentence just revealed, which only this function, holding the live
+    `CardState` the reveal touched, can answer; a fresh "top of library"
+    lookup after the card has already moved to hand would answer nothing.
+
+    The reveal (CR 701.20a) happens before the move, so every player sees
+    the same card the life total is about to be measured against - moving
+    it to hand first and revealing the hand card after would show a card
+    that, by the rules text's own order, was never on top of the library
+    when it was shown.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    if not _REVEAL_TOP_CARD_OF_LIBRARY_BARE_RE.fullmatch(clauses[index].strip()):
+        return None
+    if not _PUT_THAT_CARD_INTO_YOUR_HAND_BARE_RE.fullmatch(clauses[index + 1].strip()):
+        return None
+    if not _YOU_LOSE_LIFE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE.fullmatch(clauses[index + 2].strip()):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if not player.library:
+            # CR 704.5b's failed-draw shape has no analogue that stops a
+            # reveal from an empty library outright, but there is simply no
+            # card to reveal, move, or measure a mana value from (CR 121.4).
+            return
+        card = player.library[0]
+        game.reveal(card, source=source)
+        mana_value = int(card.mana_value)
+        player.add(card, Zone.HAND)
+        player.lose_life(mana_value)
+
+    return 3, effect
+
+
 #: "You gain life equal to the life you've lost this turn." - Children of
 #: Korlis. The amount is read off `Player.life_lost_this_turn`, the gross
 #: per-turn ledger, not the net change in the life total: every route down
@@ -7435,10 +7553,14 @@ _TIMING_COST_REDUCTION_LINE_RE = re.compile(
 #: "Fireball deals X damage divided evenly, rounded down, among any number
 #: of targets." would be read as the card's *second* clause rather than its
 #: only resolving one, and `_parse_mixed_clauses`'s fail-closed-per-clause
-#: rule would take it down too.
+#: rule would take it down too. One or more mana symbols
+#: (`\{[^}]+\}(?:\{[^}]+\})*`), matching `_COST_INCREASE_PER_TARGET_RE`'s own
+#: amount group rather than a single-symbol amount only - Aerial Formation's
+#: off-pool "costs {2}{U} more" is the multi-symbol proof this generalises
+#: past Fireball's/Launch the Fleet's own single generic {1}.
 _COST_INCREASE_PER_TARGET_LINE_RE = re.compile(
-    r"^(?:Strive\s*—\s*)?This spell costs \{[^}]+\} more to cast for each target beyond "
-    r"the first\.\s*",
+    r"^(?:Strive\s*—\s*)?This spell costs \{[^}]+\}(?:\{[^}]+\})* more to cast for each "
+    r"target beyond the first\.\s*",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -10304,6 +10426,94 @@ def _parse_target_gains_ability_until_cast_from_exile_clause(text: str) -> Abili
     return effect
 
 
+#: "Until end of turn, any number of target creatures each gain "`<ability>`"."
+#: (Launch the Fleet) and "Until end of turn, up to two target creatures you
+#: control each gain "`<ability>`"." (Warriors' Lesson, off-pool - proves this
+#: generalises past "any number of" to "up to N" and past no-controller-
+#: qualifier to "you control") - CR 611.2's "until end of turn" duration on
+#: CR 113.10a's ability-adding grant, aimed at *targets* rather than at a
+#: static source's own board-wide group (`_GRANT_QUOTED_ABILITY_THEN_RETURN_
+#: FRONT_FACE_RE`'s "creatures you control", a `Selector` re-evaluated every
+#: sweep) or at the source itself (`_GAINS_ABILITY_RE`).
+#:
+#: The whole-paragraph "quoted ability ends in a full stop of its own" problem
+#: `_GRANT_QUOTED_ABILITY_THEN_RETURN_FRONT_FACE_RE`'s own docstring explains
+#: applies here even harder: Launch the Fleet's own granted ability text
+#: carries an internal comma too ("Whenever this creature attacks, create
+#: a..."), which `split_effect_clauses`'s naive top-level comma cut slices
+#: mid-sentence - so this is matched whole, ahead of any clause split, the
+#: same way every other quoted-whole-paragraph shape in this module is.
+#:
+#: The phrase capture is handed to `_targets_understood(..., count_agnostic=
+#: True)` rather than re-deriving its own grammar for "any number of"/"up to
+#: N"/"you control": `machines/targeting.py`'s `profile_for_text` already
+#: reads every one of those shapes for the *casting* side (Launch the Fleet's
+#: own strive cost already depends on it), so re-parsing the count here would
+#: only be able to disagree with what casting already decided was legal.
+#:
+#: The grant itself is `CardState.granted_ability_texts` (CR 113.10a: "These
+#: instructions become part of the ability that's added to the object"),
+#: exactly the way `_parse_target_gains_ability_until_cast_from_exile_clause`
+#: grants one - the *expiry* is the only thing that differs: a `DelayedTrigger`
+#: watching `TriggerEvent.BEGINNING_OF_STEP`/`Step.CLEANUP` rather than a
+#: named game event, because CR 514.2's own cleanup-step turn-based action is
+#: where every "until end of turn" effect ends, and CR 514.3a keeps that
+#: cleanup step itself open for priority ("a cleanup step in which any of
+#: these things happen ... will be followed by another cleanup step") when
+#: something genuinely triggers there - which this does, once, per target.
+_PLURAL_TARGET_GAIN_QUOTED_ABILITY_RE = re.compile(
+    r"^(?:until end of turn,\s*)?"
+    r"(?P<phrase>[a-z][a-z0-9 ]*? target creatures?(?: you control)?) each gain "
+    r'["“](?P<ability>.+?)["”]'
+    r"(?:\s+until end of turn)?\s*\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_plural_target_gain_quoted_ability_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_PLURAL_TARGET_GAIN_QUOTED_ABILITY_RE`'s shape."""
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _PLURAL_TARGET_GAIN_QUOTED_ABILITY_RE.fullmatch(" ".join(whole.split()))
+    if match is None:
+        return None
+    phrase = match.group("phrase").strip()
+    if not _targets_understood(phrase, count_agnostic=True, battlefield_only=True):
+        return None
+    ability_text = match.group("ability").strip()
+    if not ability_text:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source_name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            if ability_text not in target.granted_ability_texts:
+                target.granted_ability_texts = (*target.granted_ability_texts, ability_text)
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=f'{target.name} gains "{ability_text}" until end of turn.',
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=Step.CLEANUP,
+                    controller=controller.username,
+                    source_id=source_id_of(stack_object),
+                    source_name=source_name,
+                    remaining=1,
+                    expires_end_of_turn=False,
+                    effect=RevokeGrantedAbility(
+                        land_id=target.id,
+                        land_stamp=target.zone_change_stamp,
+                        granted_text=ability_text,
+                    ),
+                )
+            )
+
+    return effect
+
+
 #: "You may cast this card for as long as it remains exiled." - Emrakul, the
 #: Exigent Doom's own second sentence of the same ability, self-referential
 #: ("this card") rather than `_PLAY_PERMISSION_RE`'s "it"/"that card" aimed
@@ -12510,7 +12720,7 @@ _GAIN_LIFE_EQUAL_TO_DAMAGE_PREVENTED_RE = re.compile(
 _CONTINUOUS_PUMP_OR_KEYWORD_RE = re.compile(
     r"^(?:target (?:[a-z]+ )?creature"
     r"(?: and all other creatures with the same name as that creature)?"
-    rf"|(?:up to )?{AMOUNT} target (?:[a-z]+ )?creatures(?: each)?)"
+    rf"|(?:(?:up to )?{AMOUNT}|any number of) target (?:[a-z]+ )?creatures(?: each)?)"
     r" (?:gets? [+-]\d+/[+-]\d+|gains? [a-z ]+) until end of turn\.?$",
     re.IGNORECASE,
 )
@@ -12518,8 +12728,18 @@ _CONTINUOUS_PUMP_OR_KEYWORD_RE = re.compile(
 #: The pump half of a combined "gets +N/+N and gains <keyword>" sentence
 #: (Give In to Violence: "Target creature gets +2/+2 and gains lifelink until
 #: end of turn."), once `split_effect_clauses`'s own "and" separator has cut
-#: the duration and the keyword off the end of it.
-_BARE_CONTINUOUS_PUMP_RE = re.compile(r"^target creature gets [+-]\d+/[+-]\d+$", re.IGNORECASE)
+#: the duration and the keyword off the end of it. The plural alternative
+#: ("(?:(?:up to )?{AMOUNT}|any number of) target creatures(?: you control)?
+#: each get(s)? ...") is Aerial Formation's own shape - "Any number of target
+#: creatures each get +1/+1 and gain flying until end of turn." - split the
+#: identical way, with the plural verb "get" (not "gets") and the "each"
+#: landing inside this first clause rather than after it.
+_BARE_CONTINUOUS_PUMP_RE = re.compile(
+    r"^(?:target creature gets|(?:(?:up to )?"
+    + AMOUNT
+    + r"|any number of) target creatures(?: you control)? each gets?) [+-]\d+/[+-]\d+$",
+    re.IGNORECASE,
+)
 #: The keyword half of the *reversed* order, "gains <keyword> and gets +N/+N"
 #: - a shape this pool has no real card for, but CR 608.2c does not care which
 #: half a card prints first, so it is read the same way as the forward order.
@@ -17668,6 +17888,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if attacking_tokens_then_sacrifice is not None:
         return attacking_tokens_then_sacrifice
+    tapped_attacking_tokens = _parse_tapped_attacking_tokens_whole_text(
+        effect_text, for_spell=False
+    )
+    if tapped_attacking_tokens is not None:
+        return tapped_attacking_tokens
     may_cost_then_attacking_token = _parse_may_cost_then_attacking_token_clause(effect_text)
     if may_cost_then_attacking_token is not None:
         return may_cost_then_attacking_token
@@ -26099,6 +26324,69 @@ def _parse_create_tapped_attacking_tokens_then_sacrifice(text: str) -> AbilityEf
     return effect
 
 
+#: "create `<n>` `<desc>` token(s)[ with `<tail>`][ named `<name>`] that's/
+#: are tapped and attacking." with **no** trailing sacrifice sentence -
+#: `_ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE`'s own unconditional,
+#: permanent sibling. Launch the Fleet's own granted line ("Whenever this
+#: creature attacks, create a 1/1 white Soldier creature token that's
+#: tapped and attacking.") is exactly this shape once the quoted ability
+#: resolves as a triggered ability of its own (`machines/effects.py`'s
+#: `_parse_plural_target_gain_quoted_ability_whole_text`): the token it
+#: makes is a real, permanent Soldier, never sacrificed - `_MAY_COST_THEN_
+#: ATTACKING_TOKEN_RE` below already makes the sacrifice *optional* for
+#: Kavaron Harrier's/Gut, True-Soul Zealot's own "you may ..." wrapper
+#: around this identical token shape, which is what proves the mechanism
+#: (`create_tokens(..., tapped=True, attacking=...)`) already handles a
+#: permanent tapped-and-attacking token correctly; this is the same call
+#: with no cost-choice preamble and no forced sacrifice at all.
+_TAPPED_ATTACKING_TOKENS_RE = re.compile(
+    rf"^create (?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+with\s+(?P<tail>.+?))?"
+    r"(?:\s+named (?P<name>.+?))?"
+    r"\s+that(?:'s|’s| is| are) tapped and attacking\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_tapped_attacking_tokens_whole_text(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_TAPPED_ATTACKING_TOKENS_RE`'s shape - see it for why no sacrifice
+    trails it here. Read whole (`_strip_non_effect_preamble` first, the same
+    way every other whole-text token shape in this section is) rather than
+    through the ordinary per-clause dispatch, since a card carrying this
+    sentence as its *only* one still reaches here with nothing before it to
+    strip - the preamble strip is a no-op in that case, exactly as it is for
+    `_parse_create_tapped_attacking_tokens_then_sacrifice`.
+    """
+    match = _TAPPED_ATTACKING_TOKENS_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    definition = _parse_generic_token_descriptor(
+        match.group("desc").strip().split(), match.group("tail")
+    )
+    if definition is None:
+        return None
+    if name := match.group("name"):
+        definition = definition.model_copy(update={"name": name.strip()})
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        create_tokens(
+            game,
+            definition,
+            controller.username,
+            count,
+            tapped=True,
+            attacking=_defender_of_controllers_attack(game, controller.username),
+        )
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # "You may <cost>. If you do, create ... tapped and attacking[. Sacrifice
 # that token at <timing>.]" (CR 118.12, CR 508.4, CR 603.7a)
@@ -34087,6 +34375,11 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if grant_then_return_front_face is not None:
         return [grant_then_return_front_face]
+    plural_target_gain_quoted_ability = _parse_plural_target_gain_quoted_ability_whole_text(
+        text, for_spell=for_spell
+    )
+    if plural_target_gain_quoted_ability is not None:
+        return [plural_target_gain_quoted_ability]
     each_sacrifices_then_if_you_did = _parse_each_sacrifices_then_if_you_did_clause(
         text, for_spell=for_spell
     )
@@ -34151,14 +34444,23 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # hand and draw seven cards" splits into two clause fragments,
         # neither of which `_parse_mixed_clause` can read alone.
         return [each_player_may_discard_hand_and_draw]
-    if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(" ".join(text.strip().split())):
+    if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).strip().split())
+    ):
         # Read whole for the same reason the two above are: Echoing Courage's
         # subject, "Target creature and all other creatures with the same name
         # as that creature", carries a bare " and " that `_CLAUSE_SEPARATOR`
         # cuts through, leaving two fragments neither of which is a readable
         # clause. A single-sentence pump with no such "and" (Giant Growth)
         # reaches exactly the same `create_continuous_effect` one step earlier
-        # than it used to, for the identical effect.
+        # than it used to, for the identical effect. `_strip_non_effect_
+        # preamble` first, the same way every whole-text check above already
+        # reads `whole = _strip_non_effect_preamble(text).strip()` before its
+        # own regex - Aerial Formation's own leading "Strive — This spell
+        # costs {2}{U} more to cast for each target beyond the first." is a
+        # sibling *cost* sentence (CR 601.2f), never part of this one's own
+        # shape, and this raw `text` (unlike the whole-text parsers' own
+        # `whole`) was never stripped before reaching here.
         return [create_continuous_effect]  # type: ignore[list-item]
     # Riveteers Charm's own mode one ("... with the greatest mana value
     # among creatures and planeswalkers they control.") is a single sentence
@@ -34294,6 +34596,22 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_surveil_then_if_quality_to_hand_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_surveil_then_for_each_on_top_draw_and_lose_life_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_reveal_top_hand_lose_life_equal_to_mana_value_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

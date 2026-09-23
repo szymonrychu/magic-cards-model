@@ -1077,6 +1077,71 @@ def evasion_restriction_refusal(
     return None
 
 
+#: Akawalli, the Seething Tower's descend 8 clause grants exactly this text
+#: (`machines/layers.py`'s `_split_gated_grants`, the "not `has ...`, so
+#: capitalise and grant verbatim" branch every non-keyword static clause in
+#: that module goes through - the same path `ATTACK_WITHOUT_DEFENDER_TEXT`
+#: above is a fixed literal for). Checked directly with `has_ability` the
+#: same way that constant is, both because "can't be blocked by more than
+#: one creature" has no keyword name of its own for `has_keyword` to look
+#: up, and because a bare granted fragment with no subject and no trailing
+#: full stop is not a `layer_readable_sentences` sentence at all (that
+#: reader is built for a printed line's own full sentences, not a layer-6
+#: literal): `_evasion_restriction_sentences`'s sentence-search approach
+#: would silently never see this text, the same way it would never see
+#: `ATTACK_WITHOUT_DEFENDER_TEXT` if that were checked through it instead of
+#: directly.
+BLOCKED_BY_AT_MOST_ONE_GRANT_TEXT = "Can't be blocked by more than one creature"
+
+
+def _blocked_by_at_most_one_sentences(attacker: CardState, game: "Game | None" = None) -> list[str]:
+    """Self-referential "can't be blocked by more than one creature" sentences
+    the attacker has *now* (CR 613.5), read the same layer-aware way
+    `_evasion_restriction_sentences` reads "can't be blocked" - Charging
+    Rhino's own printed, unconditional "This creature can't be blocked by
+    more than one creature." The other shape, Akawalli's conditional grant,
+    is not a sentence in this sense at all - see `BLOCKED_BY_AT_MOST_ONE_
+    GRANT_TEXT`'s own docstring - so `blocked_by_at_most_one_refusal` checks
+    it separately, directly, before ever calling this.
+    """
+    subjects = _self_reference_alternatives(attacker)
+    subject = re.compile(
+        rf"^(?:{'|'.join(re.escape(name) for name in subjects)})\b"
+        r".*can't be blocked by more than one creature\b",
+        re.IGNORECASE,
+    )
+    sentences = _computed_ability_sentences(attacker, game)
+    return [sentence for sentence in sentences if subject.search(sentence)]
+
+
+def blocked_by_at_most_one_refusal(
+    game: "Game", attacker: CardState, blocker_count: int
+) -> str | None:
+    """Why a block declaration with two or more blockers on `attacker` is
+    illegal, or None (CR 509.1b): a restriction "an attacking creature has
+    that restricts what can block it" (CR 509.1b), the reverse of menace, so
+    it is checked against the whole finished declaration the same way
+    `declaration_refusal` already checks menace - "how many creatures are
+    blocking this attacker" is a fact about the declaration, not about one
+    (blocker, attacker) pair, which is why this lives beside `declaration_
+    refusal` rather than `block_refusal`.
+    """
+    if blocker_count < 2:
+        return None
+    if game is not None and game.characteristics_of(attacker).has_ability(
+        BLOCKED_BY_AT_MOST_ONE_GRANT_TEXT
+    ):
+        return (
+            f"{attacker.name} can't be blocked by more than one creature "
+            f"(descend 8 grant, CR 509.1b)"
+        )
+    for sentence in _blocked_by_at_most_one_sentences(attacker, game):
+        return (
+            f'{attacker.name} can\'t be blocked by more than one creature: "{sentence}" (CR 509.1b)'
+        )
+    return None
+
+
 def looks_like_unparsed_evasion_restriction(
     attacker: CardState, game: "Game | None" = None
 ) -> bool:
@@ -1426,7 +1491,10 @@ def declaration_refusal(game: "Game", declared: dict[UUID, list[CardState]]) -> 
     restriction (CR 509.1b): whether one blocker is the *only* one blocking
     this combat is a fact about the whole declaration, not about the
     (blocker, attacker) pair `block_refusal` is asked about. Each creature
-    may block only one attacker (CR 509.1a).
+    may block only one attacker (CR 509.1a). "Can't be blocked by more than
+    one creature" (Charging Rhino; Akawalli, the Seething Tower's descend 8)
+    is menace's mirror image, checked the same way (`blocked_by_at_most_one_
+    refusal`).
     """
     seen: set[UUID] = set()
     all_blockers: list[CardState] = []
@@ -1442,6 +1510,9 @@ def declaration_refusal(game: "Game", declared: dict[UUID, list[CardState]]) -> 
             continue
         if has_keyword(attacker, Keyword.MENACE, game) and 0 < len(blockers) < 2:
             return f"{attacker.name} has menace and cannot be blocked by fewer than two creatures"
+        cap_refusal = blocked_by_at_most_one_refusal(game, attacker, len(blockers))
+        if cap_refusal is not None:
+            return cap_refusal
 
     for blocker in all_blockers:
         refusal = self_block_alone_refusal(game, blocker, len(all_blockers))

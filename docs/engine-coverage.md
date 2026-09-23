@@ -3345,3 +3345,191 @@ Sweep after the four closed clauses: 128 of 1255 silent (comfortably under
 the 130 ceiling the reviewing coordinator set), 0 unmatchable trigger
 conditions, registry rows unchanged (`EFFECTS` 1, `TRIGGER_EFFECTS` 6,
 `ACTIVATED_EFFECTS` 0).
+
+## Ability-word clauses: block cap, -N/-M pump, quoted-grant-to-targets
+
+Flow 2's own ability-word task (T15): every reported gap under Descend,
+Inspired, and Strive, plus off-pool proofs for Enrage, Morbid, Repartee, and
+Survival that the clause *under* each ability word actually runs, not only
+that the trigger fires.
+
+**CR 509.1b's "can't be blocked by more than one creature"** - the mirror of
+menace (CR 702.111b), and just as much a whole-declaration fact as menace
+is, not a per-(blocker, attacker) one: `machines/combat.py`'s
+`blocked_by_at_most_one_refusal`, called from `declaration_refusal` beside
+the existing menace check. Two shapes are read: the printed, unconditional
+sentence (Charging Rhino, `_blocked_by_at_most_one_sentences`, the same
+self-referential-subject reading `_evasion_restriction_sentences` already
+does for plain "can't be blocked") and `BLOCKED_BY_AT_MOST_ONE_GRANT_TEXT`,
+a fixed literal checked directly with `has_ability` the way `ATTACK_
+WITHOUT_DEFENDER_TEXT` already is - a bare granted fragment with no subject
+and no trailing full stop is not a `layer_readable_sentences` sentence at
+all, so the sentence-search path would never see it. Akawalli, the Seething
+Tower's own Descend 8 ("... gets an additional +2/+2 and can't be blocked
+by more than one creature.") is the conditional case: `machines/layers.py`'s
+`_DESCEND_GATED_SELF_STATIC_LEADING_RE`/`_TRAILING_RE` now accept an
+optional "an additional" ahead of the pump delta, and the trailing
+non-keyword clause is granted verbatim by the existing `_split_gated_grants`
+"not `has ...`" branch - no new machinery there, only the regex widening.
+Tested in `scenarios/test_blocked_by_at_most_one.py` and (the pump/gating
+half) `scenarios/test_descend_ability_word.py`.
+
+**A general "`<target>` gets -N/-M" reader** - `machines/layers.py`'s
+`_SUBJECT` (and therefore `_PUMP_RE`) only ever read a "you control"
+controller clause after a target's noun; Deepwater Hypnotist's own Inspired
+clause, "target creature an opponent controls gets -3/-0 until end of
+turn.", needed the second possessive too. `_CONTROLLER_CLAUSE` now covers
+both. The negative delta itself needed no new code - `COUNT` already
+includes zero and every digit, so "-3/-0" was always inside `_PUMP_RE`'s
+own grammar once the controller clause matched. Burrog Befuddler's ETB
+("target creature an opponent controls gets -1/-0 until end of turn.") is
+the off-pool, non-Inspired proof that the reader is general across any
+trigger; Pain Seer's own Inspired clause is a *third*, unrelated effect
+("reveal the top card of your library and put that card into your hand.
+You lose life equal to that card's mana value.") - the Dark Confidant
+template, previously entirely unbuilt (no reader anywhere read "reveal the
+top card ... put that card into your hand" as its own clause) - closed with
+a three-clause merge, `_merge_reveal_top_hand_lose_life_equal_to_mana_value_
+clauses`, the "that card" (CR 608.2c) anaphora resolved off the live
+`CardState` the reveal touched rather than a second lookup. Tested in
+`scenarios/test_inspired.py`.
+
+**"`<any number of|up to N|N>` target creatures [you control] each gain
+"`<quoted ability>`"" until end of turn"** (CR 611.2a's duration on CR
+113.10a's ability-adding grant, aimed at resolved *targets* rather than a
+board-wide `Selector`) - genuinely new: `machines/layers.py`'s existing
+group-quoted-ability-grant builders (`_GROUP_QUOTED_ABILITY_GRANT_RE`,
+`_GRANT_QUOTED_ABILITY_THEN_RETURN_FRONT_FACE_RE`) are all sourced off a
+*permanent's own printed static text*, reconciled onto `CardState.granted_
+ability_texts` every board sweep by `sync_granted_ability_texts` reading
+`quoted_ability_grants`'s "what could this **source** grant" vocabulary - a
+one-shot spell resolution that grants to whatever it targeted has no
+permanent on the battlefield whose printed text that reconciliation could
+ever re-derive the grant from (`sync_granted_ability_texts`'s own docstring
+already excludes exactly this shape, citing Urza's Saga's one-shot chapter
+II grant as the precedent). `machines/effects.py`'s new
+`_parse_plural_target_gain_quoted_ability_whole_text` instead appends the
+quoted text directly to each resolved target's `granted_ability_texts` (the
+same primitive `_parse_target_gains_ability_until_cast_from_exile_clause`
+already uses for its own differently-durationed grant) and schedules a
+`DelayedTrigger` per target - `RevokeGrantedAbility`, reused unchanged -
+watching `TriggerEvent.BEGINNING_OF_STEP`/`Step.CLEANUP` rather than a
+named game event, since CR 514.2's cleanup-step turn-based action is where
+every "until end of turn" effect ends and CR 514.3a keeps that step open
+for priority when something genuinely triggers there. Read whole, ahead of
+`split_effect_clauses`, the same way every other quoted-whole-paragraph
+shape in this module already is: the granted ability text itself commonly
+carries its own internal comma (Launch the Fleet's own "Whenever this
+creature attacks, create a..."), which the naive top-level comma cut would
+slice mid-sentence. The *target* phrase ("any number of target creatures",
+"up to two target creatures you control") is handed to `_targets_
+understood(..., count_agnostic=True)` rather than re-derived, since
+`machines/targeting.py`'s `profile_for_text` already reads every one of
+those count shapes for the casting side.
+
+Proven the granted trigger actually fires, not merely that the text lands:
+Launch the Fleet's own attack trigger creates a Soldier token when the
+granted creature attacks (which needed its own fix - `machines/effects.py`'s
+"create N tokens ... tapped and attacking" shape only ever existed paired
+with a forced sacrifice, `_ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE`
+et al.; the **permanent**, unconditional form
+`_parse_tapped_attacking_tokens_whole_text`/`_TAPPED_ATTACKING_TOKENS_RE`
+did not exist, so a granted "tapped and attacking" token with no sacrifice
+sentence after it silently created nothing). Warriors' Lesson (off-pool,
+"up to two target creatures you control", a differently-worded granted
+ability) proves both the grant and its combat-damage-draw trigger firing,
+and that the grant is actually gone by the next cleanup step. Tested in
+`scenarios/test_strive.py`.
+
+**Two multi-symbol mana-cost regressions the strive proof cards exposed**,
+unrelated to strive's own rules but blocking the proof cards' own sweep
+verdict: `machines/effects.py`'s `_COST_INCREASE_PER_TARGET_LINE_RE` and
+`machines/targeting.py`'s twin `_COST_INCREASE_PER_TARGET_LINE` both matched
+only a single mana symbol (`\{[^}]+\}`) in "This spell costs `<N>` more to
+cast for each target beyond the first." - every pool printing of the shape
+happened to cost one generic symbol (Fireball's/Launch the Fleet's own
+`{1}`), so Aerial Formation's off-pool `{2}{U}` exposed the gap. Both now
+read one-or-more symbols, matching `casting.py`'s own `_COST_INCREASE_PER_
+TARGET_RE`, which already did. `machines/effects.py`'s own `_BARE_
+CONTINUOUS_PUMP_RE`/`_CONTINUOUS_PUMP_OR_KEYWORD_RE` and `machines/layers.
+py`'s `_PLURAL_TARGET_SUBJECT` were also widened to accept "any number of"
+alongside "up to N"/"N", the same shape Aerial Formation's own "Any number
+of target creatures each get +1/+1 and gain flying until end of turn."
+needed on the plain-pump side.
+
+**Descend's intervening-*if* shape** (CR 603.4/608.2a) - distinct from the
+gated-*static* shape above and from CR 700.11's own per-turn "descended
+this turn" event count: "When/Whenever ..., if there are N or more
+permanent cards in your graveyard, `<effect>`." `machines/triggers.py`'s
+`intervening_if_holds` had no branch for it at all - `_descend_permanent_
+card_count_holds`/`_DESCEND_PERMANENT_CARD_COUNT_CLAUSE` is the new one,
+reading `machines/layers.py`'s own `count_permanent_cards` (imported
+locally to avoid a real circular import: `layers.py` imports `combat.py`,
+which imports this module). **What actually blocked both proof cards from
+ever reaching that branch**: `machines/abilities.py`'s `_ABILITY_WORD`
+regex, used to strip a CR 207.2c label before `_parse_triggered` ever sees
+the line, capped its second word at letters only - "Descend 4"/"Descend 8"
+never stripped, so the whole line never started with "When"/"Whenever" and
+silently became a `StaticAbility` instead of a `TriggeredAbility` for
+*every* triggered descend clause in the pool (harmless for the static/pump
+shape, which `machines/layers.py` reads straight off raw oracle text and
+never consults this classification - fatal for a triggered one, which
+`abilities_triggered_by` only ever finds as a real `TriggeredAbility`). Now
+accepts a bare number as the second word, matching `machines/layers.py`'s
+own `_ABILITY_WORD_RE` that already did. Coati Scavenger (ETB, "if there
+are four or more permanent cards in your graveyard") and Starving Revenant
+(a non-self-referential "whenever you draw a card" trigger, "if there are
+eight or more") are the off-pool proofs, both ways - triggers and does not
+trigger below the threshold (CR 603.4: the ability never becomes pending at
+all, not one that fires and does nothing). Starving Revenant's own ETB
+("surveil 2. Then for each card you put on top of your library, you draw a
+card and you lose 3 life.") needed a third new merge, `_merge_surveil_then_
+for_each_on_top_draw_and_lose_life_clauses`: `_merge_surveil_then_if_
+quality_to_hand_clauses`'s existing sibling only ever read the surveil's
+*graveyard*-bound half (`CardSplit.moved`); this reads the *kept* half
+(`CardSplit.top_order`, which `Game.surveil` always fills), drawing and
+losing life once per card kept so a sibling "whenever you draw a card"
+trigger - this same card's own Descend 8 - fires once per card, not once
+for the batch. Tested in `scenarios/test_descend_ability_word.py`.
+
+**Morbid's "enters with N counters if a creature died this turn"** - a CR
+614.1c replacement effect, not a triggered ability at all, so it shares
+none of the machinery above. `machines/replacement.py`'s `_ENTERS_WITH`
+already had a *leading* `(?:If (?P<condition>...),\s*)?` group (evaluated
+generically at gathering time for any `ENTERS_WITH`/`ENTERS_TAPPED` effect
+whose `condition` is set, via `_enters_tapped_condition`/`_read_enters_
+condition`), but no trailing one, and Festerhide Boar's own printing puts
+the condition after the counters ("... enters with two +1/+1 counters on
+it if a creature died this turn."). Added a trailing `(?:\s+if
+(?P<trailing_condition>.+?))?` group, folded into the same `condition`
+field either way, plus `_read_enters_condition`'s own new "a creature died
+this turn" case (`Game.creatures_died_this_turn > 0`, the same running
+count `machines/triggers.py`'s `_creatures_died_this_turn_holds` already
+reads for the *triggered*-ability shape of the identical fact, Darklight
+Phoenix's threshold form - the two readers do not share code because the
+reading sites are different, not because the fact is). `--card` still
+reports Charging Rhino's and Festerhide Boar's own clauses as
+`static_unaudited`, the same as Mindskinner's identical CR 509.1b shape and
+every other combat-restriction/replacement-effect line this sweep does not
+have visibility into (`scripts/sweep_pool.py`'s own severity ordering:
+`static_unaudited` is "an unknown, never a claim of coverage", not a bug -
+`silent` is the only bucket that is) - both are proven correct by scenario
+instead. Tested in `scenarios/test_morbid.py`.
+
+Enrage (Needletooth Raptor: combat and noncombat damage both fire it, zero
+and prevented damage do not - `test_enrage.py`), Repartee (Rehearsed
+Debater: an instant/sorcery targeting a creature pumps it, one targeting a
+player does not - `test_repartee.py`), and Survival (Cautious Survivor: the
+second main phase's own beginning-of-step trigger, gated on whether the
+creature is tapped - `test_survival.py`) needed no engine changes at all;
+each off-pool proof card is new pool coverage for an ability word whose
+underlying trigger and clause were already both correctly built.
+
+Sweep after this task: `--keywords` unchanged at this task's scope (four
+keywords outside it remain - Compleated, Miracle, Monstrosity, Sneak, each
+its own subsystem, tracked separately); `--effects` shows none of Charging
+Rhino, Akawalli, Deepwater Hypnotist, Launch the Fleet, Gruesome Discovery,
+Bellowing Aegisaur, Ranging Raptors, Stirring Hopesinger, Kona, Basking
+Capybara, Didact Echo, or any printing added by this task as `silent`
+(Charging Rhino and Festerhide Boar are `static_unaudited`, the documented,
+non-bug category above; every other card is `handled`).

@@ -1747,10 +1747,13 @@ _SELF_COST_REDUCTION_LINE = re.compile(
 #: actually prices the increase (CR 601.2f); this is only the same read-it-
 #: out-of-the-way fix `machines/effects.py`'s own `_COST_INCREASE_PER_TARGET_
 #: LINE_RE` already applies to the resolution text, duplicated here for the
-#: identical circular-import reason `_SELF_COST_REDUCTION_LINE` is.
+#: identical circular-import reason `_SELF_COST_REDUCTION_LINE` is. One or
+#: more mana symbols (`\{[^}]+\}(?:\{[^}]+\})*`), matching `_COST_INCREASE_
+#: PER_TARGET_RE`'s own amount group and `effects.py`'s twin - Aerial
+#: Formation's off-pool "costs {2}{U} more" is the multi-symbol proof.
 _COST_INCREASE_PER_TARGET_LINE = re.compile(
-    r"\b(?:Strive\s*—\s*)?This spell costs \{[^}]+\} more to cast for each target beyond "
-    r"the first\.\s*",
+    r"\b(?:Strive\s*—\s*)?This spell costs \{[^}]+\}(?:\{[^}]+\})* more to cast for each "
+    r"target beyond the first\.\s*",
     re.IGNORECASE,
 )
 

@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "f25ea466-eb48-4c4c-b5d4-35f58e46ebe1",
+  "oracle_id": "2ca969eb-3d79-4d1f-8d9d-7b8204ad166a",
+  "multiverse_ids": [
+    636828
+  ],
+  "mtgo_id": 118052,
+  "arena_id": 87268,
+  "tcgplayer_id": 525359,
+  "cardmarket_id": 743209,
+  "name": "Starving Revenant",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1",
+  "scryfall_uri": "https://scryfall.com/card/lci/123/starving-revenant?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:36:10Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.jpg?1783913770",
+    "normal": "https://cards.scryfall.io/normal/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.jpg?1783913770",
+    "large": "https://cards.scryfall.io/large/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.jpg?1783913770",
+    "png": "https://cards.scryfall.io/png/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.png?1783913770",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.jpg?1783913770",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.jpg?1783913770",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.webp?1783913770",
+    "grid": "https://cards.scryfall.io/grid/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.webp?1783913770",
+    "display": "https://cards.scryfall.io/display/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.webp?1783913770",
+    "art": "https://cards.scryfall.io/art/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.webp?1783913770",
+    "crop": "https://cards.scryfall.io/crop/front/f/2/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1.webp?1783913770"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Spirit Horror",
+  "oracle_text": "When this creature enters, surveil 2. Then for each card you put on top of your library, you draw a card and you lose 3 life.\nDescend 8 \u2014 Whenever you draw a card, if there are eight or more permanent cards in your graveyard, target opponent loses 1 life and you gain 1 life.",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Surveil",
+    "Descend"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set": "lci",
+  "set_name": "The Lost Caverns of Ixalan",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alci&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lci?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f25ea466-eb48-4c4c-b5d4-35f58e46ebe1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2ca969eb-3d79-4d1f-8d9d-7b8204ad166a&unique=prints",
+  "collector_number": "123",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Fesbra",
+  "artist_ids": [
+    "420561e6-7613-4404-8653-d38503b49f8a"
+  ],
+  "illustration_id": "1f8c06a5-9898-4c9d-ad75-e5244a5f2f24",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 7453,
+  "penny_rank": 1955,
+  "preview": {
+    "source": "Dorasuta",
+    "source_uri": "https://dorasuta.jp/column/detail?aid=10901",
+    "previewed_at": "2023-10-30"
+  },
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.23",
+    "eur_foil": "0.24",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636828&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStarving%2BRevenant",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStarving%2BRevenant",
+    "edhrec": "https://edhrec.com/route/?cc=Starving+Revenant"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525359%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743209&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/118052?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

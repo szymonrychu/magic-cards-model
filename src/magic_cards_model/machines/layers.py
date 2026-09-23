@@ -2710,19 +2710,31 @@ _UP_TO_ONE_PREFIX = r"(?:up to one )?"
 #: never reaches past the qualifier into the noun, "you control", or a verb
 #: that happens to also be lowercase words.
 _QUALIFIER = r"(?: [a-z][a-z-]*)*?"
+#: The controller clause a "target"/"another target" subject may carry after
+#: its noun - "you control" (Liliana the Faultless's own shape above) or "an
+#: opponent controls" (Deepwater Hypnotist's own Inspired trigger: "target
+#: creature an opponent controls gets -3/-0 until end of turn."). Same
+#: reasoning as `_QUALIFIER`: this parser never re-derives who was legally
+#: targeted, it only has to recognise the shape, so admitting the second
+#: possessive costs nothing.
+_CONTROLLER_CLAUSE = r"(?: you control| an opponent controls)?"
 _SUBJECT = (
-    rf"(?:{_UP_TO_ONE_PREFIX}target{_QUALIFIER} {_SUBJECT_NOUN}(?: you control)?"
+    rf"(?:{_UP_TO_ONE_PREFIX}target{_QUALIFIER} {_SUBJECT_NOUN}{_CONTROLLER_CLAUSE}"
     rf"|this creature|this permanent"
-    rf"|another target{_QUALIFIER} {_SUBJECT_NOUN}(?: you control)?)"
+    rf"|another target{_QUALIFIER} {_SUBJECT_NOUN}{_CONTROLLER_CLAUSE})"
 )
 
 #: A plural target subject - "up to two target creatures" (Dauntless
 #: Onslaught's own CR 115.6 shape), "up to 2 target attacking creatures" (a
 #: reflexive ability's count written in as a digit, Swashbuckler
-#: Extraordinaire, Campsite Cuisine) - read with the plural verb ("get",
-#: "each get", "gain"). CR 601.2c/603.3d already fixed how many and which
-#: were targeted; the builders below apply to every resolved target.
-_PLURAL_TARGET_SUBJECT = rf"(?:up to )?(?:\d+|{COUNT}) target{_QUALIFIER} creatures"
+#: Extraordinaire, Campsite Cuisine), or "any number of target creatures"
+#: (CR 107.1c's own "any positive number or zero", Aerial Formation's and
+#: Launch the Fleet's shared strive template) - read with the plural verb
+#: ("get", "each get", "gain"). CR 601.2c/603.3d already fixed how many and
+#: which were targeted; the builders below apply to every resolved target.
+_PLURAL_TARGET_SUBJECT = (
+    rf"(?:(?:up to )?(?:\d+|{COUNT})|any number of) target{_QUALIFIER} creatures"
+)
 _PLURAL_PUMP_SUBJECT = rf"{_PLURAL_TARGET_SUBJECT}(?: each)?"
 
 #: Xenagos, God of Revels' own reversed order: "another target creature you
@@ -5636,16 +5648,29 @@ _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE = re.compile(
 #: uncached`'s own call), the same normalisation every self-referential
 #: static sentence in this module already relies on - so no literal-name
 #: branch is needed here, only "this creature/permanent/token".
+#:
+#: Akawalli's own Descend 8 ("... gets an additional +2/+2 and can't be
+#: blocked by more than one creature.") is the same template stacked on top
+#: of its own Descend 4: "an additional" is an optional word ahead of the
+#: pump delta (CR 613.4c's sublayer 7c applies every static's own +2/+2
+#: independently regardless of the printed adjective - it is there only so
+#: the two pumps read as additive English, not as a rules instruction), and
+#: the trailing grant is `_split_gated_grants`' plain "not `has ...`, so
+#: granted verbatim" branch: CR 509.1b's own evasion-restriction shape, read
+#: at the combat layer by `machines/combat.py`'s `blocked_by_at_most_one_
+#: refusal`, the same way that module already reads Ghalta's/Loot's own
+#: literal-text grants rather than a `Keyword` member, because "can't be
+#: blocked by more than one creature" has no keyword name of its own.
 _DESCEND_GATED_SELF_STATIC_LEADING_RE = re.compile(
     r"^as long as there are (?P<count>[a-z]+) or more permanent cards in your "
     r"graveyard, this (?:creature|permanent|token) "
-    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
+    r"(?:gets (?:an additional )?(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
     r"|(?P<grant_only>has .+?))\.?$",
     re.IGNORECASE,
 )
 _DESCEND_GATED_SELF_STATIC_TRAILING_RE = re.compile(
     r"^this (?:creature|permanent|token) "
-    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
+    r"(?:gets (?:an additional )?(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
     r"|(?P<grant_only>has .+?))"
     r" as long as there are (?P<count>[a-z]+) or more permanent cards in your graveyard\.?$",
     re.IGNORECASE,

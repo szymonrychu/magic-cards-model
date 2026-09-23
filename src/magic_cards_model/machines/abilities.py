@@ -2544,7 +2544,21 @@ def _parse_chapter_line(text: str, common: dict) -> list[TriggeredAbility] | Non
 
 
 #: CR 207.2c ability word: a short capitalised phrase, then an em dash.
-_ABILITY_WORD = re.compile(r"^([A-Z][A-Za-z'\- ]{2,30}?)\s+—\s+(?=\S)")
+#: Capped at two words, which is how Oracle prints them - except "descend
+#: 4"/"descend 8", whose second word is a bare number rather than another
+#: capitalised word (CR 207.2c's own closed list has both spellings; see
+#: `machines/effects.py`'s `_ABILITY_WORDS` for the full list and its
+#: citation), so the second slot accepts one too - the same shape `machines/
+#: layers.py`'s own `_ABILITY_WORD_RE` already reads for the static half of
+#: this ability word. Without this, "Descend 4 —"/"Descend 8 —" never
+#: stripped here, so a *triggered* descend clause (Coati Scavenger, Starving
+#: Revenant) never started with "When"/"Whenever" once this far and fell
+#: through to `StaticAbility` - harmless for the pump/grant shape, which
+#: `machines/layers.py` reads straight off the card's raw oracle text and
+#: never consults this module's own `Ability` classification, but fatal for
+#: a triggered one, whose `abilities_triggered_by`/`intervening_if_holds`
+#: only ever see a `TriggeredAbility`.
+_ABILITY_WORD = re.compile(r"^([A-Z][A-Za-z'\- ]{2,30}?(?: \d+)?)\s+—\s+(?=\S)")
 
 #: CR 603.1's three words, at the start of the line.
 _TRIGGER = re.compile(r"^(When|Whenever|At)\b\s*", re.IGNORECASE)

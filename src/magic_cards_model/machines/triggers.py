@@ -3338,6 +3338,55 @@ def _control_creature_with_power_holds(game: "Game", clause: str, source: CardSt
     return False
 
 
+#: "there are N or more permanent cards in your graveyard" - the "descend
+#: 4"/"descend 8" ability words' own condition (CR 207.2c) read as a plain
+#: triggered ability's intervening *if* rather than as `machines/layers.py`'s
+#: gated-self-static shape: Coati Scavenger's "When this creature enters, if
+#: there are four or more permanent cards in your graveyard, return target
+#: permanent card from your graveyard to your hand." and Starving Revenant's
+#: "Whenever you draw a card, if there are eight or more permanent cards in
+#: your graveyard, target opponent loses 1 life and you gain 1 life." -
+#: distinct from CR 700.11's own per-turn "you descended this turn" event
+#: count (the clause immediately below): the two mechanics only share the
+#: English word "descend". This one is a live graveyard count, re-checked at
+#: CR 603.4 and again at CR 608.2a, the same live count `machines/layers.py`'s
+#: `count_permanent_cards` answers for the static shape.
+_DESCEND_PERMANENT_CARD_COUNT_CLAUSE = re.compile(
+    rf"^there are (?P<n>{COUNT}) or more permanent cards in your graveyard$"
+)
+
+
+def _descend_permanent_card_count_holds(
+    game: "Game", clause: str, source: CardState
+) -> bool | None:
+    """`_DESCEND_PERMANENT_CARD_COUNT_CLAUSE`'s shape, or `None` when `clause`
+    is not it. `count_permanent_cards` is imported locally, the same way
+    `intervening_if_holds` already imports `meld_condition_holds` from
+    `.meld` - `machines/layers.py` imports `machines/combat.py`, which
+    imports this module for `GameEvent`, so a module-level import here would
+    be circular.
+    """
+    match = _DESCEND_PERMANENT_CARD_COUNT_CLAUSE.fullmatch(clause)
+    if match is None:
+        return None
+    threshold = parse_count(match.group("n"), article=False)
+    if threshold is None:
+        # Not actually reachable: every string `_DESCEND_PERMANENT_CARD_
+        # COUNT_CLAUSE` accepts for its `n` group is itself a `COUNT`
+        # alternative, and `parse_count` (with `article=False`, matching how
+        # this group was matched) is total over that vocabulary. `None` here
+        # would mean the two had drifted apart - return `None` rather than a
+        # `bool` so the caller's own `_fail_closed` catches that drift
+        # instead of this function silently answering for a shape it does
+        # not actually recognise.
+        return None
+
+    from .layers import count_permanent_cards
+
+    controller = source.controller or game.active_player.username
+    return count_permanent_cards(game.player(controller).graveyard) >= threshold
+
+
 #: CR 702.176a's own intervening *if*, read over the keyword and the counter
 #: kind rather than over one card: "this permanent's impending cost was paid
 #: and it has a time counter on it". The paid half is
@@ -3619,6 +3668,10 @@ def intervening_if_holds(
         # method's own docstring for the merge note).
         controller = source.controller or game.active_player.username
         return game.descended(controller)
+
+    descend_count = _descend_permanent_card_count_holds(game, clause, source)
+    if descend_count is not None:
+        return descend_count
 
     if clause in _REVOLT_CLAUSES:
         # CR 207.2c: Revolt is an ability word, so no numbered rule spells out

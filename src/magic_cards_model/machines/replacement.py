@@ -514,9 +514,19 @@ _ENTERS_PREPARED = re.compile(
 # every other entering-shape regex here does, though a "you control" subject
 # never actually matches it (it names a class, not the printing card itself).
 _ENTERS_UNTAPPED = re.compile(rf"^(?P<subject>.+?) {_ENTERS} untapped\.?$", re.IGNORECASE)
+#: The trailing counterpart of the leading `(?P<condition>...)` group above -
+#: Festerhide Boar's own Morbid clause (CR 207.2c, the ability word stripped
+#: before this ever runs), "This creature enters with two +1/+1 counters on
+#: it if a creature died this turn." CR 614.1c's "enters with" carries a
+#: condition on either side of the sentence in the pool, the same way
+#: `_ENTERS_TAPPED` already reads both a leading "If ..." and a trailing
+#: "unless ..."; `_try_enters_with` folds whichever one matched into the
+#: same `condition` field, and `_read_enters_condition` is what has to
+#: recognise the text itself.
 _ENTERS_WITH = re.compile(
     rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} with (?P<what>.+?)"
-    r"(?:\s+on it)?(?:,\s*(?P<tail>where .+?))?\.?$",
+    r"(?:\s+on it)?(?:,\s*(?P<tail>where .+?))?"
+    r"(?:\s+if (?P<trailing_condition>.+?))?\.?$",
     re.IGNORECASE,
 )
 _ENTERS_AS_COPY = re.compile(
@@ -1140,7 +1150,8 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
             counter_kind=counter_kind,
             amount_expression=expression,
             that_many_multiplier=that_many_multiplier,
-            condition=(match.group("condition") or "").strip() or None,
+            condition=(match.group("condition") or match.group("trailing_condition") or "").strip()
+            or None,
             self_replacement=_refers_to_self(subject, names),
         )
     ]
@@ -3783,6 +3794,21 @@ def _controls_a_card_type(card_type: Type) -> EntersCondition:
     return holds
 
 
+#: Morbid's own condition (CR 207.2c, the ability word stripped before this
+#: is ever reached) - "a creature died this turn", Festerhide Boar's own
+#: enters-with gate. CR 700.4: "'Dies' means 'is put into a graveyard from
+#: the battlefield.'" `Game.creatures_died_this_turn` is the running count
+#: `machines/triggers.py`'s own `_creatures_died_this_turn_holds` already
+#: reads for the *triggered*-ability shape of the same fact (Darklight
+#: Phoenix's "two or more creatures died this turn"); this is the bare,
+#: singular "a creature died" form - any death counts, not a threshold - for
+#: a *replacement* effect's own condition instead of a triggered ability's
+#: intervening if, which is why it is read here rather than imported from
+#: that module (the fact is shared, the reading site is not).
+def _a_creature_died_this_turn(game: "Game", entering: CardState) -> bool:
+    return game.creatures_died_this_turn > 0
+
+
 def _controls_other_lands(
     count: int, at_least: bool, basic: bool = False, subtype_plural: str | None = None
 ) -> EntersCondition:
@@ -3955,6 +3981,9 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
     match = _X_IS_RE.match(condition)
     if match is not None:
         return _x_is(int(match.group("count")), at_most=match.group("direction").lower() == "less")
+
+    if condition.strip().lower() == "a creature died this turn":
+        return _a_creature_died_this_turn
 
     return None
 
