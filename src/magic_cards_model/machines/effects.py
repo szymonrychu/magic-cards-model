@@ -32679,6 +32679,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     targeted = _parse_targeted_clause(clause, for_spell=for_spell)
     if targeted is not None:
         return targeted
+    explores = _parse_explores_clause(clause, for_spell=for_spell)
+    if explores is not None:
+        return explores
     loyalty_instant_speed = _parse_loyalty_instant_speed_clause(clause, for_spell=for_spell)
     if loyalty_instant_speed is not None:
         return loyalty_instant_speed
@@ -33160,6 +33163,19 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     together, so this has to see the paragraph whole before anything splits
     it.
     """
+    explores_whole_text = _parse_explores_clause(text, for_spell=for_spell)
+    if explores_whole_text is not None:
+        # Read whole, ahead of the comma/clause split, for the same reason
+        # every other "X, then Y" shape below is: "it explores, then it
+        # explores again" carries a bare ", then " `_CLAUSE_SEPARATOR` cuts
+        # clean through (Jadelight Ranger, Over the Edge's second mode), and
+        # the trailing fragment - "it explores again" - is not itself a
+        # clause `_parse_mixed_clause` can read alone. A plain "it explores."
+        # with nothing else on the card also matches here, before ever
+        # reaching the splitter; one with a second, unrelated clause (Enter
+        # the Unknown's own extra land drop) does not match the *whole*
+        # text and falls through to the per-clause registration below.
+        return [explores_whole_text]
     whole_text_effect = _parse_choose_name_search_and_exile_whole_text(text, for_spell=for_spell)
     if whole_text_effect is not None:
         return [whole_text_effect]
@@ -36804,6 +36820,145 @@ def _explore(
         controller.note_library_changed()  # CR 701.20d
 
 
+def _explore_each_in_apnap_order(
+    game: "Game",
+    explorers: list[CardState],
+    source_name: str,
+    source_id: str | None,
+    *,
+    twice: bool,
+) -> None:
+    """One or more permanents explore, one at a time (CR 701.44d).
+
+    CR 701.44d: "If multiple permanents are instructed to explore at the same
+    time, the first player in APNAP order who controls (or, in the case of a
+    permanent no longer on the battlefield, last controlled; see rule
+    701.44c) one or more of those permanents chooses one of them and it
+    explores. Then this process is repeated for each remaining instruction to
+    explore." CR 101.4 is the APNAP order itself.
+
+    Grouped by each permanent's own controller - live if it can still be
+    found, or its last known controller (CR 701.44c) - rather than by the
+    resolving ability's controller, so this reads correctly even for a
+    permanent nobody currently controls. With zero or one explorer (every
+    printed shape this parser currently reaches: a self-reference or a single
+    target both name at most one permanent) the loop runs once with nothing
+    to choose between, exactly CR 608.2d's "no impossible or trivial choice".
+    """
+    remaining = list(explorers)
+    while remaining:
+        by_controller: dict[str, list[CardState]] = {}
+        for permanent in remaining:
+            by_controller.setdefault(game.controller_of(permanent).username, []).append(permanent)
+        chooser = next(
+            player for player in _players_in_apnap_order(game) if player.username in by_controller
+        )
+        own = by_controller[chooser.username]
+        if len(own) == 1:
+            chosen = own[0]
+        else:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=chooser.username,
+                    prompt="choose a permanent to explore next",
+                    source=source_name,
+                    amount=1,
+                    cards=tuple(permanent.id for permanent in own),
+                    source_id=source_id,
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in own}
+            chosen = by_id.get(chosen_ids[0], own[0]) if chosen_ids else own[0]
+        remaining.remove(chosen)
+        controller = game.controller_of(chosen)
+        _explore(game, chosen, controller, source_name, source_id=source_id)
+        if twice:
+            _explore(game, chosen, controller, source_name, source_id=source_id)
+
+
+#: The generic "<subject> explores[, then it explores again]." clause (CR
+#: 701.44a-d), read off any triggered, activated, or spell text - Merfolk
+#: Branchwalker's "it explores.", Legion Vanguard's "This creature
+#: explores.", Miner's Guidewing's "target creature you control explores.",
+#: Jadelight Ranger's "it explores, then it explores again.". `for_spell`
+#: gates the self-referring subjects out: CR 701.44a instructs "a permanent"
+#: to explore, and a resolving spell is not itself a permanent (CR 300.1) to
+#: be that subject - only its targeted or "each ... you control" forms make
+#: sense on a spell (Enter the Unknown, Over the Edge).
+#:
+#: A literal self-reference by the card's own printed name reaches this the
+#: same way every other self-referring clause in this file does: normalized
+#: to "this permanent" by `_self_normalized_effect_text` before the second,
+#: fallback parse attempt - Amalia Benavides Aguirre's own "Amalia Benavides
+#: Aguirre explores. Then destroy ..." keeps its dedicated whole-sentence
+#: parser below instead (its second sentence is not part of this shape at
+#: all), but shares this function's `source_or_last_known` fix for CR
+#: 701.44c.
+_EXPLORES_CLAUSE_RE = re.compile(
+    r"^(?P<subject>this creature|this permanent|it|"
+    r"target creature you control|each creature you control)\s+explores"
+    r"(?P<again>,?\s*then it explores again)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_explores_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_EXPLORES_CLAUSE_RE`'s shape; see the banner above.
+
+    - **CR 701.44a** - what exploring does, run by the shared `_explore`.
+    - **CR 701.44b** - it explored even if every action was impossible (an
+      empty library) - `_explore` itself returns immediately in that case,
+      after nothing.
+    - **CR 701.44c** - a permanent gone before this resolves still explores,
+      by its last known information, and gets no counter (`_explore`'s own
+      `permanent.zone is Zone.BATTLEFIELD` check reads false either for a
+      live object that has moved off the battlefield, found by the same id
+      wherever it now sits, or for a detached last-known-information
+      snapshot, since both carry the zone they were last actually in).
+    - **CR 701.44d** - multiple explorers from one instruction go one at a
+      time, in APNAP order; `_explore_each_in_apnap_order` above.
+    """
+    match = _EXPLORES_CLAUSE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    subject = match.group("subject").lower()
+    twice = match.group("again") is not None
+    is_self = subject in ("this creature", "this permanent", "it")
+    if is_self and for_spell:
+        return None
+    is_target = subject == "target creature you control"
+    if is_target and not _targets_understood("target creature you control", count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        source_id = source_id_of(stack_object)
+        if is_self:
+            assert isinstance(stack_object, AbilityOnStack)
+            source = stack_object.source_or_last_known(game)
+            explorers = [source] if source is not None else []
+        elif is_target:
+            explorers = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+            ]
+        else:  # "each creature you control"
+            controller_username = game.controller_of(stack_object).username
+            explorers = [
+                permanent
+                for permanent in list(game.battlefield)
+                if game.controller_of(permanent).username == controller_username
+                and game.characteristics_of(permanent).is_creature
+            ]
+        _explore_each_in_apnap_order(game, explorers, source_name, source_id, twice=twice)
+
+    return effect
+
+
 #: Amalia Benavides Aguirre's whole trigger: "<Name> explores. Then destroy
 #: all other creatures if its power is exactly N." Read whole rather than
 #: clause by clause, because the second sentence's "its" is anaphoric
@@ -36846,7 +37001,12 @@ def _parse_explores_then_conditional_mass_destroy(text: str) -> AbilityEffect | 
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = game.controller_of(ability)
-        source = ability.source(game)
+        # CR 701.44c: gone before this resolves, its last known information
+        # still says which object explored - `source`, not `source_or_last_
+        # known`, used to make Amalia stop exploring entirely the moment she
+        # left the battlefield, which was simply wrong (see `_explore_each_
+        # in_apnap_order`'s docstring, this shape's generic twin).
+        source = ability.source_or_last_known(game)
         if source is None:
             return
         _explore(game, source, controller, ability.source_name, source_id=source_id_of(ability))

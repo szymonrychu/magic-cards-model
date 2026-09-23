@@ -124,6 +124,8 @@ from magic_cards_model.machines.effects import (  # noqa: E402
     _compose_layer_effect_with_remainder_for_ability_mode,
     _parse_counter_then_recruit_by_mana_value_pair,
     _parse_endure_clause,
+    _parse_explores_clause,
+    _parse_explores_then_conditional_mass_destroy,
     _parse_recruit_clause,
     _parse_where_x_is_continuous_effect,
     activated_effect_for,
@@ -150,6 +152,7 @@ from magic_cards_model.machines.replacement import (  # noqa: E402
     ENTERS_KINDS,
     _self_enters_modifiers,
     parse_replacement_effects,
+    strip_reminder_text,
 )
 from magic_cards_model.machines.targeting import profile_for_text  # noqa: E402
 from magic_cards_model.machines.triggers import (  # noqa: E402
@@ -733,6 +736,61 @@ def executed_keywords(printing: Card) -> dict[str, str]:
             "machines/keywords.py (has_ascend, _has_computed_ascend, "
             "ascend_as_a_spell_resolves, CR 702.131)"
         )
+
+    # Explore (CR 701.44a: "Certain spells and abilities instruct a
+    # permanent to explore.") is the bare-word keyword-action shape, read by
+    # `machines/effects._parse_explores_clause` off whichever triggered,
+    # activated, or spell text carries it - the generic "<subject>
+    # explores[, then it explores again]" shape, registered once in
+    # `_parse_mixed_clause` so all three contexts reach it. Gated on that
+    # parser (or Amalia Benavides Aguirre's own dedicated whole-sentence one,
+    # tried in the same order the real dispatch chain tries it) actually
+    # matching *this* card's own text, the same per-card discipline
+    # endure/recruit above use, not on the keyword name by itself.
+    # `tests/scenarios/test_explore.py` proves it live.
+    if any(k.lower() == "explore" for k in printing.keywords):
+        candidates: list[tuple[str, bool]] = [
+            (
+                getattr(ability, "effect", None) or ability.text,
+                ability.kind is not AbilityKind.STATIC,
+            )
+            for ability in parse_abilities(printing)
+        ]
+        profile = modal_profile(printing)
+        if profile is not None and profile.understood:
+            # A modal spell's own mode text (Over the Edge's second bullet)
+            # never shows up in `parse_abilities` at all - modes are read by
+            # `machines/modes.py`, not `machines/abilities.py` - so this asks
+            # the same place the real dispatch chain (`resolve_modal_spell`
+            # -> `parse_mode_effect`) reads each chosen mode's text from.
+            for mode in profile.modes:
+                mode_text, _ = strip_reminder_text(mode_effect_body(mode))
+                candidates.append((mode_text, False))
+        elif not candidates:
+            # A non-modal spell (Enter the Unknown) has no `parse_abilities`
+            # entry either - its own resolution text is the printed oracle
+            # text as a whole, the same thing `effect_for` reads.
+            text, _ = strip_reminder_text(printing.oracle_text or "")
+            candidates.append((text, False))
+        for text, is_ability in candidates:
+            if _parse_explores_then_conditional_mass_destroy(text) is not None:
+                found["explore"] = (
+                    "machines/effects.py "
+                    "(_parse_explores_then_conditional_mass_destroy, CR 701.44a)"
+                )
+                break
+            if _parse_explores_clause(text, for_spell=not is_ability) is not None:
+                found["explore"] = "machines/effects.py (_parse_explores_clause, CR 701.44a-d)"
+                break
+            if is_ability and _parse_explores_clause(text, for_spell=True) is not None:
+                # A targeted/"each ... you control" clause on a triggered or
+                # activated ability (Miner's Guidewing's death trigger) reads
+                # the same either way `for_spell` goes - only the self-only
+                # subjects are gated on it - so this catches that shape too
+                # without the ability/spell classification above having to
+                # be exact.
+                found["explore"] = "machines/effects.py (_parse_explores_clause, CR 701.44a-d)"
+                break
 
     return found
 

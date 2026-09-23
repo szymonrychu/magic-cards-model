@@ -2187,13 +2187,48 @@ Grouped by the mechanic each one needed, not by card:
   `_parse_return_target_then_conditional_draw` for **Boomerang Basics**: the
   controller check has to run before the return, because a card in a hand has
   no controller at all (CR 108.4).
-- **Explore** (CR 701.44a, CR 701.44b) - a new primitive, `_explore`. The
-  reveal is CR 701.20a; the "back on top or into your graveyard" half reuses
-  `Game.look_at_top_and_split` rather than `Game.surveil`, since nothing here
-  is CR 701.25a's keyword action. `_parse_explores_then_conditional_mass_
-  destroy` is **Amalia Benavides Aguirre**'s whole trigger, with the power
-  compared *after* the +1/+1 counter the explore may have just added
-  (CR 122.1a, CR 613.4c).
+- **Explore** (CR 701.44a-d) - the primitive is `_explore`: the reveal is
+  CR 701.20a; the "back on top or into your graveyard" half reuses `Game.
+  look_at_top_and_split` rather than `Game.surveil`, since nothing here is
+  CR 701.25a's keyword action. `_parse_explores_then_conditional_mass_
+  destroy` is **Amalia Benavides Aguirre**'s own whole trigger (her second
+  sentence, "Then destroy all other creatures if its power is exactly N.",
+  with the power compared *after* the +1/+1 counter the explore may have
+  just added, CR 122.1a, CR 613.4c). T08 added the generic clause,
+  `_parse_explores_clause`: "`<subject>` explores[, then it explores
+  again]." off any triggered, activated, or spell text, subject one of
+  "this creature"/"this permanent" (a literal self-name normalizes to this
+  first, `_self_normalized_effect_text`)/"it" (a self-reference, gated to
+  abilities only - CR 300.1: a resolving spell is never itself a permanent),
+  "target creature you control", or "each creature you control" (built for
+  generality; no Modern/Pioneer/Standard-legal printing carries this exact
+  wording yet, so it has no scenario proof). Registered twice in
+  `_parse_mixed_clause`'s and `_parse_mixed_clauses`' shared per-clause
+  dispatcher (reached by spells, triggered abilities, activated abilities,
+  and a modal spell's own chosen-mode text alike): once against a clause's
+  whole, unsplit text (catches the "again" doubling, which `_CLAUSE_
+  SEPARATOR`'s bare ", then " would otherwise cut into two unreadable
+  fragments) and once per ordinary clause (a plain "it explores." sharing a
+  card with an unrelated second clause, Enter the Unknown's own extra land
+  drop). CR 701.44c ("gone before this resolves, its last known information
+  says which object explored and who controlled it") reads `AbilityOnStack.
+  source_or_last_known` rather than `.source` - the same one-line fix now
+  applied to Amalia's own dedicated parser too, since her trigger had the
+  identical bug (stopped exploring entirely, rather than exploring with no
+  counter, the moment her own source left the battlefield). Several
+  permanents from one instruction (CR 701.44d) go one at a time in APNAP
+  order, `_explore_each_in_apnap_order`; every subject this parser reads
+  names at most one permanent, so that branch is implemented and unit-level
+  correct but likewise has no real multi-explorer printing to prove it
+  against (`o:explores` on Scryfall returns none). Proven live on **Merfolk
+  Branchwalker** (plain ETB "it explores": land, nonland-keep,
+  nonland-graveyard, an empty library, and the permanent bounced in response
+  to its own trigger), **Jadelight Ranger** (explores twice: land then
+  nonland, two nonlands), **Legion Vanguard** ("this creature", an activated
+  ability), **Miner's Guidewing** ("target creature you control", a death
+  trigger), **Enter the Unknown** (a sorcery, alongside an unrelated second
+  clause), and **Over the Edge** (a modal sorcery's second mode, the
+  "again" doubling on a targeted subject).
 - **Recruit** (CR 701.70a) - `_parse_recruit_clause` for **Lake-town
   Lookout** and **Esgaroth Garrison** (an ETB trigger this time, not a dies
   trigger). The keyword's own definition names the 1/1 white Human Soldier

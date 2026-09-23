@@ -1431,7 +1431,12 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     positives (ability words, flavor words, Partner/Choose a Background,
     the seven now-registered built keywords (T01's six plus T02's Waterbend),
     the stale "ascend" entry) are all gone, and no new false positive has
-    appeared in their place."""
+    appeared in their place. Explore is off this list as of T08:
+    `machines/effects._parse_explores_clause` reads the generic "<subject>
+    explores[, then it explores again]" shape (CR 701.44a-d) off triggered,
+    activated, and spell text alike, so the reported Amalia Benavides Aguirre
+    and every other explore-bearing pool card resolve rather than falling
+    through unexecuted."""
     from scripts.sweep_pool import in_target_formats
 
     names = [name for name in pool() if in_target_formats(card(name))]
@@ -1442,7 +1447,6 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     assert set(by_keyword) == {
         "Compleated",
         "Discover",
-        "Explore",
         "Miracle",
         "Monstrosity",
         "Sneak",

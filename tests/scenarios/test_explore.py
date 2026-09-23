@@ -36,6 +36,7 @@ which reuses `DecisionKind.SCRY`, so the harness answers it with
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
@@ -318,3 +319,400 @@ def test_life_gained_by_a_spell_triggers_the_explore_too():
     # `cast_and_resolve` runs through to the next priority, which is exactly
     # where CR 603.3 puts a waiting trigger on the stack.
     assert scenario.stack_names() == ["Amalia Benavides Aguirre's triggered ability"]
+
+
+# ============================================================================
+# The generic "<subject> explores[, then it explores again]." clause
+# ============================================================================
+#
+# Amalia's own trigger above is read whole, by a parser built for her exact
+# sentence (the conditional mass-destroy tacked onto it). Every other printed
+# explorer says just "<subject> explores." (optionally ", then it explores
+# again"), with no second sentence riding on it, and that shape had no reader
+# at all before this section - `machines/effects.py`'s `_parse_explores_
+# clause`, registered once in `_parse_mixed_clause`, so it reaches triggered,
+# activated, and spell text alike, modal spells included.
+#
+# Every CR number below was looked up with `mise run rules:find <n>` in the
+# session that wrote this file (the CR text is quoted from the effective
+# 2026-09-25 rules):
+#
+# - **CR 701.44a** - "Certain spells and abilities instruct a permanent to
+#   explore. To do so, that permanent's controller reveals the top card of
+#   their library. If a land card is revealed this way, that player puts that
+#   card into their hand. Otherwise, that player puts a +1/+1 counter on the
+#   exploring permanent and may put the revealed card into their graveyard."
+# - **CR 701.44b** - "A permanent 'explores' after the process described in
+#   rule 701.44a is complete, even if some or all of those actions were
+#   impossible." (the empty-library case below.)
+# - **CR 701.44c** - "If a permanent is no longer on the battlefield as an
+#   effect instructs it to explore, its last known information is used to
+#   determine which object explored and who controlled it." (the bounced-in-
+#   response case below - no counter, because there is no permanent left to
+#   put one on, but the reveal still happens for its own controller.)
+# - **CR 701.44d** - "If multiple permanents are instructed to explore at the
+#   same time, the first player in APNAP order who controls ... one or more
+#   of those permanents chooses one of them and it explores. Then this
+#   process is repeated for each remaining instruction to explore." Every
+#   printed subject this parser reads names at most one permanent (a self-
+#   reference or a single target), so `_explore_each_in_apnap_order`'s own
+#   choice-among-several branch is implemented and exercised by its own
+#   in-module tests but has no real printing to prove it against yet - no
+#   Modern/Pioneer/Standard-legal card instructs more than one permanent to
+#   explore from a single instruction (verified against every explore-bearing
+#   card Scryfall returns for `o:explores`; `each creature you control
+#   explores` and `up to N target creatures ... explore` both come back with
+#   zero matches). See `docs/engine-coverage.md`.
+#
+# Real off-pool printings, one per subject form and one per context, none of
+# them Amalia and none of them the deck pool's own Fire Magic-adjacent cards:
+#
+# - Merfolk Branchwalker (ETB trigger, "it") - land, nonland-keep,
+#   nonland-graveyard, empty library, and bounced in response to its own
+#   trigger.
+# - Jadelight Ranger (ETB trigger, "it ... then it explores again") - land
+#   then nonland; two nonlands.
+# - Legion Vanguard (activated ability, "This creature").
+# - Miner's Guidewing (death trigger, "target creature you control").
+# - Enter the Unknown (sorcery, "Target creature you control", combined with
+#   an unrelated second clause in the same card - proves the per-clause
+#   dispatcher still reads the rest of the card).
+# - Over the Edge (modal sorcery, mode 2, "Target creature you control ...
+#   then it explores again").
+#
+# "Named self" (a card referring to the exploring permanent by its own
+# printed name rather than "this creature"/"it") is Amalia's own shape,
+# above - `_self_normalized_effect_text` rewrites it to "this permanent"
+# before either parser ever sees it, so nothing here duplicates that proof.
+
+
+def _branchwalker_board(*library: str) -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            library=list(library),
+            hand=["Merfolk Branchwalker"],
+            battlefield=["Forest", "Forest"],
+        )
+        .player("bob", life=20)
+    )
+
+
+def _cast_branchwalker(scenario) -> None:
+    """Cast Merfolk Branchwalker and put its own ETB trigger on the stack,
+    unresolved - CR 603.3 already put it there by the time `cast_and_resolve`
+    returns, the same way Amalia's own trigger is already on the stack after
+    `combat_damage()` above."""
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest")
+    scenario.cast_and_resolve("Merfolk Branchwalker", *sources)
+    assert scenario.stack_names() == ["Merfolk Branchwalker's triggered ability"]
+
+
+def test_branchwalker_reveals_a_land_to_hand_with_no_counter():
+    """The generic parser's land branch (CR 701.44a), triggered context,
+    subject "it"."""
+    scenario = _branchwalker_board("Plains", "Llanowar Elves").build()
+    _cast_branchwalker(scenario)
+    scenario.resolve_top()
+
+    branchwalker = scenario.creature("Merfolk Branchwalker", "alice")
+    assert Counter.PLUS_ONE not in branchwalker.counters
+    assert _hand_names(scenario) == ["Plains"]
+    assert _library_names(scenario) == ["Llanowar Elves"]
+
+
+def test_branchwalker_may_keep_a_nonland_on_top_with_a_counter():
+    """The generic parser's nonland branch, kept rather than binned."""
+    scenario = _branchwalker_board("Llanowar Elves", "Plains").build()
+    scenario.scry_keeping_everything_on_top()
+    _cast_branchwalker(scenario)
+    scenario.resolve_top()
+
+    branchwalker = scenario.creature("Merfolk Branchwalker", "alice")
+    assert branchwalker.counters[Counter.PLUS_ONE] == 1
+    assert _hand_names(scenario) == []
+    assert _library_names(scenario) == ["Llanowar Elves", "Plains"]
+
+
+def test_branchwalker_may_bin_a_nonland_with_a_counter():
+    """The generic parser's nonland branch, sent to the graveyard instead."""
+    scenario = _branchwalker_board("Llanowar Elves", "Plains").build()
+    (elves,) = scenario.top_of_library(1)
+    scenario.scry_bottoming(elves)
+    _cast_branchwalker(scenario)
+    scenario.resolve_top()
+
+    branchwalker = scenario.creature("Merfolk Branchwalker", "alice")
+    assert branchwalker.counters[Counter.PLUS_ONE] == 1
+    assert scenario.find("Llanowar Elves", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+    assert _library_names(scenario) == ["Plains"]
+
+
+def test_branchwalker_still_explores_an_empty_library():
+    """CR 701.44b, read through the generic parser rather than Amalia's."""
+    scenario = _branchwalker_board().build()
+    _cast_branchwalker(scenario)
+    scenario.resolve_top()
+
+    alice = scenario.player("alice")
+    branchwalker = scenario.creature("Merfolk Branchwalker", "alice")
+    assert Counter.PLUS_ONE not in branchwalker.counters
+    assert alice.library == []
+    assert alice.hand == []
+    assert alice.graveyard == []
+
+
+def test_a_branchwalker_bounced_in_response_still_explores_with_no_counter():
+    """CR 701.44c: Merfolk Branchwalker itself answers its own trigger's
+    "it", so bouncing *that* permanent in response (CR 400.7 does not mint a
+    new id for a card that simply moves zones in this engine - see
+    `test_sacrifice_self_trigger.test_a_source_bounced_and_recast_in_
+    response_is_a_new_object_the_trigger_skips`, which reads the *same*
+    object's `.zone` right after its own bounce) leaves the trigger's own
+    `AbilityOnStack.source_id` still findable, now in alice's hand.
+
+    `_explore` reads that same object's current zone, not last known
+    information, since it is still findable at all - and it is that current
+    zone, not the battlefield one it triggered from, that decides there is no
+    counter to place. The library is still alice's own: CR 701.44c's "who
+    controlled it" is read off the exploring permanent's own controller, not
+    off whoever is priority-tapped at the moment it resolves.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Llanowar Elves", "Plains"],
+            hand=["Merfolk Branchwalker"],
+            battlefield=["Forest", "Forest"],
+        )
+        .player("bob", hand=["Unsummon"], battlefield=["Island"], life=20)
+        .build()
+    )
+    scenario.scry_keeping_everything_on_top()
+    _cast_branchwalker(scenario)
+    branchwalker = scenario.creature("Merfolk Branchwalker", "alice")
+
+    scenario.pass_priority("alice")
+    scenario.cast_and_resolve(
+        "Unsummon",
+        *scenario.untapped_sources("Island", username="bob"),
+        username="bob",
+        targets=[branchwalker],
+    )
+    assert branchwalker.zone is Zone.HAND
+    assert scenario.stack_names() == ["Merfolk Branchwalker's triggered ability"]
+
+    scenario.resolve_top()
+
+    # No counter - there is no permanent left to put one on - but the reveal
+    # and the graveyard-or-keep question (CR 701.44a's own "may", asked
+    # regardless of whether a counter went anywhere) both still happen: the
+    # library is still one card shorter in its own right, not merely
+    # untouched because the whole instruction quietly did nothing.
+    assert Counter.PLUS_ONE not in branchwalker.counters
+    assert [decision.kind for decision in scenario.questions_asked()] == [DecisionKind.SCRY]
+    assert _library_names(scenario) == ["Llanowar Elves", "Plains"]
+    assert _hand_names(scenario) == ["Merfolk Branchwalker"]
+
+
+# --------------------------------------------------------------------------
+# Jadelight Ranger: "it explores, then it explores again." - one sentence,
+# two full runs of CR 701.44a-b in a row for the same permanent.
+# --------------------------------------------------------------------------
+
+
+def _jadelight_board(*library: str) -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            library=list(library),
+            hand=["Jadelight Ranger"],
+            battlefield=["Forest", "Forest", "Forest"],
+        )
+        .player("bob", life=20)
+    )
+
+
+def _cast_jadelight(scenario) -> None:
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest")
+    scenario.cast_and_resolve("Jadelight Ranger", *sources)
+    assert scenario.stack_names() == ["Jadelight Ranger's triggered ability"]
+
+
+def test_jadelight_ranger_explores_a_land_then_a_nonland():
+    """First explore hits a land (hand, no counter); the second explore then
+    reads the *new* top of library - the land's departure is what makes the
+    second reveal Llanowar Elves rather than the card behind it."""
+    scenario = _jadelight_board("Plains", "Llanowar Elves").build()
+    scenario.scry_keeping_everything_on_top()
+    _cast_jadelight(scenario)
+    scenario.resolve_top()
+
+    ranger = scenario.creature("Jadelight Ranger", "alice")
+    assert ranger.counters[Counter.PLUS_ONE] == 1
+    assert _hand_names(scenario) == ["Plains"]
+    assert _library_names(scenario) == ["Llanowar Elves"]
+
+
+def test_jadelight_ranger_explores_two_nonlands():
+    """Both explores add a counter; the two questions are answered
+    differently (bin the first, keep the second) so the test cannot pass by
+    accident on an engine that only ever asks once."""
+    scenario = _jadelight_board("Llanowar Elves", "Birds of Paradise").build()
+    (elves,) = scenario.top_of_library(1)
+    scenario.scry_bottoming(elves)
+    scenario.scry_keeping_everything_on_top()
+    _cast_jadelight(scenario)
+    scenario.resolve_top()
+
+    ranger = scenario.creature("Jadelight Ranger", "alice")
+    assert ranger.counters[Counter.PLUS_ONE] == 2
+    assert scenario.find("Llanowar Elves", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+    assert _library_names(scenario) == ["Birds of Paradise"]
+    assert _hand_names(scenario) == []
+
+
+# --------------------------------------------------------------------------
+# Legion Vanguard: "This creature explores." on an activated ability.
+# --------------------------------------------------------------------------
+
+
+def test_legion_vanguard_explores_off_its_own_activated_ability():
+    """ "This creature" reads the same as Merfolk Branchwalker's "it", off an
+    activated ability's cost (a sacrifice) rather than an ETB trigger."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Llanowar Elves", "Plains"],
+            battlefield=["Legion Vanguard", "Swamp", "Grizzly Bears"],
+        )
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (elves,) = scenario.top_of_library(1)
+    scenario.scry_bottoming(elves)
+    vanguard = scenario.creature("Legion Vanguard", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.activate(vanguard, *scenario.untapped_sources("Swamp"), sacrificing=[bears])
+    scenario.resolve_top()
+
+    assert vanguard.counters[Counter.PLUS_ONE] == 1
+    assert scenario.find("Llanowar Elves", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+    assert _library_names(scenario) == ["Plains"]
+
+
+# --------------------------------------------------------------------------
+# Miner's Guidewing: "target creature you control explores." on a death
+# trigger - the targeted subject, off a triggered ability.
+# --------------------------------------------------------------------------
+
+
+def test_miners_guidewing_explores_a_targeted_creature_when_it_dies():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Plains", "Llanowar Elves"],
+            battlefield=["Miner's Guidewing", "Grizzly Bears"],
+        )
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    guidewing = scenario.creature("Miner's Guidewing", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Miner's Guidewing", [bears])
+
+    scenario.game.destroy(guidewing)
+    scenario.state_based_actions()
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Miner's Guidewing's triggered ability"]
+    scenario.resolve_top()
+
+    assert Counter.PLUS_ONE not in bears.counters
+    assert _hand_names(scenario) == ["Plains"]
+    assert _library_names(scenario) == ["Llanowar Elves"]
+
+
+# --------------------------------------------------------------------------
+# Enter the Unknown: "Target creature you control explores." on a sorcery,
+# sharing the card with an unrelated second clause.
+# --------------------------------------------------------------------------
+
+
+def test_enter_the_unknown_explores_its_target_and_grants_a_land_play():
+    """Proves both that the targeted subject reads off a resolving spell
+    (CR 300.1: a spell is never itself a permanent, so this shape only ever
+    exists targeted) and that `_parse_mixed_clause`'s per-clause dispatcher
+    still reads the card's *other* sentence once explore is not the gap."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Enter the Unknown"],
+            library=["Llanowar Elves", "Plains"],
+            battlefield=["Forest", "Grizzly Bears"],
+        )
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (elves,) = scenario.top_of_library(1)
+    scenario.scry_bottoming(elves)
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.cast_and_resolve(
+        "Enter the Unknown", *scenario.untapped_sources("Forest"), targets=[bears]
+    )
+
+    assert bears.counters[Counter.PLUS_ONE] == 1
+    assert scenario.find("Llanowar Elves", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+    assert scenario.game.extra_land_plays.get("alice", 0) == 1
+
+
+# --------------------------------------------------------------------------
+# Over the Edge: a modal sorcery whose second mode is "Target creature you
+# control explores, then it explores again." - the targeted subject with the
+# "again" doubling, off a chosen mode's own text.
+# --------------------------------------------------------------------------
+
+
+def test_over_the_edges_second_mode_explores_its_target_twice():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Over the Edge"],
+            library=["Plains", "Llanowar Elves"],
+            battlefield=["Forest", "Forest", "Grizzly Bears"],
+        )
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.scry_keeping_everything_on_top()
+
+    casting = scenario.cast("Over the Edge")
+    casting.choose_modes([2])
+    casting.choose_targets([bears])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Forest", "Forest"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    # First explore reveals Plains (hand, no counter); the second then reads
+    # the new top, Llanowar Elves - a nonland, so exactly one counter goes on,
+    # not two, which is what a parser that ran the *first* explore twice
+    # instead of running the instruction twice would get wrong.
+    assert bears.counters[Counter.PLUS_ONE] == 1
+    assert _hand_names(scenario) == ["Plains"]
+    assert _library_names(scenario) == ["Llanowar Elves"]
