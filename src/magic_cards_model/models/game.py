@@ -2989,7 +2989,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 59
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 60
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3794,6 +3794,15 @@ class Game(EngineModel):
     gained `last_known_attached_to`, the attachment an Aura or Equipment had
     as it left the battlefield (CR 608.2h), so an Aura's pending enters
     trigger can still find what it enchanted - a field added to `CardState`.
+
+    Bumped 59 -> 60 (S23, static anthems): the `QualifiedCreatures` selector
+    gained `nontoken`, `legendary`, `of_chosen_color` and `chosen_color`, and
+    the `Count` union gained `CountOtherCreaturesLikeThatOne` - fields and a
+    kind added to a `machines/layers.py` continuous-effect spec, the bump
+    rule's first bullet. Caged Sun, Voice of All, Mirror Box and Nightpack
+    Ambusher, all already in the pool, now apply where a version-59 board
+    applied nothing, and protection now also refuses blocks (CR 702.16f) and
+    attachments (CR 702.16c, CR 702.16d), the second bullet.
     """
 
     @model_validator(mode="before")
@@ -13346,6 +13355,24 @@ class Game(EngineModel):
         if color is not None:
             return color in source.colors
         return False
+
+    def protection_quality_against(self, target: CardState, source: CardState) -> str | None:
+        """The quality `target` has protection from that `source` has, or None.
+
+        The shared question behind CR 702.16c ("can't be enchanted by Auras
+        that have the stated quality"), CR 702.16d ("can't be equipped by
+        Equipment that have the stated quality") and CR 702.16f ("Attacking
+        creatures with protection can't be blocked by creatures that have the
+        stated quality"): each asks it of a *permanent* source, so the source's
+        qualities are read the way `source_has_quality` reads a damage
+        source's - computed on the battlefield (CR 613.5), printed elsewhere -
+        and the target's protection is `_effective_protection_qualities`', its
+        printed protection plus any granted in layer 6 (CR 613.1f).
+        """
+        for quality in self._effective_protection_qualities(target):
+            if self.source_has_quality(source, quality):
+                return quality
+        return None
 
     def _effective_protection_qualities(self, target: CardState) -> list[str]:
         """Every quality `target` has protection from right now: its own printed

@@ -238,14 +238,14 @@ def test_cavern_of_souls_restricted_mana_grant_is_not_silently_dropped():
     assert any(notice.source_id == cavern.id for notice in notices)
 
 
-def test_voice_of_alls_own_protection_grant_gets_a_layer_notice_not_this_one():
+def test_voice_of_alls_own_protection_grant_is_wired_with_no_notice():
     """Voice of All: "This creature has protection from the chosen color." is
-    permanent-targeted, unlike Runed Halo's player-targeted grant, and already
-    matches `machines/layers.py`'s generic "looks like a static grant but did
-    not parse" net with no new code needed - so it gets a `LayerNotice` there,
-    not an `UnwiredChoiceNotice` here. Both notices exist for the same reason
-    (an anaphora this wave's mana clause does not consume); they simply live on
-    two different lists because two different subsystems own them.
+    permanent-targeted, unlike Runed Halo's player-targeted grant. It used to
+    fail closed with a `LayerNotice`; `machines/layers.py`'s
+    `_SELF_PROTECTION_FROM_CHOSEN_COLOR_RE` now reads it as a layer 6 grant
+    (CR 613.1f) of "Protection from <the chosen colour>", so neither notice
+    list carries it - `test_protection_from_chosen_colour.py` covers what the
+    protection then does.
     """
     scenario = (
         Scenario()
@@ -264,9 +264,10 @@ def test_voice_of_alls_own_protection_grant_gets_a_layer_notice_not_this_one():
 
     assert voice.choice == Choice(kind=ChoiceKind.COLOR, value=Color.BLUE.value)
     assert not any(notice.source_id == voice.id for notice in scenario.game.unwired_choice_notices)
-    assert any(
+    assert not any(
         notice.source_id == voice.id for notice in scenario.game.continuous_effects.layer_notices
     )
+    assert scenario.game.characteristics_of(voice).has_ability("Protection from blue")
 
 
 def test_the_mana_clauses_own_choice_never_gets_an_unwired_notice():

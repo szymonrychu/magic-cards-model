@@ -582,6 +582,30 @@ def test_a_snapshot_written_before_the_last_known_attachment_is_refused() -> Non
         Game.model_validate(dumped)
 
 
+#: The last version before S23's static anthems: `QualifiedCreatures` gained
+#: its supertype, nontoken and chosen-colour fields and `Count` gained
+#: `CountOtherCreaturesLikeThatOne`.
+_SCHEMA_VERSION_BEFORE_STATIC_ANTHEM_QUALIFIERS = 59
+
+
+def test_the_static_anthem_bump_moved_the_version_past_fifty_nine() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_STATIC_ANTHEM_QUALIFIERS
+
+
+def test_a_snapshot_written_before_static_anthem_qualifiers_is_refused() -> None:
+    """A version-59 dump is refused rather than decoded as current: a board
+    holding Caged Sun or Mirror Box computed no anthem there and computes one
+    here, and a stored `QualifiedCreatures` has no chosen-colour field."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_STATIC_ANTHEM_QUALIFIERS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_STATIC_ANTHEM_QUALIFIERS}",
+    ):
+        Game.model_validate(dumped)
+
+
 def _a_game_with_a_pending_dies_trigger_and_a_cant_be_countered_grant() -> Game:
     """A real board carrying both of T5's/T9's own reachable-but-unbumped
     state at once, played to the point that matters rather than hand-built:

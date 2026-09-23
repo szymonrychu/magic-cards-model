@@ -88,10 +88,10 @@ from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.creature_types import creature_types
-from ..data.subtypes import subtype_vocabulary
+from ..data.subtypes import canonical_subtype, subtype_vocabulary
 from ..ids import new_id
 from ..models.card import Color, Layout, Supertype, Type, has_changeling, with_every_creature_type
-from ..models.card_state import CardState, Counter
+from ..models.card_state import CardState, ChoiceKind, Counter
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
@@ -501,10 +501,46 @@ class CountBasicLandTypesAmongLandsControlledBy(CountBase):
         return len(found)
 
 
+class CountOtherCreaturesLikeThatOne(CountBase):
+    """ "... for each other [legendary] creature you control [with the same
+    name as that creature]" - a count taken **per object**: "that creature"
+    is whichever creature the effect is being applied to (`chars`), so each
+    one counts the creatures other than itself.
+
+    Mirror Box's same-name clause is `same_name=True`: CR 201.2a, "Two or
+    more objects have the same name if they have at least one name in common
+    ... An object with no name doesn't have the same name as any other
+    object", so a nameless (face-down) creature counts nothing and is counted
+    by nothing. Heroes' Podium's "for each other legendary creature you
+    control" is `legendary=True` (CR 205.4d's supertype). "You control" is the
+    source's controller, `username`, read off the board each time the board
+    is computed (CR 611.3a), not a list fixed when the source entered.
+    """
+
+    kind: Literal["other_creatures_like_that_one"] = "other_creatures_like_that_one"
+    username: str | None = None
+    same_name: bool = False
+    legendary: bool = False
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        if self.same_name and not chars.name:
+            return 0
+        return sum(
+            1
+            for other in board.values()
+            if other.card_id != chars.card_id
+            and other.is_creature
+            and other.controller == self.username
+            and (not self.same_name or other.name == chars.name)
+            and (not self.legendary or Supertype.LEGENDARY in other.supertypes)
+        )
+
+
 #: How many of something an effect counts, judged against one object and the
 #: board as it stands in that sublayer (CR 613.5).
 Count = Annotated[
     FixedCount
+    | CountOtherCreaturesLikeThatOne
     | CountOtherCreaturesNamed
     | CountLandsControlledBy
     | CountPermanentsControlledBy
@@ -681,9 +717,28 @@ class QualifiedCreatures(SelectorBase):
     tokens: bool = False
     gate_card_type: Type | None = None
     gate_threshold: int = 0
+    nontoken: bool = False
+    legendary: bool | None = None
+    """`True` for "legendary creatures", `False` for "nonlegendary creatures"
+    (CR 205.4d's supertype), `None` when the subject names neither."""
+    of_chosen_color: bool = False
+    """ "... of the chosen color" (Caged Sun): the colour the source chose as
+    it entered (CR 614.12a), carried in `chosen_color`. With no colour chosen
+    the group is empty rather than every creature."""
+    chosen_color: Color | None = None
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         if not chars.is_creature:
+            return False
+        if self.of_chosen_color and (
+            self.chosen_color is None or self.chosen_color not in chars.colors
+        ):
+            return False
+        if self.nontoken and chars.is_token:
+            return False
+        if self.legendary is not None and self.legendary != (
+            Supertype.LEGENDARY in chars.supertypes
+        ):
             return False
         if self.opponents:
             if chars.controller is None or chars.controller == self.username:
@@ -2405,10 +2460,15 @@ def qualified_creatures(
     tokens: bool = False,
     gate_card_type: Type | None = None,
     gate_threshold: int = 0,
+    nontoken: bool = False,
+    legendary: bool | None = None,
+    of_chosen_color: bool = False,
+    chosen_color: Color | None = None,
 ) -> Selector:
-    """ "[Other] [non<colour>] [land|artifact] creature[ token]s [you control|your
-    opponents control]" - the anthem subject with the qualifiers the pool
-    actually prints, composed one predicate at a time.
+    """ "[Other] [non<colour>] [[non]legendary] [nontoken] [land|artifact]
+    creature[ token]s [you control|your opponents control] [of the chosen
+    color]" - the anthem subject with the qualifiers the pool actually prints,
+    composed one predicate at a time.
 
     Each qualifier is a plain question about the *computed* characteristics,
     which is what makes it correct rather than merely convenient:
@@ -2429,6 +2489,16 @@ def qualified_creatures(
       (CR 111.1: "A token is a marker used to represent any permanent that
       isn't represented by a card"), which rides on `Characteristics.is_token`
       for the same reason `permanents_controlled_by`'s `nontoken` does.
+      `nontoken` is its negation (Always Watching's "Nontoken creatures you
+      control"; Mirror Box's "Each nontoken creature you control").
+    - `legendary` is the supertype (CR 205.4d): Mirror Box's "Each legendary
+      creature you control", Arvad the Cursed's "Other legendary creatures
+      you control", and `False` for a printed "nonlegendary".
+    - `of_chosen_color` is Caged Sun's "Creatures you control of the chosen
+      color": `chosen_color` is the colour recorded on the source as it
+      entered (CR 614.12a), fixed for as long as that object stays on the
+      battlefield, while the creature's own colour is asked of the computed
+      board (CR 105.2) exactly as `without_color` is.
 
     `gate_card_type`/`gate_threshold` are the whole-board "as long as you
     control N or more <card type>s" condition a printed "as long as ..."
@@ -2450,6 +2520,10 @@ def qualified_creatures(
         tokens=tokens,
         gate_card_type=gate_card_type,
         gate_threshold=gate_threshold,
+        nontoken=nontoken,
+        legendary=legendary,
+        of_chosen_color=of_chosen_color,
+        chosen_color=chosen_color,
     )
 
 
@@ -3431,12 +3505,27 @@ _KEYWORD_GRANT_RE = re.compile(
 #: Jubilation's "Other nonblack creatures you control get +1/+1" and Aang,
 #: Destined Savior's "Land creatures you control have vigilance" would
 #: otherwise need the qualifiers spelled out twice and kept in step by hand.
-_QUALIFIED_CREATURE_SUBJECT = (
+_SUBJECT_QUALIFIERS = (
     r"(?P<other>other )?"
     r"(?:non(?P<noncolor>white|blue|black|red|green) )?"
+    r"(?P<legendary>(?:non)?legendary )?"
+    r"(?P<nontoken>nontoken )?"
     r"(?:(?P<land>land )|(?P<artifact>artifact ))?"
-    r"(?P<noun>creature tokens|creatures) "
-    r"(?P<whose>you control|your opponents control)"
+)
+#: "... of the chosen color" after the controller clause - Caged Sun's,
+#: Heraldic Banner's and Hall of Triumph's subject, the colour being the one
+#: the source chose as it entered (CR 614.12a).
+_CHOSEN_COLOR_SUFFIX = r"(?P<chosen> of the chosen colou?r)?"
+_QUALIFIED_CREATURE_SUBJECT = (
+    _SUBJECT_QUALIFIERS + r"(?P<noun>creature tokens|creatures) "
+    r"(?P<whose>you control|your opponents control)" + _CHOSEN_COLOR_SUFFIX
+)
+#: The singular twin, after "each": Mirror Box's "Each legendary creature you
+#: control gets +1/+1." The same qualifier groups, so `qualifiers_from_subject`
+#: reads either shape.
+_EACH_QUALIFIED_CREATURE_SUBJECT = (
+    r"each " + _SUBJECT_QUALIFIERS + r"(?P<noun>creature token|creature) "
+    r"(?P<whose>you control|your opponents control)" + _CHOSEN_COLOR_SUFFIX
 )
 
 #: "As long as you control <number word> or more <card type>s, " - the printed
@@ -3452,6 +3541,38 @@ _BOARD_COUNT_GATE_RE = re.compile(
 
 _ANTHEM_RE = re.compile(
     rf"^{_QUALIFIED_CREATURE_SUBJECT} get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
+    re.IGNORECASE,
+)
+
+#: `_EACH_ANTHEM_RE` with a per-object count after it - Mirror Box's "Each
+#: nontoken creature you control gets +1/+1 for each other creature you
+#: control with the same name as that creature." and Heroes' Podium's "Each
+#: legendary creature you control gets +1/+1 for each other legendary creature
+#: you control." The counted group is always "other ... creature[s] you
+#: control", judged against the creature being pumped (`CountOtherCreatures
+#: LikeThatOne`); layer 7c (CR 613.4c).
+_EACH_ANTHEM_PER_OTHER_CREATURE_RE = re.compile(
+    rf"^{_EACH_QUALIFIED_CREATURE_SUBJECT} gets "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each other "
+    r"(?P<count_legendary>legendary )?creature you control"
+    r"(?P<same_name> with the same name as that creature)?\.?$",
+    re.IGNORECASE,
+)
+
+#: "This creature has protection from the chosen color." (Voice of All, Order
+#: of the Stars) - a self grant (CR 613.1f) whose quality is the colour the
+#: permanent chose as it entered (CR 614.12a), read off `CardState.choice` by
+#: `_self_protection_from_chosen_color_builder`.
+_SELF_PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
+    r"^this (?:creature|permanent|token) has protection from the chosen colou?r\.?$",
+    re.IGNORECASE,
+)
+
+#: `_ANTHEM_RE`'s singular "each" form - Mirror Box's "Each legendary
+#: creature you control gets +1/+1." Read by the same builder.
+_EACH_ANTHEM_RE = re.compile(
+    rf"^{_EACH_QUALIFIED_CREATURE_SUBJECT} gets "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
     re.IGNORECASE,
 )
@@ -4407,9 +4528,17 @@ _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE = re.compile(
 #: 611.2) - Glorious Anthem's *cast* does not create a second, permanent copy
 #: of its own anthem, and the same is true of a keyword granted to a group
 #: this way.
+#:
+#: The qualifier words are `_SUBJECT_QUALIFIERS`' - the supertype, "nontoken",
+#: "each"'s singular noun and "of the chosen color" included - so Mirror Box's
+#: "Each legendary creature you control gets +1/+1." and Caged Sun's
+#: "Creatures you control of the chosen color get +1/+1." are excluded from
+#: resolution routing as the static abilities they are.
 _LOOKS_LIKE_ANTHEM_RE = re.compile(
-    r"^(?:as long as [^,]+, )?(?:other )?(?:non(?:white|blue|black|red|green) )?(?:land )?"
-    r"(?:creature tokens|creatures) (?:you control|your opponents control) (?:get|have|has)\b",
+    r"^(?:as long as [^,]+, )?(?:each )?(?:other )?(?:non(?:white|blue|black|red|green) )?"
+    r"(?:(?:non)?legendary )?(?:nontoken )?(?:land |artifact )?"
+    r"(?:creature tokens?|creatures?) (?:you control|your opponents control)"
+    r"(?: of the chosen colou?r)? (?:get|gets|have|has)\b",
     re.IGNORECASE,
 )
 
@@ -4983,6 +5112,100 @@ def _anthem_builder(
     return builder
 
 
+def _self_protection_from_chosen_color_builder(*, line: str) -> EffectBuilder:
+    """`_SELF_PROTECTION_FROM_CHOSEN_COLOR_RE`'s shape: layer 6 (CR 613.1f)
+    grants the source "Protection from <colour>" for the colour recorded on it
+    as it entered (CR 614.12a). CR 702.16a: "Protection is a static ability,
+    written 'Protection from [quality].'" - once the line is in
+    `Characteristics.abilities`, every protection reader (targeting CR
+    702.16b, enchant CR 702.16c, equip CR 702.16d, damage CR 702.16e, blocking
+    CR 702.16f) reads it like a printed one.
+
+    No colour recorded - a permanent that somehow entered without the choice -
+    grants nothing rather than guessing one. Keyed to the printed line
+    (`source_ability`), so an ability-removing effect (CR 613.1f) takes the
+    protection with it.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        color = chosen_color_of(source)
+        if color is None:
+            return []
+        ability = f"Protection from {color.name.lower()}"
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: has {ability} (the chosen color)",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(ability),
+            )
+        ]
+
+    return builder
+
+
+def _per_other_creature_anthem_builder(
+    power: int,
+    toughness: int,
+    *,
+    other: bool,
+    same_name: bool,
+    count_legendary: bool,
+    line: str,
+    qualifiers: CreatureQualifiers,
+) -> EffectBuilder:
+    """`_EACH_ANTHEM_PER_OTHER_CREATURE_RE`'s shape: `_anthem_builder`'s live
+    qualified group (CR 611.3a), pumped in layer 7c (CR 613.4c) by a count
+    taken separately for each creature in it (`CountOtherCreaturesLikeThatOne`)
+    rather than once for the whole group.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector, subject = _creature_group(
+            source, other=other, whose="you control", qualifiers=qualifiers
+        )
+        counted = (
+            f"other {'legendary ' if count_legendary else ''}creature you control"
+            f"{' with the same name as that creature' if same_name else ''}"
+        )
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} each get "
+                f"{power:+d}/{toughness:+d} for each {counted}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=modify_power_toughness_per(
+                    CountOtherCreaturesLikeThatOne(
+                        username=source.controller,
+                        same_name=same_name,
+                        legendary=count_legendary,
+                    ),
+                    power,
+                    toughness,
+                ),
+            )
+        ]
+
+    return builder
+
+
 def _anthem_and_keyword_grant_builder(
     power: int,
     toughness: int,
@@ -5138,11 +5361,37 @@ def _creature_group(
             tokens=qualifiers.tokens,
             gate_card_type=qualifiers.gate_card_type,
             gate_threshold=qualifiers.gate_threshold,
+            nontoken=qualifiers.nontoken,
+            legendary=qualifiers.legendary,
+            of_chosen_color=qualifiers.of_chosen_color,
+            chosen_color=chosen_color_of(source) if qualifiers.of_chosen_color else None,
         ),
         f"{'other ' if other else ''}{qualifiers.words}"
         f"{'creature tokens' if qualifiers.tokens else 'creatures'} "
-        f"{'your opponents control' if opponents else 'you control'}",
+        f"{'your opponents control' if opponents else 'you control'}"
+        f"{_chosen_color_words(source) if qualifiers.of_chosen_color else ''}",
     )
+
+
+def chosen_color_of(source: CardState) -> Color | None:
+    """The colour `source` chose as it entered (CR 614.12a), or `None` if it
+    recorded no colour choice - read off `CardState.choice`, where
+    `machines/replacement.py` stores every "as [this] enters, choose ..."
+    answer."""
+    chosen = source.choice
+    if chosen is None or chosen.kind is not ChoiceKind.COLOR:
+        return None
+    try:
+        return Color(chosen.value)
+    except ValueError:
+        return None
+
+
+def _chosen_color_words(source: CardState) -> str:
+    """ " of the chosen color (green)" for a journal line."""
+    color = chosen_color_of(source)
+    word = color.name.lower() if color is not None else "none chosen"
+    return f" of the chosen color ({word})"
 
 
 class CreatureQualifiers(EngineModel):
@@ -5174,6 +5423,9 @@ class CreatureQualifiers(EngineModel):
     gate_card_type: Type | None = None
     gate_threshold: int = 0
     gate_words: str = ""
+    nontoken: bool = False
+    legendary: bool | None = None
+    of_chosen_color: bool = False
 
     @property
     def is_empty(self) -> bool:
@@ -5183,6 +5435,9 @@ class CreatureQualifiers(EngineModel):
             and not self.also_artifact
             and not self.tokens
             and self.gate_card_type is None
+            and not self.nontoken
+            and self.legendary is None
+            and not self.of_chosen_color
         )
 
     @property
@@ -5190,6 +5445,10 @@ class CreatureQualifiers(EngineModel):
         prefix = ""
         if self.color_word is not None:
             prefix += f"non{self.color_word} "
+        if self.legendary is not None:
+            prefix += "legendary " if self.legendary else "nonlegendary "
+        if self.nontoken:
+            prefix += "nontoken "
         if self.land:
             prefix += "land "
         if self.also_artifact:
@@ -5206,6 +5465,7 @@ def qualifiers_from_subject(
     subject, when there was one; everything else comes off the subject itself.
     """
     color_word = match.group("noncolor")
+    legendary = match.group("legendary")
     base = gate or CreatureQualifiers()
     return base.model_copy(
         update={
@@ -5213,7 +5473,10 @@ def qualifiers_from_subject(
             "color_word": color_word.lower() if color_word else None,
             "land": match.group("land") is not None,
             "also_artifact": match.group("artifact") is not None,
-            "tokens": match.group("noun").lower() == "creature tokens",
+            "tokens": match.group("noun").lower() in ("creature tokens", "creature token"),
+            "nontoken": match.group("nontoken") is not None,
+            "legendary": None if legendary is None else not legendary.lower().startswith("non"),
+            "of_chosen_color": match.group("chosen") is not None,
         }
     )
 
@@ -5723,8 +5986,16 @@ def _becomes_creature_with_mana_value_pt_builder(extra_type: Type) -> EffectBuil
 #: case-sensitive on the subtype: Oracle text only ever capitalizes a creature
 #: type, and `_ANTHEM_RE`'s literal "creatures" is tried first, so this never
 #: intercepts the plain anthem.
+#:
+#: `subtypes` is one capitalised plural or several joined by "and"/"or"/commas
+#: - Nightpack Ambusher's "Other Wolves and Werewolves you control get +1/+1."
+#: and Warg Rider's "Other Orcs and Goblins you control have menace." print the
+#: same group as a two-item list. Each item is read back to its type-line
+#: singular by `_subtype_list_words` (`data/subtypes.canonical_subtype`, so
+#: "Wolves" is "Wolf", not "Wolve"), and the group is any one of them.
+_SUBTYPE_LIST = r"(?P<subtypes>[A-Z][a-z-]+(?:(?:,| and|, and| or|, or) [A-Z][a-z-]+)*)"
 _SUBTYPE_ANTHEM_RE = re.compile(
-    r"^(?P<other>[Oo]ther )?(?P<subtype>[A-Z][a-z]+)s you control get "
+    rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST} you control get "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$"
 )
 
@@ -5735,7 +6006,7 @@ _SUBTYPE_ANTHEM_RE = re.compile(
 #: power/toughness. Case-sensitive on the subtype for the same reason
 #: `_SUBTYPE_ANTHEM_RE` is: Oracle text only ever capitalizes a creature type.
 _SUBTYPE_KEYWORD_GRANT_RE = re.compile(
-    r"^(?P<other>[Oo]ther )?(?P<subtype>[A-Z][a-z]+)s you control "
+    rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST} you control "
     r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$"
 )
 
@@ -6290,6 +6561,29 @@ def _subtype_word(word: str) -> str | None:
     if _card_type_word(singular) is not None:
         return None
     return singular.capitalize()
+
+
+def _subtype_list_words(raw: str) -> list[str] | None:
+    """ "Wolves and Werewolves" -> ["Wolf", "Werewolf"] (CR 205.3m), or `None`
+    if any item is not a printed subtype's plural.
+
+    Each item goes through `data/subtypes.canonical_subtype`, which reads a
+    printed plural back to the one subtype it can only be ("Wolves" is "Wolf",
+    "Elves" is "Elf", "Merfolk" is itself). A word it cannot place - a card
+    type ("Creatures", "Artifacts": a different sentence entirely) or anything
+    else - fails the whole list closed rather than granting a narrower group
+    than the card prints.
+    """
+    words = [part.strip() for part in re.split(r",\s*(?:and\s+|or\s+)?|\s+and\s+|\s+or\s+", raw)]
+    subtypes: list[str] = []
+    for word in words:
+        if not word or _card_type_word(word) is not None:
+            return None
+        subtype = canonical_subtype(word)
+        if subtype is None:
+            return None
+        subtypes.append(subtype.capitalize())
+    return subtypes or None
 
 
 def _filtered_anthem_builder(
@@ -8218,7 +8512,7 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             qualifiers=qualifiers_from_subject(match),
         )
-    if match := _ANTHEM_RE.fullmatch(sentence):
+    if match := (_ANTHEM_RE.fullmatch(sentence) or _EACH_ANTHEM_RE.fullmatch(sentence)):
         return _anthem_builder(
             int(match.group("power")),
             int(match.group("toughness")),
@@ -8349,6 +8643,20 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     name, which is the whole of Blood Moon, Harbinger of the Seas, Dryad of the
     Ilysian Grove, Leyline of the Guildpact, Urborg, Yavimaya and Toph.
     """
+    if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
+        return _self_protection_from_chosen_color_builder(line=sentence)
+    if match := _EACH_ANTHEM_PER_OTHER_CREATURE_RE.fullmatch(sentence):
+        if match.group("whose").lower() != "you control":
+            return None
+        return _per_other_creature_anthem_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            other=match.group("other") is not None,
+            same_name=match.group("same_name") is not None,
+            count_legendary=match.group("count_legendary") is not None,
+            line=sentence,
+            qualifiers=qualifiers_from_subject(match),
+        )
     if match := _NONBASIC_LANDS_ARE_RE.fullmatch(sentence):
         subtype = _BASIC_LAND_TYPE_WORDS[match.group("subtype").lower()]
         return _nonbasic_lands_are_builder(subtype)
@@ -8384,11 +8692,11 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             return None
         return _lands_keyword_grant_builder(keywords, line=sentence)
     if match := _SUBTYPE_ANTHEM_RE.fullmatch(sentence):
-        subtype = _subtype_word(match.group("subtype"))
-        if subtype is None:
+        subtypes = _subtype_list_words(match.group("subtypes"))
+        if subtypes is None:
             return None
         return _filtered_anthem_builder(
-            [subtype],
+            subtypes,
             int(match.group("power")),
             int(match.group("toughness")),
             [],
@@ -8396,12 +8704,12 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
         )
     if match := _SUBTYPE_KEYWORD_GRANT_RE.fullmatch(sentence):
-        subtype = _subtype_word(match.group("subtype"))
+        subtypes = _subtype_list_words(match.group("subtypes"))
         keywords = _split_and_validate_keywords(match.group("keywords"))
-        if subtype is None or keywords is None:
+        if subtypes is None or keywords is None:
             return None
         return _filtered_anthem_builder(
-            [subtype],
+            subtypes,
             0,
             0,
             keywords,

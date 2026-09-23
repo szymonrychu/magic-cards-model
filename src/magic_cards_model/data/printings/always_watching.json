@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1",
+  "oracle_id": "c2153115-bc12-458d-baeb-538ec61e1242",
+  "multiverse_ids": [
+    456527
+  ],
+  "tcgplayer_id": 180379,
+  "cardmarket_id": 366548,
+  "name": "Always Watching",
+  "lang": "en",
+  "released_at": "2018-11-16",
+  "uri": "https://api.scryfall.com/cards/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1",
+  "scryfall_uri": "https://scryfall.com/card/gnt/7/always-watching?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:13:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.jpg?1783933993",
+    "normal": "https://cards.scryfall.io/normal/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.jpg?1783933993",
+    "large": "https://cards.scryfall.io/large/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.jpg?1783933993",
+    "png": "https://cards.scryfall.io/png/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.png?1783933993",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.jpg?1783933993",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.jpg?1783933993",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.webp?1783933993",
+    "grid": "https://cards.scryfall.io/grid/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.webp?1783933993",
+    "display": "https://cards.scryfall.io/display/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.webp?1783933993",
+    "art": "https://cards.scryfall.io/art/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.webp?1783933993",
+    "crop": "https://cards.scryfall.io/crop/front/c/f/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1.webp?1783933993"
+  },
+  "mana_cost": "{1}{W}{W}",
+  "cmc": 3.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Nontoken creatures you control get +1/+1 and have vigilance.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "cdbedc27-4f24-4d89-ace1-8da1b36ac78e",
+  "set": "gnt",
+  "set_name": "Game Night",
+  "set_type": "box",
+  "set_uri": "https://api.scryfall.com/sets/cdbedc27-4f24-4d89-ace1-8da1b36ac78e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Agnt&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/gnt?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/cf65bfa0-9c05-4e9e-b4c7-d705e1a822c1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac2153115-bc12-458d-baeb-538ec61e1242&unique=prints",
+  "collector_number": "7",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"We pray to Avacyn on high.\nOn snow-white wings fearless you fly.\nKeep safe our souls. Keep safe our lives.\nMay angels watch us from the skies.\"\n\u2014Children's prayer",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chase Stone",
+  "artist_ids": [
+    "2d753f61-5f5b-468e-97ea-8e0fdd347340"
+  ],
+  "illustration_id": "84eead85-fba1-4165-a634-b8553e0283e8",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 6585,
+  "penny_rank": 2859,
+  "prices": {
+    "usd": "1.06",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.80",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=456527&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAlways%2BWatching",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAlways%2BWatching",
+    "edhrec": "https://edhrec.com/route/?cc=Always+Watching"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F180379%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=366548&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Always+Watching&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

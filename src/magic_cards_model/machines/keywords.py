@@ -2056,6 +2056,12 @@ def equip_activation(
 
     activation = unannounced_equip_activation(game, equipment, player)
     profile_for_text(EQUIP_EFFECT).check([target], player, game, source_id=equipment.id)
+    # CR 702.16b: the equip ability is "from a source with the stated quality"
+    # whenever the Equipment has it, and a bare-text profile carries no source
+    # card to ask - so the protection half of the target check is made here.
+    refusal = _protection_refusal_for_attachment(game, equipment, target)
+    if refusal is not None:
+        raise ValueError(refusal)
     activation.targets = [TargetRef.to_card(target)]
     ability = _keyword(equipment.card, "equip")
     reduction = ability.cost_reduction if ability is not None else None
@@ -2157,9 +2163,38 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
             continue  # CR 301.5: an Equipment can't legally be attached to a noncreature
         if game.controller_of(creature).username != activation.player:
             continue
+        if _protection_refusal_for_attachment(game, equipment, creature) is not None:
+            # CR 608.2b's recheck of a target that gained protection in
+            # response, and CR 301.5b: "If an effect attempts to attach an
+            # Equipment to an object that can't be equipped by it, the
+            # Equipment doesn't move."
+            continue
         equipment.attach_to(creature)
         return creature
     return None
+
+
+def _protection_refusal_for_attachment(game: Any, attached: CardState, host: Any) -> str | None:
+    """Why `host`'s protection keeps `attached` off it, or None.
+
+    CR 702.16c: "A permanent or player with protection can't be enchanted by
+    Auras that have the stated quality." CR 702.16d: "A permanent with
+    protection can't be equipped by Equipment that have the stated quality or
+    fortified by Fortifications that have the stated quality." Both are the
+    same question - does the host have protection from a quality the attached
+    permanent has - asked through `Game.protection_quality_against`, so a
+    printed and a layer-6-granted protection answer alike. A host that is not
+    a card on the battlefield (a player, or nothing) is not asked here.
+    """
+    if not isinstance(host, CardState) or host.zone is not Zone.BATTLEFIELD:
+        return None
+    quality = game.protection_quality_against(host, attached)
+    if quality is None:
+        return None
+    return (
+        f"{host.name} has protection from {quality}, so {attached.name} "
+        f"cannot be attached to it (CR 702.16c, CR 702.16d)"
+    )
 
 
 # --------------------------------------------------------------------------
@@ -2650,7 +2685,11 @@ def _host_is_legal_for(
     if host.id == attached.id:
         return False  # CR 301.5c: "An Equipment can't equip itself."
     types, _subtypes = _computed_types_and_subtypes(game, host, board)
-    return Type.CREATURE in types if wanted == "creature" else Type.LAND in types
+    if not (Type.CREATURE in types if wanted == "creature" else Type.LAND in types):
+        return False
+    # CR 702.16d: an Equipment or Fortification with a quality its host has
+    # protection from is on an illegal permanent, so CR 704.5n unattaches it.
+    return _protection_refusal_for_attachment(game, attached, host) is None
 
 
 def equipment_state_based_actions(game: Any) -> list[CardState]:
@@ -4175,6 +4214,11 @@ def aura_state_based_actions(game: Any) -> list[CardState]:
                 why_cannot_enchant(permanent, host, controller.username if controller else "", game)
                 is not None
             )
+        if not illegal:
+            # CR 702.16c: "Such Auras attached to the permanent or player with
+            # protection will be put into their owners' graveyards as a
+            # state-based action" - CR 303.4c's "other applicable effects".
+            illegal = _protection_refusal_for_attachment(game, permanent, host) is not None
         if illegal:
             doomed.append(permanent)
     return doomed

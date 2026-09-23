@@ -283,7 +283,13 @@ def test_the_x_probes_are_the_one_place_the_best_answer_wins():
         # the level 2 "becomes level" trigger, read now (S19,
         # `tests/scenarios/test_class_level_triggers.py`), and its static
         # anthem reads handled.
-        ("Caged Sun", "Creatures you control of the chosen color get +1/+1."),
+        # Caged Sun stood here after it. S23 reads "Creatures you control of
+        # the chosen color get +1/+1." (`tests/scenarios/test_chosen_colour_
+        # anthem.py`); Armed with Proof's layer 4 type grant is still unread.
+        (
+            "Armed with Proof",
+            "Clues you control are Equipment in addition to their other types.",
+        ),
     ],
 )
 def test_an_unread_continuous_effect_is_flagged_rather_than_failing_open(name, phrase):

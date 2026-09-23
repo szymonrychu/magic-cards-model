@@ -1434,6 +1434,15 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
     ):
         return f"{attacker.name} has flying and {blocker.name} has neither flying nor reach"
 
+    # CR 702.16f: "Attacking creatures with protection can't be blocked by
+    # creatures that have the stated quality."
+    quality = game.protection_quality_against(attacker, blocker)
+    if quality is not None:
+        return (
+            f"{attacker.name} has protection from {quality}, so {blocker.name} "
+            f"cannot block it (CR 702.16f)"
+        )
+
     restriction = evasion_restriction_refusal(game, attacker, blocker)
     if restriction is not None:
         return restriction
