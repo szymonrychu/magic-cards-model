@@ -130,6 +130,7 @@ class KeywordRule(StrEnum):
     BATTLE_CRY = "CR 702.91a"
     OUTLAST = "CR 702.107a"
     POWER_UP = "CR 702.193a"
+    PARTNER_WITH = "CR 702.124j"
 
 
 def executes(keyword: str) -> bool:
@@ -326,6 +327,19 @@ def executes(keyword: str) -> bool:
         # _parse_discover_clause` from inside another ability's or spell's
         # effect text.
         "discover",
+        # CR 702.124j: "'Partner with [name]' represents two abilities" -
+        # a deck-construction half (CR 702.124a, inert here; see
+        # `scripts/sweep_pool.py`'s `NEEDS_NO_CODE` "partner" entry, the same
+        # rule) and a triggered half this module does execute:
+        # `_partner_with_ability`/`_TRIGGER_EXPANSIONS` below write out the
+        # "When this permanent enters, target player may search their
+        # library for a card named [name], reveal it, put it into their
+        # hand, then shuffle" ability, with `[name]` read off the card's own
+        # printed line (`KeywordAbility.parameter`), never a name table.
+        # Distinct from plain "partner" (`NEEDS_NO_CODE`): CR 702.124f says
+        # the two are different abilities that "cannot be combined", so
+        # crediting one keyword must never silence the other.
+        "partner with",
     }
 
 
@@ -612,6 +626,54 @@ def _impending_ability(ability: KeywordAbility) -> TriggeredAbility:
         intervening_if="this permanent's impending cost was paid and it has a time counter on it",
         effect="remove a time counter from it",
         event=TriggerEvent.BEGINNING_OF_STEP,
+    )
+
+
+def _partner_with_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.124j's second half: "'Partner with [name]' represents two
+    abilities. ... and 'When this permanent enters the battlefield, target
+    player may search their library for a card named [name], reveal it, put
+    it into their hand, then shuffle their library.'"
+
+    Only this triggered half runs during a game. The first half -
+    designating two legendary cards as a Commander deck's two commanders -
+    is CR 702.124a's own deck-construction rule ("modify the rules for deck
+    construction in the Commander variant ... and function before the game
+    begins"): this engine targets Modern, Pioneer, and Standard only
+    (`CLAUDE.md`), none of which is Commander, so there is nothing for it to
+    execute - `scripts/sweep_pool.py`'s `NEEDS_NO_CODE` documents plain
+    "partner" on the same rule, and this keyword's deck-construction half is
+    inert for the identical reason.
+
+    `[name]` is `ability.parameter`: `machines/abilities.py`'s keyword-line
+    parser already reads "Partner with Jacob Frye" off the card's own
+    printed line as `KeywordAbility(canonical="Partner with",
+    parameter="Jacob Frye")`, so the name this ability searches for comes
+    from whichever printing carries it, never a card-name table
+    (`CLAUDE.md`'s "target the mechanic, never the card").
+
+    Current printings shorten the *reminder* text for space - "target player
+    may put [name] into their hand from their library, then shuffle" omits
+    "search" and "reveal" - but the WotC ruling on Evie Frye (2024-07-05,
+    fetched fresh this session) is explicit that both still happen: "Note
+    that the target player searches their library (which may be affected by
+    effects such as that of Stranglehold) and that the card they find is
+    revealed, even though these words aren't included in the ability's
+    reminder text." This writes out the rule's fuller wording, not the
+    printed shorthand, so `machines/effects.py`'s ordinary
+    search-reveal-shuffle clause parser reads it unchanged.
+    """
+    name = (ability.parameter or "").strip()
+    return _expansion(
+        ability,
+        keyword="partner with",
+        word=TriggerWord.WHEN,
+        condition="this permanent enters",
+        effect=(
+            f"target player may search their library for a card named {name}, "
+            "reveal it, put it into their hand, then shuffle"
+        ),
+        event=TriggerEvent.ENTERS_THE_BATTLEFIELD,
     )
 
 
@@ -1010,6 +1072,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "impending": _single(_impending_ability),
     "battle cry": _single(_battle_cry_ability),
     "cumulative upkeep": _single(_cumulative_upkeep_ability),
+    "partner with": _single(_partner_with_ability),
 }
 
 

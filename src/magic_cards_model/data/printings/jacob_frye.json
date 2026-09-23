@@ -1,0 +1,160 @@
+{
+  "object": "card",
+  "id": "23422e75-e1c7-484b-aa1f-155ef9a998ec",
+  "oracle_id": "31af65c3-602b-4ac9-a25f-dccb88f8f751",
+  "multiverse_ids": [
+    667617
+  ],
+  "mtgo_id": 128020,
+  "tcgplayer_id": 556307,
+  "cardmarket_id": 775522,
+  "name": "Jacob Frye",
+  "lang": "en",
+  "released_at": "2024-07-05",
+  "uri": "https://api.scryfall.com/cards/23422e75-e1c7-484b-aa1f-155ef9a998ec",
+  "scryfall_uri": "https://scryfall.com/card/acr/27/jacob-frye?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:49:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.jpg?1783910980",
+    "normal": "https://cards.scryfall.io/normal/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.jpg?1783910980",
+    "large": "https://cards.scryfall.io/large/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.jpg?1783910980",
+    "png": "https://cards.scryfall.io/png/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.png?1783910980",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.jpg?1783910980",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.jpg?1783910980",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.webp?1783910980",
+    "grid": "https://cards.scryfall.io/grid/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.webp?1783910980",
+    "display": "https://cards.scryfall.io/display/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.webp?1783910980",
+    "art": "https://cards.scryfall.io/art/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.webp?1783910980",
+    "crop": "https://cards.scryfall.io/crop/front/2/3/23422e75-e1c7-484b-aa1f-155ef9a998ec.webp?1783910980"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Assassin",
+  "oracle_text": "Partner with Evie Frye (When this creature enters, target player may put Evie into their hand from their library, then shuffle.)\nWhenever one or more Assassins you control deal combat damage to a player, exile up to one target Assassin card or card with freerunning from your graveyard. If you do, copy it. You may cast the copy.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Partner with",
+    "Partner"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f34d942a-8f41-49fb-982e-152001855ee0",
+      "component": "combo_piece",
+      "name": "Evie Frye",
+      "type_line": "Legendary Creature \u2014 Human Assassin",
+      "uri": "https://api.scryfall.com/cards/f34d942a-8f41-49fb-982e-152001855ee0"
+    },
+    {
+      "object": "related_card",
+      "id": "3666fafa-54b5-495e-8168-c579fd901b58",
+      "component": "combo_piece",
+      "name": "Jacob Frye",
+      "type_line": "Legendary Creature \u2014 Human Assassin",
+      "uri": "https://api.scryfall.com/cards/3666fafa-54b5-495e-8168-c579fd901b58"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set": "acr",
+  "set_name": "Assassin's Creed",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aacr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/acr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/23422e75-e1c7-484b-aa1f-155ef9a998ec/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A31af65c3-602b-4ac9-a25f-dccb88f8f751&unique=prints",
+  "collector_number": "27",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lie Setiawan",
+  "artist_ids": [
+    "6f771d3f-310e-4aa4-841f-5ba4ba9f025a"
+  ],
+  "illustration_id": "3b852739-3a8c-4643-8c4c-307dc88212ec",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 8076,
+  "penny_rank": 4192,
+  "prices": {
+    "usd": "0.31",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.39",
+    "eur_foil": "0.35",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=667617&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJacob%2BFrye",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJacob%2BFrye",
+    "edhrec": "https://edhrec.com/route/?cc=Jacob+Frye"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F556307%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=775522&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/128020?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

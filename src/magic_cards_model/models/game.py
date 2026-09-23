@@ -170,6 +170,7 @@ from ..machines.keywords import (
     has_suspend,
     is_indestructible,
     keyword_effect_for,
+    keyword_triggered_abilities,
     turn_face_up_cost,
     why_cannot_turn_face_up,
 )
@@ -7685,11 +7686,23 @@ class Game(EngineModel):
         # which keeps only the six trigger conditions the matcher recognises. A
         # trigger the matcher cannot read still announces targets, and Guide of
         # Souls' "Whenever you attack" is exactly that case.
+        #
+        # `keyword_triggered_abilities` too: CR 702.1's keyword shorthand (Ward,
+        # Evoke, Battle cry, ...) never appears in `parse_abilities`' own output
+        # at all - it parses as a `KeywordAbility`, and only `machines/keywords.
+        # keyword_triggered_abilities` expands it into the `TriggeredAbility`
+        # the rule actually means. None of that family needed a target before
+        # "Partner with [name]" (CR 702.124j: "target player may search their
+        # library ..."), so nothing exercised this gap until then - a scripted
+        # `choose_trigger_targets("Evie Frye", ["bob"])` found no targeting
+        # trigger here at all and fell through to whatever *other* printed
+        # ability the card happened to carry, refusing a perfectly legal target
+        # in that unrelated ability's name.
         printed = [
             ability
             for ability in parse_abilities(source.card)
             if isinstance(ability, TriggeredAbility)
-        ]
+        ] + keyword_triggered_abilities(source.card)
         # CR 603.12's reflexive ability is a plain triggered ability once
         # created (`Game.create_reflexive_trigger`), whatever *kind* of
         # ability's text it was carved out of - Agatha's Soul Cauldron's own

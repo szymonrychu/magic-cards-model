@@ -31200,6 +31200,82 @@ def _parse_target_player_sacrifices_clause(
     return effect
 
 
+#: CR 702.124j's second half, written out by `machines/keywords.
+#: _partner_with_ability`: "target player may search their library for a
+#: card named [name], reveal it, put it into their hand, then shuffle." The
+#: printed reminder text on current printings elides "search"/"reveal" for
+#: space ("target player may put [name] into their hand from their
+#: library, then shuffle"), but the WotC ruling on Evie Frye (2024-07-05,
+#: `mise run rules:pull` fetched the current CR the same session) spells
+#: out that both still happen, which is why the *generated* text - not the
+#: printed shorthand - carries them, and why this reads the fuller wording.
+#: `[name]` is greedy-but-bounded by the fixed tail, so a name that itself
+#: contains a comma (none in the pool do) would still stop at the first
+#: ", reveal it" rather than swallowing it.
+_TARGET_PLAYER_MAY_SEARCH_NAMED_CARD_RE = re.compile(
+    r"^target player may search (?:their|your|his or her) library for a card named "
+    r"(?P<name>.+?), reveal it, put it into (?:their|your|his or her) hand, then shuffle$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_may_search_named_card_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_MAY_SEARCH_NAMED_CARD_RE`'s shape, or `None`.
+
+    Two layers of "may", matching `_parse_search_reveal_shuffle_top_clause`'s
+    own "you may search ..." convention: the outer `game.may` is CR 608.2d's
+    plain optional instruction - declining it skips the search (and its
+    shuffle) entirely, exactly as declining any other "you may" does. Once
+    taken, the search itself is still declinable per-card (CR 701.23b treats
+    a name the same as a stated type or color: "a player ... isn't required
+    to find ... even if [it is] present") - `Game.search_and_put` already
+    sets `optional=True` on its own inner `Game.search_library` call, so the
+    target player can search, see the named card sitting right there, and
+    still choose not to take it. Either way `Game.search_and_put` shuffles
+    unconditionally once it runs, which is what makes the named card's
+    genuine absence from the library ("search fails") indistinguishable from
+    a present-but-declined find - both still shuffle, only the inner "may" a
+    scenario scripts differs.
+    """
+    match = _TARGET_PLAYER_MAY_SEARCH_NAMED_CARD_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    name = match.group("name").strip()
+    if not name:
+        return None
+
+    def matches(state: CardState) -> bool:
+        return state.name == name
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            if not game.may(
+                target,
+                f"search your library for a card named {name}",
+                source=source,
+                source_id=source_id,
+            ):
+                continue
+            game.search_and_put(
+                target,
+                matches,
+                destination=Zone.HAND,
+                reveal=True,
+                source=source,
+                source_id=source_id,
+            )
+
+    return effect
+
+
 #: "Separate all `<quality>` target player controls into two piles.
 #: `<consequence>` all `<quality>` in the pile of that player's choice." -
 #: CR 700.3's pile primitive, read whole across both sentences the way
@@ -34232,6 +34308,13 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if _EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
         return exile_target_players_graveyard
     # -- end Wave W1 single-clause additions -------------------------------
+    # -- CR 702.124j: "Partner with [name]" -------------------------------
+    target_player_may_search_named_card = _parse_target_player_may_search_named_card_clause(
+        clause, for_spell=for_spell
+    )
+    if target_player_may_search_named_card is not None:
+        return target_player_may_search_named_card
+    # -- end Partner with ---------------------------------------------------
     # -- Wave W11's own single-clause addition (CR 106.4, CR 605.1a) ------
     add_mana = _parse_add_mana_clause(clause, for_spell=for_spell)
     if add_mana is not None:
