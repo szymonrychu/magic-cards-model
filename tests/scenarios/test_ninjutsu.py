@@ -10,10 +10,9 @@ cost component (`return_to_hand_cost`/`_why_not_return_to_hand`) for the
 "unblocked attacking creature" half nothing in `machines/cost.py` could pay
 before.
 
-Proved on Moon-Circuit Hacker, an ordinary creature - unlike Kaito, Bane of
-Nightmares, a planeswalker card whose CR 506.3a exemption (a noncreature
-object put onto the battlefield "attacking" never actually becomes an
-attacker) is its own edge case, covered separately below.
+Proved on Moon-Circuit Hacker, an ordinary creature - and on Kaito, Bane of
+Nightmares, a planeswalker card that is a creature on the battlefield during
+his controller's turn, covered separately below.
 """
 
 from magic_cards_model.machines import Step
@@ -98,12 +97,13 @@ def test_a_blocked_attacker_cannot_pay_ninjutsu():
         payment.pay()
 
 
-def test_kaito_enters_tapped_but_never_an_attacker():
-    """Kaito, Bane of Nightmares is a planeswalker card, not a creature card
-    - CR 506.3a's exemption applies exactly the way `_put_onto_the_
-    battlefield_attacking`'s own guard already reads it for a token: it
-    enters the battlefield, tapped, but "is never considered to be an
-    attacking creature" because it is not a creature at all.
+def test_kaito_enters_tapped_and_attacking_as_a_creature():
+    """Kaito, Bane of Nightmares is a planeswalker card, but on the
+    battlefield during his controller's turn, with loyalty counters on him,
+    his own static ability makes him a 3/4 Ninja creature - so he enters as a
+    creature and, per CR 702.49c, "enters attacking the same player,
+    planeswalker, or battle as the creature that was returned" (his own
+    ruling says the same). CR 506.3a's noncreature exemption does not apply.
     """
     scenario = (
         Scenario()
@@ -126,5 +126,8 @@ def test_kaito_enters_tapped_but_never_an_attacker():
 
     assert kaito.zone is Zone.BATTLEFIELD
     assert kaito.tapped
-    assert scenario.game.combat.attack_by(kaito.id) is None
+    attack = scenario.game.combat.attack_by(kaito.id)
+    assert attack is not None
+    assert attack.defender.username == "bob"
+    assert scenario.game.characteristics_of(kaito).is_creature
     assert bears.zone is Zone.HAND

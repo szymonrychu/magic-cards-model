@@ -6578,18 +6578,39 @@ _TURN_FACT_CONDITION_PHRASES: dict[str, tuple[str, str]] = {
     "you sacrificed a permanent this turn": ("sacrificed_permanent", "you"),
 }
 
-#: "As long as `<condition>`, this `<object>` is an artifact creature." -
-#: Phoenix Fleet Airship ("you control eight or more permanents named Phoenix
-#: Fleet Airship") and Grond, the Gatebreaker ("it's your turn and you control
-#: an Army"), each self-reference already rewritten to "this permanent" by
-#: `self_normalized_effect_text` (CR 201.5). The type phrase is added in layer
-#: 4 (CR 613.1d), keeping every type already there (CR 205.1b).
+#: A permanent's own conditional type change: "[During your turn,] [as long as
+#: `<condition>`,] `<this>` is a[n] [`<P/T>`] [`<Subtypes>`] `<types>` creature
+#: [in addition to its other types | that's still a `<type>`] [and [it] has |
+#: with `<keywords>`]." - Phoenix Fleet Airship ("you control eight or more
+#: permanents named Phoenix Fleet Airship ... is an artifact creature"), Grond,
+#: the Gatebreaker ("it's your turn and you control an Army"), Kaito, Bane of
+#: Nightmares ("During your turn, as long as Kaito has one or more loyalty
+#: counters on him, he's a 3/4 Ninja creature and has hexproof") and Idol of
+#: False Gods ("... has eight or more +1/+1 counters on it, it's a 0/0
+#: creature in addition to its other types and it has annihilator 2"). Every
+#: self-reference is already "this permanent" (`self_normalized_effect_text`,
+#: CR 201.5); "he's"/"she's"/"it's" is the same object. Types in layer 4 (CR
+#: 613.1d), keywords in layer 6 (CR 613.1f), the P/T in layer 7b (CR 613.4b).
 _CONDITIONAL_SELF_TYPE_CHANGE_RE = re.compile(
-    r"^as long as (?P<condition>[^,]+), this [a-z]+ is an? "
-    r"(?P<types>(?:[a-z]+ )*creature)\.?$",
+    r"^(?P<your_turn>during your turn, )?(?:as long as (?P<condition>[^,]+), )?"
+    r"(?:this [a-z]+ is|(?:he|she|it)(?:'s| is)|they(?:'re| are)) an? "
+    r"(?:(?P<power>\d+)/(?P<toughness>\d+) )?"
+    r"(?P<subtypes>(?:(?-i:[A-Z][a-zA-Z'-]*) )*)"
+    r"(?P<types>(?:[a-z]+ )*creature)"
+    r"(?P<in_addition> in addition to its other types)?"
+    r"(?: that'?s still an? (?P<still>[a-z]+))?"
+    r"(?:(?:,? and (?:it |he |she |they )?(?:has|have)| with) (?P<keywords>[^.]+?))?"
+    r"(?: that'?s still an? (?P<still_after>[a-z]+))?\.?$",
     re.IGNORECASE,
 )
 _ITS_YOUR_TURN_RE = re.compile(r"it(?:'s| is) your turn", re.IGNORECASE)
+#: "this permanent has one or more loyalty counters on him" (Kaito), "this
+#: artifact has eight or more +1/+1 counters on it" (Idol of False Gods).
+_SELF_HAS_N_COUNTERS_RE = re.compile(
+    rf"this [a-z]+ has (?P<count>{COUNT}) or more (?P<kind>[a-z0-9+/-]+) counters? "
+    r"on (?:it|him|her|them)",
+    re.IGNORECASE,
+)
 _YOU_CONTROL_N_NAMED_RE = re.compile(
     rf"you control (?P<count>{COUNT}) or more permanents named (?P<name>.+)",
     re.IGNORECASE,
@@ -7976,18 +7997,34 @@ def _graveyard_card_count_gated_self_static_builder(
     return builder
 
 
-def _conditional_self_type_change_builder(
-    types: tuple[Type, ...],
-    your_turn_only: bool,
-    requirements: tuple[tuple[str, object, int], ...],
-    *,
-    line: str,
-) -> EffectBuilder:
-    """`_CONDITIONAL_SELF_TYPE_CHANGE_RE`'s shape. "It's your turn" is read
-    off `LayerContext.active_player` at build time; every "you control"
-    count lives in `SelfIfControlsCounted`, re-asked against the board being
-    computed. A name of "this permanent" is the card's own (CR 201.5), taken
-    from the source as the effect is built."""
+class _SelfTypeChange(NamedTuple):
+    """What `_CONDITIONAL_SELF_TYPE_CHANGE_RE` read off one sentence."""
+
+    types: tuple[Type, ...]
+    subtypes: tuple[str, ...]
+    #: CR 205.1b: "in addition to its other types", "still a [type]", or an
+    #: "artifact creature" - every prior type and subtype is kept (a named
+    #: creature type still replaces the old creature types). Otherwise CR
+    #: 205.1a: the new types and subtypes replace the old ones.
+    retains: bool
+    power_toughness: tuple[int, int] | None
+    granted: tuple[str, ...]
+    your_turn_only: bool
+    #: "you control ..." tests, re-asked on the board (`SelfIfControlsCounted`).
+    requirements: tuple[tuple[str, object, int], ...]
+    #: "this permanent has N or more <kind> counters on it": (kind, N).
+    counters: tuple[tuple[str, int], ...]
+
+
+def _conditional_self_type_change_builder(change: _SelfTypeChange, *, line: str) -> EffectBuilder:
+    """`_CONDITIONAL_SELF_TYPE_CHANGE_RE`'s shape. Whose turn it is and the
+    source's own counters are read at build time (`LayerContext.active_player`,
+    `CardState.counters`) - `effects_for` rebuilds on every CR 613.5
+    computation, so the effect is on exactly while its condition holds (CR
+    604.2, CR 611.3a). Every "you control" count lives in
+    `SelfIfControlsCounted`, re-asked against the board being computed. A name
+    of "this permanent" is the card's own (CR 201.5), taken from the source as
+    the effect is built."""
 
     def builder(
         source: CardState,
@@ -7995,10 +8032,12 @@ def _conditional_self_type_change_builder(
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        if your_turn_only and context.active_player != source.controller:
+        if change.your_turn_only and context.active_player != source.controller:
+            return []
+        if any(source.counter_count(kind) < threshold for kind, threshold in change.counters):
             return []
         built: list[ControlledCountRequirement] = []
-        for kind, value, threshold in requirements:
+        for kind, value, threshold in change.requirements:
             if kind == "name":
                 name = source.name if value == "this permanent" else str(value)
                 built.append(ControlledCountRequirement(name=name, threshold=threshold))
@@ -8010,27 +8049,82 @@ def _conditional_self_type_change_builder(
         selector = SelfIfControlsCounted(
             card_id=source.id, username=source.controller, requirements=tuple(built)
         )
-        return [
+        common = {
+            "timestamp": timestamp,
+            "source_id": source.id,
+            "source_ability": _source_line_for(source, line),
+            "selector": selector,
+        }
+        described = f"{source.name}: as long as its condition holds"
+        modifications: list[Modification]
+        if not change.retains:
+            modifications = [SetTypesAndSubtypes(types=change.types, subtypes=change.subtypes)]
+        else:
+            modifications = [AddType(card_type=card_type) for card_type in change.types]
+            if change.subtypes:
+                modifications.append(SetCreatureTypes(subtypes=change.subtypes))
+        type_phrase = " ".join((*change.subtypes, *(each.value for each in change.types)))
+        effects = [
             ContinuousEffect(
-                description=f"{source.name}: is {card_type.value} as long as its condition holds",
+                description=f"{described}, is {with_indefinite_article(type_phrase)}",
                 layer=Layer.TYPE,
-                timestamp=timestamp,
-                source_id=source.id,
-                source_ability=_source_line_for(source, line),
-                selector=selector,
-                modification=AddType(card_type=card_type),
+                modification=modification,
+                **common,
             )
-            for card_type in types
+            for modification in modifications
         ]
+        effects.extend(
+            ContinuousEffect(
+                description=f"{described}, has {ability}",
+                layer=Layer.ABILITY,
+                modification=grant_ability(ability),
+                **common,
+            )
+            for ability in change.granted
+        )
+        if change.power_toughness is not None:
+            power, toughness = change.power_toughness
+            effects.append(
+                ContinuousEffect(
+                    description=f"{described}, has base P/T {power}/{toughness}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    modification=set_power_toughness(power, toughness),
+                    **common,
+                )
+            )
+        return effects
 
     return builder
 
 
+def _granted_self_keywords(raw: str) -> list[str] | None:
+    """The "and has `<keywords>`" / "with `<keywords>`" tail of a self type
+    change: `_split_and_validate_keywords`'s whitelist, plus a numbered keyword
+    `machines/keywords.py` writes out as a triggered ability (Idol of False
+    Gods' "annihilator 2", CR 702.86a) - a grant only ever hands out a keyword
+    that will actually do something."""
+    from .keywords import writes_triggered_ability
+
+    validated = _split_and_validate_keywords(raw)
+    if validated is not None:
+        return validated
+    numbered = re.fullmatch(r"(?P<keyword>[a-z]+) (?P<n>\d+)", raw.strip(), re.IGNORECASE)
+    if numbered is None or not writes_triggered_ability(numbered.group("keyword")):
+        return None
+    return [f"{numbered.group('keyword').capitalize()} {numbered.group('n')}"]
+
+
 def _conditional_self_type_change(sentence: str) -> EffectBuilder | None:
     """`_CONDITIONAL_SELF_TYPE_CHANGE_RE` read whole, or `None`: every part
-    of the condition (joined by "and") and every type word must read."""
+    of the condition (joined by "and"), every type word, every subtype and
+    every granted keyword must read, and there must be a condition at all."""
     match = _CONDITIONAL_SELF_TYPE_CHANGE_RE.fullmatch(sentence.strip())
     if match is None:
+        return None
+    your_turn_only = match.group("your_turn") is not None
+    condition = match.group("condition")
+    if condition is None and not your_turn_only:
         return None
     types: list[Type] = []
     for word in match.group("types").split():
@@ -8038,11 +8132,29 @@ def _conditional_self_type_change(sentence: str) -> EffectBuilder | None:
         if card_type is None:
             return None
         types.append(card_type)
-    your_turn_only = False
+    known_creature_types = {kind.lower(): kind for kind in creature_types()}
+    subtypes: list[str] = []
+    for word in match.group("subtypes").split():
+        subtype = known_creature_types.get(word.lower())
+        if subtype is None:
+            return None
+        subtypes.append(subtype)
+    granted: list[str] = []
+    if match.group("keywords") is not None:
+        keywords = _granted_self_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        granted = keywords
     requirements: list[tuple[str, object, int]] = []
-    for part in re.split(r"\s+and\s+", match.group("condition").strip()):
+    counters: list[tuple[str, int]] = []
+    for part in re.split(r"\s+and\s+", (condition or "").strip()) if condition else []:
         if _ITS_YOUR_TURN_RE.fullmatch(part):
             your_turn_only = True
+        elif has_counters := _SELF_HAS_N_COUNTERS_RE.fullmatch(part):
+            threshold = parse_count(has_counters.group("count"), article=False)
+            if threshold is None:
+                return None
+            counters.append((has_counters.group("kind").lower(), threshold))
         elif named := _YOU_CONTROL_N_NAMED_RE.fullmatch(part):
             threshold = parse_count(named.group("count"), article=False)
             if threshold is None:
@@ -8059,8 +8171,25 @@ def _conditional_self_type_change(sentence: str) -> EffectBuilder | None:
                 return None
         else:
             return None
+    power = match.group("power")
+    retains = (
+        match.group("in_addition") is not None
+        or match.group("still") is not None
+        or match.group("still_after") is not None
+        or Type.ARTIFACT in types
+    )
     return _conditional_self_type_change_builder(
-        tuple(types), your_turn_only, tuple(requirements), line=sentence
+        _SelfTypeChange(
+            types=tuple(types),
+            subtypes=tuple(subtypes),
+            retains=retains,
+            power_toughness=(int(power), int(match.group("toughness"))) if power else None,
+            granted=tuple(granted),
+            your_turn_only=your_turn_only,
+            requirements=tuple(requirements),
+            counters=tuple(counters),
+        ),
+        line=sentence,
     )
 
 

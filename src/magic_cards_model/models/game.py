@@ -17834,11 +17834,14 @@ class Game(EngineModel):
                     "this turn (CR 606.3)"
                 )
             removes = ability.loyalty.removes
-            if removes and (permanent.loyalty or 0) < removes:
-                # CR 606.6: the counters the negative cost removes have to be
-                # on the planeswalker before the ability may be activated.
+            present = permanent.counter_count(Counter.LOYALTY)
+            if removes and present < removes:
+                # CR 606.6: "the permanent has at least that many loyalty
+                # counters on it" - counters, not loyalty, so a planeswalker a
+                # layer-4 effect made a plain creature (Kaito, Bane of
+                # Nightmares on his own turn) still activates them.
                 return (
-                    f"{permanent.name} has {permanent.loyalty} loyalty, not the {removes} "
+                    f"{permanent.name} has {present} loyalty, not the {removes} "
                     f"its {ability.loyalty.printed} cost removes (CR 606.6)"
                 )
 
