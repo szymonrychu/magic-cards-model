@@ -19709,6 +19709,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     converge_exile = _parse_converge_exile_by_colors_spent(whole)
     if converge_exile is not None:
         return converge_exile
+    gain_life_if_color_spent = _parse_gain_life_if_color_spent_clause(whole)
+    if gain_life_if_color_spent is not None:
+        return gain_life_if_color_spent
     x_life_mass_debuff = _parse_x_life_mass_debuff(whole)
     if x_life_mass_debuff is not None:
         return x_life_mass_debuff
@@ -20055,6 +20058,59 @@ def _parse_converge_exile_by_colors_spent(effect_text: str) -> Effect | None:
                 mana_value = game.characteristics_of(target).mana_value
                 if mana_value <= colors_spent:
                     game.exile_permanent(target)
+
+    return effect
+
+
+#: Dawnglow Infusion: "You gain X life if {G} was spent to cast this spell
+#: and X life if {W} was spent to cast this spell." CR 707.2's own worked
+#: example of what a copy does *not* carry: "Because mana isn't an object, a
+#: copy of Dawnglow Infusion won't cause you to gain any life, no matter what
+#: mana was spent to cast the original spell" - `Game.copy_spell` already
+#: excludes `mana_spent` from what it writes onto a copy's own `CastRecord`
+#: (see that method's own docstring), so a copy's resolution reads an empty
+#: `mana_spent` and gains nothing here with no special case for `is_copy`.
+#: Two independent conditions in one instruction, not CR 608.2c's sequential
+#: clauses ("Do both if {G}{W} was spent" - reminder text, CR 207.2) - read
+#: whole rather than split at "and", the same reason `_CONVERGE_EXILE_RE`
+#: above and `_EACH_PLAYER_EXILE_SACRIFICE_RETURN_RE` are whole-text matches.
+#: Generalised over which two colors are named (`_COLOR_LETTERS`) rather than
+#: hardcoded to {G}/{W}, so a future card sharing this exact template with a
+#: different color pair is covered for free; Dawnglow Infusion is the only
+#: printing in the pool today. Matched on the *literal* "X" - like
+#: `_parse_x_life_mass_debuff` above, this needs `Game.cast_record(spell).
+#: x_value` itself (CR 107.3a) multiplied by however many of the two named
+#: colors were actually spent (CR 601.2h), which `effect_for`'s own
+#: substitution cannot express (it would collapse "X life ... and X life"
+#: into two copies of one fixed number, not "count how many conditions
+#: held").
+_GAIN_LIFE_IF_COLOR_SPENT_RE = re.compile(
+    r"^you gain x life if (?P<color1>\{[wubrg]\}) was spent to cast this spell "
+    r"and x life if (?P<color2>\{[wubrg]\}) was spent to cast (?:this spell|it)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_gain_life_if_color_spent_clause(effect_text: str) -> Effect | None:
+    """`_GAIN_LIFE_IF_COLOR_SPENT_RE`'s shape, or `None` if this is not it."""
+    match = _GAIN_LIFE_IF_COLOR_SPENT_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    color1 = Color(match.group("color1").strip("{}").upper())
+    color2 = Color(match.group("color2").strip("{}").upper())
+
+    def effect(game: "Game", spell: CardState) -> None:
+        record = game.cast_record(spell)
+        x_value = record.x_value
+        if x_value <= 0:
+            return
+        total = 0
+        if record.mana_of_color_spent(color1) > 0:
+            total += x_value
+        if color2 != color1 and record.mana_of_color_spent(color2) > 0:
+            total += x_value
+        if total > 0:
+            game.gain_life(game.controller_of(spell), total)
 
     return effect
 

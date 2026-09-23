@@ -269,12 +269,20 @@ def test_doublecast_then_kicked_burst_lightning_copies_kicked():
 
 
 def test_a_copy_of_dawnglow_infusion_carries_no_mana_spent():
-    """CR 707.2, verbatim: "a copy of Dawnglow Infusion won't cause you to
-    gain any life" - because `mana_spent` is not among the copied values.
-    Dawnglow Infusion's own per-colour life-gain clause has no text parser in
-    this engine (a card-specific dispatcher is not this file's scope), so
-    this reads the two `CastRecord`s directly: the real cast paid {G}, so its
-    own record shows it; the copy's record must not."""
+    """CR 707.2's own worked example, verbatim: "Dawnglow Infusion is a
+    sorcery that reads, 'You gain X life if {G} was spent to cast this spell
+    and X life if {W} was spent to cast it.' Because mana isn't an object, a
+    copy of Dawnglow Infusion won't cause you to gain any life, no matter
+    what mana was spent to cast the original spell." Dawnglow Infusion's
+    actual printed oracle text (`resolve_cards`/the fixture in
+    `tests/fixtures`... - `src/magic_cards_model/data/printings/
+    dawnglow_infusion.json`) says "cast this spell" both times; the engine
+    now has a real parser for it
+    (`machines/effects._parse_gain_life_if_color_spent_clause`), so this
+    resolves both spells for real rather than only reading `CastRecord`: the
+    real cast paid {G}{G} (X=1), so it gains 1 life on resolution; the copy's
+    own record carries `x_value=1` but no `mana_spent` at all (CR 707.2's own
+    exclusion), so it must resolve for 0."""
     scenario = (
         Scenario()
         .player(
@@ -286,6 +294,7 @@ def test_a_copy_of_dawnglow_infusion_carries_no_mana_spent():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    starting_life = scenario.player("alice").life
 
     casting = scenario.cast("Dawnglow Infusion")
     casting.determine_cost(x_value=1)
@@ -300,8 +309,24 @@ def test_a_copy_of_dawnglow_infusion_carries_no_mana_spent():
     copy = scenario.game.copy_spell(infusion, controller="alice")
     copy_record = scenario.game.cast_record(copy)
     assert copy_record.is_copy is True
+    assert copy_record.x_value == 1, "X itself IS copied (CR 707.2)"
     assert not copy_record.any_mana_spent, "CR 707.2: mana spent is never copied"
     assert copy_record.mana_spent == {}
+
+    # The copy sits on top of the stack (CR 707.10d) - resolve it first. A
+    # real cast of Dawnglow Infusion with no dispatcher for its own text
+    # resolves silently (no gain, no notice); this proves the resolution
+    # itself, not just the record it reads from.
+    assert scenario.game.stack[-1].id == copy.id
+    scenario.resolve_top()  # the copy
+    assert scenario.player("alice").life == starting_life, (
+        "CR 707.2's own worked example: the copy gains no life at all"
+    )
+
+    scenario.resolve_top()  # the original
+    assert scenario.player("alice").life == starting_life + 1, (
+        "the original paid {G}, so it gains X=1 life"
+    )
 
 
 # --------------------------------------------------------------------------
