@@ -1,0 +1,80 @@
+{
+  "ability": "Whenever you cast an instant or sorcery spell during your turn, flip a coin. If you lose the flip, Ral deals 1 damage to you. If you win the flip, you may exile Ral. If you do, return him to the battlefield transformed under his owner's control.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Ral, Monsoon Mage@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Ral, Monsoon Mage // Ral, Leyline Prodigy"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Opt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Ral, Monsoon Mage // Ral, Leyline Prodigy",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "exile Ral, Monsoon Mage, then return it to the battlefield transformed",
+        "source": "Ral, Monsoon Mage"
+      }
+    ],
+    "fields_changed": ["coin_flips_performed", "permanents_left_battlefield_this_turn"],
+    "notices": {},
+    "objects": {
+      "Ral, Monsoon Mage@alice#1": {
+        "counters": [
+          {},
+          {
+            "loyalty": 3
+          }
+        ],
+        "power": [1, null],
+        "toughness": [3, null],
+        "transformed": [false, true]
+      }
+    },
+    "players": {},
+    "stack": ["Opt@alice#1"]
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "cast_spell",
+  "number": 0,
+  "recipe": {
+    "attempt": "cast_probe",
+    "index": 0,
+    "params": {
+      "caster": "alice",
+      "probe": "Opt"
+    },
+    "variant": "quiet"
+  }
+}

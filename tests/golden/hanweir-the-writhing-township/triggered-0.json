@@ -1,0 +1,86 @@
+{
+  "ability": "Whenever Hanweir attacks, create two 3/2 colorless Eldrazi Horror creature tokens that are tapped and attacking.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Hanweir, the Writhing Township@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Hanweir, the Writhing Township"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "declare_attackers",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Hanweir, the Writhing Township",
+  "delta": {
+    "created": {
+      "Eldrazi Horror Token@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 3,
+        "tapped": true,
+        "toughness": 2,
+        "transformed": false,
+        "zone": "battlefield"
+      },
+      "Eldrazi Horror Token@alice+2": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 3,
+        "tapped": true,
+        "toughness": 2,
+        "transformed": false,
+        "zone": "battlefield"
+      }
+    },
+    "decisions": [],
+    "fields_changed": ["combat", "continuous_effects"],
+    "notices": {},
+    "objects": {},
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "attacks",
+  "number": 0,
+  "recipe": {
+    "attempt": "combat",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

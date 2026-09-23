@@ -1,0 +1,134 @@
+{
+  "ability": "At the beginning of your end step, you may sacrifice three other nonland permanents. If you do, return a creature card from your graveyard to the battlefield with a finality counter on it.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Scavenger's Talent@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Scavenger's Talent"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": null,
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Scavenger's Talent",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "sacrifice three other nonland permanents",
+        "source": "Scavenger's Talent"
+      },
+      {
+        "amount": 3,
+        "cards": ["Memnite@alice#1", "Icehide Golem@alice#1", "Bonesplitter@alice#1", "Icy Manipulator@alice#1"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose 3 permanents to sacrifice",
+        "source": "Scavenger's Talent"
+      },
+      {
+        "amount": 1,
+        "cards": ["Grizzly Bears@alice#2", "Memnite@alice#2", "Llanowar Elves@alice#1", "Serra Angel@alice#1", "Icehide Golem@alice#1"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose 1 card(s) to return from your graveyard to the battlefield",
+        "source": "Scavenger's Talent"
+      },
+      {
+        "amount": 0,
+        "cards": ["?", "?", "?", "?"],
+        "kind": "order_triggers",
+        "player": "alice",
+        "players": [],
+        "prompt": "order your triggered abilities on the stack, bottom of the stack first: 1. Scavenger's Talent, 2. Scavenger's Talent, 3. Scavenger's Talent, 4. Scavenger's Talent",
+        "source": null
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Scavenger's Talent",
+        "source": "Scavenger's Talent"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Scavenger's Talent",
+        "source": "Scavenger's Talent"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Scavenger's Talent",
+        "source": "Scavenger's Talent"
+      }
+    ],
+    "fields_changed": ["creatures_died_this_turn", "graveyard_arrivals_this_turn", "once_per_turn_triggers", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts"],
+    "notices": {},
+    "objects": {
+      "Bonesplitter@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Icehide Golem@alice#1": {
+        "counters": [
+          {},
+          {
+            "finality": 1
+          }
+        ]
+      },
+      "Icy Manipulator@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
+    "players": {},
+    "stack": ["ability of Scavenger's Talent@alice#1: Whenever you sacrifice a permanent, target player mills two cards.", "ability of Scavenger's Talent@alice#1: Whenever one or more creatures you control die, create a Food token. This ability triggers only once each turn.", "ability of Scavenger's Talent@alice#1: Whenever you sacrifice a permanent, target player mills two cards.", "ability of Scavenger's Talent@alice#1: Whenever you sacrifice a permanent, target player mills two cards."]
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "beginning_of_step",
+  "number": 2,
+  "recipe": {
+    "attempt": "staged",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

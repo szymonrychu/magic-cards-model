@@ -1,0 +1,81 @@
+{
+  "ability": "At the beginning of your upkeep, you may sacrifice two Islands. If you do, untap this creature.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Leviathan@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Leviathan"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": null,
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Leviathan",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "sacrifice two Islands",
+        "source": "Leviathan"
+      },
+      {
+        "amount": 2,
+        "cards": ["Island@alice#1", "Island@alice#2", "Island@alice#3"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose 2 permanents to sacrifice",
+        "source": "Leviathan"
+      }
+    ],
+    "fields_changed": ["graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts"],
+    "notices": {},
+    "objects": {
+      "Island@alice#2": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Island@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "beginning_of_step",
+  "number": 0,
+  "recipe": {
+    "attempt": "staged",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

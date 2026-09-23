@@ -1,0 +1,87 @@
+{
+  "ability": "When this creature enters, each opponent sacrifices a creature of their choice, discards a card, and loses 4 life.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Dusk Mangler@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Dusk Mangler"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Dusk Mangler",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": ["Fleecemane Lion@bob#1", "Icehide Golem@bob#1"],
+        "kind": "choose_cards",
+        "player": "bob",
+        "players": [],
+        "prompt": "sacrifice a creature",
+        "source": "Dusk Mangler"
+      },
+      {
+        "amount": 1,
+        "cards": ["Forest@bob#2", "Grizzly Bears@bob#1", "Lightning Bolt@bob#1", "Opt@bob#1"],
+        "kind": "choose_cards",
+        "player": "bob",
+        "players": [],
+        "prompt": "discard 1 card(s)",
+        "source": "Dusk Mangler"
+      }
+    ],
+    "fields_changed": ["cards_discarded_this_turn", "creatures_died_this_turn", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts"],
+    "notices": {},
+    "objects": {
+      "Icehide Golem@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Opt@bob#1": {
+        "zone": ["hand", "graveyard"]
+      }
+    },
+    "players": {
+      "bob": {
+        "life": [20, 16]
+      }
+    },
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "enters_the_battlefield",
+  "number": 0,
+  "recipe": {
+    "attempt": "put",
+    "index": 0,
+    "params": {
+      "tapped": false
+    },
+    "variant": "quiet"
+  }
+}

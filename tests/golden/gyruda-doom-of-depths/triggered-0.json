@@ -1,0 +1,92 @@
+{
+  "ability": "When Gyruda enters, each player mills four cards. Put a creature card with an even mana value from among the milled cards onto the battlefield under your control.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Gyruda, Doom of Depths@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Gyruda, Doom of Depths"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Gyruda, Doom of Depths",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": ["Grizzly Bears@alice#3", "Grizzly Bears@bob#3"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose a card to put onto the battlefield",
+        "source": "Gyruda, Doom of Depths"
+      }
+    ],
+    "fields_changed": ["continuous_effects", "graveyard_arrivals_this_turn"],
+    "notices": {},
+    "objects": {
+      "Forest@alice#6": {
+        "zone": ["library", "graveyard"]
+      },
+      "Forest@bob#4": {
+        "zone": ["library", "graveyard"]
+      },
+      "Grizzly Bears@alice#3": {
+        "zone": ["library", "graveyard"]
+      },
+      "Grizzly Bears@bob#3": {
+        "zone": ["library", "battlefield"]
+      },
+      "Island@alice#5": {
+        "zone": ["library", "graveyard"]
+      },
+      "Island@bob#3": {
+        "zone": ["library", "graveyard"]
+      },
+      "Lightning Bolt@alice#3": {
+        "zone": ["library", "graveyard"]
+      },
+      "Lightning Bolt@bob#3": {
+        "zone": ["library", "graveyard"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "enters_the_battlefield",
+  "number": 0,
+  "recipe": {
+    "attempt": "put",
+    "index": 0,
+    "params": {
+      "tapped": false
+    },
+    "variant": "quiet"
+  }
+}

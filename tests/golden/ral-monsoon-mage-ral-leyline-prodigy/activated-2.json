@@ -1,0 +1,79 @@
+{
+  "ability": "−8: Exile the top eight cards of your library. You may cast instant and sorcery spells from among them this turn without paying their mana costs.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Ral, Leyline Prodigy@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Ral, Monsoon Mage // Ral, Leyline Prodigy"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Ral, Monsoon Mage // Ral, Leyline Prodigy",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["play_permissions"],
+    "notices": {},
+    "objects": {
+      "Forest@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#4": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#5": {
+        "zone": ["library", "exile"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 2,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}

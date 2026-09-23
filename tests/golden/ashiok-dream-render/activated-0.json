@@ -1,0 +1,97 @@
+{
+  "ability": "−1: Target player mills four cards. Then exile each opponent's graveyard.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Ashiok, Dream Render@alice#1",
+    "targets": ["player:alice"],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Ashiok, Dream Render"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Ashiok, Dream Render",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["graveyard_arrivals_this_turn"],
+    "notices": {},
+    "objects": {
+      "Bonesplitter@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Forest@alice#6": {
+        "zone": ["library", "graveyard"]
+      },
+      "Forest@bob#3": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Grizzly Bears@alice#3": {
+        "zone": ["library", "graveyard"]
+      },
+      "Grizzly Bears@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Island@alice#5": {
+        "zone": ["library", "graveyard"]
+      },
+      "Island@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Lightning Bolt@alice#3": {
+        "zone": ["library", "graveyard"]
+      },
+      "Lightning Bolt@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Llanowar Elves@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Memnite@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Opt@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Serra Angel@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Swamp@bob#2": {
+        "zone": ["graveyard", "exile"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 0,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}

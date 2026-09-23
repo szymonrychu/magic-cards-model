@@ -1,0 +1,73 @@
+{
+  "ability": "−6: Separate all permanents target player controls into two piles. That player sacrifices all permanents in the pile of their choice.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Liliana of the Veil@alice#1",
+    "targets": ["player:alice"],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Liliana of the Veil"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Liliana of the Veil",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 22,
+        "cards": ["Plains@alice#1", "Island@alice#1", "Swamp@alice#1", "Mountain@alice#1", "Forest@alice#1", "Plains@alice#2", "Island@alice#2", "Swamp@alice#2", "Mountain@alice#2", "Forest@alice#2", "Plains@alice#3", "Island@alice#3", "Swamp@alice#3", "Mountain@alice#3", "Forest@alice#3", "Wastes@alice#1", "Wastes@alice#2", "Memnite@alice#1", "Icehide Golem@alice#1", "Bonesplitter@alice#1", "Icy Manipulator@alice#1", "Liliana of the Veil@alice#1"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "separate alice's permanents into pile one",
+        "source": "Liliana of the Veil"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_pile",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose a pile to sacrifice",
+        "source": "Liliana of the Veil"
+      }
+    ],
+    "fields_changed": [],
+    "notices": {},
+    "objects": {},
+    "players": {},
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 2,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}

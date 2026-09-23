@@ -1,0 +1,115 @@
+{
+  "ability": "{3}, {T}, Exile Abstergo Entertainment: Return up to one target historic card from your graveyard to your hand, then exile all graveyards.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Abstergo Entertainment@alice#1",
+    "targets": ["Bonesplitter@alice#2"],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Abstergo Entertainment"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Abstergo Entertainment",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["known_carries"],
+    "notices": {},
+    "objects": {
+      "Bonesplitter@alice#2": {
+        "zone": ["graveyard", "hand"]
+      },
+      "Bonesplitter@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Forest@alice#5": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Forest@bob#3": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Grizzly Bears@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Grizzly Bears@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Island@alice#4": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Island@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Lightning Bolt@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Lightning Bolt@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Llanowar Elves@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Llanowar Elves@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Memnite@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Memnite@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Opt@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Opt@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Serra Angel@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Serra Angel@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Swamp@alice#4": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Swamp@bob#2": {
+        "zone": ["graveyard", "exile"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 0,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}
