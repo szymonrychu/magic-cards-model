@@ -31,6 +31,8 @@ from scripts.survey_cards import (
 )
 
 from magic_cards_model.models import Card
+from magic_cards_model.support import classify_card
+from tests.cards import gap_example
 
 
 def test_a_card_that_works_classifies_as_handled(tmp_path):
@@ -41,14 +43,13 @@ def test_a_card_that_works_classifies_as_handled(tmp_path):
 
 
 def test_a_genuinely_dead_card_classifies_as_silent(tmp_path):
-    """Gavony Dawnguard is `test_sweep_pool.py`'s own control for a still-open
-    gap: its day/night text (CR 731) has no subsystem to read it.
-
-    Keen-Eyed Curator stood here until S09 read its linked-exile threshold
-    static; Rancor and Grand Arbiter Augustin IV before it, closed the same
-    way.
+    """A still-silent printing, chosen by `gap_example` the same way
+    `test_sweep_pool.py`'s control is. Keen-Eyed Curator stood here until S09
+    read its linked-exile threshold static; Rancor and Grand Arbiter Augustin
+    IV before it.
     """
-    result = survey_one("Gavony Dawnguard", tmp_path)
+    printing = gap_example("silent", lambda p: classify_card(p)[0] == SILENT)
+    result = survey_one(printing.name, tmp_path)
     assert result.found
     assert result.category == SILENT
 

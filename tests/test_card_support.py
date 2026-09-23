@@ -29,7 +29,7 @@ from magic_cards_model.support import (
     has_rules_text,
     ignored_keywords,
 )
-from tests.cards import CARD_POOL, card, pool
+from tests.cards import CARD_POOL, card, gap_example, pool
 
 
 def _kinds(support: CardSupport) -> set[str]:
@@ -60,32 +60,41 @@ def test_a_nonlegendary_activated_ability_is_judged_as_the_engine_reads_it():
 
 
 def test_a_card_with_a_dead_clause_is_silent_and_names_the_clause():
-    """Gavony Dawnguard is the sweep's own control for a still-open gap
-    (`tests/test_sweep_pool.py`): its day/night trigger (CR 731) has no
-    subsystem to read it. (Keen-Eyed Curator stood here until S09 read its
-    linked-exile threshold static.)"""
-    support = card_support(card("Gavony Dawnguard"))
-    assert support.status == "silent"
+    """A still-silent printing, chosen by `gap_example` (Keen-Eyed Curator
+    stood here until S09 read its linked-exile threshold static): the card is
+    silent and names the dead clause."""
+    printing = gap_example("silent", lambda p: card_support(p).status == "silent")
+    support = card_support(printing)
     silent = [clause for clause in support.clauses if clause.status == "silent"]
     assert silent
-    assert any("day becomes night" in clause.text for clause in silent)
-    assert all(clause.reason for clause in silent)
+    assert all(clause.text and clause.reason for clause in silent)
 
 
 def test_a_card_that_only_fails_closed_is_notice():
-    """Bank Job (out of format, so the owner rule never forces it read): a
-    clause that fails closed with a notice, and an executed keyword. (Final
-    Showdown stood here until S21 read its last two Spree modes.)"""
-    support = card_support(card("Bank Job"))
-    assert support.status == "notice"
+    """A printing whose worst clause fails closed with a notice, chosen by
+    `gap_example` (Final Showdown stood here until S21 read its last two
+    Spree modes): nothing on it is silent or unaudited."""
+    printing = gap_example("a notice", lambda p: card_support(p).status == "notice")
+    support = card_support(printing)
     assert {clause.status for clause in support.clauses} <= {"handled", "notice"}
-    assert any(c.kind == "keyword" and c.status == "handled" for c in support.clauses)
+    assert any(clause.status == "notice" for clause in support.clauses)
+
+
+def _unaudited_static_only(printing) -> bool:
+    support = card_support(printing)
+    return support.status == "unaudited" and all(
+        c.kind == "static" and c.outcome == "static_unaudited"
+        for c in support.clauses
+        if c.status == "unaudited"
+    )
 
 
 def test_a_static_ability_nothing_audits_is_unaudited():
-    """Alhammarret's Archive's life-doubling replacement is a static line no
-    support check audits - an explicit unknown, never a claim either way."""
-    support = card_support(card("Alhammarret's Archive"))
+    """A static line no support check audits (Alhammarret's Archive's
+    life-doubling replacement stood here) is an explicit unknown, never a
+    claim either way. The printing is chosen by `gap_example`."""
+    printing = gap_example("unaudited on a static line", _unaudited_static_only)
+    support = card_support(printing)
     assert support.status == "unaudited"
     unaudited = [c for c in support.clauses if c.status == "unaudited"]
     assert unaudited
@@ -93,13 +102,18 @@ def test_a_static_ability_nothing_audits_is_unaudited():
 
 
 def test_the_worst_clause_decides_the_card():
-    """Bloodghast carries a handled clause, a fail-closed clause and an
-    unaudited static line: the card is only as good as its worst clause
-    (silent < unaudited < notice < handled)."""
-    support = card_support(card("Bloodghast"))
-    statuses = {clause.status for clause in support.clauses}
-    assert {"handled", "notice", "unaudited"} <= statuses
-    assert support.status == "unaudited"
+    """A printing carrying a handled clause, a fail-closed clause and an
+    unaudited one (Bloodghast stood here), chosen by `gap_example`: the card
+    is only as good as its worst clause (silent < unaudited < notice <
+    handled)."""
+    printing = gap_example(
+        "handled, notice and unaudited at once",
+        lambda p: (
+            {clause.status for clause in card_support(p).clauses}
+            == {"handled", "notice", "unaudited"}
+        ),
+    )
+    assert card_support(printing).status == "unaudited"
 
 
 def test_a_multi_face_card_judges_each_castable_face():

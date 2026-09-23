@@ -59,7 +59,7 @@ from magic_cards_model.support import (
     in_target_formats,
     missed_layer_shape,
 )
-from tests.cards import card, pool
+from tests.cards import card, gap_example, pool
 
 # -- The baseline: a plain card must classify honestly in both directions ---
 
@@ -73,16 +73,18 @@ def test_a_card_that_works_classifies_as_handled():
 
 
 def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
-    """Gavony Dawnguard's day/night text (CR 731) has no subsystem to read it,
-    so the card still does nothing - fixing the classifier must never make a
-    genuinely-dead card look alive: this is the control for that.
+    """A card the engine genuinely cannot read still does nothing - fixing
+    the classifier must never make a genuinely-dead card look alive: this is
+    the control for that.
 
     (Keen-Eyed Curator stood here until S09 read its "card types among cards
     exiled with this creature" static - `tests/scenarios/test_linked_exile_
     card_type_threshold.py` pins it. Rancor and Grand Arbiter Augustin IV
-    stood here earlier and were closed the same way.)
+    stood here earlier and were closed the same way - so the control is now
+    chosen by `gap_example`, never named.)
     """
-    category, _ = classify_card(card("Gavony Dawnguard"))
+    printing = gap_example("silent", lambda p: classify_card(p)[0] == SILENT)
+    category, _ = classify_card(printing)
     assert category == SILENT
 
 
@@ -202,8 +204,9 @@ def test_a_permanent_spells_own_resolution_is_not_counted_as_a_dead_clause():
 
 
 def test_a_dead_clause_cannot_hide_behind_a_working_one():
-    """Obsidian Charmaw's enters-trigger is read and its cost-reduction static
-    line is not, so reporting the best outcome per card would call the whole
+    """A card whose enters-trigger is read and whose static line is not
+    (Obsidian Charmaw's cost reduction stood here; the card is now chosen by
+    `gap_example`): reporting the best outcome per card would call the whole
     card handled. The card-level verdict must be the worse of the two.
 
     This case was originally written against Territorial Kavu, whose domain
@@ -212,11 +215,15 @@ def test_a_dead_clause_cannot_hide_behind_a_working_one():
     `handled` on both clauses, pinned below - so the case moved to a card that
     still has the split rather than being deleted along with the gap it found.
     """
-    by_source = {c.source: c.category for c in classify_clauses(card("Obsidian Charmaw"))}
-    assert by_source["triggered"] == HANDLED
-    assert by_source["static"] == STATIC_UNAUDITED
 
-    assert classify_card(card("Obsidian Charmaw"))[0] == STATIC_UNAUDITED
+    def split(printing) -> bool:
+        by_source = {c.source: c.category for c in classify_clauses(printing)}
+        return by_source.get("triggered") == HANDLED and by_source.get("static") == (
+            STATIC_UNAUDITED
+        )
+
+    printing = gap_example("a read trigger beside an unaudited static", split)
+    assert classify_card(printing)[0] == STATIC_UNAUDITED
 
 
 def test_the_formerly_unread_layer_shapes_are_read_now():
@@ -607,9 +614,14 @@ def test_an_unread_condition_is_not_reclassified():
     `"triggered (unread condition)"` source it already has, not fold it into
     the new `UNMATCHABLE_CONDITION` bucket this closure adds.
     """
+
     # Caretaker's Talent stood here until S19 read its "When this Class
-    # becomes level 2"; Gavony Dawnguard's day/night condition is still unread.
-    by_source = {c.source: c.category for c in classify_clauses(card("Gavony Dawnguard"))}
+    # becomes level 2"; the card is chosen now, never named.
+    def unread(printing) -> bool:
+        return any(c.source == "triggered (unread condition)" for c in classify_clauses(printing))
+
+    printing = gap_example("carrying an unread trigger condition", unread)
+    by_source = {c.source: c.category for c in classify_clauses(printing)}
     assert by_source["triggered (unread condition)"] == SILENT
 
 

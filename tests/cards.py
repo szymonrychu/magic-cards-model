@@ -20,8 +20,11 @@ against the real shape.
 """
 
 import json
+from collections.abc import Callable
 from functools import cache
 from pathlib import Path
+
+import pytest
 
 import magic_cards_model
 from magic_cards_model.models import Card, CardState, Zone
@@ -56,3 +59,27 @@ def card(name: str) -> Card:
 def card_state(name: str, zone: Zone = Zone.LIBRARY, **kwargs) -> CardState:
     """One physical copy of a card, in a zone."""
     return CardState(card=card(name), zone=zone, **kwargs)
+
+
+def gap_example(what: str, has_gap: Callable[[Card], bool]) -> Card:
+    """A real printing standing in for "a card the engine does not fully read
+    yet": the first by name that `has_gap` accepts, taken from outside
+    Modern, Pioneer and Standard when any such printing qualifies.
+
+    Chosen, never named. Under the owner rule every in-format card is only
+    waiting its turn to be read - Keen-Eyed Curator and Final Showdown each
+    stood as a named example until the day they were read, and every test
+    using them broke at once. An in-format printing is
+    only the fallback for a gap no out-of-format printing has; when no
+    printing at all has it, the gap is closed and the test says so."""
+    from magic_cards_model.support import in_target_formats
+
+    printings = [pool()[name] for name in sorted({c.name for c in pool().values()})]
+    for candidates in (
+        [p for p in printings if not in_target_formats(p)],
+        [p for p in printings if in_target_formats(p)],
+    ):
+        for printing in candidates:
+            if has_gap(printing):
+                return printing
+    pytest.fail(f"no printing in the pool is still {what} - the gap is closed")
