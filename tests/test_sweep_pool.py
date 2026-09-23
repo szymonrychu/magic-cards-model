@@ -1525,42 +1525,44 @@ def test_knight_of_graces_conditional_pump_is_handled() -> None:
     assert statics == [HANDLED]
 
 
-# -- T5 review fix: the "you and <group>" player half must read NOTICE -----
+# -- T12: the "you and <group>" player half is granted, so it reads HANDLED --
 
 
-def test_veil_of_summers_player_subject_split_classifies_as_notice() -> None:
+def test_veil_of_summers_player_subject_split_classifies_as_handled() -> None:
     """Veil of Summer's third sentence, "You and permanents you control gain
     hexproof from blue and from black until end of turn", is a compound
     subject `_parse_you_and_group_gain_clause` (`machines/effects.py`) splits
-    in two: the group half is granted for real, but the player half is
-    deliberately withheld and recorded as a `PlayerSubjectSplitNotice`
-    (`Game.player_subject_split_notices`) rather than applied - T12's own
-    scope (`docs/engine-coverage.md`'s T5/G2b row,
+    in two. T5/G2b granted the group half for real but left the player half
+    recorded as a `PlayerSubjectSplitNotice` (`Game.player_subject_split_
+    notices`) rather than applied - a deliberately separate task's scope at
+    the time (`docs/engine-coverage.md`'s T5/G2b row). T12 closed that gap:
+    the player half is now handed to `parse_clause_effect`, the same reader
+    that already read this exact sentence
+    (`tests/scenarios/test_player_hexproof_shroud.py::
+    test_the_clause_parser_reads_hexproof_from_two_qualities_on_you`), so
+    both halves of the split now apply and `classify_card`'s worst-clause
+    verdict is `HANDLED`
+    (`tests/scenarios/test_player_hexproof_from_quality.py`,
     `tests/scenarios/test_veil_of_summer.py::
-    test_the_player_half_is_neither_granted_nor_silently_dropped`).
-
-    The dispatcher that reads Veil's whole text (`parse_mixed_effect_for_
-    spell`) returns one composed closure for all three sentences together, so
-    the returned callable's own `__name__` never shows up in `_NOTICE_STAND_
-    IN_NAMES` the way a pure notice-only fallback's does - the player-half
-    gap was invisible to `_dispatch_category`'s name check, and the card
-    reported `HANDLED` even though a whole sentence of it fails closed at
-    runtime. `classify_card`'s worst-clause verdict must be `NOTICE`, not
-    `HANDLED`, until T12 actually grants the player half.
+    test_the_player_half_is_granted_too`).
     """
     category, _ = classify_card(card("Veil of Summer"))
-    assert category == NOTICE
+    assert category == HANDLED
 
 
-def test_a_you_and_group_gain_clause_is_never_silent_or_handled() -> None:
+def test_a_you_and_group_gain_clause_is_handled_once_both_halves_apply() -> None:
     """The same compound-subject shape, read directly off Veil's own spell
-    face by `classify_clauses`: the clause itself must never read `HANDLED`
-    (the player half is unread) and never `SILENT` (the group half is a real,
-    working grant)."""
+    face by `classify_clauses`: the clause itself must never read `SILENT`
+    (the group half is a real, working grant), and now that T12 grants the
+    player half too, it reads `HANDLED` rather than the `NOTICE` it fell back
+    to while only the group half applied
+    (`_leaves_you_and_group_player_half_unread` now actually tries
+    `parse_clause_effect` on the player-half predicate instead of
+    downgrading the clause unconditionally)."""
     clauses = [
         c
         for c in classify_clauses(card("Veil of Summer"))
         if "you and permanents you control gain" in c.text.lower()
     ]
     assert clauses, "Veil's compound-subject sentence must still be its own clause"
-    assert [c.category for c in clauses] == [NOTICE]
+    assert [c.category for c in clauses] == [HANDLED]

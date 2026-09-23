@@ -1,13 +1,21 @@
 """Scenario: Veil of Summer's own compound-subject sentence, "You and
 permanents you control gain hexproof from blue and from black until end of
-turn" - the *permanents* half only (CR 611.2c, CR 702.11d, CR 702.11f).
+turn" - the *permanents* half (CR 611.2c, CR 702.11d, CR 702.11f).
 
 `test_opponent_cast_colour_condition.py` covers Veil's first sentence and
 `test_cant_be_countered_this_turn.py` its second; this file is the third
 sentence, once its "You and `<group>`" subject is split
-(`_parse_you_and_group_gain_clause`, `docs/engine-coverage.md`'s own T5/G2b
-section explains why the *player* half is a recorded gap rather than a
-grant here - a separate, later task's scope).
+(`_parse_you_and_group_gain_clause`). The *player* half of that same split
+used to be a recorded `PlayerSubjectSplitNotice` rather than a grant - a
+deliberately separate, later task's scope (`docs/engine-coverage.md`'s own
+T5/G2b section). Flow 1 T12 closed that gap by wiring the split's player
+half to the same reader flow 2's `test_player_hexproof_shroud.py` already
+proved reads it; `tests/scenarios/test_player_hexproof_from_quality.py` is
+that task's own file and is now the fuller player-half coverage (an
+opponent's blue/black spell or ability, the caster's own spell, the CR
+608.2b resolution recheck, cleanup expiry, CR 702.11f's two abilities).
+`test_the_player_half_is_granted_too` below is this file's own,
+narrower check that the split's player half is no longer merely recorded.
 
 Every CR number here was looked up with `mise run rules:find` in the
 session that wrote this file: CR 611.2c, CR 702.11d, CR 702.11f, CR 403.3.
@@ -92,19 +100,23 @@ def test_the_grant_is_fixed_at_resolution_not_a_live_group():
     assert bears.zone is Zone.BATTLEFIELD
 
 
-def test_the_player_half_is_neither_granted_nor_silently_dropped():
-    """`PlayerSubjectSplitNotice`'s whole point: Alice herself never gets
-    hexproof from this sentence (the player half is a separate task's
-    scope), and the gap is recorded, not silent."""
+def test_the_player_half_is_granted_too():
+    """The compound subject's player half ("You gain hexproof from blue and
+    from black until end of turn") is granted for real now (flow 1 T12), not
+    merely recorded as a `PlayerSubjectSplitNotice` - the fuller coverage of
+    what that grant does (an opponent's spell or ability refused, the
+    caster's own spell allowed, CR 608.2b, cleanup expiry, CR 702.11f's two
+    abilities) lives in `tests/scenarios/test_player_hexproof_from_
+    quality.py`; this is just proof, in this file, that the old recorded gap
+    is gone."""
     scenario = _board()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (forest,) = scenario.untapped_sources("Forest", username="alice")
-    veil = scenario.cast_and_resolve("Veil of Summer", forest, username="alice")
+    scenario.cast_and_resolve("Veil of Summer", forest, username="alice")
 
     alice = scenario.player("alice")
-    assert alice.targeting_grants == [], "the player half was never silently applied"
-
-    (notice,) = scenario.game.player_subject_split_notices
-    assert notice.text == "You gain hexproof from blue and from black until end of turn"
-    assert notice.source_name == "Veil of Summer"
-    assert notice.source_id == veil.id
+    grants = [g for g in alice.targeting_grants if g.keyword == "hexproof"]
+    assert sorted(g.quality for g in grants) == ["black", "blue"]
+    assert scenario.game.player_subject_split_notices == [], (
+        "the player half is granted now, so it is no longer also recorded as an unread gap"
+    )

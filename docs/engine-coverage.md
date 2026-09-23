@@ -3645,15 +3645,106 @@ than a silent one.
 
 Sweep after this task: `--effects` shows neither Veil of Summer nor
 Sandstalker Moloch as `silent`. Sandstalker Moloch is `handled`. Veil of
-Summer is `notice` - its worst clause, not its best: `parse_mixed_effect_
-for_spell` composes all three of its sentences into one closure with no
-`__name__` of its own, so the player-half gap the paragraph above describes
-had no notice stand-in name for `scripts/sweep_pool.py`'s `_dispatch_
-category` to see it by. `_leaves_you_and_group_player_half_unread` reads the
-card's own text the way `split_effect_clauses` splits it for the real
-dispatcher and downgrades the verdict directly, so a "you and `<group>`"
-compound subject can never read `handled` anywhere in the pool until T12
-actually grants the player half. Bound // Determined's back half, Determined,
-is `handled`, and its front half, Bound, is unchanged (`silent` - a `_parse_
-shared_subject_clauses`-shaped gap out of this task's scope, T5b's own).
+Summer was `notice` at this point in the wave - its worst clause, not its
+best: `parse_mixed_effect_for_spell` composes all three of its sentences
+into one closure with no `__name__` of its own, so the player-half gap the
+paragraph above describes had no notice stand-in name for `scripts/
+sweep_pool.py`'s `_dispatch_category` to see it by. `_leaves_you_and_group_
+player_half_unread` reads the card's own text the way `split_effect_
+clauses` splits it for the real dispatcher and downgraded the verdict
+directly, so a "you and `<group>`" compound subject could not read
+`handled` anywhere in the pool until T12 (below) actually granted the
+player half. Bound // Determined's back half, Determined, is `handled`,
+and its front half, Bound, is unchanged (`silent` - a `_parse_shared_
+subject_clauses`-shaped gap out of this task's scope, T5b's own).
 `--targeting` stays at 0.
+
+## Flow 1, T12: Veil of Summer's player hexproof (CR 702.11c/702.11d)
+
+Closes the gap the T5/G2b row above documents: the compound-subject split's
+*player* half ("You gain hexproof from blue and from black until end of
+turn") is now granted for real, not merely recorded.
+
+**What changed.** `_parse_you_and_group_gain_clause`'s player half
+(`player_text`, "You `<predicate>`") is handed to `parse_clause_effect` -
+the exact reader `_PLAYER_GAINS_HEXPROOF_RE`/`_player_gains_hexproof_
+clause` already existed to read this sentence, proven in `test_player_
+hexproof_shroud.py::test_the_clause_parser_reads_hexproof_from_two_
+qualities_on_you` before this task began. When it parses (Veil's sentence
+does), the resulting `ClauseEffect` is called with the spell's or ability's
+controller, granting through `Game.grant_player_hexproof` - the same call
+flow 2's own generic mechanism makes, so `Player.targeting_grants` gains
+one `PlayerTargetingGrant` per quality (CR 702.11f's "two abilities"), each
+`Duration.UNTIL_END_OF_TURN`, expired by the existing `Game.cleanup_step`
+filter with **no change to cleanup itself** (flow 3 owns that code; this
+task only registers through the state flow 2 already wired into it). The
+quality itself is read by `hexproof_qualities_in` (`machines/casting.py`),
+the same CR 702.11f "from A and from B" splitter the *permanents* half
+already reuses - one reader, not two. When the player-half predicate does
+not parse (a hypothetical future "You and creatures you control gain flying
+until end of turn" - a keyword with no meaning for a player), the code
+falls back to recording a `PlayerSubjectSplitNotice` exactly as before this
+task, so the fail-open convention this file uses throughout is unchanged
+for whatever this reader still cannot read.
+
+**Enforcement needed nothing new.** `Game.hexproof_refusal` already judges
+"[quality]" off the *source's* characteristics
+(`_quality_characteristics_of`), not the target's, already exempts the
+target's own controller ("your opponents" - CR 702.11b/CR 702.11d), and is
+already asked in three places: `TargetingProfile.check` at announcement
+(spells and abilities alike), the live-candidate filters, and `legal_
+target`'s own CR 608.2b resolution recheck - so a Veil cast in response to
+an already-targeted black spell makes that target illegal and the spell
+does nothing on resolution, with no code change here. All of that is flow
+2's, built and tested generically before this task started; this task only
+supplies the missing *call* that actually produces the grant Veil's own
+sentence describes. Tested in `tests/scenarios/test_player_hexproof_from_
+quality.py`: an opponent's blue or black spell (Peek, Mind Rot) refused, a
+red one (Lava Spike) allowed; the caster's own blue spell still legal; an
+opponent's blue or black *ability* (Persistent Petitioners, Bile Urchin)
+refused, a red one (Orcish Spy) allowed; Veil cast in response fizzles an
+already-targeted Mind Rot (CR 608.2b); the grant gone after `cleanup_step`;
+and the full, unmodified card text granting both qualities as two separate
+`PlayerTargetingGrant`s with no `PlayerSubjectSplitNotice` left behind
+(CR 702.11f).
+
+**Proof exemption (D2), argued.** The project's own "prove generality on a
+card that was not the reported one" rule is met everywhere else in this
+row - `_player_gains_hexproof_clause`'s reader was proven generically
+before this task on a narrowed sentence, and the enforcement path
+(`hexproof_refusal`) was proven generically by flow 2 on Blossoming Calm, a
+different printing entirely. What remains specific to Veil is the
+*mechanism this task wires up*: routing a "You and `<group>`" compound
+subject's player half into that reader. A second proof printing for that
+exact wiring does not exist to reach for: CR 702.11d's "hexproof from
+[quality]" granted to a *player* (as opposed to a permanent) is one of the
+rarest templates MTG prints, and a search of every local fixture under
+`src/magic_cards_model/data/printings/` for "hexproof from" on a "you"/"you
+have hexproof" subject turns up nothing besides Veil of Summer - no other
+Modern-, Pioneer- or Standard-legal printing in this repo's pool grants a
+player hexproof from a quality at all, let alone through this same
+compound-subject shape. Absent network access to a full Scryfall bulk-data
+sweep in this session, this is a local-pool search, not an exhaustive one,
+but it is consistent with the card's own design history: Veil of Summer is
+the templating example most MTG rules resources cite for this exact
+sentence, and no reprint or functional reprint exists in the tracked
+formats. The *general* half of the mechanism (the "You and `<group>`"
+split itself, and `parse_clause_effect`'s dispatch of whatever the
+predicate turns out to be) stays provably general - a different predicate
+still falls back to a recorded notice rather than a silent drop or a Veil-
+only hardcode - so this exemption is scoped to "no second player-hexproof-
+from-quality printing exists to prove it on", not to the parsing mechanism
+itself.
+
+Sweep after this task: `--effects` no longer lists Veil of Summer under
+either `silent` or `notice` - it is `handled`. `--targeting` reports one
+unreadable phrase, on Nahiri, the Unforgiving - unaffected by this task (my
+diff touches no targeting-phrase code) and out of this task's scope; it
+predates this task in the shared wave branch. The pool-wide silent count is
+95, comfortably under this wave's
+`<= 103` target. No schema bump: `PlayerTargetingGrant.quality` and
+`PlayerSubjectSplitNotice` are both pre-existing dump-reachable fields
+(flow 2's schema 37 and T5/G2b respectively); this task adds no new field.
+The dispatch fingerprint (`tests/dispatch_fingerprint_baseline.json`) is
+unchanged - `_parse_you_and_group_gain_clause` is still the winning parser
+for this clause shape; only what it does internally changed.

@@ -34656,11 +34656,21 @@ def _parse_you_and_group_gain_clause(clause: str, *, for_spell: bool) -> Targete
     *whole* compound clause the same way an unread group clause always
     would on its own.
 
-    The player half ("You `<predicate>`") is deliberately **not** handed to
-    `parse_clause_effect`'s own `_PLAYER_GAINS_HEXPROOF_RE` reader here,
-    even though that reader already recognises the identical narrowed
-    sentence - see `PlayerSubjectSplitNotice`'s own docstring for why this
-    half stays a recorded gap rather than a second effect applied inline.
+    The player half ("You `<predicate>`") is handed to `parse_clause_
+    effect` - the same reader `_PLAYER_GAINS_HEXPROOF_RE`/`_player_gains_
+    hexproof_clause` already proved reads this identical narrowed sentence
+    (`tests/scenarios/test_player_hexproof_shroud.py::test_the_clause_
+    parser_reads_hexproof_from_two_qualities_on_you`) - so "You gain
+    hexproof from blue and from black until end of turn" is granted for
+    real through `Game.grant_player_hexproof`, the same call flow 2's own
+    generic mechanism makes, reusing its permanent-side quality reader
+    (`hexproof_qualities_in`) rather than a second one. A predicate that
+    reader cannot understand (some future "You and creatures you control
+    gain flying until end of turn" - a keyword a player has no meaning for)
+    still falls back to `PlayerSubjectSplitNotice`, recorded rather than
+    silently applied or silently dropped, exactly as before this task -
+    the fail-open notice convention this file uses throughout stays in
+    force for whatever this reader does not (yet) cover.
     """
     match = _YOU_AND_GROUP_SUBJECT_RE.fullmatch(clause.strip())
     if match is None:
@@ -34673,18 +34683,28 @@ def _parse_you_and_group_gain_clause(clause: str, *, for_spell: bool) -> Targete
     if group_effect is None:
         return None
     player_text = f"You {predicate}"
+    player_effect = parse_clause_effect(player_text)
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         group_effect(game, stack_object)
         source = (
             stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
         )
+        source_name = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        if player_effect is not None:
+            controller = (
+                game.controller_of(stack_object)
+                if isinstance(stack_object, CardState)
+                else game.player(stack_object.controller)  # type: ignore[union-attr]
+            )
+            player_effect(game, controller, source_name, source_id_of(stack_object))
+            return
         game.player_subject_split_notices.append(
             PlayerSubjectSplitNotice(
                 source_id=source.id if source is not None else None,
-                source_name=(
-                    stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-                ),
+                source_name=source_name,
                 text=player_text,
             )
         )

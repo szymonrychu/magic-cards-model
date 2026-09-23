@@ -139,6 +139,7 @@ from magic_cards_model.machines.effects import (  # noqa: E402
     effect_for,
     modal_trigger_profile,
     mode_effect_body,
+    parse_clause_effect,
     parse_mixed_effect,
     parse_mode_effect,
     reads_as_transforms_line,
@@ -1314,20 +1315,25 @@ def _leaves_you_and_group_player_half_unread(text: str) -> bool:
     """Whether `text` carries `_parse_you_and_group_gain_clause`'s own
     compound-subject shape (`machines/effects._YOU_AND_GROUP_SUBJECT_RE`) -
     "You and `<group>` you control gain `<keyword(s)>` until end of turn",
-    Veil of Summer's own third sentence.
+    Veil of Summer's own third sentence - with a player half that reader
+    still cannot apply.
 
-    That parser grants the group half for real but deliberately records a
-    `PlayerSubjectSplitNotice` for the player half instead of applying it
-    (see that model's own docstring, and `docs/engine-coverage.md`'s T5/G2b
-    row, for why the player half is a separate task's scope) - the same
-    fail-closed convention `_NOTICE_STAND_IN_NAMES` above exists for. But
-    unlike those, the dispatcher this clause goes through
-    (`parse_mixed_effect_for_spell`/`parse_mixed_effect`) composes every
-    clause of a mixed-effect card into one anonymous closure before handing
-    it back, so the player-half gap has no distinct `__name__` for
-    `_dispatch_category`'s name check to see - a card carrying this sentence
-    would otherwise read `HANDLED` outright, even though a whole sentence of
-    it never runs.
+    That parser grants the group half for real, and (since flow 1 T12) also
+    hands the player half ("You `<predicate>`") to `parse_clause_effect`,
+    the same reader `_PLAYER_GAINS_HEXPROOF_RE` already proved reads "You
+    gain hexproof from blue and from black until end of turn". When that
+    reader understands the predicate too, both halves apply and this
+    function must not downgrade the card - unlike `_NOTICE_STAND_IN_NAMES`
+    above, this is not a permanent stand-in, only a fallback for whatever
+    predicate shape the player-clause reader does not (yet) cover, still
+    recorded as a `PlayerSubjectSplitNotice` rather than silently applied or
+    dropped (see that model's own docstring). The dispatcher this clause
+    goes through (`parse_mixed_effect_for_spell`/`parse_mixed_effect`)
+    composes every clause of a mixed-effect card into one anonymous closure
+    before handing it back, so an unread player half has no distinct
+    `__name__` for `_dispatch_category`'s name check to see on its own - a
+    card carrying this sentence would otherwise read `HANDLED` outright even
+    when a whole sentence of it never runs.
 
     Split the same way `split_effect_clauses` splits a card's raw text for
     the real dispatchers, since the guard that keeps this subject whole as
@@ -1335,10 +1341,14 @@ def _leaves_you_and_group_player_half_unread(text: str) -> bool:
     shape - reading the unsplit text directly would miss it whenever the
     clause is not the whole card.
     """
-    return any(
-        _YOU_AND_GROUP_SUBJECT_RE.fullmatch(clause.strip()) is not None
-        for clause in split_effect_clauses(text)
-    )
+    for clause in split_effect_clauses(text):
+        match = _YOU_AND_GROUP_SUBJECT_RE.fullmatch(clause.strip())
+        if match is None:
+            continue
+        player_text = f"You {match.group('predicate').strip()}"
+        if parse_clause_effect(player_text) is None:
+            return True
+    return False
 
 
 HANDLED = "handled"
