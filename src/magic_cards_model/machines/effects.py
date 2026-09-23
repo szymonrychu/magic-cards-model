@@ -6904,9 +6904,11 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         # CR 701.24a. Always wrapped by `_parse_optional_player_clause`'s
         # "you may" (no printed card in the pool shuffles unconditionally
         # here - that shape goes through `_BARE_SHUFFLES_RE`'s own "each
-        # player ..." family instead), so `Game.may`'s own default - take it -
-        # decides the unscripted case, the same as every other optional
-        # clause this parser reads.
+        # player ..." family instead). Unlike every other optional clause
+        # this parser reads, an unscripted "you may shuffle" declines - see
+        # `_parse_optional_player_clause`'s own `default=False` for this one
+        # clause, and `Decision.default_may`'s docstring for the CR 701.20d
+        # reasoning.
         return lambda game, player, source, source_id: game.shuffle_library(player)
 
     if match := _UNTAP_ALL_QUALIFIER_RE.fullmatch(clause):
@@ -6956,18 +6958,22 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 _YOU_MAY_RE = re.compile(r"^you may (?P<clause>.+)$", re.IGNORECASE | re.DOTALL)
 
 
-def _optional_clause(inner: ClauseEffect, prompt: str) -> ClauseEffect:
+def _optional_clause(
+    inner: ClauseEffect, prompt: str, *, default: bool | None = None
+) -> ClauseEffect:
     """Wrap an already-parsed clause so it only runs if `Game.may` says yes.
 
     CR 608.2d: "if a cost or effect allows a player to choose to do something
     ... that player is not required to make that choice unless the effect
     specifically says the player must." `Game.may`'s own default is to take
     the option, which is the engine-wide convention this reuses rather than
-    reargues.
+    reargues - `default` is `None` for every clause but one, so this keeps
+    that convention unless a caller documents why theirs is the exception
+    (see `_parse_optional_player_clause`'s "you may shuffle" case).
     """
 
     def effect(game: "Game", player: Player, source: str, source_id: str | None) -> None:
-        if game.may(player, prompt, source=source, source_id=source_id):
+        if game.may(player, prompt, source=source, source_id=source_id, default=default):
             inner(game, player, source, source_id)
 
     return effect
@@ -7000,7 +7006,15 @@ def _parse_optional_player_clause(clause: str) -> ClauseEffect | None:
         inner = parse_clause_effect(inner_text) or parse_clause_effect(f"you {inner_text}")
         if inner is None:
             return None
-        return _optional_clause(inner, inner_text)
+        # "You may shuffle." is the one optional clause this parser reads
+        # whose unscripted answer is not "take it": shuffling ends whatever
+        # look or order the clauses above it just fixed (CR 701.20d), so the
+        # engine-wide "take it" convention would silently undo a rigged
+        # library on every unscripted Ponder-shaped cast. Declining is the
+        # same "leave the order alone" posture `SCRY`/`SURVEIL`'s own
+        # defaults already take - see `Decision.default_may`.
+        default = False if _SHUFFLE_RE.fullmatch(inner_text.rstrip(".")) else None
+        return _optional_clause(inner, inner_text, default=default)
     # "You draw a card and gain 2 life." (Surgical Precision, Vigorbloom
     # Charm) - `split_effect_clauses`'s own bare-"and" cut leaves the second
     # clause's subject implicit ("gain 2 life", not "you gain 2 life"), the

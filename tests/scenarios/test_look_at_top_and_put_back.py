@@ -11,10 +11,14 @@ legal "moved" answer, so the entire looked-at set is always `rest`, and its
 `top_order` is CR 401.4's free arrangement. A separate clause reader answers
 "you may shuffle" with `Game.may` + `Game.shuffle_library`, the same "you may"
 machinery (`_parse_optional_player_clause`) every other optional clause in
-this parser already goes through - so its unscripted default is `Game.may`'s
-own documented one, "take it" (see `test_conditional_sacrifice_clauses.
-test_the_sacrifice_defaults_to_taking_it_unscripted`), not a bespoke default
-invented for this one clause.
+this parser already goes through - but with a documented, `Decision.
+default_may` exception to `Game.may`'s own usual default: an unscripted
+answer here *declines*, not "take it" (contrast `test_conditional_sacrifice_
+clauses.test_the_sacrifice_defaults_to_taking_it_unscripted`). Shuffling ends
+the look the clauses above it just fixed (CR 701.20d), so taking it by
+default would silently randomise a rigged library on every unscripted
+Ponder-shaped cast; declining is the same "leave the order alone" posture
+`SCRY`/`SURVEIL`'s own defaults already take.
 
 Every CR number below was looked up with `mise run rules:find` in the session
 that wrote this file, against the on-disk Comprehensive Rules effective
@@ -124,18 +128,19 @@ def test_ponder_with_the_shuffle_accepted_randomises_and_ends_the_look():
 def test_an_unscripted_seat_keeps_the_order_and_declines_the_shuffle_by_default():
     """Nothing scripted at all: `default_answer`'s own `SCRY` default ("keep
     every card on top", no card moved and no order named) leaves the
-    looked-at order unchanged - the same reason `tests/scenarios/test_
-    conditional_alternative_costs.py`'s own unscripted Ponder casts need no
-    change here, since none of its assertions read library order or count.
+    looked-at order unchanged, and the "you may shuffle" question's own
+    documented exception (`Decision.default_may=False`, module docstring
+    above) leaves the shuffle declined too - the same reason `tests/
+    scenarios/test_conditional_alternative_costs.py`'s own unscripted Ponder
+    casts need no change here, whichever way this defaulted, since none of
+    its assertions read library order or count.
 
-    The shuffle is a second question with its own default, and this file
-    covers it on its own terms rather than assuming it from the split: `MAY`'s
-    documented default is "take it" (`test_conditional_sacrifice_clauses.
-    test_the_sacrifice_defaults_to_taking_it_unscripted` is the precedent),
-    so an entirely unscripted Ponder both keeps the looked-at order (`SCRY`'s
-    own default) *and* shuffles the rest of the library behind it (`MAY`'s
-    own default) - the shuffle is over the whole library, so it never
-    contradicts the three-card order the split already fixed above it.
+    Unlike an unscripted sacrifice or discard (`MAY`'s ordinary "take it",
+    `test_conditional_sacrifice_clauses.
+    test_the_sacrifice_defaults_to_taking_it_unscripted`), an unscripted
+    "you may shuffle" here does *not* take it: shuffling would end the very
+    look the split above it just fixed (CR 701.20d), silently un-rigging a
+    stacked library nobody asked to randomise.
     """
     scenario = (
         Scenario()
@@ -150,15 +155,18 @@ def test_an_unscripted_seat_keeps_the_order_and_declines_the_shuffle_by_default(
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     alice = scenario.player("alice")
+    forest, island, swamp = scenario.top_of_library(3)
     shuffles_before = scenario.game.shuffles_performed
 
     ponder = scenario.cast_and_resolve("Ponder", *scenario.untapped_sources("Island"))
 
     assert ponder.zone is Zone.GRAVEYARD
     assert len(alice.hand) == 1, "the draw happens either way"
-    assert scenario.game.shuffles_performed == shuffles_before + 1, (
-        "MAY's own default is 'take it' - see test_conditional_sacrifice_clauses"
+    assert scenario.game.shuffles_performed == shuffles_before, (
+        "you may shuffle declines unscripted - Decision.default_may=False"
     )
+    assert forest in alice.hand and forest.zone is Zone.HAND, "the new top, drawn"
+    assert alice.library[:2] == [island, swamp], "the rigged order stays rigged"
 
 
 def test_index_counts_five_and_asks_no_shuffle_question():

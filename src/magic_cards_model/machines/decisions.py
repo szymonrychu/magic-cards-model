@@ -534,6 +534,17 @@ class Decision:
     #: `False` removes it from `legal_options`, which is how paying 2 life at
     #: 1 life stops being an option rather than becoming a rules violation.
     affirmative_is_legal: bool = True
+    #: `MAY` only: overrides `default_answer`'s engine-wide "take it" for this
+    #: one question. `None` (every caller but one) leaves that convention in
+    #: force. `Game.may`'s own "you may shuffle" clause is the exception - the
+    #: shuffle ends whatever look or order the cards above it just fixed (CR
+    #: 701.20d: reordering the library un-reveals it), so an unscripted answer
+    #: there defaults to declining, the same "leave the look's order alone"
+    #: posture `SCRY`/`SURVEIL`'s own defaults already take, rather than to
+    #: taking the option the way an unscripted sacrifice or discard does. A
+    #: documented deviation on the one question that asks it, not a silent
+    #: special case - see `Game.may`'s own docstring.
+    default_may: bool | None = None
     #: The legal targets a `CHOOSE_TARGETS` answer must be a subset of, worked
     #: out by `machines/targeting.py`'s own checker so this module does not
     #: grow a second target grammar.
@@ -647,6 +658,10 @@ def default_answer(decision: Decision) -> object:
         # engine should take on a player's behalf: an unscripted player keeps
         # the hand they were dealt and takes no opening-hand action.
         return False
+    if decision.kind is DecisionKind.MAY and decision.default_may is not None:
+        # A caller wrote its own deviation down rather than taking the
+        # engine-wide one below - see `Decision.default_may`.
+        return decision.default_may
     if decision.kind in (
         DecisionKind.MAY,
         DecisionKind.PAY_LIFE,

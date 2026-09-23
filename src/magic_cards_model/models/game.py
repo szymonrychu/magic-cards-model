@@ -8857,11 +8857,14 @@ class Game(EngineModel):
         source: str | None = None,
         source_id: str | None = None,
         cards: Sequence[CardState] = (),
+        default: bool | None = None,
     ) -> bool:
         """A plain "you may" during resolution (CR 608.2d).
 
         Both branches are always legal, so this is the one question where the
         default - take it - is a genuine deviation rather than the only answer.
+        `default` lets a caller write its own documented deviation from that
+        instead (`Decision.default_may`); leaving it `None` keeps "take it".
 
         `cards` are the cards the "you may" is about - the revealed cards a
         player may take one of - published on `Decision.cards` so the player
@@ -8876,6 +8879,7 @@ class Game(EngineModel):
                 source=source,
                 source_id=source_id,
                 cards=tuple(state.id for state in cards),
+                default_may=default,
             )
         )
         return bool(answer)
