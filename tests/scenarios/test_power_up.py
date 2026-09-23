@@ -220,3 +220,30 @@ def test_a_new_aerial_doombot_object_may_activate_again():
     scenario.activate(second, *second_sources)
     scenario.pass_until_resolved()
     assert second.counters[Counter.PLUS_ONE] == 3
+
+
+# --------------------------------------------------------------------------
+# CR 702.193a's "only once" bookkeeping dumps the same way every time
+# --------------------------------------------------------------------------
+
+
+def test_power_up_bookkeeping_dumps_in_one_canonical_order():
+    """`Game.exhausted` is a set of `id:stamp:index` strings, and a set of
+    strings iterates in hash order - randomised per process by
+    `PYTHONHASHSEED`. Dumped as a bare set, the same game could list its
+    power-up activations in a different order after a decode and re-dump,
+    which is what made `test_a_new_aerial_doombot_object_may_activate_again`
+    (two entries) fail the round-trip invariant in roughly one process in
+    fourteen. Six activated Doombots make an accidentally sorted order a
+    1-in-720 event, so this is red for any hash-ordered dump."""
+    doombots = ["Aerial Doombot"] * 6
+    scenario = already_on_the_battlefield(*doombots, *["Island"] * 36)
+    for doombot in [c for c in scenario.game.battlefield if c.name == "Aerial Doombot"]:
+        sources = scenario.untapped_sources(*["Island"] * 6)
+        scenario.activate(doombot, *sources)
+        scenario.pass_until_resolved()
+        assert scenario.why_cannot_activate(doombot) is not None
+
+    dumped = scenario.game.model_dump(mode="json")["exhausted"]
+    assert len(dumped) == 6
+    assert dumped == sorted(dumped)

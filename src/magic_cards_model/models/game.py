@@ -2578,7 +2578,7 @@ class Game(EngineModel):
     `"<permanent id>:<ability index>"`, for CR 602.5b restrictions such as
     "Activate only once each turn". Cleared when a new turn begins."""
 
-    exhausted: set[str] = Field(default_factory=set)
+    exhausted: SortedSet[str] = Field(default_factory=set)
     """Which abilities have been activated at all, ever, keyed the same way
     as `activations` (`Game._activation_key`) - CR 702.177a's Exhaust:
     "'[Cost]: [Effect]' means '[Cost]: [Effect]. Activate only once.'" -
@@ -2590,7 +2590,9 @@ class Game(EngineModel):
     always gets (unlike `permanent.id`, which is stable across an ordinary
     zone change - see `CardState`'s own "same id, new object" note), so a
     card that leaves and returns is not exhausted by what its earlier self
-    did."""
+    did. A `SortedSet` so it dumps in one canonical order: as a bare set of
+    strings its JSON order followed per-process hash randomisation, and a
+    decode and re-dump could list the same keys differently."""
 
     loyalty_activations: dict[str, int] = Field(default_factory=dict)
     """How often a loyalty ability of each permanent has been activated this
