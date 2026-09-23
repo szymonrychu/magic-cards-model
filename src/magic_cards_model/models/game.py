@@ -2669,7 +2669,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 38
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 39
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3229,6 +3229,13 @@ class Game(EngineModel):
     `last_known_keywords`, CR 702.90d's last known information (first
     bullet), and "gets N poison counters" and "a creature you control becomes
     the target of a spell" are newly read clauses on Venerated Rotpriest.
+
+    Bumped 38 -> 39: `CombatMachine` gained `first_strike_damage_step` and
+    `first_strike_step_ids` (CR 510.4's first-strike combat damage step as a
+    step of its own, with its own priority round, and the creatures that had
+    first strike or double strike as it began). A version-38 snapshot paused
+    in a combat damage step would resume into a different game, so it is
+    refused.
     """
 
     @model_validator(mode="before")
