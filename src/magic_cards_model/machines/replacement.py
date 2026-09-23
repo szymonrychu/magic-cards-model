@@ -4373,13 +4373,11 @@ _COPY_CANDIDATES_RE = re.compile(
 
 #: The mana value bound a copy candidate may carry - Mockingbird's "less than
 #: or equal to the amount of mana spent to cast this creature" (CR 202.3 is
-#: the mana value, CR 601.2h the payment that spends the mana), plus the two
-#: numeric spellings of the same comparison ("N or less", "less than or equal
-#: to N"), so a bound printed with a number reads through the same filter.
+#: the mana value, CR 601.2h the payment that spends the mana). No printing
+#: carries a numeric bound on this clause, so none is read: it fails closed.
 _COPY_MANA_VALUE_BOUND_RE = re.compile(
-    r"^(?:less than or equal to (?:(?P<spent>the amount of mana spent to cast this "
-    r"(?:creature|permanent|artifact|enchantment|land))|(?P<at_most>\d+))"
-    r"|(?P<or_less>\d+) or less)$",
+    r"^less than or equal to the amount of mana spent to cast this "
+    r"(?:creature|permanent|artifact|enchantment|land)$",
     re.IGNORECASE,
 )
 
@@ -4434,12 +4432,9 @@ def enters_as_copy_outcome(effect: ReplacementEffect) -> str:
 
 def _copy_mana_value_bound(game: "Game", bound: str, entering: CardState) -> int | None:
     """The highest mana value a candidate may have, or `None` if unreadable."""
-    match = _COPY_MANA_VALUE_BOUND_RE.match(bound.strip())
-    if match is None:
+    if _COPY_MANA_VALUE_BOUND_RE.match(bound.strip()) is None:
         return None
-    if match.group("spent"):
-        return _mana_spent_to_cast(game, entering)
-    return int(match.group("at_most") or match.group("or_less"))
+    return _mana_spent_to_cast(game, entering)
 
 
 def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[CardState] | None:

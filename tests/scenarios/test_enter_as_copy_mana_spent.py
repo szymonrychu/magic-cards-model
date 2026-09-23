@@ -353,3 +353,22 @@ def test_a_clone_of_mockingbird_as_bears_keeps_bird_and_flying():
     # The real Grizzly Bears is untouched: the exception is the copy's own.
     assert "Bird" not in scenario.game.characteristics_of(bears).subtypes
     assert "Flying" not in scenario.game.characteristics_of(bears).abilities
+
+
+def test_only_the_mana_spent_bound_reads_a_numeric_bound_fails_closed():
+    """Mockingbird's "less than or equal to the amount of mana spent to cast
+    this creature" is the only mana value bound an enter-as-a-copy clause
+    prints. A numeric spelling ("3 or less", "less than or equal to 3") is not
+    a template any printing carries, so the reader does not guess at it: it
+    returns `None` and the clause fails closed rather than widening."""
+    from magic_cards_model.machines.replacement import _copy_mana_value_bound
+
+    scenario = Scenario().player("alice", hand=["Mockingbird"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bird = scenario.put_onto_battlefield("Mockingbird", "alice")
+    game = scenario.game
+
+    spent = "less than or equal to the amount of mana spent to cast this creature"
+    assert _copy_mana_value_bound(game, spent, bird) == 0
+    assert _copy_mana_value_bound(game, "3 or less", bird) is None
+    assert _copy_mana_value_bound(game, "less than or equal to 3", bird) is None
