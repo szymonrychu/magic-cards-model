@@ -50,14 +50,15 @@ def test_a_card_that_works_is_handled():
 
 
 def test_a_card_with_a_dead_clause_is_silent_and_names_the_clause():
-    """Keen-Eyed Curator is the sweep's own control for a still-open gap
-    (`tests/test_sweep_pool.py`): its exiled-card-types bonus happens
-    nowhere."""
-    support = card_support(card("Keen-Eyed Curator"))
+    """Gavony Dawnguard is the sweep's own control for a still-open gap
+    (`tests/test_sweep_pool.py`): its day/night trigger (CR 731) has no
+    subsystem to read it. (Keen-Eyed Curator stood here until S09 read its
+    linked-exile threshold static.)"""
+    support = card_support(card("Gavony Dawnguard"))
     assert support.status == "silent"
     silent = [clause for clause in support.clauses if clause.status == "silent"]
     assert silent
-    assert any("four or more card types" in clause.text for clause in silent)
+    assert any("day becomes night" in clause.text for clause in silent)
     assert all(clause.reason for clause in silent)
 
 
