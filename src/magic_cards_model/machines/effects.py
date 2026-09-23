@@ -9616,46 +9616,10 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
 #: source yet. "Its owner's"/"your" library are the same library either way
 #: (CR 108.3, CR 400.1) - Borborygmos prints the first, Bookwurm and
 #: Screaming Swarm the second. CR 401.2 keeps the rest of the library's own
-#: order; nothing else in it moves.
-_PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE = re.compile(
-    rf"^put this (?:permanent|creature|card)(?: from your graveyard)? into "
-    rf"(?:its owner'?s|your) library (?P<ordinal>{ORDINAL}) from the top\.?$",
-    re.IGNORECASE,
-)
-
-
-def _parse_put_self_into_library_nth_from_top_clause(text: str) -> AbilityEffect | None:
-    """`_PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE`'s shape.
-
-    CR 113.7a lets the ability find its own source by id in whatever zone it
-    now occupies, on or off the battlefield (Bookwurm's own ability works
-    from the graveyard). `Game.put_cards_into_library` already puts a
-    single-card instruction on top (CR 401.2's single face-down pile); the
-    card is then slid down to its printed depth by direct list surgery -
-    still a hidden-zone reposition nobody's knowledge distinguishes from the
-    "everything about this library is now unknown" `put_cards_into_library`
-    itself already declares by putting something on top at all.
-    """
-    match = _PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE.fullmatch(text.strip())
-    if match is None:
-        return None
-    depth = parse_ordinal(match.group("ordinal"))
-    if depth is None or depth < 1:
-        return None
-    index = depth - 1
-
-    def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
-        if source is None or source.owner is None:
-            return
-        game.put_cards_into_library([source], to_bottom=False)
-        if index > 0:
-            library = game.player(source.owner).library
-            if source in library:
-                library.remove(source)
-                library.insert(min(index, len(library)), source)
-
-    return effect
+#: order; nothing else in it moves. Read by `_parse_dead_object_to_library_
+#: clause` (below, in the dead-self family) rather than a reader of its own -
+#: see that function's own docstring for why one reader now covers both this
+#: self-referential activated shape and a dies trigger's own "it".
 
 
 #: "Put a +1/+1 counter on it. Then if it has exactly four +1/+1 counters on
@@ -30553,9 +30517,9 @@ def _reposition_in_owners_library(game: "Game", card: CardState, *, depth: int) 
     """After `Game.put_cards_into_library` has just put `card` on the very
     top of its own owner's library, slide it down to `depth` (CR 609.3's "as
     much as it can" when the library does not hold that many other cards) -
-    the same list-surgery `_parse_put_self_into_library_nth_from_top_clause`
-    already does for a self-referential ordinal placement. The rest of the
-    library keeps its own order (CR 401.2)."""
+    the same list-surgery `_parse_dead_object_to_library_clause` reuses for
+    its own self-referential ordinal placement. The rest of the library
+    keeps its own order (CR 401.2)."""
     if card.owner is None:
         return
     library = game.player(card.owner).library
@@ -33304,6 +33268,56 @@ def _parse_self_return_clause(clause: str, *, for_spell: bool) -> TargetedClause
     return effect
 
 
+def _dead_self_object_id(ability: "AbilityOnStack") -> UUID | None:
+    """The id a dead-self clause's "it" names: `ability.event.subject_id`
+    when there is a triggering event to read (CR 603.10a's look-back),
+    falling back to the ability's own `source_id` when there is none (a
+    plain activated ability, CR 113.7a). For a `TriggerEvent.DIES` ability
+    the two already agree - `Game.put_into_graveyard`'s own `triggers_for`
+    call sets `source_id` to the very card the dies event names - so this
+    only actually matters for the no-event fallback."""
+    event = ability.event
+    return (event.subject_id if event is not None else None) or ability.source_id
+
+
+def _dead_self_found(game: "Game", ability: "AbilityOnStack") -> CardState | None:
+    """The object a dead-self clause's "it" still names, or `None` if CR
+    113.7a/CR 400.7e no longer let this ability find it.
+
+    With a triggering event (every dies trigger in this family):
+    `GameEvent.zone_change_stamp` is the exact CR 400.7 incarnation the dies
+    event's own move minted in the graveyard. CR 400.7e: a look-back ability
+    "can find the new object that it became in the zone it moved to when the
+    ability triggered, if that zone is a public zone" - the graveyard, and
+    only that graveyard incarnation, not wherever the card has gone since.
+    So this refuses unless the live object (by id) is *still* sitting in the
+    graveyard carrying that same stamp - exiled from the graveyard in
+    response (a real pool graveyard-hate printing, Tormod's Crypt among
+    them), returned to the battlefield, or even shuffled back into the same
+    graveyard as a fresh CR 400.7 object of its own, are all "not found" the
+    same way, and CR 608.2c never runs half an instruction for the clauses
+    that read this.
+
+    With no triggering event (a plain activated ability, Borborygmos and
+    Fblthp's own `{1}{U}`, which fires from the *battlefield*): the old,
+    looser check this family always had - found by id, and not still on the
+    battlefield (CR 113.7a's fail-soft for a source already gone).
+    """
+    object_id = _dead_self_object_id(ability)
+    if object_id is None:
+        return None
+    found = game.find_by_id(object_id)
+    if not isinstance(found, CardState):
+        return None
+    event = ability.event
+    if event is None:
+        return None if found.zone is Zone.BATTLEFIELD else found
+    stamp = event.zone_change_stamp
+    if stamp is None or found.zone is not Zone.GRAVEYARD or found.zone_change_stamp != stamp:
+        return None
+    return found
+
+
 #: "Exile it" (Ancient Adamantoise's own dies trigger) - CR 603.10a's
 #: look-back "it", naming the ability's own source rather than a target.
 #: Distinct from `_EXILE_THAT_CARD_RE`, whose "that card" is a card an
@@ -33315,14 +33329,15 @@ _EXILE_IT_RE = re.compile(r"^exile it$", re.IGNORECASE)
 def _parse_exile_dead_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Exile it" - moves the ability's own source to exile from wherever
     CR 700.4's move just put it (almost always the graveyard, since this only
-    ever prints on a dies trigger in the pool). CR 113.7a: the ability
-    resolves independently of its source, so a source that can no longer be
-    found does nothing rather than raising, the same fail-soft
-    `_parse_self_return_clause` already gives its own self-reference.
+    ever prints on a dies trigger in the pool). `_dead_self_found` is CR
+    113.7a's fail-soft (a source that can no longer be found does nothing
+    rather than raising) plus, once there is a dies event to check, CR
+    400.7e's own tighter "only the incarnation the event created, only while
+    it is still there" - see that helper's own docstring for why.
 
     Ability-only (`for_spell=False`): nothing in the pool prints this on a
-    spell, and `AbilityOnStack.source` is what finds the departed object -
-    a resolving spell has no equivalent lookup for "itself" once its
+    spell, and `AbilityOnStack.source`/`.event` are what finds the departed
+    object - a resolving spell has no equivalent lookup for "itself" once its
     resolution has already moved it elsewhere.
     """
     if for_spell:
@@ -33333,8 +33348,8 @@ def _parse_exile_dead_self_clause(clause: str, *, for_spell: bool) -> TargetedCl
     def effect(game: "Game", stack_object: "StackObject") -> None:
         ability = stack_object
         assert isinstance(ability, AbilityOnStack)
-        source = ability.source(game)
-        if source is None or source.zone is Zone.BATTLEFIELD:
+        source = _dead_self_found(game, ability)
+        if source is None:
             return
         game.exile_permanent(source)
 
@@ -33355,12 +33370,13 @@ def _parse_return_dead_self_to_hand_clause(
     now sits (almost always the graveyard, per CR 700.4 - an Aura's own dies
     trigger fires the same way a creature's does, CR 700.4 naming "a
     permanent", not only a creature) to its owner's hand (CR 108.3, CR 401).
-    CR 113.7a: a source that can no longer be found does nothing rather than
-    raising, the same fail-soft shape `_parse_exile_dead_self_clause` and
-    `_parse_self_return_clause` already give their own self-references.
+    `_dead_self_found` is the same fail-soft/CR 400.7e lookup
+    `_parse_exile_dead_self_clause` shares with this reader - see that
+    helper's own docstring.
 
     Ability-only (`for_spell=False`): nothing in the pool prints this on a
-    spell, and `AbilityOnStack.source` is what finds the departed object.
+    spell, and `AbilityOnStack.source`/`.event` are what finds the departed
+    object.
     """
     if for_spell:
         return None
@@ -33370,10 +33386,130 @@ def _parse_return_dead_self_to_hand_clause(
     def effect(game: "Game", stack_object: "StackObject") -> None:
         ability = stack_object
         assert isinstance(ability, AbilityOnStack)
-        source = ability.source(game)
-        if source is None or source.zone is Zone.BATTLEFIELD:
+        source = _dead_self_found(game, ability)
+        if source is None:
             return
         game.return_to_hand(source)
+
+    return effect
+
+
+#: "put it (on the (top|bottom) of|into) its owner's library[ <ordinal> from
+#: the top]" / "shuffle it into its owner's library" - Murderous Rider's own
+#: dies trigger ("put it on the bottom of its owner's library"), Dark
+#: Revenant's ("...on top..."), and Cavalier of Gales's ("shuffle it into
+#: its owner's library") - the dead-self family's own library placement,
+#: alongside `_EXILE_IT_RE`'s exile and `_RETURN_IT_TO_OWNERS_HAND_RE`'s
+#: hand.
+#:
+#: Subsumes `_PUT_SELF_INTO_LIBRARY_NTH_FROM_TOP_RE`'s old "this
+#: `<permanent|creature|card>`" self-reference (Borborygmos and Fblthp,
+#: Bookwurm, Screaming Swarm) rather than keeping a second regex for the
+#: same "put/shuffle this object into a library" mechanic - "it" and "this
+#: `<noun>`" name the same CR 201.5/CR 607.1 self-reference, just
+#: normalised differently depending on whether `_self_normalized_effect_
+#: text` already turned a permanent's own printed name into "this
+#: permanent" or the card prints the pronoun itself.
+_DEAD_OBJECT_TO_LIBRARY_RE = re.compile(
+    r"^(?:you may )?"
+    r"(?:"
+    r"put (?:it|this (?:permanent|creature|card))(?: from your graveyard)? "
+    r"on (?:the )?(?P<side>top|bottom) of (?:its owner'?s|your) library"
+    r"|"
+    rf"put (?:it|this (?:permanent|creature|card))(?: from your graveyard)? "
+    rf"into (?:its owner'?s|your) library (?P<ordinal>{ORDINAL}) from the top"
+    r"|"
+    r"shuffle (?:it|this (?:permanent|creature|card))(?: from your graveyard)? "
+    r"into (?:its owner'?s|your) library"
+    r")\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_dead_object_to_library_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_DEAD_OBJECT_TO_LIBRARY_RE`'s shape.
+
+    "It"/"this `<noun>`" is resolved by `_dead_self_found` exactly as
+    `_parse_exile_dead_self_clause`'s own "it" is - see that helper's own
+    docstring for the CR 400.7e look-back this is the actual fix for:
+    Murderous Rider's own dies trigger, exiled from the graveyard in
+    response by a real pool printing (Tormod's Crypt), no longer moves; the
+    same recheck that already refuses a dies trigger's "exile it" once the
+    card has moved on refuses this reader's "put it .../shuffle it ..." too.
+    Borborygmos and Fblthp's own event-less `{1}{U}` keeps the old, looser
+    "found by id, not on the battlefield" behaviour that reader always had -
+    it fires *from* the battlefield, so gating it on "still in the
+    graveyard" would refuse the very ability this clause has always run
+    (`test_fra_s8b_self_into_library_nth_from_top.py`).
+
+    CR 701.24c: "If an effect would cause a player to shuffle one or more
+    specific objects into a library, that library is shuffled even if none
+    of those objects are in the zone they're expected to be in." So the
+    shuffle destination always shuffles the named object's owner's library -
+    read off the live object by id alone, CR 108.3 ownership surviving every
+    CR 400.7 reset regardless of whether `_dead_self_found` can still find
+    *this* incarnation of it - moving the object in only when
+    `_dead_self_found` says it is still there to move. The put-on-top,
+    put-on-bottom and put-Nth-from-the-top destinations have no such rule:
+    unfound there is simply refused, the same as the exile/hand siblings.
+
+    A token (CR 111.7) already ceased to exist, or one this resolution
+    catches still sitting in the graveyard, is excluded from both paths the
+    same way - CR 111.8 lets a token that left the battlefield move to
+    nowhere, including a library, so this reader is never the thing that
+    moves one.
+    """
+    if for_spell:
+        return None
+    match = _DEAD_OBJECT_TO_LIBRARY_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    is_optional = clause.strip().lower().startswith("you may")
+    side = match.group("side")
+    ordinal_word = match.group("ordinal")
+    is_shuffle = side is None and ordinal_word is None
+    to_bottom = side == "bottom"
+    depth: int | None = None
+    if ordinal_word is not None:
+        ordinal = parse_ordinal(ordinal_word)
+        if ordinal is None or ordinal < 1:
+            return None
+        depth = ordinal - 1
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        object_id = _dead_self_object_id(ability)
+        if object_id is None:
+            return
+        raw = game.find_by_id(object_id)
+        raw_state = raw if isinstance(raw, CardState) and not is_token(raw) else None
+        found_state = _dead_self_found(game, ability)
+        if found_state is not None and is_token(found_state):
+            found_state = None
+        if is_optional:
+            controller = game.controller_of(ability)
+            if not game.may(
+                controller,
+                clause.strip(),
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+            ):
+                return
+        if is_shuffle:
+            owner_name = raw_state.owner if raw_state is not None else None
+            if owner_name is None:
+                return
+            owner = game.player(owner_name)
+            if found_state is not None:
+                owner.add(found_state, Zone.LIBRARY)
+            game.shuffle_library(owner)
+            return
+        if found_state is None or found_state.owner is None:
+            return
+        game.put_cards_into_library([found_state], to_bottom=to_bottom)
+        if depth is not None and depth > 0:
+            _reposition_in_owners_library(game, found_state, depth=depth)
 
     return effect
 
@@ -34377,9 +34513,6 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counters_on_self = _parse_put_counters_on_self_clause(clause)
         if counters_on_self is not None:
             return counters_on_self  # type: ignore[return-value]
-        put_self_into_library = _parse_put_self_into_library_nth_from_top_clause(clause)
-        if put_self_into_library is not None:
-            return put_self_into_library  # type: ignore[return-value]
         search_that_many_battlefield = _parse_search_that_many_battlefield_clause(
             clause, for_spell=for_spell
         )
@@ -34474,6 +34607,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     return_dead_self = _parse_return_dead_self_to_hand_clause(clause, for_spell=for_spell)
     if return_dead_self is not None:
         return return_dead_self
+    dead_object_to_library = _parse_dead_object_to_library_clause(clause, for_spell=for_spell)
+    if dead_object_to_library is not None:
+        return dead_object_to_library
     sacrifice_self = _parse_sacrifice_self_clause(clause, for_spell=for_spell)
     if sacrifice_self is not None:
         return sacrifice_self

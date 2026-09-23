@@ -426,6 +426,30 @@ class GameEvent(EngineModel):
     the same combat: that declaration is not `attacking_alone`, but each
     attacker is still `attacking_player_alone`."""
 
+    zone_change_stamp: UUID | None = None
+    """For a `TriggerEvent.DIES` event, `subject_id`'s own `CardState.
+    zone_change_stamp` as it was the instant CR 700.4's move landed it in
+    the graveyard - `Game.put_into_graveyard` reads it off the object right
+    after `Player.add` (`CardState.move_to`) mints it, before anything else
+    can move the card again.
+
+    CR 400.7e: a look-back ability "can find the new object that it became
+    in the zone it moved to when the ability triggered, if that zone is a
+    public zone" - a narrower promise than "wherever it is now". A dies
+    trigger's own "exile it" (Ancient Adamantoise), "return it to its
+    owner's hand" (Rancor) and "put it on the bottom of its owner's
+    library" (Murderous Rider) all read this stamp against the live
+    object's *current* `zone_change_stamp` before touching it: matching
+    means the graveyard object the trigger is holding is still the exact
+    incarnation CR 700.4 created, and a mismatch (moved again since,
+    including back into the same graveyard as a fresh CR 400.7 object) means
+    it cannot be found any more, so the clause does nothing - CR 608.2c
+    never runs half an instruction, so the notice-free "nothing" is CR
+    400.7's own answer, not a gap. `None` for every event this field was
+    never populated for, and for a `DIES` event built before this field
+    existed (an older decoded game), which is read the same "nothing found"
+    way rather than crashing."""
+
 
 class TargetingNoticeKind(StrEnum):
     """Why a triggered ability went on the stack with no targets chosen."""

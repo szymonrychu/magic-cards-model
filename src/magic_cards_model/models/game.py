@@ -13276,6 +13276,12 @@ class Game(EngineModel):
                         subject_types=left_battlefield_chars.types,
                         subject_subtypes=left_battlefield_chars.subtypes,
                         player=card_state.controller,
+                        # CR 400.7e: the incarnation this move just minted
+                        # (`Player.add` above already ran `CardState.move_to`,
+                        # which stamped a fresh one), so a dead-self reader
+                        # resolving later can tell this exact object apart
+                        # from one that has since moved again.
+                        zone_change_stamp=card_state.zone_change_stamp,
                     )
                 )
             return card_state
