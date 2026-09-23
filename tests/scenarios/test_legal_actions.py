@@ -34,6 +34,8 @@ from magic_cards_model.models import Zone
 from magic_cards_model.models.action import Action, ActionKind, Affordability
 from magic_cards_model.models.card import Color
 from magic_cards_model.models.card_state import TargetRef
+from magic_cards_model.support import in_target_formats
+from tests.cards import pool
 from tests.scenarios.harness import Scenario
 
 
@@ -993,35 +995,116 @@ def test_action_round_trips_through_json_and_holds_no_nested_card_state():
 # -- review-pass findings: seven defects found against the real card pool ---
 
 
+def _unbuildable_activation() -> tuple[str, int]:
+    """The first (by name) out-of-format permanent in the pool with an
+    activated ability whose cost `Game.activation_cost` refuses to build, and
+    that ability's index.
+
+    Chosen rather than named: Relic of Progenitus was this test's card until
+    its "Exile this artifact" cost became buildable, and every Modern, Pioneer
+    and Standard card is owed full support (the owner rule), so an in-format
+    card here is only waiting to be fixed. An out-of-format one - Moniker
+    Mage's "Say your middle name", a cost no game engine prices - keeps the
+    shape without leaning on a legal card's gap."""
+    seen: set[str] = set()
+    for _, printing in sorted(pool().items()):
+        if printing.name in seen:
+            continue
+        seen.add(printing.name)
+        if in_target_formats(printing) or printing.card_faces or printing.is_land:
+            continue
+        if not {"Artifact", "Creature", "Enchantment"} & set(printing.type_line.split()):
+            continue
+        if ":" not in (printing.oracle_text or ""):
+            continue
+        scenario = Scenario().player("alice", battlefield=[printing.name]).player("bob").build()
+        permanent = scenario.find(printing.name, Zone.BATTLEFIELD, "alice")
+        for index in range(len(scenario.game.activated_abilities(permanent))):
+            try:
+                scenario.game.activation_cost(permanent, index)
+            except ValueError as error:
+                if "cannot build a cost for" in str(error):
+                    return printing.name, index
+    pytest.fail(
+        "no out-of-format permanent in the pool has an activation cost the engine cannot "
+        "build: add a real printing of one (an Un-card cost like 'Say your middle name') "
+        "with scripts/add_card.py"
+    )
+
+
 def test_legal_actions_reports_unbuildable_activation_cost_as_unknown_instead_of_raising():
-    """Finding 1 (highest): Relic of Progenitus's second ability -
-    `{1}, Exile this artifact: Exile all graveyards. Draw a card.` - has a
-    `CostKind.OTHER` piece ("Exile this artifact") `cost_component_for_
-    phrase` declines to read (`_PHRASE_EXILE` only understands "exile this
-    card", never a bare "this <type>"), so `Game.activation_cost` raises
-    `ValueError: cannot build a cost for 'Exile this artifact'`.
-    `why_cannot_activate` returns `None` for this ability, so the loop in
-    `_battlefield_ability_actions` used to reach the unguarded call and let
-    the exception escape `legal_actions` entirely - the caller got no
-    actions at all, not even `PASS_PRIORITY`/`CONCEDE`. CR 118.6:
+    """Finding 1 (highest): an activated ability whose cost has a
+    `CostKind.OTHER` piece `cost_component_for_phrase` declines to read makes
+    `Game.activation_cost` raise `ValueError: cannot build a cost for ...`.
+    The loop in `_battlefield_ability_actions` used to reach that unguarded
+    call and let the exception escape `legal_actions` entirely - the caller
+    got no actions at all, not even `PASS_PRIORITY`/`CONCEDE`. CR 118.6:
     "Attempting to cast a spell or activate an ability that has an unpayable
     cost is a legal action" - the attempt is still legal even though this
     enumeration cannot price it, so it must be reported `Affordability.
     UNKNOWN` with the engine's own reason instead, the same treatment `_off_
     zone_actions` already gives an unbuildable off-battlefield activation."""
-    scenario = Scenario().player("alice", battlefield=["Relic of Progenitus"]).player("bob").build()
+    name, index = _unbuildable_activation()
+    scenario = Scenario().player("alice", battlefield=[name]).player("bob").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     actions = legal_actions(scenario.game, "alice")
 
     assert any(a.kind is ActionKind.PASS_PRIORITY for a in actions)
     assert any(a.kind is ActionKind.CONCEDE for a in actions)
-    (exile_ability,) = [
-        a for a in actions if a.kind is ActionKind.ACTIVATE and a.ability_index == 1
+    (unbuildable,) = [
+        a
+        for a in actions
+        if a.kind in (ActionKind.ACTIVATE, ActionKind.ACTIVATE_MANA) and a.ability_index == index
     ]
-    assert exile_ability.affordable is Affordability.UNKNOWN
-    assert exile_ability.unaffordable_reason is not None
-    assert "cannot build a cost for" in exile_ability.unaffordable_reason
+    assert unbuildable.affordable is Affordability.UNKNOWN
+    assert unbuildable.unaffordable_reason is not None
+    assert "cannot build a cost for" in unbuildable.unaffordable_reason
+
+
+def test_relic_of_progenitus_exile_this_artifact_cost_is_priced():
+    """Relic of Progenitus's second ability - `{1}, Exile this artifact:
+    Exile all graveyards. Draw a card.` - now builds: "Exile this artifact"
+    is a cost this permanent pays by leaving (CR 118.3), so the ability is
+    priced by its `{1}` alone - `NO` with nothing to pay it, `YES` with an
+    Island - and activating it exiles the Relic as a cost."""
+    bare = Scenario().player("alice", battlefield=["Relic of Progenitus"]).player("bob").build()
+    bare.start_at(Step.PRECOMBAT_MAIN)
+    (unpaid,) = [
+        a
+        for a in legal_actions(bare.game, "alice")
+        if a.kind is ActionKind.ACTIVATE and a.ability_index == 1
+    ]
+    assert unpaid.affordable is Affordability.NO
+    assert "{1}" in (unpaid.unaffordable_reason or "")
+
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Relic of Progenitus", "Island"],
+            graveyard=["Grizzly Bears"],
+            library=["Forest"],
+        )
+        .player("bob", graveyard=["Lightning Bolt"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (paid,) = [
+        a
+        for a in legal_actions(scenario.game, "alice")
+        if a.kind is ActionKind.ACTIVATE and a.ability_index == 1
+    ]
+    assert paid.affordable is Affordability.YES
+
+    relic = scenario.find("Relic of Progenitus", Zone.BATTLEFIELD, "alice")
+    scenario.activate(relic, *scenario.untapped_sources("Island"), index=1)
+    assert relic.zone is Zone.EXILE, "exiled as the cost, before the ability resolves"
+    scenario.resolve_top()
+
+    assert scenario.game.player("alice").graveyard == []
+    assert scenario.game.player("bob").graveyard == []
+    assert [card.name for card in scenario.game.player("alice").hand] == ["Forest"]
 
 
 def test_legal_actions_respects_timing_for_a_keyword_cast_option():
