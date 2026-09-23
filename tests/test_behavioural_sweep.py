@@ -1,0 +1,2341 @@
+"""The behavioural pool sweep: every handled trigger fires, every handled
+activation resolves - executed through the real engine, not parsed.
+
+`support.card_support` (and `scripts/sweep_pool.py` on top of it) is a
+*static* verdict: "a dispatcher returned an effect for this text". It said
+`handled` for Devourer of Destiny's cast trigger on the day that trigger
+vanished in production (engine b4316b8, fixed by 838d1b0), because the
+dispatcher did return an effect - the trigger just never reached the stack.
+This module is the execution-based guard that would have caught it.
+
+For every card in the fixture pool that exists in Modern, Pioneer or Standard
+(`support.in_target_formats`), and for every triggered or activated clause
+`card_support` classifies `handled`:
+
+- **Triggers.** A real board is built from real printings (no mocks, no
+  hand-written card data), the ability's trigger event is raised through the
+  engine's own path - the event is read off the engine's own parsed
+  `TriggeredAbility.event` (or `_unread_trigger_events` for a condition the
+  parser leaves `event=None`), never off a card name - and the test asserts
+  the ability reaches the stack (CR 603.3), or resolves on the spot for a
+  triggered mana ability (CR 605.4a), and that resolving it changes the game
+  state or asks a question (CR 608.2d) - never a silent no-op, and never a
+  notice (the engine failing closed on the clause).
+- **Activations.** The ability is activated once on the same stock board,
+  through `Game.begin_activating`/`activate_ability` (or `off_zone_activation`
+  for an ability that functions from a hand, graveyard or exile), and the
+  same "resolution did something" check runs.
+
+How an event is raised is chosen by event kind only, and each kind tries a
+short list of real actions (put the source onto the battlefield, cast it,
+destroy it, attack with it, play whole turns with it in play, ...), each on
+a fresh board, until one puts the ability on the stack. Each list runs three
+times over: on the plain stock board ("quiet"), after an eventful turn that
+satisfies the common "if you [did X] this turn" conditions ("busy"), and
+with the opponent's non-land permanents gone ("lonely"). A target the stock
+board cannot offer is supplied from the pool by the engine's own
+`TargetRequirement.rejects` (`_target_material`). Where an event kind still
+cannot be raised generically it is listed in `TRIGGER_KIND_SKIPS` with its
+reason - one per kind, never per card - and the module teardown prints the
+executed/skipped count for every kind.
+
+The stock opposing board is chosen to catch the Devourer class of defect:
+every coloured permanent the opponent controls *mentions* a targeting
+protection in a statement without having one (Kaito, Bane of Nightmares on
+its non-controller's turn, Fleecemane Lion while not monstrous), and every
+artifact is a hexproof granter or remover (Shadowspear, Dragonfire Blade),
+while the controller's own permanents are colourless. A misread that makes a
+mention count as the keyword leaves a "permanent that's one or more colors"
+trigger with no legal target, and CR 603.3d removes it - which fails here.
+This generalises the cast-trigger guard 838d1b0 added to every trigger event.
+
+Rules verified this session with `mise run rules:find`: CR 603.2 (a trigger
+event matching makes the ability trigger), CR 603.3 (it goes on the stack the
+next time a player would receive priority), CR 603.3d (no legal target for a
+required target removes it), CR 603.4 (an intervening "if" is checked when
+the event occurs), CR 605.4a (a triggered mana ability resolves
+immediately), CR 608.2d (choices made during resolution), CR 602.2 (the
+activation process), CR 702.11b (hexproof).
+"""
+
+from __future__ import annotations
+
+import contextlib
+import re
+from collections import Counter
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass
+from functools import cache
+from typing import Any, NamedTuple
+
+import pytest
+
+from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import (
+    ActivatedAbility,
+    TriggeredAbility,
+    TriggerEvent,
+    keyword_abilities,
+    parse_abilities,
+)
+from magic_cards_model.machines.casting import MarkedExile
+from magic_cards_model.machines.cost import ComponentKind, cost_component_for_phrase
+from magic_cards_model.machines.effects import transform_permanent
+from magic_cards_model.machines.keywords import (
+    crew_activation,
+    crew_number,
+    off_zone_abilities,
+    off_zone_activation,
+)
+from magic_cards_model.machines.legal_actions import legal_actions
+from magic_cards_model.machines.targeting import (
+    ControllerRestriction,
+    TargetRequirement,
+    profile_for_text,
+)
+from magic_cards_model.machines.triggers import (
+    AbilityOnStack,
+    _singular_subtype,
+    _unread_trigger_events,
+    triggered_abilities_of,
+    zones_ability_functions_in,
+)
+from magic_cards_model.models import Card, CardState, Color, Type, Zone
+from magic_cards_model.models.action import ActionKind
+from magic_cards_model.models.card import Layout
+from magic_cards_model.models.card_state import TargetRef
+from magic_cards_model.models.token import PREDEFINED, create_predefined_tokens, token_copy_of
+from magic_cards_model.numbers import parse_count
+from magic_cards_model.support import _probe_cards, card_support, in_target_formats
+from tests.cards import card_state, pool
+from tests.scenarios.harness import PlayedScenario, ResolutionEffect, Scenario, mana_from
+
+# ---------------------------------------------------------------------------
+# The stock board.
+# ---------------------------------------------------------------------------
+
+ALICE = "alice"
+BOB = "bob"
+
+_BASICS = ["Plains", "Island", "Swamp", "Mountain", "Forest"]
+#: Enough mana of every colour (three of each, for {G}{G}{G} and "three or
+#: more other Plains"), and colourless - kept no larger, because every
+#: permanent is recomputed by the layer system (CR 613) on every check.
+_LANDS = _BASICS * 3 + ["Wastes"] * 2
+#: The opponent casts only one-mana spells.
+_BOB_LANDS = [*_BASICS, "Wastes"]
+#: The controller's own non-land permanents are colourless on purpose - see
+#: the module docstring: a coloured one would give a "permanent that's one or
+#: more colors" trigger a target the Devourer misread never touched.
+_ALICE_PERMANENTS = ["Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"]
+#: Every coloured permanent mentions a targeting protection it does not have
+#: right now; every artifact grants or removes hexproof on something else.
+_BOB_PERMANENTS = [
+    "Kaito, Bane of Nightmares",
+    "Fleecemane Lion",
+    "Icehide Golem",
+    "Shadowspear",
+    "Dragonfire Blade",
+]
+_LIBRARY = ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"] * 5
+_HAND = ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"]
+#: Eight permanent cards, for "N or more permanent cards in your graveyard"
+#: (the descend 4 / descend 8 ability words, CR 207.2c).
+_GRAVEYARD = [
+    "Grizzly Bears",
+    "Lightning Bolt",
+    "Forest",
+    "Bonesplitter",
+    "Opt",
+    "Memnite",
+    "Island",
+    "Llanowar Elves",
+    "Swamp",
+    "Serra Angel",
+]
+
+#: Spells cast to raise "whenever you cast a ..." for another spell: real
+#: printings spanning card type, colour, mana value, supertype and
+#: targeting. Stock material, like the board - never chosen per card.
+_PROBE_SPELLS = [
+    "Opt",
+    "Lightning Bolt",
+    "Memnite",
+    "Grizzly Bears",
+    "Giant Growth",
+    "Duress",
+    "Bonesplitter",
+    "Thoughtseize",
+    "Llanowar Elves",
+    "Serra Angel",
+    "Kaito, Bane of Nightmares",
+    "Devourer of Destiny",
+]
+#: Creatures to put onto the battlefield, kill or attack with when a
+#: condition names "a creature" without a type the probe finder can use.
+_PROBE_CREATURES = ["Memnite", "Grizzly Bears", "Llanowar Elves", "Serra Angel"]
+#: Stock tools: an activated ability that targets (CR 115.1c), and a card
+#: with an adventure to cast a spell from exile with (CR 715.4).
+_TARGETING_TOOL = "Icy Manipulator"
+_ADVENTURER = "Bonecrusher Giant"
+
+
+# ---------------------------------------------------------------------------
+# Variants and per-case staging, read by `_board`.
+# ---------------------------------------------------------------------------
+
+QUIET, BUSY, LONELY, WAR = "quiet", "busy", "lonely", "war"
+#: Every variant, in the order a case tries them.
+VARIANTS = (QUIET, BUSY, LONELY, WAR)
+
+
+class Material(NamedTuple):
+    """A real printing (or a predefined token, CR 111.10) a case needs on the
+    board: in `owner`'s `zone`, tapped, or put onto the battlefield this turn
+    (`entered`) rather than staged there."""
+
+    name: str
+    owner: str
+    zone: Zone
+    tapped: bool = False
+    entered: bool = False
+
+
+@dataclass
+class _Staging:
+    """What every board of the case being run gets on top of the stock one."""
+
+    variant: str = QUIET
+    case: Case | None = None
+    material: tuple[Material, ...] = ()
+
+
+_STAGING = _Staging()
+
+
+def _board(
+    *,
+    hand: tuple[str, ...] = (),
+    battlefield: tuple[str, ...] = (),
+    graveyard: tuple[str, ...] = (),
+    bob_hand: tuple[str, ...] = (),
+    bob_battlefield: tuple[str, ...] = (),
+    active: str = ALICE,
+    step: Step | None = Step.PRECOMBAT_MAIN,
+    busy: bool = True,
+    before: Callable[[PlayedScenario], Any] | None = None,
+) -> PlayedScenario:
+    """The stock board plus this attempt's own cards, at `step` of
+    `active`'s turn (`None` leaves it in the untap step, before anything).
+
+    The current variant and the case's target material are applied here, so
+    every attempt gets them without asking: a busy variant adds a rich board
+    and plays an eventful turn first (unless `busy=False`, for an attempt
+    that plays the turn itself), a lonely one clears the opponent's
+    non-land permanents. `before` stages the source on the built board
+    before anything is played."""
+    variant = _STAGING.variant
+    extra: dict[str, dict[str, list[str]]] = {
+        ALICE: {"battlefield": [], "graveyard": [], "hand": []},
+        BOB: {"battlefield": [], "graveyard": [], "hand": []},
+    }
+    tapped_material: list[tuple[str, str]] = []
+    tokens: list[tuple[str, str]] = []
+    entering: list[tuple[str, str]] = []
+    for name, owner, zone, tapped, entered in _STAGING.material:
+        if zone is Zone.STACK:
+            continue
+        if name in PREDEFINED:
+            tokens.append((name, owner))
+            continue
+        if entered:
+            extra[owner]["hand"].append(name)
+            entering.append((name, owner))
+            continue
+        extra[owner][zone.value].append(name)
+        if tapped:
+            tapped_material.append((name, owner))
+    if variant == BUSY:
+        # An enchantment, a 4-power creature, five more Mountains and three
+        # snow lands, for "if you control an enchantment", "while you control
+        # a creature with power 4 or greater", "five other Mountains" and
+        # "four or more snow permanents".
+        extra[ALICE]["battlefield"] += (
+            ["Intangible Virtue", "Serra Angel"] + ["Mountain"] * 5 + ["Snow-Covered Forest"] * 3
+        )
+        extra[ALICE]["hand"] += ["Giant Growth", "Memnite", "Opt"]
+    if variant == WAR:
+        extra[ALICE]["battlefield"] += ["Grizzly Bears"] * 3
+        extra[BOB]["battlefield"] += ["Grizzly Bears"] * 3
+    bob_permanents = [] if variant == LONELY else list(_BOB_PERMANENTS)
+    seats = {
+        ALICE: {
+            "library": list(_LIBRARY),
+            "hand": list(_HAND) + list(hand) + extra[ALICE]["hand"],
+            "battlefield": list(_LANDS)
+            + list(_ALICE_PERMANENTS)
+            + list(battlefield)
+            + extra[ALICE]["battlefield"],
+            "graveyard": list(_GRAVEYARD) + list(graveyard) + extra[ALICE]["graveyard"],
+        },
+        BOB: {
+            "library": list(_LIBRARY),
+            "hand": list(_HAND) + list(bob_hand) + extra[BOB]["hand"],
+            "battlefield": list(_BOB_LANDS)
+            + bob_permanents
+            + list(bob_battlefield)
+            + extra[BOB]["battlefield"],
+            "graveyard": list(_GRAVEYARD) + extra[BOB]["graveyard"],
+        },
+    }
+    scenario = Scenario()
+    for username in [ALICE, BOB] if active == ALICE else [BOB, ALICE]:
+        scenario.player(username, **seats[username])
+    played = scenario.build()
+    for name, owner in tokens:
+        create_predefined_tokens(played.game, name, owner)
+    if before is not None:
+        before(played)
+    if step is not None:
+        played.start_at(step)
+    # Tapped after the untap step `start_at` runs (CR 502.3), or it would be
+    # untapped again before anything asked about it.
+    for name, owner in tapped_material:
+        _last(played, name, Zone.BATTLEFIELD, owner).tapped = True
+    if step is not None:
+        for name, owner in entering:
+            state = _last(played, name, Zone.HAND, owner)
+            played.game.put_onto_battlefield(state, owner)
+        if variant == BUSY and busy and step in (Step.PRECOMBAT_MAIN, Step.POSTCOMBAT_MAIN):
+            _busy_turn(played)
+        if variant == WAR and busy and step is Step.PRECOMBAT_MAIN and active == ALICE:
+            _war_turn(played)
+    return played
+
+
+def _busy_turn(scenario: PlayedScenario) -> None:
+    """An eventful turn so far, for the "if you [did X] this turn" family of
+    conditions (CR 603.4): three instants cast, two creature spells, life
+    gained, two cards drawn, a permanent sacrificed (revolt), a permanent card
+    discarded (descend), and an opponent's blue spell - each stopping early
+    if the case's own ability already triggered off it."""
+    case = _STAGING.case
+    game = scenario.game
+
+    def done() -> bool:
+        return case is not None and _drive(scenario, case, None) is not None
+
+    steps: list[Callable[[], Any]] = [
+        lambda: _cast(scenario, "Opt"),
+        lambda: _cast(scenario, "Lightning Bolt"),
+        lambda: _cast(scenario, "Giant Growth"),
+        lambda: _cast(scenario, "Grizzly Bears"),
+        lambda: _cast(scenario, "Memnite"),
+        lambda: game.gain_life(ALICE, 1),
+        lambda: game.draw_cards(ALICE, 2),
+        lambda: game.sacrifice(_first(scenario, "Memnite", ALICE)),
+        lambda: game.discard_cards(ALICE, [_last(scenario, "Forest", Zone.HAND, ALICE)]),
+        lambda: _opponent_casts(scenario, "Opt"),
+    ]
+    for step in steps:
+        try:
+            step()
+        except (_Unavailable, ValueError, AssertionError):
+            continue
+        if done():
+            return
+        while game.stack:
+            game.resolve_top()
+            if done():
+                return
+
+
+def _war_turn(scenario: PlayedScenario) -> None:
+    """A bloody turn so far, for the "attacked with N or more creatures this
+    turn" and "N or more creatures died this turn" conditions (CR 602.5b,
+    CR 603.4): every creature the controller can attack with attacks
+    (CR 508.1), combat damage is dealt, then creatures other than the case's
+    own card are destroyed until five have died (CR 700.4) - ending in the
+    postcombat main phase."""
+    case = _STAGING.case
+    game = scenario.game
+    own = case.card if case is not None else ""
+    scenario.turn.advance_to(Step.DECLARE_ATTACKERS)
+    game.sync_priority_with_step()
+    attackers = [
+        p
+        for p in game.permanents_controlled_by(ALICE)
+        if Type.CREATURE in p.types and not _named(p, own) and scenario.can_attack(p)
+    ]
+    try:
+        if attackers:
+            scenario.attack_with(*attackers)
+            _settle(scenario)
+            while game.stack:
+                game.resolve_top()
+            scenario.no_blocks()
+            scenario.combat_damage()
+            _settle(scenario)
+            while game.stack:
+                game.resolve_top()
+    except (ValueError, AssertionError):
+        pass
+    scenario.turn.advance_to(Step.POSTCOMBAT_MAIN)
+    game.sync_priority_with_step()
+    victims = [
+        p
+        for p in [*game.permanents_controlled_by(BOB), *game.permanents_controlled_by(ALICE)]
+        if Type.CREATURE in p.types and not _named(p, own)
+    ]
+    for victim in victims:
+        if game.creatures_died_this_turn >= 5:
+            break
+        game.destroy(victim)
+    _settle(scenario)
+    while game.stack:
+        game.resolve_top()
+
+
+def _first(scenario: PlayedScenario, name: str, username: str) -> CardState:
+    for state in scenario.game.permanents_controlled_by(username):
+        if _named(state, name):
+            return state
+    raise _Unavailable(f"{username} controls no {name}")
+
+
+def _named(state: CardState, name: str) -> bool:
+    """`name` is a printing's full name; a double-faced permanent on the
+    battlefield answers to the face that is up (CR 712.8f), so the front
+    face's name has to match too."""
+    faces = {name, *name.split(" // ")}
+    return state.name in faces or state.name.split(" //")[0] in faces
+
+
+def _last(scenario: PlayedScenario, name: str, zone: Zone, username: str) -> CardState:
+    """The copy of `name` this attempt added: the last one in `zone`, so a
+    stock copy of the same card (a probe Memnite beside the stock one) is
+    never picked by mistake."""
+    if zone in scenario.game.shared_zones:
+        found = [
+            state
+            for state in scenario.game.shared_zones[zone]
+            if isinstance(state, CardState)
+            and getattr(state, "controller_or_owner", None) == username
+            and _named(state, name)
+        ]
+    else:
+        found = [
+            state for state in scenario.game.player(username).cards_in(zone) if _named(state, name)
+        ]
+    if not found:
+        raise _Unavailable(f"{name} is not in {username}'s {zone.value}")
+    return found[-1]
+
+
+# ---------------------------------------------------------------------------
+# Cases.
+# ---------------------------------------------------------------------------
+
+
+@cache
+def _format_pool() -> tuple[Card, ...]:
+    """Every distinct printing in the fixture pool that exists in Modern,
+    Pioneer or Standard - the owner rule's scope."""
+    seen: set[str] = set()
+    cards: list[Card] = []
+    for card in pool().values():
+        if card.name in seen or not in_target_formats(card):
+            continue
+        seen.add(card.name)
+        cards.append(card)
+    return tuple(sorted(cards, key=lambda card: card.name))
+
+
+def _event_kind(ability: TriggeredAbility) -> str:
+    """The event this trigger watches, as the engine itself reads it."""
+    if ability.event is not None:
+        return ability.event.value
+    unread = _unread_trigger_events(ability.condition)
+    if unread:
+        return "+".join(sorted(event.value for event in unread))
+    return "state"
+
+
+@dataclass(frozen=True)
+class Case:
+    card: str
+    text: str
+    kind: str
+    number: int
+
+    @property
+    def id(self) -> str:
+        return f"{self.card} #{self.number} [{self.kind}]"
+
+    @property
+    def printing(self) -> Card:
+        return pool()[self.card]
+
+
+def _handled(card: Card, kind: str) -> list[str]:
+    return [
+        clause.text
+        for clause in card_support(card).clauses
+        if clause.kind == kind and clause.status == "handled"
+    ]
+
+
+def _trigger_ability(card: Card, text: str) -> TriggeredAbility:
+    for ability in triggered_abilities_of(card):
+        if ability.text == text:
+            return ability
+    # A CR 603.8 state trigger ("When there are four or more page counters
+    # on this artifact") is swept by `state_triggers_for`, not listed by
+    # `triggered_abilities_of`, which answers for event triggers only.
+    for ability in parse_abilities(card):
+        if isinstance(ability, TriggeredAbility) and ability.text == text:
+            return ability
+    raise AssertionError(f"{card.name}: no triggered ability reads {text!r}")
+
+
+@cache
+def trigger_cases() -> tuple[Case, ...]:
+    cases = []
+    for card in _format_pool():
+        for number, text in enumerate(_handled(card, "triggered")):
+            kind = _event_kind(_trigger_ability(card, text))
+            cases.append(Case(card.name, text, kind, number))
+    return tuple(cases)
+
+
+@cache
+def activation_cases() -> tuple[Case, ...]:
+    cases = []
+    for card in _format_pool():
+        for number, text in enumerate(_handled(card, "activated")):
+            cases.append(Case(card.name, text, "activated", number))
+    return tuple(cases)
+
+
+# ---------------------------------------------------------------------------
+# Finding the ability once the event has happened.
+# ---------------------------------------------------------------------------
+
+
+class _Unavailable(Exception):
+    """This attempt's setup could not be made on the stock board - the next
+    attempt is tried. Never a verdict on the ability itself."""
+
+
+def _same_card(source_name: str, card: str) -> bool:
+    """A source is named by the face that is up (CR 712.8e), so any face's
+    name is this card's."""
+    names = {card, *card.split(" // ")}
+    return source_name in names or source_name.split(" //")[0] in names
+
+
+def _settle(scenario: PlayedScenario) -> None:
+    """CR 704.3 then CR 603.3: what the event caused, as the next priority
+    would see it."""
+    game = scenario.game
+    if game.is_over:
+        return
+    game.check_state_based_actions()
+    game.put_triggers_on_stack()
+
+
+def _ours(scenario: PlayedScenario, case: Case, source_id: Any) -> AbilityOnStack | None:
+    """The stack object this case's ability became, if it is there."""
+    for item in scenario.game.stack:
+        if not isinstance(item, AbilityOnStack) or item.ability.text != case.text:
+            continue
+        if source_id is not None and item.source_id != source_id:
+            continue
+        if _same_card(item.source_name, case.card):
+            return item
+    return None
+
+
+def _drive(
+    scenario: PlayedScenario,
+    case: Case,
+    source_id: Any,
+    *,
+    advance: bool = False,
+    limit: int = 80,
+) -> AbilityOnStack | None:
+    """Look for the ability on the stack, resolving whatever else the event
+    put there first; with `advance`, keep playing the turn forward (and the
+    next ones, `limit` steps at most) until it shows up."""
+    for _ in range(limit):
+        _settle(scenario)
+        found = _ours(scenario, case, source_id)
+        if found is not None:
+            return found
+        if scenario.game.is_over:
+            return None
+        if scenario.game.stack:
+            scenario.game.resolve_top()
+            continue
+        if not advance:
+            return None
+        scenario.advance()
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Targets: for the casts and activations the harness makes, and material for
+# a target restriction the stock board cannot satisfy.
+# ---------------------------------------------------------------------------
+
+
+def _pick(scenario: PlayedScenario, slots: Any, prefer: Any = None) -> list[Any]:
+    """The first legal candidates of each target slot (CR 601.2c) - `prefer`
+    first when it is one - at least one per slot even for an "up to"
+    requirement, so the resolution has something to act on, never the same
+    object twice."""
+    chosen: list[Any] = []
+    taken: set[Any] = set()
+    for slot in slots:
+        wanted = max(1, slot.minimum)
+        if slot.maximum is not None:
+            wanted = min(wanted, slot.maximum)
+        options: list[Any] = [c for c in slot.candidates if c not in taken]
+        options += [p for p in slot.player_candidates if p not in taken]
+        if prefer in options:
+            options.remove(prefer)
+            options.insert(0, prefer)
+        for option in options[:wanted]:
+            taken.add(option)
+            chosen.append(option if isinstance(option, str) else scenario.game.find_by_id(option))
+    return [c for c in chosen if c is not None]
+
+
+def _action_for(
+    scenario: PlayedScenario, username: str, kind: ActionKind, card_id: Any, **match: Any
+) -> Any:
+    for action in legal_actions(scenario.game, username):
+        if action.kind is not kind or action.card_id != card_id:
+            continue
+        if all(getattr(action, field) == value for field, value in match.items()):
+            return action
+    return None
+
+
+def _cast(
+    scenario: PlayedScenario,
+    name: str,
+    username: str = ALICE,
+    *,
+    prefer: Any = None,
+    keyword: str | None = None,
+    kicked: bool = False,
+    paying_with: str | None = None,
+    from_zone: Zone = Zone.HAND,
+) -> CardState:
+    """Cast `name` (CR 601.2) for its mana cost - face down with `keyword`
+    (morph, CR 702.37c), kicked with `kicked` (CR 702.33a) - naming the
+    first legal targets, and paying automatically, or with lands of the
+    `paying_with` basic type first."""
+    spell = _last(scenario, name, from_zone, username)
+    action = _action_for(scenario, username, ActionKind.CAST, spell.id, alternative_cost=None)
+    if keyword is None and from_zone is not Zone.HAND and action is not None:
+        # The permission that lets it be cast from there (CR 715.3d's
+        # Adventure, CR 702.34a's flashback) is announced as a keyword.
+        keyword = action.keyword
+    targets = _pick(scenario, action.target_slots, prefer) if action is not None else []
+    try:
+        casting = scenario.cast(spell.name, username, from_zone=from_zone, targets=targets or None)
+        if keyword is not None:
+            casting.use_keyword(keyword)
+        if kicked:
+            casting.pay_kicker(1)
+        payment = casting.begin_paying()
+        permanents = scenario.game.permanents_controlled_by(username)
+        if paying_with is None:
+            payment.auto_tap(permanents)
+        else:
+            # Tap the named basic type first, then colourless, for exactly
+            # the spell's mana value - "if {U}{U} was spent" (CR 601.2h).
+            lands = [p for p in permanents if p.card.is_land and not p.tapped]
+            ordered = [p for p in lands if p.name == paying_with]
+            ordered += [p for p in lands if p.name == "Wastes"]
+            ordered += [p for p in lands if p not in ordered]
+            for land in ordered[: int(spell.card.cmc)]:
+                payment.tap_for_mana(land, mana_from(land))
+        payment.pay()
+        return scenario.put_on_stack(casting)
+    except (ValueError, AssertionError) as error:
+        raise _Unavailable(f"casting {name}: {error}") from error
+
+
+def _opponent_casts(scenario: PlayedScenario, name: str) -> CardState:
+    """The non-active player casts an instant (CR 117.1a) once the active
+    player has passed priority to them (CR 117.3d)."""
+    active = scenario.game.active_player.username
+    other = BOB if active == ALICE else ALICE
+    if scenario.priority_holder == active:
+        scenario.pass_priority(active)
+    return _cast(scenario, name, other)
+
+
+def _objects(scenario: PlayedScenario) -> list[Any]:
+    game = scenario.game
+    found: list[Any] = []
+    for zone_cards in game.shared_zones.values():
+        found += [s for s in zone_cards if isinstance(s, CardState)]
+    for player in game.players:
+        for zone_cards in player.zones.values():
+            found += list(zone_cards)
+    found += [item for item in game.stack if isinstance(item, AbilityOnStack)]
+    found += list(game.players)
+    return found
+
+
+def _satisfied(scenario: PlayedScenario, requirement: TargetRequirement) -> bool:
+    return any(
+        requirement.rejects(candidate, ALICE, scenario.game, None) is None
+        for candidate in _objects(scenario)
+    )
+
+
+def _quick_fit(card: Card, requirement: TargetRequirement) -> bool:
+    """A cheap pre-filter on the printed characteristics a requirement
+    names, before the engine's own `rejects` is asked on a real board."""
+    types = set(card.types)
+    if requirement.card_types and not requirement.card_types & types:
+        return False
+    if requirement.excluded_card_types & types:
+        return False
+    subtypes = {subtype.lower() for subtype in card.subtypes}
+    if (
+        requirement.required_subtypes
+        and not {subtype.lower() for subtype in requirement.required_subtypes} & subtypes
+    ):
+        return False
+    if requirement.required_colors and not requirement.required_colors & set(card.colors or ()):
+        return False
+    if requirement.color_count == "colorless" and card.colors:
+        return False
+    return not requirement.excluded_colors & set(card.colors or ())
+
+
+_PERMANENT_TYPES = {
+    Type.ARTIFACT,
+    Type.CREATURE,
+    Type.ENCHANTMENT,
+    Type.LAND,
+    Type.PLANESWALKER,
+    Type.BATTLE,
+}
+
+
+@cache
+def _target_material(text: str) -> tuple[Material, ...]:
+    """Real printings to add to the board so each target requirement of
+    `text` has a legal candidate, found by the engine's own
+    `TargetRequirement.rejects` - empty when the stock board already has one
+    for every requirement (so the Devourer board is never diluted)."""
+    profile = profile_for_text(text)
+    if not profile.understood or not profile.requirements:
+        return ()
+    saved = _STAGING.variant, _STAGING.material
+    _STAGING.variant, _STAGING.material = QUIET, ()
+    try:
+        stock = _board()
+        material: list[Material] = []
+        for requirement in profile.requirements:
+            if _satisfied(stock, requirement):
+                continue
+            if Zone.STACK in requirement.zones:
+                material.append(Material("Opt", ALICE, Zone.STACK))
+                continue
+            found = _find_material(requirement)
+            if found is not None:
+                material.append(found)
+        return tuple(material)
+    finally:
+        _STAGING.variant, _STAGING.material = saved
+
+
+def _find_material(requirement: TargetRequirement) -> Material | None:
+    owners = {
+        ControllerRestriction.YOU: [ALICE],
+        ControllerRestriction.OPPONENT: [BOB],
+        ControllerRestriction.NOT_YOU: [BOB],
+    }.get(requirement.controller, [BOB, ALICE])
+    zones = [z for z in (Zone.BATTLEFIELD, Zone.GRAVEYARD) if z in requirement.zones]
+    tapped = bool(requirement.must_be_tapped)
+    entered = requirement.must_have_entered_this_turn
+    tried = 0
+    for card in _format_pool():
+        if card.card_faces or not _quick_fit(card, requirement):
+            continue
+        for zone in zones:
+            if zone is Zone.BATTLEFIELD and not set(card.types) & _PERMANENT_TYPES:
+                continue
+            for owner in owners if zone is Zone.BATTLEFIELD else [ALICE]:
+                tried += 1
+                if tried > 40:
+                    return None
+                candidate = Material(card.name, owner, zone, tapped, entered)
+                saved = _STAGING.material
+                _STAGING.material = (candidate,)
+                try:
+                    scenario = _board()
+                finally:
+                    _STAGING.material = saved
+                try:
+                    staged = _last(scenario, card.name, zone, owner)
+                except _Unavailable:
+                    continue
+                if requirement.rejects(staged, ALICE, scenario.game, None) is None:
+                    return candidate
+    return None
+
+
+def _stack_material(scenario: PlayedScenario) -> None:
+    """A spell for a "target spell" requirement to aim at (CR 115.1)."""
+    for name, owner, zone, _, _ in _STAGING.material:
+        if zone is Zone.STACK:
+            with contextlib.suppress(_Unavailable):
+                _cast(scenario, name, owner)
+
+
+# ---------------------------------------------------------------------------
+# Staging the source.
+# ---------------------------------------------------------------------------
+
+Attempt = Callable[[], tuple[PlayedScenario, Any]]
+
+
+def _is(card: Card, card_type: Type) -> bool:
+    return card_type in card.types
+
+
+def _enchant_restriction(card: Card) -> str | None:
+    for keyword in keyword_abilities(card):
+        if keyword.canonical.lower() == "enchant":
+            return (keyword.parameter or "").lower()
+    return None
+
+
+def _attach(scenario: PlayedScenario, source: CardState) -> None:
+    """Stage an Aura on something it can enchant, as a board would have it:
+    an unattached Aura is put into its owner's graveyard by CR 704.5m before
+    anything else could happen."""
+    restriction = _enchant_restriction(source.card)
+    if restriction is None:
+        return
+    if "player" in restriction or "opponent" in restriction:
+        source.attachment = TargetRef.to_player(scenario.game.player(BOB))
+        return
+    wanted = next((word for word in _BASICS if word.lower() in restriction), None)
+    for permanent in scenario.game.permanents_controlled_by(ALICE):
+        if permanent is source:
+            continue
+        if wanted is not None and permanent.name != wanted:
+            continue
+        if "land" in restriction and not permanent.card.is_land:
+            continue
+        if "creature" in restriction and Type.CREATURE not in permanent.types:
+            continue
+        if "artifact" in restriction and Type.ARTIFACT not in permanent.types:
+            continue
+        source.attachment = TargetRef.to_card(permanent)
+        return
+
+
+def _back_face(card: Card, ability: Any) -> bool:
+    """Whether the ability is printed on a transforming card's back face
+    (CR 712.2), so the source has to be staged transformed (CR 712.8e)."""
+    faces = card.card_faces or []
+    return (
+        card.layout is Layout.TRANSFORM
+        and len(faces) > 1
+        and ability is not None
+        and ability.face == faces[1].name
+    )
+
+
+def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardState:
+    """The source as the ability needs it: attached if an Aura, on the face
+    the ability is printed on, at the Class level the ability unlocks at
+    (CR 716.2a)."""
+    if _back_face(source.card, ability):
+        source.transformed = True
+    level = getattr(ability, "class_level", None)
+    if level is not None:
+        source.class_level = level
+    _attach(scenario, source)
+    return source
+
+
+def _staged(scenario: PlayedScenario, name: str, username: str = ALICE) -> CardState:
+    return _last(scenario, name, Zone.BATTLEFIELD, username)
+
+
+def _source(scenario: PlayedScenario, case: Case, ability: Any) -> CardState:
+    return _prime(scenario, _staged(scenario, case.card), ability)
+
+
+def _functions_from_graveyard(card: Card, ability: TriggeredAbility) -> bool:
+    zones = zones_ability_functions_in(ability, card_state(card.name))
+    return Zone.BATTLEFIELD not in zones and Zone.GRAVEYARD in zones
+
+
+def _home(case: Case, ability: TriggeredAbility, **extra: Any) -> tuple[PlayedScenario, Any]:
+    """A board with the source where its ability functions (CR 113.6): the
+    battlefield, or the graveyard for "return this card from your
+    graveyard" abilities."""
+    card = case.printing
+    if _functions_from_graveyard(card, ability):
+        scenario = _board(graveyard=(card.name,), **extra)
+        return scenario, _last(scenario, card.name, Zone.GRAVEYARD, ALICE).id
+    battlefield = (card.name, *extra.pop("battlefield", ()), *_named_partners(ability))
+    staged: list[CardState] = []
+    scenario = _board(
+        battlefield=battlefield,
+        before=lambda played: staged.append(_source(played, case, ability)),
+        **extra,
+    )
+    _stack_material(scenario)
+    return scenario, staged[0].id
+
+
+def _named_partners(ability: TriggeredAbility) -> tuple[str, ...]:
+    """A card a condition names outright ("a creature named Midnight
+    Scavengers", CR 201.2), read off the text, so it is on the board too."""
+    text = f"{ability.condition} {ability.intervening_if or ''}"
+    found = re.findall(r"named ([A-Z][\w' -]*?)(?=[,.]|$)", text)
+    return tuple(name for name in found if name in pool())
+
+
+def _plural_subtypes(condition: str) -> list[str]:
+    found = []
+    for word in re.findall(r"\b([A-Z][a-z]+s)\b", condition):
+        singular = _singular_subtype(word)
+        if singular is not None:
+            found.append(singular)
+    return found
+
+
+def _probes(case: Case, ability: TriggeredAbility, *, entering: bool) -> list[str]:
+    """Real printings to stand in for the "other" object a condition names:
+    the engine's own probe finder (`support._probe_cards`, the one
+    `card_support` proves reachability with), a creature of a plural subtype
+    the condition names ("one or more Allies"), then the stock probe
+    creatures."""
+    found = _probe_cards(case.printing, ability.condition, entering=entering) or []
+    names = [card.name for card in found if card.name in pool()]
+    for subtype in _plural_subtypes(ability.condition):
+        for card in _format_pool():
+            lowered = {s.lower() for s in card.subtypes}
+            if subtype.lower() in lowered and _is(card, Type.CREATURE) and not card.card_faces:
+                names.append(card.name)
+                break
+    for name in _PROBE_CREATURES:
+        if name not in names:
+            names.append(name)
+    return names
+
+
+# ---------------------------------------------------------------------------
+# Raising a trigger event. An attempt builds its own fresh board, performs
+# one real action and returns `(scenario, source_id)` - `source_id` pins the
+# source when a twin of the card may be on the board, otherwise `None`.
+# ---------------------------------------------------------------------------
+
+
+def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    card = case.printing
+    lowered = (ability.condition + " " + (ability.intervening_if or "")).lower()
+    tapped_choices = [False, True] if "tapped" in lowered else [False]
+    transformed = _back_face(card, ability)
+
+    for tapped in tapped_choices:
+
+        def put(tapped: bool = tapped) -> tuple[PlayedScenario, Any]:
+            scenario = _board(hand=(card.name,))
+            _stack_material(scenario)
+            source = _last(scenario, card.name, Zone.HAND, ALICE)
+            try:
+                entered = scenario.game.put_onto_battlefield(
+                    source, ALICE, tapped=tapped, transformed=transformed
+                )
+            except ValueError as error:
+                raise _Unavailable(str(error)) from error
+            _prime(scenario, entered, ability)
+            return scenario, None
+
+        yield put
+
+    if card.is_land:
+
+        def play() -> tuple[PlayedScenario, Any]:
+            scenario = _board(hand=(card.name,))
+            try:
+                scenario.play_land(card.name, ALICE)
+            except ValueError as error:
+                raise _Unavailable(str(error)) from error
+            return scenario, None
+
+        yield play
+        return
+
+    kicker = any(k.canonical.lower() in ("kicker", "multikicker") for k in keyword_abilities(card))
+    payers: list[str | None] = [None, *(_BASICS if "spent" in lowered else [])]
+    for kicked in [False, True] if kicker else [False]:
+        for paying_with in payers:
+
+            def cast(kicked: bool = kicked, paying_with: str | None = paying_with):
+                scenario = _board(hand=(card.name,))
+                _stack_material(scenario)
+                _cast(scenario, card.name, kicked=kicked, paying_with=paying_with)
+                return scenario, None
+
+            yield cast
+
+
+def _other_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    lowered = ability.condition.lower()
+    tapped_choices = [False, True] if "tapped" in lowered else [False]
+    owners = [ALICE, BOB] if "opponent" in lowered or "a player" in lowered else [ALICE]
+    for probe in _probes(case, ability, entering=True):
+        for owner in owners:
+            for tapped in tapped_choices:
+
+                def put(probe: str = probe, owner: str = owner, tapped: bool = tapped):
+                    extra = {"hand": (probe,)} if owner == ALICE else {"bob_hand": (probe,)}
+                    scenario, source_id = _home(case, ability, **extra)
+                    entering = _last(scenario, probe, Zone.HAND, owner)
+                    try:
+                        scenario.game.put_onto_battlefield(entering, owner, tapped=tapped)
+                    except ValueError as error:
+                        raise _Unavailable(str(error)) from error
+                    return scenario, source_id
+
+                yield put
+
+        if "token" in lowered:
+
+            def token(probe: str = probe) -> tuple[PlayedScenario, Any]:
+                scenario, source_id = _home(case, ability, battlefield=(probe,))
+                token_copy_of(scenario.game, _staged(scenario, probe), ALICE)
+                return scenario, source_id
+
+            yield token
+
+
+#: How each "leaves the battlefield" event is caused, in the engine's own
+#: words: the method that performs the move is the one that emits the event.
+_REMOVALS: dict[str, tuple[str, ...]] = {
+    TriggerEvent.DIES.value: ("destroy", "sacrifice"),
+    TriggerEvent.IS_SACRIFICED.value: ("sacrifice",),
+    TriggerEvent.LEAVES_THE_BATTLEFIELD.value: ("exile_permanent", "destroy", "return_to_hand"),
+    TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE.value: ("exile_permanent",),
+    TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND.value: ("return_to_hand",),
+}
+
+_PREDEFINED_TOKEN_WORDS = ("food", "treasure", "clue", "powerstone")
+
+
+def _leaving(case: Case, ability: TriggeredAbility, kind: str) -> Iterator[Attempt]:
+    lowered = ability.condition.lower()
+    removals = _REMOVALS[kind]
+
+    for removal in removals:
+
+        def itself(removal: str = removal) -> tuple[PlayedScenario, Any]:
+            scenario = _board(battlefield=(case.card,))
+            _stack_material(scenario)
+            source = _source(scenario, case, ability)
+            getattr(scenario.game, removal)(source)
+            return scenario, None
+
+        yield itself
+
+    for word in _PREDEFINED_TOKEN_WORDS:
+        if word in lowered:
+
+            def predefined(word: str = word) -> tuple[PlayedScenario, Any]:
+                scenario, source_id = _home(case, ability)
+                (token,) = create_predefined_tokens(scenario.game, word.capitalize(), ALICE)
+                getattr(scenario.game, removals[-1])(token)
+                return scenario, source_id
+
+            yield predefined
+
+    owners = [ALICE, BOB] if "opponent" in lowered or "a creature dies" in lowered else [ALICE]
+    for probe in _probes(case, ability, entering=False):
+        for owner in owners:
+            for removal in removals:
+                for as_token in [False, True] if "token" in lowered else [False]:
+
+                    def other(
+                        probe: str = probe,
+                        owner: str = owner,
+                        removal: str = removal,
+                        as_token: bool = as_token,
+                    ) -> tuple[PlayedScenario, Any]:
+                        extra = (
+                            {"battlefield": (probe,)}
+                            if owner == ALICE
+                            else {"bob_battlefield": (probe,)}
+                        )
+                        scenario, source_id = _home(case, ability, **extra)
+                        victim = _staged(scenario, probe, owner)
+                        if as_token:
+                            (victim,) = token_copy_of(scenario.game, victim, owner)
+                        source = scenario.game.find_by_id(source_id)
+                        if re.search(r"\b(enchanted|equipped)\b", lowered):
+                            source.attachment = TargetRef.to_card(victim)
+                        if "dealt damage by" in lowered:
+                            scenario.game.deal_damage(victim, 1, source=source)
+                        getattr(scenario.game, removal)(victim)
+                        return scenario, source_id
+
+                    yield other
+
+
+def _combat_sides(ability: TriggeredAbility) -> list[str]:
+    """Which side attacks for this condition: the source's controller, or
+    its opponent ("attacks you", "blocks")."""
+    lowered = ability.condition.lower()
+    if re.search(r"attacks you\b", lowered):
+        return [BOB]
+    if "blocks" in lowered or "opponent" in lowered or "a creature attacks" in lowered:
+        return [ALICE, BOB]
+    return [ALICE]
+
+
+def _crew(scenario: PlayedScenario, vehicle: CardState) -> None:
+    """Crew a Vehicle (CR 702.122a) with the controller's other creatures."""
+    controller = vehicle.controller
+    crew = [
+        p
+        for p in scenario.game.permanents_controlled_by(controller)
+        if Type.CREATURE in p.types and p is not vehicle and not p.tapped
+    ]
+    try:
+        activation = crew_activation(scenario.game, vehicle, crew, controller)
+        activation.begin_paying()
+        activation.payment.pay()
+        activation.activate()
+        activation.resolve()
+    except (ValueError, AssertionError) as error:
+        raise _Unavailable(f"crewing: {error}") from error
+
+
+def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    card = case.printing
+    lowered = ability.condition.lower()
+    is_vehicle = crew_number(card) is not None
+    for side in _combat_sides(ability):
+        attackers: list[str | None] = []
+        if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle):
+            attackers.append(None)
+        if not is_vehicle:
+            attackers += [p for p in _probes(case, ability, entering=False) if p != card.name]
+        for probe in attackers:
+
+            def fight(probe: str | None = probe, side: str = side) -> tuple[Any, ...]:
+                extra: tuple[str, ...] = (probe,) if probe is not None else ()
+                if is_vehicle:
+                    extra = ("Serra Angel",)
+                if side == ALICE:
+                    scenario = _board(battlefield=(case.card, *extra), step=Step.DECLARE_ATTACKERS)
+                else:
+                    scenario = _board(
+                        battlefield=(case.card,),
+                        bob_battlefield=extra,
+                        active=BOB,
+                        step=Step.DECLARE_ATTACKERS,
+                    )
+                source = _source(scenario, case, ability)
+                if is_vehicle and side == ALICE:
+                    _crew(scenario, source)
+                attacker = source if probe is None else _staged(scenario, probe, side)
+                if attacker is not source and "equipped" in lowered:
+                    source.attachment = TargetRef.to_card(attacker)
+                defender = BOB if side == ALICE else ALICE
+                try:
+                    scenario.attack_with(attacker, defending=defender)
+                except (ValueError, AssertionError) as error:
+                    raise _Unavailable(str(error)) from error
+                return scenario, source, attacker, defender
+
+            yield _combat_stages(case, fight, lowered)
+
+
+def _combat_stages(case: Case, fight: Callable[[], tuple[Any, ...]], lowered: str) -> Attempt:
+    """Declare the attack, then block (with the source when it is on the
+    defending side, CR 509.1), then deal combat damage (CR 510) - checking
+    for the ability after each."""
+
+    def combat() -> tuple[PlayedScenario, Any]:
+        scenario, source, attacker, defender = fight()
+        if _drive(scenario, case, source.id) is not None:
+            return scenario, source.id
+        game = scenario.game
+        blocker = None
+        if "block" in lowered:
+            if source is not attacker and source.controller == defender:
+                if crew_number(source.card) is not None:
+                    _crew(scenario, source)
+                blocker = source
+            else:
+                blocker = next(
+                    (
+                        p
+                        for p in game.permanents_controlled_by(defender)
+                        if Type.CREATURE in p.types and not p.tapped
+                    ),
+                    None,
+                )
+        try:
+            if blocker is not None:
+                scenario.block(attacker, blocker)
+            else:
+                scenario.no_blocks()
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(str(error)) from error
+        if _drive(scenario, case, source.id) is not None:
+            return scenario, source.id
+        scenario.combat_damage()
+        return scenario, source.id
+
+    return combat
+
+
+def _turns(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """Play whole turns - the source's controller's, then the opponent's,
+    then the controller's again - with the source already in play: every
+    "at the beginning of" step, every draw step, every untap step and every
+    lore counter a Saga gets (CR 714.3c) happens on its own along the way."""
+    card = case.printing
+
+    def staged() -> tuple[PlayedScenario, Any]:
+        step = Step.PRECOMBAT_MAIN if _STAGING.variant == BUSY else None
+        scenario, source_id = _home(case, ability, step=step)
+        source = scenario.game.find_by_id(source_id)
+        if _STAGING.variant == BUSY:
+            source.tapped = True
+        for permanent in scenario.game.permanents_controlled_by(ALICE):
+            if permanent.card.is_land:
+                permanent.tapped = True  # something for the untap step to untap
+                break
+        return scenario, source_id
+
+    yield staged
+
+    if set(card.types) & _PERMANENT_TYPES:
+
+        def entered() -> tuple[PlayedScenario, Any]:
+            scenario = _board(hand=(card.name,))
+            state = _last(scenario, card.name, Zone.HAND, ALICE)
+            try:
+                entered_state = scenario.game.put_onto_battlefield(
+                    state, ALICE, transformed=_back_face(card, ability)
+                )
+            except ValueError as error:
+                raise _Unavailable(str(error)) from error
+            _prime(scenario, entered_state, ability)
+            return scenario, None
+
+        yield entered
+
+
+def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    lowered = ability.condition.lower()
+    if "this spell" in lowered:
+        yield from _self_entering(case, ability)
+        return
+
+    if "from exile" in lowered:
+
+        def adventure() -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability, hand=(_ADVENTURER,))
+            casting = scenario.cast(_ADVENTURER, ALICE)
+            casting.cast_as_adventure()
+            casting.choose_targets([BOB])
+            payment = casting.begin_paying()
+            payment.auto_tap(scenario.game.permanents_controlled_by(ALICE))
+            payment.pay()
+            scenario.put_on_stack(casting)
+            scenario.game.resolve_top()
+            _cast(scenario, _ADVENTURER, from_zone=Zone.EXILE)
+            return scenario, source_id
+
+        yield adventure
+
+    if "opponent" in lowered:
+        casters = [BOB]
+    elif "player" in lowered:
+        casters = [ALICE, BOB]
+    else:
+        casters = [ALICE]
+    during_your_turn = "during your turn" in lowered
+    for caster in casters:
+        for probe in _PROBE_SPELLS:
+
+            def cast_probe(probe: str = probe, caster: str = caster):
+                if caster == ALICE:
+                    scenario, source_id = _home(case, ability, hand=(probe, probe))
+                elif during_your_turn:
+                    scenario, source_id = _home(case, ability, bob_hand=(probe,))
+                else:
+                    scenario, source_id = _home(case, ability, bob_hand=(probe,), active=BOB)
+                for _ in range(2 if caster == ALICE else 1):
+                    if caster == scenario.game.active_player.username:
+                        _cast(scenario, probe, caster)
+                    else:
+                        _opponent_casts(scenario, probe)
+                    if _drive(scenario, case, source_id) is not None:
+                        break
+                return scenario, source_id
+
+            yield cast_probe
+
+
+def _mana_sources(scenario: PlayedScenario, username: str) -> list[CardState]:
+    return [
+        permanent
+        for permanent in scenario.game.permanents_controlled_by(username)
+        if not permanent.tapped
+        and any(
+            ability.mana is not None
+            for ability in scenario.game.activated_abilities(permanent)
+            if isinstance(ability, ActivatedAbility)
+        )
+    ]
+
+
+def _tapping_for_mana(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """Tap one mana source of the relevant player through its own mana
+    ability (CR 106.12). A triggered mana ability resolves right away
+    (CR 605.4a), so it shows as extra mana rather than on the stack -
+    `run_trigger_case` checks for both."""
+    lowered = ability.condition.lower()
+    tapper = BOB if "opponent" in lowered else ALICE
+    extra = ("Llanowar Elves",) if "creature" in lowered else ()
+    # "As this enters, choose a color" (Caged Sun, Utopia Sprawl) is only
+    # chosen by really entering (CR 614.12), so the source is also tried
+    # put onto the battlefield rather than staged there.
+    for entered in (False, True):
+        for wanted in [*extra, *_BASICS, "Wastes"]:
+            yield _tap_one(case, ability, tapper, extra, wanted, entered)
+
+
+def _tap_one(
+    case: Case,
+    ability: TriggeredAbility,
+    tapper: str,
+    extra: tuple[str, ...],
+    wanted: str,
+    entered: bool,
+) -> Attempt:
+    def tap() -> tuple[PlayedScenario, Any]:
+        own = (case.card,) if not entered else ()
+        if tapper == ALICE:
+            scenario = _board(battlefield=(*own, *extra), hand=(case.card,), step=None)
+        else:
+            scenario = _board(
+                battlefield=own,
+                hand=(case.card,),
+                bob_battlefield=extra,
+                active=BOB,
+                step=None,
+            )
+        if entered:
+            state = _last(scenario, case.card, Zone.HAND, ALICE)
+            source = _prime(scenario, scenario.game.put_onto_battlefield(state, ALICE), ability)
+        else:
+            source = _source(scenario, case, ability)
+        scenario.start_at(Step.PRECOMBAT_MAIN)
+        land = next(
+            (s for s in _mana_sources(scenario, tapper) if s.name == wanted and s is not source),
+            None,
+        )
+        if source.attachment is not None and source.attachment.card_id is not None:
+            land = scenario.game.find_by_id(source.attachment.card_id)
+        if land is None:
+            raise _Unavailable(f"no untapped {wanted}")
+        pool_before = scenario.game.player(tapper).mana_pool.total
+        produced = land.card.produced_mana or []
+        color = Color(produced[0]) if len(produced) > 1 else None
+        try:
+            scenario.activate(land, username=tapper, color=color)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(str(error)) from error
+        scenario.mana_gained = scenario.game.player(tapper).mana_pool.total - pool_before
+        return scenario, source.id
+
+    return tap
+
+
+def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Iterator[Attempt]:
+    """An event about the source itself that one engine method performs."""
+    lowered = ability.condition.lower()
+
+    def happen() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability)
+        game = scenario.game
+        source = game.find_by_id(source_id)
+        if action == "dealt damage":
+            game.deal_damage(source, 1, source=_staged(scenario, "Icehide Golem", BOB))
+        elif action == "counters":
+            match = re.search(r"(\+1/\+1|[a-z]+) counters?", lowered)
+            game.add_counters(source, match.group(1) if match else "+1/+1", 1)
+        elif action == "monstrous":
+            game.become_monstrous(source, 1)
+        elif action == "transform":
+            source.transformed = False  # from the front face, into the back
+            transform_permanent(game, source)
+        elif action == "state":
+            match = re.search(
+                r"there are (?P<count>[\w,]+) or more (?P<kind>[a-z]+) counters", lowered
+            )
+            if match is None:
+                raise _Unavailable("no counter threshold in the condition")
+            raw = match.group("count").replace(",", "")
+            count = int(raw) if raw.isdigit() else parse_count(raw, article=False)
+            if count is None:
+                raise _Unavailable(f"cannot read {raw!r}")
+            game.add_counters(source, match.group("kind"), count)
+        return scenario, source_id
+
+    yield happen
+
+
+def _untapping(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """Tap the source by attacking with it (CR 508.1f), then play on to the
+    controller's next untap step (CR 502.3)."""
+
+    def run() -> tuple[PlayedScenario, Any]:
+        scenario = _board(battlefield=(case.card,), step=Step.DECLARE_ATTACKERS)
+        source = _source(scenario, case, ability)
+        try:
+            scenario.attack_with(source, defending=BOB)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(str(error)) from error
+        scenario.no_blocks()
+        return scenario, source.id
+
+    yield run
+
+
+def _targeting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """Make something the target of a spell (a probe spell cast at it) or of
+    an ability (the stock targeting tool activated at it), CR 115.1."""
+    for probe in ("Giant Growth", "Lightning Bolt"):
+
+        def spell(probe: str = probe) -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability, hand=(probe,))
+            _cast(scenario, probe, prefer=source_id)
+            return scenario, source_id
+
+        yield spell
+
+    def tool() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, battlefield=(_TARGETING_TOOL,))
+        tool_state = _staged(scenario, _TARGETING_TOOL)
+        action = _action_for(scenario, ALICE, ActionKind.ACTIVATE, tool_state.id, ability_index=0)
+        if action is None:
+            raise _Unavailable("the targeting tool cannot be activated")
+        targets = _pick(scenario, action.target_slots, source_id)
+        scenario.activate(tool_state, auto=True, targets=targets)
+        return scenario, source_id
+
+    yield tool
+
+
+def _morph_card() -> str | None:
+    for card in _format_pool():
+        if any(k.canonical.lower() == "morph" for k in keyword_abilities(card)):
+            return card.name
+    return None
+
+
+def _turning_face_up(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """Cast a card face down for its morph cost (CR 702.37c), then turn it
+    face up (CR 702.37e) - the source itself, or the pool's first morph card
+    for a condition about another permanent."""
+    card = case.printing
+    own = [k.canonical for k in keyword_abilities(card) if k.canonical.lower() == "morph"]
+    choices = ([(card.name, own[0])] if own else []) + [(_morph_card(), "Morph")]
+    for name, keyword in choices:
+        if name is None:
+            continue
+
+        def run(name: str = name, keyword: str = keyword) -> tuple[PlayedScenario, Any]:
+            if name == card.name:
+                scenario, source_id = _board(hand=(name,)), None
+            else:
+                scenario, source_id = _home(case, ability, hand=(name,))
+            _cast(scenario, name, keyword=keyword)
+            scenario.game.resolve_top()
+            face_down = next(
+                p for p in scenario.game.permanents_controlled_by(ALICE) if not p.face_up
+            )
+            scenario.turn_face_up(face_down, *_mana_sources(scenario, ALICE))
+            return scenario, source_id
+
+        yield run
+
+
+def _bending(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """Pay a waterbend cost (CR 701.67a) - the one bending event the engine
+    raises - by activating a pool ability whose cost prints one."""
+    tool = next(
+        (
+            card.name
+            for card in _format_pool()
+            for a in parse_abilities(card)
+            if isinstance(a, ActivatedAbility) and "waterbend" in a.cost.lower()
+        ),
+        None,
+    )
+    if tool is None:
+        return
+
+    def run() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, battlefield=(tool,))
+        tool_state = _staged(scenario, tool)
+        for index, activated in enumerate(scenario.game.activated_abilities(tool_state)):
+            if "waterbend" not in activated.cost.lower():
+                continue
+            action = _action_for(
+                scenario, ALICE, ActionKind.ACTIVATE, tool_state.id, ability_index=index
+            )
+            targets = _pick(scenario, action.target_slots) if action is not None else []
+            scenario.activate(tool_state, index=index, auto=True, targets=targets or None)
+            return scenario, source_id
+        raise _Unavailable("no waterbend cost")
+
+    yield run
+
+
+def _player_event(case: Case, ability: TriggeredAbility, action: str) -> Iterator[Attempt]:
+    """An event that happens to a player: drawing, gaining life,
+    discarding, getting energy, being dealt noncombat damage, scrying -
+    up to three times, for "your second/third card each turn"."""
+    lowered = ability.condition.lower()
+    players = [BOB] if "opponent" in lowered else [ALICE, BOB]
+    for player in players:
+
+        def happen(player: str = player) -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability)
+            game = scenario.game
+            for _ in range(3):
+                if action == "draw":
+                    game.draw_cards(player, 1)
+                elif action == "gain":
+                    game.gain_life(player, 1)
+                elif action == "discard":
+                    game.discard_cards(player, [game.player(player).hand[-1]])
+                elif action == "energy":
+                    game.add_player_counters(player, "energy", 1)
+                elif action == "noncombat damage":
+                    memnite = _first(scenario, "Memnite", ALICE)
+                    game.deal_damage(game.player(player), 1, source=memnite)
+                elif action == "scry":
+                    game.scry(player, 1)
+                if _drive(scenario, case, source_id) is not None:
+                    break
+            return scenario, source_id
+
+        yield happen
+
+
+def _graveyard_leaving(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    for name in ["Lightning Bolt", "Grizzly Bears"]:
+
+        def exile(name: str = name) -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability)
+            scenario.game.exile_cards([_last(scenario, name, Zone.GRAVEYARD, ALICE)])
+            return scenario, source_id
+
+        yield exile
+
+
+def _playing_exiled(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """Activate the source's own abilities, then play or cast what they
+    exiled with permission (CR 601.2, CR 305.1) - "a card exiled with this"
+    (CR 607.2a)."""
+
+    def play_exiled() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability)
+        game = scenario.game
+        source = game.find_by_id(source_id)
+        for index, _ in enumerate(game.activated_abilities(source)):
+            if game.why_cannot_activate(source, index, ALICE) is not None:
+                continue
+            scenario.activate(source, index=index, auto=True)
+            while game.stack:
+                game.resolve_top()
+            break
+        for action in legal_actions(game, ALICE):
+            if action.from_zone is not Zone.EXILE:
+                continue
+            exiled = game.find_by_id(action.card_id)
+            if action.kind is ActionKind.PLAY_LAND:
+                game.play_land(exiled, ALICE)
+                return scenario, source_id
+            if action.kind is ActionKind.CAST:
+                _cast(scenario, exiled.name, from_zone=Zone.EXILE)
+                return scenario, source_id
+        raise _Unavailable("nothing exiled to play")
+
+    yield play_exiled
+
+
+def _attempts(case: Case) -> Iterator[Attempt]:
+    ability = _trigger_ability(case.printing, case.text)
+    kinds = case.kind.split("+")
+    for kind in kinds:
+        if kind == TriggerEvent.ENTERS_THE_BATTLEFIELD.value:
+            yield from _self_entering(case, ability)
+            yield from _other_entering(case, ability)
+        elif kind in _REMOVALS:
+            yield from _leaving(case, ability, kind)
+        elif kind in ("attacks", "blocks", "combat_damage_to_players", "becomes_tapped"):
+            yield from _combat(case, ability)
+        elif kind == TriggerEvent.DEALS_DAMAGE.value:
+            lowered = ability.condition.lower()
+            if "is dealt damage" in lowered and "noncombat" not in lowered:
+                yield from _about_the_source(case, ability, "dealt damage")
+            elif "noncombat" in lowered:
+                yield from _player_event(case, ability, "noncombat damage")
+            else:
+                yield from _combat(case, ability)
+        elif kind == TriggerEvent.CAST_SPELL.value:
+            if "plays_land" in kinds:
+                yield from _playing_exiled(case, ability)
+            yield from _casting(case, ability)
+        elif kind in ("tapped_for_mana", "mana_added"):
+            yield from _tapping_for_mana(case, ability)
+        elif kind == "draws_a_card":
+            yield from _player_event(case, ability, "draw")
+        elif kind == "gains_life":
+            yield from _player_event(case, ability, "gain")
+        elif kind == "discards_a_card":
+            yield from _player_event(case, ability, "discard")
+        elif kind == "player_counters_put":
+            yield from _player_event(case, ability, "energy")
+        elif kind == "scry_or_surveil":
+            yield from _player_event(case, ability, "scry")
+        elif kind == "counters_put":
+            yield from _about_the_source(case, ability, "counters")
+        elif kind == "becomes_monstrous":
+            yield from _about_the_source(case, ability, "monstrous")
+        elif kind == "transforms":
+            yield from _about_the_source(case, ability, "transform")
+        elif kind == "state":
+            yield from _about_the_source(case, ability, "state")
+        elif kind in ("leaves_graveyard", "exiled_from_graveyard"):
+            yield from _graveyard_leaving(case, ability)
+        elif kind == "becomes_untapped":
+            yield from _untapping(case, ability)
+        elif kind == "becomes_target":
+            yield from _targeting(case, ability)
+        elif kind == "turned_face_up":
+            yield from _turning_face_up(case, ability)
+        elif kind == "waterbends":
+            yield from _bending(case, ability)
+    # Every kind also gets whole turns played with the source in play:
+    # beginning-of-step, draw-step draws, untap steps and Saga chapters all
+    # happen on their own there, and so does anything an attempt above
+    # started (an attack that tapped the source untaps next turn).
+    yield from _turns(case, ability)
+
+
+#: Attempts whose event happens later in the turn (or in the next ones), so
+#: `_drive` keeps playing forward after them.
+_ADVANCING = {"staged", "entered", "run"}
+
+
+# ---------------------------------------------------------------------------
+# Kinds the harness cannot raise generically - reviewed, one reason per event
+# kind, never per card.
+# ---------------------------------------------------------------------------
+
+TRIGGER_KIND_SKIPS: dict[str, str] = {}
+
+
+# ---------------------------------------------------------------------------
+# Real engine gaps this sweep found that are larger than a local fix - left
+# failing, `xfail(strict=True)`, for the silent-card campaign. `strict` makes
+# a fix announce itself: the entry has to be removed the day the card works.
+# Keyed by case id because each is a finding about one clause, not a harness
+# limitation (those are `TRIGGER_KIND_SKIPS`, per event kind).
+# ---------------------------------------------------------------------------
+
+KNOWN_ENGINE_GAPS: dict[str, str] = {
+    "Illuminated Folio #0 [activated]": (
+        "cost 'Reveal two cards from your hand that share a color' cannot be built"
+    ),
+    "Tameshi, Reality Architect #0 [activated]": (
+        "cost 'Return a land you control to its owner's hand' cannot be built"
+    ),
+    "The Filigree Sylex #2 [activated]": (
+        "cost 'Remove ten oil counters from among permanents you control and "
+        "sacrifice The Filigree Sylex' cannot be built"
+    ),
+}
+
+
+def _params(cases: tuple[Case, ...]) -> list[Any]:
+    return [
+        pytest.param(
+            case,
+            id=case.id,
+            marks=[pytest.mark.xfail(strict=True, reason=KNOWN_ENGINE_GAPS[case.id])]
+            if case.id in KNOWN_ENGINE_GAPS
+            else [],
+        )
+        for case in cases
+    ]
+
+
+# ---------------------------------------------------------------------------
+# The report.
+# ---------------------------------------------------------------------------
+
+_REPORT: dict[str, Counter[str]] = {"triggered": Counter(), "activated": Counter()}
+
+
+def _reported(case: Case, outcome: str) -> str:
+    if case.id in KNOWN_ENGINE_GAPS and outcome != "executed":
+        return "known engine gap (xfail)"
+    return outcome
+
+
+def _record(family: str, kind: str, outcome: str) -> None:
+    _REPORT[family][f"{kind}: {outcome}"] += 1
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _report_counts(request: pytest.FixtureRequest) -> Iterator[None]:
+    """Print executed/skipped/failed per event kind when the module ends."""
+    yield
+    reporter = request.config.pluginmanager.get_plugin("terminalreporter")
+    if reporter is None:
+        return
+    for family, counts in _REPORT.items():
+        if not counts:
+            continue
+        reporter.write_line(f"\nbehavioural sweep - {family}, per event kind:")
+        for key in sorted(counts):
+            reporter.write_line(f"  {key}: {counts[key]}")
+
+
+# ---------------------------------------------------------------------------
+# The trigger sweep.
+# ---------------------------------------------------------------------------
+
+
+def _resolve_ours(scenario: PlayedScenario, found: AbilityOnStack) -> ResolutionEffect:
+    """Resolve whatever went on the stack above the ability, then the
+    ability itself, measuring what it did."""
+    while scenario.game.stack and scenario.game.stack[-1] is not found:
+        scenario.game.resolve_top()
+    return scenario.resolve_top_measured()
+
+
+def _source_notices(scenario: PlayedScenario, case: Case) -> list[str]:
+    """Notices the engine raised about this card while the event played
+    out - an unread intervening "if" (CR 603.4), cast condition or target
+    restriction is the engine failing closed on the ability rather than
+    performing it. CR 603.3d's plain "no legal target" is not one: it is
+    reported with the attempt instead."""
+    found = []
+    for field in ("intervening_if_notices", "targeting_notices", "cast_condition_notices"):
+        for notice in getattr(scenario.game, field):
+            kind = getattr(notice, "kind", None)
+            if kind is not None and kind.value == "no_legal_targets":
+                continue
+            if _same_card(notice.source_name, case.card):
+                text = getattr(notice, "clause", None) or getattr(notice, "condition", None)
+                found.append(f"{field}: {text or notice.text!r}")
+    return found
+
+
+def _wrongly_untargetable(
+    scenario: PlayedScenario, case: Case, ability: TriggeredAbility, source_id: Any
+) -> list[str]:
+    """The objects the target restriction itself accepts although CR 603.3d
+    removed the ability for having no legal target - on the controller's own
+    turn, where nothing on the stock board has a targeting protection (the
+    opponent's permanents only *mention* one; Kaito's own-turn hexproof is
+    his controller's turn, not this one). A non-empty answer is a targeting
+    protection read where there is none: the Devourer of Destiny defect."""
+    game = scenario.game
+    if not _no_target(scenario, case) or game.active_player.username != ALICE:
+        return []
+    if source_id is None:
+        source_id = next(
+            (s.id for s in [*game.stack, *game.battlefield] if _same_card(s.name, case.card)),
+            None,
+        )
+    requirements = profile_for_text(ability.text).requirements
+    found = []
+    for candidate in _objects(scenario):
+        if isinstance(candidate, AbilityOnStack) or getattr(candidate, "id", None) == source_id:
+            continue
+        if any(r.rejects(candidate, ALICE, game, source_id) is None for r in requirements):
+            found.append(getattr(candidate, "name", None) or getattr(candidate, "username", "?"))
+    return found
+
+
+def _no_target(scenario: PlayedScenario, case: Case) -> bool:
+    return any(
+        notice.kind.value == "no_legal_targets" and _same_card(notice.source_name, case.card)
+        for notice in scenario.game.targeting_notices
+    )
+
+
+def run_trigger_case(case: Case) -> tuple[str, str]:
+    """`("executed", detail)` when the ability fired and did something,
+    `("failed", detail)` otherwise."""
+    ability = _trigger_ability(case.printing, case.text)
+    tried: list[str] = []
+    outcome: tuple[str, str] | None = None
+    closed: str | None = None
+    for variant in VARIANTS:
+        _STAGING.variant, _STAGING.case = variant, case
+        _STAGING.material = _target_material(ability.text)
+        try:
+            for attempt in _attempts(case):
+                try:
+                    scenario, source_id = attempt()
+                except (_Unavailable, ValueError) as unavailable:
+                    tried.append(f"{variant} {attempt.__name__}: unavailable: {unavailable}")
+                    continue
+                advance = attempt.__name__ in _ADVANCING
+                found = _drive(scenario, case, source_id, advance=advance)
+                if found is None:
+                    if getattr(scenario, "mana_gained", 0) > 1:
+                        return "executed", "triggered mana ability resolved on the spot"
+                    wrongly = _wrongly_untargetable(scenario, case, ability, source_id)
+                    if wrongly:
+                        return "failed", (
+                            f"{variant} {attempt.__name__}: removed for no legal target "
+                            f"(CR 603.3d), yet the target restriction accepts {wrongly} - "
+                            "a targeting protection read where there is none (CR 702.11b)"
+                        )
+                    notices = _source_notices(scenario, case)
+                    if notices:
+                        closed = (
+                            f"{variant} {attempt.__name__}: failed closed: {sorted(set(notices))}"
+                        )
+                    why = "no legal target (CR 603.3d)" if _no_target(scenario, case) else ""
+                    tried.append(f"{variant} {attempt.__name__}: never reached the stack {why}")
+                    continue
+                effect = _resolve_ours(scenario, found)
+                if effect.did_something:
+                    return "executed", repr(effect)
+                outcome = "failed", f"{variant} {attempt.__name__}: resolved: {effect!r}"
+        finally:
+            _STAGING.variant, _STAGING.case, _STAGING.material = QUIET, None, ()
+    if outcome is not None:
+        return outcome
+    if closed is not None:
+        return "failed", closed
+    return "failed", "the ability never reached the stack: " + "; ".join(tried[-8:])
+
+
+@pytest.mark.parametrize("case", _params(trigger_cases()))
+def test_every_handled_trigger_fires_and_does_something(case: Case) -> None:
+    if case.kind in TRIGGER_KIND_SKIPS:
+        _record("triggered", case.kind, "skipped")
+        pytest.skip(TRIGGER_KIND_SKIPS[case.kind])
+    outcome, detail = run_trigger_case(case)
+    _record("triggered", case.kind, _reported(case, outcome))
+    assert outcome == "executed", f"{case.card}: {case.text!r} - {detail}"
+
+
+# ---------------------------------------------------------------------------
+# The activation sweep.
+# ---------------------------------------------------------------------------
+
+#: The `begin_activating`/`off_zone_activation` keyword each object-choosing
+#: cost component is paid through (CR 601.2b, CR 602.2b).
+_COST_KEYWORDS = {
+    ComponentKind.SACRIFICE: "sacrificing",
+    ComponentKind.DISCARD: "discarding",
+    ComponentKind.EXILE: "exiling",
+    ComponentKind.TAP: "tapping",
+    ComponentKind.REVEAL: "revealing",
+}
+
+
+def _activated_ability(card: Card, text: str) -> ActivatedAbility:
+    for ability in parse_abilities(card):
+        if isinstance(ability, ActivatedAbility) and ability.text == text:
+            return ability
+    raise AssertionError(f"{card.name}: no activated ability reads {text!r}")
+
+
+def _x_for(ability: ActivatedAbility) -> int:
+    return 1 if "{x}" in ability.cost.lower() or " x " in f" {ability.cost.lower()} " else 0
+
+
+def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbility) -> None:
+    """What the cost or the restriction asks for that the stock board does
+    not start with: energy (CR 107.14), counters to remove (CR 122.1),
+    loyalty for a minus ability (CR 606.6), the level below a Class's bar
+    (CR 716.2a), a card exiled with the source for a "card exiled with this"
+    target (CR 607.2a), and an ability on the stack to target (CR 115.1c)."""
+    game = scenario.game
+    cost = ability.cost.lower()
+    if "{e}" in cost:
+        game.add_player_counters(ALICE, "energy", 10)
+    for match in re.finditer(
+        r"remove (?:an?|one|two|three|x|\d+) (\S+) counters? from (this|~)", cost
+    ):
+        game.add_counters(source, match.group(1), 5)
+    if ability.loyalty is not None:
+        minus = re.match(r"[−-](\d+)", ability.cost.strip())
+        if minus is not None:
+            game.add_counters(source, "loyalty", int(minus.group(1)))
+    if ability.class_level_target is not None:
+        source.class_level = ability.class_level_target - 1
+    profile = profile_for_text(ability.effect)
+    if any(r.exiled_with_source for r in profile.requirements):
+        # The source's own linked exile (CR 607.2a) fills when a creature
+        # dies with it in play - kill the opponent's.
+        victims = [p for p in game.permanents_controlled_by(BOB) if Type.CREATURE in p.types]
+        if victims:
+            game.destroy(victims[0])
+        _settle(scenario)
+        while game.stack:
+            game.resolve_top()
+    if any(r.allows_abilities for r in profile.requirements):
+        tool = _first(scenario, _TARGETING_TOOL, ALICE)
+        action = _action_for(scenario, ALICE, ActionKind.ACTIVATE, tool.id, ability_index=0)
+        if action is not None:
+            scenario.activate(tool, auto=True, targets=_pick(scenario, action.target_slots))
+
+
+def _cost_choices(
+    scenario: PlayedScenario, source: CardState, index: int, x_value: int, *, off_zone: bool
+) -> dict[str, list[CardState]]:
+    """The objects each "sacrifice/discard/exile/tap [something]" cost piece
+    is paid with (CR 601.2b): the first ones the cost's own `CardRequirement`
+    accepts, never the source itself unless the cost names it, lands last."""
+    game = scenario.game
+    try:
+        total = game.activation_cost(source, index, ALICE, x_value=x_value)
+    except ValueError:
+        return {}
+    chosen: dict[str, list[CardState]] = {}
+    taken: set[Any] = set()
+    for component in total.components:
+        keyword = _COST_KEYWORDS.get(component.kind)
+        if keyword is None or component.cards or component.required <= 0:
+            continue
+        if component.kind in (ComponentKind.SACRIFICE, ComponentKind.TAP):
+            pool = [
+                p
+                for p in game.permanents_controlled_by(ALICE)
+                if component.kind is not ComponentKind.TAP or not p.tapped
+            ]
+        elif component.kind in (ComponentKind.DISCARD, ComponentKind.REVEAL):
+            pool = list(game.player(ALICE).hand)
+        else:
+            pool = list(game.player(ALICE).cards_in(component.zone))
+        # The source itself may pay a cost that names no "other" (four
+        # Persistent Petitioners tapping themselves); never a sacrifice of it.
+        own_ok = component.kind is ComponentKind.TAP and not getattr(
+            component.requirement, "excludes_source", False
+        )
+        candidates = [
+            c
+            for c in pool
+            if (c is not source or own_ok)
+            and c.id not in taken
+            and (
+                component.requirement is None
+                or component.requirement.why_not(c, game, ALICE) is None
+            )
+        ]
+        candidates.sort(key=lambda c: c.card.is_land)
+        picked = candidates[: component.required]
+        taken.update(c.id for c in picked)
+        chosen.setdefault(keyword, []).extend(picked)
+    return chosen
+
+
+def _cost_material(case: Case) -> tuple[Material, ...]:
+    """Real printings - or predefined tokens (CR 111.10) - for a cost piece
+    the stock board cannot pay ("Sacrifice a Food", "Tap four untapped
+    Advisors you control"), found by the cost's own `CardRequirement`."""
+    return _cost_material_for(case.card, case.text)
+
+
+@cache
+def _cost_material_for(card_name: str, text: str) -> tuple[Material, ...]:
+    card = pool()[card_name]
+    ability = _activated_ability(card, text)
+    saved = _STAGING.variant, _STAGING.material
+    _STAGING.variant, _STAGING.material = QUIET, _target_material(ability.effect)
+    try:
+        scenario, source, index = _activation_board(case_for(card_name, text), ability, False)
+        if source is None or index is None:
+            return ()
+        game = scenario.game
+        try:
+            total = game.activation_cost(source, index, ALICE, x_value=_x_for(ability))
+        except ValueError:
+            return ()
+        material: list[Material] = []
+        choices = _cost_choices(scenario, source, index, _x_for(ability), off_zone=False)
+        for component in total.components:
+            keyword = _COST_KEYWORDS.get(component.kind)
+            if keyword is None or component.cards or component.required <= 0:
+                continue
+            have = len(choices.get(keyword, []))
+            if have >= component.required:
+                continue
+            requirement = component.requirement
+            if requirement is not None and requirement.same_name_as is not None:
+                # "a legendary card with the same name as a legendary
+                # permanent you control": the pair, one in each place.
+                pair = _same_name_pair(requirement)
+                if pair is not None:
+                    material += [
+                        Material(pair, ALICE, Zone.BATTLEFIELD),
+                        Material(pair, ALICE, Zone.HAND),
+                    ]
+                continue
+            found = _cost_card(component)
+            if found is not None:
+                material += [found] * (component.required - have)
+        return tuple(material)
+    finally:
+        _STAGING.variant, _STAGING.material = saved
+
+
+def case_for(card_name: str, text: str) -> Case:
+    return Case(card_name, text, "activated", 0)
+
+
+def _same_name_pair(requirement: Any) -> str | None:
+    """A permanent card that satisfies both halves of a "with the same name
+    as a [quality] permanent you control" cost."""
+    for card in _format_pool():
+        if card.card_faces or not set(card.types) & _PERMANENT_TYPES:
+            continue
+        if set(requirement.supertypes) <= set(card.supertypes) and set(
+            requirement.same_name_as.supertypes
+        ) <= set(card.supertypes):
+            return card.name
+    return None
+
+
+def _cost_card(component: Any) -> Material | None:
+    requirement = component.requirement
+    if component.kind in (ComponentKind.DISCARD, ComponentKind.REVEAL):
+        zone = Zone.HAND
+    elif component.kind is ComponentKind.EXILE:
+        zone = component.zone
+    else:
+        zone = Zone.BATTLEFIELD
+    if requirement is not None and zone is Zone.BATTLEFIELD:
+        for token in PREDEFINED:
+            if token.lower() in {s.lower() for s in requirement.subtypes}:
+                return Material(token, ALICE, Zone.BATTLEFIELD)
+    tried = 0
+    for card in _format_pool():
+        if card.card_faces:
+            continue
+        if zone is Zone.BATTLEFIELD and not set(card.types) & _PERMANENT_TYPES:
+            continue
+        if requirement is not None:
+            if requirement.types and not set(requirement.types) & set(card.types):
+                continue
+            # Printed plural ("Advisors") or singular - compare stems.
+            wanted = {s.lower().rstrip("s") for s in requirement.subtypes}
+            if wanted and not wanted & {s.lower().rstrip("s") for s in card.subtypes}:
+                continue
+        tried += 1
+        if tried > 12:
+            return None
+        scenario = _board(
+            battlefield=(card.name,) if zone is Zone.BATTLEFIELD else (),
+            hand=(card.name,) if zone is Zone.HAND else (),
+            graveyard=(card.name,) if zone is Zone.GRAVEYARD else (),
+        )
+        state = _last(scenario, card.name, zone, ALICE)
+        if requirement is None or requirement.why_not(state, scenario.game, ALICE) is None:
+            return Material(card.name, ALICE, zone)
+    return None
+
+
+def _activation_board(
+    case: Case, ability: ActivatedAbility, enters: bool, *, combat: bool = False
+) -> tuple[PlayedScenario, CardState | None, int | None]:
+    """A board with the source on the battlefield - staged, or put there
+    this turn (`enters`: a planeswalker's loyalty, CR 306.5b) - and the index
+    of the ability in `Game.activated_abilities` (CR 602.1)."""
+    card = case.printing
+    if combat:
+        # "target attacking or blocking creature" (CR 506.3): the
+        # controller's own stock creature attacks, the source stays home.
+        scenario = _board(battlefield=(card.name,), step=Step.DECLARE_ATTACKERS)
+        scenario.attack_with(_first(scenario, "Memnite", ALICE), defending=BOB)
+        scenario.no_blocks()
+        source = _source(scenario, case, ability)
+    elif enters:
+        scenario = _board(hand=(card.name,))
+        state = _last(scenario, card.name, Zone.HAND, ALICE)
+        source = scenario.game.put_onto_battlefield(
+            state, ALICE, transformed=_back_face(card, ability)
+        )
+        _prime(scenario, source, ability)
+        _settle(scenario)
+        while scenario.game.stack:
+            scenario.game.resolve_top()
+            _settle(scenario)
+    else:
+        scenario = _board(battlefield=(card.name,))
+        source = _source(scenario, case, ability)
+    indexes = [
+        i for i, a in enumerate(scenario.game.activated_abilities(source)) if a.text == case.text
+    ]
+    return scenario, source, indexes[0] if indexes else None
+
+
+def _activate(
+    scenario: PlayedScenario, source: CardState, index: int, ability: ActivatedAbility
+) -> Any:
+    """Activate once (CR 602.2): announce with the first legal targets and
+    the cost's chosen objects, pay mana with everything but the source, and
+    put it on the stack."""
+    game = scenario.game
+    refusal = game.why_cannot_activate(source, index, ALICE)
+    if refusal is not None:
+        raise _Unavailable(f"refused: {refusal}")
+    x_value = _x_for(ability)
+    action = _action_for(scenario, ALICE, ActionKind.ACTIVATE, source.id, ability_index=index)
+    targets = _pick(scenario, action.target_slots) if action is not None else []
+    choices = _cost_choices(scenario, source, index, x_value, off_zone=False)
+    sacrificing = choices.get("sacrificing")
+    if sacrificing is None and re.search(r"sacrifice (this|~)", ability.cost.lower()):
+        sacrificing = [source]
+    try:
+        payment = game.begin_activating(
+            source,
+            index,
+            ALICE,
+            sacrificing=sacrificing,
+            discarding=choices.get("discarding"),
+            exiling=choices.get("exiling"),
+            revealing=choices.get("revealing"),
+            tapping=choices.get("tapping"),
+            x_value=x_value,
+            targets=targets or None,
+        )
+        payment.auto_tap([p for p in game.permanents_controlled_by(ALICE) if p is not source])
+        payment.pay()
+        on_stack = game.activate_ability(
+            source,
+            index,
+            ALICE,
+            x_value=x_value,
+            exiled_for_cost=(choices.get("exiling") or [None])[0],
+            sacrificed_for_cost=sacrificing,
+        )
+        game.retain_priority(ALICE)
+        return on_stack
+    except (ValueError, AssertionError) as error:
+        raise _Unavailable(f"activation refused: {error}") from error
+
+
+def run_activation_case(case: Case) -> tuple[str, str]:
+    card = case.printing
+    ability = _activated_ability(card, case.text)
+    if ability.zone not in (None, Zone.BATTLEFIELD):
+        return _run_off_zone(case, ability)
+    tried: list[str] = []
+    outcome: tuple[str, str] | None = None
+    profile = profile_for_text(ability.effect)
+    in_combat = any(r.combat_states for r in profile.requirements)
+    for variant in VARIANTS:
+        _STAGING.variant, _STAGING.case = variant, case
+        _STAGING.material = _target_material(ability.effect) + _cost_material(case)
+        try:
+            for enters in [False, True]:
+                scenario, source, index = _activation_board(
+                    case, ability, enters, combat=in_combat and not enters
+                )
+                if source is None or index is None:
+                    tried.append(f"{variant}: the permanent does not list the ability")
+                    continue
+                _stack_material(scenario)
+                _prepare(scenario, source, ability)
+                try:
+                    on_stack = _activate(scenario, source, index, ability)
+                except _Unavailable as unavailable:
+                    tried.append(f"{variant}: {unavailable}")
+                    continue
+                _settle(scenario)
+                if on_stack is None:
+                    return "executed", "resolved as a mana ability"
+                effect = _resolve_ours(scenario, on_stack)
+                if effect.did_something:
+                    return "executed", repr(effect)
+                outcome = "failed", f"{variant}: resolved: {effect!r}"
+        finally:
+            _STAGING.variant, _STAGING.case, _STAGING.material = QUIET, None, ()
+    if outcome is not None:
+        return outcome
+    return "failed", "; ".join(tried[-6:])
+
+
+def _off_zone_home(case: Case, ability: ActivatedAbility) -> tuple[PlayedScenario, CardState]:
+    """The card where its ability functions (CR 113.6j, 113.6m): in hand, in
+    the graveyard, or suspended in exile (CR 702.62a) for an ability that
+    functions "only if this card is suspended"."""
+    card = case.printing
+    combat = any(r.combat_states for r in profile_for_text(ability.effect).requirements)
+    where: dict[str, Any] = {}
+    if combat:
+        # "target attacking or blocking creature": during the opponent's
+        # attack (CR 506.3), where such a creature exists.
+        where = {"bob_battlefield": ("Memnite",), "active": BOB, "step": Step.DECLARE_ATTACKERS}
+    if ability.zone is Zone.GRAVEYARD:
+        scenario = _board(graveyard=(card.name,), **where)
+        state = _last(scenario, card.name, Zone.GRAVEYARD, ALICE)
+    else:
+        scenario = _board(hand=(card.name,), **where)
+        state = _last(scenario, card.name, Zone.HAND, ALICE)
+    if combat:
+        scenario.attack_with(_staged(scenario, "Memnite", BOB), defending=ALICE)
+        scenario.no_blocks()
+    if ability.zone is Zone.GRAVEYARD:
+        return scenario, state
+    if ability.zone is Zone.EXILE:
+        action = MarkedExile.suspend(scenario.game, state, ALICE)
+        payment = action.begin_paying()
+        payment.auto_tap(scenario.game.permanents_controlled_by(ALICE))
+        payment.pay()
+        action.take()
+        state = _last(scenario, card.name, Zone.EXILE, ALICE)
+    return scenario, state
+
+
+def _run_off_zone(case: Case, ability: ActivatedAbility) -> tuple[str, str]:
+    """An ability that functions from a hand, a graveyard or exile,
+    activated through `off_zone_activation` (the index space legal_actions'
+    `ACTIVATE_OFF_ZONE` names)."""
+    card = case.printing
+    entries = [i for i, e in enumerate(off_zone_abilities(card)) if e.ability.text == case.text]
+    if not entries:
+        return "failed", "not listed among the off-zone abilities"
+    index = entries[0]
+    tried: list[str] = []
+    for variant in (QUIET, BUSY):
+        _STAGING.variant = variant
+        _STAGING.material = _target_material(ability.effect) + _off_zone_cost_material(case)
+        try:
+            scenario, state = _off_zone_home(case, ability)
+            game = scenario.game
+            _stack_material(scenario)
+            _prepare(scenario, state, ability)
+            action = _action_for(
+                scenario, ALICE, ActionKind.ACTIVATE_OFF_ZONE, state.id, ability_index=index
+            )
+            targets = _pick(scenario, action.target_slots) if action is not None else []
+            choices = _off_zone_choices(scenario, state, ability)
+            try:
+                activation = off_zone_activation(
+                    game,
+                    state,
+                    ALICE,
+                    index,
+                    targets=targets or None,
+                    sacrificing=choices.get("sacrificing"),
+                    discarding=choices.get("discarding"),
+                    exiling=choices.get("exiling"),
+                )
+                payment = activation.begin_paying()
+                payment.auto_tap(game.permanents_controlled_by(ALICE))
+                payment.pay()
+                on_stack = activation.activate()
+            except (ValueError, AssertionError) as error:
+                tried.append(f"{variant}: activation refused: {error}")
+                continue
+            _settle(scenario)
+            effect = _resolve_ours(scenario, on_stack)
+            if effect.did_something:
+                return "executed", repr(effect)
+            tried.append(f"{variant}: resolved: {effect!r}")
+        finally:
+            _STAGING.variant, _STAGING.material = QUIET, ()
+    return "failed", "; ".join(tried)
+
+
+def _off_zone_pieces(ability: ActivatedAbility) -> list[tuple[str, Any]]:
+    """The sacrifice/discard/exile pieces of an off-battlefield cost other than the
+    card itself, as (keyword, `CostComponent`) - read by the engine's own
+    `cost_component_for_phrase`."""
+    pieces = []
+    for part in ability.cost.split(","):
+        phrase = part.strip()
+        lowered = phrase.lower()
+        for verb, keyword in (
+            ("sacrifice", "sacrificing"),
+            ("discard", "discarding"),
+            ("exile", "exiling"),
+        ):
+            if lowered.startswith(verb) and not re.match(rf"{verb} (this|~)", lowered):
+                pieces.append((keyword, cost_component_for_phrase(phrase)))
+    return pieces
+
+
+def _off_zone_choices(
+    scenario: PlayedScenario, state: CardState, ability: ActivatedAbility
+) -> dict[str, list[CardState]]:
+    """The objects an off-battlefield sacrifice/discard cost is paid with,
+    accepted by the cost's own `CardRequirement.why_not`, lands last."""
+    game = scenario.game
+    chosen: dict[str, list[CardState]] = {}
+    for keyword, component in _off_zone_pieces(ability):
+        requirement = getattr(component, "requirement", None)
+        if keyword == "sacrificing":
+            pool = game.permanents_controlled_by(ALICE)
+        elif keyword == "exiling":
+            pool = list(game.player(ALICE).cards_in(getattr(component, "zone", Zone.GRAVEYARD)))
+        else:
+            pool = list(game.player(ALICE).hand)
+        for candidate in sorted(pool, key=lambda c: c.card.is_land):
+            if candidate is not state and (
+                requirement is None or requirement.why_not(candidate, game, ALICE) is None
+            ):
+                chosen[keyword] = [candidate]
+                break
+    return chosen
+
+
+def _off_zone_cost_material(case: Case) -> tuple[Material, ...]:
+    """A predefined token (CR 111.10) for an off-battlefield "Sacrifice a
+    Food" cost the stock board cannot pay."""
+    ability = _activated_ability(case.printing, case.text)
+    material = []
+    for keyword, component in _off_zone_pieces(ability):
+        requirement = getattr(component, "requirement", None)
+        if keyword != "sacrificing" or requirement is None:
+            continue
+        for token in PREDEFINED:
+            if token.lower() in {s.lower() for s in requirement.subtypes}:
+                material.append(Material(token, ALICE, Zone.BATTLEFIELD))
+    return tuple(material)
+
+
+@pytest.mark.parametrize("case", _params(activation_cases()))
+def test_every_handled_activation_resolves_and_does_something(case: Case) -> None:
+    outcome, detail = run_activation_case(case)
+    _record("activated", "activated", _reported(case, outcome))
+    assert outcome == "executed", f"{case.card}: {case.text!r} - {detail}"

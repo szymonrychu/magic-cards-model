@@ -23,7 +23,20 @@ description = "Format and autofix"
 run = ["uv run ruff format .", "uv run ruff check --fix ."]
 
 [tasks.test]
-description = "Run the test suite"
+description = "Run the test suite (all but the behavioural pool sweep)"
+run = "uv run pytest --ignore=tests/test_behavioural_sweep.py"
+
+# The behavioural pool sweep (`tests/test_behavioural_sweep.py`) executes
+# every handled trigger and activation of every Modern/Pioneer/Standard card
+# in the pool through the real engine - several minutes, so it is its own
+# task rather than part of the quick `test`. `test:full` (everything, sweep
+# included) is what the full-suite/merge flow runs before anything lands.
+[tasks."test:behaviour"]
+description = "Run the behavioural pool sweep: every handled trigger fires, every activation resolves"
+run = "uv run pytest tests/test_behavioural_sweep.py"
+
+[tasks."test:full"]
+description = "Run the whole suite, behavioural pool sweep included (the merge gate)"
 run = "uv run pytest"
 
 # The S1 dispatch-chain winner fingerprint (engine-modularization plan) is

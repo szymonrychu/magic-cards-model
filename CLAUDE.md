@@ -164,6 +164,15 @@ abilities only. Triggered, activated, and static abilities are read by the
 dispatchers in `machines/effects.py` (`effect_for`, `trigger_effect_for`,
 `activated_effect_for`) and their parsers.
 
+**Parsed is not played.** `card_support`/`sweep_pool.py` say a dispatcher
+returned an effect for the text; `tests/test_behavioural_sweep.py` plays it.
+For every handled trigger and activation of every in-format pool card it
+raises the real event (or activates the ability) through the engine and
+fails when the ability never reaches the stack, resolves to nothing, or fails
+closed with a notice. A new card, parser or shape is not done until
+`mise run test:behaviour` is green for it - see `docs/engine-coverage.md`'s
+"The behavioural sweep".
+
 `scripts/sweep_pool.py` is how this is measured: `--effects` sorts every clause
 into handled / notice / static_unaudited / **silent**, and `--keywords` lists
 keywords that parse but that no machine executes. Silent falling while notice
@@ -250,7 +259,10 @@ passes.
 
 - Python 3.13, ruff for lint and format, pytest for tests, config in
   `pyproject.toml`.
-- `mise run test`, `mise run lint`, `mise run fmt`.
+- `mise run test`, `mise run lint`, `mise run fmt`. `mise run test` leaves
+  out the behavioural pool sweep; `mise run test:behaviour` runs it alone
+  (several minutes), and `mise run test:full` runs everything - the
+  full-suite/merge gate: nothing lands on `main` without `test:full` green.
 - `Card` is the immutable Scryfall printing. Anything mutable in a game belongs
   on `CardState` or above - do not add game state to `Card`.
 - Legality is clamped to standard, pioneer, and modern. Print, market, and

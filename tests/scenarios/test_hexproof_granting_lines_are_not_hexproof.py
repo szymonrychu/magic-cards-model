@@ -178,39 +178,8 @@ def test_only_keyword_lines_in_the_pool_carry_hexproof():
     assert offenders == []
 
 
-def _unconditional_cast_trigger_cards() -> list[str]:
-    """Pool cards printing a "When you cast this spell" trigger that is not a
-    keyword's reminder text and has no intervening "if" (CR 603.4)."""
-    names = []
-    for name, card in sorted(pool().items()):
-        if "//" in name:
-            continue
-        for line in _printed_lines(card):
-            text = _REMINDER.sub("", line)
-            match = re.search(r"when you cast this spell,? (?P<rest>.*)", text, re.IGNORECASE)
-            if match and not match.group("rest").lower().startswith("if "):
-                names.append(name)
-                break
-    return names
-
-
-_LANDS = ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes"] * 3
-_BOB = ["Kaito, Bane of Nightmares", "Dragonfire Blade", "Shadowspear", "Forest"]
-
-
-@pytest.mark.parametrize("name", _unconditional_cast_trigger_cards())
-def test_every_pool_cast_trigger_fires_when_cast(name):
-    """Cast each such card on a board where the opponent's only coloured
-    non-creature permanent is Kaito and the only artifacts are hexproof
-    *granters*; its cast trigger must reach the stack (CR 603.2)."""
-    scenario = (
-        Scenario()
-        .player("alice", library=["Forest"] * 5, hand=[name], battlefield=_LANDS)
-        .player("bob", library=["Forest"] * 5, battlefield=_BOB)
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-
-    scenario.cast_onto_stack(name, auto=True)
-    triggered = [item for item in scenario.stack_names() if item == f"{name}'s triggered ability"]
-    assert triggered, f"{name}'s cast trigger never reached the stack: {scenario.stack_names()}"
+# The pool-wide "every cast trigger reaches the stack against Kaito and the
+# hexproof granters" guard that stood here is now one kind among all of them
+# in `tests/test_behavioural_sweep.py`, whose stock opposing board is that
+# same adversarial board: every trigger event in the pool, not only casting,
+# is raised against it and must reach the stack and do something.

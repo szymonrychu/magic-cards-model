@@ -4167,3 +4167,92 @@ numbers verified with `mise run rules:find`: 105.1, 105.2, 107.1b, 107.2,
 | "The first `<type>[ or <type>]` spell you cast each turn costs {N}/{C} (or {1}) less to cast [for each `<count>`]" (CR 601.2f, 118.7b-c) | `cost._FIRST_SPELL_EACH_TURN_COST_DECREASE`, `Game._counted_type_decrease` | Eluge | Melek, Reforged Researcher | `test_flood_counters.py` |
 | "`<Types>` spells you cast cost {N} less to cast for each `<count>`" | `cost._TYPE_COST_DECREASE` "for each" tail | - | Mindsplice Apparatus | `test_flood_counters.py` |
 | "for each `<qualifier>` you control with a `<kind>` counter on it" | `effects._QUALIFIER_YOU_CONTROL_RE` counter filter | Eluge (cost count) | Armorcraft Judge | `test_flood_counters.py` |
+
+## The behavioural sweep: parsed is not played (`tests/test_behavioural_sweep.py`)
+
+`card_support` (and `sweep_pool.py` on it) is static: "a dispatcher returned
+an effect for this text". It said `handled` for Devourer of Destiny's cast
+trigger on the day that trigger vanished in production (b4316b8; fixed by
+838d1b0: a line merely *mentioning* hexproof made Kaito hexproof, so CR 603.3d
+removed the only-target trigger). The behavioural sweep executes instead.
+
+**What it runs.** For every card in the fixture pool that exists in Modern,
+Pioneer or Standard (`support.in_target_formats`), every triggered and every
+activated clause `card_support` classifies `handled`:
+
+- a trigger's event is raised through the real engine path - chosen by the
+  engine's own parsed `TriggeredAbility.event` (or `_unread_trigger_events`
+  for `event=None`), never by card name: put onto the battlefield or cast
+  (ETB, "when you cast this spell"), destroy/sacrifice/exile/bounce (dies,
+  leaves), declare attackers/blockers and deal combat damage, play whole
+  turns (every "at the beginning of", draw step, untap step, Saga chapter),
+  cast a probe spell, tap a mana source, draw/gain/discard/scry/energy,
+  counters, monstrosity, transform, morph face up, targeting, waterbend.
+  "Other object" conditions take their probe from `support._probe_cards`
+  (the engine's own reachability probe);
+- an activation is announced through `Game.begin_activating`/
+  `activate_ability` (or `off_zone_activation` for a hand/graveyard/exile
+  ability) with the first legal targets and the cost's objects chosen by the
+  cost's own `CardRequirement`;
+- it passes only if the ability reaches the stack (CR 603.3) - or, a
+  triggered mana ability, resolves on the spot (CR 605.4a) - and resolving
+  it changes the game or asks a question (CR 608.2d), with no notice
+  (`ResolutionEffect` in `tests/scenarios/harness.py`: the engine failing
+  closed on a clause is a failure, not an effect).
+
+**Boards.** One stock board: alice (the controller, active) has three of
+each basic plus Wastes and only colourless non-land permanents; bob's
+coloured permanents all *mention* a targeting protection they do not have
+(Kaito on alice's turn, a non-monstrous Fleecemane Lion) and his artifacts
+grant or remove hexproof elsewhere (Shadowspear, Dragonfire Blade). A trigger
+that CR 603.3d removes for "no legal target" while the target restriction
+itself (`TargetRequirement.rejects`) accepts one of those objects fails on
+the spot - the Devourer defect, caught for every targeting trigger, not just
+cast triggers (the old per-cast-trigger guard in
+`test_hexproof_granting_lines_are_not_hexproof.py` is folded into this).
+Each case tries the board four ways, stopping at the first that works:
+`quiet` (stock), `busy` (an eventful turn: three instants, two creature
+spells, life gained, two draws, a sacrifice, a permanent card discarded, an
+opponent's blue spell; a richer board with an enchantment, a 4-power
+creature, more Mountains and snow lands), `lonely` (no opposing non-land
+permanents), `war` (every creature attacks, then five creatures die). A
+target or cost the stock board cannot supply is added from the pool by the
+engine's own `rejects`/`why_not` (`_target_material`, `_cost_material`).
+
+**Skips.** `TRIGGER_KIND_SKIPS` is per event kind, reviewed, and empty: every
+event kind in the pool is raised. `KNOWN_ENGINE_GAPS` is per clause and
+`xfail(strict=True)`: real gaps the sweep found that need new cost plumbing,
+left for the silent-card campaign - Illuminated Folio ("Reveal two cards from
+your hand that share a color"), Tameshi, Reality Architect ("Return a land you
+control to its owner's hand") and The Filigree Sylex ("Remove ten oil counters
+from among permanents you control and sacrifice ..."), all three "cannot build
+a cost".
+
+**Numbers (2026-09-23).** 821 cases: 478 triggers executed across 31 event
+kinds (215 enters, 52 beginning-of-step, 49 cast, 41 dies, 31 attacks, 20
+Saga chapters, 12 damage, 11 tapped for mana, and the long tail), 340
+activations executed, 3 known gaps xfailed, 0 skipped; 280s single process.
+`mise run test` leaves it out; `mise run test:behaviour` runs it alone and
+`mise run test:full` - the merge gate - runs everything. Every case is its
+own parameter, so it also runs under pytest-xdist.
+
+**Findings, each fixed test-first on the way** (CR numbers verified with
+`mise run rules:find`): a resolved Adventure was exiled without its
+adventured pile, so the creature could never be cast (CR 715.3d); Prairie
+Dog's "if you haven't cast a spell from your hand this turn" (CR 603.4); The
+Darkness Crystal's die-replacement exiled without the CR 607.1 link its own
+activation targets; "a creature attacks you or a planeswalker you control"
+read as the attacker's controller (Slumbering Dragon, proven on Isperia,
+Supreme Judge; CR 506.2, 508.1b); "N or more creatures died this turn",
+"you attacked with N or more creatures this turn", "it has no <kind> counters
+on it" activation restrictions (Lagomos, both Ojer temples, Minas Tirith;
+CR 602.5b); off_zone_activation could not pay an exile cost (Scrapheap
+Scrounger); "Exile this artifact" as a cost (Relic of Progenitus, Brittle
+Effigy; CR 700.7); Might Makes Right's "each creature on the battlefield with
+the greatest power" (CR 208.1); "you attack with one or more creatures ...
+that many" (Screaming Swarm; CR 508.3d); "[you may] put a card you own from
+outside the game into your hand" (North Wind Avatar, Mastermind's
+Acquisition; CR 108.3b). New pool printings: Sliver Construct (target
+material for "target Sliver"), Isperia, Minas Tirith, Brittle Effigy,
+Mastermind's Acquisition. Rules verified for the sweep itself: CR 603.2,
+603.3, 603.3d, 603.4, 605.4a, 608.2d, 602.2, 702.11b.

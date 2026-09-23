@@ -222,6 +222,76 @@ def diff_json(left: Any, right: Any, path: str = "$") -> str | None:
     return None
 
 
+#: Top-level `Game` fields that move whenever *anything* resolves, whatever
+#: it did: the stack and priority themselves (CR 608.2n removes the resolved
+#: object), the id counter, the decision log (counted separately by
+#: `ResolutionEffect.questions`), the per-turn resolution tally, and the
+#: scratch fields a resolution fills and empties. A resolution that changed
+#: only these did nothing a player could see.
+_RESOLUTION_BOOKKEEPING = frozenset(
+    {
+        "stack",
+        "priority",
+        "decisions",
+        "objects_created",
+        "ability_resolutions_this_turn",
+        "pending_triggers",
+        "trigger_targets",
+        "resolving",
+        "fizzled",
+    }
+)
+
+
+def _notice_counts(dump: dict[str, Any]) -> dict[str, int]:
+    return {key: len(value) for key, value in dump.items() if key.endswith("_notices")}
+
+
+class ResolutionEffect:
+    """What resolving one stack object did (CR 608.2): which parts of the game
+    moved, which questions it put to a player (CR 608.2d), and which notices
+    it raised - the engine's own admission that it failed closed on a clause
+    instead of performing it.
+
+    `did_something` is the behavioural sweep's bar: the game changed or a
+    player was asked something, and no notice was raised on the way.
+    """
+
+    def __init__(self, before: dict[str, Any], after: dict[str, Any], questions: int) -> None:
+        self.changed = sorted(
+            key
+            for key in set(before) | set(after)
+            if key not in _RESOLUTION_BOOKKEEPING
+            and not key.endswith("_notices")
+            and before.get(key) != after.get(key)
+        )
+        self.questions = questions
+        before_notices, after_notices = _notice_counts(before), _notice_counts(after)
+        raised = {
+            key: [
+                notice
+                for notice in after[key][before_notices.get(key, 0) :]
+                # CR 603.3d's "no legal choices" is the game working, not
+                # the engine failing closed: a trigger the resolution caused
+                # with nothing to target is simply removed.
+                if notice.get("kind") != "no_legal_targets"
+            ]
+            for key, count in after_notices.items()
+            if count > before_notices.get(key, 0)
+        }
+        self.notices = {key: found for key, found in raised.items() if found}
+
+    @property
+    def did_something(self) -> bool:
+        return bool(self.changed or self.questions) and not self.notices
+
+    def __repr__(self) -> str:
+        return (
+            f"ResolutionEffect(changed={self.changed}, questions={self.questions}, "
+            f"notices={self.notices})"
+        )
+
+
 def _checkpoint_start_game(original: Any) -> Any:
     """Wrap `Match.start_game` so a deck-loading scenario that never touches
     `Scenario`/`PlayedScenario` still hands its `Game` through `checkpoint`.
@@ -1145,6 +1215,17 @@ class PlayedScenario:
     def resolve_top(self):
         """Resolve the top of the stack. Returns a `CardState` or an `AbilityOnStack`."""
         return self.game.resolve_top()
+
+    def resolve_top_measured(self) -> ResolutionEffect:
+        """Resolve the top of the stack and report what that resolution did -
+        see `ResolutionEffect`. Measured straight after CR 608.2's resolution,
+        before any state-based action, so a creature the resolution damaged
+        still counts as changed even if CR 704.5g later kills it."""
+        before = self.game.model_dump(mode="json")
+        asked = len(self.game.decisions.asked)
+        self.game.resolve_top()
+        after = self.game.model_dump(mode="json")
+        return ResolutionEffect(before, after, len(self.game.decisions.asked) - asked)
 
     # -- abilities --------------------------------------------------------
 
