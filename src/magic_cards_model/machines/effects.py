@@ -200,7 +200,6 @@ from .replacement import DrawReplacementKind, NextTimeDrawReplacement
 from .targeting import (
     COMPARISON_CLAUSE_PATTERN,
     ControllerRestriction,
-    TargetRequirement,
     permanent_description,
     profile_for_text,
     spell_profile_for_text,
@@ -12909,11 +12908,11 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         return puts_graveyard_on_bottom_of_library
 
-    owner_of_target_puts_top_or_bottom = _parse_owner_of_target_puts_on_top_or_bottom_clause(
+    owner_puts_it_into_library = _parse_owner_puts_it_into_library_clause(
         clause, for_spell=for_spell
     )
-    if owner_of_target_puts_top_or_bottom is not None:
-        return owner_of_target_puts_top_or_bottom
+    if owner_puts_it_into_library is not None:
+        return owner_puts_it_into_library
 
     if match := _TAP_UNTAP_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -29577,54 +29576,6 @@ def _nonland_or_typed_card_matcher(quality: str) -> Callable[[CardState], bool] 
     return _quality_matcher(quality)
 
 
-#: "Choose up to one target creature spell or planeswalker spell." (Subtlety).
-#: CR 115.6: "up to one" is nought or one, so choosing none is a legal answer,
-#: not a fizzle - `Game.resolve_targets` already returns an empty list for a
-#: legally-targeted-nothing ability, which is exactly what this reads as "do
-#: nothing" rather than as an error. The phrase after "choose up to one" is
-#: read the same way any other targeted clause's phrase is - through
-#: `machines/targeting.py`'s own `profile_for_text`, not a second grammar
-#: here - so a future card naming a different pair of spell types is covered
-#: for free.
-_CHOOSE_UP_TO_ONE_TARGET_RE = re.compile(r"^choose (?P<phrase>up to one target .+)$", re.IGNORECASE)
-
-#: "Its owner puts it on their choice of the top or bottom of their library."
-#: - Subtlety's own consequence. "Its owner" (CR 108.3) is deliberately not
-#: "its controller": a spell on the stack is controlled by whoever cast it
-#: but *owned* by whoever started the game with it, and CR 401.2's library is
-#: the owner's own, not the caster's.
-_OWNER_PUTS_ON_TOP_OR_BOTTOM_RE = re.compile(
-    r"^its owner puts it on their choice of the top or bottom of their library$",
-    re.IGNORECASE,
-)
-
-
-def _spell_target_requirement(phrase: str) -> TargetRequirement | None:
-    """`phrase` ("target creature spell or planeswalker spell"), read as a
-    requirement that targets an object *on the stack* and nothing else -
-    never a player, never an ability, never an unbounded count - or `None` if
-    `machines/targeting.py` cannot confidently read it as exactly that.
-
-    Deliberately not `_targets_understood`: that helper's `battlefield_only`
-    flag only ever means "skip the zone check entirely" when turned off
-    (`exile`/`return` reach any zone, on purpose), which would silently accept
-    a targeted *permanent* here too. A spell target is always CR 115.5's
-    stack, and nothing else, so this checks that zone directly instead of
-    reusing a helper with no way to ask for it.
-    """
-    profile = profile_for_text(phrase)
-    if not profile.understood or len(profile.requirements) != 1:
-        return None
-    requirement = profile.requirements[0]
-    if requirement.zones != frozenset({Zone.STACK}):
-        return None
-    if requirement.allows_players or requirement.allows_abilities:
-        return None
-    if requirement.unbounded:
-        return None
-    return requirement
-
-
 #: "put two cards from your hand on top of your library in any order"
 #: (Brainstorm), and its bottom-of-library twin. CR 121.1's draw is a move
 #: *out* of the library; this is the move back in, and CR 603.2c is the reason
@@ -29690,7 +29641,83 @@ def _parse_put_cards_from_hand_into_library_clause(
     return effect
 
 
-def _put_spell_in_library(game: "Game", spell: CardState, *, top: bool) -> None:
+#: Shared by every "owner puts it into a library" subject form below - CR
+#: 608.2d's own choice, worded either as Subtlety's/Aether Gust's/Sudden
+#: Setback's/Misleading Motes' bare "puts it on their choice of the top or
+#: bottom of `<library>`", or as Wan Shi Tong's/Deem Inferior's "puts it into
+#: `<library>` `<ordinal>` from the top or on the bottom", whose own top side
+#: lands at a printed depth (CR 609.3's "as much as it can" when the library
+#: is shallower than that) rather than the very top. Written once so every
+#: subject form only has to name its own target and spell "puts it" a single
+#: time between them.
+_OWNER_PUTS_IT_INTO_LIBRARY_TAIL = (
+    r"puts it (?:on their choice of the top or bottom of (?:their|its owner'?s) library"
+    rf"|into (?:their|its owner'?s) library (?P<ordinal>{ORDINAL}) "
+    r"from the top or on the bottom)\.?$"
+)
+
+#: "The owner of `<target>` puts it ..." - Deem Inferior, Sudden Setback,
+#: Plan for All Outcomes, Moonsnare Prototype. CR 108.3's owner, read off the
+#: target itself, deliberately never the resolving spell/ability's controller
+#: nor the target's own controller (`test_a_stolen_permanents_owner_is_asked_
+#: not_its_new_controller` is exactly the case where those two diverge).
+_OWNER_OF_TARGET_PUTS_INTO_LIBRARY_RE = re.compile(
+    rf"^the owner of (?P<phrase>.+?) {_OWNER_PUTS_IT_INTO_LIBRARY_TAIL}", re.IGNORECASE
+)
+
+#: "`<target>`'s owner puts it ..." - Misleading Motes, Wan Shi Tong - the
+#: same CR 108.3 owner, in the possessive rather than "the owner of".
+_TARGET_POSSESSIVE_OWNER_PUTS_INTO_LIBRARY_RE = re.compile(
+    rf"^(?P<phrase>.+?)'s owner {_OWNER_PUTS_IT_INTO_LIBRARY_TAIL}", re.IGNORECASE
+)
+
+#: "Its owner puts it ..." - the anaphoric second sentence of a two-clause
+#: paragraph (Aether Gust's own "Choose target spell or permanent that's red
+#: or green.", Subtlety's "Choose up to one target creature spell or
+#: planeswalker spell."), paired below with whichever clause before it names
+#: the target - "its owner" is CR 607.1 anaphora back to that target, so
+#: there is nothing to resolve without both clauses read together.
+_ITS_OWNER_PUTS_INTO_LIBRARY_RE = re.compile(
+    rf"^its owner {_OWNER_PUTS_IT_INTO_LIBRARY_TAIL}", re.IGNORECASE
+)
+
+#: An optional leading "Choose " on the target-naming half of that two-clause
+#: paragraph (Aether Gust's "Choose target ...", Subtlety's "Choose up to one
+#: target ..."); a bare "target `<X>`." with no "Choose" is read the same way.
+_CHOOSE_TARGET_PREFIX_RE = re.compile(r"^choose\s+", re.IGNORECASE)
+
+
+def _owner_puts_it_into_library_destination_depth(match: re.Match[str]) -> int | None:
+    """The 0-based index `_OWNER_PUTS_IT_INTO_LIBRARY_TAIL`'s own `<ordinal>`
+    names, or `None` for the bare "top or bottom of `<library>`" shape, whose
+    own top answer is the literal top rather than a printed depth."""
+    ordinal_text = match.group("ordinal")
+    if ordinal_text is None:
+        return None
+    ordinal = parse_ordinal(ordinal_text)
+    if ordinal is None or ordinal < 1:
+        return None
+    return ordinal - 1
+
+
+def _reposition_in_owners_library(game: "Game", card: CardState, *, depth: int) -> None:
+    """After `Game.put_cards_into_library` has just put `card` on the very
+    top of its own owner's library, slide it down to `depth` (CR 609.3's "as
+    much as it can" when the library does not hold that many other cards) -
+    the same list-surgery `_parse_put_self_into_library_nth_from_top_clause`
+    already does for a self-referential ordinal placement. The rest of the
+    library keeps its own order (CR 401.2)."""
+    if card.owner is None:
+        return
+    library = game.player(card.owner).library
+    if card in library:
+        library.remove(card)
+        library.insert(min(depth, len(library)), card)
+
+
+def _put_spell_in_library(
+    game: "Game", spell: CardState, *, top: bool, depth: int | None = None
+) -> None:
     """Move a spell off the stack straight into its owner's library (CR
     401.2), instead of letting it resolve.
 
@@ -29704,6 +29731,10 @@ def _put_spell_in_library(game: "Game", spell: CardState, *, top: bool) -> None:
     surviving past this point would misread a later intervening *if* as
     "nothing was spent" instead of correctly finding no record at all
     (`machines/triggers._cast_record_for_clause`).
+
+    `depth` is Wan Shi Tong's/Deem Inferior's own printed ordinal (Aether
+    Gust's/Subtlety's/Sudden Setback's bare top-or-bottom shape leaves it
+    `None`) - only meaningful on the top side; the bottom answer ignores it.
     """
     if spell not in game.stack:
         return
@@ -29714,85 +29745,21 @@ def _put_spell_in_library(game: "Game", spell: CardState, *, top: bool) -> None:
     # One CR 401.1 instruction, so the move raises the library event and is
     # known to every player, who saw the spell on the stack (CR 400.2).
     game.put_cards_into_library([spell], to_bottom=not top)
+    if top and depth:
+        _reposition_in_owners_library(game, spell, depth=depth)
 
 
-def _parse_choose_up_to_one_target_spell_clauses(
-    clauses: list[str], index: int, *, for_spell: bool
-) -> tuple[int, TargetedClause] | None:
-    """Subtlety's whole paragraph: "choose up to one target creature spell or
-    planeswalker spell. Its owner puts it on their choice of the top or
-    bottom of their library."
-
-    Ability-only (`for_spell=False`): CR 601.2c never runs for a resolving
-    spell choosing its own targets that way, and nothing in the pool prints
-    this shape on a spell. A merge, not two independent single-clause
-    parsers, because "its owner" in the second sentence is CR 607.1 anaphora
-    back to whichever spell the first sentence's target turned out to be -
-    there is nothing to resolve without both clauses read together.
+def _owner_puts_it_into_library_effect(*, for_spell: bool, depth: int | None) -> TargetedClause:
+    """The shared effect body for every "owner puts it into a library"
+    subject form: CR 608.2d's own choice, asked of the target's own owner
+    (CR 108.3) - never the resolving spell/ability's controller, and never
+    the target's own controller when the two differ - then dispatched by the
+    *target's own zone* at the moment of resolution, not by which sentence
+    named it: `_put_spell_in_library` off the stack (which also forgets the
+    stale `CastRecord`, CR 400.7/608.2b), `Game.put_cards_into_library`
+    everywhere else. `depth` is `None` for the bare top-or-bottom destination,
+    or the printed ordinal's 0-based index for the other one.
     """
-    if for_spell or index + 1 >= len(clauses):
-        return None
-    choose_match = _CHOOSE_UP_TO_ONE_TARGET_RE.fullmatch(clauses[index].strip())
-    if choose_match is None:
-        return None
-    requirement = _spell_target_requirement(choose_match.group("phrase"))
-    if requirement is None or requirement.minimum != 0 or requirement.maximum != 1:
-        return None
-    if _OWNER_PUTS_ON_TOP_OR_BOTTOM_RE.fullmatch(clauses[index + 1].strip()) is None:
-        return None
-
-    def effect(game: "Game", stack_object: "StackObject") -> None:
-        ability = stack_object
-        assert isinstance(ability, AbilityOnStack)
-        spells = [
-            target
-            for target in game.resolve_targets(ability)
-            if isinstance(target, CardState) and target.zone is Zone.STACK
-        ]
-        if not spells:
-            return
-        spell = spells[0]
-        if spell.owner is None:
-            return
-        top = game.ask(
-            Decision(
-                kind=DecisionKind.PUT_ON_TOP_OR_BOTTOM,
-                player=spell.owner,
-                prompt=(f"put {spell.name} on the top or bottom of {spell.owner}'s library"),
-                source=ability.source_name,
-                source_id=source_id_of(ability),
-            )
-        )
-        assert isinstance(top, bool)
-        _put_spell_in_library(game, spell, top=top)
-
-    return 2, effect
-
-
-#: "The owner of up to one other target nonland permanent puts it on their
-#: choice of the top or bottom of their library." - Plan for All Outcomes'
-#: own ETB: Subtlety's identical two-clause shape (just above), folded into
-#: one sentence and aimed at a *permanent* rather than a spell on the stack,
-#: so `game.resolve_targets` and CR 401.2's plain move through `Game.put_
-#: cards_into_library` are what actually differ - the CR 608.2d choice of
-#: top or bottom is `_put_spell_in_library`'s own `DecisionKind.PUT_ON_TOP_
-#: OR_BOTTOM` question, asked here instead of built as a second copy of it.
-_OWNER_OF_TARGET_PUTS_ON_TOP_OR_BOTTOM_RE = re.compile(
-    r"^the owner of (?P<phrase>.*target .+?) puts it on their choice of the "
-    r"top or bottom of (?:their|its owner'?s) library\.?$",
-    re.IGNORECASE,
-)
-
-
-def _parse_owner_of_target_puts_on_top_or_bottom_clause(
-    clause: str, *, for_spell: bool
-) -> TargetedClause | None:
-    """`_OWNER_OF_TARGET_PUTS_ON_TOP_OR_BOTTOM_RE`'s shape, or `None`."""
-    match = _OWNER_OF_TARGET_PUTS_ON_TOP_OR_BOTTOM_RE.fullmatch(clause.strip())
-    if match is None:
-        return None
-    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
-        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
@@ -29809,9 +29776,64 @@ def _parse_owner_of_target_puts_on_top_or_bottom_clause(
                 )
             )
             assert isinstance(top, bool)
+            if target.zone is Zone.STACK:
+                _put_spell_in_library(game, target, top=top, depth=depth)
+                continue
             game.put_cards_into_library([target], to_bottom=not top)
+            if top and depth:
+                _reposition_in_owners_library(game, target, depth=depth)
 
     return effect
+
+
+def _parse_owner_puts_it_into_library_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "The owner of `<target>` puts it ..." or "`<target>`'s owner puts it
+    ..." - `_OWNER_OF_TARGET_PUTS_INTO_LIBRARY_RE`'s and `_TARGET_POSSESSIVE_
+    OWNER_PUTS_INTO_LIBRARY_RE`'s shapes, either destination. Works for a
+    spell target and an ability target alike (`for_spell` only ever picks
+    which of the two names the resolving object in a prompt)."""
+    stripped = clause.strip()
+    match = _OWNER_OF_TARGET_PUTS_INTO_LIBRARY_RE.fullmatch(stripped)
+    if match is None:
+        match = _TARGET_POSSESSIVE_OWNER_PUTS_INTO_LIBRARY_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+    depth = _owner_puts_it_into_library_destination_depth(match)
+    return _owner_puts_it_into_library_effect(for_spell=for_spell, depth=depth)
+
+
+def _merge_choose_target_then_owner_puts_it_into_library_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "(Choose )?`<target>`. Its owner puts it ..." - Aether Gust's own
+    two-sentence paragraph ("Choose target spell or permanent that's red or
+    green. Its owner puts it on their choice of the top or bottom of their
+    library."); Subtlety's identical "Choose up to one target creature spell
+    or planeswalker spell." is just this with "up to one" inside the target
+    phrase, read by `_targets_understood`'s own `count_agnostic` the same way
+    every other verb's "up to N target ..." already is.
+
+    A merge, not two independent single-clause parsers: "its owner" in the
+    second sentence is CR 607.1 anaphora back to whichever object the first
+    sentence's target turned out to be, and there is nothing to resolve
+    without both clauses read together. Works for spells and abilities alike
+    - nothing about choosing a target this way is ability-only, and Aether
+    Gust prints the identical shape on a spell.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    destination_match = _ITS_OWNER_PUTS_INTO_LIBRARY_RE.fullmatch(clauses[index + 1].strip())
+    if destination_match is None:
+        return None
+    phrase = _CHOOSE_TARGET_PREFIX_RE.sub("", clauses[index].strip())
+    if not _targets_understood(phrase, count_agnostic=True, battlefield_only=False):
+        return None
+    depth = _owner_puts_it_into_library_destination_depth(destination_match)
+    return 2, _owner_puts_it_into_library_effect(for_spell=for_spell, depth=depth)
 
 
 def _merge_reveal_hand_choose_discard_clauses(
@@ -33364,11 +33386,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     each_opponent_discards = _parse_each_opponent_discards_clause(clause, for_spell=for_spell)
     if each_opponent_discards is not None:
         return each_opponent_discards
-    owner_puts_on_top_or_bottom = _parse_owner_of_target_puts_on_top_or_bottom_clause(
-        clause, for_spell=for_spell
-    )
-    if owner_puts_on_top_or_bottom is not None:
-        return owner_puts_on_top_or_bottom
+    # `_parse_owner_puts_it_into_library_clause`'s single-clause shape is
+    # already tried above through `_parse_targeted_clause`, this function's
+    # very first check - a second call here could never be reached.
     target_player_draws = _parse_target_player_draws_clause(clause, for_spell=for_spell)
     if target_player_draws is not None:
         return target_player_draws
@@ -33981,14 +34001,16 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         # -- end Wave W6 multi-clause merges ----------------------------------
-        # -- Wave W7b's own multi-clause merge (CR 108.3, CR 115.6, CR 401.2) --
-        merged = _parse_choose_up_to_one_target_spell_clauses(clauses, index, for_spell=for_spell)
+        # -- G1c's own multi-clause merge (CR 108.3, CR 115.6, CR 401.2/609.3) -
+        merged = _merge_choose_target_then_owner_puts_it_into_library_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
             index += consumed
             continue
-        # -- end Wave W7b multi-clause merge ---------------------------------
+        # -- end G1c multi-clause merge ---------------------------------------
         if index + 1 < len(clauses):
             merged = _parse_delayed_pay_or_lose_clauses(clauses, index, for_spell=for_spell)
             if merged is not None:

@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3",
+  "oracle_id": "565ba85c-bad8-4cbd-a2ff-b4384b886308",
+  "multiverse_ids": [
+    646828
+  ],
+  "mtgo_id": 122040,
+  "arena_id": 89196,
+  "tcgplayer_id": 535972,
+  "cardmarket_id": 753611,
+  "name": "Sudden Setback",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3",
+  "scryfall_uri": "https://scryfall.com/card/mkm/72/sudden-setback?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:21:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.jpg?1783912904",
+    "normal": "https://cards.scryfall.io/normal/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.jpg?1783912904",
+    "large": "https://cards.scryfall.io/large/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.jpg?1783912904",
+    "png": "https://cards.scryfall.io/png/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.png?1783912904",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.jpg?1783912904",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.jpg?1783912904",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.webp?1783912904",
+    "grid": "https://cards.scryfall.io/grid/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.webp?1783912904",
+    "display": "https://cards.scryfall.io/display/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.webp?1783912904",
+    "art": "https://cards.scryfall.io/art/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.webp?1783912904",
+    "crop": "https://cards.scryfall.io/crop/front/0/b/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3.webp?1783912904"
+  },
+  "mana_cost": "{2}{U}{U}",
+  "cmc": 4.0,
+  "type_line": "Instant",
+  "oracle_text": "The owner of target spell or nonland permanent puts it on their choice of the top or bottom of their library.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set": "mkm",
+  "set_name": "Murders at Karlov Manor",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0b9e5fd6-a5ea-4ae5-83f5-89ed6a658dd3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A565ba85c-bad8-4cbd-a2ff-b4384b886308&unique=prints",
+  "collector_number": "72",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Look, buddy, you're not in trouble. I just wanna ask you a questio\u2014\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Olivier Bernard",
+  "artist_ids": [
+    "11c6f325-68c2-4f2a-972d-98d2ffe6c224"
+  ],
+  "illustration_id": "2e70f41f-f587-4fd5-90ac-f22b8733424c",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 22502,
+  "preview": {
+    "source": "Marca",
+    "source_uri": "https://www.marca.com/videojuegos/juegos/2024/01/24/65afccccca4741341e8b45b4.html",
+    "previewed_at": "2024-01-23"
+  },
+  "prices": {
+    "usd": "0.11",
+    "usd_foil": "0.14",
+    "usd_etched": null,
+    "eur": "0.11",
+    "eur_foil": "0.09",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=646828&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSudden%2BSetback",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSudden%2BSetback",
+    "edhrec": "https://edhrec.com/route/?cc=Sudden+Setback"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535972%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=753611&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/122040?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
