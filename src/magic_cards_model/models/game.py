@@ -2695,7 +2695,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 40
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 41
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3268,6 +3268,12 @@ class Game(EngineModel):
     the choices made for the original, but "a copy of a spell isn't cast").
     A version-39 snapshot holding a copied spell on the stack has no record
     for it and would resolve that copy differently, so it is refused.
+
+    Bumped 40 -> 41: `Decision` gained `default_may` (the unscripted answer
+    to "you may shuffle" after a look-and-put-back is to decline), and "look
+    at the top N cards of your library, then put them back in any order"
+    plus its optional shuffle are newly read, so a paused game asking that
+    question, or holding such an ability, would resume differently.
     """
 
     @model_validator(mode="before")
