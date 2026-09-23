@@ -14344,6 +14344,15 @@ class Game(EngineModel):
                 if event.exile_marker is not None:
                     # CR 715.3d: the controller exiled it, and may play it.
                     annotate_exile(card_state, event.exile_marker, card_state.controller, self)
+                elif event.exile_link is not None:
+                    # CR 607.1: exiled "with" the replacement's source.
+                    card_state.exile_annotation = ExileAnnotation(
+                        marker=ExileMarker.LINKED,
+                        owner=card_state.owner,
+                        turn_exiled=self.turn.turns_taken if self.turn is not None else None,
+                        linked_permanent_id=event.exile_link.id,
+                        linked_permanent_stamp=event.exile_link.zone_change_stamp,
+                    )
             elif event.destination is Zone.LIBRARY:
                 # Green Sun's Zenith's own "Shuffle [this] into its owner's
                 # library" (`machines/replacement.py`'s `_stack_replacements`

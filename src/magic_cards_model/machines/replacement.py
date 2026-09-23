@@ -127,7 +127,7 @@ from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
 from ..numbers import COUNT, MULTIPLIER, parse_count, parse_multiplier
 from ..snapshot import EngineModel
-from .abilities import keywords_in_lines
+from .abilities import keywords_in_lines, self_reference_names
 from .casting import PlayAction
 from .combat import Keyword
 from .decisions import Decision, DecisionKind, source_id_of
@@ -1590,6 +1590,11 @@ class ReplaceableEvent:
     #: play it" is read off this marker afterwards. `Game.put_into_graveyard`
     #: annotates the card once it has actually arrived in exile.
     exile_marker: ExileMarker | None = None
+    #: The permanent a replacement exiled the card "with" (CR 607.1): set when
+    #: the replacement's source also prints an ability referring to cards
+    #: "exiled with" itself, so that ability finds the card. `Game.put_into_
+    #: graveyard` writes the CR 607.2a link once the card is in exile.
+    exile_link: CardState | None = None
     #: True while combat damage is being dealt (CR 510.2).
     combat: bool = False
     #: True for the draw an active player takes as the draw step's turn-based
@@ -1783,8 +1788,23 @@ def _to_graveyard(event: ReplaceableEvent) -> bool:
 
 
 def _exile_instead(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    """ "...exile it instead" - the card goes to exile and never reaches a graveyard."""
+    """ "...exile it instead" - the card goes to exile and never reaches a graveyard.
+
+    When the replacement's own source prints another ability about cards
+    "exiled with" itself (The Darkness Crystal's activated ability), the two
+    are linked (CR 607.1) and the exiled card is recorded as exiled with it.
+    """
     event.destination = Zone.EXILE
+    if source is not None and event.card is not source and _refers_to_cards_exiled_with(source):
+        event.exile_link = source
+
+
+def _refers_to_cards_exiled_with(source: CardState) -> bool:
+    """Whether `source`'s printed text refers to cards "exiled with" itself -
+    by "this [object]" or by its own name (CR 201.5)."""
+    text = source.card.front_oracle_text or ""
+    names = "|".join(re.escape(name) for name in self_reference_names(source.card.name))
+    return re.search(rf"exiled with (?:this \w+|{names})\b", text) is not None
 
 
 def _exile_adventured_instead(game: "Game", source: CardState, event: ReplaceableEvent) -> None:

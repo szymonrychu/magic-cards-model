@@ -103,7 +103,7 @@ from pydantic import ConfigDict
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..models.card import Card, Color, Supertype, Type
-from ..models.card_state import CardState, ExileMarker, TargetRef
+from ..models.card_state import CardState, TargetRef
 from ..models.zone import Zone
 from ..numbers import parse_count
 from ..serialization import SortedFrozenSet
@@ -728,11 +728,12 @@ class TargetRequirement(EngineModel):
             )
         if self.exiled_with_source:
             annotation = target.exile_annotation
+            # Any CR 607.2a/607.1 link to this permanent - imprint's,
+            # hideaway's or a plain "exiled with" one.
             linked = (
                 annotation is not None
-                and annotation.marker is ExileMarker.IMPRINTED
                 and source_id is not None
-                and annotation.linked_permanent_id == source_id
+                and annotation.links_to(source_id, None)
             )
             if not linked:
                 return (

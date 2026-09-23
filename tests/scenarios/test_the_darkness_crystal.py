@@ -131,3 +131,42 @@ def test_a_creature_card_still_in_the_graveyard_is_not_a_legal_target():
     )
     with pytest.raises(ValueError):
         scenario.activate(crystal, *activation_sources, targets=[goblin])
+
+
+# -- the two paragraphs together (CR 607.1) ----------------------------------
+
+
+def test_a_creature_the_crystal_exiled_as_it_died_is_exiled_with_the_crystal():
+    """CR 607.1: "An object may have two abilities printed on it such that one
+    of them causes actions to be taken or objects ... to be affected and the
+    other one directly refers to those ... objects. If so, these two abilities
+    are linked." The replacement paragraph (built since this file was first
+    written) exiles the dying creature; the activated paragraph's "card
+    exiled with The Darkness Crystal" has to find it there - with no staging
+    by hand. Found by the behavioural sweep: the activation had no legal
+    target in a real game."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["The Darkness Crystal"], battlefield=["Swamp"] * 10)
+        .player("bob", battlefield=["Goblin Guide"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    crystal = scenario.cast_and_resolve(
+        "The Darkness Crystal", *scenario.untapped_sources(*["Swamp"] * 4)
+    )
+    goblin = scenario.creature("Goblin Guide", "bob")
+
+    scenario.game.destroy(goblin)
+
+    assert goblin.zone is Zone.EXILE
+    assert scenario.player("alice").life == 22
+    assert goblin.exile_annotation is not None
+    assert goblin.exile_annotation.linked_permanent_id == crystal.id
+
+    scenario.activate(crystal, *scenario.untapped_sources(*["Swamp"] * 6), targets=[goblin])
+    scenario.resolve_top()
+
+    assert goblin.zone is Zone.BATTLEFIELD
+    assert goblin.controller == "alice"
+    assert goblin.counters[Counter.PLUS_ONE] == 2
