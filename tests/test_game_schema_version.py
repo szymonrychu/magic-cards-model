@@ -431,6 +431,7 @@ def test_a_snapshot_written_before_flow_three_integration_is_refused() -> None:
     ):
         Game.model_validate(dumped)
 
+
 #: The version stamped before the F1T11 integration bump: `Game.player_
 #: subject_split_notices` (T5) and `CastingRuleEffect.excluded_source_id`
 #: (T5) landed without a bump, and the dead-object-to-library dies readers
