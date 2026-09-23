@@ -2695,7 +2695,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 39
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 40
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3262,6 +3262,12 @@ class Game(EngineModel):
     first strike or double strike as it began). A version-38 snapshot paused
     in a combat damage step would resume into a different game, so it is
     refused.
+
+    Bumped 39 -> 40: `CastRecord` gained `is_copy`, and `Game.copy_spell` now
+    writes a `CastRecord` for every copy it makes (CR 707.10: a copy carries
+    the choices made for the original, but "a copy of a spell isn't cast").
+    A version-39 snapshot holding a copied spell on the stack has no record
+    for it and would resolve that copy differently, so it is refused.
     """
 
     @model_validator(mode="before")
