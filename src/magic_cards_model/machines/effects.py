@@ -33299,9 +33299,15 @@ def _dead_self_found(game: "Game", ability: "AbilityOnStack") -> CardState | Non
     that read this.
 
     With no triggering event (a plain activated ability, Borborygmos and
-    Fblthp's own `{1}{U}`, which fires from the *battlefield*): the old,
-    looser check this family always had - found by id, and not still on the
-    battlefield (CR 113.7a's fail-soft for a source already gone).
+    Fblthp's own `{1}{U}`, which fires *from* the battlefield and is still
+    sitting there, untriggered by any zone change, when this runs): the old,
+    looser check this family always had before the subsume - found by id,
+    full stop, whatever zone that turns out to be. Gating this branch on
+    "not on the battlefield" is the exile-it/return-it siblings' own dies-
+    trigger gate (CR 113.7a's fail-soft for a source that has since gone
+    back to the battlefield), and it does not apply here: this branch is
+    reached only by a source that started on the battlefield and is
+    expected to still be there.
     """
     object_id = _dead_self_object_id(ability)
     if object_id is None:
@@ -33311,7 +33317,7 @@ def _dead_self_found(game: "Game", ability: "AbilityOnStack") -> CardState | Non
         return None
     event = ability.event
     if event is None:
-        return None if found.zone is Zone.BATTLEFIELD else found
+        return found
     stamp = event.zone_change_stamp
     if stamp is None or found.zone is not Zone.GRAVEYARD or found.zone_change_stamp != stamp:
         return None
