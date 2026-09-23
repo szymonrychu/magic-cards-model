@@ -677,6 +677,7 @@ def test_a_generic_mana_activation_costs_number_is_not_read_as_a_target_count():
     (requirement,) = the_profile.requirements
     assert requirement.count == 1
     assert requirement.minimum == 1
+    assert all(requirement.if_gift_promised is None for requirement in the_profile.requirements)
 
 
 # --------------------------------------------------------------------------
@@ -765,4 +766,3 @@ def test_a_different_planeswalkers_own_loyalty_comparison_also_parses():
     (alternative,) = requirement.alternatives
     assert alternative.card_types == frozenset({Type.ARTIFACT})
     assert alternative.required_subtypes == frozenset({"vehicle"})
-    assert all(requirement.if_gift_promised is None for requirement in the_profile.requirements)
