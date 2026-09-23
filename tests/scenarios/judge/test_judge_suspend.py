@@ -30,10 +30,8 @@ from magic_cards_model.machines.casting import (
     annotate_exile,
     finish_suspend,
 )
-from magic_cards_model.machines.effects import effect_for
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter, ExileMarker
-from tests.cards import card
 from tests.scenarios.harness import PlayedScenario, Scenario
 
 # Suspended Sentence, verified with `resolve_cards`:
@@ -46,25 +44,32 @@ from tests.scenarios.harness import PlayedScenario, Scenario
 # (CR 702.62b).
 
 
-def test_suspended_sentences_own_self_exile_clause_is_not_executed():
-    """The premise state has no engine path: `effect_for` reads the card, but
-    only far enough to file a notice.
-
-    Suspended Sentence's three sentences are one paragraph - "Destroy target
-    creature an opponent controls. That player loses 3 life. Exile Suspended
-    Sentence with three time counters on it." - and `machines/effects.py`
-    parses a spell's whole clause list or nothing (the fail-closed shape
-    `docs/scenario-tests.md` describes). The third sentence's anaphoric
-    "Suspended Sentence" self-reference is not a clause it can build, so what
-    comes back is a notice-only effect rather than a destroy-plus-drain-plus-
-    self-suspend one. Recorded so the xfail below is read as *this* gap, not
-    as a claim that the destroy half is broken.
+def test_suspended_sentences_own_self_exile_clause_is_executed():
+    """The premise state is reachable through the card itself: its whole
+    paragraph - "Destroy target creature an opponent controls. That player
+    loses 3 life. Exile Suspended Sentence with three time counters on it." -
+    is read, the last sentence by the self-exile-with-time-counters reader
+    (`tests/scenarios/test_self_exile_with_time_counters.py`), so the
+    resolving spell lands in exile suspended rather than in a graveyard.
     """
-    sentence = card("Suspended Sentence")
-    assert "Exile Suspended Sentence with three time counters on it." in sentence.oracle_text
-    effect = effect_for(sentence.name, sentence.oracle_text)
-    assert effect is not None
-    assert effect.__name__ == "anaphoric_notice_only"
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Suspended Sentence"], battlefield=["Swamp"] * 4)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", username="bob")
+
+    sentence = scenario.cast_and_resolve(
+        "Suspended Sentence", *scenario.untapped_sources(*["Swamp"] * 4), targets=[bears]
+    )
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert sentence.zone is Zone.EXILE
+    assert sentence.counter_count(Counter.TIME) == 3
+    assert sentence.is_suspended
 
 
 def _suspend_own_card(scenario: PlayedScenario, username: str) -> None:
@@ -121,8 +126,8 @@ def test_the_owner_casts_a_card_someone_else_suspended():
     out the resolving spell's instructions. `annotate_exile` and
     `Game.add_counters` are the engine's own two halves of "exile it with N
     time counters on it" (`MarkedExile.take` calls exactly these), used
-    directly here because `effect_for` never executes the card's own line -
-    proven in the first test above.
+    directly here to stage the episode's exact split - alice exiling, bob
+    owning - which casting the card from alice's own hand cannot produce.
 
     CR 400.7 does not rescue the wrong answer either: the card is a new object
     each time it changes zones, with no memory of who cast it - which is

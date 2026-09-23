@@ -3551,15 +3551,19 @@ def effect_for(
         effect = _spell_effect_or_notice(substitute_x(effect_text, x_value))
     if effect is not None and not _is_notice_only(effect):
         return effect
+    time_counters: int | None = None
     rest_text = _strip_self_exile_sentence(card_name, effect_text)
     if rest_text is None:
-        return effect
+        with_counters = _strip_self_exile_with_time_counters_sentence(card_name, effect_text)
+        if with_counters is None:
+            return effect
+        rest_text, time_counters = with_counters
     rest = _spell_effect_or_notice(rest_text)
     if rest is None and x_value is not None:
         rest = _spell_effect_or_notice(substitute_x(rest_text, x_value))
     if rest is None or _is_notice_only(rest):
         return effect
-    return _then_exile_self(rest)
+    return _then_exile_self(rest, time_counters=time_counters)
 
 
 def _is_notice_only(effect: object) -> bool:
@@ -3587,15 +3591,58 @@ def _strip_self_exile_sentence(card_name: str, text: str) -> str | None:
     return None if stripped == text.strip() or not stripped else stripped
 
 
-def _then_exile_self(rest: Effect) -> Effect:
+def _self_names_pattern(card_name: str) -> str:
+    names = {card_name, card_name.split("//")[0].strip()}
+    return "|".join(re.escape(name) for name in sorted(names, key=len, reverse=True))
+
+
+def _strip_self_exile_with_time_counters_sentence(
+    card_name: str, text: str
+) -> tuple[str, int] | None:
+    """`text` without its "Exile `<this spell's name>` with `<n>` time
+    counters on it." sentence, and `n` - the line the self-recurring suspend
+    spells close their resolution text with (Arc Blade, Suspended Sentence,
+    Rousing Refrain, Reality Strobe) - or `None` when `text` has no such
+    sentence ending a line. CR 201.5: the name means this very object.
+
+    Only the end of a *line* is required, not the end of the text: every one
+    of these cards prints its "Suspend N-[cost]" keyword on the line after,
+    which the rest of the dispatch already reads past.
+    """
+    pattern = re.compile(
+        r"(?:^|(?<=[.\s]))Exile (?:"
+        + _self_names_pattern(card_name)
+        + rf") with (?P<n>{COUNT}) time counters? on it\.(?=[ \t]*(?:\n|$))",
+        re.IGNORECASE | re.MULTILINE,
+    )
+    match = pattern.search(text)
+    if match is None:
+        return None
+    counters = parse_count(match.group("n"))
+    if counters is None:
+        return None
+    stripped = (text[: match.start()] + text[match.end() :]).strip()
+    if not stripped:
+        return None
+    return stripped, counters
+
+
+def _then_exile_self(rest: Effect, *, time_counters: int | None = None) -> Effect:
     """`rest`, then CR 608.2c's last written instruction: the spell exiles
     itself as it resolves, so CR 608.2n's move to its owner's graveyard never
     happens (the same `Game.exile_cards` the Burning Wish family's own
-    "Exile `<this>`" uses)."""
+    "Exile `<this>`" uses).
+
+    With `time_counters`, the card arrives in exile with that many time
+    counters on it; a card that has suspend is then suspended (CR 702.62b)
+    and its keyword's own exile-zone triggers take it from there. A card a
+    replacement effect sent somewhere other than exile gets none."""
 
     def effect(game: "Game", spell: CardState) -> None:
         rest(game, spell)
         game.exile_cards([spell])
+        if time_counters and spell.zone is Zone.EXILE:
+            game.add_counters(spell, Counter.TIME, time_counters)
 
     return effect
 
