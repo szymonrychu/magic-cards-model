@@ -445,8 +445,9 @@ class DestroySubject(DelayedEffectSpecBase):
 class TapSubject(DelayedEffectSpecBase):
     """ "Tap it at the beginning of the next turn's upkeep" - CR 701.26a: "To
     tap a permanent, turn it sideways from an upright position. Only untapped
-    permanents can be tapped." `CardState.tap` is a no-op on a permanent that
-    is already tapped, which is that second sentence.
+    permanents can be tapped." `CardState.tap_if_untapped` leaves an
+    already-tapped subject as it is, with no error, which is that second
+    sentence.
     """
 
     kind: Literal["tap_subject"] = "tap_subject"
@@ -454,7 +455,7 @@ class TapSubject(DelayedEffectSpecBase):
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         permanent = trigger.still_affects(game)
         if permanent is not None:
-            permanent.tap()
+            permanent.tap_if_untapped()
 
 
 def _drop_sibling_triggers(game: "Game", trigger: "DelayedTrigger") -> None:

@@ -2010,6 +2010,28 @@ class CardState(EngineModel):
             raise ValueError(f"{self.name} is already tapped")
         self.tapped = True
 
+    def tap_if_untapped(self) -> bool:
+        """Tap this card if it is not already tapped; otherwise leave it be.
+
+        CR 701.26a: "To tap a permanent, turn it sideways from an upright
+        position. Only untapped permanents can be tapped." That is the whole
+        of it - a resolving spell or ability that says "tap" a permanent
+        already tapped simply does nothing to its tap status, with no error
+        and no event, and the rest of the sentence still applies (Frost
+        Breath's "doesn't untap" and a stun counter both still land on an
+        already-tapped target). `tap` stays strict for a cost (CR 118.3) and
+        for declaring an attacker (CR 508.1f), where an already-tapped
+        permanent is illegal rather than silently skipped.
+
+        Battlefield-only, like `tap`. Returns whether it actually tapped.
+        """
+        if self.zone is not Zone.BATTLEFIELD:
+            raise ValueError(f"only battlefield cards tap, {self.name} is in {self.zone}")
+        if self.tapped:
+            return False
+        self.tapped = True
+        return True
+
     def untap(self, *, exert_applies: bool = True) -> None:
         """Untap this card, unless it was exerted (CR 701.43a-b).
 
@@ -2037,10 +2059,19 @@ class CardState(EngineModel):
         no "would become untapped" event for a stun counter to replace, and
         spending one there would burn a counter on an untap that was already
         called off.
+
+        It is also checked *after* an "already untapped" no-op, for the same
+        reason: CR 701.26b, "Only tapped permanents can be untapped." A
+        permanent that is not tapped was never going to untap, so - exactly
+        like the exerted case just above - there is no "would become
+        untapped" event for CR 122.1d to replace, and no counter is spent
+        finding that out.
         """
         if exert_applies and self.exerted:
             self.exerted = False
             return
+        if not self.tapped:
+            return  # CR 701.26b: nothing to untap, so nothing "would become untapped"
         if self.counters[Counter.STUN] > 0:
             self.counters.remove(Counter.STUN, 1)  # CR 122.1d
             return

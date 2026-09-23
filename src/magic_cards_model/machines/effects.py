@@ -7954,7 +7954,7 @@ def tap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
     """Tap each permanent this still legally targets (CR 701.26a)."""
     for target in game.resolve_targets(stack_object):
         if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-            target.tap()
+            target.tap_if_untapped()
 
 
 def untap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
@@ -8028,7 +8028,7 @@ def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         for target in game.resolve_targets(ability):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                target.tap()
+                target.tap_if_untapped()
                 target.exerted = True
 
     return effect
@@ -8063,7 +8063,7 @@ def _parse_tap_enchanted_then_unprepared_clause(text: str) -> AbilityEffect | No
         enchanted = game.find_by_id(enchanted_id)
         if enchanted is None or enchanted.zone is not Zone.BATTLEFIELD:
             return
-        enchanted.tap()
+        enchanted.tap_if_untapped()
         game.become_unprepared(enchanted)
 
     return effect
@@ -24583,7 +24583,7 @@ def _parse_for_each_opponent_tap_clause(text: str, *, for_spell: bool) -> Abilit
     def effect(game: "Game", stack_object: "StackObject") -> None:
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                target.tap()
+                target.tap_if_untapped()
 
     return effect
 
@@ -24616,7 +24616,7 @@ def _parse_for_each_opponent_tap_then_stun_clause(
         tapped: list[CardState] = []
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                target.tap()
+                target.tap_if_untapped()
                 tapped.append(target)
         for permanent in tapped:
             if permanent.zone is Zone.BATTLEFIELD:

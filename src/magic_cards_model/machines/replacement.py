@@ -5157,8 +5157,7 @@ def _regeneration_effects(game: "Game", event: ReplaceableEvent) -> list[Applica
             return
         card.regeneration_shields -= 1
         card.damage = 0
-        if not card.tapped:
-            card.tap()
+        card.tap_if_untapped()
         game.combat.remove(card.id)  # CR 506.4
         event.replaced = True
 
