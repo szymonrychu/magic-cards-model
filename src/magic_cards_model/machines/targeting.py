@@ -3050,6 +3050,7 @@ def _split_type_or_closed_subtype_card(
     reduced_text = f"{first_word} {noun_word}{text[match.end() :]}"
     return first_word, noun_word, subtype_word, subtype_type, reduced_text
 
+
 #: "target `<quality>` card or card with `<keyword>`" - Jacob Frye's own
 #: "target Assassin card or card with freerunning from your graveyard". The
 #: second item is a whole card of its own described only by a keyword
