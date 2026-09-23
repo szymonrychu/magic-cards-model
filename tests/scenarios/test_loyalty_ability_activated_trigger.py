@@ -18,6 +18,9 @@ cross-checked with `mise run rules:find` (on-disk CR effective 2026-09-25):
 - **CR 603.2** - a triggered ability triggers whenever the game state
   matches the event it describes, including another ability's own
   activation.
+- **CR 611.2c** - a resolving ability's continuous effect fixes the set of
+  objects it affects as it begins: the Cadet the trigger made first gets the
+  `+1`'s +1/+0.
 - **CR 119.2** - damage generally.
 - **CR 111.7** - a token's characteristics are those stated when it was
   created; "except for tokens you control" excludes it from a mass-damage
@@ -46,7 +49,10 @@ def test_ajani_unrelenting_creates_a_cadet_when_its_controller_activates_loyalty
         state for state in scenario.game.permanents_controlled_by("alice") if state.name == "Cadet"
     ]
     assert len(cadets) == 1
-    assert scenario.game.characteristics_of(cadets[0]).power_toughness == (2, 2)
+    # The Cadet is a 2/2 as created, and already on the battlefield when the
+    # +1 ("Creatures you control get +1/+0 and gain haste until end of turn")
+    # resolves after it, so CR 611.2c fixes it into the affected set: 3/2.
+    assert scenario.game.characteristics_of(cadets[0]).power_toughness == (3, 2)
 
 
 def test_gideon_the_oathless_damages_an_opponent_who_activates_a_loyalty_ability() -> None:
