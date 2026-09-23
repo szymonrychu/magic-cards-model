@@ -73,9 +73,10 @@ def test_a_card_with_a_dead_clause_is_silent_and_names_the_clause():
 
 
 def test_a_card_that_only_fails_closed_is_notice():
-    """Final Showdown (Spree): two of its three modes are unread and fail
-    closed with a `ModeNotice`; its Spree keyword is executed."""
-    support = card_support(card("Final Showdown"))
+    """Bank Job (out of format, so the owner rule never forces it read): a
+    clause that fails closed with a notice, and an executed keyword. (Final
+    Showdown stood here until S21 read its last two Spree modes.)"""
+    support = card_support(card("Bank Job"))
     assert support.status == "notice"
     assert {clause.status for clause in support.clauses} <= {"handled", "notice"}
     assert any(c.kind == "keyword" and c.status == "handled" for c in support.clauses)

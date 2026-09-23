@@ -188,6 +188,7 @@ from .layers import (
     is_genuine_resolution_layer_sentence,
     is_resolution_layer_effect_text,
     is_retention_clause,
+    lose_all_abilities,
     modify_power_toughness,
     only_this_incarnation,
     other_creatures_controlled_by,
@@ -8442,6 +8443,14 @@ _COLOUR_PAIR_AND_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "lose all abilities and have base power and toughness 0/2" (Sudden
+#: Spoiling) - one CR 611.2 instruction setting two characteristics at once
+#: (CR 613.1f and CR 613.4b), not three instructions joined by "and".
+_LOSE_ALL_AND_BASE_PT_RE = re.compile(
+    r"\blos(?:e|es) all abilities and (?:have|has) base power and toughness \d+/\d+",
+    re.IGNORECASE,
+)
+
 
 def split_effect_clauses(text: str) -> list[str]:
     """Break an effect into the clauses CR 608.2c executes in order.
@@ -8481,6 +8490,9 @@ def split_effect_clauses(text: str) -> list[str]:
     )
     # "blue and red Elemental creature token" - one colour phrase.
     masked = _COLOUR_PAIR_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
+    masked = _LOSE_ALL_AND_BASE_PT_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
     split = (
         _LEADING_THEN_RE.sub("", clause.strip()).replace(_AND_SENTINEL, " and ")
         for clause in _CLAUSE_SEPARATOR.split(masked)
@@ -12343,8 +12355,15 @@ def _parse_tap_untap_two_targets_clause(effect_text: str) -> Effect | None:
 #: clause on the player-target it cannot see, and `return None` before this
 #: pattern ever got a turn - `_parse_targeted_clause` commits to the first
 #: regex that fullmatches, not the first that also parses successfully.
+#:
+#: The plural, count-bearing form reads the same way: "Exile any number of
+#: target players' graveyards." (Thraben Charm's third mode, The Death of
+#: Gwen Stacy's chapter III) - one graveyard per player target, and CR
+#: 107.1c's "any number" (zero included) is simply how many player targets
+#: the stack object carries.
 _EXILE_TARGET_PLAYERS_GRAVEYARD_RE = re.compile(
-    r"^exile (?P<phrase>.*target player's graveyard)\.?$", re.IGNORECASE
+    r"^exile (?P<phrase>.*target (?:player's graveyard|players' graveyards))\.?$",
+    re.IGNORECASE,
 )
 #: "Exile all graveyards." (Rest in Peace) and "Exile all cards that are
 #: `<quality>` from all graveyards." (Sanctifier en-Vec) - no "target" at all
@@ -14671,7 +14690,9 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # Ahead of `_EXILE_TARGET_RE`: that pattern's phrase is a superset of
         # this one's and would otherwise commit first, read the player target
         # with `allow_player_targets` left `False`, and refuse the clause.
-        if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+        if not _targets_understood(
+            match.group("phrase"), allow_player_targets=True, count_agnostic=True
+        ):
             return None
         return exile_target_players_graveyard
 
@@ -15991,12 +16012,6 @@ def resolve_modal_spell(game: "Game", spell: CardState) -> None:
 #: least they must.
 NO_FURTHER_MODES = "Choose no further modes."
 
-#: CR 207.2d: "flavor words appear in italics at the beginning of some
-#: abilities ... [and] have no special rules meaning". Flash Thompson's
-#: "Heckle \u2014 Tap target creature." is such a mode; the words before the
-#: dash are not rules text.
-_FLAVOR_WORD_PREFIX = re.compile(r"^[A-Z][^\u2014.\n]{0,40}?\s+\u2014\s+")
-
 
 def modal_trigger_profile(effect_text: str | None) -> ModalProfile | None:
     """The modes of a triggered ability's "choose ... -" effect (CR 700.2),
@@ -16028,9 +16043,10 @@ def modal_trigger_profile(effect_text: str | None) -> ModalProfile | None:
 
 def mode_effect_body(mode: Mode) -> str:
     """One mode's effect text with CR 700.2h's cost prefix and CR 207.2d's
-    flavor word taken off - what a parser reads and what targeting is read
-    from."""
-    return _FLAVOR_WORD_PREFIX.sub("", mode_effect_text(mode)).strip()
+    flavor word taken off (`machines/modes.mode_effect_text` does both - Flash
+    Thompson's "Heckle" label comes off "Tap target creature.") - what a
+    parser reads and what targeting is read from."""
+    return mode_effect_text(mode).strip()
 
 
 def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
@@ -23700,6 +23716,18 @@ _RIDER_BECOMES_TYPE_IN_ADDITION_RE = re.compile(
 )
 
 
+#: "It deals damage equal to its power to target creature." - Crush
+#: Underfoot's rider, after "Choose a Giant creature you control." The
+#: referent is the source of the damage (CR 120.1: "An object that deals damage is the
+#: source of that damage"), one-sided - not a fight (CR 701.14a) - and the amount is its
+#: power as the rider runs (CR 608.2h). The target phrase is the resolving
+#: object's own target, rechecked on resolution (CR 608.2b).
+_RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to (?P<phrase>.*\btarget\b.+)$",
+    re.IGNORECASE,
+)
+
+
 #: "If `<condition>`, `<anaphor>` [also] `<rider>`" / "`<anaphor>` [also]
 #: `<rider>` if `<condition>`" - Violent Urge's Delirium sentence ("If there
 #: are four or more card types among cards in your graveyard, that creature
@@ -24009,6 +24037,31 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
                 )
 
         return becomes_type_in_addition
+
+    if match := _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE.fullmatch(rider):
+        phrase = match.group("phrase").strip()
+        if not _targets_understood(phrase, count_agnostic=True, allow_player_targets=True):
+            return None
+
+        def deals_damage_equal_to_its_power(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            dealers = [referent for referent in referents if referent.zone is Zone.BATTLEFIELD]
+            if not dealers:
+                return
+            dealer = dealers[0]
+            amount = game.power_of(dealer) or 0
+            if amount <= 0:
+                return
+            referent_ids = {referent.id for referent in referents}
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, CardState) and (
+                    target.id in referent_ids or target.zone is not Zone.BATTLEFIELD
+                ):
+                    continue
+                game.deal_damage(target, amount, source=dealer)
+
+        return deals_damage_equal_to_its_power
 
     return None
 
@@ -24381,6 +24434,66 @@ def _parse_token_then_object_anaphor_clause_pair(
         if not created:
             return
         rider(game, created, stack_object)
+
+    return effect
+
+
+#: "Choose a <permanent description> you control." - an untargeted choice
+#: (CR 115.10a: no "target", so shroud and hexproof never stop it) made while
+#: the spell or ability resolves (CR 608.2d), whose object the next
+#: sentence's "It" names. Final Showdown's "Choose a creature you control. It
+#: gains indestructible until end of turn."; Crush Underfoot's "Choose a
+#: Giant creature you control. It deals damage equal to its power to target
+#: creature." The description is read by `machines/targeting.
+#: permanent_description`, the same grammar every edict uses.
+_CHOOSE_PERMANENT_YOU_CONTROL_RE = re.compile(
+    r"^choose (?:a|an|one) (?P<description>.+?) you control$", re.IGNORECASE
+)
+
+
+def _parse_choose_then_object_anaphor_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Choose a `<description>` you control. It `<rider>`." as one CR 608.2c
+    instruction: the controller chooses one matching permanent they control
+    as it resolves (CR 608.2d), and the rider - any `_parse_referent_object_
+    clause` reads - acts on it. Nothing to choose means nothing for "it" to
+    name, so the rider does not run (CR 608.2d: an impossible choice is not
+    made), and that is not an unread clause.
+    """
+    if not _OBJECT_ANAPHOR_RE.search(second):
+        return None
+    match = _CHOOSE_PERMANENT_YOU_CONTROL_RE.fullmatch(first.strip().rstrip(".").strip())
+    if match is None:
+        return None
+    requirement = permanent_description(match.group("description"))
+    if requirement is None:
+        return None
+    rider = _parse_referent_object_clause(second)
+    if rider is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(controller.username)
+            if requirement.rejects(permanent, controller.username, game) is None
+        ]
+        if not candidates:
+            return
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
+        )
+        chosen = _choose_one_card(
+            game,
+            controller,
+            candidates,
+            prompt=f"choose a {match.group('description')} you control",
+            source=source_name,
+            source_id=source_id_of(stack_object),
+        )
+        rider(game, [chosen], stack_object)
 
     return effect
 
@@ -38168,6 +38281,105 @@ def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return ability_clause
 
 
+#: A mass, one-shot "lose all abilities" (CR 613.1f, layer 6), optionally
+#: with a base power/toughness it sets at the same time (CR 613.4b, sublayer
+#: 7b) - Final Showdown's "All creatures lose all abilities until end of
+#: turn." and Sudden Spoiling's "Until end of turn, creatures target player
+#: controls lose all abilities and have base power and toughness 0/2." The
+#: duration may be printed first or last, never both and never neither: a
+#: bare "Creatures lose all abilities." is Dress Down's own static ability
+#: (CR 611.3), read by `machines/layers.py`'s battlefield sweep, not a
+#: resolution effect. The group subject is any `_mass_creature_group_
+#: targets` reads, plus "creatures target player/opponent controls".
+_MASS_LOSE_ALL_ABILITIES_RE = re.compile(
+    r"^(?P<leading>until end of turn, )?"
+    r"(?P<subject>all creatures|(?:other )?creatures (?:you control|your opponents control)"
+    r"|creatures (?P<targeted>target (?:player|opponent)) controls)"
+    r" lose all abilities"
+    r"(?: and have base power and toughness (?P<power>\d+)/(?P<toughness>\d+))?"
+    r"(?P<trailing> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_mass_lose_all_abilities_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_MASS_LOSE_ALL_ABILITIES_RE`'s shape, on a spell or an ability.
+
+    CR 611.2c: the set of creatures is fixed when the effect begins - read
+    once, here, from the computed board, the same fixed-set-now convention
+    `_run_mass_pump` keeps - so a creature that enters later keeps its
+    abilities. Each creature gets its own `only_this_incarnation` effect
+    (CR 400.7), timed to CR 514.2's cleanup (`Duration.UNTIL_END_OF_TURN`).
+    """
+    match = _MASS_LOSE_ALL_ABILITIES_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if bool(match.group("leading")) == bool(match.group("trailing")):
+        return None
+    subject = match.group("subject")
+    targeted = match.group("targeted")
+    if targeted is not None and not _targets_understood(targeted, allow_player_targets=True):
+        return None
+    power = int(match.group("power")) if match.group("power") is not None else None
+    toughness = int(match.group("toughness")) if match.group("toughness") is not None else None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source = stack_object if for_spell else stack_object.source_or_last_known(game)  # type: ignore[union-attr]
+        if not isinstance(source, CardState):
+            return
+        if targeted is not None:
+            players = {
+                target.username
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            }
+            board = game.computed_board()
+            group = [
+                permanent
+                for permanent in game.battlefield
+                if board.of(permanent).is_creature
+                and game.controller_of(permanent).username in players
+            ]
+        else:
+            group = _mass_creature_group_targets(game, controller, source.id, subject) or []
+        if not group:
+            return
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for creature in group:
+            selector = only_this_incarnation(creature, creature.zone_change_stamp)
+            built = [
+                ContinuousEffect(
+                    description=f"{source.name}: {creature.name} loses all abilities",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=lose_all_abilities,
+                )
+            ]
+            if power is not None and toughness is not None:
+                built.append(
+                    ContinuousEffect(
+                        description=(
+                            f"{source.name}: {creature.name} has base P/T {power}/{toughness}"
+                        ),
+                        layer=Layer.POWER_TOUGHNESS,
+                        sublayer=Sublayer.SET,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=selector,
+                        modification=set_power_toughness(power, toughness),
+                    )
+                )
+            for continuous in built:
+                if continuous.holds(game):
+                    store.add(continuous)
+
+    return effect
+
+
 #: Veil of Summer's "Spells you control can't be countered this turn." and
 #: Determined's "Other spells you control can't be countered this turn." -
 #: CR 611.2c's second sentence: a continuous effect from a resolving spell
@@ -38530,6 +38742,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     mass_pump = _parse_mass_pump_group_clause(clause, for_spell=for_spell)
     if mass_pump is not None:
         return mass_pump
+    mass_lose_all = _parse_mass_lose_all_abilities_clause(clause, for_spell=for_spell)
+    if mass_lose_all is not None:
+        return mass_lose_all
     spells_cant_be_countered = _parse_spells_cant_be_countered_clause(clause, for_spell=for_spell)
     if spells_cant_be_countered is not None:
         return spells_cant_be_countered
@@ -39615,6 +39830,9 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             or _parse_token_then_object_anaphor_clause_pair(
                 sentences[0], sentences[1], for_spell=for_spell
             )
+            or _parse_choose_then_object_anaphor_clause_pair(
+                sentences[0], sentences[1], for_spell=for_spell
+            )
             or _parse_draw_equal_to_then_lose_life_clause_pair(
                 sentences[0], sentences[1], for_spell=for_spell
             )
@@ -40044,6 +40262,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_token_then_object_anaphor_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_choose_then_object_anaphor_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

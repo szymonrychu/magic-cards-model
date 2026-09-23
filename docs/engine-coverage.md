@@ -4064,3 +4064,27 @@ Not read (stays an unread condition): a returned-to-hand subject naming a
 subtype, a colour, "token"/"nontoken", "an opponent controls", or "this
 creature or another creature" (Stormfront Riders, whose own ETB return is
 also unread).
+## S21: modal spells - named modes, any number of target players' graveyards, mass lose-all, choose-then-anaphor
+
+Thraben Charm, Scout the City and Final Showdown failed closed with a
+`ModeNotice`; every clause of all three now sweeps `handled`. CR numbers
+verified with `mise run rules:find`: 207.2c, 207.2d, 700.2, 700.2h, 702.172a,
+107.1c, 115.1, 115.10a, 120.1, 406.2, 514.2, 608.2b, 608.2c, 608.2d, 608.2h,
+611.2c, 613.1f, 613.4b, 613.7, 701.8a, 701.14a.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| A named mode's label ("Bring Down", "Do Homework", printed before an em dash) is a flavor word with no rules meaning (CR 207.2d); the instruction is the text after the dash, for resolution and targeting alike | `modes.mode_effect_text` (`_MODE_LABEL`), after the CR 700.2h cost prefix; `effects.mode_effect_body` now just delegates to it | Scout the City (Bring Down) | School Daze, You Find the Villains' Lair | `test_named_modes.py` |
+| "Exile any number of target players' graveyards." - one graveyard per player target, zero targets legal (CR 107.1c, 115.1, 406.2) | `_EXILE_TARGET_PLAYERS_GRAVEYARD_RE` widened to the plural, read count-agnostic; spell and ability side | Thraben Charm mode 3 | The Death of Gwen Stacy chapter III | `test_any_number_of_target_graveyards.py` |
+| "[Until end of turn, ]`<group>` lose all abilities[ and have base power and toughness N/N][ until end of turn]" as a resolution effect - layer 6 (CR 613.1f) plus sublayer 7b (CR 613.4b), group fixed on resolution (CR 611.2c); group is any `_mass_creature_group_targets` subject or "creatures target player/opponent controls" | `_parse_mass_lose_all_abilities_clause` in `_parse_mixed_clause`; `split_effect_clauses` masks the "and have base power and toughness" conjunction (`_LOSE_ALL_AND_BASE_PT_RE`) | Final Showdown mode 1 | Sudden Spoiling | `test_spree_final_showdown.py` |
+| "Choose a `<description>` you control. It `<rider>`." - untargeted (CR 115.10a, shroud does not stop it), chosen on resolution (CR 608.2d), nothing to choose means the rider does not run | `_parse_choose_then_object_anaphor_clause_pair` (description via `targeting.permanent_description`, rider via `_parse_referent_object_clause`), in both pair dispatch sites | Final Showdown mode 2 | Crush Underfoot | `test_spree_final_showdown.py` |
+| Referent rider "It deals damage equal to its power to `<target>`" - the referent is the damage source (CR 120.1), one-sided, not a fight (CR 701.14a) | `_RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE` in `_parse_referent_object_clause` | - | Crush Underfoot | `test_spree_final_showdown.py` |
+
+Every Final Showdown mode combination (all seven) is cast, charged the printed
+{W} plus each chosen mode's cost (CR 700.2h), and resolved with no notice;
+modes 1 and 2 together leave the chosen creature indestructible because the
+later layer 6 timestamp wins (CR 613.7).
+
+Still not modelled: The Death of Gwen Stacy's chapter II ("Each player may
+discard a card. Each player who doesn't loses 3 life.") is silent - the card
+was added only as the proof printing for chapter III.

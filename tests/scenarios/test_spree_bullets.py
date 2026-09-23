@@ -211,11 +211,9 @@ def test_choosing_one_mode_charges_only_that_modes_own_cost():
 
 
 def test_choosing_two_modes_sums_both_their_costs():
-    """Modes 1 and 2, {1} each - CR 702.172a charges a chosen mode's own
-    additional cost whether or not this wave can also read its effect (modes
-    1 and 2's own clauses are not read yet; the mechanism this file proves is
-    the cost summing and the choice count, not every mode's own resolution -
-    see this file's own module docstring)."""
+    """Modes 1 and 2, {1} each - CR 702.172a charges each chosen mode's own
+    additional cost. (Every mode's own resolution is
+    `test_spree_final_showdown.py`'s.)"""
     scenario = _final_showdown_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
@@ -262,11 +260,9 @@ def test_modes_are_recorded_in_printed_order_regardless_of_choice_order():
 
 
 def test_the_destroy_mode_still_runs_however_it_was_ordered_among_the_choice():
-    """Mode 3 ("Destroy all creatures") is the one mode this wave reads
-    (this file's own module docstring); choosing it alongside an unread mode,
-    named *first*, proves the unread mode's own `ModeNotice` does not stop
-    the readable one from running (CR 101.3 does not excuse a mode that
-    parses fine because a different mode on the same spell does not)."""
+    """Mode 3 ("Destroy all creatures") named *first*, mode 1 second: both
+    run, in printed order, and neither leaves a `ModeNotice` (S21 read mode
+    1's mass "lose all abilities")."""
     scenario = _final_showdown_board(alice_battlefield=["Grizzly Bears"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     own_bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
@@ -281,5 +277,4 @@ def test_the_destroy_mode_still_runs_however_it_was_ordered_among_the_choice():
 
     assert own_bears.zone is Zone.GRAVEYARD
     assert their_bears.zone is Zone.GRAVEYARD
-    notice_modes = {notice.mode_number for notice in scenario.game.mode_notices}
-    assert notice_modes == {1}, "mode 1 fails closed with a notice, not silence"
+    assert not scenario.game.mode_notices, "every Final Showdown mode reads"

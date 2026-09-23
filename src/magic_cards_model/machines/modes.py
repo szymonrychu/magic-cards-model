@@ -105,6 +105,14 @@ _MODE_WITH_COST = re.compile(
     r"^\s*(?:(?P<label>[^{}\-—]{1,20}?)\s*[-—]\s*)?"
     r"(?P<cost>(?:\{[^{}]+\})+)\s*[-—]\s*(?P<effect>.+)$"
 )
+#: CR 207.2d: a flavor word (or CR 207.2c ability word) naming a mode -
+#: "Bring Down", "Two-Weapon Fighting", "Learn Their Secrets", each followed
+#: by an em dash. A
+#: capitalised run of at most 40 characters with no sentence punctuation, no
+#: mana symbol and no dash of its own, then the em dash. The cap and the
+#: punctuation ban are what keep an ordinary instruction that merely has an
+#: em dash further along from being read as a label.
+_MODE_LABEL = re.compile(r"^[A-Z][^{}.:;\u2014\n]{0,39}?\s+\u2014\s+")
 #: CR 700.2i: pawprint modes are not counted in bullets at all.
 _PAWPRINT = re.compile(r"\{P\}")
 #: CR 700.2h keywords (Spree, Tiered) print their modal instruction inside a
@@ -380,16 +388,27 @@ def mode_rules_text(mode: Mode, x_value: int | None = None) -> str:
 
 
 def mode_effect_text(mode: Mode) -> str:
-    """One mode's own effect text, its CR 700.2h cost-before-effect prefix
-    (Tiered's tier label and cost, Spree's cost) stripped off - what a
-    resolution-time parser (`machines/effects.py::parse_mode_effect`) should
-    read, since paying the cost already happened during casting (CR 601.2f).
-    A mode with no such prefix (`mode.cost is None`) is returned unchanged.
+    """One mode's own effect text, with everything in front of the
+    instruction that is not rules text taken off - what a resolution-time
+    parser (`machines/effects.py::parse_mode_effect`) and a targeting
+    profile (`mode_rules_text`) should both read:
+
+    - CR 700.2h's cost-before-effect prefix (Tiered's tier label and cost,
+      Spree's cost): paying it already happened during casting (CR 601.2f).
+    - A named mode's label - Scout the City's "Bring Down" in front of
+      "Destroy target creature with flying.", School Daze's "Do Homework"
+      in front of "Draw three cards." CR 207.2d: flavor words "have no special rules meaning", so
+      the instruction is only the text after the dash. Stripped here, once,
+      rather than by each reader stepping over it on its own.
+
+    A mode with neither prefix is returned unchanged.
     """
-    if mode.cost is None:
-        return mode.text
-    match = _MODE_WITH_COST.match(mode.text)
-    return mode.text if match is None else match.group("effect")
+    text = mode.text
+    if mode.cost is not None:
+        match = _MODE_WITH_COST.match(text)
+        if match is not None:
+            text = match.group("effect")
+    return _MODE_LABEL.sub("", text, count=1)
 
 
 # --------------------------------------------------------------------------

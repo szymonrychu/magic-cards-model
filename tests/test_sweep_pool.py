@@ -1423,16 +1423,25 @@ def test_tiered_registration_is_conditioned_on_the_profile_being_understood(monk
 # -- T01: OWNER RULE - a legal card cannot rest on a fail-closed notice -----
 
 
+def _a_legal_notice_card() -> str:
+    """The first pool card legal in Modern, Pioneer or Standard whose worst
+    clause is `NOTICE`. Chosen dynamically: the owner rule makes every such
+    card the next one the campaign reads, so any fixed name here goes stale
+    (Final Showdown stood here until S21 read its last two Spree modes)."""
+    for name in sorted(pool()):
+        printing = card(name)
+        if in_target_formats(printing) and classify_card(printing)[0] == NOTICE:
+            return name
+    pytest.fail("no legal pool card fails closed with a notice any more - pick a new vehicle")
+
+
 def test_legal_cards_failing_closed_lists_a_legal_notice_card_as_a_gap():
-    """Final Showdown (Spree, legal in all three target formats) classifies
-    `NOTICE` because two of its three modes are unread - the owner rule says
-    a legal card resting on a notice is a gap, not a clean pass, so it must
-    be listed. Metamorphic Blast, once the other example, reads both modes
-    since T05 (`test_changeling.py`); Insatiable Avarice, the example before
-    that, reads both its own modes since T16 (`test_search_put_on_top.py`)
-    and so is no longer one either."""
-    gaps = dict(legal_cards_failing_closed(["Final Showdown", "Metamorphic Blast"]))
-    assert "Final Showdown" in gaps
+    """A legal card that classifies `NOTICE` is a gap under the owner rule, not
+    a clean pass, so it must be listed. Metamorphic Blast reads both modes
+    since T05 (`test_changeling.py`), so it is not one."""
+    vehicle = _a_legal_notice_card()
+    gaps = dict(legal_cards_failing_closed([vehicle, "Metamorphic Blast"]))
+    assert vehicle in gaps
     assert "Metamorphic Blast" not in gaps
 
 
@@ -1460,13 +1469,14 @@ def test_report_effects_prints_the_legal_gap_section():
 
     from scripts.sweep_pool import report_effects
 
+    vehicle = _a_legal_notice_card()
     buffer = io.StringIO()
     with redirect_stdout(buffer):
-        report_effects(["Final Showdown", "Metamorphic Blast", "Lightning Bolt"])
+        report_effects([vehicle, "Metamorphic Blast", "Lightning Bolt"])
     output = buffer.getvalue()
     assert "Legal cards (Modern/Pioneer/Standard) failing closed with a notice" in output
-    assert "Final Showdown" in output
-    # Metamorphic Blast reads both modes since T05, so only Final Showdown is left.
+    assert vehicle in output
+    # Metamorphic Blast reads both modes since T05, so only the vehicle is left.
     assert "1 legal card(s) failing closed" in output
 
 
