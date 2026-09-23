@@ -33,8 +33,13 @@ from tests.scenarios.harness import Scenario
 
 
 def _to_next_turn(scenario) -> None:
+    """Advance into the next player's turn, resolving whatever triggers on
+    the way (Prairie Dog's own end-step trigger now reads its intervening
+    "if you haven't cast a spell from your hand this turn", CR 603.4)."""
     active = scenario.turn.active_player
     while scenario.turn.active_player == active:
+        while not scenario.game.stack_is_empty:
+            scenario.resolve_top()
         scenario.advance()
 
 
