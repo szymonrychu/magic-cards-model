@@ -2443,6 +2443,11 @@ class Game(EngineModel):
     event (`returned_to_hand_batch`). Empty outside `_announce_returns`. Not
     persisted: read only while those events are being raised."""
     _entering_together: list[CardState] | None = PrivateAttr(default=None)
+    #: The zone each permanent entered from, held only between
+    #: `enter_the_battlefield` and the enters event it raises (`_enters_event`
+    #: reads it into `GameEvent.origin_zone`) - never across a call, so not
+    #: game state and not persisted.
+    _entry_origins: dict[UUID, Zone] = PrivateAttr(default_factory=dict)
     """Permanents put onto the battlefield inside `entering_together`, whose
     enters events wait for the last of them (CR 603.6a). `None` outside one.
     Not persisted: the block opens and closes within one resolving effect."""
@@ -9146,6 +9151,10 @@ class Game(EngineModel):
             if extra_loyalty:
                 self.add_counters(card_state, Counter.LOYALTY, extra_loyalty)
 
+            # CR 603.4's "if it entered from your graveyard" (Prized Amalgam,
+            # Archfiend's Vessel) asks where the permanent came from - the
+            # enters event carries it (`GameEvent.origin_zone`).
+            self._entry_origins[card_state.id] = event.origin
             if self._entering_together is not None:
                 self._entering_together.append(card_state)
                 return card_state
@@ -9155,7 +9164,11 @@ class Game(EngineModel):
     def _announce_entry(self, card_state: CardState) -> None:
         """Raise the enters events for a permanent that is now on the battlefield."""
         with self._id_allocator_scope():
-            self.emit(self._enters_event(card_state))
+            event = self._enters_event(card_state)
+            origin = self._entry_origins.pop(card_state.id, None)
+            if origin is not None:
+                event = event.model_copy(update={"origin_zone": origin})
+            self.emit(event)
             # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
             # before this point) is not routed through `add_counters` - the same
             # direct-write choice `_enter_with_loyalty` already makes for a

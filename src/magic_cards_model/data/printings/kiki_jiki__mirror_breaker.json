@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "a2ff0ee3-9600-4c7d-acec-6ec90595384e",
+  "oracle_id": "a34b7416-cfe3-4a1e-a8c1-a3056b747519",
+  "multiverse_ids": [
+    438702
+  ],
+  "mtgo_id": 66151,
+  "mtgo_foil_id": 66152,
+  "tcgplayer_id": 145482,
+  "cardmarket_id": 301621,
+  "name": "Kiki-Jiki, Mirror Breaker",
+  "lang": "en",
+  "released_at": "2017-11-17",
+  "uri": "https://api.scryfall.com/cards/a2ff0ee3-9600-4c7d-acec-6ec90595384e",
+  "scryfall_uri": "https://scryfall.com/card/ima/136/kiki-jiki-mirror-breaker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:38:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.jpg?1783935527",
+    "normal": "https://cards.scryfall.io/normal/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.jpg?1783935527",
+    "large": "https://cards.scryfall.io/large/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.jpg?1783935527",
+    "png": "https://cards.scryfall.io/png/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.png?1783935527",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.jpg?1783935527",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.jpg?1783935527",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.webp?1783935527",
+    "grid": "https://cards.scryfall.io/grid/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.webp?1783935527",
+    "display": "https://cards.scryfall.io/display/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.webp?1783935527",
+    "art": "https://cards.scryfall.io/art/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.webp?1783935527",
+    "crop": "https://cards.scryfall.io/crop/front/a/2/a2ff0ee3-9600-4c7d-acec-6ec90595384e.webp?1783935527"
+  },
+  "mana_cost": "{2}{R}{R}{R}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Goblin Shaman",
+  "oracle_text": "Haste\n{T}: Create a token that's a copy of target nonlegendary creature you control, except it has haste. Sacrifice it at the beginning of the next end step.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Haste"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c",
+      "component": "token",
+      "name": "Copy",
+      "type_line": "Token",
+      "uri": "https://api.scryfall.com/cards/f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c"
+    },
+    {
+      "object": "related_card",
+      "id": "a2ff0ee3-9600-4c7d-acec-6ec90595384e",
+      "component": "combo_piece",
+      "name": "Kiki-Jiki, Mirror Breaker",
+      "type_line": "Legendary Creature \u2014 Goblin Shaman",
+      "uri": "https://api.scryfall.com/cards/a2ff0ee3-9600-4c7d-acec-6ec90595384e"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "741bcd30-7709-4133-8919-f4b46483bed7",
+  "set": "ima",
+  "set_name": "Iconic Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/741bcd30-7709-4133-8919-f4b46483bed7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aima&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ima?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a2ff0ee3-9600-4c7d-acec-6ec90595384e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa34b7416-cfe3-4a1e-a8c1-a3056b747519&unique=prints",
+  "collector_number": "136",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Steven Belledin",
+  "artist_ids": [
+    "f07d73b9-52a0-4fe5-858b-61f7b42174a5"
+  ],
+  "illustration_id": "203931d3-6a4b-4440-97ee-aee4f236934b",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1252,
+  "penny_rank": 262,
+  "prices": {
+    "usd": "17.06",
+    "usd_foil": "24.54",
+    "usd_etched": null,
+    "eur": "7.53",
+    "eur_foil": "10.12",
+    "tix": "0.66"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=438702&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKiki-Jiki%252C%2BMirror%2BBreaker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKiki-Jiki%252C%2BMirror%2BBreaker",
+    "edhrec": "https://edhrec.com/route/?cc=Kiki-Jiki%2C+Mirror+Breaker"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F145482%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=301621&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/66151?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

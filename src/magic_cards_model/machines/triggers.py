@@ -389,7 +389,10 @@ class GameEvent(EngineModel):
     a Fireball cast for X=3."""
 
     origin_zone: Zone | None = None
-    """For a `TriggerEvent.CAST_SPELL` event, the zone the card was in
+    """For a `TriggerEvent.ENTERS_THE_BATTLEFIELD` event, the zone the
+    permanent entered from (`Game.enter_the_battlefield`; `Zone.STACK` for a
+    resolving spell) - read by CR 603.4's "if it entered from your
+    graveyard". For a `TriggerEvent.CAST_SPELL` event, the zone the card was in
     immediately before CR 601.2a moved it to the stack (CR 400.7: it is a new
     object on the stack, so this has to be captured before the move, not
     re-derived from the object afterwards). `Game.put_on_stack` is the only
@@ -4227,7 +4230,65 @@ def intervening_if_holds(
     if self_is_a_creature is not None:
         return self_is_a_creature
 
+    entered_or_cast_from_graveyard = _entered_or_cast_from_graveyard_holds(
+        game, clause, source, event
+    )
+    if entered_or_cast_from_graveyard is not None:
+        return entered_or_cast_from_graveyard
+
     return _fail_closed(game, ability, source)
+
+
+#: One alternative of Prized Amalgam's and Archfiend's Vessel's clause: "it
+#: entered from your graveyard" / "you cast it from your graveyard".
+_FROM_GRAVEYARD_ALTERNATIVE = re.compile(
+    r"^(?:it entered(?: the battlefield)? from (?P<entered>your|a) graveyard"
+    r"|you cast it from (?P<cast>your|a) graveyard)$"
+)
+
+
+def _entered_or_cast_from_graveyard_holds(
+    game: "Game", clause: str, source: CardState, event: "GameEvent | None"
+) -> bool | None:
+    """CR 603.4's "if it entered from your graveyard or you cast it from your
+    graveyard" - `None` when the clause is not this shape.
+
+    "It" is the enters event's own object (the entering creature, which is
+    the source itself for Archfiend's Vessel's self-trigger). "Entered from
+    your graveyard" reads `GameEvent.origin_zone` - the zone the permanent
+    left to enter (`Game.enter_the_battlefield`) - and "your" graveyard is
+    the one its owner keeps (CR 400.3) belonging to the ability's
+    controller. "You cast it from your graveyard" reads the permanent's own
+    `CastRecord` (CR 400.7d): cast from the graveyard, by a player who is the
+    ability's controller. Either alternative satisfies the clause (the
+    English "or"). Both are recorded facts about that one event, so the
+    CR 603.4 recheck on resolution reads the same answer.
+    """
+    parts = [part.strip() for part in clause.split(" or ")]
+    matches = [_FROM_GRAVEYARD_ALTERNATIVE.fullmatch(part) for part in parts]
+    if not parts or any(match is None for match in matches):
+        return None
+    if event is None or event.subject_id is None:
+        return False
+    you = source.controller or source.owner
+    subject = game.find_by_id(event.subject_id)
+    owner = subject.owner if isinstance(subject, CardState) else None
+    for match in matches:
+        assert match is not None
+        entered_whose = match.group("entered")
+        if entered_whose is not None:
+            if event.origin_zone is Zone.GRAVEYARD and (entered_whose == "a" or owner == you):
+                return True
+            continue
+        cast_whose = match.group("cast")
+        if not isinstance(subject, CardState):
+            continue
+        record = game.cast_record_of(subject)
+        if record is None or record.origin_zone is not Zone.GRAVEYARD:
+            continue
+        if subject.controller == you and (cast_whose == "a" or owner == you):
+            return True
+    return False
 
 
 #: Ayara's Oathsworn's clause: "it has fewer than four +1/+1 counters on it",

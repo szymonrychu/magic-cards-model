@@ -2018,28 +2018,47 @@ def _attacker_assignment(
 #: no subject (Dragon's Rage Channeler's delirium grants "Attacks each combat if
 #: able"). The whole line has to be the requirement, so the delirium static
 #: that merely mentions the words is not one while its condition is false.
+#: "attacks a player each combat if able" (Nahiri, the Unforgiving's +1,
+#: granted as this same kind of line) is the narrower requirement: only an
+#: attack on a player obeys it, never one on a planeswalker or battle.
 _ATTACKS_EACH_COMBAT_RE = re.compile(
-    r"^(?:(?P<subject>.+?) )?attacks each (?:combat|turn) if able\.?$", re.IGNORECASE
+    r"^(?:(?P<subject>.+?) )?attacks (?P<player>a player )?each (?:combat|turn) if able\.?$",
+    re.IGNORECASE,
 )
+
+
+def _attack_requirement_match(line: str, name: str) -> "re.Match[str] | None":
+    match = _ATTACKS_EACH_COMBAT_RE.fullmatch(line.strip())
+    if match is None:
+        return None
+    subject = (match.group("subject") or "").strip().lower()
+    if subject not in ("", "this creature", "this permanent", name.lower()):
+        return None
+    return match
 
 
 def is_attack_requirement_line(line: str, name: str) -> bool:
     """Whether one computed ability line of a creature named `name` is its own
-    "attacks each combat if able" requirement (CR 508.1d)."""
-    match = _ATTACKS_EACH_COMBAT_RE.fullmatch(line.strip())
-    if match is None:
-        return False
-    subject = (match.group("subject") or "").strip().lower()
-    return subject in ("", "this creature", "this permanent", name.lower())
+    "attacks [a player] each combat if able" requirement (CR 508.1d)."""
+    return _attack_requirement_match(line, name) is not None
+
+
+def _own_attack_requirements(game: "Game", creature: CardState) -> list[bool]:
+    """One entry per "attacks each combat if able" line the creature carries
+    on the computed board (CR 613.5) - each one a requirement (CR 508.1d) -
+    `True` for one that only an attack on a player obeys."""
+    characteristics = game.characteristics_of(creature)
+    requirements: list[bool] = []
+    for line in characteristics.abilities:
+        match = _attack_requirement_match(line, creature.name)
+        if match is not None:
+            requirements.append(match.group("player") is not None)
+    return requirements
 
 
 def _own_attack_requirement_count(game: "Game", creature: CardState) -> int:
-    """How many "attacks each combat if able" lines the creature carries on
-    the computed board (CR 613.5) - each one a requirement (CR 508.1d)."""
-    characteristics = game.characteristics_of(creature)
-    return sum(
-        1 for line in characteristics.abilities if is_attack_requirement_line(line, creature.name)
-    )
+    """How many "attacks each combat if able" lines the creature carries."""
+    return len(_own_attack_requirements(game, creature))
 
 
 def attack_requirement_holders(game: "Game", player: str) -> list[CardState]:
@@ -2073,7 +2092,11 @@ def attack_requirements_obeyed(
     if defender is None:
         return 0
     goaders = creature.goaded_by
-    obeyed = _own_attack_requirement_count(game, creature) + len(goaders)
+    obeyed = len(goaders) + sum(
+        1
+        for player_only in _own_attack_requirements(game, creature)
+        if defender.is_player or not player_only
+    )
     if defender.is_player:
         obeyed += sum(1 for goader in goaders if goader != defender.username)
     return obeyed
@@ -2112,8 +2135,11 @@ class UnobeyedAttackRequirement:
 
 def _requirement_wording(game: "Game", creature: CardState) -> str:
     parts: list[str] = []
-    if _own_attack_requirement_count(game, creature):
+    requirements = _own_attack_requirements(game, creature)
+    if any(not player_only for player_only in requirements):
         parts.append("attacks each combat if able")
+    if any(requirements):
+        parts.append("attacks a player each combat if able")
     for goader in creature.goaded_by:
         parts.append(
             f"is goaded by {goader} (CR 701.15b: it attacks each combat if able and "

@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3",
+  "oracle_id": "4b8fb8dc-f1c5-4994-8a58-4849e7e85539",
+  "multiverse_ids": [
+    382283
+  ],
+  "tcgplayer_id": 83222,
+  "cardmarket_id": 267291,
+  "name": "Heckling Fiends",
+  "lang": "en",
+  "released_at": "2014-06-06",
+  "uri": "https://api.scryfall.com/cards/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3",
+  "scryfall_uri": "https://scryfall.com/card/cns/145/heckling-fiends?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:42:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.jpg?1783939349",
+    "normal": "https://cards.scryfall.io/normal/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.jpg?1783939349",
+    "large": "https://cards.scryfall.io/large/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.jpg?1783939349",
+    "png": "https://cards.scryfall.io/png/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.png?1783939349",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.jpg?1783939349",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.jpg?1783939349",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.webp?1783939349",
+    "grid": "https://cards.scryfall.io/grid/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.webp?1783939349",
+    "display": "https://cards.scryfall.io/display/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.webp?1783939349",
+    "art": "https://cards.scryfall.io/art/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.webp?1783939349",
+    "crop": "https://cards.scryfall.io/crop/front/a/d/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3.webp?1783939349"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Devil",
+  "oracle_text": "{2}{R}: Target creature attacks this turn if able.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "7d4ebb59-a50b-45b8-8fff-ab70767819a5",
+  "set": "cns",
+  "set_name": "Conspiracy",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/7d4ebb59-a50b-45b8-8fff-ab70767819a5",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acns&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cns?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ad68539a-c7d3-46ee-ab94-ef9cc0f12dc3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4b8fb8dc-f1c5-4994-8a58-4849e7e85539&unique=prints",
+  "collector_number": "145",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Their language may be a cacophonous agglomeration of chittering snorts and mad barking, but the message they send is all too clear.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Clint Cearley",
+  "artist_ids": [
+    "03b75350-d5a0-4e3a-b3b4-8d4a5554385b"
+  ],
+  "illustration_id": "d92c6d60-ea1f-4885-a0e8-85af6e5ece46",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 27948,
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.02",
+    "eur_foil": "0.21",
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=382283&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHeckling%2BFiends",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHeckling%2BFiends",
+    "edhrec": "https://edhrec.com/route/?cc=Heckling+Fiends"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F83222%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=267291&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Heckling+Fiends&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

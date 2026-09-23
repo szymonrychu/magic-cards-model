@@ -1424,6 +1424,72 @@ class CreatedTriggeredAbility(DelayedEffectSpecBase):
             effect(game, ability)
 
 
+class ActOnEachSubject(DelayedEffectSpecBase):
+    """ "Exile them" / "Sacrifice those tokens" at the beginning of the next
+    end step - one delayed triggered ability about every object its own
+    paragraph just made (Lightning Coils, Feral Lightning, Chandra,
+    Flamecaller), where `SacrificeSubject`/`ExileSubjectAtNextEndStep` are
+    about one.
+
+    CR 603.7c is applied object by object: `subjects` pairs each object's id
+    with the `zone_change_stamp` it had when the ability was created, and an
+    object no longer on the battlefield, or back as a new object (CR 400.7),
+    is skipped. CR 701.21a: "A player can't sacrifice ... something that's a
+    permanent they don't control", so a sacrifice skips an object someone
+    else controls now; exile (CR 701.13a) and a return to hand have no such
+    restriction.
+    """
+
+    kind: Literal["act_on_each_subject"] = "act_on_each_subject"
+
+    action: Literal["exile", "sacrifice", "destroy", "return_to_hand"]
+    subjects: tuple[tuple[UUID, UUID], ...]
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        for subject_id, stamp in self.subjects:
+            found = game.find_by_id(subject_id)
+            if not isinstance(found, CardState) or found.zone is not Zone.BATTLEFIELD:
+                continue
+            if found.zone_change_stamp != stamp:
+                continue
+            if self.action == "sacrifice":
+                if game.controller_of(found).username != trigger.controller:
+                    continue
+                game.sacrifice(found)
+            elif self.action == "exile":
+                game.exile_permanent(found)
+            elif self.action == "destroy":
+                game.destroy(found)
+            else:
+                game.return_to_hand(found)
+
+
+class ReturnSubjectFromGraveyardToBattlefield(DelayedEffectSpecBase):
+    """ "Return this card from your graveyard to the battlefield [tapped] at
+    the beginning of the next end step" - Prized Amalgam's own delayed return
+    of itself.
+
+    CR 603.7c is the zone check: the card has to still be the same object in
+    the graveyard (`expected_zone`/`expected_stamp`); one that was exiled, or
+    that left and came back, is not returned. It returns under the delayed
+    ability's controller - the player who controlled the ability that made it
+    (CR 603.7e) and whose graveyard "your graveyard" names - and tapped when
+    the clause says so.
+    """
+
+    kind: Literal["return_subject_from_graveyard_to_battlefield"] = (
+        "return_subject_from_graveyard_to_battlefield"
+    )
+
+    tapped: bool = False
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        card = trigger.still_affects(game)
+        if card is None:
+            return
+        game.put_onto_battlefield(card, trigger.controller, tapped=self.tapped)
+
+
 #: What a delayed (or reflexive) triggered ability does when it resolves -
 #: `DelayedTrigger.effect`'s own type. Every string this task's requirement 2
 #: names (`"warp:exile"`, `"grant_extra_turn"`, `"sacrifice"`) is a member's
@@ -1465,7 +1531,9 @@ DelayedEffectSpec = Annotated[
     | AddManaWhenLandTapped
     | PumpEventSubject
     | CountersAndKeywordsEventSubject
-    | CreatedTriggeredAbility,
+    | CreatedTriggeredAbility
+    | ActOnEachSubject
+    | ReturnSubjectFromGraveyardToBattlefield,
     Field(discriminator="kind"),
 ]
 
@@ -1931,6 +1999,26 @@ _ANAPHOR_AGREEMENT: dict[str, Callable[[CardState, "Game | None"], bool]] = {
     "that artifact": lambda state, game: Type.ARTIFACT in _agreement_types(state, game),
     "that land": lambda state, game: Type.LAND in _agreement_types(state, game),
     "that enchantment": lambda state, game: Type.ENCHANTMENT in _agreement_types(state, game),
+    # CR 201.5 / CR 700.7's self-reference: the ability's own source, which
+    # the caller hands over as the subject. A card, never a token (CR 108.2b).
+    "this card": lambda state, game: not state.token,
+    # The plural pronouns - Lightning Coils' "Exile them", Mirror March's
+    # "Those tokens gain haste. Exile them" - each checked object by object.
+    "them": lambda state, game: True,
+    "those tokens": lambda state, game: state.token,
+    "those creatures": lambda state, game: Type.CREATURE in _agreement_types(state, game),
+}
+
+#: The pronouns that name several objects at once: one delayed triggered
+#: ability about all of them (`ActOnEachSubject`), not one per object.
+_PLURAL_ANAPHORS = frozenset({"them", "those tokens", "those creatures"})
+
+#: What `ActOnEachSubject` does for each verb a plural pronoun can take.
+_PLURAL_ACTIONS: dict[str, Literal["exile", "sacrifice", "destroy", "return_to_hand"]] = {
+    "exile": "exile",
+    "sacrifice": "sacrifice",
+    "destroy": "destroy",
+    "return_to_hand": "return_to_hand",
 }
 
 _ANAPHOR_PATTERN = "|".join(
@@ -1950,8 +2038,9 @@ _SIMPLE_VERB_RE = re.compile(
 #: the two phrasings name the same zone; `Game.return_to_hand` sends it to the
 #: owner's hand either way, which is the only thing the rules permit.
 _RETURN_RE = re.compile(
-    rf"^return (?P<anaphor>{_ANAPHOR_PATTERN}) to "
-    r"(?P<destination>its owner's hand|your hand|the battlefield under its owner's control)$",
+    rf"^return (?P<anaphor>{_ANAPHOR_PATTERN}) (?P<from_graveyard>from your graveyard )?to "
+    r"(?P<destination>its owner's hand|your hand|their owners' hands"
+    r"|the battlefield under its owner's control|the battlefield)(?P<tapped> tapped)?$",
     re.IGNORECASE,
 )
 
@@ -1976,6 +2065,14 @@ _ANAPHORIC_VERBS: dict[str, tuple[DelayedEffectSpecBase, Zone]] = {
     "tap": (tap_subject, Zone.BATTLEFIELD),
     "return_to_hand": (return_subject_to_hand, Zone.BATTLEFIELD),
     "return_to_battlefield": (return_subject_to_battlefield_under_owner, Zone.EXILE),
+    # Prized Amalgam's "return this card from your graveyard to the
+    # battlefield tapped": the object waits in the graveyard, and CR 603.7c
+    # checks it is still that same card there.
+    "return_from_graveyard": (ReturnSubjectFromGraveyardToBattlefield(), Zone.GRAVEYARD),
+    "return_from_graveyard_tapped": (
+        ReturnSubjectFromGraveyardToBattlefield(tapped=True),
+        Zone.GRAVEYARD,
+    ),
 }
 
 
@@ -2021,6 +2118,70 @@ class AnaphoricDelayedClause(EngineModel):
         return _ANAPHORIC_VERBS[self.verb][1]
 
     @property
+    def plural(self) -> bool:
+        """Whether the pronoun names several objects ("them", "those
+        tokens") - one ability about all of them, `ActOnEachSubject`."""
+        return self.anaphor in _PLURAL_ANAPHORS
+
+    @property
+    def self_referential(self) -> bool:
+        """Whether the pronoun is the ability's own source ("this card")
+        rather than something an earlier sentence produced."""
+        return self.anaphor == "this card"
+
+    def triggers_for_all(
+        self,
+        subjects: "list[CardState]",
+        *,
+        controller: str,
+        source_id: UUID | None,
+        source_name: str,
+        game: "Game | None" = None,
+    ) -> list[DelayedTrigger] | None:
+        """The delayed triggered ability(ies) this clause creates about every
+        object in `subjects` - the objects the paragraph's earlier sentence
+        just produced.
+
+        A plural pronoun makes **one** ability about all of them (CR 603.7a:
+        the paragraph creates one delayed triggered ability, however many
+        objects it names). A singular pronoun names exactly one object, so
+        more than one subject is a mismatch and fails closed (`None`), the
+        same as a pronoun that does not agree. No subjects at all is an empty
+        list: nothing was produced, so nothing is created (CR 101.3).
+        """
+        if not subjects:
+            return []
+        if not all(self.agrees_with(subject, game) for subject in subjects):
+            return None
+        if self.plural:
+            return [
+                DelayedTrigger(
+                    text=self.text,
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=self.step,
+                    controller=controller,
+                    source_id=source_id,
+                    source_name=source_name,
+                    effect=ActOnEachSubject(
+                        action=_PLURAL_ACTIONS[self.verb],
+                        subjects=tuple(
+                            (subject.id, subject.zone_change_stamp) for subject in subjects
+                        ),
+                    ),
+                )
+            ]
+        if len(subjects) != 1:
+            return None
+        single = self.trigger_for(
+            subjects[0],
+            controller=controller,
+            source_id=source_id,
+            source_name=source_name,
+            game=game,
+        )
+        return None if single is None else [single]
+
+    @property
     def effect(self) -> DelayedEffectSpecBase:
         """What this does when it resolves."""
         return _ANAPHORIC_VERBS[self.verb][0]
@@ -2049,7 +2210,7 @@ class AnaphoricDelayedClause(EngineModel):
         `game`, when given, is forwarded to `agrees_with` so a battlefield
         referent's *computed* characteristics decide agreement (CR 613.5).
         """
-        if not self.agrees_with(subject, game):
+        if self.plural or not self.agrees_with(subject, game):
             return None
         return DelayedTrigger(
             text=self.text,
@@ -2097,12 +2258,26 @@ def parse_anaphoric_delayed_clause(clause: str) -> AnaphoricDelayedClause | None
         if returning is None:
             return None
         anaphor = returning.group("anaphor").lower()
-        verb = (
-            "return_to_hand"
-            if returning.group("destination").lower() in ("its owner's hand", "your hand")
-            else "return_to_battlefield"
-        )
+        destination = returning.group("destination").lower()
+        from_graveyard = returning.group("from_graveyard") is not None
+        tapped = returning.group("tapped") is not None
+        if destination in ("its owner's hand", "your hand", "their owners' hands"):
+            if from_graveyard or tapped:
+                return None
+            verb = "return_to_hand"
+        elif destination == "the battlefield":
+            # Only the graveyard return names no controller: CR 603.7e's
+            # controller of the delayed ability is who "your graveyard" is.
+            if not from_graveyard:
+                return None
+            verb = "return_from_graveyard_tapped" if tapped else "return_from_graveyard"
+        else:
+            if from_graveyard or tapped:
+                return None
+            verb = "return_to_battlefield"
 
+    if anaphor in _PLURAL_ANAPHORS and verb not in _PLURAL_ACTIONS:
+        return None
     return AnaphoricDelayedClause(text=clause, step=step, anaphor=anaphor, verb=verb)
 
 

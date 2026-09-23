@@ -1,0 +1,159 @@
+{
+  "object": "card",
+  "id": "83437022-ba00-4370-83c2-ce1260336fcc",
+  "oracle_id": "62c240ac-f2dd-4e39-9e82-50307efa833e",
+  "multiverse_ids": [
+    485411
+  ],
+  "mtgo_id": 81403,
+  "arena_id": 71870,
+  "tcgplayer_id": 215555,
+  "cardmarket_id": 468184,
+  "name": "Archfiend's Vessel",
+  "lang": "en",
+  "released_at": "2020-07-03",
+  "uri": "https://api.scryfall.com/cards/83437022-ba00-4370-83c2-ce1260336fcc",
+  "scryfall_uri": "https://scryfall.com/card/m21/88/archfiends-vessel?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:18:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.jpg?1783930712",
+    "normal": "https://cards.scryfall.io/normal/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.jpg?1783930712",
+    "large": "https://cards.scryfall.io/large/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.jpg?1783930712",
+    "png": "https://cards.scryfall.io/png/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.png?1783930712",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.jpg?1783930712",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.jpg?1783930712",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.webp?1783930712",
+    "grid": "https://cards.scryfall.io/grid/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.webp?1783930712",
+    "display": "https://cards.scryfall.io/display/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.webp?1783930712",
+    "art": "https://cards.scryfall.io/art/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.webp?1783930712",
+    "crop": "https://cards.scryfall.io/crop/front/8/3/83437022-ba00-4370-83c2-ce1260336fcc.webp?1783930712"
+  },
+  "mana_cost": "{B}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Human Cleric",
+  "oracle_text": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)\nWhen this creature enters, if it entered from your graveyard or you cast it from your graveyard, exile it. If you do, create a 5/5 black Demon creature token with flying.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Lifelink"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f54c7f9f-a1ea-4bf0-8ab3-cca49f393f4a",
+      "component": "token",
+      "name": "Demon",
+      "type_line": "Token Creature \u2014 Demon",
+      "uri": "https://api.scryfall.com/cards/f54c7f9f-a1ea-4bf0-8ab3-cca49f393f4a"
+    },
+    {
+      "object": "related_card",
+      "id": "83437022-ba00-4370-83c2-ce1260336fcc",
+      "component": "combo_piece",
+      "name": "Archfiend's Vessel",
+      "type_line": "Creature \u2014 Human Cleric",
+      "uri": "https://api.scryfall.com/cards/83437022-ba00-4370-83c2-ce1260336fcc"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "bc94aba1-7376-4e02-a12d-3a2efb66ab0f",
+  "set": "m21",
+  "set_name": "Core Set 2021",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/bc94aba1-7376-4e02-a12d-3a2efb66ab0f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am21&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m21?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/83437022-ba00-4370-83c2-ce1260336fcc/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A62c240ac-f2dd-4e39-9e82-50307efa833e&unique=prints",
+  "collector_number": "88",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jake Murray",
+  "artist_ids": [
+    "be53e4e1-ab31-494a-b154-e00ee97eb463"
+  ],
+  "illustration_id": "b1493aff-1c73-43ad-8c9e-130a322369fb",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14233,
+  "penny_rank": 3308,
+  "preview": {
+    "source": "Eric Portnoy",
+    "source_uri": "https://twitter.com/BarbarianSSJ/status/1270154931345874944",
+    "previewed_at": "2020-06-08"
+  },
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.50",
+    "usd_etched": null,
+    "eur": "0.19",
+    "eur_foil": "0.45",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=485411&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArchfiend%2527s%2BVessel",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArchfiend%2527s%2BVessel",
+    "edhrec": "https://edhrec.com/route/?cc=Archfiend%27s+Vessel"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F215555%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=468184&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/81403?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -4088,3 +4088,35 @@ later layer 6 timestamp wins (CR 613.7).
 Still not modelled: The Death of Gwen Stacy's chapter II ("Each player may
 discard a card. Each player who doesn't loses 3 life.") is silent - the card
 was added only as the proof printing for chapter III.
+## S22: put or copy onto the battlefield with haste, then take it away at the next end step
+
+Emperor of Bones, Fable of the Mirror-Breaker (and its full `A // B` name),
+Nahiri, the Harbinger, Nahiri, the Unforgiving, Tamiyo, Compleated Sage,
+Lagomos, Hand of Hatred, Lightning Coils and Prized Amalgam were silent or
+failing closed. Every clause of all eight now sweeps `handled`. CR numbers
+verified with `mise run rules:find`: 101.3, 105.2, 107.3a, 113.6m, 115.1,
+115.6, 122.1h, 122.6, 400.3, 400.7, 400.7d, 508.1d, 500.6, 603.4, 603.7a,
+603.7b, 603.7c, 603.7d, 603.7e, 606.4, 607.2a, 608.2b, 608.2c, 608.2d,
+611.2a, 613.1f, 701.13a, 701.21a, 701.46a, 702.10b, 702.138a, 707.2, 707.9a,
+707.9b.
+
+| Mechanic | Rules | How | Tests |
+|---|---|---|---|
+| "`<antecedent>`. [`<It/That token/They>` gain(s) `<keywords>`[ `<duration>`].] [`<Sacrifice/Exile/Destroy/Return>` `<it/them/that creature>`[ to your hand] at the beginning of the next end step.]" on a token, a token copy, a searched or put card | CR 603.7a-c, CR 400.7, CR 613.1f, CR 611.2a, CR 608.2c | `machines/effects._parse_put_then_grant_then_delayed_whole_text` (ability and spell dispatch, after `parse_mixed_effect`): the antecedent is read by the ordinary dispatcher and run with a before/after (id, zone-change stamp) diff of the battlefield; the grant is `only_this_incarnation`; the delayed clause is `machines/delayed.AnaphoricDelayedClause.triggers_for_all`, one ability per singular pronoun, one `ActOnEachSubject` for a plural one | `scenarios/test_haste_and_end_step_removal.py` (Kiki-Jiki, Mirror Breaker; Feral Lightning; Through the Breach) |
+| "Create a token that's a copy of [another] target `<creature>`, except it has haste" | CR 707.9a | `_CREATE_TOKEN_COPIES_EXCEPT_RE` now matches the singular "that's a copy" (it never did); `_read_token_copy_except` reads unquoted keywords and "it's P/T" (CR 707.9b) | `scenarios/test_haste_and_end_step_removal.py`, `scenarios/test_token_copy_of_exiled_card.py` |
+| "Exile target `<filter>` card [with mana value X / less than `<self>`'s loyalty] from your graveyard. Create a token that's a copy of `<it/that card>`[, except ...]" | CR 707.2, CR 707.9b, CR 608.2b, CR 606.4, CR 107.3a | `_parse_exile_card_then_token_copy_clause`, ahead of `parse_mixed_effect` (which read "it" as the source and copied Nahiri herself) | `scenarios/test_token_copy_of_exiled_card.py` (Offspring's Revenge) |
+| "Put a `<quality>` card exiled with this `<object>` onto the battlefield under your control[ with `<n>` `<kind>` counter(s) on it]" | CR 607.2a, CR 608.2d, CR 122.1h | `_parse_put_card_exiled_with_self_clause` over `Game.cards_exiled_with(source, source_stamp)` | `scenarios/test_counters_put_trigger_linked_exile.py` (Sisters of Stone Death) |
+| "Remove all of them from it and `<instruction with "that many">`" | CR 603.4, CR 608.2c, CR 101.3 | `_parse_remove_all_counters_then_that_many_clause`: the kind is the intervening "if"'s counters (or a printed kind), the number the count actually removed | `scenarios/test_haste_and_end_step_removal.py` |
+| Intervening "if it entered from your graveyard or you cast it from your graveyard" | CR 603.4, CR 400.3, CR 400.7d | `machines/triggers._entered_or_cast_from_graveyard_holds`; `Game.enter_the_battlefield` now puts the zone a permanent entered from on its enters event (`GameEvent.origin_zone`), and the cast half reads the permanent's `CastRecord.origin_zone` | `scenarios/test_graveyard_trigger_delayed_return.py` (Archfiend's Vessel) |
+| "return this card from your graveyard to the battlefield [tapped] at the beginning of the next end step" | CR 113.6m, CR 603.7c | `machines/delayed._RETURN_RE` reads the graveyard return and "this card"; `ReturnSubjectFromGraveyardToBattlefield` | `scenarios/test_graveyard_trigger_delayed_return.py` |
+| "[Until your next turn, ]`<target creature>` attacks [a player] (each combat / this turn) if able" | CR 508.1d, CR 611.2a, CR 115.6 | `_parse_target_attacks_if_able_clause` grants the requirement line for the printed duration; `machines/combat._own_attack_requirements` counts "attacks a player each combat if able" as obeyed only by an attack on a player | `scenarios/test_attacks_each_combat_until_next_turn.py` (Heckling Fiends) |
+
+Proof printings: Scryfall search (2026-09-23) found no second legal printing of
+"return this card from your graveyard to the battlefield ... next end step",
+"remove all of them ... create that many" or "attacks a player each combat";
+those readers are proven on the listed cards, and the widest reader of each
+(the requirement grant, the delayed return) on Heckling Fiends / the shared
+anaphoric primitive. `sweep_pool.py --effects` before/after: legal cards
+failing closed 27 -> 16, silent 50 -> 47 cards; nothing changed bucket for the
+worse. No schema bump: no new persisted field (two new `DelayedEffectSpec`
+kinds, an existing `GameEvent` field now filled for enters events).

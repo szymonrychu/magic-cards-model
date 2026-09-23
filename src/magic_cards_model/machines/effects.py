@@ -19536,6 +19536,25 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     linked_exile = _parse_linked_exile_clause(effect_text)
     if linked_exile is not None:
         return linked_exile
+    # S22's whole-text readers: each names its own object ("exiled with this
+    # creature", "that card" after an exile, "them" after a count), so none
+    # of them may be cut apart by the clause splitter below.
+    target_attacks_if_able = _parse_target_attacks_if_able_clause(effect_text)
+    if target_attacks_if_able is not None:
+        return target_attacks_if_able
+    exile_card_then_token_copy = _parse_exile_card_then_token_copy_clause(
+        effect_text, for_spell=False
+    )
+    if exile_card_then_token_copy is not None:
+        return exile_card_then_token_copy
+    put_card_exiled_with_self = _parse_put_card_exiled_with_self_clause(effect_text)
+    if put_card_exiled_with_self is not None:
+        return put_card_exiled_with_self
+    remove_all_counters_then_that_many = _parse_remove_all_counters_then_that_many_clause(
+        effect_text
+    )
+    if remove_all_counters_then_that_many is not None:
+        return remove_all_counters_then_that_many
     flashback_grant = _parse_grant_flashback_clause(effect_text)
     if flashback_grant is not None:
         return flashback_grant
@@ -20049,6 +20068,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
+    put_then_grant_then_delayed = _parse_put_then_grant_then_delayed_whole_text(
+        effect_text, for_spell=False
+    )
+    if put_then_grant_then_delayed is not None:
+        return put_then_grant_then_delayed
     condition_instead = _parse_condition_instead_clause_for_ability(effect_text)
     if condition_instead is not None:
         return condition_instead
@@ -22444,6 +22468,12 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    exile_card_then_token_copy = _parse_exile_card_then_token_copy_clause(whole, for_spell=True)
+    if exile_card_then_token_copy is not None:
+        return exile_card_then_token_copy
+    target_attacks_if_able = _parse_target_attacks_if_able_clause(whole)
+    if target_attacks_if_able is not None:
+        return target_attacks_if_able
     created_trigger = _parse_created_trigger_spell_text(whole)
     if created_trigger is not None:
         return created_trigger
@@ -22685,6 +22715,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     composed = _compose_layer_effect_with_remainder(effect_text)
     if composed is not None:
         return composed
+    put_then_grant_then_delayed = _parse_put_then_grant_then_delayed_whole_text(
+        effect_text, for_spell=True
+    )
+    if put_then_grant_then_delayed is not None:
+        return put_then_grant_then_delayed
     unread_conditional = _unreadable_conditional_clause(effect_text, for_spell=True)
     if unread_conditional is not None:
 
@@ -33921,7 +33956,8 @@ def _parse_for_each_creature_target_player_copy_clause(
 #: (the type/P-T shape), either of which `split_effect_clauses` would cut the
 #: sentence at, leaving fragments neither of which is a clause at all.
 _CREATE_TOKEN_COPIES_EXCEPT_RE = re.compile(
-    rf"^create {count_pattern('count')} tokens? that (?:are copies|'?s a copy|is a copy) of "
+    rf"^create {count_pattern('count')} tokens? "
+    r"that(?: are copies|'s a copy|’s a copy| is a copy) of "
     r"(?P<phrase>(?:another )?target .+?)"
     r"(?:, except (?P<except>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -33945,6 +33981,18 @@ _TOKEN_COPY_EXCEPT_TYPE_PT_RE = re.compile(
     r"(?:(?P<subtype>[A-Za-z]+) )?creatures? in addition to (?:their|its) other types"
     r"(?:,? and (?:they|it) (?:have|has) (?P<abilities>.+))?$",
     re.IGNORECASE | re.DOTALL,
+)
+
+
+#: CR 707.9a's granted-ability exception, unquoted keywords - "except it has
+#: haste", "except they have flying and haste".
+_TOKEN_COPY_EXCEPT_KEYWORDS_RE = re.compile(
+    r"^(?:it has|they have) (?P<keywords>[a-z ,]+)$", re.IGNORECASE
+)
+
+#: CR 707.9b's P/T-only exception - "except it's 1/1".
+_TOKEN_COPY_EXCEPT_PT_RE = re.compile(
+    r"^(?:it'?s|they'?re) (?P<power>\d+)/(?P<toughness>\d+)$", re.IGNORECASE
 )
 
 
@@ -33979,6 +34027,17 @@ def _read_token_copy_except(
     stripped = " ".join(except_text.strip().split()).rstrip(".")
     if quoted := _TOKEN_COPY_EXCEPT_QUOTED_RE.fullmatch(stripped):
         return (quoted.group("ability").strip(),), None, None, None
+    if keywords_only := _TOKEN_COPY_EXCEPT_KEYWORDS_RE.fullmatch(stripped):
+        # CR 707.9a, unquoted: "except it has haste" (Kiki-Jiki, Mirror
+        # Breaker; Reflection of Kiki-Jiki; Splinter Twin; Twinflame).
+        keywords = split_and_validate_keywords(keywords_only.group("keywords"))
+        if keywords is None:
+            return None
+        return (", ".join(keywords),), None, None, None
+    if pt_only := _TOKEN_COPY_EXCEPT_PT_RE.fullmatch(stripped):
+        # CR 707.9b: "except it's 1/1" (Offspring's Revenge; offspring's own
+        # reminder shape) replaces the copiable P/T and nothing else.
+        return (), int(pt_only.group("power")), int(pt_only.group("toughness")), None
     if type_pt := _TOKEN_COPY_EXCEPT_TYPE_PT_RE.fullmatch(stripped):
         abilities_text = type_pt.group("abilities")
         added = (_normalize_keyword_list(abilities_text),) if abilities_text else ()
@@ -44834,5 +44893,475 @@ def _parse_double_power_target_clause(text: str) -> AbilityEffect | None:
                 modification=modify_power_toughness(power, 0),
             )
         )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Put or create, [grant,] then take away at the next end step (S22)
+# --------------------------------------------------------------------------
+#
+#     <antecedent>. [<It|That token|That creature|They|Those tokens> gain(s)
+#     <keywords>[ until end of turn| until your next turn].]
+#     [<Sacrifice|Exile|Destroy|Return> <it|them|that creature|...>[ to your
+#     hand] at the beginning of the next end step.]
+#
+# One printed tail on many antecedents: a token copy (Reflection of Kiki-Jiki,
+# Kiki-Jiki, Mirror Breaker), a created token (Lagomos, Hand of Hatred;
+# Lightning Coils; Feral Lightning), a searched-for card (Nahiri, the
+# Harbinger), a card put from hand (Through the Breach), a card put from a
+# linked exile (Emperor of Bones) or a token copy of a card exiled from a
+# graveyard (Nahiri, the Unforgiving; Offspring's Revenge).
+#
+# The pronoun is CR 400.7 anaphora to whatever the antecedent put onto the
+# battlefield, discovered only as it runs - so the antecedent is parsed by
+# the ordinary dispatchers and run with a before/after diff of the
+# battlefield (id *and* zone-change stamp, so an object that left and came
+# back during the antecedent is a new one), the same technique
+# `_parse_token_then_object_anaphor_clause_pair` uses for its own tokens.
+# The delayed sentence is `machines/delayed.py`'s anaphoric primitive
+# (CR 603.7a creates it, CR 603.7c checks the object at resolution).
+
+#: "<pronoun> gain(s) <keywords>[ <duration>]" - the grant between the
+#: antecedent and the delayed sentence.
+_ANAPHOR_GAINS_KEYWORDS_RE = re.compile(
+    r"^(?P<anaphor>it|they|that token|those tokens|that creature|those creatures"
+    r"|that card|that permanent) gains? (?P<keywords>[a-z ,]+?)"
+    r"(?: (?P<duration>until end of turn|until your next turn))?$",
+    re.IGNORECASE,
+)
+
+_PLURAL_GRANT_ANAPHORS = frozenset({"they", "those tokens", "those creatures"})
+
+#: A sentence end, outside any quotation - the texts this reads carry none.
+_SIMPLE_SENTENCE_SPLIT_RE = re.compile(r"(?<=\.)\s+(?=[A-Za-z])")
+
+#: The dispatcher answers a composed head must never be built on: a notice
+#: stand-in (the head itself fails closed) or a sentinel that re-reads the
+#: card's whole oracle text rather than the head.
+_NOT_A_HEAD_NAMES = frozenset(
+    {
+        "create_continuous_effect",
+        "create_continuous_effect_of_ability",
+        "resolve_modal_spell",
+        "layer_effect_with_remainder_notice",
+    }
+)
+
+
+def _is_readable_head(effect: object) -> bool:
+    if effect is None:
+        return False
+    name = getattr(effect, "__name__", "")
+    return not (name.endswith("_notice_only") or name in _NOT_A_HEAD_NAMES)
+
+
+def _entered_since(game: "Game", before: set[tuple[UUID, UUID]]) -> list[CardState]:
+    """Every object on the battlefield now that was not there, as that same
+    object (CR 400.7), in `before`."""
+    return [
+        state for state in game.battlefield if (state.id, state.zone_change_stamp) not in before
+    ]
+
+
+def _grant_keywords_to(
+    game: "Game",
+    permanent: CardState,
+    keywords: Sequence[str],
+    duration: str | None,
+    *,
+    controller: str,
+    source_name: str,
+) -> None:
+    """CR 613.1f's layer-6 grant of `keywords` to exactly this object
+    (`only_this_incarnation`, CR 400.7), for as long as CR 611.2a's printed
+    duration says - none printed is indefinite."""
+    store = continuous_effects(game)
+    if duration == "until end of turn":
+        lasting, owner = Duration.UNTIL_END_OF_TURN, None
+    elif duration == "until your next turn":
+        lasting, owner = Duration.UNTIL_YOUR_NEXT_TURN, controller
+    else:
+        lasting, owner = Duration.INDEFINITE, None
+    for keyword in keywords:
+        store.add(
+            ContinuousEffect(
+                description=f"{source_name}: {permanent.name} gains {keyword.lower()}",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=lasting,
+                until_next_turn_of=owner,
+                selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                modification=grant_ability(keyword),
+            )
+        )
+
+
+def _parse_put_then_grant_then_delayed_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """The whole paragraph above as one CR 608.2c instruction, or `None`.
+
+    At least one of the two trailing sentences (the grant, the delayed
+    clause) must be there - an antecedent alone is somebody else's shape.
+    The antecedent is read by the ordinary dispatcher for its side
+    (`_spell_effect_or_notice` / `_ability_effect_or_notice`) and must come
+    back a real effect, never a notice stand-in: an antecedent this file
+    cannot run fails the whole paragraph closed (CR 608.2c).
+
+    A delayed clause whose pronoun is the ability's own source ("return this
+    card from your graveyard ...", Prized Amalgam) needs no antecedent at
+    all: the source is the referent.
+    """
+    if '"' in text or "“" in text:
+        return None
+    normalized = " ".join(_strip_non_effect_preamble(text).split())
+    sentences = [part for part in _SIMPLE_SENTENCE_SPLIT_RE.split(normalized) if part]
+    if not sentences:
+        return None
+    delayed = parse_anaphoric_delayed_clause(sentences[-1])
+    delayed_text: str | None = None
+    if delayed is not None:
+        delayed_text = sentences.pop()
+    grant_keywords: list[str] | None = None
+    grant_duration: str | None = None
+    grant_plural = False
+    if sentences:
+        grant_match = _ANAPHOR_GAINS_KEYWORDS_RE.fullmatch(sentences[-1].rstrip("."))
+        if grant_match is not None:
+            keywords = split_and_validate_keywords(grant_match.group("keywords"))
+            if keywords is None:
+                return None
+            grant_keywords = list(keywords)
+            grant_duration = (grant_match.group("duration") or "").lower() or None
+            grant_plural = grant_match.group("anaphor").lower() in _PLURAL_GRANT_ANAPHORS
+            sentences.pop()
+    if delayed is None and grant_keywords is None:
+        return None
+    if delayed is not None and delayed.self_referential:
+        if for_spell or sentences or grant_keywords is not None:
+            return None
+        return _self_referential_delayed_effect(delayed_text or "")
+    if not sentences:
+        return None
+    head_text = " ".join(sentences)
+    head = _spell_effect_or_notice(head_text) if for_spell else _ability_effect_or_notice(head_text)
+    if not _is_readable_head(head):
+        return None
+    assert head is not None
+    if delayed is not None and grant_keywords is not None and grant_plural != delayed.plural:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        if for_spell:
+            assert isinstance(stack_object, CardState)
+            source_id: UUID | None = stack_object.id
+            source_name = stack_object.card.name
+        else:
+            assert isinstance(stack_object, AbilityOnStack)
+            source_id, source_name = stack_object.source_id, stack_object.source_name
+        before = {(state.id, state.zone_change_stamp) for state in game.battlefield}
+        head(game, stack_object)
+        entered = _entered_since(game, before)
+        if not entered:
+            return  # CR 101.3: nothing was produced for the pronoun to name.
+        if grant_keywords is not None and (grant_plural or len(entered) == 1):
+            for permanent in entered:
+                _grant_keywords_to(
+                    game,
+                    permanent,
+                    grant_keywords,
+                    grant_duration,
+                    controller=controller,
+                    source_name=source_name,
+                )
+        if delayed is None:
+            return
+        triggers = delayed.triggers_for_all(
+            entered,
+            controller=controller,
+            source_id=source_id,
+            source_name=source_name,
+            game=game,
+        )
+        for trigger in triggers or []:
+            game.create_delayed_trigger(
+                trigger.model_copy(update={"text": (delayed_text or trigger.text).strip()})
+            )
+
+    return effect
+
+
+def _self_referential_delayed_effect(clause: str) -> AbilityEffect:
+    """A triggered ability whose whole effect is a delayed clause about its
+    own source - Prized Amalgam's "return this card from your graveyard to
+    the battlefield tapped at the beginning of the next end step." CR 603.7a
+    creates the ability as this one resolves, about the source *as it is
+    now*: `expected_stamp` is its current zone-change stamp, so a card that
+    has since left the graveyard and come back is a new object CR 603.7c
+    will not return (CR 400.7)."""
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game) if ability.source_id is not None else None
+        if not isinstance(source, CardState):
+            return
+        trigger = anaphoric_delayed_trigger(
+            clause,
+            subject=source,
+            controller=ability.controller,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            game=game,
+        )
+        if trigger is not None and source.zone is trigger.expected_zone:
+            game.create_delayed_trigger(trigger)
+
+    return effect
+
+
+#: "Exile target <filter> card [with mana value ...] from <your|a> graveyard.
+#: Create a token that's a copy of <it|that card>[, except <exception>]." -
+#: Nahiri, the Unforgiving's 0, Tamiyo, Compleated Sage's -X, Offspring's
+#: Revenge. The second sentence's pronoun is the card the first just exiled
+#: (CR 608.2c: later text refers back to earlier text), never the ability's source.
+_EXILE_CARD_THEN_TOKEN_COPY_RE = re.compile(
+    r"^exile (?P<phrase>target .+?) from (?P<zone>your graveyard|a graveyard)\.\s*"
+    r"create a token that'?s a copy of (?:it|that card)"
+    r"(?:, except (?P<except>.+?))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_card_then_token_copy_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EXILE_CARD_THEN_TOKEN_COPY_RE`'s shape, or `None`.
+
+    CR 707.2: the token copies the card's copiable values as it now is in
+    exile; CR 707.9b's exception (Offspring's Revenge's "except it's 1/1") is
+    `_read_token_copy_except`'s. CR 608.2b: a target that left the graveyard
+    is illegal, the ability does nothing, and no copy is made - the copy is
+    made only of a card this resolution actually exiled.
+    """
+    match = _EXILE_CARD_THEN_TOKEN_COPY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    phrase = f"{match.group('phrase')} from {match.group('zone')}"
+    if not _targets_understood(phrase, battlefield_only=False):
+        return None
+    exception = _read_token_copy_except(match.group("except"))
+    if exception is None:
+        return None
+    added, power, toughness, added_type = exception
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.GRAVEYARD:
+                continue
+            exiled = game.exile_permanent(target)
+            if exiled.zone is not Zone.EXILE:
+                continue
+            token_copy_of(
+                game,
+                exiled,
+                controller,
+                added_abilities=added,
+                power=power,
+                toughness=toughness,
+                added_creature_type=added_type,
+            )
+
+    return effect
+
+
+#: "Put a <quality> card exiled with <this object> onto the battlefield under
+#: your control[ with <n> <kind> counter(s) on it]." - Emperor of Bones,
+#: Sisters of Stone Death, Yggdrasil, Rebirth Engine, Tomb of the Dusk Rose.
+#: CR 607.2a: "exiled with this object" is the pile this object's own
+#: exiling ability made, read by `Game.cards_exiled_with`.
+_PUT_CARD_EXILED_WITH_SELF_RE = re.compile(
+    rf"^put (?:a|an|one) (?P<quality>[a-z ]+?) card exiled with "
+    r"(?:this [a-z]+|it|him|her) onto the battlefield under your control"
+    rf"(?: with (?P<counter_n>{COUNT}) (?P<counter>[a-z0-9+/-]+) counters? on it)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_card_exiled_with_self_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_CARD_EXILED_WITH_SELF_RE`'s shape, or `None`.
+
+    No target (CR 115.1 - "a creature card", not "target"): the controller
+    chooses among the matching cards in the source's own linked pile as the
+    ability resolves (CR 608.2d). The pile is the source *as this object*
+    (`AbilityOnStack.source_stamp`, CR 400.7). Counters are placed as it
+    arrives, the way `_parse_return_cards_from_your_graveyard_clause`
+    already places Scavenger's Talent's finality counter (CR 122.1h).
+    """
+    match = _PUT_CARD_EXILED_WITH_SELF_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    matches = _quality_matcher(match.group("quality"))
+    counter_kind = match.group("counter")
+    counter_amount = parse_count(match.group("counter_n")) if counter_kind else 0
+    if counter_kind and not counter_amount:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if ability.source_id is None:
+            return
+        candidates = [
+            card
+            for card in game.cards_exiled_with(ability.source_id, ability.source_stamp)
+            if matches(card)
+        ]
+        if not candidates:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=ability.controller,
+                prompt="choose a card exiled with this permanent to put onto the battlefield",
+                source=ability.source_name,
+                amount=1,
+                cards=tuple(card.id for card in candidates),
+                source_id=source_id_of(ability),
+            )
+        )
+        by_id = {card.id: card for card in candidates}
+        for card_id in chosen_ids:
+            permanent = game.put_onto_battlefield(by_id[card_id], ability.controller)
+            if counter_kind and permanent.zone is Zone.BATTLEFIELD:
+                game.add_counters(permanent, counter_kind.lower(), counter_amount or 0)
+
+    return effect
+
+
+#: "Remove all of them from it and <instruction with 'that many'>." -
+#: Lightning Coils. "Them" is the counters the ability's own intervening "if"
+#: named ("if this artifact has five or more charge counters on it"), "it"
+#: the source; "that many" is how many were actually removed. A printed kind
+#: ("remove all charge counters from it") names the counters itself.
+_REMOVE_ALL_COUNTERS_THEN_THAT_MANY_RE = re.compile(
+    r"^remove all (?:of them|(?P<kind>[a-z0-9+/-]+) counters) from (?:it|this [a-z]+)"
+    r"(?:,)? and (?P<rest>.*\bthat many\b.*)$",
+    re.IGNORECASE,
+)
+
+#: The counter kind an intervening "if" names - `machines/triggers.py`'s own
+#: `_COUNTER_COUNT_CLAUSE` reads the same clause for CR 603.4.
+_INTERVENING_COUNTER_KIND_RE = re.compile(r"\b(?P<kind>[a-z0-9+/-]+) counters? on it$")
+
+
+def _parse_remove_all_counters_then_that_many_clause(text: str) -> AbilityEffect | None:
+    """`_REMOVE_ALL_COUNTERS_THEN_THAT_MANY_RE`'s shape, or `None`.
+
+    CR 608.2c: one instruction - the second half's number is whatever the
+    first half actually removed, read then, not the number the condition
+    promised. The second half is parsed by the ordinary dispatcher with the
+    number substituted in, checked here once against a probe value so an
+    unreadable remainder fails the whole ability closed now rather than at
+    resolution. Zero removed does nothing more (CR 101.3).
+    """
+    match = _REMOVE_ALL_COUNTERS_THEN_THAT_MANY_RE.fullmatch(" ".join(text.split()).rstrip("."))
+    if match is None:
+        return None
+    rest = match.group("rest")
+    printed_kind = match.group("kind")
+
+    def rest_for(amount: int) -> AbilityEffect | None:
+        substituted = re.sub(r"\bthat many\b", str(amount), rest, count=1, flags=re.IGNORECASE)
+        parsed = _ability_effect_or_notice(substituted)
+        return parsed if _is_readable_head(parsed) else None
+
+    if rest_for(2) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game) if ability.source_id is not None else None
+        if not isinstance(source, CardState):
+            return
+        kind = printed_kind
+        if kind is None:
+            clause = (getattr(ability.ability, "intervening_if", None) or "").lower().strip()
+            named = _INTERVENING_COUNTER_KIND_RE.search(clause)
+            if named is None:
+                return
+            kind = named.group("kind")
+        amount = source.counter_count(kind.lower())
+        if amount <= 0:
+            return
+        source.remove_counters(kind.lower(), amount)
+        follow = rest_for(amount)
+        if follow is not None:
+            follow(game, ability)
+
+    return effect
+
+
+#: "[Until your next turn, ]<target> attacks [a player ](each combat|this
+#: turn) if able[ this turn]." - Nahiri, the Unforgiving's +1 and Heckling
+#: Fiends' activated ability: a CR 508.1d requirement put on a target by a
+#: resolving ability, for CR 611.2a's printed duration.
+_TARGET_ATTACKS_IF_ABLE_RE = re.compile(
+    r"^(?:(?P<lead>until your next turn|until end of turn), )?"
+    r"(?P<phrase>(?:up to one )?target creature(?: [a-z' ]+?)?) attacks "
+    r"(?P<player>a player )?(?P<when>each combat|this turn) if able"
+    r"(?: (?P<trail>this turn|until end of turn|until your next turn))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
+    """`_TARGET_ATTACKS_IF_ABLE_RE`'s shape, or `None`.
+
+    The requirement is granted as an ability line on the target (layer 6,
+    CR 613.1f) that `machines/combat.py`'s CR 508.1d reader already counts -
+    "This creature attacks each combat if able." or, for "attacks a player",
+    "This creature attacks a player each combat if able.", which only an
+    attack on a player obeys. "Attacks this turn if able" is the same
+    requirement ending with the turn (CR 508.1d's last sentence reads a
+    turn-long requirement at each declare-attackers step of that turn).
+    """
+    match = _TARGET_ATTACKS_IF_ABLE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    phrase = match.group("phrase")
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+    lead = (match.group("lead") or "").lower()
+    trail = (match.group("trail") or "").lower()
+    if lead and trail:
+        return None
+    this_turn = match.group("when").lower() == "this turn"
+    duration_text = lead or trail or ("until end of turn" if this_turn else "")
+    if duration_text == "this turn":
+        duration_text = "until end of turn"
+    if not duration_text:
+        return None
+    line = (
+        "This creature attacks a player each combat if able."
+        if match.group("player")
+        else "This creature attacks each combat if able."
+    )
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                _grant_keywords_to(
+                    game,
+                    target,
+                    [line],
+                    duration_text,
+                    controller=controller,
+                    source_name=source_name,
+                )
 
     return effect

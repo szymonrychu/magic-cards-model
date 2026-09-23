@@ -3903,6 +3903,16 @@ def _read_adjectives(raw_words: list[str], words: list[str]) -> tuple[_Adjective
             and _is_adjective(words[joined])
         ):
             index += 1
+        elif (
+            joined + 1 < len(words)
+            and words[index] == ","
+            and words[joined] in {"or", "and"}
+            and _is_adjective(words[joined + 1])
+        ):
+            # The serial comma closing a list of three or more: Offspring's
+            # Revenge's "red, white, or black creature card" (CR 105.2's
+            # colors, any one of which satisfies the requirement).
+            index += 2
     return adjectives, index
 
 
