@@ -122,6 +122,7 @@ from magic_cards_model.machines.cost import (  # noqa: E402
     waterbend_mana_cost,
 )
 from magic_cards_model.machines.effects import (  # noqa: E402
+    _YOU_AND_GROUP_SUBJECT_RE,
     _compose_layer_effect_with_remainder_for_ability_mode,
     _parse_counter_then_recruit_by_mana_value_pair,
     _parse_endure_clause,
@@ -1307,6 +1308,38 @@ _NOTICE_STAND_IN_NAMES = frozenset(
         "layer_effect_with_remainder_notice",
     }
 )
+
+
+def _leaves_you_and_group_player_half_unread(text: str) -> bool:
+    """Whether `text` carries `_parse_you_and_group_gain_clause`'s own
+    compound-subject shape (`machines/effects._YOU_AND_GROUP_SUBJECT_RE`) -
+    "You and `<group>` you control gain `<keyword(s)>` until end of turn",
+    Veil of Summer's own third sentence.
+
+    That parser grants the group half for real but deliberately records a
+    `PlayerSubjectSplitNotice` for the player half instead of applying it
+    (see that model's own docstring, and `docs/engine-coverage.md`'s T5/G2b
+    row, for why the player half is a separate task's scope) - the same
+    fail-closed convention `_NOTICE_STAND_IN_NAMES` above exists for. But
+    unlike those, the dispatcher this clause goes through
+    (`parse_mixed_effect_for_spell`/`parse_mixed_effect`) composes every
+    clause of a mixed-effect card into one anonymous closure before handing
+    it back, so the player-half gap has no distinct `__name__` for
+    `_dispatch_category`'s name check to see - a card carrying this sentence
+    would otherwise read `HANDLED` outright, even though a whole sentence of
+    it never runs.
+
+    Split the same way `split_effect_clauses` splits a card's raw text for
+    the real dispatchers, since the guard that keeps this subject whole as
+    one clause (`_PLAYER_GROUP_SUBJECT_AND_RE`) only fires on exactly that
+    shape - reading the unsplit text directly would miss it whenever the
+    clause is not the whole card.
+    """
+    return any(
+        _YOU_AND_GROUP_SUBJECT_RE.fullmatch(clause.strip()) is not None
+        for clause in split_effect_clauses(text)
+    )
+
 
 HANDLED = "handled"
 NOTICE = "notice"
@@ -2514,6 +2547,14 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 )
             ):
                 category = QUOTED_EFFECT
+            # `parse_mixed_effect_for_spell` composes every clause of a mixed
+            # spell into one anonymous closure, so a "you and <group>" player
+            # half it fails closed on (`_leaves_you_and_group_player_half_
+            # unread`'s own docstring) has no `__name__` `_dispatch_category`
+            # could ever see - never raise it back to HANDLED, only ever
+            # worsen an already-worse verdict.
+            if _leaves_you_and_group_player_half_unread(face.text):
+                category = _worse(category, NOTICE)
             clauses.append(ClauseOutcome(category, face.text, "spell"))
 
     activated_index = 0
@@ -2564,6 +2605,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 )
             ):
                 category = QUOTED_EFFECT
+            if _leaves_you_and_group_player_half_unread(ability.effect):
+                category = _worse(category, NOTICE)
             clauses.append(ClauseOutcome(category, ability.text, "activated"))
         elif isinstance(ability, TriggeredAbility) and is_permanent:
             if prepare_spell_face_name is not None and ability.face == prepare_spell_face_name:
@@ -2634,6 +2677,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 category = QUOTED_EFFECT
             if _condition_can_fire(printing, ability) is False:
                 category = UNMATCHABLE_CONDITION
+            if _leaves_you_and_group_player_half_unread(ability.effect):
+                category = _worse(category, NOTICE)
             clauses.append(ClauseOutcome(category, ability.text, "triggered"))
         elif ability.kind is AbilityKind.STATIC and is_permanent:
             if prepare_spell_face_name is not None and ability.face == prepare_spell_face_name:

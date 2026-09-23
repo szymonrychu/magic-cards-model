@@ -3644,7 +3644,16 @@ hexproof), with the player half recorded as an explicit, loud gap rather
 than a silent one.
 
 Sweep after this task: `--effects` shows neither Veil of Summer nor
-Sandstalker Moloch as `silent` (both `handled`); Bound // Determined's back
-half, Determined, is `handled`, and its front half, Bound, is unchanged
-(`silent` - a `_parse_shared_subject_clauses`-shaped gap out of this task's
-scope, T5b's own). `--targeting` stays at 0.
+Sandstalker Moloch as `silent`. Sandstalker Moloch is `handled`. Veil of
+Summer is `notice` - its worst clause, not its best: `parse_mixed_effect_
+for_spell` composes all three of its sentences into one closure with no
+`__name__` of its own, so the player-half gap the paragraph above describes
+had no notice stand-in name for `scripts/sweep_pool.py`'s `_dispatch_
+category` to see it by. `_leaves_you_and_group_player_half_unread` reads the
+card's own text the way `split_effect_clauses` splits it for the real
+dispatcher and downgrades the verdict directly, so a "you and `<group>`"
+compound subject can never read `handled` anywhere in the pool until T12
+actually grants the player half. Bound // Determined's back half, Determined,
+is `handled`, and its front half, Bound, is unchanged (`silent` - a `_parse_
+shared_subject_clauses`-shaped gap out of this task's scope, T5b's own).
+`--targeting` stays at 0.
