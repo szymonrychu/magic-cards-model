@@ -181,39 +181,16 @@ def test_a_disjunction_names_both_whole_descriptions():
 # -- an unreadable description fails closed -------------------------------------
 
 
-def test_an_unreadable_half_of_the_disjunction_fails_closed_with_a_notice():
-    """Moonsilver Key's "an artifact card with a mana ability or a basic land
-    card": "with a mana ability" is not a description this engine reads, so the
-    search is not run at all rather than run for the wrong set of cards."""
-    scenario = (
-        Scenario()
-        .player(
-            "alice",
-            battlefield=["Moonsilver Key", "Plains"],
-            library=["Plains", "Mind Stone"],
-        )
-        .player("bob")
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    key = scenario.find("Moonsilver Key", Zone.BATTLEFIELD, "alice")
-    (plains,) = scenario.untapped_sources("Plains")
-
-    scenario.activate(key, plains)
-    scenario.resolve_top()
-
-    assert scenario.player("alice").hand == []
-    assert [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS] == []
-    (notice,) = scenario.game.search_description_notices
-    assert notice.source_name == "Moonsilver Key"
-    assert "with a mana ability" in notice.text
-
-
 def test_the_unreadable_search_is_a_notice_not_a_silent_parse():
+    """ "with power 5 or greater" is not a description this engine reads (the
+    "with <keyword>" and "with a mana ability" qualifiers are - see
+    test_search_with_flash_description.py and
+    test_search_mana_ability_description.py), so the search is not run at all
+    rather than run for the wrong set of cards."""
     effect = trigger_effect_for(
         "Moonsilver Key",
         TriggerEvent.ENTERS_THE_BATTLEFIELD,
-        "search your library for an artifact card with a mana ability or a basic land card, "
+        "search your library for a creature card with power 5 or greater or a basic land card, "
         "reveal it, put it into your hand, then shuffle.",
     )
     assert effect is not None

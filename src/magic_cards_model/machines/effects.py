@@ -107,11 +107,13 @@ from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
     _ABILITY_WORD,
+    KEYWORD_ABILITY_NAMES,
     AbilityKind,
     ActivatedAbility,
     TriggeredAbility,
     TriggerEvent,
     _parse_line,
+    has_mana_ability,
     keyword_abilities,
     legendary_self_pronoun_normalized,
     parse_abilities,
@@ -4769,6 +4771,52 @@ def _exact_mana_cost_matcher(costs_text: str) -> Callable[[CardState], bool]:
     return matches
 
 
+#: "with a mana ability" / "with <keyword>[ or <keyword>]" after the word
+#: "card" - a quality the card *has* rather than a type it is. Waterlogged
+#: Teachings' and Mystical Teachings' "a card with flash" (CR 702.8a's flash
+#: is a keyword the card has in its library), Moonsilver Key's "an artifact
+#: card with a mana ability" (CR 605.1). Only CR 702's own keyword names are
+#: offered (`KEYWORD_ABILITY_NAMES`), longest first so "flashback" is never
+#: read as "flash" plus leftover letters; any other "with ..." phrase still
+#: does not match here and stays with whichever reader owns it.
+_KEYWORD_NAME_ALTERNATION = "|".join(
+    re.escape(name) for name in sorted(KEYWORD_ABILITY_NAMES, key=len, reverse=True)
+)
+_HAVING_PATTERN = (
+    r"a mana ability|(?:" + _KEYWORD_NAME_ALTERNATION + r")"
+    r"(?:,? or (?:" + _KEYWORD_NAME_ALTERNATION + r"))*"
+)
+
+
+def _having_matcher(having: str) -> Callable[[CardState], bool]:
+    """What `_HAVING_PATTERN` names, as a predicate on a card.
+
+    "a mana ability" is `has_mana_ability` on the face this object has now
+    (CR 712.8a: the front face in a library). A keyword list is "has any one
+    of them" (the same "or" a type list prints), compared as whole keyword
+    names against `CardState.keywords` - CR 702.34a's flashback is a different
+    keyword from flash, so Faithless Looting is not "a card with flash".
+    """
+    lowered = having.strip().lower()
+    if lowered == "a mana ability":
+        return lambda state: has_mana_ability(state.card, state.up_face_name)
+    wanted = {word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()}
+
+    def matches(state: CardState) -> bool:
+        return bool(wanted & {keyword.lower() for keyword in state.keywords})
+
+    return matches
+
+
+def _and_having(
+    base: Callable[[CardState], bool], having: Callable[[CardState], bool]
+) -> Callable[[CardState], bool]:
+    def matches(state: CardState) -> bool:
+        return base(state) and having(state)
+
+    return matches
+
+
 _SEARCH_AND_PUT_RE = re.compile(
     # "Its controller may search ..." is deliberately not an alternative here
     # any more - that subject names a different player than whoever controls
@@ -4822,6 +4870,10 @@ _SEARCH_AND_PUT_RE = re.compile(
     # CR 202.1b's "no mana cost" is not {0}. Read by `_exact_mana_cost_matcher`.
     r"(?: with mana cost (?P<mana_costs>"
     + _MANA_COST_LIST
+    + r"))?"
+    # "card with flash" / "card with a mana ability" - `_HAVING_PATTERN`.
+    + r"(?: with (?P<having>"
+    + _HAVING_PATTERN
     + r"))?"
     # Harvest Season's own X-defining tail, read the same way `_SCRY_RE`/
     # `_SURVEIL_RE` already read theirs, through `count_expression`.
@@ -5093,6 +5145,7 @@ def _quality_description(
     *,
     basic_land_type: bool = False,
     mana_costs: str | None = None,
+    having: str | None = None,
 ) -> str:
     """One card description for a `Game.may`/`Game.ask` prompt, article and
     all - "a basic land card", "a creature card with mana value 1 or less".
@@ -5109,6 +5162,8 @@ def _quality_description(
         noun += f" with mana value {max_mv} or less"
     if mana_costs is not None:
         noun += f" with mana cost {mana_costs}"
+    if having is not None:
+        noun += f" with {having}"
     return with_indefinite_article(noun)
 
 
@@ -5120,7 +5175,8 @@ def _quality_description(
 _SEARCH_DESCRIPTION_RE = re.compile(
     r"(?:(?P<quality>.+?) )?card(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
-    r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?",
+    r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?"
+    r"(?: with (?P<having>" + _HAVING_PATTERN + r"))?",
     re.IGNORECASE,
 )
 #: "or a" / "or an" between two whole card descriptions - Starfield
@@ -5211,6 +5267,8 @@ def _search_descriptions(
         whole += f" with mana value {match.group('max_mv')} or less"
     if groups.get("mana_costs"):
         whole += f" with mana cost {groups['mana_costs']}"
+    if groups.get("having"):
+        whole += f" with {groups['having']}"
     joined = quality is not None and re.search(r"\bcard\b", quality, re.IGNORECASE)
     halves = _SEARCH_DESCRIPTION_JOIN_RE.split(whole) if joined else [whole]
     matchers: list[Callable[[CardState], bool]] = []
@@ -5234,6 +5292,9 @@ def _search_descriptions(
             # CR 202.1: a printed-cost bound, not a mana-value one - see
             # `_exact_mana_cost_matcher`.
             matcher = _and_has_exact_mana_cost(matcher, _exact_mana_cost_matcher(mana_costs))
+        having = piece.group("having")
+        if having:
+            matcher = _and_having(matcher, _having_matcher(having))
         matchers.append(matcher)
         descriptions.append(
             _quality_description(
@@ -5241,6 +5302,7 @@ def _search_descriptions(
                 max_mv,
                 basic_land_type=with_basic_land_type,
                 mana_costs=mana_costs or None,
+                having=having or None,
             )
         )
     if len(matchers) == 1:
@@ -5273,9 +5335,9 @@ class SearchDescriptionNotice(EngineModel):
 
     CR 701.23a's search finds "a card that matches the given description", and
     CR 701.23b makes finding nothing a legal answer - so a description read as
-    matching nothing is indistinguishable from a real miss. Moonsilver Key's
-    "an artifact card with a mana ability or a basic land card" is the shape:
-    "with a mana ability" is not a description this engine reads. The search is
+    matching nothing is indistinguishable from a real miss. A description
+    with a qualifier `_SEARCH_DESCRIPTION_RE` does not take ("a creature card
+    with power 5 or greater or a basic land card") is the shape. The search is
     not run at all, and this records why.
     """
 

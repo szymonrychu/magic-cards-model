@@ -3783,3 +3783,273 @@ def parse_triggered_mana(effect: str) -> TriggeredManaShape | None:
     if restriction is not None:
         update["restriction"] = restriction
     return shape.model_copy(update=update) if update else shape
+
+
+# -- "a card with a mana ability" (CR 605.1) ---------------------------------
+
+#: CR 605.1a's fourth criterion: "its cost and effect don't move any card to
+#: or from a library." Drawing (CR 121.1), milling and surveilling take a card
+#: out of a library, and any text naming a library puts one in or takes one
+#: out - Chromatic Sphere's "Add one mana of any color. Draw a card." is the
+#: shape this keeps out.
+_MOVES_A_LIBRARY_CARD_RE = re.compile(
+    r"\b(?:draws?|mills?|surveils?|library|libraries)\b", re.IGNORECASE
+)
+_TARGET_WORD_RE = re.compile(r"\btargets?\b", re.IGNORECASE)
+_MANA_WORD_RE = re.compile(r"\bmana\b", re.IGNORECASE)
+
+
+def has_mana_ability(card: Card, face: str | None = None) -> bool:
+    """Whether `card` itself has a mana ability (CR 605.1) - Moonsilver Key's
+    "an artifact card with a mana ability".
+
+    - **CR 605.1a**, an activated ability: it adds mana (`ActivatedAbility.
+      mana`, whatever else the cost asks for - Lotus Petal's sacrifice,
+      Springleaf Drum's tapped creature), it does not require a target, it is
+      not a loyalty ability, and neither its cost nor its effect moves a card
+      to or from a library.
+    - **CR 605.1b**, a triggered ability: it triggers on mana (the condition
+      names mana - Caged Sun's "a land's ability causes you to add one or more
+      mana"), adds mana (`parse_triggered_mana`), and does not target.
+    - **CR 305.6**'s intrinsic ability of a land with a basic land type.
+
+    Only the card's own abilities count: a quoted ability it grants to
+    something else (Paradise Mantle's "Equipped creature has "{T}: Add ..."")
+    is that other object's, and `parse_abilities` reads the whole line as one
+    static ability. `face` is the face whose abilities count (CR 712.8a: the
+    front face anywhere but the battlefield or stack), the same convention as
+    `parse_mana_abilities`.
+    """
+    for ability in parse_abilities(card):
+        if face is not None and ability.face != face:
+            continue
+        if isinstance(ability, ActivatedAbility) and _is_activated_mana_ability(ability):
+            return True
+        if isinstance(ability, TriggeredAbility) and _is_triggered_mana_ability(ability):
+            return True
+    intrinsic = intrinsic_land_ability(card, face)
+    return intrinsic is not None and intrinsic.mana is not None
+
+
+#: CR 702's keyword abilities, one per subsection heading of the CR effective
+#: 2026-09-25, lowercased (CR 702.145's "Daybound and Nightbound" is two words a
+#: card can each have). A search for "a card with <keyword>" (Waterlogged
+#: Teachings' "a card with flash", CR 702.8a) is read only for a word on this
+#: list, so a phrase that is not a keyword never matches silently.
+KEYWORD_ABILITY_NAMES: frozenset[str] = frozenset(
+    {
+        "absorb",
+        "affinity",
+        "afflict",
+        "afterlife",
+        "aftermath",
+        "amplify",
+        "annihilator",
+        "ascend",
+        "assist",
+        "aura swap",
+        "awaken",
+        "backup",
+        "banding",
+        "bargain",
+        "battle cry",
+        "bestow",
+        "blitz",
+        "bloodthirst",
+        "boast",
+        "bushido",
+        "buyback",
+        "cascade",
+        "casualty",
+        "champion",
+        "changeling",
+        "cipher",
+        "cleave",
+        "companion",
+        "compleated",
+        "conspire",
+        "convoke",
+        "craft",
+        "crew",
+        "cumulative upkeep",
+        "cycling",
+        "dash",
+        "daybound",
+        "deathtouch",
+        "decayed",
+        "defender",
+        "delve",
+        "demonstrate",
+        "dethrone",
+        "devoid",
+        "devour",
+        "disguise",
+        "disturb",
+        "double strike",
+        "dredge",
+        "echo",
+        "embalm",
+        "emerge",
+        "enchant",
+        "encore",
+        "enlist",
+        "entwine",
+        "epic",
+        "equip",
+        "escalate",
+        "escape",
+        "eternalize",
+        "evoke",
+        "evolve",
+        "exalted",
+        "exhaust",
+        "exploit",
+        "extort",
+        "fabricate",
+        "fading",
+        "fear",
+        "firebending",
+        "first strike",
+        "flanking",
+        "flash",
+        "flashback",
+        "flying",
+        "for mirrodin!",
+        "forecast",
+        "foretell",
+        "fortify",
+        "freerunning",
+        "frenzy",
+        "fuse",
+        "gift",
+        "graft",
+        "gravestorm",
+        "harmonize",
+        "haste",
+        "haunt",
+        "hexproof",
+        "hidden agenda",
+        "hideaway",
+        "horsemanship",
+        "impending",
+        "improvise",
+        "increment",
+        "indestructible",
+        "infect",
+        "ingest",
+        "intimidate",
+        "job select",
+        "jump-start",
+        "kicker",
+        "landwalk",
+        "level up",
+        "lifelink",
+        "living metal",
+        "living weapon",
+        "madness",
+        "max speed",
+        "mayhem",
+        "melee",
+        "menace",
+        "mentor",
+        "miracle",
+        "mobilize",
+        "modular",
+        "more than meets the eye",
+        "morph",
+        "mutate",
+        "myriad",
+        "nightbound",
+        "ninjutsu",
+        "offering",
+        "offspring",
+        "outlast",
+        "overload",
+        "paradigm",
+        "partner",
+        "persist",
+        "phasing",
+        "plot",
+        "poisonous",
+        "power-up",
+        "protection",
+        "prototype",
+        "provoke",
+        "prowess",
+        "prowl",
+        "rampage",
+        "ravenous",
+        "reach",
+        "read ahead",
+        "rebound",
+        "reconfigure",
+        "recover",
+        "reinforce",
+        "renown",
+        "replicate",
+        "retrace",
+        "riot",
+        "ripple",
+        "saddle",
+        "scavenge",
+        "shadow",
+        "shroud",
+        "skulk",
+        "sneak",
+        "solved",
+        "soulbond",
+        "soulshift",
+        "space sculptor",
+        "spectacle",
+        "splice",
+        "split second",
+        "spree",
+        "squad",
+        "start your engines!",
+        "station",
+        "storied",
+        "storm",
+        "sunburst",
+        "surge",
+        "suspend",
+        "teamwork",
+        "tiered",
+        "toxic",
+        "training",
+        "trample",
+        "transfigure",
+        "transmute",
+        "tribute",
+        "umbra armor",
+        "undaunted",
+        "undying",
+        "unearth",
+        "unleash",
+        "vanishing",
+        "vigilance",
+        "visit",
+        "ward",
+        "warp",
+        "web-slinging",
+        "wither",
+    }
+)
+
+
+def _is_activated_mana_ability(ability: ActivatedAbility) -> bool:
+    """CR 605.1a's four criteria, read off one parsed activated ability."""
+    return (
+        ability.mana is not None
+        and ability.loyalty is None
+        and not _TARGET_WORD_RE.search(ability.effect)
+        and not _MOVES_A_LIBRARY_CARD_RE.search(f"{ability.cost} {ability.effect}")
+    )
+
+
+def _is_triggered_mana_ability(ability: TriggeredAbility) -> bool:
+    """CR 605.1b's criteria, read off one parsed triggered ability."""
+    return (
+        _MANA_WORD_RE.search(ability.condition) is not None
+        and not _TARGET_WORD_RE.search(ability.effect)
+        and parse_triggered_mana(ability.effect) is not None
+    )
