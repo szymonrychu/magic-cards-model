@@ -15,7 +15,10 @@ mise run install
 ## Tasks
 
 - `mise run install` - sync venv from lockfile
-- `mise run test` - pytest
+- `mise run test` - pytest, without the behavioural pool sweep
+- `mise run test:behaviour` - the behavioural pool sweep alone (several minutes)
+- `mise run test:full` - everything; with `mise run lint`, the gate that must
+  be green before any merge to `main`
 - `mise run lint` / `mise run fmt` - ruff
 
 ## Layout

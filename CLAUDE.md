@@ -261,8 +261,15 @@ passes.
   `pyproject.toml`.
 - `mise run test`, `mise run lint`, `mise run fmt`. `mise run test` leaves
   out the behavioural pool sweep; `mise run test:behaviour` runs it alone
-  (several minutes), and `mise run test:full` runs everything - the
-  full-suite/merge gate: nothing lands on `main` without `test:full` green.
+  (several minutes), and `mise run test:full` runs everything.
+- **Merge gate (owner rule): `main` holds only stable, fully tested, green
+  code, and only that is deployed.** Before any merge to `main`, both
+  `mise run lint` and `mise run test:full` (which is `test` plus
+  `test:behaviour`) must be green on the rebased branch, and the api's own
+  tiers must be green against it (`../magic-cards-model-api`: `lint`, `test`,
+  `test:pg`). A sweep case the harness cannot drive yet goes into
+  `SWEEP_DRIVER_GAPS` (per event kind and precondition, strict xfail), never
+  a bare skip.
 - `Card` is the immutable Scryfall printing. Anything mutable in a game belongs
   on `CardState` or above - do not add game state to `Card`.
 - Legality is clamped to standard, pioneer, and modern. Print, market, and
