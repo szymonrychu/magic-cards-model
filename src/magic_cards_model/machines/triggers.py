@@ -1227,11 +1227,43 @@ def _types_match(types: tuple[Type, ...] | None, condition: str) -> bool:
 #: so "Cats" yields "Cat" rather than swallowing the trailing "s".
 _OTHER_SUBTYPE = re.compile(r"\bother ([A-Za-z]+?)s?\s+you control\b", re.IGNORECASE)
 
-#: Frontline Heroism's own clause - see `condition_matches`'s `CAST_SPELL`
-#: branch for why it has to be stripped before `_types_match` sees it.
+#: "that targets only a single creature [you control | other than
+#: `<self-reference>`]" - Frontline Heroism's own "you control" and Ivy,
+#: Gleeful Spellthief's own "other than Ivy" are the identical CR 601.2c
+#: target-count restriction (CR 115.3's exactly-one) with two different
+#: qualifiers on *which* single creature counts, read by one template rather
+#: than a card-specific reader for each - see `condition_matches`'s
+#: `CAST_SPELL` branch for why either has to be stripped before `_types_match`
+#: sees it. The "you control" half needs no card name and stays a fixed
+#: module-level pattern; the "other than" half is built per-source
+#: (`_targets_only_single_creature_other_than_re`), the same reason
+#: `_self_referential` cannot be a fixed pattern either - it has to recognise
+#: *this* card's own self-reference forms (`self_reference_names`), never a
+#: hardcoded name.
 _TARGETS_ONLY_SINGLE_CREATURE_CLAUSE = re.compile(
     r"that targets only a single creature you control", re.IGNORECASE
 )
+
+
+def _targets_only_single_creature_other_than_re(
+    source_name: str, *, legendary: bool = True
+) -> re.Pattern[str]:
+    """ "that targets only a single creature other than `<self-reference>`" -
+    Ivy, Gleeful Spellthief's own shape, built for `source_name`'s own
+    self-reference forms rather than a literal name: the mechanic is "other
+    than itself", never "other than Ivy" as a hardcoded string, so a
+    differently-named card printing the identical template is read the same
+    way.
+    """
+    alternatives = "|".join(
+        self_reference_pattern(name)
+        for name in self_reference_names(source_name, legendary=legendary)
+    )
+    return re.compile(
+        rf"that targets only a single creature other than\s+(?:{alternatives})",
+        re.IGNORECASE,
+    )
+
 
 #: Danitha, Spear of Agony's own "a spell that targets an opponent or a
 #: creature an opponent controls" and Danitha, Sword of Hope's own "a spell
@@ -2228,7 +2260,21 @@ def condition_matches(
         # Hope's own general "that targets `<restriction>`" reader just below
         # never mistakes Frontline's narrower clause for a *different*
         # restriction it would have to fail closed on trying to read.
+        targets_only_single_creature_you_control_match = (
+            _TARGETS_ONLY_SINGLE_CREATURE_CLAUSE.search(condition)
+        )
+        targets_only_single_creature_other_than_pattern = (
+            _targets_only_single_creature_other_than_re(
+                source.name, legendary=_is_legendary_source(source)
+            )
+        )
+        targets_only_single_creature_other_than_match = (
+            targets_only_single_creature_other_than_pattern.search(condition)
+        )
         without_frontline_clause = _TARGETS_ONLY_SINGLE_CREATURE_CLAUSE.sub("", condition)
+        without_frontline_clause = targets_only_single_creature_other_than_pattern.sub(
+            "", without_frontline_clause
+        )
         target_match = _SPELL_THAT_TARGETS_RE.search(without_frontline_clause)
         target_clause = target_match.group("target").strip() if target_match is not None else None
         # `caster_condition` also serves as the type/colour/subtype checks'
@@ -2311,16 +2357,22 @@ def condition_matches(
                 return False
             if not holds:
                 return False
-        if "targets only a single creature you control" in lowered:
-            # Frontline Heroism's own condition - not a fact about the cast
+        if (
+            targets_only_single_creature_you_control_match is not None
+            or targets_only_single_creature_other_than_match is not None
+        ):
+            # Frontline Heroism's own "you control" and Ivy, Gleeful
+            # Spellthief's own "other than Ivy" - not a fact about the cast
             # spell's own printed characteristics at all (CR 105, CR 202.3),
             # but about *what it targets* (CR 601.2c), read off the spell's
             # own `CardState.targets` now that it sits on the stack. "only a
-            # single" is CR 115.3's exactly-one, "creature you control" is
-            # CR 109.4/608.2b's ordinary target-legality vocabulary read
-            # directly here rather than through `machines/targeting.py`,
-            # since this is a *condition on an already-legal announcement*,
-            # not a targeting requirement of Frontline Heroism's own.
+            # single" is CR 115.3's exactly-one; "creature you control" is
+            # CR 109.4/608.2b's ordinary target-legality vocabulary and
+            # "other than `<self-reference>`" is CR 201.5/115.5's own
+            # exclusion of the source itself - both read directly here
+            # rather than through `machines/targeting.py`, since this is a
+            # *condition on an already-legal announcement*, not a targeting
+            # requirement of the trigger source's own.
             if event.subject_id is None:
                 return False
             spell = game.find_by_id(event.subject_id)
@@ -2336,7 +2388,10 @@ def condition_matches(
             # an earthbent land (CR 701.66a) is a creature only there.
             if not game.characteristics_of(target).is_creature:
                 return False
-            if game.controller_of(target).username != controller:
+            if targets_only_single_creature_you_control_match is not None:
+                if game.controller_of(target).username != controller:
+                    return False
+            elif target.id == source.id:
                 return False
         if "mana value" in lowered:
             comparison = _mana_value_comparison(condition)

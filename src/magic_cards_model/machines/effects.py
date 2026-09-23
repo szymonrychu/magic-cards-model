@@ -18236,6 +18236,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if create_token_then_copy_spell_retargeted is not None:
         return create_token_then_copy_spell_retargeted
+    copy_that_spell_retargeted = _parse_copy_that_spell_retargeted_clause(effect_text)
+    if copy_that_spell_retargeted is not None:
+        return copy_that_spell_retargeted
     copy_next_spell_you_cast = _parse_copy_next_spell_you_cast_clause(effect_text)
     if copy_next_spell_you_cast is not None:
         return copy_next_spell_you_cast
@@ -36165,6 +36168,74 @@ def _parse_create_token_then_copy_spell_retargeted_clause(text: str) -> AbilityE
         # the copy only if the token is a legal target for every instance of
         # "target" on the spell, and creates nothing at all otherwise.
         game.copy_spell_targeting(spell, controller, tokens[0])
+
+    return effect
+
+
+#: "[You may] copy that spell. The copy targets `<self-reference>`." - Ivy,
+#: Gleeful Spellthief's own cast trigger effect, once its own "a player casts
+#: a spell that targets only a single creature other than Ivy" condition has
+#: been split off (`machines/triggers._targets_only_single_creature_other_
+#: than_re` reads *that* half - CR 601.2c's target-count restriction). This
+#: is the bare retarget, with no token-creation clause in front of it the way
+#: Frontline Heroism's own "create a ... token, then copy that spell. The
+#: copy targets that token." pairs one, so `_parse_create_token_then_copy_
+#: spell_retargeted_clause` above stays the reader for that shape and is
+#: never tried against this one - its own `token_clause` group has nothing
+#: to match on a bare "copy that spell.".
+#:
+#: `<self-reference>` only ever reaches this reader normalized: the literal
+#: printed name ("The copy targets Ivy.") is what `trigger_effect_for`'s
+#: first, unnormalized pass tries, and only the second,
+#: `machines/abilities.self_normalized_effect_text` pass turns it into "this
+#: permanent" before any clause parser sees it - the same two-pass precedent
+#: `trigger_effect_for`'s own docstring already documents for Ruby, Daring
+#: Tracker's own printed-name pump.
+_COPY_THAT_SPELL_RETARGETED_RE = re.compile(
+    r"^(?P<may>you may )?copy that spell\.\s*the copy targets "
+    r"(?:this permanent|this creature)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_that_spell_retargeted_clause(text: str) -> AbilityEffect | None:
+    """`_COPY_THAT_SPELL_RETARGETED_RE`'s shape - Ivy, Gleeful Spellthief.
+
+    CR 707.10e: "the copy targets `<X>`" specifies the copy's own new target
+    rather than offering CR 707.10c's optional "you may choose new targets"
+    permission, so this reaches `Game.copy_spell_targeting` (not `Game.
+    offer_new_targets_for_copy`) exactly the way `_parse_create_token_then_
+    copy_spell_retargeted_clause` above does for Frontline Heroism - it
+    builds the copy only if the trigger's own source is a legal target for
+    every instance of "target" on the spell, and creates nothing at all
+    otherwise; nothing here ever overwrites `copy.targets` directly. Ivy's
+    own "you may" is CR 608.2d's ordinary optional permission, asked before
+    the attempt - answering no is always legal and simply means no copy is
+    made, the same as an illegal specified target does.
+    """
+    match = _COPY_THAT_SPELL_RETARGETED_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    optional = match.group("may") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if spell is None or spell not in game.stack:
+            return
+        source = ability.source(game)
+        if source is None:
+            return
+        if optional and not game.may(
+            game.player(ability.controller),
+            "copy that spell",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        game.copy_spell_targeting(spell, ability.controller, source)
 
     return effect
 
