@@ -147,6 +147,15 @@ def test_the_result_is_frozen():
     assert isinstance(support.clauses[0], SupportClause)
 
 
+def test_the_support_models_announce_mutation_like_every_engine_model():
+    """The package-wide invariant (`test_models_announce_mutation`) holds for
+    the support oracle's own models too."""
+    from magic_cards_model.snapshot import EngineModel
+
+    assert issubclass(CardSupport, EngineModel)
+    assert issubclass(SupportClause, EngineModel)
+
+
 def test_the_verdict_matches_the_sweep_for_every_pool_card():
     """Single source of truth: the per-card rules-text verdict is exactly
     `classify_card`'s, for every card with rules text."""

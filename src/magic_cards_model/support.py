@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Literal, NamedTuple
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 from magic_cards_model import __version__
 from magic_cards_model.ids import install_id_allocator, reset_id_allocator
@@ -142,6 +142,7 @@ from magic_cards_model.models import CardState, Game, Player, Zone
 from magic_cards_model.models.card import Card, Layout, Legality, Type, types_of
 from magic_cards_model.models.card_state import Counters, TargetRef
 from magic_cards_model.numbers import parse_count
+from magic_cards_model.snapshot import EngineModel
 
 #: The package's own real Scryfall printings (`data/printings`), used only as
 #: probe material: a trigger condition naming "a Mountain" or "an artifact" is
@@ -2761,7 +2762,7 @@ _KEYWORD_IGNORED_REASON = "no machine in the engine executes this keyword"
 ENGINE_VERSION = f"{__version__}+schema{Game.CURRENT_SCHEMA_VERSION}"
 
 
-class SupportClause(BaseModel):
+class SupportClause(EngineModel):
     """One clause of a card and what the engine does with it."""
 
     model_config = ConfigDict(frozen=True)
@@ -2780,7 +2781,7 @@ class SupportClause(BaseModel):
     source: str
 
 
-class CardSupport(BaseModel):
+class CardSupport(EngineModel):
     """What the engine supports on one card: every clause's own verdict and
     the card's, which is its worst clause's (silent < unaudited < notice <
     handled). A card with no clauses at all (a vanilla creature) is
