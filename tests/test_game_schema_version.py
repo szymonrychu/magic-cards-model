@@ -14,7 +14,9 @@ full policy and the bump rule this module exercises rather than restates.
 
 import pytest
 
-from magic_cards_model.machines import Step
+from magic_cards_model.machines import PriorityOutcome, Step
+from magic_cards_model.machines.casting_restrictions import create_spells_cant_be_countered_grant
+from magic_cards_model.machines.triggers import AbilityOnStack
 from magic_cards_model.models import CardState, Match, Player
 from magic_cards_model.models.card import Color
 from magic_cards_model.models.game import Game, SchemaVersionMismatch
@@ -428,3 +430,105 @@ def test_a_snapshot_written_before_flow_three_integration_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_FLOW_THREE_BLOCK_TAP_AND_ANNIHILATE_FIXES}",
     ):
         Game.model_validate(dumped)
+
+#: The version stamped before the F1T11 integration bump: `Game.player_
+#: subject_split_notices` (T5) and `CastingRuleEffect.excluded_source_id`
+#: (T5) landed without a bump, and the dead-object-to-library dies readers
+#: (T9/G6) closed Murderous Rider et al. against a `GameEvent.zone_change_
+#: stamp` bumped separately (46 -> 47, still true and unrepeated here); this
+#: is the integration wave's own bump for what stayed unbumped after it.
+_SCHEMA_VERSION_BEFORE_F1T11_INTEGRATION = 51
+
+
+def test_the_f1t11_integration_bump_moved_the_version_past_fifty_one() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_F1T11_INTEGRATION
+
+
+def test_a_snapshot_written_before_the_f1t11_integration_bump_is_refused() -> None:
+    """A version-51 dump is refused rather than decoded as current: Smuggler's
+    Copter's crew-and-attack/block "you may draw a card. If you do, discard a
+    card." went from `<none>` (a silent no-op) to a real merged reader
+    (f1-t8/G5) on a printing that was already in the pool, the bump rule's
+    second bullet by name - a version-51 game holding a crewed, attacking
+    Copter would resolve that trigger differently decoded here."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_F1T11_INTEGRATION
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_F1T11_INTEGRATION}",
+    ):
+        Game.model_validate(dumped)
+
+
+def _a_game_with_a_pending_dies_trigger_and_a_cant_be_countered_grant() -> Game:
+    """A real board carrying both of T5's/T9's own reachable-but-unbumped
+    state at once, played to the point that matters rather than hand-built:
+    Murderous Rider's dies trigger sitting on the stack, still holding the
+    `GameEvent.zone_change_stamp` (T9/G6) that lets it find its own graveyard
+    incarnation when it resolves, and a Veil-of-Summer-shaped `CastingRule
+    Effect` (T5/G2b) granting alice's spells protection from countering this
+    turn, recorded on `Game.casting_rule_effects`."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Murderous Rider"], library=["Forest", "Island"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    rider = scenario.creature("Murderous Rider", "alice")
+
+    scenario.game.destroy(rider)
+    scenario.game.put_triggers_on_stack()
+    scenario.game.casting_rule_effects.append(
+        create_spells_cant_be_countered_grant("alice", "Veil of Summer")
+    )
+    return scenario.game
+
+
+def test_round_trip_preserves_a_pending_dies_trigger_and_the_cant_be_countered_grant() -> None:
+    """Extends the module's own round-trip coverage (`test_round_trip_at_the_
+    current_version_is_unaffected` only ever plays a pump spell) to the two
+    kinds of state this integration bump exists for: a pending trigger
+    carrying a `GameEvent.zone_change_stamp`, and a `Game.casting_rule_
+    effects` entry - both reachable from `Game.model_dump()` and both able to
+    resolve differently if a decode ever silently lost either one."""
+    game = _a_game_with_a_pending_dies_trigger_and_a_cant_be_countered_grant()
+
+    (rider_trigger,) = [
+        ability
+        for ability in game.stack
+        if isinstance(ability, AbilityOnStack) and ability.source_name == "Murderous Rider"
+    ]
+    assert rider_trigger.event is not None
+    assert rider_trigger.event.zone_change_stamp is not None
+    assert len(game.casting_rule_effects) == 1
+
+    dumped = game.model_dump(mode="json")
+    assert dumped["schema_version"] == Game.CURRENT_SCHEMA_VERSION
+
+    decoded = Game.model_validate(dumped)
+    assert decoded.model_dump(mode="json") == dumped
+
+    (decoded_trigger,) = [
+        ability
+        for ability in decoded.stack
+        if isinstance(ability, AbilityOnStack) and ability.source_name == "Murderous Rider"
+    ]
+    assert decoded_trigger.event is not None
+    assert decoded_trigger.event.zone_change_stamp == rider_trigger.event.zone_change_stamp
+    assert len(decoded.casting_rule_effects) == 1
+    assert decoded.casting_rule_effects[0].kind == game.casting_rule_effects[0].kind
+
+    # And it is still live: the dies trigger still resolves and still finds
+    # its own graveyard incarnation to move, exactly as the un-decoded game
+    # would have.
+    for _ in range(len(decoded.players_in_game)):
+        holder = decoded.priority_holder or decoded.controller_of_player(decoded.turn.active_player)
+        outcome = decoded.pass_priority(holder)
+        if outcome is not PriorityOutcome.PASSED:
+            break
+    decoded_rider = [
+        state for state in decoded.player("alice").library if state.name == "Murderous Rider"
+    ]
+    assert decoded_rider, "the decoded trigger must still find and move its own dead incarnation"

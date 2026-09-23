@@ -2855,7 +2855,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 51
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 52
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3560,6 +3560,36 @@ class Game(EngineModel):
     only a single creature other than itself" trigger condition) is a wholly
     new mechanic no pool printing used before it existed to write it - the
     bump rule's own carve-out - so it needs no bump of its own.
+    Bumped 51 -> 52 (F1T11 integration): `Game` gained `player_subject_split_
+    notices` and `CastingRuleEffect` gained `excluded_source_id` (T5/G2b's
+    "You and `<group>` gain `<keyword(s)>` until end of turn" subject split and
+    Determined's "Other spells you control can't be countered this turn." -
+    fields added to `Game` and to something reachable from its dump per the
+    bump rule's first bullet, landed on this branch without their own bump on
+    the wave's stated convention of one bump at integration). A version-51
+    snapshot holding either - a pending player-half split notice, or a
+    `SPELLS_CANT_BE_COUNTERED_GRANT` naming an excluded source - would decode
+    with the new field silently absent: the split notice would lose its own
+    identity and the exclusion would read as "no exclusion", letting a
+    counterspell that should still work against Determined's own casting fail
+    instead. (T9/G6's own `GameEvent.zone_change_stamp` - the dead-object-to-
+    library dies readers' CR 603.10a/400.7e look-back stamp - already moved
+    this version once, 46 -> 47, at its own merge; nothing further to bump for
+    it here.)
+
+    This bump also covers the wave's own bump-rule second bullet: f1-t8/G5's
+    "you may `<action>`. If you do, `<consequence>`." merger closed Smuggler's
+    Copter - a printing already in the pool, not one this task added - from a
+    silent no-op (`<none>` in the dispatch fingerprint) to a real reader
+    (`parse_mixed_effect`), so a crewed, attacking or blocking Copter's draw-
+    then-discard trigger now actually draws and discards instead of doing
+    nothing. A version-51 snapshot holding that trigger on the stack, or
+    holding the Copter itself, would resolve it differently decoded here, so
+    it is refused rather than replayed into a different game. (f3-t8's own
+    CR 707.10e generalisation, read against this same rule, changes no
+    already-pooled card's resolution - only Ivy, a new fixture this session
+    added - so it needs no bump of its own; Frontline Heroism's copy-
+    targeting fix was already bumped at its own, earlier merge.)
     """
 
     @model_validator(mode="before")
