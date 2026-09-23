@@ -23,18 +23,25 @@ Amy does. The pieces, each looked up:
 
 CR 724.1's procedure itself is built now: `Game.end_the_turn` performs
 CR 724.1a's discarded triggers, CR 724.1b's exile (including the resolving
-object, tracked on `Game.resolving`), CR 724.1d's jump to the cleanup step and
-its combat removal, and CR 724.1f's "no player gets priority". The four tests
-below drive it directly.
+object, tracked on `Game.resolving`), CR 724.1c's state-based-action check,
+CR 724.1d's jump to the cleanup step and its combat removal, and CR 724.1f's
+"no player gets priority". The tests below drive it directly.
 
-Two pieces of DDR#957 remain unbuilt, and they are what the `xfail` at the
-bottom names: splice (`machines/casting.py`) and Plagiarize's draw replacement
-(`machines/replacement.py`). Time Stop's own "End the turn." also has no row in
-`machines/effects.py`, so nothing yet calls `end_the_turn` from a resolution.
-
-**CR 724.1c and CR 724.1e could not be confirmed** with
-`knowledge_search(type="rules")` in the session that wrote this, so neither is
-implemented or cited.
+Both DDR#957 pieces are built now too: splice (`machines/casting.py`) and
+Plagiarize's draw replacement (`machines/replacement.py`), and Time Stop's own
+"End the turn." has a row in `machines/effects.py` (`end_the_turn_effect`), so
+`test_time_stop_ends_the_turn_and_exiles_the_stack_under_it` below drives the
+whole thing from a real resolution rather than a direct call. What CR 724.1's
+procedure leaves *owed* - the cleanup step's own CR 514.1/514.2 turn-based
+actions, deferred rather than skipped, and CR 724.1c/f's own trigger-stacking
+and "another cleanup step" - is `tests/scenarios/test_ending_the_turn_cleanup.
+py`'s whole subject, not this file's. The tests below that call
+`Game.end_the_turn` directly, rather than through a real resolution, still
+leave that debt outstanding (`Game.cleanup_owed` stays true) exactly as
+before this wave, because nothing here ever reaches the `Game._before_
+priority` call that pays it off - only the two tests driven through a genuine
+`resolve_top` (Time Stop's own resolution, and DDR#957's spliced one) do, and
+both now leave `cleanup_owed` false by the time they finish.
 
 Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
@@ -306,6 +313,11 @@ def test_time_stop_ends_the_turn_and_exiles_the_stack_under_it():
     assert scenario.game.stack_is_empty
     assert scenario.step is Step.CLEANUP, "CR 724.1d skips to the cleanup step"
     assert scenario.player("bob").life == 20, "the Bolt never resolved"
+    # CR 608.2m's "will continue to resolve fully" reaches the end of Time
+    # Stop's own text (there is no more of it) before the cleanup step it owes
+    # actually runs: `Game._before_priority`, reached as this resolution
+    # finishes, already paid the debt off.
+    assert scenario.game.cleanup_owed is False
 
 
 def test_the_spliced_draw_happens_in_cleanup_and_plagiarize_steals_it():
@@ -377,3 +389,11 @@ def test_the_spliced_draw_happens_in_cleanup_and_plagiarize_steals_it():
     # hand was empty, which conflated "did not draw" with "no longer holds the
     # card he only revealed".
     assert [state.name for state in scenario.player("bob").hand] == ["Everdream"]
+    # CR 608.2m again: Everdream's spliced "Draw a card." is the rest of this
+    # same resolution's text, and it already ran (the draw above) before the
+    # owed cleanup step's CR 514.2 could end Plagiarize's "until end of turn"
+    # replacement - had the ordering been reversed, bob would have drawn
+    # instead of alice. `Game._before_priority` pays the debt only once this
+    # whole resolution, spliced text included, has finished.
+    assert scenario.game.cleanup_owed is False
+    assert scenario.game.draw_redirections == [], "CR 514.2 has since ended it"

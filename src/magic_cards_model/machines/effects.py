@@ -2910,7 +2910,39 @@ def end_the_turn_effect(game: "Game", spell: CardState) -> None:
     still runs, because `effect_for`'s fallback executes each clause in the
     order written (CR 608.2c) and this one is Time Stop's only sentence -
     anything spliced on sits beside it and is reached on its own.
+
+    Reached from an activated ability's own printed text the identical way,
+    with no row or extension of its own needed: `_PLAIN_END_THE_TURN_RE`
+    lives in `_parse_targeted_clause`, which `parse_mixed_effect`/
+    `activated_effect_for` already try for every activated ability with no
+    `ACTIVATED_EFFECTS` row, and this function never reads its second
+    argument at all - it works identically for an `AbilityOnStack` as for a
+    `CardState`. Sundial of the Infinite's "{1}, {T}: End the turn." is the
+    printing that exercises it (its own "Activate only during your turn."
+    is a separate CR 602.5 timing restriction, already stripped off the
+    effect text before this is ever reached - see `ActivatedAbility.
+    instructions`/`activated_effect_for`).
     """
+    game.end_the_turn()
+
+
+def end_the_turn_if_your_turn_effect(game: "Game", stack_object: "StackObject") -> None:
+    """Day's Undoing: "If it's your turn, end the turn." - CR 724.1's
+    procedure, gated on CR 102.1's active player being this resolving spell's
+    own controller.
+
+    Not CR 608.2a's intervening *if* - that rule is for a *triggered*
+    ability's own trigger condition, rechecked as it resolves. This is a
+    plain CR 608.2c instruction carrying a condition, read and acted on once,
+    the same as any other "if <condition>, <instruction>" clause.
+
+    "Your turn" is the resolving object's own controller's turn, not the
+    caster's at some earlier moment: a spell or ability has exactly one
+    controller for its whole time on the stack, so there is no second
+    reading to weigh against `game.controller_of`'s answer.
+    """
+    if game.controller_of(stack_object).username != game.active_player.username:
+        return
     game.end_the_turn()
 
 
@@ -12657,9 +12689,9 @@ _DAMAGE_EACH_CREATURE_RE = re.compile(
 #: - CR 615.1a's prevention effect naming neither a permanent nor a player, so
 #: the shield protects the whole board; see `prevent_all_combat_damage`.
 #: Time Stop's whole text. CR 724.1's procedure lives on `Game.end_the_turn`;
-#: this is only the sentence that calls it. Distinct from
-#: `_CONDITIONAL_END_THE_TURN_RE` far below, which is Day's Undoing's *gated*
-#: "if it's your turn, end the turn" and is still a notice.
+#: this is only the sentence that calls it. Distinct from `_END_THE_TURN_RE`
+#: far below, which is Day's Undoing's own *gated* "if it's your turn, end
+#: the turn" and reads `end_the_turn_if_your_turn_effect` instead.
 _PLAIN_END_THE_TURN_RE = re.compile(r"^end the turn\.?$", re.IGNORECASE)
 _PREVENT_ALL_COMBAT_DAMAGE_RE = re.compile(
     r"^prevent all combat damage that would be dealt this turn\.?$", re.IGNORECASE
@@ -13606,6 +13638,9 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
 
     if _PLAIN_END_THE_TURN_RE.fullmatch(clause):
         return end_the_turn_effect  # type: ignore[return-value]
+
+    if _END_THE_TURN_RE.fullmatch(clause.strip().rstrip(".")):
+        return end_the_turn_if_your_turn_effect
 
     if _PREVENT_ALL_COMBAT_DAMAGE_RE.fullmatch(clause):
         return prevent_all_combat_damage  # type: ignore[return-value]
@@ -23432,24 +23467,23 @@ def _unreadable_conditional_clause(text: str, *, for_spell: bool) -> str | None:
     return _unreadable_end_the_turn_clause(whole)
 
 
-#: "If it's your turn, end the turn." - Day's Undoing's second sentence.
-#: CR 724.1 ("Some cards end the turn. When an effect ends the turn, follow
-#: these steps in order, as they differ from the normal process for resolving
-#: spells and abilities") is a whole procedure of its own - exile the stack
-#: (CR 724.1b), skip the rest of the turn's steps and phases, then the
-#: cleanup-step actions of CR 514.1 and CR 514.2 - none of which this engine's
-#: turn machine can be told to do. Recorded as a `ConditionalClauseNotice`
-#: rather than left silent: the condition ("if it's your turn") is plainly a
-#: CR 118 conditional clause, and the point of the notice is that the card
-#: does nothing *and says so*, rather than quietly resolving only its first
-#: sentence - which for this card would be a strictly worse outcome, refilling
-#: an opponent's hand with no turn ended.
+#: "If it's your turn, end the turn." - Day's Undoing's second sentence, read
+#: for real by `end_the_turn_if_your_turn_effect` (`_parse_targeted_clause`,
+#: reached through the ordinary per-clause dispatch ahead of everything
+#: below). What is left here is `_unreadable_end_the_turn_clause`'s own use of
+#: this same regex as a `ConditionalClauseNotice` detector for a card that
+#: pairs this exact sentence with some *other* clause this wave still cannot
+#: read - the per-clause parse of "if it's your turn, end the turn" alone
+#: would succeed, but CR 608.2c's fail-closed-per-instruction rule still takes
+#: the whole effect down with its unreadable sibling, and this is what names
+#: the shape in the notice rather than leaving the whole card silent.
 _END_THE_TURN_RE = re.compile(r"^if it'?s your turn, end the turn$", re.IGNORECASE)
 
 
 def _unreadable_end_the_turn_clause(whole: str) -> str | None:
     """The "end the turn" clause inside `whole`, if there is one - see
-    `_END_THE_TURN_RE`."""
+    `_END_THE_TURN_RE`'s own docstring for why this still exists even though
+    the clause itself now parses."""
     clauses = _prepare_effect_clauses(whole)
     if clauses is None:
         return None

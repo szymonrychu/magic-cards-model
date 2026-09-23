@@ -31,8 +31,10 @@ in the session that wrote it.
   rule above, because nothing can reach the stack there to begin with.
 - **CR 502.4** - no player receives priority during the untap step.
 - **CR 514.3** - normally no player receives priority during the cleanup
-  step either; CR 514.3a's exception (a cleanup trigger reopening the step)
-  is not modelled - see `Game.advance`'s docstring.
+  step either; CR 514.3a's exception (a cleanup trigger reopening the step,
+  and CR 514.3a's own "another cleanup step" once that round concludes) is
+  modelled now - see `Game.step_grants_priority` and
+  `tests/scenarios/test_ending_the_turn_cleanup.py`.
 - **CR 117.3a** - the active player receives priority first, at the start of
   most steps and phases.
 - **CR 723.5** - while controlling another player, a controller makes that

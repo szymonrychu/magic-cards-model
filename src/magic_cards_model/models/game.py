@@ -2793,7 +2793,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 48
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 49
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3451,6 +3451,15 @@ class Game(EngineModel):
     the stack, or one holding either permanent, would resolve that trigger
     differently, so a version-47 snapshot is refused rather than replayed
     into a different game.
+
+    Bumped 48 -> 49: `Game` gained `cleanup_owed` (CR 724.1's "end the turn"
+    now performs CR 724.1c's state-based check and defers the cleanup step's
+    own CR 514.1/514.2 turn-based actions rather than skipping them, and
+    `_before_priority` pays that debt off, CR 514.3a/724.1f included). A
+    version-48 snapshot paused mid-resolution after an effect ended the turn
+    would resume with that debt silently forgotten - the cleanup that
+    "until end of turn" effects and the discard step depend on would simply
+    never happen - so it is refused.
     """
 
     @model_validator(mode="before")
@@ -3600,6 +3609,23 @@ class Game(EngineModel):
     `Scenario.manual_turn_based_actions()` turns this off for one scenario.
     Note that `Scenario.start_at` walks the turn machine directly and never
     fires turn-based actions, whatever this is set to.
+    """
+
+    cleanup_owed: bool = False
+    """Whether a cleanup step's own CR 514.1/514.2 turn-based actions are
+    owed but have not run yet (CR 724.1d/724.1f).
+
+    Set by `end_the_turn`, which drops the turn pointer straight into the
+    cleanup step without performing its discard or its damage/"until end of
+    turn" wipe - CR 608.2m lets the spell or ability whose text called it
+    keep resolving, and those effects must still be in force for it. Cleared
+    by `_before_priority`, which is where the owed cleanup actually happens
+    once that resolution finishes: see both docstrings.
+
+    A plain persisted field rather than transient state: CR 608.2d's
+    decision-pending pause can leave a game sitting with this true (the
+    resolution that set it has not yet reached its own end), and a paused
+    game that forgot the debt would resume having silently skipped it.
     """
 
     def _allocate_id(self) -> UUID:
@@ -4268,7 +4294,7 @@ class Game(EngineModel):
         CR 724.1: "Some cards end the turn. When an effect ends the turn, follow
         these steps in order, as they differ from the normal process for
         resolving spells and abilities (see rule 608)." The steps this performs,
-        each looked up:
+        each looked up in full:
 
         - **CR 724.1a** - "If there are any triggered abilities that triggered
           before this process began but haven't been put onto the stack yet,
@@ -4283,19 +4309,51 @@ class Game(EngineModel):
           stack once it starts to resolve, it will continue to resolve fully."
           So Time Stop's own remaining text - a spliced-on card's, say - still
           runs after this returns.
+        - **CR 724.1c** - "Check state-based actions. No player gets priority,
+          and no triggered abilities are put onto the stack." `check_state_
+          based_actions` alone is exactly this half of CR 704.3: it performs
+          every applicable state-based action (a lethally damaged creature
+          here, say) and records whatever that triggers in `pending_triggers`
+          the same way any other state-based check does, but - unlike
+          `_check_state_based_actions_and_stack_triggers`, which every ordinary
+          priority moment goes through - it never calls `put_triggers_on_stack`
+          itself, so nothing this finds reaches the stack here.
         - **CR 724.1d** - "The current phase and/or step ends. If this happens
-          during combat, remove all creatures and planeswalkers from combat. The
-          game skips straight to the cleanup step." The turn machine's pointer
-          is moved to `Step.CLEANUP` directly; the cleanup step's own turn-based
-          actions (CR 514.1, 514.2) are `cleanup_step`'s job and are *not*
-          performed here, which is what leaves an "until end of turn" effect
-          still running for whatever resolves next.
+          during combat, remove all creatures and planeswalkers from combat.
+          The game skips straight to the cleanup step; skip any phases or
+          steps between this phase or step and the cleanup step. If an effect
+          ends the turn during the cleanup step, a new cleanup step begins."
+          `advance_to(Step.CLEANUP)` is a no-op when the pointer is already
+          there, which is exactly how "a new cleanup step begins" for that
+          case reaches the same `cleanup_owed` machinery as the ordinary one -
+          see below.
+        - **CR 724.1e** - "Even though the turn ends, 'at the beginning of the
+          end step' triggered abilities don't trigger because the end step is
+          skipped." `TurnMachine.advance_to` moves the pointer with no event of
+          its own; only `Game._advance_past_checks`'s own step-by-step walk
+          ever emits `TriggerEvent.BEGINNING_OF_STEP`, and this never calls it,
+          so the end step's trigger simply never gets a moment to fire.
         - **CR 724.1f** - "No player gets priority during this process, so
-          triggered abilities are not put onto the stack." Nothing here calls
-          `put_triggers_on_stack` or touches the priority machine.
-
-        **Unverified**: `knowledge_search` in this session could not return
-        CR 724.1c or CR 724.1e, so neither is implemented or cited here.
+          triggered abilities are not put onto the stack. If any triggered
+          abilities have triggered since this process began, those abilities
+          are put onto the stack during the cleanup step, then the active
+          player gets priority and players can cast spells and activate
+          abilities. Then there will be another cleanup step before the turn
+          finally ends. If no triggered abilities have triggered during this
+          process, no player gets priority during the cleanup step." The
+          cleanup step's own CR 514.1/514.2 turn-based actions are not
+          performed here - `cleanup_owed` records that they are owed instead -
+          which is what leaves an "until end of turn" effect (Giant Growth's
+          own pump, say) still running for whatever the resolution does next.
+          `Game._before_priority`, called as that resolution finishes (every
+          call site of it is a resolution's own final step), pays the debt:
+          it runs `cleanup_step`, then the ordinary CR 704.3/603.3 check every
+          resolution already gets - which is CR 514.3a's own text a second
+          time, catching whatever CR 724.1c or the cleanup step itself left
+          pending and putting it on the stack with the active player given
+          priority - and finding nothing left pending immediately after
+          resolving whatever *did* get stacked is that same method's cue to
+          pay off "another cleanup step" the identical way, recursively.
         """
         with self._id_allocator_scope():
             assert self.turn is not None
@@ -4317,14 +4375,17 @@ class Game(EngineModel):
                 resolving.move_to(Zone.EXILE)
                 self.exile.append(resolving)
                 self.turn_ended_exiled_ids.add(resolving.id)
+            self.check_state_based_actions()  # CR 724.1c
             # CR 724.1d, the combat half: removing every creature and planeswalker
             # from combat is `CombatMachine.clear`'s whole job.
             self.combat.clear()
-            self.turn.advance_to(Step.CLEANUP)
-            # CR 724.1f: "No player gets priority during this process". The pointer
-            # now rests in a cleanup step with an emptied `pending_triggers` and an
-            # exiled stack, so CR 514.3's ordinary "no player receives priority"
-            # is the state to be in, and this is what puts it there.
+            self.turn.advance_to(Step.CLEANUP)  # CR 724.1d, the step-skip half
+            self.cleanup_owed = True  # CR 724.1d/f: owed, not performed, here
+            # CR 724.1c/724.1f: "No player gets priority during this process".
+            # `step_grants_priority` reads `cleanup_owed` to keep withholding it
+            # even though CR 724.1c's own check, just above, may already have
+            # left something in `pending_triggers` - see that property's own
+            # docstring.
             self.sync_priority_with_step()
 
     def cleanup_step(self) -> list[CardState]:
@@ -7953,7 +8014,41 @@ class Game(EngineModel):
         CR 704.3 checks state-based actions first, then CR 603.3 puts anything
         that has triggered onto the stack, and only then does `PriorityMachine`
         hand priority out.
+
+        **CR 724.1d/724.1f - the owed cleanup.** Every call site of this method
+        is a resolution's own final step (see `resolve_top`/`_resolve_ability`),
+        which is exactly when CR 608.2m says a spell or ability that called
+        `end_the_turn` "will continue to resolve fully" - so if a cleanup step's
+        own CR 514.1/514.2 turn-based actions are still owed (`cleanup_owed`),
+        they happen first, right here, before the ordinary check below.
+
+        **CR 514.3a - "another cleanup step".** Read in full: "... those
+        state-based actions are performed, then those triggered abilities are
+        put on the stack, then the active player gets priority. Players may
+        cast spells and activate abilities. Once the stack is empty and all
+        players pass in succession, another cleanup step begins." Every object
+        this method is resolving that was sitting in a cleanup step (this
+        method's own tail syncs priority to match, so nothing else could have
+        put it there) got onto the stack only because that exception, or
+        `cleanup_owed`'s own version of it just above, had already granted
+        priority - so finding nothing left pending immediately after resolving
+        it is exactly that "stack is empty and all players pass" moment. The
+        fix is to pay off one more owed cleanup right away: CR 724.1d's "a new
+        cleanup step begins" (ending the turn again from inside a cleanup step
+        CR 514.3a had reopened) is the identical event, and reaches here as
+        `cleanup_owed` being set once again.
+
+        `was_owed` is what tells the two apart from CR 724.1f's own "if no
+        triggered abilities have triggered during this process, no player gets
+        priority" case: a cleanup step that owed its very first CR 514.1/514.2
+        run and found nothing pending on the one check that followed never
+        opened a CR 514.3a round at all, so nothing is owed back either.
         """
+        was_owed = self.cleanup_owed
+        if was_owed:
+            self.cleanup_owed = False
+            self.cleanup_step()
+        was_in_cleanup = self.turn is not None and self.turn.step is Step.CLEANUP
         self._check_state_based_actions_and_stack_triggers()
         if self.priority is not None:
             self.priority.reset()
@@ -7962,6 +8057,9 @@ class Game(EngineModel):
         # CR 724.1 drops the pointer into cleanup mid-resolution, and priority
         # must not come back on the way out of it.
         self.sync_priority_with_step()
+        if was_in_cleanup and not was_owed and not self.step_grants_priority:
+            self.cleanup_owed = True
+            self._before_priority()
 
     def _take_out_of_every_zone(self, card_state: CardState) -> None:
         """Lift a card out of wherever it currently is, shared zones included."""
@@ -18429,15 +18527,18 @@ class Game(EngineModel):
         - is a cleanup step in which players do receive priority. An empty one is
         CR 514.3's ordinary case and grants none.
 
-        **Not modelled, and unverified**: `knowledge_search` in this session
-        returns CR 514.3a only as far as the sentence quoted above, so the rest
-        of that rule - what the game does *after* it finds something waiting,
-        including whether a further cleanup step begins - is not implemented and
-        is not cited. What is implemented is the half the excerpt states: such a
-        cleanup step is not one in which nobody receives priority.
+        `cleanup_owed` overrides that to False regardless of `pending_triggers`:
+        CR 724.1c's own state-based check, run inside `end_the_turn` before the
+        cleanup step's CR 514.1/514.2 turn-based actions have happened, can
+        already have left something waiting there, but CR 724.1c/724.1f are
+        explicit that "no player gets priority" until that debt is paid - see
+        `_before_priority`, which is what pays it and then re-asks this same
+        question with the debt cleared.
         """
         assert self.turn is not None
         if self.turn.step is Step.CLEANUP:
+            if self.cleanup_owed:
+                return False
             return bool(self.pending_triggers) or bool(self.stack)
         return self.turn.grants_priority
 
@@ -18797,8 +18898,7 @@ class Game(EngineModel):
         over ("Any ability that triggers during this step will be held until the
         n[ext time a player would receive priority]"), which is what leaving
         them in `pending_triggers` does. A cleanup step holds them over too
-        *unless* CR 514.3a's exception applies - see `step_grants_priority`, and
-        the note there on how far that rule could be verified.
+        *unless* CR 514.3a's exception applies - see `step_grants_priority`.
 
         Two refusals, both raised before anything moves:
 
