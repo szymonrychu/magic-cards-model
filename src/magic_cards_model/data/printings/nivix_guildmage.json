@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "3669d445-197d-41ad-9ff4-1d5895378fb6",
+  "oracle_id": "d04356f1-0e1a-4689-8e54-f88c4c6dd936",
+  "multiverse_ids": [
+    433118
+  ],
+  "tcgplayer_id": 139998,
+  "cardmarket_id": 300500,
+  "name": "Nivix Guildmage",
+  "lang": "en",
+  "released_at": "2017-08-25",
+  "uri": "https://api.scryfall.com/cards/3669d445-197d-41ad-9ff4-1d5895378fb6",
+  "scryfall_uri": "https://scryfall.com/card/c17/186/nivix-guildmage?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:44:38Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.jpg?1783935878",
+    "normal": "https://cards.scryfall.io/normal/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.jpg?1783935878",
+    "large": "https://cards.scryfall.io/large/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.jpg?1783935878",
+    "png": "https://cards.scryfall.io/png/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.png?1783935878",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.jpg?1783935878",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.jpg?1783935878",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.webp?1783935878",
+    "grid": "https://cards.scryfall.io/grid/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.webp?1783935878",
+    "display": "https://cards.scryfall.io/display/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.webp?1783935878",
+    "art": "https://cards.scryfall.io/art/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.webp?1783935878",
+    "crop": "https://cards.scryfall.io/crop/front/3/6/3669d445-197d-41ad-9ff4-1d5895378fb6.webp?1783935878"
+  },
+  "mana_cost": "{U}{R}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Wizard",
+  "oracle_text": "{1}{U}{R}: Draw a card, then discard a card.\n{2}{U}{R}: Copy target instant or sorcery spell you control. You may choose new targets for the copy.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5caec427-0c78-4c37-b4ec-30f7e0ba9abf",
+  "set": "c17",
+  "set_name": "Commander 2017",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/5caec427-0c78-4c37-b4ec-30f7e0ba9abf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac17&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c17?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3669d445-197d-41ad-9ff4-1d5895378fb6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad04356f1-0e1a-4689-8e54-f88c4c6dd936&unique=prints",
+  "collector_number": "186",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"The only action worth taking is one with an unknown outcome.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Scott M. Fischer",
+  "artist_ids": [
+    "23b0cf43-3e43-44c6-8329-96446eca5bce"
+  ],
+  "illustration_id": "a0f57176-1208-4971-8268-bca5117d95bf",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 16382,
+  "penny_rank": 12752,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=433118&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNivix%2BGuildmage",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNivix%2BGuildmage",
+    "edhrec": "https://edhrec.com/route/?cc=Nivix+Guildmage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F139998%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=300500&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Nivix+Guildmage&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

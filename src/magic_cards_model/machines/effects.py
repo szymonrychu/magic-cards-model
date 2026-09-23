@@ -30537,19 +30537,24 @@ def _parse_copy_that_spell_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return effect
 
 
-#: "Copy target instant or sorcery spell[.][ you control.]" - Reverberate's
-#: own bare shape, plus Increasing Vengeance's own "If this spell was cast
-#: from a graveyard, copy that spell twice instead." rider and either
-#: card's optional "You may choose new targets for the copy/copies."
-#: permission. Unlike `_COPY_THAT_SPELL_RE` above, this is *for_spell*: the
-#: copied object is CR 601.2c's own announced target
-#: (`spell.targets`/`_COUNTER_TARGET_SPELL_RE`'s own "counter target spell"
-#: precedent), not CR 607.1's "that spell" anaphora back to a triggering
-#: `CAST_SPELL` event, so it reads correctly whether printed on a spell
-#: (Reverberate, Increasing Vengeance - the only two shapes in the pool) or,
-#: were one ever printed, a triggered ability watching its own cast target.
-#: `_SPELL_QUALIFIER` already reads "instant or sorcery" (both words are in
-#: `_SPELL_QUALIFIER_WORD`), so nothing new is needed there.
+#: "Copy target <qualifier> spell[ you control]." - Reverberate's own bare
+#: shape, plus Increasing Vengeance's own "If this spell was cast from a
+#: graveyard, copy that spell twice instead." rider and either card's
+#: optional "You may choose new targets for the copy/copies." permission.
+#: Unlike `_COPY_THAT_SPELL_RE` above, the copied object is the stack
+#: object's own announced target (CR 601.2c for a spell, CR 115.1c/602.2b
+#: for an activated ability - `targets` either way, the `_COUNTER_TARGET_
+#: SPELL_RE` "counter target spell" precedent), not CR 607.1's "that spell"
+#: anaphora back to a triggering `CAST_SPELL` event. So it reads the same
+#: printed on a spell (Reverberate, Increasing Vengeance) and on an
+#: activated ability (Mirrorpool, Nivix Guildmage: "instant or sorcery
+#: spell you control"; Drafna, Founder of Lat-Nam: "artifact spell you
+#: control. (The copy becomes a token.)" - the reminder is stripped by
+#: `_strip_non_effect_preamble`, and CR 707.10f's token is `Game.
+#: resolve_top`'s own resolution of a copied permanent spell).
+#: `_SPELL_QUALIFIER` already reads every type word the printings use, and
+#: the type and "you control" restrictions are enforced at announcement by
+#: `machines/targeting.py`, not here.
 _COPY_TARGET_SPELL_RE = re.compile(
     rf"^copy target(?: {_SPELL_QUALIFIER})? spell(?: you control)?\.?"
     r"(?P<doubles>\s*if this spell was cast from a graveyard,\s*"
@@ -30590,26 +30595,29 @@ def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedCl
     already answers "not from a graveyard" on its own, but `is_copy` is the
     field written for exactly this kind of negation-shaped read).
     """
-    if not for_spell:
-        return None
     stripped = " ".join(_strip_non_effect_preamble(text).strip().split())
     match = _COPY_TARGET_SPELL_RE.fullmatch(stripped)
     if match is None:
         return None
     doubles_from_graveyard = match.group("doubles") is not None
+    if doubles_from_graveyard and not for_spell:
+        # "If this spell was cast ..." only means anything on a spell.
+        return None
     offer_new_targets = match.group("new_targets") is not None
 
-    def effect(game: "Game", spell: CardState) -> None:
-        controller = game.controller_of(spell).username
-        record = game.cast_record(spell)
-        copies = (
-            2
-            if doubles_from_graveyard
-            and not record.is_copy
-            and record.origin_zone is Zone.GRAVEYARD
-            else 1
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        copies = 1
+        if doubles_from_graveyard and isinstance(stack_object, CardState):
+            record = game.cast_record(stack_object)
+            if not record.is_copy and record.origin_zone is Zone.GRAVEYARD:
+                copies = 2
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
         )
-        for reference in spell.targets:
+        for reference in stack_object.targets:
             if not reference.is_card:
                 continue
             target = next((item for item in game.stack if item.id == reference.card_id), None)
@@ -30621,8 +30629,8 @@ def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedCl
                     game.offer_new_targets_for_copy(
                         copy,
                         controller,
-                        source_name=spell.name,
-                        source_id=str(spell.id),
+                        source_name=source_name,
+                        source_id=source_id_of(stack_object),
                     )
 
     return effect
