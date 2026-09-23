@@ -107,6 +107,7 @@ from ..machines.decisions import (
     DecisionKind,
     DecisionPending,
     DecisionScript,
+    PendingAbility,
     PendingDecision,
     ask_attackers,
     ask_blockers,
@@ -2659,7 +2660,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 35
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 36
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3187,6 +3188,15 @@ class Game(EngineModel):
     bump: `once_per_turn_triggers` is keyed on the ability's printed text
     rather than its condition, and `cards_drawn_in_own_draw_step` is reset
     per draw step.
+
+    Bumped 35 -> 36: `machines/decisions.Decision` gained `abilities`, a
+    `PendingAbility` per `ORDER_TRIGGERS` question - id, source id, source
+    name, printed text and controller for each ability CR 603.3b is ordering,
+    reachable from a decoded game via `Game.decisions.asked` (a pending
+    `ORDER_TRIGGERS` question a caller paused on and dumped). The batch is in
+    no zone at all at the moment the question is asked (CR 603.3b comes one
+    step before CR 603.3 puts anything on the stack), so a client reading a
+    paused game previously had no way to name it or point at its source.
     """
 
     @model_validator(mode="before")
@@ -6866,17 +6876,26 @@ class Game(EngineModel):
                 result.extend(block)
                 continue
             by_id = {ability.id: ability for ability in block}
+            # Two copies of one card is the ordinary case for this question,
+            # so the source name alone does not distinguish the options - each
+            # `PendingAbility` carries the ability's own source id and text
+            # too. Nothing downstream can recover them from the board: CR
+            # 603.3b is asked one step before CR 603.3 puts these on the
+            # stack, so at this moment they are in no zone at all and this
+            # frame is the only thing still holding them.
             chosen = ask_trigger_order(
                 self.decisions,
                 block[0].controller,
-                tuple((ability.id, ability.source_name) for ability in block),
-                # Two copies of one card is the ordinary case for this
-                # question, so the source name alone does not distinguish the
-                # options - the ability's own text does. Nothing downstream can
-                # recover it: CR 603.3b is asked one step before CR 603.3 puts
-                # these on the stack, so at this moment they are in no zone at
-                # all and this frame is the only thing still holding them.
-                ability_texts=tuple(ability.ability.text for ability in block),
+                tuple(
+                    PendingAbility(
+                        id=ability.id,
+                        source_id=source_id_of(ability),
+                        source_name=ability.source_name,
+                        text=ability.ability.text,
+                        controller=ability.controller,
+                    )
+                    for ability in block
+                ),
             )
             result.extend(by_id[ability_id] for ability_id in chosen)
         return result

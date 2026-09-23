@@ -127,7 +127,6 @@ their step's turn-based action runs rather than while anything resolves.
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from itertools import zip_longest
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -151,6 +150,7 @@ __all__ = [
     "DecisionPending",
     "DecisionScript",
     "DeclaredPair",
+    "PendingAbility",
     "PendingDecision",
     "ScriptedAnswer",
     "ask_attackers",
@@ -399,6 +399,44 @@ class CardSplit:
 
 
 @dataclass(frozen=True)
+class PendingAbility:
+    """One triggered ability waiting to be ordered onto the stack (CR 603.3).
+
+    "Once an ability has triggered, its controller puts it on the stack as an
+    object that's not a card" (CR 603.3), and "an ability can be an activated
+    or triggered ability on the stack. This kind of ability is an object"
+    (CR 113.1c) - an object with no card behind it, and, at the moment
+    `ORDER_TRIGGERS` is asked, in no zone at all (CR 603.3b is asked one step
+    *before* CR 603.3 puts it on the stack). CR 603.3a controls it by "the
+    player who controlled its source at the time it triggered", which is
+    `controller` here.
+
+    This is `Decision.abilities`' own element, one per `Decision.cards` entry,
+    positionally aligned - the structured twin of `card_labels`' prose, built
+    by `source_id_of(ability)` so `source_id` follows the same convention
+    `Decision.source_id` does.
+    """
+
+    #: The `AbilityOnStack.id` this entry names - the same id `Decision.cards`
+    #: holds at this position.
+    id: UUID
+    #: The source's own battlefield id (`source_id_of`), or `None` when the
+    #: source has none to give (`AbilityOnStack.source_id` is `None`) - what
+    #: lets a client point at the permanent asking, and tell two copies of one
+    #: card apart, which the source name alone cannot.
+    source_id: str | None
+    #: The source's printed name.
+    source_name: str
+    #: The triggered ability's own printed text (CR 603.1), not the source's
+    #: whole `oracle_text` - empty when the ability has none to give.
+    text: str
+    #: Who controls this ability (CR 603.3a) - the block `ask_trigger_order`
+    #: is ordering is always one controller's, but a client reading a paused
+    #: question benefits from not having to look it up elsewhere.
+    controller: str
+
+
+@dataclass(frozen=True)
 class Decision:
     """One question, its asker, and every legal answer to it (CR 608.2d).
 
@@ -425,8 +463,9 @@ class Decision:
     #: asks - a turn-based action (the combat declarations, CR 508.1/509.1;
     #: the cleanup discard, CR 514.1), a state-based action (the legend rule,
     #: CR 704.5j), the pregame (CR 103.5), or CR 603.3b's ordering, which is
-    #: about several abilities at once. A string so it serializes as itself;
-    #: build it with `source_id_of`. Like `card`, not part of
+    #: about several abilities at once and so has no single asker - though
+    #: each `abilities` entry below names its own. A string so it serializes
+    #: as itself; build it with `source_id_of`. Like `card`, not part of
     #: `ScriptedAnswer.matches`.
     source_id: str | None = None
     #: The specific card this question is about, when a name is not enough to
@@ -456,11 +495,19 @@ class Decision:
     #: question is published those abilities are in no zone at all - not the
     #: stack, not `pending_triggers` - and a caller reading the game cannot
     #: find them however hard it looks. The asker is the only thing that still
-    #: holds them, so the label has to travel with the question.
+    #: holds them, so the label has to travel with the question - one way of
+    #: naming this kind's `cards`; `abilities` below is the other.
     #:
     #: Empty for every other kind, whose `cards` are real cards a lookup can
     #: name.
     card_labels: tuple[str, ...] = ()
+    #: `ORDER_TRIGGERS` only - set only for that kind, empty everywhere else.
+    #: The structured form of `card_labels` above: one `PendingAbility` per
+    #: `cards` entry, positionally aligned, that also carries the source's own
+    #: object id, so a client can point at the permanent asking rather than
+    #: only naming it - `card_labels`' prose cannot say which Chalice of the
+    #: Void is which; this can.
+    abilities: tuple[PendingAbility, ...] = ()
     #: Where the cards the player picks (`CardSplit.moved`) end up, and where
     #: the ones they do not pick end up, in short lowercase prose: "bottom of
     #: your library", "your graveyard", "top of your library", "exiled".
@@ -1361,10 +1408,9 @@ def ask_mulligan(script: DecisionScript, player: str, *, prompt: str = "take a m
 def ask_trigger_order(
     script: DecisionScript,
     player: str,
-    abilities: tuple[tuple[UUID, str], ...],
+    abilities: tuple[PendingAbility, ...],
     *,
     prompt: str = "order your triggered abilities on the stack",
-    ability_texts: tuple[str, ...] = (),
 ) -> tuple[UUID, ...]:
     """Put CR 603.3b's ordering to one player, and return the order they chose.
 
@@ -1373,12 +1419,13 @@ def ask_trigger_order(
     which *player's* block goes on first; this is the only choice left, and it
     is the one DDR#983 turns on.
 
-    `abilities` is that player's own waiting abilities as `(id, source_name)`
-    pairs, in the order they triggered - pairs rather than `AbilityOnStack`
-    objects so this module stays free of `machines/triggers.py`. The answer is
-    a permutation of exactly them, **bottom of the stack first**, given as ids
-    or as source names (`_resolve_trigger_order`). Asked and validated here
-    rather than through `Game.ask` for
+    `abilities` is that player's own waiting abilities, one `PendingAbility`
+    per ability, in the order they triggered - `PendingAbility` rather than
+    `AbilityOnStack` objects so this module stays free of
+    `machines/triggers.py`. The answer is a permutation of exactly them,
+    **bottom of the stack first**, given as ids or as source names
+    (`_resolve_trigger_order`). Asked and validated here rather than through
+    `Game.ask` for
     the same reason `ask_mulligan` and the two combat declarations are: it is a
     question the rules ask, not one a resolving effect asks (CR 608.2d), and
     there is no yes-or-no for `legal_options` to narrow.
@@ -1402,7 +1449,7 @@ def ask_trigger_order(
     question with only the ids in front of it is being asked to choose between
     two anonymous hex strings.
     """
-    ids = tuple(ability_id for ability_id, _ in abilities)
+    ids = tuple(ability.id for ability in abilities)
     if len(ids) < 2:
         return ids
     # The prompt names each ability's source, numbered in the same order as
@@ -1413,18 +1460,17 @@ def ask_trigger_order(
     # positional against `cards` so an answerer that only has the ids can still
     # tell which is which.
     prompt = f"{prompt}, bottom of the stack first: " + ", ".join(
-        f"{index}. {name}" for index, (_, name) in enumerate(abilities, start=1)
+        f"{index}. {ability.source_name}" for index, ability in enumerate(abilities, start=1)
     )
     # `card_labels` is the structured form of what the prompt says in prose:
     # one label per `cards` entry, so a caller does not have to parse English
-    # to build a usable picker. `ability_texts` is optional because a caller
-    # that has only the `(id, source_name)` pairs can still ask - it then gets
-    # the source name alone, which is enough unless two of the abilities share
-    # a source, which is exactly the common case (two copies of one card), so
-    # pass it whenever it is available.
+    # to build a usable picker. `abilities` carries each source's own printed
+    # text too, which is what makes the label say more than just the source
+    # name - the common case for this kind is two abilities off the same
+    # source, which the name alone does not distinguish.
     labels = tuple(
-        f"{name} - {text}" if text else name
-        for (_, name), text in zip_longest(abilities, ability_texts, fillvalue="")
+        f"{ability.source_name} - {ability.text}" if ability.text else ability.source_name
+        for ability in abilities
     )
     decision = Decision(
         kind=DecisionKind.ORDER_TRIGGERS,
@@ -1432,6 +1478,7 @@ def ask_trigger_order(
         prompt=prompt,
         cards=ids,
         card_labels=labels,
+        abilities=abilities,
         # CR 603.3b's question is about several abilities, each with a source
         # of its own, so no one object asks it.
         source_id=None,
@@ -1457,7 +1504,7 @@ def ask_trigger_order(
 
 
 def _resolve_trigger_order(
-    decision: Decision, answer: tuple[object, ...], abilities: tuple[tuple[UUID, str], ...]
+    decision: Decision, answer: tuple[object, ...], abilities: tuple[PendingAbility, ...]
 ) -> tuple[UUID, ...]:
     """Turn an `ORDER_TRIGGERS` answer into ability ids.
 
@@ -1482,14 +1529,16 @@ def _resolve_trigger_order(
         if not isinstance(item, str):
             raise ValueError(f"{decision.prompt}: {item!r} is neither an ability id nor a name")
         hits = [
-            pair for pair in remaining if pair[1] == item or pair[1].split("//")[0].strip() == item
+            ability
+            for ability in remaining
+            if ability.source_name == item or ability.source_name.split("//")[0].strip() == item
         ]
         if len(hits) != 1:
             raise ValueError(
                 f"{decision.prompt}: {item!r} names {len(hits)} of the abilities offered, not one"
             )
         remaining.remove(hits[0])
-        order.append(hits[0][0])
+        order.append(hits[0].id)
     return tuple(order)
 
 

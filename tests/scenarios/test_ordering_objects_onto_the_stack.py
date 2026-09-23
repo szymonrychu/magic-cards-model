@@ -41,10 +41,19 @@ question having been asked. A test that only checks the question appeared
 passes just as well when the answer is thrown away.
 """
 
+from uuid import UUID
+
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.decisions import Answer, Decision, DecisionKind, DecisionPending
+from magic_cards_model.machines.decisions import (
+    Answer,
+    Decision,
+    DecisionKind,
+    DecisionPending,
+    PendingAbility,
+)
+from magic_cards_model.machines.triggers import triggered_abilities_of
 from magic_cards_model.models import Zone
 from magic_cards_model.models.game import Game
 from magic_cards_model.models.token import TokenState
@@ -194,6 +203,76 @@ def test_three_seats_put_their_blocks_on_in_turn_order_from_the_active_player():
     rest = [scenario.resolve_top() for _ in range(3)]
     assert [item.controller for item in rest] == ["bob", "alice", "alice"]
     assert scenario.game.stack_is_empty
+
+
+def test_the_question_carries_a_structured_ability_ref_per_source():
+    """CR 113.1c / CR 603.3 / CR 603.3a: an ability on the stack is its own
+    object, controlled by whoever controlled its source when it triggered -
+    and `card_labels`' prose is not the only way to say so. Each `Decision.
+    abilities` entry, positionally aligned with `cards`, names the ability's
+    own id, its source's own battlefield id (so a client can point at the
+    permanent asking, and tell the two Chalices apart), the source's printed
+    name and trigger text, and the controller.
+
+    Board copied from `test_two_triggers_of_the_same_printed_source_cannot_be_
+    named_apart` (two Chalice of the Void, alice's Lightning Bolt), left
+    unscripted: a by-name script cannot tell two Chalices apart, but an
+    `abilities` entry can, because it carries the source's own object id
+    rather than just its name.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Chalice of the Void", "Chalice of the Void", "Mountain"],
+            hand=["Lightning Bolt"],
+            library=list(LIBRARY),
+        )
+        .player("bob", library=list(LIBRARY))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chalices = [c for c in scenario.game.battlefield if c.name == "Chalice of the Void"]
+    for chalice in chalices:
+        chalice.add_counters("charge", 1)
+    (trigger,) = triggered_abilities_of(chalices[0].card)
+
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[scenario.player("bob")])
+
+    (question,) = order_questions(scenario)
+    assert len(question.abilities) == 2
+    assert tuple(ability.id for ability in question.abilities) == question.cards
+    for ability in question.abilities:
+        assert ability.source_name == "Chalice of the Void"
+        assert ability.text == trigger.text
+        assert ability.controller == "alice"
+    source_ids = {ability.source_id for ability in question.abilities}
+    assert source_ids == {str(chalice.id) for chalice in chalices}
+    assert len(source_ids) == 2
+
+
+def test_the_abilities_carry_each_creatures_own_battlefield_id():
+    """A different mechanic from Chalice's replacement-and-trigger pair: two
+    creatures' combat-damage triggers, each `abilities` entry still naming its
+    own source by the source's own battlefield id, in the order the abilities
+    triggered - and `card_labels` keeps its existing '<source_name> - <text>'
+    shape unchanged.
+    """
+    scenario = combat_damage_board()
+    frog = scenario.creature("Psychic Frog", "alice")
+    ragavan = scenario.creature("Ragavan, Nimble Pilferer", "alice")
+
+    (question,) = order_questions(scenario)
+    assert [ability.source_id for ability in question.abilities] == [str(frog.id), str(ragavan.id)]
+    assert [ability.source_name for ability in question.abilities] == [
+        "Psychic Frog",
+        "Ragavan, Nimble Pilferer",
+    ]
+    assert [ability.controller for ability in question.abilities] == ["alice", "alice"]
+    assert question.card_labels == tuple(
+        f"{ability.source_name} - {ability.text}" for ability in question.abilities
+    )
 
 
 def test_the_question_names_the_sources_it_is_offering():
@@ -586,3 +665,37 @@ def test_pause_when_unanswered_raises_decision_pending_for_the_trigger_order():
     assert pending.decision.kind is DecisionKind.ORDER_TRIGGERS
     assert pending.decision.player == "alice"
     assert "603.3b" in pending.rule
+
+
+def test_pause_when_unanswered_carries_abilities_on_the_pending_decision():
+    """The paused question's `abilities` are exactly what got asked, and a
+    `Game` dumped while that question is still in `decisions.asked` round-
+    trips through `Game.model_validate(game.model_dump())` with `abilities`
+    intact - `PendingAbility` instances, each `id` a real `UUID`, not a decode
+    that silently landed as a bag of plain dicts nobody validated.
+    """
+    scenario = _frog_and_ragavan_unblocked()
+    scenario.game.decisions.pause_when_unanswered = True
+
+    with pytest.raises(DecisionPending) as excinfo:
+        scenario.advance()
+
+    pending = excinfo.value.pending
+    (asked,) = [
+        question
+        for question in scenario.game.decisions.asked
+        if question.kind is DecisionKind.ORDER_TRIGGERS
+    ]
+    assert pending.decision.abilities == asked.abilities
+    assert len(pending.decision.abilities) == 2
+
+    restored = Game.model_validate(scenario.game.model_dump())
+    (restored_question,) = [
+        question
+        for question in restored.decisions.asked
+        if question.kind is DecisionKind.ORDER_TRIGGERS
+    ]
+    assert restored_question.abilities == pending.decision.abilities
+    for ability in restored_question.abilities:
+        assert isinstance(ability, PendingAbility)
+        assert isinstance(ability.id, UUID)
