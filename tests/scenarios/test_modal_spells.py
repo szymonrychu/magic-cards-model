@@ -10,8 +10,13 @@ its modes first.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.effects import parse_mode_effect
+from magic_cards_model.machines.modes import modal_profile
 from magic_cards_model.models import Zone
+from magic_cards_model.support import in_target_formats
+from tests.cards import pool
 from tests.scenarios.harness import Scenario
+from tests.scenarios.test_unread_spell_text_fails_closed import _lands_paying
 
 
 def board() -> Scenario:
@@ -625,36 +630,98 @@ def test_mystic_confluence_repeated_mode_runs_twice():
     assert scenario.game.mode_notices == []
 
 
-def test_a_mode_this_wave_cannot_read_is_recorded_as_a_notice_and_the_other_still_happens():
-    """Cryptic Command modes [1, 3]: mode 1 ("Counter target spell.") is a
-    shape this wave reads; mode 3 ("Tap all creatures your opponents
-    control.") is not, since it names no target at all. Per-mode fail-closed
-    (CR 702.42b: each mode is followed on its own) means mode 1 still
-    counters the targeted spell even though mode 3 could not be performed -
-    and mode 3's absence is loud, not silent.
-    """
-    scenario = board().build()
+def _a_modal_spell_with_an_unread_mode() -> tuple[str, list[str], int, int]:
+    """The first (by name) out-of-format, single-faced modal instant or
+    sorcery in the pool that may choose two modes, one untargeted mode
+    `parse_mode_effect` reads and one it does not, with the lands that pay
+    for it: `(name, lands, read_mode, unread_mode)`.
+
+    Chosen, not named. Cryptic Command stood here until S18 read its "Tap all
+    creatures your opponents control."; the owner rule (every Modern, Pioneer
+    and Standard card fully supported) means any in-format vehicle is only
+    waiting its turn, so this picks from cards legal in none of the three."""
+    seen: set[str] = set()
+    for _, printing in sorted(pool().items()):
+        if printing.name in seen:
+            continue
+        seen.add(printing.name)
+        if in_target_formats(printing) or printing.card_faces:
+            continue
+        if not {"Instant", "Sorcery"} & set(printing.type_line.split()):
+            continue
+        modal = modal_profile(printing)
+        if modal is None or not modal.understood or modal.maximum < 2:
+            continue
+        untargeted = [mode for mode in modal.modes if "target" not in mode.text.lower()]
+        read = [mode.number for mode in untargeted if parse_mode_effect(mode, 0) is not None]
+        unread = [mode.number for mode in untargeted if parse_mode_effect(mode, 0) is None]
+        lands = _lands_paying(printing.mana_cost or "")
+        if read and unread and lands is not None:
+            return printing.name, lands, read[0], unread[0]
+    pytest.fail(
+        "no out-of-format modal spell in the pool has both a read and an unread "
+        "untargeted mode: add a real printing of one with scripts/add_card.py"
+    )
+
+
+def _cast_modes(name: str, lands: list[str], modes: list[int]) -> Scenario:
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[name],
+            library=["Forest"] * 3,
+            graveyard=["Forest"],
+            battlefield=[*lands, "Grizzly Bears"],
+        )
+        .player("bob", library=["Forest"] * 3, graveyard=["Island"], battlefield=["Grizzly Bears"])
+        .build()
+    )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-
-    bolt_casting = scenario.cast("Lightning Bolt", targets=["bob"])
-    bolt_payment = bolt_casting.begin_paying()
-    scenario.pay_with(bolt_payment, *scenario.untapped_sources("Mountain"))
-    bolt_on_stack = scenario.put_on_stack(bolt_casting)
-    assert bolt_on_stack.zone is Zone.STACK
-
-    casting = scenario.cast("Cryptic Command")
-    casting.choose_modes([1, 3])
-    casting.choose_targets([bolt_on_stack])
+    casting = scenario.cast(name)
+    casting.choose_modes(sorted(modes))
+    casting.choose_targets([])
     payment = casting.begin_paying()
-    scenario.pay_with(payment, *scenario.untapped_sources("Island", "Island", "Island", "Mountain"))
+    scenario.pay_with(payment, *scenario.untapped_sources(*lands))
     scenario.put_on_stack(casting)
-    scenario.resolve_top()  # Cryptic Command is on top; resolving it counters the bolt.
+    scenario.resolve_top()
+    return scenario
 
-    assert bolt_on_stack.zone is Zone.GRAVEYARD, "mode 1: the targeted spell was countered"
-    assert len(scenario.game.mode_notices) == 1
-    notice = scenario.game.mode_notices[0]
-    assert notice.mode_number == 3
-    assert notice.source_name == "Cryptic Command"
+
+def _board(scenario: Scenario) -> list[object]:
+    """Every card's name and zone, and each life total - what a mode changes."""
+    players = [
+        (
+            player.username,
+            player.life,
+            [
+                sorted(card.name for card in player.cards_in(zone))
+                for zone in (Zone.HAND, Zone.LIBRARY, Zone.GRAVEYARD)
+            ],
+        )
+        for player in scenario.game.players
+    ]
+    shared = [
+        sorted((card.name, card.owner) for card in scenario.game.battlefield),
+        sorted((card.name, card.owner) for card in scenario.game.exile),
+    ]
+    return [players, shared]
+
+
+def test_a_mode_this_wave_cannot_read_is_recorded_as_a_notice_and_the_other_still_happens():
+    """A modal spell cast with one mode this engine reads and one it does not:
+    per-mode fail-closed (CR 702.42b: each mode is followed on its own) means
+    the read mode still happens - the board ends exactly as it does when that
+    mode is chosen alone - and the unread mode's absence is loud, not silent.
+    """
+    name, lands, read_mode, unread_mode = _a_modal_spell_with_an_unread_mode()
+
+    alone = _cast_modes(name, lands, [read_mode])
+    both = _cast_modes(name, lands, [read_mode, unread_mode])
+
+    assert alone.game.mode_notices == []
+    assert _board(both) == _board(alone), "the read mode happened as it does on its own"
+    assert [(n.source_name, n.mode_number) for n in both.game.mode_notices] == [(name, unread_mode)]
 
 
 def test_x_value_must_agree_between_targets_and_cost():
