@@ -29793,21 +29793,32 @@ _CONDITION_INSTEAD_RE = re.compile(
     re.IGNORECASE,
 )
 
+
+def _not_cast_from_hand(game: "Game", spell: CardState) -> bool:
+    """Twinned Vision's own "this spell wasn't cast from your hand" (CR
+    601.2b's own "wherever it is"), read off `Game.cast_record(spell)`.
+
+    `origin_zone` alone already answers this correctly for a copy - CR 707.10
+    a copy "isn't cast", so `copy_spell` always writes `Zone.STACK`, never
+    `Zone.HAND` - but the negation is written to check `is_copy` explicitly
+    rather than lean on `Zone.STACK != Zone.HAND` holding by coincidence: a
+    copy genuinely "wasn't cast from your hand" (it wasn't cast at all), and
+    this is the shape (a negated "cast from" read) that CR 707.10's own
+    reasoning has to be spelled out for, not inferred from a field default.
+    """
+    record = game.cast_record(spell)
+    return record.is_copy or record.origin_zone is not Zone.HAND
+
+
 #: The conditions `_CONDITION_INSTEAD_RE` reads, each asked of the game and
 #: the resolving spell itself as it resolves. Morbid's "a creature died this
 #: turn" (CR 700.4) reads `Game.creatures_died_this_turn`; Twinned Vision's
-#: own "this spell wasn't cast from your hand" (CR 601.2b's own "wherever
-#: it is") reads `Game.cast_record(spell).origin_zone` (`Casting.origin_
-#: zone`'s own value, carried onto the `CastRecord` as the spell goes on
-#: the stack). A condition not listed leaves the whole card unread.
+#: own "this spell wasn't cast from your hand" reads `_not_cast_from_hand`
+#: above. A condition not listed leaves the whole card unread.
 _INSTEAD_CONDITIONS: dict[str, Callable[["Game", "CardState"], bool]] = {
     "a creature died this turn": lambda game, spell: game.creatures_died_this_turn > 0,
-    "this spell wasn't cast from your hand": (
-        lambda game, spell: game.cast_record(spell).origin_zone is not Zone.HAND
-    ),
-    "this spell wasn't cast from hand": (
-        lambda game, spell: game.cast_record(spell).origin_zone is not Zone.HAND
-    ),
+    "this spell wasn't cast from your hand": _not_cast_from_hand,
+    "this spell wasn't cast from hand": _not_cast_from_hand,
 }
 
 
@@ -33959,13 +33970,13 @@ def _parse_create_token_then_copy_spell_retargeted_clause(text: str) -> AbilityE
         spell = game.find_by_id(event.subject_id)
         if spell is None or spell not in game.stack:
             return
-        copy = game.copy_spell(spell, controller=controller)
-        # CR 707.2's copiable "targets" is overwritten here rather than left
-        # to `offer_new_targets_for_copy`: "the copy targets that token" is a
-        # forced instruction, not CR 707.10c's optional permission, and it
-        # names a specific new target (the very token just created) rather
-        # than letting the controller choose freely among legal ones.
-        copy.targets = [TargetRef.coerce(tokens[0])]
+        # CR 707.10e: "the copy targets that token" specifies the copy's own
+        # new target rather than offering CR 707.10c's optional "you may
+        # choose new targets" permission, so `copy_spell_targeting` (not
+        # `offer_new_targets_for_copy`) is the one that applies - it builds
+        # the copy only if the token is a legal target for every instance of
+        # "target" on the spell, and creates nothing at all otherwise.
+        game.copy_spell_targeting(spell, controller, tokens[0])
 
     return effect
 

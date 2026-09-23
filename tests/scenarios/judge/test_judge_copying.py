@@ -27,9 +27,13 @@ and, for an object on the stack, choices made when casting or activating it
 Copying is **partly** built, and each test below says which part it is
 standing on. DDR#951's own clause parses and runs for real
 (`machines/effects._parse_create_token_then_copy_spell_retargeted_clause`), so
-its Soldier token and its retargeted copy both happen; what it fails on is one
-rules question about the copy's target, recorded in that test's own xfail
-reason.
+its Soldier token is always made; whether the retargeted copy itself is made
+too now turns on CR 707.10e ("If that player or object isn't a legal target
+for each instance of the word 'target,' the copy isn't created"), read
+through `Game.copy_spell_targeting` - Psychotic Fury's own "target
+multicolored creature" refuses the mono-red Soldier, so no copy reaches the
+stack for it; Giant Growth's unrestricted "target creature" accepts the same
+Soldier, so its copy does.
 
 The permanent-copying half is now largely built and each test says which piece
 of it it stands on. CR 614.1c's "enter as a copy" replacement works, including
@@ -46,8 +50,6 @@ named precisely in the one remaining xfail reason:
 "copies of" in a clause. Every CR number here was looked up with
 `knowledge_search(type="rules")`.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
@@ -102,40 +104,23 @@ def test_frontline_heroisms_copy_clause_is_read_off_the_effect_half_of_the_line(
     assert trigger_effect_for("Frontline Heroism", TriggerEvent.CAST_SPELL, effect_text) is not None
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="The trigger fires, the Soldier token is created, and a real second Psychotic Fury "
-    "(is_copy, retargeted at the token) does reach the stack - that much works. The copy is "
-    "then removed from the stack by CR 608.2b's on-resolution target check ('If the spell or "
-    "ability specifies targets, it checks whether the targets are still legal'), because a 1/1 "
-    "red Soldier is not the 'target multicolored creature' Psychotic Fury requires, so nothing "
-    "ever gains double strike. "
-    "Whether that is correct turns on the disposition clause of CR 707.10e ('Some effects copy "
-    "a spell or ability and specify a new target for the copy'), whose text this session could "
-    "not retrieve past its second sentence - knowledge_search truncates the excerpt before the "
-    "clause that says what happens when the specified object is an illegal target for the copy. "
-    "Exempting an effect-specified copy target from the CR 608.2b check would be a change to "
-    "src/machines, which this test does not own.",
-)
-def test_frontline_heroism_should_copy_psychotic_fury_onto_a_fresh_token():
-    """DDR#951: the copy should hand double strike to a token Kitchen Finks never asked for.
+def test_frontline_heroism_creates_no_copy_when_the_token_is_an_illegal_target():
+    """DDR#951, corrected: CR 707.10e - "If that player or object isn't a
+    legal target for each instance of the word 'target,' the copy isn't
+    created." Psychotic Fury reads "Target multicolored creature gains double
+    strike until end of turn. Draw a card." (verified with `resolve_cards`), a
+    legal single-creature target against Kitchen Finks, so Frontline
+    Heroism's trigger fires (CR 603.2) and makes a 1/1 **red** Soldier token -
+    never multicolored, so it is never a legal target for "target
+    multicolored creature". `Game.copy_spell_targeting` refuses to build the
+    copy at all rather than build one CR 608.2b would only fizzle a moment
+    later (the shape an earlier, since-removed draft of this test wrongly
+    expected as strict-xfail): only the original Psychotic Fury is ever on
+    the stack.
 
-    Psychotic Fury reads "Target multicolored creature gains double strike
-    until end of turn. Draw a card." (verified with `resolve_cards`) - a legal
-    single-creature target, so Frontline Heroism's trigger fires (CR 603.2),
-    making a 1/1 Soldier token and copying Psychotic Fury with the copy
-    retargeted onto that token. CR 707.10e is the rule for a copy whose target
-    the *effect* names: "Some effects copy a spell or ability and specify a new
-    target for the copy. If the spell or ability has more than one target, each
-    of the copy's targets must be that player or object." Frontline Heroism is
-    that shape - "The copy targets that token" - rather than CR 707.10c's "may
-    choose new targets".
-
-    The token receiving double strike despite not being multicolored is
-    exactly what tells this apart from Psychotic Fury resolving once, plainly.
-    Two mana and a library are not decoration: Psychotic Fury costs {1}{R}, and
-    its second sentence is "Draw a card", which on an empty library would lose
-    alice the game to CR 704.5b's state-based action and take her whole
+    Two mana and a library are not decoration: Psychotic Fury costs {1}{R},
+    and its second sentence is "Draw a card", which on an empty library would
+    lose alice the game to CR 704.5b's state-based action and take her whole
     battlefield - the Soldier included - with her.
     """
     scenario = (
@@ -155,13 +140,50 @@ def test_frontline_heroism_should_copy_psychotic_fury_onto_a_fresh_token():
     sources = scenario.untapped_sources("Mountain", "Mountain", username="alice")
     scenario.cast_and_resolve("Psychotic Fury", *sources, username="alice", targets=[finks])
 
-    # The trigger resolved first (it went on the stack above the spell that
-    # caused it), so the original Psychotic Fury is still waiting underneath
-    # the copy Frontline Heroism just made - CR 112.1a: "A copy of a spell is
-    # also a spell, even if it has no card associated with it."
-    original, copy = scenario.game.stack
-    assert (original.name, original.is_copy) == ("Psychotic Fury", False)
-    assert (copy.name, copy.is_copy) == ("Psychotic Fury", True)
+    soldiers = [
+        state
+        for state in scenario.game.permanents_controlled_by("alice")
+        if isinstance(state, TokenState)
+    ]
+    assert len(soldiers) == 1, "the trigger should still have made a 1/1 Soldier token"
+
+    # CR 707.10e: the illegal specified target means no copy was ever put on
+    # the stack - not a copy made and then removed by CR 608.2b's own check.
+    assert [state.name for state in scenario.game.stack] == ["Psychotic Fury"]
+
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    abilities = scenario.game.characteristics_of(soldiers[0]).abilities
+    assert "Double strike" not in abilities
+
+
+def test_frontline_heroism_copies_giant_growth_onto_the_fresh_token():
+    """DDR#951's positive twin: Giant Growth's "Target creature gets +3/+3
+    until end of turn." carries no colour restriction at all, so the same 1/1
+    red Soldier token Frontline Heroism just made **is** a legal target for
+    every instance of "target" on it, and `Game.copy_spell_targeting` does
+    build the copy, retargeted onto the token exactly as CR 707.10e's
+    disposition clause describes.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Giant Growth"],
+            battlefield=["Frontline Heroism", "Kitchen Finks", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    finks = scenario.creature("Kitchen Finks", "alice")
+
+    (forest,) = scenario.untapped_sources("Forest", username="alice")
+    scenario.cast_onto_stack("Giant Growth", forest, username="alice", targets=[finks])
+
+    while len(scenario.game.stack) > 1:
+        scenario.resolve_top()  # the trigger, then the copy it makes
 
     soldiers = [
         state
@@ -170,14 +192,13 @@ def test_frontline_heroism_should_copy_psychotic_fury_onto_a_fresh_token():
     ]
     assert len(soldiers) == 1, "the trigger should have made a 1/1 Soldier token"
     (token,) = soldiers
-    # CR 707.10e's specified target: the copy points at the token, not at Finks.
-    assert copy.targets[0].card_id == token.id
+    assert (token.power, token.toughness) == (4, 4), (
+        "CR 707.10e: the copy's own specified target got the +3/+3, not Finks"
+    )
+    assert (finks.power, finks.toughness) == (3, 2), "the original still hits Finks, untouched"
 
-    while scenario.game.stack:
-        scenario.resolve_top()
-
-    abilities = scenario.game.characteristics_of(token).abilities
-    assert "Double strike" in abilities, "the copy should have targeted the token"
+    scenario.resolve_top()  # the original Giant Growth, on Finks
+    assert (finks.power, finks.toughness) == (6, 5)
 
 
 # --------------------------------------------------------------------------

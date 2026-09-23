@@ -1320,7 +1320,32 @@ class CastRecord(EngineModel):
     (Flashback), from exile (Rebound's own recast), or anywhere else never
     triggers it a second time, which is exactly what would build an infinite
     exile-and-recast loop if this were read off anything but the announcement
-    itself."""
+    itself.
+
+    For a copy's own record (`is_copy=True`), this is always `Zone.STACK`,
+    never the bare default above: CR 707.10 - "a copy of a spell isn't cast" -
+    so a copy was not cast from anywhere, and `Zone.STACK` is neither `HAND`
+    nor `GRAVEYARD` nor any other zone a "cast from <zone>" clause names,
+    which is what makes every *positive* such read already correct for a copy
+    with no clause-by-clause change. `is_copy` itself is the field a
+    negation-shaped read ("wasn't cast from your hand") checks explicitly -
+    see `is_copy`'s own docstring."""
+    is_copy: bool = False
+    """Whether this record describes a copy rather than a cast spell (CR
+    707.10: "a copy of a spell isn't cast"). Written by `Game.copy_spell`,
+    never by `Game.note_cast` - a copy's record is never the product of an
+    announcement.
+
+    Every "was this spell cast" and "cast from <zone>" reader in this engine
+    is answered correctly for a copy by `origin_zone` alone (see its own
+    docstring): a copy's `origin_zone` is always `Zone.STACK`, which no
+    "cast from <zone>" clause ever names. This field exists for the one
+    shape that default cannot answer on its own - a *negation* ("this spell
+    wasn't cast from your hand", Twinned Vision) - where a reader checks
+    `is_copy` explicitly alongside the zone comparison, rather than leaning
+    on `Zone.STACK` happening to not equal `Zone.HAND` either. A copy is
+    still "also a spell" (CR 112.1a) for everything else - targeting,
+    resolution, the stack - only casting itself is excluded."""
     face: str | None = None
     """The name of the face being cast, for a card with more than one (CR 715.3)."""
     exile_annotation: "ExileAnnotation | None" = None
@@ -4383,6 +4408,7 @@ class Game(EngineModel):
         gift_promised: bool = False,
         gift_chosen_player: str | None = None,
         additional_cost_cards: list[UUID] | None = None,
+        is_copy: bool = False,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
 
@@ -4410,7 +4436,17 @@ class Game(EngineModel):
         `machines/casting.py` calls this as the spell goes on the stack. A spell
         cast without going through a `Casting` has no record and is treated as
         cast plainly, which is exactly right.
+
+        `is_copy` is `Game.copy_spell`'s own use of this method: CR 707.10
+        makes a copy carry every CR 707.2 choice above except `mana_spent`/
+        `spend_effects` (CR 707.2's own Dawnglow Infusion example) and
+        `exile_instead_of_graveyard` (CR 604.5's grant belongs to how the
+        *original* left the stack), with `origin_zone` forced to `Zone.STACK`
+        regardless of what is passed - a copy "isn't cast", so it was never
+        cast from anywhere.
         """
+        if is_copy:
+            origin_zone = Zone.STACK
         record = CastRecord(
             keyword=keyword,
             keyword_cost_paid=keyword_cost_paid,
@@ -4431,6 +4467,7 @@ class Game(EngineModel):
             gift_chosen_player=gift_chosen_player,
             additional_cost_cards=list(additional_cost_cards or []),
             card_id=spell.id,
+            is_copy=is_copy,
         )
         self.forget_cast_record(spell)
         self.cast_records[spell.zone_change_stamp] = record
@@ -5999,22 +6036,41 @@ class Game(EngineModel):
         around the same `Card`, since `machines/effects.py` has no
         modification to apply here - "and, for an object on the stack,
         choices made when casting or activating it (mode, targets, the value
-        of X, ...)"; `targets` is carried over verbatim, and a caller wanting
-        CR 707.10c's "new targets" permission chooses them afterward the same
+        of X, whether it was kicked, how it will affect multiple targets, and
+        so on)". `targets`/`division` (CR 601.2d's damage split) are simple
+        scalar copiable values carried straight off `spell`; `x_value`,
+        `modes`/`mode_targets`, `kicked`, `replicated`, `offspring_paid`,
+        `blight_paid`, `gift_promised`/`gift_chosen_player`,
+        `additional_cost_cards`, `keyword` and `keyword_cost_paid` all live on
+        the *original's* `CastRecord` instead, so they are copied below by
+        writing the copy its own record (`Game.note_cast(..., is_copy=True)`),
+        keyed by the copy's own `zone_change_stamp` rather than shared with
+        the original's. A caller wanting CR 707.10c's "new targets" permission
+        chooses them afterward through `offer_new_targets_for_copy`, the same
         way `cast_during_resolution` lets a resolving ability choose targets
-        for what it casts. `division` (CR 601.2d's damage split) travels too,
-        being a simple scalar copiable value; `x_value` lives on `Game.
-        cast_record`, keyed by the *original* spell's own id, and `modes`/
-        `mode_targets` live on `CastRecord` too - neither is copied here, so
-        a copy of an `{X}` spell or a modal spell is not yet modelled (see
-        `docs/engine-coverage.md`). Nothing in the pool copies either.
+        for what it casts.
 
-        The copy is controlled by `controller` if given, or by the original
-        spell's own controller otherwise - who controls a copy is CR 707.10b's
-        business and this wave could not confirm its exact wording in this
-        session (`docs/engine-coverage.md` records the gap), so the fallback
-        picked here is the one no card in the pool exercises differently:
-        Alania, Divergent Storm's own copy names no controller of its own.
+        **Not copied** (CR 707.2's own list of exclusions): `mana_spent` and
+        `spend_effects` - "a copy of Dawnglow Infusion won't cause you to gain
+        any life", because the mana that paid the *original's* cost was never
+        spent paying the copy's (a copy is never cast, so it has no cost to
+        pay at all) - and `exile_instead_of_graveyard`, CR 604.5's own grant
+        tied to how the *original* left the stack, not to a copy that ceases
+        to exist rather than reaching a graveyard in the first place
+        (CR 707.10a).
+
+        The copy is owned **and** controlled by `controller` if given, or by
+        the original spell's own controller otherwise (CR 707.10: "A copy of
+        a spell is owned by the player under whose control it was put on the
+        stack. A copy of a spell or ability is controlled by the player under
+        whose control it was put on the stack.") - both halves of that
+        sentence name the *copy's own* controller, never the original's
+        owner, which is why `owner` is set to `controller` below rather than
+        to `spell.owner`: Reverberate copying an opponent's spell is owned by
+        the Reverberate caster from the moment it exists, not by whoever owns
+        the card the original spell's `Card` came from (a copy has no card of
+        its own to begin with - CR 707.10a's own "even if it has no card
+        associated with it", CR 112.1a).
 
         CR 707.10f/111.13: a copy of a *permanent* spell becomes a token as
         it resolves (`token=True`, set below in `_resolve_top_impl` once it
@@ -6036,12 +6092,13 @@ class Game(EngineModel):
         """
         with self._id_allocator_scope():
             controller = controller or spell.controller or self.controller_of(spell).username
+            original_record = self.cast_record(spell)
             state_type = TokenState if spell.is_permanent else CardState
             copy = state_type(
                 card=spell.card,
                 zone=Zone.STACK,
                 controller=controller,
-                owner=spell.owner,
+                owner=controller,
                 is_copy=True,
                 token=False,
                 targets=list(spell.targets),
@@ -6057,6 +6114,23 @@ class Game(EngineModel):
                 prepare_spell_face=spell.prepare_spell_face,
             )
             self.stack.append(copy)
+            self.note_cast(
+                copy,
+                keyword=original_record.keyword,
+                keyword_cost_paid=original_record.keyword_cost_paid,
+                face=original_record.face,
+                modes=list(original_record.modes),
+                mode_targets=[list(slice_) for slice_ in original_record.mode_targets],
+                x_value=original_record.x_value,
+                kicked=original_record.kicked,
+                replicated=original_record.replicated,
+                offspring_paid=original_record.offspring_paid,
+                blight_paid=original_record.blight_paid,
+                gift_promised=original_record.gift_promised,
+                gift_chosen_player=original_record.gift_chosen_player,
+                additional_cost_cards=list(original_record.additional_cost_cards),
+                is_copy=True,
+            )
             return copy
 
     def offer_new_targets_for_copy(
@@ -6073,8 +6147,32 @@ class Game(EngineModel):
         targets), never with none chosen instead - "new targets" is an
         option to replace them, not a second, separate targeting event that
         could come back empty.
+
+        A **modal** copy (`cast_record(copy).modes` non-empty) profiles only
+        its chosen modes' own targeting requirements (CR 700.2c/700.2f), the
+        same way `_resolution_profile` rechecks an ordinary modal spell's
+        targets rather than `profile_for_text`ing the whole "Choose two -"
+        printed text (which `TargetingProfile` reads as unmodal and
+        unreadable): `profile_for_modes_with_owners` gives the per-mode
+        requirements plus which chosen mode instance each one belongs to, and
+        that same `owners` list is what lets a changed target be written back
+        into the *right* mode's own slice of `CastRecord.mode_targets`
+        (`TargetingProfile.assign_to_owners`) rather than left stale while
+        only the flat `copy.targets` moves - CR 700.2g still holds regardless
+        (the modes themselves are never touched here, only their targets).
         """
-        profile = profile_for_text(copy.oracle_text or "")
+        record = self.cast_record(copy)
+        owners: list[int] | None = None
+        if record.modes:
+            try:
+                profile, owners = profile_for_modes_with_owners(
+                    copy.card, record.modes, record.x_value or None
+                )
+            except ValueError:
+                # Not actually a modal card - fall through to its plain text.
+                profile = profile_for_text(copy.oracle_text or "")
+        else:
+            profile = profile_for_text(copy.oracle_text or "")
         if not profile.understood or not profile.requirements:
             return
         candidates = self._legal_target_candidates(profile, controller, copy.id)
@@ -6105,8 +6203,60 @@ class Game(EngineModel):
         )
         chosen = self.ask(decision)
         assert isinstance(chosen, (list, tuple))
-        if chosen:
-            copy.targets = list(chosen)
+        if not chosen:
+            return
+        copy.targets = list(chosen)
+        if owners is not None:
+            assignment = profile.assign_to_owners(
+                owners, list(chosen), controller, game=self, source_id=copy.id
+            )
+            mode_targets = [list(assignment.get(index, [])) for index in range(len(record.modes))]
+            self.cast_records[copy.zone_change_stamp] = record.model_copy(
+                update={"mode_targets": mode_targets}
+            )
+
+    def copy_spell_targeting(
+        self, spell: CardState, controller: str, target: "Targetable | AbilityOnStack"
+    ) -> CardState | None:
+        """CR 707.10e: an effect that copies a spell and *specifies* a new
+        target for the copy, rather than CR 707.10c's optional "you may
+        choose new targets" permission `offer_new_targets_for_copy` covers -
+        Frontline Heroism's own "create a 1/1 red Soldier ... token, then
+        copy that spell. The copy targets that token" is the one printing in
+        the pool.
+
+        CR 707.10e, verbatim: "Some effects copy a spell or ability and
+        specify a new target for the copy... If that player or object isn't
+        a legal target for each instance of the word 'target,' the copy
+        isn't created."
+
+        Reuses the same target-legality primitive `_legal_target_candidates`
+        already calls (`TargetRequirement.rejects`) and the same profile
+        `_resolution_profile` already builds for an ordinary CR 608.2b
+        recheck - modal, X, split, and Adventure spells included - rather
+        than a second reader: `target` has to satisfy *every* requirement
+        the spell's text has ("each instance of the word 'target'"), not
+        just one, which is why this checks all of `profile.requirements`
+        rather than reusing `_legal_target_candidates`'s own any-of-them
+        membership test. A profile this session's reader could not parse at
+        all, or a spell with no targets to begin with, refuses the same way -
+        a restriction that cannot be read is never treated as satisfied.
+
+        No copy reaches the stack when `target` fails - CR 707.10e's own "the
+        copy isn't created", not a copy made and then fizzled - which is why
+        this builds the copy only *after* every requirement has already
+        accepted `target`, and returns `None` with nothing created otherwise.
+        """
+        profile = self._resolution_profile(spell)
+        if not profile.understood or not profile.requirements:
+            return None
+        for requirement in profile.requirements:
+            if requirement.rejects(target, controller, self, spell.id) is not None:
+                return None
+        copy = self.copy_spell(spell, controller=controller)
+        ref = TargetRef.coerce(target)
+        copy.targets = [ref for _ in profile.requirements]
+        return copy
 
     #: How many triggered mana abilities may resolve inline, back to back, off
     #: one activation before the engine calls it a CR 104.4b loop. There is no
