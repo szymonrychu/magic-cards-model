@@ -5204,6 +5204,8 @@ class Game(EngineModel):
         if card_state not in self.stack:
             self.stack.append(card_state)
         self.spells_cast_this_turn.setdefault(controller, []).append(card_state)
+        if origin_zone is Zone.HAND:
+            self.record_turn_fact("cast_spell_from_hand", controller)
 
         if card_state.prepare_spell_face:
             # CR 601.2i: "That permanent loses the prepared designation at

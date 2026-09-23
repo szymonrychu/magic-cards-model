@@ -169,3 +169,73 @@ def test_nightpack_ambusher_creates_a_wolf_after_not_casting_a_spell():
         if state.token and "Wolf" in state.subtypes and state.name != "Nightpack Ambusher"
     ]
     assert len(wolves) == 1
+
+
+# -- "if you haven't cast a spell from your hand this turn" ------------------
+#
+# The same negated history, restricted to where the spell was cast from
+# (CR 601.2a moves the card from where it is to the stack; the origin is what
+# "from your hand" asks). Prairie Dog's own clause fell through to
+# `_fail_closed` - found by the behavioural sweep, not by a card report.
+
+
+def _prairie_dog_counters(scenario: Scenario) -> int:
+    dog = scenario.find("Prairie Dog", Zone.BATTLEFIELD, "alice")
+    return dog.counter_count("+1/+1")
+
+
+def test_prairie_dog_grows_after_a_turn_with_no_spell_cast_from_hand():
+    scenario = Scenario().player("alice", battlefield=["Prairie Dog"]).player("bob").build()
+
+    _advance_to_end_step(scenario)
+
+    assert _prairie_dog_counters(scenario) == 1
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_prairie_dog_does_not_grow_after_a_spell_cast_from_hand():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Prairie Dog", "Mountain"],
+            hand=["Lightning Bolt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=["bob"]
+    )
+
+    _advance_to_end_step(scenario)
+
+    assert _prairie_dog_counters(scenario) == 0
+
+
+def test_prairie_dog_still_grows_after_a_spell_cast_from_the_graveyard():
+    """Flashback casts from the graveyard (CR 702.34a), not from a hand, so
+    the condition still holds."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Prairie Dog"] + ["Mountain"] * 3,
+            graveyard=["Faithless Looting"],
+            hand=["Island", "Island"],
+            library=["Island"] * 5,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Faithless Looting", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*["Mountain"] * 3))
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+
+    _advance_to_end_step(scenario)
+
+    assert _prairie_dog_counters(scenario) == 1

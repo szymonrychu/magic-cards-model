@@ -4589,7 +4589,8 @@ def _another_spell_cast_this_turn_holds(
 #: cast N or more spells this turn" form; this is its negated twin, over the
 #: identical field.
 _DIDNT_CAST_SPELL_THIS_TURN = re.compile(
-    r"^(?:you|that player) (?:didn'?t|did not) cast a spell this turn$"
+    r"^(?:you|that player) (?:didn'?t|did not|haven'?t|have not) cast a spell"
+    r"(?P<from_hand> from (?:your|their) hand)? this turn$"
 )
 
 
@@ -4603,9 +4604,15 @@ def _didnt_cast_spell_this_turn_holds(game: "Game", clause: str, source: CardSta
     for its positive form, over the identical `Game.spells_cast_this_turn`
     list CR 601.2i keeps.
     """
-    if _DIDNT_CAST_SPELL_THIS_TURN.match(clause) is None:
+    match = _DIDNT_CAST_SPELL_THIS_TURN.match(clause)
+    if match is None:
         return None
     controller = source.controller or game.active_player.username
+    if match.group("from_hand"):
+        # Prairie Dog's "if you haven't cast a spell from your hand this
+        # turn": only a cast whose CR 601.2a move started in a hand counts,
+        # recorded as it happened (`Game.put_on_stack`).
+        return not game.turn_fact_holds("cast_spell_from_hand", controller)
     cast = game.spells_cast_this_turn.get(controller, [])
     return len(cast) == 0
 
