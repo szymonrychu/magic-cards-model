@@ -4218,10 +4218,28 @@ engine's own `rejects`/`why_not` (`_target_material`, `_cost_material`).
 event kind in the pool is raised. `KNOWN_ENGINE_GAPS` is per clause and
 `xfail(strict=True)`: real gaps the sweep found that need new cost plumbing,
 left for the silent-card campaign - Illuminated Folio ("Reveal two cards from
-your hand that share a color"), Tameshi, Reality Architect ("Return a land you
-control to its owner's hand") and The Filigree Sylex ("Remove ten oil counters
-from among permanents you control and sacrifice ..."), all three "cannot build
-a cost".
+your hand that share a color") and The Filigree Sylex ("Remove ten oil
+counters from among permanents you control and sacrifice ..."), both "cannot
+build a cost" (Tameshi's return-a-land cost has been built since f67d0a6).
+
+**Drivers added 2026-09-24** (per event kind or precondition, never per
+card), which took the last 13 unexecuted cases to executed: a Class level-up
+is raised by activating the level ability from one level below (CR 716.2a);
+"if it entered from your graveyard" puts the source, or another creature,
+onto the battlefield from the graveyard (CR 603.4); an intervening "if this
+[permanent] has N or more [kind] counters on it" stages the counters; "if an
+opponent controls more [lands/creatures/artifacts] than you" gives the
+opponent one more than the controller, counted on the stock board; disguise
+and megamorph are turned face up like morph (CR 702.168a, 702.37e); "from
+anywhere other than your hand" casts the Adventurer from exile; "noncreature
+permanents" probes with the stock Equipment and enchantment; a "target ...
+spell" requirement gets the first stock probe spell its own `rejects`
+accepts; "target token" gets a predefined token (CR 111.10); and a "blocking
+or blocked by [this]" activation is made with the source attacking and
+blocked (CR 509.1g). One was an engine gap, fixed test-first: "you play a
+land or cast a spell from anywhere other than your hand" (Shadow of the
+Goblin, proof Vega, the Watcher; CR 601.1a, 116.2a) -
+`tests/scenarios/test_play_from_anywhere_other_than_hand.py`.
 
 **Numbers (2026-09-23).** 821 cases: 478 triggers executed across 31 event
 kinds (215 enters, 52 beginning-of-step, 49 cast, 41 dies, 31 attacks, 20
@@ -4435,3 +4453,52 @@ verified with `mise run rules:find`: 103.8a, 107.1c, 107.3a, 108.3, 118.7a,
 | CR 103.8a's skip is of the whole step (CR 500.11, 614.10a): `Game.advance` walks past the starting player's first draw step, so no beginning event, no "at the beginning of your draw step" trigger, no priority; a CR 500.8 additional beginning phase's draw step that turn is not skipped | `Game._advance_past_checks`, `TurnMachine.skips_draw` (`resume_index`) | - | The Immortal Sun | `test_draw_an_additional_card.py`, `test_turn_based_actions.py`, `test_compound_trigger_conditions.py` |
 
 Proof printings added: Airbending Lesson, The Immortal Sun, Soul Seizer.
+
+## Golden behaviour snapshots: played is pinned (`tests/golden/`)
+
+The behavioural sweep proves each handled ability *does something*; its
+goldens pin *what*. Every executed case writes and then compares
+`tests/golden/<card-slug>/<triggered|activated>-<n>.json`:
+
+- `board` - the setup in the engine's own scenario DSL: each seat's
+  `Scenario().player(...)` arguments, predefined tokens, tapped material, the
+  start step, and whether the busy/war turn was played first;
+- `recipe` - the variant and the attempt (name, index, parameters) that
+  raised the event, or for an activation whether the source entered this
+  turn;
+- `action` - the ability on the stack: source, controller, targets, modes, X;
+- `delta` - what its resolution changed: objects moved/tapped/damaged/
+  countered/pumped, tokens created, life and player counters, questions asked
+  (CR 608.2d), notices, changed game fields, the stack left behind.
+
+Objects are labelled `<name>@<owner>#<k>` from a fixed walk of the game, never
+by raw id; the board is built under the engine's id allocator seeded by the
+case, the variant and the board's contents, and `Game.game_uid` is pinned the
+same way, so shuffles and ids are identical on every run (checked across
+`PYTHONHASHSEED` values). A mismatch fails the case's own test id with a
+unified diff; `mise run golden:update` (`pytest ... --update-golden`)
+regenerates them and the diff is reviewed in the commit, never hand-edited.
+`test_every_golden_belongs_to_a_swept_case` flags a stale golden.
+
+**Format decision.** The engine's `snapshot.py` is a board *cache*, not a
+format, and the api's play-script DSL (`contract/playscript.schema.json`) is a
+seat's conditional move plan - it has no board setup, and engine tests may
+not depend on the api repo. The carrier is therefore engine-native: the
+scenario harness's own builder arguments plus the sweep's recipe, as JSON.
+
+**Replayable.** `tests.golden.load(path)` returns a `Golden`;
+`build_board()` builds the recorded board through the harness, `replay()`
+plays the recorded recipe through the real engine and returns the record
+(equal to the file while behaviour is unchanged; `tests/test_golden_snapshots.py`
+replays three). `mise run golden:replay <file>` prints a golden and its replay.
+
+**Proven (2026-09-24, scratch copies).** Reverting 838d1b0's hexproof fix
+fails the Devourer of Destiny case; with the sweep's own no-legal-target guard
+also disabled, the golden alone still fails it - the trigger falls back to the
+busy board and exiles alice's Intangible Virtue instead of Kaito. Changing the
+"you gain N life" reader to N+1 fails Guide of Souls' golden with
+`"life": [20, 21]` becoming `[20, 22]`.
+
+**Numbers.** 925 goldens (3.7 MB); the sweep with comparison runs 344s single
+process (926 passed, 2 xfailed), against 280s before goldens - the extra is
+the two state projections around each resolution.

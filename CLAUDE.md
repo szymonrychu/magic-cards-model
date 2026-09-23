@@ -173,6 +173,16 @@ closed with a notice. A new card, parser or shape is not done until
 `mise run test:behaviour` is green for it - see `docs/engine-coverage.md`'s
 "The behavioural sweep".
 
+**Played is pinned.** Every ability the sweep executes also has a golden,
+`tests/golden/<card-slug>/<triggered|activated>-<n>.json`: the board (the
+`Scenario().player(...)` arguments), the recipe that raised the event, the
+ability as it stood on the stack, and the normalised delta its resolution
+made (zones, life, counters, tokens, damage, questions asked, notices,
+stack). The sweep fails a case whose delta moved, with a diff. When the change
+is intended - a newly handled card, a reader fixed - run
+`mise run golden:update` and review the golden diff in the commit; never
+hand-edit a golden. `mise run golden:replay <file>` replays one as a scenario.
+
 `scripts/sweep_pool.py` is how this is measured: `--effects` sorts every clause
 into handled / notice / static_unaudited / **silent**, and `--keywords` lists
 keywords that parse but that no machine executes. Silent falling while notice
@@ -261,7 +271,9 @@ passes.
   `pyproject.toml`.
 - `mise run test`, `mise run lint`, `mise run fmt`. `mise run test` leaves
   out the behavioural pool sweep; `mise run test:behaviour` runs it alone
-  (several minutes), and `mise run test:full` runs everything.
+  (several minutes, goldens compared), and `mise run test:full` runs
+  everything. `mise run golden:update` regenerates the sweep's goldens after
+  an intended behaviour change (commit the reviewed diff with it).
 - **Merge gate (owner rule): `main` holds only stable, fully tested, green
   code, and only that is deployed.** Before any merge to `main`, both
   `mise run lint` and `mise run test:full` (which is `test` plus
