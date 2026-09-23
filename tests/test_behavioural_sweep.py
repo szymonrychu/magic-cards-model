@@ -49,6 +49,12 @@ mention count as the keyword leaves a "permanent that's one or more colors"
 trigger with no legal target, and CR 603.3d removes it - which fails here.
 This generalises the cast-trigger guard 838d1b0 added to every trigger event.
 
+Every executed case is also compared with its golden,
+`tests/golden/<card-slug>/<triggered|activated>-<n>.json` - the board, the
+recipe, the ability on the stack and the normalised delta its resolution
+made (see `tests/golden/__init__.py`); `mise run golden:update` rewrites
+them after an intended change.
+
 Rules verified this session with `mise run rules:find`: CR 603.2 (a trigger
 event matching makes the ability trigger), CR 603.3 (it goes on the stack the
 next time a player would receive priority), CR 603.3d (no legal target for a

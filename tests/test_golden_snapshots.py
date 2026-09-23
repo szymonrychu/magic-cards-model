@@ -17,8 +17,8 @@ import pytest
 from tests.golden import GOLDEN_DIR, diff, dumps, golden_path, load, slug
 from tests.scenarios.harness import PlayedScenario
 
-#: A trigger, a targeted trigger and an activation - the Devourer of Destiny
-#: cast trigger is the regression the goldens exist to pin.
+#: A targeted cast trigger, an enters trigger and an activation - the
+#: Devourer of Destiny cast trigger is the regression the goldens exist to pin.
 REPLAYED = [
     ("Devourer of Destiny", "triggered", 0),
     ("Guide of Souls", "triggered", 0),
