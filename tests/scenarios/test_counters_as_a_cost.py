@@ -235,8 +235,13 @@ def test_a_counter_cost_still_pays_when_toughness_is_boosted_by_a_static_effect(
 def test_a_placed_minus_one_counter_annihilates_an_existing_plus_one_counter():
     """A permanent that already carries a +1/+1 counter and then pays a cost
     that puts a -1/-1 counter on itself ends up with neither, not both -
-    CR 704.5q's pairwise removal is a state-based action, so it does not
-    happen mid-payment, only once someone next checks (CR 704.3).
+    CR 704.5q's pairwise removal is a state-based action, so it is not part of
+    paying the cost itself (CR 118.3 never reads it), but CR 704.3 checks
+    whenever a player *would get priority*, and CR 117.3c makes the activating
+    player receive priority right back the moment activation finishes
+    (`Game.retain_priority`'s own docstring cites both) - so by the time
+    `activate` returns, the pair is already gone, with no separate call
+    needed to see it.
 
     Devoted Druid has no way to gain a +1/+1 counter printed on itself, so
     this drives the annihilation directly the way `test_counters.py` does,
@@ -249,10 +254,6 @@ def test_a_placed_minus_one_counter_annihilates_an_existing_plus_one_counter():
     druid.add_counters(Counter.PLUS_ONE, 1)
 
     scenario.activate(druid, index=1)
-    assert druid.counter_count(Counter.MINUS_ONE) == 1
-    assert druid.counter_count(Counter.PLUS_ONE) == 1
-
-    scenario.state_based_actions()
 
     assert druid.counter_count(Counter.MINUS_ONE) == 0
     assert druid.counter_count(Counter.PLUS_ONE) == 0

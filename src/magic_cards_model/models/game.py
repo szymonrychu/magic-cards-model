@@ -264,6 +264,7 @@ from .card_state import (
     ExileAnnotation,
     ExileMarker,
     TargetRef,
+    annihilate_counters_on,
     planeswalkers_with_zero_loyalty,
 )
 from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect
@@ -10505,7 +10506,42 @@ class Game(EngineModel):
             apply_replacements(self, event)
             if event.amount <= 0:
                 return player.counter_count(kind)
-            return player.add_counters(kind, event.amount)
+            new_total = player.add_counters(kind, event.amount)
+            self._emit_player_counters_put(player, str(kind), event.amount)
+            return new_total
+
+    def _emit_player_counters_put(self, player: Player, kind: str, amount: int) -> None:
+        """CR 122.6's "counters being put on ... an object that's given
+        counters" event, for a player rather than a permanent - the player
+        twin of `_emit_counters_put` just below.
+
+        Fabrication Module's own "Whenever you get one or more {E} ..."
+        (CR 107.14) is the shape this exists for: getting energy is CR
+        122.6's own event from the player's side, the same way a permanent
+        being given counters is from the object's side, so it needs the same
+        once-per-instruction, whole-amount event `_emit_counters_put` already
+        raises for a permanent.
+
+        One event per instruction, carrying the whole amount - CR 603.2c's
+        "one event, multiple occurrences" reading `_emit_counters_put`'s own
+        docstring explains, unchanged here.
+
+        Called only after `add_player_counters` has already applied
+        replacements and confirmed `amount > 0` (CR 603.2g: "an ability
+        triggers only if its trigger event actually occurs" - a replacement
+        or a bare non-positive call leaves nothing to get, so nothing here
+        fires).
+        """
+        if amount <= 0:
+            return
+        self.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.PLAYER_COUNTERS_PUT,
+                counter_kind=kind,
+                amount=amount,
+                player=player.username,
+            )
+        )
 
     def _emit_counters_put(self, permanent: CardState, kind: str, amount: int) -> None:
         """CR 122.6's generic "counters are put on this object" event.
@@ -13474,6 +13510,19 @@ class Game(EngineModel):
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
         gone_copies = self._copies_that_cease_to_exist()  # CR 704.5e/707.10a
         self._remember_sources_that_ceased_to_exist(gone_tokens + gone_copies)
+
+        # CR 704.5q: "If a permanent has both a +1/+1 counter and a -1/-1
+        # counter on it, N +1/+1 and N -1/-1 counters are removed from it,
+        # where N is the smaller of the number of +1/+1 and -1/-1 counters on
+        # it" (CR 122.3 states the same rule from the counters' own side). A
+        # direct mutation, not a move, so it runs before the read-only board
+        # snapshot below rather than through `leaving`/`_put_state_based_
+        # action_losers` - and it needs no repeat-until-stable loop of its
+        # own: removing equal piles of +1/+1 and -1/-1 never changes net
+        # power or toughness, so it can never make a *different* CR 704.5
+        # condition newly true, only ever the same one CR 704.3's outer loop
+        # in `_check_state_based_actions_impl` already repeats.
+        annihilate_counters_on(self.battlefield)
 
         # Every check below reads the battlefield and moves nothing, so they
         # share one layered board (`snapshot.scan_pin`); the moves come after.

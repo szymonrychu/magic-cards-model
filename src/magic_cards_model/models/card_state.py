@@ -2748,8 +2748,8 @@ def annihilate_counters_on(permanents: Iterable[CardState]) -> list[CardState]:
     from the counters' side.
 
     A state-based action, so a game performs it as part of CR 704.3 rather than
-    at the moment the counters meet. Nothing in `Game` dispatches it yet - see
-    `docs/engine-coverage.md`.
+    at the moment the counters meet. `Game._state_based_actions_once`
+    (`models/game.py`) is the caller, on every battlefield-wide check.
     """
     return [state for state in permanents if state.annihilate_counters()]
 
@@ -2762,19 +2762,6 @@ def planeswalkers_with_zero_loyalty(permanents: Iterable[CardState]) -> list[Car
     of loyalty counters on it (CR 306.5c), so this is a counters rule.
     """
     return [state for state in permanents if state.has_zero_loyalty]
-
-
-def counter_state_based_actions(permanents: Iterable[CardState]) -> list[CardState]:
-    """The counter-driven state-based actions, in one pass (CR 704.3).
-
-    Annihilation first (CR 704.5q), then the planeswalkers left at zero loyalty
-    (CR 704.5i), which is what the caller should put into graveyards. The
-    remaining counter-driven action, a creature whose -1/-1 counters take its
-    toughness to 0 or less (CR 704.5f), needs no help here: `CardState.toughness`
-    already counts them, so `Game.check_state_based_actions` sees it.
-    """
-    annihilate_counters_on(permanents)
-    return planeswalkers_with_zero_loyalty(permanents)
 
 
 def _as_number(printed: str | None) -> int | None:

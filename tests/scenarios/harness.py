@@ -30,7 +30,7 @@ from magic_cards_model.machines.decisions import (
 from magic_cards_model.machines.objects_as_costs import waterbend
 from magic_cards_model.machines.triggers import AbilityOnStack
 from magic_cards_model.models import CardState, Color, Game, Match, Player, Zone
-from magic_cards_model.models.card_state import TargetRef, counter_state_based_actions
+from magic_cards_model.models.card_state import TargetRef
 from tests.cards import card_state
 
 #: What a scenario may hand to `targets=`: a permanent, a player, or a
@@ -1435,21 +1435,20 @@ class PlayedScenario:
     # -- state-based actions ----------------------------------------------
 
     def state_based_actions(self) -> list[CardState]:
-        """Check state-based actions, counters included (CR 704.3).
+        """Check state-based actions (CR 704.3) - a plain alias for `Game.
+        check_state_based_actions`.
 
-        `Game.check_state_based_actions` covers the CR 704.5 items it can
-        express, but nothing in `Game` dispatches the two counter-driven ones -
-        annihilation (CR 704.5q) and a planeswalker at zero loyalty
-        (CR 704.5i). They are performed here first, the same way this harness
-        drives the combat turn-based actions the turn machine does not.
-
-        A creature killed by its -1/-1 counters needs no help: its toughness
-        already counts them, so CR 704.5f fires inside `Game`.
+        `Game` now performs the whole CR 704.5 sweep itself, counters
+        included: annihilation (CR 704.5q, via `models.card_state.
+        annihilate_counters_on`, called from `Game._state_based_actions_once`)
+        and a planeswalker at zero loyalty (CR 704.5i) both live there. This
+        method used to duplicate the annihilation half here - directly, with
+        no priority round and no exemption check - which is exactly the
+        workaround `tests/scenarios/test_zero_loyalty_exemption.py` warns
+        against for the loyalty half; it exists now only because every other
+        scenario file in this pool already calls it by this name.
         """
-        leaving = counter_state_based_actions(self.game.battlefield)
-        for state in leaving:
-            self.game.destroy(state)
-        return leaving + self.game.check_state_based_actions()
+        return self.game.check_state_based_actions()
 
     def cast_and_resolve(
         self,

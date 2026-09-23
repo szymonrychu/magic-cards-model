@@ -120,6 +120,18 @@ class ExtraTriggerEvent(StrEnum):
     #: **Missing emit:** `Game.add_counters` (`models/game.py`), which today
     #: emits only for lore counters (CR 107.15a).
     COUNTERS_PUT = "counters_put"
+    #: CR 122.6's same "counters being put on ... an object that's given
+    #: counters" sentence, from a player's side rather than a permanent's -
+    #: CR 122.1's "some kinds of counters are normally placed on players
+    #: rather than on objects" (energy chief among them). Fabrication
+    #: Module's "Whenever you get one or more {E} (energy counters), ..." and
+    #: Territorial Gorger's identical condition with a different effect.
+    #: `GameEvent.counter_kind` is which kind, `GameEvent.amount` how many,
+    #: `GameEvent.player` who got them - CR 603.2c's "one event, multiple
+    #: occurrences" reading is the same one `COUNTERS_PUT` documents above.
+    #: **Emitted by:** `Game.add_player_counters` (`models/game.py`), through
+    #: `Game._emit_player_counters_put`.
+    PLAYER_COUNTERS_PUT = "player_counters_put"
     #: CR 603.10a names "abilities that trigger when a card leaves a graveyard"
     #: among the zone-change triggers that look back in time. Murktide Regent's
     #: "Whenever an instant or sorcery card leaves your graveyard" and Hardened
@@ -2601,6 +2613,28 @@ _COUNTERS_PUT_CONDITION = re.compile(
     r"^one or more (?P<kind>\S+) counters are put on (?P<subject>.+)$"
 )
 
+#: Fabrication Module's and Territorial Gorger's condition: "you get one or
+#: more {E} (energy counters), ..." (CR 122.6, CR 107.14) - `machines/
+#: abilities.parse_abilities` strips the parenthetical reminder before either
+#: module ever sees the text, so the literal string is "you get one or more
+#: {e}" with no trailing "counters" word for the mana-symbol case; a
+#: spelled-out kind ("you get one or more poison counters") has no reminder to
+#: strip and keeps it, which is the second branch below. `_player_counter_
+#: kind` reads whichever branch matched into the plain kind string `GameEvent.
+#: counter_kind` carries (CR 107.14: "the energy symbol is {E}" - the only
+#: mana-symbol counter kind CR 122.1 currently names, so `{e}` is the only
+#: symbol read).
+_PLAYER_COUNTERS_PUT_CONDITION = re.compile(
+    r"^you get one or more (?:(?P<symbol>\{e\})|(?P<kind>[a-z]+) counters?)$"
+)
+
+
+def _player_counter_kind(match: re.Match[str]) -> str:
+    """The counter kind `_PLAYER_COUNTERS_PUT_CONDITION` matched, as the plain
+    string `GameEvent.counter_kind`/`models.card_state.Counter.ENERGY` use."""
+    return "energy" if match.group("symbol") is not None else match.group("kind")
+
+
 #: Inspired Tethermage's "Whenever you put one or more loyalty counters on a
 #: planeswalker, ..." (CR 122.6, CR 606.4) - a different shape from
 #: `_COUNTERS_PUT_CONDITION` above in every way that matters: active voice
@@ -2712,6 +2746,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
     if _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
+    if _PLAYER_COUNTERS_PUT_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.PLAYER_COUNTERS_PUT})
     if _LEAVES_GRAVEYARD_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.LEAVES_GRAVEYARD})
     if _PUT_INTO_LIBRARY_CONDITION.match(lowered):
@@ -2751,6 +2787,13 @@ def _unread_condition_matches(
     - **counters put on this permanent** (CR 122.6) - self-referential only,
       which is the only form printed in this pool, and the counter kind has to
       be the kind named.
+    - **you get one or more [kind] counters** (CR 122.6, CR 109.5) -
+      Fabrication Module's and Territorial Gorger's own "whenever you get one
+      or more {E}": "you" is the ability's controller at the moment it
+      triggered, and the counter kind has to be the kind named (CR 107.14
+      normalises `{e}` to `"energy"`, the same string `Game.
+      add_player_counters` stamps the event with for an ordinary `Counter.
+      ENERGY` call).
     - **cards leave your graveyard** (CR 603.10a) - "your" is the ability's
       controller, and an optional type restriction ("an instant or sorcery
       card") is checked against what left.
@@ -2794,6 +2837,18 @@ def _unread_condition_matches(
         if match.group("who") == "you put":
             return event.subject_controller == controller
         return event.subject_controller is not None and event.subject_controller != controller
+
+    match = _PLAYER_COUNTERS_PUT_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.PLAYER_COUNTERS_PUT:
+            return False
+        if event.counter_kind != _player_counter_kind(match):
+            return False
+        # CR 109.5: "you" on a triggered ability's own text is the ability's
+        # controller at the moment it triggered - an opponent's own energy
+        # (or any other kind) is a real `PLAYER_COUNTERS_PUT` event, just not
+        # one that matches "whenever *you* get".
+        return event.player == controller
 
     match = _LEAVES_GRAVEYARD_CONDITION.match(condition)
     if match is not None:
