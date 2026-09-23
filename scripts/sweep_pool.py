@@ -103,6 +103,7 @@ from magic_cards_model.machines.casting import (  # noqa: E402
     TARGET_LEGALITY_KEYWORDS,
     TIMING_KEYWORDS,
     adventure_face,
+    has_split_second,
     keyword_cast_options,
 )
 from magic_cards_model.machines.combat import (  # noqa: E402
@@ -118,6 +119,8 @@ from magic_cards_model.machines.cost import (  # noqa: E402
 )
 from magic_cards_model.machines.effects import (  # noqa: E402
     _compose_layer_effect_with_remainder_for_ability_mode,
+    _parse_endure_clause,
+    _parse_recruit_clause,
     _parse_where_x_is_continuous_effect,
     activated_effect_for,
     create_continuous_effect,
@@ -174,9 +177,39 @@ from magic_cards_model.machines.triggers import (  # noqa: E402
     _required_types as _condition_required_types,
 )
 from magic_cards_model.models import CardState, Game, Player, Zone  # noqa: E402
-from magic_cards_model.models.card import Card, Layout, Type, types_of  # noqa: E402
+from magic_cards_model.models.card import Card, Layout, Legality, Type, types_of  # noqa: E402
 from magic_cards_model.models.card_state import Counters, TargetRef  # noqa: E402
 from magic_cards_model.numbers import parse_count  # noqa: E402
+
+
+def in_target_formats(printing: Card) -> bool:
+    """Whether this printing exists in at least one of the three formats this
+    engine targets (`CLAUDE.md`: "Legality is clamped to standard, pioneer,
+    and modern").
+
+    **Banned counts as existing.** A banned card was legal once, was printed
+    into that format's card pool, and a banned-but-printed card can still be
+    played in a non-sanctioned pod running the format's card list (and may be
+    unbanned) - CR 100.6's list of "banned" and "restricted" is Wizards
+    tournament policy, not a rule about which cards a format's rules text
+    ever has to execute. `Legality.NOT_LEGAL` is the only status this
+    treats as "never printed for this format" (`Legalities`'s own docstring:
+    Scryfall's fourth status, `restricted`, applies only to Vintage, which
+    this model does not track at all). So the check is simply "not
+    not_legal, in any of the three", not "legal".
+
+    This is the sweep's own honesty gate, not an engine rule: it decides
+    which cards the coverage reports hold the engine to account for, per the
+    owner rule that every card legal in Modern, Pioneer or Standard must be
+    fully supported - never silently excused because a coverage report
+    happened to stop asking about it.
+    """
+    legalities = printing.legalities
+    return any(
+        legality is not Legality.NOT_LEGAL
+        for legality in (legalities.modern, legalities.pioneer, legalities.standard)
+    )
+
 
 #: Keywords that need no code because they change what a card *is*, not what the
 #: engine has to do. Each is inert in the sense that the rules attach no action
@@ -196,42 +229,110 @@ NEEDS_NO_CODE = frozenset(
         "adapt",  # an activated ability, parsed as one.
         "landwalk",  # the umbrella name Scryfall prints beside the real one.
         "umbra armor",  # an ability-word-shaped label on a totem armour Aura.
+        # CR 702.124a (verified 2026-09-23, `mise run rules:find 702.124a`):
+        # "Partner abilities are keyword abilities that modify the rules for
+        # deck construction in the Commander variant (see rule 903), and they
+        # function before the game begins. ... The partner abilities are:
+        # partner, partner-[text], partner with [name], choose a Background,
+        # and Doctor's companion." Both entries below are that same family:
+        # inert outside a Commander deck's construction step, and this
+        # engine targets Modern/Pioneer/Standard only (`in_target_formats`
+        # above), none of which is Commander. Neither reported card (Sakashima
+        # of a Thousand Faces, Silas Renn, Seeker Adept, Gut, True-Soul
+        # Zealot) is legal in any of the three anyway, so this is a
+        # documentation choice, not a live gap - see F5 in the flow-2 brief.
+        "partner",
+        "choose a background",
     }
 )
 
-#: Ability words (CR 207.2c: "An ability word appears in italics at the
+#: CR 207.2c (verified 2026-09-23, `mise run rules:find 207.2c`; local CR
+#: copy effective 2026-09-25): "An ability word appears in italics at the
 #: beginning of some abilities. Ability words are similar to keywords in that
 #: they tie together cards that have similar functionality, but they have no
-#: special rules meaning"). A card carrying one is not carrying an unexecuted
-#: keyword, so listing one here is never a coverage claim - the clause under
-#: the word is judged on its own by `classify_card`, exactly like any other.
+#: special rules meaning and no individual entries in the Comprehensive
+#: Rules." This is that list, verbatim and complete (60 entries) - not the
+#: eight this sweep happened to see on the pool one day, which is how the
+#: list went stale before: `converge`, `revolt`, `undergrowth`, `domain` and
+#: `threshold` were added only after they were individually reported as
+#: ignored *keywords*, and every one of those reports was this table's own
+#: false positive, not a real gap.
 #:
-#: `converge`, `revolt`, `undergrowth` and `domain` were reported as ignored
-#: *keywords* by several deck sweeps, and every one of those reports was this
-#: table's own false positive: `knowledge_search(type="rules")` returns no
-#: numbered rule for any of the four - they are ability words, and nothing more
-#: specific may be cited - and three of the four have their clause read by a
-#: real parser today (`_parse_converge_exile_by_colors_spent`,
-#: `Game.revolt_active_for` with `_parse_revolt_destroy_or_exile_clause`, and
-#: `_parse_undergrowth_pump_and_fight_clause`). Listing a word here only stops
-#: the *keyword* report claiming an execution path is missing; the clause the
-#: word introduces is still judged on its own by `classify_card`, which is why
-#: Territorial Kavu's domain characteristic-defining ability still reports as a
-#: dead clause below rather than disappearing with the word.
+#: A card carrying an ability word is not carrying an unexecuted keyword, so
+#: listing one here is never a coverage claim - the clause under the word is
+#: judged on its own by `classify_card`, exactly like any other. Three of the
+#: original four have their clause read by a real parser today
+#: (`_parse_converge_exile_by_colors_spent`, `Game.revolt_active_for` with
+#: `_parse_revolt_destroy_or_exile_clause`, and
+#: `_parse_undergrowth_pump_and_fight_clause`); Territorial Kavu's domain
+#: characteristic-defining ability still reports as a dead clause below
+#: rather than disappearing with the word, which is the point - membership
+#: here only silences the *keyword* report, never `classify_card`.
+#:
+#: Two entries need normalising before a lookup matches Scryfall's own
+#: spelling, both handled by `_normalized_ability_word` below rather than by
+#: listing every variant here: CR prints "descend 4" and "descend 8" as two
+#: separate list entries (the two counts a card can actually print,
+#: Akawalli's own "Descend 8" among them), collapsed to one `descend` entry
+#: here with the trailing count stripped at lookup time; and CR's own
+#: `council's dilemma` uses a straight apostrophe while Scryfall's printed
+#: keyword line uses a curly one, normalised the same way.
 ABILITY_WORDS = frozenset(
     {
-        "delirium",
-        "ferocious",
-        "metalcraft",
-        "landfall",
-        "flurry",
+        "adamant",
+        "addendum",
+        "alliance",
+        "battalion",
+        "bloodrush",
+        "celebration",
         "channel",
-        "ascend",
-        "imprint",
+        "chroma",
+        "cohort",
+        "constellation",
         "converge",
-        "revolt",
-        "undergrowth",
+        "council's dilemma",
+        "coven",
+        "delirium",
+        "descend",
+        "disappear",
         "domain",
+        "eerie",
+        "eminence",
+        "enrage",
+        "fateful hour",
+        "fathomless descent",
+        "ferocious",
+        "flurry",
+        "formidable",
+        "grandeur",
+        "hellbent",
+        "heroic",
+        "imprint",
+        "infusion",
+        "inspired",
+        "join forces",
+        "kinship",
+        "landfall",
+        "lieutenant",
+        "magecraft",
+        "metalcraft",
+        "morbid",
+        "opus",
+        "pack tactics",
+        "paradox",
+        "parley",
+        "radiance",
+        "raid",
+        "rally",
+        "renew",
+        "repartee",
+        "revolt",
+        "secret council",
+        "spell mastery",
+        "strive",
+        "survival",
+        "sweep",
+        "tempting offer",
         # fra-final-audit batch A item 2: Reality Fracture's "Threshold —
         # <condition>." (Barbarian Ring, Werebear, Loot the Anomaly, Null
         # Summoner, Proft Sinister Mastermind). `machines/casting.py`'s own
@@ -243,8 +344,28 @@ ABILITY_WORDS = frozenset(
         # card - each already read by its own unrelated, generic parser,
         # not by any code keyed on the word "Threshold" itself.
         "threshold",
+        "undergrowth",
+        "valiant",
+        "vivid",
+        "void",
+        "will of the council",
     }
 )
+
+
+def _normalized_ability_word(word: str) -> str:
+    """`word` (a Scryfall `keywords` entry, or a flavor-word label read off a
+    printed ability line) prepared for a lookup in `ABILITY_WORDS` - CR
+    207.2c's own spelling, lowercased, with the two mismatches
+    `ABILITY_WORDS`'s own docstring names resolved: a curly apostrophe
+    swapped for the straight one CR's plain text uses (`council's dilemma`),
+    and a trailing printed count stripped so `descend 4`/`descend 8` both
+    reach the collapsed `descend` entry (CR 207.2c lists the two counts
+    separately; the count is descend's own designated amount, CR 700.11, not
+    part of the ability word's name).
+    """
+    normalized = word.strip().lower().replace("’", "'")
+    return re.sub(r"\s+\d+$", "", normalized)
 
 
 def executed_keywords(printing: Card) -> dict[str, str]:
@@ -311,6 +432,39 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # `Casting.choose_modes(entwined=True)`.
     if profile is not None and profile.entwine_cost is not None:
         found["entwine"] = "machines/casting.py (additional cost)"
+
+    # Tiered (CR 702.183a: "Choose one. As an additional cost to cast this
+    # spell, pay the cost associated with that mode.") is a CR 700.2h modal
+    # keyword: its reminder text ("Choose one additional cost.") and each
+    # tier's own printed cost are both read by `machines/modes.modal_profile`
+    # into `Mode.cost`, the same field Spree below fills. Conditioned on the
+    # profile actually parsing (`profile.understood`) *and* on some mode
+    # actually carrying a cost, never on the bare keyword name alone: a
+    # Tiered card this parser could not read leaves nothing for
+    # `Casting.choose_modes` to act on, and reporting it executed anyway
+    # would be exactly the false "registry membership" claim this sweep
+    # exists to catch. `tests/scenarios/test_tiered.py` proves it live.
+    if (
+        profile is not None
+        and profile.understood
+        and any(mode.cost is not None for mode in profile.modes)
+        and any(k.lower() == "tiered" for k in printing.keywords)
+    ):
+        found["tiered"] = "machines/modes.py (tiered modal profile, CR 702.183a)"
+
+    # Spree (CR 702.172a: "Choose one or more modes. As an additional cost to
+    # cast this spell, pay the costs associated with those modes.") is the
+    # identical CR 700.2h shape as Tiered, read by the same
+    # `modal_profile`/`Mode.cost` pair - only the keyword name and the "+"
+    # bullet (CR 702.172b) differ. Same per-card gate as Tiered above.
+    # `tests/scenarios/test_spree_bullets.py` proves it live.
+    if (
+        profile is not None
+        and profile.understood
+        and any(mode.cost is not None for mode in profile.modes)
+        and any(k.lower() == "spree" for k in printing.keywords)
+    ):
+        found["spree"] = "machines/modes.py (spree modal profile, CR 702.172a)"
 
     # Suspend (CR 702.62a) is not a `KeywordCastOption`: unlike Flashback's
     # static "from the graveyard, for this cost" grant, its free cast is a
@@ -435,6 +589,90 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if any(k.lower() == "proliferate" for k in printing.keywords):
         found["proliferate"] = "machines/effects.py (_parse_proliferate_clause, CR 701.34a)"
 
+    # Shroud (CR 702.18a: "This permanent or player can't be the target of
+    # spells or abilities.") has no printed parameter of its own to parse -
+    # unlike endure/recruit below, the keyword name *is* the whole ability,
+    # so the keyword's presence is already the fact the machinery reads:
+    # `Game.shroud_refusal` and `TargetingProfile._check_shroud` both read it
+    # straight off `has_keyword`, the same computed-board reader every other
+    # keyword check in `models/game.py` already uses. Not a
+    # `TARGET_LEGALITY_KEYWORDS` entry like Hexproof: shroud has no
+    # controller exception (CR 702.18b), so it is refused at the *target*
+    # rather than at announcement, through a different function.
+    # `tests/scenarios/test_shroud.py` proves it live.
+    if any(k.lower() == "shroud" for k in printing.keywords):
+        found["shroud"] = (
+            "models/game.py (Game.shroud_refusal), "
+            "machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a)"
+        )
+
+    # Split second (CR 702.61a: "As long as this spell is on the stack,
+    # players can't cast other spells or activate abilities that aren't mana
+    # abilities.") is the identical shape to shroud above: no printed
+    # parameter, so the keyword's presence is the whole fact -
+    # `has_split_second` (`machines/casting.py`) is the canonical reader
+    # `split_second_restriction_source` itself calls.
+    # `tests/scenarios/test_split_second.py` proves it live.
+    if has_split_second(printing):
+        found["split second"] = "machines/casting.py (split_second_restriction_source, CR 702.61a)"
+
+    # Endure (CR 701.63a: "... that permanent's controller creates an N/N
+    # white Spirit creature token unless they put N +1/+1 counters on that
+    # permanent.") *does* have a printed parameter (the count), so - unlike
+    # shroud/split second above - presence of the keyword proves nothing
+    # about whether *this* card's own clause is the shape
+    # `machines/effects._parse_endure_clause` actually reads: substituting a
+    # probe value for a bare "X" (`substitute_x`, the same CR 107.3a
+    # substitution `classify_clauses` already performs) mirrors what the real
+    # engine does before ever trying the parser, and only a real match
+    # registers the keyword. `tests/scenarios/test_endure.py` proves it live.
+    if any(k.lower() == "endure" for k in printing.keywords):
+        for ability in parse_abilities(printing):
+            text = getattr(ability, "effect", None) or ability.text
+            if _parse_endure_clause(substitute_x(text, 1)) is not None:
+                found["endure"] = "machines/effects.py (_parse_endure_clause, CR 701.63a)"
+                break
+
+    # Recruit (CR 701.70a: "Draw a card, then discard a card. If you
+    # discarded a nonland card this way, create a 1/1 white Human Soldier
+    # creature token.") is the bare-word keyword-action shape ("Recruit."),
+    # read by `machines/effects._parse_recruit_clause` off whichever
+    # ability's own text carries it - gated on that parser actually matching
+    # *this* card's clause, the same per-card discipline endure above uses,
+    # not on the keyword name by itself. `tests/scenarios/test_recruit.py`
+    # proves it live.
+    if any(k.lower() == "recruit" for k in printing.keywords):
+        for ability in parse_abilities(printing):
+            text = getattr(ability, "effect", None) or ability.text
+            if _parse_recruit_clause(text, for_spell=False) is not None:
+                found["recruit"] = "machines/effects.py (_parse_recruit_clause, CR 701.70a)"
+                break
+
+    # Ascend (CR 702.131a/b: "If [any time] you control ten or more
+    # permanents and you don't have the city's blessing, you get the city's
+    # blessing for the rest of the game.") has no printed parameter either -
+    # the same shape as shroud/split second above, so the keyword's presence
+    # is already what `machines/keywords.py`'s own `has_ascend`/
+    # `_has_computed_ascend` (a permanent) and `ascend_as_a_spell_resolves`
+    # (a spell, called from `models/game.py`) act on.
+    #
+    # This is the sweep-truth rewrite's own finding, not part of the brief's
+    # planned six: `ABILITY_WORDS` used to carry a bare, uncited "ascend"
+    # entry - unlike every other pre-existing entry there, which cites the
+    # `knowledge_search` finding of no CR number and the parser that reads
+    # its clause - and replacing that list with CR 207.2c's verbatim text
+    # (which has no "ascend" in it at all) surfaced it as a false "ignored
+    # keyword" the moment the bogus entry was gone. It is the identical
+    # false-positive shape this sweep already warns about, just pointed the
+    # other way: a stale table hid a real, already-built CR 702.131 keyword
+    # ability instead of flagging a fake gap. `tests/scenarios/test_ascend.py`
+    # proves it live.
+    if any(k.lower() == "ascend" for k in printing.keywords):
+        found["ascend"] = (
+            "machines/keywords.py (has_ascend, _has_computed_ascend, "
+            "ascend_as_a_spell_resolves, CR 702.131)"
+        )
+
     return found
 
 
@@ -444,13 +682,357 @@ def executed_keywords(printing: Card) -> dict[str, str]:
 #: creature."), but there is nothing for any machine to execute.
 _FLAVOR_WORD_LABEL = re.compile(r"^\u2022\s*(?P<word>[^\u2014\n]+?)\s+\u2014\s+", re.MULTILINE)
 
+#: CR 207.2d's *other* shape: an ability line labelled `<Label> \u2014 <text>`
+#: with no bullet at all - Mister Negative's "Darkforce Inversion \u2014 When
+#: Mister Negative enters, ..." and its like below. The em dash must have real
+#: whitespace on both sides, which is deliberately what keeps this from ever
+#: matching a printed keyword-reminder line: CR 702 keywords with a colon-like
+#: printed cost use the em dash with **no** surrounding space at all
+#: (Vexing Sphinx's "Cumulative upkeep\u2014Discard a card."), so that shape
+#: never reaches this regex to begin with, on top of `CR_KEYWORD_NAMES`
+#: catching it below a second time.
+_FLAVOR_WORD_LINE = re.compile(r"^(?P<word>[^\u2014\n]+?)\s+\u2014\s+", re.MULTILINE)
+
+#: CR 701's keyword actions and CR 702's keyword abilities, every numbered
+#: section's own heading transcribed verbatim (verified 2026-09-23, `mise run
+#: rules:find 701` and `rules:find 702`; local CR copy effective 2026-09-25),
+#: skipping only each section's unnumbered introductory paragraph (701.1,
+#: 702.1), which names no ability. Two CR headings each name a *pair* of
+#: keywords joined by "and" ("Tap and Untap", "Daybound and Nightbound");
+#: both the whole heading and its two halves are kept, since Scryfall prints
+#: "Daybound" and "Nightbound" as two separate keyword-line labels, never the
+#: combined CR heading.
+#:
+#: This is the second half of CR 207.2d's own test for a flavor word: a
+#: flavor word "look[s] like" an ability word or keyword but "ha[s] no
+#: special rules meaning" of its own, so the generalized flavor-word rule
+#: below (`_FLAVOR_WORD_LINE`) must never fire on a label that actually *is*
+#: one of these - Aerial Doombot's "Power-up \u2014 {5}{U}: ..." is CR
+#: 702.193's own keyword line, not a flavor word, even though its shape
+#: (label, space, em dash, space, text) is identical to Darkforce Inversion's.
+_CR_KEYWORD_HEADINGS: tuple[str, ...] = (
+    "Activate",
+    "Attach",
+    "Behold",
+    "Cast",
+    "Counter",
+    "Create",
+    "Destroy",
+    "Discard",
+    "Double",
+    "Triple",
+    "Exchange",
+    "Exile",
+    "Fight",
+    "Goad",
+    "Investigate",
+    "Mill",
+    "Play",
+    "Regenerate",
+    "Reveal",
+    "Sacrifice",
+    "Scry",
+    "Search",
+    "Shuffle",
+    "Surveil",
+    "Tap and Untap",
+    "Transform",
+    "Convert",
+    "Fateseal",
+    "Clash",
+    "Planeswalk",
+    "Set in Motion",
+    "Abandon",
+    "Proliferate",
+    "Detain",
+    "Populate",
+    "Monstrosity",
+    "Vote",
+    "Bolster",
+    "Manifest",
+    "Support",
+    "Meld",
+    "Exert",
+    "Explore",
+    "Assemble",
+    "Adapt",
+    "Amass",
+    "Learn",
+    "Venture into the Dungeon",
+    "Connive",
+    "Open an Attraction",
+    "Roll to Visit Your Attractions",
+    "Incubate",
+    "The Ring Tempts You",
+    "Face a Villainous Choice",
+    "Time Travel",
+    "Discover",
+    "Cloak",
+    "Collect Evidence",
+    "Suspect",
+    "Forage",
+    "Manifest Dread",
+    "Endure",
+    "Harness",
+    "Airbend",
+    "Earthbend",
+    "Waterbend",
+    "Blight",
+    "Heal",
+    "Recruit",
+    "Empower Jace",
+    "Deathtouch",
+    "Defender",
+    "Double Strike",
+    "Enchant",
+    "Equip",
+    "First Strike",
+    "Flash",
+    "Flying",
+    "Haste",
+    "Hexproof",
+    "Indestructible",
+    "Intimidate",
+    "Landwalk",
+    "Lifelink",
+    "Protection",
+    "Reach",
+    "Shroud",
+    "Trample",
+    "Vigilance",
+    "Ward",
+    "Banding",
+    "Rampage",
+    "Cumulative Upkeep",
+    "Flanking",
+    "Phasing",
+    "Buyback",
+    "Shadow",
+    "Cycling",
+    "Echo",
+    "Horsemanship",
+    "Fading",
+    "Kicker",
+    "Flashback",
+    "Madness",
+    "Fear",
+    "Morph",
+    "Amplify",
+    "Provoke",
+    "Storm",
+    "Affinity",
+    "Entwine",
+    "Modular",
+    "Sunburst",
+    "Bushido",
+    "Soulshift",
+    "Splice",
+    "Offering",
+    "Ninjutsu",
+    "Epic",
+    "Convoke",
+    "Dredge",
+    "Transmute",
+    "Bloodthirst",
+    "Haunt",
+    "Replicate",
+    "Forecast",
+    "Graft",
+    "Recover",
+    "Ripple",
+    "Split Second",
+    "Suspend",
+    "Vanishing",
+    "Absorb",
+    "Aura Swap",
+    "Delve",
+    "Fortify",
+    "Frenzy",
+    "Gravestorm",
+    "Poisonous",
+    "Transfigure",
+    "Champion",
+    "Changeling",
+    "Evoke",
+    "Hideaway",
+    "Prowl",
+    "Reinforce",
+    "Conspire",
+    "Persist",
+    "Wither",
+    "Retrace",
+    "Devour",
+    "Exalted",
+    "Unearth",
+    "Cascade",
+    "Annihilator",
+    "Level Up",
+    "Rebound",
+    "Umbra Armor",
+    "Infect",
+    "Battle Cry",
+    "Living Weapon",
+    "Undying",
+    "Miracle",
+    "Soulbond",
+    "Overload",
+    "Scavenge",
+    "Unleash",
+    "Cipher",
+    "Evolve",
+    "Extort",
+    "Fuse",
+    "Bestow",
+    "Tribute",
+    "Dethrone",
+    "Hidden Agenda",
+    "Outlast",
+    "Prowess",
+    "Dash",
+    "Exploit",
+    "Menace",
+    "Renown",
+    "Awaken",
+    "Devoid",
+    "Ingest",
+    "Myriad",
+    "Surge",
+    "Skulk",
+    "Emerge",
+    "Escalate",
+    "Melee",
+    "Crew",
+    "Fabricate",
+    "Partner",
+    "Undaunted",
+    "Improvise",
+    "Aftermath",
+    "Embalm",
+    "Eternalize",
+    "Afflict",
+    "Ascend",
+    "Assist",
+    "Jump-Start",
+    "Mentor",
+    "Afterlife",
+    "Riot",
+    "Spectacle",
+    "Escape",
+    "Companion",
+    "Mutate",
+    "Encore",
+    "Boast",
+    "Foretell",
+    "Demonstrate",
+    "Daybound and Nightbound",
+    "Disturb",
+    "Decayed",
+    "Cleave",
+    "Training",
+    "Compleated",
+    "Reconfigure",
+    "Blitz",
+    "Casualty",
+    "Enlist",
+    "Read Ahead",
+    "Ravenous",
+    "Squad",
+    "Space Sculptor",
+    "Visit",
+    "Prototype",
+    "Living Metal",
+    "More Than Meets the Eye",
+    "For Mirrodin!",
+    "Toxic",
+    "Backup",
+    "Bargain",
+    "Craft",
+    "Disguise",
+    "Solved",
+    "Plot",
+    "Saddle",
+    "Spree",
+    "Freerunning",
+    "Gift",
+    "Offspring",
+    "Impending",
+    "Exhaust",
+    "Max Speed",
+    "Start Your Engines!",
+    "Harmonize",
+    "Mobilize",
+    "Job Select",
+    "Tiered",
+    "Station",
+    "Warp",
+    "\u221e (Infinity)",
+    "Mayhem",
+    "Web-slinging",
+    "Firebending",
+    "Sneak",
+    "Increment",
+    "Paradigm",
+    "Power-up",
+    "Teamwork",
+    "Storied",
+)
+
+CR_KEYWORD_NAMES = frozenset(
+    piece.strip().lower()
+    for heading in _CR_KEYWORD_HEADINGS
+    for piece in ((heading, *heading.split(" and ", 1)) if " and " in heading else (heading,))
+)
+
+
+def _oracle_texts(printing: Card) -> list[str]:
+    """Every block of oracle text on this printing worth scanning for a
+    flavor-word label - the top-level text when the printing has one, plus
+    every face's own text for a split/transform/modal-DFC/prepare card, since
+    a keyword can sit on a face that never reaches the (null) top-level
+    `oracle_text` at all: Sephiroth, Fabled SOLDIER's Super Nova is on the
+    back (transform) face only.
+    """
+    texts = [printing.oracle_text] if printing.oracle_text else []
+    texts.extend(face.oracle_text for face in printing.card_faces or [] if face.oracle_text)
+    return texts
+
+
+def _is_flavor_word_label(printing: Card, label: str) -> bool:
+    """Whether `label` (an em-dash-labelled line's own leading text) is CR
+    207.2d's other flavor-word shape rather than a real keyword or ability
+    word wearing the same "Label \u2014 text" clothing.
+
+    Three conditions, all required: the label has to actually be one of this
+    printing's own Scryfall `keywords` (never an arbitrary noun phrase this
+    regex happened to catch), and it must be neither a CR 701/702 keyword
+    name (`CR_KEYWORD_NAMES` - Power-up, Cumulative upkeep, a Ward label)
+    nor a CR 207.2c ability word (`ABILITY_WORDS`).
+    """
+    lowered = label.strip().lower()
+    if lowered not in {keyword.lower() for keyword in printing.keywords}:
+        return False
+    if lowered in CR_KEYWORD_NAMES:
+        return False
+    return _normalized_ability_word(label) not in ABILITY_WORDS
+
 
 def flavor_words(printing: Card) -> frozenset[str]:
-    """The words this printing uses only as a mode's flavor-word label."""
-    return frozenset(
-        match.group("word").strip().lower()
-        for match in _FLAVOR_WORD_LABEL.finditer(printing.oracle_text or "")
-    )
+    """The words this printing uses only as a flavor-word label (CR 207.2d) -
+    a mode's bulleted label, or an ordinary ability line labelled
+    `<Label> \u2014 <text>` whose label is not a real keyword or ability word
+    in disguise. See `_is_flavor_word_label` for the generalized shape's own
+    guard.
+    """
+    found: set[str] = set()
+    for text in _oracle_texts(printing):
+        found.update(
+            match.group("word").strip().lower() for match in _FLAVOR_WORD_LABEL.finditer(text)
+        )
+        for match in _FLAVOR_WORD_LINE.finditer(text):
+            label = match.group("word").strip()
+            if _is_flavor_word_label(printing, label):
+                found.add(label.lower())
+    return frozenset(found)
 
 
 def ignored_keywords(printing: Card) -> list[str]:
@@ -463,7 +1045,7 @@ def ignored_keywords(printing: Card) -> list[str]:
         if (
             lowered in executed
             or lowered in NEEDS_NO_CODE
-            or lowered in ABILITY_WORDS
+            or _normalized_ability_word(keyword) in ABILITY_WORDS
             or lowered in flavor
         ):
             continue
@@ -1906,6 +2488,34 @@ def report_keywords(names: list[str]) -> int:
     return len(by_keyword)
 
 
+def legal_cards_failing_closed(names: list[str]) -> list[tuple[str, str]]:
+    """Cards among `names` that are legal in Modern, Pioneer or Standard
+    (`in_target_formats`) whose worst clause (`classify_card`) fails closed
+    with a `NOTICE` - the owner rule's own gap list.
+
+    A `NOTICE` is correct, fail-closed behaviour in the ordinary sense
+    `report_effects`'s own module docstring describes it - nothing silently
+    did nothing - but the owner rule is stricter than "not a bug": every
+    card legal in one of the three target formats must be **fully
+    supported**, so a legal card resting on a notice is never an acceptable
+    end state, only a still-open gap that has not been closed yet. A card
+    outside the three target formats can rest on a notice indefinitely; this
+    list is deliberately silent about those - `in_target_formats` is checked
+    here directly, regardless of whether the caller already filtered `names`
+    (main()'s default run) or passed the whole pool (`--all-formats`), so the
+    answer never depends on which one happened to call it.
+    """
+    found: list[tuple[str, str]] = []
+    for name in names:
+        printing = card(name)
+        if not has_rules_text(printing) or not in_target_formats(printing):
+            continue
+        category, detail = classify_card(printing)
+        if category == NOTICE:
+            found.append((name, detail))
+    return found
+
+
 def report_effects(names: list[str]) -> int:
     """Sort every clause of every card with rules text into handled / notice /
     static_unaudited / silent / unmatchable_condition / quoted_effect, and
@@ -1990,6 +2600,26 @@ def report_effects(names: list[str]) -> int:
         if detail:
             print(f"    {detail[:70]}")
 
+    # OWNER RULE: a card legal in Modern, Pioneer or Standard must be fully
+    # supported - a fail-closed notice is not an acceptable end state for one
+    # of those, even though `NOTICE` is ordinarily correct behaviour (see
+    # this function's own docstring). So a legal card resting on a notice is
+    # listed here as a gap in its own right, never folded into the "fine"
+    # reading `counts[NOTICE]` alone would otherwise invite.
+    legal_gaps = legal_cards_failing_closed(names)
+    print("\nLegal cards (Modern/Pioneer/Standard) failing closed with a notice")
+    print("-" * 62)
+    if not legal_gaps:
+        print("  none - no legal card rests on a fail-closed notice")
+    for name, detail in sorted(legal_gaps):
+        print(f"  {name}")
+        if detail:
+            print(f"    {detail[:70]}")
+    print(
+        f"\n  {len(legal_gaps)} legal card(s) failing closed with a notice - OWNER RULE: "
+        "not an acceptable end state, still a gap to close"
+    )
+
     print(
         f"\n  {len(silent)} of {len(with_text)} cards with rules text have a clause that does "
         f"nothing and logs nothing\n  ({counts[HANDLED]} handled by a registry row or a parser, "
@@ -2051,15 +2681,20 @@ def report_card(name: str) -> int:
     printing = card(name)
     print(f"{printing.name}  [{printing.type_line}]")
     print("-" * 62)
+    if not in_target_formats(printing):
+        print("  outside Modern/Pioneer/Standard - not counted")
     for ability in parse_abilities(printing):
         detail = getattr(ability, "cost", None) or getattr(ability, "parameter", None) or ""
         print(f"  {ability.kind.value:<10} {ability.text[:60]}  {detail}")
     executed = executed_keywords(printing)
+    flavor = flavor_words(printing)
     print("\n  keyword execution:")
     for keyword in printing.keywords:
         where = executed.get(keyword.lower())
-        if where is None and keyword.lower() in NEEDS_NO_CODE | ABILITY_WORDS | flavor_words(
-            printing
+        if where is None and (
+            keyword.lower() in NEEDS_NO_CODE
+            or _normalized_ability_word(keyword) in ABILITY_WORDS
+            or keyword.lower() in flavor
         ):
             where = "no code needed"
         print(f"    {keyword:<18} {where or 'IGNORED'}")
@@ -2074,6 +2709,17 @@ def report_card(name: str) -> int:
     return 0
 
 
+def format_filter_footer(all_names: list[str], filtered_names: list[str]) -> None:
+    """The report footer the format rule owes every report it filtered:
+    how many pool cards `in_target_formats` dropped, so the count above never
+    reads as the *whole* pool's coverage by accident."""
+    excluded = len(all_names) - len(filtered_names)
+    print(
+        f"\n  {excluded} pool card(s) excluded (not legal in Modern, Pioneer or Standard) "
+        "- pass --all-formats to include them"
+    )
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--keywords", action="store_true", help="only the keyword report")
@@ -2086,29 +2732,51 @@ def main(argv: list[str]) -> int:
         "--targeting", action="store_true", help="only the unreadable-targeting report"
     )
     parser.add_argument("--card", help="report on one card by name")
+    parser.add_argument(
+        "--all-formats",
+        action="store_true",
+        help=(
+            "disable the Modern/Pioneer/Standard filter (`in_target_formats`) and report "
+            "on the whole card pool"
+        ),
+    )
     args = parser.parse_args(argv)
 
     if args.card:
         return report_card(args.card)
 
-    names = sorted(pool())
-    if not names:
+    all_names = sorted(pool())
+    if not all_names:
         print(f"no cards in {CARD_POOL}")
         return 1
 
+    names = (
+        all_names
+        if args.all_formats
+        else [name for name in all_names if in_target_formats(card(name))]
+    )
+
     if args.effects:
         report_effects(names)
+        if not args.all_formats:
+            format_filter_footer(all_names, names)
         return 0
     if args.keywords:
         report_keywords(names)
+        if not args.all_formats:
+            format_filter_footer(all_names, names)
         return 0
     if args.targeting:
         report_targeting(names)
+        if not args.all_formats:
+            format_filter_footer(all_names, names)
         return 0
 
     report_keywords(names)
     report_effects(names)
     report_targeting(names)
+    if not args.all_formats:
+        format_filter_footer(all_names, names)
     return 0
 
 

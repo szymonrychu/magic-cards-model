@@ -39,8 +39,11 @@ from scripts.sweep_pool import (
     _x_candidates,
     classify_card,
     classify_clauses,
+    flavor_words,
     has_rules_text,
     ignored_keywords,
+    in_target_formats,
+    legal_cards_failing_closed,
     missed_layer_shape,
 )
 
@@ -1041,3 +1044,408 @@ def test_self_enters_line_category_does_not_match_an_unrelated_paragraph():
         "As this land enters, you may pay 2 life. If you don't, it deals 2 damage to you.",
     )
     assert result is None
+
+
+# -- T01: format filter (Modern/Pioneer/Standard, banned counts as in) ------
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Corpseweaver Prodigy",  # digital-only Alchemy card, no CR text at all
+        "Snowfall",
+        "Séance Board",
+        "Gut, True Soul Zealot",
+        "Sakashima of a Thousand Faces",
+        "Silas Renn, Seeker Adept",
+        "Primaris Chaplain",
+        "Celestine, the Living Saint",
+        "Astral Dragon",
+        "Frenzied Gorespawn",
+        "Enigma Thief",
+        "Elvish Lookout",
+        "Nevinyrral, Urborg Tyrant",
+    ],
+)
+def test_cards_not_legal_in_any_target_format_are_excluded(name):
+    """`in_target_formats` clamps to Modern/Pioneer/Standard, the three
+    formats `CLAUDE.md` says this engine targets - not_legal in all three
+    means excluded from the format-filtered reports."""
+    from scripts.sweep_pool import in_target_formats
+
+    printing = card(name)
+    assert printing.legalities.modern == "not_legal"
+    assert printing.legalities.pioneer == "not_legal"
+    assert printing.legalities.standard == "not_legal"
+    assert in_target_formats(printing) is False
+
+
+def test_a_card_banned_in_one_target_format_but_legal_in_another_is_included():
+    """Amalia Benavides Aguirre is banned in Pioneer but legal in Modern and
+    Standard: banned counts as "exists in the format" (a banned card was
+    printed into the format's card pool and can be unbanned), so the format
+    filter must not drop it."""
+    from scripts.sweep_pool import in_target_formats
+
+    printing = card("Amalia Benavides Aguirre")
+    assert printing.legalities.pioneer == "banned"
+    assert printing.legalities.modern == "legal"
+    assert in_target_formats(printing) is True
+
+
+def test_a_card_legal_in_only_one_target_format_is_included():
+    """Vexing Sphinx is legal in Modern alone (not_legal in Pioneer and
+    Standard) - any one of the three formats is enough."""
+    from scripts.sweep_pool import in_target_formats
+
+    printing = card("Vexing Sphinx")
+    assert printing.legalities.modern == "legal"
+    assert printing.legalities.pioneer == "not_legal"
+    assert printing.legalities.standard == "not_legal"
+    assert in_target_formats(printing) is True
+
+
+def test_main_keywords_report_drops_out_of_format_cards():
+    """`main`'s default run filters `--keywords`'s own `names` through
+    `in_target_formats` - Elvish Lookout (Shroud, out of format) must not
+    appear in the report even though Shroud itself is registered."""
+    import io
+    from contextlib import redirect_stdout
+
+    from scripts.sweep_pool import main
+
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        main(["--keywords"])
+    output = buffer.getvalue()
+    assert "Elvish Lookout" not in output
+    assert "excluded" in output
+
+
+def test_main_all_formats_flag_disables_the_filter():
+    """`--all-formats` reports on the whole pool - the footer's own excluded
+    count must read zero, and it prints no footer line at all (the filter is
+    off, so there is nothing to report about it)."""
+    import io
+    from contextlib import redirect_stdout
+
+    from scripts.sweep_pool import main
+
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        main(["--keywords", "--all-formats"])
+    output = buffer.getvalue()
+    assert "excluded" not in output
+
+
+def test_report_card_notes_when_the_filter_would_drop_the_card():
+    """`--card` always reports on the named card regardless of format, but
+    prints the "not counted" line when the format filter would have dropped
+    it from the pool-wide reports."""
+    import io
+    from contextlib import redirect_stdout
+
+    from scripts.sweep_pool import main
+
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        main(["--card", "Elvish Lookout"])
+    assert "outside Modern/Pioneer/Standard - not counted" in buffer.getvalue()
+
+
+def test_report_card_does_not_note_an_in_format_card():
+    import io
+    from contextlib import redirect_stdout
+
+    from scripts.sweep_pool import main
+
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        main(["--card", "Lightning Bolt"])
+    assert "not counted" not in buffer.getvalue()
+
+
+# -- T01: CR 207.2c ability words, verbatim and complete ---------------------
+
+
+def test_ability_words_is_the_complete_verbatim_cr_207_2c_list():
+    """60 entries (`descend 4`/`descend 8` collapsed to one `descend` entry -
+    see `_normalized_ability_word`), verified 2026-09-23 with
+    `mise run rules:find 207.2c`."""
+    from scripts.sweep_pool import ABILITY_WORDS
+
+    assert len(ABILITY_WORDS) == 60
+    assert "adamant" in ABILITY_WORDS
+    assert "will of the council" in ABILITY_WORDS
+    assert "descend" in ABILITY_WORDS
+    assert "descend 4" not in ABILITY_WORDS
+    assert "descend 8" not in ABILITY_WORDS
+
+
+@pytest.mark.parametrize(
+    ("name", "word"),
+    [
+        ("Basking Capybara", "Descend"),
+        ("Bellowing Aegisaur", "Enrage"),
+        ("Corpseweaver Prodigy", "Infusion"),
+        ("Deepwater Hypnotist", "Inspired"),
+        ("Gruesome Discovery", "Morbid"),
+        ("Stirring Hopesinger", "Repartee"),
+        ("Launch the Fleet", "Strive"),
+        ("Kona, Rescue Beastie", "Survival"),
+    ],
+)
+def test_cr_207_2c_ability_words_are_not_reported_as_unexecuted_keywords(name, word):
+    """The eight ability words the flow-2 brief classified by CR 207.2c,
+    each on its own reported card - a card carrying one is never carrying an
+    unexecuted keyword (CR 207.2c: ability words "have no special rules
+    meaning")."""
+    assert word not in ignored_keywords(card(name))
+
+
+def test_descend_4_and_descend_8_both_match_the_collapsed_ability_word():
+    """Scryfall prints `Descend 4` and `Descend 8` as two different keyword
+    strings (the count is CR 700.11's own designated amount); both have to
+    reach `ABILITY_WORDS`'s single `descend` entry."""
+    from scripts.sweep_pool import _normalized_ability_word
+
+    assert _normalized_ability_word("Descend 4") == "descend"
+    assert _normalized_ability_word("Descend 8") == "descend"
+
+
+def test_councils_dilemma_curly_apostrophe_normalizes_to_the_cr_spelling():
+    from scripts.sweep_pool import _normalized_ability_word
+
+    assert _normalized_ability_word("Council’s dilemma") == "council's dilemma"
+
+
+def test_waterbend_is_not_a_cr_207_2c_ability_word():
+    """CR 701.67 waterbend is a keyword *action*, not an ability word - it
+    must not be swallowed by the ability-word table."""
+    from scripts.sweep_pool import ABILITY_WORDS, _normalized_ability_word
+
+    assert _normalized_ability_word("Waterbend") not in ABILITY_WORDS
+
+
+def test_ascend_is_not_a_cr_207_2c_ability_word():
+    """CR 702.131 ascend is a real keyword ability with its own machinery
+    (`machines/keywords.py`) - the pre-existing `ABILITY_WORDS` table used to
+    carry an uncited "ascend" entry that hid this real keyword behind a false
+    "no special rules meaning" claim. It must not be in the verbatim CR
+    207.2c list."""
+    from scripts.sweep_pool import ABILITY_WORDS
+
+    assert "ascend" not in ABILITY_WORDS
+
+
+def test_ascend_is_registered_as_executed():
+    """`machines/keywords.py` already builds ascend (`has_ascend`,
+    `_has_computed_ascend`, `ascend_as_a_spell_resolves`, CR 702.131) -
+    replacing the stale `ABILITY_WORDS` entry with the real CR 207.2c list
+    must not turn a built keyword into a false gap report."""
+    assert "Ascend" not in ignored_keywords(card("Ocelot Pride"))
+
+
+# -- T01: flavor words (CR 207.2d), generalized past the bullet-mode shape --
+
+
+@pytest.mark.parametrize(
+    ("name", "word"),
+    [
+        ("Mister Negative", "Darkforce Inversion"),
+        ("Superior Spider-Man", "Mind Swap"),
+        ("Sephiroth, Fabled SOLDIER", "Super Nova"),
+    ],
+)
+def test_generalized_flavor_word_labels_are_recognised(name, word):
+    """CR 207.2d's other shape - an ability line labelled `<Label> — <text>`
+    with no bullet - is a flavor word when the label is one of the card's own
+    Scryfall keywords and is neither a CR 701/702 keyword name nor a CR
+    207.2c ability word. None of these three labels has a CR entry
+    (`knowledge_search`/`rules:find` return nothing for any of them), and
+    each is proven `handled` by its own clause outcome, not by this table."""
+    assert word.lower() in flavor_words(card(name))
+    assert word not in ignored_keywords(card(name))
+
+
+def test_power_up_label_is_not_swallowed_as_a_flavor_word():
+    """Aerial Doombot's "Power-up — {5}{U}: ..." has the identical printed
+    shape (label, em dash with spaces, text) as a real flavor word, but
+    "Power-up" is CR 702.193's own keyword ability name - the generalized
+    flavor-word rule must not treat it as decorative and must still report it
+    as an unexecuted keyword."""
+    assert "power-up" not in flavor_words(card("Aerial Doombot"))
+    assert "Power-up" in ignored_keywords(card("Aerial Doombot"))
+
+
+def test_cumulative_upkeep_label_is_not_swallowed_as_a_flavor_word():
+    """Vexing Sphinx's "Cumulative upkeep—Discard a card." has no space
+    around its em dash at all (unlike Power-up above), so it never even
+    reaches the generalized flavor-word regex - and "cumulative upkeep" is
+    also a CR 702.24 keyword name, a second, independent reason it must not
+    be treated as a flavor word."""
+    assert "cumulative upkeep" not in flavor_words(card("Vexing Sphinx"))
+    assert "Cumulative upkeep" in ignored_keywords(card("Vexing Sphinx"))
+
+
+def test_cr_keyword_names_covers_both_701_and_702_headings():
+    from scripts.sweep_pool import CR_KEYWORD_NAMES
+
+    assert "power-up" in CR_KEYWORD_NAMES  # CR 702.193
+    assert "cumulative upkeep" in CR_KEYWORD_NAMES  # CR 702.24
+    assert "recruit" in CR_KEYWORD_NAMES  # CR 701.70
+    assert "endure" in CR_KEYWORD_NAMES  # CR 701.63
+    assert "daybound" in CR_KEYWORD_NAMES  # split half of CR 702.145's heading
+    assert "nightbound" in CR_KEYWORD_NAMES
+
+
+# -- T01: Partner / Choose a Background (CR 702.124a, deck construction) ----
+
+
+def test_partner_needs_no_code():
+    """CR 702.124a: partner abilities "modify the rules for deck construction
+    in the Commander variant ... and function before the game begins" -
+    inert in Modern/Pioneer/Standard."""
+    from scripts.sweep_pool import NEEDS_NO_CODE
+
+    assert "partner" in NEEDS_NO_CODE
+    assert "Partner" not in ignored_keywords(card("Sakashima of a Thousand Faces"))
+    assert "Partner" not in ignored_keywords(card("Silas Renn, Seeker Adept"))
+
+
+def test_choose_a_background_needs_no_code():
+    from scripts.sweep_pool import NEEDS_NO_CODE
+
+    assert "choose a background" in NEEDS_NO_CODE
+    assert "Choose a background" not in ignored_keywords(card("Gut, True Soul Zealot"))
+
+
+# -- T01: the six built-but-unregistered keywords get named branches --------
+
+
+def test_shroud_is_registered_as_executed():
+    assert "Shroud" not in ignored_keywords(card("Elvish Lookout"))
+
+
+def test_split_second_is_registered_as_executed():
+    assert "Split second" not in ignored_keywords(card("Sudden Shock"))
+
+
+@pytest.mark.parametrize("name", ["Fortress Kin-Guard", "Krumar Initiate"])
+def test_endure_is_registered_as_executed(name):
+    """Fortress Kin-Guard's endure has a literal printed count ("endures
+    1"); Krumar Initiate's is an announced X ("endures X.") - both have to
+    reach `_parse_endure_clause` through the same CR 107.3a substitution
+    `classify_clauses` itself performs."""
+    assert "Endure" not in ignored_keywords(card(name))
+
+
+def test_recruit_is_registered_as_executed():
+    assert "Recruit" not in ignored_keywords(card("Lake-town Lookout"))
+
+
+def test_tiered_is_registered_as_executed():
+    assert "Tiered" not in ignored_keywords(card("Fire Magic"))
+
+
+def test_spree_is_registered_as_executed():
+    assert "Spree" not in ignored_keywords(card("Insatiable Avarice"))
+
+
+def test_tiered_registration_is_conditioned_on_the_profile_being_understood(monkeypatch):
+    """The review focus: a registration must be conditioned on the machinery
+    actually reading the card, never on the keyword name alone. Faking an
+    unread modal profile for a Tiered card must make the registration
+    disappear even though the keyword is still printed."""
+    import scripts.sweep_pool as sweep_pool
+
+    real_modal_profile = sweep_pool.modal_profile
+
+    def fake_modal_profile(printing):
+        profile = real_modal_profile(printing)
+        if profile is None:
+            return None
+        return profile.model_copy(update={"understood": False})
+
+    monkeypatch.setattr(sweep_pool, "modal_profile", fake_modal_profile)
+    assert "tiered" not in sweep_pool.executed_keywords(card("Fire Magic"))
+
+
+# -- T01: OWNER RULE - a legal card cannot rest on a fail-closed notice -----
+
+
+def test_legal_cards_failing_closed_lists_a_legal_notice_card_as_a_gap():
+    """Insatiable Avarice and Metamorphic Blast (Spree, legal in all three
+    target formats) classify `NOTICE` because some of their modes are unread
+    - the owner rule says a legal card resting on a notice is a gap, not a
+    clean pass, so both must be listed."""
+    gaps = dict(legal_cards_failing_closed(["Insatiable Avarice", "Metamorphic Blast"]))
+    assert "Insatiable Avarice" in gaps
+    assert "Metamorphic Blast" in gaps
+
+
+def test_legal_cards_failing_closed_excludes_an_out_of_format_notice_card():
+    """Frenzied Gorespawn (goad) is not_legal in Modern, Pioneer or Standard
+    and also classifies `NOTICE` - the owner rule does not apply to it, so it
+    must not be reported as a gap even when it is in the input list."""
+    printing = card("Frenzied Gorespawn")
+    assert not in_target_formats(printing)
+    assert classify_card(printing)[0] == NOTICE
+    gaps = dict(legal_cards_failing_closed(["Frenzied Gorespawn"]))
+    assert "Frenzied Gorespawn" not in gaps
+
+
+def test_legal_cards_failing_closed_excludes_a_handled_card():
+    """A legal card whose worst clause is `HANDLED` is not a gap."""
+    gaps = dict(legal_cards_failing_closed(["Lightning Bolt"]))
+    assert "Lightning Bolt" not in gaps
+
+
+def test_report_effects_prints_the_legal_gap_section():
+    import io
+    from contextlib import redirect_stdout
+
+    from scripts.sweep_pool import report_effects
+
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        report_effects(["Insatiable Avarice", "Metamorphic Blast", "Lightning Bolt"])
+    output = buffer.getvalue()
+    assert "Legal cards (Modern/Pioneer/Standard) failing closed with a notice" in output
+    assert "Insatiable Avarice" in output
+    assert "2 legal card(s) failing closed" in output
+
+
+# -- T01: acceptance - the honest unbuilt-keyword list -----------------------
+
+
+def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
+    """The acceptance check for the whole rewrite: with every ability word,
+    flavor word, format exclusion and registration above in place, the
+    in-format pool's own unexecuted-keyword list is exactly the fourteen
+    genuinely unbuilt CR 701/702 keywords - the pre-existing false
+    positives (ability words, flavor words, Partner/Choose a Background,
+    the six now-registered built keywords, the stale "ascend" entry) are all
+    gone, and no new false positive has appeared in their place."""
+    from scripts.sweep_pool import in_target_formats
+
+    names = [name for name in pool() if in_target_formats(card(name))]
+    by_keyword: dict[str, list[str]] = {}
+    for name in names:
+        for keyword in ignored_keywords(card(name)):
+            by_keyword.setdefault(keyword, []).append(name)
+    assert set(by_keyword) == {
+        "Changeling",
+        "Compleated",
+        "Cumulative upkeep",
+        "Discover",
+        "Explore",
+        "Infect",
+        "Miracle",
+        "Monstrosity",
+        "Outlast",
+        "Power-up",
+        "Sneak",
+        "Toxic",
+        "Waterbend",
+    }

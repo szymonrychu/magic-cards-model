@@ -599,6 +599,29 @@ uv run python scripts/sweep_pool.py --targeting  # targeting text the parser can
 uv run python scripts/sweep_pool.py --card "Grief"
 ```
 
+**The format filter (2026-09-23, T01).** `--keywords`, `--effects` and
+`--targeting` filter `names` through `in_target_formats` before reporting -
+`CLAUDE.md`'s own clamp to Modern, Pioneer and Standard, applied to the
+measurement tool for the first time rather than only to `models/card.py`'s
+`Legalities`. A printing is in scope the moment any one of the three
+`Legality` is not `not_legal` - **banned counts as in scope**, since a banned
+card was printed into that format's pool and can be unbanned, and a
+not-yet-sanctioned pod running the format's card list can still play it; only
+`not_legal` in all three (a Standard-only rotated-out card, a Commander-only
+printing, an Alchemy digital-only card) drops it. `--all-formats` disables the
+filter and reports on the whole pool; `--card NAME` always reports the named
+card regardless, printing "outside Modern/Pioneer/Standard - not counted"
+when the filter would have dropped it from the pool-wide reports. Every
+filtered report's own footer states how many pool cards the rule excluded.
+This is the owner rule the filter exists to serve: every card legal in one of
+the three target formats must be **fully supported**, so `--effects` also
+lists a legal card whose worst clause fails closed with a `NOTICE` in its own
+"legal cards failing closed" section (`legal_cards_failing_closed`) - a
+fail-closed notice is ordinarily correct, fail-*closed* behaviour, but for a
+legal card it is a still-open gap, never a clean pass, and an out-of-format
+card's own notice is not tracked there. See `MEMORY.md`'s 2026-09-23 T01 line
+for the ability-word/flavor-word rules the same rewrite carries.
+
 The targeting report exists to keep a number at zero: a phrase
 `machines/targeting.py` cannot read comes back `understood=False` and CR 115
 legality is then not checked at all, which looks exactly like a card that
