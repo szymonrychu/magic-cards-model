@@ -8,14 +8,14 @@ an `UnmodeledTriggerEffectNotice`; a spell now records the same notice, on the
 same `Game.unmodeled_trigger_effect_notices` list, with the spell's own id,
 name and whole printed text (none of it ran).
 
-Strix Serenade ("Counter target artifact, creature, or planeswalker spell. Its
-controller creates a 2/2 blue Bird creature token with flying.") is the
-vehicle: Ponder, this test's own vehicle before the look-top-and-put-back wave
-(`tests/scenarios/test_look_at_top_and_put_back.py`) gave it a reader, has one
-now, so it can no longer stand for "unread". Strix Serenade's own clause
-combines a counter with a token grant for the countered spell's controller - a
-shape this wave's look/shuffle readers never touch - and still has no reader
-anywhere in `src/`.
+Flame Sweep ("Flame Sweep deals 2 damage to each creature except for
+creatures you control with flying.") is the vehicle. Ponder was the first, until
+the look-top-and-put-back wave (`tests/scenarios/test_look_at_top_and_put_back.py`)
+gave it a reader; Strix Serenade was the second, until S14's counterspell riders
+(`tests/scenarios/test_counter_controller_creates.py`) read its "Its controller
+creates" rider. Flame Sweep's "except for creatures you control with flying"
+exclusion is outside the one exclusion the mass-damage reader knows ("except
+for tokens you control"), so it still has no reader.
 
 Not every `None` is a gap, and the notice must not fire for these:
 
@@ -34,36 +34,28 @@ from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 
-def test_an_unread_instant_records_a_notice_naming_its_whole_text():
+def test_an_unread_sorcery_records_a_notice_naming_its_whole_text():
     scenario = (
         Scenario()
-        .player("alice", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
-        .player("bob", hand=["Strix Serenade"], battlefield=["Island"])
+        .player("alice", hand=["Flame Sweep"], battlefield=["Mountain"] * 3)
+        .player("bob", battlefield=["Grizzly Bears"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", username="bob")
 
-    bears = scenario.cast_onto_stack(
-        "Grizzly Bears",
-        *scenario.untapped_sources("Forest", "Forest", username="alice"),
-        username="alice",
-    )
-    scenario.pass_priority("alice")
-
-    serenade = scenario.cast_and_resolve(
-        "Strix Serenade",
-        *scenario.untapped_sources("Island", username="bob"),
-        username="bob",
-        targets=[bears],
+    sweep = scenario.cast_and_resolve(
+        "Flame Sweep", *scenario.untapped_sources(*["Mountain"] * 3), username="alice"
     )
 
-    assert serenade.zone is Zone.GRAVEYARD
-    assert bears.zone is Zone.STACK, "an unread 'counter' clause counters nothing"
+    assert sweep.zone is Zone.GRAVEYARD
+    assert bears.zone is Zone.BATTLEFIELD
+    assert bears.damage == 0, "an unread damage clause deals nothing"
     assert scenario.game.unmodeled_trigger_effect_notices == [
         UnmodeledTriggerEffectNotice(
-            source_id=serenade.id,
-            source_name="Strix Serenade",
-            text=serenade.oracle_text,
+            source_id=sweep.id,
+            source_name="Flame Sweep",
+            text=sweep.oracle_text,
         )
     ]
 
