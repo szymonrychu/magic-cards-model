@@ -27867,6 +27867,44 @@ def _parse_if_additional_cost_paid_clause(clause: str, *, for_spell: bool) -> Ta
     return effect
 
 
+#: "If this spell's <keyword> cost was paid, <consequence>." - a resolution-
+#: time condition on the spell's own announcement naming the alternative-cost
+#: keyword it was cast with (Morsel Theft's prowl, CR 702.76a). Read off the
+#: `CastRecord`: the keyword used *and* its cost paid, the same pair CR
+#: 702.185a's warp reads, since a keyword option that pays the mana cost
+#: records the keyword without its cost. "Additional" is
+#: `_IF_ADDITIONAL_COST_PAID_RE`'s, which names no keyword.
+_IF_KEYWORD_COST_PAID_RE = re.compile(
+    r"^if this spell'?s (?!additional\b)(?P<keyword>[a-z]+) cost was paid, (?P<rest>.+)$",
+    re.IGNORECASE,
+)
+
+
+def _parse_if_keyword_cost_paid_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_IF_KEYWORD_COST_PAID_RE`'s shape. Spell-only, like
+    `_parse_if_additional_cost_paid_clause`: an ability has no `CastRecord`."""
+    if not for_spell:
+        return None
+    match = _IF_KEYWORD_COST_PAID_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    keyword = match.group("keyword")
+    rest = match.group("rest").strip()
+    clause_effect = parse_clause_effect(rest) or parse_clause_effect(f"you {rest}")
+    if clause_effect is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if (
+            game.was_cast_with(stack_object, keyword)
+            and game.cast_record(stack_object).keyword_cost_paid
+        ):
+            player = game.controller_of(stack_object)
+            clause_effect(game, player, stack_object.name, source_id_of(stack_object))  # type: ignore[union-attr]
+
+    return effect
+
+
 #: "If you have seven or more cards in your graveyard, you may transform this
 #: permanent." (Search for Azcanta, after its "Then" is cut off by the
 #: splitter) and "If there are N or more cards in your graveyard, ..." - a
@@ -34751,6 +34789,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if_additional_cost_paid = _parse_if_additional_cost_paid_clause(clause, for_spell=for_spell)
     if if_additional_cost_paid is not None:
         return if_additional_cost_paid
+    if_keyword_cost_paid = _parse_if_keyword_cost_paid_clause(clause, for_spell=for_spell)
+    if if_keyword_cost_paid is not None:
+        return if_keyword_cost_paid
     exile_that_players_library = _parse_exile_that_players_library_clause(
         clause, for_spell=for_spell
     )

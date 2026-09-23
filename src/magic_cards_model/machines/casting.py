@@ -164,6 +164,14 @@ class KeywordCastOption(EngineModel):
     unavailable while the caster controls no unblocked creature (CR 509.1h),
     and `cost` carries a `ComponentKind.RETURN_TO_HAND` component the caster
     fills with the creature chosen (CR 601.2b's `choosing`)."""
+    prowl: bool = False
+    """True for CR 702.76a's prowl: the alternative cost is available only "if
+    a player was dealt combat damage this turn by a source that, at the time
+    it dealt that damage, was under your control and had any of this spell's
+    creature types". `why_not` asks `Game.prowl_condition_holds`, which reads
+    `Game.combat_damage_to_players_this_turn` - the record captured as the
+    damage was dealt, so a source that has since died or changed still counts
+    as it was."""
     understood: bool = True
     """False when the keyword's printed cost could not be read into something
     payable. The option is still reported, so a sweep can see the gap."""
@@ -246,6 +254,13 @@ class KeywordCastOption(EngineModel):
                     f"{spell.name} was not discarded this turn, so it cannot be cast "
                     f"with {self.keyword} ({self.rule})"
                 )
+
+        if self.prowl and game is not None and not game.prowl_condition_holds(caster, spell):
+            return (
+                f"no player was dealt combat damage this turn by a source {caster} "
+                f"controlled that shared a creature type with {spell.name}, so it cannot "
+                f"be cast for its {self.keyword} cost ({self.rule})"
+            )
 
         if (
             self.timing is CastTiming.SORCERY
@@ -569,6 +584,25 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             zone=Zone.HAND,
             cost=cost,
             pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
+    if canonical == "prowl":
+        # CR 702.76a: "'Prowl [cost]' means 'You may pay [cost] rather than
+        # pay this spell's mana cost if a player was dealt combat damage this
+        # turn by a source that, at the time it dealt that damage, was under
+        # your control and had any of this spell's creature types.'" An
+        # alternative cost (CR 118.9) with no zone of its own, so the hand -
+        # the zone a card is cast from by default - the same reading evoke's
+        # option makes. The condition is `why_not`'s, off `prowl`.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.76a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            prowl=True,
             understood=cost is not None,
         )
 

@@ -1779,6 +1779,10 @@ def _deal_combat_damage(game: "Game", source: CardState, target: "Targetable", a
     from ..models.player import Player
 
     if isinstance(target, Player):
+        # CR 702.76a's prowl asks what the source was "at the time it dealt
+        # that damage" - its controller and creature types - so that is
+        # captured here, off damage actually dealt, not looked up later.
+        game.record_combat_damage_to_player(source, target.username)
         # CR 702.164c / CR 120.3g: combat damage dealt to a player by a
         # creature with toxic gives that player poison counters equal to its
         # total toxic value, "in addition to the damage's other results" -

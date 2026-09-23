@@ -12,6 +12,7 @@ from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
 from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
+from ..data.creature_types import creature_types
 from ..data.subtypes import canonical_subtype
 from ..ids import install_id_allocator, reset_id_allocator
 from ..machines import combat as combat_rules
@@ -1749,6 +1750,30 @@ class GraveyardArrival(EngineModel):
     spell leaving the stack."""
 
 
+class CombatDamageToPlayer(EngineModel):
+    """One source's combat damage actually dealt to a player this turn
+    (CR 510.2), with what that source was *at the time it dealt that damage*.
+
+    CR 702.76a's prowl asks exactly this: "if a player was dealt combat damage
+    this turn by a source that, at the time it dealt that damage, was under
+    your control and had any of this spell's creature types." Storing the
+    source's id and looking it up later cannot answer that - the source may
+    have died since, changed controller, or lost a type - so the controller
+    and the computed creature types (CR 613.5, changeling's CR 702.73a
+    included) are captured by `machines/combat._deal_combat_damage` as the
+    damage is dealt, off damage actually dealt only (a prevented hit is not
+    "dealt"). Cleared when a new turn begins."""
+
+    player: str
+    """The player who was dealt the damage."""
+    source_id: UUID
+    controller: str
+    """The source's controller when it dealt the damage."""
+    creature_types: tuple[str, ...] = ()
+    """The source's computed creature types (CR 205.3m) when it dealt the
+    damage."""
+
+
 class SchemaVersionMismatch(RuntimeError):
     """A `Game` snapshot's `schema_version` does not match this build's
     `Game.CURRENT_SCHEMA_VERSION`, or the snapshot has no `schema_version` at
@@ -2495,6 +2520,14 @@ class Game(EngineModel):
     through `LayerContext.combat_damage_dealt_this_turn`. Cleared when a new
     turn begins."""
 
+    combat_damage_to_players_this_turn: list[CombatDamageToPlayer] = Field(default_factory=list)
+    """Every source's combat damage actually dealt to a player this turn, with
+    its controller and creature types at that moment - CR 702.76a's prowl
+    condition (see `CombatDamageToPlayer`). `machines/combat.py`'s
+    `_deal_combat_damage` is the single writer through
+    `record_combat_damage_to_player`; `prowl_condition_holds` is the reader.
+    Cleared when a new turn begins."""
+
     graveyard_arrivals_this_turn: list[GraveyardArrival] = Field(default_factory=list)
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
     per arrival - see `GraveyardArrival`'s own docstring for why this is one
@@ -2793,7 +2826,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 49
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 50
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3460,6 +3493,14 @@ class Game(EngineModel):
     would resume with that debt silently forgotten - the cleanup that
     "until end of turn" effects and the discard step depend on would simply
     never happen - so it is refused.
+
+    Bumped 49 -> 50: `Game` gained `combat_damage_to_players_this_turn` (CR
+    702.76a's prowl: each combat hit on a player with its source's controller
+    and creature types at that moment), and Prowl became a cast option with a
+    resolution-time "if this spell's prowl cost was paid" reader. A version-49
+    snapshot paused after combat damage this turn has no record of it, so
+    Morsel Theft's prowl cost would be refused on a board where it is legal -
+    refused rather than decoded into that different game.
     """
 
     @model_validator(mode="before")
@@ -13425,6 +13466,40 @@ class Game(EngineModel):
                 )
             return card_state
 
+    def record_combat_damage_to_player(self, source: CardState, player: str) -> None:
+        """Ledger one source's combat damage dealt to `player` (CR 510.2) on
+        `combat_damage_to_players_this_turn`, capturing the source's
+        controller and computed creature types *now*, as CR 702.76a's "at the
+        time it dealt that damage" requires. Called only with damage actually
+        dealt (`machines/combat._deal_combat_damage`)."""
+        kinds = set(creature_types())
+        self.combat_damage_to_players_this_turn.append(
+            CombatDamageToPlayer(
+                player=player,
+                source_id=source.id,
+                controller=self.controller_of(source).username,
+                creature_types=tuple(
+                    kind for kind in self.characteristics_of(source).subtypes if kind in kinds
+                ),
+            )
+        )
+
+    def prowl_condition_holds(self, caster: str, spell: CardState) -> bool:
+        """CR 702.76a: "a player was dealt combat damage this turn by a source
+        that, at the time it dealt that damage, was under your control and had
+        any of this spell's creature types."
+
+        The spell's creature types are its own (a Kindred type line's, or a
+        changeling's every creature type - CR 702.73a), read off its current
+        characteristics; the source's side is the record's, captured when the
+        damage was dealt."""
+        kinds = set(creature_types())
+        spell_types = {kind for kind in self.characteristics_of(spell).subtypes if kind in kinds}
+        return any(
+            record.controller == caster and spell_types.intersection(record.creature_types)
+            for record in self.combat_damage_to_players_this_turn
+        )
+
     def _record_graveyard_arrival(
         self,
         card_state: CardState,
@@ -19046,6 +19121,7 @@ class Game(EngineModel):
             self.turn_facts_last_turn = self.turn_facts
             self.turn_facts = {}
             self.combat_damage_dealt_this_turn_by = set()
+            self.combat_damage_to_players_this_turn = []
             self.graveyard_arrivals_this_turn = []
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and
