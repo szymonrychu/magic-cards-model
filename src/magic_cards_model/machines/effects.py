@@ -170,6 +170,7 @@ from .layers import (
     _split_and_validate_keywords,
     add_subtype,
     add_type,
+    all_permanents_controlled_by,
     count_card_types,
     creatures_controlled_by,
     creatures_controlled_by_opponents_of,
@@ -1883,7 +1884,8 @@ def _parse_scry_or_untap_if_not_starting_player_clauses(
 # already-resolved group, and everything below computes that group and (when
 # the card prints one) the "where X is ..." magnitude.
 _MASS_SUBJECT_RE = re.compile(
-    r"^(?:other )?creatures (?:you control|your opponents control)\b", re.IGNORECASE
+    r"^(?:(?:other )?creatures (?:you control|your opponents control)|permanents you control)\b",
+    re.IGNORECASE,
 )
 #: History of Benalia's own chapter III: "Knights you control get +2/+1
 #: until end of turn." - CR 205.3m's bare creature-type word standing in for
@@ -1996,6 +1998,14 @@ def _mass_creature_group_targets(
         # Toxic Deluge's own "All creatures get -X/-X until end of turn." -
         # no controller restriction at all, unlike the three shapes above.
         selector = every_creature
+    elif opening.startswith("permanents you control"):
+        # Veil of Summer's own group half, once its compound "You and
+        # permanents you control" subject is split (CR 403.3: every object
+        # on the battlefield is a permanent) - the identical selector
+        # `Game.condition_holds`'s own "you control a [quality]" branch
+        # reaches for a whole-board count, not narrowed to creatures the
+        # way every subject above it is.
+        selector = all_permanents_controlled_by(controller)
     else:
         return None
     board = game.computed_board()
@@ -15186,6 +15196,35 @@ def _is_layer_effect_text(text: str) -> bool:
     like that one piece.
     """
     return is_resolution_layer_effect_text(text)
+
+
+class PlayerSubjectSplitNotice(EngineModel):
+    """The player half of a "You and `<group>` gain `<keyword(s)>` until end
+    of turn" compound subject (Veil of Summer's own "You and permanents you
+    control gain hexproof from blue and from black until end of turn") -
+    read (`_parse_you_and_group_gain_clause` splits the subject, and the
+    group half already applies through the ordinary mass-grant reader), but
+    deliberately not yet granted.
+
+    `Game.grant_player_hexproof`/`grant_player_shroud` and their own clause
+    reader (`_player_gains_hexproof_clause`, `_PLAYER_GAINS_HEXPROOF_RE`)
+    already exist and already read this exact sentence once its subject is
+    narrowed to "You" alone - see `test_the_clause_parser_reads_hexproof_
+    from_two_qualities_on_you` - but wiring the *player* half of this split
+    to them is a separate, later piece of work, scoped on purpose so the
+    two halves land independently. Until then this fails closed the same
+    way every other unread-clause gap in this file does: recorded, not
+    silently dropped and not silently applied.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The player-subject sentence this wave reads but does not yet grant,
+    as it would print alone ("You gain hexproof from blue and from black
+    until end of turn")."""
 
 
 class LayerRemainderNotice(EngineModel):
@@ -34363,6 +34402,119 @@ def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return ability_clause
 
 
+#: Veil of Summer's "Spells you control can't be countered this turn." and
+#: Determined's "Other spells you control can't be countered this turn." -
+#: CR 611.2c's second sentence: a continuous effect from a resolving spell
+#: or ability that modifies no characteristic and changes no controller
+#: "modifies the rules of the game, so it can affect objects that weren't
+#: affected when that continuous effect began" - a spell `controller` casts
+#: *later* this turn is covered exactly as one already on the stack.
+#: Recorded on `Game.casting_rule_effects` (`create_spells_cant_be_
+#: countered_grant`) and read back wherever CR 113.6g's "can't be
+#: countered" is already enforced, `Game.counter`
+#: (`machines.casting_restrictions.spell_protected_from_countering`).
+#: "Other" (Determined's own word, not a CR 205.3m subtype) excludes the
+#: resolving spell itself from the protection it grants.
+_SPELLS_CANT_BE_COUNTERED_THIS_TURN_RE = re.compile(
+    r"^(?P<other>other )?spells you control can'?t be countered this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_spells_cant_be_countered_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SPELLS_CANT_BE_COUNTERED_THIS_TURN_RE`'s shape."""
+    match = _SPELLS_CANT_BE_COUNTERED_THIS_TURN_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    excludes_self = match.group("other") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .casting_restrictions import create_spells_cant_be_countered_grant
+
+        controller = game.controller_of(stack_object)
+        source_name = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        excluded_source_id = (
+            stack_object.id if excludes_self and isinstance(stack_object, CardState) else None
+        )
+        game.casting_rule_effects.append(
+            create_spells_cant_be_countered_grant(
+                controller.username, source_name, excluded_source_id=excluded_source_id
+            )
+        )
+
+    return effect
+
+
+#: "You and `<group>` you control gain `<keyword(s)>` until end of turn" -
+#: Veil of Summer's own third sentence, "You and permanents you control gain
+#: hexproof from blue and from black until end of turn", once `split_effect_
+#: clauses`'s own guard (`_PLAYER_GROUP_SUBJECT_AND_RE`) has already kept
+#: this compound subject whole as one clause instead of cutting it at its
+#: own "and". `predicate` is everything after "you control" verbatim
+#: ("gain hexproof from blue and from black until end of turn"), shared by
+#: both halves once each is given its own subject.
+_YOU_AND_GROUP_SUBJECT_RE = re.compile(
+    r"^you and (?P<group>permanents|creatures) you control (?P<predicate>gain .+)$",
+    re.IGNORECASE,
+)
+
+
+def _parse_you_and_group_gain_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_YOU_AND_GROUP_SUBJECT_RE`'s shape: a CR 608.2c compound subject read
+    as two independent instructions with the same predicate (CR 205.3m has
+    no bearing here - "you" and "permanents"/"creatures" are two different
+    kinds of thing, not one plural noun).
+
+    The group half ("`<group>` you control `<predicate>`") is handed
+    straight to the ordinary mass-grant reader, `_parse_mass_pump_group_
+    clause` - the ability grant itself, CR 611.2c's fixed-now group of
+    permanents, and the layer machinery that keeps `hexproof from
+    [quality]` enforced at targeting time are all exactly what that reader
+    (and `machines/layers.py`'s `_MASS_PUMP_UNTIL_EOT_RE`) already give a
+    plain "creatures you control gain ..." clause; `None` here fails the
+    *whole* compound clause the same way an unread group clause always
+    would on its own.
+
+    The player half ("You `<predicate>`") is deliberately **not** handed to
+    `parse_clause_effect`'s own `_PLAYER_GAINS_HEXPROOF_RE` reader here,
+    even though that reader already recognises the identical narrowed
+    sentence - see `PlayerSubjectSplitNotice`'s own docstring for why this
+    half stays a recorded gap rather than a second effect applied inline.
+    """
+    match = _YOU_AND_GROUP_SUBJECT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    group = match.group("group").lower()
+    predicate = match.group("predicate").strip()
+    group_effect = _parse_mass_pump_group_clause(
+        f"{group} you control {predicate}", for_spell=for_spell
+    )
+    if group_effect is None:
+        return None
+    player_text = f"You {predicate}"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        group_effect(game, stack_object)
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        game.player_subject_split_notices.append(
+            PlayerSubjectSplitNotice(
+                source_id=source.id if source is not None else None,
+                source_name=(
+                    stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+                ),
+                text=player_text,
+            )
+        )
+
+    return effect
+
+
 #: "[Until end of turn, ]you may activate loyalty abilities of `<subject>`
 #: on any player's turn any time you could cast an instant." - Jace's
 #: Machinations' own first sentence ("Jace planeswalkers you control",
@@ -34543,6 +34695,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     mass_pump = _parse_mass_pump_group_clause(clause, for_spell=for_spell)
     if mass_pump is not None:
         return mass_pump
+    spells_cant_be_countered = _parse_spells_cant_be_countered_clause(clause, for_spell=for_spell)
+    if spells_cant_be_countered is not None:
+        return spells_cant_be_countered
+    you_and_group_gain = _parse_you_and_group_gain_clause(clause, for_spell=for_spell)
+    if you_and_group_gain is not None:
+        return you_and_group_gain
     named_token = _parse_named_token_clause(clause, for_spell=for_spell)
     if named_token is not None:
         return named_token

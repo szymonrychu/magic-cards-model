@@ -3308,12 +3308,30 @@ _ANTHEM_AND_KEYWORD_GRANT_RE = re.compile(
 #: front of it at all - two names for the same magnitude because `re` refuses
 #: a group name used twice, and `_parse_layer_sentence` reads whichever pair
 #: matched.
+#: "Permanents you control" (Veil of Summer's own group half, once its
+#: compound "You and permanents you control" subject is split - CR 403.3:
+#: every object on the battlefield is a permanent, so this is CR 611.2's
+#: mass grant over the *whole* board a player controls, not only their
+#: creatures) joins the two creature-scoped subjects and "all creatures" as
+#: a fourth alternative. It carries no `other`/`whose` capture of its own -
+#: neither is read for it downstream, the same way neither is for "all
+#: creatures" (see the note above).
+#:
+#: `keywords` used to be a bare comma/"and"-joined list of one- or two-word
+#: items - never wide enough for CR 702.11f's "hexproof from [quality A]
+#: and from [quality B]" (Veil's own "gain hexproof from blue and from
+#: black"), whose "and from" is not a second keyword at all. Widened to a
+#: non-greedy run of letters/commas/apostrophes/hyphens/spaces, bounded by
+#: whatever the rest of the pattern needs next (an "and get ..." pump or the
+#: closing "until end of turn") the same way `_split_and_validate_keywords`
+#: below is already the one place a raw keyword-list string is actually
+#: validated - this capture only has to find where the list *ends*, not
+#: parse what is in it.
 _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     r"^(?:(?P<other>other )?creatures (?P<whose>you control|your opponents control)|"
-    r"all creatures) "
+    r"all creatures|permanents you control) "
     r"(?:"
-    r"gain (?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
-    r"(?:\s+and\s+[a-z]+(?: [a-z]+)?)?)"
+    r"gain (?P<keywords>[a-z][a-z,'\- ]*?)"
     r"(?: and get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+))?"
     # Aerie Mystics: "Creatures you control gain shroud until end of turn." -
     # the keyword-only shape, with no "get +N/+N" at all (CR 611.2's mass

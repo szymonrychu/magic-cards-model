@@ -3536,6 +3536,29 @@ _PERMANENT_KEYWORD_COST_PAID_WITH_COUNTER = re.compile(
 _POWER_GREATER_THAN_SELF_RE = re.compile(r"^it had power greater than (?P<name>.+)'s power$")
 
 
+def _opponent_cast_color_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """Sandstalker Moloch's own intervening if: "if an opponent cast a blue
+    and/or black spell this turn" - the identical board fact Veil of
+    Summer's trailing "if" reads, in different words.
+
+    Read through `Game.condition_holds`'s own `_CONDITION_OPPONENT_CAST_
+    COLOR` branch rather than a second copy of the colour/turn logic here,
+    so the two cards can never drift apart on what counts as "cast" or
+    which player is "an opponent" of whom - the shape check
+    (`fullmatch`, not just importing `condition_is_readable`, which would
+    also route every *other* board condition `condition_holds` reads
+    through this ability's intervening if, well beyond this one clause)
+    is the only thing duplicated, and only so this stays a plain `None`
+    for every clause shape this reader is not meant for.
+    """
+    from ..models.game import _CONDITION_OPPONENT_CAST_COLOR
+
+    if _CONDITION_OPPONENT_CAST_COLOR.fullmatch(clause) is None:
+        return None
+    controller = source.controller or game.active_player.username
+    return game.condition_holds(controller, clause, source)
+
+
 def intervening_if_holds(
     game: "Game",
     ability: TriggeredAbility,
@@ -3867,6 +3890,10 @@ def intervening_if_holds(
     subtype_count = _controlled_subtype_count_holds(game, clause, source)
     if subtype_count is not None:
         return subtype_count
+
+    opponent_cast_color = _opponent_cast_color_holds(game, clause, source)
+    if opponent_cast_color is not None:
+        return opponent_cast_color
 
     return _fail_closed(game, ability, source)
 

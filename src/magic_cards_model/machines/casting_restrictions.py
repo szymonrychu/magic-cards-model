@@ -122,6 +122,19 @@ class CastingRuleKind:
     graveyards or libraries." Scoped to the zone a cast would come from, so it
     is answered by `zone_cast_prohibition_source` - which takes the spell and
     its origin zone - rather than by the blanket reader below."""
+    SPELLS_CANT_BE_COUNTERED_GRANT = "spells_cant_be_countered_grant"
+    """Veil of Summer's "Spells you control can't be countered this turn."
+    and Determined's "Other spells you control can't be countered this
+    turn." - CR 611.2c's second sentence: this effect modifies no
+    characteristic and changes no object's controller, so it "modifies the
+    rules of the game" and "can affect objects that weren't affected when
+    that continuous effect began" - a spell `controller` casts *later* this
+    turn is covered exactly as one already on the stack when the source
+    resolved. Read by `spell_protected_from_countering` at the one place
+    CR 113.6g's printed "can't be countered" is already enforced,
+    `Game.counter`. `excluded_source_id` is Determined's own "Other": the
+    resolving spell that granted this protects every *other* spell its
+    controller casts, never itself."""
 
 
 class CastingRuleEffect(EngineModel):
@@ -159,6 +172,12 @@ class CastingRuleEffect(EngineModel):
     names a specific player, who may be the caster's own opponent, teammate,
     or (if somehow legally targeted) the caster - the restriction follows the
     target, not a fixed relationship to whoever cast the spell."""
+    excluded_source_id: UUID | None = None
+    """Set only for `CastingRuleKind.SPELLS_CANT_BE_COUNTERED_GRANT`:
+    Determined's own "Other spells you control can't be countered this
+    turn" - the resolving spell that granted the protection, excluded from
+    the very protection it grants. `None` for Veil of Summer's plain
+    "Spells you control", which excludes nothing."""
     amount: int | None = None
     """`INSTANT_SORCERY_COST_REDUCTION_GRANT`: the flat discount.
     `SPELL_COUNT_CANT_CAST`: the printed cap that has been reached."""
@@ -206,6 +225,67 @@ def create_targeted_cant_cast_restriction(
         duration=Duration.UNTIL_END_OF_TURN,
         restricted_player=restricted_player,
     )
+
+
+def create_spells_cant_be_countered_grant(
+    controller: str,
+    source_name: str,
+    *,
+    excluded_source_id: UUID | None = None,
+) -> CastingRuleEffect:
+    """Veil of Summer's "Spells you control can't be countered this turn."
+    and Determined's "Other spells you control can't be countered this
+    turn." as a recorded effect - see `CastingRuleKind.
+    SPELLS_CANT_BE_COUNTERED_GRANT`'s own docstring for why this is
+    recorded at all rather than read off a live permanent (CR 611.2c)."""
+    return CastingRuleEffect(
+        kind=CastingRuleKind.SPELLS_CANT_BE_COUNTERED_GRANT,
+        controller=controller,
+        source_name=source_name,
+        duration=Duration.UNTIL_END_OF_TURN,
+        excluded_source_id=excluded_source_id,
+    )
+
+
+def spell_protected_from_countering(game: Any, spell: Any) -> bool:
+    """Whether some *recorded* CR 611.2c effect - as opposed to
+    `cannot_be_countered`'s printed-or-granted "This spell can't be
+    countered" read directly off the spell itself - stops `spell` from
+    being countered right now (CR 113.6g, CR 611.2c, CR 101.2).
+
+    Consulted from `Game.counter` alongside `cannot_be_countered`, never on
+    its own: the two are independent sources of the identical CR 701.6a
+    refusal, exactly the way `blanket_cant_cast_restriction` reads a
+    recorded effect and a live battlefield scan as two sources of the same
+    "can't cast" refusal.
+
+    Only a *spell* (an object with a `card`, per `cannot_be_countered`'s own
+    convention) can be protected this way - CR 405.1: an ability on the
+    stack has no card behind it, so `Ranger-Captain of Eos`-style abilities
+    are never swept in by a blanket "spells you control" grant, matching CR
+    113.6g's own "can't be countered" being a *spell's* ability in every
+    printing that grants it this way.
+
+    `excluded_source_id` is Determined's own "Other": the spell that
+    granted the protection is not itself protected by it, read by identity
+    (`spell.id`) rather than by name, so two different copies of the same
+    card do not accidentally exclude each other.
+    """
+    if getattr(spell, "card", None) is None:
+        return False
+    controller = getattr(spell, "controller", None)
+    if controller is None:
+        return False
+    spell_id = getattr(spell, "id", None)
+    for effect in getattr(game, "casting_rule_effects", []):
+        if effect.kind != CastingRuleKind.SPELLS_CANT_BE_COUNTERED_GRANT:
+            continue
+        if effect.controller != controller:
+            continue
+        if effect.excluded_source_id is not None and effect.excluded_source_id == spell_id:
+            continue
+        return True
+    return False
 
 
 def blanket_cant_cast_restriction(

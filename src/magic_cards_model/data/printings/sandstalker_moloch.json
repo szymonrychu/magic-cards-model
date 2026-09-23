@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "eb17b083-413b-4a09-a935-ac27594e3bd6",
+  "oracle_id": "f2a6dc8d-3c98-44ae-aff0-b838d7aee0b7",
+  "multiverse_ids": [
+    607260
+  ],
+  "mtgo_id": 110292,
+  "arena_id": 84496,
+  "tcgplayer_id": 490567,
+  "cardmarket_id": 704051,
+  "name": "Sandstalker Moloch",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/eb17b083-413b-4a09-a935-ac27594e3bd6",
+  "scryfall_uri": "https://scryfall.com/card/mom/203/sandstalker-moloch?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:29:22Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.jpg?1783916962",
+    "normal": "https://cards.scryfall.io/normal/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.jpg?1783916962",
+    "large": "https://cards.scryfall.io/large/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.jpg?1783916962",
+    "png": "https://cards.scryfall.io/png/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.png?1783916962",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.jpg?1783916962",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.jpg?1783916962",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.webp?1783916962",
+    "grid": "https://cards.scryfall.io/grid/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.webp?1783916962",
+    "display": "https://cards.scryfall.io/display/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.webp?1783916962",
+    "art": "https://cards.scryfall.io/art/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.webp?1783916962",
+    "crop": "https://cards.scryfall.io/crop/front/e/b/eb17b083-413b-4a09-a935-ac27594e3bd6.webp?1783916962"
+  },
+  "mana_cost": "{1}{G}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Lizard",
+  "oracle_text": "Flash\nWhen this creature enters, if an opponent cast a blue and/or black spell this turn, look at the top four cards of your library. You may reveal a permanent card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+  "power": "4",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set": "mom",
+  "set_name": "March of the Machine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amom&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mom?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/eb17b083-413b-4a09-a935-ac27594e3bd6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af2a6dc8d-3c98-44ae-aff0-b838d7aee0b7&unique=prints",
+  "collector_number": "203",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Donato Giancola",
+  "artist_ids": [
+    "90332db2-aecb-4d79-917b-95cbeb8d0cb6"
+  ],
+  "illustration_id": "352701f7-dd7a-4669-b899-26cb38a8bba1",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 24255,
+  "preview": {
+    "source": "TheAsianAvenger",
+    "source_uri": "https://twitter.com/Theasianavenger/status/1641539146752868355",
+    "previewed_at": "2023-03-30"
+  },
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.13",
+    "usd_etched": null,
+    "eur": "0.04",
+    "eur_foil": "0.07",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607260&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSandstalker%2BMoloch",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSandstalker%2BMoloch",
+    "edhrec": "https://edhrec.com/route/?cc=Sandstalker+Moloch"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490567%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704051&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/110292?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

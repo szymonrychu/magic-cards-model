@@ -65,6 +65,7 @@ from ..machines.casting_restrictions import (
     CastingRuleKind,
     cannot_be_countered,
     combat_lockdown_restriction_source,
+    spell_protected_from_countering,
 )
 from ..machines.combat import (
     Attack,
@@ -146,6 +147,7 @@ from ..machines.effects import (
     ImprintNotice,
     LayerRemainderNotice,
     ModeNotice,
+    PlayerSubjectSplitNotice,
     ReflexiveClauseNotice,
     SearchDescriptionNotice,
     SuspendRedirectNotice,
@@ -795,6 +797,24 @@ _CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN = re.compile(
 _CONDITION_CAST_A_SPELL_THIS_TURN = re.compile(
     r"you(?:'ve| have) cast an? (?:(?P<quality>[\w-]+) )?spell this turn", re.IGNORECASE
 )
+#: Veil of Summer's own trailing "Draw a card if an opponent has cast a blue
+#: or black spell this turn." and Sandstalker Moloch's differently-worded
+#: intervening if, "an opponent cast a blue and/or black spell this turn" -
+#: the same board fact (CR 105.1's five colors) read off `Game.spells_cast_
+#: this_turn`, the identical list `_CONDITION_CAST_A_SPELL_THIS_TURN` above
+#: already reads for a *quality* word, now read for one or more *colour*
+#: words instead - CR 105.1's "or" is inclusive (a spell that is both
+#: still counts), so "blue or black"/"blue and/or black" are the same
+#: question asked two different ways: did an opponent cast a spell that
+#: was blue, or was black, or both. `(?:has cast|cast)` covers both cards'
+#: own tenses without needing two separate patterns.
+_CONDITION_OPPONENT_CAST_COLOR = re.compile(
+    r"an opponent (?:has cast|cast) an? "
+    r"(?P<colors>(?:white|blue|black|red|green)"
+    r"(?:(?:,\s*|\s+and/or\s+|\s+or\s+|\s+and\s+)(?:white|blue|black|red|green))*)"
+    r" spell this turn",
+    re.IGNORECASE,
+)
 #: Proctor of Potential: "you've scried or surveilled this turn" (CR
 #: 701.22a, 701.25a) - read off `Game.turn_facts["scried_or_surveilled"]`
 #: (`turn_fact_holds`), recorded in `scry` and `surveil` alike, since the
@@ -842,6 +862,7 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_SPELLS_CAST_THIS_TURN,
     _CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN,
     _CONDITION_CAST_A_SPELL_THIS_TURN,
+    _CONDITION_OPPONENT_CAST_COLOR,
     _CONDITION_SUSPENDED,
     _CONDITION_KICKED,
     _CONDITION_DESCENDED,
@@ -2034,6 +2055,12 @@ class Game(EngineModel):
     Academic Ascent's own "Empower Jace 2." used to be silently dropped the
     moment the pump sentence routed the *whole* text to `create_continuous_
     effect`. See `LayerRemainderNotice`."""
+
+    player_subject_split_notices: list[PlayerSubjectSplitNotice] = Field(default_factory=list)
+    """One entry per "You and `<group>` gain `<keyword(s)>` until end of
+    turn" compound subject (Veil of Summer's own third sentence) whose
+    player half is read but not yet granted - see
+    `PlayerSubjectSplitNotice`."""
 
     search_description_notices: list[SearchDescriptionNotice] = Field(default_factory=list)
     """Library searches whose card description could not be read, so the
@@ -13011,6 +13038,14 @@ class Game(EngineModel):
         returned untouched, still on the stack, and **no** counter event is
         emitted, because nothing was countered for a trigger to watch.
 
+        **Veil of Summer's "Spells you control can't be countered this
+        turn"** is the identical refusal from a different source: not the
+        spell's own printed or granted ability (`cannot_be_countered`), but a
+        recorded CR 611.2c effect `spell_protected_from_countering` reads off
+        `casting_rule_effects` - CR 101.2 gives either "can't" the same
+        precedence, so the two checks are tried together and either one
+        alone is enough to refuse the counter.
+
         The guard sits above the `to_exile` branch on purpose. Force of
         Negation's and Delay's "exile it instead of putting it into its owner's
         graveyard" is a rider on the countering, not an alternative to it; if
@@ -13024,7 +13059,7 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             if spell not in self.stack:
                 raise ValueError(f"{spell.name} is not on the stack")
-            if cannot_be_countered(spell):
+            if cannot_be_countered(spell) or spell_protected_from_countering(self, spell):
                 return spell
             self.stack.remove(spell)
             if isinstance(spell, CardState):
@@ -17149,6 +17184,20 @@ class Game(EngineModel):
             if quality is None:
                 return None
             return any(quality(state) for state in self.spells_cast_this_turn.get(controller, []))
+
+        if match := _CONDITION_OPPONENT_CAST_COLOR.fullmatch(text):
+            colors: list[Color] = []
+            for word in re.split(r",\s*|\s+and/or\s+|\s+or\s+|\s+and\s+", match.group("colors")):
+                color = _COLOR_WORDS.get(word.strip().lower())
+                if color is None:
+                    return None
+                if color not in colors:
+                    colors.append(color)
+            return any(
+                any(color in state.colors for color in colors)
+                for opponent in opponents
+                for state in self.spells_cast_this_turn.get(opponent.username, [])
+            )
 
         if _CONDITION_SUSPENDED.fullmatch(text):
             if source is None:
