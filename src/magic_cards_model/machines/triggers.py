@@ -218,6 +218,20 @@ class ExtraTriggerEvent(StrEnum):
     #: player who drew and revealed it. **Emitted by:** `Game.draw_cards`,
     #: through `Game._offer_miracle_reveal`, and nowhere else.
     REVEALED_FOR_MIRACLE = "revealed_for_miracle"
+    #: CR 510.2: "all combat damage that's been assigned is dealt
+    #: simultaneously" - one combat damage step's damage to one player, as a
+    #: single event, which is what a batched "Whenever one or more
+    #: `<description>` you control deal combat damage to a player" condition
+    #: watches (CR 603.2c: "An ability triggers only once each time its
+    #: trigger event occurs"). Jacob Frye's "one or more Assassins", Invasion
+    #: Tactics' "one or more Allies". `GameEvent.player` is the player dealt
+    #: the damage; `GameEvent.amount` is how many `Game.combat_damage_to_
+    #: players_this_turn` records that step appended - the tail
+    #: `batched_combat_damage_sources` reads, each record carrying what its
+    #: source was at the time it dealt the damage. **Emitted by:**
+    #: `machines/combat.combat_damage_step`, once per player dealt combat
+    #: damage in the step, and only when some was actually dealt (CR 603.2g).
+    COMBAT_DAMAGE_TO_PLAYERS = "combat_damage_to_players"
 
 
 class GameEvent(EngineModel):
@@ -2919,6 +2933,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.REVEALED_FOR_MIRACLE})
     if _UNTAPPED_DURING_UNTAP_STEP_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP})
+    if _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(lowered):
+        return frozenset({ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS})
     bending = _bending_events_named(lowered)
     if bending:
         return bending
@@ -3091,6 +3107,13 @@ def _unread_condition_matches(
             and event.subject_id == source.id
             and event.player == controller
         )
+
+    if _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(condition):
+        # CR 603.2c: one trigger per step's damage to a player, however many
+        # of the described creatures dealt it.
+        if event.event is not ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS:
+            return False
+        return bool(batched_combat_damage_sources(game, ability.condition, controller, event))
 
     bending_events = _bending_events_named(condition)
     if bending_events:
@@ -5127,6 +5150,116 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
             )
         )
     ]
+
+
+#: "one or more `<description>` deal combat damage to `<recipient>`" - Jacob
+#: Frye's "one or more Assassins you control deal combat damage to a player",
+#: Invasion Tactics' "one or more Allies you control ...", Professional
+#: Face-Breaker's "one or more creatures you control ...". The plural "deal"
+#: is the batch: CR 603.2c's one trigger for the step's damage (see
+#: `ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS`), where the singular "a
+#: creature you control deals combat damage" is one trigger per creature
+#: (`TriggerEvent.DEALS_DAMAGE`).
+_ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE = re.compile(
+    r"^one or more (?P<description>.+?) deal combat damage to "
+    r"(?P<recipient>a player|an opponent|one of your opponents)$",
+    re.IGNORECASE,
+)
+
+#: A bare list of plural subtypes - "Assassins", "Allies", "Scouts, Pirates,
+#: and/or Rogues" - split on its own separators.
+_SUBTYPE_LIST_SEPARATOR_RE = re.compile(
+    r"\s*(?:,\s*(?:and/or|and|or)?|\band/or\b|\bor\b|\band\b)\s*"
+)
+
+
+def _singular_subtype(plural: str) -> str | None:
+    """`plural` as a subtype in CR 205.3's vocabulary, singular and
+    lower-cased, or `None`. English plurals the subtype list actually uses:
+    a bare "s" (Assassins), "ies" (Allies), "ves" (Elves, Wolves), and the
+    Latin "Fungi"."""
+    lowered = plural.lower()
+    vocabulary = {word.lower() for word in subtype_vocabulary()}
+    candidates = [lowered]
+    if lowered.endswith("ies"):
+        candidates.append(lowered[:-3] + "y")
+    if lowered.endswith("ves"):
+        candidates.append(lowered[:-3] + "f")
+    if lowered.endswith("s"):
+        candidates.append(lowered[:-1])
+    if lowered == "fungi":
+        candidates.append("fungus")
+    return next((candidate for candidate in candidates if candidate in vocabulary), None)
+
+
+def _bare_subtype_list(description: str) -> frozenset[str] | None:
+    """The singular subtypes a bare plural-subtype description names, or
+    `None` when any item is not a subtype on its own."""
+    items = [item for item in _SUBTYPE_LIST_SEPARATOR_RE.split(description.strip()) if item]
+    singular = [_singular_subtype(item) for item in items]
+    if not singular or any(item is None for item in singular):
+        return None
+    return frozenset(item for item in singular if item is not None)
+
+
+def batched_combat_damage_sources(
+    game: "Game", condition: str, controller: str, event: GameEvent
+) -> list[UUID] | None:
+    """The sources a "one or more `<description>` deal combat damage to
+    `<recipient>`" condition counts in `event`'s combat damage step, or
+    `None` when `condition` is not that shape or its description does not
+    read (fail closed).
+
+    The step's records are the last `event.amount` entries of `Game.
+    combat_damage_to_players_this_turn` - the event is matched as it is
+    emitted, right after that step's damage was dealt (CR 510.2), so nothing
+    has been appended since. Each record holds the source's controller and
+    creature types *when it dealt the damage*; a bare subtype list
+    ("Assassins") is read off those, and any other description ("creatures
+    with flying", "non-Human creatures") through `machines/targeting.
+    permanent_description` against the source as it is now - still on the
+    battlefield, since state-based actions have not run yet (CR 510.2 is
+    followed by CR 704.3's check only once the step's triggers are
+    collected).
+    """
+    match = _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(condition.strip())
+    if match is None:
+        return None
+    if event.event is not ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS or event.player is None:
+        return []
+    if match.group("recipient").lower() != "a player" and event.player == controller:
+        return []
+    description = match.group("description")
+    yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
+    remainder = " ".join(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).split())
+    if not yours and re.search(r"\bcontrols?\b", remainder, re.IGNORECASE):
+        return None
+    subtypes = _bare_subtype_list(remainder)
+    requirement = None
+    if subtypes is None:
+        from .targeting import permanent_description
+
+        requirement = permanent_description(remainder)
+        if requirement is None:
+            return None
+    records = game.combat_damage_to_players_this_turn
+    step_records = records[len(records) - (event.amount or 0) :] if event.amount else []
+    found: list[UUID] = []
+    for record in step_records:
+        if record.player != event.player or (yours and record.controller != controller):
+            continue
+        if subtypes is not None:
+            if not subtypes & {kind.lower() for kind in record.creature_types}:
+                continue
+        else:
+            source = game.find_by_id(record.source_id)
+            if not isinstance(source, CardState) or requirement is None:
+                continue
+            if requirement.rejects(source, controller, game) is not None:
+                continue
+        if record.source_id not in found:
+            found.append(record.source_id)
+    return found
 
 
 def _event_for(

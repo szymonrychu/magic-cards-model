@@ -916,7 +916,7 @@ class TargetRequirement(EngineModel):
             return None
         if not has_keyword(target, self.required_keyword, game):
             return (
-                f"{self.phrase} needs a creature with {self.required_keyword}, "
+                f"{self.phrase} needs an object with {self.required_keyword}, "
                 f"and {target.name} is not"
             )
         return None
@@ -3050,6 +3050,30 @@ def _split_type_or_closed_subtype_card(
     reduced_text = f"{first_word} {noun_word}{text[match.end() :]}"
     return first_word, noun_word, subtype_word, subtype_type, reduced_text
 
+#: "target `<quality>` card or card with `<keyword>`" - Jacob Frye's own
+#: "target Assassin card or card with freerunning from your graveyard". The
+#: second item is a whole card of its own described only by a keyword
+#: ability it has (CR 702.1), not one more noun sharing the first item's
+#: adjectives, so it is read as an independent `TargetRequirement.
+#: alternatives` entry rather than merged into the first reading.
+_OR_CARD_WITH_KEYWORD_RE = re.compile(
+    r"\bcards? or cards? with (?P<keyword>[a-z]+(?: strike)?)\b", re.IGNORECASE
+)
+
+
+#: "target `<supertype>` or `<quality>` card" - Nashi, Moon's Legacy's
+#: "target legendary or Rat card from your graveyard". The supertype (CR
+#: 205.4a) and the subtype are two independent disjuncts - a legendary card
+#: *or* a Rat card - whereas the ordinary adjective reader keeps one shared
+#: `required_supertypes`/`required_subtypes` pair that has to hold at once.
+#: Read as the second disjunct's own requirement plus an `alternatives` entry
+#: for the supertype alone.
+_SUPERTYPE_OR_QUALITY_CARD_RE = re.compile(
+    r"^\s*(?P<supertype>legendary|basic|snow) or "
+    r"(?P<other>(?!cards?\b)[a-z][\w-]* (?P<noun>cards?))\b",
+    re.IGNORECASE,
+)
+
 
 def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetRequirement | None:
     """Turn one "target ..." phrase into a requirement, or None if unreadable.
@@ -3081,6 +3105,47 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             update={
                 "phrase": f"{base.phrase} or {subtype_word} {noun_word}",
                 "alternatives": base.alternatives + (alternative,),
+            }
+        )
+    supertype_or = _SUPERTYPE_OR_QUALITY_CARD_RE.match(suffix)
+    if supertype_or is not None:
+        tail = suffix[supertype_or.end() :]
+        base = _read_phrase(prefix, supertype_or.group("other") + tail, strict=strict)
+        alternative = _read_phrase(
+            prefix,
+            supertype_or.group("supertype") + " " + supertype_or.group("noun") + tail,
+            strict=strict,
+        )
+        if base is None or alternative is None:
+            return None
+        return base.model_copy(
+            update={
+                "phrase": f"target {supertype_or.group('supertype').lower()} or "
+                + base.phrase.removeprefix("target "),
+                "alternatives": (*base.alternatives, alternative),
+            }
+        )
+    or_keyword = _OR_CARD_WITH_KEYWORD_RE.search(re.split(r"[.;]", suffix)[0])
+    if or_keyword is not None:
+        base = _read_phrase(
+            prefix,
+            suffix[: or_keyword.start()] + "card" + suffix[or_keyword.end() :],
+            strict=strict,
+        )
+        if base is None or not base.allows_cards:
+            return None
+        keyword = or_keyword.group("keyword").lower()
+        alternative = TargetRequirement(
+            phrase=f"target card with {keyword}",
+            allows_cards=True,
+            zones=base.zones,
+            controller=base.controller,
+            required_keyword=keyword,
+        )
+        return base.model_copy(
+            update={
+                "phrase": f"{base.phrase} or card with {keyword}",
+                "alternatives": (*base.alternatives, alternative),
             }
         )
     excludes_source = _excludes_source(prefix)

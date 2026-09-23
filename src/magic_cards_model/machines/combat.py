@@ -62,7 +62,7 @@ from .abilities import (
     unread_keyword_tokens,
 )
 from .decisions import Decision, DecisionKind
-from .triggers import GameEvent
+from .triggers import ExtraTriggerEvent, GameEvent
 
 #: What a creature may attack besides a player (CR 306.6, 310.5).
 ATTACKABLE_PERMANENT_TYPES = frozenset({Type.PLANESWALKER, Type.BATTLE})
@@ -1718,8 +1718,10 @@ def combat_damage_step(game: "Game") -> list[tuple["Targetable", int]]:
             elif power > 0:
                 assignments.append((blocker, attacker, power))
 
+    recorded = len(game.combat_damage_to_players_this_turn)
     for source, target, amount in assignments:
         _deal_combat_damage(game, source, target, amount)
+    _emit_combat_damage_to_players(game, recorded)
 
     combat.damage_steps_done += 1
     game.check_state_based_actions()
@@ -1739,6 +1741,26 @@ def combat_damage_step(game: "Game") -> list[tuple["Targetable", int]]:
     # place in combat that emitted events and never let them onto the stack.
     game.put_triggers_on_stack()
     return [(target, amount) for _, target, amount in assignments]
+
+
+def _emit_combat_damage_to_players(game: "Game", recorded: int) -> None:
+    """CR 510.2's simultaneous damage as one `ExtraTriggerEvent.
+    COMBAT_DAMAGE_TO_PLAYERS` event per player dealt combat damage this step
+    - what a batched "one or more `<description>` deal combat damage to a
+    player" trigger watches (CR 603.2c). `recorded` is how many records the
+    turn's ledger held before this step, so the step's own are the tail the
+    event's `amount` points at. No damage dealt to a player, no event
+    (CR 603.2g)."""
+    step_records = game.combat_damage_to_players_this_turn[recorded:]
+    for player in dict.fromkeys(record.player for record in step_records):
+        game.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS,
+                player=player,
+                combat=True,
+                amount=len(step_records),
+            )
+        )
 
 
 def _deal_combat_damage(game: "Game", source: CardState, target: "Targetable", amount: int) -> int:

@@ -5975,10 +5975,13 @@ class Game(EngineModel):
         mana_value_below: float | None = None,
         play: bool = False,
         alternative_cost: TotalCost | None = None,
+        pays_mana_cost: bool = False,
     ) -> CardState | None:
         """A resolving "you may cast/play <card> without paying its mana cost"
         (CR 608.2d, CR 608.2g): one `MAY`, legal only when the cast or play is
         (`can_cast_during_resolution`), then `cast_during_resolution`.
+        `pays_mana_cost` is the plain "you may cast the copy" with no
+        "without paying" - see `cast_during_resolution`.
 
         `play=True` is the wider "play" (CR 601.1a): a land card is played,
         never cast (CR 305.9), through `_play_land_during_resolution`.
@@ -6015,6 +6018,7 @@ class Game(EngineModel):
             keyword=keyword,
             mana_value_below=mana_value_below,
             alternative_cost=alternative_cost,
+            pays_mana_cost=pays_mana_cost,
         )
 
     def _can_play_land_during_resolution(self, username: str) -> bool:
@@ -6051,6 +6055,7 @@ class Game(EngineModel):
         keyword: str | None = None,
         mana_value_below: float | None = None,
         alternative_cost: TotalCost | None = None,
+        pays_mana_cost: bool = False,
     ) -> CardState | None:
         """CR 608.2g: cast `card` without paying its mana cost while the
         resolving spell or ability that allows it is still resolving - the one
@@ -6083,6 +6088,12 @@ class Game(EngineModel):
         pay; the timing is still the resolving trigger's (CR 608.2g), and the
         permission still never outlives this call.
 
+        `pays_mana_cost` is CR 707.12's plain "you may cast the copy" (Jacob
+        Frye, Nashi, Moon's Legacy): the cast "follows the rules for casting
+        spells", so with no "without paying its mana cost" the mana cost is
+        owed (CR 601.2f) and paid from untapped sources the same way a
+        resolution cast's other owed mana is (`_pay_resolution_cast_mana`).
+
         Returns `None`, with the card back where it was, when the cast is not
         legal: no option qualifies, a mandatory announcement has no legal
         choice (CR 601.2c), or a cost cannot be paid (CR 118.3, CR 601.2h).
@@ -6105,7 +6116,7 @@ class Game(EngineModel):
             action=PlayAction.CAST,
             # An alternative cost is announced on the casting itself below;
             # the permission then only waives timing (CR 608.2g), not the cost.
-            pays_mana_cost=alternative_cost is not None,
+            pays_mana_cost=alternative_cost is not None or pays_mana_cost,
             source_name=source_name,
             rule=rule,
             zone=card.zone,

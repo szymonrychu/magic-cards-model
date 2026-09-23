@@ -18052,6 +18052,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     exile_one_of_each_type_copy_cast = _parse_exile_one_of_each_type_copy_cast_clause(effect_text)
     if exile_one_of_each_type_copy_cast is not None:
         return exile_one_of_each_type_copy_cast
+    exile_target_copy_cast = _parse_exile_target_card_copy_it_cast_clause(effect_text)
+    if exile_target_copy_cast is not None:
+        return exile_target_copy_cast
     mana_adding = _parse_mana_adding_trigger(effect_text)
     if mana_adding is not None:
         return mana_adding
@@ -24805,8 +24808,17 @@ def _substitute_reflexive_count(text: str, count: int) -> str:
 #: way" carries none at all, any card qualifies) and, when printed, is any
 #: single word `_nonland_or_typed_card_matcher`/`_quality_matcher` already
 #: read - "nonland" is not special-cased here.
+#:
+#: The singular "When you discard a[n] `<quality>` card this way" (Evie
+#: Frye's own "a creature card", Teo, Spirited Glider's and Glacial
+#: Dragonhunt's "a nonland card") is the same family with a different count:
+#: CR 603.12a, "if the trigger event or events occur multiple times during
+#: the resolution of the spell or ability that created it, the reflexive
+#: triggered ability will trigger once for each of those times" - one
+#: reflexive ability per qualifying card discarded, where "one or more" is
+#: one ability for the whole batch.
 _REFLEXIVE_DISCARD_COUNT_RE = re.compile(
-    r"^(?P<antecedent>.+?)\.\s*when you discard one or more "
+    r"^(?P<antecedent>.+?)\.\s*when you discard (?:(?P<batch>one or more)|an?) "
     r"(?:(?P<quality>[a-z]+) )?cards? this way,\s*(?P<consequence>.+?)\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -24842,6 +24854,7 @@ def _parse_reflexive_discard_count_clause(text: str) -> AbilityEffect | None:
     antecedent_effect = _ability_effect_or_notice(antecedent_text)
     if antecedent_effect is None:
         return None
+    batch = match.group("batch") is not None
     quality_word = match.group("quality")
     quality_matcher: Callable[[CardState], bool] | None = None
     if quality_word is not None:
@@ -24869,13 +24882,16 @@ def _parse_reflexive_discard_count_clause(text: str) -> AbilityEffect | None:
         count = len(discarded)
         if count <= 0:
             return
-        game.create_reflexive_trigger(
-            text=_substitute_reflexive_count(consequence_text, count),
-            controller=controller.username,
-            source_id=ability.source_id,
-            source_name=source_name,
-            callback=ReflexiveConsequence(),
-        )
+        # CR 603.12a: "one or more" is one ability carrying the count; the
+        # singular "a `<quality>` card" triggers once per qualifying card.
+        for _ in range(1 if batch else count):
+            game.create_reflexive_trigger(
+                text=_substitute_reflexive_count(consequence_text, count),
+                controller=controller.username,
+                source_id=ability.source_id,
+                source_name=source_name,
+                callback=ReflexiveConsequence(),
+            )
 
     return effect
 
@@ -26291,6 +26307,87 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
             return
         if copy in game.exile:
             game.exile.remove(copy)  # CR 707.10a
+
+    return effect
+
+
+#: "exile `<target phrase>` from your graveyard. [If you do, ]copy it. You
+#: may cast the copy[ without paying its mana cost]." and its "... from your
+#: graveyard and copy it. ..." sibling - Jacob Frye's "exile up to one target
+#: Assassin card or card with freerunning from your graveyard. If you do,
+#: copy it. You may cast the copy.", Nashi, Moon's Legacy's "exile up to one
+#: target legendary or Rat card from your graveyard and copy it. You may cast
+#: the copy.", Demilich's and Founding the Third Path's "Copy it." form.
+#:
+#: CR 707.12: "An effect that instructs a player to cast a copy of an object
+#: (and not just copy a spell) follows the rules for casting spells, except
+#: that the copy is created in the same zone the object is in" - the card is
+#: exiled first, so the copy is made in exile, and with no "without paying
+#: its mana cost" its costs are paid (CR 601.2f-h). CR 707.10a: "If a copy of
+#: a card is in any zone other than the stack or the battlefield, it ceases
+#: to exist" - a copy not cast is removed. CR 707.10f: a cast copy of a
+#: permanent spell becomes a token as it resolves (`Game.resolve_top`).
+_EXILE_TARGET_CARD_COPY_IT_CAST_RE = re.compile(
+    r"^exile (?:up to one )?target [^.]+? from (?:your|a) graveyard"
+    r"(?:\s+and copy it|\.\s*(?:if you do,\s*)?copy it)\.\s*"
+    r"you may cast the copy(?P<free> without paying its mana cost)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_target_card_copy_it_cast_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_TARGET_CARD_COPY_IT_CAST_RE`'s shape, or `None`.
+
+    The target itself is `machines/targeting.profile_for_text`'s ordinary
+    reading of the phrase (CR 601.2c/603.3d). "If you do" (CR 608.2c) is the
+    exile actually happening: a target gone by resolution (CR 608.2b) or none
+    chosen for "up to one" means nothing is copied. The cast is `Game.
+    may_cast_during_resolution` - a `MAY` (CR 608.2d), then the real casting
+    machine with the copy's own targets and costs.
+    """
+    match = _EXILE_TARGET_CARD_COPY_IT_CAST_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    free = match.group("free") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        targets = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD
+        ]
+        if not targets:
+            return
+        for original in game.exile_cards(targets):
+            if original.zone is not Zone.EXILE:
+                continue  # CR 608.2c: "if you do" - it was not exiled.
+            copy = CardState(
+                card=original.card,
+                zone=Zone.EXILE,
+                controller=controller.username,
+                owner=controller.username,  # CR 112.2a
+                is_copy=True,
+            )
+            game.exile.append(copy)
+            game.may_cast_during_resolution(
+                copy,
+                controller.username,
+                prompt=(
+                    f"cast the copy of {copy.name}"
+                    + (" without paying its mana cost" if free else "")
+                ),
+                source=source_name,
+                source_id=source_id_of(ability),
+                source_name=source_name,
+                rule="CR 707.12",
+                pays_mana_cost=not free,
+            )
+            if copy.zone is Zone.EXILE and copy in game.exile:
+                game.exile.remove(copy)  # CR 707.10a
 
     return effect
 
