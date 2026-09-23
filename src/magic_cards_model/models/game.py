@@ -6246,6 +6246,14 @@ class Game(EngineModel):
         copy isn't created", not a copy made and then fizzled - which is why
         this builds the copy only *after* every requirement has already
         accepted `target`, and returns `None` with nothing created otherwise.
+
+        A **modal** copy's `CastRecord.mode_targets` is kept in step with the
+        forced retarget the same way `offer_new_targets_for_copy` keeps it in
+        step with an *optional* one (CR 700.2f): `machines/effects.py`'s
+        modal resolution reads `mode_targets`, not `copy.targets`, so a modal
+        spell copied through this path without the sync would resolve every
+        chosen mode against the *original's* pre-retarget slices instead of
+        `target`.
         """
         profile = self._resolution_profile(spell)
         if not profile.understood or not profile.requirements:
@@ -6256,6 +6264,24 @@ class Game(EngineModel):
         copy = self.copy_spell(spell, controller=controller)
         ref = TargetRef.coerce(target)
         copy.targets = [ref for _ in profile.requirements]
+        record = self.cast_record(copy)
+        if record.modes:
+            try:
+                mode_profile, owners = profile_for_modes_with_owners(
+                    copy.card, record.modes, record.x_value or None
+                )
+            except ValueError:
+                mode_profile = None
+            if mode_profile is not None and mode_profile.requirements:
+                assignment = mode_profile.assign_to_owners(
+                    owners, copy.targets, controller, game=self, source_id=copy.id
+                )
+                mode_targets = [
+                    list(assignment.get(index, [])) for index in range(len(record.modes))
+                ]
+                self.cast_records[copy.zone_change_stamp] = record.model_copy(
+                    update={"mode_targets": mode_targets}
+                )
         return copy
 
     #: How many triggered mana abilities may resolve inline, back to back, off

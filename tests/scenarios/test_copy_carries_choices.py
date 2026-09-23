@@ -32,23 +32,21 @@ to check `is_copy` explicitly rather than lean on that default alone.
 
 Doublecast ("When you next cast an instant or sorcery spell this turn, copy
 that spell. You may choose new targets for the copy.") is the one printing in
-the pool with a real dispatcher for making a copy from a resolving effect, so
-it drives every case below that needs a copy made by the engine's own
-resolution rather than by calling `Game.copy_spell` directly. Reverberate
-("Copy target instant or sorcery spell.") and Increasing Vengeance ("Copy
-target instant or sorcery spell you control. If this spell was cast from a
-graveyard, copy that spell twice instead. You may choose new targets for the
-copies.") have no text parser in this engine yet (`machines/effects.py` has no
-"copy target ... spell" clause reader at all) - out of this file's own scope,
-which is `CastRecord`/`copy_spell`/`offer_new_targets_for_copy` themselves, not
-a new effect dispatcher. Both are still added to the pool as real, Modern-legal
-printings (`scripts/add_card.py`) and both are still cast for real - proving
-their own cost and targeting are legal - and their own resolution is then
-driven directly through `Game.copy_spell`/`Game.offer_new_targets_for_copy`,
-the exact two public methods their printed clause would call, the same
-precedent `tests/test_copy_spell_stack_decode.py` already sets for calling
-`copy_spell` directly on a real cast spell rather than routing through a
-trigger incidental to what is being tested.
+the pool with a real dispatcher for making a copy from a resolving *ability*,
+so it drives every case below that needs a copy made that way rather than by
+calling `Game.copy_spell` directly. Reverberate ("Copy target instant or
+sorcery spell.") and Increasing Vengeance ("Copy target instant or sorcery
+spell you control. If this spell was cast from a graveyard, copy that spell
+twice instead. You may choose new targets for the copies.") are read by
+`machines/effects.py`'s `_parse_copy_target_spell_clause` (a *spell's own*
+"copy target ... spell" clause, CR 707.10, distinct from Doublecast's "that
+spell" trigger-anaphora shape) - case (f) resolves Increasing Vengeance for
+real through it. Case (g)'s Reverberate and case (h)'s modal retarget still
+drive `Game.copy_spell`/`Game.offer_new_targets_for_copy` directly, the exact
+two public methods the parsed dispatcher itself calls, the same precedent
+`tests/test_copy_spell_stack_decode.py` already sets for calling `copy_spell`
+directly on a real cast spell rather than routing every case through a
+resolution incidental to what is being tested.
 
 Every CR number here was looked up with `mise run rules:find` in the session
 that wrote this file (CR 707.10, 707.10a, 707.2, 700.2f, 700.2g, 702.33d).
@@ -307,30 +305,17 @@ def test_a_copy_of_dawnglow_infusion_carries_no_mana_spent():
 
 
 # --------------------------------------------------------------------------
-# (f) a copy is not cast - Increasing Vengeance cast with flashback, then
-#     copied itself; the copy of Increasing Vengeance is not "cast from a
-#     graveyard"
+# (f) a copy is not cast - Increasing Vengeance cast with flashback, resolved
+#     for real through the engine's own "copy target instant or sorcery
+#     spell" dispatcher (`machines/effects.py`'s
+#     `_parse_copy_target_spell_clause`), then a copy of Increasing Vengeance
+#     itself, also resolved for real; the copy of Increasing Vengeance is not
+#     "cast from a graveyard"
 # --------------------------------------------------------------------------
 
 
-def test_a_copy_of_increasing_vengeance_was_not_cast_from_a_graveyard():
-    """Increasing Vengeance: "Copy target instant or sorcery spell you
-    control. If this spell was cast from a graveyard, copy that spell twice
-    instead." Cast for real with flashback (from the graveyard), its own
-    `CastRecord.origin_zone` is `Zone.GRAVEYARD` - a real fact, recorded by
-    the real `Casting`/`note_cast` machinery, no parser needed for that part.
-
-    A copy of Increasing Vengeance (what Doublecast's or Reverberate's own
-    resolution would build) is a different object with its own record:
-    CR 707.10 - a copy "isn't cast" - so `is_copy=True`, `origin_zone=Zone.
-    STACK`, and any "if this spell was cast from a graveyard" reader (the same
-    shape `machines/effects.py` already reads for Retrieve the Esper/
-    Recursive Recruitment) must see it as *not* cast from a graveyard, and
-    `cast_record(copy).is_copy` is `True` for every "cast from" reader to
-    route through - never `Zone.HAND` either, which the field's own bare
-    default would otherwise silently read as if nobody had recorded anything.
-    """
-    scenario = (
+def _increasing_vengeance_board() -> Scenario:
+    return (
         Scenario()
         .player(
             "alice",
@@ -339,8 +324,23 @@ def test_a_copy_of_increasing_vengeance_was_not_cast_from_a_graveyard():
             battlefield=["Mountain"] * 8,
         )
         .player("bob", life=20)
-        .build()
     )
+
+
+def test_increasing_vengeance_cast_from_a_graveyard_copies_the_target_twice():
+    """Increasing Vengeance: "Copy target instant or sorcery spell you
+    control. If this spell was cast from a graveyard, copy that spell twice
+    instead. You may choose new targets for the copies." Cast for real with
+    flashback (from the graveyard), its own `CastRecord.origin_zone` is
+    `Zone.GRAVEYARD` - a real fact, recorded by the real `Casting`/
+    `note_cast` machinery.
+
+    This is the engine's own dispatcher actually resolving the card - not a
+    reader this test defines and calls instead - so `bob` really does take 3
+    from the original Bolt and 3 more from each of the two copies CR 707.10's
+    own rider makes: 9 total, not 3.
+    """
+    scenario = _increasing_vengeance_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     (bolt_source,) = scenario.untapped_sources("Mountain")
@@ -357,24 +357,86 @@ def test_a_copy_of_increasing_vengeance_was_not_cast_from_a_graveyard():
     assert vengeance_record.origin_zone is Zone.GRAVEYARD
     assert vengeance_record.is_copy is False
 
-    def was_cast_from_a_graveyard(spell) -> bool:
-        record = scenario.game.cast_record(spell)
-        return not record.is_copy and record.origin_zone is Zone.GRAVEYARD
+    # Keep each copy's own target (bob) rather than retargeting it - one
+    # "may" question per copy CR 707.10's rider makes.
+    scenario.will_take_the_may(False, source="Increasing Vengeance", times=2)
+    scenario.resolve_top()  # Increasing Vengeance's own resolution
 
-    assert was_cast_from_a_graveyard(vengeance) is True
+    copies = [
+        item for item in scenario.game.stack if item.name == "Lightning Bolt" and item.id != bolt.id
+    ]
+    assert len(copies) == 2, (
+        "Increasing Vengeance was cast from a graveyard, so CR 707.10's own "
+        "rider copies the targeted spell twice, not once"
+    )
+    for copy in copies:
+        record = scenario.game.cast_record(copy)
+        assert record.is_copy is True
+        assert record.origin_zone is not Zone.HAND
+        assert record.origin_zone is Zone.STACK
+
+    _resolve_all(scenario)
+    scenario.state_based_actions()
+    assert scenario.player("bob").life == 20 - 3 - 3 - 3, (
+        "the original Bolt and both of its copies each deal 3"
+    )
+
+
+def test_a_copy_of_increasing_vengeance_was_not_cast_from_a_graveyard():
+    """A copy of Increasing Vengeance (what Doublecast's or Reverberate's own
+    resolution would build) is a different object with its own record: CR
+    707.10 - a copy "isn't cast" - so `is_copy=True`, `origin_zone=Zone.
+    STACK`, never `Zone.HAND` either, which the field's own bare default
+    would otherwise silently read as if nobody had recorded anything.
+
+    Resolved for real through the same dispatcher the sibling test above
+    exercises, the copy's own "if this spell was cast from a graveyard" read
+    must come back false even though the *original* really was cast from a
+    graveyard: `CastRecord.is_copy`, not `origin_zone` alone, is what the
+    dispatcher checks - only one copy of the Bolt reaches the stack, not two.
+    """
+    scenario = _increasing_vengeance_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    (bolt_source,) = scenario.untapped_sources("Mountain")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", bolt_source, targets=["bob"])
+
+    casting = scenario.cast("Increasing Vengeance", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    casting.choose_targets([bolt])
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment, username="alice")
+    vengeance = scenario.put_on_stack(casting)
+
+    vengeance_record = scenario.game.cast_record(vengeance)
+    assert vengeance_record.origin_zone is Zone.GRAVEYARD
+    assert vengeance_record.is_copy is False
 
     # What Doublecast's/Reverberate's own resolution would do to Increasing
-    # Vengeance itself - `Game.copy_spell`, the same public method either
-    # clause calls.
+    # Vengeance itself, before the original ever resolves - `Game.
+    # copy_spell`, the same public method either clause calls.
     copy_of_vengeance = scenario.game.copy_spell(vengeance, controller="alice")
     copy_record = scenario.game.cast_record(copy_of_vengeance)
     assert copy_record.is_copy is True
     assert copy_record.origin_zone is not Zone.HAND
     assert copy_record.origin_zone is Zone.STACK
-    assert was_cast_from_a_graveyard(copy_of_vengeance) is False, (
+
+    # The copy is on top of the stack (just pushed) - resolve *it*, through
+    # the real dispatcher, not the still-unresolved original underneath it.
+    assert scenario.stack_names()[-1] == "Increasing Vengeance"
+    scenario.will_take_the_may(False, source="Increasing Vengeance", times=1)
+    scenario.resolve_top()
+
+    copies = [
+        item for item in scenario.game.stack if item.name == "Lightning Bolt" and item.id != bolt.id
+    ]
+    assert len(copies) == 1, (
         "the copy of Increasing Vengeance was never cast at all, so it was not "
         "'cast from a graveyard' - it copies once, not twice"
     )
+    (copy_of_bolt,) = copies
+    copy_of_bolt_record = scenario.game.cast_record(copy_of_bolt)
+    assert copy_of_bolt_record.is_copy is True
 
 
 # --------------------------------------------------------------------------
@@ -506,3 +568,62 @@ def test_retargeting_a_modal_copy_keeps_its_modes_and_syncs_mode_targets():
         "bob",
         bear.id,
     ], "the flat targets list agrees with the per-mode slices"
+
+
+# --------------------------------------------------------------------------
+# (i) Game.copy_spell_targeting keeps a modal copy's mode_targets in step
+#     with the specified new target - Abrade, the same shape Frontline
+#     Heroism's own dispatcher calls
+# --------------------------------------------------------------------------
+
+
+def test_copy_spell_targeting_keeps_a_modal_copys_mode_targets_in_step():
+    """CR 707.10e ("Some effects copy a spell ... and specify a new target
+    for the copy") plus CR 700.2f ("Modal spells and abilities may have
+    different targeting requirements for each mode"): `Game.
+    copy_spell_targeting` overwrites the copy's flat `targets`, but a modal
+    spell's own resolution (`machines/effects.py`'s `resolve_modal_spell`)
+    reads `CastRecord.mode_targets`, never `copy.targets` - so a modal copy
+    built this way has to carry the forced retarget into its own chosen
+    mode's slice, the same sync `offer_new_targets_for_copy` already does
+    for CR 707.10c's optional permission.
+
+    Abrade's first mode, "Abrade deals 3 damage to target creature.", is
+    chosen alone - one mode, one target, so `mode_targets` is a one-element
+    list of one-element slices, and a copy_spell_targeting that only ever
+    touched `copy.targets` would leave that slice on Abrade's own original
+    target (`bear`) instead of the specified new one (`mystic`).
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Abrade"], battlefield=["Mountain", "Mountain"])
+        .player("bob", battlefield=["Grizzly Bears", "Elvish Mystic"], life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bear = scenario.creature("Grizzly Bears", "bob")
+    mystic = scenario.creature("Elvish Mystic", "bob")
+
+    casting = scenario.cast("Abrade")
+    casting.choose_modes([1])  # "Abrade deals 3 damage to target creature."
+    casting.choose_targets([bear])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Mountain"))
+    abrade = scenario.put_on_stack(casting)
+
+    # Frontline Heroism's own shape ("... then copy that spell. The copy
+    # targets that token.") specifies the new target unconditionally - the
+    # exact public method its dispatcher calls.
+    copy = scenario.game.copy_spell_targeting(abrade, "alice", mystic)
+    assert copy is not None, "the mystic is a legal target for Abrade's damage mode"
+    assert [ref.card_id for ref in copy.targets] == [mystic.id]
+
+    record = scenario.game.cast_record(copy)
+    assert record.modes == [1]
+    assert len(record.mode_targets) == 1
+    (mode_one_targets,) = record.mode_targets
+    assert [ref.card_id for ref in mode_one_targets] == [mystic.id], (
+        "mode_targets must move with the forced retarget, not stay on the "
+        "original's bear - resolve_modal_spell reads mode_targets, not "
+        "copy.targets"
+    )

@@ -27871,6 +27871,97 @@ def _parse_copy_that_spell_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return effect
 
 
+#: "Copy target instant or sorcery spell[.][ you control.]" - Reverberate's
+#: own bare shape, plus Increasing Vengeance's own "If this spell was cast
+#: from a graveyard, copy that spell twice instead." rider and either
+#: card's optional "You may choose new targets for the copy/copies."
+#: permission. Unlike `_COPY_THAT_SPELL_RE` above, this is *for_spell*: the
+#: copied object is CR 601.2c's own announced target
+#: (`spell.targets`/`_COUNTER_TARGET_SPELL_RE`'s own "counter target spell"
+#: precedent), not CR 607.1's "that spell" anaphora back to a triggering
+#: `CAST_SPELL` event, so it reads correctly whether printed on a spell
+#: (Reverberate, Increasing Vengeance - the only two shapes in the pool) or,
+#: were one ever printed, a triggered ability watching its own cast target.
+#: `_SPELL_QUALIFIER` already reads "instant or sorcery" (both words are in
+#: `_SPELL_QUALIFIER_WORD`), so nothing new is needed there.
+_COPY_TARGET_SPELL_RE = re.compile(
+    rf"^copy target(?: {_SPELL_QUALIFIER})? spell(?: you control)?\.?"
+    r"(?P<doubles>\s*if this spell was cast from a graveyard,\s*"
+    r"copy that spell twice instead\.)?"
+    r"(?P<new_targets>\s*you may choose new targets for the cop(?:y|ies)\.?)?\s*$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_COPY_TARGET_SPELL_RE`'s shape, tried against the whole unsplit text
+    (see the call site in `_parse_mixed_clauses`) for the same reason
+    `_parse_copy_that_spell_clause` is: a bare period joins its sentences,
+    which `_prepare_effect_clauses` would otherwise cut apart before any
+    per-clause dispatch ever saw them together.
+
+    `text` is stripped through `_strip_non_effect_preamble` first, the same
+    call `_prepare_effect_clauses` itself makes - Increasing Vengeance's own
+    printed text carries a trailing "Flashback {cost} (reminder text)." line
+    (CR 702.32a's own keyword-ability line, not part of this spell's CR
+    608.2c resolution at all), which `_strip_keyword_ability_lines` (the last
+    step of `_strip_non_effect_preamble`) is what removes; left in, it would
+    trail after `_COPY_TARGET_SPELL_RE`'s own `$` anchor and the whole clause
+    would silently fail to match instead of being read.
+
+    CR 707.10: each spell the caster actually targeted, still on the stack
+    (CR 608.2b - an illegal or already-resolved/countered target is simply
+    skipped, `counter_targets`'s own precedent), is put through `Game.
+    copy_spell` once, or twice when the graveyard rider applies. That rider
+    reads *this spell's own* `CastRecord` (`game.cast_record(spell)`), never
+    the copied target's: CR 707.10 is explicit that a copy "isn't cast" at
+    all, so a copy of Increasing Vengeance itself (built by some further
+    copy effect, the way Doublecast or Reverberate would build one) was
+    never "cast from a graveyard" regardless of where the original it copies
+    came from - `CastRecord.is_copy` is what settles that read, not leaning
+    on `origin_zone is not Zone.GRAVEYARD` alone (a copy's `origin_zone` is
+    unconditionally forced to `Zone.STACK` by `Game.copy_spell`, which
+    already answers "not from a graveyard" on its own, but `is_copy` is the
+    field written for exactly this kind of negation-shaped read).
+    """
+    if not for_spell:
+        return None
+    stripped = " ".join(_strip_non_effect_preamble(text).strip().split())
+    match = _COPY_TARGET_SPELL_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    doubles_from_graveyard = match.group("doubles") is not None
+    offer_new_targets = match.group("new_targets") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        record = game.cast_record(spell)
+        copies = (
+            2
+            if doubles_from_graveyard
+            and not record.is_copy
+            and record.origin_zone is Zone.GRAVEYARD
+            else 1
+        )
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            for _ in range(copies):
+                copy = game.copy_spell(target, controller=controller)
+                if offer_new_targets:
+                    game.offer_new_targets_for_copy(
+                        copy,
+                        controller,
+                        source_name=spell.name,
+                        source_id=str(spell.id),
+                    )
+
+    return effect
+
+
 #: "This creature deals N damage to that spell's controller." - Bonecrusher
 #: Giant's own "becomes the target of a spell" trigger (CR 702.21a's own
 #: event, `TriggerEvent.BECOMES_TARGET`, generic and not ward-specific -
@@ -33237,6 +33328,9 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # the Unknown's own extra land drop) does not match the *whole*
         # text and falls through to the per-clause registration below.
         return [explores_whole_text]
+    copy_target_spell_whole = _parse_copy_target_spell_clause(text, for_spell=for_spell)
+    if copy_target_spell_whole is not None:
+        return [copy_target_spell_whole]
     whole_text_effect = _parse_choose_name_search_and_exile_whole_text(text, for_spell=for_spell)
     if whole_text_effect is not None:
         return [whole_text_effect]
