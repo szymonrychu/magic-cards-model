@@ -5400,6 +5400,13 @@ class Casting(EngineModel):
                 replicated=self.replicated,
                 offspring_paid=self.offspring_paid,
                 blight_paid=self.blight_paid,
+                # CR 702.150a (compleated): read off the settled payment,
+                # only at CR 601.2h like `mana_spent` just above it - the
+                # payment is the one place the actual choice of resource per
+                # symbol survives.
+                phyrexian_life_symbols_paid=(
+                    self.payment.phyrexian_life_symbols_paid if self.payment is not None else 0
+                ),
                 gift_promised=self.gift_promised,
                 gift_chosen_player=self.gift_chosen_player,
                 # CR 400.7 makes the spell a new object the moment CR 601.2a

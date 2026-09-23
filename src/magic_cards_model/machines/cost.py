@@ -5408,6 +5408,30 @@ class CostPayment(EngineModel):
         return self.step in {CostStep.PAID, CostStep.CANCELLED}
 
     @property
+    def phyrexian_life_symbols_paid(self) -> int:
+        """How many Phyrexian mana symbols of this cost were paid with life
+        rather than mana (CR 107.4f), read off the settled payment.
+
+        `ManaPayment.options` lines up one-to-one with `ManaCost.symbols`
+        (`ManaPool.payment_for`) - each entry is which resource actually paid
+        that symbol, and `PaymentOption.life` is set only for the "or 2 life"
+        half of a Phyrexian symbol (never for `pay_life_cost`'s own unrelated
+        additional-cost life, which is a separate `CostComponent` and never
+        touches `options` at all). Counting entries rather than dividing
+        `life_paid` by `PHYREXIAN_LIFE` is deliberate: it stays correct symbol
+        by symbol even if a future printing ever priced one differently from
+        another, where a single pooled total could not be split back apart.
+
+        `None` before the payment is settled (`mana_payment` is only set once
+        `pay()` has actually run, in `_pay_impl`) reads as 0 - "nothing paid
+        yet" is not "nothing paid with life", but it is exactly what CR
+        702.150a's compleated needs to see for a payment nobody has finished.
+        """
+        if self.mana_payment is None:
+            return 0
+        return sum(1 for option in self.mana_payment.options if option.life)
+
+    @property
     def life_available(self) -> int:
         """What the payer may put towards a Phyrexian symbol (CR 107.4f, 119.4).
 

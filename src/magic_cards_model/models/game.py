@@ -1405,6 +1405,27 @@ class CastRecord(EngineModel):
     `optional_additional_cost_paid` below is the field that clause's own
     reader actually asks, so a future card whose optional additional cost is
     something other than blight is not left unreadable."""
+    phyrexian_life_symbols_paid: int = 0
+    """How many Phyrexian mana symbols of this spell's total cost were paid
+    with life rather than mana (CR 107.4f), read off the settled payment by
+    `machines/cost.CostPayment.phyrexian_life_symbols_paid`.
+
+    CR 702.150a's compleated is the one reader: "If this permanent would
+    enter with one or more loyalty counters on it and the player who cast it
+    chose to pay life for any part of its cost represented by Phyrexian mana
+    symbols, it instead enters the battlefield with that many loyalty
+    counters minus two for each of those mana symbols." `machines/
+    replacement._compleated_modifier` reads this field off the cast record
+    while the permanent is still on its way in (CR 614.12), the same moment
+    `_sunburst_modifier` reads `mana_spent` for CR 702.44b's distinct-colors
+    count.
+
+    Not copied by `Game.copy_spell` (CR 707.10 - "a copy of a spell isn't
+    cast", so no mana or life was ever spent casting it), the same exclusion
+    `mana_spent`/`spend_effects` already document above: a copy's own record
+    simply never mentions this field, which leaves it at its default of 0 and
+    is exactly right - a copy of a compleated planeswalker enters at its full
+    printed loyalty regardless of how the original was paid for."""
 
     @property
     def optional_additional_cost_paid(self) -> bool:
@@ -2704,7 +2725,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 45
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 46
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3311,6 +3332,16 @@ class Game(EngineModel):
     gained `REVEALED_FOR_MIRACLE`, a value a version-44 build cannot decode on
     a pending or stacked trigger; and "Put all creatures on the bottom of
     their owners' libraries" is newly read (Terminus). Refused instead.
+
+    Bumped 45 -> 46: `CastRecord` gained `phyrexian_life_symbols_paid`
+    (CR 107.4f), and compleated (CR 702.150a) is newly read: a planeswalker
+    with the keyword now enters with two fewer loyalty counters for each
+    Phyrexian symbol of its cost paid with life
+    (`machines/replacement._compleated_modifier`). Nahiri, the Unforgiving,
+    Ajani, Sleeper Agent and Tamiyo, Compleated Sage were already printings a
+    decoded stack could hold mid-cast, so the same resolving spell enters the
+    battlefield with a different loyalty total - a version-45 snapshot paused
+    partway through casting one is refused rather than resolved differently.
     """
 
     @model_validator(mode="before")
@@ -4460,6 +4491,7 @@ class Game(EngineModel):
         replicated: int = 0,
         offspring_paid: bool = False,
         blight_paid: bool = False,
+        phyrexian_life_symbols_paid: int = 0,
         gift_promised: bool = False,
         gift_chosen_player: str | None = None,
         additional_cost_cards: list[UUID] | None = None,
@@ -4519,6 +4551,7 @@ class Game(EngineModel):
             replicated=replicated,
             offspring_paid=offspring_paid,
             blight_paid=blight_paid,
+            phyrexian_life_symbols_paid=phyrexian_life_symbols_paid,
             gift_promised=gift_promised,
             gift_chosen_player=gift_chosen_player,
             additional_cost_cards=list(additional_cost_cards or []),
@@ -8174,6 +8207,22 @@ class Game(EngineModel):
 
             for kind, amount in event.counters.items():
                 self.add_counters(card_state, kind, amount)
+
+            if event.loyalty_reduction:
+                # CR 702.150a (compleated): "minus two for each" of the
+                # Phyrexian symbols paid with life, off whatever CR 306.5b's
+                # intrinsic entering loyalty (plus `event.counters` above)
+                # just placed. Clamped to what is actually there rather than
+                # handed straight to `remove_counters` - CR 122's counters
+                # are a count, never negative, and Nissa, Ascended Animist's
+                # own two-symbol printing is the proof this can be asked to
+                # remove more than a smaller-loyalty walker would ever carry.
+                # A planeswalker taken to 0 this way still leaves normally
+                # (CR 704.5i) at the state-based check this same resolution
+                # already runs.
+                to_remove = min(event.loyalty_reduction, card_state.counter_count(Counter.LOYALTY))
+                if to_remove:
+                    card_state.remove_counters(Counter.LOYALTY, to_remove)
 
             extra_loyalty = self._additional_entering_loyalty(card_state)
             if extra_loyalty:

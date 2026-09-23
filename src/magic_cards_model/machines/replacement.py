@@ -1446,6 +1446,22 @@ class ReplaceableEvent:
     #: raises its own `ADD_COUNTERS` event - CR 616.1g's "event contained within
     #: the first event", and what lets Doubling Season see them (CR 122.6).
     counters: dict[str, int] = field(default_factory=dict)
+    #: Loyalty counters compleated takes back off a planeswalker's own CR
+    #: 306.5b/CR 614.1c entering count (CR 702.150a), summed if more than one
+    #: instance of the ability somehow applied. Deliberately not folded into
+    #: `counters` above: every other entry there is an amount *placed on top
+    #: of* an entering-with-nothing baseline (CR 614.1c's ordinary "enters
+    #: with N counters" shape, which `counters` predates this field to serve),
+    #: while compleated's own text is "that many ... minus two for each" -
+    #: subtractive from whatever the permanent's *printed* loyalty (CR
+    #: 306.5b) already put there, which `counters` never carries in the first
+    #: place. Kept separate rather than let a negative slip into `counters`
+    #: itself, which would also (wrongly) put it in reach of a doubling
+    #: effect that watches counters *placed* (CR 122.6) - compleated removes
+    #: counters that would otherwise have been placed; it does not itself
+    #: place any. `Game.enter_the_battlefield` applies it, clamped to what
+    #: CR 306.5b actually put there, after `counters` above.
+    loyalty_reduction: int = 0
     #: Whether the permanent arrives tapped (CR 614.1c).
     tapped: bool = False
     #: Whether the permanent arrives with the prepared designation (CR 722.3a).
@@ -4777,6 +4793,10 @@ def _self_enters_modifiers(
     if sunburst is not None:
         performable.append(sunburst)
 
+    compleated = _compleated_modifier(game, card_state)
+    if compleated is not None:
+        performable.append(compleated)
+
     return performable
 
 
@@ -4844,6 +4864,80 @@ def _sunburst_modifier(
         self_replacement=True,
     )
     return ("self:sunburst", _apply_self_enters(effect, amount), "Sunburst (CR 702.44a)", False)
+
+
+#: CR 702.150a's own life-payment count, per Phyrexian symbol.
+_COMPLEATED_LIFE_PER_SYMBOL = 2
+
+
+def _compleated_modifier(
+    game: "Game", card_state: CardState
+) -> tuple[str, Apply, str, bool] | None:
+    """Compleated (CR 702.150a), read off the keyword rather than off a
+    parsed sentence, the same way `_sunburst_modifier` is: "Compleated
+    (`{.../P}` can be paid with `...` or 2 life. If life was paid, this
+    planeswalker enters with two fewer loyalty counters.)" is reminder text
+    (CR 207.2), never a rules-text sentence `_ENTERS_WITH` matches.
+
+    CR 702.150a verbatim: "If this permanent would enter with one or more
+    loyalty counters on it and the player who cast it chose to pay life for
+    any part of its cost represented by Phyrexian mana symbols, it instead
+    enters the battlefield with that many loyalty counters minus two for
+    each of those mana symbols."
+
+    Three conditions gate this, each one a corner this mechanic has to get
+    right rather than a guess:
+
+    - **"this permanent"** - only a planeswalker has loyalty counters to
+      begin with (CR 205.2a gates `_enter_with_loyalty` the same way), so a
+      Compleated keyword on anything else (none in the pool, but nothing here
+      assumes otherwise) does nothing.
+    - **"would enter with one or more loyalty counters"** - read off the
+      entering object's own printed loyalty (CR 306.5a) while it is still on
+      its way in, before CR 306.5b has placed any. A planeswalker printed
+      with no loyalty stat at all has none to reduce.
+    - **"the player who cast it chose to pay life"** - CR 601.2h's settled
+      payment, not "life was paid for any reason": `CastRecord.
+      phyrexian_life_symbols_paid` is written only from the Phyrexian half of
+      `PaymentOption` (`machines/cost.CostPayment.phyrexian_life_symbols_
+      paid`), never from an unrelated `pay_life_cost` additional cost. No
+      record at all - the permanent was put onto the battlefield some other
+      way (Tooth and Nail, a blink), never cast, CR 400.7 - reads as "chose
+      to pay life" being false, not true: `Game.cast_record_of` already fails
+      closed the same way for every other CR 601.2b choice a permanent's
+      entering event reads (`_x_is`, `_sunburst_counter_amount`). A **copy**
+      of a compleated spell (CR 707.10, `Game.copy_spell`) carries a record
+      too, but never one naming this field - `Game.copy_spell`'s own
+      `note_cast` call does not pass it, the same exclusion its docstring
+      already gives `mana_spent`/`spend_effects` - so a copy always enters at
+      full printed loyalty regardless of how the original was paid for.
+    """
+    keywords = {k.lower() for k in card_state.card.keywords}
+    if "compleated" not in keywords:
+        return None
+    # `CardState.loyalty` reads the printed number (CR 306.5a) whenever the
+    # object is not on the battlefield - exactly where this runs, CR 614.12's
+    # "while it is still on its way in". `is_planeswalker` is layer-aware and
+    # falls back to the printed type off the battlefield too, the same gate
+    # `_enter_with_loyalty` itself uses.
+    if not card_state.is_planeswalker or (card_state.loyalty or 0) < 1:
+        return None
+    record = game.cast_record_of(card_state)
+    symbols_paid_with_life = record.phyrexian_life_symbols_paid if record is not None else 0
+    if symbols_paid_with_life <= 0:
+        return None
+    reduction = _COMPLEATED_LIFE_PER_SYMBOL * symbols_paid_with_life
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        del game, source
+        event.loyalty_reduction += reduction
+
+    text = (
+        f"Compleated: enters with {reduction} fewer loyalty counters "
+        f"({symbols_paid_with_life} Phyrexian symbol"
+        f"{'s' if symbols_paid_with_life != 1 else ''} paid with life, CR 702.150a)"
+    )
+    return ("self:compleated", apply, text, False)
 
 
 def _leaving_the_stack(event: ReplaceableEvent) -> bool:

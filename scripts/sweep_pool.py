@@ -565,6 +565,16 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if any(k.lower() == "sunburst" for k in printing.keywords):
         found["sunburst"] = "machines/replacement.py (_sunburst_modifier, CR 702.44a)"
 
+    # Compleated (CR 702.150a) is the identical "read off the keyword, not a
+    # parsed sentence" shape as Sunburst just above - a planeswalker's own
+    # entering-loyalty replacement, read by `machines/replacement.py`'s
+    # `_self_enters_modifiers`/`_compleated_modifier`. `ABILITY_WORDS` used to
+    # carry "Compleated" too (CR 207.2c's list does not - it is a keyword
+    # ability, CR 702.150), which silently satisfied this same check for the
+    # wrong reason; named here by hand now that it is a real one.
+    if any(k.lower() == "compleated" for k in printing.keywords):
+        found["compleated"] = "machines/replacement.py (_compleated_modifier, CR 702.150a)"
+
     # Affinity (CR 702.41a) is a cost *reduction* read off the spell's own
     # text ("Affinity for [text]") - `Game.cost_reduction_for`'s `_AFFINITY_RE`
     # counts matching permanents and folds the result into `Casting.
