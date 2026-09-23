@@ -111,6 +111,7 @@ from magic_cards_model.machines.casting import (  # noqa: E402
 from magic_cards_model.machines.combat import (  # noqa: E402
     Keyword,
     is_attack_requirement_line,
+    is_blocked_by_at_most_one_line,
     is_group_attack_restriction_line,
 )
 from magic_cards_model.machines.cost import (  # noqa: E402
@@ -1513,8 +1514,18 @@ def _self_enters_line_category(printing: Card, text: str) -> str | None:
     permanent as it enters, produces a performable entry whose own label text
     covers every self-referential `ENTERS_KINDS` sentence this paragraph
     parses into - `STATIC_UNAUDITED` (via `None`) for anything this cannot
-    confirm, a board-state condition this synthetic single-permanent board
-    cannot decide included, since guessing either way would not be honest.
+    confirm, a board-state condition naming *other permanents*
+    (`_enters_tapped_condition`'s land/subtype/life-total shapes) this
+    synthetic single-permanent board cannot decide included, since inventing
+    the rest of a board to force one of those true would not be honest.
+
+    Morbid's own "if a creature died this turn" (CR 207.2c, CR 700.4 -
+    Festerhide Boar) is different: it is not a fact about which permanents
+    exist, it is `Game.creatures_died_this_turn`'s own running count, a
+    plain per-turn history fact any real game can genuinely have - so this
+    stages it true the same honest way a real game turn could, rather than
+    leaving a fully-handled clause (`tests/scenarios/test_morbid.py`)
+    unaudited for a synthetic board that happens to have no history yet.
     """
     effects = parse_replacement_effects(printing)
     self_kinds = [
@@ -1554,6 +1565,15 @@ def _self_enters_line_category(printing: Card, text: str) -> str | None:
             players=[Player(username="sweep_you"), Player(username="sweep_opp")],
             schema_version=Game.CURRENT_SCHEMA_VERSION,
         )
+        if any(
+            (effect.condition or "").strip().lower() == "a creature died this turn"
+            for effect in self_kinds
+        ):
+            # Morbid's own condition (CR 207.2c) - a genuine per-turn history
+            # fact (CR 700.4), staged true so this synthetic board can decide
+            # it the same honest way a real game turn could (see this
+            # function's own docstring).
+            game.creatures_died_this_turn = 1
         state = _synthetic_permanent(
             printing, controller="sweep_you", token=False, tapped=False, counter_kind=None
         )
@@ -1619,6 +1639,10 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return HANDLED
     if is_group_attack_restriction_line(text):
         # CR 508.1c: `combat.group_attack_restriction_refusal` enforces it.
+        return HANDLED
+    if is_blocked_by_at_most_one_line(text, printing.name):
+        # CR 509.1b: `combat.declaration_refusal` (via `blocked_by_at_most_
+        # one_refusal`) enforces it.
         return HANDLED
     if reads_as_transforms_line(text):
         # CR 712.20: `effects.transform_permanent` applies it as it transforms.

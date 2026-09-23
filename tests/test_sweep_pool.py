@@ -98,6 +98,32 @@ def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
     assert category == SILENT
 
 
+def test_charging_rhinos_blocked_by_at_most_one_static_classifies_as_handled():
+    """Charging Rhino's unconditional "This creature can't be blocked by more
+    than one creature." (CR 509.1b, the mirror of menace) is fully enforced
+    by `combat.declaration_refusal` via `blocked_by_at_most_one_refusal`
+    (`tests/scenarios/test_blocked_by_at_most_one.py`), but `_static_ability_
+    category` never asked about that shape at all, so the printed line
+    reported `STATIC_UNAUDITED` despite the engine reading it correctly in a
+    real game.
+    """
+    category, _ = classify_card(card("Charging Rhino"))
+    assert category == HANDLED
+
+
+def test_festerhide_boars_morbid_enters_with_counters_classifies_as_handled():
+    """Festerhide Boar's Morbid "This creature enters with two +1/+1 counters
+    on it if a creature died this turn." (CR 207.2c ability word, CR 614.1c
+    enters-with) is fully handled in a real game
+    (`tests/scenarios/test_morbid.py`), but `_self_enters_line_category`'s
+    synthetic single-permanent board never has a creature die, so Morbid's
+    own board-state condition always reads false there and the clause
+    reported `STATIC_UNAUDITED` even though the engine genuinely applies it.
+    """
+    category, _ = classify_card(card("Festerhide Boar"))
+    assert category == HANDLED
+
+
 def test_grand_arbiters_three_cost_modifier_statics_are_all_handled():
     """Grand Arbiter Augustin IV: "White/Blue spells you cast cost {1} less to
     cast" was already read by `machines/cost.cost_modifier_effect`; "Spells

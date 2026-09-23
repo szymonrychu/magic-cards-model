@@ -1142,6 +1142,31 @@ def blocked_by_at_most_one_refusal(
     return None
 
 
+#: A self-referential "can't be blocked by more than one creature." line (CR
+#: 509.1b, the mirror of menace) as printed, with no game or `CardState`
+#: needed to ask about it - `_blocked_by_at_most_one_sentences` above answers
+#: the same question off a live board, but `scripts/sweep_pool.py`'s static-
+#: ability classifier only ever has the bare printed text (the same
+#: constraint `is_attack_requirement_line`/`is_group_attack_restriction_line`
+#: already work under), so this mirrors those: an optional leading subject,
+#: matched the same way, then the restriction's own fixed words.
+_BLOCKED_BY_AT_MOST_ONE_LINE_RE = re.compile(
+    r"^(?:(?P<subject>.+?) )?can't be blocked by more than one creature\.?$", re.IGNORECASE
+)
+
+
+def is_blocked_by_at_most_one_line(line: str, name: str) -> bool:
+    """Whether one computed ability line of a creature named `name` is its own
+    "can't be blocked by more than one creature" restriction (CR 509.1b) -
+    Charging Rhino's own unconditional printed line - that `blocked_by_at_
+    most_one_refusal` enforces from `declaration_refusal`."""
+    match = _BLOCKED_BY_AT_MOST_ONE_LINE_RE.fullmatch(line.strip())
+    if match is None:
+        return False
+    subject = (match.group("subject") or "").strip().lower()
+    return subject in ("", "this creature", "this permanent", name.lower())
+
+
 def looks_like_unparsed_evasion_restriction(
     attacker: CardState, game: "Game | None" = None
 ) -> bool:
