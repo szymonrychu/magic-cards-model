@@ -16,7 +16,18 @@ from pydantic import (
 
 from ..ids import new_id
 from ..snapshot import AnnouncesMutation, EngineModel, announce_mutation, mutation_landed
-from .card import Card, Color, Layout, Supertype, Type, subtypes_of, supertypes_of, types_of
+from .card import (
+    Card,
+    Color,
+    Layout,
+    Supertype,
+    Type,
+    has_changeling,
+    subtypes_of,
+    supertypes_of,
+    types_of,
+    with_every_creature_type,
+)
 from .zone import Zone
 
 PERMANENT_TYPES = frozenset(
@@ -1473,12 +1484,33 @@ class CardState(EngineModel):
 
     @property
     def subtypes(self) -> tuple[str, ...]:
-        """This object's subtypes (CR 205.3, CR 708.2). Face down, there are none.
+        """This object's subtypes (CR 205.3, CR 708.2), changeling included.
+
+        `printed_subtypes` plus, for an object with changeling, every creature
+        type (CR 702.73a: "This ability works everywhere, even outside the
+        game"; CR 604.3: a characteristic-defining ability functions in all
+        zones). This is the reader for a card in a hand, library, graveyard,
+        exile, on the stack or outside the game - a Goblin-spell cost
+        reduction, "reveal an Elf card", "behold a Kithkin" - where no layer
+        system runs. On the battlefield the same CDA is applied in layer 4
+        instead (`machines/layers._changeling_effect`), which is where a later
+        type-setting effect can override it (CR 613.3); a battlefield reader
+        asks the computed board, never this.
+        """
+        printed = self.printed_subtypes
+        if self.face_down_characteristics is None and has_changeling(self.oracle_text):
+            return with_every_creature_type(self.types, printed)
+        return printed
+
+    @property
+    def printed_subtypes(self) -> tuple[str, ...]:
+        """The subtypes on the type line (CR 205.3, CR 708.2). Face down, none.
 
         The same `up_face` read as `types` - a transformed Ajani is an Ajani
         planeswalker and no longer a Cat, which is exactly what his own back
         face's "+1/+1 counter on each Cat you control" has to be counted
-        against.
+        against. `machines/layers.printed_characteristics` starts layer 1 from
+        this, so changeling's creature types arrive in layer 4, not here.
         """
         if self.has_no_characteristics:
             return ()  # CR 406.3a

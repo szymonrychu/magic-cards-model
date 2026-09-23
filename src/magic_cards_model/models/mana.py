@@ -39,14 +39,14 @@ class HasCharacteristics(Protocol):
     """The four characteristics CR 106.6's restrictions are written against,
     plus a name for the refusal message.
 
-    A structural type rather than `Card`, because the two things that answer
-    these questions are not related by inheritance and must not be: `Card` is
-    the printing (CR 613.1's starting point, right for a spell on the stack,
-    which `Game.computed_board` does not cover), and `machines/layers.
-    Characteristics` is the layer-computed answer (CR 613.5, right for a
-    permanent). Widening the annotation is the whole change - both already
-    print `name`, `types`, `subtypes`, `supertypes` and `colors` with the same
-    meanings, so `ManaSpend._of` needs no branch.
+    A structural type, because the two things that answer these questions are
+    not related by inheritance and must not be: `CardState` is the spell
+    (right for a spell on the stack, which `Game.computed_board` does not
+    cover - its face and its changeling CDA included, CR 604.3), and
+    `machines/layers.Characteristics` is the layer-computed answer (CR 613.5,
+    right for a permanent). Both print `name`, `types`, `subtypes`,
+    `supertypes` and `colors` with the same meanings, so `ManaSpend._of` needs
+    no branch.
 
     `machines` may not be imported from `models` (the dependency runs the other
     way), which is the other reason this is a Protocol and not a union.
@@ -580,8 +580,9 @@ class ManaSpend(EngineModel):
         """Mana spent to cast `card` as a spell, out of `zone`.
 
         A spell is on the stack, which `Game.computed_board` does not cover, so
-        the caller has only the printed `Card` to give and that is the right
-        answer here.
+        the caller gives the spell's own `CardState`: the face being cast
+        (CR 709.3b, CR 715.3b) and its characteristic-defining abilities -
+        a changeling spell is a Dragon spell (CR 702.73a, CR 604.3).
 
         `zone` is keyword-only and has **no default** on purpose. CR 601.2a
         moves the card to the stack as the very first step of the

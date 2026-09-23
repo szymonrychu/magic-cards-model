@@ -187,6 +187,12 @@ def executes(keyword: str) -> bool:
         # and the end step trigger is `_impending_ability`/`_impending_effect`
         # here.
         "impending",
+        # CR 702.73a. A characteristic-defining ability that works in every
+        # zone (CR 604.3): off the battlefield it is `CardState.subtypes`
+        # (`models/card.with_every_creature_type`), on the battlefield it is
+        # `machines/layers._changeling_effects`, a layer 4 CDA (CR 613.1d)
+        # applied before every other type-changing effect (CR 613.3).
+        "changeling",
         # CR 702.189a. The triggered half is `_firebending_ability` above
         # (`_TRIGGER_EXPANSIONS`), and `machines/effects._parse_firebending_
         # add_mana` reads the "add N {R}" effect it puts on the stack.

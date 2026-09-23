@@ -9,12 +9,15 @@ Legality is clamped to standard, pioneer, and modern.
 Reference: https://scryfall.com/docs/api/cards
 """
 
+import re
+from collections.abc import Sequence
 from enum import StrEnum
 from functools import cache
 from uuid import UUID
 
 from pydantic import ConfigDict
 
+from ..data.creature_types import creature_types
 from ..snapshot import EngineModel
 
 # --------------------------------------------------------------------------
@@ -411,3 +414,41 @@ def subtypes_of(type_line: str) -> list[str]:
     """Subtypes parsed out of a single face's `type_line`, right of the em dash."""
     _, _, right = type_line.partition("—")
     return right.split()
+
+
+#: A reminder parenthetical, dropped before a keyword line is split on commas.
+_REMINDER_TEXT = re.compile(r"\([^)]*\)")
+
+
+@cache
+def has_changeling(oracle_text: str | None) -> bool:
+    """Whether `oracle_text` carries a changeling keyword line (CR 702.73a).
+
+    Read off the rules text rather than Scryfall's card-level `keywords`, so it
+    answers for the face that is up and for a token created "with changeling"
+    (CR 604.3a item 2), whose `TokenDefinition.oracle_text` prints its keywords
+    as one comma-joined line ("Flying, Changeling") the way a printing does.
+    Memoised on the text: the same string always gives the same answer.
+    """
+    for line in (oracle_text or "").splitlines():
+        keywords = _REMINDER_TEXT.sub("", line).strip()
+        if keywords.endswith("."):
+            continue  # a sentence, not a keyword line
+        if any(part.strip().lower() == "changeling" for part in keywords.split(",")):
+            return True
+    return False
+
+
+def with_every_creature_type(types: Sequence[Type], subtypes: Sequence[str]) -> tuple[str, ...]:
+    """`subtypes` plus every CR 205.3m creature type - changeling's
+    "This object is every creature type" (CR 702.73a).
+
+    CR 205.3d: "An object can't gain a subtype that doesn't correspond to one
+    of that object's types", so only a creature or a kindred object gains them
+    (CR 205.3m: "Creatures and kindreds share their lists of subtypes"), and
+    nothing but creature types is ever added.
+    """
+    if Type.CREATURE not in types and Type.KINDRED not in types:
+        return tuple(subtypes)
+    present = set(subtypes)
+    return tuple(subtypes) + tuple(kind for kind in creature_types() if kind not in present)

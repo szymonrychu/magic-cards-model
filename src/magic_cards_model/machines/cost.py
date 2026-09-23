@@ -3739,6 +3739,12 @@ class CostModifierEffect(EngineModel):
     needs only one of these types to qualify (CR 205.2a: a multi-type card is
     checked against all its types)."""
 
+    applies_to_subtype: str | None = None
+    """`TYPE_DECREASE` only, for the subtype shape - Goblin Warchief's "Goblin
+    spells you cast cost {1} less to cast." - lowercased (`canonical_subtype`).
+    A spell qualifies when it has that subtype (CR 205.3), which a changeling
+    spell always does for a creature type (CR 702.73a)."""
+
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
     "Noncreature": Type.CREATURE,
@@ -3827,6 +3833,15 @@ _TYPE_COST_DECREASE = re.compile(
     re.IGNORECASE,
 )
 
+#: The subtype shape - Goblin Warchief's own "Goblin spells you cast cost {1}
+#: less to cast." One capitalised word that `canonical_subtype` places in
+#: CR 205.3's list; a card type or a color word never reaches here, because
+#: the two shapes above are tried first.
+_SUBTYPE_COST_DECREASE = re.compile(
+    r"(?:^|(?<=[.\n]))\s*(?P<subtype>[A-Z][a-z'-]+) spells you cast cost \{(?P<amount>\d+)\} "
+    r"less to cast\."
+)
+
 #: Anything that talks about a spell costing more, or a floor on what a spell
 #: would cost, whether or not the shapes above could read it - Grand Arbiter
 #: Augustin IV's "Spells your opponents cast cost {1} more to cast" mentions
@@ -3912,6 +3927,15 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
                 kind=CostModifierKind.TYPE_DECREASE,
                 amount=int(match.group("amount")),
                 applies_to_types=types,
+            )
+    match = _SUBTYPE_COST_DECREASE.search(text)
+    if match is not None:
+        subtype = canonical_subtype(match.group("subtype"))
+        if subtype is not None:
+            return CostModifierEffect(
+                kind=CostModifierKind.TYPE_DECREASE,
+                amount=int(match.group("amount")),
+                applies_to_subtype=subtype,
             )
     return None
 

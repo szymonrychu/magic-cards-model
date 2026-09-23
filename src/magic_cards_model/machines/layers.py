@@ -87,9 +87,10 @@ from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
 from magic_cards_model.phrases import with_indefinite_article
 
+from ..data.creature_types import creature_types
 from ..data.subtypes import subtype_vocabulary
 from ..ids import new_id
-from ..models.card import Color, Layout, Supertype, Type
+from ..models.card import Color, Layout, Supertype, Type, has_changeling, with_every_creature_type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count, where_x_pattern
@@ -914,6 +915,22 @@ class PermanentsControlledByWithCounters(SelectorBase):
         return any(count > 0 for count in chars.counters.values())
 
 
+class WithChangeling(SelectorBase):
+    """Every object that has changeling as layer 4 finds it (CR 702.73a).
+
+    Read off the characteristics as layers 1-3 left them, so a copy effect
+    that gave an object changeling (CR 604.3a item 2: "acquired ... as the
+    result of a copy effect") is included and one that took it away is not.
+    Layer 6's ability-removing effects come later (CR 613.1f), so Humility does
+    not reach back and undo it.
+    """
+
+    kind: Literal["with_changeling"] = "with_changeling"
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return has_changeling("\n".join(chars.abilities))
+
+
 #: Does this effect apply to that object? Judged against characteristics as
 #: computed so far, with the rest of the board available for effects that
 #: count things or say "each other" (CR 613.5).
@@ -940,7 +957,8 @@ Selector = Annotated[
     | PermanentsOfTypesControlledBy
     | CreaturesControlledByWithSubtype
     | CreaturesControlledByWithColor
-    | PermanentsControlledByWithCounters,
+    | PermanentsControlledByWithCounters
+    | WithChangeling,
     Field(discriminator="kind"),
 ]
 
@@ -1121,6 +1139,20 @@ class AddSubtype(ModificationBase):
         return chars.with_(**changes)
 
 
+class AddEveryCreatureType(ModificationBase):
+    """Layer 4: changeling's "This object is every creature type" (CR 702.73a).
+
+    Additive, and creature types only - `with_every_creature_type` holds the
+    CR 205.3d gate (a creature or kindred object only).
+    """
+
+    kind: Literal["add_every_creature_type"] = "add_every_creature_type"
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        subtypes = with_every_creature_type(chars.types, chars.subtypes)
+        return chars if subtypes == chars.subtypes else chars.with_(subtypes=subtypes)
+
+
 class AddBasicLandTypes(ModificationBase):
     """Layer 4: become every basic land type in addition to the others (CR 613.1d)."""
 
@@ -1298,6 +1330,25 @@ class BecomeACopy(ModificationBase):
         )
 
 
+class SetCreatureTypes(ModificationBase):
+    """Layer 4: the object's creature types become exactly these (CR 205.1a).
+
+    "When an effect sets one or more of an object's subtypes, the new
+    subtype(s) replaces any existing subtypes from the appropriate set" - so
+    "becomes a white Rabbit" replaces every creature type (a changeling's
+    included, CR 613.3 having applied its CDA first) and leaves the card types
+    and any other set's subtypes alone.
+    """
+
+    kind: Literal["set_creature_types"] = "set_creature_types"
+    subtypes: tuple[str, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        creature = set(creature_types())
+        kept = tuple(subtype for subtype in chars.subtypes if subtype not in creature)
+        return chars.with_(subtypes=kept + self.subtypes)
+
+
 class SetTypesAndSubtypes(ModificationBase):
     """Layer 4: replace the object's types and subtypes outright (CR 205.1a).
 
@@ -1340,6 +1391,7 @@ Modification = Annotated[
     | AddType
     | RemoveType
     | AddSubtype
+    | AddEveryCreatureType
     | AddBasicLandTypes
     | SetBasicLandType
     | SetColors
@@ -1354,6 +1406,7 @@ Modification = Annotated[
     | SwitchPowerToughness
     | BecomeACopy
     | SetTypesAndSubtypes
+    | SetCreatureTypes
     | AddTypesAndSubtype,
     Field(discriminator="kind"),
 ]
@@ -1475,7 +1528,9 @@ def printed_characteristics(
         controller=state.stored_controller,
         supertypes=tuple(state.supertypes),
         types=tuple(state.types),
-        subtypes=tuple(state.subtypes),
+        # The type line only: changeling's creature types are its CDA's
+        # layer 4 contribution (`_changeling_effects`), not a printed value.
+        subtypes=tuple(state.printed_subtypes),
         colors=tuple(state.colors),
         abilities=tuple(_ability_lines(state.oracle_text))
         + _keyword_counter_lines(on_the_permanent),
@@ -1752,6 +1807,10 @@ def compute_board(
     started: set[object] = set()
 
     for layer in Layer:
+        if layer is Layer.TYPE:
+            # Asked of the board as layers 1-3 left it: a copy or text effect
+            # decides whether an object has changeling by now (CR 604.3a).
+            all_effects += _changeling_effects(board)
         for sublayer in _sublayers_of(layer):
             group = [e for e in all_effects if e.layer is layer and e.sublayer is sublayer]
             if not group:
@@ -1772,6 +1831,30 @@ def compute_board(
                     board = _apply_group(phase, board, started, journal)
 
     return ComputedBoard(characteristics=board, journal=journal)
+
+
+def _changeling_effects(board: Board) -> list[ContinuousEffect]:
+    """Changeling as the layer 4 characteristic-defining ability it is.
+
+    CR 702.73a: "Changeling is a characteristic-defining ability.
+    'Changeling' means 'This object is every creature type.'" CR 613.1d puts
+    it in layer 4 and CR 613.3 applies it ahead of every other layer 4 effect,
+    so a later "becomes a white Rabbit" (CR 205.1a) replaces the creature types
+    it gave. `board` is the board as layers 1-3 left it, so an object that a
+    copy effect gave changeling has it and one a copy effect took it from does
+    not (CR 604.3a item 2); a board with no changeling gets no effect at all.
+    """
+    if not any(WithChangeling()(chars, board) for chars in board.values()):
+        return []
+    return [
+        ContinuousEffect(
+            description="Changeling: every creature type (CR 702.73a)",
+            layer=Layer.TYPE,
+            characteristic_defining=True,
+            selector=WithChangeling(),
+            modification=AddEveryCreatureType(),
+        )
+    ]
 
 
 def _sublayers_of(layer: Layer) -> tuple[Sublayer | CopySublayer | None, ...]:
@@ -3397,6 +3480,22 @@ _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Until end of turn, target creature becomes a white Rabbit with base power
+#: and toughness 0/1." (Metamorphic Blast's first mode) and "Until end of
+#: turn, target creature loses all abilities and becomes a blue Frog with base
+#: power and toughness 1/1." (Turn to Frog) - one template, the colour and the
+#: "loses all abilities" optional. Read after `_normalize_duration_first` has
+#: moved the duration to the end. Four layers from one effect (CR 613.6):
+#: layer 4 sets the creature type (CR 205.1a: it replaces the creature types
+#: and nothing else), layer 5 the colour (CR 613.1e), layer 6 removes the
+#: abilities (CR 613.1f), sublayer 7b sets the base P/T (CR 613.4b).
+_BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
+    r"^target creature (?P<loses>loses all abilities and )?becomes an? "
+    r"(?:(?P<color>white|blue|black|red|green) )?(?P<subtype>[a-z']+) with base power and "
+    r"toughness (?P<power>\d+)/(?P<toughness>\d+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
 #: "Target permanent becomes an artifact in addition to its other types until
 #: end of turn." (Liquimetal Coating) - layer 4 (CR 613.1d), and "in addition
 #: to" rather than a replacement: `add_type` keeps whatever types the
@@ -4968,6 +5067,59 @@ def _base_pt_set_builder(power: int, toughness: int) -> EffectBuilder:
             )
             for target in targets
         ]
+
+    return builder
+
+
+def _becomes_creature_type_with_base_pt_builder(
+    subtype: str,
+    color: Color | None,
+    power: int,
+    toughness: int,
+    *,
+    loses_abilities: bool,
+) -> EffectBuilder:
+    """`_BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE`'s shape: one resolving effect
+    applied in each layer it names (CR 613.6), until end of turn, to each
+    target's current incarnation (CR 400.7)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            selector = only_this_incarnation(target, target.zone_change_stamp)
+            parts: list[tuple[str, Layer, Sublayer | None, Modification]] = [
+                (f"is a {subtype}", Layer.TYPE, None, SetCreatureTypes(subtypes=(subtype,)))
+            ]
+            if color is not None:
+                parts.append((f"is {color.name.lower()}", Layer.COLOR, None, set_colors(color)))
+            if loses_abilities:
+                parts.append(("loses all abilities", Layer.ABILITY, None, lose_all_abilities))
+            parts.append(
+                (
+                    f"has base P/T {power}/{toughness}",
+                    Layer.POWER_TOUGHNESS,
+                    Sublayer.SET,
+                    set_power_toughness(power, toughness),
+                )
+            )
+            effects.extend(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} {what}",
+                    layer=layer,
+                    sublayer=sublayer,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=modification,
+                )
+                for what, layer, sublayer, modification in parts
+            )
+        return effects
 
     return builder
 
@@ -7515,6 +7667,21 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _becomes_color_builder(
             _COLOR_WORDS[match.group("color").lower()],
             until_eot=bool(match.group("until_eot")),
+        )
+    if match := _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE.fullmatch(sentence):
+        subtype = next(
+            (kind for kind in creature_types() if kind.lower() == match.group("subtype").lower()),
+            None,
+        )
+        if subtype is None:
+            return None
+        color = match.group("color")
+        return _becomes_creature_type_with_base_pt_builder(
+            subtype,
+            _COLOR_WORDS[color.lower()] if color else None,
+            int(match.group("power")),
+            int(match.group("toughness")),
+            loses_abilities=match.group("loses") is not None,
         )
     if match := _BECOMES_TYPE_IN_ADDITION_RE.fullmatch(sentence):
         extra_type = _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())

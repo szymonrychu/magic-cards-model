@@ -31,7 +31,14 @@ Every CR number here was looked up with `mise run rules:find` against the
 import re
 from dataclasses import dataclass
 
-from ..models.card import Card, Type, subtypes_of, types_of
+from ..models.card import (
+    Card,
+    Type,
+    has_changeling,
+    subtypes_of,
+    types_of,
+    with_every_creature_type,
+)
 from ..numbers import parse_count
 
 #: CR 702.139a's own templating: "Companion—[Condition]." The reminder text
@@ -174,6 +181,17 @@ def _qualifying_cards(qualifier: str, cards: list[Card]) -> list[Card] | None:
     return [card for card in cards if card_type in types_of(card.type_line)]
 
 
+def _deck_card_subtypes(card: Card) -> tuple[str, ...]:
+    """A deck card's subtypes before the game begins, changeling included:
+    CR 604.3's characteristic-defining abilities "also function outside the
+    game and before the game begins", and CR 702.73a makes a changeling card
+    every creature type there too."""
+    subtypes = subtypes_of(card.type_line)
+    if has_changeling(card.front_oracle_text):
+        return with_every_creature_type(types_of(card.type_line), subtypes)
+    return tuple(subtypes)
+
+
 def companion_condition_satisfied(
     card: Card, mainboard_cards: list[Card], *, minimum_deck_size: int = 60
 ) -> CompanionConditionResult:
@@ -213,7 +231,7 @@ def companion_condition_satisfied(
         offending = [
             candidate.name
             for candidate in qualifying
-            if not (wanted & {t.lower() for t in subtypes_of(candidate.type_line)})
+            if not (wanted & {t.lower() for t in _deck_card_subtypes(candidate)})
         ]
         if offending:
             return CompanionConditionResult(

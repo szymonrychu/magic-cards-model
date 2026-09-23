@@ -13216,6 +13216,11 @@ _TOKEN_KEYWORDS = {
     "prowess",
     "first strike",
     "double strike",
+    # CR 604.3a item (2): changeling "granted to the token it affects by the
+    # effect that created the token" is a characteristic-defining ability -
+    # Crib Swap's Shapeshifter. The keyword line is all it takes; the creature
+    # types are `CardState.subtypes`/`machines/layers._changeling_effects`.
+    "changeling",
 }
 
 _TOKEN_COLOR_WORDS = {
@@ -15466,10 +15471,11 @@ def _parse_create_token_mill_repeat_clause(text: str) -> AbilityEffect | None:
     inside one resolution, not a second stack object (nothing in CR 603.12
     covers "repeat" the way it covers "when you do") - each pass creates one
     token, mills one card, and only continues if *that* card was the named
-    subtype (CR 205.3, checked against the card's own printed subtypes, since
-    a card in the graveyard carries no continuous effect to compute a layer 4
-    change from). The loop terminates on its own: `_mill` mills nothing once
-    the library is empty (CR 701.17a's "as many ... as possible"), which reads
+    subtype (CR 205.3, checked against the card's own `CardState.subtypes`,
+    since a card in the graveyard carries no continuous effect to compute a
+    layer 4 change from - but does carry a changeling CDA, CR 604.3). The
+    loop terminates on its own: `_mill` mills nothing once the library is
+    empty (CR 701.17a's "as many ... as possible"), which reads
     here as "no card was milled", never true to the "if" condition.
     """
     match = _CREATE_TOKEN_MILL_REPEAT_RE.fullmatch(_strip_non_effect_preamble(text).strip())
@@ -15486,7 +15492,9 @@ def _parse_create_token_mill_repeat_clause(text: str) -> AbilityEffect | None:
         while True:
             create_tokens(game, definition, player.username, 1)
             milled = _mill(game, player, 1)
-            if not milled or kind_word.lower() not in {s.lower() for s in milled[0].card.subtypes}:
+            # `CardState.subtypes`: the milled card's own CDA, changeling
+            # included (CR 604.3), not just the type line.
+            if not milled or kind_word.lower() not in {s.lower() for s in milled[0].subtypes}:
                 return
             source = ability.source(game)
             if source is not None and source.zone is Zone.BATTLEFIELD:
@@ -35203,8 +35211,10 @@ def _parse_card_group_qualifier(phrase: str) -> Callable[[CardState], bool] | No
             return False
         if not (types & set(card.types)):
             return False
+        # `CardState.subtypes` rather than the printing's type line: a
+        # changeling card is every creature type in every zone (CR 604.3).
         if excluded_subtype is not None and excluded_subtype in {
-            subtype.lower() for subtype in card.subtypes
+            subtype.lower() for subtype in state.subtypes
         }:
             return False
         mana_value = card.cmc or 0

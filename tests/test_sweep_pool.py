@@ -1375,13 +1375,14 @@ def test_tiered_registration_is_conditioned_on_the_profile_being_understood(monk
 
 
 def test_legal_cards_failing_closed_lists_a_legal_notice_card_as_a_gap():
-    """Insatiable Avarice and Metamorphic Blast (Spree, legal in all three
-    target formats) classify `NOTICE` because some of their modes are unread
-    - the owner rule says a legal card resting on a notice is a gap, not a
-    clean pass, so both must be listed."""
+    """Insatiable Avarice (Spree, legal in all three target formats)
+    classifies `NOTICE` because some of its modes are unread - the owner rule
+    says a legal card resting on a notice is a gap, not a clean pass, so it
+    must be listed. Metamorphic Blast, once the other example, reads both
+    modes since T05 (`test_changeling.py`) and so is no longer one."""
     gaps = dict(legal_cards_failing_closed(["Insatiable Avarice", "Metamorphic Blast"]))
     assert "Insatiable Avarice" in gaps
-    assert "Metamorphic Blast" in gaps
+    assert "Metamorphic Blast" not in gaps
 
 
 def test_legal_cards_failing_closed_excludes_an_out_of_format_notice_card():
@@ -1413,7 +1414,8 @@ def test_report_effects_prints_the_legal_gap_section():
     output = buffer.getvalue()
     assert "Legal cards (Modern/Pioneer/Standard) failing closed with a notice" in output
     assert "Insatiable Avarice" in output
-    assert "2 legal card(s) failing closed" in output
+    # Metamorphic Blast reads both modes since T05, so only Avarice is left.
+    assert "1 legal card(s) failing closed" in output
 
 
 # -- T01: acceptance - the honest unbuilt-keyword list -----------------------
@@ -1436,7 +1438,6 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
         for keyword in ignored_keywords(card(name)):
             by_keyword.setdefault(keyword, []).append(name)
     assert set(by_keyword) == {
-        "Changeling",
         "Compleated",
         "Cumulative upkeep",
         "Discover",

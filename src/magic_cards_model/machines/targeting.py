@@ -3718,8 +3718,13 @@ _COLORS_OF_MANA_SPENT_CONDITION = re.compile(
 #: whole - the whole tail is the effect's own verb phrase, not a further
 #: target restriction - before the comparison scan ever sees it, the same way
 #: `_COLORS_OF_MANA_SPENT_CONDITION` is read out of the way just above.
+#:
+#: The same verb phrase follows a type change too - Metamorphic Blast's
+#: "target creature **becomes a white Rabbit with base power and toughness
+#: 0/1**" - where "becomes" already marks it as the effect (CR 205.1a), never
+#: a restriction on what may be targeted.
 _SETS_BASE_POWER_TOUGHNESS_EFFECT = re.compile(
-    r"\bhas base power and toughness\b.*$", re.IGNORECASE
+    r"\b(?:has|becomes\b.*?\bwith) base power and toughness\b.*$", re.IGNORECASE
 )
 
 

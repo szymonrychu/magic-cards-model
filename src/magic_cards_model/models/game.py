@@ -15522,6 +15522,12 @@ class Game(EngineModel):
                         t in spell.types for t in effect.applies_to_types
                     ):
                         decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                    elif effect.applies_to_subtype is not None and any(
+                        subtype.lower() == effect.applies_to_subtype for subtype in spell.subtypes
+                    ):
+                        # `CardState.subtypes`: the spell is off the battlefield,
+                        # so its changeling CDA is read there (CR 702.73a).
+                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
 
         for grant in self.casting_rule_effects:
             if (
