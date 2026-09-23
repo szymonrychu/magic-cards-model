@@ -1833,6 +1833,30 @@ def compute_board(
     return ComputedBoard(characteristics=board, journal=journal)
 
 
+def copiable_characteristics(
+    state: CardState, effects: Iterable[ContinuousEffect] = ()
+) -> Characteristics:
+    """An object's copiable values (CR 707.2): what is printed on it, "as
+    modified by other copy effects" - layer 1 (CR 613.2) and nothing after it.
+
+    `effects` is every continuous effect that may apply; only layer 1 ones are
+    applied, so a type-changing effect, an anthem or a counter never reaches
+    the answer (CR 707.2: "Other effects (including type-changing and
+    text-changing effects), status, counters, and stickers are not copied").
+    An object no copy effect touches answers with its printed values, exactly
+    as `printed_characteristics` would, less its counters.
+    """
+    board: dict[UUID, Characteristics] = {state.id: printed_characteristics(state, {})}
+    copy_effects = [effect for effect in effects if effect.layer is Layer.COPY]
+    started: set[object] = set()
+    journal = Journal()
+    for sublayer in _sublayers_of(Layer.COPY):
+        group = [effect for effect in copy_effects if effect.sublayer is sublayer]
+        if group:
+            board = _apply_group(group, board, started, journal)
+    return board[state.id]
+
+
 def _changeling_effects(board: Board) -> list[ContinuousEffect]:
     """Changeling as the layer 4 characteristic-defining ability it is.
 
@@ -3122,6 +3146,8 @@ def _become_a_copy_builder(
     toughness_override: int | None = None,
     added_types: Sequence[Type] = (),
     added_subtypes: Sequence[str] = (),
+    added_abilities: Sequence[str] = (),
+    copiable_values: Characteristics | None = None,
 ) -> EffectBuilder:
     """`_BECOME_A_COPY_RE`'s shape.
 
@@ -3139,10 +3165,10 @@ def _become_a_copy_builder(
     live read is correct, not merely convenient). **Known gap**: a target
     itself modified by a characteristic-defining ability or an earlier copy
     effect would have copiable values `printed_characteristics` cannot
-    reconstruct (CR 707.2's own "as modified by ... any 613.5 continuous
-    effects that already changed its copiable values in some way" is not
-    read here) - nothing in the pool needs that yet, so it is left for a
-    future wave rather than guessed at; see `docs/engine-coverage.md`.
+    reconstruct (CR 707.2's "as modified by other copy effects") unless the
+    caller passes `copiable_values` - the enter-as-a-copy path
+    (`replacement._enters_as_copy`) does, from `copiable_characteristics`;
+    the "becomes a copy of target creature" path still reads printed values.
 
     CR 707.4's own "remaining on the battlefield" clause is why this is not
     routed through `ENTERS_AS_COPY`'s enters-the-battlefield machinery: the
@@ -3167,10 +3193,21 @@ def _become_a_copy_builder(
 
     The added types and subtypes are additive (CR 205.1b: "all the object's
     prior card types, supertypes, or subtypes are retained"), which is what
-    the printed "in addition to his other types" says.
+    the printed "in addition to his other types" says. `added_abilities` is
+    CR 707.9a's gained ability ("This ability becomes part of the copiable
+    values for the copy, along with any other abilities that were copied") -
+    Mockingbird's flying, Phantasmal Image's quoted trigger - appended to the
+    copied ability lines, once.
+
+    `copiable_values`, when a caller has them, replaces the printed read of
+    `targets[0]`: CR 707.2's copiable values are the printed ones "as modified
+    by other copy effects", which `copiable_characteristics` computes and
+    `printed_characteristics` alone cannot - a Clone copying a
+    Mockingbird-as-Grizzly-Bears must copy the Bird and flying too.
     """
     added_types = tuple(added_types)
     added_subtypes = tuple(added_subtypes)
+    added_abilities = tuple(added_abilities)
 
     def builder(
         source: CardState,
@@ -3180,7 +3217,9 @@ def _become_a_copy_builder(
     ) -> list[ContinuousEffect]:
         if not targets:
             return []
-        copied = printed_characteristics(targets[0])
+        copied = (
+            copiable_values if copiable_values is not None else printed_characteristics(targets[0])
+        )
         types = copied.types + tuple(
             card_type for card_type in added_types if card_type not in copied.types
         )
@@ -3194,7 +3233,8 @@ def _become_a_copy_builder(
             types=types,
             subtypes=subtypes,
             colors=copied.colors,
-            abilities=copied.abilities,
+            abilities=copied.abilities
+            + tuple(ability for ability in added_abilities if ability not in copied.abilities),
             power=power_override if power_override is not None else copied.power,
             toughness=toughness_override if toughness_override is not None else copied.toughness,
         )

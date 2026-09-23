@@ -238,27 +238,16 @@ def test_echoing_deeps_except_clause_reads_as_added_types_with_no_pt():
     assert exception.added_subtypes == ("Cave",)
 
 
-def test_mockingbirds_except_clause_grants_an_ability_and_stays_unreadable():
-    """ "... and it has flying" is a shape this module does not parse.
-
-    Mockingbird's clause splits on " and " into two parts: "it's a Bird in
-    addition to its other types" (the same types-only shape Echoing Deeps
-    now reads) and "it has flying" (granting an ability as part of the copy,
-    which no branch of `_parse_copy_exception` reads). CR 608.2c has no notion
-    of running half an instruction, so the *whole* clause stays unreadable
-    rather than applying just the Bird type - `copy_exception` is `None` and
-    `copy_exception_unparsed` carries the raw text instead of the two `None`s
-    being indistinguishable, which is what lets `_enters_as_copy` fail closed
-    with a notice instead of silently copying with no Bird type and no
-    flying.
-    """
+def test_mockingbirds_except_clause_grants_an_ability_as_part_of_the_copy():
+    """ "... and it has flying" is CR 707.9a's gained ability: the whole tail
+    reads, the Bird subtype and the Flying ability line both, so nothing is
+    left in `copy_exception_unparsed`."""
     effect = only("Mockingbird", ReplacementKind.ENTERS_AS_COPY)
 
-    assert effect.copy_exception is None
-    assert (
-        effect.copy_exception_unparsed
-        == "it's a Bird in addition to its other types and it has flying"
-    )
+    assert effect.copy_exception_unparsed is None
+    assert effect.copy_exception is not None
+    assert effect.copy_exception.added_subtypes == ("Bird",)
+    assert effect.copy_exception.added_abilities == ("Flying",)
 
 
 def test_superior_spider_mans_except_clause_is_unaffected():

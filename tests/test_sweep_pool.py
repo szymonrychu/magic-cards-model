@@ -124,6 +124,30 @@ def test_festerhide_boars_morbid_enters_with_counters_classifies_as_handled():
     assert category == HANDLED
 
 
+@pytest.mark.parametrize(
+    "name",
+    ["Mockingbird", "Echoing Deeps", "Phantasmal Image", "Clever Impersonator", "Vesuva"],
+)
+def test_an_enter_as_a_copy_clause_is_judged_by_what_the_engine_does(name):
+    """CR 614.1c / CR 707.9: the copy clause's "except ..." tail is part of the
+    copy's copiable values, not a missed layer 4/6 effect, and its candidate
+    phrase is judged by the engine's own `enters_as_copy_outcome` - so a
+    readable clause is `HANDLED` (`tests/scenarios/test_enter_as_copy_*.py`
+    play each of these), where Mockingbird and Echoing Deeps used to be
+    `SILENT` on their tails alone."""
+    category, _ = classify_card(card(name))
+    assert category == HANDLED
+
+
+def test_an_enter_as_a_copy_clause_with_an_unreadable_tail_is_a_notice():
+    """Sakashima of a Thousand Faces' "except it has Sakashima's other
+    abilities" fails closed with an `UnreadableCopyExceptionNotice`."""
+    outcomes = {
+        outcome.category for outcome in classify_clauses(card("Sakashima of a Thousand Faces"))
+    }
+    assert NOTICE in outcomes
+
+
 def test_grand_arbiters_three_cost_modifier_statics_are_all_handled():
     """Grand Arbiter Augustin IV: "White/Blue spells you cast cost {1} less to
     cast" was already read by `machines/cost.cost_modifier_effect`; "Spells

@@ -105,7 +105,9 @@ from magic_cards_model.machines.modes import modal_profile, substitute_x
 from magic_cards_model.machines.objects_as_costs import has_improvise
 from magic_cards_model.machines.replacement import (
     ENTERS_KINDS,
+    ReplacementKind,
     _self_enters_modifiers,
+    enters_as_copy_outcome,
     parse_replacement_effects,
     strip_reminder_text,
 )
@@ -1611,6 +1613,40 @@ def _self_enters_line_category(printing: Card, text: str) -> str | None:
     return None
 
 
+def _enters_as_copy_line_category(printing: Card, text: str) -> str | None:
+    """A static paragraph that is CR 614.1c's "enter as a copy of ...", judged
+    by `machines/replacement.enters_as_copy_outcome` - the engine's own answer
+    for what `_enters_as_copy` does with it - or `None` when the paragraph is
+    not one (or carries a condition, which `_self_enters_modifiers` skips and
+    `_self_enters_line_category` already answers for).
+
+    Asked ahead of `missed_layer_shape` on purpose: a copy clause's "except
+    it's a Cave in addition to its other types" / "and it has flying" tail is
+    CR 707.9's modification of the copy itself, part of layer 1's copiable
+    values, not a layer 4 or layer 6 effect a separate reader missed -
+    Mockingbird and Echoing Deeps were reported `SILENT` on that tail alone.
+    Equally, a copy clause whose candidate phrase the engine cannot read
+    (Clever Impersonator's "any nonland permanent" before it was read) is
+    `SILENT`, not credited `HANDLED` because `_self_enters_modifiers` lists
+    every copy clause as performable.
+    """
+    copies = [
+        effect
+        for effect in parse_replacement_effects(printing)
+        if effect.kind is ReplacementKind.ENTERS_AS_COPY
+        and effect.self_replacement
+        and effect.condition is None
+        and _strip_reminder(effect.raw)[0] == text.strip()
+    ]
+    if not copies:
+        return None
+    outcomes = [enters_as_copy_outcome(effect) for effect in copies]
+    for worst in (SILENT, NOTICE):
+        if worst in outcomes:
+            return worst
+    return HANDLED
+
+
 def _static_ability_category(printing: Card, text: str) -> str:
     """One static line of a permanent (CR 604.2, CR 113.3d), judged the way
     the battlefield sweep judges it - per line, not per card.
@@ -1647,6 +1683,9 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return NOTICE
     if looks_like_unparsed_cost_modifier(text):
         return NOTICE
+    copy_clause = _enters_as_copy_line_category(printing, text)
+    if copy_clause is not None:
+        return copy_clause
     if missed_layer_shape(text) is not None:
         return SILENT
     if player_keyword_grant_of_line(text) is not None:

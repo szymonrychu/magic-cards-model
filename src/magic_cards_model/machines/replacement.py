@@ -256,6 +256,16 @@ class CopyException(EngineModel):
     added_types: tuple[Type, ...] = ()
     #: Subtypes gained on top of the copied ones (CR 205.1b, CR 205.3).
     added_subtypes: tuple[str, ...] = ()
+    #: Abilities the copy gains as part of the copying process (CR 707.9a:
+    #: "This ability becomes part of the copiable values for the copy, along
+    #: with any other abilities that were copied."), one ability line each -
+    #: a keyword capitalised the way a printed keyword line is ("Flying",
+    #: Mockingbird's "it has flying"), or a quoted ability's own text with the
+    #: quotes removed (Phantasmal Image's "it has "When this creature becomes
+    #: the target of a spell or ability, sacrifice it.""). Lines, because
+    #: `BecomeACopy.abilities` is ability text one line per ability, which is
+    #: what every reader of the computed board already parses.
+    added_abilities: tuple[str, ...] = ()
 
 
 class ReplacementEffect(EngineModel):
@@ -569,7 +579,9 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
     set of values ... becomes part of the copiable values" is a single answer,
     not a list of independent edits.
 
-    Split on " and " because that is how the printed tails join their clauses.
+    Split by `_split_exception_parts`: " and " / ", " before the next
+    clause's pronoun is how the printed tails join their clauses, and a quoted
+    granted ability (CR 707.9a) is never cut.
     """
     if not clause:
         return None
@@ -578,9 +590,9 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
     toughness: int | None = None
     added_types: list[Type] = []
     added_subtypes: list[str] = []
+    added_abilities: list[str] = []
 
-    for part in re.split(r"\s+and\s+", clause.strip().rstrip(".")):
-        part = part.strip()
+    for part in _split_exception_parts(clause.strip()):
         if match := _COPY_EXCEPT_NAME.match(part):
             name = match.group("name").strip()
             continue
@@ -598,9 +610,21 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
                     # Hero", stored capitalised the way every subtype is.
                     added_subtypes.append(word)
             continue
+        if match := _COPY_EXCEPT_HAS.match(part):
+            granted = _granted_abilities(match.group("what"))
+            if granted is None:
+                return None
+            added_abilities.extend(granted)
+            continue
         return None
 
-    if name is None and power is None and not added_types and not added_subtypes:
+    if (
+        name is None
+        and power is None
+        and not added_types
+        and not added_subtypes
+        and not added_abilities
+    ):
         return None
     return CopyException(
         name=name,
@@ -608,7 +632,68 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         toughness=toughness,
         added_types=tuple(added_types),
         added_subtypes=tuple(added_subtypes),
+        added_abilities=tuple(added_abilities),
     )
+
+
+#: Where one exception ends and the next begins, outside quoted text: ", and "
+#: / ", " / " and " followed by the pronoun that opens every exception clause
+#: ("his name is ... and he's a 4/4 ...", "it's a Bird ... and it has
+#: flying"). Anchoring on the pronoun is what keeps a keyword list's own "and"
+#: ("it has flying and haste") inside its clause.
+_EXCEPTION_SEPARATOR = re.compile(
+    r"(?:,\s*and\s+|,\s+|\s+and\s+)(?=(?:he|she|it|they|his|her|its|their)\b)",
+    re.IGNORECASE,
+)
+
+
+def _split_exception_parts(clause: str) -> list[str]:
+    """An "except ..." tail cut into its clauses, never inside a quoted ability.
+
+    Phantasmal Image's granted trigger - "When this creature becomes the
+    target of a spell or ability, sacrifice it." - carries its own comma and
+    would otherwise be cut at it; quoted spans are masked before splitting
+    and restored in the pieces.
+    """
+    masked = re.sub(r'"[^"]*"', lambda quoted: "\x00" * len(quoted.group(0)), clause)
+    parts: list[str] = []
+    start = 0
+    for separator in _EXCEPTION_SEPARATOR.finditer(masked):
+        parts.append(clause[start : separator.start()])
+        start = separator.end()
+    parts.append(clause[start:])
+    return [part.strip().rstrip(".").strip() for part in parts if part.strip()]
+
+
+#: CR 707.9a's granted ability: "it has flying" / "it has "<ability>"".
+_COPY_EXCEPT_HAS = re.compile(
+    r"^(?:he|she|it|they) (?:has|have) (?P<what>.+)$", re.IGNORECASE | re.DOTALL
+)
+
+_QUOTED_ABILITY = re.compile(r'"(?P<ability>[^"]+)"')
+
+
+def _granted_abilities(what: str) -> list[str] | None:
+    """The ability lines a copy exception's "it has ..." grants, or `None`.
+
+    Two shapes, the two a copy exception prints: one or more quoted abilities
+    joined by "and" (read whole, quotes removed - CR 707.9a's gained ability
+    is exactly that text), or a keyword list validated against the same
+    whitelist every layer 6 keyword grant uses. Anything else - Sakashima of a
+    Thousand Faces' "it has Sakashima's other abilities" - is `None`, which
+    fails the whole tail closed.
+    """
+    # Imported here: `machines/layers.py` imports this module.
+    from .layers import split_and_validate_keywords
+
+    what = what.strip().rstrip(".").strip()
+    if what.startswith('"'):
+        quoted = [match.group("ability").strip() for match in _QUOTED_ABILITY.finditer(what)]
+        leftover = _QUOTED_ABILITY.sub("", what)
+        if not quoted or re.sub(r"[\s,]|\band\b", "", leftover):
+            return None
+        return quoted
+    return split_and_validate_keywords(what)
 
 
 _AS_ENTERS = re.compile(
@@ -694,6 +779,15 @@ def _names_of(card: Card) -> tuple[str, ...]:
                 # a nonlegendary "Goblin Guide" is never "Goblin".
                 names.append(part.split()[0].strip())
     return tuple(sorted(set(names), key=len, reverse=True))
+
+
+def _names_of_name(name: str) -> tuple[str, ...]:
+    """`_names_of` for an object known only by its name - a copy's copiable
+    name (CR 707.2), which has no `Card` of its own to read faces off. The
+    full name and its comma-split head (CR 201.5c's shortened name), longest
+    first."""
+    names = {name.strip(), name.split(",")[0].strip()}
+    return tuple(sorted((part for part in names if part), key=len, reverse=True))
 
 
 def _parse_oracle_text(
@@ -1466,6 +1560,15 @@ class ReplaceableEvent:
     tapped: bool = False
     #: Whether the permanent arrives with the prepared designation (CR 722.3a).
     prepared: bool = False
+    #: The copiable values an "enter as a copy" replacement already gave the
+    #: entering permanent (CR 614.1c, CR 707.2), as (name, ability lines) -
+    #: `None` until one applies. CR 614.12: which enters-replacements apply is
+    #: decided from "the characteristics of the permanent as it would exist on
+    #: the battlefield, taking into account replacement effects that have
+    #: already modified how it enters", so once the copy is chosen the copied
+    #: object's own "enters with"/"as ... enters"/"enters tapped" abilities
+    #: are the ones read, not the entering card's printed ones.
+    entering_as_copy: tuple[str, tuple[str, ...]] | None = None
 
     #: The object dealing the damage (CR 120.1, CR 120.7). `None` when the
     #: caller did not say - CR 609.7b, CR 615.8 and CR 702.16e all ask about the
@@ -4261,12 +4364,82 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
 #: token isn't a card"), so the wording is admitted per zone rather than
 #: interchangeably.
 _COPY_CANDIDATES_RE = re.compile(
-    r"^any (?P<filter>artifact|creature|enchantment|land|permanent)"
-    r"(?: on the battlefield| card in a graveyard)$",
+    r"^any (?:non(?P<excluded>artifact|creature|enchantment|land|planeswalker) )?"
+    r"(?P<filter>artifact|creature|enchantment|land|permanent|planeswalker)"
+    r"(?P<zone> on the battlefield| card in a graveyard)"
+    r"(?: with mana value (?P<bound>.+))?$",
     re.IGNORECASE,
 )
 
-_COPY_FROM_GRAVEYARD_RE = re.compile(r"card in a graveyard$", re.IGNORECASE)
+#: The mana value bound a copy candidate may carry - Mockingbird's "less than
+#: or equal to the amount of mana spent to cast this creature" (CR 202.3 is
+#: the mana value, CR 601.2h the payment that spends the mana), plus the two
+#: numeric spellings of the same comparison ("N or less", "less than or equal
+#: to N"), so a bound printed with a number reads through the same filter.
+_COPY_MANA_VALUE_BOUND_RE = re.compile(
+    r"^(?:less than or equal to (?:(?P<spent>the amount of mana spent to cast this "
+    r"(?:creature|permanent|artifact|enchantment|land))|(?P<at_most>\d+))"
+    r"|(?P<or_less>\d+) or less)$",
+    re.IGNORECASE,
+)
+
+
+def _mana_spent_to_cast(game: "Game", entering: CardState) -> int:
+    """The total mana spent to cast the spell that became `entering`.
+
+    CR 601.2h is where the total cost is paid, and `CastRecord.mana_spent` is
+    that payment by color - every mana, not only what went to {X} (the
+    Mockingbird ruling: "counts all mana spent to cast Mockingbird, not just
+    mana spent on {X}. If there are any additional costs to cast it, the mana
+    spent to pay those costs counts as well."). A permanent that was not cast
+    - put onto the battlefield by an effect - has no record, and no mana was
+    spent to cast it: 0.
+    """
+    record = game.cast_record_of(entering)
+    if record is None:
+        return 0
+    return sum(record.mana_spent.values())
+
+
+def enters_as_copy_outcome(effect: ReplacementEffect) -> str:
+    """What `_enters_as_copy` does with this "enter as a copy" clause, asked of
+    the clause alone - "handled", "notice" or "silent".
+
+    `scripts/sweep_pool.py` reads a copy clause's truth here rather than
+    re-deriving it, so the tool and the engine cannot drift:
+
+    - "notice": the "except ..." tail did not read, and `_enters_as_copy`
+      records an `UnreadableCopyExceptionNotice` and skips the copy.
+    - "silent": the candidate phrase (`_COPY_CANDIDATES_RE`, with its mana
+      value bound) does not read, so `_copy_candidates` returns `None` and the
+      permanent enters as itself with nothing logged - or a linked "When you
+      do" sentence (CR 603.12) is one `_create_linked_reflexive_trigger`
+      cannot perform.
+    - "handled": every part of the clause is performed.
+    """
+    if effect.copy_exception_unparsed is not None:
+        return "notice"
+    match = _COPY_CANDIDATES_RE.match((effect.copy_of or "").strip().rstrip("."))
+    if match is None:
+        return "silent"
+    bound = match.group("bound")
+    if bound is not None and _COPY_MANA_VALUE_BOUND_RE.match(bound.strip()) is None:
+        return "silent"
+    if effect.linked_trigger is not None:
+        linked = _REFLEXIVE_OPENER.match(effect.linked_trigger)
+        if linked is None or not _EXILE_THAT_CARD_RE.match(linked.group("effect").strip()):
+            return "silent"
+    return "handled"
+
+
+def _copy_mana_value_bound(game: "Game", bound: str, entering: CardState) -> int | None:
+    """The highest mana value a candidate may have, or `None` if unreadable."""
+    match = _COPY_MANA_VALUE_BOUND_RE.match(bound.strip())
+    if match is None:
+        return None
+    if match.group("spent"):
+        return _mana_spent_to_cast(game, entering)
+    return int(match.group("at_most") or match.group("or_less"))
 
 
 def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[CardState] | None:
@@ -4276,6 +4449,14 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
     Two zones are read: the battlefield (Clone) and every graveyard (Superior
     Spider-Man's "any creature card in a graveyard" - "a graveyard", not "your
     graveyard", so every player's is searched).
+
+    The type filter is one card type, "permanent" for any, and an optional
+    "non<type>" in front of it (Clever Impersonator's "any nonland permanent
+    on the battlefield"). An optional mana value bound follows it
+    (`_COPY_MANA_VALUE_BOUND_RE`): Mockingbird's "with mana value less than
+    or equal to the amount of mana spent to cast this creature", read against
+    each candidate's mana value as it is on the battlefield (CR 202.3 - a
+    Clone copying a two-drop has the two-drop's mana value, CR 707.2).
 
     The entering object is excluded: it is not on the battlefield yet, so this
     is belt and braces against a caller that put it there first.
@@ -4288,7 +4469,22 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
     wanted = None if word == "permanent" else _CARD_TYPE_WORDS.get(word)
     if wanted is None and word != "permanent":
         return None
-    if _COPY_FROM_GRAVEYARD_RE.search(cleaned):
+    excluded = _CARD_TYPE_WORDS.get((match.group("excluded") or "").lower())
+    bound: int | None = None
+    if match.group("bound") is not None:
+        bound = _copy_mana_value_bound(game, match.group("bound"), entering)
+        if bound is None:
+            return None
+
+    def admitted(types: Iterable[Type], mana_value: float) -> bool:
+        kinds = set(types)
+        if wanted is not None and wanted not in kinds:
+            return False
+        if excluded is not None and excluded in kinds:
+            return False
+        return bound is None or mana_value <= bound
+
+    if "graveyard" in match.group("zone").lower():
         # A graveyard card has no continuous effect reaching it (CR 613.5
         # applies to the battlefield), so its printed types are the only
         # answer there is.
@@ -4298,19 +4494,20 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
         return [
             candidate
             for candidate in pool
-            if candidate.id != entering.id and (wanted is None or wanted in candidate.types)
+            if candidate.id != entering.id and admitted(candidate.types, candidate.mana_value)
         ]
     # The battlefield half: the *selection* of what may be copied reads the
     # computed board (CR 613.5) - a land earthbend (CR 701.66a) already made
     # a creature is a candidate for "any creature on the battlefield", even
     # though the values actually copied stay the copiable ones (CR 707.2,
-    # unaffected by this - `Game.enter_the_battlefield` copies the chosen
-    # candidate's printed card, not its computed characteristics).
+    # unaffected by this - `_enters_as_copy` copies the chosen candidate's
+    # copiable values, not its computed characteristics).
     board = game.computed_board()
     return [
         candidate
         for candidate in game.battlefield
-        if candidate.id != entering.id and (wanted is None or wanted in board.of(candidate).types)
+        if candidate.id != entering.id
+        and admitted(board.of(candidate).types, board.of(candidate).mana_value)
     ]
 
 
@@ -4423,7 +4620,12 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
         # Imported here rather than at module scope: `machines/layers.py` is a
         # sibling this module is imported by, the same reason `keywords` and
         # `casting` are imported inside `_stack_replacements`.
-        from .layers import LayerContext, _become_a_copy_builder
+        from .layers import (
+            BecomeACopy,
+            LayerContext,
+            _become_a_copy_builder,
+            copiable_characteristics,
+        )
 
         entering = event.card
         if entering is None or entering.controller is None:
@@ -4439,6 +4641,10 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
             return
         candidates = _copy_candidates(game, effect.copy_of or "", entering)
         if not candidates:
+            # CR 707.2 has nothing to copy: the permanent enters as itself,
+            # and untapped - the printed "tapped" belongs to the copy choice
+            # (Echoing Deeps ruling 2023-11-10: "If you choose to have Echoing
+            # Deeps not copy anything, it enters the battlefield untapped.").
             return
         if effect.optional and not game.may(
             entering.controller,
@@ -4464,15 +4670,33 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
         if not chosen:
             return
         exception = effect.copy_exception or CopyException()
-        for built in _become_a_copy_builder(
+        # CR 707.2: "as modified by other copy effects" - a battlefield
+        # candidate that is itself a copy is copied as what it copies. A
+        # graveyard card has no copy effect on it (CR 613.5 is about the
+        # battlefield), so its printed values are its copiable ones.
+        copiable = (
+            copiable_characteristics(chosen[0], game.continuous_effects.active(game))
+            if chosen[0].zone is Zone.BATTLEFIELD
+            else None
+        )
+        built_effects = _become_a_copy_builder(
             until_eot=False,
             name_override=exception.name,
             power_override=exception.power,
             toughness_override=exception.toughness,
             added_types=exception.added_types,
             added_subtypes=exception.added_subtypes,
-        )(entering, game.continuous_effects.tick(), chosen, LayerContext()):
+            added_abilities=exception.added_abilities,
+            copiable_values=copiable,
+        )(entering, game.continuous_effects.tick(), chosen, LayerContext())
+        for built in built_effects:
             game.continuous_effects.add(built)
+            if isinstance(built.modification, BecomeACopy):
+                event.entering_as_copy = (built.modification.name, built.modification.abilities)
+        if effect.tapped:
+            # CR 614.1c: "enter tapped as a copy of" - one replacement, so the
+            # permanent is tapped exactly when the copy choice was taken.
+            event.tapped = True
 
         _create_linked_reflexive_trigger(game, effect, card_name, entering, chosen[0])
 
@@ -4541,9 +4765,22 @@ def _turns_begun_since_foretold(game: "Game", entering: CardState) -> int | None
 
 
 def _self_enters_modifiers(
-    game: "Game", card_state: CardState
+    game: "Game",
+    card_state: CardState,
+    entering_as_copy: tuple[str, tuple[str, ...]] | None = None,
 ) -> list[tuple[str, Apply, str, bool]]:
     """The card's own "enters ..." replacement effects, as things to apply.
+
+    `entering_as_copy` is `ReplaceableEvent.entering_as_copy`: once an "enter
+    as a copy" replacement has applied, CR 614.12 reads "the characteristics
+    of the permanent as it would exist on the battlefield, taking into account
+    replacement effects that have already modified how it enters" - the
+    copied object's own "enters with"/"as ... enters"/"enters tapped" lines,
+    under `copy:` keys, and no longer the printed card's (Mockingbird ruling
+    2024-07-26: "Any 'as [this creature] enters' or '[this creature] enters
+    with' abilities of the copied creature will also work"). A second "enter
+    as a copy" among the copied lines is not offered again: CR 616.1c has
+    already had its one copy effect chosen for this event.
 
     CR 614.12: "Some replacement effects modify how a permanent enters the
     battlefield. Such effects may come from the permanent itself if they affect
@@ -4594,11 +4831,23 @@ def _self_enters_modifiers(
     # `up_face_name` is `None` for an ordinary single-faced card, which keeps
     # every one of its own lines (`effect.face` is also `None` there).
     up_face_name = card_state.up_face_name
-    parsed = [
-        effect
-        for effect in parse_replacement_effects(card_state.card)
-        if up_face_name is None or effect.face in (None, up_face_name)
-    ]
+    key = "self"
+    if entering_as_copy is None:
+        parsed = [
+            effect
+            for effect in parse_replacement_effects(card_state.card)
+            if up_face_name is None or effect.face in (None, up_face_name)
+        ]
+    else:
+        key = "copy"
+        copied_name, copied_lines = entering_as_copy
+        parsed = [
+            effect
+            for effect in _parse_oracle_text(
+                "\n".join(copied_lines), face=None, names=_names_of_name(copied_name)
+            )
+            if effect.kind is not ReplacementKind.ENTERS_AS_COPY
+        ]
     #: (key suffix, what to do, label, CR 616.1c copy-as-it-enters).
     performable: list[tuple[str, Apply, str, bool]] = []
     consumed: set[int] = set()
@@ -4627,7 +4876,7 @@ def _self_enters_modifiers(
                 consumed.add(follower)
                 performable.append(
                     (
-                        f"self:{index}",
+                        f"{key}:{index}",
                         choice,
                         f"{effect.text} {parsed[follower].text}",
                         False,
@@ -4641,7 +4890,7 @@ def _self_enters_modifiers(
             # enters as itself rather than as a guess.
             performable.append(
                 (
-                    f"self:{index}",
+                    f"{key}:{index}",
                     _enters_as_copy(effect, card_state.card.name),
                     effect.text,
                     True,
@@ -4679,7 +4928,7 @@ def _self_enters_modifiers(
                         consumed.add(follower)
                         performable.append(
                             (
-                                f"self:{index}",
+                                f"{key}:{index}",
                                 _sacrifice_any_number_then_enter_with_counters(
                                     restriction,
                                     parsed[follower].counter_kind,
@@ -4696,7 +4945,7 @@ def _self_enters_modifiers(
             if choice_kind is not None:
                 performable.append(
                     (
-                        f"self:{index}",
+                        f"{key}:{index}",
                         _choose_a_quality(choice_kind, card_state.card.name),
                         effect.text,
                         False,
@@ -4786,7 +5035,7 @@ def _self_enters_modifiers(
             or readable_counters
         ):
             performable.append(
-                (f"self:{index}", _apply_self_enters(effect, amount), effect.text, False)
+                (f"{key}:{index}", _apply_self_enters(effect, amount), effect.text, False)
             )
 
     sunburst = _sunburst_modifier(game, card_state, up_face_name)
@@ -5610,7 +5859,9 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
         entering = event.card
-        for suffix, apply, label, copy_as_it_enters in _self_enters_modifiers(game, entering):
+        for suffix, apply, label, copy_as_it_enters in _self_enters_modifiers(
+            game, entering, entering_as_copy=event.entering_as_copy
+        ):
             found.append(
                 ApplicableEffect(
                     key=f"{entering.id}:{suffix}",
