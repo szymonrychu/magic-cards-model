@@ -19542,6 +19542,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     target_attacks_if_able = _parse_target_attacks_if_able_clause(effect_text)
     if target_attacks_if_able is not None:
         return target_attacks_if_able
+    target_blocks_self_if_able = _parse_target_blocks_self_if_able_clause(effect_text)
+    if target_blocks_self_if_able is not None:
+        return target_blocks_self_if_able
     exile_card_then_token_copy = _parse_exile_card_then_token_copy_clause(
         effect_text, for_spell=False
     )
@@ -22474,6 +22477,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     target_attacks_if_able = _parse_target_attacks_if_able_clause(whole)
     if target_attacks_if_able is not None:
         return target_attacks_if_able
+    target_blocks_self_if_able = _parse_target_blocks_self_if_able_clause(whole)
+    if target_blocks_self_if_able is not None:
+        return target_blocks_self_if_able
     created_trigger = _parse_created_trigger_spell_text(whole)
     if created_trigger is not None:
         return created_trigger
@@ -45296,6 +45302,65 @@ def _parse_remove_all_counters_then_that_many_clause(text: str) -> AbilityEffect
         follow = rest_for(amount)
         if follow is not None:
             follow(game, ability)
+
+    return effect
+
+
+#: "<target> blocks <this object> this turn if able." - Sisters of Stone
+#: Death, Tangle Angler, Matsu-Tribe Decoy, Lurking Arynx: a CR 509.1c
+#: requirement on the target naming the ability's own source, lasting the
+#: turn (CR 611.2a). The source's name has been read as "this creature"
+#: by the time the clause gets here, like every other self-reference.
+_TARGET_BLOCKS_SELF_IF_ABLE_RE = re.compile(
+    r"^(?P<phrase>(?:up to one )?target (?:[a-z' ]+ )?creature(?: [a-z' ]+?)?) blocks "
+    r"(?:this creature|this permanent|it) this turn if able\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_blocks_self_if_able_clause(text: str) -> TargetedClause | None:
+    """`_TARGET_BLOCKS_SELF_IF_ABLE_RE`'s shape, or `None`.
+
+    The requirement is granted until end of turn as an ability line on the
+    target (layer 6, CR 613.1f) - "This creature blocks <source name> each
+    combat if able." - that `machines/combat.py`'s CR 509.1c reader counts,
+    the block-side twin of `_parse_target_attacks_if_able_clause`. It names
+    the source as it is now; a source that has already left the battlefield
+    (CR 400.7) is a new object no attacker can be, so nothing is granted.
+    """
+    match = _TARGET_BLOCKS_SELF_IF_ABLE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if isinstance(stack_object, CardState):
+            return
+        source = (
+            game.find_by_id(stack_object.source_id) if stack_object.source_id is not None else None
+        )
+        if (
+            not isinstance(source, CardState)
+            or source.zone is not Zone.BATTLEFIELD
+            or (
+                stack_object.source_stamp is not None
+                and source.zone_change_stamp != stack_object.source_stamp
+            )
+        ):
+            return
+        controller = game.controller_of(stack_object).username
+        line = f"This creature blocks {source.name} each combat if able."
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                _grant_keywords_to(
+                    game,
+                    target,
+                    [line],
+                    "until end of turn",
+                    controller=controller,
+                    source_name=stack_object.source_name,
+                )
 
     return effect
 

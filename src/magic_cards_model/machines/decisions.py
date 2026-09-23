@@ -1607,7 +1607,8 @@ def _ask_declaration(
         )
     if not found:
         # The asker's own legal floor when it gave one (CR 508.1d: a creature
-        # that attacks each combat if able), else "declare nobody".
+        # that attacks each combat if able; CR 509.1c: one that blocks a named
+        # attacker if able), else "declare nobody".
         value = tuple(default) if default else default_answer(decision)
     if not isinstance(value, (list, tuple)):
         raise ValueError(f"{decision.prompt}: the answer is a list of pairs")
@@ -1649,6 +1650,7 @@ def ask_blockers(
     *,
     prompt: str = "declare blockers",
     attackers: tuple[UUID, ...] = (),
+    default: Sequence[tuple[UUID, UUID | str]] = (),
 ) -> list[tuple["CardState | UUID", "CardState | TargetRef | UUID | str"]]:
     """Put CR 703.4j's declaration to one defending player (CR 509.1).
 
@@ -1660,4 +1662,6 @@ def ask_blockers(
     asked in turn order (CR 802.4), and the whole combat is judged as one
     declaration (CR 509.1) once every answer is in.
     """
-    return _ask_declaration(script, DecisionKind.DECLARE_BLOCKERS, player, prompt, attackers)
+    return _ask_declaration(
+        script, DecisionKind.DECLARE_BLOCKERS, player, prompt, attackers, default
+    )

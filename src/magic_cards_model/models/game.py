@@ -4543,6 +4543,7 @@ class Game(EngineModel):
                         username,
                         prompt="declare blockers",
                         attackers=tuple(attackers_by_defender[username]),
+                        default=combat_rules.required_block_declaration(self, username),
                     )
                 )
             )

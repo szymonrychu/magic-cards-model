@@ -1568,6 +1568,9 @@ def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) ->
     refusal = declaration_refusal(game, declared)
     if refusal is not None:
         raise ValueError(refusal)
+    unobeyed = unobeyed_block_requirement(game, declared)
+    if unobeyed is not None:
+        raise ValueError(unobeyed)
 
     for attack in combat.attacks:
         chosen = declared[attack.attacker_id]
@@ -2196,3 +2199,154 @@ def unobeyed_attack_requirement(
             )
         return UnobeyedAttackRequirement(creature, reason)
     return None
+
+
+# -- block requirements (CR 509.1c) ------------------------------------------
+
+#: CR 509.1c's requirement to block one named attacker, as the ability line
+#: `effects._parse_target_blocks_self_if_able_clause` grants until end of turn
+#: ("Target creature blocks this creature this turn if able." - Sisters of
+#: Stone Death, Tangle Angler): "This creature blocks <attacker> each combat
+#: if able." Only a block on an attacker with that name obeys it.
+_BLOCKS_NAMED_EACH_COMBAT_RE = re.compile(
+    r"^(?:this creature|this permanent) blocks (?P<attacker>.+?) each combat if able\.?$",
+    re.IGNORECASE,
+)
+
+
+def _own_block_requirements(game: "Game", creature: CardState) -> list[str]:
+    """The attacker name each block requirement line on `creature`'s computed
+    board (CR 613.5) names - one entry per requirement (CR 509.1c)."""
+    names: list[str] = []
+    for line in game.characteristics_of(creature).abilities:
+        match = _BLOCKS_NAMED_EACH_COMBAT_RE.fullmatch(line.strip())
+        if match is not None:
+            names.append(match.group("attacker").lower())
+    return names
+
+
+def _block_requirements_obeyed(
+    game: "Game", creature: CardState, attacker: CardState | None
+) -> int:
+    """How many of `creature`'s block requirements blocking `attacker`
+    (`None`: not blocking) obeys."""
+    if attacker is None:
+        return 0
+    return sum(
+        1 for name in _own_block_requirements(game, creature) if name == attacker.name.lower()
+    )
+
+
+def _block_requirement_holders(game: "Game") -> list[CardState]:
+    """Every creature a defending player controls that carries a block
+    requirement this combat (CR 509.1c)."""
+    defenders = {defending_player(game, attack.defender) for attack in game.combat.attacks}
+    board = game.computed_board()
+    holders: list[CardState] = []
+    for username in defenders:
+        if username is None:
+            continue
+        for creature in game.permanents_controlled_by(username):
+            if board.of(creature).is_creature and _own_block_requirements(game, creature):
+                holders.append(creature)
+    return holders
+
+
+def _most_obedient_block(game: "Game", creature: CardState) -> tuple[CardState | None, int]:
+    """The attacker `creature` could block (`block_refusal`) that obeys the
+    most of its requirements, and that count - `(None, 0)` when none obeys
+    any."""
+    best: CardState | None = None
+    best_count = 0
+    for attack in game.combat.attacks:
+        attacker = game.find_by_id(attack.attacker_id)
+        if not isinstance(attacker, CardState):
+            continue
+        count = _block_requirements_obeyed(game, creature, attacker)
+        if count > best_count and block_refusal(game, creature, attack) is None:
+            best, best_count = attacker, count
+    return best, best_count
+
+
+def _with_reassigned(
+    declared: Mapping[UUID, list[CardState]], blocker: CardState, attacker_id: UUID
+) -> dict[UUID, list[CardState]]:
+    moved = {
+        attacked: [chosen for chosen in blockers if chosen.id != blocker.id]
+        for attacked, blockers in declared.items()
+    }
+    moved.setdefault(attacker_id, []).append(blocker)
+    return moved
+
+
+def unobeyed_block_requirement(
+    game: "Game", declared: Mapping[UUID, list[CardState]], player: str | None = None
+) -> str | None:
+    """Why the block declaration `declared` (attacker id to its blockers)
+    obeys fewer requirements than it could, or `None` (CR 509.1c).
+
+    A declaration is short of CR 509.1c's maximum when some requirement
+    holder could be moved onto the attacker its requirement names and the
+    declaration would still break no restriction (`block_refusal` for the
+    pair, `declaration_refusal` for the whole - menace, "can't block
+    alone"): that declaration obeys more. Every requirement read here binds
+    only its own creature, so one holder moved at a time finds each shortfall
+    except one that only a second, requirement-free blocker joining could make
+    legal (two blockers on a menace attacker) - a declaration this accepts
+    rather than refuses. No "can't block unless a player pays" cost is
+    modelled, so CR 509.1c's unpaid-cost clause has nothing to exempt.
+    `player` narrows the check to one defending player's own creatures (CR
+    802.4: each declares for their own).
+    """
+    blocking: dict[UUID, UUID] = {
+        blocker.id: attacker_id
+        for attacker_id, blockers in declared.items()
+        for blocker in blockers
+    }
+    for creature in _block_requirement_holders(game):
+        if player is not None and game.controller_of(creature).username != player:
+            continue
+        chosen_id = blocking.get(creature.id)
+        chosen = game.find_by_id(chosen_id) if chosen_id is not None else None
+        obeyed = _block_requirements_obeyed(
+            game, creature, chosen if isinstance(chosen, CardState) else None
+        )
+        best, best_count = _most_obedient_block(game, creature)
+        if best is None or best_count <= obeyed:
+            continue
+        if declaration_refusal(game, _with_reassigned(declared, creature, best.id)) is not None:
+            continue
+        where = "not blocking" if chosen is None else f"blocking {chosen.name}"
+        return (
+            f"{creature.name} blocks {best.name} each combat if able and can block it, "
+            f"so {where} obeys fewer requirements than it could (CR 509.1c)"
+        )
+    return None
+
+
+def required_block_declaration(game: "Game", username: str) -> list[tuple[UUID, UUID]]:
+    """What an unscripted `username` declares instead of nobody: each of
+    their requirement holders blocking the attacker it names (CR 509.1c),
+    kept only while the whole declaration stays legal, repeated until
+    nothing more can be added."""
+    declared: dict[UUID, list[CardState]] = {
+        attack.attacker_id: [] for attack in game.combat.attacks
+    }
+    pairs: list[tuple[UUID, UUID]] = []
+    changed = True
+    while changed:
+        changed = False
+        for creature in _block_requirement_holders(game):
+            if game.controller_of(creature).username != username:
+                continue
+            if any(creature.id == blocker_id for blocker_id, _ in pairs):
+                continue
+            best, _count = _most_obedient_block(game, creature)
+            if best is None:
+                continue
+            trial = _with_reassigned(declared, creature, best.id)
+            if declaration_refusal(game, trial) is None:
+                declared = trial
+                pairs.append((creature.id, best.id))
+                changed = True
+    return pairs

@@ -103,7 +103,11 @@ from .casting import (
     why_cannot_cast_restriction,
     why_mana_cost_unpayable,
 )
-from .combat import ATTACKABLE_PERMANENT_TYPES, unobeyed_attack_requirement
+from .combat import (
+    ATTACKABLE_PERMANENT_TYPES,
+    unobeyed_attack_requirement,
+    unobeyed_block_requirement,
+)
 from .cost import (
     ComponentKind,
     CostComponent,
@@ -1616,10 +1620,15 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
                 if decision.kind is DecisionKind.DECLARE_ATTACKERS
                 else _blocker_actions(game, decision.player)
             )
-        nobody_is_legal = not (
-            decision.kind is DecisionKind.DECLARE_ATTACKERS
-            and game is not None
-            and unobeyed_attack_requirement(game, {}) is not None
+        nobody_is_legal = game is None or (
+            unobeyed_attack_requirement(game, {}) is None
+            if decision.kind is DecisionKind.DECLARE_ATTACKERS
+            else unobeyed_block_requirement(
+                game,
+                {attack.attacker_id: [] for attack in game.combat.attacks},
+                decision.player,
+            )
+            is None
         )
         nobody = [build(decision_option="declare_nobody")] if nobody_is_legal else []
         return [*pair_actions, *nobody]

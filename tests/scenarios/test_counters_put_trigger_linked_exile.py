@@ -225,6 +225,7 @@ def test_every_listed_clause_is_handled_by_the_sweep():
         if clause.kind == "keyword":
             continue
         assert clause.outcome == HANDLED, (clause.text, clause.outcome)
-    sisters = card_support(card("Sisters of Stone Death"))
-    put = [c for c in sisters.clauses if "Put a creature card exiled" in c.text]
-    assert [c.outcome for c in put] == [HANDLED]
+    for clause in card_support(card("Sisters of Stone Death")).clauses:
+        if clause.kind == "keyword":
+            continue
+        assert clause.outcome == HANDLED, (clause.text, clause.outcome)
