@@ -2793,7 +2793,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 46
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 47
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3410,6 +3410,14 @@ class Game(EngineModel):
     decoded stack could hold mid-cast, so the same resolving spell enters the
     battlefield with a different loyalty total - a version-45 snapshot paused
     partway through casting one is refused rather than resolved differently.
+
+    Bumped 46 -> 47: `GameEvent` gained `zone_change_stamp` (CR 400.7e), the
+    dying object's graveyard incarnation, which a dies trigger's "exile it" /
+    "return it" / "put it into its owner's library" now checks before moving
+    the card. `AbilityOnStack.event` persists that event on the stack and in
+    `pending_triggers`, so a version-46 snapshot holding such a trigger would
+    decode with the stamp `None` and resolve as "nothing found" where it used
+    to move the card - it is refused rather than resolved differently.
     """
 
     @model_validator(mode="before")
