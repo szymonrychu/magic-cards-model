@@ -315,30 +315,20 @@ def test_kaitos_zero_draws_nothing_when_no_opponent_has_lost_life():
     assert alice.hand == []
 
 
-# -- Birthing Ritual: still refused, and now on the record ----------------
+# -- Birthing Ritual: its sentence-initial "Then" reads, and it triggers ----
 
 
-def test_birthing_ritual_is_refused_by_its_intervening_if_and_says_so():
+def test_birthing_ritual_triggers_and_reads_its_sentence_initial_then():
     """`At the beginning of your end step, if you control a creature, look at
     the top seven cards of your library. Then you may sacrifice a creature. If
-    you do, you may put a creature card with mana value X or less from among
-    those cards onto the battlefield, where X is 1 plus the sacrificed
-    creature's mana value. Put the rest on the bottom of your library in a
-    random order.`
+    you do, ...`
 
-    The sentence-initial "Then" was never this card's only blocker, and this
-    test says so out loud. Three remain and all three are outside this wave:
-    CR 603.4's intervening *if* clause ("if you control a creature") that
-    nothing reads, CR 118.12's "If you do, ..." consequence clause, and
-    reading a value back off a creature sacrificed **during resolution**
-    rather than as a CR 118.8a cost - `AbilityOnStack.cost_sacrificed_card_
-    ids` records the cost's sacrifice, and there is no equivalent record for
-    one an effect made mid-resolution.
-
-    The first of the three is what stops the ability live: the trigger never
-    reaches the stack at all, and an `InterveningIfNotice` records why. Alice
-    plainly does control a creature, so this is the engine failing closed on
-    text it cannot read, not the condition being false.
+    The sentence-initial "Then" was never this card's only blocker. S05 closed
+    the other three - the intervening *if* ("if you control a creature", CR
+    603.4, `triggers._you_control_a_holds`), the "If you do" consequence (CR
+    118.12) and the sacrificed creature's mana value read while resolving -
+    so the ability now reaches the stack with no `InterveningIfNotice`. The
+    whole resolution is proven in `test_sacrificed_mana_value_bound.py`.
     """
     scenario = (
         Scenario()
@@ -352,13 +342,10 @@ def test_birthing_ritual_is_refused_by_its_intervening_if_and_says_so():
     )
     scenario.start_at(Step.POSTCOMBAT_MAIN)
     scenario.advance()  # the end step begins
+    scenario.game.put_triggers_on_stack()
 
-    notices = scenario.game.intervening_if_notices
-    assert [notice.source_name for notice in notices] == ["Birthing Ritual"]
-    assert notices[0].clause == "you control a creature"
-    # Nothing ran: the library is untouched and no creature was sacrificed.
-    assert len(scenario.player("alice").library) == 7
-    assert scenario.creature("Grizzly Bears", "alice").zone is Zone.BATTLEFIELD
+    assert scenario.game.intervening_if_notices == []
+    assert scenario.stack_names() == ["Birthing Ritual's triggered ability"]
 
 
 def test_birthing_ritual_effect_body_leaves_a_notice_rather_than_nothing():

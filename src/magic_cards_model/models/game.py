@@ -1549,6 +1549,16 @@ class CastRecord(EngineModel):
     id up with `Game.find_by_id`, which still finds it wherever paying the
     cost moved it (a sacrifice to the graveyard, an exile cost to exile)."""
 
+    additional_cost_mana_values: list[float] = Field(default_factory=list)
+    """`additional_cost_cards`' mana values, aligned by position and taken as
+    the record is written (CR 601.2h, the costs just paid) - CR 608.2h's last
+    known information for Eldritch Evolution's "the sacrificed creature's
+    mana value". An id alone is not enough for this one question: a
+    sacrificed token ceases to exist (CR 111.7, CR 704.5d) before the spell
+    resolves, leaving `Game.find_by_id` nothing to find, and a copy's mana
+    value on the battlefield (CR 707.2) is not its card's. Read through
+    `Game.last_known_mana_value`, the same number either way."""
+
     sneak_defender: TargetRef | None = None
     """The player, planeswalker or battle the creature returned to pay this
     spell's sneak cost was attacking (CR 702.190b), copied from `Casting.
@@ -2317,6 +2327,14 @@ class Game(EngineModel):
     announcement is discarded and the next activation announces its own.
     Not persisted: both calls run inside one command, and a command that
     pauses is replayed from its start, `begin_activating` included."""
+    _left_battlefield_characteristics: dict[UUID, Characteristics] = PrivateAttr(
+        default_factory=dict
+    )
+    """What each permanent was as it last left the battlefield (CR 603.10a's
+    look-back), taken by `_note_left_battlefield` while it was still there,
+    so a departure event its move did not stamp with types still carries
+    them - `emit` fills `subject_types`/`subject_subtypes` from here. Not
+    persisted: it is read within the same move that wrote it."""
 
     library_orders_kept: list[LibraryOrderKept] = Field(default_factory=list)
     """Library cards that kept their order through a put onto the bottom or a
@@ -2855,7 +2873,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 54
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 55
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3618,6 +3636,14 @@ class Game(EngineModel):
     CR 604.2), which changes what a version-53 board's cleanup discard
     (CR 514.1) does for a player controlling one; and annihilator (CR
     702.86a) now triggers where it did nothing. Refused instead.
+
+    Bumped 54 -> 55 (S05, putting creature cards onto the battlefield): new
+    persisted fields - `CardState.last_known_mana_value` (CR 608.2h) and
+    `times_transformed` (CR 701.27f), `CastRecord.additional_cost_mana_values`
+    and `AbilityOnStack.cost_sacrificed_mana_values` (a sacrificed cost's
+    mana value, taken as it was paid), and `DelayedEffectSpec`'s new
+    `transform_subject` kind. Activated abilities now also record their
+    `source_stamp` (CR 400.7), which moves `resolution_key`.
     """
 
     @model_validator(mode="before")
@@ -4829,6 +4855,7 @@ class Game(EngineModel):
         gift_promised: bool = False,
         gift_chosen_player: str | None = None,
         additional_cost_cards: list[UUID] | None = None,
+        additional_cost_mana_values: list[float] | None = None,
         is_copy: bool = False,
         sneak_defender: TargetRef | None = None,
     ) -> "CastRecord":
@@ -4889,6 +4916,13 @@ class Game(EngineModel):
             gift_promised=gift_promised,
             gift_chosen_player=gift_chosen_player,
             additional_cost_cards=list(additional_cost_cards or []),
+            additional_cost_mana_values=(
+                list(additional_cost_mana_values)
+                if additional_cost_mana_values is not None
+                else [
+                    self.last_known_mana_value(card_id) for card_id in additional_cost_cards or []
+                ]
+            ),
             card_id=spell.id,
             is_copy=is_copy,
             sneak_defender=sneak_defender,
@@ -6642,6 +6676,7 @@ class Game(EngineModel):
                 gift_promised=original_record.gift_promised,
                 gift_chosen_player=original_record.gift_chosen_player,
                 additional_cost_cards=list(original_record.additional_cost_cards),
+                additional_cost_mana_values=list(original_record.additional_cost_mana_values),
                 is_copy=True,
             )
             return copy
@@ -7356,6 +7391,23 @@ class Game(EngineModel):
         being sacrificed and a spell being countered (CR 603.10e), whose
         subjects have also moved by the time the trigger is worked out.
         """
+        if (
+            event.event
+            in (
+                TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND,
+                TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
+            )
+            and event.subject_types is None
+            and event.subject_id in self._left_battlefield_characteristics
+        ):
+            # CR 603.10a: "When another creature you control leaves the
+            # battlefield" asks what the object was as it left - a bounce or
+            # an exile reaches here with no types stamped on it.
+            left = self._left_battlefield_characteristics[event.subject_id]
+            event = event.model_copy(
+                update={"subject_types": left.types, "subject_subtypes": left.subtypes}
+            )
         with self._id_allocator_scope():
             # CR 702.131b's "any time" and CR 702.131d's "before the game
             # checks ... trigger conditions": a player who has just come to
@@ -8332,6 +8384,10 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        if permanent in self.battlefield:
+            self._left_battlefield_characteristics[permanent.id] = self.characteristics_of(
+                permanent
+            )
         # CR 702.90d / 702.80b: the same last instant for its keywords - an
         # ability of this permanent that deals damage after it has gone (Mogg
         # Fanatic's own sacrifice cost) asks whether it had infect or wither
@@ -10193,6 +10249,8 @@ class Game(EngineModel):
         moved_amount: int | None = None,
         moved_exact: bool = False,
         asked_of: Player | str | None = None,
+        before_choosing: Callable[[list[CardState]], None] | None = None,
+        moved_candidates: Callable[[CardState], bool] | None = None,
     ) -> tuple[list[CardState], list[CardState]]:
         """Look at the top `count` cards and split them into two groups, the
         same CR 608.2d question `scry` and `surveil` already ask (CR 701.22a,
@@ -10299,6 +10357,24 @@ class Game(EngineModel):
         keyed to it - only the question and the knowledge move to `asked_of`.
         `None` (the default) keeps both roles on `player`, exactly as every
         caller before this parameter existed already behaved.
+
+        `before_choosing` runs after the look and before the split question,
+        for an instruction printed *between* the two: Birthing Ritual's "look
+        at the top seven cards of your library. Then you may sacrifice a
+        creature. If you do, you may put a creature card with mana value X or
+        less from among those cards" (CR 608.2c: in the order written). It is
+        handed the looked-at cards, which stay where they are while it runs.
+
+        `moved_candidates` narrows which looked-at cards may be `moved` at
+        all - "a creature card with mana value 4 or less from among them"
+        (Aang, at the Crossroads), "up to two creature cards with mana value
+        3 or less" (Collected Company). Given it, the question is a
+        `CHOOSE_CARDS` over only the cards that qualify, so a client is never
+        offered one it may not pick (CR 608.2d), `moved_amount`/`moved_exact`
+        bound how many, and nothing is asked when none qualifies or when the
+        exact count leaves no choice. It is read after `before_choosing`, so a
+        bound that depends on what that did (X from the sacrificed creature)
+        is current.
         """
         if isinstance(player, str):
             player = self.player(player)
@@ -10311,7 +10387,19 @@ class Game(EngineModel):
             return [], []
         amount = len(looked_at) if moved_amount is None else min(moved_amount, len(looked_at))
         pending_looks = self._look_before_choosing(chooser, looked_at, source)
-        if moved_exact and amount == len(looked_at):
+        if before_choosing is not None:
+            before_choosing(looked_at)
+        if moved_candidates is not None:
+            answer = self._choose_moved_candidates(
+                chooser,
+                [state for state in looked_at if moved_candidates(state)],
+                moved_amount=moved_amount,
+                moved_exact=moved_exact,
+                prompt=prompt or f"choose among the top {count} card(s)",
+                source=source,
+                source_id=source_id,
+            )
+        elif moved_exact and amount == len(looked_at):
             # CR 608.2d: with the library this short, every card looked at is
             # the only legal `moved` - nothing is left to choose, so nothing
             # is asked.
@@ -10343,6 +10431,41 @@ class Game(EngineModel):
             if state in library:
                 library.remove(state)
         return moved, rest
+
+    def _choose_moved_candidates(
+        self,
+        chooser: Player,
+        eligible: list[CardState],
+        *,
+        moved_amount: int | None,
+        moved_exact: bool,
+        prompt: str,
+        source: str | None,
+        source_id: str | None,
+    ) -> CardSplit:
+        """`look_at_top_and_split`'s question when only some looked-at cards
+        may move: a `CHOOSE_CARDS` over `eligible` alone (CR 608.2d - "the
+        player can't choose an option that's illegal"), asked only when there
+        is a choice left to make."""
+        most = len(eligible) if moved_amount is None else min(moved_amount, len(eligible))
+        if most <= 0:
+            return CardSplit()
+        if moved_exact and most == len(eligible):
+            return CardSplit(moved=tuple(state.id for state in eligible))
+        chosen = self.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=chooser.username,
+                prompt=prompt,
+                source=source,
+                source_id=source_id,
+                amount=most,
+                exact=moved_exact,
+                cards=tuple(state.id for state in eligible),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        return CardSplit(moved=tuple(chosen))
 
     def ask_library_bottom_order(
         self,
@@ -11720,6 +11843,26 @@ class Game(EngineModel):
                     if state.id == card_id:
                         return state
         return None
+
+    def last_known_mana_value(self, card: "CardState | UUID") -> float:
+        """An object's mana value as CR 608.2h reads it (CR 202.3): the
+        computed one while it is still on the battlefield (a copy has the
+        copied mana cost, CR 707.2), the snapshot `CardState.last_known_mana_
+        value` took as it left when that differed, and otherwise its own.
+
+        An id `find_by_id` no longer finds - a token that has ceased to exist
+        (CR 704.5d) - reads 0: a caller that needs such a token's value takes
+        it while the token is still there, as `note_cast` and
+        `activate_ability` do for the permanents a cost sacrificed.
+        """
+        state = self.find_by_id(card) if isinstance(card, UUID) else card
+        if state is None:
+            return 0.0
+        if state.zone is Zone.BATTLEFIELD:
+            return self.characteristics_of(state).mana_value
+        if state.last_known_mana_value is not None:
+            return state.last_known_mana_value
+        return state.mana_value
 
     def find_ability_by_id(self, ability_id: UUID) -> AbilityOnStack | None:
         """An activated or triggered ability on the stack, by id (CR 113.1c, 405.1).
@@ -18707,6 +18850,10 @@ class Game(EngineModel):
                 ability=ability,
                 source_id=permanent.id,
                 source_name=permanent.name,
+                # CR 400.7: which object the source was as it was activated,
+                # so "return this creature to its owner's hand" leaves a
+                # permanent that has since left and come back alone.
+                source_stamp=permanent.zone_change_stamp,
                 controller=controller,
                 targets=[TargetRef.coerce(target) for target in targets or []],
                 x_value=x_value,
@@ -18725,6 +18872,12 @@ class Game(EngineModel):
                     if paid is not None
                     else ((exiled_for_cost.id,) if exiled_for_cost is not None else ())
                 ),
+            )
+            # CR 608.2h: what each sacrificed permanent's mana value was, taken
+            # now - a sacrificed token is still in the graveyard, and ceases to
+            # exist (CR 704.5d) before this ability resolves.
+            on_stack.cost_sacrificed_mana_values = tuple(
+                self.last_known_mana_value(card_id) for card_id in on_stack.cost_sacrificed_card_ids
             )
             self.stack.append(on_stack)
             # CR 602.2b's target announcement has settled (CR 601.2c, imported

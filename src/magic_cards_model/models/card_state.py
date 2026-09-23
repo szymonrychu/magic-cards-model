@@ -680,6 +680,17 @@ class CardState(EngineModel):
     every other zone its front face's characteristics only, and `move_to`
     clears the flag on the way out.
     """
+    times_transformed: int = 0
+    """How many times `transform` has actually turned this object over - the
+    count CR 701.27f compares: "If a delayed triggered ability of a permanent
+    tries to transform that permanent, the permanent does so only if it
+    hasn't transformed or converted since that delayed triggered ability was
+    created." A delayed trigger records this number as it is created
+    (`machines/delayed.TransformSubject`) and transforms only while it is
+    unchanged, so two "transform this at the beginning of the next upkeep"
+    triggers from one board wipe turn the permanent over once, not back.
+    Only ever incremented; a zone change is caught by the delayed trigger's
+    own `expected_stamp` (CR 400.7), not by resetting this."""
     land_face_played: str | None = None
     """The name of the face this permanent entered as, when it was played as
     the land face of a modal double-faced card (CR 712.12).
@@ -1030,6 +1041,14 @@ class CardState(EngineModel):
     last_known_toughness: int | None = None
     """The toughness this object had the last time it left the battlefield
     (CR 608.2h). `last_known_power`'s other half, taken at the same instant."""
+
+    last_known_mana_value: float | None = None
+    """The mana value this object had the last time it left the battlefield
+    (CR 608.2h), when that differed from the card's own - a Clone that
+    entered as a copy of Memnite had Memnite's mana cost (CR 707.2), so a
+    sacrificed Clone's "sacrificed creature's mana value" is 0, not the 4 its
+    own card prints. `None` when the card's own `mana_value` already is the
+    answer, taken with `last_known_power`."""
 
     last_known_colors: tuple[Color, ...] | None = None
     """The colours this object had the last time it left the battlefield
@@ -2234,6 +2253,7 @@ class CardState(EngineModel):
         if Type.INSTANT in target_types or Type.SORCERY in target_types:
             return  # CR 701.27d, CR 712.10
         self.transformed = not self.transformed
+        self.times_transformed += 1
 
     def turn_face_up(self) -> None:
         """Turn this object face up, restoring the card's own characteristics.
@@ -2331,6 +2351,10 @@ class CardState(EngineModel):
         grant = self._off_battlefield_grant
         self.last_known_types = None if types == self._types_with(grant) else types
         self.last_known_subtypes = None if subtypes == self._subtypes_with(grant) else subtypes
+        # CR 608.2h for "the sacrificed creature's mana value": a copy effect
+        # (CR 707.2) is the one thing that makes it differ from the card's own.
+        mana_value = None if computed is None else computed.mana_value
+        self.last_known_mana_value = None if mana_value == self.mana_value else mana_value
 
     def move_to(self, zone: Zone) -> None:
         """Move to another zone, resetting the state a card loses on the way.
@@ -2361,6 +2385,7 @@ class CardState(EngineModel):
             # cannot be taken from here.
             self.last_known_power = None
             self.last_known_toughness = None
+            self.last_known_mana_value = None
             self.last_known_colors = None
             self.last_known_types = None
             self.last_known_subtypes = None

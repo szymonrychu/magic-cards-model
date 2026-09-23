@@ -3829,3 +3829,27 @@ Awakened Skyclave is on the battlefield, it's a land" is the opposite zone
 condition). As with D1 (Bound), the reader is proven on the listed card and
 the widened readers on the second printings above, each a different
 zone/filter pair.
+
+## S05: putting creature cards onto the battlefield
+
+| Mechanic | Reader | Reported card(s) | Off-pool proof | Test |
+|---|---|---|---|---|
+| "put any number of `<type>` cards from your hand onto the battlefield" (CR 107.1c) | `_parse_put_permanent_card_from_hand_clause` | Ghalta, Stampede Tyrant | Last March of the Ents | `test_put_from_hand_onto_battlefield.py` |
+| "Draw cards equal to `<count>`." alone | `_parse_draw_cards_equal_to_count_clause` | - | Last March of the Ents | `test_put_from_hand_onto_battlefield.py` |
+| look at the top N, [you may] put `<quantity>` `<description>` from among them onto the battlefield, rest on the bottom in any/a random order | `_merge_look_top_put_onto_battlefield_clauses`, `Game.look_at_top_and_split(before_choosing=, moved_candidates=)` | Aang, at the Crossroads | Collected Company | `test_look_at_top_put_onto_battlefield.py` |
+| the same with a "Then you may sacrifice `<x>`. If you do, ... X or less, where X is N plus the sacrificed `<type>`'s mana value" between look and put | same merge | Birthing Ritual | Enigmatic Incarnation (the resolve-time sacrifice and its mana value) | `test_sacrificed_mana_value_bound.py` |
+| search bounded by the sacrificed permanent's mana value, equality or "X or less, where X is N plus ..." (CR 608.2h last known information) | `_sacrificed_mana_value_search`, `_parse_search_mv_equal_to_sacrificed_clause`, `_parse_conditional_sacrifice_clause` | Eldritch Evolution | Prime Speaker Vannifar (activation cost), Enigmatic Incarnation | `test_sacrificed_mana_value_bound.py` |
+| a sacrificed cost's mana value kept as it was paid | `CastRecord.additional_cost_mana_values`, `AbilityOnStack.cost_sacrificed_mana_values`, `CardState.last_known_mana_value`, `Game.last_known_mana_value` | Eldritch Evolution | Prime Speaker Vannifar | token and Clone-copy corner cases in `test_sacrificed_mana_value_bound.py` |
+| "Exile `<this spell's name>`." as a spell's last sentence | `effect_for` / `_strip_self_exile_sentence` / `_then_exile_self` | Eldritch Evolution | Flood of Recollection | `test_spell_exiles_itself.py` |
+| "[each player mills|mill] N cards. [Then ]put a `<description>` card from among the milled cards onto the battlefield[ under your control]" - mandatory single put, even/odd mana value, Oxford-comma lists | `_mill_then_may_take_from_milled_runner` | Gyruda, Doom of Depths | Fetch Quest (Bramble Familiar) | `test_milled_put_onto_battlefield.py` |
+| "transform `<this>` at the beginning of the next upkeep" - delayed trigger, CR 603.7c and CR 701.27f guards | `_parse_transform_self_at_next_step_clause`, `delayed.TransformSubject`, `CardState.times_transformed` | Aang, at the Crossroads | Archangel Avacyn | `test_delayed_transform_next_upkeep.py` |
+| "When another creature you control leaves the battlefield" and "a non-`<Subtype>` creature ... dies" trigger conditions | `triggers.condition_matches` (LTB widening, `_excluded_subtype_absent`), `Game.emit` fills departure types | Aang, at the Crossroads | Archangel Avacyn | `test_delayed_transform_next_upkeep.py` |
+| "When this creature transforms into `<face>`, ..." (CR 701.27e) and "it deals N damage to each other `<type>` and each opponent" | `TriggerEvent.TRANSFORMS`, `abilities._transforms_into_face_boundary`, `_parse_damage_each_other_type_and_each_opponent_clause` | - | Archangel Avacyn // Avacyn, the Purifier | `test_transforms_into_trigger.py` |
+| "Return this creature to its owner's hand." | `_parse_return_self_to_owners_hand_clause` | - | Bramble Familiar | `test_return_self_to_hand_ability.py` |
+| intervening "if you control a `<quality>`" | `triggers._you_control_a_holds` | Birthing Ritual | - | `test_sacrificed_mana_value_bound.py` |
+
+Still not modelled: permanents put onto the battlefield by one instruction
+enter one at a time rather than simultaneously (CR 603.6a's "each time an
+event puts one or more permanents onto the battlefield"), so an entering
+"whenever another creature enters" ability only sees the ones after it -
+engine-wide, shared with every other multi-put reader.

@@ -458,6 +458,37 @@ class TapSubject(DelayedEffectSpecBase):
             permanent.tap_if_untapped()
 
 
+class TransformSubject(DelayedEffectSpecBase):
+    """ "Transform `<this>` at the beginning of the next upkeep" - Aang, at the
+    Crossroads' and Archangel Avacyn's own delayed trigger (CR 603.7,
+    CR 701.27a).
+
+    Two guards, both from the rules rather than from caution:
+
+    - CR 603.7c: the permanent must still be the object the trigger was
+      created about - `still_affects` refuses one that left the battlefield,
+      even if it has since come back (CR 400.7).
+    - CR 701.27f: "If a delayed triggered ability of a permanent tries to
+      transform that permanent, the permanent does so only if it hasn't
+      transformed or converted since that delayed triggered ability was
+      created." `times_transformed` is `CardState.times_transformed` as it
+      was at creation, so a second trigger from the same board wipe finds the
+      permanent already turned over and leaves it alone rather than turning
+      it back.
+    """
+
+    kind: Literal["transform_subject"] = "transform_subject"
+    times_transformed: int = 0
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import transform_permanent
+
+        permanent = trigger.still_affects(game)
+        if permanent is None or permanent.times_transformed != self.times_transformed:
+            return
+        transform_permanent(game, permanent)
+
+
 def _drop_sibling_triggers(game: "Game", trigger: "DelayedTrigger") -> None:
     """Drop every sibling delayed trigger once one of them has fired - CR
     603.7a's one-shot spends the whole ability, not just the one event that
@@ -1276,6 +1307,7 @@ DelayedEffectSpec = Annotated[
     | DrawACardForController
     | DestroySubject
     | TapSubject
+    | TransformSubject
     | ReturnEarthbentLand
     | DevourerOfDestinyFirstUpkeep
     | StaticPrisonReturn

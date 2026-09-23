@@ -755,6 +755,14 @@ class AbilityOnStack(EngineModel):
     A tuple rather than a single id because a printed cost may sacrifice more
     than one permanent; every printing in the pool sacrifices exactly one."""
 
+    cost_sacrificed_mana_values: tuple[float, ...] = ()
+    """`cost_sacrificed_card_ids`' mana values, aligned by position and taken
+    by `Game.activate_ability` as this object is created - CR 608.2h's last
+    known information for Prime Speaker Vannifar's "the sacrificed
+    creature's mana value". The id alone cannot answer it once a sacrificed
+    token has ceased to exist (CR 704.5d), which happens before this ability
+    resolves; see `CastRecord.additional_cost_mana_values`, its spell twin."""
+
     unless_payment: "CostPayment | None" = Field(default=None, repr=False)
     """The `machines/cost.CostPayment` made for an "unless that player pays" clause.
 
@@ -1497,6 +1505,22 @@ def _required_entering_subtype(condition: str) -> str | None:
     return whole if whole in BASIC_LAND_TYPES else subtype
 
 
+#: "a non-Angel creature you control dies" (Archangel Avacyn) - CR 205.3's
+#: subtype, negated by a hyphenated "non-" (the capital is Oracle's own
+#: subtype capitalisation, so "nontoken"/"noncreature" never match).
+_NON_SUBTYPE_WORD = re.compile(r"\bnon-(?P<subtype>[A-Z][A-Za-z]*)\b")
+
+
+def _excluded_subtype_absent(subtypes: tuple[str, ...] | None, condition: str) -> bool:
+    """Whether the subject lacks every subtype a "non-`<Subtype>`" word in
+    `condition` excludes (CR 205.3), read off the event's up-face-aware
+    `subject_subtypes` the way `_subtype_matches` reads the required one."""
+    excluded = {match.group("subtype").lower() for match in _NON_SUBTYPE_WORD.finditer(condition)}
+    if not excluded:
+        return True
+    return not any(word.lower() in excluded for word in subtypes or ())
+
+
 def _subtype_matches(subtypes: tuple[str, ...] | None, subtype: str | None) -> bool:
     """Whether `subtypes` names `subtype` (CR 712.8f). See `_types_match`'s
     docstring for why this reads `GameEvent.subject_subtypes`, not a raw
@@ -2152,6 +2176,7 @@ def condition_matches(
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)
             and _subtype_matches(event.subject_subtypes, subtype)
+            and _excluded_subtype_absent(event.subject_subtypes, condition)
         ):
             return False
         # CR 111.1's token, read the identical way `ENTERS_THE_BATTLEFIELD`
@@ -2172,12 +2197,33 @@ def condition_matches(
         power_or_toughness = _power_or_toughness_qualifier_holds(game, condition, event.subject_id)
         return power_or_toughness is None or power_or_toughness
 
+    if ability.event is TriggerEvent.TRANSFORMS:
+        # CR 701.27e: "this creature transforms into `<face>`" - this object
+        # turned over, and the face now up is the one named.
+        named = lowered.split("transforms into", 1)[1].strip()
+        return (
+            mine
+            and event.subject_id == source.id
+            and (source.up_face_name or source.name or "").lower() == named
+        )
+
     if ability.event is TriggerEvent.LEAVES_THE_BATTLEFIELD:
-        # CR 603.6c: only the self-referential form prints in this pool
-        # ("When this creature leaves the battlefield", Thought-Knot Seer) -
-        # a pure departure condition naming no destination at all, so nothing
-        # here reads an "another"/"other" widening the way `DIES` does.
-        return mine and event.subject_id == source.id
+        # CR 603.6c: "When this creature leaves the battlefield" (Thought-
+        # Knot Seer) is the source's own departure. "When another creature
+        # you control leaves the battlefield" (Aang, at the Crossroads) is
+        # anyone else's, read the way `DIES` reads its own "another"/"other"
+        # widening (CR 603.10a: a leaves-the-battlefield ability looks back
+        # at the object as it last existed, which the event carries).
+        if event.subject_id == source.id:
+            return mine
+        if mine and "another" not in lowered and "other" not in lowered:
+            return False
+        return (
+            _controller_clause_holds(condition, controller, event.subject_controller)
+            and _types_match(event.subject_types, condition)
+            and _subtype_matches(event.subject_subtypes, _required_subtype(condition))
+            and _excluded_subtype_absent(event.subject_subtypes, condition)
+        )
 
     if ability.event is TriggerEvent.ATTACKS:
         batch = batched_attackers(game, condition, controller)
@@ -3582,6 +3628,21 @@ def _opponent_cast_color_holds(game: "Game", clause: str, source: CardState) -> 
     return game.condition_holds(controller, clause, source)
 
 
+def _you_control_a_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """Birthing Ritual's own intervening if: "if you control a creature" -
+    the "you control a(n) `<quality>`" board fact `Game.condition_holds`
+    already reads for Flame of Anor's trailing "if" (`_CONDITION_CONTROLS_A`),
+    asked by CR 603.4 as the event occurs and again by CR 608.2a as the
+    ability resolves. `None` for any other clause, and for a quality
+    `condition_is_readable` refuses, so those still fail closed."""
+    from ..models.game import _CONDITION_CONTROLS_A, condition_is_readable
+
+    if _CONDITION_CONTROLS_A.fullmatch(clause) is None or not condition_is_readable(clause):
+        return None
+    controller = source.controller or game.active_player.username
+    return game.condition_holds(controller, clause, source)
+
+
 def intervening_if_holds(
     game: "Game",
     ability: TriggeredAbility,
@@ -3917,6 +3978,10 @@ def intervening_if_holds(
     opponent_cast_color = _opponent_cast_color_holds(game, clause, source)
     if opponent_cast_color is not None:
         return opponent_cast_color
+
+    you_control_a = _you_control_a_holds(game, clause, source)
+    if you_control_a is not None:
+        return you_control_a
 
     return _fail_closed(game, ability, source)
 

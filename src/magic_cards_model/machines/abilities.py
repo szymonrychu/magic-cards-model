@@ -1487,6 +1487,13 @@ class TriggerEvent(StrEnum):
     #: raises a second one of these. `GameEvent.amount` carries the N (or X)
     #: it became monstrous with (CR 701.37c).
     BECOMES_MONSTROUS = "becomes_monstrous"
+    #: CR 701.27e: "Some triggered abilities trigger when an object
+    #: 'transforms into' an object with a specified characteristic. Such an
+    #: ability triggers if the object either transforms or converts ... and
+    #: has the specified characteristic immediately after it does so."
+    #: `machines/effects.transform_permanent` raises it, once the permanent
+    #: has actually turned over.
+    TRANSFORMS = "transforms"
 
 
 class CostKind(StrEnum):
@@ -3127,6 +3134,26 @@ def _split_compound_condition(word: TriggerWord, condition: str) -> list[tuple[T
     return halves
 
 
+#: "this `<noun>` transforms into " - CR 701.27e's trigger condition, whose
+#: named face is matched whole by `_transforms_into_face_boundary`.
+_TRANSFORMS_INTO_LEAD = re.compile(r"^this [a-z]+ transforms into ", re.IGNORECASE)
+
+
+def _transforms_into_face_boundary(body: str, face: str) -> tuple[str, str] | None:
+    """`(condition, effect)` for "this `<noun>` transforms into `<face>`,
+    `<effect>`" when `<face>` is the name of the face the ability is printed
+    on (Avacyn, the Purifier's own "When this creature transforms into
+    Avacyn, the Purifier, it deals 3 damage ..."), else `None`."""
+    lead = _TRANSFORMS_INTO_LEAD.match(body)
+    if lead is None or not face:
+        return None
+    named = body[lead.end() :]
+    if not named.lower().startswith(f"{face.lower()},"):
+        return None
+    end = lead.end() + len(face)
+    return body[:end].strip(), body[end + 1 :].strip()
+
+
 def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
     """The triggered ability `text` prints, as one `TriggeredAbility` per
     trigger condition (CR 603.1b) - every entry shares the printed `text`,
@@ -3145,7 +3172,15 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
     bending_list_boundary = (
         None if type_list_boundary is not None else _BENDING_LIST_CONDITION_BOUNDARY.match(body)
     )
-    if type_list_boundary is not None:
+    transforms_into_boundary = _transforms_into_face_boundary(body, common.get("face") or "")
+    if transforms_into_boundary is not None:
+        # CR 701.27e's "transforms into `<face>`": the face's own name may
+        # hold a comma (Avacyn, the Purifier), which the plain top-level
+        # comma split below would cut through.
+        condition, rest = transforms_into_boundary
+        if not rest:
+            return None
+    elif type_list_boundary is not None:
         condition = type_list_boundary.group("condition")
         rest = body[type_list_boundary.end() :].strip()
         if not rest:
@@ -3233,6 +3268,8 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     lowered = condition.lower()
     if lowered.startswith("the beginning of"):
         return TriggerEvent.BEGINNING_OF_STEP
+    if _TRANSFORMS_INTO_LEAD.match(lowered):
+        return TriggerEvent.TRANSFORMS
     # Before the "becomes blocked" test below, which would otherwise claim
     # "becomes the target of ..." for CR 509.
     if "becomes the target" in lowered:

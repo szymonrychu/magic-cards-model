@@ -484,6 +484,32 @@ def test_a_snapshot_written_before_s03_is_refused() -> None:
         Game.model_validate(dumped)
 
 
+#: The version stamped before S05 (putting creature cards onto the
+#: battlefield): `CardState.last_known_mana_value`/`times_transformed`,
+#: `CastRecord.additional_cost_mana_values`, `AbilityOnStack.cost_sacrificed_
+#: mana_values` and `DelayedEffectSpec`'s `transform_subject` kind are new
+#: persisted fields.
+_SCHEMA_VERSION_BEFORE_S05_PUT_ONTO_BATTLEFIELD = 54
+
+
+def test_the_s05_bump_moved_the_version_past_fifty_four() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_S05_PUT_ONTO_BATTLEFIELD
+
+
+def test_a_snapshot_written_before_the_s05_bump_is_refused() -> None:
+    """A version-54 dump has no mana value recorded for a sacrificed cost
+    and no transform count, so an Eldritch Evolution or a pending Aang delayed
+    trigger in it would resolve differently decoded here - refused instead."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_S05_PUT_ONTO_BATTLEFIELD
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_S05_PUT_ONTO_BATTLEFIELD}",
+    ):
+        Game.model_validate(dumped)
+
+
 def _a_game_with_a_pending_dies_trigger_and_a_cant_be_countered_grant() -> Game:
     """A real board carrying both of T5's/T9's own reachable-but-unbumped
     state at once, played to the point that matters rather than hand-built:
