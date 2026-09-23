@@ -30850,71 +30850,107 @@ def _merge_damage_target_then_reveal_choose_discard_clauses(
 #: "`<base>`. [`<ability word>` - ]If `<condition>`, instead `<alternative>`."
 #: - Gruesome Discovery: "Target player discards two cards. / Morbid - If a
 #: creature died this turn, instead that player reveals their hand, you
-#: choose two cards from it, then that player discards those cards." - or,
-#: the trailing order Twinned Vision prints instead of the leading one:
-#: "Draw a card. If this spell wasn't cast from your hand, draw two cards
-#: instead." CR 614.1a: "Effects that use the word 'instead' are replacement
-#: effects" - here the alternative replaces the base instruction whole,
-#: whichever end of the sentence "instead" sits at. The ability word (CR
-#: 207.2c) has no rules meaning and is only skipped.
+#: choose two cards from it, then that player discards those cards." - the
+#: trailing order Twinned Vision prints instead of the leading one: "Draw a
+#: card. If this spell wasn't cast from your hand, draw two cards instead." -
+#: or CR 614.1a's other word order, the condition itself printed last:
+#: "`<alternative>` instead if `<condition>`." (Galvanic Blast: "Galvanic
+#: Blast deals 2 damage to any target. Metalcraft \u2014 Galvanic Blast deals 4
+#: damage instead if you control three or more artifacts."; Brimstone
+#: Volley, Morbid, the same shape). CR 614.1a: "Effects that use the word
+#: 'instead' are replacement effects" - here the alternative replaces the
+#: base instruction whole, whichever end of the sentence "instead" and "if"
+#: sit at. The ability word (CR 207.2c) has no rules meaning and is only
+#: skipped - `_strip_non_effect_preamble` already removes it from `whole`
+#: before this ever runs, but the label is kept optional here too (not
+#: required) in case it reaches this some other way, unstripped.
 _CONDITION_INSTEAD_RE = re.compile(
     r"^(?P<base>[^.]+)\.\s*(?:[a-z][a-z' ]*?\s+[\u2014-]\s+)?"
-    r"if (?P<condition>[^,]+), "
-    r"(?:instead (?P<alternative_leading>.+?)|(?P<alternative_trailing>.+?) instead)\.?$",
+    r"(?:"
+    r"if (?P<condition_leading>[^,]+), "
+    r"(?:instead (?P<alternative_leading>.+?)|(?P<alternative_trailing>.+?) instead)"
+    r"|"
+    r"(?P<alternative_elided>.+?) instead if (?P<condition_elided>[^.]+)"
+    r")\.?$",
     re.IGNORECASE,
 )
 
+#: The trailing "to `<target phrase>`" an elided alternative leaves out,
+#: read off the *base* clause and spliced back onto the alternative before
+#: it is parsed again - Galvanic Blast's own "deals 4 damage instead if you
+#: control three or more artifacts" names no target of its own at all.
+#: CR 601.2c fixes the spell's target once, at announcement; CR 614.1a's
+#: alternative is a replacement for the base *instruction*, not a fresh one
+#: with a target of its own, so the same phrase the base clause printed is
+#: exactly what the alternative means too.
+_TRAILING_TARGET_PHRASE_RE = re.compile(
+    r"\bto (?P<phrase>any target|(?:up to [^,.]+ )?target [^,.]+)\.?$", re.IGNORECASE
+)
 
-def _not_cast_from_hand(game: "Game", spell: CardState) -> bool:
-    """Twinned Vision's own "this spell wasn't cast from your hand" (CR
-    601.2b's own "wherever it is"), read off `Game.cast_record(spell)`.
 
-    `origin_zone` alone already answers this correctly for a copy - CR 707.10
-    a copy "isn't cast", so `copy_spell` always writes `Zone.STACK`, never
-    `Zone.HAND` - but the negation is written to check `is_copy` explicitly
-    rather than lean on `Zone.STACK != Zone.HAND` holding by coincidence: a
-    copy genuinely "wasn't cast from your hand" (it wasn't cast at all), and
-    this is the shape (a negated "cast from" read) that CR 707.10's own
-    reasoning has to be spelled out for, not inferred from a field default.
+def _resolve_instead_alternative(base_text: str, alternative_text: str) -> Effect | None:
+    """CR 614.1a's alternative, read as its own instruction - or, when it
+    elides the target phrase the base clause already announced, with that
+    phrase spliced onto it first (`_TRAILING_TARGET_PHRASE_RE`). `None` only
+    when neither reading works, which - CR 608.2c - fails the whole card
+    closed rather than running half of it.
     """
-    record = game.cast_record(spell)
-    return record.is_copy or record.origin_zone is not Zone.HAND
-
-
-#: The conditions `_CONDITION_INSTEAD_RE` reads, each asked of the game and
-#: the resolving spell itself as it resolves. Morbid's "a creature died this
-#: turn" (CR 700.4) reads `Game.creatures_died_this_turn`; Twinned Vision's
-#: own "this spell wasn't cast from your hand" reads `_not_cast_from_hand`
-#: above. A condition not listed leaves the whole card unread.
-_INSTEAD_CONDITIONS: dict[str, Callable[["Game", "CardState"], bool]] = {
-    "a creature died this turn": lambda game, spell: game.creatures_died_this_turn > 0,
-    "this spell wasn't cast from your hand": _not_cast_from_hand,
-    "this spell wasn't cast from hand": _not_cast_from_hand,
-}
+    alternative = parse_mixed_effect_for_spell(alternative_text)
+    if alternative is not None:
+        return alternative
+    if re.search(r"\btarget\b", alternative_text, re.IGNORECASE):
+        # Already names its own target (or lack of one, "any target") - a
+        # failure to parse here is a real gap, not an elision, and splicing
+        # a second "to <phrase>" onto it would only make the text worse.
+        return None
+    tail = _TRAILING_TARGET_PHRASE_RE.search(base_text.strip())
+    if tail is None:
+        return None
+    spliced = f"{alternative_text.strip().rstrip('.')} to {tail.group('phrase')}"
+    return parse_mixed_effect_for_spell(spliced)
 
 
 def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     """`_CONDITION_INSTEAD_RE`'s shape: the base instruction, or - when the
     condition holds as the spell resolves - the alternative in its place.
 
+    The condition is read by `Game.condition_holds`, not a private table -
+    `condition_is_readable` gates the parse at *parse* time, mirroring
+    exactly what `condition_holds` would answer at resolution, so a
+    condition this engine does not read leaves the whole card unread (CR
+    608.2c) rather than the parse quietly assuming it false. At resolution,
+    the rare case `condition_holds` itself still answers `None` despite the
+    shape being readable (an inner count or quality word it does not know)
+    is recorded as a `ConditionalClauseNotice`, the same class a modal
+    instruction's own unreadable alternative condition already uses, rather
+    than silently treated as false either.
+
     The alternative may name "that player", the player the base sentence
     targeted, which `_merge_reveal_hand_choose_discard_clauses` reads with
-    `anaphoric_revealer`. Both halves must read whole, or the card is left
-    unread rather than half-run (CR 608.2c).
+    `anaphoric_revealer`; or it may elide the base clause's own target
+    phrase, which `_resolve_instead_alternative` reads. Both halves must
+    read whole, or the card is left unread rather than half-run.
     """
+    from ..models.game import condition_is_readable
+
     whole = " ".join(_strip_non_effect_preamble(effect_text).split())
     match = _CONDITION_INSTEAD_RE.fullmatch(whole)
     if match is None:
         return None
-    condition = _INSTEAD_CONDITIONS.get(match.group("condition").strip().lower())
-    if condition is None:
+    condition_text = (match.group("condition_leading") or match.group("condition_elided")).strip()
+    if not condition_is_readable(condition_text):
         return None
-    base = parse_mixed_effect_for_spell(match.group("base"))
+    base_text = match.group("base")
+    base = parse_mixed_effect_for_spell(base_text)
     if base is None:
         return None
-    alternative_text = match.group("alternative_leading") or match.group("alternative_trailing")
+    alternative_text = (
+        match.group("alternative_leading")
+        or match.group("alternative_trailing")
+        or match.group("alternative_elided")
+    )
     assert alternative_text is not None
-    alternative: Effect | None = parse_mixed_effect_for_spell(alternative_text)
+    alternative = _resolve_instead_alternative(base_text, alternative_text)
     if alternative is None:
         # "that player reveals their hand, you choose two cards from it, then
         # that player discards those cards" is one CR 608.2c series of
@@ -30931,7 +30967,16 @@ def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     assert alternative is not None
 
     def effect(game: "Game", spell: CardState) -> None:
-        chosen = alternative if condition(game, spell) else base
+        controller = game.controller_of(spell).username
+        held = game.condition_holds(controller, condition_text, spell)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=spell.id, source_name=spell.card.name, text=whole
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            held = False
+        chosen = alternative if held else base
         chosen(game, spell)
 
     return effect
@@ -33755,6 +33800,91 @@ def _parse_draw_if_you_control_color_permanent_clause(clause: str) -> TargetedCl
     return effect
 
 
+#: A plain CR 608.2c conditional instruction with no "instead" anywhere - a
+#: board condition read by `Game.condition_holds`, in either printed word
+#: order: the condition first, "If `<condition>`, `<consequence>`." (Giant's
+#: Ire: "Giant's Ire deals 4 damage to target player or planeswalker. If you
+#: control a Giant, draw a card." - once `_CLAUSE_SEPARATOR` has already cut
+#: the sentence apart at its own period, this is the second clause on its
+#: own; Peppersmoke: "Target creature gets -1/-1 until end of turn. If you
+#: control a Faerie, draw a card." is the same shape), or the condition last,
+#: "`<consequence>` if `<condition>`." (Veil of Summer's own "Draw a card if
+#: an opponent has cast a blue or black spell this turn." is this order,
+#: standing alone as its own clause - the reader T5 builds on top of this
+#: one).
+#:
+#: Tried only this late in `_parse_mixed_clause`'s own ladder - after every
+#: more specific reader that already recognises an "if" of its own, `draw_
+#: if_control` (Ral, Monsoon Mage's colour-only shape) included, so neither
+#: keeps a different winner - and, for the whole-text chains that reach it
+#: at all, only once `_parse_condition_instead_clause` has already failed to
+#: read the same text as an "instead" replacement (CR 614.1a). A target's
+#: own restriction of this exact shape ("Destroy target creature if it has
+#: mana value 2 or less.", Fatal Push) never reaches here either: `machines/
+#: targeting.py`'s own `profile_for_text` already reads a trailing "if it
+#: has ..." comparison as part of the *target phrase*, so `_parse_targeted_
+#: clause` - tried first in `_parse_mixed_clause` - already consumes the
+#: whole clause before this one ever sees it.
+_LEADING_IF_CLAUSE_RE = re.compile(r"^if (?P<condition>.+?), (?P<consequence>.+)$", re.IGNORECASE)
+_TRAILING_IF_CLAUSE_RE = re.compile(r"^(?P<consequence>.+?) if (?P<condition>.+)$", re.IGNORECASE)
+
+
+def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_LEADING_IF_CLAUSE_RE`/`_TRAILING_IF_CLAUSE_RE`'s shape - see the
+    banner above for the two word orders and why this is tried this late.
+
+    `condition_is_readable` gates the parse itself: a condition this engine
+    does not read leaves the *whole* clause unread (CR 608.2c), not silently
+    run as though it were false. The rare case `Game.condition_holds` still
+    answers `None` at resolution despite the shape reading as recognised at
+    parse time (an inner count or quality word this engine does not know) is
+    recorded as a `ConditionalClauseNotice` instead, the same class `_parse_
+    condition_instead_clause` uses for its own equivalent case.
+    """
+    from ..models.game import condition_is_readable
+
+    stripped = clause.strip()
+    leading = _LEADING_IF_CLAUSE_RE.fullmatch(stripped)
+    if leading is not None:
+        condition_text = leading.group("condition").strip()
+        consequence_text = leading.group("consequence").strip()
+    else:
+        trailing = _TRAILING_IF_CLAUSE_RE.fullmatch(stripped)
+        if trailing is None:
+            return None
+        condition_text = trailing.group("condition").strip()
+        consequence_text = trailing.group("consequence").strip()
+    if not condition_is_readable(condition_text):
+        return None
+    consequence = (
+        parse_mixed_effect_for_spell(consequence_text)
+        if for_spell
+        else parse_mixed_effect(consequence_text)
+    )
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.source(game) if is_ability(stack_object) else stack_object
+        held = game.condition_holds(controller.username, condition_text, source)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id_of(stack_object),
+                source_name=(
+                    stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+                ),
+                text=stripped,
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            return
+        if held:
+            consequence(game, stack_object)
+
+    return effect
+
+
 def _parse_optional_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "You may <clause>", where `<clause>` is any shape `_parse_mixed_clause`
     reads - Vengevine's "you may return this card from your graveyard to the
@@ -34434,6 +34564,15 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if draw_if_control is not None:
         return draw_if_control
     # -- end draw-if-you-control clause --------------------------------------
+    # -- plain "if <condition>, <consequence>" / "<consequence> if
+    # <condition>" clause (G2a), tried only once every more specific reader
+    # above - `draw_if_control` included, so Ral, Monsoon Mage's own colour
+    # shape keeps its winner - and every whole-text "instead" reader has
+    # already failed (see `_parse_condition_clause`'s own docstring) ------
+    plain_condition = _parse_condition_clause(clause, for_spell=for_spell)
+    if plain_condition is not None:
+        return plain_condition
+    # -- end plain if-condition clause ---------------------------------------
     # -- Wave W5's own single-clause addition (CR 611.1) -------------------
     casting_rule = parse_casting_rule_clause(clause, for_spell=for_spell)
     if casting_rule is not None:

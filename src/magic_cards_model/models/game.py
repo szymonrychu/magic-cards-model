@@ -807,6 +807,73 @@ _CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN = re.compile(
 #: fresh every time, not a turn fact, so a card drawn or milled since the
 #: library last emptied is read correctly.
 _CONDITION_LIBRARY_EMPTY_RE = re.compile(r"your library has no cards in it", re.IGNORECASE)
+#: Morbid (an ability word, CR 207.2c): "a creature died this turn" -
+#: Brimstone Volley's, Gruesome Discovery's own condition, formerly a private
+#: `machines/effects.py` lookup (`_INSTEAD_CONDITIONS`), moved here so every
+#: reader that asks `condition_holds` - not only the "instead" shape - reads
+#: it the same way.
+_CONDITION_CREATURE_DIED_THIS_TURN = re.compile(r"a creature died this turn", re.IGNORECASE)
+#: Twinned Vision's own "this spell wasn't cast from your hand" / "... from
+#: hand" - CR 601.2a's own "from where it is to the stack" cast-from zone,
+#: read off the resolving spell's own `CastRecord` (`source`). Also moved
+#: here from the same former `_INSTEAD_CONDITIONS` table.
+_CONDITION_NOT_CAST_FROM_HAND = re.compile(
+    r"this spell wasn'?t cast from (?:your )?hand", re.IGNORECASE
+)
+
+#: Every shape `condition_holds` reads, in the same order it tries them -
+#: kept as one tuple, rather than re-deriving it, so `condition_is_readable`
+#: below and `condition_holds` itself can never drift apart on which
+#: conditions this engine actually understands.
+_CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
+    _CONDITION_POWER,
+    _CONDITION_CONTROLS_N,
+    _CONDITION_CONTROLS_A,
+    _CONDITION_CONTROLS_NAMED_PAIR,
+    _CONDITION_ENTERED_THIS_TURN,
+    _CONDITION_TYPES_AMONG_GRAVEYARD,
+    _CONDITION_GRAVEYARD_CARDS,
+    _CONDITION_OPPONENT_GRAVEYARD_CARDS,
+    _CONDITION_HAND_CARDS,
+    _CONDITION_OPPONENT_POISON,
+    _CONDITION_SELF_COUNTERS,
+    _CONDITION_LOYALTY_AMONG_NAMED,
+    _CONDITION_SPELLS_CAST_THIS_TURN,
+    _CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN,
+    _CONDITION_CAST_A_SPELL_THIS_TURN,
+    _CONDITION_SUSPENDED,
+    _CONDITION_KICKED,
+    _CONDITION_DESCENDED,
+    _CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN,
+    _CONDITION_LIBRARY_EMPTY_RE,
+    _CONDITION_CREATURE_DIED_THIS_TURN,
+    _CONDITION_NOT_CAST_FROM_HAND,
+)
+
+
+def condition_is_readable(condition: str) -> bool:
+    """Whether `Game.condition_holds` would recognise `condition`'s *shape*
+    at all - a regex-only check, with no `Game` (and so no board state) in
+    sight, for a parser deciding at *parse* time whether a printed
+    conditional clause is one this engine can gate on, before any `Game`
+    object exists to ask `condition_holds` itself.
+
+    A parser that skips this and calls `condition_holds` only at resolution
+    time has no way to fail closed on an unrecognised condition without
+    either guessing it False (silently wrong the moment the condition is
+    ever true) or building the whole `Effect` closure speculatively and
+    throwing it away - this answers the question up front instead, the same
+    way `_targets_understood` lets a targeted-clause parser fail closed on
+    an unreadable target phrase before ever building an `Effect`.
+
+    Mirrors `condition_holds` exactly: every pattern it tries is in
+    `_CONDITION_PATTERNS`, in the same order, so a `True` here is read the
+    same way once resolution actually asks.
+    """
+    text = condition.strip().rstrip(".").strip()
+    return any(pattern.fullmatch(text) is not None for pattern in _CONDITION_PATTERNS)
+
+
 #: CR 110.4a: "Specifically, it means an artifact, battle, creature,
 #: enchantment, land, or planeswalker card."
 _PERMANENT_TYPES = frozenset(
@@ -16896,6 +16963,24 @@ class Game(EngineModel):
 
         if _CONDITION_LIBRARY_EMPTY_RE.fullmatch(text):
             return len(self.player(controller).library) == 0
+
+        if _CONDITION_CREATURE_DIED_THIS_TURN.fullmatch(text):
+            # Morbid (an ability word, CR 207.2c - "no special rules
+            # meaning"): CR 700.4's own "dies" is what `creatures_died_
+            # this_turn` counts, reset for the new turn alongside the other
+            # per-turn trackers just above.
+            return self.creatures_died_this_turn > 0
+
+        if _CONDITION_NOT_CAST_FROM_HAND.fullmatch(text):
+            # Twinned Vision's own "this spell wasn't cast from your hand"
+            # (CR 601.2a: casting moves the card "from where it is to the
+            # stack") - read off `source`, the resolving spell itself; a
+            # copy (CR 707.10) "isn't cast" at all, so it counts too. No
+            # `source` means this is unread rather than guessed.
+            if source is None:
+                return None
+            record = self.cast_record(source)
+            return record.is_copy or record.origin_zone is not Zone.HAND
 
         return None
 
