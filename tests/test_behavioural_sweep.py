@@ -61,15 +61,21 @@ activation process), CR 702.11b (hexproof).
 from __future__ import annotations
 
 import contextlib
+import itertools
+import json
+import os
 import re
 from collections import Counter
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from functools import cache
+from pathlib import Path
 from typing import Any, NamedTuple
+from uuid import NAMESPACE_OID, uuid5
 
 import pytest
 
+from magic_cards_model.ids import install_id_allocator, reset_id_allocator
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import (
     ActivatedAbility,
@@ -91,6 +97,7 @@ from magic_cards_model.machines.keywords import (
 )
 from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.machines.targeting import (
+    CombatState,
     ControllerRestriction,
     TargetRequirement,
     profile_for_text,
@@ -109,6 +116,7 @@ from magic_cards_model.models.card_state import TargetRef
 from magic_cards_model.models.token import PREDEFINED, create_predefined_tokens, token_copy_of
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.support import _probe_cards, card_support, in_target_formats
+from tests import golden
 from tests.cards import card_state, pool
 from tests.scenarios.harness import PlayedScenario, ResolutionEffect, Scenario, mana_from
 
@@ -176,6 +184,9 @@ _PROBE_SPELLS = [
 #: Creatures to put onto the battlefield, kill or attack with when a
 #: condition names "a creature" without a type the probe finder can use.
 _PROBE_CREATURES = ["Memnite", "Grizzly Bears", "Llanowar Elves", "Serra Angel"]
+#: Noncreature permanents, for a condition that names "noncreature
+#: permanents": an Equipment and an enchantment.
+_PROBE_NONCREATURES = ["Bonesplitter", "Intangible Virtue"]
 #: Stock tools: an activated ability that targets (CR 115.1c), and a card
 #: with an adventure to cast a spell from exile with (CR 715.4).
 _TARGETING_TOOL = "Icy Manipulator"
@@ -210,6 +221,9 @@ class _Staging:
     variant: str = QUIET
     case: Case | None = None
     material: tuple[Material, ...] = ()
+    #: The last board `_board` built, in the scenario harness's own words -
+    #: the golden's `board`.
+    board: dict[str, Any] | None = None
 
 
 _STAGING = _Staging()
@@ -246,6 +260,9 @@ def _board(
     entering: list[tuple[str, str]] = []
     for name, owner, zone, tapped, entered in _STAGING.material:
         if zone is Zone.STACK:
+            # Cast from the owner's hand by `_stack_material` once the board
+            # is built - so it has to be in that hand first.
+            extra[owner]["hand"].append(name)
             continue
         if name in PREDEFINED:
             tokens.append((name, owner))
@@ -290,12 +307,41 @@ def _board(
             "graveyard": list(_GRAVEYARD) + extra[BOB]["graveyard"],
         },
     }
+    order = [ALICE, BOB] if active == ALICE else [BOB, ALICE]
     scenario = Scenario()
-    for username in [ALICE, BOB] if active == ALICE else [BOB, ALICE]:
+    for username in order:
         scenario.player(username, **seats[username])
-    played = scenario.build()
-    for name, owner in tokens:
-        create_predefined_tokens(played.game, name, owner)
+    # Every id the board mints, and every shuffle after it (`Game.game_uid`),
+    # is pinned by the case, the variant and the board's own contents, so
+    # the same attempt builds the same game on every run - what makes its
+    # golden stable - while two different boards never share an id (a cost
+    # requirement's `source_id` read on one board must not name a card on
+    # another).
+    contents = json.dumps([order, seats, tokens], sort_keys=True)
+    case_id = _STAGING.case.id if _STAGING.case else ""
+    seed = f"behavioural-sweep:{case_id}:{variant}:{contents}"
+    minted = itertools.count()
+    token = install_id_allocator(lambda: uuid5(NAMESPACE_OID, f"{seed}:{next(minted)}"))
+    try:
+        played = scenario.build()
+        played.game.game_uid = uuid5(NAMESPACE_OID, seed)
+        for name, owner in tokens:
+            create_predefined_tokens(played.game, name, owner)
+    finally:
+        reset_id_allocator(token)
+    _STAGING.board = {
+        "variant": variant,
+        "order": order,
+        "players": seats,
+        "tokens": [list(pair) for pair in tokens],
+        "tapped": [list(pair) for pair in tapped_material],
+        "entering": [list(pair) for pair in entering],
+        "step": step.value if step is not None else None,
+        "busy_turn": variant == BUSY
+        and busy
+        and step in (Step.PRECOMBAT_MAIN, Step.POSTCOMBAT_MAIN),
+        "war_turn": variant == WAR and busy and step is Step.PRECOMBAT_MAIN and active == ALICE,
+    }
     if before is not None:
         before(played)
     if step is not None:
@@ -750,7 +796,7 @@ def _target_material(text: str) -> tuple[Material, ...]:
             if _satisfied(stock, requirement):
                 continue
             if Zone.STACK in requirement.zones:
-                material.append(Material("Opt", ALICE, Zone.STACK))
+                material.append(Material(_stack_probe(requirement), ALICE, Zone.STACK))
                 continue
             found = _find_material(requirement)
             if found is not None:
@@ -758,6 +804,60 @@ def _target_material(text: str) -> tuple[Material, ...]:
         return tuple(material)
     finally:
         _STAGING.variant, _STAGING.material = saved
+
+
+def _stack_probe(requirement: TargetRequirement) -> str:
+    """The first stock probe spell that, cast on the stock board, is a legal
+    target for a "target ... spell" requirement (CR 115.1) - "target artifact
+    spell you control", "target instant or sorcery spell with a single
+    target" - judged by the engine's own `rejects`; Opt when none is."""
+    for name in _PROBE_SPELLS:
+        saved = _STAGING.material
+        _STAGING.material = (Material(name, ALICE, Zone.STACK),)
+        try:
+            scenario = _board()
+        finally:
+            _STAGING.material = saved
+        try:
+            spell = _cast(scenario, name)
+        except _Unavailable:
+            continue
+        if requirement.rejects(spell, ALICE, scenario.game, None) is None:
+            return name
+    return "Opt"
+
+
+#: The permanent a player is given more of, for "an opponent controls more
+#: [type] than you" (CR 603.4): a real printing of that type.
+_MORE_OF = {Type.LAND: "Plains", Type.CREATURE: "Grizzly Bears", Type.ARTIFACT: "Memnite"}
+
+
+@cache
+def _precondition_material(condition: str) -> tuple[Material, ...]:
+    """Real printings that make an intervening "if an opponent controls more
+    [lands/creatures/artifacts] than you" (CR 603.4) true on the stock board:
+    the opponent gets one more of that type than the controller has, counted
+    on the stock board by the engine itself."""
+    match = re.search(r"an opponent controls more (\w+) than you", condition.lower())
+    if match is None:
+        return ()
+    wanted = next(
+        (kind for kind in _MORE_OF if match.group(1).rstrip("s") == kind.value.lower()), None
+    )
+    if wanted is None:
+        return ()
+    saved = _STAGING.variant, _STAGING.material
+    _STAGING.variant, _STAGING.material = QUIET, ()
+    try:
+        game = _board().game
+        counts = {
+            username: sum(wanted in p.types for p in game.permanents_controlled_by(username))
+            for username in (ALICE, BOB)
+        }
+    finally:
+        _STAGING.variant, _STAGING.material = saved
+    more = counts[ALICE] + 1 - counts[BOB]
+    return tuple(Material(_MORE_OF[wanted], BOB, Zone.BATTLEFIELD) for _ in range(max(0, more)))
 
 
 def _find_material(requirement: TargetRequirement) -> Material | None:
@@ -769,6 +869,25 @@ def _find_material(requirement: TargetRequirement) -> Material | None:
     zones = [z for z in (Zone.BATTLEFIELD, Zone.GRAVEYARD) if z in requirement.zones]
     tapped = bool(requirement.must_be_tapped)
     entered = requirement.must_have_entered_this_turn
+    if requirement.must_be_token and Zone.BATTLEFIELD in zones:
+        # "target token you control": a predefined token (CR 111.10) - the
+        # pool holds printed cards only.
+        for token in PREDEFINED:
+            for owner in owners:
+                candidate = Material(token, owner, Zone.BATTLEFIELD)
+                saved = _STAGING.material
+                _STAGING.material = (candidate,)
+                try:
+                    scenario = _board()
+                finally:
+                    _STAGING.material = saved
+                staged = next(
+                    p
+                    for p in scenario.game.permanents_controlled_by(owner)
+                    if p.token and p.name.startswith(token)
+                )
+                if requirement.rejects(staged, ALICE, scenario.game, None) is None:
+                    return candidate
     tried = 0
     for card in _format_pool():
         if card.card_faces or not _quick_fit(card, requirement):
@@ -870,7 +989,26 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     if level is not None:
         source.class_level = level
     _attach(scenario, source)
+    _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     return source
+
+
+def _counter_threshold(scenario: PlayedScenario, source: CardState, condition: str | None) -> None:
+    """An intervening "if this [permanent] has N or more [kind] counters on
+    it" (CR 603.4) is met on the board the source is staged on: the counters
+    are put on it, read off the condition's own words."""
+    if not condition:
+        return
+    match = re.search(
+        r"(?:this \w+|~) has (?P<count>[\w,]+) or more (?P<kind>\S+) counters on it",
+        condition.lower(),
+    )
+    if match is None:
+        return
+    raw = match.group("count").replace(",", "")
+    count = int(raw) if raw.isdigit() else parse_count(raw, article=False)
+    if count:
+        scenario.game.add_counters(source, match.group("kind"), count)
 
 
 def _staged(scenario: PlayedScenario, name: str, username: str = ALICE) -> CardState:
@@ -892,7 +1030,7 @@ def _home(case: Case, ability: TriggeredAbility, **extra: Any) -> tuple[PlayedSc
     graveyard" abilities."""
     card = case.printing
     if _functions_from_graveyard(card, ability):
-        scenario = _board(graveyard=(card.name,), **extra)
+        scenario = _board(graveyard=(card.name, *extra.pop("graveyard", ())), **extra)
         return scenario, _last(scenario, card.name, Zone.GRAVEYARD, ALICE).id
     battlefield = (card.name, *extra.pop("battlefield", ()), *_named_partners(ability))
     staged: list[CardState] = []
@@ -930,6 +1068,9 @@ def _probes(case: Case, ability: TriggeredAbility, *, entering: bool) -> list[st
     creatures."""
     found = _probe_cards(case.printing, ability.condition, entering=entering) or []
     names = [card.name for card in found if card.name in pool()]
+    if "noncreature" in ability.condition.lower():
+        # "one or more noncreature permanents": the stock noncreature ones.
+        names += [name for name in _PROBE_NONCREATURES if name not in names]
     for subtype in _plural_subtypes(ability.condition):
         for card in _format_pool():
             lowered = {s.lower() for s in card.subtypes}
@@ -988,6 +1129,22 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
         yield put
 
+    if "from your graveyard" in lowered:
+        # "if it entered from your graveyard" (CR 603.4, CR 603.6a): the card
+        # is put onto the battlefield from its owner's graveyard.
+
+        def from_graveyard() -> tuple[PlayedScenario, Any]:
+            scenario = _board(graveyard=(card.name,))
+            source = _last(scenario, card.name, Zone.GRAVEYARD, ALICE)
+            try:
+                entered = scenario.game.put_onto_battlefield(source, ALICE, transformed=transformed)
+            except ValueError as error:
+                raise _Unavailable(str(error)) from error
+            _prime(scenario, entered, ability)
+            return scenario, None
+
+        yield from_graveyard
+
     if card.is_land:
 
         def play() -> tuple[PlayedScenario, Any]:
@@ -1019,6 +1176,23 @@ def _other_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     lowered = ability.condition.lower()
     tapped_choices = [False, True] if "tapped" in lowered else [False]
     owners = [ALICE, BOB] if "opponent" in lowered or "a player" in lowered else [ALICE]
+    if "from your graveyard" in (ability.intervening_if or "").lower():
+        # "if it entered from your graveyard" (CR 603.4): the other object
+        # enters from the controller's graveyard.
+        for probe in _probes(case, ability, entering=True):
+
+            def exhume(probe: str = probe) -> tuple[PlayedScenario, Any]:
+                scenario, source_id = _home(case, ability, graveyard=(probe,))
+                entering = _last(scenario, probe, Zone.GRAVEYARD, ALICE)
+                if entering.id == source_id:
+                    raise _Unavailable(f"{probe} is the source itself")
+                try:
+                    scenario.game.put_onto_battlefield(entering, ALICE)
+                except ValueError as error:
+                    raise _Unavailable(str(error)) from error
+                return scenario, source_id
+
+            yield exhume
     for probe in _probes(case, ability, entering=True):
         for owner in owners:
             for tapped in tapped_choices:
@@ -1270,7 +1444,10 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         yield from _self_entering(case, ability)
         return
 
-    if "from exile" in lowered:
+    if "from exile" in lowered or "other than your hand" in lowered:
+        # Cast from exile - an Adventurer's creature half after its
+        # Adventure (CR 715.4) - for "from exile" and "from anywhere other
+        # than your hand".
 
         def adventure() -> tuple[PlayedScenario, Any]:
             scenario, source_id = _home(case, ability, hand=(_ADVENTURER,))
@@ -1468,6 +1645,42 @@ def _targeting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     yield tool
 
 
+#: The keywords that let a card be cast face down and turned face up for a
+#: cost: morph (CR 702.37), megamorph (CR 702.37b) and disguise (CR 702.168).
+_FACE_DOWN_KEYWORDS = ("morph", "megamorph", "disguise")
+
+
+def _levelling(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """A Class gains the level its "When this Class becomes level N" ability
+    names (CR 716.2a): staged one level below it, then its own level-up
+    ability (CR 716.2b) is activated and resolved."""
+    level = getattr(ability, "class_level", None)
+    if level is None:
+        return
+
+    def level_up() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability)
+        game = scenario.game
+        source = game.find_by_id(source_id)
+        source.class_level = level - 1
+        indexes = [
+            index
+            for index, activated in enumerate(game.activated_abilities(source))
+            if isinstance(activated, ActivatedAbility) and activated.class_level_target == level
+        ]
+        if not indexes:
+            raise _Unavailable(f"no ability levels the Class to {level}")
+        activated = game.activated_abilities(source)[indexes[0]]
+        on_stack = _activate(scenario, source, indexes[0], activated)
+        if on_stack is not None:
+            while game.stack and _ours(scenario, case, source_id) is None:
+                game.resolve_top()
+                _settle(scenario)
+        return scenario, source_id
+
+    yield level_up
+
+
 def _morph_card() -> str | None:
     for card in _format_pool():
         if any(k.canonical.lower() == "morph" for k in keyword_abilities(card)):
@@ -1480,7 +1693,9 @@ def _turning_face_up(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]
     face up (CR 702.37e) - the source itself, or the pool's first morph card
     for a condition about another permanent."""
     card = case.printing
-    own = [k.canonical for k in keyword_abilities(card) if k.canonical.lower() == "morph"]
+    own = [
+        k.canonical for k in keyword_abilities(card) if k.canonical.lower() in _FACE_DOWN_KEYWORDS
+    ]
     choices = ([(card.name, own[0])] if own else []) + [(_morph_card(), "Morph")]
     for name, keyword in choices:
         if name is None:
@@ -1496,7 +1711,14 @@ def _turning_face_up(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]
             face_down = next(
                 p for p in scenario.game.permanents_controlled_by(ALICE) if not p.face_up
             )
-            scenario.turn_face_up(face_down, *_mana_sources(scenario, ALICE))
+            try:
+                payment = scenario.game.begin_turning_face_up(face_down, ALICE)
+                payment.auto_tap(_mana_sources(scenario, ALICE))
+                payment.pay()
+                scenario.game.turn_face_up(face_down, ALICE)
+            except (ValueError, AssertionError) as error:
+                raise _Unavailable(f"turning face up: {error}") from error
+            scenario.game.retain_priority(ALICE)
             return scenario, source_id
 
         yield run
@@ -1758,6 +1980,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _targeting(case, ability)
         elif kind == "turned_face_up":
             yield from _turning_face_up(case, ability)
+        elif kind == "class_becomes_level":
+            yield from _levelling(case, ability)
         elif kind == "waterbends":
             yield from _bending(case, ability)
         elif kind == "cycled":
@@ -1941,12 +2165,23 @@ def _report_counts(request: pytest.FixtureRequest) -> Iterator[None]:
 # ---------------------------------------------------------------------------
 
 
-def _resolve_ours(scenario: PlayedScenario, found: AbilityOnStack) -> ResolutionEffect:
+def _resolve_ours(
+    scenario: PlayedScenario, found: Any, labels: golden.Labels
+) -> tuple[ResolutionEffect, dict[str, Any], dict[str, Any]]:
     """Resolve whatever went on the stack above the ability, then the
-    ability itself, measuring what it did."""
-    while scenario.game.stack and scenario.game.stack[-1] is not found:
-        scenario.game.resolve_top()
-    return scenario.resolve_top_measured()
+    ability itself, measuring what it did - as the sweep's verdict and as the
+    golden's `action` and `delta`."""
+    game = scenario.game
+    while game.stack and game.stack[-1] is not found:
+        game.resolve_top()
+    with game.board_snapshot():
+        before = golden.snapshot(game, labels)
+        action = golden.action_view(game, labels, found)
+    game.resolve_top()
+    with game.board_snapshot():
+        after = golden.snapshot(game, labels)
+    effect = ResolutionEffect(before.dump, after.dump, after.asked - before.asked)
+    return effect, action, golden.delta(game, labels, before, after)
 
 
 def _source_notices(scenario: PlayedScenario, case: Case) -> list[str]:
@@ -2001,18 +2236,67 @@ def _no_target(scenario: PlayedScenario, case: Case) -> bool:
     )
 
 
-def run_trigger_case(case: Case) -> tuple[str, str]:
-    """`("executed", detail)` when the ability fired and did something,
-    `("failed", detail)` otherwise."""
+class Outcome(NamedTuple):
+    """A case's verdict, why, and - when it executed - its golden record."""
+
+    status: str
+    detail: str
+    record: dict[str, Any] | None = None
+
+
+def _params_of(attempt: Attempt) -> dict[str, Any]:
+    """An attempt's own parameters - the defaults its closure was bound with
+    (the probe card, its owner, the removal, ...) - for the golden recipe."""
+    code = attempt.__code__
+    names = code.co_varnames[: code.co_argcount]
+    values = attempt.__defaults__ or ()
+    bound = dict(zip(names[len(names) - len(values) :], values, strict=True))
+    return {name: value if golden._scalar(value) else str(value) for name, value in bound.items()}
+
+
+def _golden_record(
+    case: Case, recipe: dict[str, Any], action: dict[str, Any], delta: dict[str, Any]
+) -> dict[str, Any]:
+    family = "activated" if case.kind == "activated" else "triggered"
+    return {
+        "format": golden.FORMAT,
+        "card": case.card,
+        "family": family,
+        "number": case.number,
+        "ability": case.text,
+        "kind": case.kind,
+        "board": _STAGING.board,
+        "recipe": recipe,
+        "action": action,
+        "delta": delta,
+    }
+
+
+def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
+    """`executed` (with its golden record) when the ability fired and did
+    something, `failed` otherwise. `only` replays one recorded recipe."""
     ability = _trigger_ability(case.printing, case.text)
     tried: list[str] = []
-    outcome: tuple[str, str] | None = None
+    outcome: Outcome | None = None
     closed: str | None = None
     for variant in VARIANTS:
+        if only is not None and variant != only["variant"]:
+            continue
         _STAGING.variant, _STAGING.case = variant, case
-        _STAGING.material = _target_material(ability.text)
+        _STAGING.material = _target_material(ability.text) + _precondition_material(
+            ability.intervening_if or ""
+        )
         try:
-            for attempt in _attempts(case):
+            for index, attempt in enumerate(_attempts(case)):
+                if only is not None and index != only["index"]:
+                    continue
+                recipe = {
+                    "variant": variant,
+                    "attempt": attempt.__name__,
+                    "index": index,
+                    "params": _params_of(attempt),
+                }
+                _STAGING.board = None
                 try:
                     scenario, source_id = attempt()
                 except (_Unavailable, ValueError) as unavailable:
@@ -2021,14 +2305,26 @@ def run_trigger_case(case: Case) -> tuple[str, str]:
                 advance = attempt.__name__ in _ADVANCING
                 found = _drive(scenario, case, source_id, advance=advance)
                 if found is None:
-                    if getattr(scenario, "mana_gained", 0) > 1:
-                        return "executed", "triggered mana ability resolved on the spot"
+                    gained = getattr(scenario, "mana_gained", 0)
+                    if gained > 1:
+                        labels = golden.Labels(scenario.game)
+                        with scenario.game.board_snapshot():
+                            now = golden.snapshot(scenario.game, labels)
+                        delta = {"mana_gained": gained, "players": now.players}
+                        return Outcome(
+                            "executed",
+                            "triggered mana ability resolved on the spot",
+                            _golden_record(
+                                case, recipe, golden.action_view(scenario.game, labels, None), delta
+                            ),
+                        )
                     wrongly = _wrongly_untargetable(scenario, case, ability, source_id)
                     if wrongly:
-                        return "failed", (
+                        return Outcome(
+                            "failed",
                             f"{variant} {attempt.__name__}: removed for no legal target "
                             f"(CR 603.3d), yet the target restriction accepts {wrongly} - "
-                            "a targeting protection read where there is none (CR 702.11b)"
+                            "a targeting protection read where there is none (CR 702.11b)",
                         )
                     notices = _source_notices(scenario, case)
                     if notices:
@@ -2038,27 +2334,33 @@ def run_trigger_case(case: Case) -> tuple[str, str]:
                     why = "no legal target (CR 603.3d)" if _no_target(scenario, case) else ""
                     tried.append(f"{variant} {attempt.__name__}: never reached the stack {why}")
                     continue
-                effect = _resolve_ours(scenario, found)
+                labels = golden.Labels(scenario.game)
+                effect, action, delta = _resolve_ours(scenario, found, labels)
                 if effect.did_something:
-                    return "executed", repr(effect)
-                outcome = "failed", f"{variant} {attempt.__name__}: resolved: {effect!r}"
+                    return Outcome(
+                        "executed", repr(effect), _golden_record(case, recipe, action, delta)
+                    )
+                outcome = Outcome("failed", f"{variant} {attempt.__name__}: resolved: {effect!r}")
         finally:
             _STAGING.variant, _STAGING.case, _STAGING.material = QUIET, None, ()
     if outcome is not None:
         return outcome
     if closed is not None:
-        return "failed", closed
-    return "failed", "the ability never reached the stack: " + "; ".join(tried[-8:])
+        return Outcome("failed", closed)
+    return Outcome("failed", "the ability never reached the stack: " + "; ".join(tried[-8:]))
 
 
 @pytest.mark.parametrize("case", _params(trigger_cases()))
-def test_every_handled_trigger_fires_and_does_something(case: Case) -> None:
+def test_every_handled_trigger_fires_and_does_something(
+    case: Case, request: pytest.FixtureRequest
+) -> None:
     if case.kind in TRIGGER_KIND_SKIPS:
         _record("triggered", case.kind, "skipped")
         pytest.skip(TRIGGER_KIND_SKIPS[case.kind])
-    outcome, detail = run_trigger_case(case)
-    _record("triggered", case.kind, _reported(case, outcome))
-    assert outcome == "executed", f"{case.card}: {case.text!r} - {detail}"
+    outcome = run_trigger_case(case)
+    _record("triggered", case.kind, _reported(case, outcome.status))
+    assert outcome.status == "executed", f"{case.card}: {case.text!r} - {outcome.detail}"
+    _check_golden(case, outcome.record, request)
 
 
 # ---------------------------------------------------------------------------
@@ -2286,7 +2588,23 @@ def _activation_board(
     this turn (`enters`: a planeswalker's loyalty, CR 306.5b) - and the index
     of the ability in `Game.activated_abilities` (CR 602.1)."""
     card = case.printing
-    if combat:
+    if combat and _needs_a_blocker(ability):
+        # "target creature blocking or blocked by [this]" (CR 509.1g): the
+        # source attacks and the opponent's first creature blocks it.
+        scenario = _board(battlefield=(card.name,), step=Step.DECLARE_ATTACKERS)
+        source = _source(scenario, case, ability)
+        blocker = next(
+            (p for p in scenario.game.permanents_controlled_by(BOB) if Type.CREATURE in p.types),
+            None,
+        )
+        try:
+            scenario.attack_with(source, defending=BOB)
+            if blocker is None:
+                raise _Unavailable("the opponent has no creature to block with")
+            scenario.block(source, blocker)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(f"combat: {error}") from error
+    elif combat:
         # "target attacking or blocking creature" (CR 506.3): the
         # controller's own stock creature attacks, the source stays home.
         scenario = _board(battlefield=(card.name,), step=Step.DECLARE_ATTACKERS)
@@ -2311,6 +2629,13 @@ def _activation_board(
         i for i, a in enumerate(scenario.game.activated_abilities(source)) if a.text == case.text
     ]
     return scenario, source, indexes[0] if indexes else None
+
+
+def _needs_a_blocker(ability: ActivatedAbility) -> bool:
+    """Whether every combat-state target of the ability must be blocking
+    (CR 509.1g) - only a declared block can supply one."""
+    states = [r.combat_states for r in profile_for_text(ability.effect).requirements]
+    return any(states) and all(CombatState.ATTACKING not in state for state in states if state)
 
 
 def _activate(
@@ -2359,28 +2684,46 @@ def _activate(
         raise _Unavailable(f"activation refused: {error}") from error
 
 
-def run_activation_case(case: Case) -> tuple[str, str]:
+def run_activation_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
+    """`executed` (with its golden record) when one activation resolved and
+    did something, `failed` otherwise. `only` replays one recorded recipe."""
     card = case.printing
     ability = _activated_ability(card, case.text)
     if ability.zone not in (None, Zone.BATTLEFIELD):
-        return _run_off_zone(case, ability)
+        return _run_off_zone(case, ability, only)
     tried: list[str] = []
-    outcome: tuple[str, str] | None = None
+    outcome: Outcome | None = None
     profile = profile_for_text(ability.effect)
     in_combat = any(r.combat_states for r in profile.requirements)
     for variant in VARIANTS:
+        if only is not None and variant != only["variant"]:
+            continue
         _STAGING.variant, _STAGING.case = variant, case
         _STAGING.material = _target_material(ability.effect) + _cost_material(case)
         try:
             for enters in [False, True]:
-                scenario, source, index = _activation_board(
-                    case, ability, enters, combat=in_combat and not enters
-                )
+                if only is not None and enters != only["enters"]:
+                    continue
+                recipe = {"variant": variant, "enters": enters, "off_zone": False}
+                _STAGING.board = None
+                try:
+                    scenario, source, index = _activation_board(
+                        case, ability, enters, combat=in_combat and not enters
+                    )
+                except _Unavailable as unavailable:
+                    tried.append(f"{variant}: {unavailable}")
+                    continue
                 if source is None or index is None:
                     tried.append(f"{variant}: the permanent does not list the ability")
                     continue
                 _stack_material(scenario)
                 _prepare(scenario, source, ability)
+                game = scenario.game
+                labels = golden.Labels(game)
+                before = None
+                if ability.mana is not None:
+                    with game.board_snapshot():
+                        before = golden.snapshot(game, labels)
                 try:
                     on_stack = _activate(scenario, source, index, ability)
                 except _Unavailable as unavailable:
@@ -2388,16 +2731,29 @@ def run_activation_case(case: Case) -> tuple[str, str]:
                     continue
                 _settle(scenario)
                 if on_stack is None:
-                    return "executed", "resolved as a mana ability"
-                effect = _resolve_ours(scenario, on_stack)
+                    with game.board_snapshot():
+                        after = golden.snapshot(game, labels)
+                    delta = (
+                        golden.delta(game, labels, before, after)
+                        if before is not None
+                        else {"players": after.players}
+                    )
+                    return Outcome(
+                        "executed",
+                        "resolved as a mana ability",
+                        _golden_record(case, recipe, golden.action_view(game, labels, None), delta),
+                    )
+                effect, action, delta = _resolve_ours(scenario, on_stack, labels)
                 if effect.did_something:
-                    return "executed", repr(effect)
-                outcome = "failed", f"{variant}: resolved: {effect!r}"
+                    return Outcome(
+                        "executed", repr(effect), _golden_record(case, recipe, action, delta)
+                    )
+                outcome = Outcome("failed", f"{variant}: resolved: {effect!r}")
         finally:
             _STAGING.variant, _STAGING.case, _STAGING.material = QUIET, None, ()
     if outcome is not None:
         return outcome
-    return "failed", "; ".join(tried[-6:])
+    return Outcome("failed", "; ".join(tried[-6:]))
 
 
 def _off_zone_home(case: Case, ability: ActivatedAbility) -> tuple[PlayedScenario, CardState]:
@@ -2432,19 +2788,25 @@ def _off_zone_home(case: Case, ability: ActivatedAbility) -> tuple[PlayedScenari
     return scenario, state
 
 
-def _run_off_zone(case: Case, ability: ActivatedAbility) -> tuple[str, str]:
+def _run_off_zone(
+    case: Case, ability: ActivatedAbility, only: dict[str, Any] | None = None
+) -> Outcome:
     """An ability that functions from a hand, a graveyard or exile,
     activated through `off_zone_activation` (the index space legal_actions'
     `ACTIVATE_OFF_ZONE` names)."""
     card = case.printing
     entries = [i for i, e in enumerate(off_zone_abilities(card)) if e.ability.text == case.text]
     if not entries:
-        return "failed", "not listed among the off-zone abilities"
+        return Outcome("failed", "not listed among the off-zone abilities")
     index = entries[0]
     tried: list[str] = []
     for variant in (QUIET, BUSY):
-        _STAGING.variant = variant
+        if only is not None and variant != only["variant"]:
+            continue
+        recipe = {"variant": variant, "enters": False, "off_zone": True}
+        _STAGING.variant, _STAGING.case = variant, case
         _STAGING.material = _target_material(ability.effect) + _off_zone_cost_material(case)
+        _STAGING.board = None
         try:
             scenario, state = _off_zone_home(case, ability)
             game = scenario.game
@@ -2455,6 +2817,7 @@ def _run_off_zone(case: Case, ability: ActivatedAbility) -> tuple[str, str]:
             )
             targets = _pick(scenario, action.target_slots) if action is not None else []
             choices = _off_zone_choices(scenario, state, ability)
+            labels = golden.Labels(game)
             try:
                 activation = off_zone_activation(
                     game,
@@ -2474,13 +2837,15 @@ def _run_off_zone(case: Case, ability: ActivatedAbility) -> tuple[str, str]:
                 tried.append(f"{variant}: activation refused: {error}")
                 continue
             _settle(scenario)
-            effect = _resolve_ours(scenario, on_stack)
+            effect, action_record, delta = _resolve_ours(scenario, on_stack, labels)
             if effect.did_something:
-                return "executed", repr(effect)
+                return Outcome(
+                    "executed", repr(effect), _golden_record(case, recipe, action_record, delta)
+                )
             tried.append(f"{variant}: resolved: {effect!r}")
         finally:
-            _STAGING.variant, _STAGING.material = QUIET, ()
-    return "failed", "; ".join(tried)
+            _STAGING.variant, _STAGING.case, _STAGING.material = QUIET, None, ()
+    return Outcome("failed", "; ".join(tried))
 
 
 def _off_zone_pieces(ability: ActivatedAbility) -> list[tuple[str, Any]]:
@@ -2541,7 +2906,98 @@ def _off_zone_cost_material(case: Case) -> tuple[Material, ...]:
 
 
 @pytest.mark.parametrize("case", _params(activation_cases()))
-def test_every_handled_activation_resolves_and_does_something(case: Case) -> None:
-    outcome, detail = run_activation_case(case)
-    _record("activated", "activated", _reported(case, outcome))
-    assert outcome == "executed", f"{case.card}: {case.text!r} - {detail}"
+def test_every_handled_activation_resolves_and_does_something(
+    case: Case, request: pytest.FixtureRequest
+) -> None:
+    outcome = run_activation_case(case)
+    _record("activated", "activated", _reported(case, outcome.status))
+    assert outcome.status == "executed", f"{case.card}: {case.text!r} - {outcome.detail}"
+    _check_golden(case, outcome.record, request)
+
+
+# ---------------------------------------------------------------------------
+# The goldens (`tests/golden/`): what each executed ability did, pinned.
+# ---------------------------------------------------------------------------
+
+
+def _updating(request: pytest.FixtureRequest) -> bool:
+    return bool(request.config.getoption("update_golden", default=False)) or (
+        os.environ.get("GOLDEN_UPDATE") == "1"
+    )
+
+
+def _check_golden(
+    case: Case, record: dict[str, Any] | None, request: pytest.FixtureRequest
+) -> None:
+    """Compare the live record to the case's golden - or write it, under
+    `--update-golden` / `mise run golden:update`. A mismatch fails this
+    case's own test id with a unified diff."""
+    assert record is not None, f"{case.id}: executed without a golden record"
+    family = "activated" if case.kind == "activated" else "triggered"
+    path = golden.golden_path(case.card, family, case.number)
+    text = golden.dumps(record)
+    if _updating(request):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if not path.exists() or path.read_text() != text:
+            path.write_text(text)
+        return
+    if not path.exists():
+        pytest.fail(
+            f"{case.id}: no golden at {path.relative_to(golden.GOLDEN_DIR.parent.parent)} - "
+            "run `mise run golden:update` and review the new file in the commit"
+        )
+    recorded = json.loads(path.read_text())
+    if recorded != json.loads(text):
+        pytest.fail(
+            f"{case.id}: behaviour differs from its golden "
+            "(`mise run golden:update` regenerates it once the change is intended):\n"
+            + golden.diff(recorded, record, str(path.relative_to(golden.GOLDEN_DIR)))
+        )
+
+
+def _expected_goldens() -> set[Path]:
+    paths = set()
+    for case in trigger_cases():
+        if case.kind not in TRIGGER_KIND_SKIPS and case.id not in KNOWN_ENGINE_GAPS:
+            paths.add(golden.golden_path(case.card, "triggered", case.number))
+    for case in activation_cases():
+        if case.id not in KNOWN_ENGINE_GAPS:
+            paths.add(golden.golden_path(case.card, "activated", case.number))
+    return paths
+
+
+def test_every_golden_belongs_to_a_swept_case(request: pytest.FixtureRequest) -> None:
+    """A golden whose case no longer exists (a card's handled clauses were
+    renumbered, a card left the pool) is stale; the update removes it."""
+    expected = _expected_goldens()
+    stale = sorted(p for p in golden.GOLDEN_DIR.glob("*/*.json") if p not in expected)
+    if _updating(request):
+        for path in stale:
+            path.unlink()
+            with contextlib.suppress(OSError):
+                path.parent.rmdir()
+        return
+    assert not stale, "stale goldens (run `mise run golden:update`): " + ", ".join(
+        str(p.relative_to(golden.GOLDEN_DIR)) for p in stale
+    )
+
+
+def case_named(card: str, family: str, number: int) -> Case:
+    """The swept case a golden was recorded for."""
+    cases = activation_cases() if family == "activated" else trigger_cases()
+    for case in cases:
+        if case.card == card and case.number == number:
+            return case
+    raise KeyError(f"no {family} case #{number} for {card!r} in the sweep")
+
+
+def replay(case: Case, recipe: dict[str, Any]) -> dict[str, Any]:
+    """Run one recorded recipe of `case` again and return its golden record
+    (the loader's `Golden.replay`)."""
+    if case.kind == "activated":
+        outcome = run_activation_case(case, only=recipe)
+    else:
+        outcome = run_trigger_case(case, only=recipe)
+    if outcome.record is None:
+        raise AssertionError(f"{case.id}: the recorded recipe no longer executes: {outcome.detail}")
+    return json.loads(golden.dumps(outcome.record))

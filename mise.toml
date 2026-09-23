@@ -39,6 +39,19 @@ run = "uv run pytest tests/test_behavioural_sweep.py"
 description = "Run the whole suite, behavioural pool sweep included (the merge gate)"
 run = "uv run pytest"
 
+# The sweep also compares what each executed ability did against its golden,
+# `tests/golden/<card-slug>/<triggered|activated>-<n>.json` (see
+# `tests/golden/__init__.py`). When a behaviour change is intended - a new
+# card handled, a reader fixed - regenerate them here and review the golden
+# diff in the commit. Never edit a golden by hand.
+[tasks."golden:update"]
+description = "Regenerate the behavioural sweep's golden files (tests/golden/) from the engine as it is now"
+run = "uv run pytest tests/test_behavioural_sweep.py --update-golden"
+
+[tasks."golden:replay"]
+description = "Replay golden files as scenarios and print any difference: mise run golden:replay tests/golden/<card>/<ability>.json"
+run = "uv run python -m tests.golden"
+
 # The S1 dispatch-chain winner fingerprint (engine-modularization plan) is
 # gated in `tests/test_dispatch_fingerprint.py` against the committed
 # `tests/dispatch_fingerprint_baseline.json`. This is the one documented way
