@@ -22,7 +22,19 @@ all). Each is paired with the card that exposed it.
 """
 
 import pytest
-from scripts.sweep_pool import (
+from scripts.sweep_pool import legal_cards_failing_closed
+
+from magic_cards_model.machines.abilities import TriggeredAbility, parse_abilities
+from magic_cards_model.machines.effects import (
+    _DAMAGE_EACH_CREATURE_RE,
+    _DAMAGE_EACH_OPPONENT_RE,
+    trigger_effect_for,
+)
+from magic_cards_model.machines.triggers import (
+    _STATE_COUNTER_TRIGGER_RE,
+    _unread_trigger_events,
+)
+from magic_cards_model.support import (
     HANDLED,
     NOTICE,
     QUOTED_EFFECT,
@@ -43,19 +55,7 @@ from scripts.sweep_pool import (
     has_rules_text,
     ignored_keywords,
     in_target_formats,
-    legal_cards_failing_closed,
     missed_layer_shape,
-)
-
-from magic_cards_model.machines.abilities import TriggeredAbility, parse_abilities
-from magic_cards_model.machines.effects import (
-    _DAMAGE_EACH_CREATURE_RE,
-    _DAMAGE_EACH_OPPONENT_RE,
-    trigger_effect_for,
-)
-from magic_cards_model.machines.triggers import (
-    _STATE_COUNTER_TRIGGER_RE,
-    _unread_trigger_events,
 )
 from tests.cards import card, pool
 
@@ -1062,7 +1062,7 @@ def test_self_enters_line_category_does_not_match_an_unrelated_paragraph():
     must not credit a card for a paragraph it does not actually print -
     the widened match still has to find the effect's own paragraph among
     `printing`'s real replacement effects, not merely resemble it."""
-    from scripts.sweep_pool import _self_enters_line_category
+    from magic_cards_model.support import _self_enters_line_category
 
     printing = card("Blood Crypt")
     result = _self_enters_line_category(
@@ -1097,7 +1097,7 @@ def test_cards_not_legal_in_any_target_format_are_excluded(name):
     """`in_target_formats` clamps to Modern/Pioneer/Standard, the three
     formats `CLAUDE.md` says this engine targets - not_legal in all three
     means excluded from the format-filtered reports."""
-    from scripts.sweep_pool import in_target_formats
+    from magic_cards_model.support import in_target_formats
 
     printing = card(name)
     assert printing.legalities.modern == "not_legal"
@@ -1111,7 +1111,7 @@ def test_a_card_banned_in_one_target_format_but_legal_in_another_is_included():
     Standard: banned counts as "exists in the format" (a banned card was
     printed into the format's card pool and can be unbanned), so the format
     filter must not drop it."""
-    from scripts.sweep_pool import in_target_formats
+    from magic_cards_model.support import in_target_formats
 
     printing = card("Amalia Benavides Aguirre")
     assert printing.legalities.pioneer == "banned"
@@ -1122,7 +1122,7 @@ def test_a_card_banned_in_one_target_format_but_legal_in_another_is_included():
 def test_a_card_legal_in_only_one_target_format_is_included():
     """Vexing Sphinx is legal in Modern alone (not_legal in Pioneer and
     Standard) - any one of the three formats is enough."""
-    from scripts.sweep_pool import in_target_formats
+    from magic_cards_model.support import in_target_formats
 
     printing = card("Vexing Sphinx")
     assert printing.legalities.modern == "legal"
@@ -1198,7 +1198,7 @@ def test_ability_words_is_the_complete_verbatim_cr_207_2c_list():
     """60 entries (`descend 4`/`descend 8` collapsed to one `descend` entry -
     see `_normalized_ability_word`), verified 2026-09-23 with
     `mise run rules:find 207.2c`."""
-    from scripts.sweep_pool import ABILITY_WORDS
+    from magic_cards_model.support import ABILITY_WORDS
 
     assert len(ABILITY_WORDS) == 60
     assert "adamant" in ABILITY_WORDS
@@ -1233,14 +1233,14 @@ def test_descend_4_and_descend_8_both_match_the_collapsed_ability_word():
     """Scryfall prints `Descend 4` and `Descend 8` as two different keyword
     strings (the count is CR 700.11's own designated amount); both have to
     reach `ABILITY_WORDS`'s single `descend` entry."""
-    from scripts.sweep_pool import _normalized_ability_word
+    from magic_cards_model.support import _normalized_ability_word
 
     assert _normalized_ability_word("Descend 4") == "descend"
     assert _normalized_ability_word("Descend 8") == "descend"
 
 
 def test_councils_dilemma_curly_apostrophe_normalizes_to_the_cr_spelling():
-    from scripts.sweep_pool import _normalized_ability_word
+    from magic_cards_model.support import _normalized_ability_word
 
     assert _normalized_ability_word("Council’s dilemma") == "council's dilemma"
 
@@ -1248,7 +1248,7 @@ def test_councils_dilemma_curly_apostrophe_normalizes_to_the_cr_spelling():
 def test_waterbend_is_not_a_cr_207_2c_ability_word():
     """CR 701.67 waterbend is a keyword *action*, not an ability word - it
     must not be swallowed by the ability-word table."""
-    from scripts.sweep_pool import ABILITY_WORDS, _normalized_ability_word
+    from magic_cards_model.support import ABILITY_WORDS, _normalized_ability_word
 
     assert _normalized_ability_word("Waterbend") not in ABILITY_WORDS
 
@@ -1259,7 +1259,7 @@ def test_ascend_is_not_a_cr_207_2c_ability_word():
     carry an uncited "ascend" entry that hid this real keyword behind a false
     "no special rules meaning" claim. It must not be in the verbatim CR
     207.2c list."""
-    from scripts.sweep_pool import ABILITY_WORDS
+    from magic_cards_model.support import ABILITY_WORDS
 
     assert "ascend" not in ABILITY_WORDS
 
@@ -1317,7 +1317,7 @@ def test_cumulative_upkeep_label_is_not_swallowed_as_a_flavor_word():
 
 
 def test_cr_keyword_names_covers_both_701_and_702_headings():
-    from scripts.sweep_pool import CR_KEYWORD_NAMES
+    from magic_cards_model.support import CR_KEYWORD_NAMES
 
     assert "power-up" in CR_KEYWORD_NAMES  # CR 702.193
     assert "cumulative upkeep" in CR_KEYWORD_NAMES  # CR 702.24
@@ -1334,7 +1334,7 @@ def test_partner_needs_no_code():
     """CR 702.124a: partner abilities "modify the rules for deck construction
     in the Commander variant ... and function before the game begins" -
     inert in Modern/Pioneer/Standard."""
-    from scripts.sweep_pool import NEEDS_NO_CODE
+    from magic_cards_model.support import NEEDS_NO_CODE
 
     assert "partner" in NEEDS_NO_CODE
     assert "Partner" not in ignored_keywords(card("Sakashima of a Thousand Faces"))
@@ -1342,7 +1342,7 @@ def test_partner_needs_no_code():
 
 
 def test_choose_a_background_needs_no_code():
-    from scripts.sweep_pool import NEEDS_NO_CODE
+    from magic_cards_model.support import NEEDS_NO_CODE
 
     assert "choose a background" in NEEDS_NO_CODE
     assert "Choose a background" not in ignored_keywords(card("Gut, True Soul Zealot"))
@@ -1385,9 +1385,9 @@ def test_tiered_registration_is_conditioned_on_the_profile_being_understood(monk
     actually reading the card, never on the keyword name alone. Faking an
     unread modal profile for a Tiered card must make the registration
     disappear even though the keyword is still printed."""
-    import scripts.sweep_pool as sweep_pool
+    import magic_cards_model.support as support
 
-    real_modal_profile = sweep_pool.modal_profile
+    real_modal_profile = support.modal_profile
 
     def fake_modal_profile(printing):
         profile = real_modal_profile(printing)
@@ -1395,8 +1395,8 @@ def test_tiered_registration_is_conditioned_on_the_profile_being_understood(monk
             return None
         return profile.model_copy(update={"understood": False})
 
-    monkeypatch.setattr(sweep_pool, "modal_profile", fake_modal_profile)
-    assert "tiered" not in sweep_pool.executed_keywords(card("Fire Magic"))
+    monkeypatch.setattr(support, "modal_profile", fake_modal_profile)
+    assert "tiered" not in support.executed_keywords(card("Fire Magic"))
 
 
 # -- T01: OWNER RULE - a legal card cannot rest on a fail-closed notice -----
@@ -1476,7 +1476,7 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     (CR 702.150a), the same hand-named shape Sunburst already used, and every
     compleated pool printing resolves through it rather than falling through
     unexecuted."""
-    from scripts.sweep_pool import in_target_formats
+    from magic_cards_model.support import in_target_formats
 
     names = [name for name in pool() if in_target_formats(card(name))]
     by_keyword: dict[str, list[str]] = {}
@@ -1566,3 +1566,82 @@ def test_a_you_and_group_gain_clause_is_handled_once_both_halves_apply() -> None
     ]
     assert clauses, "Veil's compound-subject sentence must still be its own clause"
     assert [c.category for c in clauses] == [HANDLED]
+
+
+# -- F6 W1: the sweep reports `card_support`'s verdict, not its own ----------
+
+
+def test_the_effect_report_counts_are_card_supports_own_verdicts():
+    """`report_effects` prints `magic_cards_model.support.card_support`'s
+    per-card verdict for every pool card with rules text - the one source of
+    truth a deck checker also reads - so its closing counts line is exactly
+    the tally of `card_support(...).effect_outcome` over the same names."""
+    import io
+    from collections import Counter
+    from contextlib import redirect_stdout
+
+    from scripts.sweep_pool import report_effects
+
+    from magic_cards_model.support import card_support
+
+    names = sorted(pool())
+    tally = Counter(
+        support.effect_outcome
+        for support in (card_support(card(name)) for name in names)
+        if support.has_rules_text
+    )
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        silent = report_effects(names)
+    output = buffer.getvalue()
+    assert silent == tally[SILENT]
+    assert f"({tally[HANDLED]} handled by a registry row or a parser" in output
+    assert f"{tally[NOTICE]} fail closed with a notice" in output
+    assert f"{tally[STATIC_UNAUDITED]} rest on a static ability nobody here audits" in output
+
+
+def test_the_keyword_report_lists_card_supports_silent_keyword_clauses():
+    """`report_keywords` lists every keyword `card_support` judges silent,
+    with the cards carrying it, and nothing else."""
+    import io
+    from contextlib import redirect_stdout
+
+    from scripts.sweep_pool import report_keywords
+
+    from magic_cards_model.support import card_support
+
+    names = sorted(pool())
+    expected: dict[str, set[str]] = {}
+    for name in names:
+        for clause in card_support(card(name)).clauses:
+            if clause.kind == "keyword" and clause.status == "silent":
+                expected.setdefault(clause.text, set()).add(name)
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        count = report_keywords(names)
+    output = buffer.getvalue()
+    assert count == len(expected)
+    for keyword, cards in expected.items():
+        assert f"  {keyword:<18} {', '.join(sorted(cards))}" in output
+
+
+def test_the_card_report_prints_card_supports_clauses():
+    """`--card` prints each of `card_support`'s clause verdicts and its
+    worst-clause outcome."""
+    import io
+    from contextlib import redirect_stdout
+
+    from scripts.sweep_pool import main
+
+    from magic_cards_model.support import card_support
+
+    support = card_support(card("Bloodghast"))
+    buffer = io.StringIO()
+    with redirect_stdout(buffer):
+        main(["--card", "Bloodghast"])
+    output = buffer.getvalue()
+    for clause in support.clauses:
+        if clause.kind == "keyword":
+            continue
+        assert f"    {clause.outcome:<17} [{clause.source}] {clause.text[:60]}" in output
+    assert f"outcome (worst clause): {support.effect_outcome}" in output

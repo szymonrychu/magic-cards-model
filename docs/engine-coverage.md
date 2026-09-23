@@ -628,6 +628,25 @@ uv run python scripts/sweep_pool.py --targeting  # targeting text the parser can
 uv run python scripts/sweep_pool.py --card "Grief"
 ```
 
+**The support oracle: `magic_cards_model.support.card_support` (2026-09-23,
+F6 W1).** The per-clause classifier this script used to own now lives in the
+installed package, and the script only reports through it - one source of
+truth. `card_support(card)` takes any `Card` built from a Scryfall printing
+(never a name lookup) and returns a frozen `CardSupport`: `status` is the
+worst clause's (`silent` < `unaudited` < `notice` < `handled`; the sweep's
+`static_unaudited` is `unaudited`, and `unmatchable_condition`/
+`quoted_effect` fold into `silent`), and `clauses` lists every spell face,
+activated, triggered and static ability, and keyword with its own `outcome`
+(the sweep's category), `status` and `reason`. `effect_outcome`/
+`effect_detail` are exactly `classify_card`'s verdict. It is deterministic
+and side-effect free - probes run on throwaway boards under a fresh uuid4 id
+allocator, so a call inside a game's `_id_allocator_scope()` never shifts that
+game's ids - and memoized per `ENGINE_VERSION` (package version plus
+`Game.CURRENT_SCHEMA_VERSION`), oracle id and printed data. The whole
+printings pool classifies cold in about 1.5s (`tests/test_card_support.py`
+asserts under 5s). A deck checker warning that a card "may not be fully
+supported" reads this, never its own copy of the rules.
+
 **The format filter (2026-09-23, T01).** `--keywords`, `--effects` and
 `--targeting` filter `names` through `in_target_formats` before reporting -
 `CLAUDE.md`'s own clamp to Modern, Pioneer and Standard, applied to the
