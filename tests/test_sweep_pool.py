@@ -1272,10 +1272,11 @@ def test_power_up_label_is_not_swallowed_as_a_flavor_word():
     """Aerial Doombot's "Power-up — {5}{U}: ..." has the identical printed
     shape (label, em dash with spaces, text) as a real flavor word, but
     "Power-up" is CR 702.193's own keyword ability name - the generalized
-    flavor-word rule must not treat it as decorative and must still report it
-    as an unexecuted keyword."""
+    flavor-word rule must not treat it as decorative. It is executed
+    (`tests/scenarios/test_power_up.py`), so it is not reported as ignored
+    either."""
     assert "power-up" not in flavor_words(card("Aerial Doombot"))
-    assert "Power-up" in ignored_keywords(card("Aerial Doombot"))
+    assert "Power-up" not in ignored_keywords(card("Aerial Doombot"))
 
 
 def test_cumulative_upkeep_label_is_not_swallowed_as_a_flavor_word():
@@ -1444,8 +1445,6 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
         "Explore",
         "Miracle",
         "Monstrosity",
-        "Outlast",
-        "Power-up",
         "Sneak",
     }
 
