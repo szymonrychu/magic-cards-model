@@ -3431,6 +3431,12 @@ def intervening_if_holds(
         # "suspended" is deliberately *not* what the rule reaches for here.
         return source.zone is Zone.EXILE
 
+    if clause == "this permanent is on the battlefield":
+        # CR 702.24a's own intervening *if* for cumulative upkeep, written out
+        # by `machines/keywords._cumulative_upkeep_ability`: a zone question
+        # (CR 400.1), fully readable, so False is a real answer.
+        return source.zone is Zone.BATTLEFIELD
+
     if match := _POWER_GREATER_THAN_SELF_RE.fullmatch(clause):
         if match.group("name") not in (source.name or "").lower():
             return _fail_closed(game, ability, source)

@@ -48,7 +48,7 @@ from ..models.card_state import (
     FaceDownCharacteristics,
     TargetRef,
 )
-from ..models.mana import ManaCost
+from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
 from ..snapshot import EngineModel
 from .abilities import (
@@ -70,6 +70,7 @@ from .cost import (
     CostPayment,
     CostStep,
     TotalCost,
+    cumulative_upkeep_cost,
     discard_cost,
     return_to_hand_cost,
     tap_cost,
@@ -306,6 +307,10 @@ def executes(keyword: str) -> bool:
         # `Game.activate_ability` and `Game.activation_cost`
         # (`machines/abilities.py`, `models/game.py`).
         "power-up",
+        # CR 702.24a: `_cumulative_upkeep_ability` writes the trigger out and
+        # `_cumulative_upkeep_effect` adds the age counter and asks the one
+        # pay-or-sacrifice question.
+        "cumulative upkeep",
     }
 
 
@@ -613,6 +618,36 @@ def _battle_cry_ability(ability: KeywordAbility) -> TriggeredAbility:
         condition="this creature attacks",
         effect="each other attacking creature gets +1/+0 until end of turn",
         event=TriggerEvent.ATTACKS,
+    )
+
+
+def _cumulative_upkeep_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.24a: "'Cumulative upkeep [cost]' means 'At the beginning of your
+    upkeep, if this permanent is on the battlefield, put an age counter on this
+    permanent. Then you may pay [cost] for each age counter on it. If you
+    don't, sacrifice it.'"
+
+    [cost] is the printed one, verbatim: the space form ("Cumulative upkeep
+    {1}", `KeywordAbility.cost`), the em-dash form ("Cumulative upkeep-Discard
+    a card.", `.cost` too) and the choice form ("Cumulative upkeep {G} or
+    {W}", which the keyword parser leaves in `.parameter`).
+    `_cumulative_upkeep_effect` reads it back out of the effect text.
+
+    CR 702.24b: each printed instance is its own ability, and
+    `keyword_triggered_abilities` already yields one per instance.
+    """
+    printed = (ability.cost or ability.parameter or "").strip().rstrip(".")
+    return _expansion(
+        ability,
+        keyword="cumulative upkeep",
+        word=TriggerWord.AT,
+        condition="the beginning of your upkeep",
+        intervening_if="this permanent is on the battlefield",
+        effect=(
+            f"put an age counter on this permanent. Then you may pay {printed} for each age "
+            "counter on it. If you don't, sacrifice it"
+        ),
+        event=TriggerEvent.BEGINNING_OF_STEP,
     )
 
 
@@ -934,6 +969,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "suspend": _suspend_abilities,
     "impending": _single(_impending_ability),
     "battle cry": _single(_battle_cry_ability),
+    "cumulative upkeep": _single(_cumulative_upkeep_ability),
 }
 
 
@@ -4170,6 +4206,70 @@ def _battle_cry_effect(game: Any, ability: AbilityOnStack) -> None:
         )
 
 
+#: `_cumulative_upkeep_ability`'s own effect text, read back for its [cost].
+_CUMULATIVE_UPKEEP_EFFECT_RE = re.compile(
+    r"^put an age counter on this permanent\. Then you may pay (?P<cost>.+) for each age "
+    r"counter on it\. If you don't, sacrifice it$"
+)
+
+
+def _cumulative_upkeep_effect(game: Any, ability: AbilityOnStack) -> bool | None:
+    """CR 702.24a resolving: the age counter, then one pay-or-sacrifice decision.
+
+    The counter goes on first, and the cost is then [cost] once per age counter
+    on the permanent *now* - CR 702.24b: "the age counters are not connected to
+    any particular ability; each cumulative upkeep ability will count the total
+    number of age counters on the permanent at the time that ability resolves."
+
+    `machines/cost.cumulative_upkeep_cost` folds the repeated cost into one
+    total, one copy per counter, so each copy's choice (which card, which
+    colour) is its own, and `Game.may_pay_unless_cost` asks once: the whole
+    set, or nothing. CR 118.3 makes the affirmative illegal when the whole set
+    cannot be paid, which leaves only the sacrifice. The mana carries
+    `SpendPurpose.PAY_CUMULATIVE_UPKEEP` (`ManaSpend.paying_cumulative_upkeep`),
+    so Snowfall's restricted mana pays it (CR 106.6).
+
+    A [cost] this engine cannot read or pay mid-resolution fails closed: no
+    counter, no question, no sacrifice, and an `UnmodeledTriggerEffectNotice`
+    naming the text - never a sacrifice the player could have avoided.
+
+    Returns True if paid, False if sacrificed, None if nothing happened.
+    """
+    source = ability.source(game)
+    if source is None or source.zone is not Zone.BATTLEFIELD:
+        return None
+    printed = ability.ability
+    match = (
+        _CUMULATIVE_UPKEEP_EFFECT_RE.fullmatch(printed.effect or "")
+        if isinstance(printed, TriggeredAbility)
+        else None
+    )
+    controller = game.controller_of(source).username
+    if match is None or cumulative_upkeep_cost(match.group("cost"), 1, controller) is None:
+        game._note_unread_trigger(ability)  # noqa: SLF001
+        return None
+    game.add_counters(source, Counter.AGE, 1)
+    count = source.counter_count(Counter.AGE)
+    cost = cumulative_upkeep_cost(match.group("cost"), count, controller)
+    assert cost is not None  # the same text read at count 1 just above
+    paid = game.may_pay_unless_cost(
+        controller,
+        cost,
+        source=ability.source_name,
+        source_id=source_id_of(ability),
+        spend=ManaSpend.paying_cumulative_upkeep(game.characteristics_of(source)),
+        prompt=(
+            f"pay {cost} for {source.name}'s cumulative upkeep ({count} age counter(s)), "
+            "or sacrifice it"
+        ),
+    )
+    if paid:
+        return True
+    if source.zone is Zone.BATTLEFIELD:
+        game.sacrifice(source)  # CR 701.21a
+    return False
+
+
 #: What one keyword's triggered ability does when it resolves, by keyword.
 #: `Game._effect_of` has to consult this before the card-name registry - see
 #: `docs/engine-coverage.md` for the hook.
@@ -4187,6 +4287,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "impending": _impending_effect,
     "mobilize": _mobilize_effect,
     "battle cry": _battle_cry_effect,
+    "cumulative upkeep": _cumulative_upkeep_effect,
 }
 
 

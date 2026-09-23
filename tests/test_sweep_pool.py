@@ -1284,9 +1284,10 @@ def test_cumulative_upkeep_label_is_not_swallowed_as_a_flavor_word():
     around its em dash at all (unlike Power-up above), so it never even
     reaches the generalized flavor-word regex - and "cumulative upkeep" is
     also a CR 702.24 keyword name, a second, independent reason it must not
-    be treated as a flavor word."""
+    be treated as a flavor word. `machines/keywords.executes` claims it since
+    cumulative upkeep is built (CR 702.24a)."""
     assert "cumulative upkeep" not in flavor_words(card("Vexing Sphinx"))
-    assert "Cumulative upkeep" in ignored_keywords(card("Vexing Sphinx"))
+    assert "Cumulative upkeep" not in ignored_keywords(card("Vexing Sphinx"))
 
 
 def test_cr_keyword_names_covers_both_701_and_702_headings():
@@ -1440,7 +1441,6 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
             by_keyword.setdefault(keyword, []).append(name)
     assert set(by_keyword) == {
         "Compleated",
-        "Cumulative upkeep",
         "Discover",
         "Explore",
         "Miracle",

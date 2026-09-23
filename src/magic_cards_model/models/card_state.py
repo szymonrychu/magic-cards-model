@@ -226,6 +226,8 @@ class Counter(StrEnum):
     FINALITY = "finality"
     TIME = "time"
     CHARGE = "charge"
+    #: CR 702.24a: cumulative upkeep puts one on each upkeep and counts them.
+    AGE = "age"
 
 
 #: A counter kind: one of the named ones, or any string a card invents.

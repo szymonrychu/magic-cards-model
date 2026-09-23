@@ -6367,6 +6367,32 @@ _COUNTER_ON_IT_RE = re.compile(
 )
 
 
+#: "the number of `<kind>` counters on it" - Kjeldoran Javelineer's own "deals
+#: damage equal to the number of age counters on it": `_COUNTER_ON_IT_RE`'s
+#: source-relative count, spelled as a number rather than a "for each".
+_NUMBER_OF_COUNTERS_ON_IT_RE = re.compile(
+    r"^the number of (?P<counters>(?:\+1/\+1|-1/-1|[a-z]+) counters on (?:it|this \w+))$",
+    re.IGNORECASE,
+)
+
+
+def _damage_ability_targets_equal_to(
+    count: Callable[["Game", str, str | None], int],
+) -> AbilityEffect:
+    """An ability dealing damage "equal to" a count taken off its own source
+    to each target it still has (CR 120.3, CR 608.2h: the count is taken once,
+    as the ability resolves). The source is the permanent (CR 120.7), as in
+    `damage_ability_targets`."""
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        amount = max(count(game, ability.controller, source_id_of(ability)), 0)
+        for target in game.resolve_targets(ability):
+            game.deal_damage(target, amount, source=source)
+
+    return effect
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -12911,6 +12937,18 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         if reader is None:
             return None
         return deal_damage_equal_to_expression(reader)
+
+    if (
+        not for_spell
+        and (match := _DAMAGE_EQUAL_TO_EXPR_TARGET_RE.fullmatch(clause))
+        and (counted := _NUMBER_OF_COUNTERS_ON_IT_RE.fullmatch(match.group("expr").strip()))
+    ):
+        if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+            return None
+        counter_reader = _for_each_multiplier(counted.group("counters"))
+        if counter_reader is None:
+            return None
+        return _damage_ability_targets_equal_to(counter_reader)
 
     if match := _DAMAGE_TARGET_RE.fullmatch(clause):
         # CR 601.2d's division is triggered only by the card's own printed

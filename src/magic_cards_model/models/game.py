@@ -8692,6 +8692,8 @@ class Game(EngineModel):
         *,
         source: str | None = None,
         source_id: str | None = None,
+        spend: ManaSpend | None = None,
+        prompt: str | None = None,
     ) -> bool:
         """ "... unless that player pays [cost]", asked and then paid, for any
         printed cost (CR 118.12a, CR 608.2d) - ward's (CR 702.21a).
@@ -8713,6 +8715,11 @@ class Game(EngineModel):
         `may_pay_mana`). A part of a kind this cannot pay makes the whole cost
         unpayable rather than half-paid.
 
+        `spend` is what the mana is paid for (CR 106.6), so restricted mana
+        whose restriction allows it can pay - cumulative upkeep's
+        (`ManaSpend.paying_cumulative_upkeep`). `prompt` overrides the
+        question's wording.
+
         Returns whether the cost was paid, and pays it.
         """
         username = player if isinstance(player, str) else player.username
@@ -8721,13 +8728,15 @@ class Game(EngineModel):
             component.model_copy(update={"payer": username}) for component in cost.components
         ]
         if not components:
-            return self.may_pay_mana_cost(payer, cost.mana, source=source, source_id=source_id)
+            return self.may_pay_mana_cost(
+                payer, cost.mana, source=source, source_id=source_id, spend=spend, prompt=prompt
+            )
         if not cost.mana.symbols and all(c.kind is ComponentKind.PAY_LIFE for c in components):
             total = sum(component.amount for component in components)
             return self.may_pay_life(payer, total, source=source, source_id=source_id)
 
         candidates: list[list[CardState]] = []
-        payable = not cost.mana.symbols or payer.mana_pool.can_pay(cost.mana)
+        payable = not cost.mana.symbols or payer.mana_pool.can_pay(cost.mana, spend=spend)
         for component in components:
             if component.kind is ComponentKind.DISCARD:
                 pool = list(payer.hand)
@@ -8752,7 +8761,7 @@ class Game(EngineModel):
             Decision(
                 kind=DecisionKind.MAY,
                 player=username,
-                prompt=f"pay {cost}",
+                prompt=prompt or f"pay {cost}",
                 source=source,
                 source_id=source_id,
                 affirmative_is_legal=payable,
@@ -8780,7 +8789,7 @@ class Game(EngineModel):
             by_id = {card.id: card for card in pool}
             component.cards = [by_id[card_id] for card_id in chosen_ids]
         if cost.mana.symbols:
-            payer.mana_pool.pay(cost.mana)
+            payer.mana_pool.pay(cost.mana, spend=spend)
         for component in components:
             component.pay(self)
         return True
@@ -8923,6 +8932,8 @@ class Game(EngineModel):
         *,
         source: str | None = None,
         source_id: str | None = None,
+        spend: ManaSpend | None = None,
+        prompt: str | None = None,
     ) -> bool:
         """ "Pay {cost}. If you don't, ..." with a real (possibly colored) mana
         cost rather than `may_pay_mana`'s bare generic amount - the Pact
@@ -8940,10 +8951,11 @@ class Game(EngineModel):
         return self._may_pay_mana_while_resolving(
             player,
             cost,
-            prompt=f"pay {cost}",
+            prompt=prompt or f"pay {cost}",
             amount=cost.converted,
             source=source,
             source_id=source_id,
+            spend=spend,
         )
 
     def _may_pay_mana_while_resolving(
@@ -8955,6 +8967,7 @@ class Game(EngineModel):
         amount: int,
         source: str | None,
         source_id: str | None,
+        spend: ManaSpend | None = None,
     ) -> bool:
         """Ask `player` whether to pay `cost` mid-resolution, and pay it.
 
@@ -8965,7 +8978,8 @@ class Game(EngineModel):
         free = cost.converted <= 0 and not cost.symbols
         sources = [] if free else self._mana_sources_while_resolving(player)
         payable = free or (
-            plan_mana_payment(cost, sources, game=self, payer=player.username) is not None
+            plan_mana_payment(cost, sources, game=self, payer=player.username, spend=spend)
+            is not None
         )
         answer = self.ask(
             Decision(
@@ -8983,7 +8997,7 @@ class Game(EngineModel):
             return False
         if not free:
             chosen = sources if answer is True else [s for s in sources if s.id in set(answer)]
-            self._pay_mana_while_resolving(player, cost, chosen, prompt=prompt)
+            self._pay_mana_while_resolving(player, cost, chosen, prompt=prompt, spend=spend)
         return True
 
     def _mana_sources_while_resolving(self, player: Player) -> list[CardState]:
@@ -9004,7 +9018,13 @@ class Game(EngineModel):
         return found
 
     def _pay_mana_while_resolving(
-        self, player: Player, cost: ManaCost, sources: Sequence[CardState], *, prompt: str
+        self,
+        player: Player,
+        cost: ManaCost,
+        sources: Sequence[CardState],
+        *,
+        prompt: str,
+        spend: ManaSpend | None = None,
     ) -> None:
         """Pay `cost` from the floating pool plus mana abilities of `sources`.
 
@@ -9014,7 +9034,9 @@ class Game(EngineModel):
         payment in this engine uses. What is left over stays in the pool
         (CR 106.4a).
         """
-        payment = CostPayment.for_total(TotalCost.of(cost), game=self, payer=player.username)
+        payment = CostPayment.for_total(
+            TotalCost.of(cost), game=self, payer=player.username, spend=spend
+        )
         try:
             payment.auto_tap(sources)
         except ValueError as unpayable:

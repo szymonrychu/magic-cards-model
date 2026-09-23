@@ -4703,6 +4703,71 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
     return TotalCost(mana=mana, components=components, waterbend_generic=waterbend_generic)
 
 
+#: "{G} or {W}" - Arctic Nishoba's cumulative upkeep cost: one mana symbol or
+#: another, chosen each time the cost is paid.
+_ONE_SYMBOL_OR_ANOTHER = re.compile(
+    r"^(?P<a>\{[^{}/]+\})\s+or\s+(?P<b>\{[^{}/]+\})$", re.IGNORECASE
+)
+
+#: The non-mana kinds `Game.may_pay_unless_cost` can pay mid-resolution, and
+#: so the only ones a cumulative upkeep cost may carry here.
+_UPKEEP_PAYABLE_KINDS = frozenset(
+    {ComponentKind.DISCARD, ComponentKind.SACRIFICE, ComponentKind.PAY_LIFE}
+)
+
+
+def cumulative_upkeep_cost(printed: str, count: int, payer: str | None = None) -> TotalCost | None:
+    """CR 702.24a's "[cost] for each age counter on it", as one `TotalCost`.
+
+    "If [cost] has choices associated with it, each choice is made separately
+    for each age counter, then either the entire set of costs is paid, or none
+    of them is paid." So the printed cost is repeated `count` times into a
+    single total, and the choices stay per copy: "{G} or {W}" becomes one
+    `{G/W}` symbol per counter (each symbol is paid with either colour on its
+    own), "Discard a card" becomes a discard of `count` cards (one chosen card
+    per counter), "Pay 1 life" `count` life. One total is what makes the
+    payment all or nothing: `Game.may_pay_unless_cost` offers it only when all
+    of it can be paid (CR 118.3) and then pays all of it.
+
+    `None` when the printed cost is not one this engine can read and pay
+    mid-resolution - the caller fails closed rather than offering a payment
+    that could never be made.
+    """
+    either = _ONE_SYMBOL_OR_ANOTHER.fullmatch(printed.strip().rstrip("."))
+    if either is not None:
+        hybrid = f"{{{either.group('a')[1:-1]}/{either.group('b')[1:-1]}}}"
+        try:
+            one = TotalCost.of(ManaCost.parse(hybrid))
+        except ValueError:
+            return None
+    else:
+        read = total_cost_for_phrase(printed, payer)
+        if read is None:
+            return None
+        one = read
+    if any(component.kind not in _UPKEEP_PAYABLE_KINDS for component in one.components):
+        return None
+    if any(component.variable_count for component in one.components):
+        return None
+    mana = ManaCost()
+    for _ in range(count):
+        mana = mana.plus(one.mana)
+    components = [
+        component.model_copy(
+            update={
+                "required": component.required * count,
+                "amount": component.amount * count,
+                "cards": [],
+                "description": "",
+            }
+        )
+        for component in one.components
+        if count > 0
+    ]
+    total = TotalCost(mana=mana, components=components)
+    return total if payer is None else total.assign_payer(payer)
+
+
 _ONLY_MANA = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
 
 #: The two brace-wrapped symbols that are *not* mana: CR 107.5's tap symbol

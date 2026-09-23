@@ -519,9 +519,9 @@ class SpendPurpose(StrEnum):
     CAST_SPELL = "cast_spell"
     ACTIVATE_ABILITY = "activate_ability"
     #: Snowfall's "Spend this mana only to pay cumulative upkeep costs"
-    #: (CR 702.24a): neither a cast nor an activation. Nothing in this engine
-    #: pays cumulative upkeep yet, so no spend carries this purpose and such
-    #: mana pays for nothing - for the reason the card gives.
+    #: (CR 702.24a): neither a cast nor an activation. The one spend that
+    #: carries it is `machines/keywords._cumulative_upkeep_effect`'s payment
+    #: (`ManaSpend.paying_cumulative_upkeep`).
     PAY_CUMULATIVE_UPKEEP = "pay_cumulative_upkeep"
 
 
@@ -610,6 +610,13 @@ class ManaSpend(EngineModel):
         only the type had to stop saying `Card`.
         """
         return cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None)
+
+    @classmethod
+    def paying_cumulative_upkeep(cls, card: "HasCharacteristics") -> "ManaSpend":
+        """Mana spent to pay `card`'s cumulative upkeep (CR 702.24a) - the
+        resolving trigger's "you may pay [cost] for each age counter on it",
+        which is neither a cast nor an activation."""
+        return cls._of(SpendPurpose.PAY_CUMULATIVE_UPKEEP, card, None)
 
 
 class SpendClause(EngineModel):
