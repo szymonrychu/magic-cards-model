@@ -462,6 +462,28 @@ def test_a_snapshot_written_before_the_f1t11_integration_bump_is_refused() -> No
         Game.model_validate(dumped)
 
 
+#: The version stamped before S03 gave `Player` its "no maximum hand size for
+#: the rest of the game" field (Sea Gate Restoration, CR 613.11) and taught
+#: `has_no_maximum_hand_size` and annihilator (CR 702.86a) to act where they
+#: did nothing.
+_SCHEMA_VERSION_BEFORE_S03_NO_MAXIMUM_HAND_SIZE = 53
+
+
+def test_a_snapshot_written_before_s03_is_refused() -> None:
+    """A version-53 dump cannot say whether a player's maximum hand size was
+    removed for the rest of the game, and a version-53 board with Reliquary
+    Tower or an annihilator attacker would play differently decoded here."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_S03_NO_MAXIMUM_HAND_SIZE
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_S03_NO_MAXIMUM_HAND_SIZE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_S03_NO_MAXIMUM_HAND_SIZE}",
+    ):
+        Game.model_validate(dumped)
+
+
 def _a_game_with_a_pending_dies_trigger_and_a_cant_be_countered_grant() -> Game:
     """A real board carrying both of T5's/T9's own reachable-but-unbumped
     state at once, played to the point that matters rather than hand-built:

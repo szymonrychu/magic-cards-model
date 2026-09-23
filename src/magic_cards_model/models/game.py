@@ -2855,7 +2855,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 53
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 54
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3609,6 +3609,15 @@ class Game(EngineModel):
     unrelated attacker; decoded at 53 it correctly fires only for Copter's
     own attack or block. A version-52 snapshot with that trigger already
     pending is refused rather than resolved into that different outcome.
+
+    Bumped 53 -> 54 (S03): `Player` gained `no_maximum_hand_size_for_rest_of_
+    game` (Sea Gate Restoration's "You have no maximum hand size for the rest
+    of the game.", CR 613.11/611.2a) - a field added to a persisted model,
+    the bump rule's first bullet. `has_no_maximum_hand_size` also now reads a
+    permanent's own static "You have no maximum hand size." (Reliquary Tower,
+    CR 604.2), which changes what a version-53 board's cleanup discard
+    (CR 514.1) does for a player controlling one; and annihilator (CR
+    702.86a) now triggers where it did nothing. Refused instead.
     """
 
     @model_validator(mode="before")

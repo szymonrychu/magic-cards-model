@@ -103,10 +103,24 @@ def _rng(seed: Seed) -> Random:
     return seed if isinstance(seed, Random) else Random(seed)  # noqa: S311 - not cryptographic
 
 
-#: "You have no maximum hand size." - the emblem ability this engine reads
-#: generally (CR 114.2's own template): Wrenn and Seven's -8 and Tamiyo,
-#: Inquisitive Student's -7 both print this exact sentence.
+#: "You have no maximum hand size." - the ability this engine reads generally,
+#: wherever it is: on an emblem (CR 114.2's own template - Wrenn and Seven's
+#: -8 and Tamiyo, Seasoned Scholar's -7 both print this exact sentence) or as
+#: a permanent's static ability (Reliquary Tower).
 _NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT = "you have no maximum hand size"
+
+
+def _is_no_maximum_hand_size_line(line: str) -> bool:
+    return line.strip().rstrip(".").lower() == _NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT
+
+
+def _computed_ability_lines(game: Any, permanent: CardState) -> tuple[str, ...]:
+    """A permanent's ability lines as the layers leave them (CR 613.1f), or
+    its printed lines when the board has not computed it."""
+    try:
+        return tuple(game.characteristics_of(permanent).abilities)
+    except KeyError:
+        return tuple((permanent.oracle_text or "").splitlines())
 
 
 class Player(EngineModel):
@@ -224,6 +238,13 @@ class Player(EngineModel):
     A field for the same reason: a player may have any number of cards in hand,
     and only the cleanup step's turn-based action (CR 514.1, 703.4n) cares.
     """
+
+    no_maximum_hand_size_for_rest_of_game: bool = False
+    """Whether a resolved effect said "You have no maximum hand size for the
+    rest of the game." (Sea Gate Restoration) - CR 613.11's rule-modifying
+    effect with CR 611.2a's stated duration. It outlives the spell that made
+    it and every permanent, so it is recorded here rather than read off any
+    object; `has_no_maximum_hand_size` reads it."""
 
     mulligans_taken: int = 0
     hand_kept: bool = False
@@ -602,18 +623,39 @@ class Player(EngineModel):
 
     @property
     def has_no_maximum_hand_size(self) -> bool:
-        """CR 613.11: whether some continuous effect this player controls
-        overrides CR 402.2's own maximum hand size to "no maximum" - read
-        generally off any emblem granting CR 114.2's own "You have no
-        maximum hand size." sentence, not any one card's name, so a future
-        printing granting the identical ability the same way is covered for
-        free.
+        """CR 613.11: whether some continuous effect overrides CR 402.2's own
+        maximum hand size to "no maximum" for this player. Three sources, all
+        read off the sentence "You have no maximum hand size." rather than any
+        card's name:
+
+        - an emblem this player has (CR 114.2 - Wrenn and Seven's -8, Tamiyo,
+          Seasoned Scholar's -7);
+        - a static ability of a permanent this player controls (Reliquary
+          Tower), read off the computed board each time so it ends with the
+          permanent (CR 604.2) and an ability an effect removed grants
+          nothing (CR 613.1f, CR 305.7);
+        - a resolved "for the rest of the game" effect
+          (`no_maximum_hand_size_for_rest_of_game`, Sea Gate Restoration).
         """
+        if self.no_maximum_hand_size_for_rest_of_game:
+            return True
+        if any(
+            _is_no_maximum_hand_size_line(emblem.card.oracle_text or "") for emblem in self.emblems
+        ):
+            return True
+        game = self.game
+        if game is None:
+            return False
         return any(
-            (emblem.card.oracle_text or "").strip().rstrip(".").lower()
-            == _NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT
-            for emblem in self.emblems
+            _is_no_maximum_hand_size_line(line)
+            for permanent in game.permanents_controlled_by(self.username)
+            for line in _computed_ability_lines(game, permanent)
         )
+
+    def remove_maximum_hand_size_for_rest_of_game(self) -> None:
+        """ "You have no maximum hand size for the rest of the game." (CR
+        613.11, CR 611.2a) - see `no_maximum_hand_size_for_rest_of_game`."""
+        self.no_maximum_hand_size_for_rest_of_game = True
 
     @property
     def cards_over_maximum_hand_size(self) -> int:

@@ -42,9 +42,12 @@ __all__ = [
     "Quantity",
     "QuantitySource",
     "VariableX",
+    "Half",
     "count_pattern",
+    "halve",
     "parse_amount",
     "parse_count",
+    "parse_half",
     "parse_multiplier",
     "parse_ordinal",
     "parse_quantity",
@@ -304,3 +307,46 @@ def parse_quantity(text: str) -> Quantity | None:
     if amount is None:
         return None
     return Quantity(amount=amount, minimum=0 if up_to else amount, source=QuantitySource.FIXED)
+
+
+@dataclass(frozen=True)
+class Half:
+    """ "half `<of>`, rounded up/down" - a count that is half of something
+    else, with the rounding direction CR 107.1a requires the card to print:
+    "If a spell or ability could generate a fractional number, the spell or
+    ability will tell you whether to round up or down."
+
+    `of` is the printed text being halved, verbatim ("the number of cards in
+    your library", "their library"); what it counts is the caller's business,
+    the same division of labour `VariableX.expression` has.
+    """
+
+    of: str
+    round_up: bool
+
+
+#: "half the number of cards in your library, rounded up" (Tamiyo, Seasoned
+#: Scholar), "half their library, rounded down" (Traumatize), "the top half of
+#: their library, rounded up" (Ulamog, the Defiler) - "the top" is where the
+#: cards come from, not part of the count, so it is read and dropped here.
+_HALF_RE = re.compile(
+    r"\s*(?:the top )?half (?:of )?(?P<of>.+?),\s*rounded (?P<direction>up|down)\s*\.?\s*",
+    re.IGNORECASE,
+)
+
+
+def parse_half(text: str) -> Half | None:
+    """A `Half` for "[the top] half [of] `<of>`, rounded up|down", or `None`.
+
+    A "half" with no printed rounding direction is not read: CR 107.1a says
+    the card will say which way, and guessing would be a defect.
+    """
+    match = _HALF_RE.fullmatch(text)
+    if match is None:
+        return None
+    return Half(of=match.group("of").strip(), round_up=match.group("direction").lower() == "up")
+
+
+def halve(value: int, *, round_up: bool) -> int:
+    """`value` halved, rounded the way CR 107.1a's printed direction says."""
+    return (value + 1) // 2 if round_up else value // 2

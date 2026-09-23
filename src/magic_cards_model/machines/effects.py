@@ -93,7 +93,9 @@ from ..numbers import (
     Quantity,
     QuantitySource,
     count_pattern,
+    halve,
     parse_count,
+    parse_half,
     parse_multiplier,
     parse_ordinal,
     parse_quantity,
@@ -314,16 +316,15 @@ def deal_damage_equal_to_expression(reader: "AmountReader") -> Effect:
     reader, evaluated fresh at resolution (CR 608.2c fixes the amount as the
     ability resolves, not when it is announced) rather than once at parse
     time, the same way `_deal_damage_equal_to_sacrificed_creature_power`
-    reads its own one specific expression live. `obj` is `None`: no term
-    this engine reads for a plain damage amount refers to a characteristic
-    of an object the spell is being evaluated *for* (Heroes' Bane's "where X
-    is its power" is a counters-placement shape, not a damage one), so
-    nothing here ever dereferences it.
+    reads its own one specific expression live. `obj` is the spell itself:
+    CR 700.7's "this [something]", the only object an "it"/"this `<noun>`" term
+    (`_OBJECT_CHARACTERISTIC_RE`, `_OBJECT_COUNTER_COUNT_RE`) can name from a
+    spell's own text.
     """
 
     def effect(game: "Game", spell: CardState) -> None:
         controller = game.controller_of(spell).username
-        amount = max(reader(game, controller, None, 0), 0)  # type: ignore[arg-type]
+        amount = max(reader(game, controller, spell, 0), 0)
         for target in game.resolve_targets(spell):
             game.deal_damage(target, amount, source=spell)
 
@@ -1091,6 +1092,13 @@ _COUNT_THIS_WAY_RE = re.compile(
 #: zone with no type restriction to read ("the hand is where a player holds
 #: cards that have been drawn"), so every card in it counts, whatever it is.
 _COUNT_CARDS_IN_YOUR_HAND_RE = re.compile(r"^(?:the )?number of cards in your hand$", re.IGNORECASE)
+#: "the number of cards in your library" - Tamiyo, Seasoned Scholar's own -7
+#: count, halved by `_amount_term`'s "half ..., rounded up" term. Every card
+#: in the library counts, the same unfiltered reading
+#: `_COUNT_CARDS_IN_YOUR_HAND_RE` applies to the hand.
+_COUNT_CARDS_IN_YOUR_LIBRARY_RE = re.compile(
+    r"^(?:the )?number of cards in your library$", re.IGNORECASE
+)
 #: "the amount of life you gained this turn" - Germinate Recruits' own X
 #: (CR 107.3f) and Enlightened Confidant's own mana-value ceiling (FRA
 #: stream S8), the same expression built independently for two different
@@ -1328,6 +1336,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
         return count_in_hand
 
+    if _COUNT_CARDS_IN_YOUR_LIBRARY_RE.fullmatch(stripped):
+
+        def count_in_library(game: "Game", controller: str) -> int:
+            return len(game.player(controller).library)
+
+        return count_in_library
+
     if _AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE.fullmatch(stripped):
 
         def life_gained_amount(game: "Game", controller: str) -> int:
@@ -1455,6 +1470,16 @@ _OBJECT_CHARACTERISTIC_RE = re.compile(
 )
 
 
+#: "the number of `<kind>` counters on it" / "... on this `<noun>`" - a term
+#: naming the object the expression is evaluated for, the way
+#: `_OBJECT_CHARACTERISTIC_RE` names its power: Ulamog, the Defiler's own
+#: "annihilator X, where X is the number of +1/+1 counters on it".
+_OBJECT_COUNTER_COUNT_RE = re.compile(
+    r"^the number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters on (?:it|this [a-z]+)$",
+    re.IGNORECASE,
+)
+
+
 def _amount_term(term: str) -> AmountReader | None:
     """One term of `amount_expression`, or `None` when it is not readable."""
     text = term.strip()
@@ -1462,6 +1487,26 @@ def _amount_term(term: str) -> AmountReader | None:
     constant = parse_count(text)
     if constant is not None:
         return lambda _game, _controller, _object, _x: constant
+    if (half := parse_half(text)) is not None:
+        # CR 107.1a: the card prints which way a fractional result rounds;
+        # `numbers.parse_half` refuses a "half" that does not say.
+        inner = _amount_term(half.of)
+        if inner is None:
+            return None
+        round_up = half.round_up
+        return lambda game, controller, obj, x: halve(
+            inner(game, controller, obj, x), round_up=round_up
+        )
+    if match := _OBJECT_COUNTER_COUNT_RE.fullmatch(text):
+        kind = _counter_kind(match.group("kind"))
+
+        def read_object_counters(
+            _game: "Game", _controller: str, obj: CardState | None, _x: int
+        ) -> int:
+            # CR 608.2h: the object as it is now, or as it last existed.
+            return 0 if obj is None else obj.counters[kind]
+
+        return read_object_counters
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
     if match := _AMOUNT_TWICE_RE.fullmatch(text):
@@ -6225,6 +6270,25 @@ _MILL_RE = re.compile(
     rf"(?: for each (?P<each>.+))?",
     re.IGNORECASE,
 )
+#: "mills half their library, rounded down" (Traumatize), "exiles the top
+#: half of their library, rounded up" (Ulamog, the Defiler's cast trigger) -
+#: CR 701.17a's mill and CR 701.13a's exile, each taking a count that is half
+#: the acting player's own library (`numbers.parse_half`, CR 107.1a's printed
+#: rounding). "Their"/"your" is the player the clause is run against - the
+#: target of "Target player ...", or the controller of a bare instruction.
+_HALF_OF_OWN_LIBRARY_RE = re.compile(
+    r"^(?:you )?(?P<verb>mills?|exiles?) (?P<half>(?:the top )?half (?:of )?(?:their|your) "
+    r"library, rounded (?:up|down))$",
+    re.IGNORECASE,
+)
+#: "You have no maximum hand size for the rest of the game." (Sea Gate
+#: Restoration) - CR 613.11's rule-modifying effect with CR 611.2a's stated
+#: duration: it outlives the spell and every permanent, so it is recorded on
+#: the player (`Player.no_maximum_hand_size_for_rest_of_game`), which
+#: `Player.has_no_maximum_hand_size` reads.
+_NO_MAXIMUM_HAND_SIZE_REST_OF_GAME_RE = re.compile(
+    r"^you have no maximum hand size for the rest of the game$", re.IGNORECASE
+)
 #: CR 701.25a / CR 701.22a. "Surveil X, where X is `<expr>`" (Cerebral
 #: Download) reads `<expr>` through `count_expression`, the same reader
 #: `amount_expression`'s own terms already call.
@@ -7082,6 +7146,53 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         poison = parse_count(match.group("n"))
         return lambda game, player, source, source_id: game.add_player_counters(
             player, Counter.POISON, poison
+        )
+
+    if match := _DRAW_CARDS_EQUAL_TO_RE.fullmatch(clause):
+        # "Draw cards equal to `<expr>`" (Sea Gate Restoration's "the number
+        # of cards in your hand plus one", Tamiyo, Seasoned Scholar's "half
+        # the number of cards in your library, rounded up"). A bare X has no
+        # announced value to read here, so it is refused rather than read as
+        # zero.
+        expression = match.group("expr")
+        if re.search(r"\bx\b", expression, re.IGNORECASE):
+            return None
+        reader = amount_expression(expression)
+        if reader is None:
+            return None
+
+        def draw_equal_to(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            # CR 608.2h: counted once, as the effect applies.
+            total = reader(game, player.username, None, 0)
+            if total:
+                game.draw_cards(player.username, total)
+
+        return draw_equal_to
+
+    if match := _HALF_OF_OWN_LIBRARY_RE.fullmatch(clause):
+        half = parse_half(match.group("half"))
+        if half is None:
+            return None
+        mills = match.group("verb").lower().startswith("mill")
+        round_up = half.round_up
+
+        def half_of_own_library(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            # CR 608.2h: the library's size as the effect applies.
+            count = halve(len(player.library), round_up=round_up)
+            if count <= 0:
+                return
+            if mills:
+                _mill(game, player, count)
+            else:
+                game.exile_cards(list(player.library[:count]))
+
+        return half_of_own_library
+
+    if _NO_MAXIMUM_HAND_SIZE_REST_OF_GAME_RE.fullmatch(clause):
+        return lambda game, player, source, source_id: (
+            player.remove_maximum_hand_size_for_rest_of_game()
         )
 
     if match := _DRAW_RE.fullmatch(clause):
@@ -21930,6 +22041,79 @@ def _layer_antecedent_clause(first: str, referent_of: ReferentReader) -> Targete
     return effect
 
 
+#: "If it's a `<quality>` card, `<rider>`." - a second sentence whose "it" is
+#: the card the first sentence's own target named: Tamiyo, Seasoned Scholar's
+#: -3 ("Return target instant or sorcery card from your graveyard to your
+#: hand. If it's a green card, add one mana of any color.") and Cemetery
+#: Recruitment ("Return target creature card from your graveyard to your
+#: hand. If it's a Zombie card, draw a card.").
+_IF_ITS_A_QUALITY_CARD_RIDER_RE = re.compile(
+    r"^if it'?s an? (?P<quality>[^,]+?) card, (?P<rider>.+?)\.?$", re.IGNORECASE
+)
+
+
+def _ability_only_rider(text: str) -> TargetedClause | None:
+    """A rider only an ability can carry: "add one mana of any color"
+    (`_parse_add_one_mana_of_any_color_trigger`), which reads the resolving
+    `AbilityOnStack`'s own controller and source."""
+    add_mana = _parse_add_one_mana_of_any_color_trigger(text)
+    if add_mana is None:
+        return None
+
+    def rider(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        add_mana(game, stack_object)
+
+    return rider
+
+
+def _parse_if_target_card_quality_rider_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`<antecedent naming target card>`. If it's a `<quality>` card, `<rider>`.
+
+    One CR 608.2c instruction: the antecedent runs, then the rider runs if
+    the targeted card has the quality. The quality is read **before** the
+    antecedent moves the card: returning it to a hand takes it from a public
+    zone to a hidden one, and CR 608.2h says "if the effect has moved it from
+    a public zone to a hidden zone, the effect uses the object's last known
+    information". With no legal target left the ability never resolves at
+    all (CR 608.2b), so neither sentence happens.
+
+    The quality is `_nonland_or_typed_card_matcher`'s vocabulary (a colour, a
+    card type, a subtype - a changeling is every creature type, CR 702.73a);
+    the rider is whatever `_parse_mixed_clause` already reads ("draw a card"),
+    or, on an ability, `_parse_add_one_mana_of_any_color_trigger`'s "add one
+    mana of any color". Either half unreadable refuses the pair.
+    """
+    match = _IF_ITS_A_QUALITY_CARD_RIDER_RE.fullmatch(second.strip())
+    if match is None or "target" not in first.lower():
+        return None
+    matches_quality = _nonland_or_typed_card_matcher(match.group("quality"))
+    if matches_quality is None:
+        return None
+    antecedent = _parse_mixed_clause(first, for_spell=for_spell)
+    if antecedent is None:
+        return None
+    rider_text = match.group("rider").strip()
+    rider = _parse_mixed_clause(rider_text, for_spell=for_spell)
+    if rider is None and not for_spell:
+        rider = _ability_only_rider(rider_text)
+    if rider is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        referents = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
+        ]
+        qualifies = any(matches_quality(card) for card in referents)
+        antecedent(game, stack_object)
+        if qualifies:
+            rider(game, stack_object)
+
+    return effect
+
+
 def _parse_object_anaphor_clause_pair(
     first: str, second: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -36154,6 +36338,9 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 sentences[0], sentences[1], for_spell=for_spell
             )
             or _parse_each_group_discards_then_consequence_per_failure_clause_pair(
+                sentences[0], sentences[1], for_spell=for_spell
+            )
+            or _parse_if_target_card_quality_rider_clause_pair(
                 sentences[0], sentences[1], for_spell=for_spell
             )
         )

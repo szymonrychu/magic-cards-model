@@ -131,6 +131,7 @@ class KeywordRule(StrEnum):
     OUTLAST = "CR 702.107a"
     POWER_UP = "CR 702.193a"
     PARTNER_WITH = "CR 702.124j"
+    ANNIHILATOR = "CR 702.86a"
 
 
 def executes(keyword: str) -> bool:
@@ -340,6 +341,12 @@ def executes(keyword: str) -> bool:
         # the two are different abilities that "cannot be combined", so
         # crediting one keyword must never silence the other.
         "partner with",
+        # CR 702.86a: "Annihilator N" means "Whenever this creature attacks,
+        # defending player sacrifices N permanents." `_annihilator_ability`/
+        # `_annihilator_effect` below, printed (Ulamog's Crusher's
+        # "Annihilator 2") or granted by a static ability with a variable N
+        # (Ulamog, the Defiler's "annihilator X, where X is ...").
+        "annihilator",
     }
 
 
@@ -696,6 +703,96 @@ def _battle_cry_ability(ability: KeywordAbility) -> TriggeredAbility:
         effect="each other attacking creature gets +1/+0 until end of turn",
         event=TriggerEvent.ATTACKS,
     )
+
+
+def _annihilator_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.86a: "Annihilator N" means "Whenever this creature attacks,
+    defending player sacrifices N permanents."
+
+    N stays on the printed line (`raw`), which `_annihilator_effect` reads as
+    the trigger resolves - a number, or an X with its "where X is ..."
+    definition, counted then (CR 608.2h). CR 702.86b's "each triggers
+    separately" is `keyword_triggered_abilities`' one ability per instance.
+    """
+    count = ability.count if ability.count is not None else "X"
+    return _expansion(
+        ability,
+        keyword="annihilator",
+        word=TriggerWord.WHENEVER,
+        condition="this creature attacks",
+        effect=f"defending player sacrifices {count} permanents",
+        event=TriggerEvent.ATTACKS,
+    )
+
+
+#: The N on an annihilator line: "Annihilator 2", or "Annihilator X, where X
+#: is the number of +1/+1 counters on it" (the line Ulamog, the Defiler's
+#: static ability grants it).
+_ANNIHILATOR_COUNT_RE = re.compile(
+    r"^annihilator\s+(?P<n>\d+|x)\b(?:\s*,\s*where x is (?P<expr>[^.(]+))?",
+    re.IGNORECASE,
+)
+
+
+def _annihilator_effect(game: Any, ability: AbilityOnStack) -> None:
+    """CR 702.86a's effect: "defending player sacrifices N permanents."
+
+    **Defending player** is CR 508.5's: the player the creature is attacking
+    (or that planeswalker's controller, or that battle's protector), read off
+    the attack event's own `defender` through `combat.defending_player`, so
+    it still answers once the creature has left combat.
+
+    **N** is read off the keyword line: a number, or X counted now, as the
+    trigger resolves (CR 608.2h), with "it" the creature itself - or its last
+    known information once it has left the battlefield. An X this engine
+    cannot count fails closed with an `UnmodeledTriggerEffectNotice` rather
+    than sacrificing a guessed number.
+
+    **Which permanents** is the defending player's own choice (CR 701.21a),
+    the same edict body every "sacrifices N `<permanents>` of their choice"
+    clause shares: fewer than N sacrifices all of them, and nobody is asked a
+    question with only one answer.
+    """
+    from .combat import defending_player
+    from .effects import (
+        UnmodeledTriggerEffectNotice,
+        _sacrifice_of_choice_clause_effect,
+        amount_expression,
+    )
+
+    printed = ability.ability
+    raw = printed.raw if isinstance(printed, TriggeredAbility) else ""
+    match = _ANNIHILATOR_COUNT_RE.match((raw or "").strip())
+    count: int | None = None
+    if match is not None:
+        if match.group("n").lower() != "x":
+            count = int(match.group("n"))
+        elif match.group("expr") is not None:
+            reader = amount_expression(match.group("expr"))
+            if reader is not None:
+                source = ability.source(game)
+                if source is None or source.zone is not Zone.BATTLEFIELD:
+                    source = ability.source_last_known
+                count = reader(game, ability.controller, source, 0)
+    if count is None:
+        game.unmodeled_trigger_effect_notices.append(
+            UnmodeledTriggerEffectNotice(
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                text=raw or "annihilator",
+            )
+        )
+        return
+    event = ability.event
+    if count <= 0 or event is None or event.defender is None:
+        return
+    username = defending_player(game, event.defender)
+    if username is None:
+        return
+    sacrifice = _sacrifice_of_choice_clause_effect(
+        "permanent", count, "a permanent" if count == 1 else f"{count} permanents"
+    )
+    sacrifice(game, game.player(username), ability.source_name, source_id_of(ability))
 
 
 def _cumulative_upkeep_ability(ability: KeywordAbility) -> TriggeredAbility:
@@ -1073,6 +1170,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "battle cry": _single(_battle_cry_ability),
     "cumulative upkeep": _single(_cumulative_upkeep_ability),
     "partner with": _single(_partner_with_ability),
+    "annihilator": _single(_annihilator_ability),
 }
 
 
@@ -1109,6 +1207,20 @@ def keyword_triggered_abilities(card: Card) -> list[TriggeredAbility]:
 _GRANTED_KEYWORD_LINE_RE = re.compile(
     r"^(?P<keyword>[A-Za-z][A-Za-z'-]*)(?:\s+(?P<cost>\{[^:]*\}))?\.?$"
 )
+#: A granted keyword that takes a number rather than a cost - the line
+#: `machines/layers._self_has_counted_trigger_keyword_builder` writes for a
+#: static "`<this>` has annihilator X, where X is ..." (Ulamog, the Defiler):
+#: "Annihilator 2" or "Annihilator X, where X is `<expr>`".
+_GRANTED_COUNTED_KEYWORD_LINE_RE = re.compile(
+    r"^(?P<keyword>[A-Za-z][A-Za-z'-]*)\s+(?P<count>\d+|X)(?:,\s*where X is [^.]+)?\.?$"
+)
+
+
+def writes_triggered_ability(keyword: str) -> bool:
+    """Whether this module writes `keyword` out as a triggered ability (CR
+    702.1) - asked by `machines/layers.py` before it grants one to an object,
+    so a grant only ever hands out a keyword that will actually do something."""
+    return keyword.lower() in _TRIGGER_EXPANSIONS
 
 
 def granted_keyword_ability(text: str) -> KeywordAbility | None:
@@ -1118,6 +1230,20 @@ def granted_keyword_ability(text: str) -> KeywordAbility | None:
     module writes no triggered ability for - a grant nothing here can expand
     hands out nothing rather than a guessed ability.
     """
+    counted = _GRANTED_COUNTED_KEYWORD_LINE_RE.match(text.strip())
+    if counted is not None:
+        keyword = counted.group("keyword")
+        if keyword.lower() not in _TRIGGER_EXPANSIONS:
+            return None
+        count = counted.group("count")
+        return KeywordAbility(
+            raw=text.strip(),
+            text=text.strip(),
+            face="",
+            keyword=keyword,
+            canonical=keyword,
+            count=None if count.upper() == "X" else int(count),
+        )
     match = _GRANTED_KEYWORD_LINE_RE.match(text.strip())
     if match is None:
         return None
@@ -4591,6 +4717,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "mobilize": _mobilize_effect,
     "battle cry": _battle_cry_effect,
     "cumulative upkeep": _cumulative_upkeep_effect,
+    "annihilator": _annihilator_effect,
 }
 
 

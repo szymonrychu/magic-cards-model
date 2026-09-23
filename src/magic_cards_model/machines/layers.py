@@ -4647,6 +4647,68 @@ def spend_effect_effects(text: str, permanent: CardState, timestamp: int) -> lis
     ]
 
 
+#: "`<Name>` has annihilator X, where X is the number of +1/+1 counters on
+#: it." (Ulamog, the Defiler; CR 201.5's own name already rewritten to "this
+#: permanent" by `layer_readable_sentences`) - a static ability granting its
+#: own object a keyword that takes a number (CR 702.86a's "Annihilator N"),
+#: printed or X with its definition. Only a keyword `machines/keywords.py`
+#: writes out as a triggered ability is read (`writes_triggered_ability`):
+#: the granted line has to become a real ability, not a word on the board.
+_SELF_HAS_COUNTED_TRIGGER_KEYWORD_RE = re.compile(
+    r"^this (?:creature|permanent) has (?P<keyword>[a-z]+(?: [a-z]+)?) (?P<n>\d+|x)"
+    r"(?P<where>,\s*where x is [^.]+)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_has_counted_trigger_keyword_builder(
+    match: re.Match[str], sentence: str
+) -> EffectBuilder | None:
+    """`_SELF_HAS_COUNTED_TRIGGER_KEYWORD_RE`'s shape: a layer 6 grant (CR
+    613.1f) of "`<Keyword>` `<N>`[, where X is `<expr>`]" to the source itself.
+
+    A static ability's effect (CR 611.3, CR 604.2): timestamped off the
+    source (CR 613.7a), and keyed to the printed line (`_source_line_for`) so
+    a source that loses the ability grants nothing (CR 613.6). The granted
+    line keeps its "where X is ..." definition, so the triggered ability it
+    becomes counts X itself as it resolves (CR 608.2h), with "it" still the
+    same object.
+    """
+    from .keywords import writes_triggered_ability
+
+    keyword = match.group("keyword")
+    if not writes_triggered_ability(keyword):
+        return None
+    count = match.group("n").upper()
+    where = match.group("where")
+    if count == "X" and where is None:
+        return None
+    granted = f"{keyword.capitalize()} {count}"
+    if where is not None:
+        definition = re.sub(r"^,\s*where x is\s+", "", where.strip(), flags=re.IGNORECASE)
+        granted = f"{granted}, where X is {definition}"
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name} has {granted}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, sentence),
+                selector=_only(source.id),
+                modification=grant_ability(granted),
+            )
+        ]
+
+    return builder
+
+
 def _keyword_grant_builder(keywords: Sequence[str]) -> EffectBuilder:
     """ "[Subject] gains <keyword>[, <keyword>, and <keyword>] until end of
     turn." (CR 613.1f, CR 113.10) - one or more keywords, each its own layer
@@ -7681,6 +7743,8 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if match := _BECOME_A_COPY_RE.fullmatch(sentence):
         return _become_a_copy_builder(until_eot=bool(match.group("until_eot")))
+    if match := _SELF_HAS_COUNTED_TRIGGER_KEYWORD_RE.fullmatch(sentence):
+        return _self_has_counted_trigger_keyword_builder(match, sentence)
     if match := _KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:

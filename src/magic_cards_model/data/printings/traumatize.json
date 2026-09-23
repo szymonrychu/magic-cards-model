@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "9b8784dd-83f9-41f8-aedc-f0f81073ffcb",
+  "oracle_id": "e2ea7d01-6564-4a7f-b935-49a5e3978dac",
+  "multiverse_ids": [
+    370663
+  ],
+  "mtgo_id": 49239,
+  "mtgo_foil_id": 49240,
+  "tcgplayer_id": 69968,
+  "cardmarket_id": 262948,
+  "name": "Traumatize",
+  "lang": "en",
+  "released_at": "2013-07-19",
+  "uri": "https://api.scryfall.com/cards/9b8784dd-83f9-41f8-aedc-f0f81073ffcb",
+  "scryfall_uri": "https://scryfall.com/card/m14/77/traumatize?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:52:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.jpg?1783939929",
+    "normal": "https://cards.scryfall.io/normal/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.jpg?1783939929",
+    "large": "https://cards.scryfall.io/large/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.jpg?1783939929",
+    "png": "https://cards.scryfall.io/png/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.png?1783939929",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.jpg?1783939929",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.jpg?1783939929",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.webp?1783939929",
+    "grid": "https://cards.scryfall.io/grid/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.webp?1783939929",
+    "display": "https://cards.scryfall.io/display/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.webp?1783939929",
+    "art": "https://cards.scryfall.io/art/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.webp?1783939929",
+    "crop": "https://cards.scryfall.io/crop/front/9/b/9b8784dd-83f9-41f8-aedc-f0f81073ffcb.webp?1783939929"
+  },
+  "mana_cost": "{3}{U}{U}",
+  "cmc": 5.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Target player mills half their library, rounded down.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "e03ee1c0-ecd2-4fcc-ac3c-e8fdb103a847",
+  "set": "m14",
+  "set_name": "Magic 2014",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/e03ee1c0-ecd2-4fcc-ac3c-e8fdb103a847",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am14&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m14?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9b8784dd-83f9-41f8-aedc-f0f81073ffcb/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae2ea7d01-6564-4a7f-b935-49a5e3978dac&unique=prints",
+  "collector_number": "77",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "He was left with just enough memory to understand what he had lost.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Greg Staples",
+  "artist_ids": [
+    "93d65564-bf00-447b-8406-e2031f03b6b1"
+  ],
+  "illustration_id": "460b2d17-f6d7-4e84-b49e-d3f75fbb2868",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2746,
+  "penny_rank": 5977,
+  "prices": {
+    "usd": "3.92",
+    "usd_foil": "5.76",
+    "usd_etched": null,
+    "eur": "1.73",
+    "eur_foil": "3.44",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=370663&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTraumatize",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTraumatize",
+    "edhrec": "https://edhrec.com/route/?cc=Traumatize"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F69968%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=262948&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/49239?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
