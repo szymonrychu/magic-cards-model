@@ -30887,17 +30887,72 @@ _TRAILING_TARGET_PHRASE_RE = re.compile(
     r"\bto (?P<phrase>any target|(?:up to [^,.]+ )?target [^,.]+)\.?$", re.IGNORECASE
 )
 
+#: The base clause's own target phrase, wherever it sits in the sentence -
+#: trailing ("Firebending Lesson deals 2 damage **to target creature**") or
+#: leading ("**Target creature** gets +3/+3 until end of turn", Colossal
+#: Growth) - stopped short of whatever the clause goes on to say: a comma, a
+#: full stop, one of CR 608.2c's own resolution verbs (`machines/targeting.
+#: py`'s `_TARGET_CLAUSE_VERB_RE` reads the identical boundary for the same
+#: reason, over the *whole* card's text rather than one already-isolated
+#: clause), or the end of the clause. Used only to find the noun CR 400.7's
+#: "that `<noun>`" anaphor below has to match - never to build the splice
+#: `_TRAILING_TARGET_PHRASE_RE` above still owns, which only ever reads the
+#: trailing shape.
+_TARGET_PHRASE_ANYWHERE_RE = re.compile(
+    r"\b(?P<phrase>any target|(?:up to [^,.]+ )?target [^,.]+?)"
+    r"(?=[,.]|\s+(?:gets?|gains?|becomes?|loses?|deals?|has|have|is|are)\b|$)",
+    re.IGNORECASE,
+)
+
+
+def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str | None:
+    """CR 400.7's "that `<noun>`" is anaphora back to the base clause's own
+    already-fixed target (CR 601.2c), not a second, elided one - Colossal
+    Growth's "If this spell was kicked, instead that creature gets +4/+4 and
+    gains trample and haste until end of turn" names its target exactly the
+    way Firebending Lesson's "it deals 5 damage to that creature instead"
+    does. Swaps the anaphor for the literal phrase the base clause printed
+    ("that creature" -> "target creature") so the alternative reads as an
+    ordinary targeted clause, rather than leaving the anaphor in place for
+    `parse_mixed_effect_for_spell` to fail on or blindly appending a second,
+    redundant target phrase the way the elided-tail splice below would.
+
+    `None` when the base names no target noun `_TARGET_PHRASE_ANYWHERE_RE`
+    can read, or the alternative uses no matching anaphor at all - the
+    elided-tail splice owns every other shape.
+    """
+    match = _TARGET_PHRASE_ANYWHERE_RE.search(base_text.strip())
+    if match is None:
+        return None
+    bare_noun = re.sub(
+        r"^(?:up to [^,]+ )?(?:any )?target\s*", "", match.group("phrase"), flags=re.IGNORECASE
+    ).strip()
+    if not bare_noun:
+        return None
+    anaphor = re.compile(rf"\bthat\s+{re.escape(bare_noun)}\b", re.IGNORECASE)
+    if not anaphor.search(alternative_text):
+        return None
+    return anaphor.sub(match.group("phrase"), alternative_text, count=1)
+
 
 def _resolve_instead_alternative(base_text: str, alternative_text: str) -> Effect | None:
-    """CR 614.1a's alternative, read as its own instruction - or, when it
-    elides the target phrase the base clause already announced, with that
-    phrase spliced onto it first (`_TRAILING_TARGET_PHRASE_RE`). `None` only
-    when neither reading works, which - CR 608.2c - fails the whole card
-    closed rather than running half of it.
+    """CR 614.1a's alternative, read as its own instruction; with CR 400.7's
+    anaphor swapped for the base clause's own literal target phrase
+    (`_anaphoric_target_substitution`) when it names one that way; or, when
+    it elides the target phrase the base clause already announced rather
+    than naming it at all, with that phrase spliced onto it instead
+    (`_TRAILING_TARGET_PHRASE_RE`). `None` only when none of the three
+    readings works, which - CR 608.2c - fails the whole card closed rather
+    than running half of it.
     """
     alternative = parse_mixed_effect_for_spell(alternative_text)
     if alternative is not None:
         return alternative
+    substituted = _anaphoric_target_substitution(base_text, alternative_text)
+    if substituted is not None:
+        resolved = parse_mixed_effect_for_spell(substituted)
+        if resolved is not None:
+            return resolved
     if re.search(r"\btarget\b", alternative_text, re.IGNORECASE):
         # Already names its own target (or lack of one, "any target") - a
         # failure to parse here is a real gap, not an elision, and splicing

@@ -58,7 +58,7 @@ from magic_cards_model.machines.keywords import executes
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 
-from .harness import Scenario
+from .harness import Scenario, mana_from
 
 STUN = "stun"
 
@@ -425,39 +425,73 @@ def test_inquisition_of_kozilek_only_offers_cards_within_the_mana_value_bound():
     assert offer.cards == (bolt.id,)
 
 
-# -- What is still refused, and now says so --------------------------------
+# -- What used to be refused, and is now resolved for free ------------------
 
 
-def test_firebending_lesson_fails_closed_with_an_anaphoric_notice():
+def test_firebending_lesson_deals_base_damage_to_the_object_anaphors_referent_unkicked():
     """`Firebending Lesson deals 2 damage to target creature. If this spell
     was kicked, it deals 5 damage to that creature instead.`
 
-    "That creature" is this wave's object anaphor and is read; the sentence
-    around it is not, and deliberately so - "If `<condition>`, `<bonus>` ...
-    instead" needs a condition reader (was this spell kicked?), which is its
-    own wave. So the card is still refused whole (CR 608.2c: no notion of
-    running half an effect - it does **not** deal the base 2 and skip the
-    kicker line) and now leaves an `AnaphoricClauseNotice` naming the sentence
-    it could not read.
-
-    `_unreadable_anaphoric_clause` inspected only pairs whose first clause was
-    a destroy or an exile before this, so every object-anaphor card in the
-    pool failed in silence rather than on the record.
+    "That creature" is this file's object anaphor - the elided alternative in
+    G2a's "instead if" reader (`machines/effects.py`) resolves it against the
+    base clause's own target (CR 601.2c: a spell's target is announced once)
+    rather than needing its own antecedent search. `Game.condition_holds`
+    already read "this spell was kicked" (`_CONDITION_KICKED`) before G2a, so
+    once the instead-if reader existed this card needed no card-specific work
+    at all - proved here unkicked (the base clause) and in the sibling test
+    below kicked (the alternative), with no `AnaphoricClauseNotice` left
+    behind either way. Colossal Dreadmaw (6 toughness) rather than a vanilla
+    2/2, so the target survives both the base and the kicked amount and
+    `.damage` is still readable off the same live object afterwards instead
+    of CR 704.5g's death sweeping it to the graveyard and resetting it.
     """
     scenario = (
         Scenario()
-        .player("alice", hand=["Firebending Lesson"], battlefield=["Mountain", "Mountain"])
-        .player("bob", battlefield=["Grizzly Bears"])
+        .manual_turn_based_actions()
+        .player("alice", hand=["Firebending Lesson"], battlefield=["Mountain"] * 5)
+        .player("bob", battlefield=["Colossal Dreadmaw"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    bears = scenario.creature("Grizzly Bears", "bob")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
 
-    scenario.cast_and_resolve(
-        "Firebending Lesson", *scenario.untapped_sources("Mountain", "Mountain"), targets=[bears]
+    casting = scenario.cast("Firebending Lesson")
+    casting.choose_targets([dreadmaw])
+    payment = casting.begin_paying()
+    for source in scenario.untapped_sources("Mountain"):
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert dreadmaw.damage == 2
+    assert scenario.game.anaphoric_clause_notices == []
+
+
+def test_firebending_lesson_deals_kicked_damage_to_the_object_anaphors_referent():
+    """The kicked half of the same card: CR 601.4/702.33e - once kicked, the
+    "instead" clause replaces the base one, still against the same target.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Firebending Lesson"], battlefield=["Mountain"] * 5)
+        .player("bob", battlefield=["Colossal Dreadmaw"])
+        .build()
     )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
 
-    notices = scenario.game.anaphoric_clause_notices
-    assert [notice.source_name for notice in notices] == ["Firebending Lesson"]
-    assert "that creature" in notices[0].text.lower()
-    assert bears.damage == 0  # not the readable half on its own
+    casting = scenario.cast("Firebending Lesson")
+    casting.pay_kicker()
+    casting.choose_targets([dreadmaw])
+    payment = casting.begin_paying()
+    for source in scenario.untapped_sources(*["Mountain"] * 5):
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert dreadmaw.damage == 5
+    assert scenario.game.anaphoric_clause_notices == []
+    assert scenario.game.anaphoric_clause_notices == []
