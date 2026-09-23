@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "7f9c1a82-695b-4df2-8e51-2d71a62e7baf",
+  "oracle_id": "a0a1cd2b-ed7c-4cce-8497-4873e1e5e3df",
+  "multiverse_ids": [
+    636861
+  ],
+  "mtgo_id": 118118,
+  "arena_id": 87301,
+  "tcgplayer_id": 524178,
+  "cardmarket_id": 740867,
+  "name": "Geological Appraiser",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/7f9c1a82-695b-4df2-8e51-2d71a62e7baf",
+  "scryfall_uri": "https://scryfall.com/card/lci/150/geological-appraiser?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:35:59Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.jpg?1783913759",
+    "normal": "https://cards.scryfall.io/normal/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.jpg?1783913759",
+    "large": "https://cards.scryfall.io/large/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.jpg?1783913759",
+    "png": "https://cards.scryfall.io/png/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.png?1783913759",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.jpg?1783913759",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.jpg?1783913759",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.webp?1783913759",
+    "grid": "https://cards.scryfall.io/grid/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.webp?1783913759",
+    "display": "https://cards.scryfall.io/display/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.webp?1783913759",
+    "art": "https://cards.scryfall.io/art/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.webp?1783913759",
+    "crop": "https://cards.scryfall.io/crop/front/7/f/7f9c1a82-695b-4df2-8e51-2d71a62e7baf.webp?1783913759"
+  },
+  "mana_cost": "{2}{R}{R}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Human Artificer",
+  "oracle_text": "When this creature enters, if you cast it, discover 3. (Exile cards from the top of your library until you exile a nonland card with mana value 3 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Discover"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "not_legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "banned",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set": "lci",
+  "set_name": "The Lost Caverns of Ixalan",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alci&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lci?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/7f9c1a82-695b-4df2-8e51-2d71a62e7baf/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa0a1cd2b-ed7c-4cce-8497-4873e1e5e3df&unique=prints",
+  "collector_number": "150",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Alix Branwyn",
+  "artist_ids": [
+    "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d"
+  ],
+  "illustration_id": "e4eebb63-5ea6-4d3d-909b-dd508dde0e58",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13336,
+  "penny_rank": 180,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=Szm0yzSUUm0",
+    "previewed_at": "2023-10-24"
+  },
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": "0.14",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636861&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGeological%2BAppraiser",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGeological%2BAppraiser",
+    "edhrec": "https://edhrec.com/route/?cc=Geological+Appraiser"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F524178%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=740867&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/118118?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

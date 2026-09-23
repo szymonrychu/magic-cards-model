@@ -26610,6 +26610,53 @@ def _parse_investigate_clause(clause: str, *, for_spell: bool) -> TargetedClause
     return effect
 
 
+#: CR 701.57a: "'Discover N' means '...'" - a bare keyword action, the same
+#: shape as investigate/amass above, printed only with a plain digit in the
+#: pool ("discover 5", Trumpeting Carnosaur; "discover 3", Geological
+#: Appraiser and Zoetic Glyph). "Discover X" or "where X is ..." shapes are
+#: not read - fail closed rather than guess a value.
+_DISCOVER_RE = re.compile(r"^discover (?P<n>\d+)$", re.IGNORECASE)
+
+
+def _parse_discover_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Discover N." - `_DISCOVER_RE`'s shape, as one clause among however
+    many the card prints around it.
+
+    Discover targets nothing (CR 701.57a names no target) and, like amass and
+    investigate above, reads only the stack object's controller and name for
+    the prompt, so the same clause works identically whether it is printed on
+    a triggered ability (Trumpeting Carnosaur's bare enters-the-battlefield
+    trigger, Zoetic Glyph's leaves-the-battlefield one), an activated
+    ability, or a spell - the intervening *if* in front of Geological
+    Appraiser's own "if you cast it, discover 3" is read separately, by
+    `machines/triggers.intervening_if_holds`, before this clause is ever
+    reached, so it needs no special handling here.
+
+    The real machinery is `machines.keywords.discover` - cascade's own
+    exile-until/free-cast/random-bottom process, parameterised by `N` instead
+    of a spell's own mana value.
+    """
+    match = _DISCOVER_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    n = int(match.group("n"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .keywords import discover
+
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        controller = game.controller_of(stack_object).username
+        discover(
+            game,
+            controller,
+            n,
+            source_name=source,
+            source_id=source_id_of(stack_object),
+        )
+
+    return effect
+
+
 #: CR 701.48a: "'Learn' means 'You may discard a card. If you do, draw a
 #: card. If you didn't discard a card, you may reveal a Lesson card you own
 #: from outside the game and put it into your hand.'" A bare keyword action,
@@ -32919,6 +32966,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     investigate_clause = _parse_investigate_clause(clause, for_spell=for_spell)
     if investigate_clause is not None:
         return investigate_clause
+    discover_clause = _parse_discover_clause(clause, for_spell=for_spell)
+    if discover_clause is not None:
+        return discover_clause
     learn_clause = _parse_learn_clause(clause, for_spell=for_spell)
     if learn_clause is not None:
         return learn_clause

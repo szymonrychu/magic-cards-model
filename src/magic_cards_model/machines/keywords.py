@@ -311,6 +311,13 @@ def executes(keyword: str) -> bool:
         # `_cumulative_upkeep_effect` adds the age counter and asks the one
         # pay-or-sacrifice question.
         "cumulative upkeep",
+        # CR 701.57a-c, the same shape once more: `machines/keywords.discover`
+        # performs it (cascade's own exile-until/free-cast/random-bottom
+        # machinery, CR 702.85a, parameterised by N instead of the cascading
+        # spell's own mana value), reached through `machines/effects.
+        # _parse_discover_clause` from inside another ability's or spell's
+        # effect text.
+        "discover",
     }
 
 
@@ -3267,6 +3274,154 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
         bottomed = [state for state in result.exiled if not (cast_hit and state is result.hit)]
         effective_seed = (
             seed if seed is not None else f"{game.shuffle_seed}:{game.shuffles_performed}:cascade"
+        )
+        random.Random(effective_seed).shuffle(bottomed)  # noqa: S311
+        if bottomed:
+            game.shuffles_performed += 1
+        for state in bottomed:
+            game.exile.remove(state)
+            owner.add(state, Zone.LIBRARY)  # the bottom of the library
+        return result
+
+
+# --------------------------------------------------------------------------
+# Discover (CR 701.57a-c)
+# --------------------------------------------------------------------------
+
+
+class DiscoverResult(EngineModel):
+    """What one "discover N" process exiled and found (CR 701.57a-c)."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    exiled: list[CardState] = Field(default_factory=list)
+    """Everything exiled on the way, the hit included, in the order exiled."""
+    hit: CardState | None = None
+    """CR 701.57c's "discovered card": the final card exiled, if its mana
+    value is `N` or less. `None` when the library ran out first."""
+
+
+def discover(
+    game: Any,
+    controller: str,
+    n: int,
+    *,
+    source_name: str | None = None,
+    source_id: str | None = None,
+    seed: int | None = None,
+) -> DiscoverResult:
+    """Perform "discover N" (CR 701.57a-c).
+
+    CR 701.57a: "'Discover N' means 'Exile cards from the top of your library
+    until you exile a nonland card with mana value N or less. You may cast
+    that card without paying its mana cost if the resulting spell's mana
+    value is less than or equal to N. If you don't cast it, put that card
+    into your hand. Put the remaining exiled cards on the bottom of your
+    library in a random order.'"
+
+    Structurally `machines.keywords.cascade` (CR 702.85a) with `N` in place of
+    the cascading spell's own mana value, and two differences that come
+    straight from the two rules not saying the same thing:
+
+    - **"N or less"** is not strict, unlike cascade's own "less than this
+      spell's mana value" - a card costing exactly `N` is a hit. Read as
+      `mana_value_below=n + 1` against `Game.can_cast_during_resolution`/
+      `cast_during_resolution`, whose own bound is exclusive (`>=` is
+      refused), so "at most N" becomes "strictly below N + 1" - safe because
+      every real mana value is a whole number (CR 202.3).
+    - **declining goes to the caster's hand, not the bottom.** Cascade's own
+      "put the exiled cards on the bottom" covers a declined hit along with
+      the misses; CR 701.57a instead gives the hit its own sentence - "If you
+      don't cast it, put that card into your hand" - so only the cards that
+      were never the hit at all (the misses this process passed over, plus
+      the hit itself when it *was* cast and left through the stack instead)
+      end up in `bottomed` below. A hit that stayed in exile because it was
+      declined, or because `can_cast_during_resolution` found no legal way to
+      cast it at all, is moved to hand by hand rather than folded into that
+      list - the one place this function's shape has to diverge from
+      cascade's own `bottomed = [state for state in result.exiled if not
+      (cast_hit and state is result.hit)]` line.
+
+    CR 701.57b: "A player has 'discovered' after the process described in
+    rule 701.57a is complete, **even if some or all of those actions were
+    impossible**" - an empty library still discovers, having exiled and found
+    nothing; nothing here raises for that case, it simply returns a
+    `DiscoverResult` with an empty `exiled` and a `None` hit.
+
+    CR 107.3b: "If a player is casting a spell ... and an effect lets that
+    player cast that spell while paying neither its mana cost nor an
+    alternative cost that includes X, then the only legal choice for X is
+    0" - `Game.cast_during_resolution` already bakes this in
+    (`casting.determine_cost(x_value=0)`), the identical call cascade's own
+    free cast goes through, so nothing extra is needed here for it to hold.
+
+    `controller` is a username rather than the source object cascade itself
+    takes, because unlike cascade - "a triggered ability that functions only
+    while the spell with cascade is on the stack" - discover is a CR 701
+    keyword *action* embedded in another ability's or spell's printed text
+    (`machines/effects._parse_discover_clause`), so it has no fixed shape of
+    source to read a controller off; the caller already knows who is
+    discovering (CR 608.2c's "the controller of the spell or ability"; for a
+    triggered or activated ability, `Game.controller_of`).
+
+    `seed` lets a caller pin a literal value for a test; left `None` (every
+    production caller), the effective seed is `game.shuffle_seed`/`game.
+    shuffles_performed` - the same reproducible-seed convention cascade,
+    graveyard-bottom and hideaway all already use, so a game replayed from its
+    own decoded snapshot bottoms the misses in the same order the original
+    game really had.
+    """
+    with game._id_allocator_scope():  # noqa: SLF001
+        owner = game.player(controller)
+
+        result = DiscoverResult()
+        while owner.library:
+            state = owner.library[0]
+            # CR 400.1's one shared exile zone, through CR 406.2's door - see
+            # `cascade`'s own comment on why this is `exile_cards` plus an
+            # append rather than `owner.move(state, Zone.EXILE)`.
+            game.exile_cards([state])
+            game.reveal(state, source=source_name)  # CR 406.3, CR 701.20a
+            result.exiled.append(state)
+            if not state.card.is_land and state.card.cmc <= n:
+                result.hit = state
+                break
+
+        cast_hit = False
+        if result.hit is not None:
+            castable = game.can_cast_during_resolution(
+                result.hit, controller, mana_value_below=n + 1
+            )
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=controller,
+                prompt=f"cast {result.hit.name} without paying its mana cost (discover {n})",
+                source=source_name,
+                source_id=source_id,
+                affirmative_is_legal=castable,
+            )
+            if game.ask(decision):
+                cast_hit = (
+                    game.cast_during_resolution(
+                        result.hit,
+                        controller,
+                        source_name=source_name or "discover",
+                        rule="CR 701.57a",
+                        mana_value_below=n + 1,
+                    )
+                    is not None
+                )
+            if not cast_hit:
+                # CR 701.57a: "If you don't cast it, put that card into your
+                # hand." - declined, or `can_cast_during_resolution` found no
+                # legal way to cast it at all; either way it does not join
+                # the misses on the bottom.
+                game.exile.remove(result.hit)
+                owner.add(result.hit, Zone.HAND)
+
+        bottomed = [state for state in result.exiled if state is not result.hit]
+        effective_seed = (
+            seed if seed is not None else f"{game.shuffle_seed}:{game.shuffles_performed}:discover"
         )
         random.Random(effective_seed).shuffle(bottomed)  # noqa: S311
         if bottomed:

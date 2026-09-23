@@ -1436,7 +1436,8 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     explores[, then it explores again]" shape (CR 701.44a-d) off triggered,
     activated, and spell text alike, so the reported Amalia Benavides Aguirre
     and every other explore-bearing pool card resolve rather than falling
-    through unexecuted."""
+    through unexecuted. Discover is off it as of T09 (`machines/keywords.
+    discover`, reached through `effects._parse_discover_clause`)."""
     from scripts.sweep_pool import in_target_formats
 
     names = [name for name in pool() if in_target_formats(card(name))]
@@ -1446,7 +1447,6 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
             by_keyword.setdefault(keyword, []).append(name)
     assert set(by_keyword) == {
         "Compleated",
-        "Discover",
         "Miracle",
         "Monstrosity",
         "Sneak",
