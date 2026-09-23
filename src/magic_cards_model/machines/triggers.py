@@ -3798,6 +3798,33 @@ def _control_creature_with_power_holds(game: "Game", clause: str, source: CardSt
     return False
 
 
+#: Might Makes Right's "you control each creature on the battlefield with
+#: the greatest power": every creature tied for the highest power among all
+#: creatures on the battlefield (CR 208.1, computed per CR 613) is yours.
+_CONTROL_EACH_GREATEST_POWER = re.compile(
+    r"^you control each creature on the battlefield with the greatest power$"
+)
+
+
+def _control_each_greatest_power_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """`_CONTROL_EACH_GREATEST_POWER`'s shape, or `None` if the clause is not
+    it. False with no creature on the battlefield at all: there is then no
+    creature with the greatest power for "each" to be true of, and the
+    ability's own point (you have the biggest creature) does not hold."""
+    if _CONTROL_EACH_GREATEST_POWER.match(clause) is None:
+        return None
+    controller = source.controller or game.active_player.username
+    creatures = []
+    for state in game.battlefield:
+        characteristics = game.characteristics_of(state)
+        if characteristics.is_creature:
+            creatures.append((characteristics.power or 0, state))
+    if not creatures:
+        return False
+    greatest = max(power for power, _ in creatures)
+    return all(state.controller == controller for power, state in creatures if power == greatest)
+
+
 #: "there are N or more permanent cards in your graveyard" - the "descend
 #: 4"/"descend 8" ability words' own condition (CR 207.2c) read as a plain
 #: triggered ability's intervening *if* rather than as `machines/layers.py`'s
@@ -4209,6 +4236,9 @@ def intervening_if_holds(
         controller = source.controller or game.active_player.username
         return game.revolt_active_for(controller)
 
+    greatest_power = _control_each_greatest_power_holds(game, clause, source)
+    if greatest_power is not None:
+        return greatest_power
     power_control = _control_creature_with_power_holds(game, clause, source)
     if power_control is not None:
         return power_control
