@@ -172,7 +172,6 @@ from ..machines.keywords import (
     has_miracle,
     has_paradigm,
     has_rebound_now,
-    has_suspend,
     is_indestructible,
     keyword_effect_for,
     keyword_triggered_abilities,
@@ -2204,15 +2203,12 @@ class Game(EngineModel):
     be skipped here with nothing recorded at all."""
 
     suspend_redirect_notices: list[SuspendRedirectNotice] = Field(default_factory=list)
-    """One entry per "counter target spell. If it is countered this way,
-    exile it with N time counters ... . If it doesn't have suspend, it gains
-    suspend." effect (Delay) - recognised, but deliberately not executed,
-    because CR 702.62a's suspend is not built anywhere in this engine
-    (`ExileMarker` has no `SUSPENDED` entry, nothing removes a time counter at
-    upkeep) and countering the spell while silently dropping "it gains
-    suspend" would leave the card exiled with no way back, which is not what
-    it says. See `SuspendRedirectNotice` for why the whole paragraph fails
-    closed instead of half-executing it."""
+    """Retired: nothing writes here any more. Delay's "... exile it with N
+    time counters ... If it doesn't have suspend, it gains suspend." used to
+    fail closed into this list; it is now executed by `machines/effects.
+    _parse_exile_into_suspend_clauses`. The field stays only so the persisted
+    shape of a `Game` - and so `schema_version` - is unchanged; drop it with
+    the next schema bump."""
 
     delayed_clause_notices: list[DelayedClauseNotice] = Field(default_factory=list)
     """One entry per delayed-trigger clause (CR 603.7) whose timing this wave
@@ -17640,11 +17636,7 @@ class Game(EngineModel):
         if _CONDITION_SUSPENDED.fullmatch(text):
             if source is None:
                 return None
-            return (
-                source.zone is Zone.EXILE
-                and has_suspend(source.card)
-                and source.counter_count(Counter.TIME) > 0
-            )
+            return source.is_suspended
 
         if _CONDITION_KICKED.fullmatch(text):
             # CR 702.33d: "this spell" is the ability's own source. Reads the

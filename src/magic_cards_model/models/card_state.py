@@ -1909,9 +1909,24 @@ class CardState(EngineModel):
         """
         if self.zone is not Zone.EXILE:
             return False
-        if not any(keyword.lower() == "suspend" for keyword in self.card.keywords):
+        if not self.has_suspend:
             return False
         return self.counter_count(Counter.TIME) > 0
+
+    @property
+    def has_suspend(self) -> bool:
+        """CR 702.62b's middle clause, "has suspend": printed on the card
+        (Scryfall's `keywords`, the same read `machines/keywords.has_suspend`
+        makes) or granted to this object by a resolved effect - Delay's and
+        Suspend's own "If it doesn't have suspend, it gains suspend." -
+        which `machines/effects.grant_suspend` writes onto
+        `granted_ability_texts` as the bare keyword line, the same place a
+        granted evoke lives, so `machines/keywords.
+        granted_keyword_triggered_abilities` writes out CR 702.62a's two
+        exile-zone triggers for it exactly as it does for a printed one."""
+        if any(keyword.lower() == "suspend" for keyword in self.card.keywords):
+            return True
+        return any(_is_suspend_line(line) for line in self.granted_ability_texts)
 
     def is_summoning_sick(self, game: Any = None) -> bool:
         """Whether the summoning-sickness restriction actually applies here.
@@ -2431,6 +2446,17 @@ class CardState(EngineModel):
             self.last_known_keywords = None
         self.zone_change_stamp = new_id()
         self.zone = zone
+        if origin is Zone.EXILE and zone is not Zone.EXILE:
+            # CR 400.7: a suspend granted to a card in exile (Delay, Suspend)
+            # was granted to *that* object, and the card that leaves exile -
+            # cast off its last time counter, or moved any other way - is a
+            # new one. CR 702.62a's abilities function only in exile anyway,
+            # so dropping the line here is what keeps a card that is later
+            # exiled with time counters by something else from wrongly still
+            # "having suspend" (CR 702.62b).
+            self.granted_ability_texts = tuple(
+                line for line in self.granted_ability_texts if not _is_suspend_line(line)
+            )
         if not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
             # CR 702.103b carries bestowed across exactly one zone change:
             # "the permanent it becomes as it resolves will be a bestowed Aura
@@ -2956,6 +2982,12 @@ def counter_state_based_actions(permanents: Iterable[CardState]) -> list[CardSta
     permanents = list(permanents)
     annihilate_counters_on(permanents)
     return planeswalkers_with_zero_loyalty(permanents)
+
+
+def _is_suspend_line(line: str) -> bool:
+    """Whether a granted ability line is the bare suspend keyword - the line
+    `machines/effects.grant_suspend` writes."""
+    return line.strip().rstrip(".").lower() == "suspend"
 
 
 def _with_granted[T](have: tuple[T, ...], granted: Iterable[T]) -> tuple[T, ...]:

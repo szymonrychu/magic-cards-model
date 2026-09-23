@@ -18,8 +18,8 @@ oracle text rather than a per-card registry row:
   count; Force of Negation's own exile-instead-of-graveyard redirect)
 - a compound target across two different noun *kinds* (Consign to Memory's
   "target triggered ability or colorless spell" - an ability or a
-  colour-restricted spell) and a redirect this engine refuses outright
-  rather than half-apply (Delay's suspend redirect)
+  colour-restricted spell); Delay's counter-into-suspend redirect has its own
+  file, `test_counter_into_suspend.py`
 - a **predicate** on the target rather than a type word ("with mana value 2" -
   Spell Snare; "with power or toughness 2 or less" - Stern Scolding), and the
   qualifier and predicate slots on the "unless" shape too (Spell Pierce's
@@ -35,7 +35,6 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import DecisionKind
-from magic_cards_model.machines.effects import SuspendRedirectNotice
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
 from tests.scenarios.harness import Scenario
@@ -529,32 +528,6 @@ def test_consign_to_memory_can_target_a_triggered_ability():
     scenario.cast_and_resolve("Consign to Memory", island, username="bob", targets=[trigger])
 
     assert scenario.stack_names() == [], "the trigger was countered rather than resolving"
-
-
-# --------------------------------------------------------------------------
-# A redirect this engine refuses outright: Delay's suspend rider
-# --------------------------------------------------------------------------
-
-
-def test_delay_fails_closed_with_a_notice_instead_of_half_applying():
-    """CR 702.62a's suspend is not built anywhere in this engine (`docs/
-    engine-coverage.md`), and countering the spell while dropping "it gains
-    suspend" on the floor would leave a spell exiled with no way back when the
-    card says it eventually has one - the forbidden "looks right, isn't"
-    shape. So the whole paragraph does nothing at all, and records why.
-    """
-    scenario = board(["Opt"], bob_hand=["Delay"], bob_battlefield=["Island", "Island"]).build()
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
-    scenario.pass_priority("alice")
-
-    bob_islands = scenario.untapped_sources("Island", "Island", username="bob")
-    scenario.cast_and_resolve("Delay", *bob_islands, username="bob", targets=[opt])
-
-    assert opt.zone is Zone.STACK, "Delay never actually countered it"
-    (notice,) = scenario.game.suspend_redirect_notices
-    assert isinstance(notice, SuspendRedirectNotice)
-    assert notice.source_name == "Delay"
 
 
 # --------------------------------------------------------------------------

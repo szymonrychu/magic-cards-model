@@ -73,7 +73,6 @@ from .keywords import (
     FACE_DOWN_CAST_COST,
     enchant_restrictions,
     face_down_characteristics,
-    has_suspend,
     why_cannot_enchant,
 )
 from .layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
@@ -6019,7 +6018,7 @@ def finish_suspend(game: Any, card: CardState) -> CardState | None:
     """
     if card.zone is not Zone.EXILE:
         return None
-    if not has_suspend(card.card):
+    if not card.has_suspend:
         # CR 702.62b is broader than the suspend special action's own marker:
         # a card exiled with time counters by something else has the ability.
         return None

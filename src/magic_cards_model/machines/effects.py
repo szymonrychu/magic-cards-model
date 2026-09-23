@@ -12464,10 +12464,13 @@ _SPELL_QUALIFIER_WORD = (
 )
 #: The qualifier as *printed*, which is one or more of the words above joined
 #: by "or" - Flusterstorm's "instant or sorcery spell", against Force of
-#: Negation's single "noncreature". `machines/targeting.py` already reads the
-#: disjunction into `TargetRequirement.card_types`; this only has to accept
-#: the shape, since the restriction is enforced there and not here.
-_SPELL_QUALIFIER = rf"{_SPELL_QUALIFIER_WORD}(?: or {_SPELL_QUALIFIER_WORD})*"
+#: Negation's single "noncreature" - or, for three or more, the serial-comma
+#: list Strix Serenade's "artifact, creature, or planeswalker spell" and Swan
+#: Song's "enchantment, instant, or sorcery spell" print. `machines/
+#: targeting.py` already reads the disjunction into `TargetRequirement.
+#: card_types`; this only has to accept the shape, since the restriction is
+#: enforced there and not here.
+_SPELL_QUALIFIER = rf"{_SPELL_QUALIFIER_WORD}(?:(?:,(?: or)?| or) {_SPELL_QUALIFIER_WORD})*"
 #: The predicate a counterspell may print *after* the noun - a bound on one of
 #: the spell's own characteristics rather than a word about its type:
 #:
@@ -15837,6 +15840,14 @@ _REFERENT_GAIN_LIFE_RE = re.compile(
     rf"^gains? (?:life equal to (?P<expr>.+)|(?P<n>{COUNT}) life\.?)$", re.IGNORECASE
 )
 
+#: "loses N life." - Inevitable Defeat's and Certain Death's own "Its
+#: controller loses 3 life", and Punish Ignorance's after a counter (CR
+#: 119.3: that player's life total "is adjusted accordingly"). The "and you gain N
+#: life" half those cards print after it is its own clause by the time this
+#: is read (`split_effect_clauses` cuts at ", and you"/" and you"), run by the
+#: ordinary per-clause dispatch against the spell's own controller.
+_REFERENT_LOSE_LIFE_RE = re.compile(rf"^loses? (?P<n>{COUNT}) life\.?$", re.IGNORECASE)
+
 #: "draws a/N card(s)." - Introduction to Annihilation's own "Its controller
 #: draws a card.", CR 121.2's ordinary draw dealt to whichever player the
 #: antecedent's referent reader found.
@@ -15901,6 +15912,18 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
             player.gain_life(amount)
 
         return fixed_referent_gain_life
+
+    if match := _REFERENT_LOSE_LIFE_RE.fullmatch(rest):
+        loss = parse_count(match.group("n"))
+        if loss is None:
+            return None
+
+        def fixed_referent_lose_life(
+            game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+        ) -> None:
+            player.lose_life(loss)
+
+        return fixed_referent_lose_life
 
     if match := _REFERENT_DRAW_RE.fullmatch(rest):
         amount = parse_count(match.group("n"))
@@ -21839,14 +21862,6 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     mass_pump_for_spell = _mass_pump_spell_effect(whole)
     if mass_pump_for_spell is not None:
         return mass_pump_for_spell
-    if _COUNTER_THEN_SUSPEND_REDIRECT_RE.fullmatch(re.sub(r"\s*\([^()]*\)\s*$", "", whole)):
-
-        def suspend_redirect_notice_only(game: "Game", spell: CardState) -> None:
-            game.suspend_redirect_notices.append(
-                SuspendRedirectNotice(source_id=spell.id, source_name=spell.card.name, text=whole)
-            )
-
-        return suspend_redirect_notice_only
     flashback_grant = _parse_grant_flashback_clause(whole)
     if flashback_grant is not None:
         return flashback_grant
@@ -24092,6 +24107,55 @@ def _parse_exile_then_return_clause_pair(
     return effect
 
 
+def _parse_counter_then_referent_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Counter target `<qualifier>` spell. Its controller `<referent
+    clause>`." - Strix Serenade's and Swan Song's "Its controller creates a
+    2/2 blue Bird creature token with flying.", An Offer You Can't Refuse's
+    "Its controller creates two Treasure tokens." and Punish Ignorance's "Its
+    controller loses 3 life" - as one CR 608.2c instruction pair.
+
+    The stack-side twin of `_parse_anaphoric_clause_pair`: "its controller" is
+    CR 400.7's anaphora back to the spell the first sentence targeted, never a
+    target of its own, so the referent player is read off that spell *before*
+    it is countered (a card in a graveyard is no spell, so CR 108.4a would
+    answer its owner instead), and the second sentence is read by the same
+    `_parse_referent_clause` Crib Swap's permanent-side sentence already goes
+    through.
+
+    CR 113.6g: a spell that can't be countered stays on the stack, but the
+    second sentence still runs - CR 608.2b's target is legal, so the spell
+    "will resolve normally", and the printed rulings for this exact template
+    say so (Strix Serenade 2024-06-07, Swan Song 2013-09-15, Punish Ignorance
+    2008-10-01). A target already gone from the stack is CR 608.2b's illegal
+    target: no counter and no second sentence.
+    """
+    if not for_spell:
+        return None
+    if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
+        return None
+    subject_match = _ANAPHORIC_SUBJECT_RE.fullmatch(second.strip())
+    if subject_match is None:
+        return None
+    second_clause = _parse_referent_clause(subject_match.group("rest"))
+    if second_clause is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            referent = game.controller_of(target)
+            game.counter(target)
+            second_clause(game, referent, None, spell.name, source_id_of(spell))
+
+    return effect
+
+
 #: "Create X 1/1 colorless Thopter artifact creature tokens with flying, where
 #: X is that spell's mana value." (Access Denied) - CR 107.3's X, set by the
 #: very spell the paired first clause just countered, not chosen by the
@@ -24454,6 +24518,119 @@ def _parse_counter_exile_then_cast_free_clauses(
             )
 
     return 3, effect
+
+
+#: "If it doesn't have suspend, it gains suspend." - the rider Delay, Suspend,
+#: Jhoira of the Ghitu and Taigam, Master Opportunist all print after putting
+#: time counters on a card in exile. "It" is CR 400.7's anaphor for the card
+#: the sentence before just exiled.
+_GAINS_SUSPEND_RE = re.compile(r"^if it doesn'?t have suspend, it gains suspend\.?$", re.IGNORECASE)
+
+#: "If the spell is countered this way, exile it with `<n>` time counters on it
+#: instead of putting it into its owner's graveyard" (Delay) - CR 608.2c's
+#: own "later text ... may modify the meaning of earlier text": the counter
+#: of the sentence before is redirected to exile, with counters.
+_COUNTERED_THIS_WAY_EXILE_WITH_COUNTERS_RE = re.compile(
+    rf"^if (?:that|the) spell is countered this way, exile it with (?P<n>{COUNT}) "
+    r"time counters? on it instead of putting it into its owner'?s graveyard\.?$",
+    re.IGNORECASE,
+)
+
+#: "put `<n>` time counters on it" - the second half of Suspend's own "Exile
+#: target creature and put two time counters on it.", which
+#: `split_effect_clauses` has already cut at " and ".
+_PUT_TIME_COUNTERS_ON_IT_RE = re.compile(
+    rf"^(?:and )?put (?P<n>{COUNT}) time counters? on it\.?$", re.IGNORECASE
+)
+
+
+def grant_suspend(game: "Game", card: CardState, time_counters: int) -> None:
+    """Put `time_counters` time counters on `card`, now in exile, and "if it
+    doesn't have suspend, it gains suspend" - leaving it suspended by CR
+    702.62b's own three clauses (exile, has suspend, has a time counter).
+
+    The grant is the bare keyword line on `CardState.granted_ability_texts`,
+    so `machines/keywords.granted_keyword_triggered_abilities` writes out CR
+    702.62a's two exile-zone triggers from it exactly as it does for a
+    printed "Suspend N-[cost]": the owner's upkeep takes a counter off, and
+    the last one lets its owner cast it free, with haste for a creature. CR
+    611.2a: no duration is stated, so it lasts - until CR 400.7 ends the
+    object at its next zone change (`CardState.move_to` drops the line).
+
+    A card that is not in exile (a token, which CR 704.5d removes from any
+    zone but the battlefield, or a move a replacement effect sent elsewhere)
+    gets nothing: "it" is no longer there to be given counters.
+    """
+    if card.zone is not Zone.EXILE or card not in game.exile:
+        return
+    game.add_counters(card, Counter.TIME, time_counters)
+    if not card.has_suspend:
+        card.granted_ability_texts = (*card.granted_ability_texts, "Suspend")
+
+
+def _parse_exile_into_suspend_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Two printed shapes, one mechanic - exile a card with time counters on
+    it, then "If it doesn't have suspend, it gains suspend." (CR 702.62a,
+    702.62b), read as one CR 608.2c instruction:
+
+    - Delay: "Counter target spell. If the spell is countered this way, exile
+      it with three time counters on it instead of putting it into its
+      owner's graveyard. If it doesn't have suspend, it gains suspend." The
+      exile is a rider on the *counter* (CR 701.6a): a spell that can't be
+      countered (CR 113.6g) stays on the stack, so "countered this way" is
+      false and nothing is exiled, counted or granted.
+    - Suspend: "Exile target creature and put two time counters on it. If it
+      doesn't have suspend, it gains suspend." - a permanent exiled off the
+      battlefield (CR 406.2), counters placed once it is there.
+
+    In both, a target gone by resolution (CR 608.2b) is simply not touched.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    first = clauses[index].strip()
+    second = clauses[index + 1].strip()
+    if not _GAINS_SUSPEND_RE.fullmatch(clauses[index + 2].strip()):
+        return None
+    countered = _COUNTERED_THIS_WAY_EXILE_WITH_COUNTERS_RE.fullmatch(second)
+    if countered is not None and _COUNTER_TARGET_SPELL_RE.fullmatch(first):
+        counters = parse_count(countered.group("n"))
+        if counters is None:
+            return None
+
+        def counter_into_suspend(game: "Game", stack_object: "StackObject") -> None:
+            for reference in stack_object.targets:
+                if not reference.is_card:
+                    continue
+                target = next((item for item in game.stack if item.id == reference.card_id), None)
+                if not isinstance(target, CardState):
+                    continue
+                game.counter(target, to_exile=True)
+                if target in game.stack:
+                    continue  # CR 113.6g: not countered, so not "this way".
+                grant_suspend(game, target, counters)
+
+        return 3, counter_into_suspend
+
+    put = _PUT_TIME_COUNTERS_ON_IT_RE.fullmatch(second)
+    exile = _EXILE_TARGET_RE.fullmatch(first)
+    if put is None or exile is None:
+        return None
+    if not _targets_understood(exile.group("phrase"), count_agnostic=False, battlefield_only=True):
+        return None
+    counters = parse_count(put.group("n"))
+    if counters is None:
+        return None
+
+    def exile_into_suspend(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            game.exile_permanent(target)
+            grant_suspend(game, target, counters)
+
+    return 3, exile_into_suspend
 
 
 #: "Imprint" and its plain-English relatives - "you may exile a `<quality>`
@@ -25252,22 +25429,11 @@ class ConditionalClauseNotice(EngineModel):
 
 
 class SuspendRedirectNotice(EngineModel):
-    """A "counter target spell. If [it] is countered this way, exile it with
-    N time counters ... instead of ... graveyard. If it doesn't have suspend,
-    it gains suspend." effect (Delay) - genuinely read (the shape is
-    recognised), but deliberately not executed.
-
-    CR 702.62a's suspend is three abilities, and `docs/engine-coverage.md`
-    already tracks none of them as built: `ExileMarker` has no `SUSPENDED`
-    entry, nothing removes a time counter at upkeep, and nothing grants the
-    cast-for-free permission once the last one comes off. Half-doing this -
-    countering the spell and exiling it with three time counters while never
-    honouring "it gains suspend" - would be exactly the forbidden shape: a
-    board that looks right (the spell is gone) and is not (it can now never
-    come back, when the card says it eventually can). So the whole paragraph
-    fails closed instead: no counter, no exile, no counters placed - and this
-    notice is the record that something real went unread, not a silent no-op.
-    """
+    """Retired: the notice Delay's counter-into-suspend paragraph used to
+    fail closed into, before `_parse_exile_into_suspend_clauses` executed it.
+    Nothing constructs one any more; the model is kept only because
+    `Game.suspend_redirect_notices` still names it, so the persisted shape of
+    a `Game` does not change."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -25275,23 +25441,6 @@ class SuspendRedirectNotice(EngineModel):
     source_name: str
     text: str
     """The unreadable clause itself, as printed."""
-
-
-#: "Counter target `<qualifier>` spell. If [it/that spell] is countered this
-#: way, exile it with `<n>` time counters on it instead of putting it into its
-#: owner's graveyard. If it doesn't have suspend, it gains suspend." (Delay) -
-#: recognised whole, on purpose, rather than split into `_COUNTER_TARGET_
-#: SPELL_RE`'s own clause plus two unreadable ones: `_parse_mixed_clauses`
-#: already fails the whole card closed the moment one clause of several does
-#: not parse, but that leaves *no record* that anything was seen at all -
-#: this pattern exists only to turn that silence into a `SuspendRedirectNotice`.
-_COUNTER_THEN_SUSPEND_REDIRECT_RE = re.compile(
-    rf"^counter target(?: {_SPELL_QUALIFIER_WORD})? spell\. "
-    r"if (?:that|the) spell is countered this way, exile it with \w+ time counters? on it "
-    r"instead of putting it into its owner'?s graveyard\. "
-    r"if it doesn'?t have suspend, it gains suspend\.?$",
-    re.IGNORECASE,
-)
 
 
 def _unreadable_conditional_clause(text: str, *, for_spell: bool) -> str | None:
@@ -38326,6 +38475,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         # -- end Wave W1 multi-clause merges --------------------------------
+        merged = _parse_exile_into_suspend_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
         merged = _parse_counter_exile_then_cast_free_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
@@ -38512,6 +38667,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_exile_then_return_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_counter_then_referent_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:
