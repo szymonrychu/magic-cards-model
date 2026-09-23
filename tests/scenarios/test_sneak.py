@@ -424,3 +424,36 @@ def test_legal_actions_do_not_offer_sneak_in_a_main_phase():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     assert _sneak_casts(scenario) == []
+
+
+def test_legal_actions_offer_sneak_after_the_real_declare_blockers_turn_based_action():
+    """CR 509.1's declare-blockers turn-based action runs even when nobody
+    blocks - the declaration is still "which creatures, if any, will block".
+    `no_blocks()` (used by every other test here) calls
+    `Game.declare_blockers([])` directly, which always sets
+    `Combat.blockers_declared`; this test instead reaches the step the way a
+    real game does, through `Game.turn_based_actions()`, to prove the
+    turn-based action itself sets it too when the defending player's answer
+    to `ask_blockers` is empty."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Michelangelo's Technique"],
+            battlefield=["Grizzly Bears", "Forest", "Forest", "Forest", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.attack_with(bears)
+    scenario.start_at(Step.DECLARE_BLOCKERS)
+
+    scenario.turn_based_actions()
+
+    assert scenario.game.combat.blockers_declared, (
+        "the declare-blockers turn-based action must set blockers_declared "
+        "even when the answer to ask_blockers is empty (CR 509.1)"
+    )
+    assert len(_sneak_casts(scenario)) == 1

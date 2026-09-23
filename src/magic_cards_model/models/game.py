@@ -4279,8 +4279,14 @@ class Game(EngineModel):
                     )
                 )
             )
-        if blocks:
-            self.declare_blockers(blocks)
+        # CR 509.1's turn-based action runs whether or not anybody blocks -
+        # "which creatures, if any, will block" - so `declare_blockers` is
+        # called unconditionally. Skipping it when `blocks` is empty left
+        # `Combat.blockers_declared` False on every fully unblocked attack,
+        # which read as "blockers have not been declared yet" to any
+        # unblocked-creature check (CR 509.1h) run afterward, such as
+        # sneak's and ninjutsu's own availability.
+        self.declare_blockers(blocks)
 
     def _resolve_declaration(
         self, pairs: "list[tuple[CardState | UUID, CardState | Player | TargetRef | UUID | str]]"
