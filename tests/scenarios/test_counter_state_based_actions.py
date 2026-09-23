@@ -128,3 +128,19 @@ def test_annihilation_through_the_harness_alias_once_the_workaround_is_gone():
 
     assert bears.counters == {"+1/+1": 1}
     assert (bears.power, bears.toughness) == (3, 3)
+
+
+def test_the_api_facing_counter_state_based_actions_still_annihilates():
+    """`magic_cards_model_api.engine_api` imports
+    `card_state.counter_state_based_actions` at module load and calls it on
+    `game.battlefield`; `Game` now performs CR 704.5q itself, but the
+    function stays a working entry point for that caller."""
+    from magic_cards_model.models.card_state import counter_state_based_actions
+
+    scenario = board(battlefield=["Grizzly Bears"]).build()
+    bears = scenario.creature("Grizzly Bears")
+    bears.add_counters(Counter.PLUS_ONE, 2)
+    bears.add_counters(Counter.MINUS_ONE, 1)
+
+    assert counter_state_based_actions(scenario.game.battlefield) == []
+    assert bears.counters == {Counter.PLUS_ONE: 1}

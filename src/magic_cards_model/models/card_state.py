@@ -2764,6 +2764,20 @@ def planeswalkers_with_zero_loyalty(permanents: Iterable[CardState]) -> list[Car
     return [state for state in permanents if state.has_zero_loyalty]
 
 
+def counter_state_based_actions(permanents: Iterable[CardState]) -> list[CardState]:
+    """The counter-driven state-based actions, in one pass (CR 704.3).
+
+    Kept for `magic_cards_model_api.engine_api`, which imports it at module
+    load: `Game._state_based_actions_once` performs these itself now, through
+    the same two helpers. Annihilation first (CR 704.5q), then the
+    planeswalkers left at zero loyalty (CR 704.5i), which is what the caller
+    should put into graveyards.
+    """
+    permanents = list(permanents)
+    annihilate_counters_on(permanents)
+    return planeswalkers_with_zero_loyalty(permanents)
+
+
 def _as_number(printed: str | None) -> int | None:
     """A printed power or toughness as an int, or None if it is not a plain number."""
     if printed is None:
