@@ -279,3 +279,64 @@ def test_a_modal_card_whose_every_mode_is_player_parseable_does_not_run_them_all
     modal_text = "Choose one —\nYou gain 3 life.\nDraw a card."
     assert parse_player_effect_for_spell(modal_text) is None
     assert parse_mixed_effect_for_spell(modal_text) is None
+
+
+# --------------------------------------------------------------------------
+# T10/G7 review fix - a shared-subject verb list beside an ordinary
+# bystander sentence. `_parse_shared_subject_clauses` used to require *every*
+# sentence of the text to open with one of its five subject words
+# (`_SHARED_SUBJECT_RE`) before it would carry a subject across a single one
+# of them - a card mixing a genuine shared-subject list with so much as one
+# other sentence that states no subject of its own ("Draw a card.", "Scry
+# 1." - CR 701's own keyword-action imperatives need none) fell through the
+# whole pass untouched, and the list's own later items landed right back on
+# `_parse_optional_player_clause`'s "you " retry, which has no memory of the
+# list's real subject and silently ran them against the resolving ability's
+# own *controller* instead - the identical fail-open Arbiter of Woe exposed
+# for a whole-text match, now reachable again the moment any bystander
+# sentence sits next to the list.
+#
+# No real card in the fixture pool (or in a live Scryfall search for this
+# shape in the session that wrote this fix) carries this exact pairing -
+# every real card that opens a shared-subject list also states "You ..."
+# explicitly for its own controller's half, which is itself one of the five
+# subject words and so was already covered. Synthetic strings, the same
+# discipline `test_unreadable_anaphoric_clause_finds_the_second_sentence_of_
+# a_synthetic_pair` above and `test_a_variable_energy_amount_does_not_parse`
+# (`test_effects.py`) use for a shape with no real-card example - the
+# fixture-pool, real-board proof that the underlying mechanism itself is
+# correct is `tests/scenarios/test_shared_subject_verb_list.py`'s Archon of
+# Cruelty/Dusk Mangler/Arbiter of Woe cases, unaffected by this fix since
+# their own second sentence already opens with "You ...".
+# --------------------------------------------------------------------------
+
+
+def test_shared_subject_list_still_carries_its_subject_beside_a_trailing_bystander():
+    """ "Each opponent discards a card and loses 2 life. Draw a card." reads
+    as two CR 608.2c instructions - the opponents' own shared-subject list,
+    and the controller's separate draw - never three, with "loses 2 life"
+    orphaned onto whoever `_parse_optional_player_clause`'s "you " retry
+    happens to run it against.
+    """
+    from magic_cards_model.machines.effects import _parse_mixed_clauses
+
+    text = "Each opponent discards a card and loses 2 life. Draw a card."
+    clauses = _parse_mixed_clauses(text, for_spell=False)
+    assert clauses is not None
+    assert len(clauses) == 2
+
+
+def test_shared_subject_list_still_carries_its_subject_before_a_trailing_bystander():
+    """The identical shape with the bystander sentence naming no subject at
+    all and the list opening with "target opponent" instead of "each
+    opponent" - Archon of Cruelty's own subject, paired with a keyword
+    action (Scry) that carries no subject word of its own."""
+    from magic_cards_model.machines.effects import _parse_mixed_clauses
+
+    text = (
+        "Target opponent sacrifices a creature of their choice, discards a "
+        "card, and loses 2 life. Scry 1."
+    )
+    clauses = _parse_mixed_clauses(text, for_spell=False)
+    assert clauses is not None
+    assert len(clauses) == 2

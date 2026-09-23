@@ -35156,16 +35156,56 @@ def _parse_shared_subject_sentence(sentence: str, *, for_spell: bool) -> Targete
 
 
 def _parse_shared_subject_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
-    """Every sentence of `text` read through `_parse_shared_subject_sentence`,
-    or `None` the moment one is not that shape.
+    """Every sentence of `text` read through `_parse_shared_subject_sentence`
+    where that sentence opens one of the five subject shapes, and through
+    the ordinary `_parse_mixed_clauses` pipeline (recursively, one sentence
+    at a time) for any sentence that does not - `None` the moment either
+    reading fails, or the text carries no shared-subject sentence at all.
 
-    Requiring *every* sentence of the whole ability/spell text to match is
-    deliberate: a card mixing a genuine shared-subject list with some other,
-    unrelated sentence this reader does not cover falls through to the rest
-    of `_parse_mixed_clauses` untouched (its own per-clause dispatch, and the
-    narrower single-shape mergers already there), rather than this reader
-    consuming half the text and leaving the rest for something else to
-    re-discover.
+    **The review fix this is** (T10/G7 round 2): the first cut of this
+    reader required *every* sentence of the text to open with one of
+    `_SHARED_SUBJECT_RE`'s five subject words before it would carry a
+    subject across even one of them. That is stricter than the fail-open it
+    was built to close actually needs: a shared-subject list sitting beside
+    an *ordinary* bystander sentence that states no subject of its own at
+    all - "Draw a card.", "Scry 1." (CR 701's own keyword-action
+    imperatives, always the resolving spell's or ability's own controller by
+    default, needing no stated subject to read correctly on their own) -
+    fell through this reader entirely, and the list's own later items were
+    right back where they started: reaching `_parse_optional_player_clause`
+    at `_parse_mixed_clause`'s own last resort, whose "you " retry has no
+    memory of the list's real subject and silently ran them against the
+    resolving ability's own *controller* instead. `_parse_mixed_clauses(
+    "Each opponent discards a card and loses 2 life. Draw a card.")` is the
+    probe that found it: three clauses, with "loses 2 life" orphaned onto
+    the controller exactly as it was before this reader existed at all.
+
+    Splitting sentence-by-sentence instead of all-or-nothing closes that:
+    every sentence that *does* open a shared-subject list is read by
+    `_parse_shared_subject_sentence` (unchanged), so its own later items
+    never reach the split-based per-clause dispatch that could orphan them
+    in the first place, whatever sits beside it. A sentence that does not
+    open one is read by recursing into `_parse_mixed_clauses` for that one
+    sentence alone - exactly the reading it would already get as the whole
+    text of a card with no shared-subject list at all, since a lone sentence
+    never re-enters this function (the length check below returns `None`
+    immediately for it, the same way the original all-or-nothing form did
+    for a text with no matching sentence). Fail-closed still holds per
+    sentence: any sentence, matched or not, that fails to parse fails the
+    whole text (CR 608.2c's usual "no partial run of the instruction"), so
+    this is strictly a widening of *which* texts this reader reaches, never
+    a loosening of what counts as a read.
+
+    Real cards never actually exercise the gap this widening closes -
+    Archon of Cruelty, Arbiter of Woe, and Dusk Mangler all state "You ..."
+    explicitly for their own controller's half, which is itself one of the
+    five subject words and so already matched under the old all-or-nothing
+    form. `tests/test_mixed_effects.py` pins the gap itself with a synthetic
+    string (no real card in the fixture pool, or in a live Scryfall search
+    for this shape, carries it); the fixture-pool, real-board proof that the
+    underlying mechanism is correct remains those three cards' own scenario
+    tests, unaffected since their own text was never routed through the new
+    branch below.
 
     Tried only after every more specific whole-text merger already in
     `_parse_mixed_clauses` has had first refusal (see this function's own
@@ -35175,14 +35215,36 @@ def _parse_shared_subject_clauses(text: str, *, for_spell: bool) -> list[Targete
     one already claimed.
     """
     sentences = _plain_resolution_sentences(text)
-    if not sentences:
+    if len(sentences) < 2:
+        # A lone sentence gets no benefit from carrying a subject across
+        # itself, and reading it here would recurse into `_parse_mixed_
+        # clauses` for the identical text that called this function in the
+        # first place - unchanged from the original all-or-nothing form,
+        # which also read a single sentence through `_parse_shared_subject_
+        # sentence` alone (never through this widened branch).
+        if not sentences:
+            return None
+        effect = _parse_shared_subject_sentence(sentences[0], for_spell=for_spell)
+        return [effect] if effect is not None else None
+    has_shared_subject_sentence = any(
+        _parse_shared_subject_sentence(sentence, for_spell=for_spell) is not None
+        for sentence in sentences
+    )
+    if not has_shared_subject_sentence:
+        # Nothing here opens a shared-subject list at all - leave the text
+        # untouched for the rest of `_parse_mixed_clauses`' own pipeline,
+        # exactly as the original all-or-nothing form already did.
         return None
     effects: list[TargetedClause] = []
     for sentence in sentences:
         effect = _parse_shared_subject_sentence(sentence, for_spell=for_spell)
-        if effect is None:
+        if effect is not None:
+            effects.append(effect)
+            continue
+        bystander_effects = _parse_mixed_clauses(sentence, for_spell=for_spell)
+        if bystander_effects is None:
             return None
-        effects.append(effect)
+        effects.extend(bystander_effects)
     return effects
 
 

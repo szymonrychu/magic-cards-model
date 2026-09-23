@@ -3421,12 +3421,33 @@ class Game(EngineModel):
 
     Bumped 47 -> 48 (G7): a "`<SUBJ>` `<verb1>`, `<verb2>`, and `<verb3>`"
     shared-subject verb list is newly carried across every item instead of
-    only its first, and `_parse_optional_player_clause`'s own "you " retry
-    no longer silently attributes an orphaned later item to the resolving
-    ability's controller. Archon of Cruelty's own trigger went from a no-op
-    to a real edict/discard/life-loss; Arbiter of Woe's "each opponent
-    discards a card and loses 2 life" now costs the opponent the life
-    instead of the controller. A paused game with either trigger already on
+    only its first. `_parse_optional_player_clause`'s own "you " retry is
+    unchanged - it is still every other caller's correct way to read a
+    genuinely subject-less fragment - but `_parse_shared_subject_clauses`
+    now claims a shared-subject sentence whole, before `_CLAUSE_SEPARATOR`
+    ever splits its later items into the orphaned fragments that retry used
+    to see. (Round 2 widened this to claim a shared-subject sentence even
+    when it sits beside an *ordinary* sentence with no subject word of its
+    own - "Draw a card.", "Scry 1." - closing a gap the first cut left open;
+    see `_parse_shared_subject_clauses`'s own docstring. The dispatch
+    fingerprint's one changed entry from that widening, "You draw a card
+    and lose 1 life. Then if your library has no cards in it, you win the
+    game." (Doctor Doom, Unrivaled's activated ability), moves from
+    `<none>` to `_parse_shared_subject_clauses` in `_parse_mixed_clauses`'s
+    own chain - the per-clause split path that used to read it still exists
+    and is unchanged, this sentence is just claimed one step earlier now;
+    `tests/scenarios/test_self_owner_shuffles_and_win_the_game.py::test_doctor_doom_wins_the_game_when_his_activated_draw_empties_the_library_off_pool`
+    reruns the same draw/life-loss/win-check/shuffle against a real board
+    and still passes, so this is a dispatch-path change with no behaviour
+    change - no further bump for it. No other entry in either whole-text or
+    single-clause chain moved, across the full pool - in particular, no
+    entry moved off `_parse_optional_player_clause` as `_parse_mixed_
+    clause`'s own winner, because that function was never the thing to
+    change: the fix is which sentences reach the per-clause split at all.)
+    Archon of Cruelty's own trigger went from a no-op to a real
+    edict/discard/life-loss; Arbiter of Woe's "each opponent discards a
+    card and loses 2 life" now costs the opponent the life instead of the
+    controller. A paused game with either trigger already on
     the stack, or one holding either permanent, would resolve that trigger
     differently, so a version-47 snapshot is refused rather than replayed
     into a different game.
