@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a",
+  "oracle_id": "b3606b80-8d1b-4417-8902-a7ccf6b97cbb",
+  "multiverse_ids": [
+    555359
+  ],
+  "mtgo_id": 98535,
+  "arena_id": 80309,
+  "tcgplayer_id": 269097,
+  "cardmarket_id": 652109,
+  "name": "Take to the Streets",
+  "lang": "en",
+  "released_at": "2022-04-29",
+  "uri": "https://api.scryfall.com/cards/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a",
+  "scryfall_uri": "https://scryfall.com/card/snc/158/take-to-the-streets?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:11:41Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.jpg?1783923101",
+    "normal": "https://cards.scryfall.io/normal/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.jpg?1783923101",
+    "large": "https://cards.scryfall.io/large/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.jpg?1783923101",
+    "png": "https://cards.scryfall.io/png/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.png?1783923101",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.jpg?1783923101",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.jpg?1783923101",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.webp?1783923101",
+    "grid": "https://cards.scryfall.io/grid/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.webp?1783923101",
+    "display": "https://cards.scryfall.io/display/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.webp?1783923101",
+    "art": "https://cards.scryfall.io/art/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.webp?1783923101",
+    "crop": "https://cards.scryfall.io/crop/front/2/b/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a.webp?1783923101"
+  },
+  "mana_cost": "{4}{G}",
+  "cmc": 5.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Creatures you control get +2/+2 until end of turn. Citizens you control get an additional +1/+1 and gain vigilance until end of turn.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "df837242-8c15-42e4-b049-c933a02dc501",
+  "set": "snc",
+  "set_name": "Streets of New Capenna",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/df837242-8c15-42e4-b049-c933a02dc501",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asnc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/snc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2b4a5122-6922-4ab5-aa43-94cf2d7f9c8a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab3606b80-8d1b-4417-8902-a7ccf6b97cbb&unique=prints",
+  "collector_number": "158",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "No institution, however grand, can withstand the collective will of the people.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Matt Forsyth",
+  "artist_ids": [
+    "5548bc56-e1cc-40d5-a6cd-ae81beafa8a3"
+  ],
+  "illustration_id": "ebfd30e0-4a1c-4f26-b660-04c9df0ef1b5",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 26644,
+  "preview": {
+    "source": "SpellTable",
+    "source_uri": "https://twitter.com/SpellTable/status/1514348421154451459",
+    "previewed_at": "2022-04-13"
+  },
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.25",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.03",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=555359&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTake%2Bto%2Bthe%2BStreets",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTake%2Bto%2Bthe%2BStreets",
+    "edhrec": "https://edhrec.com/route/?cc=Take+to+the+Streets"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269097%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=652109&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/98535?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -430,8 +430,7 @@ def test_the_base_pt_set_shape_is_read_off_its_own_sentence():
     (Its real activation cost, "Waterbend {3}:", is a bespoke keyword cost
     this project's cost parser does not read yet - see
     `docs/engine-coverage.md` - so the shape is exercised on the clause
-    itself, the same way `test_layer_effects_registry_is_minimal.py` checks
-    Violent Urge's *Delirium* clause on its own.)
+    itself.)
     """
     text = "This creature has base power and toughness 5/2 until end of turn."
     assert text in (card("Flexible Waterbender").oracle_text or "")

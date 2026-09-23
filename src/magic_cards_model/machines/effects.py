@@ -527,7 +527,7 @@ def create_continuous_effect(game: "Game", spell: CardState) -> None:
 
     The `LayerContext` carries what the builder cannot see from the battlefield:
     every graveyard, and separately the *controller's* graveyard, which is what
-    a card printing "cards in your graveyard" means (Violent Urge's delirium).
+    a card printing "cards in your graveyard" means.
     Both are read now, as the spell resolves, which is the moment the effect's
     one-off conditions are locked in (CR 611.2c).
 
@@ -1939,7 +1939,8 @@ def _parse_scry_or_untap_if_not_starting_player_clauses(
 # already-resolved group, and everything below computes that group and (when
 # the card prints one) the "where X is ..." magnitude.
 _MASS_SUBJECT_RE = re.compile(
-    r"^(?:(?:other )?creatures (?:you control|your opponents control)|permanents you control)\b",
+    r"^(?:(?:other )?creatures (?:you control|your opponents control)|permanents you control"
+    r"|all creatures|creatures that are (?:white|blue|black|red|green)\b)\b",
     re.IGNORECASE,
 )
 #: History of Benalia's own chapter III: "Knights you control get +2/+1
@@ -1970,6 +1971,20 @@ _MASS_SUBTYPE_SUBJECT_RE = re.compile(
 _MASS_POWER_FILTER_RE = re.compile(
     rf"^(?P<other>other )?creatures (?P<whose>you control|your opponents control) "
     rf"with power {count_pattern('power', article=False)} or greater\b",
+    re.IGNORECASE,
+)
+#: The two whole-board subjects `_MASS_SUBJECT_RE` reads that also open
+#: sentences which are not a pump at all - see `_parse_mass_pump_clause`.
+_MASS_WHOLE_BOARD_SUBJECT_RE = re.compile(r"^(?:all creatures|creatures that are)\b", re.IGNORECASE)
+#: "Creatures that are green and/or white" - Glistening Deluge's second
+#: sentence: every creature on the battlefield, narrowed by colour (CR 105.2:
+#: an object is one or more of the five colours, so "and/or" admits a
+#: creature that is either or both, once). Read once, against the computed
+#: board, when the effect begins (CR 611.2c) - the same fixed-set-now
+#: convention the other mass subjects here already get.
+_MASS_COLOR_FILTER_RE = re.compile(
+    r"^creatures that are (?P<colors>(?:white|blue|black|red|green)"
+    r"(?:(?:,\s*|\s+and/or\s+|\s+or\s+)(?:white|blue|black|red|green))*)\b",
     re.IGNORECASE,
 )
 #: The trailing computed-magnitude clause - "..., where X is <expr>." - split
@@ -2014,6 +2029,20 @@ def _mass_creature_group_targets(
             for permanent in game.battlefield
             if base_selector(board.of(permanent), board.characteristics)
             and any(word.lower() == subtype for word in board.of(permanent).subtypes)
+        ]
+    color_filter_match = _MASS_COLOR_FILTER_RE.match(text.strip())
+    if color_filter_match is not None:
+        wanted = {
+            _TOKEN_COLOR_WORDS[word.lower()]
+            for word in re.findall(
+                r"white|blue|black|red|green", color_filter_match.group("colors"), re.IGNORECASE
+            )
+        }
+        board = game.computed_board()
+        return [
+            permanent
+            for permanent in game.battlefield
+            if board.of(permanent).is_creature and wanted & set(board.of(permanent).colors)
         ]
     power_filter_match = _MASS_POWER_FILTER_RE.match(text.strip())
     if power_filter_match is not None:
@@ -2112,14 +2141,73 @@ def _parse_mass_pump_clause(
         return None
     where_match = _WHERE_X_IS_RE.search(text)
     if where_match is None:
-        return text, None, remainder
-    magnitude_expr = count_expression(where_match.group("expr"))
-    if magnitude_expr is None:
-        return None
-    template = text[: where_match.start()].rstrip(", ").rstrip(".") + "."
-    if "+x/+x" not in template.lower():
-        return None
+        template, magnitude_expr = text, None
+    else:
+        magnitude_expr = count_expression(where_match.group("expr"))
+        if magnitude_expr is None:
+            return None
+        template = text[: where_match.start()].rstrip(", ").rstrip(".") + "."
+        if "+x/+x" not in template.lower():
+            return None
+    if _MASS_WHOLE_BOARD_SUBJECT_RE.match(template) is not None:
+        # "All creatures ..." / "Creatures that are <colour> ..." (Glistening
+        # Deluge) are claimed here only when the rest is a pump or grant
+        # `machines/layers.py` reads: the same subject also opens sentences
+        # that are no pump at all ("All creatures lose all abilities until
+        # end of turn.", Final Showdown), which must keep failing closed
+        # where they always have rather than pass as read.
+        probe = re.sub(r"\+x/\+x", "+1/+1", template, flags=re.IGNORECASE)
+        if parsed_layer_effects(_mass_pump_parseable(probe)) is None:
+            return None
     return template, magnitude_expr, remainder
+
+
+def _mass_pump_parseable(literal: str) -> str:
+    """The mass-pump sentence `literal` as `machines/layers.py`'s own parser
+    reads it: the group's filter (subtype, power, colour) stripped off the
+    subject, since `_mass_creature_group_targets` has already applied it."""
+    # `targets` is already the concrete, subtype-filtered group (CR 611.2c) -
+    # `machines/layers.py`'s own parser only needs to recognise the *shape*
+    # of what follows ("get +N/+N ... until end of turn"), which is templated
+    # on the literal "creatures" subject. A bare CR 205.3m subtype standing
+    # in for it (History of Benalia's "Knights you control") is rewritten to
+    # that literal subject here, once, rather than teaching `machines/
+    # layers.py` a second subject grammar it would then have to keep in step
+    # with `_MASS_SUBTYPE_SUBJECT_RE` above.
+    subtype_match = _MASS_SUBTYPE_SUBJECT_RE.match(literal.strip())
+    power_filter_match = _MASS_POWER_FILTER_RE.match(literal.strip())
+    color_filter_match = _MASS_COLOR_FILTER_RE.match(literal.strip())
+    if color_filter_match is not None:
+        # The colour filter, like the power filter below, is already applied
+        # to `targets`; `machines/layers.py` only needs the group shape.
+        parseable = "all creatures" + literal.strip()[color_filter_match.end() :]
+    elif power_filter_match is not None:
+        # The same rewrite, for a "with power N or greater" filter instead
+        # of a subtype: `targets` already carries only the creatures that
+        # met it (`_mass_creature_group_targets` above), so the filter
+        # phrase itself is stripped before `machines/layers.py` ever sees
+        # the sentence - its own `_MASS_PUMP_UNTIL_EOT_RE` knows the bare
+        # "creatures you control"/"other creatures you control" subject, not
+        # this one.
+        prefix = "other creatures " if power_filter_match.group("other") else "creatures "
+        parseable = (
+            prefix + power_filter_match.group("whose") + literal.strip()[power_filter_match.end() :]
+        )
+    elif subtype_match is not None:
+        parseable = "creatures " + literal.strip()[subtype_match.start("whose") :]
+    else:
+        parseable = literal
+    # `parsed_layer_effects` reads `_effect_sentences`, which needs a real
+    # sentence terminator to recognise anything at all - fine for a whole,
+    # unsplit ability effect (still carries its own printed period), but
+    # `literal` can also arrive here already trimmed of one: `_parse_mass_
+    # pump_group_clause` calls this on a single clause `split_effect_
+    # clauses` has already cut apart (and that splitter always strips a
+    # trailing "."), Ingris Stingerquill's "Then creatures you control gain
+    # haste until end of turn." among them.
+    if not parseable.rstrip().endswith("."):
+        parseable = parseable.rstrip() + "."
+    return parseable
 
 
 def _run_mass_pump(
@@ -2150,42 +2238,7 @@ def _run_mass_pump(
     targets = _mass_creature_group_targets(game, controller, source.id, literal)
     if not targets:
         return
-    # `targets` is already the concrete, subtype-filtered group (CR 611.2c) -
-    # `machines/layers.py`'s own parser only needs to recognise the *shape*
-    # of what follows ("get +N/+N ... until end of turn"), which is templated
-    # on the literal "creatures" subject. A bare CR 205.3m subtype standing
-    # in for it (History of Benalia's "Knights you control") is rewritten to
-    # that literal subject here, once, rather than teaching `machines/
-    # layers.py` a second subject grammar it would then have to keep in step
-    # with `_MASS_SUBTYPE_SUBJECT_RE` above.
-    subtype_match = _MASS_SUBTYPE_SUBJECT_RE.match(literal.strip())
-    power_filter_match = _MASS_POWER_FILTER_RE.match(literal.strip())
-    if power_filter_match is not None:
-        # The same rewrite, for a "with power N or greater" filter instead
-        # of a subtype: `targets` already carries only the creatures that
-        # met it (`_mass_creature_group_targets` above), so the filter
-        # phrase itself is stripped before `machines/layers.py` ever sees
-        # the sentence - its own `_MASS_PUMP_UNTIL_EOT_RE` knows the bare
-        # "creatures you control"/"other creatures you control" subject, not
-        # this one.
-        prefix = "other creatures " if power_filter_match.group("other") else "creatures "
-        parseable = (
-            prefix + power_filter_match.group("whose") + literal.strip()[power_filter_match.end() :]
-        )
-    elif subtype_match is not None:
-        parseable = "creatures " + literal.strip()[subtype_match.start("whose") :]
-    else:
-        parseable = literal
-    # `parsed_layer_effects` reads `_effect_sentences`, which needs a real
-    # sentence terminator to recognise anything at all - fine for a whole,
-    # unsplit ability effect (still carries its own printed period), but
-    # `literal` can also arrive here already trimmed of one: `_parse_mass_
-    # pump_group_clause` calls this on a single clause `split_effect_
-    # clauses` has already cut apart (and that splitter always strips a
-    # trailing "."), Ingris Stingerquill's "Then creatures you control gain
-    # haste until end of turn." among them.
-    if not parseable.rstrip().endswith("."):
-        parseable = parseable.rstrip() + "."
+    parseable = _mass_pump_parseable(literal)
     builder = parsed_layer_effects(parseable)
     if builder is None:
         # A keyword outside `_KNOWN_KEYWORDS`'s whitelist, or some other shape
@@ -22761,6 +22814,17 @@ _RIDER_LAYER_SUBJECT_RE = re.compile(
     rf"^(?P<pronoun>{_OBJECT_ANAPHOR})\s+(?P<predicate>(?:gain|get)s?\s+.+)$", re.IGNORECASE
 )
 
+#: "It becomes an Angel in addition to its other types and gains flying." -
+#: Archangel Elspeth's -2 rider, read the same rewrite-the-subject way as
+#: the "gains"/"gets" rider just above, by `machines/layers.py`'s own
+#: `_BECOMES_SUBTYPE_IN_ADDITION_RE` (layer 4 plus layer 6, CR 613.1d/f).
+#: Kept to the "in addition to its other types" shape: a bare "becomes a
+#: <type>" replaces types instead (CR 205.1a) and is a different sentence.
+_RIDER_BECOMES_IN_ADDITION_SUBJECT_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR}\s+(?P<predicate>becomes\s+.+\bin addition to its other types\b.*)$",
+    re.IGNORECASE,
+)
+
 #: "It can't be blocked this turn." - Kappa Cannoneer's own rider. Granted as
 #: a layer 6 ability (CR 613.1f) whose text is the self-referential sentence
 #: `machines/combat._evasion_restriction_sentences` already reads off the
@@ -22779,6 +22843,12 @@ _RIDER_GOAD_RE = re.compile(rf"^goad {_OBJECT_ANAPHOR}$", re.IGNORECASE)
 #: "Untap it." - Tethermage's Advantage's own rider, after its pump. CR
 #: 701.18a: "To untap a permanent means to remove the tapped status from it."
 _RIDER_UNTAP_RE = re.compile(rf"^untap {_OBJECT_ANAPHOR}$", re.IGNORECASE)
+
+#: "Tap it." - Tyvar, the Pummeler's and Vanguard of the Rose's own rider,
+#: after the source grants itself indestructible. CR 701.26a: "To tap a
+#: permanent, turn it sideways from an upright position. Only untapped
+#: permanents can be tapped."
+_RIDER_TAP_RE = re.compile(rf"^tap {_OBJECT_ANAPHOR}$", re.IGNORECASE)
 
 #: "If it would die this turn, exile it instead." - Essence Burn's own
 #: rider (CR 614.1a); Combustion Technique's identical wording is the real,
@@ -22856,13 +22926,90 @@ _RIDER_BECOMES_TYPE_IN_ADDITION_RE = re.compile(
 )
 
 
+#: "If `<condition>`, `<anaphor>` [also] `<rider>`" / "`<anaphor>` [also]
+#: `<rider>` if `<condition>`" - Violent Urge's Delirium sentence ("If there
+#: are four or more card types among cards in your graveyard, that creature
+#: gains double strike until end of turn."), Temur Battle Rage's Ferocious
+#: one ("That creature also gains trample until end of turn if you control a
+#: creature with power 4 or greater.") and Crumb and Get It's gift one ("If
+#: the gift was promised, that creature also gains indestructible until end
+#: of turn."). The ability word in front (CR 207.2c) is already gone by the
+#: time a clause reaches here. "also" only says the rider adds to what the
+#: antecedent did; it changes nothing, so it is dropped before the rider
+#: itself is read.
+_CONDITIONAL_REFERENT_LEADING_RE = re.compile(
+    rf"^if (?P<condition>[^,]+), (?P<rider>{_OBJECT_ANAPHOR}\b.+)$", re.IGNORECASE
+)
+_CONDITIONAL_REFERENT_TRAILING_RE = re.compile(
+    rf"^(?P<rider>{_OBJECT_ANAPHOR}\b.+?) if (?P<condition>.+)$", re.IGNORECASE
+)
+_RIDER_ALSO_RE = re.compile(rf"^(?P<anaphor>{_OBJECT_ANAPHOR}) also\b", re.IGNORECASE)
+
+
+def _parse_conditional_referent_clause(rider: str) -> ReferentObjectClause | None:
+    """`_CONDITIONAL_REFERENT_*_RE`'s shape: a referent rider that runs only if
+    its condition holds, checked once, on resolution (CR 608.2h), through
+    `Game.condition_holds` - the same reader every other printed condition
+    goes through. A condition this engine does not read refuses the whole
+    rider at parse time (`condition_is_readable`), so the pair fails closed
+    rather than running the rider as though the condition were false; the
+    rare `None` answer at resolution is recorded as a
+    `ConditionalClauseNotice`, the same channel `_parse_condition_clause`
+    uses.
+    """
+    from ..models.game import condition_is_readable
+
+    match = _CONDITIONAL_REFERENT_LEADING_RE.fullmatch(rider)
+    if match is None:
+        match = _CONDITIONAL_REFERENT_TRAILING_RE.fullmatch(rider)
+    if match is None:
+        return None
+    condition_text = match.group("condition").strip()
+    if not condition_is_readable(condition_text):
+        return None
+    body = _RIDER_ALSO_RE.sub(lambda found: found.group("anaphor"), match.group("rider").strip())
+    inner = _parse_referent_object_clause(body)
+    if inner is None:
+        return None
+
+    def conditional_rider(
+        game: "Game", referents: list[CardState], stack_object: "StackObject"
+    ) -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.source(game) if is_ability(stack_object) else stack_object  # type: ignore[union-attr]
+        held = game.condition_holds(controller.username, condition_text, source)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id_of(stack_object),
+                source_name=(
+                    stack_object.name
+                    if isinstance(stack_object, CardState)
+                    else stack_object.source_name  # type: ignore[union-attr]
+                ),
+                text=rider,
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            return
+        if held:
+            inner(game, referents, stack_object)
+
+    return conditional_rider
+
+
 def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
     """A rider sentence read as something to do to the objects its antecedent
     found, or `None` when this wave cannot read it - in which case the pair is
     refused and the whole effect fails closed (CR 608.2c), which is what
     `_unreadable_anaphoric_clause` then records a notice for.
     """
-    rider = rider.strip().rstrip(".").strip()
+    # CR 207.2c: a leading ability word ("Delirium — ") carries no rules
+    # meaning; the rider is the sentence after it.
+    rider = _strip_ability_word_labels(rider.strip()).strip().rstrip(".").strip()
+
+    conditional = _parse_conditional_referent_clause(rider)
+    if conditional is not None:
+        return conditional
 
     if match := _RIDER_PUT_COUNTERS_RE.fullmatch(rider):
         amount = parse_count(match.group("n"))
@@ -22924,6 +23071,17 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
 
         return untap_rider
 
+    if _RIDER_TAP_RE.fullmatch(rider):
+
+        def tap_rider(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            for referent in referents:
+                if referent.zone is Zone.BATTLEFIELD and referent.untapped:
+                    referent.tap()
+
+        return tap_rider
+
     if _RIDER_DIE_TO_EXILE_THIS_TURN_RE.fullmatch(rider):
 
         def die_to_exile_rider(
@@ -22981,7 +23139,9 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
 
         return keyword_choice_rider
 
-    if match := _RIDER_LAYER_SUBJECT_RE.fullmatch(rider):
+    if match := _RIDER_LAYER_SUBJECT_RE.fullmatch(
+        rider
+    ) or _RIDER_BECOMES_IN_ADDITION_SUBJECT_RE.fullmatch(rider):
         rewritten = f"Target creature {match.group('predicate').strip()}."
         builder = parsed_layer_effects(rewritten)
         if builder is None:
@@ -23076,6 +23236,9 @@ def _layer_antecedent_clause(first: str, referent_of: ReferentReader) -> Targete
     rather than a fresh `game.resolve_targets` call, so the antecedent and
     the rider can never disagree about what "it" means.
     """
+    # A clause cut out of its sentence by `split_effect_clauses` has lost its
+    # period, which `machines/layers.py`'s sentence reader needs.
+    first = _as_sentence(first)
     if not is_resolution_layer_effect_text(first):
         return None
     builder = parsed_layer_effects(first)

@@ -43,21 +43,7 @@ def _oracle_text(card_name: str) -> str:
     return card(card_name).oracle_text or ""
 
 
-#: Violent Urge is the one row this guard cannot check the same way as every
-#: other: its first sentence *is* `parsed_layer_effects`'s pump-and-keyword
-#: shape (and `_violent_urge` reuses that exact builder rather than
-#: reimplementing it - see its docstring), but its *Delirium* clause
-#: conditions a third grant on card types in the controller's graveyard, which
-#: no generalised shape reads. So `parsed_layer_effects` legitimately returns
-#: something for its text - not because the row is dead weight, but because
-#: part of it is genuinely covered and part of it genuinely is not. Checking
-#: "the parser returns *something*" cannot tell those two cases apart for a
-#: multi-sentence card; `test_violent_urge_delirium_is_not_reachable_through_the_parser_alone`
-#: below checks the part that actually matters instead.
-_CANNOT_BE_ALL_OR_NOTHING = {"Violent Urge"}
-
-
-@pytest.mark.parametrize("card_name", sorted(LAYER_EFFECTS.keys() - _CANNOT_BE_ALL_OR_NOTHING))
+@pytest.mark.parametrize("card_name", sorted(LAYER_EFFECTS.keys()))
 def test_layer_effects_row_is_not_reachable_through_the_parser(card_name: str) -> None:
     text = _oracle_text(card_name)
     result = parsed_layer_effects(text)
@@ -66,21 +52,6 @@ def test_layer_effects_row_is_not_reachable_through_the_parser(card_name: str) -
         f"already reads {card_name!r}'s oracle text into a working effect "
         f"({text!r}). Delete the row - see this file's docstring."
     )
-
-
-def test_violent_urge_delirium_is_not_reachable_through_the_parser_alone() -> None:
-    """The one sentence of Violent Urge's row `parsed_layer_effects` cannot
-    read: *Delirium*'s conditional double-strike grant.
-
-    If a future generalised shape ever reads this, the whole card becomes
-    fully reachable and belongs in `_CANNOT_BE_ALL_OR_NOTHING`'s removal, not
-    its membership.
-    """
-    delirium_clause = (
-        "Delirium — If there are four or more card types among cards in your "
-        "graveyard, that creature gains double strike until end of turn."
-    )
-    assert parsed_layer_effects(delirium_clause) is None
 
 
 def test_a_readded_redundant_row_fails_the_guard() -> None:

@@ -1,0 +1,152 @@
+{
+  "object": "card",
+  "id": "35ed6263-bdd7-4013-ac8c-9b652d71a0db",
+  "oracle_id": "0b2481d6-97a0-4f92-b7e5-3451863fd7fb",
+  "multiverse_ids": [
+    607017
+  ],
+  "mtgo_id": 109806,
+  "arena_id": 84253,
+  "tcgplayer_id": 490443,
+  "cardmarket_id": 703481,
+  "name": "Archangel Elspeth",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/35ed6263-bdd7-4013-ac8c-9b652d71a0db",
+  "scryfall_uri": "https://scryfall.com/card/mom/6/archangel-elspeth?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:31:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.jpg?1783917071",
+    "normal": "https://cards.scryfall.io/normal/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.jpg?1783917071",
+    "large": "https://cards.scryfall.io/large/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.jpg?1783917071",
+    "png": "https://cards.scryfall.io/png/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.png?1783917071",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.jpg?1783917071",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.jpg?1783917071",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.webp?1783917071",
+    "grid": "https://cards.scryfall.io/grid/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.webp?1783917071",
+    "display": "https://cards.scryfall.io/display/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.webp?1783917071",
+    "art": "https://cards.scryfall.io/art/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.webp?1783917071",
+    "crop": "https://cards.scryfall.io/crop/front/3/5/35ed6263-bdd7-4013-ac8c-9b652d71a0db.webp?1783917071"
+  },
+  "mana_cost": "{2}{W}{W}",
+  "cmc": 4.0,
+  "type_line": "Legendary Planeswalker \u2014 Elspeth",
+  "oracle_text": "+1: Create a 1/1 white Soldier creature token with lifelink.\n\u22122: Put two +1/+1 counters on target creature. It becomes an Angel in addition to its other types and gains flying.\n\u22126: Return all nonland permanent cards with mana value 3 or less from your graveyard to the battlefield.",
+  "loyalty": "4",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "93f99e67-901f-4c8d-8a09-e443b7eb928f",
+      "component": "combo_piece",
+      "name": "Archangel Elspeth",
+      "type_line": "Legendary Planeswalker \u2014 Elspeth",
+      "uri": "https://api.scryfall.com/cards/93f99e67-901f-4c8d-8a09-e443b7eb928f"
+    },
+    {
+      "object": "related_card",
+      "id": "1774c68a-3d76-4fe1-b741-e6acf6b9214c",
+      "component": "token",
+      "name": "Soldier",
+      "type_line": "Token Creature \u2014 Soldier",
+      "uri": "https://api.scryfall.com/cards/1774c68a-3d76-4fe1-b741-e6acf6b9214c"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set": "mom",
+  "set_name": "March of the Machine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amom&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mom?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/35ed6263-bdd7-4013-ac8c-9b652d71a0db/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0b2481d6-97a0-4f92-b7e5-3451863fd7fb&unique=prints",
+  "collector_number": "6",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Cynthia Sheppard",
+  "artist_ids": [
+    "9dfbdd58-65e6-40cf-951a-80e141061939"
+  ],
+  "illustration_id": "eb2c4411-ab9b-491a-8534-8aa0c30c3ea9",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": true,
+  "edhrec_rank": 5534,
+  "penny_rank": 6972,
+  "prices": {
+    "usd": "4.45",
+    "usd_foil": "4.56",
+    "usd_etched": null,
+    "eur": "3.09",
+    "eur_foil": "4.01",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607017&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArchangel%2BElspeth",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArchangel%2BElspeth",
+    "edhrec": "https://edhrec.com/route/?cc=Archangel+Elspeth"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490443%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=703481&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/109806?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

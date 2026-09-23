@@ -3519,6 +3519,9 @@ _ANTHEM_AND_KEYWORD_GRANT_RE = re.compile(
 _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     r"^(?:(?P<other>other )?creatures (?P<whose>you control|your opponents control)|"
     r"all creatures|permanents you control) "
+    # Dawn's Truce's gift sentence: "permanents you control also gain
+    # indestructible" - "also" only says it adds to what came before.
+    r"(?:also )?"
     r"(?:"
     r"gain (?P<keywords>[a-z][a-z,'\- ]*?)"
     r"(?: and get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+))?"
@@ -3527,7 +3530,12 @@ _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     # grant is not required to carry a pump). Ingris Stingerquill's own
     # "Then creatures you control gain haste until end of turn." is the same
     # shape, one clause among several rather than the whole effect.
-    r"|get (?P<power_only>[+-]\d+)/(?P<toughness_only>[+-]\d+)"
+    # Take to the Streets' / Glistening Deluge's own second sentence: "an
+    # additional" names no new rule - sublayer 7c modifications simply add
+    # (CR 613.4c) - and a keyword grant may follow the pump ("get an
+    # additional +1/+1 and gain vigilance").
+    r"|get (?:an additional )?(?P<power_only>[+-]\d+)/(?P<toughness_only>[+-]\d+)"
+    r"(?: and gain (?P<keywords_after>[a-z][a-z,'\- ]*?))?"
     r") until end of turn\.?$",
     re.IGNORECASE,
 )
@@ -3735,6 +3743,25 @@ _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
 _BECOMES_TYPE_IN_ADDITION_RE = re.compile(
     r"^target permanent becomes an? (?P<extra_type>[a-z]+) in addition to its "
     r"other types until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: "<subject> becomes a[n] <creature type(s)> in addition to its other types
+#: [and gains <keyword>[, <keyword>, ... and <keyword>]] until end of turn." -
+#: Enter the Avatar State's "Until end of turn, target creature you control
+#: becomes an Avatar in addition to its other types and gains flying, first
+#: strike, lifelink, and hexproof." (duration-first, normalised before this is
+#: tried) and Archangel Elspeth's -2 rider "It becomes an Angel in addition to
+#: its other types and gains flying." (the anaphor rewritten to "target
+#: creature" by `machines/effects.py`'s referent rider, and no duration at
+#: all: CR 611.2a, "If no duration is stated, it lasts until the end of the
+#: game"). The words are CR 205.3m creature
+#: types, checked against the real list rather than accepted blind; a card
+#: type in this slot is `_BECOMES_TYPE_IN_ADDITION_RE`'s own sentence instead.
+_BECOMES_SUBTYPE_IN_ADDITION_RE = re.compile(
+    rf"^{_SUBJECT} becomes an? (?P<subtypes>[A-Za-z][A-Za-z' ]*?) in addition to "
+    r"its other types(?: and gains (?P<keywords>[a-z][a-z ,]*?))?"
+    r"(?P<until_eot> until end of turn)?\.?$",
     re.IGNORECASE,
 )
 
@@ -5469,6 +5496,63 @@ def _becomes_type_in_addition_builder(extra_type: Type) -> EffectBuilder:
         ]
 
     return builder
+
+
+def _becomes_subtype_in_addition_builder(
+    subtypes: Sequence[str], keywords: Sequence[str], duration: Duration
+) -> EffectBuilder:
+    """`_BECOMES_SUBTYPE_IN_ADDITION_RE`'s shape: one layer 4 subtype
+    addition per creature type (CR 613.1d; CR 205.1b keeps every prior type)
+    and one layer 6 grant per keyword (CR 613.1f), all built from the one
+    resolution and so sharing its one timestamp (CR 613.7b), fixed to the
+    objects the caller resolved (CR 611.2c)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            selector = only_this_incarnation(target, target.zone_change_stamp)
+            effects.extend(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} becomes a {subtype} "
+                    "in addition to its other types",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    duration=duration,
+                    selector=selector,
+                    modification=add_subtype(subtype),
+                )
+                for subtype in subtypes
+            )
+            effects.extend(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} gains {keyword}",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    duration=duration,
+                    selector=selector,
+                    modification=grant_ability(keyword),
+                )
+                for keyword in keywords
+            )
+        return effects
+
+    return builder
+
+
+def _creature_type_words(raw: str) -> list[str] | None:
+    """ "Avatar" / "Monk Avatar" -> each CR 205.3m creature type as the
+    official list spells it, or `None` if any word is not one."""
+    known = {kind.lower(): kind for kind in creature_types()}
+    words = raw.split()
+    found = [known.get(word.lower()) for word in words]
+    if not words or any(word is None for word in found):
+        return None
+    return [word for word in found if word is not None]
 
 
 def _gain_control_until_eot_builder() -> EffectBuilder:
@@ -8145,8 +8229,9 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if match := _MASS_PUMP_UNTIL_EOT_RE.fullmatch(sentence):
         keywords: list[str] = []
-        if match.group("keywords") is not None:
-            validated = _split_and_validate_keywords(match.group("keywords"))
+        keyword_text = match.group("keywords") or match.group("keywords_after")
+        if keyword_text is not None:
+            validated = _split_and_validate_keywords(keyword_text)
             if validated is None:
                 return None
             keywords = validated
@@ -8234,6 +8319,17 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         if extra_type is None:
             return None
         return _becomes_type_in_addition_builder(extra_type)
+    if match := _BECOMES_SUBTYPE_IN_ADDITION_RE.fullmatch(sentence):
+        subtypes = _creature_type_words(match.group("subtypes"))
+        keywords = (
+            _split_and_validate_keywords(match.group("keywords"))
+            if match.group("keywords") is not None
+            else []
+        )
+        if subtypes is None or keywords is None:
+            return None
+        duration = Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE
+        return _becomes_subtype_in_addition_builder(subtypes, keywords, duration)
     if match := _SELF_BECOMES_TYPE_UNTIL_NEXT_TURN_RE.fullmatch(sentence):
         extra_type = _card_type_word(match.group("extra_type"))
         if extra_type is None:
@@ -9522,62 +9618,6 @@ def _tishanas_tidebinder(
 #: Grove's land-drop line above.
 
 
-def _violent_urge(
-    source: CardState,
-    timestamp: int,
-    targets: Sequence[CardState],
-    context: LayerContext,
-) -> list[ContinuousEffect]:
-    """ "Target creature gets +1/+0 and gains first strike until end of turn.
-    *Delirium* - If there are four or more card types among cards in your
-    graveyard, that creature gains double strike until end of turn."
-
-    Three effects from one resolution, in two layers - CR 613.6: "If an effect
-    should be applied in different layers and/or sublayers, the parts of the
-    effect each apply in their appropriate ones." The +1/+0 is sublayer 7c
-    (CR 613.4c); first strike (CR 702.7a) and double strike (CR 702.4) are
-    ability grants in layer 6 (CR 613.1f, CR 113.10).
-
-    *Delirium* is an ability word with no rules meaning of its own (CR 207.2c),
-    so the condition is only the sentence printed after it: four or more card
-    types (CR 205.2a, CR 300.1) among cards in **your** graveyard, which is
-    `context.your_graveyard` and deliberately not `context.graveyards`.
-
-    The condition is checked once, here, as the spell resolves. It is not a
-    "for as long as" duration (CR 611.2b): the creature keeps double strike for
-    the turn even if the graveyard later loses a card type, because CR 611.2c
-    fixes what a resolving spell's effect does at the moment it is created.
-
-    Both grants share the caveat Assault Strobe's granted double strike has:
-    combat does not read granted keywords, so they are recorded and inert.
-
-    **Why this row still exists.** The first sentence alone - "Target creature
-    gets +1/+0 and gains first strike until end of turn." - is exactly
-    `parsed_layer_effects`'s pump-and-keyword shape, so this reuses
-    `_pump_and_keyword_builder` rather than reimplementing it (one
-    implementation per rule). Only the *Delirium* clause is genuinely
-    one-of-a-kind: no generalised shape this wave reads conditions a grant on
-    card types in a graveyard, so that third effect is still hand-built.
-    `test_layer_effects_registry_is_minimal.py` excludes this card by name for
-    exactly this reason - the row is not dead weight, it does one thing the
-    parser cannot.
-    """
-    effects = _pump_and_keyword_builder(1, 0, ["First strike"])(source, timestamp, targets, context)
-    if count_card_types(context.your_graveyard) >= 4:
-        effects.extend(
-            ContinuousEffect(
-                description=f"Violent Urge: {target.name} gains double strike (delirium)",
-                layer=Layer.ABILITY,
-                timestamp=timestamp,
-                duration=Duration.UNTIL_END_OF_TURN,
-                selector=only_this_incarnation(target, target.zone_change_stamp),
-                modification=grant_ability("Double strike"),
-            )
-            for target in targets
-        )
-    return effects
-
-
 def _remains_on_the_battlefield(permanent: CardState) -> Condition:
     """ "For as long as this creature remains on the battlefield" (CR 611.2b).
 
@@ -9592,7 +9632,7 @@ def _remains_on_the_battlefield(permanent: CardState) -> Condition:
 
 
 #: Continuous effects by card name, for the shapes `parsed_layer_effects`
-#: cannot read (or, like Violent Urge, reads only part of). `effects_for`
+#: cannot read. `effects_for`
 #: checks here first and falls back to the parser on a miss, so a card with
 #: neither generates no effect, which is right for a vanilla creature and
 #: silently wrong for anything with text `parsed_layer_effects` cannot read
@@ -9634,11 +9674,10 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
     "Nighthawk Scavenger": _nighthawk_scavenger,
     "Allosaurus Rider": _allosaurus_rider,
     "Tishana's Tidebinder": _tishanas_tidebinder,
-    # The pump and first strike are the generalised shapes; the *Delirium*
-    # clause conditions a third grant on card types in the controller's
-    # graveyard (CR 205.2a, CR 300.1), which no generalised shape this wave
-    # reads accounts for - a one-of-a-kind conditional, not a fourth pattern.
-    "Violent Urge": _violent_urge,
+    # "Violent Urge" has no row: its pump and first strike are the
+    # generalised shapes, and its *Delirium* rider is read off the template
+    # by `machines/effects.py`'s conditional referent rider
+    # (`_parse_conditional_referent_clause`).
     # "Monstrous Rage" has no row: its pump is the generalised shape, read off
     # its own oracle text by the parser fallback; its token creation is
     # `machines/effects.py`'s job (CR 111.10k, CR 701.7a).

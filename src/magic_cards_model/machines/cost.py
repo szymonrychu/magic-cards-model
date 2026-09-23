@@ -4285,7 +4285,11 @@ _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
 #: "Sacrifice an artifact, creature, or land" (Greater Gargadon) - matches as
 #: one phrase rather than being split by `_split_cost_phrase`'s own comma cut;
 #: `_requirement` is what turns the list into a `CardRequirement` disjunction.
-_PHRASE_SACRIFICE = re.compile(rf"^sacrifice {_COST_COUNT} (?P<quality>[\w ,]+)$", re.IGNORECASE)
+#: "Sacrifice another creature or artifact" (Vanguard of the Rose) reads
+#: "another" as `_PHRASE_EXILE` does below: one, excluding the source.
+_PHRASE_SACRIFICE = re.compile(
+    rf"^sacrifice (?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ,]+)$", re.IGNORECASE
+)
 #: `Discard a card`, `Discard a legendary card with the same name as a
 #: legendary permanent you control` (Key to the Side-Door). The same-name tail
 #: is a second demand on the *same* card - CR 201.2a's "at least one name in
@@ -4304,8 +4308,12 @@ _PHRASE_DISCARD = re.compile(
 #: wording because CR 107.5's "a permanent that's already tapped can't be
 #: tapped again to pay the cost" is true whether or not the sentence says so -
 #: `CostComponent._why_not_tap` enforces it either way.
+#: "Tap another untapped creature you control" (Tyvar, the Pummeler) reads
+#: "another" the same way: one, and never the ability's own source.
 _PHRASE_TAP = re.compile(
-    rf"^tap {_COST_COUNT} (?:untapped )?(?P<quality>[\w ,]+?) you control$", re.IGNORECASE
+    rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?:untapped )?(?P<quality>[\w ,]+?) "
+    r"you control$",
+    re.IGNORECASE,
 )
 #: `Collect evidence 6` (Detective's Phoenix's `Bestow-{R}, Collect evidence
 #: 6.`) - CR 701.59a's keyword action used as a cost. Nothing is named to
@@ -4701,10 +4709,14 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     sacrifice = _PHRASE_SACRIFICE.match(text)
     if sacrifice is not None:
-        read = _cost_count(sacrifice.group("count"))
+        another = sacrifice.group("another") is not None
+        read = (1, False) if another else _cost_count(sacrifice.group("count"))
         requirement = _requirement(sacrifice.group("quality"))
         if read is None or requirement is None:
             return None
+        # CR 601.2c/113.6's "another": `Game.activation_cost` fills in which
+        # permanent is excluded, the same as for "Exile another ...".
+        requirement.excludes_source = another
         component = sacrifice_cost(payer=payer, required=read[0], description=text)
         component.requirement = requirement
         component.variable_count = read[1]
@@ -4712,10 +4724,12 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     tap = _PHRASE_TAP.match(text)
     if tap is not None:
-        read = _cost_count(tap.group("count"))
+        another = tap.group("another") is not None
+        read = (1, False) if another else _cost_count(tap.group("count"))
         requirement = _requirement(tap.group("quality"))
         if read is None or requirement is None:
             return None
+        requirement.excludes_source = another
         component = tap_cost(payer=payer, description=text)
         component.required = read[0]
         component.requirement = requirement

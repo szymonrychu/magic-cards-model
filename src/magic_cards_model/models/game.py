@@ -796,6 +796,12 @@ _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IG
 #: kicked, choose any number instead." - CR 601.4's worked example for this
 #: exact card.
 _CONDITION_KICKED = re.compile(r"this spell was kicked", re.IGNORECASE)
+#: CR 702.174k: "If a spell's controller declares the intention to pay a
+#: spell's gift cost, that spell's gift was promised." Crumb and Get It's and
+#: Dawn's Truce's own "If the gift was promised, ..." - read off the resolving
+#: object's `CastRecord.gift_promised`, the same record `_CONDITION_KICKED`
+#: reads, and carried to a permanent by CR 400.7d the same way.
+_CONDITION_GIFT_PROMISED = re.compile(r"the gift was promised", re.IGNORECASE)
 #: CR 700.11: Molten Collapse's "If you descended this turn, you may choose
 #: both instead."
 _CONDITION_DESCENDED = re.compile(r"you descended this turn", re.IGNORECASE)
@@ -901,6 +907,7 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_OPPONENT_CAST_COLOR,
     _CONDITION_SUSPENDED,
     _CONDITION_KICKED,
+    _CONDITION_GIFT_PROMISED,
     _CONDITION_DESCENDED,
     _CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN,
     _CONDITION_LIBRARY_EMPTY_RE,
@@ -17652,6 +17659,12 @@ class Game(EngineModel):
             record = self.cast_record_of(source)
             return record is not None and record.kicked > 0
 
+        if _CONDITION_GIFT_PROMISED.fullmatch(text):
+            if source is None:
+                return None
+            record = self.cast_record_of(source)
+            return record is not None and record.gift_promised
+
         if _CONDITION_DESCENDED.fullmatch(text):
             # CR 700.11, Molten Collapse's own "If you descended this turn,
             # you may choose both instead." - the same running count
@@ -18020,6 +18033,10 @@ class Game(EngineModel):
         # "Sacrifice X Goats" / "Sacrifice one or more artifacts": the count is
         # the announced X or every nominated object (CR 107.3a).
         component = announce_count(component, x_value, len(pool))
+        if component.requirement is not None and component.requirement.excludes_source:
+            # "Sacrifice another ..." (CR 601.2c/113.6): only here is the
+            # source known, the same fill-in `CostKind.OTHER` does below.
+            component.requirement.source_id = permanent.id
         chosen = []
         while pool and len(chosen) < component.required:
             chosen.append(pool.pop(0))

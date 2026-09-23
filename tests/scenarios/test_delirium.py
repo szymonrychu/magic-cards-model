@@ -26,7 +26,8 @@ session that wrote this file.
 - **CR 120.5** - damage does not destroy a creature; a state-based action does.
 
 The counting is `count_card_types` in `machines/layers.py`, and the effects are
-`delirium_damage` and `_violent_urge`.
+`delirium_damage` and, for Violent Urge's rider, `machines/effects.py`'s
+`_parse_conditional_referent_clause`.
 """
 
 from magic_cards_model.machines import Step
