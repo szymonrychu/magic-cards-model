@@ -194,3 +194,23 @@ def test_last_march_of_the_ents_with_no_creatures_draws_nothing():
 
     assert wurm.zone is Zone.BATTLEFIELD
     assert [state.name for state in scenario.player("alice").library] == ["Serra Angel"]
+
+
+def test_ghalta_s_creatures_enter_simultaneously_and_see_each_other():
+    """CR 603.6a: "Each time an event puts one or more permanents onto the
+    battlefield, all permanents on the battlefield (including the newcomers)
+    are checked" - one instruction is one event, so each Soul Warden's
+    "whenever another creature enters" sees the other. Entered one at a
+    time, only the first would see the second: one life, not two.
+    """
+    scenario = _ghalta("Soul Warden", "Soul Warden")
+    wardens = [state for state in scenario.player("alice").hand if state.name == "Soul Warden"]
+    scenario.will_choose_cards(*wardens, username="alice", source=GHALTA)
+
+    _ghalta_enters(scenario)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Soul Warden's triggered ability"] * 2
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+
+    assert scenario.player("alice").life == 22

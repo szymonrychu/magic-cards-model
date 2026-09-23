@@ -6089,8 +6089,9 @@ def _merge_look_top_put_onto_battlefield_clauses(
             before_choosing=before_choosing,
             moved_candidates=lambda state: allowed["put"] and description.admits(state, bound["x"]),
         )
-        for state in moved:
-            game.put_onto_battlefield(state, player.username, tapped=tapped)
+        with game.entering_together():  # CR 603.6a: one instruction, one event
+            for state in moved:
+                game.put_onto_battlefield(state, player.username, tapped=tapped)
         _put_rest_on_bottom(
             game,
             player,
@@ -40550,8 +40551,12 @@ def _parse_put_permanent_card_from_hand_clause(
                 )
             )
             by_any_id = {state.id: state for state in candidates}
-            for card_id in chosen_any:
-                game.put_onto_battlefield(by_any_id[card_id], controller.username, tapped=tapped)
+            # CR 603.6a: one instruction, one entering event.
+            with game.entering_together():
+                for card_id in chosen_any:
+                    game.put_onto_battlefield(
+                        by_any_id[card_id], controller.username, tapped=tapped
+                    )
             return
         if optional and not game.may(
             controller,
@@ -40573,10 +40578,11 @@ def _parse_put_permanent_card_from_hand_clause(
             )
         )
         by_id = {state.id: state for state in candidates}
-        for card_id in chosen_ids:
-            state = by_id.get(card_id)
-            if state is not None:
-                game.put_onto_battlefield(state, controller.username, tapped=tapped)
+        with game.entering_together():  # CR 603.6a
+            for card_id in chosen_ids:
+                state = by_id.get(card_id)
+                if state is not None:
+                    game.put_onto_battlefield(state, controller.username, tapped=tapped)
 
     return effect
 

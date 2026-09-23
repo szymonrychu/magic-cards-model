@@ -2335,6 +2335,10 @@ class Game(EngineModel):
     so a departure event its move did not stamp with types still carries
     them - `emit` fills `subject_types`/`subject_subtypes` from here. Not
     persisted: it is read within the same move that wrote it."""
+    _entering_together: list[CardState] | None = PrivateAttr(default=None)
+    """Permanents put onto the battlefield inside `entering_together`, whose
+    enters events wait for the last of them (CR 603.6a). `None` outside one.
+    Not persisted: the block opens and closes within one resolving effect."""
 
     library_orders_kept: list[LibraryOrderKept] = Field(default_factory=list)
     """Library cards that kept their order through a put onto the bottom or a
@@ -8685,6 +8689,15 @@ class Game(EngineModel):
             if extra_loyalty:
                 self.add_counters(card_state, Counter.LOYALTY, extra_loyalty)
 
+            if self._entering_together is not None:
+                self._entering_together.append(card_state)
+                return card_state
+            self._announce_entry(card_state)
+            return card_state
+
+    def _announce_entry(self, card_state: CardState) -> None:
+        """Raise the enters events for a permanent that is now on the battlefield."""
+        with self._id_allocator_scope():
             self.emit(self._enters_event(card_state))
             # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
             # before this point) is not routed through `add_counters` - the same
@@ -8692,7 +8705,30 @@ class Game(EngineModel):
             # planeswalker's own entering loyalty - so it needs its own emission
             # for CR 107.15a's chapter I to trigger the moment the Saga arrives.
             self._emit_lore_counters_added(card_state, card_state.lore_counters)
-            return card_state
+
+    @contextmanager
+    def entering_together(self) -> Iterator[None]:
+        """Every permanent put onto the battlefield inside the block enters as one event.
+
+        CR 603.6a: "Each time an event puts one or more permanents onto the
+        battlefield, all permanents on the battlefield (including the
+        newcomers) are checked for any enters-the-battlefield triggers that
+        match the event." One instruction putting several cards is one event,
+        so each newcomer's "whenever another creature enters" must see every
+        other newcomer - which it only can if no enters event is raised until
+        the last of them is there. A nested block joins the outer one.
+        """
+        if self._entering_together is not None:
+            yield
+            return
+        self._entering_together = []
+        try:
+            yield
+        finally:
+            entered, self._entering_together = self._entering_together, None
+        for card_state in entered:
+            if card_state.zone is Zone.BATTLEFIELD:
+                self._announce_entry(card_state)
 
     def put_onto_battlefield(
         self,

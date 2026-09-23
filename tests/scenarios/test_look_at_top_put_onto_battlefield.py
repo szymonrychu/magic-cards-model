@@ -229,3 +229,20 @@ def test_collected_company_bottoms_the_rest_in_the_owner_s_chosen_order():
         "Opt",
         "Hill Giant",
     ]
+
+
+def test_collected_company_s_creatures_enter_simultaneously_and_see_each_other():
+    """CR 603.6a: both creatures are put by one instruction, one event, so
+    each Soul Warden sees the other enter - two triggers, not the one a
+    one-at-a-time entry would give."""
+    scenario = _coco(["Soul Warden", "Soul Warden", "Opt", "Forest", "Hill Giant", "Forest"])
+    wardens = [state for state in scenario.player("alice").library if state.name == "Soul Warden"]
+    scenario.will_choose_cards(*wardens, username="alice", source=COCO)
+
+    _cast_coco(scenario)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Soul Warden's triggered ability"] * 2
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+
+    assert scenario.player("alice").life == 22

@@ -3846,10 +3846,9 @@ zone/filter pair.
 | "When another creature you control leaves the battlefield" and "a non-`<Subtype>` creature ... dies" trigger conditions | `triggers.condition_matches` (LTB widening, `_excluded_subtype_absent`), `Game.emit` fills departure types | Aang, at the Crossroads | Archangel Avacyn | `test_delayed_transform_next_upkeep.py` |
 | "When this creature transforms into `<face>`, ..." (CR 701.27e) and "it deals N damage to each other `<type>` and each opponent" | `TriggerEvent.TRANSFORMS`, `abilities._transforms_into_face_boundary`, `_parse_damage_each_other_type_and_each_opponent_clause` | - | Archangel Avacyn // Avacyn, the Purifier | `test_transforms_into_trigger.py` |
 | "Return this creature to its owner's hand." | `_parse_return_self_to_owners_hand_clause` | - | Bramble Familiar | `test_return_self_to_hand_ability.py` |
-| intervening "if you control a `<quality>`" | `triggers._you_control_a_holds` | Birthing Ritual | - | `test_sacrificed_mana_value_bound.py` |
+| intervening "if you control a `<quality>`" | `triggers._you_control_a_holds` | Birthing Ritual | Lagonna-Band Elder | `test_sacrificed_mana_value_bound.py`, `test_intervening_if_you_control_a.py` |
+| several permanents put by one instruction enter as one event, so each newcomer's "whenever another creature enters" sees the others (CR 603.6a) | `Game.entering_together`, used by the "any number of"/"up to N" from-hand put and the look-at-top put | Ghalta, Stampede Tyrant | Collected Company | `test_put_from_hand_onto_battlefield.py`, `test_look_at_top_put_onto_battlefield.py` |
 
-Still not modelled: permanents put onto the battlefield by one instruction
-enter one at a time rather than simultaneously (CR 603.6a's "each time an
-event puts one or more permanents onto the battlefield"), so an entering
-"whenever another creature enters" ability only sees the ones after it -
-engine-wide, shared with every other multi-put reader.
+Still not modelled: the older multi-put readers outside this section (for
+example Tooth and Nail-style searches) still put one card at a time; they
+opt in by wrapping their loop in `Game.entering_together`.
