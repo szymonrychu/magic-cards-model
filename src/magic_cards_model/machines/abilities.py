@@ -2998,6 +2998,24 @@ _CAST_TYPE_LIST_CONDITION_BOUNDARY = re.compile(
     re.IGNORECASE,
 )
 
+#: Avatar Aang's own "Whenever you waterbend, earthbend, firebend, or
+#: airbend, draw a card." - the same "list of verbs joined by a final 'or',
+#: itself followed by the ordinary trigger comma" shape
+#: `_CAST_TYPE_LIST_CONDITION_BOUNDARY` above reads for a cast condition's
+#: type list, read here for CR 701.67c's own bending verbs (and any subset
+#: or order of them, since only "waterbend" has a rule number that reaches
+#: this engine - `machines/triggers.py`'s own `_BENDING_CONDITION` is what
+#: actually classifies the captured condition, this only finds where it
+#: ends). Without this, `_split_top_level`'s bare comma split below would cut
+#: the condition off after "you waterbend" and read "earthbend" as the whole
+#: of the trigger's effect.
+_BENDING_LIST_CONDITION_BOUNDARY = re.compile(
+    r"^(?P<condition>you (?:waterbend|earthbend|firebend|airbend)"
+    r"(?:,\s*(?:waterbend|earthbend|firebend|airbend))*(?:,)?"
+    r"\s+or\s+(?:waterbend|earthbend|firebend|airbend))\s*,\s*",
+    re.IGNORECASE,
+)
+
 #: CR 603.2h's own trailing restriction, in either the rule's own wording
 #: ("Do this only once each turn") or Caretaker's Talent's paraphrase ("This
 #: ability triggers only once each turn") - both always the ability's last
@@ -3081,9 +3099,17 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
     body = text[match.end() :]
 
     type_list_boundary = _CAST_TYPE_LIST_CONDITION_BOUNDARY.match(body)
+    bending_list_boundary = (
+        None if type_list_boundary is not None else _BENDING_LIST_CONDITION_BOUNDARY.match(body)
+    )
     if type_list_boundary is not None:
         condition = type_list_boundary.group("condition")
         rest = body[type_list_boundary.end() :].strip()
+        if not rest:
+            return None
+    elif bending_list_boundary is not None:
+        condition = bending_list_boundary.group("condition")
+        rest = body[bending_list_boundary.end() :].strip()
         if not rest:
             return None
     else:

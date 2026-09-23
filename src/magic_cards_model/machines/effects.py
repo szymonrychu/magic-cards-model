@@ -6146,6 +6146,27 @@ def _untap_all_qualifier_matches(game: "Game", state: CardState, noun: str, nonl
     return False
 
 
+#: Avatar Aang: "Whenever you waterbend, earthbend, firebend, or airbend,
+#: draw a card. Then if you've done all four this turn, transform Avatar
+#: Aang." `split_effect_clauses` cuts the sentence in two on the period;
+#: "draw a card" is `_DRAW_RE`'s own ordinary shape (nothing new needed for
+#: it), and this reads the second clause. The name is captured rather than
+#: assumed, so this is CR 201.5's self-reference by printed name generalised
+#: past Aang's own - any future double-faced card that prints this exact
+#: "done all four this turn, transform `<name>`" shape reads the same way,
+#: it is only that no other one exists yet. The four "this turn" facts
+#: (`_ALL_FOUR_BEND_FACTS`) are `Game.turn_facts` entries recorded by
+#: whichever mechanic actually bent that way - CR 701.67c for waterbend
+#: (`Game.record_turn_fact("waterbent", ...)`, see `models/game.py`); this
+#: clause only reads the ledger, not how any entry got there.
+_TRANSFORM_IF_DONE_ALL_FOUR_BENDS_RE = re.compile(
+    r"^(?:then\s+)?if you'?ve done all four this turn,\s*transform (?P<name>[^.]+)$",
+    re.IGNORECASE,
+)
+
+_ALL_FOUR_BEND_FACTS = ("waterbent", "earthbent", "firebent", "airbent")
+
+
 #: "If you put a `<quality>` card into your graveyard this way, put that
 #: card into your hand." - Chandra, Chill of Compliance's own `+1` (a plain
 #: quality, "noncreature, nonland") and Enlightened Confidant's own trigger
@@ -6846,6 +6867,29 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
                     state.untap(exert_applies=False)
 
         return untap_all
+
+    if match := _TRANSFORM_IF_DONE_ALL_FOUR_BENDS_RE.fullmatch(clause):
+        name = match.group("name").strip()
+
+        def transform_if_done_all_four_bends(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            # CR 201.5: "if an object's text uses its own name, it is
+            # referring to that particular object" - the printed name is
+            # read here rather than assumed, so a differently-named card
+            # printing this same shape self-references correctly too.
+            if name.lower() != source.lower() or source_id is None:
+                return
+            if not all(
+                game.turn_fact_holds(fact, player.username) for fact in _ALL_FOUR_BEND_FACTS
+            ):
+                return
+            permanent = game.find_by_id(UUID(source_id))
+            if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+                return
+            transform_permanent(game, permanent)
+
+        return transform_if_done_all_four_bends
 
     return None
 
@@ -21629,6 +21673,55 @@ def _parse_counter_then_create_tokens_by_mana_value_pair(
     return effect
 
 
+#: Sound the Trumpets: "Counter target spell. If that spell's mana value was
+#: 2 or less, recruit." - the same "that spell" anaphora
+#: `_CREATE_TOKENS_WHERE_X_IS_THAT_SPELLS_MANA_VALUE_RE` reads for Access
+#: Denied, gating CR 701.70a's own keyword action instead of a token count.
+_COUNTER_THEN_RECRUIT_IF_MANA_VALUE_RE = re.compile(
+    r"^if that spell'?s mana value was (?P<n>\d+) or less, recruit\.?$", re.IGNORECASE
+)
+
+
+def _parse_counter_then_recruit_by_mana_value_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Sound the Trumpets - see `_COUNTER_THEN_RECRUIT_IF_MANA_VALUE_RE`.
+
+    CR 400.7's anaphora ("that spell" is whatever the first sentence's
+    "target spell" found) and the mana-value-before-countering order are
+    exactly `_parse_counter_then_create_tokens_by_mana_value_pair`'s own
+    reasoning; only the gated instruction differs, so this reuses `_parse_
+    recruit_clause`'s own effect rather than repeating CR 701.70a's draw/
+    discard/token steps a second time.
+    """
+    if not for_spell:
+        return None
+    if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
+        return None
+    match = _COUNTER_THEN_RECRUIT_IF_MANA_VALUE_RE.fullmatch(second.strip())
+    if match is None:
+        return None
+    threshold = int(match.group("n"))
+    recruit_effect = _parse_recruit_clause("recruit", for_spell=for_spell)
+    assert recruit_effect is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        countered: CardState | None = None
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is not None:
+                countered = target
+                game.counter(target)
+        if countered is None:
+            return
+        if int(countered.card.cmc) <= threshold:
+            recruit_effect(game, spell)
+
+    return effect
+
+
 #: "If that spell is countered this way, exile it instead of putting it into
 #: its owner's graveyard." (Force of Negation) or "..., put it on top of its
 #: owner's library instead of into that player's graveyard." (Memory Lapse) -
@@ -33523,6 +33616,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_counter_then_create_tokens_by_mana_value_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_counter_then_recruit_by_mana_value_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

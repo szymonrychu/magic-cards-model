@@ -36,6 +36,7 @@ session that wrote this file.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -216,3 +217,179 @@ def test_a_shrouded_creature_also_refuses_an_activated_abilitys_target():
 
     with pytest.raises(ValueError, match="has shroud"):
         scenario.activate(bombardment, sacrificing=[fodder], targets=[lookout])
+
+
+# -- Deft Duelist (off-set): a second printed-shroud proof ------------------
+
+
+def test_deft_duelist_refuses_an_opponents_spell_too():
+    """A second printed-shroud card, with a keyword line (first strike) in
+    front of its shroud line - proving the reader is not thrown by other
+    text sharing the same keyword paragraph."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Deft Duelist"])
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    duelist = scenario.creature("Deft Duelist", "alice")
+
+    casting = scenario.cast("Lightning Bolt", username="bob")
+    with pytest.raises(ValueError, match="has shroud"):
+        casting.choose_targets([duelist])
+
+
+def test_deft_duelist_also_refuses_its_own_controllers_spell():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Deft Duelist", "Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    duelist = scenario.creature("Deft Duelist", "alice")
+
+    casting = scenario.cast("Lightning Bolt", username="alice")
+    with pytest.raises(ValueError, match="has shroud"):
+        casting.choose_targets([duelist])
+
+
+# -- Lightning Greaves: shroud granted by an Equipment, not by a spell ------
+
+
+def _greaves_board() -> Scenario:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[
+                "Lightning Greaves",
+                "Grizzly Bears",
+                "Goblin Bombardment",
+                "Runeclaw Bear",
+            ],
+        )
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _equip_greaves(scenario: Scenario, target):
+    """Equip {0}: nothing to tap, so `pay()` alone settles it."""
+    greaves = scenario.find("Lightning Greaves", Zone.BATTLEFIELD, "alice")
+    activation = equip_activation(scenario.game, greaves, target, "alice")
+    activation.begin_paying().pay()
+    activation.activate()
+    activation.resolve()
+    return activation
+
+
+def test_lightning_greaves_grants_shroud_on_equip():
+    """ "Equipped creature has haste and shroud." - a keyword grant reaching
+    the computed board (CR 613.1f) exactly the way Mage's Guile's own timed
+    grant does, proving the enforcement is not keyed to a spell's grant
+    versus an Equipment's."""
+    scenario = _greaves_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    assert not scenario.game.characteristics_of(bears).has_ability("Shroud")
+
+    _equip_greaves(scenario, bears)
+
+    assert scenario.game.characteristics_of(bears).has_ability("Shroud")
+    casting = scenario.cast("Lightning Bolt", username="bob")
+    with pytest.raises(ValueError, match="has shroud"):
+        casting.choose_targets([bears])
+
+
+def test_a_greaves_equipped_creature_refuses_its_controllers_own_activated_ability():
+    """The same activated-ability proof as Elvish Lookout's, on a granted
+    shroud this time - Goblin Bombardment's own "any target" cannot reach the
+    creature Greaves is equipped to, its controller's own ability or not."""
+    scenario = _greaves_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    fodder = scenario.creature("Runeclaw Bear", "alice")
+    bombardment = scenario.find("Goblin Bombardment", Zone.BATTLEFIELD, "alice")
+    _equip_greaves(scenario, bears)
+
+    with pytest.raises(ValueError, match="has shroud"):
+        scenario.activate(bombardment, sacrificing=[fodder], targets=[bears])
+
+
+def test_re_equipping_greaves_onto_its_own_shrouded_creature_is_refused():
+    """Equip is itself an activated ability targeting "target creature you
+    control" (CR 702.6a) - once Greaves has granted Bears shroud, equip's own
+    target check (`equip_activation`'s own `TargetingProfile.check`, the same
+    one every other activated ability's target goes through) refuses
+    re-equipping Greaves onto the very creature its own grant is shrouding,
+    with no special case needed for "the Equipment's own target" versus any
+    other ability's."""
+    scenario = _greaves_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _equip_greaves(scenario, bears)
+    assert scenario.game.characteristics_of(bears).has_ability("Shroud")
+
+    greaves = scenario.find("Lightning Greaves", Zone.BATTLEFIELD, "alice")
+    with pytest.raises(ValueError, match="has shroud"):
+        equip_activation(scenario.game, greaves, bears, "alice")
+
+
+def test_equipping_a_second_creature_still_grants_it_shroud():
+    """The newly-equipped creature gains shroud exactly the same way - the
+    grant tracks whatever Greaves is currently attached to (CR 613.1f), not
+    the specific creature first equipped."""
+    scenario = _greaves_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    fodder = scenario.creature("Runeclaw Bear", "alice")
+    _equip_greaves(scenario, bears)
+    assert scenario.game.characteristics_of(bears).has_ability("Shroud")
+
+    _equip_greaves(scenario, fodder)
+
+    assert scenario.game.characteristics_of(fodder).has_ability("Shroud")
+    assert not scenario.game.characteristics_of(bears).has_ability("Shroud")
+
+
+# -- CR 608.2b: shroud granted in response makes an already-announced target
+# -- illegal at resolution, not merely at a future announcement -------------
+
+
+def test_shroud_granted_in_response_fizzles_the_spell_at_resolution():
+    """CR 608.2b: "If the object or player that's the target of a spell or
+    ability is illegal, that object or player is removed from the spell or
+    ability. ... If all its targets, for every instance of the word "target,"
+    are removed this way, the spell or ability doesn't resolve." Lightning
+    Bolt's own target is legal the moment bob announces it (CR 601.2c) - the
+    refusal every other test in this file exercises never fires - and only
+    becomes illegal afterward, which is a different rule (CR 608.2b) checked
+    at a different time, and `Game.spell_fizzles` is what reads it."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Mage's Guile"], battlefield=["Grizzly Bears", "Island", "Island"])
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.pass_priority("alice")
+
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=[bears])
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", username="alice")
+    scenario.cast_and_resolve("Mage's Guile", *islands, username="alice", targets=[bears])
+
+    assert scenario.game.characteristics_of(bears).has_ability("Shroud")
+    assert scenario.game.spell_fizzles(bolt)
+
+    scenario.resolve_top()
+
+    assert bolt.zone is Zone.GRAVEYARD
+    assert bears.damage == 0

@@ -305,6 +305,7 @@ DELVE_RULE = "CR 702.66a"
 CREW_RULE = "CR 702.122a"
 IMPROVISE_RULE = "CR 702.126a"
 WATERBEND_RULE = "CR 701.67a"
+WATERBEND_RULE_B = "CR 701.67b"
 
 
 def convoke_offer() -> ObjectOffer:
@@ -532,9 +533,38 @@ def waterbend(payment: CostPayment, *permanents: CardState) -> list[CostSubstitu
     on the stack the way `improvise` checks `spell` - the caller has already
     established that the cost being paid is the waterbend one, and what is left
     is the same per-symbol substitution the rest of the family does.
+
+    CR 701.67b: "If a waterbend cost is part of the total cost to cast a
+    spell or activate an ability ..., the alternate method to pay for mana
+    described in rule 701.67a may be used only to pay for the amount of
+    generic mana in the waterbend cost, even if the total cost ... includes
+    other generic mana components." Unlike convoke/delve/improvise, which
+    CR 702.51b/702.66b/702.126b all bind to the *whole* spell's total cost,
+    waterbend's own rule narrows the bound to `payment.waterbend_generic`
+    when that is set - `_substitute`'s ordinary `payment.mana_owed` check
+    still applies underneath it and is what bounds every other case (nothing
+    printed yet narrows the two), but this is the check that would catch a
+    cost like "Waterbend {3}, {1}" tapping past the {3}.
     """
     offer = waterbend_offer()
-    return [_substitute(payment, offer, permanent, None) for permanent in permanents]
+    results = []
+    for permanent in permanents:
+        if payment.waterbend_generic is not None:
+            already = sum(
+                entry.option.generic
+                for entry in payment.substitutions
+                if entry.keyword == "waterbend"
+            )
+            if already + 1 > payment.waterbend_generic:
+                raise ValueError(
+                    f"{permanent.name} cannot pay for the waterbend cost: only "
+                    f"{payment.waterbend_generic} generic mana is in the waterbend "
+                    f"cost itself, and the alternate tap method reaches no further "
+                    f"even though the total cost has other generic mana in it "
+                    f"({WATERBEND_RULE_B})"
+                )
+        results.append(_substitute(payment, offer, permanent, None))
+    return results
 
 
 def _substitute(

@@ -183,3 +183,139 @@ def test_an_empty_library_costs_the_recruiting_player_the_game():
 
     scenario.state_based_actions()
     assert "alice" in scenario.game.losers
+
+
+# -- Esgaroth Garrison (off-set): an ETB recruit, not a dies trigger --------
+
+
+def test_esgaroth_garrison_enters_and_recruits_off_a_discarded_nonland():
+    """ "When this creature enters, recruit." - a second real printing on a
+    different trigger event than Lake-town Lookout's (CR 603.6a's "enters"
+    rather than CR 700.4's "dies"), proving the recruit clause itself is not
+    fitted to being a dies-trigger's payload."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Esgaroth Garrison", "Llanowar Elves"],
+            battlefield=["Plains"] * 5,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (elves,) = [
+        state for state in scenario.player("alice").hand if state.card.name == "Llanowar Elves"
+    ]
+    scenario.will_discard(elves)
+
+    sources = scenario.untapped_sources(*(["Plains"] * 5))
+    scenario.cast_and_resolve("Esgaroth Garrison", *sources)
+    scenario.pass_until_resolved()
+
+    token = scenario.find(TOKEN, Zone.BATTLEFIELD, "alice")
+    assert is_token(token)
+    assert token.controller == "alice"
+    assert _hand_names(scenario) == ["Forest"]
+
+
+def test_esgaroth_garrison_recruits_nothing_off_a_discarded_land():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Llanowar Elves"],
+            hand=["Esgaroth Garrison", "Forest"],
+            battlefield=["Plains"] * 5,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (forest,) = [state for state in scenario.player("alice").hand if state.card.name == "Forest"]
+    scenario.will_discard(forest)
+
+    sources = scenario.untapped_sources(*(["Plains"] * 5))
+    scenario.cast_and_resolve("Esgaroth Garrison", *sources)
+    scenario.pass_until_resolved()
+
+    assert TOKEN not in scenario.battlefield_names()
+    assert _graveyard_names(scenario).count("Forest") == 1
+
+
+# -- Sound the Trumpets: recruit gated on the countered spell's mana value --
+
+
+def test_sound_the_trumpets_recruits_when_the_countered_spells_mana_value_is_two_or_less():
+    """CR 701.70a's recruit, this time gated by CR 400.7's "that spell" -
+    Lightning Bolt is mana value 1, at or under the printed "2 or less"."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Sound the Trumpets", "Llanowar Elves"],
+            battlefield=["Island"] * 3,
+        )
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (elves,) = [
+        state for state in scenario.player("alice").hand if state.card.name == "Llanowar Elves"
+    ]
+    scenario.will_discard(elves)
+    scenario.pass_priority("alice")
+
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", "Island", username="alice")
+    scenario.cast_onto_stack("Sound the Trumpets", *islands, username="alice", targets=[bolt])
+    scenario.pass_until_resolved()
+
+    assert bolt.zone is Zone.GRAVEYARD, "CR 701.6a: countered"
+    assert scenario.player("alice").life == 20, "Lightning Bolt never resolved"
+    token = scenario.find(TOKEN, Zone.BATTLEFIELD, "alice")
+    assert is_token(token)
+    assert _hand_names(scenario) == ["Forest"]
+
+
+def test_sound_the_trumpets_recruits_nothing_when_the_countered_spells_mana_value_is_higher():
+    """Watchwolf, mana value 3, crosses the printed "2 or less" and recruits
+    nothing - the control this file's other cards already give the "if" (a
+    discarded land, an empty draw): the counter still happens, only the
+    recruit does not. Watchwolf has no flash, so it is bob's own board and
+    his own main phase that casts it - alice, not the active player, is the
+    one responding with Sound the Trumpets."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Watchwolf"], battlefield=["Forest", "Plains"])
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Sound the Trumpets", "Llanowar Elves"],
+            battlefield=["Island"] * 3,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    sources = scenario.untapped_sources("Forest", "Plains", username="bob")
+    wolf = scenario.cast_onto_stack("Watchwolf", *sources, username="bob")
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", "Island", username="alice")
+    scenario.cast_onto_stack("Sound the Trumpets", *islands, username="alice", targets=[wolf])
+    scenario.pass_until_resolved()
+
+    assert wolf.zone is Zone.GRAVEYARD, "still countered - CR 701.6a"
+    assert TOKEN not in scenario.battlefield_names()
+    # No draw or discard happened at all: recruit's own "if" never ran.
+    assert _hand_names(scenario) == ["Llanowar Elves"]

@@ -247,7 +247,16 @@ class ModalProfile(EngineModel):
             raise ValueError(
                 f"too many modes: {len(modes)} chosen where the spell allows at most {maximum}"
             )
-        return modes
+        # CR 608.2a: "the controller of the spell or ability follows its
+        # instructions in the order written" - a modal spell's own
+        # instructions *are* the bulleted modes in printed order (CR 700.2),
+        # so the chosen subset resolves in that order however the caster
+        # announced them (CR 601.2b's choice is which modes, not what order
+        # they run in). `sorted` is stable, so CR 700.2d's repeated mode -
+        # "the spell is treated as if that mode appeared that many times in
+        # sequence" - keeps its own repeats adjacent and in the order they
+        # were announced.
+        return tuple(sorted(modes, key=lambda mode: mode.number))
 
     def allowed_range(
         self, *, entwined: bool = False, alternative: bool = False

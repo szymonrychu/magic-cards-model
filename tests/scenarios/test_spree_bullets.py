@@ -34,6 +34,8 @@ session that wrote this file:
   per-mode fail-closed `ModeNotice` is what keeps the readable mode running.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.modes import modal_profile
 from magic_cards_model.models import Zone
@@ -155,3 +157,115 @@ def test_three_steps_ahead_counters_a_spell_and_loots_in_the_same_cast():
     # (CR 701.9a): three Mountains in hand, minus the discarded one, is two.
     assert len(alice.hand) == 2 and all(c.name == "Mountain" for c in alice.hand)
     assert {c.name for c in alice.graveyard} == {"Three Steps Ahead", "Mountain"}
+
+
+# -- Final Showdown (off-set): choosing 1, 2, or all 3 modes; zero refused; --
+# -- printed order, not announcement order ------------------------------- --
+
+
+def test_final_showdown_is_read_with_all_three_plus_bulleted_modes():
+    from tests.cards import card
+
+    profile = modal_profile(card("Final Showdown"))
+    assert profile is not None
+    assert profile.understood
+    assert profile.minimum == 1
+    assert profile.maximum == 3
+    assert [mode.cost for mode in profile.modes] == ["{1}", "{1}", "{3}{W}{W}"]
+
+
+def _final_showdown_board(*, alice_battlefield: list[str] | None = None) -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice", hand=["Final Showdown"], battlefield=["Plains"] * 8 + (alice_battlefield or [])
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+    )
+
+
+def test_choosing_one_mode_charges_only_that_modes_own_cost():
+    """Mode 3, "Destroy all creatures" - {3}{W}{W} on top of the printed {W}
+    (CR 118.8a) is {3}{W}{W}{W}."""
+    scenario = _final_showdown_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Final Showdown")
+    casting.choose_modes([3])
+
+    assert casting.total_cost.mana == ManaCost.parse("{3}{W}{W}{W}")
+
+
+def test_choosing_two_modes_sums_both_their_costs():
+    """Modes 1 and 2, {1} each - CR 702.172a charges a chosen mode's own
+    additional cost whether or not this wave can also read its effect (modes
+    1 and 2's own clauses are not read yet; the mechanism this file proves is
+    the cost summing and the choice count, not every mode's own resolution -
+    see this file's own module docstring)."""
+    scenario = _final_showdown_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Final Showdown")
+    casting.choose_modes([1, 2])
+
+    assert casting.total_cost.mana == ManaCost.parse("{2}{W}")
+
+
+def test_choosing_all_three_modes_sums_every_cost():
+    scenario = _final_showdown_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Final Showdown")
+    casting.choose_modes([1, 2, 3])
+
+    assert casting.total_cost.mana == ManaCost.parse("{5}{W}{W}{W}")
+
+
+def test_choosing_zero_modes_is_refused():
+    """CR 702.172a: "Choose one or more modes" - a minimum of one, same as
+    every other Spree card in this file."""
+    scenario = _final_showdown_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Final Showdown")
+    with pytest.raises(ValueError, match="too few modes"):
+        casting.choose_modes([])
+
+
+def test_modes_are_recorded_in_printed_order_regardless_of_choice_order():
+    """CR 702.42b's general statement (this file's own module docstring):
+    each chosen mode resolves in the order printed on the card, not the
+    order it was named in. Choosing "3, 1" still records "1, 3" - the fix
+    lives in `ModalProfile.resolve` (`machines/modes.py`), general to every
+    modal card, not special-cased to Spree or to this one printing."""
+    scenario = _final_showdown_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Final Showdown")
+    casting.choose_modes([3, 1])
+
+    assert casting.chosen_mode_numbers == [1, 3]
+
+
+def test_the_destroy_mode_still_runs_however_it_was_ordered_among_the_choice():
+    """Mode 3 ("Destroy all creatures") is the one mode this wave reads
+    (this file's own module docstring); choosing it alongside an unread mode,
+    named *first*, proves the unread mode's own `ModeNotice` does not stop
+    the readable one from running (CR 101.3 does not excuse a mode that
+    parses fine because a different mode on the same spell does not)."""
+    scenario = _final_showdown_board(alice_battlefield=["Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    own_bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    their_bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+
+    casting = scenario.cast("Final Showdown")
+    casting.choose_modes([3, 1])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources(*(["Plains"] * 8)))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert own_bears.zone is Zone.GRAVEYARD
+    assert their_bears.zone is Zone.GRAVEYARD
+    notice_modes = {notice.mode_number for notice in scenario.game.mode_notices}
+    assert notice_modes == {1}, "mode 1 fails closed with a notice, not silence"

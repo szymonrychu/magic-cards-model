@@ -1422,11 +1422,12 @@ def test_report_effects_prints_the_legal_gap_section():
 def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     """The acceptance check for the whole rewrite: with every ability word,
     flavor word, format exclusion and registration above in place, the
-    in-format pool's own unexecuted-keyword list is exactly the fourteen
+    in-format pool's own unexecuted-keyword list is exactly the thirteen
     genuinely unbuilt CR 701/702 keywords - the pre-existing false
     positives (ability words, flavor words, Partner/Choose a Background,
-    the six now-registered built keywords, the stale "ascend" entry) are all
-    gone, and no new false positive has appeared in their place."""
+    the seven now-registered built keywords (T01's six plus T02's Waterbend),
+    the stale "ascend" entry) are all gone, and no new false positive has
+    appeared in their place."""
     from scripts.sweep_pool import in_target_formats
 
     names = [name for name in pool() if in_target_formats(card(name))]
@@ -1447,7 +1448,6 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
         "Power-up",
         "Sneak",
         "Toxic",
-        "Waterbend",
     }
 
 

@@ -3544,10 +3544,27 @@ class TotalCost(EngineModel):
     mana: ManaCost = Field(default_factory=ManaCost)
     components: list[CostComponent] = Field(default_factory=list)
 
+    waterbend_generic: int | None = None
+    """CR 701.67b: when this total cost includes a waterbend cost, how much
+    of `mana`'s generic is specifically the waterbend's own - the bound the
+    alternate tap method (`machines/objects_as_costs.waterbend`) may not
+    reach past, "even if the total cost ... includes other generic mana
+    components." `None` for the ordinary case (no waterbend cost at all, or
+    the whole of `mana`'s generic *is* the waterbend's own, which is every
+    printing in the pool today - nothing prints a waterbend cost alongside
+    another generic mana component in the same total cost yet). Set by
+    `total_cost_for_phrase` when it folds in a `waterbend_mana_cost` piece,
+    and carried onto the open `CostPayment` by `CostPayment.for_total`."""
+
     @classmethod
-    def of(cls, mana: "ManaCost | str | None" = None, *components: CostComponent) -> "TotalCost":
+    def of(
+        cls,
+        mana: "ManaCost | str | None" = None,
+        *components: CostComponent,
+        waterbend_generic: int | None = None,
+    ) -> "TotalCost":
         parsed = ManaCost.parse(mana) if isinstance(mana, str) else (mana or ManaCost())
-        return cls(mana=parsed, components=list(components))
+        return cls(mana=parsed, components=list(components), waterbend_generic=waterbend_generic)
 
     @property
     def is_free(self) -> bool:
@@ -4641,6 +4658,7 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
     """
     mana = ManaCost()
     components: list[CostComponent] = []
+    waterbend_generic: int | None = None
     for part in _split_cost_phrase(phrase):
         if _ONLY_MANA.match(part) and not _ACTION_SYMBOL.match(part):
             mana = mana.plus(ManaCost.parse(part))
@@ -4648,12 +4666,17 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
         waterbend = waterbend_mana_cost(part)
         if waterbend is not None:
             mana = mana.plus(waterbend)
+            # CR 701.67b's own bound: only *this* piece's generic, not the
+            # whole phrase's - a second, plain-mana piece in the same
+            # comma-separated cost (none printed yet, but CR 602.1a allows
+            # it) must not widen what the tap method may cover.
+            waterbend_generic = (waterbend_generic or 0) + waterbend.generic
             continue
         component = cost_component_for_phrase(part, payer)
         if component is None:
             return None
         components.append(component)
-    return TotalCost(mana=mana, components=components)
+    return TotalCost(mana=mana, components=components, waterbend_generic=waterbend_generic)
 
 
 _ONLY_MANA = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
@@ -5120,6 +5143,16 @@ class CostPayment(EngineModel):
     here. `mana_owed` is `cost` with them taken out, and that - not `cost` - is
     what the pool is asked to cover."""
 
+    waterbend_generic: int | None = None
+    """`TotalCost.waterbend_generic`, carried over by `for_total` - CR
+    701.67b's own bound on how much of `cost`'s generic the waterbend tap
+    method (`machines/objects_as_costs.waterbend`) may cover, distinct from
+    `cost`'s own generic total whenever the total cost also has other
+    generic mana in it. `None` when this payment has no waterbend cost, or
+    when nothing distinguishes the waterbend's own generic from the rest
+    (every printing in the pool today) - `waterbend` then bounds itself by
+    `cost` alone, exactly as convoke and delve already do."""
+
     mana_payment: ManaPayment | None = None
     """How the mana part was settled, once it has been (CR 118.13)."""
 
@@ -5177,7 +5210,14 @@ class CostPayment(EngineModel):
         components = list(total.components)
         if payer is None:
             payer = next((c.payer for c in components if c.payer is not None), None)
-        payment = cls(cost=total.mana, components=components, game=game, payer=payer, spend=spend)
+        payment = cls(
+            cost=total.mana,
+            components=components,
+            game=game,
+            payer=payer,
+            spend=spend,
+            waterbend_generic=total.waterbend_generic,
+        )
         payment._seed_payer_pool()
         return payment
 

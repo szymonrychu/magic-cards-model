@@ -16481,6 +16481,7 @@ class Game(EngineModel):
 
         mana = ManaCost()
         components = []
+        waterbend_generic: int | None = None
         for piece in ability.costs:
             if piece.kind is CostKind.MANA:
                 mana = increase(mana, ManaCost.parse(piece.text).with_x(x_value))
@@ -16595,6 +16596,17 @@ class Game(EngineModel):
                     if whole is not None and whole.mana.symbols:
                         mana = increase(mana, whole.mana.with_x(x_value))
                         components.extend(whole.components)
+                        if whole.waterbend_generic is not None:
+                            # CR 701.67b: this ability's own waterbend
+                            # budget is the sum of whatever `total_cost_for_
+                            # phrase` read as waterbend-sourced generic
+                            # across every comma-separated piece of the
+                            # cost - `piece.text` is already one such piece,
+                            # so summing across the loop is what a cost with
+                            # more than one waterbend clause (CR 701.67b
+                            # never forbids it, though nothing prints it)
+                            # would need too.
+                            waterbend_generic = (waterbend_generic or 0) + whole.waterbend_generic
                         continue
                 if component is None:
                     raise ValueError(f"cannot build a cost for {piece.text!r}")
@@ -16656,7 +16668,9 @@ class Game(EngineModel):
             # a clause of it - see `ActivationCostReduction`'s docstring).
             mana = mana.minus(self.activation_cost_reduction_for(permanent, ability, controller))
 
-        return TotalCost(mana=mana, components=components).assign_payer(controller)
+        return TotalCost(
+            mana=mana, components=components, waterbend_generic=waterbend_generic
+        ).assign_payer(controller)
 
     def activation_cost_reduction_for(
         self, permanent: CardState, ability: ActivatedAbility, controller: str
@@ -17155,6 +17169,25 @@ class Game(EngineModel):
             entry = self._announced_targets.pop(key, None)
             opened = self._opened_payments.pop(key, None)
             paid = opened if opened is not None and opened.step is CostStep.PAID else None
+            if paid is not None and paid.waterbend_generic is not None:
+                # CR 701.67c: "An ability that triggers whenever a player
+                # waterbends triggers whenever that player pays a waterbend
+                # cost, regardless of how they paid that cost." One event
+                # per waterbend cost actually paid - mana, taps
+                # (`machines/objects_as_costs.waterbend`), or a mix - not one
+                # per tap, since a tap is how the cost gets paid, not an
+                # event of its own.
+                self.record_turn_fact("waterbent", controller)
+                self.emit(
+                    GameEvent(
+                        event=ExtraTriggerEvent.WATERBENDS,
+                        subject_id=permanent.id,
+                        subject_name=permanent.name,
+                        subject_controller=controller,
+                        subject_card=permanent.card,
+                        player=controller,
+                    )
+                )
             # Only the announcement whose payment was paid belongs to this
             # activation; one whose payment was rewound or abandoned is stale.
             recorded = entry[0] if entry is not None and entry[1].step is CostStep.PAID else None

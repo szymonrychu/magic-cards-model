@@ -164,3 +164,94 @@ def test_firaga_deals_three_damage_to_each_creature():
 
     assert mystic.zone is Zone.GRAVEYARD
     assert bears.zone is Zone.GRAVEYARD, "3 damage kills a 2-toughness Grizzly Bears too"
+
+
+# -- Thunder Magic (off-set): a second Tiered printing, this one targeted --
+
+
+def test_thunder_magics_three_tiers_are_read_the_same_general_way():
+    """A different mode count of tiers is unaffected: three modes again, but
+    Thunder Magic's own costs ({0}/{3}/{5}{R}) are not Fire Magic's, proving
+    the reader is not fitted to one card's numbers."""
+    profile = modal_profile(card("Thunder Magic"))
+
+    assert profile.understood
+    assert len(profile.modes) == 3
+    assert [mode.cost for mode in profile.modes] == ["{0}", "{3}", "{5}{R}"]
+    assert profile.minimum == 1 and profile.maximum == 1
+
+
+def test_thundaga_cannot_be_paid_with_insufficient_mana():
+    """The {5}{R} tier's own additional cost, unaffordable off five Mountains
+    alone - CR 601.2h refuses the payment, not the announcement."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Thunder Magic"], battlefield=["Mountain"] * 5)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+
+    casting = scenario.cast("Thunder Magic")
+    casting.choose_modes([3])
+    casting.choose_targets([bears])
+
+    assert casting.total_cost.mana == ManaCost.parse("{5}{R}{R}")
+    mountains = scenario.untapped_sources(*(["Mountain"] * 5))
+    with pytest.raises(ValueError):
+        scenario.pay_with(casting.begin_paying(), *mountains)
+
+
+def test_the_thunder_tier_deals_two_damage_to_the_target_creature():
+    """Wall of Omens (0/4) survives the Thunder tier's 2 damage, so the
+    partial damage itself is checked rather than only a death."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Thunder Magic"], battlefield=["Mountain"])
+        .player("bob", battlefield=["Wall of Omens"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wall = scenario.find("Wall of Omens", Zone.BATTLEFIELD, "bob")
+
+    casting = scenario.cast("Thunder Magic")
+    casting.choose_modes([1])
+    casting.choose_targets([wall])
+    (mountain,) = scenario.untapped_sources("Mountain")
+    scenario.pay_with(casting.begin_paying(), mountain)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert wall.zone is Zone.BATTLEFIELD
+    assert wall.damage == 2
+
+
+def test_the_thundaga_tier_deals_eight_damage_to_the_target_creature():
+    """The chosen tier's own additional cost ({5}{R}) is on top of the
+    printed {R} (CR 700.2h), so the total is {5}{R}{R} - seven Mountains."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Thunder Magic"], battlefield=["Mountain"] * 7)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+
+    casting = scenario.cast("Thunder Magic")
+    casting.choose_modes([3])
+    casting.choose_targets([bears])
+    assert casting.total_cost.mana == ManaCost.parse("{5}{R}{R}")
+    mountains = scenario.untapped_sources(*(["Mountain"] * 7))
+    scenario.pay_with(casting.begin_paying(), *mountains)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    scenario.state_based_actions()
+
+    assert bears.zone is Zone.GRAVEYARD, (
+        "8 damage kills a 2-toughness Grizzly Bears many times over"
+    )

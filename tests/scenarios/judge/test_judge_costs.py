@@ -24,13 +24,17 @@ reaches `Game.activation_cost`. What failed was the test: it passed the chosen
 card as `sacrificing=` for an *exile* component, and asserted on
 `Player.battlefield`, an attribute that does not exist.
 
-DDR#991 is still `xfail`, on a narrower and now-true reason. `machines/cost.py`
-reads `Waterbend {3}` as the `{3}` it names (CR 701.67a's "Pay [cost]"), and
-`machines/objects_as_costs.waterbend` already spends the taps - but a waterbend
-cost is *mana*, and `Game.activation_cost` routes an unclassified cost piece
-through `cost_component_for_phrase` alone, which can only return a
-`CostComponent` and so never sees it. That one branch in `models/game.py` is
-the whole of what is left.
+DDR#991 is no longer `xfail` either - the branch its own reason named is
+built. `machines/cost.py` reads `Waterbend {3}` as the `{3}` it names
+(CR 701.67a's "Pay [cost]"), `Game.activation_cost`'s `CostKind.OTHER` arm
+falls back to `total_cost_for_phrase` (rather than `cost_component_for_
+phrase` alone, which can only return a `CostComponent` and so can never
+carry mana) whenever a cost piece is mana wearing an action word, and
+`machines/objects_as_costs.waterbend` spends the taps against the open
+`CostPayment` that produces. `tests/scenarios/test_waterbend.py` covers the
+keyword end to end, including 701.67b's own bound (a waterbend cost that is
+only part of a larger total cost lets the taps reach no further than the
+waterbend's own generic) and 701.67c's "whenever you waterbend" trigger.
 
 DDR#978's cost-increase half is no longer `xfail` - a concurrent engine wave
 landed static "spells cost more" abilities (Sphere of Resistance and its kin)
@@ -68,8 +72,16 @@ def test_the_waterbend_cost_reads_as_the_mana_it_names():
     ability "isn't an additional or alternative cost and applies only after the
     total cost ... is determined") - `machines/objects_as_costs.waterbend` is
     that half, and it was already here.
+
+    `waterbend_generic` is CR 701.67b's own bound - carried alongside the mana
+    itself so a waterbend cost sharing a total cost with other generic mana
+    (none printed yet, but CR 701.67b's own text anticipates it) can still
+    have its tap method capped at its own share; `TotalCost.of("{3}")` (an
+    ordinary mana phrase, not a waterbend one) leaves it `None`.
     """
-    assert total_cost_for_phrase("Waterbend {3}") == TotalCost(mana=ManaCost.parse("{3}"))
+    assert total_cost_for_phrase("Waterbend {3}") == TotalCost(
+        mana=ManaCost.parse("{3}"), waterbend_generic=3
+    )
     assert waterbend_mana_cost("Waterbend {3}") == ManaCost.parse("{3}")
     assert waterbend_mana_cost("Exert this creature") is None
 

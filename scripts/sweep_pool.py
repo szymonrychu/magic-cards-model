@@ -118,9 +118,11 @@ from magic_cards_model.machines.cost import (  # noqa: E402
     cost_announces_x,
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
+    waterbend_mana_cost,
 )
 from magic_cards_model.machines.effects import (  # noqa: E402
     _compose_layer_effect_with_remainder_for_ability_mode,
+    _parse_counter_then_recruit_by_mana_value_pair,
     _parse_endure_clause,
     _parse_recruit_clause,
     _parse_where_x_is_continuous_effect,
@@ -134,6 +136,7 @@ from magic_cards_model.machines.effects import (  # noqa: E402
     parse_mode_effect,
     reads_as_transforms_line,
     resolve_modal_spell,
+    split_effect_clauses,
     trigger_effect_for,
 )
 from magic_cards_model.machines.layers import (  # noqa: E402
@@ -469,6 +472,30 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     ):
         found["spree"] = "machines/modes.py (spree modal profile, CR 702.172a)"
 
+    # Waterbend (CR 701.67a: "'Waterbend [cost]' means 'Pay [cost]. For each
+    # generic mana in that cost, you may tap an untapped artifact or creature
+    # you control rather than pay that mana.'") is an action word introducing
+    # an *ability's* cost, not a modal spell shape - `waterbend_mana_cost`
+    # (`machines/cost.py`) is the reader, `Game.activation_cost`'s own
+    # `CostKind.OTHER` fold-in is what turns the phrase into a payable total,
+    # and `machines/objects_as_costs.waterbend` is CR 701.67b's alternate tap
+    # method against an open `CostPayment`. Conditioned on some ability's own
+    # printed cost actually matching the "Waterbend [cost]" shape, never on
+    # the bare keyword name alone - the same per-card discipline Endure and
+    # Recruit above use. `tests/scenarios/test_waterbend.py` proves it live,
+    # including CR 701.67b's own bound and CR 701.67c's "whenever you
+    # waterbend" trigger (`ExtraTriggerEvent.WATERBENDS`, `machines/
+    # triggers.py`).
+    if any(k.lower() == "waterbend" for k in printing.keywords):
+        for ability in parse_abilities(printing):
+            cost = getattr(ability, "cost", None)
+            if cost is not None and waterbend_mana_cost(cost) is not None:
+                found["waterbend"] = (
+                    "machines/objects_as_costs.py (waterbend), "
+                    "models/game.py (Game.activation_cost, CR 701.67a)"
+                )
+                break
+
     # Suspend (CR 702.62a) is not a `KeywordCastOption`: unlike Flashback's
     # static "from the graveyard, for this cost" grant, its free cast is a
     # dynamic `PlayPermission` handed out only once a *specific suspended
@@ -651,17 +678,35 @@ def executed_keywords(printing: Card) -> dict[str, str]:
 
     # Recruit (CR 701.70a: "Draw a card, then discard a card. If you
     # discarded a nonland card this way, create a 1/1 white Human Soldier
-    # creature token.") is the bare-word keyword-action shape ("Recruit."),
-    # read by `machines/effects._parse_recruit_clause` off whichever
-    # ability's own text carries it - gated on that parser actually matching
-    # *this* card's clause, the same per-card discipline endure above uses,
-    # not on the keyword name by itself. `tests/scenarios/test_recruit.py`
-    # proves it live.
+    # creature token.") is most often the bare-word keyword-action shape
+    # ("Recruit."), read by `machines/effects._parse_recruit_clause` off
+    # whichever ability's own text carries it - gated on that parser actually
+    # matching *this* card's clause, the same per-card discipline endure
+    # above uses, not on the keyword name by itself. Sound the Trumpets'
+    # own "Counter target spell. If that spell's mana value was 2 or less,
+    # recruit." is the second shape (CR 400.7 anaphora gating the same
+    # keyword action), read by `_parse_counter_then_recruit_by_mana_value_
+    # pair` as a clause *pair* rather than a lone clause, so it needs its own
+    # check. `tests/scenarios/test_recruit.py` proves both live.
     if any(k.lower() == "recruit" for k in printing.keywords):
         for ability in parse_abilities(printing):
             text = getattr(ability, "effect", None) or ability.text
             if _parse_recruit_clause(text, for_spell=False) is not None:
                 found["recruit"] = "machines/effects.py (_parse_recruit_clause, CR 701.70a)"
+                break
+            clauses = split_effect_clauses(text)
+            for_spell = ability.kind is AbilityKind.STATIC
+            if any(
+                _parse_counter_then_recruit_by_mana_value_pair(
+                    clauses[index], clauses[index + 1], for_spell=for_spell
+                )
+                is not None
+                for index in range(len(clauses) - 1)
+            ):
+                found["recruit"] = (
+                    "machines/effects.py "
+                    "(_parse_counter_then_recruit_by_mana_value_pair, CR 701.70a)"
+                )
                 break
 
     # Ascend (CR 702.131a/b: "If [any time] you control ten or more

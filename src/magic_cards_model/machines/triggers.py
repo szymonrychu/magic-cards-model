@@ -174,6 +174,28 @@ class ExtraTriggerEvent(StrEnum):
     #: (CR 603.2g: "An ability triggers only if its trigger event actually
     #: occurs").
     UNTAPPED_DURING_UNTAP_STEP = "untapped_during_untap_step"
+    #: CR 701.67c: "An ability that triggers whenever a player waterbends
+    #: triggers whenever that player pays a waterbend cost, regardless of
+    #: how they paid that cost." One event per waterbend cost actually paid
+    #: (mana, taps, or a mix), not one per tap - `machines/objects_as_costs.
+    #: waterbend`'s own per-symbol substitutions are how the cost is paid,
+    #: not events of their own. Emitted by `Game.activate_ability` once the
+    #: payment it opened through `begin_activating` is confirmed `PAID` and
+    #: that `TotalCost` carried a waterbend cost (`CostPayment.
+    #: waterbend_generic is not None`). `GameEvent.player` is the payer.
+    WATERBENDS = "waterbends"
+    #: The three sibling bending verbs Avatar Aang's own "Whenever you
+    #: waterbend, earthbend, firebend, or airbend, draw a card" condition
+    #: names alongside waterbend (CR 701.67c's own rule number covers only
+    #: waterbend; the other three bending keywords are not built by this
+    #: module - see `docs/engine-coverage.md`). Named here, with no emitter,
+    #: purely so the condition parser can read the whole printed OR-list
+    #: without misreading the words it does not yet have an event for as
+    #: unparseable; `_unread_condition_matches` never returns True for one
+    #: of these because nothing raises them.
+    EARTHBENDS = "earthbends"
+    FIREBENDS = "firebends"
+    AIRBENDS = "airbends"
 
 
 class GameEvent(EngineModel):
@@ -2595,6 +2617,37 @@ _UNTAPPED_DURING_UNTAP_STEP_CONDITION = re.compile(
     r"^you untap one or more permanents during your untap step$"
 )
 
+#: CR 701.67c's own words, "whenever a player waterbends", read off however
+#: the condition actually names the bending verbs - a bare "you waterbend"
+#: (nothing printed prints this alone yet, but CR 701.67c's rule is written
+#: as though something might) or Avatar Aang's own four-way "you waterbend,
+#: earthbend, firebend, or airbend" list, in any order and with any subset
+#: of the four bending verbs (CR 207.2's own listing-order convention is not
+#: pinned to). Every named word maps onto its own `ExtraTriggerEvent`
+#: member; only `WATERBENDS` is ever actually raised (see that member's own
+#: docstring), so a condition naming only the other three never fires -
+#: correctly, since nothing bends that way yet.
+_BENDING_WORD = r"(?:waterbend|earthbend|firebend|airbend)"
+_BENDING_CONDITION = re.compile(
+    rf"^you {_BENDING_WORD}(?:,\s*{_BENDING_WORD})*(?:,)?\s*(?:or\s+{_BENDING_WORD})?$",
+    re.IGNORECASE,
+)
+_BENDING_EVENTS: dict[str, ExtraTriggerEvent] = {
+    "waterbend": ExtraTriggerEvent.WATERBENDS,
+    "earthbend": ExtraTriggerEvent.EARTHBENDS,
+    "firebend": ExtraTriggerEvent.FIREBENDS,
+    "airbend": ExtraTriggerEvent.AIRBENDS,
+}
+
+
+def _bending_events_named(condition: str) -> frozenset[ExtraTriggerEvent]:
+    """Every bending event `_BENDING_CONDITION` names in `condition`, or an
+    empty set if the condition is not that shape at all."""
+    if _BENDING_CONDITION.match(condition) is None:
+        return frozenset()
+    words = re.findall(_BENDING_WORD, condition, re.IGNORECASE)
+    return frozenset(_BENDING_EVENTS[word.lower()] for word in words)
+
 
 def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTriggerEvent]:
     """The events a condition `machines/abilities._trigger_event` left unread
@@ -2629,6 +2682,9 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED})
     if _UNTAPPED_DURING_UNTAP_STEP_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP})
+    bending = _bending_events_named(lowered)
+    if bending:
+        return bending
     return frozenset()
 
 
@@ -2769,6 +2825,13 @@ def _unread_condition_matches(
             event.event is ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED
             and event.subject_id == source.id
         )
+
+    bending_events = _bending_events_named(condition)
+    if bending_events:
+        # CR 701.67c: "whenever a player waterbends" - "you", so the event's
+        # own player has to be the ability's controller, exactly like every
+        # other "whenever you `<verb>`" condition this module reads.
+        return event.event in bending_events and event.player == controller
 
     return False
 
