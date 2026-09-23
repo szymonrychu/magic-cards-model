@@ -16508,6 +16508,17 @@ class Game(EngineModel):
         """
         return f"{permanent.id}:{permanent.zone_change_stamp}:{index}"
 
+    def _activation_handoff_key(self, permanent: CardState, index: int) -> str:
+        """The key `begin_activating` hands an activation to `activate_ability`
+        by (`announced_reveal_counts`, `_announced_targets`, `_opened_payments`).
+
+        Not `_activation_key`: paying the cost between the two calls can move
+        the permanent itself (Mogg Fanatic's "Sacrifice this creature"), which
+        changes its `zone_change_stamp`, and the announced targets and paid
+        cost belong to that one activation all the same (CR 602.2b).
+        """
+        return f"{permanent.id}:{index}"
+
     def _entered_this_turn(self, permanent: CardState) -> bool:
         """Whether this permanent arrived on the battlefield this turn.
 
@@ -17168,7 +17179,7 @@ class Game(EngineModel):
         # CR 601.2h pays the cost the player chose, so a reveal cost nobody
         # named is asked about now, before anything is spent - and refused now
         # (CR 118.3) if the cards named cannot pay it.
-        key = self._activation_key(permanent, index)
+        key = self._activation_handoff_key(permanent, index)
         self.announced_reveal_counts.pop(key, None)
         for component in total.components:
             if (
@@ -17322,7 +17333,7 @@ class Game(EngineModel):
             # CR 107.3a: a "Reveal X ..." cost's X is the number of cards
             # `begin_activating` revealed, unless the caller announced it.
             announced = self.announced_reveal_counts.pop(
-                self._activation_key(permanent, index), None
+                self._activation_handoff_key(permanent, index), None
             )
             if announced is not None and not x_value:
                 x_value = announced
@@ -17332,8 +17343,9 @@ class Game(EngineModel):
             # have made one illegal - Vampire Hexmage sacrificing itself - and
             # nothing rechecks that here; CR 608.2b does, on resolution.
             key = self._activation_key(permanent, index)
-            entry = self._announced_targets.pop(key, None)
-            opened = self._opened_payments.pop(key, None)
+            handoff = self._activation_handoff_key(permanent, index)
+            entry = self._announced_targets.pop(handoff, None)
+            opened = self._opened_payments.pop(handoff, None)
             paid = opened if opened is not None and opened.step is CostStep.PAID else None
             if paid is not None and paid.waterbend_generic is not None:
                 # CR 701.67c: "An ability that triggers whenever a player
