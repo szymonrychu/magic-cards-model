@@ -7463,6 +7463,16 @@ _QUALITY_LIST_AND_FROM_RE = re.compile(r"\bfrom\s+[^.\n]*?\s+and\s+from\b", re.I
 #: runs the clauses in exactly this order anyway.
 _LEADING_THEN_RE = re.compile(r"^then\s+", re.IGNORECASE)
 
+#: "a 3/3 blue and red Elemental creature token" (Artistic Process), "a 4/3
+#: white and black Vampire Demon creature token" (Vito, Fanatic of
+#: Aclazotz) - two of CR 105.1's colour words joined by "and" are one
+#: adjective phrase naming a multicoloured object, never two CR 608.2c
+#: instructions: an instruction never opens on a bare colour word.
+_COLOUR_PAIR_AND_RE = re.compile(
+    r"\b(?:white|blue|black|red|green)\s+and\s+(?:white|blue|black|red|green)\b",
+    re.IGNORECASE,
+)
+
 
 def split_effect_clauses(text: str) -> list[str]:
     """Break an effect into the clauses CR 608.2c executes in order.
@@ -7500,6 +7510,8 @@ def split_effect_clauses(text: str) -> list[str]:
     masked = _QUALITY_LIST_AND_FROM_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
+    # "blue and red Elemental creature token" - one colour phrase.
+    masked = _COLOUR_PAIR_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
     split = (
         _LEADING_THEN_RE.sub("", clause.strip()).replace(_AND_SENTINEL, " and ")
         for clause in _CLAUSE_SEPARATOR.split(masked)
@@ -17272,34 +17284,84 @@ def _parse_get_an_emblem_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
-#: "`<effect>`. If this is the `<ordinal>` time this ability has resolved
-#: this turn, `<consequence>`." (Sephiroth, Fabled SOLDIER) - the count is
-#: `Game.ability_resolutions_this_turn`, which already includes the
-#: resolution in progress when the effect runs.
+#: "... this is the `<ordinal>` time this ability has resolved this turn" -
+#: the count is `Game.ability_resolutions_this_turn`, which already includes
+#: the resolution in progress when the effect runs. Two printed shapes carry
+#: it, each optionally followed by more "If it's the `<ordinal>` time,
+#: `<effect>`." branches:
+#:
+#: - "`<effect>`. If this is the `<ordinal>` time this ability has resolved
+#:   this turn, `<consequence>`." - an unconditional effect, then the
+#:   conditional one (Sephiroth, Fabled SOLDIER; Soulbright Seeker);
+#: - "`<effect>` if this is the `<ordinal>` time this ability has resolved
+#:   this turn. If it's the `<ordinal>` time, `<effect>`. ..." - every effect
+#:   conditional, one per resolution (Omnath, Locus of Creation; Belladonna
+#:   Took; Vito, Fanatic of Aclazotz).
+#:
+#: The "if" is never CR 603.4's intervening "if" - it does not immediately
+#: follow the trigger condition - so the ability always triggers and the
+#: count is read only as it resolves.
+_NTH_RESOLUTION_ANCHOR = (
+    rf"this is the (?P<ordinal>{ORDINAL}) time this ability has resolved this turn"
+)
 _NTH_RESOLUTION_RE = re.compile(
-    rf"^(?P<first>.+?)\.\s*if this is the (?P<ordinal>{ORDINAL}) time this ability has "
-    r"resolved this turn, (?P<then>.+?)\.?$",
+    rf"^(?:(?P<first>.+?)\.\s*)?if {_NTH_RESOLUTION_ANCHOR}, (?P<then>.+?)\.?$",
     re.IGNORECASE | re.DOTALL,
+)
+_NTH_RESOLUTION_LEADING_RE = re.compile(
+    rf"^(?P<then>[^.]+?) if {_NTH_RESOLUTION_ANCHOR}\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+#: One more branch: "If it's the `<ordinal>` time, `<effect>`." - "it" is
+#: the same "this ability has resolved this turn" count the anchor names.
+_NTH_RESOLUTION_BRANCH_RE = re.compile(
+    rf"\.\s*if it(?:'|’)s the (?P<ordinal>{ORDINAL}) time, ", re.IGNORECASE
 )
 
 
+def _nth_resolution_branch_effect(text: str) -> AbilityEffect | None:
+    """One branch's effect, read by the ordinary ability dispatcher - but
+    never one of its fail-closed notice stand-ins, which would hide an
+    unreadable branch inside a readable whole."""
+    effect = _ability_effect_or_notice(text)
+    if effect is None or getattr(effect, "__name__", "").endswith(("_notice_only", "_notice")):
+        return None
+    return effect
+
+
 def _parse_nth_resolution_clause(text: str) -> AbilityEffect | None:
-    """`_NTH_RESOLUTION_RE`'s shape. The first sentence is any effect this
-    file reads; the consequence runs only on the named resolution."""
-    match = _NTH_RESOLUTION_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    """`_NTH_RESOLUTION_RE`'s and `_NTH_RESOLUTION_LEADING_RE`'s shapes, each
+    with any number of trailing `_NTH_RESOLUTION_BRANCH_RE` branches. The
+    unconditional first sentence, if any, always runs; then the one branch
+    naming this resolution's count runs, or none from the count after the
+    last named one on."""
+    stripped = _strip_non_effect_preamble(text).strip()
+    pieces = _NTH_RESOLUTION_BRANCH_RE.split(stripped)
+    head, rest = pieces[0], pieces[1:]
+    match = _NTH_RESOLUTION_RE.fullmatch(head) or _NTH_RESOLUTION_LEADING_RE.fullmatch(head)
     if match is None:
         return None
-    nth = parse_ordinal(match.group("ordinal"))
-    first = parse_mixed_effect(match.group("first") + ".")
-    then_text = match.group("then").strip() + "."
-    then = parse_mixed_effect(then_text) or _parse_transform_clause(then_text)
-    if nth is None or first is None or then is None:
+    first_text = match.groupdict().get("first")
+    first = parse_mixed_effect(first_text + ".") if first_text else None
+    if first_text and first is None:
         return None
+    raw_branches = [(match.group("ordinal"), match.group("then"))]
+    raw_branches += list(zip(rest[0::2], rest[1::2], strict=True))
+    branches: list[tuple[int, AbilityEffect]] = []
+    for ordinal, branch_text in raw_branches:
+        nth = parse_ordinal(ordinal)
+        effect = _nth_resolution_branch_effect(branch_text.strip().rstrip(".") + ".")
+        if nth is None or effect is None:
+            return None
+        branches.append((nth, effect))
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        first(game, ability)
-        if game.ability_resolutions_this_turn.get(resolution_key(ability), 0) == nth:
-            then(game, ability)
+        if first is not None:
+            first(game, ability)
+        count = game.ability_resolutions_this_turn.get(resolution_key(ability), 0)
+        for nth, then in branches:
+            if count == nth:
+                then(game, ability)
 
     return effect
 
@@ -19182,18 +19244,24 @@ _DAMAGE_EACH_FILTERED_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: "each opponent and each <types> they control" - End the Festivities. The
-#: players are damaged too (CR 119.2: "Damage dealt to a player normally
-#: causes that player to lose that much life"), which is what makes this
-#: different from every other filter here.
+#: "each opponent and each <types> they control" - End the Festivities - or
+#: "... you don't control" - Omnath, Locus of Creation's "each opponent and
+#: each planeswalker you don't control". The players are damaged too (CR
+#: 119.2: "Damage dealt to a player normally causes that player to lose that
+#: much life"), which is what makes this different from every other filter
+#: here. "They control" is the named opponents' own permanents; "you don't
+#: control" is every permanent whose controller is not the effect's "you"
+#: (CR 109.5).
 _DAMAGE_EACH_OPPONENT_AND_THEIRS_RE = re.compile(
-    r"^opponent and each (?P<groups>[a-z]+(?:\s+and\s+(?:each\s+)?[a-z]+)*) they control$",
+    r"^opponent and each (?P<groups>[a-z]+(?:\s+and\s+(?:each\s+)?[a-z]+)*) "
+    r"(?P<whose>they control|you don(?:'|\u2019)t control)$",
     re.IGNORECASE,
 )
 
-#: "<type list> you control" / "<type list> your opponents control" -
-#: Fulminous Forte's own "each creature and planeswalker your opponents
-#: control": the same bare CR 205.2a type list `_parse_mass_type_qualifier`
+#: "<type list> you control" / "<type list> your opponents control" /
+#: "<type list> you don't control" - Fulminous Forte's own "each creature and
+#: planeswalker your opponents control", Barrage of Boulders' "each creature
+#: you don't control": the same bare CR 205.2a type list `_parse_mass_type_qualifier`
 #: already reads, with a controller restriction appended. Read as its own
 #: whole-clause shape rather than folded into `_parse_damage_group_filter`'s
 #: predicate, since a controller check needs the resolving object's own
@@ -19201,7 +19269,7 @@ _DAMAGE_EACH_OPPONENT_AND_THEIRS_RE = re.compile(
 #: `(game, permanent)` signature has no way to reach.
 _DAMAGE_GROUP_TYPES_AND_CONTROLLER_RE = re.compile(
     r"^(?P<types>[a-z]+(?:(?:,\s*| and | or )[a-z]+)*) "
-    r"(?P<whose>you control|your opponents control)$",
+    r"(?P<whose>you control|your opponents control|you don(?:'|\u2019)t control)$",
     re.IGNORECASE,
 )
 
@@ -19210,6 +19278,21 @@ _DAMAGE_GROUP_TYPES_AND_CONTROLLER_RE = re.compile(
 _DAMAGE_GROUP_KEYWORD_RE = re.compile(
     r"^(?P<group>[a-z]+) (?P<sense>with|without) (?P<keyword>[a-z]+)$", re.IGNORECASE
 )
+
+
+def _controlled_by_whose(
+    permanent: CardState, whose: str, controller: str, opponent_names: set[str]
+) -> bool:
+    """Whether `permanent` is in a damage filter's controller group, relative
+    to the effect's controller - its CR 109.5 "you". "They control" and "your
+    opponents control" are the opponents' permanents, "you control" the
+    controller's own, and "you don't control" everyone's but the
+    controller's."""
+    if whose == "you control":
+        return permanent.controller == controller
+    if whose.startswith("you don"):
+        return permanent.controller != controller
+    return permanent.controller in opponent_names
 
 
 def _parse_damage_group_filter(
@@ -19309,6 +19392,7 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
             if card_type is None:
                 return None
             types.add(card_type)
+        whose = opponents_match.group("whose").lower()
 
         def opponents_effect(game: "Game", stack_object: "StackObject") -> None:
             source = (
@@ -19326,7 +19410,8 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
             recipients = [
                 permanent
                 for permanent in list(game.battlefield)
-                if permanent.controller in names and types & set(board.of(permanent).types)
+                if _controlled_by_whose(permanent, whose, controller, names)
+                and types & set(board.of(permanent).types)
             ]
             for opponent in opponents:
                 game.deal_damage(opponent, amount, source=source)
@@ -19344,7 +19429,7 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
             if card_type is None:
                 return None
             types.add(card_type)
-        opponents_only = controller_match.group("whose").lower() == "your opponents control"
+        whose = controller_match.group("whose").lower()
 
         def controller_scoped_effect(game: "Game", stack_object: "StackObject") -> None:
             source = (
@@ -19356,16 +19441,13 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
             amount = max(amount_of(game, controller), 0)  # CR 608.2h, once
             if amount <= 0:
                 return
-            names = (
-                {opponent.username for opponent in _opponents(game, controller)}
-                if opponents_only
-                else {controller}
-            )
+            opponent_names = {opponent.username for opponent in _opponents(game, controller)}
             board = game.computed_board()
             recipients = [
                 permanent
                 for permanent in list(game.battlefield)
-                if permanent.controller in names and types & set(board.of(permanent).types)
+                if _controlled_by_whose(permanent, whose, controller, opponent_names)
+                and types & set(board.of(permanent).types)
             ]
             for permanent in recipients:
                 if permanent.zone is Zone.BATTLEFIELD:
