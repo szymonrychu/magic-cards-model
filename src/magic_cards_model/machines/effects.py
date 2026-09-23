@@ -24477,7 +24477,8 @@ def _parse_goad_for_each_opponent_then_counters_clause(
     def effect(game: "Game", stack_object: "StackObject") -> None:
         goaded = _goad_resolved_targets(game, stack_object)
         board = game.computed_board()
-        amount = sum(max(board.of(creature).power or 0, 0) for creature in goaded)
+        # CR 107.1b: negative powers count toward the total; only a negative X is 0.
+        amount = max(sum(board.of(creature).power or 0 for creature in goaded), 0)
         source = stack_object.source(game) if isinstance(stack_object, AbilityOnStack) else None
         if amount > 0 and source is not None and source.zone is Zone.BATTLEFIELD:
             game.add_counters(source, kind, amount)

@@ -564,6 +564,31 @@ def test_havoc_eater_goads_up_to_one_creature_that_opponent_controls():
     assert scenario.creature("Havoc Eater", "alice").counter_count(Counter.PLUS_ONE) == 3
 
 
+def test_havoc_eater_sums_a_negative_power_into_the_total():
+    """CR 107.1b: "If a calculation or comparison needs to use a negative
+    value, it does so" - only a negative final X becomes 0. Hill Giant (3)
+    plus a -1/3 Living Library totals 2, not 3."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Havoc Eater"], library=list(LIBRARY))
+        .player("bob", battlefield=["Hill Giant"], library=list(LIBRARY))
+        .player("carol", battlefield=["Living Library"], library=list(LIBRARY))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.creature("Hill Giant", "bob")
+    living_library = scenario.creature("Living Library", "carol")
+    living_library.add_counters(Counter.MINUS_ONE, 1)
+    scenario.will_choose_targets(giant, living_library, source="Havoc Eater")
+
+    scenario.put_onto_battlefield("Havoc Eater", "alice")
+    _resolve_everything(scenario)
+
+    assert giant.goaded_by == ["alice"]
+    assert living_library.goaded_by == ["alice"]
+    assert scenario.creature("Havoc Eater", "alice").counter_count(Counter.PLUS_ONE) == 2
+
+
 def test_havoc_eater_may_goad_nothing():
     scenario = (
         Scenario()
