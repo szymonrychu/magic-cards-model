@@ -1829,6 +1829,48 @@ def _mana_value_comparison(condition: str) -> tuple[int, str] | None:
     return None
 
 
+#: CR 506.2/508.1b: an attack on the ability's controller, or on a
+#: planeswalker they control - "Whenever a creature attacks you or a
+#: planeswalker you control" (Slumbering Dragon, Isperia, Circle of Flame).
+#: The "you control" here is the planeswalker's, never the attacker's.
+_ATTACKS_YOU_RE = re.compile(r"\battacks you(?P<planeswalker> or a planeswalker you control)?$")
+
+
+def _attacks_you_holds(
+    game: "Game",
+    attacker_text: str,
+    defended: "re.Match[str]",
+    controller: str,
+    event: GameEvent,
+) -> bool:
+    """Whether `event`'s attack is on `controller` (or, when the condition
+    says so, a planeswalker `controller` controls) by an attacker matching
+    the condition's own description ("a creature without flying")."""
+    defender = event.defender
+    if defender is None:
+        return False
+    if defender.username is not None:
+        attacked_you = defender.username == controller
+    else:
+        attacked = game.find_by_id(defender.card_id) if defender.card_id is not None else None
+        attacked_you = (
+            defended.group("planeswalker") is not None
+            and isinstance(attacked, CardState)
+            and attacked.controller == controller
+            and Type.PLANESWALKER in attacked.types
+        )
+    if not attacked_you:
+        return False
+    from .targeting import permanent_description
+
+    description = re.sub(r"^(?:a|an)\s+", "", attacker_text.strip())
+    requirement = permanent_description(description)
+    attacker = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+    if requirement is None or not isinstance(attacker, CardState):
+        return False
+    return requirement.rejects(attacker, controller, game, None) is None
+
+
 def _controller_clause_holds(
     condition: str, controller: str, subject_controller: str | None
 ) -> bool:
@@ -2283,6 +2325,9 @@ def condition_matches(
         # "a creature you control attacks alone").
         if "a player alone" not in lowered and "alone" in lowered and not event.attacking_alone:
             return False
+        defended = _ATTACKS_YOU_RE.search(lowered)
+        if defended is not None:
+            return _attacks_you_holds(game, lowered[: defended.start()], defended, controller, event)
         if mine:
             return event.subject_id == source.id
         return _controller_clause_holds(
