@@ -10,7 +10,7 @@ Its own *effect*, when it resolves, is CR 614.1a's "the next time ... would
 that turn, that answers only that opponent's very next draw, however it
 happens (a draw step, a spell, another ability), not every draw for the rest
 of the turn the way Plagiarize's "skip that draw" redirection ("until end of
-turn, if ... would draw ..., instead ...", `DrawRedirection`) keeps firing.
+turn, if ... would draw ..., instead ...", `DrawSkipReplacement`) keeps firing.
 
 Modelled the same way CR 615.8's "next time [a source] would deal damage"
 shield already is (`PreventionShield`/`ShieldKind`): a small stored,

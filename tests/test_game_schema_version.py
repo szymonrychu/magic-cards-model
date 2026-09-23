@@ -536,6 +536,30 @@ def test_a_snapshot_written_before_the_linked_exile_stamps_is_refused() -> None:
         Game.model_validate(dumped)
 
 
+#: The last version before S15's resolution-created replacements:
+#: `Game.draw_redirections` became `Game.created_replacements`, and
+#: `DelayedEffectSpec` gained `CreatedTriggeredAbility`.
+_SCHEMA_VERSION_BEFORE_CREATED_REPLACEMENTS = 57
+
+
+def test_the_created_replacements_bump_moved_the_version_past_fifty_seven() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_CREATED_REPLACEMENTS
+
+
+def test_a_snapshot_written_before_created_replacements_is_refused() -> None:
+    """A version-57 dump is refused rather than decoded as current: a
+    pending Plagiarize in it sits on `draw_redirections`, a field this build
+    no longer has, and would silently stop replacing anything."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_CREATED_REPLACEMENTS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_CREATED_REPLACEMENTS}",
+    ):
+        Game.model_validate(dumped)
+
+
 def _a_game_with_a_pending_dies_trigger_and_a_cant_be_countered_grant() -> Game:
     """A real board carrying both of T5's/T9's own reachable-but-unbumped
     state at once, played to the point that matters rather than hand-built:

@@ -64,18 +64,17 @@ def test_which_of_the_three_cards_effects_are_read():
 
     Plagiarize: "Until end of turn, if target player would draw a card, instead
     that player skips that draw and you draw a card." - a CR 614.1a replacement
-    effect with a duration, and `effect_for` is still the wrong place to look
-    for it: nothing about it is a resolution *effect*. It is built now as a
-    `machines/replacement.DrawRedirection`, left behind on
-    `Game.draw_redirections` by `Game._create_resolution_replacements` the way
-    a resolved prevention spell leaves a CR 615.1 shield - see the test below.
+    effect with a duration. Resolving it creates the effect: `effect_for`
+    reads it and leaves a `machines/replacement.DrawSkipReplacement` on
+    `Game.created_replacements`, the way a resolved prevention spell leaves a
+    CR 615.1 shield - see the test below.
 
     Everdream: "Draw a card." plus "Splice onto instant or sorcery {2}{U}". The
     draw *is* read - it is the one clause of this episode the engine can run -
     which is what makes the splice half the interesting gap.
     """
     assert effect_for("Time Stop", card("Time Stop").oracle_text or "") is not None
-    assert effect_for("Plagiarize", card("Plagiarize").oracle_text or "") is None
+    assert effect_for("Plagiarize", card("Plagiarize").oracle_text or "") is not None
     assert effect_for("Everdream", card("Everdream").oracle_text or "") is not None
 
 
@@ -156,7 +155,7 @@ def test_plagiarize_takes_the_targeted_players_next_draw():
 
     The spell is in a graveyard by the time the effect ever applies, which is
     why this cannot be a static ability read off a permanent: it is stored on
-    `Game.draw_redirections`, and CR 514.2's cleanup step is what ends it.
+    `Game.created_replacements`, and CR 514.2's cleanup step is what ends it.
     """
     scenario = (
         Scenario()
@@ -378,7 +377,7 @@ def test_the_spliced_draw_happens_in_cleanup_and_plagiarize_steals_it():
     assert len(scenario.player("alice").hand) == 1, "Amy drew the spliced card"
     # The draw itself is the episode's question, and library counts are what
     # answer it: bob's spliced "Draw a card" was replaced, so he skipped it and
-    # alice drew instead (CR 614.1a, the DrawRedirection Plagiarize left behind).
+    # alice drew instead (CR 614.1a, the DrawSkipReplacement Plagiarize left behind).
     assert len(scenario.player("bob").library) == 5, "bob skipped the draw"
     assert len(scenario.player("alice").library) == 4, "alice took it"
     # Everdream is still in bob's hand, and that is correct: splice says
@@ -396,4 +395,4 @@ def test_the_spliced_draw_happens_in_cleanup_and_plagiarize_steals_it():
     # instead of alice. `Game._before_priority` pays the debt only once this
     # whole resolution, spliced text included, has finished.
     assert scenario.game.cleanup_owed is False
-    assert scenario.game.draw_redirections == [], "CR 514.2 has since ended it"
+    assert scenario.game.created_replacements == [], "CR 514.2 has since ended it"

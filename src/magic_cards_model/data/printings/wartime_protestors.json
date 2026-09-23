@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "bac81940-d717-49ff-83b2-16a22bb2c988",
+  "oracle_id": "6557813b-4ee7-4881-a37c-10c8ea097360",
+  "multiverse_ids": [],
+  "resource_id": "270F63998CFE745AF2F897B5204ED9E692DFF2292768BFD479E911AF612DE31C",
+  "mtgo_id": 144804,
+  "arena_id": 97437,
+  "tcgplayer_id": 662773,
+  "cardmarket_id": 858182,
+  "name": "Wartime Protestors",
+  "lang": "en",
+  "released_at": "2025-11-21",
+  "uri": "https://api.scryfall.com/cards/bac81940-d717-49ff-83b2-16a22bb2c988",
+  "scryfall_uri": "https://scryfall.com/card/tla/160/wartime-protestors?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:09:10Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.jpg?1783904950",
+    "normal": "https://cards.scryfall.io/normal/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.jpg?1783904950",
+    "large": "https://cards.scryfall.io/large/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.jpg?1783904950",
+    "png": "https://cards.scryfall.io/png/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.png?1783904950",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.jpg?1783904950",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.jpg?1783904950",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.webp?1783904950",
+    "grid": "https://cards.scryfall.io/grid/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.webp?1783904950",
+    "display": "https://cards.scryfall.io/display/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.webp?1783904950",
+    "art": "https://cards.scryfall.io/art/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.webp?1783904950",
+    "crop": "https://cards.scryfall.io/crop/front/b/a/bac81940-d717-49ff-83b2-16a22bb2c988.webp?1783904950"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Human Rebel Ally",
+  "oracle_text": "Haste\nWhenever another Ally you control enters, put a +1/+1 counter on that creature and it gains haste until end of turn.",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Haste"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set": "tla",
+  "set_name": "Avatar: The Last Airbender",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atla&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tla?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bac81940-d717-49ff-83b2-16a22bb2c988/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6557813b-4ee7-4881-a37c-10c8ea097360&unique=prints",
+  "collector_number": "160",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Fire Lord Ozai's cruel reign only forged a stronger resolve in the hearts of the resistance.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Yosuke Adachi",
+  "artist_ids": [
+    "0c8e01f6-7071-47e8-9e79-65c042a0aec9"
+  ],
+  "illustration_id": "c53a96a7-f996-4a4f-81ed-86549945e7ec",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 9233,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": "0.15",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWartime%2BProtestors",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWartime%2BProtestors",
+    "edhrec": "https://edhrec.com/route/?cc=Wartime+Protestors"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F662773%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=858182&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/144804?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

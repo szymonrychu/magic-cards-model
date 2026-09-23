@@ -135,6 +135,7 @@ from .delayed import (
     CopyNextSpellYouCast,
     CountersAndKeywordsEventSubject,
     CreateAttackingTokens,
+    CreatedTriggeredAbility,
     CreateTokenCopyOfControlledToken,
     DelayedBlinkReturnWithRider,
     DelayedTrigger,
@@ -155,6 +156,7 @@ from .delayed import (
     anaphoric_delayed_trigger,
     draw_a_card_for_controller,
     parse_anaphoric_delayed_clause,
+    put_counters_and_grant_keywords_to_event_subject,
     return_earthbent_land,
     return_subject_to_battlefield_under_owner,
     return_subject_to_hand,
@@ -201,7 +203,13 @@ from .modes import (
     mode_effect_text,
     substitute_x,
 )
-from .replacement import DrawReplacementKind, NextTimeDrawReplacement
+from .replacement import (
+    CreatedReplacement,
+    DrawReplacementKind,
+    DrawSkipReplacement,
+    NextTimeDrawReplacement,
+    created_replacement_spec,
+)
 from .targeting import (
     COMPARISON_CLAUSE_PATTERN,
     ControllerRestriction,
@@ -19329,6 +19337,17 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if cast_noncreature_this_turn_copy_token is not None:
         return cast_noncreature_this_turn_copy_token
+    created_trigger = _parse_created_trigger_ability_text(effect_text)
+    if created_trigger is not None:
+        return created_trigger
+    created_replacement = _parse_created_replacement_ability_text(effect_text)
+    if created_replacement is not None:
+        return created_replacement
+    event_subject_counters_and_keywords = _parse_event_subject_counters_and_keywords_clause(
+        effect_text
+    )
+    if event_subject_counters_and_keywords is not None:
+        return event_subject_counters_and_keywords
     attacking_tokens_then_sacrifice = _parse_create_tapped_attacking_tokens_then_sacrifice(
         effect_text
     )
@@ -21701,6 +21720,12 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    created_trigger = _parse_created_trigger_spell_text(whole)
+    if created_trigger is not None:
+        return created_trigger
+    created_replacement = _parse_created_replacement_spell_text(whole)
+    if created_replacement is not None:
+        return created_replacement
     draw_x_from_target_graveyard_from_library = (
         _parse_draw_x_from_target_graveyard_from_library_clause(whole)
     )
@@ -27943,6 +27968,329 @@ def _parse_cast_noncreature_spell_this_turn_copy_token_clause(
     return effect
 
 
+# --------------------------------------------------------------------------
+# Triggered abilities a resolving spell or ability creates for the turn
+# --------------------------------------------------------------------------
+#
+# "Whenever `<condition>` this turn, `<effect>`" (First Day of Class, Beck,
+# Rite of Harmony) and "Until end of turn, whenever `<condition>`,
+# `<effect>`" (Dovin, Grand Arbiter's +1, Mistway Spy's face-up trigger).
+# CR 603.7/603.7a: resolving the instruction creates a delayed triggered
+# ability; CR 603.7b: "this turn"/"until end of turn" is a stated duration, so
+# it fires on every matching event rather than once, and CR 514.2 ends it in
+# the cleanup step.
+#
+# The created ability is rewritten as the printed trigger it reads as - the
+# duration words off, nothing else changed - and handed to the same readers a
+# printed trigger goes through: `machines/triggers.granted_triggered_
+# abilities_of` for the condition (matched later by `condition_matches`) and
+# `trigger_effect_for` for the effect. So the template is closed for every
+# condition and effect a printed trigger already reads, and a created ability
+# whose condition or effect is *not* read is refused here rather than created
+# to do nothing.
+#
+# The other "this turn" delayed-trigger readers above (Dalkovan Encampment's,
+# Lyra's, Summon: Good King Mog XII's, The Last Ronin's) stay ahead of this
+# one in the dispatch chain; they carry riders ("that are tapped and
+# attacking. Sacrifice them ...", "attacks alone") this reader does not.
+
+_CREATED_TRIGGER_THIS_TURN_RE = re.compile(
+    r"^whenever (?P<condition>[^,]+?) this turn,\s*(?P<effect>\S.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_CREATED_TRIGGER_UNTIL_END_OF_TURN_RE = re.compile(
+    r"^until end of turn,\s*(?P<ability>whenever\s+\S.*)$", re.IGNORECASE | re.DOTALL
+)
+
+
+def created_trigger_line(paragraph: str) -> str | None:
+    """The printed-trigger reading of a created "this turn" ability, or `None`
+    when `paragraph` is not one of the two shapes above."""
+    text = " ".join(paragraph.strip().split())
+    this_turn = _CREATED_TRIGGER_THIS_TURN_RE.fullmatch(text)
+    if this_turn is not None:
+        return f"Whenever {this_turn.group('condition')}, {this_turn.group('effect')}"
+    until_eot = _CREATED_TRIGGER_UNTIL_END_OF_TURN_RE.fullmatch(text)
+    if until_eot is not None:
+        ability = until_eot.group("ability")
+        return ability[0].upper() + ability[1:]
+    return None
+
+
+def _readable_created_trigger(line: str) -> TriggeredAbility | None:
+    """`line` read as a printed trigger, when both halves are readable: a
+    condition `machines/triggers.condition_matches` can match (an event, no
+    intervening "if" - CR 603.4's recheck is `triggers_for`'s, not a delayed
+    trigger's) and an effect `trigger_effect_for` answers with a real effect,
+    not a fail-closed notice."""
+    from .triggers import granted_triggered_abilities_of
+
+    found = granted_triggered_abilities_of([line])
+    if len(found) != 1:
+        return None
+    (ability,) = found
+    if ability.event is None or ability.intervening_if is not None or ability.once_per_turn:
+        return None
+    if ability.event is TriggerEvent.TAPPED_FOR_MANA or parse_triggered_mana(ability.effect):
+        # CR 605.1b: a created ability that triggers on tapping for mana and
+        # adds mana is a mana ability - it resolves on the spot, never on the
+        # stack - and `_parse_until_end_of_turn_tap_land_additional_mana_
+        # clause` builds it that way (High Tide's shape).
+        return None
+    effect = trigger_effect_for("", ability.event, ability.effect)
+    if effect is None or _is_notice_only(effect):
+        return None
+    return ability
+
+
+def _create_turn_scoped_trigger(
+    game: "Game",
+    line: str,
+    event: TriggerEvent,
+    *,
+    controller: str,
+    source: CardState | None,
+    source_id: UUID | None,
+    source_name: str,
+) -> None:
+    """CR 603.7a/603.7d-e: the ability exists from now, controlled by whoever
+    controlled the creating spell or ability as it resolved, with that spell's
+    or ability's source as its own. The source's printing rides along - see
+    `CreatedTriggeredAbility.source_card` - because a resolving spell is in no
+    zone at all while it resolves (a fused Beck // Call's own Birds enter
+    then), and a copy (CR 707.10a) or a token (CR 111.7) may cease to exist."""
+    game.create_delayed_trigger(
+        DelayedTrigger(
+            text=line,
+            event=event,
+            controller=controller,
+            source_id=source_id,
+            source_name=source_name,
+            remaining=None,
+            expires_end_of_turn=True,
+            effect=CreatedTriggeredAbility(
+                ability_text=line, source_card=source.card if source is not None else None
+            ),
+        )
+    )
+
+
+def _split_created_trigger_paragraph(text: str) -> tuple[str, TriggeredAbility, str] | None:
+    """(printed line, its parse, the rest of the text) when `text` opens with
+    a readable created "this turn" trigger. CR 603.1: the whole paragraph is
+    the trigger - its trailing sentences are its own instructions - so only
+    the following *paragraphs* are the spell's or ability's further
+    instructions (First Day of Class's "Learn.")."""
+    paragraphs = [part for part in text.strip().split("\n") if part.strip()]
+    if not paragraphs:
+        return None
+    line = created_trigger_line(paragraphs[0])
+    if line is None:
+        return None
+    ability = _readable_created_trigger(line)
+    if ability is None:
+        return None
+    return line, ability, "\n".join(paragraphs[1:]).strip()
+
+
+def _parse_created_trigger_spell_text(text: str) -> Effect | None:
+    """The spell side: see the banner above."""
+    split = _split_created_trigger_paragraph(text)
+    if split is None:
+        return None
+    line, ability, rest_text = split
+    event = ability.event
+    assert event is not None
+    rest: Effect | None = None
+    if rest_text:
+        rest = _spell_effect_or_notice(rest_text)
+        if rest is None or _is_notice_only(rest):
+            return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        _create_turn_scoped_trigger(
+            game,
+            line,
+            event,
+            controller=game.controller_of(spell).username,
+            source=spell,
+            source_id=spell.id,
+            source_name=spell.name,
+        )
+        if rest is not None:
+            rest(game, spell)
+
+    return effect
+
+
+def _parse_created_trigger_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side (a loyalty ability, a triggered ability's effect)."""
+    split = _split_created_trigger_paragraph(_strip_non_effect_preamble(text))
+    if split is None:
+        return None
+    line, ability, rest_text = split
+    event = ability.event
+    assert event is not None
+    rest: AbilityEffect | None = None
+    if rest_text:
+        rest = _ability_effect_or_notice(rest_text)
+        if rest is None or _is_notice_only(rest):
+            return None
+
+    def effect(game: "Game", stack_object: AbilityOnStack) -> None:
+        _create_turn_scoped_trigger(
+            game,
+            line,
+            event,
+            controller=stack_object.controller,
+            source=stack_object.source(game),
+            source_id=stack_object.source_id,
+            source_name=stack_object.source_name,
+        )
+        if rest is not None:
+            rest(game, stack_object)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Replacement effects a resolving spell or ability creates for the turn
+# --------------------------------------------------------------------------
+#
+# "Until end of turn, if target player would draw a card, instead ..."
+# (Plagiarize), "Until end of turn, if you would put one or more +1/+1
+# counters on a creature you control, put that many plus one ... instead"
+# (Prairie Dog), "If a creature would enter the battlefield under an
+# opponent's control this turn, it enters under your control instead"
+# (Gather Specimens), Crafty Cutpurse's token-creation twin. Resolving the
+# sentence *is* creating the effect (CR 614.1a, CR 611.2a), the same way a
+# resolved prevention spell's shield is; `machines/replacement.
+# created_replacement_spec` reads the shape and `Game.created_replacements`
+# holds it until CR 514.2's cleanup step.
+
+
+def _created_replacement_record(
+    text: str,
+    *,
+    controller: str,
+    source_id: UUID | None,
+    source_name: str,
+    target_player: str | None,
+) -> CreatedReplacement | None:
+    spec = created_replacement_spec(text)
+    if spec is None:
+        return None
+    if isinstance(spec, DrawSkipReplacement) and spec.affected == "player":
+        # CR 115.1: "target player" was chosen on announcement and rechecked
+        # at CR 608.2b; no legal one left means nothing to replace.
+        if target_player is None:
+            return None
+        spec = spec.model_copy(update={"affected_player": target_player})
+    return CreatedReplacement(
+        spec=spec,
+        label=" ".join(text.split()),
+        controller=controller,
+        source_id=source_id,
+        source_name=source_name,
+    )
+
+
+def _parse_created_replacement_spell_text(text: str) -> Effect | None:
+    """The spell side: the whole resolution text is the one sentence."""
+    if created_replacement_spec(text) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        target = next(
+            (
+                ref.username
+                for ref in spell.targets
+                if ref.username is not None and game.is_in_game(ref.username)
+            ),
+            None,
+        )
+        record = _created_replacement_record(
+            text,
+            controller=game.controller_of(spell).username,
+            source_id=spell.id,
+            source_name=spell.name,
+            target_player=target,
+        )
+        if record is not None:
+            game.created_replacements.append(record)
+
+    return effect
+
+
+def _parse_created_replacement_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side (Prairie Dog's activated ability, Crafty Cutpurse's
+    enters trigger)."""
+    if created_replacement_spec(text) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        target = next(
+            (
+                found.username
+                for found in game.resolve_targets(ability)
+                if isinstance(found, Player) and game.is_in_game(found.username)
+            ),
+            None,
+        )
+        record = _created_replacement_record(
+            text,
+            controller=ability.controller,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            target_player=target,
+        )
+        if record is not None:
+            game.created_replacements.append(record)
+
+    return effect
+
+
+#: "Put N `<kind>` counter(s) on it/that creature and it gains `<keywords>`
+#: until end of turn." (or the same as two sentences) - the effect of a
+#: trigger whose condition names the object: First Day of Class's created
+#: "Whenever a creature you control enters, ...", Wartime Protestors' printed
+#: "Whenever another Ally you control enters, put a +1/+1 counter on that
+#: creature and it gains haste until end of turn." "It"/"that creature" is the
+#: object the trigger event names (CR 603.2's event, the entering creature),
+#: not the ability's source; CR 122.1's counters are permanent, CR 611.2a's
+#: grant ends at cleanup.
+_EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|that creature)"
+    r"(?:\.\s*|,?\s+and\s+)(?:it|that creature) gains (?P<keywords>[^.]+?) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_event_subject_counters_and_keywords_clause(text: str) -> AbilityEffect | None:
+    """`_EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE`'s shape."""
+    match = _EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    keywords = split_and_validate_keywords(match.group("keywords"))
+    if amount is None or keywords is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        put_counters_and_grant_keywords_to_event_subject(
+            game,
+            ability.event,
+            kind,
+            amount,
+            tuple(keywords),
+            source_name=ability.source_name,
+            source_id=ability.source_id,
+        )
+
+    return effect
+
+
 #: Fire Navy Trebuchet's whole attack trigger, once `machines/abilities.py` has
 #: split the "Whenever you attack," condition off the front: "create a 2/1
 #: colorless Construct artifact creature token with flying named Ballistic
@@ -30429,21 +30777,16 @@ class DelayedClauseNotice(EngineModel):
 class ControlReplacementNotice(EngineModel):
     """A resolving spell's own "if [a permanent] would enter the battlefield
     under [a player]'s control [this turn], it enters under [another
-    player]'s control instead" (CR 614.1a's `IF_WOULD_INSTEAD` shape,
-    `machines/replacement.py`'s own `ReplacementKind.IF_WOULD_INSTEAD`) -
-    recognised by shape, but not built.
+    player]'s control instead" (CR 614.1a's `IF_WOULD_INSTEAD` shape) whose
+    subject or players `machines/replacement.created_replacement_spec` does
+    not read - recognised by shape, not built.
 
-    Two things this engine has nowhere to put, not one: `ReplaceableEvent`
-    (`machines/replacement.py`) has no field a replacement could set to
-    redirect an entering permanent's controller - `Game.put_onto_battlefield`
-    sets `card_state.controller` *before* `apply_replacements` runs and never
-    reconsiders it - and `machines/replacement.py`'s own `parse_replacement_
-    effects` only ever reads a *permanent's own printed* static ability text;
-    nothing here represents a temporary, "this turn"-scoped replacement rule
-    conjured by a resolving instant or sorcery and watching every future
-    zone change rather than one printed source. Gather Specimens needs both.
-    Recorded rather than silently dropped, the same "unreadable is not the
-    same as no effect" convention every other notice class here keeps.
+    Gather Specimens itself is read (`EnterUnderYourControl`, created by
+    `_parse_created_replacement_spell_text` ahead of this in the dispatch
+    chain); this is the fail-closed net for a differently worded sentence of
+    the same shape, recorded rather than silently dropped, the same
+    "unreadable is not the same as no effect" convention every other notice
+    class here keeps.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -30453,7 +30796,7 @@ class ControlReplacementNotice(EngineModel):
     text: str
 
 
-#: Gather Specimens' own templated shape - see `ControlReplacementNotice`.
+#: The shape `ControlReplacementNotice` fails closed on.
 _CONTROL_REPLACEMENT_RE = re.compile(
     r"^if a? ?[a-z]+ would enter the battlefield under an? [a-z' ]+'?s control"
     r"(?: this turn)?, it enters under [a-z' ]+ control instead\.?$",

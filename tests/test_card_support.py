@@ -94,14 +94,18 @@ def test_the_worst_clause_decides_the_card():
 def test_a_multi_face_card_judges_each_castable_face():
     """Beck // Call is a split card: a player chooses which half to cast
     (CR 709.3, verified 2026-09-23 with `mise run rules:find 709.3`), so each
-    half is judged as its own spell - one handled, one dead."""
+    half is judged as its own spell - two clauses, each carrying its own
+    half's text. (Beck's half used to be the dead one; its "this turn"
+    trigger is read now, so both are handled.)"""
     printing = card("Beck // Call")
     support = card_support(printing)
     assert support.name == "Beck // Call"
     spells = [c for c in support.clauses if c.kind == "spell"]
     assert len(spells) == 2
-    assert {c.status for c in spells} == {"handled", "silent"}
-    assert support.status == "silent"
+    assert spells[0].text.startswith("Whenever a creature enters this turn")
+    assert spells[1].text.startswith("Create four 1/1 white Bird")
+    assert {c.status for c in spells} == {"handled"}
+    assert support.status == "handled"
 
 
 def test_a_keyword_only_card_is_handled_through_its_keywords():

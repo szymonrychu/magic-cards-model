@@ -21,9 +21,8 @@ Not every `None` is a gap, and the notice must not fire for these:
 
 - a permanent spell, which becomes a permanent as it resolves (CR 608.3a);
   its abilities are judged on their own when they trigger;
-- a spell whose resolution leaves a replacement effect instead
-  (Plagiarize, CR 614.1a), which `Game._create_resolution_replacements`
-  builds without `effect_for`.
+- a spell whose resolution leaves a replacement effect (Plagiarize, CR
+  614.1a) - `effect_for` reads it, and resolving it creates the effect.
 
 Every CR number above was read in full with `mise run rules:find` in the
 session that wrote this file.
@@ -87,7 +86,7 @@ def test_a_spell_that_leaves_a_replacement_effect_records_no_notice():
         "Plagiarize", *scenario.untapped_sources(*["Island"] * 4), targets=["bob"]
     )
 
-    assert scenario.game.draw_redirections, "the replacement is what Plagiarize does"
+    assert scenario.game.created_replacements, "the replacement is what Plagiarize does"
     assert scenario.game.unmodeled_trigger_effect_notices == []
 
 

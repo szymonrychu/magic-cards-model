@@ -1,0 +1,144 @@
+{
+  "object": "card",
+  "id": "eb1a16f9-13d4-4188-8e1e-0f2394349c7a",
+  "oracle_id": "af94fd87-ea37-49eb-b5e6-0b1846f23859",
+  "multiverse_ids": [
+    535032
+  ],
+  "resource_id": "8BCBEE8E35B7D79D9DD1D034BCAE39F76BCB0B2B856A8F41A79585BECDFAD804",
+  "mtgo_id": 93478,
+  "arena_id": 78603,
+  "tcgplayer_id": 247869,
+  "cardmarket_id": 574736,
+  "name": "Rite of Harmony",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/eb1a16f9-13d4-4188-8e1e-0f2394349c7a",
+  "scryfall_uri": "https://scryfall.com/card/mid/236/rite-of-harmony?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:52:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.jpg?1783925556",
+    "normal": "https://cards.scryfall.io/normal/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.jpg?1783925556",
+    "large": "https://cards.scryfall.io/large/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.jpg?1783925556",
+    "png": "https://cards.scryfall.io/png/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.png?1783925556",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.jpg?1783925556",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.jpg?1783925556",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.webp?1783925556",
+    "grid": "https://cards.scryfall.io/grid/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.webp?1783925556",
+    "display": "https://cards.scryfall.io/display/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.webp?1783925556",
+    "art": "https://cards.scryfall.io/art/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.webp?1783925556",
+    "crop": "https://cards.scryfall.io/crop/front/e/b/eb1a16f9-13d4-4188-8e1e-0f2394349c7a.webp?1783925556"
+  },
+  "mana_cost": "{G}{W}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Whenever a creature or enchantment you control enters this turn, draw a card.\nFlashback {2}{G}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [
+    "Flashback"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/eb1a16f9-13d4-4188-8e1e-0f2394349c7a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaf94fd87-ea37-49eb-b5e6-0b1846f23859&unique=prints",
+  "collector_number": "236",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Nature bends to the witches' call.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Rovina Cai",
+  "artist_ids": [
+    "b64d0979-4028-4409-8285-eec2fa282dd4"
+  ],
+  "illustration_id": "fdb25802-680a-49fd-9759-9586a42c5fbc",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4611,
+  "penny_rank": 7542,
+  "preview": {
+    "source": "iYingdi",
+    "source_uri": "https://mob.iyingdi.com/post/5123843",
+    "previewed_at": "2021-09-03"
+  },
+  "prices": {
+    "usd": "0.99",
+    "usd_foil": "0.84",
+    "usd_etched": null,
+    "eur": "0.89",
+    "eur_foil": "1.36",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=535032&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRite%2Bof%2BHarmony",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRite%2Bof%2BHarmony",
+    "edhrec": "https://edhrec.com/route/?cc=Rite+of+Harmony"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F247869%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574736&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/93478?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

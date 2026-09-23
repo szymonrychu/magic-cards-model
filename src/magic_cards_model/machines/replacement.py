@@ -112,14 +112,15 @@ import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated, Literal
 from uuid import UUID
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.creature_types import creature_types
+from ..ids import new_id
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, Choice, ChoiceKind, Counter, ExileMarker
 from ..models.token import TokenDefinition, is_token
@@ -1612,6 +1613,15 @@ class ReplaceableEvent:
     #: target creature. It can't be regenerated' ...)".
     regeneration_allowed: bool = True
 
+    #: Under whose control the tokens being created would enter, for
+    #: `CREATE_TOKENS` - `None` is `player`'s own (CR 111.2: "The token enters
+    #: the battlefield under that player's control"). Kept apart from `player`
+    #: because a replacement can change who controls them without changing who
+    #: creates (and so owns) them - Crafty Cutpurse's "each token that would be
+    #: created under an opponent's control this turn is created under your
+    #: control instead" (`EnterUnderYourControl`).
+    controller: str | None = None
+
     #: What the tokens being created are, for `CREATE_TOKENS` (CR 111.3).
     #:
     #: Without it the event says only *how many*, which is enough for Doubling
@@ -1645,6 +1655,13 @@ class ReplaceableEvent:
     #: A human-readable trace of what applied, in order. Scenario tests assert
     #: on outcomes, not on this - it exists so a failure says *why*.
     history: list[str] = field(default_factory=list)
+
+    @property
+    def creating_controller(self) -> str | None:
+        """Under whose control the tokens of a `CREATE_TOKENS` event would enter."""
+        if self.controller is not None:
+            return self.controller
+        return self.player.username if self.player is not None else None
 
     @property
     def happens(self) -> bool:
@@ -1713,6 +1730,12 @@ class ApplicableEffect:
     #: battlefield, one of them must be chosen." True for exactly those, which
     #: is what `order_effects` puts first - the choice is forced, not free.
     copy_as_it_enters: bool = False
+
+    #: CR 616.1b: "If any of the replacement and/or prevention effects would
+    #: modify under whose control an object would enter the battlefield, one of
+    #: them must be chosen." True for exactly those (`EnterUnderYourControl`),
+    #: which `order_effects` puts ahead of even a copy effect.
+    controls_entry: bool = False
 
     @property
     def controller(self) -> str:
@@ -1929,45 +1952,9 @@ def _draw_plus(amount: int) -> Apply:
     return apply
 
 
-def _counter_amount_applies(
-    kind: str | None, types: frozenset[Type] | None, you_control: bool
-) -> Applies:
-    """ "If one or more [kind] counters would be put on [a creature] [you control]..."
-
-    CR 122.6: "counters being put on an object ... refers to putting counters on
-    that object while it's on the battlefield and also to an object that's given
-    counters as it enters the battlefield", which is why the enters-with
-    counters of CR 614.1c reach this too.
-
-    `kind` None is "one or more counters" of any kind; `types` None is "a
-    permanent". A permanent already on the battlefield reads its computed types
-    (CR 613.5) - a land earthbend (CR 701.66a) made a creature is a creature
-    you control, whatever it prints.
-    """
-
-    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
-            return False
-        card = event.card
-        if card is None:
-            return False
-        if you_control and card.controller != source.controller:
-            return False
-        if kind is not None and (event.counter_kind or "").strip().lower() != kind:
-            return False
-        if types is None:
-            return True
-        card_types = (
-            game.characteristics_of(card).types if card.zone is Zone.BATTLEFIELD else card.types
-        )
-        return any(wanted in card_types for wanted in types)
-
-    return applies
-
-
 def _counter_amount_applies_to_player(kind: str | None) -> Applies:
     """ "If you would get one or more [kind] counters, ..." - the player twin
-    of `_counter_amount_applies`. "You" is CR 201.5's own reference to
+    of `CounterAmountReplacement.applies`. "You" is CR 201.5's own reference to
     whoever controls the source printing the ability (its controller, not
     necessarily the player the counters land on in general - every printing
     of this shape in the pool is self-referential, "you" meaning the
@@ -1975,7 +1962,7 @@ def _counter_amount_applies_to_player(kind: str | None) -> Applies:
 
     `kind` `None` is "one or more counters" of any kind (Winding
     Constrictor's own "you get" line); a named kind (Aether Refinery's "{E}")
-    is read the same way `_counter_amount_applies` reads a card-counter
+    is read the same way `CounterAmountReplacement.applies` reads a card-counter
     replacement's own kind.
     """
 
@@ -2800,7 +2787,9 @@ def _extra_token_applies(wanted: frozenset[Type]) -> Applies:
 
     "Under your control" is CR 111.2's "the token enters the battlefield under
     that player's control", so the test is against the player *creating* them
-    and not against whoever the effect belongs to - Kozilek's Command makes the
+    (or whoever a control-changing replacement already moved them to,
+    `ReplaceableEvent.creating_controller`) and not against whoever the effect
+    belongs to - Kozilek's Command makes the
     targeted player the creator, and a Doubling Season that player does not
     control does nothing about it. "One or more" is why `amount > 0` is
     checked: creating nothing is not an event to replace.
@@ -2815,7 +2804,7 @@ def _extra_token_applies(wanted: frozenset[Type]) -> Applies:
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
         if event.kind is not EventKind.CREATE_TOKENS or event.amount <= 0:
             return False
-        if event.player is None or event.player.username != source.controller:
+        if event.creating_controller is None or event.creating_controller != source.controller:
             return False
         if not wanted:
             return True
@@ -2938,6 +2927,8 @@ _COUNTER_KIND_WORD = r"(?:\{[^}]+\}|[+/\w-]+)"
 _COUNTER_AMOUNT_EVENT_RE = re.compile(
     r"^(?:an effect would put one or more counters on (?P<effect_subject>.+?)"
     rf"|one or more (?:(?P<kind>{_COUNTER_KIND_WORD}) )?counters would be put on (?P<subject>.+?)"
+    rf"|you would put one or more (?:(?P<put_kind>{_COUNTER_KIND_WORD}) )?counters on"
+    r" (?P<put_subject>.+?)"
     rf"|(?P<player_event>you would get one or more"
     rf" (?:counters?|(?P<player_kind>{_COUNTER_KIND_WORD}))))$",
     re.IGNORECASE,
@@ -2948,6 +2939,8 @@ _COUNTER_AMOUNT_REPLACEMENT_RE = re.compile(
     r"(?: of each of those kinds of counters"
     rf"| (?P<kind>{_COUNTER_KIND_WORD}) counters(?: (?P<op>plus|minus) (?P<n>{COUNT}))?)"
     r" are put on (?:it|that creature|that permanent)"
+    rf"|put that many(?: plus (?P<put_plus>{COUNT}))? (?P<put_rkind>{_COUNTER_KIND_WORD}) counters"
+    r" on (?:it|that creature|that permanent)"
     rf"|you get (?:(?P<pmult>{MULTIPLIER}) that many|that many(?: plus (?P<pplus>{COUNT}))?)"
     r"(?: of each of those kinds of counters"
     rf"| (?P<pkind>{_COUNTER_KIND_WORD})(?: counters?)?"
@@ -2972,7 +2965,16 @@ def _counter_subject_types(types_text: str) -> frozenset[Type] | None | bool:
 
 
 def _counter_amount(match: re.Match[str]) -> Apply | None:
-    """The multiplier or addend a counter replacement prints, or None.
+    """`_counter_amount_values` as an `Apply`."""
+    values = _counter_amount_values(match)
+    if values is None:
+        return None
+    multiplier, addend = values
+    return _scale_amount(multiplier=multiplier, addend=addend)
+
+
+def _counter_amount_values(match: re.Match[str]) -> tuple[int, int] | None:
+    """The (multiplier, addend) a counter replacement prints, or None.
 
     `p`-prefixed groups are `_COUNTER_AMOUNT_REPLACEMENT_RE`'s player-counter
     branch ("you get twice that many ..."); the rest are its card-counter
@@ -2982,9 +2984,13 @@ def _counter_amount(match: re.Match[str]) -> Apply | None:
     multiplier_text = match.group("it_mult") or match.group("mult") or match.group("pmult")
     if multiplier_text is not None:
         multiplier = parse_multiplier(multiplier_text)
-        return None if multiplier is None else _scale_amount(multiplier=multiplier)
+        return None if multiplier is None else (multiplier, 0)
     addend_text = (
-        match.group("plus") or match.group("n") or match.group("pplus") or match.group("pn")
+        match.group("plus")
+        or match.group("n")
+        or match.group("pplus")
+        or match.group("pn")
+        or match.group("put_plus")
     )
     if addend_text is None:
         return None  # a bare "that many" replaces nothing
@@ -2992,7 +2998,7 @@ def _counter_amount(match: re.Match[str]) -> Apply | None:
     if addend is None:
         return None
     op = match.group("op") or match.group("pop")
-    return _scale_amount(addend=-addend if op == "minus" else addend)
+    return (1, -addend if op == "minus" else addend)
 
 
 def _normalized_counter_kind(raw: str | None) -> str | None:
@@ -3053,8 +3059,37 @@ def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | Non
             apply=apply,
         )
 
+    spec = read_counter_amount(effect)
+    return None if spec is None else _static_form(effect.text, spec)
+
+
+def read_counter_amount(effect: ReplacementEffect) -> "CounterAmountReplacement | None":
+    """`CounterAmountReplacement`'s reader - the card-counter half of
+    `_compile_counter_doubler` (Hardened Scales, Doubling Season's counter
+    line, Branching Evolution, Vizier of Remedies, Winding Constrictor's card
+    line), and Prairie Dog's active-voice created form of the same sentence.
+    A multiplier and an addend are data, never pinned."""
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    event_match = _COUNTER_AMOUNT_EVENT_RE.match((effect.event or "").strip())
+    if event_match is None or event_match.group("player_event") is not None:
+        return None
+    replacement_match = _COUNTER_AMOUNT_REPLACEMENT_RE.match(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if replacement_match is None:
+        return None
+    active_voice = event_match.group("put_subject") is not None
+    if active_voice != (replacement_match.group("put_rkind") is not None):
+        # "you would put ... put that many" is one voice throughout; a passive
+        # event with an active replacement (or the reverse) is no printing.
+        return None
     subject_match = _COUNTER_SUBJECT_RE.match(
-        (event_match.group("effect_subject") or event_match.group("subject")).lower()
+        (
+            event_match.group("effect_subject")
+            or event_match.group("subject")
+            or event_match.group("put_subject")
+        ).lower()
     )
     if subject_match is None:
         return None
@@ -3062,21 +3097,24 @@ def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | Non
     if types is False:
         return None
 
-    event_kind = (event_match.group("kind") or "").lower() or None
-    replacement_kind = (replacement_match.group("kind") or "").lower() or None
+    event_kind = (event_match.group("kind") or event_match.group("put_kind") or "").lower() or None
+    replacement_kind = (
+        replacement_match.group("kind") or replacement_match.group("put_rkind") or ""
+    ).lower() or None
     if replacement_kind != event_kind:
         # "+1/+1 counters would be put ... that many plus one -1/-1 counters"
         # is no card; "of each of those kinds" answers only a kindless event.
         return None
-    apply = _counter_amount(replacement_match)
-    if apply is None:
+    amount = _counter_amount_values(replacement_match)
+    if amount is None:
         return None
-    return CardReplacement(
-        label=effect.text,
-        applies=_counter_amount_applies(
-            event_kind, types, subject_match.group("you_control") is not None
-        ),
-        apply=apply,
+    multiplier, addend = amount
+    return CounterAmountReplacement(
+        counter_kind=event_kind,
+        types=None if types is None else tuple(sorted(types)),
+        you_control=subject_match.group("you_control") is not None,
+        multiplier=multiplier,
+        addend=addend,
     )
 
 
@@ -3441,6 +3479,69 @@ def _cant_enter_replacements(card: Card) -> list[CardReplacement]:
     return found
 
 
+# -- "if <player> would draw a card[ except ...], [instead ]that player skips
+#    that draw[ and you draw a card]" (Notion Thief; Plagiarize's created form) --
+
+#: "that player skips that draw[ and you draw a card]" - the replacement half.
+_DRAW_SKIP_RE = re.compile(
+    r"^that player skips that draw(?P<you> and you draw a card)?$", re.IGNORECASE
+)
+#: "<who> would draw a card[ except the first one they draw in each of their
+#: draw steps]" - the event half.
+_DRAW_EVENT_RE = re.compile(
+    r"^(?P<who>target player|an opponent|a player|you) would draw a card"
+    r"(?P<except> except the first one (?:they|you) draws? in each of (?:their|your) draw steps)?$",
+    re.IGNORECASE,
+)
+_DRAW_WHO: dict[str, Literal["player", "opponent", "you", "any"]] = {
+    "target player": "player",
+    "an opponent": "opponent",
+    "a player": "any",
+    "you": "you",
+}
+
+
+def read_draw_skip(effect: ReplacementEffect) -> "DrawSkipReplacement | None":
+    """`DrawSkipReplacement`'s reader, shared by the static and created forms.
+    "target player" comes back with no `affected_player`; the caller that
+    knows the target fills it in (only a resolving spell has one)."""
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    event_match = _DRAW_EVENT_RE.match((effect.event or "").strip())
+    replacement_match = _DRAW_SKIP_RE.match((effect.replacement or "").strip().rstrip("."))
+    if event_match is None or replacement_match is None:
+        return None
+    return DrawSkipReplacement(
+        affected=_DRAW_WHO[event_match.group("who").lower()],
+        except_first_draw_step_draw=event_match.group("except") is not None,
+        you_draw=replacement_match.group("you") is not None,
+    )
+
+
+def _compile_draw_skip(effect: ReplacementEffect) -> CardReplacement | None:
+    """Notion Thief's static line - the static form of `DrawSkipReplacement`.
+    A "target player" has no meaning on a static ability, so it is refused."""
+    spec = read_draw_skip(effect)
+    if spec is None or spec.affected == "player":
+        return None
+    return _static_form(effect.text, spec)
+
+
+def _static_form(
+    label: str, spec: "DrawSkipReplacement | CounterAmountReplacement"
+) -> CardReplacement:
+    """A created-form spec as a permanent's static replacement: "you" is the
+    permanent's controller."""
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        return spec.applies(game, source.controller or "", event)
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        spec.apply(game, (source.controller if source is not None else None) or "", event)
+
+    return CardReplacement(label=label, applies=applies, apply=apply)
+
+
 #: Tried in order against every parsed effect on a `REPLACEMENTS` miss. Order
 #: does not matter between them - each one's event/replacement match is
 #: specific enough that at most one ever claims a given `ReplacementEffect`.
@@ -3456,6 +3557,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_draw_doubler_except_draw_step,
     _compile_draw_doubler,
     _compile_draw_plus,
+    _compile_draw_skip,
     _compile_token_doubler,
     _compile_extra_token,
     _compile_token_substitution,
@@ -5616,69 +5718,301 @@ def _regeneration_effects(game: "Game", event: ReplaceableEvent) -> list[Applica
     ]
 
 
-class DrawRedirection(EngineModel):
-    """One player's draws taken by another, for a duration (CR 614.1a).
+# --------------------------------------------------------------------------
+# Replacement effects a resolving spell or ability leaves behind
+# --------------------------------------------------------------------------
+#
+# "Until end of turn, if target player would draw a card, instead that player
+# skips that draw and you draw a card." (Plagiarize), "{4}{W}: Until end of
+# turn, if you would put one or more +1/+1 counters on a creature you
+# control, put that many plus one +1/+1 counters on it instead." (Prairie
+# Dog), "If a creature would enter the battlefield under an opponent's control
+# this turn, it enters under your control instead." (Gather Specimens).
+#
+# CR 614.1a makes each a replacement effect; CR 611.2a gives it the duration
+# it states, independent of the object that made it - so unlike every static
+# replacement above there is no permanent to ask while it lasts, and it is
+# stored on `Game.created_replacements` as a `CreatedReplacement` until CR
+# 514.2's cleanup step ends it. What it does is data - one of the `kind`-
+# tagged shapes below - so a game carrying one round-trips through
+# `Game.model_dump` and applies identically after decode.
+#
+# Each shape is read by one reader shared with the printed static form of the
+# same sentence: `DrawSkipReplacement` is Notion Thief's static line too,
+# `CounterAmountReplacement` is Hardened Scales' (`_compile_counter_doubler`
+# wraps the same spec). The static form's "you" is its permanent's
+# controller; the created form's is the player who controlled the creating
+# spell or ability as it resolved.
 
-    Plagiarize prints the only one in this pool: "Until end of turn, if target
-    player would draw a card, instead that player skips that draw and you draw
-    a card." That is CR 614.1a's "[if] [Event] would happen, [Something else]
-    happens instead" shape, but unlike every other entry in this module it is
-    not a static ability of a permanent - the instant that made it is in a
-    graveyard by the time it ever applies, and CR 614.6 has the new event
-    happen in place of the old one for as long as the duration runs.
 
-    Stored on `Game.draw_redirections` for the same reason
-    `Game.prevention_shields` stores a CR 615.1 shield: the effect has to
-    outlive its source, and it has a duration of its own that CR 514.2's
-    cleanup step ends.
+class DrawSkipReplacement(EngineModel):
+    """ "If `<player>` would draw a card[ except the first one they draw in
+    each of their draw steps], [instead ]that player skips that draw[ and you
+    draw a card][ instead]."
+
+    CR 614.6: "If an event is replaced, it never happens. A modified event
+    occurs instead" - "that player skips that draw and you draw a card" is the
+    same draw, now yours, so `apply` hands the event itself to the replacing
+    player rather than raising a fresh draw. That is what CR 614.5 needs: the
+    modified draw is one this effect has already had its opportunity at, so
+    Plagiarize on yourself does not loop (ruling 2004-10-04), and two players'
+    Plagiarizes on each other hand the draw back (ruling 2007-07-15), the same
+    shape Notion Thief's own two-Thieves ruling (2018-03-16) describes.
+
+    `affected` is who "would draw": `"player"` is one named player
+    (`affected_player` - Plagiarize's "target player", fixed at resolution),
+    `"opponent"`/`"you"` are read against the effect's controller, `"any"` is
+    "a player". `you_draw` false is Possessed Portal's bare "skips that draw".
     """
 
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["draw_skip"] = "draw_skip"
+    affected: Literal["player", "opponent", "you", "any"]
+    affected_player: str | None = None
+    except_first_draw_step_draw: bool = False
+    you_draw: bool = True
+
+    def applies(self, game: "Game", controller: str, event: "ReplaceableEvent") -> bool:
+        if event.kind is not EventKind.DRAW or event.player is None or event.amount <= 0:
+            return False
+        if self.except_first_draw_step_draw and event.draw_step_draw:
+            return False
+        drawer = event.player.username
+        if self.affected == "player":
+            return drawer == self.affected_player
+        if self.affected == "opponent":
+            return drawer != controller
+        if self.affected == "you":
+            return drawer == controller
+        return True
+
+    def apply(self, game: "Game", controller: str, event: "ReplaceableEvent") -> None:
+        if not self.you_draw:
+            event.amount = 0
+            return
+        event.player = game.player(controller)
+        event.draw_step_draw = False
+
+
+class CounterAmountReplacement(EngineModel):
+    """ "If one or more `<kind>` counters would be put on `<a subject>`
+    [you control], `<N times | that many plus/minus N>` ... instead" and the
+    active-voice "If you would put one or more `<kind>` counters on `<a
+    subject>` [you control], put that many plus N ... instead" (Prairie Dog).
+
+    CR 122.6: counters an object is given as it enters count as counters put
+    on it, so both routes reach `EventKind.ADD_COUNTERS`. The event does not
+    record which player's effect is putting the counters, so the active voice
+    is read the way its "on a creature you control" already narrows it - see
+    `MEMORY.md`. `types` `None` is "a permanent"; `counter_kind` `None` is any
+    kind. CR 107.1b floors the result at zero.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["counter_amount"] = "counter_amount"
+    counter_kind: str | None = None
+    types: tuple[Type, ...] | None = None
+    you_control: bool = False
+    multiplier: int = 1
+    addend: int = 0
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
+            return False
+        card = event.card
+        if card is None:
+            return False
+        if self.you_control and card.controller != controller:
+            return False
+        if self.counter_kind is not None and (
+            (event.counter_kind or "").strip().lower() != self.counter_kind
+        ):
+            return False
+        if self.types is None:
+            return True
+        card_types = (
+            game.characteristics_of(card).types if card.zone is Zone.BATTLEFIELD else card.types
+        )
+        return any(wanted in card_types for wanted in self.types)
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        event.amount = max(event.amount * self.multiplier + self.addend, 0)
+
+
+class EnterUnderYourControl(EngineModel):
+    """ "If a creature would enter the battlefield under an opponent's control
+    this turn, it enters under your control instead." (Gather Specimens) and
+    "each token that would be created under an opponent's control this turn is
+    created under your control instead." (Crafty Cutpurse).
+
+    Two events, because CR 701.7b makes a token *being created* and a token
+    *entering the battlefield* two: `on_creation` watches `CREATE_TOKENS` and
+    moves `ReplaceableEvent.controller` (the owner stays the creator, CR
+    111.2), otherwise `ENTERS_BATTLEFIELD` and the entering object's own
+    controller. CR 616.1b puts either ahead of every other replacement on the
+    same event (`ApplicableEffect.controls_entry`) - Crafty Cutpurse's ruling
+    (2018-01-19) that an opponent's Anointed Procession then doubles nothing,
+    Gather Specimens' (2008-10-01) that it applies before "enters with".
+
+    `types` is what "a creature" names, read off the object as it would exist
+    on the battlefield (CR 614.12); `tokens_only` is "each token".
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["enter_under_your_control"] = "enter_under_your_control"
+    on_creation: bool = False
+    types: tuple[Type, ...] = ()
+    tokens_only: bool = False
+
+    def applies(self, game: "Game", controller: str, event: "ReplaceableEvent") -> bool:
+        if self.on_creation:
+            if event.kind is not EventKind.CREATE_TOKENS or event.amount <= 0:
+                return False
+            would_be = event.creating_controller
+            if would_be is None or would_be == controller:
+                return False
+            if not self.types:
+                return True
+            if event.definition is not None:
+                return any(wanted in event.definition.types for wanted in self.types)
+            return event.card is not None and any(
+                wanted in event.card.types for wanted in self.types
+            )
+        card = event.card
+        if event.kind is not EventKind.ENTERS_BATTLEFIELD or card is None:
+            return False
+        if not card.controller or card.controller == controller:
+            return False
+        if self.tokens_only and not is_token(card):
+            return False
+        return not self.types or any(wanted in card.types for wanted in self.types)
+
+    def apply(self, game: "Game", controller: str, event: "ReplaceableEvent") -> None:
+        if self.on_creation:
+            event.controller = controller
+        elif event.card is not None:
+            event.card.controller = controller
+
+
+#: What a `CreatedReplacement` does - a `kind`-tagged union, refused at decode
+#: for an unknown tag rather than silently doing nothing.
+CreatedReplacementSpec = Annotated[
+    DrawSkipReplacement | CounterAmountReplacement | EnterUnderYourControl,
+    Field(discriminator="kind"),
+]
+
+
+class CreatedReplacement(EngineModel):
+    """One replacement effect a resolved spell or ability left on the game
+    (CR 614.1a, CR 611.2a). `controller` is CR 109.5's "you": whoever
+    controlled the creating spell or ability as it resolved - the source
+    itself may be long gone. Ended by `Game.cleanup_step` (CR 514.2)."""
+
+    id: UUID = Field(default_factory=new_id)
+    spec: CreatedReplacementSpec
     label: str
-    """What the effect says, for the event trace."""
-
     controller: str
-    """Who created it - `ApplicableEffect` needs a controller for CR 616.1's
-    ordering, and the spell that made this is long gone."""
-
-    skipping: str
-    """The player whose draw is replaced: Plagiarize's "target player"."""
-
-    drawing: str
-    """The player who draws instead: Plagiarize's "you" (CR 109.5)."""
-
+    source_id: UUID | None = None
+    source_name: str
     until_end_of_turn: bool = True
-    """CR 514.2 ends it in the cleanup step, alongside the marked damage and
-    every other "until end of turn" effect."""
 
 
-#: Plagiarize's whole printed sentence. Matched entire rather than split into
-#: `ReplacementEffect`'s event/replacement halves, because the replacement half
-#: names two different players ("that player" and "you") and nothing in this
-#: module's clause splitter carries that pairing.
-_DRAW_REDIRECTION_RE = re.compile(
-    r"^until end of turn, if target player would draw a card, instead that player "
-    r"skips that draw and you draw a card\.?$",
+#: The two duration forms a created replacement is printed with: a leading
+#: "Until end of turn," (Plagiarize, Prairie Dog) or "this turn" inside the
+#: event (Gather Specimens, Crafty Cutpurse).
+_UNTIL_END_OF_TURN_PREFIX_RE = re.compile(r"^until end of turn,\s*", re.IGNORECASE)
+_THIS_TURN_RE = re.compile(r"\s+this turn\b", re.IGNORECASE)
+
+#: Gather Specimens' and Crafty Cutpurse's sentence, either event: "[If] a
+#: creature would enter the battlefield under an opponent's control this turn,
+#: it enters under your control instead." / "each token that would be created
+#: under an opponent's control this turn is created under your control
+#: instead."
+_ENTER_UNDER_YOUR_CONTROL_RE = re.compile(
+    r"^(?:if )?(?:an?|each) (?P<subject>[a-z ]+?)(?: that)? would "
+    r"(?P<verb>enter(?: the battlefield)?|be created) under an opponent'?s control,?\s+"
+    r"(?:it )?(?:enters|is created) under your control instead\.?$",
     re.IGNORECASE,
 )
 
 
-def draw_redirection_for(text: str, controller: str, target: str | None) -> DrawRedirection | None:
-    """Read a resolving spell's text into a `DrawRedirection`, or `None`.
-
-    `target` is the player the spell targeted (CR 115.1), rechecked for
-    legality by the caller at CR 608.2b before this is ever asked; `None` means
-    no player was targeted, and then there is nothing to redirect.
-    """
-    if target is None:
+def _read_enter_under_your_control(sentence: str) -> EnterUnderYourControl | None:
+    match = _ENTER_UNDER_YOUR_CONTROL_RE.fullmatch(sentence.strip())
+    if match is None:
         return None
-    if _DRAW_REDIRECTION_RE.fullmatch(" ".join(text.strip().split())) is None:
+    words = match.group("subject").lower().split()
+    tokens_only = words[-1] == "token"
+    type_words = words[:-1] if tokens_only else words
+    types = [_CARD_TYPE_WORDS.get(word) for word in type_words]
+    if any(wanted is None for wanted in types) or (not types and not tokens_only):
         return None
-    return DrawRedirection(
-        label=" ".join(text.strip().split()),
-        controller=controller,
-        skipping=target,
-        drawing=controller,
+    on_creation = match.group("verb").lower() == "be created"
+    if on_creation and not tokens_only:
+        return None  # only a token is ever "created" (CR 111.1)
+    return EnterUnderYourControl(
+        on_creation=on_creation,
+        types=tuple(wanted for wanted in types if wanted is not None),
+        tokens_only=tokens_only,
     )
+
+
+def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
+    """The resolution-created replacement a sentence prints, or `None`.
+
+    Only a sentence carrying a stated duration is read here ("Until end of
+    turn, ..." or "... this turn ..."): without one CR 611.2a would make it
+    last the whole game, a shape no printing in the pool has. The duration is
+    taken off and the rest is read by the same shape readers the static forms
+    use."""
+    text = " ".join(sentence.strip().split())
+    body = _UNTIL_END_OF_TURN_PREFIX_RE.sub("", text, count=1)
+    if body == text:
+        if _THIS_TURN_RE.search(text) is None:
+            return None
+        body = _THIS_TURN_RE.sub("", text, count=1)
+    body = body[0].upper() + body[1:] if body else body
+    entering = _read_enter_under_your_control(body)
+    if entering is not None:
+        return entering
+    for effect in _parse_sentence(body, ()):
+        for reader in (read_draw_skip, read_counter_amount):
+            spec = reader(effect)
+            if spec is not None:
+                return spec
+    return None
+
+
+def _created_replacement_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """Every `Game.created_replacements` record that applies to this event.
+    Sourceless like a prevention shield (CR 615.1): the controller recorded at
+    creation is who CR 616.1 treats as the effect's controller."""
+    found: list[ApplicableEffect] = []
+    for record in game.created_replacements:
+        if not record.spec.applies(game, record.controller, event):
+            continue
+
+        def apply(
+            game: "Game",
+            source: CardState | None,
+            event: ReplaceableEvent,
+            record: CreatedReplacement = record,
+        ) -> None:
+            record.spec.apply(game, record.controller, event)
+
+        found.append(
+            ApplicableEffect(
+                key=f"created:{record.id}",
+                source=None,
+                label=record.label,
+                apply=apply,
+                controller_username=record.controller,
+                controls_entry=isinstance(record.spec, EnterUnderYourControl),
+            )
+        )
+    return found
 
 
 class DrawReplacementKind(StrEnum):
@@ -5696,7 +6030,7 @@ class DrawReplacementKind(StrEnum):
 class NextTimeDrawReplacement(EngineModel):
     """One player's *next* draw this turn, replaced with something else
     (CR 614.1a's "the next time ... would ..., instead ..." shape), rather
-    than every draw for a duration the way `DrawRedirection` reads Plagiarize's
+    than every draw for a duration the way `DrawSkipReplacement` reads Plagiarize's
     "until end of turn, if ... would draw ..., instead ...".
 
     Urabrask, Heretic Praetor prints the only one in this pool: "At the
@@ -5708,7 +6042,7 @@ class NextTimeDrawReplacement(EngineModel):
     shield *is* the effect").
 
     Stored on `Game.next_time_draw_replacements` for the same reason
-    `Game.prevention_shields` and `Game.draw_redirections` are stored rather
+    `Game.prevention_shields` and `Game.created_replacements` are stored rather
     than closed over: the ability that created it is off the stack by the
     time a future draw event checks for it, and CR 514.2's cleanup step needs
     an unused one to expire with every other "this turn" effect.
@@ -5813,49 +6147,15 @@ def _die_to_exile_this_turn_effects(
     ]
 
 
-def _draw_redirection_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
-    """The draw redirections waiting on this draw event (CR 614.1a).
-
-    Sourceless, like `_shield_effects`: the spell that created one is in a
-    graveyard, and CR 614.6 does not care.
-    """
-    if event.kind is not EventKind.DRAW or event.player is None:
-        return []
-
-    def applier(redirection: DrawRedirection) -> Apply:
-        def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
-            # "that player skips that draw" - the event's own draw is replaced
-            # down to nothing, which CR 603.2g then makes trigger nothing.
-            event.amount = 0
-            # "and you draw a card" - a *new* draw, by a different player, so
-            # it goes through `Game.draw_cards` and is itself replaceable
-            # (CR 614.6: the modified event is what happens).
-            game.draw_cards(game.player(redirection.drawing), 1)
-
-        return apply
-
-    return [
-        ApplicableEffect(
-            key=f"draw-redirection:{index}",
-            source=None,
-            label=redirection.label,
-            apply=applier(redirection),
-            controller_username=redirection.controller,
-        )
-        for index, redirection in enumerate(game.draw_redirections)
-        if redirection.skipping == event.player.username and event.amount > 0
-    ]
-
-
 def _next_time_draw_replacement_effects(
     game: "Game", event: ReplaceableEvent
 ) -> list[ApplicableEffect]:
     """The unspent "next time [player] would draw a card this turn, instead
     ..." replacements waiting on this draw event (CR 614.1a, CR 614.5).
 
-    Sourceless, like `_draw_redirection_effects`: the ability that installed
+    Sourceless, like `_created_replacement_effects`: the ability that installed
     one may be off the stack, and CR 614.6 does not care. Unlike a
-    `DrawRedirection`, this fires at most once - `replacement.spent` is set
+    `DrawSkipReplacement`, this fires at most once - `replacement.spent` is set
     inside `apply` rather than the record being removed from `Game.
     next_time_draw_replacements`, so a player ordering several replaceable
     effects on the same draw (CR 616.1) still sees a consistent list while
@@ -5926,7 +6226,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     found.extend(_regeneration_effects(game, event))
     found.extend(_finality_counter_effects(event))
     found.extend(_die_to_exile_this_turn_effects(game, event))
-    found.extend(_draw_redirection_effects(game, event))
+    found.extend(_created_replacement_effects(game, event))
     found.extend(_next_time_draw_replacement_effects(game, event))
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
@@ -5981,15 +6281,17 @@ def order_effects(
     CR 616.1a-d's forced choices are checked first even so, because they are not
     a matter of preference: a self-replacement effect (CR 614.15) must be chosen
     before anything else, then a control-changing one (CR 616.1b), then a
-    copy-as-it-enters one (CR 616.1c). Only the third of those is an effect this
-    engine can perform - Clone's "enters as a copy of" - and it is sorted ahead
-    of everything else here. The other two are still hooks with nothing to hang
-    on them, and remain the shape the rule demands.
+    copy-as-it-enters one (CR 616.1c). The second and third are effects this
+    engine performs - Gather Specimens' and Crafty Cutpurse's "enters/is created
+    under your control instead" (`EnterUnderYourControl`), Clone's "enters as a
+    copy of" - and are sorted ahead of everything else here, in that order. The
+    first is still a hook with nothing to hang on it.
     """
     ordered = list(candidates)
     chooser = event.chooser(game)
     ordered.sort(
         key=lambda effect: (
+            0 if effect.controls_entry else 1,  # CR 616.1b, before a copy effect
             0 if effect.copy_as_it_enters else 1,  # CR 616.1c, before the free choice
             0 if effect.controller == chooser else 1,
         )

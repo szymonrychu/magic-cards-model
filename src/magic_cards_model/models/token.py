@@ -668,6 +668,11 @@ def create_tokens(
         )
         apply_replacements(game, creation)
         count = creation.amount
+        # CR 111.2 makes the creator the owner; a replacement may still move
+        # who controls them (Crafty Cutpurse's "is created under your control
+        # instead") without making anyone else their creator.
+        owner = controller
+        controller = creation.creating_controller or controller
         # A replacement effect may add tokens that are not more of `definition` -
         # Stridehangar Automaton's "those tokens plus an additional 1/1 ... Thopter
         # ... are created instead". CR 614.6 makes that one modified event, so they
@@ -689,7 +694,7 @@ def create_tokens(
         card = (creation.definition or definition).to_card()
         created: list[TokenState] = []
         for _ in range(count):
-            token = TokenState(card=card, zone=Zone.STACK, controller=controller, owner=controller)
+            token = TokenState(card=card, zone=Zone.STACK, controller=controller, owner=owner)
             # `zone=Zone.STACK` is only where it is *before* it exists: nothing holds
             # it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)` at once.
             # It is never a token in a zone other than the battlefield for the
@@ -717,7 +722,7 @@ def create_tokens(
             # applies to it: those describe how *these* tokens were asked for, and
             # the addition was asked for by somebody else's card.
             addition = TokenState(
-                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=controller
+                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
             )
             game.put_onto_battlefield(addition, controller)
             created.append(addition)
@@ -896,6 +901,8 @@ def token_copy_of(
         )
         apply_replacements(game, creation)
         count = creation.amount
+        owner = controller  # CR 111.2 - see `create_tokens`
+        controller = creation.creating_controller or controller
         extra_definitions = list(creation.extra)
 
         copiable = copiable_card_with_added_abilities(original.card, added_abilities)
@@ -917,14 +924,12 @@ def token_copy_of(
 
         created: list[TokenState] = []
         for _ in range(count):
-            copy = TokenState(
-                card=copiable, zone=Zone.STACK, controller=controller, owner=controller
-            )
+            copy = TokenState(card=copiable, zone=Zone.STACK, controller=controller, owner=owner)
             game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
             created.append(copy)
         for extra in extra_definitions:
             addition = TokenState(
-                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=controller
+                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
             )
             game.put_onto_battlefield(addition, controller)
             created.append(addition)

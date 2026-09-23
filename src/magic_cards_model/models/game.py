@@ -213,14 +213,13 @@ from ..machines.opening_hand import (
 )
 from ..machines.priority import PriorityMachine, PriorityOutcome
 from ..machines.replacement import (
-    DrawRedirection,
+    CreatedReplacement,
     EventKind,
     NextTimeDrawReplacement,
     ReplaceableEvent,
     UnreadableCopyExceptionNotice,
     UnwiredChoiceNotice,
     apply_replacements,
-    draw_redirection_for,
 )
 from ..machines.targeting import (
     TargetingProfile,
@@ -2276,13 +2275,10 @@ class Game(EngineModel):
     control_replacement_notices: list[ControlReplacementNotice] = Field(default_factory=list)
     """One entry per resolving spell whose text reads as a CR 614.1a
     "if [a permanent] would enter the battlefield under [a player]'s
-    control, it enters under [another player]'s control instead" -
-    Gather Specimens is the fixture pool's example. Recognised by shape but
-    not built: `ReplaceableEvent` has no field for a replacement to redirect
-    an entering permanent's controller into, and nothing here represents a
-    temporary, spell-conjured replacement rule watching every future zone
-    change the way `machines/replacement.py`'s `parse_replacement_effects`
-    reads a permanent's own printed one. See `ControlReplacementNotice`."""
+    control, it enters under [another player]'s control instead" in a
+    wording `machines/replacement.created_replacement_spec` does not read -
+    the fail-closed net behind Gather Specimens' own, which is built
+    (`created_replacements`). See `ControlReplacementNotice`."""
 
     opening_hand_notices: list[OpeningHandNotice] = Field(default_factory=list)
     """One entry per card paragraph that claims a CR 103.6 opening-hand action
@@ -2939,7 +2935,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 57
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 58
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3274,7 +3270,7 @@ class Game(EngineModel):
       Praetor's own "the next time they would draw a card this turn,
       instead they exile the top card of their library" - CR 614.1a's
       one-shot "next time ... instead ..." shape, distinct from
-      `draw_redirections`' every-draw-until-end-of-turn shape).
+      Plagiarize's every-draw-until-end-of-turn shape).
 
     The fifth, `permanent_cards_to_graveyard_this_turn` (CR 700.11, Descend's
     own running count), was dropped rather than carried forward: FRA S5's
@@ -3731,6 +3727,14 @@ class Game(EngineModel):
     Improvisation Capstone and Germination Practicum, all already in the
     pool, now resolve where a version-56 board resolved them to nothing,
     the second bullet.
+    Bumped 57 -> 58 (S15, resolution-created "this turn" triggers and
+    replacements): `Game.draw_redirections` (Plagiarize's one-shape record)
+    became `Game.created_replacements`, a `kind`-tagged union covering draw
+    redirection, counter-amount and enter-under-your-control replacements;
+    `DelayedEffectSpec` gained `CreatedTriggeredAbility`; and a draw replaced
+    by "you draw a card" is now the same modified event (CR 614.6) rather than
+    a second draw - a version-57 board holding a pending Plagiarize has
+    nowhere to decode it to.
     """
 
     @model_validator(mode="before")
@@ -3810,18 +3814,19 @@ class Game(EngineModel):
     opening hand, say - which is a real collision, not merely a cosmetic one:
     two distinct objects would compare equal by id."""
 
-    draw_redirections: list[DrawRedirection] = Field(default_factory=list)
-    """CR 614.1a replacement effects a resolved spell left behind, taking one
-    player's draws for another - Plagiarize.
+    created_replacements: list[CreatedReplacement] = Field(default_factory=list)
+    """CR 614.1a replacement effects a resolved spell or ability left behind
+    for a stated duration (CR 611.2a) - Plagiarize's draw redirection, Prairie
+    Dog's "that many plus one", Gather Specimens' "enters under your control
+    instead" (`machines/replacement.CreatedReplacement`).
 
-    Kept beside `prevention_shields` and for the same reason: the source is a
-    graveyard card by the time the effect ever applies, and the effect has a
-    duration of its own (CR 514.2 ends it in the cleanup step, which is where
-    `discard_to_maximum_hand_size` clears the list)."""
+    Kept beside `prevention_shields` and for the same reason: the source may
+    be a graveyard card, or gone, by the time the effect ever applies, and the
+    effect has a duration of its own (CR 514.2 ends it in the cleanup step)."""
 
     next_time_draw_replacements: list[NextTimeDrawReplacement] = Field(default_factory=list)
     """CR 614.1a's "the next time [player] would draw a card this turn,
-    instead ..." - a one-shot replacement, unlike `draw_redirections`'
+    instead ..." - a one-shot replacement, unlike `created_replacements`'
     every-draw-until-end-of-turn shape. Urabrask, Heretic Praetor's own
     triggered ability installs one of these here when it resolves; a future
     draw event for the named player consumes it at most once (CR 614.5) and
@@ -3831,7 +3836,7 @@ class Game(EngineModel):
     """CR 614.1a replacement effects a resolved spell left behind, each
     naming one permanent: "If [it] would die this turn, exile it instead" -
     Essence Burn's own rider (Combustion Technique's identical shape is the
-    real, off-set printing). Stored the same way `draw_redirections` is,
+    real, off-set printing). Stored the same way `created_replacements` is,
     for the identical reason: the creating spell is long gone in a graveyard
     by the time the replacement ever fires, and CR 514.2's cleanup step ends
     every "this turn" effect, so the whole list is simply cleared there
@@ -4700,15 +4705,15 @@ class Game(EngineModel):
                 for shield in self.prevention_shields
                 if not shield.spent and not shield.until_end_of_turn
             ]
-            # CR 514.2's same sentence again, for the draw redirections: an
-            # "until end of turn" replacement effect ends here, *after* the
-            # discard above - which is the whole of DDR#957's ruling, since a
-            # draw that happens earlier in this same cleanup step is still
-            # replaced.
-            self.draw_redirections = [
-                redirection
-                for redirection in self.draw_redirections
-                if not redirection.until_end_of_turn
+            # CR 514.2's same sentence again, for the replacement effects a
+            # resolved spell or ability left behind: an "until end of turn" /
+            # "this turn" one ends here, *after* the discard above - which is
+            # the whole of DDR#957's ruling, since a draw that happens earlier
+            # in this same cleanup step is still replaced.
+            self.created_replacements = [
+                replacement
+                for replacement in self.created_replacements
+                if not replacement.until_end_of_turn
             ]
             # CR 514.2's same sentence again, for the one-shot "next time ...
             # would draw ..., instead ..." replacements: whichever of these
@@ -5386,7 +5391,6 @@ class Game(EngineModel):
         # duration `ContinuousEffect`s that outlived it.
         effects = []
         unread_faces: list[tuple[str, str]] = []
-        left_replacement = False
         if not spell.is_permanent:
             for face_name, face_text in faces_to_resolve:
                 effect = effect_for(face_name, face_text, x_value=x_value)
@@ -5394,7 +5398,6 @@ class Game(EngineModel):
                     effects.append(effect)
                 elif face_text.strip():
                     unread_faces.append((face_name, face_text))
-            left_replacement = self._create_resolution_replacements(spell)
         if effects:
             try:
                 for effect in effects:
@@ -5449,11 +5452,10 @@ class Game(EngineModel):
                 self._before_priority()
                 raise
 
-        if unread_faces and not left_replacement and not spell.is_permanent:
+        if unread_faces and not spell.is_permanent:
             # Fail closed: an instant or sorcery whose printed text no parser
             # reads used to resolve as nothing with no trace (Stock Up, live
-            # game). A permanent spell's `None` is correct (CR 608.3a), and a
-            # spell that left a replacement effect did what it says (CR 614.1a).
+            # game). A permanent spell's `None` is correct (CR 608.3a).
             for face_name, face_text in unread_faces:
                 self.unmodeled_trigger_effect_notices.append(
                     UnmodeledTriggerEffectNotice(
@@ -7618,7 +7620,7 @@ class Game(EngineModel):
             # it has triggered it is an ordinary trigger in every other respect -
             # CR 603.3 puts it on the stack the next time a player would receive
             # priority, alongside these.
-            triggered = triggered + self.delayed_triggers.fire(event)
+            triggered = triggered + self.delayed_triggers.fire(event, self)
             # CR 603.8: a state trigger watches a game state, not an event, so it
             # is swept for after every event rather than matched against one. This
             # is what lets a countered state trigger fire again immediately - the
@@ -8424,39 +8426,6 @@ class Game(EngineModel):
         for zone_cards in self.shared_zones.values():
             if card_state in zone_cards:
                 zone_cards.remove(card_state)
-
-    def _create_resolution_replacements(self, spell: CardState) -> bool:
-        """A resolving spell that leaves a replacement effect behind (CR 614.1a).
-
-        Plagiarize is the printing: "Until end of turn, if target player would
-        draw a card, instead that player skips that draw and you draw a card."
-        There is nothing for `machines/effects.py` to do when it resolves - no
-        object moves, no counter is placed - and nothing for the layer engine
-        either, because CR 614 is not one of CR 613's layers. What it leaves is
-        a `DrawRedirection` on `Game.draw_redirections`, exactly the way a
-        resolved prevention spell leaves a CR 615.1 shield.
-
-        The targeted player is read off the spell's own announced targets,
-        which CR 608.2b has already rechecked (`spell_fizzles` ran above and a
-        spell whose only target became illegal never got here).
-
-        Returns whether a replacement was left, so a spell with no `effect_for`
-        reader is not reported as unread when this is what it does.
-        """
-        target = next(
-            (
-                ref.username
-                for ref in spell.targets
-                if ref.username is not None and self.is_in_game(ref.username)
-            ),
-            None,
-        )
-        controller = self.controller_of(spell).username
-        redirection = draw_redirection_for(spell.oracle_text or "", controller, target)
-        if redirection is None:
-            return False
-        self.draw_redirections.append(redirection)
-        return True
 
     def _apply_mana_spend_effects(self, permanent: CardState) -> None:
         """CR 106.6's additional effect, applied to the permanent that spell
@@ -11385,45 +11354,57 @@ class Game(EngineModel):
                 player = self.player(player)
 
             drawn: list[CardState] = []
-            for index in range(count):
+            for _ in range(count):
                 event = ReplaceableEvent(
                     kind=EventKind.DRAW,
                     player=player,
                     amount=1,
-                    draw_step_draw=self._is_draw_step_draw(player) and index == 0,
+                    # CR 504.1's draw, and "the first one they draw in each of
+                    # their draw steps" (Notion Thief, Alhammarret's Archive):
+                    # the first card actually drawn this draw step, not the
+                    # first card of whichever draw instruction comes first.
+                    draw_step_draw=self._is_draw_step_draw(player)
+                    and self.cards_drawn_in_own_draw_step.get(player.username, 0) == 0,
                 )
                 apply_replacements(self, event)
+                # CR 614.6: a replacement may hand the draw to someone else
+                # ("that player skips that draw and you draw a card") - the
+                # modified event is what happens, so whoever it now names draws.
+                drawer = event.player or player
                 # CR 121.2: each card actually drawn is its own draw, so each is
                 # its own trigger event - a replacement that turns one draw into
                 # two still produces two events. A draw replaced down to nothing
                 # never happened, so it triggers nothing (CR 603.2g).
-                for card in player.draw_up_to(event.amount) if event.amount > 0 else []:
-                    drawn.append(card)
+                for card in drawer.draw_up_to(event.amount) if event.amount > 0 else []:
+                    if drawer is player:
+                        # Only `player`'s own draws are what the caller asked
+                        # for; a draw handed to someone else is theirs.
+                        drawn.append(card)
                     # CR 121.2's individual draw, counted before it is announced.
                     # `machines/triggers` answers "you draw your third card in a
                     # turn" by reading `cards_drawn_this_turn` *while* the event
                     # below is being dispatched, so the count has to already
                     # include this card or the ordinal would never match.
-                    self.cards_drawn_this_turn[player.username] = (
-                        self.cards_drawn_this_turn.get(player.username, 0) + 1
+                    self.cards_drawn_this_turn[drawer.username] = (
+                        self.cards_drawn_this_turn.get(drawer.username, 0) + 1
                     )
-                    if self._is_draw_step_draw(player):
-                        self.cards_drawn_in_own_draw_step[player.username] = (
-                            self.cards_drawn_in_own_draw_step.get(player.username, 0) + 1
+                    if self._is_draw_step_draw(drawer):
+                        self.cards_drawn_in_own_draw_step[drawer.username] = (
+                            self.cards_drawn_in_own_draw_step.get(drawer.username, 0) + 1
                         )
-                    if self.cards_drawn_this_turn[player.username] == 1:
+                    if self.cards_drawn_this_turn[drawer.username] == 1:
                         # CR 702.94a: "as you draw it if it's the first card
                         # you've drawn this turn" - asked here, mid-draw, and
                         # only for this one card (CR 121.2).
-                        self._offer_miracle_reveal(player, card)
+                        self._offer_miracle_reveal(drawer, card)
                     self.emit(
                         GameEvent(
                             event=TriggerEvent.DRAWS_A_CARD,
                             subject_id=card.id,
                             subject_name=card.name,
-                            subject_controller=player.username,
+                            subject_controller=drawer.username,
                             subject_card=card.card,
-                            player=player.username,
+                            player=drawer.username,
                         )
                     )
             return drawn

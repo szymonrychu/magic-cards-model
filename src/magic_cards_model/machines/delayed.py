@@ -76,13 +76,14 @@ with them (see `memory/delayed-trigger-serialization-game-py-isolation.md`).
 
 import re
 from collections.abc import Callable
+from functools import cache
 from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
 
 from ..ids import new_id
-from ..models.card import Color, Type
+from ..models.card import Card, Color, Type
 from ..models.card_state import PERMANENT_TYPES, CardState, Counter
 from ..models.mana import ManaCost
 from ..models.token import TokenDefinition, create_tokens, is_token, token_copy_of
@@ -150,6 +151,21 @@ class DelayedEffectSpecBase(EngineModel):
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         raise NotImplementedError
+
+    matches_against_the_game: ClassVar[bool] = False
+    """Whether `event_matches` needs the game to answer - `DelayedTriggers.
+    fire` called without one never fires such a trigger."""
+
+    def event_matches(self, game: "Game", trigger: "DelayedTrigger", event: GameEvent) -> bool:
+        """A further, game-aware check on an event `DelayedTrigger.matches`
+        already accepted. `True` for every kind but one whose own condition is
+        read by `machines/triggers.condition_matches` (`CreatedTriggeredAbility`)."""
+        return True
+
+    def printed_ability(self, trigger: "DelayedTrigger") -> TriggeredAbility | None:
+        """The ability as a printed `TriggeredAbility`, when this kind carries
+        one; `None` keeps `DelayedTrigger.as_ability`'s own stand-in."""
+        return None
 
 
 class ExileWarped(DelayedEffectSpecBase):
@@ -1259,32 +1275,153 @@ class CountersAndKeywordsEventSubject(DelayedEffectSpecBase):
     keywords: tuple[str, ...]
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
-        event = ability.event
-        if event is None or event.subject_id is None:
+        put_counters_and_grant_keywords_to_event_subject(
+            game,
+            ability.event,
+            self.counter_kind,
+            self.counter_amount,
+            self.keywords,
+            source_name=trigger.source_name,
+            source_id=trigger.source_id,
+        )
+
+
+def put_counters_and_grant_keywords_to_event_subject(
+    game: "Game",
+    event: GameEvent | None,
+    counter_kind: Counter | str,
+    counter_amount: int,
+    keywords: tuple[str, ...],
+    *,
+    source_name: str,
+    source_id: UUID | None,
+) -> None:
+    """Put `counter_amount` `counter_kind` counters on the object the
+    triggering event names and grant it `keywords` until end of turn - the
+    shared body of `CountersAndKeywordsEventSubject` and `machines/effects.
+    _parse_event_subject_counters_and_keywords_clause` ("put a +1/+1 counter
+    on it and it gains haste until end of turn").
+
+    Nothing happens when that object is no longer on the battlefield: the
+    counters and the grant are both about a permanent (CR 122.1, CR 611.2a).
+    """
+    if event is None or event.subject_id is None:
+        return
+    target = game.find_by_id(event.subject_id)
+    if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+        return
+    if counter_amount > 0:
+        # `Game.add_counters`, never `CardState.add_counters` - CR 614.16's
+        # replacement effects (Vizier of Remedies, a doubling effect) and
+        # CR 122.6's "counters put on an object" event both need this to
+        # go through the game, the same reason `ReturnExiledCardAndAdd
+        # Counters` above does.
+        game.add_counters(target, counter_kind, counter_amount)
+    for keyword in keywords:
+        game.continuous_effects.add(
+            ContinuousEffect(
+                description=f"{source_name}: {target.name} gains {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=game.continuous_effects.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                source_id=source_id,
+                selector=only_this_incarnation(target, target.zone_change_stamp),
+                modification=grant_ability(keyword),
+            ),
+            game,
+        )
+
+
+@cache
+def _created_ability(text: str) -> TriggeredAbility | None:
+    """`text` read as one printed triggered ability, once per distinct text -
+    `CreatedTriggeredAbility` asks on every event it might match."""
+    from .triggers import granted_triggered_abilities_of
+
+    found = granted_triggered_abilities_of([text])
+    return found[0] if found else None
+
+
+class CreatedTriggeredAbility(DelayedEffectSpecBase):
+    """A triggered ability a resolving spell or ability creates for a stated
+    duration - "Whenever a creature you control enters this turn, ..." (First
+    Day of Class), "Until end of turn, whenever a creature you control deals
+    combat damage to a player, ..." (Dovin, Grand Arbiter's +1).
+
+    CR 603.7: "An effect may create a delayed triggered ability that can do
+    something at a later time." CR 603.7b: it triggers only once "unless it
+    has a stated duration, such as 'this turn'" - so the `DelayedTrigger`
+    carrying this is built with `remaining=None` and `expires_end_of_turn=
+    True`, and CR 514.2's cleanup step ends it.
+
+    `ability_text` is the created ability written as a printed one ("Whenever
+    a creature you control enters, put a +1/+1 counter on it ..."), the
+    duration words already taken off by the reader that built it (`machines/
+    effects._parse_turn_scoped_trigger_creation`). Everything about it is read
+    back off that text by the same machinery a printed trigger goes through:
+    the condition by `machines/triggers.condition_matches` (`event_matches`),
+    the effect by `machines/effects.trigger_effect_for` (`__call__`). So one
+    template closes every created trigger whose printed twin is already read,
+    rather than one hand-written filter field per card, and the record stays a
+    string - it round-trips through `Game.model_dump` with no callable on it.
+
+    `source_card` is the creating object's printing, kept so the condition
+    can still be matched when that object is in no zone at all - a spell
+    mid-resolution (a fused Beck // Call's Birds enter while it resolves), a
+    copy of a spell (CR 707.10a), a token that left (CR 111.7) - since CR
+    603.7d/e fix the source as it was when the ability was created, not
+    whatever is left of it.
+    """
+
+    kind: Literal["created_triggered_ability"] = "created_triggered_ability"
+
+    matches_against_the_game: ClassVar[bool] = True
+
+    ability_text: str
+    source_card: Card | None = None
+
+    def parsed(self) -> TriggeredAbility | None:
+        return _created_ability(self.ability_text)
+
+    def printed_ability(self, trigger: "DelayedTrigger") -> TriggeredAbility | None:
+        parsed = self.parsed()
+        if parsed is None:
+            return None
+        return parsed.model_copy(update={"face": trigger.source_name})
+
+    def _source(self, game: "Game", trigger: "DelayedTrigger") -> CardState | None:
+        if trigger.source_id is not None:
+            found = game.find_by_id(trigger.source_id)
+            if isinstance(found, CardState):
+                return found
+        if self.source_card is None:
+            return None
+        return CardState(
+            id=trigger.source_id or self.source_card.id,
+            card=self.source_card,
+            zone=Zone.EXILE,
+            controller=trigger.controller,
+            owner=trigger.controller,
+        )
+
+    def event_matches(self, game: "Game", trigger: "DelayedTrigger", event: GameEvent) -> bool:
+        from .triggers import condition_matches
+
+        parsed = self.parsed()
+        source = self._source(game, trigger)
+        if parsed is None or source is None:
+            return False
+        return condition_matches(game, parsed, source, trigger.controller, event)
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import trigger_effect_for
+
+        parsed = self.parsed()
+        if parsed is None:
             return
-        target = game.find_by_id(event.subject_id)
-        if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
-            return
-        if self.counter_amount > 0:
-            # `Game.add_counters`, never `CardState.add_counters` - CR 614.16's
-            # replacement effects (Vizier of Remedies, a doubling effect) and
-            # CR 122.6's "counters put on an object" event both need this to
-            # go through the game, the same reason `ReturnExiledCardAndAdd
-            # Counters` above does.
-            game.add_counters(target, self.counter_kind, self.counter_amount)
-        for keyword in self.keywords:
-            game.continuous_effects.add(
-                ContinuousEffect(
-                    description=f"{trigger.source_name}: {target.name} gains {keyword}",
-                    layer=Layer.ABILITY,
-                    timestamp=game.continuous_effects.tick(),
-                    duration=Duration.UNTIL_END_OF_TURN,
-                    source_id=trigger.source_id,
-                    selector=only_this_incarnation(target, target.zone_change_stamp),
-                    modification=grant_ability(keyword),
-                ),
-                game,
-            )
+        effect = trigger_effect_for(trigger.source_name, parsed.event, parsed.effect)
+        if effect is not None:
+            effect(game, ability)
 
 
 #: What a delayed (or reflexive) triggered ability does when it resolves -
@@ -1327,7 +1464,8 @@ DelayedEffectSpec = Annotated[
     | RevokeGrantedAbility
     | AddManaWhenLandTapped
     | PumpEventSubject
-    | CountersAndKeywordsEventSubject,
+    | CountersAndKeywordsEventSubject
+    | CreatedTriggeredAbility,
     Field(discriminator="kind"),
 ]
 
@@ -1611,8 +1749,14 @@ class DelayedTrigger(EngineModel):
 
         CR 603.7 puts the trigger word inside the ability rather than at its
         start, so `word` is recorded as the one the text actually carries and
-        `condition` holds the delayed ability's own wait.
+        `condition` holds the delayed ability's own wait. A created ability
+        that carries its own printed shape (`CreatedTriggeredAbility`) is
+        handed over as that parse instead, so an effect parser reading the
+        ability's condition or effect text sees the real split.
         """
+        printed = self.effect.printed_ability(self)
+        if printed is not None:
+            return printed
         return TriggeredAbility(
             raw=self.text,
             text=self.text,
@@ -2102,16 +2246,25 @@ class DelayedTriggers(EngineModel):
         self.pending[ability.id] = trigger
         return ability
 
-    def fire(self, event: GameEvent) -> list[AbilityOnStack]:
+    def fire(self, event: GameEvent, game: "Game | None" = None) -> list[AbilityOnStack]:
         """Everything this event triggers, in creation order (CR 603.2, 603.7b).
 
         CR 603.7b: "A delayed triggered ability will trigger only once - the next
         time its trigger event occurs - unless it has a stated duration", so a
         trigger with a count spends one and a spent trigger is dropped.
+
+        `game` lets a trigger whose condition needs the board
+        (`DelayedEffectSpecBase.event_matches`) ask it; without one such a
+        trigger never fires, the safe direction to be wrong in.
         """
         fired: list[AbilityOnStack] = []
         for trigger in list(self.triggers):
             if not trigger.matches(event):
+                continue
+            if game is None:
+                if trigger.effect.matches_against_the_game:
+                    continue
+            elif not trigger.effect.event_matches(game, trigger, event):
                 continue
             if trigger.remaining is not None:
                 trigger.remaining -= 1
