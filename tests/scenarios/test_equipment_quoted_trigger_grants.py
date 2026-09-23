@@ -220,9 +220,11 @@ def test_primaris_chaplain_gains_indestructible_when_it_attacks_off_set():
 
     scenario.attack_with(chaplain, defending="bob")
     scenario.game.put_triggers_on_stack()
-    assert scenario.stack_names() == ["Primaris Chaplain's triggered ability"]
-    scenario.pass_priority("alice")
-    scenario.pass_priority("bob")
+    # CR 702.91a: its printed Battle cry is a second attack trigger.
+    assert scenario.stack_names() == ["Primaris Chaplain's triggered ability"] * 2
+    for _ in range(2):
+        scenario.pass_priority("alice")
+        scenario.pass_priority("bob")
 
     assert scenario.game.characteristics_of(chaplain).has_ability("Indestructible")
 
@@ -234,8 +236,9 @@ def test_primaris_chaplain_loses_it_again_at_end_of_turn():
 
     scenario.attack_with(chaplain, defending="bob")
     scenario.game.put_triggers_on_stack()
-    scenario.pass_priority("alice")
-    scenario.pass_priority("bob")
+    for _ in range(2):  # Rosarius and Battle cry (CR 702.91a)
+        scenario.pass_priority("alice")
+        scenario.pass_priority("bob")
     assert scenario.game.characteristics_of(chaplain).has_ability("Indestructible")
 
     scenario.start_at(Step.END_STEP)

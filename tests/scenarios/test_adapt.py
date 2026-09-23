@@ -71,7 +71,10 @@ def test_adapt_does_nothing_to_a_creature_that_already_has_a_plus_one_counter():
 def test_adapt_is_untouched_by_a_minus_one_counter():
     """A -1/-1 counter is not a +1/+1 counter (CR 122.3's annihilation only
     ever removes matched pairs), so a creature carrying only -1/-1 counters
-    still has "no +1/+1 counters on it" and adapts normally."""
+    still has "no +1/+1 counters on it" and adapts normally. The +1/+1
+    counter it gets then annihilates with the -1/-1 one (CR 704.5q) as the
+    game checks state-based actions after resolution - the -1/-1 counter
+    being gone is the proof adapt put one on."""
     scenario = _scenario().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     sources = scenario.untapped_sources("Forest", "Forest")
@@ -82,8 +85,8 @@ def test_adapt_is_untouched_by_a_minus_one_counter():
     scenario.activate(broodscale, *remaining)
     scenario.resolve_top()
 
-    assert broodscale.counters[Counter.PLUS_ONE] == 1
-    assert broodscale.counters[Counter.MINUS_ONE] == 1
+    assert broodscale.counters[Counter.PLUS_ONE] == 0
+    assert broodscale.counters[Counter.MINUS_ONE] == 0
 
 
 def test_adapt_does_nothing_once_the_creature_has_left_the_battlefield():
