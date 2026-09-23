@@ -96,3 +96,37 @@ def test_scrapheap_scrounger_reads_the_identical_cost_with_no_rider_at_all():
     assert not scrounger.tapped
     assert scrounger.counter_count(Counter.PLUS_ONE) == 0
     assert mystic.zone is Zone.EXILE
+
+
+def test_the_off_zone_entry_point_pays_the_exile_cost_too():
+    """`off_zone_activation` is the one entry point a caller holding an
+    `ACTIVATE_OFF_ZONE` action (`legal_actions`) uses. It took a sacrifice
+    and a discard but no exiled cards, so this cost - legal, and offered as
+    an action - could not be paid through it at all. Found by the
+    behavioural sweep."""
+    from magic_cards_model.machines.keywords import off_zone_abilities, off_zone_activation
+
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Swamp", "Swamp"],
+            graveyard=["Scrapheap Scrounger", "Elvish Mystic"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scrounger = scenario.find("Scrapheap Scrounger", Zone.GRAVEYARD, "alice")
+    mystic = scenario.find("Elvish Mystic", Zone.GRAVEYARD, "alice")
+    (index,) = [
+        i for i, entry in enumerate(off_zone_abilities(scrounger.card)) if entry.family == "printed"
+    ]
+
+    activation = off_zone_activation(scenario.game, scrounger, "alice", index, exiling=[mystic])
+    scenario.pay_with(activation.begin_paying(), *scenario.untapped_sources("Swamp", "Swamp"))
+    activation.activate()
+    scenario.pass_until_resolved()
+
+    assert scrounger.zone is Zone.BATTLEFIELD
+    assert mystic.zone is Zone.EXILE

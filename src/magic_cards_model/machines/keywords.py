@@ -2966,6 +2966,7 @@ def off_battlefield_activation(
     targets: list[Any] | None = None,
     sacrificing: list[CardState] | None = None,
     discarding: list[CardState] | None = None,
+    exiling: list[CardState] | None = None,
 ) -> KeywordActivation:
     """Build the activation for one of this card's printed activated abilities
     that functions off the battlefield (CR 113.6j, CR 113.6m).
@@ -3010,7 +3011,12 @@ def off_battlefield_activation(
         profile.check(list(targets or []), player, game, source=card)
 
     cost = game.activation_cost(
-        card, source_index, player, sacrificing=sacrificing, discarding=discarding
+        card,
+        source_index,
+        player,
+        sacrificing=sacrificing,
+        discarding=discarding,
+        exiling=exiling,
     )
     return KeywordActivation(
         card=card,
@@ -3168,6 +3174,7 @@ def off_zone_activation(
     targets: list[Any] | None = None,
     sacrificing: list[CardState] | None = None,
     discarding: list[CardState] | None = None,
+    exiling: list[CardState] | None = None,
 ) -> KeywordActivation:
     """Activate `off_zone_abilities(card.card)[index]`, whichever family it
     is in - the single entry point a caller holding an `ACTIVATE_OFF_ZONE`
@@ -3186,7 +3193,7 @@ def off_zone_activation(
         )
     entry = pool[index]
     if entry.family == "cycling":
-        if targets or sacrificing or discarding:
+        if targets or sacrificing or discarding or exiling:
             # CR 702.29a spells the whole ability out - "[Cost], Discard this
             # card: Draw a card." - so there is nothing here for a target, a
             # sacrifice, or a second discard to be *for*. Refused rather than
@@ -3198,7 +3205,7 @@ def off_zone_activation(
             )
         return cycling_activation(game, card, player, entry.index)
     if entry.family in ("unearth", "transmute"):
-        if targets or sacrificing or discarding:
+        if targets or sacrificing or discarding or exiling:
             # Same fail-closed refusal as cycling above: CR 702.84a and
             # CR 702.53a each spell their whole ability out too, so there is
             # nothing here for a target, a sacrifice, or a second discard to
@@ -3217,6 +3224,7 @@ def off_zone_activation(
         targets=targets,
         sacrificing=sacrificing,
         discarding=discarding,
+        exiling=exiling,
     )
 
 
