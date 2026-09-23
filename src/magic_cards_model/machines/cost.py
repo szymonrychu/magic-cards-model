@@ -4242,8 +4242,12 @@ _MANA_VALUE_TAIL = r"(?: with mana value (?P<mana_value>\d+))?"
 #: names on the targeting side; `_requirement`'s caller below is what
 #: actually marks `CardRequirement.excludes_source`, since `_requirement`
 #: itself never sees which permanent this cost belongs to).
+#: "Exile this artifact" (Wand of Vertebrae, Perpetual Timepiece) names the
+#: permanent itself by type (CR 700.7's "this"), so it is exiled from the
+#: battlefield; "this card" keeps its own zone default.
 _PHRASE_EXILE = re.compile(
-    rf"^exile (?:this card|(?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ]*?)cards?)"
+    rf"^exile (?:this (?P<self_noun>card|artifact|creature|enchantment|land|planeswalker|permanent)"
+    rf"|(?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ]*?)cards?)"
     + _MANA_VALUE_TAIL
     + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
     re.IGNORECASE,
@@ -4663,7 +4667,9 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     exile = _PHRASE_EXILE.match(text)
     if exile is not None:
-        zone = _ZONE_WORDS.get((exile.group("zone") or "hand").lower(), Zone.HAND)
+        self_noun = (exile.group("self_noun") or "card").lower()
+        default_zone = "hand" if self_noun == "card" else "battlefield"
+        zone = _ZONE_WORDS.get((exile.group("zone") or default_zone).lower(), Zone.HAND)
         if exile.group("count") is None and exile.group("another") is None:
             # "Exile this card [from your graveyard]": CR 700.7's self-
             # reference, so there is nothing to choose - only the caller

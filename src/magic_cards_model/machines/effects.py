@@ -7686,6 +7686,55 @@ def _player_gains_hexproof_clause(match: re.Match[str]) -> ClauseEffect | None:
     return gain
 
 
+#: "discard a card unless `<condition>`" - Moon-Circuit Hacker's "discard a
+#: card unless this creature entered this turn", Kaito Shizuki's "Then discard
+#: a card unless you attacked this turn". CR 118.12a reads "[Do something]
+#: unless [...]" as the something happening only when the other thing did
+#: not; here the other thing is a board fact `Game.condition_holds` reads.
+_DISCARD_UNLESS_CONDITION_RE = re.compile(
+    r"^(?:then )?(?P<discard>discards? .+?) unless (?P<condition>.+)$", re.IGNORECASE
+)
+
+
+def _parse_discard_unless_condition_clause(clause: str) -> ClauseEffect | None:
+    """`_DISCARD_UNLESS_CONDITION_RE`'s shape: the discard is any shape
+    `_DISCARD_A_CARD_RE` reads, and the condition must be one
+    `condition_is_readable` knows at parse time. The condition is asked of the
+    resolving ability's own source (`source_id`) - a self-reference like
+    "this creature entered this turn" reads its last known state when it has
+    left the battlefield (CR 608.2h). An answer `condition_holds` still cannot
+    give records a `ConditionalClauseNotice` and discards nothing."""
+    from ..models.game import condition_is_readable
+
+    match = _DISCARD_UNLESS_CONDITION_RE.fullmatch(clause)
+    if match is None:
+        return None
+    discard_text = match.group("discard").strip()
+    condition = match.group("condition").strip()
+    if _DISCARD_A_CARD_RE.fullmatch(discard_text) is None or not condition_is_readable(condition):
+        return None
+    discard = parse_clause_effect(discard_text)
+    if discard is None:
+        return None
+
+    def discard_unless(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        source_state = game.find_by_id(UUID(source_id)) if source_id is not None else None
+        held = game.condition_holds(player.username, condition, source_state)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=UUID(source_id) if source_id is not None else None,
+                source_name=source,
+                text=clause,
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            return
+        if not held:
+            discard(game, player, source, source_id)
+
+    return discard_unless
+
+
 def parse_clause_effect(clause: str) -> ClauseEffect | None:
     """One clause of an effect with nobody to ask a question of: a plain life
     total change, an energy grant, a draw, a mill, a surveil or a scry.
@@ -7700,6 +7749,10 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
     # CR 207.2a: reminder text in parentheses is not rules text - "get {E}
     # (an energy counter)" and "surveil 1 (Look at ...)" both carry one.
     clause = re.sub(r"\s*\([^()]*\)\s*$", "", clause).strip().rstrip(".").strip()
+
+    discard_unless = _parse_discard_unless_condition_clause(clause)
+    if discard_unless is not None:
+        return discard_unless
 
     if match := _GAIN_LIFE_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
@@ -19283,6 +19336,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if damage_each_creature_except_tokens is not None:
         return damage_each_creature_except_tokens
+    may_discard_or_sacrifice = _parse_may_discard_or_sacrifice_if_you_do_clause(
+        effect_text, for_spell=False
+    )
+    if may_discard_or_sacrifice is not None:
+        return may_discard_or_sacrifice
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=False)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
@@ -21820,6 +21878,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
         # own ", then " joins are CR 608.2c instructions in one breath, not
         # three clauses `_CLAUSE_SEPARATOR` may cut apart and fail separately.
         return each_player_exiles_sacrifices_and_returns_creatures
+    may_discard_or_sacrifice = _parse_may_discard_or_sacrifice_if_you_do_clause(
+        effect_text, for_spell=True
+    )
+    if may_discard_or_sacrifice is not None:
+        return may_discard_or_sacrifice
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=True)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
@@ -23708,6 +23771,84 @@ _THEN_EACH_WHO_DIDNT_DISCARD_QUALITY_LOSES_LIFE_RE = re.compile(
 )
 
 
+#: "Each `<player|opponent>` who can't `<clause>`." - Liliana, Waker of the
+#: Dead's `+1` ("Each opponent who can't loses 3 life."): the consequence
+#: lands on each member who could not discard. CR 118.12's "can't" is a
+#: member who never started to pay the discard - an empty hand.
+_EACH_WHO_CANT_RE = re.compile(
+    r"^each (?P<who>player|opponent) who can'?t (?P<clause>.+?)\.?$", re.IGNORECASE
+)
+#: "For each `<player|opponent>` who can't, you `<clause>`." - Cruel
+#: Grimnarch's "you gain 4 life", Refurbished Familiar's and Aclazotz's "you
+#: draw a card": the consequence lands on the controller, once per member who
+#: could not discard.
+_FOR_EACH_WHO_CANT_YOU_RE = re.compile(
+    r"^for each (?P<who>player|opponent) who can'?t, (?P<clause>you .+?)\.?$", re.IGNORECASE
+)
+#: "loses `<n>` life" - the third-person life loss a member of the group
+#: takes, which `parse_clause_effect`'s second-person grammar does not read.
+_MEMBER_LOSES_LIFE_RE = re.compile(rf"^loses (?P<n>{COUNT}) life$", re.IGNORECASE)
+
+
+def _who_cant_discard_consequence(
+    second: str, discard_who: str, discard_count: int
+) -> Callable[["Game", Player, list[Player], str, str | None], None] | None:
+    """The "who can't" second sentence of a group discard, as a consequence
+    `_parse_each_group_discards_then_consequence_per_failure_clause_pair`
+    runs after the first sentence's discard (CR 118.12, CR 608.2c).
+
+    The punished group must lie inside the discarding one: "each player
+    discards ... each opponent who can't" judges only the opponents, and the
+    controller's own empty hand costs them nothing.
+    """
+    text = second.strip()
+    member_match = _EACH_WHO_CANT_RE.fullmatch(text)
+    you_match = None if member_match is not None else _FOR_EACH_WHO_CANT_YOU_RE.fullmatch(text)
+    match = member_match or you_match
+    if match is None:
+        return None
+    who = match.group("who").lower()
+    if who == "player" and discard_who != "player":
+        return None
+    clause_text = match.group("clause").strip()
+    clause: ClauseEffect | None
+    if member_match is not None and (life := _MEMBER_LOSES_LIFE_RE.fullmatch(clause_text)):
+        amount = parse_count(life.group("n"))
+        if amount is None:
+            return None
+
+        def lose_life(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            player.lose_life(amount)
+
+        clause = lose_life
+    else:
+        clause = parse_clause_effect(clause_text)
+    if clause is None:
+        return None
+    on_member = member_match is not None
+
+    def consequence(
+        game: "Game",
+        controller: Player,
+        group: list[Player],
+        source: str,
+        source_id: str | None,
+    ) -> None:
+        failed: list[Player] = []
+        for member in group:
+            discarded = _discard_cards(game, member, discard_count, source, source_id=source_id)
+            punished = who == "player" or member.username != controller.username
+            if not discarded and punished:
+                failed.append(member)
+        for member in failed:
+            if on_member:
+                clause(game, member, source, source_id)
+            else:
+                clause(game, controller, source, source_id)
+
+    return consequence
+
+
 def _parse_each_group_discards_then_consequence_per_failure_clause_pair(
     first: str, second: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -23760,6 +23901,8 @@ def _parse_each_group_discards_then_consequence_per_failure_clause_pair(
                 game.draw_cards(controller.username, failures * draw_each)
 
         consequence = draw_consequence
+    elif (cant := _who_cant_discard_consequence(second, discard_who, discard_count)) is not None:
+        consequence = cant
     else:
         life_match = _THEN_EACH_WHO_DIDNT_DISCARD_QUALITY_LOSES_LIFE_RE.fullmatch(second.strip())
         if life_match is None or life_match.group("who").lower() != discard_who:
@@ -25508,6 +25651,120 @@ def _unreadable_end_the_turn_clause(whole: str) -> str | None:
         if _END_THE_TURN_RE.fullmatch(clause.strip().rstrip(".")):
             return clause.strip()
     return None
+
+
+#: "You may discard a card or sacrifice a land. If you do, draw two cards."
+#: (Highway Robbery) and the halves the other way round, "You may sacrifice an
+#: artifact or discard a card. If you do, ..." (Vision of Love, K'un-Lun
+#: Warrior, Reckless Detective) - CR 118.12's optional cost, payable two ways.
+_MAY_DISCARD_OR_SACRIFICE_IF_YOU_DO_RE = re.compile(
+    rf"^you may (?:discard (?P<discard_first>{COUNT}) cards? "
+    r"or sacrifice (?P<restriction_last>[^.]+?)"
+    rf"|sacrifice (?P<restriction_first>[^.]+?) or discard (?P<discard_last>{COUNT}) cards?)"
+    r"\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_discard_or_sacrifice_if_you_do_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_MAY_DISCARD_OR_SACRIFICE_IF_YOU_DO_RE`'s shape.
+
+    One "you may" (CR 118.12), legal to accept only when at least one half
+    can be paid (CR 608.2d: a cost is paid in full or not at all, so a hand
+    shorter than the discard count or no permanent matching the restriction
+    removes that half). When both halves are payable the player then picks
+    one (`CHOOSE_A_QUALITY`, options in printed order); when only one is,
+    that one is paid with no second question. The consequence runs only once
+    the chosen half was actually paid.
+    """
+    match = _MAY_DISCARD_OR_SACRIFICE_IF_YOU_DO_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    discard_text = match.group("discard_first") or match.group("discard_last")
+    discard_n = parse_count(discard_text)
+    restriction_text = (match.group("restriction_last") or match.group("restriction_first")).strip()
+    restriction = _sacrifice_restriction(restriction_text)
+    if discard_n is None or discard_n < 1 or restriction is None:
+        return None
+    consequence_text = match.group("consequence").strip()
+    if re.search(r"\botherwise\b", consequence_text, re.IGNORECASE):
+        return None
+    consequence = (
+        parse_mixed_effect_for_spell(consequence_text)
+        if for_spell
+        else parse_mixed_effect(consequence_text)
+    )
+    if consequence is None:
+        return None
+    discard_option = f"discard {discard_text.lower()} card{'s' if discard_n > 1 else ''}"
+    sacrifice_option = f"sacrifice {restriction_text}"
+    discard_printed_first = match.group("discard_first") is not None
+    printed_order = (
+        (discard_option, sacrifice_option)
+        if discard_printed_first
+        else (sacrifice_option, discard_option)
+    )
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        permanent_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
+        candidates = restriction.candidates(game, player, permanent_id)
+        payable = {
+            discard_option: len(player.hand) >= discard_n,
+            sacrifice_option: _sacrifice_is_payable(restriction.quantity, candidates),
+        }
+        options = tuple(option for option in printed_order if payable[option])
+        if not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=player.username,
+                prompt=" or ".join(printed_order),
+                source=source_name,
+                affirmative_is_legal=bool(options),
+                source_id=source_id_of(stack_object),
+            )
+        ):
+            return
+        chosen = options[0]
+        if len(options) > 1:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_QUALITY,
+                    player=player.username,
+                    prompt="choose which to do",
+                    source=source_name,
+                    options=options,
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            assert isinstance(answer, str)
+            chosen = answer
+        if chosen == discard_option:
+            discarded = _discard_cards(
+                game, player, discard_n, source_name, source_id=source_id_of(stack_object)
+            )
+            if len(discarded) < discard_n:
+                return
+        else:
+            sacrificed = _choose_permanents_to_sacrifice(
+                game,
+                player,
+                restriction,
+                candidates,
+                source_name=source_name,
+                source_id=source_id_of(stack_object),
+            )
+            if not sacrificed:
+                return
+            for permanent in sacrificed:
+                game.sacrifice(permanent)
+        consequence(game, stack_object)  # type: ignore[arg-type]
+
+    return effect
 
 
 def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
@@ -29993,8 +30250,16 @@ def _parse_empower_jace_clause(clause: str, *, for_spell: bool) -> TargetedClaus
 #: subject other than the resolving object's own controller (Fateful
 #: Absence's "Its controller investigates.") are both real templates this
 #: does not read - fail closed rather than guess a count or a controller.
+#:
+#: A trailing "for each `<phrase>`" scales it by `_for_each_multiplier`'s
+#: count, read once as the ability applies (CR 608.2h): Tamiyo Meets the
+#: Story Circle's "investigate twice for each card discarded this way" (CR
+#: 608.2c's "this way" onto the discard the same ability just made) and
+#: Teysa, Opulent Oligarch's "investigate for each opponent who lost life
+#: this turn".
 _INVESTIGATE_RE = re.compile(
-    r"^investigate(?:\s+(?P<multiplier>twice|thrice|once|\d+|[a-z]+)(?:\s+times?)?)?$",
+    r"^investigate(?:\s+(?P<multiplier>twice|thrice|once|\d+|(?!for\b)[a-z]+)(?:\s+times?)?)?"
+    r"(?:\s+for each (?P<each>.+))?$",
     re.IGNORECASE,
 )
 
@@ -30019,9 +30284,18 @@ def _parse_investigate_clause(clause: str, *, for_spell: bool) -> TargetedClause
     amount = 1 if word is None else parse_multiplier(word) or parse_multiplier(f"{word} times")
     if amount is None:
         return None
+    each = match.group("each")
+    multiplier = _for_each_multiplier(each) if each is not None else None
+    if each is not None and multiplier is None:
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        investigate(game, game.controller_of(stack_object).username, amount)
+        controller = game.controller_of(stack_object).username
+        times = amount
+        if multiplier is not None:
+            times *= multiplier(game, controller, source_id_of(stack_object))
+        if times > 0:
+            investigate(game, controller, times)
 
     return effect
 
@@ -34646,8 +34920,13 @@ _EXILE_THAT_PLAYERS_GRAVEYARD_RE = re.compile(r"^exile that player'?s graveyard$
 #: cards" - CR 118.12's optional cost half of "[Do something]. If [a player]
 #: does, ...", the same quantity grammar `_DISCARD_A_CARD_RE` reads for the
 #: unconditional shape.
+#:
+#: "you may" is optional in the pattern: Territorial Kavu's own mode and
+#: Shadow of the Goblin's "discard a card. If you do, draw a card." print the
+#: mandatory form, whose "if you do" asks whether the player started to pay
+#: (CR 118.12) - a player with an empty hand never does.
 _MAY_DISCARD_N_CARDS_RE = re.compile(
-    rf"^you may discards? "
+    rf"^(?P<may>you may )?discards? "
     rf"(?:(?P<any>any number of)|(?:(?P<upto>up to )?(?P<n>{AMOUNT})))\s+cards?$",
     re.IGNORECASE,
 )
@@ -34849,6 +35128,8 @@ def _merge_may_discard_if_you_do_clauses(
     if consequence is None and player_clause is None:
         return None
 
+    optional = discard_match.group("may") is not None
+
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
@@ -34866,7 +35147,7 @@ def _merge_may_discard_if_you_do_clauses(
             affirmative_is_legal=bool(player.hand),
             source_id=source_id_of(stack_object),
         )
-        if not game.ask(decision):
+        if optional and not game.ask(decision):
             return
         discarded = _discard_cards(
             game, player, needed, source, source_id=source_id_of(stack_object), exact=exact
@@ -37487,6 +37768,52 @@ def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
     return effect
 
 
+#: "Shuffle up to three target cards from your graveyard into your library."
+#: (Tamiyo Meets the Story Circle III), "Shuffle up to five target cards ..."
+#: (Wand of Vertebrae), "Shuffle any number of target cards ..." (Perpetual
+#: Timepiece, The Bath Song III) - CR 701.24a's shuffle with the targeted
+#: cards put in first.
+_SHUFFLE_TARGET_CARDS_INTO_LIBRARY_RE = re.compile(
+    r"^shuffle (?P<phrase>(?:up to [a-z0-9]+ |any number of |[a-z0-9]+ )?target cards? "
+    r"from (?:your|a) graveyard) into (?:your|its owner'?s|their owners'?) library\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_shuffle_target_cards_into_library_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SHUFFLE_TARGET_CARDS_INTO_LIBRARY_RE`'s shape.
+
+    Each target still in the graveyard it was chosen in (CR 608.2b) goes into
+    its owner's library, and each library that received a card is shuffled
+    (CR 701.24a). With no card moved - zero targets chosen (CR 115.6), or
+    every one gone - the controller's own library is still shuffled, the
+    instruction's own verb.
+    """
+    match = _SHUFFLE_TARGET_CARDS_INTO_LIBRARY_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        moved: list[CardState] = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD
+        ]
+        owners: list[str] = []
+        for target in moved:
+            if target.owner not in owners:
+                owners.append(target.owner)
+            game.put_cards_into_library([target])
+        for owner in owners or [game.controller_of(stack_object).username]:
+            game.shuffle_library(owner)
+
+    return effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -37497,6 +37824,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     targeted = _parse_targeted_clause(clause, for_spell=for_spell)
     if targeted is not None:
         return targeted
+    shuffle_targets = _parse_shuffle_target_cards_into_library_clause(clause, for_spell=for_spell)
+    if shuffle_targets is not None:
+        return shuffle_targets
     explores = _parse_explores_clause(clause, for_spell=for_spell)
     if explores is not None:
         return explores

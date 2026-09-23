@@ -878,6 +878,20 @@ _CONDITION_NOT_CAST_FROM_HAND = re.compile(
 _CONDITION_ADDITIONAL_COST_PAID = re.compile(
     r"this spell'?s additional cost was paid", re.IGNORECASE
 )
+#: "this creature entered this turn" (Moon-Circuit Hacker's "unless" rider),
+#: "this land entered this turn" (Mirrex's activation restriction) - the
+#: condition's own source, read off `CardState.turn_entered` against the
+#: current turn. A source that has since left the battlefield keeps its stamp,
+#: which is its last known information (CR 608.2h).
+_CONDITION_SELF_ENTERED_THIS_TURN = re.compile(
+    r"this (?:creature|permanent|artifact|enchantment|land|planeswalker|battle) entered "
+    r"(?:the battlefield )?this turn",
+    re.IGNORECASE,
+)
+#: "you attacked this turn" (Kaito Shizuki's `+1`) - whether the player
+#: declared one or more attackers this turn (CR 508.1), recorded as the
+#: `turn_facts["attacked"]` fact by `declare_attackers`.
+_CONDITION_YOU_ATTACKED_THIS_TURN = re.compile(r"you attacked this turn", re.IGNORECASE)
 
 #: Every shape `condition_holds` reads, in the same order it tries them -
 #: kept as one tuple, rather than re-deriving it, so `condition_is_readable`
@@ -912,6 +926,8 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_CREATURE_DIED_THIS_TURN,
     _CONDITION_NOT_CAST_FROM_HAND,
     _CONDITION_ADDITIONAL_COST_PAID,
+    _CONDITION_SELF_ENTERED_THIS_TURN,
+    _CONDITION_YOU_ATTACKED_THIS_TURN,
 )
 
 
@@ -950,7 +966,21 @@ def condition_is_readable(condition: str) -> bool:
     same way once resolution actually asks.
     """
     text = condition.strip().rstrip(".").strip()
+    if (alternatives := _condition_alternatives(text)) is not None:
+        return all(condition_is_readable(part) for part in alternatives)
     return any(pattern.fullmatch(text) is not None for pattern in _CONDITION_PATTERNS)
+
+
+#: "`<condition>` or if `<condition>`" - Gathering Place's own "Activate only
+#: if this land entered this turn or if you control a basic land": either
+#: half being true is enough.
+_CONDITION_OR_IF = re.compile(r"\s+or if\s+", re.IGNORECASE)
+
+
+def _condition_alternatives(text: str) -> list[str] | None:
+    """The halves of an "X or if Y" condition, or `None` for a plain one."""
+    parts = _CONDITION_OR_IF.split(text)
+    return parts if len(parts) > 1 else None
 
 
 #: CR 110.4a: "Specifically, it means an artifact, battle, creature,
@@ -15408,6 +15438,9 @@ class Game(EngineModel):
                 # `Game`'s "this turn" fields.
                 self.attacked_this_turn.add(creature.id)
             if attacks:
+                # CR 508.1: declaring attackers is how a player attacks -
+                # "you attacked this turn" (Kaito Shizuki) asks this.
+                self.record_turn_fact("attacked", self.active_player.username)
                 # CR 508.3d: "An ability that reads 'Whenever [a player]
                 # attacks, . . .' triggers if one or more creatures that
                 # player controls are declared as attackers" - once for the
@@ -17448,6 +17481,11 @@ class Game(EngineModel):
         read.
         """
         text = condition.strip().rstrip(".").strip()
+        if (alternatives := _condition_alternatives(text)) is not None:
+            answers = [self.condition_holds(controller, part, source) for part in alternatives]
+            if any(answers):
+                return True
+            return None if None in answers else False
         board = self.computed_board()
         controlled = self.permanents_controlled_by(controller)
         opponents = [player for player in self.players_in_game if player.username != controller]
@@ -17696,6 +17734,14 @@ class Game(EngineModel):
             if source is None:
                 return None
             return self.cast_record(source).optional_additional_cost_paid
+
+        if _CONDITION_SELF_ENTERED_THIS_TURN.fullmatch(text):
+            if source is None:
+                return None
+            return self._entered_this_turn(source)
+
+        if _CONDITION_YOU_ATTACKED_THIS_TURN.fullmatch(text):
+            return self.turn_fact_holds("attacked", controller)
 
         return None
 

@@ -3960,3 +3960,27 @@ moved into silent or notice.
 | "If you would put one or more +1/+1 counters on a creature you control, put that many plus one ... instead" | CR 614.1a, 122.6, 122.6a, 608.2c, 616.1, 611.2a | `replacement.read_counter_amount` (the card-counter half of `_compile_counter_doubler`, now a `CounterAmountReplacement` spec) reads the active voice too. "you would put" reads the event's `putter` - the resolving spell or ability's controller (CR 608.2c), else the recipient's controller (CR 122.6a) - so an opponent's proliferate onto your creature gets no +1. Prairie Dog (stacks with Hardened Scales, two activations add two, outlives the Dog); proven on Hardened Scales | `scenarios/test_turn_scoped_replacements_from_resolution.py` |
 | "If a creature would enter the battlefield under an opponent's control this turn, it enters under your control instead" / "each token that would be created under an opponent's control this turn is created under your control instead" | CR 614.1a, 616.1b, 111.2, 701.7b, 614.5 | `replacement.EnterUnderYourControl`: the entering object's controller (tokens included), or the new `ReplaceableEvent.controller` of a token creation (`create_tokens`/`token_copy_of` keep the creator as owner). `ApplicableEffect.controls_entry` sorts it first (CR 616.1b), so an opponent's Doubling Season doubles nothing under Crafty Cutpurse; two players' Gather Specimens hand the creature back. `ControlReplacementNotice` stays as the net for a wording the reader does not take. Gather Specimens; proven on Crafty Cutpurse | `scenarios/test_enter_under_your_control_instead.py` |
 
+## S16: discard-driven clauses
+
+Highway Robbery, Liliana, Waker of the Dead, Tamiyo Meets the Story Circle and
+Moon-Circuit Hacker were silent; Territorial Kavu failed closed on its rummage
+mode. Every clause of all five now sweeps `handled` (Kavu's domain line stays
+`handled`; Plot stays read by `machines/casting.py`). CR numbers verified with
+`mise run rules:find`: 118.12, 118.12a, 608.2b, 608.2c, 608.2d, 608.2h, 115.6,
+700.7, 701.24a, 508.1 (code) and 701.9b, 701.16a, 701.21a, 107.1c, 714.2b,
+702.49a, 702.170d, 603.3c, 604.3, 305.6, 504.1 (tests).
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "You may discard a card or sacrifice `<x>`. If you do, `<effect>`." and the halves swapped (CR 118.12, 608.2d): one "you may", legal only when a half is payable in full; both payable asks which (`CHOOSE_A_QUALITY`, printed order) | `_parse_may_discard_or_sacrifice_if_you_do_clause`, ahead of `_parse_conditional_sacrifice_clause` in both dispatchers | Highway Robbery (also cast via Plot) | Vision of Love (was a `ConditionalClauseNotice`) | `test_discard_or_sacrifice_choice.py` |
+| mandatory "Discard N card(s). If you do, `<effect>`." - "if you do" is "started to pay" (CR 118.12), so an empty hand gets nothing | `_merge_may_discard_if_you_do_clauses` (the "you may" is now optional in `_MAY_DISCARD_N_CARDS_RE`) | Territorial Kavu's attack-trigger mode | Shadow of the Goblin | `test_mandatory_discard_if_you_do.py` |
+| "Each `<group>` discards a card. Each opponent who can't `<clause>`." / "For each opponent who can't, you `<clause>`." - "can't" is a member who discarded nothing; the punished group must lie inside the discarding one | `_who_cant_discard_consequence`, a third consequence of `_parse_each_group_discards_then_consequence_per_failure_clause_pair` | Liliana, Waker of the Dead `+1` | Cruel Grimnarch, Refurbished Familiar | `test_each_player_discards_punisher.py` |
+| "investigate [twice] for each `<phrase>`" (CR 701.16a, 608.2h) - "card discarded this way" reads the discard the same ability made (CR 608.2c) | `_INVESTIGATE_RE` + `_for_each_multiplier` | Tamiyo Meets the Story Circle II | Teysa, Opulent Oligarch | `test_discard_any_number_scaled.py` |
+| "Shuffle up to N / any number of target cards from your graveyard into your library" (CR 115.6, 608.2b, 701.24a) | `_parse_shuffle_target_cards_into_library_clause` | Tamiyo Meets the Story Circle III | Wand of Vertebrae | `test_shuffle_targets_into_library.py` |
+| "Exile this artifact" (and any "this `<permanent type>`") as an activation cost, from the battlefield (CR 700.7) | `cost._PHRASE_EXILE`'s `self_noun` | - | Wand of Vertebrae | `test_shuffle_targets_into_library.py` |
+| "discard a card unless `<condition>`" (CR 118.12a), condition asked of the ability's own source, last known information if it left (CR 608.2h) | `_parse_discard_unless_condition_clause` in `parse_clause_effect` | Moon-Circuit Hacker (ninjutsu counts as entering) | Kaito Shizuki `+1` | `test_unless_entered_this_turn.py` |
+| conditions "this `<permanent>` entered this turn", "you attacked this turn" (CR 508.1, `turn_facts["attacked"]`), and "`<a>` or if `<b>`" | `Game.condition_holds` / `condition_is_readable` (`_CONDITION_SELF_ENTERED_THIS_TURN`, `_CONDITION_YOU_ATTACKED_THIS_TURN`, `_condition_alternatives`) | Moon-Circuit Hacker | Kaito Shizuki, Gathering Place's "Activate only if this land entered this turn or if you control a basic land" (was always refused) | `test_unless_entered_this_turn.py` |
+
+Still not modelled: Kaito Shizuki's end-step "if Kaito entered this turn, he
+phases out" (phasing, CR 702.26, is its own task); Kaito is in the pool for
+his `+1` only.
