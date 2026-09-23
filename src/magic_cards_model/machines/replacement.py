@@ -3133,6 +3133,82 @@ def _compile_lands_you_control_enter_untapped(effect: ReplacementEffect) -> Card
     )
 
 
+# -- "<permanents> your opponents control enter tapped" (CR 614.1d, non-self) --
+
+#: The plural card-type nouns a "<list> your opponents control enter tapped"
+#: subject names, each optionally "nonbasic" (CR 205.4a's supertype).
+_PLURAL_PERMANENT_TYPES = {
+    "artifacts": Type.ARTIFACT,
+    "battles": Type.BATTLE,
+    "creatures": Type.CREATURE,
+    "enchantments": Type.ENCHANTMENT,
+    "lands": Type.LAND,
+    "planeswalkers": Type.PLANESWALKER,
+}
+_OPPONENTS_CONTROL_SUBJECT_RE = re.compile(
+    r"^(?P<classes>.+?) your opponents control$", re.IGNORECASE
+)
+_TYPE_LIST_SPLIT_RE = re.compile(r",\s*(?:and\s+|or\s+)?|\s+(?:and|or)\s+", re.IGNORECASE)
+
+
+def _read_opponents_permanent_classes(subject: str) -> tuple[tuple[Type, bool], ...] | None:
+    """ "Creatures your opponents control", "Artifacts, creatures, and lands
+    your opponents control", "Creatures and nonbasic lands your opponents
+    control" - each noun as `(type, nonbasic)`, or `None` for any noun this
+    does not read (fail closed rather than drop it)."""
+    match = _OPPONENTS_CONTROL_SUBJECT_RE.match(subject.strip())
+    if match is None:
+        return None
+    classes: list[tuple[Type, bool]] = []
+    for noun in _TYPE_LIST_SPLIT_RE.split(match.group("classes").strip().lower()):
+        noun = noun.strip()
+        nonbasic = noun.startswith("nonbasic ")
+        if nonbasic:
+            noun = noun[len("nonbasic ") :]
+        card_type = _PLURAL_PERMANENT_TYPES.get(noun)
+        if card_type is None:
+            return None
+        classes.append((card_type, nonbasic))
+    return tuple(classes) or None
+
+
+def _compile_opponents_permanents_enter_tapped(
+    effect: ReplacementEffect,
+) -> CardReplacement | None:
+    """Kinjalli's Sunwing's "Creatures your opponents control enter tapped."
+
+    CR 614.12: which of these applies is judged on the permanent "as it would
+    exist on the battlefield" - `event.card.types` is read while
+    `Game.put_onto_battlefield` holds `CardState._entering_battlefield`, so a
+    card that is a creature only off the battlefield (CR 113.6c) is not one
+    here.
+    """
+    if effect.kind is not ReplacementKind.ENTERS_TAPPED or effect.self_replacement:
+        return None
+    if effect.condition:
+        return None
+    classes = _read_opponents_permanent_classes(effect.subject or "")
+    if classes is None:
+        return None
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        card = event.card
+        if event.kind is not EventKind.ENTERS_BATTLEFIELD or card is None:
+            return False
+        if not _is_opponent(game, card.controller, source.controller):
+            return False
+        types = card.types
+        return any(
+            card_type in types and not (nonbasic and Supertype.BASIC in card.supertypes)
+            for card_type, nonbasic in classes
+        )
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        event.tapped = True
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
 # --------------------------------------------------------------------------
 # Keyword-only shapes (CR 702)
 # --------------------------------------------------------------------------
@@ -3385,6 +3461,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_token_substitution,
     _compile_counter_doubler,
     _compile_lands_you_control_enter_untapped,
+    _compile_opponents_permanents_enter_tapped,
 )
 
 

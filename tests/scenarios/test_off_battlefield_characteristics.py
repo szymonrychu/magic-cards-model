@@ -29,7 +29,8 @@ pair each, every one on a real printing that is not Grist:
 And the other side of the zone line, on the battlefield: it is not a
 creature, it enters from exile as a planeswalker only (CR 614.12's "as it
 would exist on the battlefield" - Containment Priest's "nontoken creature
-would enter" does not see it), and dying as a planeswalker is not a creature
+would enter" does not see it, and neither does Kinjalli's Sunwing's
+"Creatures your opponents control enter tapped"), and dying as a planeswalker is not a creature
 dying (CR 603.10a's look-back), even though the card it leaves in the
 graveyard is a creature card again.
 
@@ -445,6 +446,63 @@ def test_containment_priest_does_not_see_grist_entering_as_a_creature():
     scenario.resolve_top()
 
     assert grist.zone is Zone.BATTLEFIELD
+
+
+def _generous_revival_under_sunwing(target: str, *, sunwing_controller: str = "bob"):
+    """alice reanimates `target` from her graveyard with Generous Revival (an
+    untapped return: "Return target creature card with mana value 3 or less
+    from your graveyard to the battlefield ...") while `sunwing_controller`
+    controls Kinjalli's Sunwing."""
+    alice_battlefield = ["Plains"] * 3
+    bob_battlefield: list[str] = []
+    (bob_battlefield if sunwing_controller == "bob" else alice_battlefield).append(
+        "Kinjalli's Sunwing"
+    )
+    scenario = (
+        Scenario()
+        .player(
+            "alice", hand=["Generous Revival"], graveyard=[target], battlefield=alice_battlefield
+        )
+        .player("bob", battlefield=bob_battlefield)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    returned = scenario.find(target, Zone.GRAVEYARD, "alice")
+    sources = scenario.untapped_sources("Plains", "Plains", "Plains")
+    scenario.cast_and_resolve("Generous Revival", *sources, targets=[returned])
+    return scenario, returned
+
+
+def test_kinjallis_sunwing_does_not_tap_grist_entering_as_a_planeswalker():
+    """Kinjalli's Sunwing: "Creatures your opponents control enter tapped."
+    Proof on a printing outside the deck pool that CR 614.12 reads the
+    permanent as it would exist on the battlefield: Grist leaves the
+    graveyard a creature card and arrives a planeswalker, so bob's Sunwing
+    does not apply to it."""
+    scenario, grist = _generous_revival_under_sunwing(GRIST)
+
+    assert grist.zone is Zone.BATTLEFIELD
+    assert not grist.is_creature
+    assert not grist.tapped
+
+
+def test_kinjallis_sunwing_taps_a_creature_an_opponent_returns():
+    """The same return with a card that is a creature on the battlefield too:
+    Sunwing's replacement applies (CR 614.1d), so the Grist case above is the
+    CR 614.12 reading and not a Sunwing that never fires."""
+    scenario, bears = _generous_revival_under_sunwing("Grizzly Bears")
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert bears.tapped
+
+
+def test_kinjallis_sunwing_leaves_its_controllers_own_creatures_untapped():
+    """ "your opponents control": a creature entering under the Sunwing's own
+    controller is not in the affected set."""
+    scenario, bears = _generous_revival_under_sunwing("Grizzly Bears", sunwing_controller="alice")
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert not bears.tapped
 
 
 # --------------------------------------------------------------------------

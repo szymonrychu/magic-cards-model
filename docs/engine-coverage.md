@@ -3803,7 +3803,8 @@ not a copiable value either (CR 707.2).
 | Object | `CardState.types`/`.subtypes`/`.printed_power`/`.printed_toughness` | Add the grant in every zone but the battlefield (CR 205.1b additive). `printed_types` is the grant-free type line. |
 | Spell | `CardState.types_as_a_spell` | Adds the grant to a spell's cast-face types regardless of where the object is now: `why_cannot_cast_now`/`why_cannot_cast_restriction` (casting.py), the noncreature cost tax (`Game`), prowess (`keywords.py`), "N `<type>` spells cast this turn" (`triggers.py`). |
 | Board | `layers.off_battlefield_characteristics_of`, `Game.characteristics_of` | Off the battlefield: `printed_characteristics` (copiable values, grant-free) plus the grant. |
-| Entering | `CardState._entering_battlefield`, `Game.put_onto_battlefield` | CR 614.12: replacement effects see the permanent "as it would exist on the battlefield" - Containment Priest does not exile a Grist coming in from exile. |
+| Entering | `CardState._entering_battlefield`, `Game.put_onto_battlefield` | CR 614.12: replacement effects see the permanent "as it would exist on the battlefield" - Containment Priest does not exile a Grist coming in from exile, and Kinjalli's Sunwing (off-pool proof) does not tap one returned by Generous Revival. |
+| Opponents' permanents enter tapped | `replacement._compile_opponents_permanents_enter_tapped` | CR 614.1d: "<plural permanent types, each optionally nonbasic> your opponents control enter tapped" (Kinjalli's Sunwing; the list form covers "Artifacts, creatures, and lands" and "Creatures and nonbasic lands"). Built as the off-pool CR 614.12 proof for Grist: its type check reads `CardState.types` under `_entering_battlefield`. An unread noun or any condition fails closed (not compiled). |
 | Look-back | `CardState.remember_last_known_power_toughness` | LKI types/subtypes are compared against the off-battlefield answer, so a Grist that died as a planeswalker keeps `last_known_types == (PLANESWALKER,)` (CR 603.10a). |
 | Card filters | `effects.py` | Graveyard/library/exile creature-card readers (`_SELECT_FROM_TOP_KINDS`, Tyvar's return, mass exile/reanimate, look-at-top creature, Agatha's Soul Cauldron's reflexive check) and Boneyard Wurm's CDA (`layers.py`) read `CardState.types`, not `Card.types`. |
 
@@ -3813,7 +3814,9 @@ deck pool: Essence Scatter (stack, may target) and Negate (stack, may not),
 Thalia, Guardian of Thraben (no tax), Soul-Scar Mage (no prowess), Duress
 (hand, cannot take), Grisly Salvage (library, offered), Raise Dead (graveyard
 target), Boneyard Wurm (graveyard count), The Darkness Crystal (exile target,
-enters as a planeswalker only), Containment Priest (CR 614.12), plus Grist's
+enters as a planeswalker only), Kinjalli's Sunwing (CR 614.12, with a
+Grizzly Bears control that Sunwing does tap; Containment Priest is kept but is
+in the deck pool), plus Grist's
 own +1 (milled Grist is an Insect card) and -5 (graveyard Grists count,
 including one that went to 0 paying for it).
 
