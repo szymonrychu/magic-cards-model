@@ -4023,3 +4023,25 @@ with `mise run rules:find`: 115.2, 115.3, 115.5, 115.7, 115.7a-f, 115.9a,
 | "you control a `<quality>` with power/toughness N or greater" (CR 208.1, computed board) - Bolt Bend's CR 601.2f discount, Fanatic of Rhonas's and Baxter Building's "Activate only if" (CR 602.5) | `game._CONDITION_POWER` (quality via `_permanent_quality`) | Bolt Bend | Baxter Building (toughness) | `test_power_conditioned_discount.py` |
 | Hydroelectric Laboratory's "you may pay 3 life, else enters tapped" land face | existing shockland-style reader | Hydroelectric Specimen // Hydroelectric Laboratory | - | `test_mdfc_land_play.py` |
 
+## S18: tap-all and counter manipulation
+
+Suppression Ray and Enchanted River's Grasp were silent, Predator Ooze's
+attack trigger was silent, Cryptic Command and Treasure Map failed closed with
+a notice. Every clause of all five (and the `A // B` names) now sweeps
+`handled`. CR numbers verified with `mise run rules:find`: 701.26a, 115.10a,
+608.2b, 608.2c, 608.2d, 608.2h, 107.14, 118.3, 122.1, 122.1a, 122.1d, 303.4b,
+301.5a, 115.1b, 113.7a, 700.2a, 700.7, 701.27a, 111.4, 111.10a, 508.1, 603.2,
+702.12b, 704.5f.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "Tap all `<qualifier>` `<whose>`" - target player/opponent, your opponents, you (don't) control, or everyone (CR 701.26a, 115.10a); an already tapped permanent is left alone and is not one "tapped this way" | `_tap_all_group_runner` / `_parse_tap_all_group_clause` (qualifier `_parse_mass_type_qualifier`, controller words `_goad_group_member`) | Suppression Ray's first sentence, Cryptic Command's third mode (every mode pair tested) | Dawnglare Invoker (activated, target player), Subjugator Angel (enters trigger, your opponents) | `test_tap_all_target_player.py` |
+| "You may pay any amount of {E}. If you do, choose up to that many `<noun>` tapped this way. Put a `<kind>` counter on each of them." (CR 107.14, 118.3, 608.2d, 122.1d) | `_parse_tap_all_pay_energy_counter_chosen_whole_text` - the choice is a `CHOOSE_CARDS` with `exact=False`, capped at the tapped set | Suppression Ray | none exists (Scryfall `o:"tapped this way" o:"stun counter"` returns Suppression Ray only); its tap-all half is proven on Dawnglare Invoker | `test_energy_scaled_stun.py` |
+| "tap enchanted/equipped creature" (CR 303.4b, 301.5a) and "it" after it as the attached object; "remove all [`<kind>`] counters from it/that creature" as an object-anaphor rider (CR 122.1) | `_parse_tap_attached_clause`, `_referent_reader`'s attached shape (only when no other shape applies), `_RIDER_REMOVE_ALL_COUNTERS_RE` | Enchanted River's Grasp | Honest Work (same sentence), Charmed Sleep (tap alone), Blitz Leech (rider after a targeted -2/-2, was a notice) | `test_remove_all_counters.py` |
+| An Aura's pending trigger still finds what it enchanted after the Aura left (CR 113.7a, 608.2h) | `CardState.last_known_attached_to`, stamped as the permanent leaves the battlefield (schema 58 -> 59) | Enchanted River's Grasp | - | `test_remove_all_counters.py` |
+| "Put a `<kind>` counter on this `<noun>`. Then if there are N or more `<kind>` counters on it, `<remove those counters / remove all of them>`, `<transform it / this noun>`, [`untap it`,] [any clause]" (CR 608.2c, 701.27a), threshold read off last known counters if the source left (CR 608.2h, Treasure Map's ruling) | `_parse_counter_threshold_whole_text` | Treasure Map (and its three Treasures, CR 111.10a) | Ludevic's Test Subject (five hatchling counters, "remove all of them", no token) | `test_counter_threshold_transform.py` |
+| "put N `<kind>` counter(s) on it" as a trigger's whole instruction: "it" is the trigger event's subject (CR 603.2, 508.1) | `_parse_counter_on_it_trigger_subject_clause` | Predator Ooze (indestructible kept, CR 702.12b) | Gleam of Battle ("a creature you control attacks") | `test_attack_trigger_counter_on_it.py` |
+
+The sweep's activated-ability classifier now passes `legendary=` as `Game`
+does: it read Treasure Map's "create three Treasure tokens" as a legend's
+short self-name and scored a working ability a notice.

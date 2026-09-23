@@ -2612,8 +2612,15 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 clauses.append(ClauseOutcome(HANDLED, ability.text, "activated"))
                 continue
             x_candidates = _x_candidates(ability.cost)
+            # `legendary=` as `Game` passes it at a real activation: only a
+            # legend's first-word short name is a self-reference, so a
+            # nonlegendary Treasure Map's "create three Treasure tokens" must
+            # not be read as "create three this permanent tokens".
+            legendary = Supertype.LEGENDARY in printing.supertypes
             activated_effects = [
-                activated_effect_for(printing.name, index, ability.effect, x_value=x_value)
+                activated_effect_for(
+                    printing.name, index, ability.effect, x_value=x_value, legendary=legendary
+                )
                 for x_value in x_candidates
             ]
             # The same substituted text `create_continuous_effect_of_ability`
@@ -2635,7 +2642,9 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 and category == HANDLED
                 and not _is_sentinel_effect(activated_effects[0])
                 and _effect_matched_inside_quotes(
-                    lambda text, i=index: activated_effect_for(printing.name, i, text),
+                    lambda text, i=index, legend=legendary: activated_effect_for(
+                        printing.name, i, text, legendary=legend
+                    ),
                     ability.effect,
                 )
             ):

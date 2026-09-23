@@ -11427,6 +11427,48 @@ def _parse_counter_on_trigger_subject_clause(clause: str) -> TargetedClause | No
     return effect
 
 
+#: "put `<n>` `<kind>` counter(s) on it." as a triggered ability's whole
+#: instruction - Predator Ooze's "Whenever this creature attacks, put a +1/+1
+#: counter on it.", Gleam of Battle's "Whenever a creature you control
+#: attacks, put a +1/+1 counter on it." Nothing earlier in the effect text
+#: for "it" to point back to, so it is the object the trigger's own condition
+#: named (`GameEvent.subject_id`: the attacker, CR 508.1), the referent
+#: `_parse_untap_trigger_subject_clause` reads for "untap it". Tried only
+#: after every clause pair has declined the text (`_parse_mixed_clauses`
+#: pairs first), so an "it" with an antecedent in its own sentence list
+#: never reaches here.
+_COUNTER_ON_IT_TRIGGER_SUBJECT_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counter_on_it_trigger_subject_clause(clause: str) -> TargetedClause | None:
+    """`_COUNTER_ON_IT_TRIGGER_SUBJECT_RE`'s shape - a subject that has left
+    the battlefield (CR 400.7) gets nothing and nothing else is picked."""
+    match = _COUNTER_ON_IT_TRIGGER_SUBJECT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        event = stack_object.event
+        if event is None or event.subject_id is None:
+            return
+        subject = game.find_by_id(event.subject_id)
+        if not isinstance(subject, CardState) or subject.zone is not Zone.BATTLEFIELD:
+            return
+        if amount > 0:
+            game.add_counters(subject, kind, amount)
+
+    return effect
+
+
 #: "If that land is a `<basic land type>`, add `<mana>`." - Koth, the
 #: Geomancer's own rider on its own landfall trigger, CR 400.7's "that land"
 #: pointing at whichever permanent this ability's own `TriggerEvent.subject_
@@ -20657,6 +20699,380 @@ def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
     return effect
 
 
+#: "Tap all `<qualifier>` `<whose>`." - Suppression Ray's own first sentence
+#: and Dawnglare Invoker's whole activated ability ("tap all creatures target
+#: player controls"), Cryptic Command's third mode and Subjugator Angel's
+#: enters trigger ("tap all creatures your opponents control"). `<qualifier>`
+#: is `_parse_mass_type_qualifier`'s grammar, the same one the untap-all and
+#: mass-destroy readers use; `<whose>` names whose permanents are in the
+#: group, the same controller vocabulary `_goad_group_member` already reads
+#: for a mass goad. CR 115.10a: only the *player* is ever a target here - the
+#: permanents are affected, never targeted.
+_TAP_ALL_GROUP_RE = re.compile(
+    r"^tap all (?P<qualifier>.+?)"
+    r"(?: (?P<whose>target (?:player|opponent) controls|your opponents control"
+    r"|you don'?t control|an opponent controls|you control))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _tap_all_group_runner(
+    clause: str,
+) -> Callable[["Game", "StackObject"], list[CardState]] | None:
+    """`_TAP_ALL_GROUP_RE`'s shape as a runner that returns the permanents it
+    actually tapped - CR 701.26a: "Only untapped permanents can be tapped", so
+    a permanent already tapped is left alone and is *not* one "tapped this
+    way" (Suppression Ray's own ruling, 2024-06-07), which is what a later
+    sentence reading back the tapped set needs. `None` for any clause this
+    cannot read, including a target phrase `machines/targeting.py` does not
+    understand.
+
+    The group is read once, as the instruction is applied (CR 608.2h), so a
+    permanent that arrives afterwards is never tapped by it. A target player
+    who is no longer legal (CR 608.2b) leaves the whole group untouched.
+    """
+    match = _TAP_ALL_GROUP_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    type_matches = _parse_mass_type_qualifier(match.group("qualifier"))
+    if type_matches is None:
+        return None
+    whose = re.sub(r"don'?t", "don't", (match.group("whose") or "").lower())
+    if whose.startswith("target") and not _targets_understood(
+        whose.removesuffix(" controls"), allow_player_targets=True
+    ):
+        return None
+
+    def run(game: "Game", stack_object: "StackObject") -> list[CardState]:
+        controller = game.controller_of(stack_object).username
+        targeted: str | None = None
+        if whose.startswith("target"):
+            players = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+            if not players:
+                return []
+            targeted = players[0].username
+        group = [
+            permanent
+            for permanent in list(game.battlefield)
+            if permanent.zone is Zone.BATTLEFIELD
+            and type_matches(game.characteristics_of(permanent))
+            and _goad_group_member(game, controller, whose, targeted, permanent)
+        ]
+        return [permanent for permanent in group if permanent.tap_if_untapped()]
+
+    return run
+
+
+#: "tap enchanted creature" / "tap equipped creature" - Charmed Sleep's
+#: whole enters trigger, and the first half of Enchanted River's Grasp's and
+#: Honest Work's "tap enchanted creature and remove all counters from it".
+#: CR 303.4b/301.5a: the object the Aura or Equipment is attached to, never a
+#: target of its own (CR 115.1b: an Aura permanent targets nothing).
+_TAP_ATTACHED_RE = re.compile(
+    r"^tap (?:enchanted|equipped) (?:creature|permanent|artifact|land)\.?$", re.IGNORECASE
+)
+#: The same attached-object phrase anywhere in an antecedent clause - what
+#: `_referent_reader` reads "it" as when no other referent shape applies.
+_ATTACHED_SUBJECT_RE = re.compile(
+    r"\b(?:enchanted|equipped) (?:creature|permanent|artifact|land)\b", re.IGNORECASE
+)
+
+
+def _attached_object(game: "Game", stack_object: "StackObject") -> CardState | None:
+    """The permanent the resolving object's source is attached to (CR
+    303.4b, CR 301.5a), or `None` once it has left the battlefield (CR
+    608.2h). The source is read through its last known information when it
+    has itself left (CR 113.7a) - the attachment it last had still names the
+    enchanted object."""
+    source: CardState | None = (
+        stack_object.source_or_last_known(game)
+        if isinstance(stack_object, AbilityOnStack)
+        else stack_object
+    )
+    if source is None:
+        return None
+    attached_id = (
+        source.attached_to if source.zone is Zone.BATTLEFIELD else source.last_known_attached_to
+    )
+    if attached_id is None:
+        return None
+    attached = game.find_by_id(attached_id)
+    if not isinstance(attached, CardState) or attached.zone is not Zone.BATTLEFIELD:
+        return None
+    return attached
+
+
+def _parse_tap_attached_clause(clause: str) -> TargetedClause | None:
+    """`_TAP_ATTACHED_RE`'s shape - CR 701.26a's tap, silent on an
+    already-tapped permanent (`CardState.tap_if_untapped`)."""
+    if _TAP_ATTACHED_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        attached = _attached_object(game, stack_object)
+        if attached is not None:
+            attached.tap_if_untapped()
+
+    return effect
+
+
+def _parse_tap_all_group_clause(clause: str) -> TargetedClause | None:
+    """`_TAP_ALL_GROUP_RE`'s shape as an ordinary clause - see
+    `_tap_all_group_runner`."""
+    run = _tap_all_group_runner(clause)
+    if run is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        run(game, stack_object)
+
+    return effect
+
+
+#: "Tap all `<group>`. You may pay any amount of {E}. If you do, choose up to
+#: that many `<noun>` tapped this way. Put a `<kind>` counter on each of
+#: them." - Suppression Ray. Four sentences carrying anaphora across all of
+#: them ("that many" back to the energy paid, "tapped this way" back to the
+#: first sentence's own tapped set, "each of them" back to the choice), so
+#: read whole. The first sentence is `_tap_all_group_runner`'s whole grammar,
+#: the chosen noun any CR 205.2a type `_parse_mass_type_qualifier` reads, the
+#: counter any CR 122.1 kind. No second printing of the energy half exists
+#: (Scryfall `o:"tapped this way" o:"stun counter"`, 2026-09-23: Suppression
+#: Ray alone); each piece is the shared grammar, not this card's sentence.
+_TAP_ALL_PAY_ENERGY_COUNTER_CHOSEN_RE = re.compile(
+    r"^(?P<tap>tap all [^.]+)\.\s*"
+    r"you may pay any amount of \{e\}\.\s*"
+    r"if you do, choose up to that many (?P<noun>[^.]+?) tapped this way\.\s*"
+    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each of them\."
+    r"(?:\s*\([^()]*\))?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_tap_all_pay_energy_counter_chosen_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TAP_ALL_PAY_ENERGY_COUNTER_CHOSEN_RE`'s shape.
+
+    CR 608.2c: in the order written - tap first, then CR 608.2d's
+    variable-amount energy question (CR 107.14: paying {E} removes energy
+    counters; `Game.pay_any_amount_of_energy` never pays more than the player
+    has, CR 118.3, and declining is paying 0), then the choice of up to that
+    many of the permanents the first sentence actually tapped and still on the
+    battlefield, then the counters. Paying 0 is "if you don't": no choice is
+    asked and no counter placed. Paying more than there are tapped permanents
+    is legal and simply caps the choice.
+    """
+    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    match = _TAP_ALL_PAY_ENERGY_COUNTER_CHOSEN_RE.fullmatch(whole)
+    if match is None:
+        return None
+    tap_all = _tap_all_group_runner(match.group("tap"))
+    if tap_all is None:
+        return None
+    noun_matches = _parse_mass_type_qualifier(match.group("noun"))
+    if noun_matches is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        tapped = tap_all(game, stack_object)
+        player = game.controller_of(stack_object)
+        source = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        paid = game.pay_any_amount_of_energy(
+            player, source=source, source_id=source_id_of(stack_object)
+        )
+        if paid <= 0:
+            return
+        candidates = [
+            permanent
+            for permanent in tapped
+            if permanent.zone is Zone.BATTLEFIELD
+            and noun_matches(game.characteristics_of(permanent))
+        ]
+        if not candidates:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose up to {min(paid, len(candidates))} permanent(s) tapped this way",
+                source=source,
+                amount=min(paid, len(candidates)),
+                cards=tuple(permanent.id for permanent in candidates),
+                source_id=source_id_of(stack_object),
+                exact=False,
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {permanent.id: permanent for permanent in candidates}
+        for chosen_id in chosen_ids:
+            game.add_counters(by_id[chosen_id], kind, amount)
+
+    return effect
+
+
+#: "Put `<n>` `<kind>` counter(s) on this `<noun>`. Then if there are N or
+#: more `<kind>` counters on it, `<consequences>`." - Treasure Map's "remove
+#: those counters, transform this artifact, and create three Treasure
+#: tokens", Ludevic's Test Subject's "remove all of them and transform it",
+#: Hostile Hostel's "remove those counters, transform it, then untap it",
+#: Primal Amulet's "you may remove those counters and transform it". Any
+#: sentences ahead of the counter (Treasure Map's "Scry 1.") are read by the
+#: ordinary clause reader first (CR 608.2c, in the order written). "It" is the
+#: permanent the counter was just put on - the source itself (CR 700.7).
+_COUNTER_THRESHOLD_RE = re.compile(
+    r"^(?P<pre>(?:[^.]+\.\s+)*?)"
+    rf"(?P<put>put (?P<n>{COUNT}) (?P<kind>[a-z]+) counters? on this (?P<noun>[a-z]+))\.\s*"
+    rf"then if there are (?P<threshold>{COUNT}) or more (?P=kind) counters on "
+    r"(?:it|this (?P=noun)), (?P<rest>[^.]+)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+#: The consequence list's own separators: a comma (optionally ", and" /
+#: ", then"), a bare " and ", a bare " then ".
+_COUNTER_THRESHOLD_ITEM_SPLIT_RE = re.compile(
+    r",\s*(?:and\s+|then\s+)?|\s+and\s+|\s+then\s+", re.IGNORECASE
+)
+_COUNTER_THRESHOLD_REMOVE_RE = re.compile(
+    r"^remove (?:those(?: [a-z]+)? counters|all of them|them|all [a-z]+ counters from it)$",
+    re.IGNORECASE,
+)
+_COUNTER_THRESHOLD_SELF_RE = re.compile(
+    r"^(?P<verb>transform|untap) (?:it|this (?:creature|permanent|artifact|enchantment|land))$",
+    re.IGNORECASE,
+)
+
+#: What one consequence of `_COUNTER_THRESHOLD_RE` does, given the source
+#: still on the battlefield (`None` once it has left).
+ThresholdConsequence = Callable[["Game", "StackObject", CardState | None], None]
+
+
+def _counter_threshold_consequence(
+    item: str, kind: str, *, for_spell: bool
+) -> ThresholdConsequence | None:
+    """One item of `_COUNTER_THRESHOLD_RE`'s consequence list, or `None` when
+    no reader here knows it (which refuses the whole shape)."""
+    if _COUNTER_THRESHOLD_REMOVE_RE.fullmatch(item):
+
+        def remove(game: "Game", stack_object: "StackObject", live: CardState | None) -> None:
+            if live is not None and live.counter_count(kind):
+                live.remove_counters(kind, live.counter_count(kind))
+
+        return remove
+    if self_match := _COUNTER_THRESHOLD_SELF_RE.fullmatch(item):
+        if self_match.group("verb").lower() == "transform":
+
+            def transform(
+                game: "Game", stack_object: "StackObject", live: CardState | None
+            ) -> None:
+                if live is not None:
+                    transform_permanent(game, live)
+
+            return transform
+
+        def untap(game: "Game", stack_object: "StackObject", live: CardState | None) -> None:
+            if live is not None:
+                live.untap()
+
+        return untap
+    clause = _parse_mixed_clause(item, for_spell=for_spell)
+    if clause is None:
+        return None
+
+    def other(game: "Game", stack_object: "StackObject", live: CardState | None) -> None:
+        clause(game, stack_object)
+
+    return other
+
+
+def _parse_counter_threshold_whole_text(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_COUNTER_THRESHOLD_RE`'s shape.
+
+    The threshold is checked once, after the counter is put on (CR 608.2c),
+    against the source as it is now or, if it has left the battlefield, its
+    last known information (CR 608.2h) - Treasure Map's own ruling
+    (2017-09-29): a Map that left with three landmark counters still makes
+    three Treasures, with nothing left to remove counters from or transform.
+    A counter put on some other way never transforms it by itself: only this
+    resolution checks. "Remove those counters" removes every counter of that
+    kind, not only the threshold's worth (four found, four removed). A
+    leading "you may" is one CR 608.2d choice over the whole list.
+    """
+    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    match = _COUNTER_THRESHOLD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    pre_text = match.group("pre").strip()
+    pre = _parse_mixed_clauses(pre_text, for_spell=for_spell) if pre_text else []
+    if pre is None:
+        return None
+    put = _parse_mixed_clause(match.group("put"), for_spell=for_spell)
+    threshold = parse_count(match.group("threshold"))
+    if put is None or threshold is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    rest = match.group("rest").strip()
+    optional = rest.lower().startswith("you may ")
+    if optional:
+        rest = rest[len("you may ") :]
+    items: list[ThresholdConsequence] = []
+    for raw in _COUNTER_THRESHOLD_ITEM_SPLIT_RE.split(rest):
+        if not raw.strip():
+            continue
+        consequence = _counter_threshold_consequence(raw.strip(), kind, for_spell=for_spell)
+        if consequence is None:
+            return None
+        items.append(consequence)
+    if not items:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for clause in pre:
+            clause(game, stack_object)
+        put(game, stack_object)
+        known: CardState | None = (
+            stack_object.source_or_last_known(game)
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object
+        )
+        if known is None:
+            return
+        live = known if known.zone is Zone.BATTLEFIELD else None
+        # CR 608.2h: a source that left the battlefield is counted as it last
+        # existed there - `last_known_counters`, snapshotted on the way out.
+        found = known.counters[kind] if live is not None else known.last_known_counters[kind]
+        if found < threshold:
+            return
+        if optional:
+            source = (
+                stack_object.source_name
+                if isinstance(stack_object, AbilityOnStack)
+                else stack_object.name
+            )
+            if not game.may(
+                game.controller_of(stack_object),
+                rest,
+                source=source,
+                source_id=source_id_of(stack_object),
+            ):
+                return
+        for item in items:
+            item(game, stack_object, live)
+
+    return effect
+
+
 #: "<Source> deals N damage to each <type>[ and each <type>]*." -
 #: Brotherhood's End's own first mode: "Brotherhood's End deals 3 damage to
 #: each creature and each planeswalker." Unlike `_DAMAGE_EACH_OPPONENT_RE`'s
@@ -23023,6 +23439,16 @@ def _referent_reader(first: str) -> ReferentReader | None:
         bool(_MASS_CREATURE_SUBJECT_RE.search(lowered)),
         bool(_SELF_SUBJECT_RE.search(lowered)),
     ]
+    if sum(matches) == 0 and _ATTACHED_SUBJECT_RE.search(lowered):
+        # "tap enchanted creature and remove all counters from it" - the
+        # object the source is attached to (CR 303.4b), read only when no
+        # other shape above applies, so no existing antecedent changes.
+
+        def from_attached(game: "Game", stack_object: "StackObject") -> list[CardState]:
+            attached = _attached_object(game, stack_object)
+            return [] if attached is None else [attached]
+
+        return from_attached
     if sum(matches) != 1:
         return None
     if matches[0]:
@@ -23121,6 +23547,17 @@ _RIDER_UNTAP_RE = re.compile(rf"^untap {_OBJECT_ANAPHOR}$", re.IGNORECASE)
 #: permanent, turn it sideways from an upright position. Only untapped
 #: permanents can be tapped."
 _RIDER_TAP_RE = re.compile(rf"^tap {_OBJECT_ANAPHOR}$", re.IGNORECASE)
+
+#: "Remove all counters from it." / "... from that creature." - Enchanted
+#: River's Grasp's and Honest Work's second half, Blitz Leech's own second
+#: sentence. Every kind at once (CR 122.1: counters of every name are
+#: markers on the object), or one named kind ("remove all +1/+1 counters
+#: from it") - the same kind grammar `_REMOVE_ALL_COUNTERS_FROM_TARGET_RE`
+#: reads for its targeted twin.
+_RIDER_REMOVE_ALL_COUNTERS_RE = re.compile(
+    rf"^remove all (?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters from {_OBJECT_ANAPHOR}$",
+    re.IGNORECASE,
+)
 
 #: "If it would die this turn, exile it instead." - Essence Burn's own
 #: rider (CR 614.1a); Combustion Technique's identical wording is the real,
@@ -23353,6 +23790,22 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
                     referent.tap()
 
         return tap_rider
+
+    if match := _RIDER_REMOVE_ALL_COUNTERS_RE.fullmatch(rider):
+        only_kind = _counter_kind(match.group("kind")) if match.group("kind") else None
+
+        def remove_all_counters_rider(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            for referent in referents:
+                if referent.zone is not Zone.BATTLEFIELD:
+                    continue
+                for each in [only_kind] if only_kind is not None else list(referent.counters):
+                    present = referent.counter_count(each)
+                    if present:
+                        referent.remove_counters(each, present)
+
+        return remove_all_counters_rider
 
     if _RIDER_DIE_TO_EXILE_THIS_TURN_RE.fullmatch(rider):
 
@@ -38448,6 +38901,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     untap_all_you_control = _parse_untap_all_you_control_clause(clause)
     if untap_all_you_control is not None:
         return untap_all_you_control
+    tap_all_group = _parse_tap_all_group_clause(clause)
+    if tap_all_group is not None:
+        return tap_all_group
+    tap_attached = _parse_tap_attached_clause(clause)
+    if tap_attached is not None:
+        return tap_attached
     target_gains_ability_until_cast = _parse_target_gains_ability_until_cast_from_exile_clause(
         clause
     )
@@ -38486,6 +38945,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counter_on_trigger_subject = _parse_counter_on_trigger_subject_clause(clause)
         if counter_on_trigger_subject is not None:
             return counter_on_trigger_subject
+        counter_on_it_trigger_subject = _parse_counter_on_it_trigger_subject_clause(clause)
+        if counter_on_it_trigger_subject is not None:
+            return counter_on_it_trigger_subject
         that_player = _parse_that_player_clause(clause, for_spell=for_spell)
         if that_player is not None:
             return that_player
@@ -38966,6 +39428,18 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             mill_then_take_from_milled_run(game, player, source, source_id_of(stack_object))
 
         return [mill_then_take_from_milled_whole]
+    counter_threshold = _parse_counter_threshold_whole_text(text, for_spell=for_spell)
+    if counter_threshold is not None:
+        # Read whole: "on it" and "those counters" point back at the counter
+        # sentence, and the consequence list's commas would split it apart.
+        return [counter_threshold]
+    tap_all_pay_energy_counter_chosen = _parse_tap_all_pay_energy_counter_chosen_whole_text(
+        text, for_spell=for_spell
+    )
+    if tap_all_pay_energy_counter_chosen is not None:
+        # Read whole: four sentences carrying anaphora across all of them
+        # ("that many", "tapped this way", "each of them").
+        return [tap_all_pay_energy_counter_chosen]
     reveal_two_outside_opponent_chooses = _parse_reveal_two_outside_opponent_chooses_clause(
         text, for_spell=for_spell
     )

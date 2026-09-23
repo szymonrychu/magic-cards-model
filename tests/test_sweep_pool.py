@@ -28,8 +28,10 @@ from magic_cards_model.machines.abilities import TriggeredAbility, parse_abiliti
 from magic_cards_model.machines.effects import (
     _DAMAGE_EACH_CREATURE_RE,
     _DAMAGE_EACH_OPPONENT_RE,
+    parse_mode_effect,
     trigger_effect_for,
 )
+from magic_cards_model.machines.modes import modal_profile
 from magic_cards_model.machines.triggers import (
     _STATE_COUNTER_TRIGGER_RE,
     _unread_trigger_events,
@@ -855,18 +857,26 @@ def test_modal_category_is_worst_mode_not_best_mode():
     `classify_card`'s own docstring already rejects for an ordinary card
     (Territorial Kavu, Obsidian Charmaw, Engineered Explosives).
 
-    Cryptic Command (off-set, not Reality Fracture and not the reported
-    card): four modes, the third ("Return target permanent to its owner's
-    hand" is fine, but the counter-then-draw combination and the tap-all
-    mode are what actually leaves one mode dark) reads False, proving the
-    worst-mode rule on its own. Vraska's Final Mercy was the reported shape
-    at the time this test was written - mode 1 (destroy) read, mode 2 (lose
-    life, Empower Jace 6) did not, since Empower Jace (CR 701.71) belonged to
-    a different wave - and now that Empower Jace has landed, both of its
-    modes read: it is fully `HANDLED`, which this test keeps asserting so a
-    future regression in either mode is still caught.
+    The half-read example is chosen from the pool rather than named: this
+    campaign's goal is every legal modal card fully read, so any one named
+    card stops demonstrating the rule the moment its last mode lands - which
+    is what happened to Cryptic Command (S18 read its tap-all mode). The test
+    only fails outright if no pool card is left with one mode read and one
+    not, the one state in which the rule can no longer be shown at all.
+    Vraska's Final Mercy and Cryptic Command, both fully read now, keep
+    asserting `HANDLED` so a regression in any of their modes is caught.
     """
-    assert _modal_category(card("Cryptic Command")) == NOTICE
+    half_read = [
+        printing
+        for printing in pool().values()
+        if (modal := modal_profile(printing)) is not None
+        and modal.understood
+        and len({parse_mode_effect(mode, 0) is None for mode in modal.modes}) == 2
+    ]
+    assert half_read, "no pool card has one mode read and one unread - the rule is unshowable"
+    for printing in half_read:
+        assert _modal_category(printing) == NOTICE, printing.name
+    assert _modal_category(card("Cryptic Command")) == HANDLED
     assert _modal_category(card("Vraska's Final Mercy")) == HANDLED
 
 

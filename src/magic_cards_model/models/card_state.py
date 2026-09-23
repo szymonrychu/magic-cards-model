@@ -1121,6 +1121,18 @@ class CardState(EngineModel):
     exactly that question, and there is nothing else left to ask.
     """
 
+    last_known_attached_to: UUID | None = None
+    """The card this object was attached to as it last left the battlefield
+    (CR 608.2h's last known information), `None` if it was attached to no
+    card or its last move did not start on the battlefield.
+
+    CR 113.7a has an Aura's enters trigger exist independently of the Aura,
+    so answering Enchanted River's Grasp's "tap enchanted creature and remove
+    all counters from it" by removing the Grasp itself still leaves the
+    trigger to find the creature it enchanted - which it can only read here,
+    since leaving the battlefield unattaches it (CR 400.7).
+    """
+
     choice: Choice | None = None
     """An "as [this] enters, choose ..." answer, made before this object
     entered the battlefield (CR 614.1c, CR 614.12a).
@@ -2482,6 +2494,7 @@ class CardState(EngineModel):
         # away. Persist is the card in the pool that asks (CR 702.79a).
         self.last_known_counters = self.counters
         self.counters = Counters()
+        self.last_known_attached_to = self.attached_to if origin is Zone.BATTLEFIELD else None
         # A permanent that leaves the battlefield is no longer attached to
         # anything (CR 400.7 - it is a new object), and the deathtouch damage
         # CR 704.5h remembers went with the object it was marked on.

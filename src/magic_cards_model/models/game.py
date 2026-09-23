@@ -2975,7 +2975,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 58
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 59
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3775,6 +3775,11 @@ class Game(EngineModel):
     by "you draw a card" is now the same modified event (CR 614.6) rather than
     a second draw - a version-57 board holding a pending Plagiarize has
     nowhere to decode it to.
+
+    Bumped 58 -> 59 (S18, tap-all and counter manipulation): `CardState`
+    gained `last_known_attached_to`, the attachment an Aura or Equipment had
+    as it left the battlefield (CR 608.2h), so an Aura's pending enters
+    trigger can still find what it enchanted - a field added to `CardState`.
     """
 
     @model_validator(mode="before")

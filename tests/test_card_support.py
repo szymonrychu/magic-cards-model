@@ -49,6 +49,16 @@ def test_a_card_that_works_is_handled():
     assert clause.reason
 
 
+def test_a_nonlegendary_activated_ability_is_judged_as_the_engine_reads_it():
+    """Treasure Map is not legendary, so the engine never reads "Treasure" in
+    its "create three Treasure tokens" as a short self-name
+    (`self_normalized_effect_text`'s legendary-only first-word form) - the
+    sweep must ask `activated_effect_for` the same way `Game` does, or it
+    judges a working ability a notice."""
+    support = card_support(card("Treasure Map"))
+    assert support.status == "handled"
+
+
 def test_a_card_with_a_dead_clause_is_silent_and_names_the_clause():
     """Gavony Dawnguard is the sweep's own control for a still-open gap
     (`tests/test_sweep_pool.py`): its day/night trigger (CR 731) has no
