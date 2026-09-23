@@ -2327,7 +2327,9 @@ def condition_matches(
             return False
         defended = _ATTACKS_YOU_RE.search(lowered)
         if defended is not None:
-            return _attacks_you_holds(game, lowered[: defended.start()], defended, controller, event)
+            return _attacks_you_holds(
+                game, lowered[: defended.start()], defended, controller, event
+            )
         if mine:
             return event.subject_id == source.id
         return _controller_clause_holds(
