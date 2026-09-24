@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["graveyard_arrivals_this_turn"],
+    "fields_changed": ["counters_put_this_turn", "graveyard_arrivals_this_turn"],
     "notices": {},
     "objects": {
       "Fallaji Archaeologist@alice#1": {

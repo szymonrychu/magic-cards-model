@@ -711,11 +711,14 @@ class CreatureControlledByWithId(SelectorBase):
     kind: Literal["creature_controlled_by_with_id"] = "creature_controlled_by_with_id"
     username: str | None = None
     card_id: UUID
+    stamp: UUID | None = None
+    """CR 400.7's incarnation the placement was on; `None` accepts any."""
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         return (
             chars.is_creature
             and chars.card_id == self.card_id
+            and (self.stamp is None or chars.zone_change_stamp == self.stamp)
             and chars.controller == self.username
         )
 
@@ -11555,11 +11558,12 @@ class LayerContext(EngineModel):
     #: dealt combat damage yet" is the reader.
     combat_damage_dealt_this_turn: frozenset[UUID] = frozenset()
 
-    #: `Game.counters_put_this_turn` as `(putter, permanent id, kind)` - CR
-    #: 122.6's per-turn placement history, read by "as long as you've put one
-    #: or more +1/+1 counters on `<this>` this turn" and "each creature you
-    #: control that you've put ... on this turn" (`machines/counter_effects`).
-    counters_put_this_turn: tuple[tuple[str, UUID, str], ...] = ()
+    #: `Game.counters_put_this_turn` as `(putter, permanent id, kind, zone
+    #: change stamp)` - CR 122.6's per-turn placement history, read by "as long
+    #: as you've put one or more +1/+1 counters on `<this>` this turn" and
+    #: "each creature you control that you've put ... on this turn"
+    #: (`machines/counter_effects`). The stamp is CR 400.7's incarnation.
+    counters_put_this_turn: tuple[tuple[str, UUID, str, UUID | None], ...] = ()
 
     #: Each player's Ring-bearer designation (CR 701.54a/b), as `(id,
     #: zone_change_stamp)` keyed by username - `Game.ring_bearer_designations`.

@@ -46,7 +46,7 @@
         "source": "Treasure Map"
       }
     ],
-    "fields_changed": ["reveals", "turn_facts"],
+    "fields_changed": ["counters_put_this_turn", "reveals", "turn_facts"],
     "notices": {},
     "objects": {
       "Treasure Map@alice#1": {

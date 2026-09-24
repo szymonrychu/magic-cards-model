@@ -38,7 +38,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["counters_put_this_turn"],
     "notices": {},
     "objects": {
       "Abhorrent Oculus@alice#1": {

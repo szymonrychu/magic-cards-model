@@ -7,7 +7,7 @@ card:
   description>`"** (CR 122.6) - Ant-Man, Colony Commander's "a creature",
   Knight of Wundagore's "another creature", Invisible Woman, Sue Storm's "one
   or more other Heroes you control", Stocking the Pantry's and Terrasymbiosis'
-  "a creature you control". `unread_trigger_events`/`condition_matches` are
+  "a creature you control". `counter_trigger_events`/`counter_condition_matches` are
   the two halves `machines/triggers.py`'s unread-condition fallback asks.
 - **"Whenever one or more `<description>` you control deal damage to a
   player"** (CR 120.1, CR 603.2c) - The Thing, Ben Grimm's own batched damage
@@ -61,8 +61,8 @@ _DESCRIPTION_RE = re.compile(
 
 
 def singular_subtype(word: str) -> str | None:
-    """`word` as a subtype in CR 205.3's vocabulary (its own spelling), or
-    `None`. English plurals the subtype lists print: "s" (Goblins), "es"
+    """`word` as a subtype in CR 205.3's vocabulary (lower-cased, as the
+    vocabulary stores it), or `None`. English plurals the subtype lists print: "s" (Goblins), "es"
     (Heroes), "ies" (Allies), "ves" (Elves)."""
     vocabulary = {entry.lower(): entry for entry in subtype_vocabulary()}
     lowered = word.lower()
@@ -191,7 +191,7 @@ def _deal_damage(condition: str) -> tuple[Description, bool] | None:
     return description, match.group("recipient").lower() == "an opponent"
 
 
-def unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTriggerEvent]:
+def counter_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTriggerEvent]:
     """The events one of this module's conditions watches, or an empty set.
 
     Asked by `machines/triggers._unread_trigger_events` after its own shapes,
@@ -204,7 +204,7 @@ def unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrigg
     return frozenset()
 
 
-def condition_matches(
+def counter_condition_matches(
     game: Game,
     ability: TriggeredAbility,
     source: CardState,
@@ -336,13 +336,17 @@ _CREATURES_WITH_COUNTERS_GRANT_RE = re.compile(
 )
 
 
-def put_this_turn(context: object, putter: str | None, card_id: object, kind: str) -> bool:
-    """Whether `putter` has put one or more `kind` counters on `card_id` this
-    turn, off `LayerContext.counters_put_this_turn`."""
+def put_this_turn(context: object, putter: str | None, permanent: CardState, kind: str) -> bool:
+    """Whether `putter` has put one or more `kind` counters on this very
+    object (CR 400.7: this incarnation of it) this turn, off
+    `LayerContext.counters_put_this_turn`."""
     records = getattr(context, "counters_put_this_turn", ())
     return any(
-        who == putter and on == card_id and placed.lower() == kind.lower()
-        for who, on, placed in records
+        who == putter
+        and on == permanent.id
+        and stamp in (None, permanent.zone_change_stamp)
+        and placed.lower() == kind.lower()
+        for who, on, placed, stamp in records
     )
 
 
@@ -359,7 +363,7 @@ def parse_static_layer_sentence(sentence: str):  # noqa: ANN201 - EffectBuilder
             return None
         kind = match.group("kind").lower()
         return layers._context_gated_self_static_builder(
-            lambda source, context: put_this_turn(context, source.controller, source.id, kind),
+            lambda source, context: put_this_turn(context, source.controller, source, kind),
             keywords,
             line=sentence,
             description=f"as long as you've put a {kind} counter on it this turn",
@@ -398,12 +402,12 @@ def _each_put_on_this_turn_builder(kind: str, keywords: list[str], *, other: boo
 
     def builder(source, timestamp, targets, context):  # noqa: ANN001, ANN202
         marked = [
-            card_id
-            for who, card_id, placed in getattr(context, "counters_put_this_turn", ())
+            (card_id, stamp)
+            for who, card_id, placed, stamp in getattr(context, "counters_put_this_turn", ())
             if who == source.controller and placed.lower() == kind
         ]
         effects = []
-        for card_id in dict.fromkeys(marked):
+        for card_id, stamp in dict.fromkeys(marked):
             if other and card_id == source.id:
                 continue
             for keyword in keywords:
@@ -418,7 +422,7 @@ def _each_put_on_this_turn_builder(kind: str, keywords: list[str], *, other: boo
                         source_id=source.id,
                         source_ability=layers._source_line_for(source, line),
                         selector=layers.CreatureControlledByWithId(
-                            username=source.controller, card_id=card_id
+                            username=source.controller, card_id=card_id, stamp=stamp
                         ),
                         modification=layers.grant_ability(keyword),
                     )

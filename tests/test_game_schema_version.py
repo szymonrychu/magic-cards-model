@@ -1033,3 +1033,25 @@ def test_a_snapshot_written_before_treasure_mana_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_TREASURE_MANA}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before `Game.counters_put_this_turn` (C02-T4).
+_SCHEMA_VERSION_BEFORE_COUNTERS_PUT_HISTORY = 73
+
+
+def test_the_counters_put_history_bump_moved_the_version_past_seventy_three() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_COUNTERS_PUT_HISTORY
+
+
+def test_a_snapshot_written_before_counters_put_history_is_refused() -> None:
+    """A version-73 dump is refused rather than decoded as current: it
+    carries no record of the counters put this turn, so Kid Loki's hexproof
+    and Beast's flying would read as though none had been put."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_COUNTERS_PUT_HISTORY
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_COUNTERS_PUT_HISTORY}",
+    ):
+        Game.model_validate(dumped)

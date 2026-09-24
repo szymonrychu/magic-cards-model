@@ -93,6 +93,7 @@ from magic_cards_model.machines.abilities import (
 )
 from magic_cards_model.machines.casting import MarkedExile
 from magic_cards_model.machines.cost import ComponentKind, cost_component_for_phrase
+from magic_cards_model.machines.counter_effects import singular_subtype
 from magic_cards_model.machines.effects import transform_permanent
 from magic_cards_model.machines.keywords import (
     crew_activation,
@@ -741,6 +742,7 @@ def _cast(
     kicked: bool = False,
     paying_with: str | None = None,
     from_zone: Zone = Zone.HAND,
+    x_value: int | None = None,
 ) -> CardState:
     """Cast `name` (CR 601.2) for its mana cost - face down with `keyword`
     (morph, CR 702.37c), kicked with `kicked` (CR 702.33a) - naming the
@@ -763,6 +765,9 @@ def _cast(
             casting.use_keyword(keyword)
         if kicked:
             casting.pay_kicker(1)
+        if x_value is not None:
+            # CR 107.3a: the X announced for an {X} spell.
+            casting.determine_cost(x_value=x_value)
         payment = casting.begin_paying()
         permanents = scenario.game.permanents_controlled_by(username)
         if paying_with is None:
@@ -1247,6 +1252,19 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 return scenario, None
 
             yield cast
+
+    if "{X}" in (card.mana_cost or "") and re.search(r"\bX\b", ability.effect or ""):
+        # CR 107.3m: an enters ability that refers to X reads the X its spell
+        # was cast with - The Ruinous Wrecking Crew's "choose up to X" has no
+        # mode to choose at the X = 0 the attempts above cast it for.
+
+        def cast_with_x() -> tuple[PlayedScenario, Any]:
+            scenario = _board(hand=(card.name,), battlefield=_extra_lands_for(card))
+            _stack_material(scenario)
+            _cast(scenario, card.name, x_value=1)
+            return scenario, None
+
+        yield cast_with_x
 
     if "mana from a treasure" in lowered:
         # "if mana from a Treasure was spent to cast it" (CR 106.3): a
@@ -1755,6 +1773,53 @@ def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Ite
     yield happen
 
 
+def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "Whenever you put a[n]/one or more `<kind>` counter(s) on `<a
+    description>`" (CR 122.6, CR 122.6a): the controller puts one on another
+    creature they control - of the subtype the description names, when it
+    names one (Invisible Woman, Sue Storm's "other Heroes"), a plain Grizzly
+    Bears otherwise (Knight of Wundagore's "another creature", Stocking the
+    Pantry's "a creature you control")."""
+    match = re.search(
+        r"\byou put (?:an?|one or more) (\+1/\+1|-1/-1|[a-z]+) counters? on (.+)$",
+        ability.condition,
+        re.IGNORECASE,
+    )
+    if match is None:
+        return
+    kind = match.group(1)
+    partner = "Grizzly Bears"
+    for word in re.findall(r"\b[A-Z][a-z]+\b", match.group(2)):
+        subtype = singular_subtype(word)
+        if subtype is None:
+            continue
+        candidates = sorted(
+            (
+                card
+                for card in _format_pool()
+                if Type.CREATURE in card.types
+                and subtype.lower() in {word.lower() for word in card.subtypes}
+            ),
+            key=lambda card: (len(card.oracle_text or ""), card.name),
+        )
+        if not candidates:
+            return
+        partner = candidates[0].name
+        break
+
+    def put_on_another() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, battlefield=(partner,))
+        target = next(
+            permanent
+            for permanent in reversed(scenario.game.permanents_controlled_by(ALICE))
+            if permanent.name == partner and permanent.id != source_id
+        )
+        scenario.game.add_counters(target, kind, 1, putter=ALICE)
+        return scenario, source_id
+
+    yield put_on_another
+
+
 def _untapping(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     """Tap the source by attacking with it (CR 508.1f), then play on to the
     controller's next untap step (CR 502.3)."""
@@ -2194,6 +2259,7 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _player_event(case, ability, "scry")
         elif kind == "counters_put":
             yield from _about_the_source(case, ability, "counters")
+            yield from _counters_you_put(case, ability)
         elif kind == "becomes_monstrous":
             yield from _about_the_source(case, ability, "monstrous")
         elif kind == "transforms":
@@ -2568,7 +2634,8 @@ def _activated_ability(card: Card, text: str) -> ActivatedAbility:
 
 
 def _x_for(ability: ActivatedAbility) -> int:
-    return 1 if "{x}" in ability.cost.lower() or " x " in f" {ability.cost.lower()} " else 0
+    cost = ability.cost.lower()
+    return 1 if "{x}" in cost or " x " in f" {cost} " or "remove any number of" in cost else 0
 
 
 def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbility) -> None:
@@ -2582,8 +2649,13 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
     if "{e}" in cost:
         game.add_player_counters(ALICE, "energy", 10)
     for match in re.finditer(
-        r"remove (?:an?|one|two|three|x|\d+) (\S+) counters? from (this|~)", cost
+        r"remove (?:an?|one|two|three|x|\d+|any number of) (\S+) counters? from "
+        r"(?:this|~|(?P<name>[^,:]+))",
+        cost,
     ):
+        named = match.group("name")
+        if named is not None and not source.name.lower().startswith(named.strip()):
+            continue  # CR 201.5: a name in its own cost is the source itself
         game.add_counters(source, match.group(1), 5)
     if ability.loyalty is not None:
         minus = re.match(r"[−-](\d+)", ability.cost.strip())

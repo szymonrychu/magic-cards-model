@@ -2237,6 +2237,10 @@ class CountersPutRecord(EngineModel):
     amount: int
     controller: str | None = None
     types: tuple[Type, ...] = ()
+    zone_change_stamp: UUID | None = None
+    """Which incarnation of `card_id` (CR 400.7): a permanent that left the
+    battlefield and came back is a new object the counters were never put
+    on."""
 
 
 #: CR 701.54c: "they get an emblem named The Ring".
@@ -9175,7 +9179,12 @@ class Game(EngineModel):
                 break
             options = tuple(mode.text for mode in remaining)
             if len(chosen) >= minimum:
-                options = (NO_FURTHER_MODES, *options)
+                # "choose up to N -" (CR 700.2b) may stop before its first
+                # mode too; offered last until a mode is chosen, so the first
+                # printed mode stays the unscripted default (`default_answer`).
+                options = (
+                    (*options, NO_FURTHER_MODES) if not chosen else (NO_FURTHER_MODES, *options)
+                )
             answer = self.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_A_MODE,
@@ -13373,6 +13382,7 @@ class Game(EngineModel):
                 amount=amount,
                 controller=permanent.controller,
                 types=chars.types,
+                zone_change_stamp=permanent.zone_change_stamp,
             )
         )
         self.emit(
@@ -16434,7 +16444,7 @@ class Game(EngineModel):
             # CR 122.6's per-turn placement history (Beast, Erudite
             # Aerialist; Kid Loki), who put what kind on which permanent.
             counters_put_this_turn=tuple(
-                (record.putter, record.card_id, record.kind)
+                (record.putter, record.card_id, record.kind, record.zone_change_stamp)
                 for record in self.counters_put_this_turn
             ),
             # CR 607.2a: Keen-Eyed Curator's "card types among cards exiled

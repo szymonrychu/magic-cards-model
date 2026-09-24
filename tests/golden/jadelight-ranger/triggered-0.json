@@ -46,7 +46,7 @@
         "source": "Jadelight Ranger"
       }
     ],
-    "fields_changed": ["known_carries", "reveals"],
+    "fields_changed": ["counters_put_this_turn", "known_carries", "reveals"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

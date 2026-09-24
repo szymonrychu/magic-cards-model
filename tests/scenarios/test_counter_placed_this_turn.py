@@ -314,3 +314,30 @@ def test_badgermole_reads_the_same_sentence():
 
     assert has_keyword(bears, Keyword.TRAMPLE, scenario.game)
     assert not has_keyword(mole, Keyword.TRAMPLE, scenario.game)
+
+
+def test_a_creature_that_left_and_came_back_is_a_new_object():
+    """CR 400.7: the Bears that died and were returned are a new object - the
+    counter alice put on the old one this turn is not "on it"."""
+    scenario = _board("Kid Loki", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.game.add_counters(bears, Counter.PLUS_ONE, 1, putter="alice")
+    assert _hexproof(scenario, bears)
+
+    scenario.game.put_into_graveyard(bears)
+    returned = scenario.game.put_onto_battlefield(bears, "alice")
+
+    assert not _hexproof(scenario, returned)
+
+
+def test_beast_that_left_and_came_back_does_not_fly():
+    scenario = _board("Beast, Erudite Aerialist").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    beast = scenario.creature("Beast, Erudite Aerialist", "alice")
+    scenario.game.add_counters(beast, Counter.PLUS_ONE, 1, putter="alice")
+
+    scenario.game.put_into_graveyard(beast)
+    returned = scenario.game.put_onto_battlefield(beast, "alice")
+
+    assert not has_keyword(returned, Keyword.FLYING, scenario.game)

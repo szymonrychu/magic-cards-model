@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["counters_put_this_turn"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#2": {

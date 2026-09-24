@@ -134,6 +134,7 @@ from .cost import (
     removes_announced_number_of_counters,
     spend_restriction,
 )
+from .counter_effects import parse_resolution_text as _parse_counter_resolution_text
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
@@ -17949,9 +17950,7 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                 mode = profile.mode(number)
                 ability.targets = list(slices[position]) if position < len(slices) else []
                 mode_text = mode_effect_body(mode)
-                from .counter_effects import parse_resolution_text as counter_resolution_text
-
-                clause = counter_resolution_text(mode_text)
+                clause = _parse_counter_resolution_text(mode_text)
                 if clause is None:
                     clause = parse_mixed_effect(mode_text)
                 if clause is None:
@@ -22684,10 +22683,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     resolved and did nothing: no exile, no `Notice`, the gap invisible.
     Possibility Storm shares the identical opening and is read the same way.
     """
-    from .counter_effects import parse_resolution_text as counter_resolution_text
     from .meld import parse_meld_activation_clause, parse_meld_resolution_clause
 
-    counter_resolution = counter_resolution_text(effect_text)
+    counter_resolution = _parse_counter_resolution_text(effect_text)
     if counter_resolution is not None:
         return counter_resolution
     meld_activation = parse_meld_activation_clause(effect_text)
@@ -26057,9 +26055,7 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
-    from .counter_effects import parse_resolution_text as counter_resolution_text
-
-    counter_resolution = counter_resolution_text(whole, for_spell=True)
+    counter_resolution = _parse_counter_resolution_text(whole, for_spell=True)
     if counter_resolution is not None:
         return counter_resolution
     dealt_damage_this_way = _parse_dealt_damage_this_way_die_to_exile(whole)
