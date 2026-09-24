@@ -1754,6 +1754,8 @@ def _best_flow_plan(
     pool_buckets: dict[_Bucket, int],
     pool_registry: list[ManaRestriction],
     game: Any = None,
+    *,
+    any_color: bool = False,
 ) -> TapPlan | None:
     """The smallest tapping plan that settles `options` (one already-resolved
     reading of `ManaCost`'s payable-in-multiple-ways symbols) out of `simple`
@@ -1822,7 +1824,7 @@ def _best_flow_plan(
                 bucket[3],
             ),
         )
-        demands = _demand_list(options, all_buckets)
+        demands = _demand_list(options, all_buckets, any_color=any_color)
         result = _assign_sources(demands, sources_map, capacity_map)
         if result is None:
             continue
@@ -1923,7 +1925,15 @@ def _solve_auto_tap_flow(
         life = sum(option.life for option in options)
         if life > life_available:
             continue
-        plan = _best_flow_plan(options, simple, exotic, pool_buckets, pool_registry, context.game)
+        plan = _best_flow_plan(
+            options,
+            simple,
+            exotic,
+            pool_buckets,
+            pool_registry,
+            context.game,
+            any_color=context.spend is not None and context.spend.any_color,
+        )
         if plan is not None:
             return plan
     return None

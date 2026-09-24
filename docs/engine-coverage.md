@@ -4504,3 +4504,29 @@ busy board and exiles alice's Intangible Virtue instead of Kaito. Changing the
 **Numbers.** 925 goldens (3.7 MB); the sweep with comparison runs 344s single
 process (926 passed, 2 xfailed), against 280s before goldens - the extra is
 the two state projections around each resolution.
+
+## C00-T1: activation prohibitions and activation permissions
+
+Clarion Conqueror, Collector Ouphe, Cursed Totem, Damping Matrix, Disruptor
+Flute, Pithing Needle, Karn, the Great Creator, Shang-Chi, Master of Kung Fu,
+Tyvar, Jubilant Brawler, The Wandering Emperor and Agatha's Soul Cauldron each
+had a `static_unaudited` clause; every clause of all eleven now sweeps
+`handled` (Teferi, Master of Time's loyalty static too). CR numbers verified
+with `mise run rules:find`: 105.1, 109.2, 109.2c, 109.5, 117.3b, 201.4,
+201.4a, 201.4b, 201.5b, 205.2a, 302.6, 400.7, 406.3a, 602.1, 602.5, 602.5a,
+604.2, 605.1a, 606.3, 607.2a, 609.4, 609.4b, 611.1, 611.3a, 613.1f, 613.5,
+614.12a, 702.6a, 702.10c, 702.122a, 704.5q.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "Activated abilities of `<card-type list>` [your opponents control] can't be activated [unless they're mana abilities]." - permanents only (CR 109.2), computed types (CR 613.5), now also refusing keyword activations (equip, crew) and dropped from `legal_actions`; the refusal names the source (CR 602.5, 611.1) | `game._parse_activation_prohibition`, `Game.activation_prohibition`, `KeywordActivation.why_not` | Clarion Conqueror, Collector Ouphe, Cursed Totem, Damping Matrix, Karn | Stony Silence | `test_activation_prohibitions.py` |
+| "Activated abilities of sources with the chosen name can't be activated [unless they're mana abilities]." - read against CR 614.12a's recorded name, in every zone (CR 109.2c: a named card's cycling in hand) | `game._CHOSEN_NAME_PROHIBITION_RE`, `Game.activation_prohibition` | Pithing Needle, Disruptor Flute | Phyrexian Revoker | `test_activation_prohibitions.py` |
+| "As this enters, choose a `<quality>` card name." - CR 201.4a's qualified name; an answer the printing pool shows lacks the quality is refused | `replacement._CHOOSE_A_CARD_NAME_RE`, `card_name_quality`, `_card_name_quality_refusal` | - | Phyrexian Revoker | `test_activation_prohibitions.py` |
+| "You may activate abilities of creatures you control as though those creatures had haste." (CR 609.4, 702.10c) - already enforced, now credited by the sweep and offered by `legal_actions` | `Game.activation_haste_permission` | Tyvar, Shang-Chi | Thousand-Year Elixir | `test_activate_as_though_haste.py` |
+| "[As long as `<condition>`, ]you may activate her/his/its loyalty abilities any time you could cast an instant." - CR 606.3's timing half only, condition asked afresh (CR 611.3a) | `game._SELF_LOYALTY_INSTANT_SPEED_RE`, `Game._self_loyalty_instant_speed` | The Wandering Emperor | Teferi, Master of Time (shared permission path; no other legal printing carries the conditional form) | `test_loyalty_instant_speed.py` |
+| "You may spend mana as though it were mana of any color to activate abilities of `<types>` you control / those abilities." - CR 609.4b: widens only which mana pays a coloured symbol (colorless included; `{C}` and `{S}` unchanged), in both the pool settle and the auto-tap solver, and in `legal_actions`' affordability | `ManaSpend.any_color`, `mana._demand_list`, `Game.spends_mana_as_any_color` | Agatha's Soul Cauldron | Drana and Linvala | `test_granted_abilities_from_linked_exile.py` |
+| "`<subject>` has/have all activated abilities of all `<types>` cards exiled with `<this/it>`" / "... of all creatures your opponents control." - layer 6 (CR 613.1f) from CR 607.2a's linked pile (this incarnation only, CR 400.7) or the board, self-names rewritten (CR 201.5b) | `layers.all_activated_abilities_grant`, `_all_activated_abilities_builder`, `GrantActivatedAbilitiesOf` | Agatha's Soul Cauldron | Patchwork Crawler, Drana and Linvala | `test_granted_abilities_from_linked_exile.py` |
+
+Proof printings added: Stony Silence, Phyrexian Revoker, Thousand-Year Elixir,
+Patchwork Crawler, Drana and Linvala (plus the listed Cursed Totem and Damping
+Matrix). Schema 64 -> 65 for `ManaSpend.any_color`.

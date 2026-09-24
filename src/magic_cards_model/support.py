@@ -152,6 +152,7 @@ from magic_cards_model.models.card import (
     types_of,
 )
 from magic_cards_model.models.card_state import Counters, TargetRef
+from magic_cards_model.models.game import reads_activation_rule_line
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.snapshot import EngineModel
 
@@ -1734,6 +1735,14 @@ def _static_ability_category(printing: Card, text: str) -> str:
     self_enters = _self_enters_line_category(printing, text)
     if self_enters is not None:
         return self_enters
+    if reads_activation_rule_line(
+        text, printing.name, legendary=Supertype.LEGENDARY in printing.supertypes
+    ):
+        # CR 602.5 (`Game.activation_prohibition`), CR 609.4 (`Game.
+        # activation_haste_permission`), CR 606.3 (`Game._loyalty_instant_
+        # speed_permitted`) and CR 609.4b (`Game.spends_mana_as_any_color`)
+        # each enforce one of these where activation legality is decided.
+        return HANDLED
     return STATIC_UNAUDITED
 
 

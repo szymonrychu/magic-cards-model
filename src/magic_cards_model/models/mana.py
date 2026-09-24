@@ -560,10 +560,26 @@ class ManaSpend(EngineModel):
     unknown spend: the engine cannot show the restriction was honoured. It is
     always `None` for an activation, where no card moves anywhere.
     """
+    any_color: bool = False
+    """CR 609.4b: the payer "may spend mana as though it were mana of any
+    color" on this cost - Agatha's Soul Cauldron's "... to activate abilities
+    of creatures you control", Drana and Linvala's "... to activate those
+    abilities". Set by the caller that knows the permission applies
+    (`Game.spends_mana_as_any_color`); the flag "affects only how the player
+    may pay a cost. It doesn't change that cost, and it doesn't change what
+    mana was actually spent to pay that cost", which is why it widens only
+    the coloured demands `_demand_list` builds and nothing about the cost or
+    the mana itself. A `{C}` symbol still wants colorless mana (colorless is
+    not a color, CR 105.1) and `{S}` still wants snow mana."""
 
     @classmethod
     def _of(
-        cls, purpose: SpendPurpose, card: "HasCharacteristics", zone: Zone | None
+        cls,
+        purpose: SpendPurpose,
+        card: "HasCharacteristics",
+        zone: Zone | None,
+        *,
+        any_color: bool = False,
     ) -> "ManaSpend":
         return cls(
             purpose=purpose,
@@ -573,6 +589,7 @@ class ManaSpend(EngineModel):
             supertypes=frozenset(card.supertypes),
             colorless=not card.colors,
             zone=zone,
+            any_color=any_color,
         )
 
     @classmethod
@@ -597,7 +614,7 @@ class ManaSpend(EngineModel):
         return cls._of(SpendPurpose.CAST_SPELL, card, zone)
 
     @classmethod
-    def activating(cls, card: "HasCharacteristics") -> "ManaSpend":
+    def activating(cls, card: "HasCharacteristics", *, any_color: bool = False) -> "ManaSpend":
         """Mana spent to activate an ability whose source is `card`.
 
         Unlike `casting`, the source of an activated ability is normally a
@@ -608,8 +625,10 @@ class ManaSpend(EngineModel):
         abilities of creature sources". `Characteristics` (machines/layers.py)
         prints the same four names this reads, so no branch is needed here -
         only the type had to stop saying `Card`.
+
+        `any_color` is CR 609.4b's permission, see the field's own docstring.
         """
-        return cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None)
+        return cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None, any_color=any_color)
 
     @classmethod
     def paying_cumulative_upkeep(cls, card: "HasCharacteristics") -> "ManaSpend":
@@ -1003,7 +1022,7 @@ def _candidate_options(
 
 
 def _demand_list(
-    options: Sequence[PaymentOption], buckets: Iterable[_Bucket]
+    options: Sequence[PaymentOption], buckets: Iterable[_Bucket], *, any_color: bool = False
 ) -> list[tuple[int, list[_Bucket]]]:
     """The demand list `_assign` (and `machines/cost.py`'s source-picking
     `_assign_sources`) solve against, built from one resolution of a cost's
@@ -1017,6 +1036,12 @@ def _demand_list(
     unrestricted, non-snow before snow - see `ManaPool._buckets`) survives
     into the demand list unchanged, which is what makes a restricted bucket
     the one spent when either would do.
+
+    `any_color` is CR 609.4b's "spend mana as though it were mana of any
+    color" (`ManaSpend.any_color`): a coloured demand then accepts every
+    bucket - colorless mana included, since it is spent *as though* it were
+    that color - while a `{C}` demand (`Color.COLORLESS`, not a color) and a
+    snow demand stay as they are.
     """
     buckets = list(buckets)
     generic = sum(option.generic for option in options)
@@ -1025,7 +1050,13 @@ def _demand_list(
         option.color for option in options if option.color is not None and not option.snow
     )
     demands: list[tuple[int, list[_Bucket]]] = [
-        (count, [b for b in buckets if b[0] == color]) for color, count in colors.items()
+        (
+            count,
+            list(buckets)
+            if any_color and color is not Color.COLORLESS
+            else [b for b in buckets if b[0] == color],
+        )
+        for color, count in colors.items()
     ]
     if snow_needed:
         demands.append((snow_needed, [b for b in buckets if b[1]]))
@@ -1317,7 +1348,9 @@ class ManaPool(EngineModel):
     ) -> ManaPayment | None:
         """Can the pool cover these fixed demands? If so, with what mana?"""
         buckets = self._spendable_buckets(spend_on)
-        demands = _demand_list(options, buckets)
+        demands = _demand_list(
+            options, buckets, any_color=spend_on is not None and spend_on.any_color
+        )
         spent = _assign(buckets, demands)
         if spent is None:
             return None

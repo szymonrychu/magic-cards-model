@@ -246,8 +246,9 @@ def test_a_land_still_taps_the_turn_it_arrives_with_no_grant_in_play():
 def test_every_printing_carrying_this_sentence_is_read_by_the_strict_shape():
     """The whole card pool, not a name list: any static line that opens like
     this family must parse, or the engine is silently granting nothing while a
-    card says otherwise. Two printings carry it today (Tyvar, Jubilant Brawler
-    and Shang-Chi, Master of Kung Fu) and this is what notices a third."""
+    card says otherwise. Three printings carry it today (Tyvar, Jubilant
+    Brawler, Shang-Chi, Master of Kung Fu and Thousand-Year Elixir) and this is
+    what notices a fourth."""
     looks_like = [
         (card.name, line)
         for card in all_printings()
@@ -255,7 +256,7 @@ def test_every_printing_carrying_this_sentence_is_read_by_the_strict_shape():
         if _LOOKS_LIKE_HASTE_ACTIVATION_PERMISSION_RE.match(line)
     ]
 
-    assert {name for name, _ in looks_like} == {TYVAR, SHANG_CHI}
+    assert {name for name, _ in looks_like} == {TYVAR, SHANG_CHI, "Thousand-Year Elixir"}
     unread = [
         (name, line) for name, line in looks_like if not _HASTE_ACTIVATION_PERMISSION_RE.match(line)
     ]
