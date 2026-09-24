@@ -46,7 +46,7 @@
         "source": "Nylea, Keen-Eyed"
       }
     ],
-    "fields_changed": ["graveyard_arrivals_this_turn", "reveals"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "reveals"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

@@ -55,7 +55,7 @@
         "source": "Six"
       }
     ],
-    "fields_changed": ["graveyard_arrivals_this_turn", "known_carries"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "known_carries"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

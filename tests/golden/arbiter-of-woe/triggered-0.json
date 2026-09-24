@@ -46,7 +46,7 @@
         "source": "Arbiter of Woe"
       }
     ],
-    "fields_changed": ["cards_discarded_this_turn", "cards_drawn_this_turn", "graveyard_arrivals_this_turn", "life_gained_amount_this_turn", "life_gained_this_turn"],
+    "fields_changed": ["cards_discarded_this_turn", "cards_drawn_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "life_gained_amount_this_turn", "life_gained_this_turn"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

@@ -185,6 +185,7 @@ from magic_cards_model.models.game import (
     reads_activation_rule_line,
     reads_self_cost_reduction_line,
 )
+from magic_cards_model.models.player import reads_maximum_hand_size_line
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.snapshot import EngineModel
 
@@ -1845,6 +1846,11 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # `machines/replacement.py` compiles and `applicable_effects` applies
         # from the battlefield (Solphim's double, Crystal Barricade's
         # prevention, Mjolnir's "Double all damage ...").
+        return HANDLED
+    if reads_maximum_hand_size_line(text):
+        # CR 402.2 / CR 613.11: `Player.cards_over_maximum_hand_size` reads
+        # "Your maximum hand size is N." and "You have no maximum hand size."
+        # off the battlefield, in timestamp order, for the cleanup discard.
         return HANDLED
     if is_player_rules_static_line(text):
         # CR 119.7 / CR 615.12: `Game.life_gain_prohibited` and

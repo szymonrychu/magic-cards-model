@@ -46,7 +46,7 @@
         "source": "Cruel Grimnarch"
       }
     ],
-    "fields_changed": ["cards_discarded_this_turn", "graveyard_arrivals_this_turn"],
+    "fields_changed": ["cards_discarded_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn"],
     "notices": {},
     "objects": {
       "Opt@bob#1": {

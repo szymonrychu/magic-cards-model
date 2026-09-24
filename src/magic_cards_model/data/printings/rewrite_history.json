@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "91fdf444-3f41-4b8b-b9f5-f3ae3d903649",
+  "oracle_id": "f91c860e-3feb-4a5a-b7ef-4e7d38d61c75",
+  "multiverse_ids": [],
+  "resource_id": "A66F5397CFBA75334FFC4B90902A5A5F1C79D36AB9BA6447CE8C47FF0640CDAE",
+  "mtgo_id": 152327,
+  "arena_id": 104965,
+  "tcgplayer_id": 696550,
+  "cardmarket_id": 891160,
+  "name": "Rewrite History",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/91fdf444-3f41-4b8b-b9f5-f3ae3d903649",
+  "scryfall_uri": "https://scryfall.com/card/msh/71/rewrite-history?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:52Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.jpg?1783902952",
+    "normal": "https://cards.scryfall.io/normal/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.jpg?1783902952",
+    "large": "https://cards.scryfall.io/large/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.jpg?1783902952",
+    "png": "https://cards.scryfall.io/png/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.png?1783902952",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.jpg?1783902952",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.jpg?1783902952",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.webp?1783902952",
+    "grid": "https://cards.scryfall.io/grid/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.webp?1783902952",
+    "display": "https://cards.scryfall.io/display/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.webp?1783902952",
+    "art": "https://cards.scryfall.io/art/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.webp?1783902952",
+    "crop": "https://cards.scryfall.io/crop/front/9/1/91fdf444-3f41-4b8b-b9f5-f3ae3d903649.webp?1783902952"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Enchantment \u2014 Plan",
+  "oracle_text": "Whenever one or more creatures you control become tapped, draw a card, then discard a card and put a plan counter on this enchantment.\nWhen the fourth plan counter is put on this enchantment, sacrifice it. When you do, return up to two target instant and/or sorcery cards from your graveyard to your hand.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/91fdf444-3f41-4b8b-b9f5-f3ae3d903649/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af91c860e-3feb-4a5a-b7ef-4e7d38d61c75&unique=prints",
+  "collector_number": "71",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Allen Douglas",
+  "artist_ids": [
+    "e17f248e-6a47-4889-b048-a646739923b0"
+  ],
+  "illustration_id": "64c7c3ed-dca6-486b-886d-40c766404484",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 19591,
+  "preview": {
+    "source": "Instant Mind",
+    "source_uri": "https://www.xiaohongshu.com/explore/6a20c89f000000002202b26e?app_platform=ios&app_version=9.33.2&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBLTwV6bIZSaAzKprDNIE0ensQG5sZ6xI44oKHUeg8j58=&author_share=1&xhsshare=CopyLink&shareRedId=ODlIOEQ8SU02NzUyOTgwNjczOThINjlM&apptime=1780540321&share_id=dd71169f90994c0097c3226cbd2567c1",
+    "previewed_at": "2026-06-03"
+  },
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.28",
+    "usd_etched": null,
+    "eur": "0.11",
+    "eur_foil": "0.20",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRewrite%2BHistory",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRewrite%2BHistory",
+    "edhrec": "https://edhrec.com/route/?cc=Rewrite+History"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696550%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891160&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152327?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

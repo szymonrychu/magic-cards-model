@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "2d6b1b2f-903c-438c-baba-a3b3e60b1d4f",
+  "oracle_id": "e8e15ab4-e4c7-4faf-b469-288451ddee02",
+  "multiverse_ids": [
+    667603
+  ],
+  "mtgo_id": 127992,
+  "tcgplayer_id": 556383,
+  "cardmarket_id": 775473,
+  "name": "Ballad of the Black Flag",
+  "lang": "en",
+  "released_at": "2024-07-05",
+  "uri": "https://api.scryfall.com/cards/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f",
+  "scryfall_uri": "https://scryfall.com/card/acr/13/ballad-of-the-black-flag?utm_source=api",
+  "layout": "saga",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:49:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.jpg?1783910985",
+    "normal": "https://cards.scryfall.io/normal/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.jpg?1783910985",
+    "large": "https://cards.scryfall.io/large/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.jpg?1783910985",
+    "png": "https://cards.scryfall.io/png/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.png?1783910985",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.jpg?1783910985",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.jpg?1783910985",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.webp?1783910985",
+    "grid": "https://cards.scryfall.io/grid/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.webp?1783910985",
+    "display": "https://cards.scryfall.io/display/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.webp?1783910985",
+    "art": "https://cards.scryfall.io/art/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.webp?1783910985",
+    "crop": "https://cards.scryfall.io/crop/front/2/d/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f.webp?1783910985"
+  },
+  "mana_cost": "{1}{U}{U}",
+  "cmc": 3.0,
+  "type_line": "Enchantment \u2014 Saga",
+  "oracle_text": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)\nI, II, III \u2014 Mill three cards. You may put a historic card from among them into your hand. (Artifacts, legendaries, and Sagas are historic.)\nIV \u2014 Historic spells you cast this turn cost {2} less to cast.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set": "acr",
+  "set_name": "Assassin's Creed",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aacr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/acr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2d6b1b2f-903c-438c-baba-a3b3e60b1d4f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae8e15ab4-e4c7-4faf-b469-288451ddee02&unique=prints",
+  "collector_number": "13",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mikl\u00f3s Ligeti",
+  "artist_ids": [
+    "397e374b-b428-4bab-b198-372f7f4c2f40"
+  ],
+  "illustration_id": "886b1f58-aba2-44b7-80b2-b1216fbf1fa8",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 6559,
+  "prices": {
+    "usd": "0.31",
+    "usd_foil": "0.44",
+    "usd_etched": null,
+    "eur": "0.28",
+    "eur_foil": "0.23",
+    "tix": "1.36"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=667603&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBallad%2Bof%2Bthe%2BBlack%2BFlag",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBallad%2Bof%2Bthe%2BBlack%2BFlag",
+    "edhrec": "https://edhrec.com/route/?cc=Ballad+of+the+Black+Flag"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F556383%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=775473&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/127992?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

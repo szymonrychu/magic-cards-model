@@ -55,7 +55,7 @@
         "source": "Dusk Mangler"
       }
     ],
-    "fields_changed": ["cards_discarded_this_turn", "creatures_died_this_turn", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts"],
+    "fields_changed": ["cards_discarded_this_turn", "creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Icehide Golem@bob#1": {

@@ -4368,6 +4368,21 @@ class Casting(EngineModel):
                 )
             )
 
+        # "The next <quality> spell you cast this turn can be cast without
+        # paying its mana cost" (World War Hulk) - `machines/next_spell.py`.
+        next_spell_grants = getattr(self.game, "next_spell_free_cast_grants_for", None)
+        for free_grant in next_spell_grants(self.spell, self.caster) if next_spell_grants else []:
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.STATIC,
+                    rule="CR 118.9",
+                    source_name=free_grant.source_name,
+                    description="nothing",
+                    cost=None,
+                )
+            )
+
         for source_name, grant in self._static_free_cast_grants():
             unavailable = None
             if self.origin_zone is not grant.zone:

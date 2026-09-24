@@ -121,7 +121,7 @@ from magic_cards_model.models.action import ActionKind
 from magic_cards_model.models.card import Layout
 from magic_cards_model.models.card_state import Choice, ChoiceKind, TargetRef
 from magic_cards_model.models.token import PREDEFINED, create_predefined_tokens, token_copy_of
-from magic_cards_model.numbers import parse_count
+from magic_cards_model.numbers import parse_count, parse_ordinal
 from magic_cards_model.support import _probe_cards, card_support, in_target_formats
 from tests import golden
 from tests.cards import card_state, pool
@@ -1037,7 +1037,9 @@ def _back_face(card: Card, ability: Any) -> bool:
     (CR 712.2), so the source has to be staged transformed (CR 712.8e)."""
     faces = card.card_faces or []
     return (
-        card.layout is Layout.TRANSFORM
+        # CR 701.27a: any double-faced card can transform - a modal one too
+        # (King T'Challa's "Transform King T'Challa").
+        card.layout in (Layout.TRANSFORM, Layout.MODAL_DFC)
         and len(faces) > 1
         and ability is not None
         and ability.face == faces[1].name
@@ -1157,6 +1159,23 @@ def _probes(case: Case, ability: TriggeredAbility, *, entering: bool) -> list[st
     for name in _PROBE_CREATURES:
         if name not in names:
             names.append(name)
+    # A subtype the condition names in a form with no plural "s" ("one or
+    # more nontoken Merfolk you control", CR 205.3m) - tried last, so every
+    # case the probes above already drive keeps the probe it had.
+    for word in re.findall(r"\b([A-Z][a-z]+)\b", ability.condition):
+        subtype = _singular_subtype(word)
+        if subtype is None:
+            continue
+        for card in _format_pool():
+            lowered = {s.lower() for s in card.subtypes}
+            if (
+                subtype.lower() in lowered
+                and _is(card, Type.CREATURE)
+                and not card.card_faces
+                and card.name not in names
+            ):
+                names.append(card.name)
+                break
     return names
 
 
@@ -1732,8 +1751,14 @@ def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Ite
         if action == "dealt damage":
             game.deal_damage(source, 1, source=_staged(scenario, "Icehide Golem", BOB))
         elif action == "counters":
-            match = re.search(r"(\+1/\+1|[a-z]+) counters?", lowered)
-            game.add_counters(source, match.group(1) if match else "+1/+1", 1)
+            nth = re.search(r"the ([a-z]+) (\S+) counter is put on", lowered)
+            if nth is not None and parse_ordinal(nth.group(1)) is not None:
+                # "When the fourth plan counter is put on this enchantment"
+                # (CR 122.6 as a threshold): enough at once to reach it.
+                game.add_counters(source, nth.group(2), parse_ordinal(nth.group(1)))
+            else:
+                match = re.search(r"(\+1/\+1|[a-z]+) counters?", lowered)
+                game.add_counters(source, match.group(1) if match else "+1/+1", 1)
         elif action == "monstrous":
             game.become_monstrous(source, 1)
         elif action == "transform":
@@ -2164,7 +2189,15 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _other_entering(case, ability)
         elif kind in _REMOVALS:
             yield from _leaving(case, ability, kind)
-        elif kind in ("attacks", "blocks", "combat_damage_to_players", "becomes_tapped"):
+        elif kind in (
+            "attacks",
+            "blocks",
+            "combat_damage_to_players",
+            "becomes_tapped",
+            # "one or more <description> become tapped" (CR 603.2c): the
+            # attackers a declaration taps together (CR 508.1f).
+            "permanents_tapped",
+        ):
             yield from _combat(case, ability)
         elif kind == TriggerEvent.DEALS_DAMAGE.value:
             lowered = ability.condition.lower()

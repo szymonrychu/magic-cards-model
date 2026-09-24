@@ -285,6 +285,23 @@ class ExtraTriggerEvent(StrEnum):
     #: controlled none), `GameEvent.amount` how many times the Ring has now
     #: tempted them. **Emitted by:** `Game.ring_tempts`, and nowhere else.
     RING_TEMPTS_YOU = "ring_tempts_you"
+    #: CR 701.26a's tapping, as CR 603.2c's one event for every permanent one
+    #: instruction, cost or declaration tapped together: Rewrite History's
+    #: "Whenever one or more creatures you control become tapped" and Deeproot
+    #: Pilgrimage's "one or more nontoken Merfolk you control". Which
+    #: permanents were in the batch is `Game.tapped_batch`, live only while
+    #: this event is being matched. **Emitted by:** `Game.
+    #: announce_batched_events`, from what `CardState.tap`/`.tap_if_untapped`
+    #: noted (`Game.note_permanent_tapped`).
+    PERMANENTS_TAPPED = "permanents_tapped"
+    #: CR 400.6's "put into a graveyard", as CR 603.2c's one event for every
+    #: card moved there together: Robot Domination's "Whenever one or more
+    #: creature cards are put into your graveyard from anywhere" and Crawling
+    #: Infestation's "... from anywhere during your turn". Which cards is
+    #: `Game.graveyard_batch` (`GraveyardArrival` records), live only while
+    #: this event is being matched. **Emitted by:** `Game.
+    #: announce_batched_events`, off `Game.graveyard_arrivals_this_turn`.
+    PUT_INTO_GRAVEYARD = "put_into_graveyard"
 
 
 class GameEvent(EngineModel):
@@ -3219,8 +3236,38 @@ _LAND_ADDED_CHOSEN_MANA_CONDITION = re.compile(
 #: Both trailing suffixes mean the same turn-scoped count; "each turn" is how
 #: most printings say it. "You"/"your" is the ability's own controller;
 #: "an opponent"/"their" is any player who is not.
+#: King T'Challa's "a player draws their second card each turn" is the
+#: third subject: any player at all, the ability's controller included.
 _NTH_DRAW_CONDITION = re.compile(
-    r"^(?P<who>you|an opponent) draws? (?:your|their) (?P<ordinal>[a-z]+) card (?:in a|each) turn$"
+    r"^(?P<who>you|an opponent|a player) draws? (?:your|their) (?P<ordinal>[a-z]+) card"
+    r" (?:in a|each) turn$"
+)
+
+#: "one or more `<description>` become tapped" - Rewrite History's
+#: "creatures you control", Deeproot Pilgrimage's "nontoken Merfolk you
+#: control". The plural verb is the batch (CR 603.2c).
+_ONE_OR_MORE_BECOME_TAPPED_CONDITION = re.compile(
+    r"^one or more (?P<description>.+?) become tapped$", re.IGNORECASE
+)
+
+#: "one or more `<type>` cards are put into your graveyard from anywhere[
+#: during your turn]" (Robot Domination; Crawling Infestation) and the
+#: narrower origin "from your library" (CR 400.6). A card, so never a token
+#: (CR 108.2).
+_ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION = re.compile(
+    r"^one or more (?P<types>[a-z]+(?: or [a-z]+)*) cards are put into your graveyard"
+    r" from (?P<origin>anywhere|your library)(?P<your_turn> during your turn)?$"
+)
+
+#: The Plans' "the fourth plan counter is put on this enchantment" (Claim the
+#: Kingdom, Political Triumph; Robot Domination's "third", Doom Reigns
+#: Supreme's "fifth", Construct a Cosmic Cube's "seventh") - CR 122.6's
+#: counters being put on an object, read as a threshold: the one event that
+#: takes this object's count of that kind from below N to N or more, the
+#: reading CR 714.2b spells out for a Saga's lore counters. Self-referential
+#: only, which is how every printing names its object.
+_NTH_COUNTER_PUT_CONDITION = re.compile(
+    r"^the (?P<ordinal>[a-z]+) (?P<kind>\S+) counter is put on (?:this [a-z]+|it)$"
 )
 
 #: CR 702.62a's third ability, as `machines/keywords._suspend_abilities`
@@ -3538,6 +3585,12 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         )
     if _NTH_DRAW_CONDITION.match(lowered):
         return frozenset({TriggerEvent.DRAWS_A_CARD})
+    if _NTH_COUNTER_PUT_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
+    if _ONE_OR_MORE_BECOME_TAPPED_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.PERMANENTS_TAPPED})
+    if _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.PUT_INTO_GRAVEYARD})
     if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.MANA_ADDED})
     if _LAST_TIME_COUNTER_CONDITION.match(lowered):
@@ -3610,6 +3663,48 @@ def _unread_condition_matches(
     """
     condition = ability.condition.lower().strip()
     mine = _self_referential(ability.condition, source.name, legendary=_is_legendary_source(source))
+
+    match = _ONE_OR_MORE_BECOME_TAPPED_CONDITION.match(ability.condition.strip())
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.PERMANENTS_TAPPED:
+            return False
+        return bool(_tapped_batch_matching(game, match.group("description"), controller))
+
+    match = _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.PUT_INTO_GRAVEYARD:
+            return False
+        if match.group("your_turn") and game.active_player.username != controller:
+            return False
+        from_library = match.group("origin") == "your library"
+        for arrival in game.graveyard_batch:
+            if arrival.player != controller:
+                continue
+            if from_library and arrival.origin_zone is not Zone.LIBRARY:
+                continue
+            card = game.find_by_id(arrival.card_id) if arrival.card_id else None
+            if card is None or getattr(card, "token", False):
+                continue  # CR 108.2: a token is not a card.
+            if _types_match(tuple(card.types), match.group("types")):
+                return True
+        return False
+
+    match = _NTH_COUNTER_PUT_CONDITION.match(condition)
+    if match is not None:
+        # CR 122.6, as a threshold: `source`'s count of the named kind is the
+        # total *after* `event.amount` were just put on, so the event crossed
+        # N exactly when the count before it was below N.
+        if event.event is not ExtraTriggerEvent.COUNTERS_PUT:
+            return False
+        if event.counter_kind != match.group("kind") or not mine:
+            return False
+        if event.subject_id != source.id:
+            return False
+        threshold = parse_ordinal(match.group("ordinal"))
+        if threshold is None:
+            return False
+        new_total = source.counter_count(match.group("kind"))
+        return new_total - (event.amount or 0) < threshold <= new_total
 
     match = _COUNTERS_PUT_CONDITION.match(condition)
     if match is not None:
@@ -3699,6 +3794,8 @@ def _unread_condition_matches(
         if match.group("who") == "you":
             if event.player != controller:
                 return False
+        elif match.group("who") == "a player":
+            pass
         elif event.player == controller:
             # "an opponent draws their Nth card each turn" (Gleaming
             # Splendor) - never the ability's own controller.
@@ -4858,6 +4955,10 @@ def intervening_if_holds(
     if drawn_count is not None:
         return drawn_count
 
+    hand_count = _hand_card_count_holds(game, clause, source)
+    if hand_count is not None:
+        return hand_count
+
     self_tapped = _source_tapped_holds(clause, source)
     if self_tapped is not None:
         return self_tapped
@@ -5305,6 +5406,34 @@ _DRAWN_CARD_COUNT_CLAUSE = re.compile(
     rf"|(?P<suffix_count>{COUNT}) or (?P<direction>more|fewer))"
     r" cards? this turn$"
 )
+
+
+#: "you have fewer than ten cards in hand" (The Ten Rings; Doctor Octopus,
+#: Master Planner's "eight"; Kozilek, the Great Distortion's "seven") - CR
+#: 402.1's hand, counted as the clause is checked (CR 603.4: as the ability
+#: triggers and again as it resolves). "You" is the ability's controller.
+_HAND_CARD_COUNT_CLAUSE = re.compile(
+    r"^you have "
+    rf"(?:(?P<comparison>fewer than|more than|at least|exactly) (?P<count>{COUNT})"
+    rf"|(?P<suffix_count>{COUNT}) or (?P<direction>more|fewer))"
+    r" cards? in (?:your )?hand$"
+)
+
+
+def _hand_card_count_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """`_HAND_CARD_COUNT_CLAUSE`'s comparison, or `None` if the clause is not it."""
+    match = _HAND_CARD_COUNT_CLAUSE.match(clause)
+    if match is None:
+        return None
+    if match.group("suffix_count") is not None:
+        count_word, comparison = match.group("suffix_count"), match.group("direction")
+    else:
+        count_word, comparison = match.group("count"), match.group("comparison")
+    count = parse_count(count_word)
+    if count is None:
+        return None
+    controller = source.controller or game.active_player.username
+    return _SUBTYPE_COUNT_COMPARISONS[comparison](len(game.player(controller).hand), count)
 
 
 def _drawn_card_count_holds(game: "Game", clause: str, source: CardState) -> bool | None:
@@ -6242,6 +6371,27 @@ def _defender_controller_of(game: "Game", attacker: CardState) -> str | None:
         if isinstance(defending_permanent, CardState):
             return game.controller_of(defending_permanent).username
     return None
+
+
+def _tapped_batch_matching(game: "Game", description: str, controller: str) -> list[CardState]:
+    """The permanents of `Game.tapped_batch` a "one or more `<description>`
+    become tapped" condition counts - the description read with the grammar
+    a "target" phrase uses (`machines/targeting.permanent_description`), "you
+    control" as the ability's own controller. Empty when the description does
+    not read, so an unread qualifier fails closed."""
+    from .targeting import permanent_description
+
+    yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
+    requirement = permanent_description(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip())
+    if requirement is None:
+        return []
+    return [
+        permanent
+        for permanent in game.tapped_batch
+        if permanent.zone is Zone.BATTLEFIELD
+        and (not yours or game.controller_of(permanent).username == controller)
+        and requirement.rejects(permanent, controller, game) is None
+    ]
 
 
 def batched_attackers(game: "Game", condition: str, controller: str) -> list[CardState] | None:

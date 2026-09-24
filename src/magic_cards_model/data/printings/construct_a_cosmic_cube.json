@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "448de757-ac16-4529-b851-1a1331b821a5",
+  "oracle_id": "369aa9a6-af8a-432c-adff-ced2bb203dc7",
+  "multiverse_ids": [],
+  "resource_id": "ED6746D51431E115DD2EE84E3213F4BAE5CA19B92D140654309F637426EF0224",
+  "mtgo_id": 152367,
+  "arena_id": 104985,
+  "tcgplayer_id": 696235,
+  "cardmarket_id": 890555,
+  "name": "Construct a Cosmic Cube",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/448de757-ac16-4529-b851-1a1331b821a5",
+  "scryfall_uri": "https://scryfall.com/card/msh/90/construct-a-cosmic-cube?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.jpg?1783902946",
+    "normal": "https://cards.scryfall.io/normal/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.jpg?1783902946",
+    "large": "https://cards.scryfall.io/large/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.jpg?1783902946",
+    "png": "https://cards.scryfall.io/png/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.png?1783902946",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.jpg?1783902946",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.jpg?1783902946",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.webp?1783902946",
+    "grid": "https://cards.scryfall.io/grid/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.webp?1783902946",
+    "display": "https://cards.scryfall.io/display/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.webp?1783902946",
+    "art": "https://cards.scryfall.io/art/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.webp?1783902946",
+    "crop": "https://cards.scryfall.io/crop/front/4/4/448de757-ac16-4529-b851-1a1331b821a5.webp?1783902946"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Enchantment \u2014 Plan",
+  "oracle_text": "Whenever you draw your second card each turn, create a 2/1 black Villain creature token with menace and put a plan counter on this enchantment.\nWhen the seventh plan counter is put on this enchantment, sacrifice it. When you do, you control target opponent during their next turn. (You see all cards that player could see and make all decisions for them.)",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "248b4c86-163b-46eb-9949-e8d8e5875294",
+      "component": "combo_piece",
+      "name": "Construct a Cosmic Cube",
+      "type_line": "Enchantment \u2014 Plan",
+      "uri": "https://api.scryfall.com/cards/248b4c86-163b-46eb-9949-e8d8e5875294"
+    },
+    {
+      "object": "related_card",
+      "id": "cd76092f-0f5e-4890-996c-33f4f47c659c",
+      "component": "token",
+      "name": "Villain",
+      "type_line": "Token Creature \u2014 Villain",
+      "uri": "https://api.scryfall.com/cards/cd76092f-0f5e-4890-996c-33f4f47c659c"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/448de757-ac16-4529-b851-1a1331b821a5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A369aa9a6-af8a-432c-adff-ced2bb203dc7&unique=prints",
+  "collector_number": "90",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Eugene Maslovski",
+  "artist_ids": [
+    "60a22da8-9c86-428d-bef1-0778fe153d0d"
+  ],
+  "illustration_id": "0e2a20ba-7bd5-4771-9c16-234046f1aa47",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11964,
+  "prices": {
+    "usd": "0.30",
+    "usd_foil": "0.31",
+    "usd_etched": null,
+    "eur": "0.26",
+    "eur_foil": "0.61",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DConstruct%2Ba%2BCosmic%2BCube",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DConstruct%2Ba%2BCosmic%2BCube",
+    "edhrec": "https://edhrec.com/route/?cc=Construct+a+Cosmic+Cube"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696235%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=890555&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152367?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

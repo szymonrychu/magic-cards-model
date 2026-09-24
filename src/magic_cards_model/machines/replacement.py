@@ -2745,6 +2745,22 @@ def _creature_on_battlefield(game: "Game", card: CardState) -> bool:
 
 def _prevention_recipient(group: str) -> _PreventionRecipient | None:
     words = group.strip().lower()
+    if words in ("this creature", "this permanent") or re.fullmatch(
+        r"[A-Z][\w'-]*(?:[ ,-]+[A-Z][\w'-]*)*", group.strip()
+    ):
+        # "Prevent all damage that would be dealt to Black Panther." / "... to
+        # Cho-Manno." - the permanent naming itself (CR 201.5), checked
+        # against the holder's own current face name as the damage arrives.
+        printed = group.strip()
+
+        def itself(game: "Game", holder: CardState, event: ReplaceableEvent) -> bool:
+            if event.card is None or event.card.id != holder.id:
+                return False
+            return words in ("this creature", "this permanent") or printed in (
+                self_reference_names(holder.name)
+            )
+
+        return itself
     if words in ("equipped creature", "enchanted creature"):
         return lambda game, holder, event: (
             event.card is not None

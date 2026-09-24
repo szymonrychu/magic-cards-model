@@ -1033,3 +1033,34 @@ def test_a_snapshot_written_before_treasure_mana_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_TREASURE_MANA}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before C02-T5's "one or more" batch bookkeeping
+#: (`tapped_since_last_batch`, `graveyard_arrivals_announced`) and this-turn
+#: spell grants (`next_spell_free_cast_grants`, `spell_cost_reduction_grants`).
+_SCHEMA_VERSION_BEFORE_BATCHED_EVENTS = 73
+
+
+def test_the_batched_events_bump_moved_the_version_past_seventy_three() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_BATCHED_EVENTS
+
+
+def test_a_snapshot_written_before_batched_events_is_refused() -> None:
+    """A version-73 dump has no `graveyard_arrivals_announced`; decoded as
+    current, every graveyard arrival already this turn would read as not yet
+    announced and be raised again as one fresh batch. Refused instead."""
+    dumped = _a_played_game().model_dump(mode="json")
+    for field in (
+        "tapped_since_last_batch",
+        "graveyard_arrivals_announced",
+        "next_spell_free_cast_grants",
+        "spell_cost_reduction_grants",
+    ):
+        del dumped[field]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_BATCHED_EVENTS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATCHED_EVENTS}",
+    ):
+        Game.model_validate(dumped)

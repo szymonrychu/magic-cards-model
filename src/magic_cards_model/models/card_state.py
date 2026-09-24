@@ -2260,6 +2260,15 @@ class CardState(EngineModel):
         if self.tapped:
             raise ValueError(f"{self.name} is already tapped")
         self.tapped = True
+        self._note_tapped()
+
+    def _note_tapped(self) -> None:
+        """Tell the bound game this permanent became tapped (CR 701.26a), for
+        CR 603.2c's "one or more ... become tapped" batch
+        (`Game.note_permanent_tapped`). Unbound, there is nobody to tell."""
+        note = getattr(self._board_source, "note_permanent_tapped", None)
+        if note is not None:
+            note(self)
 
     def tap_if_untapped(self) -> bool:
         """Tap this card if it is not already tapped; otherwise leave it be.
@@ -2281,6 +2290,7 @@ class CardState(EngineModel):
         if self.tapped:
             return False
         self.tapped = True
+        self._note_tapped()
         return True
 
     def untap(self, *, exert_applies: bool = True) -> None:

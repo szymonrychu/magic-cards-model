@@ -1171,8 +1171,10 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE = re.compile(
 #: own X. Not a count of anything: an extremum over a characteristic, which
 #: is why it needs its own reader rather than a wider qualifier on the two
 #: counting shapes above.
+#: Armor Wars' "the greatest mana value among artifacts you control" (One with
+#: the Machine's own amount) is the same extremum over CR 202.3's mana value.
 _GREATEST_CHARACTERISTIC_AMONG_RE = re.compile(
-    r"^(?:the )?greatest (?P<characteristic>power|toughness) among "
+    r"^(?:the )?greatest (?P<characteristic>power|toughness|mana value) among "
     r"(?P<qualifier>[a-z]+) you control$",
     re.IGNORECASE,
 )
@@ -1422,6 +1424,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         if card_type is None:
             return None
         wants_power = match.group("characteristic").lower() == "power"
+        wants_mana_value = match.group("characteristic").lower() == "mana value"
 
         def greatest_among(game: "Game", controller: str) -> int:
             board = game.computed_board()
@@ -1429,6 +1432,9 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             for permanent in game.battlefield:
                 chars = board.of(permanent)
                 if chars.controller != controller or card_type not in chars.types:
+                    continue
+                if wants_mana_value:
+                    values.append(int(permanent.mana_value))  # CR 202.3
                     continue
                 # CR 208.5: "If a creature somehow has no value for its power,
                 # its power is 0. The same is true for toughness." - a `*`
@@ -7079,9 +7085,13 @@ _TRANSFORM_SELF_AT_NEXT_STEP_RE = re.compile(
 #: "It deals 3 damage to each other creature and each opponent." (Avacyn, the
 #: Purifier's own transform trigger): CR 120.1's non-targeted damage to every
 #: permanent of one card type but the source itself, and to each opponent.
+#: Widened (C02-T5) to "each creature" with no "other" (The Elder Dragon War's
+#: chapter I), a "non-`<Subtype>`" exclusion (Avengers: Under Siege's "each
+#: non-Villain creature and each opponent", CR 205.3) and "each player".
 _DAMAGE_EACH_OTHER_TYPE_AND_EACH_OPPONENT_RE = re.compile(
-    rf"^(?:it|this [a-z]+) deals {count_pattern('n', article=False)} damage to each other "
-    r"(?P<type>[a-z]+) and each opponent\.?$",
+    rf"^(?:it|this [a-z]+) deals {count_pattern('n', article=False)} damage to each "
+    r"(?P<other>other )?(?:non-?(?P<excluded>(?-i:[A-Z][A-Za-z]+)) )?"
+    r"(?P<type>[a-z]+) and each (?P<who>opponent|player)\.?$",
     re.IGNORECASE,
 )
 
@@ -7099,8 +7109,13 @@ def _parse_damage_each_other_type_and_each_opponent_clause(
         return None
     amount = parse_count(match.group("n"), article=False)
     card_type = _singular_card_type(match.group("type"))
+    excluded = match.group("excluded")
+    if excluded is not None and canonical_subtype(excluded) is None:
+        return None
     if amount is None or card_type is None:
         return None
+    other_only = match.group("other") is not None
+    every_player = match.group("who").lower() == "player"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = (
@@ -7112,10 +7127,19 @@ def _parse_damage_each_other_type_and_each_opponent_clause(
         controller = game.controller_of(stack_object).username
         board = game.computed_board()
         for permanent in list(game.battlefield):
-            if permanent.id != source_id and card_type in board.of(permanent).types:
-                game.deal_damage(permanent, amount, source=source)
-        for opponent in _opponents(game, controller):
-            game.deal_damage(opponent, amount, source=source)
+            chars = board.of(permanent)
+            if other_only and permanent.id == source_id:
+                continue
+            if card_type not in chars.types:
+                continue
+            if excluded is not None and any(
+                subtype.lower() == excluded.lower() for subtype in chars.subtypes
+            ):
+                continue
+            game.deal_damage(permanent, amount, source=source)
+        players = game.players_in_game if every_player else _opponents(game, controller)
+        for player in players:
+            game.deal_damage(player, amount, source=source)
 
     return effect
 
@@ -7367,6 +7391,88 @@ def _parse_put_land_from_hand_clause(clause: str, *, for_spell: bool) -> Targete
         )
         for card_state in chosen:
             game.put_onto_battlefield(card_state, player.username, tapped=tapped)
+
+    return effect
+
+
+#: "You may put a[n] `<description>` card[ with mana value N or less] from
+#: your hand onto the battlefield[ tapped].[ If you don't, `<effect>`.]" -
+#: Origin of the Avengers' chapter II ("a Hero creature card with mana value 3
+#: or less ... If you don't, draw a card.") and Warren
+#: Instigator's "a Goblin creature card". The description is read by the
+#: search-quality reader (`_search_quality_is_readable`, `_quality_matcher`);
+#: any word it cannot place leaves the whole sentence unread. Tried
+#: only once every other reader has passed, so it never takes a sentence one
+#: of them already reads.
+_MAY_PUT_CARD_FROM_HAND_RE = re.compile(
+    r"^you may put an? (?P<desc>[^.]+?) card(?: with mana value (?P<mv>\d+) or less)?"
+    r" from your hand onto the battlefield(?P<tapped> tapped)?"
+    r"(?:\.\s*if you don'?t, (?P<otherwise>.+?))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_put_card_from_hand_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_MAY_PUT_CARD_FROM_HAND_RE`'s shape. CR 608.2d: the controller chooses
+    whether and which, only among cards that qualify - a hand with none has
+    nothing to choose, so the "you may" is not asked. CR 110.2a: it enters
+    under their control. "If you don't" (CR 608.2c) runs the other effect when
+    nothing was put onto the battlefield, for either reason."""
+    match = _MAY_PUT_CARD_FROM_HAND_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    if not _search_quality_is_readable(match.group("desc")):
+        return None
+    matches = _quality_matcher(match.group("desc"))
+    cap = int(match.group("mv")) if match.group("mv") else None
+    tapped = match.group("tapped") is not None
+    otherwise_text = match.group("otherwise")
+    otherwise = (
+        _parse_mixed_clauses(otherwise_text.strip() + ".", for_spell=for_spell)
+        if otherwise_text
+        else []
+    )
+    if otherwise is None:
+        return None
+    phrase = f"{match.group('desc')} card" + (
+        f" with mana value {cap} or less" if cap is not None else ""
+    )
+
+    def qualifies(card: CardState) -> bool:
+        return matches(card) and (cap is None or card.mana_value <= cap)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        candidates = [card for card in player.hand if qualifies(card)]
+        put = False
+        if candidates and game.may(
+            player,
+            f"put a {phrase} from your hand onto the battlefield",
+            source=source,
+            source_id=source_id,
+            cards=candidates,
+        ):
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"choose a {phrase} to put onto the battlefield",
+                    source=source,
+                    source_id=source_id,
+                    amount=1,
+                    cards=tuple(card.id for card in candidates),
+                    default_cards=(candidates[0].id,),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            chosen = next(card for card in candidates if card.id == chosen_ids[0])
+            game.put_onto_battlefield(chosen, player.username, tapped=tapped)
+            put = True
+        if not put:
+            for clause in otherwise:
+                clause(game, stack_object)
 
     return effect
 
@@ -8751,6 +8857,33 @@ def _parse_discard_unless_condition_clause(clause: str) -> ClauseEffect | None:
     return discard_unless
 
 
+#: "each opponent draws a card" (Armor Wars' chapter I) - CR 121.2's draw by
+#: every opponent of the clause's player, CR 121.2c's turn order (the active
+#: player's draws first) among them.
+_EACH_OPPONENT_DRAWS_RE = re.compile(
+    rf"^each opponent draws (?:a card|(?P<n>{COUNT}) cards)$", re.IGNORECASE
+)
+
+
+def _each_opponent_draws_clause(clause: str) -> ClauseEffect | None:
+    """`_EACH_OPPONENT_DRAWS_RE`'s draw, or `None`."""
+    match = _EACH_OPPONENT_DRAWS_RE.fullmatch(clause)
+    if match is None:
+        return None
+    count = parse_count(match.group("n")) if match.group("n") else 1
+    if count is None:
+        return None
+
+    def each_opponent_draws(
+        game: "Game", player: Player, source: str, source_id: str | None
+    ) -> None:
+        for opponent in _players_in_apnap_order(game):
+            if opponent.username != player.username:
+                game.draw_cards(opponent.username, count)
+
+    return each_opponent_draws
+
+
 def parse_clause_effect(clause: str) -> ClauseEffect | None:
     """One clause of an effect with nobody to ask a question of: a plain life
     total change, an energy grant, a draw, a mill, a surveil or a scry.
@@ -8769,6 +8902,10 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
     discard_unless = _parse_discard_unless_condition_clause(clause)
     if discard_unless is not None:
         return discard_unless
+
+    each_opponent_draws = _each_opponent_draws_clause(clause)
+    if each_opponent_draws is not None:
+        return each_opponent_draws
 
     if match := _GAIN_LIFE_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
@@ -18966,6 +19103,75 @@ def _parse_base_pt_become_clause(effect_text: str) -> AbilityEffect | None:
     return effect
 
 
+#: The same layer 7b set (CR 613.4b) on the ability's own source, with a
+#: keyword granted for the same duration: "until end of turn, Moon Girl and
+#: Devil Dinosaur's base power and toughness become 6/6 and they gain
+#: trample." (the name already "this permanent", the duration leading) and
+#: Shorecrasher Mimic's "this creature has base power and toughness 5/3 until
+#: end of turn and gains trample until end of turn." (a "has" form, the
+#: duration trailing each half).
+_SELF_BASE_PT_SET_WITH_KEYWORDS_RE = re.compile(
+    rf"^(?P<lead>until end of turn, )?(?:(?:{_SELF_WORDS})['’]s base power and toughness become"
+    rf"|(?:{_SELF_WORDS}) (?:has|have) base power and toughness) "
+    r"(?P<power>\d+)/(?P<toughness>\d+)(?P<trail> until end of turn)?"
+    r" and (?:it gains|they gain|gains?) (?P<keywords>[^.]+?)(?: until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_base_pt_set_with_keywords_clause(effect_text: str) -> AbilityEffect | None:
+    """`_SELF_BASE_PT_SET_WITH_KEYWORDS_RE`'s shape: the source's base power
+    and toughness set in layer 7b and each keyword granted in layer 6 (CR
+    613.1f), both until end of turn (CR 514.2), with one shared timestamp.
+    The source must still be the object that triggered (CR 400.7)."""
+    match = _SELF_BASE_PT_SET_WITH_KEYWORDS_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None or not (match.group("lead") or match.group("trail")):
+        return None
+    keywords = _split_and_validate_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+    power, toughness = int(match.group("power")), int(match.group("toughness"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        subject = ability.source(game)
+        if subject is None or subject.zone is not Zone.BATTLEFIELD:
+            return
+        if ability.source_stamp not in (None, subject.zone_change_stamp):
+            return
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        selector = only_this_incarnation(subject, subject.zone_change_stamp)
+        store.add(
+            ContinuousEffect(
+                description=(
+                    f"{ability.source_name}: {subject.name} has base power and "
+                    f"toughness {power}/{toughness}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=selector,
+                modification=set_power_toughness(power, toughness),
+            ),
+            game,
+        )
+        for keyword in keywords:
+            store.add(
+                ContinuousEffect(
+                    description=f"{ability.source_name}: {subject.name} gains {keyword}",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=grant_ability(keyword),
+                ),
+                game,
+            )
+
+    return effect
+
+
 #: "Prevent all damage that would be dealt by up to one target creature for
 #: as long as this Saga remains on the battlefield." (Old Fat Spider Can't
 #: See Me's chapter II) and "Prevent all combat damage that would be dealt by
@@ -22656,10 +22862,39 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     Possibility Storm shares the identical opening and is read the same way.
     """
     from .meld import parse_meld_activation_clause, parse_meld_resolution_clause
+    from .plans import (
+        parse_put_counters_on_two_objects,
+        parse_sacrifice_self_then_series,
+        parse_sacrifice_self_when_you_do,
+    )
 
     meld_activation = parse_meld_activation_clause(effect_text)
     if meld_activation is not None:
         return meld_activation
+    # The Plans' payoff joins and Claim the Kingdom's two-object "put" -
+    # `machines/plans.py`. Read whole: "When you do" and the shared "put"
+    # both straddle the clause splitter's cuts.
+    for plan_shape in (
+        parse_sacrifice_self_when_you_do,
+        parse_sacrifice_self_then_series,
+        parse_put_counters_on_two_objects,
+    ):
+        plan_effect = plan_shape(effect_text)
+        if plan_effect is not None:
+            return plan_effect
+    doubled = _parse_double_power_and_toughness_clause(effect_text)
+    if doubled is not None:
+        return doubled
+    self_base_pt_with_keywords = _parse_self_base_pt_set_with_keywords_clause(effect_text)
+    if self_base_pt_with_keywords is not None:
+        return self_base_pt_with_keywords
+    if re.search(r"\bif you don'?t,", effect_text, re.IGNORECASE):
+        # Origin of the Avengers' "... from your hand onto the battlefield.
+        # If you don't, draw a card." - the tail belongs to the put, so the
+        # whole text is read before the clause splitter cuts it off.
+        put_or_else = _parse_may_put_card_from_hand_clause(effect_text, for_spell=False)
+        if put_or_else is not None:
+            return put_or_else
     base_pt_become = _parse_base_pt_become_clause(effect_text)
     if base_pt_become is not None:
         return base_pt_become
@@ -37699,6 +37934,10 @@ def _search_quality_is_readable(quality: str) -> bool:
         return _search_quality_is_readable(lowered.removeprefix("basic "))
     if lowered.startswith("snow "):
         return _search_quality_is_readable(lowered.removeprefix("snow "))
+    if lowered == "historic":
+        # CR 700.6 - `_quality_matcher` reads it (`_historic`); this check
+        # had drifted from it and refused the word.
+        return True
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
     if not words:
         return False
@@ -37741,6 +37980,104 @@ _EXILE_TOP_OF_YOUR_LIBRARY_RE = re.compile(
     r"|(?P<that_many>that many) cards from the top of your library)$",
     re.IGNORECASE,
 )
+
+
+#: "The next red or green creature spell you cast this turn can be cast
+#: without paying its mana cost." (World War Hulk's chapter I) and "Artifact
+#: spells you cast this turn cost {1} less to cast." (Armor Wars' chapter II;
+#: Ballad of the Black Flag's "Historic spells ... {2} less") - this-turn
+#: effects on spells not yet cast, recorded on `Game` (`machines/next_spell.
+#: py`). The quality is the printed phrase, read by `spell_has_quality`.
+_NEXT_SPELL_FREE_CAST_RE = re.compile(
+    r"^the next (?P<quality>[^.]+?) spell you cast this turn can be cast without paying"
+    r" its mana cost\.?$",
+    re.IGNORECASE,
+)
+_SPELLS_COST_LESS_THIS_TURN_RE = re.compile(
+    r"^(?P<quality>[^.]+?) spells you cast this turn cost \{(?P<n>\d+)\} less to cast\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_NEXT_SPELL_FREE_CAST_RE` (CR 118.9) or `_SPELLS_COST_LESS_THIS_TURN_
+    RE` (CR 601.2f), for the resolving object's controller, this turn."""
+    from .next_spell import (
+        NextSpellFreeCastGrant,
+        SpellCostReductionGrant,
+        spell_quality_is_readable,
+    )
+
+    text = " ".join(clause.strip().split())
+    free = _NEXT_SPELL_FREE_CAST_RE.fullmatch(text)
+    cheaper = _SPELLS_COST_LESS_THIS_TURN_RE.fullmatch(text)
+    matched = free or cheaper
+    if matched is None or not spell_quality_is_readable(matched.group("quality")):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        turn = game.turn.turns_taken if game.turn is not None else 0
+        if free is not None:
+            game.next_spell_free_cast_grants = [
+                *game.next_spell_free_cast_grants,
+                NextSpellFreeCastGrant(
+                    controller=controller,
+                    source_name=source_name,
+                    quality=free.group("quality").strip(),
+                    turn=turn,
+                ),
+            ]
+        elif cheaper is not None:
+            game.spell_cost_reduction_grants = [
+                *game.spell_cost_reduction_grants,
+                SpellCostReductionGrant(
+                    controller=controller,
+                    source_name=source_name,
+                    quality=cheaper.group("quality").strip(),
+                    amount=int(cheaper.group("n")),
+                    turn=turn,
+                ),
+            ]
+
+    return effect
+
+
+#: "draw cards equal to the difference" - The Ten Rings', Doctor Octopus,
+#: Master Planner's and Kozilek, the Great Distortion's, whose intervening if
+#: (CR 603.4) names the other number: "if you have fewer than ten cards in
+#: hand". The difference is read as the ability resolves (CR 608.2h).
+_DRAW_THE_DIFFERENCE_RE = re.compile(r"^(?:you )?draw cards equal to the difference\.?$", re.I)
+_FEWER_THAN_N_CARDS_IN_HAND_RE = re.compile(
+    rf"^you have fewer than (?P<n>{COUNT}) cards in (?:your )?hand$", re.IGNORECASE
+)
+
+
+def _parse_draw_the_difference_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_DRAW_THE_DIFFERENCE_RE`, on a triggered ability whose intervening if
+    is `_FEWER_THAN_N_CARDS_IN_HAND_RE`: its controller draws N minus the
+    cards in their hand now. Any other antecedent draws nothing."""
+    if for_spell or _DRAW_THE_DIFFERENCE_RE.fullmatch(" ".join(clause.strip().split())) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        condition = getattr(stack_object.ability, "intervening_if", None) or ""
+        match = _FEWER_THAN_N_CARDS_IN_HAND_RE.fullmatch(condition.strip().rstrip("."))
+        target = parse_count(match.group("n")) if match is not None else None
+        if target is None:
+            return
+        player = game.controller_of(stack_object)
+        difference = target - len(player.hand)
+        if difference > 0:
+            game.draw_cards(player.username, difference)
+
+    return effect
 
 
 def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
@@ -37910,8 +38247,12 @@ def _parse_exile_until_antecedent(clause: str) -> "tuple[ExileAntecedent, bool] 
 #: later in the turn. Timing restrictions based on the cards' types are
 #: ignored."), CR 107.1c's "any number" includes none, and CR 118.9's
 #: "without paying" leaves X at 0 (CR 107.3b).
+#: Doom Reigns Supreme's "You may cast up to two spells from among the exiled
+#: cards without paying their mana costs." is the same instruction with an
+#: "up to" maximum and the antecedent named rather than pronouned.
 _CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE = re.compile(
-    r"^you may cast any number of spells from among them without paying their mana costs\.?$",
+    rf"^you may cast (?:any number of|up to {count_pattern('limit')}) spells from among"
+    r" (?:them|the exiled cards) without paying their mana costs\.?$",
     re.IGNORECASE,
 )
 
@@ -37924,9 +38265,11 @@ def _merge_exile_then_cast_any_number_free_clauses(
     printed moves them (CR 406.1)."""
     if index + 1 >= len(clauses):
         return None
-    if _CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE.fullmatch(clauses[index + 1].strip()) is None:
+    cast_match = _CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE.fullmatch(clauses[index + 1].strip())
+    if cast_match is None:
         return None
-    antecedent = (
+    limit = parse_count(cast_match.group("limit")) if cast_match.group("limit") else None
+    antecedent = _parse_exile_top_of_other_libraries_antecedent(clauses[index]) or (
         _spell_safe_exile_antecedent(clauses[index])
         if for_spell
         else (
@@ -37954,6 +38297,7 @@ def _merge_exile_then_cast_any_number_free_clauses(
             source_name=source_name,
             source_id=source_id_of(stack_object),
             play=False,
+            limit=limit,
         )
 
     return 2, effect
@@ -37967,6 +38311,7 @@ def _offer_free_casts_from_among(
     source_name: str,
     source_id: str | None,
     play: bool,
+    limit: int | None = None,
 ) -> None:
     """CR 608.2g's "you may [play lands and] cast [any number of] spells from
     among <cards> without paying their mana costs", one card at a time until
@@ -37983,7 +38328,8 @@ def _offer_free_casts_from_among(
     CR 118.3's cost).
     """
     remaining = [card for card in cards if card.zone is Zone.EXILE]
-    while remaining:
+    taken_count = 0
+    while remaining and (limit is None or taken_count < limit):
         legal = [
             card
             for card in remaining
@@ -38026,6 +38372,7 @@ def _offer_free_casts_from_among(
         by_id = {card.id: card for card in legal}
         chosen = by_id[chosen_ids[0]]
         remaining.remove(chosen)
+        taken_count += 1  # "up to N" is a maximum, and N have been cast.
         if not play:
             # Already chosen above: cast it, with no second "you may".
             game.cast_during_resolution(chosen, caster, source_name=source_name, rule="CR 608.2g")
@@ -44330,6 +44677,17 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     targeted = _parse_targeted_clause(clause, for_spell=for_spell)
     if targeted is not None:
         return targeted
+    this_turn_spell_grant = _parse_this_turn_spell_grant_clause(clause, for_spell=for_spell)
+    if this_turn_spell_grant is not None:
+        return this_turn_spell_grant
+    draw_the_difference = _parse_draw_the_difference_clause(clause, for_spell=for_spell)
+    if draw_the_difference is not None:
+        return draw_the_difference
+    from .player_control import parse_control_target_player_next_turn
+
+    control_player = parse_control_target_player_next_turn(clause, for_spell=for_spell)
+    if control_player is not None:
+        return control_player
     shuffle_targets = _parse_shuffle_target_cards_into_library_clause(clause, for_spell=for_spell)
     if shuffle_targets is not None:
         return shuffle_targets
@@ -44903,7 +45261,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if player_clause is None:
         # Last resort: a "you may" over a board instruction rather than over
         # the plain-player vocabulary `_parse_optional_player_clause` covers.
-        return _parse_optional_mixed_clause(clause, for_spell=for_spell)
+        return _parse_optional_mixed_clause(
+            clause, for_spell=for_spell
+        ) or _parse_may_put_card_from_hand_clause(clause, for_spell=for_spell)
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -46648,10 +47008,9 @@ def emrakul_cast_trigger(game: "Game", ability: AbilityOnStack) -> None:
     no turn object to point at - and CR 603.7b's default of triggering once is
     exactly right for a one-off extra turn.
 
-    **The control duration is still not modelled.** The card gives control
-    "during that player's next turn" and `Game.gain_control_of_player` has no
-    duration argument, so control is handed over now and never returned. See
-    `docs/engine-coverage.md`.
+    The control itself is CR 723.1's: `Game.gain_control_of_player` queues it
+    for the player's next turn and `TurnMachine` ends it as the following
+    turn begins.
 
     There being no target chosen leaves this doing nothing, which is CR 608.2b's
     outcome for a trigger whose targets are all gone anyway.
@@ -47846,6 +48205,10 @@ def _parse_card_group_qualifier(phrase: str) -> Callable[[CardState], bool] | No
     below is what splits it before each half reaches this.
     """
     text = phrase.strip()
+    if re.fullmatch(r"historic(?: cards?)?", text, re.IGNORECASE):
+        # CR 700.6 (Ballad of the Black Flag's "a historic card from among
+        # them") - the same `_historic` the search-quality reader uses.
+        return _historic
     ceiling: int | None = None
     floor: int | None = None
     bound = _CARD_MANA_VALUE_BOUND_RE.fullmatch(text)
@@ -51286,6 +51649,89 @@ def _parse_double_power_target_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Choose target creature you control. Until end of turn, double its power
+#: and toughness and it gains trample." (World War Hulk's chapter III) and
+#: "double its power and toughness until end of turn." (Grunn, the Lonely
+#: King's attack trigger, "its" the source itself) - CR 701.10b's doubling of
+#: both, with an optional keyword grant for the same duration. "its" is the
+#: chosen target when a "Choose target ..." sentence precedes it, and the
+#: ability's own source otherwise.
+_DOUBLE_POWER_AND_TOUGHNESS_RE = re.compile(
+    r"^(?:choose (?P<phrase>(?:up to one |one |a )?(?:other |another )?target creature"
+    r"(?: you control)?)\.\s*)?(?P<lead>until end of turn, )?double its power and toughness"
+    r"(?P<trail> until end of turn)?(?: and (?:it|that creature) gains? (?P<keywords>[^.]+?))?"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_double_power_and_toughness_clause(text: str) -> AbilityEffect | None:
+    """`_DOUBLE_POWER_AND_TOUGHNESS_RE`'s shape. CR 701.10a/b: the creature
+    gets +X/+Y where X and Y are its power and toughness as this resolves - a
+    layer 7c modification (CR 613.4c), fixed once created (CR 611.2c) - and a
+    negative value doubles to its own negative (CR 701.10c), which the same
+    arithmetic gives. A creature no longer on the battlefield gets nothing."""
+    match = _DOUBLE_POWER_AND_TOUGHNESS_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or not (match.group("lead") or match.group("trail")):
+        return None
+    phrase = match.group("phrase")
+    if phrase is not None and not _targets_understood(phrase, count_agnostic=False):
+        return None
+    keywords: list[str] = []
+    if match.group("keywords"):
+        read = _split_and_validate_keywords(
+            re.sub(r" until end of turn$", "", match.group("keywords").strip(), flags=re.I)
+        )
+        if read is None:
+            return None
+        keywords = read
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if phrase is not None:
+            subjects = [
+                target
+                for target in game.resolve_targets(ability)
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+            ]
+        else:
+            source = ability.source(game)
+            subjects = [source] if source is not None and source.zone is Zone.BATTLEFIELD else []
+            if subjects and ability.source_stamp not in (None, subjects[0].zone_change_stamp):
+                subjects = []  # CR 400.7: a new object, not the one that triggered
+        store = continuous_effects(game)
+        for subject in subjects:
+            power, toughness = game.characteristics_of(subject).numeric_power_toughness
+            timestamp = store.tick()
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{ability.source_name}: {subject.name} gets +{power}/+{toughness}"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(subject, subject.zone_change_stamp),
+                    modification=modify_power_toughness(power, toughness),
+                ),
+                game,
+            )
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{ability.source_name}: {subject.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(subject, subject.zone_change_stamp),
+                        modification=grant_ability(keyword),
+                    ),
+                    game,
+                )
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # Put or create, [grant,] then take away at the next end step (S22)
 # --------------------------------------------------------------------------
@@ -51966,9 +52412,15 @@ _PAY_LIFE_FOR_MANA_VALUE_RE = re.compile(
 #: Moon Sage's Scion) - libraries other than the controller's own, which
 #: `_EXILE_TOP_OF_YOUR_LIBRARY_RE` reads. The cards stay owned by their
 #: owners (CR 108.3); a permission after them goes to the controller.
+#: Widened (C02-T5) to the same exile said by the targeted player: Doom
+#: Reigns Supreme's "target opponent exiles the top five cards of their
+#: library" (CR 406.2 - who performs the exile does not change what is
+#: exiled, or whose library it came from).
 _EXILE_TOP_OF_OTHER_LIBRARIES_RE = re.compile(
-    rf"^exile the top (?:card|(?P<n>{COUNT}) cards) of "
-    r"(?:(?P<target>target (?:opponent|player))|each (?P<each>opponent|player))'s library$",
+    rf"^(?:exile the top (?:card|(?P<n>{COUNT}) cards) of "
+    r"(?:(?P<target>target (?:opponent|player))|each (?P<each>opponent|player))'s library"
+    rf"|(?P<target_exiles>target (?:opponent|player)) exiles the top (?:card|(?P<m>{COUNT}) cards)"
+    r" of their library)$",
     re.IGNORECASE,
 )
 
@@ -51984,10 +52436,11 @@ def _parse_exile_top_of_other_libraries_antecedent(
     match = _EXILE_TOP_OF_OTHER_LIBRARIES_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    count = parse_count(match.group("n")) if match.group("n") else 1
+    count_word = match.group("n") or match.group("m")
+    count = parse_count(count_word) if count_word else 1
     if count is None:
         return None
-    targeted = match.group("target") is not None
+    targeted = match.group("target") is not None or match.group("target_exiles") is not None
     opponents_only = (match.group("each") or "").lower() == "opponent"
 
     def exile_tops(game: "Game", stack_object: "StackObject") -> list[CardState]:
@@ -52012,7 +52465,7 @@ def _parse_exile_top_of_other_libraries_antecedent(
                 exiled.append(game.exile_permanent(player.library[0]))
         return exiled
 
-    return exile_tops, not targeted or match.group("n") is not None
+    return exile_tops, not targeted or count_word is not None
 
 
 #: Exile the top `<n>` cards of a library face down, then a play permission

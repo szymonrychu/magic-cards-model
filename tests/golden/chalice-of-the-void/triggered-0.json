@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cast_records", "graveyard_arrivals_this_turn", "spells_cast_this_turn"],
+    "fields_changed": ["cast_records", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "spells_cast_this_turn"],
     "notices": {},
     "objects": {
       "Memnite@alice#2": {
