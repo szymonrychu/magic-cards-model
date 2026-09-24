@@ -9392,6 +9392,23 @@ class Game(EngineModel):
             consequence = reflexive_consequence_text(text)
             if consequence is not None:
                 text = consequence
+        elif isinstance(printed, TriggeredAbility) and printed.effect:
+            # CR 603.1/601.2c: only the ability's own *effect* can name a
+            # target it announces as it goes on the stack - the trigger
+            # *condition* in front of it (CR 603.2) describes what already
+            # happened, not what this ability itself points at. Speedball,
+            # New Warrior's own "Whenever a player casts a spell that
+            # targets Speedball, he gets +2/+2 ..." is the case that needs
+            # this: scanning the whole text let `profile_for_text` misread
+            # "targets Speedball" (a CR 201.5 self-reference sitting inside
+            # the *condition*) as this ability's own "target <subtype>
+            # creature" requirement - a mandatory target with no legal
+            # candidate, which then removed the whole ability from the
+            # stack outright (CR 603.3d) before its real, targetless effect
+            # ever ran. `TriggeredAbility.effect` is already split off the
+            # condition by `machines/abilities.py`'s own parser, so this
+            # reuses that split instead of re-deriving it here.
+            text = printed.effect
         profile = profile_for_text(text).for_event_player(_that_player_of(ability))
         return self._ask_targets(
             profile, ability.controller, ability.source_id, ability.source_name, text
@@ -16427,6 +16444,13 @@ class Game(EngineModel):
             # ..." read their controller's, neither of which stands on the
             # battlefield as a characteristic the layer engine could see.
             life_by_player={player.username: player.life for player in self.players_in_game},
+            # CR 402.2: Ms. Marvel, Kamala Khan's own granted "'s base power
+            # is equal to the number of cards in your hand." reads a hand
+            # size, which no more stands on the battlefield as a
+            # characteristic than a life total does.
+            hand_size_by_player={
+                player.username: len(player.hand) for player in self.players_in_game
+            },
             # CR 702.195b's enduring story, which "As long as you have an
             # enduring story, ..." statics read off their controller.
             enduring_story_players=frozenset(

@@ -1391,7 +1391,7 @@
         "you may pay {1}. If you do, draw a card.": "_parse_may_pay_mana_if_you_do_clause",
         "you may pay {1}. When you do, destroy all artifacts, creatures, and enchantments.": "<none>",
         "you may pay {1}. When you do, put a +1/+1 counter on target Shrine for each Shrine you control.": "_parse_reflexive_pay_mana_clause",
-        "you may pay {1}. When you do, target creature with haste can't be blocked this turn except by creatures with haste.": "<none>",
+        "you may pay {1}. When you do, target creature with haste can't be blocked this turn except by creatures with haste.": "_parse_reflexive_pay_mana_clause",
         "you may pay {1}{B/G}. If you do, create a 1/1 black Snake creature token with deathtouch.": "_parse_may_pay_mana_if_you_do_clause",
         "you may pay {2}. If you do, create a 2/2 colorless Robot artifact creature token that's tapped and attacking. Sacrifice that token at end of combat.": "_parse_may_cost_then_attacking_token_clause",
         "you may pay {2}. If you do, put a +1/+1 counter on Proft and draw a card.": "<none>",

@@ -7050,6 +7050,60 @@ def _creature_subtype_count_cda_builder(subtypes: tuple[str, ...], *, line: str)
     return builder
 
 
+#: "This creature's/permanent's/token's [base] power is equal to the number
+#: of cards in your hand." - Ms. Marvel, Kamala Khan's own granted CDA ("Ms.
+#: Marvel's base power is equal to the number of cards in your hand.",
+#: self-normalized to "this permanent's..." the same way every other self-
+#: reference reaches this dispatcher, CR 201.5c). CR 604.3/613.4a: a
+#: characteristic-defining ability written directly on the object it defines
+#: sets power in sublayer 7a regardless of the word "base" in front of it -
+#: the same layer Tarmogoyf's and Boneyard Wurm's own "power is equal to
+#: ..." CDAs use (`_source_line_for`'s comment on those rows applies here
+#: too: "base" changes nothing about which layer the ability lands in, CR
+#: 613.4a already covers a CDA that merely happens to use the word).
+_HAND_SIZE_POWER_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s (?:base )?power is equal to the "
+    r"number of cards in (?:your|their) hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _hand_size_power_cda_builder(sentence: str) -> EffectBuilder:
+    """`_HAND_SIZE_POWER_CDA_RE`'s shape - see its own docstring.
+
+    `context.hand_size_of` is read at build time the same live-recompute way
+    every other off-battlefield `LayerContext` count is (`context.life_of`,
+    `context.graveyard_of`, `context.unspent_mana_of`): the board is rebuilt
+    on every `computed_board()` call (CR 613.5), and this whole function runs
+    again each time, so the count tracks the controller's hand as it grows
+    and shrinks through the rest of the turn rather than freezing at whatever
+    it was the moment the ability granting this CDA resolved.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        count = context.hand_size_of(source.controller)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: power {count} from cards in hand",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                characteristic_defining=True,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, sentence),
+                selector=_only(source.id),
+                modification=define_power(FixedCount(value=count)),
+            )
+        ]
+
+    return builder
+
+
 #: "This permanent's power is equal to the number of basic land types among
 #: lands you control." (Fblthp, Knows the Way; Nishoba Brawler,
 #: `resolve_cards`-confirmed identical wording) - *domain*'s power-only twin:
@@ -8455,6 +8509,92 @@ def sync_granted_ability_texts(
         return
     for permanent in permanents:
         mine = wanted.get(permanent.id, set())
+        kept = tuple(
+            text
+            for text in permanent.granted_ability_texts
+            if text not in grantable or text in mine
+        )
+        updated = kept + tuple(text for text in sorted(mine) if text not in kept)
+        if updated != permanent.granted_ability_texts:
+            permanent.granted_ability_texts = updated
+
+
+def _stored_self_grant_ability_texts(
+    permanent: CardState, stored: Sequence[ContinuousEffect]
+) -> frozenset[str]:
+    """Every quoted ability a *resolved* spell or ability's own stored grant
+    (CR 611.2, CR 613.1f) is putting on `permanent` right now - the
+    stored-effect counterpart of `quoted_ability_grants`'s printed-text
+    vocabulary, for a grant with no printed source at all: Iron Fist, Living
+    Weapon's and Ms. Marvel, Kamala Khan's own "`<this>` gains '`<ability>`'
+    until end of turn." triggers, each a hand-built `ContinuousEffect` via
+    `grant_ability`/`ContinuousEffects.add` rather than anything read off a
+    card's printed text.
+
+    Limited to the two selector shapes every such self-grant in the pool
+    actually uses - `Only`/`OnlyThisIncarnation` - matched here by `card_id`
+    (and, for the incarnation-scoped kind, `zone_change_stamp`) directly
+    rather than through `Selector.__call__`, which needs a `Board` this
+    reconcile step runs *before* one exists (it is what decides what goes
+    into the next board computation in the first place). A stored grant
+    using any other selector shape - none does, in the pool, for a bare
+    `GrantAbility`/`GrantAbilityInstance` modification - is left unread
+    rather than matched against a board that is not there yet.
+    """
+    texts: set[str] = set()
+    for effect in stored:
+        modification = effect.modification
+        if modification.kind not in ("grant_ability", "grant_ability_instance"):
+            continue
+        selector = effect.selector
+        if (
+            selector.kind == "only"
+            and selector.card_id == permanent.id
+            or (
+                selector.kind == "only_this_incarnation"
+                and selector.card_id == permanent.id
+                and selector.stamp == permanent.zone_change_stamp
+            )
+        ):
+            texts.add(modification.text)
+    return frozenset(texts)
+
+
+def _sync_stored_grant_ability_texts(
+    permanents: Sequence[CardState], stored: Sequence[ContinuousEffect]
+) -> None:
+    """Reconcile `CardState.granted_ability_texts` against every *stored*
+    self-grant still running (see `_stored_self_grant_ability_texts`) - the
+    stored-effect twin of `sync_granted_ability_texts`, called from
+    `ContinuousEffects.all_effects` the same way that one is, once per board
+    computation (CR 613.5).
+
+    This is what lets a granted line that is itself a further static/CDA
+    sentence - Ms. Marvel, Kamala Khan's power-defining one - reach
+    `effects_for`'s static-only battlefield sweep *before* layer 6 has run
+    for this computation, the same way a printed line already does: the
+    sweep decides what layer-7a effects a permanent contributes by reading
+    `source.granted_ability_texts` directly (`_granted_ability_effects`),
+    not by waiting for `compute_board` to apply the layer-6 grant first,
+    which would be circular (the grant's own layer-6 `ContinuousEffect` is
+    itself one of the inputs `compute_board` is about to combine with
+    whatever this sweep contributes).
+
+    Reconciled, not appended, for the identical CR 604.2 reason `sync_
+    granted_ability_texts` is: the grant comes off again the instant
+    `ContinuousEffects.end_the_turn` drops the stored effect (its `duration`
+    stops it being one of `stored` any more), with nothing else here to
+    remember or clean up.
+    """
+    grantable: set[str] = {
+        effect.modification.text
+        for effect in stored
+        if effect.modification.kind in ("grant_ability", "grant_ability_instance")
+    }
+    if not grantable:
+        return
+    for permanent in permanents:
+        mine = _stored_self_grant_ability_texts(permanent, stored)
         kept = tuple(
             text
             for text in permanent.granted_ability_texts
@@ -10713,6 +10853,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         if not subtypes or any(subtype is None for subtype in subtypes):
             return None
         return _creature_subtype_count_cda_builder(tuple(subtypes), line=sentence)
+    if _HAND_SIZE_POWER_CDA_RE.fullmatch(sentence):
+        return _hand_size_power_cda_builder(sentence)
     if match := _ATTACHED_CREATURE_PUMP_AND_QUOTED_RE.fullmatch(sentence):
         keywords = []
         if match.group("keywords") is not None:
@@ -11574,6 +11716,25 @@ class LayerContext(EngineModel):
             return None
         return self.life_by_player.get(player)
 
+    #: Each player's hand size (CR 402.2), keyed by username - a seventh
+    #: thing the layer engine never sees standing on the battlefield. Ms.
+    #: Marvel, Kamala Khan's own granted CDA ("Ms. Marvel's base power is
+    #: equal to the number of cards in your hand.", CR 613.1f grants it
+    #: onto her own computed abilities) is the reader: read when the
+    #: effects are built, like every other field here, so it moves with the
+    #: hand as cards are drawn or discarded for the rest of the turn rather
+    #: than freezing at whatever it was the moment the granting trigger
+    #: resolved.
+    hand_size_by_player: Mapping[str, int] = Field(default_factory=dict)
+
+    def hand_size_of(self, player: str | None) -> int:
+        """How many cards `player` holds, or 0 for a player this context
+        knows nothing about - the same empty-is-zero default `unspent_mana_of`
+        already uses."""
+        if player is None:
+            return 0
+        return self.hand_size_by_player.get(player, 0)
+
     def has_turn_fact(self, fact: str, player: str | None) -> bool:
         """Whether `player` is on this turn's ledger for `fact` - `False` for
         a player this context knows nothing about, the same empty-is-false
@@ -12088,7 +12249,7 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
 }
 
 
-def _granted_ability_effects(source: CardState) -> EffectBuilder | None:
+def _granted_ability_effects(source: CardState, *, static_only: bool) -> EffectBuilder | None:
     """A builder read off an ability *granted* to this permanent (CR 613.1f).
 
     `CardState.granted_ability_texts` holds the quoted lines another
@@ -12099,12 +12260,23 @@ def _granted_ability_effects(source: CardState) -> EffectBuilder | None:
     printing, so neither can reach such a line: "Llanowar Elves" has no row
     and never will, because that pump was never printed on it.
 
-    Only consulted on the resolution path (`static_only=False`), never on the
-    battlefield sweep - the line is an *activated* ability, and applying its
-    body as though it were this permanent's static contribution (CR 611.3)
-    would leave the Elves permanently +2/+2 without anybody paying {3}.
-    `layer_readable_sentences`' own `static_only` gate refuses an activated
-    ability's body anyway, so this is belt and braces.
+    Consulted on both paths, `static_only` passed straight through to
+    `parsed_layer_effects` exactly as `effects_for`'s own two other routes
+    already do: on the resolution path (`static_only=False`) a granted
+    *activated* ability's own body is fair game the same way it always was -
+    Umbral Mantle's own case, and Iron Fist, Living Weapon's self-granted
+    `"{T}: ..."`, both read only once that ability actually resolves. On the
+    battlefield sweep (`static_only=True`, `_effect_sentences`'s own gate)
+    only a `StaticAbility`-shaped granted line is read at all, so an
+    activated ability's body is refused here exactly as a printed one would
+    be (CR 611.3 never covers CR 602.1) - it does not leave the Elves
+    permanently +2/+2 without anybody paying {3}. Ms. Marvel, Kamala Khan's
+    own granted "'s base power is equal to the number of cards in your
+    hand." is the reader that needs the sweep to see a granted line at all:
+    a static/CDA sentence a resolved trigger put here (CR 613.1f) is exactly
+    as much "this permanent's own static contribution" (CR 611.3) as one
+    printed on the card would be, for as long as the grant that added it
+    keeps holding.
 
     The first granted line that parses wins. A caller that knows *which*
     granted ability is resolving should say so with `effects_for`'s
@@ -12116,7 +12288,7 @@ def _granted_ability_effects(source: CardState) -> EffectBuilder | None:
     legendary = Supertype.LEGENDARY in source.card.supertypes
     for text in source.granted_ability_texts:
         builder = parsed_layer_effects(
-            text, static_only=False, card_name=source.name, legendary=legendary
+            text, static_only=static_only, card_name=source.name, legendary=legendary
         )
         if builder is not None:
             return builder
@@ -12193,8 +12365,8 @@ def effects_for(
         builder = parsed_layer_effects(
             ability_text, static_only=static_only, card_name=source.name, legendary=legendary
         )
-    if builder is None and not static_only:
-        builder = _granted_ability_effects(source)
+    if builder is None:
+        builder = _granted_ability_effects(source, static_only=static_only)
     # `oracle_text` reads the up face (CR 712.8d/712.8f); `card.oracle_text`
     # is the raw Scryfall field, null for a modal-DFC/transform permanent -
     # same family as `effect_for`'s fix in `Game.resolve_top`. Without this,
@@ -12602,6 +12774,15 @@ class ContinuousEffects(EngineModel):
         # CR 613.7d stamps it as it entered that zone.
         emblems = _emblems_in(game)
         self.note(emblems)
+        stored = self.active(game)
+        # The stored-effect twin of the printed-text sync just above: a
+        # self-granted static/CDA line (Ms. Marvel, Kamala Khan's own) has to
+        # be on `CardState.granted_ability_texts` *before* the sweep below
+        # asks `effects_for` for this permanent's static contribution, or the
+        # granted CDA would never be read until the computation after this
+        # one - a turn late, and never at all once the grant itself expires
+        # within the same computation that first sees it.
+        _sync_stored_grant_ability_texts([*permanents, *emblems], stored)
         effects: list[ContinuousEffect] = []
         for permanent in [*permanents, *emblems]:
             effects.extend(
@@ -12614,7 +12795,7 @@ class ContinuousEffects(EngineModel):
                     static_only=True,
                 )
             )
-        return effects + self.active(game)
+        return effects + stored
 
     def board(
         self,

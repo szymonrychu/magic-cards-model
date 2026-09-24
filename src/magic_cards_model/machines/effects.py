@@ -16371,19 +16371,15 @@ def _optional_targeted_clause(
 #: targeted clause's own phrase is, through `_targets_understood` -
 #: `machines/targeting.py` already reads "with power N or less" as CR
 #: 115.1's own comparison restriction, so this never has to.
-#: `exception` ("... except by creatures with `<keyword>`", Speed, Young
-#: Avenger's own rider) is captured but deliberately refused below: `machines/
-#: combat.py` (locked to another C02 task this round) has no reader for a
-#: keyword-qualified "can't be blocked except by ..." exception at all - only
-#: a bare "can't be blocked", a power comparison, and a token exclusion - so
-#: granting the plain text here would silently drop the exception (every
-#: creature refused, haste ones included) rather than reading it, and
-#: granting nothing at all would let every creature block (the opposite
-#: error). Matching-but-refusing keeps this clause a fail-closed notice
-#: instead of either silently-wrong shape.
+#: `exception_keyword` ("... except by creatures with `<keyword>`", Speed,
+#: Young Avenger's own rider) grants the exception verbatim onto the target -
+#: `machines/combat.py`'s `evasion_restriction_refusal` reads a "can't be
+#: blocked except by creatures with `<keyword>`" sentence for exactly this
+#: shape (CR 509.1a with CR 509.1b's own "unless" folded on), refusing a
+#: blocker without the named keyword and letting one with it through.
 _TARGET_CANT_BE_BLOCKED_RE = re.compile(
     r"^(?P<phrase>(?:another )?target .+) can'?t be blocked this turn"
-    r"(?P<exception> except by creatures with [a-z]+)?\.?$",
+    r"(?: except by creatures with (?P<exception_keyword>[a-z][a-z ]*?))?\.?$",
     re.IGNORECASE,
 )
 
@@ -16447,13 +16443,21 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # the anaphoric rider `_RIDER_CANT_BE_BLOCKED_RE` reads after a
         # different antecedent - Eardrum Rattler's whole activated ability
         # is this one sentence, with no antecedent in front of it at all.
-        if match.group("exception") is not None:
-            # See the banner above `_TARGET_CANT_BE_BLOCKED_RE`: refused
-            # rather than silently read wrong either direction.
-            return None
+        exception_keyword = match.group("exception_keyword")
+        if exception_keyword is not None:
+            exception_keyword = exception_keyword.strip().lower()
+            if combat_rules.block_exception_keyword(exception_keyword) is None:
+                # Not one of `combat.Keyword`'s closed vocabulary - unread,
+                # so this clause stays unmatched rather than granting an
+                # exception `evasion_restriction_refusal` cannot enforce.
+                return None
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
-        granted_text = "This creature can't be blocked."
+        granted_text = (
+            f"This creature can't be blocked except by creatures with {exception_keyword}."
+            if exception_keyword is not None
+            else "This creature can't be blocked."
+        )
 
         def cant_be_blocked_targets(game: "Game", stack_object: "StackObject") -> None:
             effects = game.continuous_effects

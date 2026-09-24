@@ -8,19 +8,14 @@ onto CR 508.1d's own requirement, which `machines/combat.py`'s
 `_attack_requirement_match` reads off every permanent's computed ability
 lines (`test_attack_requirements.py`'s Juggernaut proof, whose own printed
 line already spells out "This creature attacks..." and never exercises this
-path). That reader checks a line's subject against `""`, `"this creature"`,
-`"this permanent"`, or the creature's own **full** printed name
-(`creature.name.lower()`) - never CR 201.5c's shortened first-name form, so
-`_attack_requirement_match("Ares attacks each combat if able.", "Ares, God
-of War")` returns `None` even though the identical text with `"Ares"` alone
-as the second argument matches - confirmed interactively. `characteristics.
-abilities` carries the line exactly as printed (`"Ares attacks each combat
-if able."`, confirmed on a live `Game`), so nothing upstream of `combat.py`
-rewrites it either. Genuine cross-file blocker: `machines/combat.py` is
-locked to another C02 task this round, so `_attack_requirement_match` cannot
-be widened from here. `test_ares_is_not_yet_forced_to_attack_by_the_engine`
-below is `xfail` for exactly this reason, not reshaped to pass; see
-MEMORY.md.
+path). That reader now checks a line's subject against `""`, `"this
+creature"`, `"this permanent"`, or every name `_self_reference_names` reads
+off the creature - the same CR 201.5c short-name vocabulary
+`_evasion_restriction_sentences` and friends already use - so "Ares" alone
+matches `"Ares, God of War"`'s own short form, and
+`test_ares_is_not_yet_forced_to_attack_by_the_engine` below now proves the
+engine actually enforces the requirement rather than merely allowing a
+declaration that happens to obey it.
 
 The second sentence is `_RETURN_THAT_CARD_TO_OWNERS_HAND_RE`/`_parse_return_
 that_card_to_owners_hand_clause`, already `handled`: "that card" is CR 400.7/
@@ -77,18 +72,7 @@ def test_declaring_ares_obeys_the_requirement():
     assert scenario.attackers() == [ares]
 
 
-@pytest.mark.xfail(
-    reason=(
-        "genuine cross-file blocker: machines/combat.py's "
-        "_attack_requirement_match never recognizes CR 201.5c's shortened "
-        "legendary self-reference ('Ares' alone) as the subject of an "
-        "'attacks each combat if able' line, only the unshortened full name "
-        "or 'this creature'/'this permanent' - combat.py is locked to "
-        "another C02 task this round, so this cannot be fixed here"
-    ),
-    strict=True,
-)
-def test_ares_is_not_yet_forced_to_attack_by_the_engine():
+def test_ares_is_forced_to_attack_by_the_engine():
     scenario = (
         Scenario()
         .player("alice", battlefield=["Ares, God of War"])
