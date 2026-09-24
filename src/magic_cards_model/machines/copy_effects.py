@@ -10,18 +10,32 @@ that spell. You may choose new targets for the copy.").
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, NamedTuple
 
-from ..models.card import Type
+from ..models.card import Supertype, Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import parse_count
 from .abilities import TriggerEvent
 from .decisions import source_id_of
 from .delayed import CopyNextSpellWithinManaValue, DelayedTrigger
+from .layers import (
+    BecomeACopy,
+    Characteristics,
+    Condition,
+    ContinuousEffect,
+    CopySublayer,
+    Duration,
+    Layer,
+    RemainsOnBattlefield,
+    copiable_characteristics,
+    only_this_incarnation,
+    printed_characteristics,
+)
 
 if TYPE_CHECKING:
-    from ..models.game import Game
+    from ..models.game import Game, StackObject
     from .effects import AbilityEffect, Effect
     from .triggers import AbilityOnStack
 
@@ -309,9 +323,461 @@ def _parse_copy_target_ability_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+# ---------------------------------------------------------------------------
+# "<subject> becomes a copy of <object>[ <duration>][, except <exceptions>]."
+# ---------------------------------------------------------------------------
+
+
+class CopyExceptions(NamedTuple):
+    """CR 707.9's "except ..." tail, read by `_parse_become_copy_exceptions`.
+
+    `name` is `SELF_NAME` when the printed name was the card's own (which
+    `self_normalized_effect_text` has rewritten to "this permanent").
+    `set_type_line` is CR 707.9b's modified characteristic with no "in
+    addition to" (Taskmaster's "he's a legendary Human Mercenary Villain
+    creature"): the supertypes, card types and subtypes it names are all the
+    copy has (CR 205.1a). Otherwise the named ones are added (CR 205.1b).
+    """
+
+    name: str | None = None
+    power: int | None = None
+    toughness: int | None = None
+    add_legendary: bool = False
+    remove_legendary: bool = False
+    types: tuple[Type, ...] = ()
+    subtypes: tuple[str, ...] = ()
+    set_type_line: bool = False
+    abilities: tuple[str, ...] = ()
+    keeps_this_ability: bool = False
+
+
+#: A name exception written with the card's own name, after normalization.
+SELF_NAME = "\x00self"
+
+_EXCEPT_NAME_RE = re.compile(r"^(?:his|her|its|their) name is (?P<name>.+)$", re.IGNORECASE)
+_EXCEPT_TYPE_LINE_RE = re.compile(
+    r"^(?:he|she|it|they)(?:'s|’s| is|'re| are) (?:an? )?(?P<legendary>legendary\s*)?"
+    r"(?:(?P<power>\d+)/(?P<toughness>\d+) )?"
+    r"(?P<types>(?!in addition\b)[A-Za-z][\w'-]*(?: (?!in addition\b)[A-Za-z][\w'-]*)*)?"
+    r"(?P<addition>\s*in addition to (?:his|her|its|their) other types)?$",
+    re.IGNORECASE,
+)
+_EXCEPT_NOT_LEGENDARY_RE = re.compile(
+    r"^(?:he|she|it|they) (?:isn'?t|is not|aren'?t|are not) legendary$", re.IGNORECASE
+)
+_EXCEPT_HAS_RE = re.compile(r"^(?:he|she|it|they) (?:has|have) (?P<what>.+)$", re.IGNORECASE)
+_THIS_ABILITY_RE = re.compile(r"(?:,\s*|\s+and\s+|^)this ability$", re.IGNORECASE)
+
+
+def _parse_become_copy_exceptions(clause: str) -> CopyExceptions | None:
+    """CR 707.9's "except ..." tail, or `None` if any part is unreadable
+    (CR 608.2c: never half a copy)."""
+    from ..models.card import Type as CardType
+    from .replacement import _granted_abilities, _split_exception_parts
+
+    fields: dict[str, object] = {}
+    for part in _split_exception_parts(clause.strip()):
+        part = part.strip().rstrip(".").strip()
+        if match := _EXCEPT_NAME_RE.fullmatch(part):
+            name = match.group("name").strip()
+            fields["name"] = SELF_NAME if name.lower() == "this permanent" else name
+            continue
+        if _EXCEPT_NOT_LEGENDARY_RE.fullmatch(part):
+            fields["remove_legendary"] = True
+            continue
+        if match := _EXCEPT_HAS_RE.fullmatch(part):
+            what = match.group("what").strip()
+            if (this := _THIS_ABILITY_RE.search(what)) is not None:
+                fields["keeps_this_ability"] = True
+                what = what[: this.start()].strip()
+            if what:
+                granted = _granted_abilities(what)
+                if granted is None:
+                    return None
+                fields["abilities"] = tuple(granted)
+            continue
+        if match := _EXCEPT_TYPE_LINE_RE.fullmatch(part):
+            if match.group("power") is not None:
+                fields["power"] = int(match.group("power"))
+                fields["toughness"] = int(match.group("toughness"))
+            types: list[Type] = []
+            subtypes: list[str] = []
+            for word in (match.group("types") or "").split():
+                try:
+                    types.append(CardType(word.lower()))
+                except ValueError:
+                    subtypes.append(word[0].upper() + word[1:])
+            fields["types"] = tuple(types)
+            fields["subtypes"] = tuple(subtypes)
+            fields["add_legendary"] = match.group("legendary") is not None
+            fields["set_type_line"] = match.group("addition") is None
+            if fields["set_type_line"] and not types:
+                return None  # "he's legendary" with nothing else is not a type line
+            continue
+        return None
+    if not fields:
+        return None
+    return CopyExceptions(**fields)  # type: ignore[arg-type]
+
+
+def _become_a_copy(
+    game: Game,
+    *,
+    subject: CardState,
+    copied: Characteristics,
+    exceptions: CopyExceptions | None,
+    source_name: str,
+    own_name: str,
+    this_ability: str | None,
+    duration: Duration,
+    until_next_turn_of: str | None = None,
+    condition: Condition | None = None,
+) -> None:
+    """CR 707.4: `subject`, staying on the battlefield, becomes a copy of
+    `copied` (its copiable values, CR 707.2), with CR 707.9's exceptions
+    written into the one layer 1a effect (CR 707.9b: they are part of the
+    copy's copiable values) - never as separate later-layer effects."""
+    name = copied.name
+    power, toughness = copied.power, copied.toughness
+    supertypes = list(copied.supertypes)
+    types = list(copied.types)
+    subtypes = list(copied.subtypes)
+    abilities = list(copied.abilities)
+    if exceptions is not None:
+        if exceptions.name is not None:
+            name = own_name if exceptions.name == SELF_NAME else exceptions.name
+        if exceptions.power is not None:
+            power, toughness = exceptions.power, exceptions.toughness
+        if exceptions.set_type_line:
+            supertypes = [Supertype.LEGENDARY] if exceptions.add_legendary else []
+            types = list(exceptions.types)
+            subtypes = list(exceptions.subtypes)
+        else:
+            if exceptions.add_legendary and Supertype.LEGENDARY not in supertypes:
+                supertypes.append(Supertype.LEGENDARY)
+            types += [t for t in exceptions.types if t not in types]
+            subtypes += [t for t in exceptions.subtypes if t not in subtypes]
+        if exceptions.remove_legendary:
+            supertypes = [t for t in supertypes if t is not Supertype.LEGENDARY]
+        abilities += [a for a in exceptions.abilities if a not in abilities]
+        if exceptions.keeps_this_ability and this_ability and this_ability not in abilities:
+            abilities.append(this_ability)
+    store = game.continuous_effects
+    store.add(
+        ContinuousEffect(
+            description=f"{source_name}: {subject.name} becomes a copy of {copied.name}",
+            layer=Layer.COPY,
+            sublayer=CopySublayer.COPIABLE,
+            timestamp=store.tick(),
+            duration=duration,
+            until_next_turn_of=until_next_turn_of,
+            condition=condition,
+            selector=only_this_incarnation(subject, subject.zone_change_stamp),
+            modification=BecomeACopy(
+                name=name,
+                mana_value=copied.mana_value,
+                supertypes=tuple(supertypes),
+                types=tuple(types),
+                subtypes=tuple(subtypes),
+                colors=copied.colors,
+                abilities=tuple(abilities),
+                power=power,
+                toughness=toughness,
+            ),
+        ),
+        game,
+    )
+
+
+def _copiable_values_of(game: Game, obj: CardState) -> Characteristics:
+    """CR 707.2's copiable values: a permanent's as modified by other copy
+    effects (`copiable_characteristics`), a card elsewhere its printed ones."""
+    if obj.zone is Zone.BATTLEFIELD:
+        return copiable_characteristics(obj, game.continuous_effects.active(game))
+    return printed_characteristics(obj)
+
+
+_SELF_SUBJECT = r"this (?:land|permanent|artifact|creature|enchantment)|he|she|it"
+
+#: "`<subject>` becomes a copy of `<object>`[ `<duration>`][, except
+#: `<exceptions>`]." with an optional leading duration - Absorbing Man's and
+#: Taskmaster's "until your next turn, `<self>` becomes a copy of up to one
+#: target ..., except his name is ... ", Shuri's "Target artifact you control
+#: becomes a copy of a second target artifact you control until end of turn,
+#: except it isn't legendary.", Saheeli's "... another target artifact or
+#: creature you control until end of turn, except it's an artifact in
+#: addition to its other types.", Lazav's "... becomes a copy of target
+#: creature card in your graveyard with mana value X, except its name is ...,
+#: it's legendary in addition to its other types, and it has this ability."
+_BECOMES_A_COPY_RE = re.compile(
+    r"^(?:(?P<lead>until end of turn|until your next turn), )?"
+    rf"(?P<subject>{_SELF_SUBJECT}|target [^.]+?)"
+    r" becomes a copy of (?P<object>(?:up to one |a second |another )?target [^.]+?)"
+    r"(?P<trail> until end of turn| until your next turn)?"
+    r'(?:, except (?P<exception>(?:[^."]|"[^"]*")+?))?\.?$',
+    re.IGNORECASE,
+)
+
+
+def _copy_duration(phrase: str | None) -> Duration:
+    lowered = (phrase or "").strip().lower()
+    if lowered == "until end of turn":
+        return Duration.UNTIL_END_OF_TURN
+    if lowered == "until your next turn":
+        return Duration.UNTIL_YOUR_NEXT_TURN
+    return Duration.INDEFINITE
+
+
+def _parse_becomes_a_copy_clause(
+    text: str,
+) -> Callable[[Game, StackObject], None] | None:
+    match = _BECOMES_A_COPY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    exceptions = None
+    if match.group("exception"):
+        exceptions = _parse_become_copy_exceptions(match.group("exception"))
+        if exceptions is None:
+            return None
+    if match.group("lead") and match.group("trail"):
+        return None
+    duration = _copy_duration(match.group("lead") or match.group("trail"))
+    subject_is_target = match.group("subject").lower().startswith("target")
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        from .triggers import AbilityOnStack as StackAbility
+
+        is_ability = isinstance(stack_object, StackAbility)
+        controller = (
+            stack_object.controller if is_ability else game.controller_of(stack_object).username
+        )
+        source = stack_object.source(game) if is_ability else stack_object
+        legal = {target.id: target for target in game.resolve_card_targets(stack_object)}
+        announced = [
+            legal.get(reference.card_id) if reference.is_card else None
+            for reference in stack_object.targets
+        ]
+        if subject_is_target:
+            if len(announced) < 2:
+                return
+            subject, copied_object = announced[0], announced[1]
+        else:
+            if (
+                source is None
+                or source.zone is not Zone.BATTLEFIELD
+                or (
+                    is_ability and stack_object.source_stamp not in (None, source.zone_change_stamp)
+                )
+            ):
+                return
+            subject = source
+            copied_object = announced[0] if announced else None
+        if subject is None or copied_object is None or subject.zone is not Zone.BATTLEFIELD:
+            return  # CR 115.6's "up to one" chose none, or CR 608.2b removed it
+        this_ability = None
+        if is_ability:
+            this_ability = (stack_object.ability.raw or stack_object.ability.text or "").strip()
+        _become_a_copy(
+            game,
+            subject=subject,
+            copied=_copiable_values_of(game, copied_object),
+            exceptions=exceptions,
+            source_name=stack_object.source_name if is_ability else stack_object.name,
+            own_name=subject.name,
+            this_ability=this_ability,
+            duration=duration,
+            until_next_turn_of=controller if duration is Duration.UNTIL_YOUR_NEXT_TURN else None,
+        )
+
+    return effect
+
+
+#: Secret Invasion's whole enters trigger: "exile up to one target creature
+#: other than enchanted creature until this Aura leaves the battlefield.
+#: Enchanted creature becomes a copy of that creature until this Aura leaves
+#: the battlefield." The exile is CR 610.3's "until ... leaves the
+#: battlefield" one-shot (returned by the same delayed trigger
+#: `machines/effects._watch_for_departure_and_return_exiled_card` builds);
+#: "that creature" is the exiled one as it last existed (CR 608.2h), its
+#: copiable values taken before it moved; the copy lasts "for as long as"
+#: the Aura remains (CR 611.2b).
+_EXILE_THEN_BECOME_ITS_COPY_RE = re.compile(
+    r"^exile (?P<phrase>(?:up to one )?target .+?) until this (?P<noun>aura|enchantment|"
+    r"creature|artifact|permanent) leaves the battlefield\.\s*"
+    r"(?P<subject>enchanted creature|this creature|this permanent) becomes a copy of "
+    r"that (?:creature|permanent|card)(?P<duration> until this (?:aura|enchantment|creature"
+    r"|artifact|permanent) leaves the battlefield)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_then_become_its_copy_clause(text: str) -> AbilityEffect | None:
+    from .effects import _targets_understood, _watch_for_departure_and_return_exiled_card
+
+    match = _EXILE_THEN_BECOME_ITS_COPY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    enchanted = match.group("subject").lower() == "enchanted creature"
+    lasting = match.group("duration") is not None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return  # CR 113.7a: nothing left to watch leave
+        targets = [
+            target
+            for target in game.resolve_card_targets(ability)
+            if target.zone is Zone.BATTLEFIELD
+        ]
+        for target in targets:
+            copied = _copiable_values_of(game, target)
+            exiled = game.exile_permanent(target)
+            if exiled.zone is not Zone.EXILE:
+                continue
+            _watch_for_departure_and_return_exiled_card(game, source, exiled, ability.controller)
+            subject_id = source.attached_to if enchanted else source.id
+            subject = game.find_by_id(subject_id) if subject_id is not None else None
+            if not isinstance(subject, CardState) or subject.zone is not Zone.BATTLEFIELD:
+                continue
+            _become_a_copy(
+                game,
+                subject=subject,
+                copied=copied,
+                exceptions=None,
+                source_name=ability.source_name,
+                own_name=subject.name,
+                this_ability=None,
+                duration=Duration.FOR_AS_LONG_AS if lasting else Duration.INDEFINITE,
+                condition=(
+                    RemainsOnBattlefield(card_id=source.id, stamp=source.zone_change_stamp)
+                    if lasting and source.zone_change_stamp is not None
+                    else None
+                ),
+            )
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "<instruction>. If <it|the token> isn't a creature, it becomes an N/N ..."
+# ---------------------------------------------------------------------------
+
+#: Ultron, Artificial Malevolence's "... create a token that's a copy of it.
+#: If the token isn't a creature, it becomes a 2/2 Robot Villain creature in
+#: addition to its other types." and Tawnos's Tinkering's "Put two +1/+1
+#: counters on target artifact, creature, or land you control. Untap that
+#: permanent. If it isn't a creature, it becomes a 0/0 creature in addition
+#: to its other types." The rider's condition is checked as it is reached
+#: (CR 608.2c); "the token" is the one the instruction before it created,
+#: "it"/"that permanent" the instruction's own target. Layer 4 adds the
+#: creature type and subtypes (CR 205.1b), sublayer 7b sets the base P/T
+#: (CR 613.4b), layer 6 grants any keywords (CR 613.1f).
+_IF_NOT_A_CREATURE_BECOMES_RE = re.compile(
+    r"^(?P<first>.+?\.)\s*if (?P<ref>it|the token|that (?:permanent|artifact|token)) isn'?t a "
+    r"creature, it becomes an? (?P<power>\d+)/(?P<toughness>\d+) "
+    r"(?P<subtypes>(?:[A-Z][\w'-]* )*)creature(?: with (?P<keywords>[a-z][a-z ,]*?))? "
+    r"in addition to its other types(?P<until_eot> until end of turn)?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _if_not_a_creature_rider(
+    text: str, first_reader: Callable[[str], object]
+) -> Callable[[Game, StackObject], None] | None:
+    from .layers import (
+        AddSubtype,
+        _creature_type_words,
+        _split_and_validate_keywords,
+        add_type,
+        grant_ability,
+        set_power_toughness,
+    )
+    from .layers import Sublayer as PTSublayer
+
+    match = _IF_NOT_A_CREATURE_BECOMES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    first = first_reader(match.group("first").strip())
+    if first is None or getattr(first, "__name__", "").endswith("notice_only"):
+        return None
+    subtypes = (
+        _creature_type_words(match.group("subtypes").strip())
+        if match.group("subtypes").strip()
+        else []
+    )
+    keywords = (
+        _split_and_validate_keywords(match.group("keywords")) if match.group("keywords") else []
+    )
+    if subtypes is None or keywords is None:
+        return None
+    power, toughness = int(match.group("power")), int(match.group("toughness"))
+    about_the_token = match.group("ref").lower() == "the token"
+    duration = Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        before = {permanent.id for permanent in game.battlefield}
+        first(game, stack_object)  # type: ignore[operator]
+        if about_the_token:
+            referents = [
+                permanent
+                for permanent in game.battlefield
+                if permanent.id not in before and permanent.token
+            ]
+        else:
+            referents = [
+                target
+                for target in game.resolve_card_targets(stack_object)
+                if target.zone is Zone.BATTLEFIELD
+            ]
+        store = game.continuous_effects
+        for referent in referents:
+            if game.characteristics_of(referent).is_creature:
+                continue
+            timestamp = store.tick()
+            selector = only_this_incarnation(referent, referent.zone_change_stamp)
+            parts: list[tuple[Layer, PTSublayer | None, object]] = [
+                (Layer.TYPE, None, add_type(Type.CREATURE)),
+                *((Layer.TYPE, None, AddSubtype(subtype=subtype)) for subtype in subtypes),
+                *((Layer.ABILITY, None, grant_ability(keyword)) for keyword in keywords),
+                (Layer.POWER_TOUGHNESS, PTSublayer.SET, set_power_toughness(power, toughness)),
+            ]
+            for layer, sublayer, modification in parts:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{referent.name} becomes a {power}/{toughness} creature",
+                        layer=layer,
+                        sublayer=sublayer,
+                        timestamp=timestamp,
+                        duration=duration,
+                        selector=selector,
+                        modification=modification,  # type: ignore[arg-type]
+                    ),
+                    game,
+                )
+
+    return effect
+
+
+def _parse_if_not_a_creature_ability(text: str) -> AbilityEffect | None:
+    from .effects import _ability_effect_or_notice
+
+    return _if_not_a_creature_rider(text, _ability_effect_or_notice)  # type: ignore[return-value]
+
+
+def _parse_if_not_a_creature_spell(text: str) -> Effect | None:
+    from .effects import _spell_effect_or_notice
+
+    return _if_not_a_creature_rider(text, _spell_effect_or_notice)  # type: ignore[return-value]
+
+
 def copy_ability_effect(effect_text: str) -> AbilityEffect | None:
     """A copy instruction on an activated or triggered ability, or `None`."""
     for reader in (
+        _parse_if_not_a_creature_ability,
+        _parse_exile_then_become_its_copy_clause,
+        _parse_becomes_a_copy_clause,
         _parse_copy_target_ability_clause,
         _parse_copy_next_within_mana_value_ability,
         _parse_copy_that_spell_then_clause,
@@ -325,7 +791,12 @@ def copy_ability_effect(effect_text: str) -> AbilityEffect | None:
 
 def copy_spell_effect(effect_text: str) -> Effect | None:
     """A copy instruction on a resolving spell, or `None`."""
-    for reader in (_parse_copy_next_within_mana_value_spell, _parse_spell_after_cast_trigger):
+    for reader in (
+        _parse_if_not_a_creature_spell,
+        _parse_becomes_a_copy_clause,
+        _parse_copy_next_within_mana_value_spell,
+        _parse_spell_after_cast_trigger,
+    ):
         effect = reader(effect_text)
         if effect is not None:
             return effect

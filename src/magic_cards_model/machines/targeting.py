@@ -554,6 +554,12 @@ class TargetRequirement(EngineModel):
     a `TargetRef`), like every other restriction here that needs more than the
     caller supplied."""
 
+    excludes_enchanted: bool = False
+    """"target creature other than enchanted creature" (Secret Invasion) - the
+    permanent the requirement's own source (an Aura) is attached to (CR
+    303.4b) cannot be chosen. Read off the plain words; not the source itself
+    (`excludes_source`), which is the Aura."""
+
     total_mana_value_at_most: int | None = None
     """"up to two target creatures with total mana value 6 or less" (The Super
     Hero Civil War's chapter I) - like `distinct_controllers`, a restriction
@@ -768,6 +774,10 @@ class TargetRequirement(EngineModel):
             return f"{self.phrase} can only target a player, not {target.name}"
         if self.excludes_source and source_id is not None and target.id == source_id:
             return f"{self.phrase} cannot target {target.name}, which this is on"
+        if self.excludes_enchanted and game is not None and source_id is not None:
+            source = game.find_by_id(source_id)
+            if source is not None and getattr(source, "attached_to", None) == target.id:
+                return f"{self.phrase} cannot target {target.name}, the enchanted creature"
         if self.owned_by_caster and target.owner is not None and target.owner != caster:
             return f"{self.phrase} needs one {caster} owns, and {target.name} is {target.owner}'s"
         # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
@@ -3392,6 +3402,21 @@ _SUPERTYPE_OR_QUALITY_CARD_RE = re.compile(
 )
 
 
+#: "target creature on the battlefield or creature card in a graveyard"
+#: (Taskmaster, Mercenary Mimic) - two disjuncts in two different zones: a
+#: permanent, or a card in a graveyard. Read as the first disjunct's own
+#: requirement plus an `alternatives` entry for the second (CR 115.1).
+_ON_THE_BATTLEFIELD_OR_CARD_RE = re.compile(
+    r"^\s*(?P<first>[a-z][\w -]*?) on the battlefield or "
+    r"(?P<second>[a-z][\w -]*?cards? in (?:a|your|an opponent's) graveyards?)\b",
+    re.IGNORECASE,
+)
+
+
+#: " other than enchanted creature" - see `TargetRequirement.excludes_enchanted`.
+_OTHER_THAN_ENCHANTED_RE = re.compile(r" other than enchanted creature\b", re.IGNORECASE)
+
+
 def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetRequirement | None:
     """Turn one "target ..." phrase into a requirement, or None if unreadable.
 
@@ -3437,6 +3462,37 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             update={
                 "phrase": f"{base.phrase} or {subtype_word} {noun_word}",
                 "alternatives": base.alternatives + (alternative,),
+            }
+        )
+    other_than_enchanted = _OTHER_THAN_ENCHANTED_RE.search(suffix)
+    if other_than_enchanted is not None:
+        base = _read_phrase(
+            prefix,
+            suffix[: other_than_enchanted.start()] + suffix[other_than_enchanted.end() :],
+            strict=strict,
+        )
+        if base is None:
+            return None
+        return base.model_copy(
+            update={
+                "phrase": f"{base.phrase} other than enchanted creature",
+                "excludes_enchanted": True,
+            }
+        )
+    battlefield_or_card = _ON_THE_BATTLEFIELD_OR_CARD_RE.match(suffix)
+    if battlefield_or_card is not None:
+        tail = suffix[battlefield_or_card.end() :]
+        base = _read_phrase(prefix, " " + battlefield_or_card.group("first") + tail, strict=strict)
+        alternative = _read_phrase(
+            prefix, " " + battlefield_or_card.group("second") + tail, strict=strict
+        )
+        if base is None or alternative is None:
+            return None
+        return base.model_copy(
+            update={
+                "phrase": f"{base.phrase} on the battlefield or "
+                + alternative.phrase.removeprefix("target "),
+                "alternatives": (*base.alternatives, alternative),
             }
         )
     supertype_or = _SUPERTYPE_OR_QUALITY_CARD_RE.match(suffix)
