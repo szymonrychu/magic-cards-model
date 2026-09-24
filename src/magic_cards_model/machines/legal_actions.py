@@ -908,11 +908,15 @@ def _cast_actions(
     refused, which is the silent `continue` this function always took. A
     caller building `blocked_casts` instead passes a list to collect into,
     from the *same* per-face checks below - CR 601.3's refusal is computed
-    once either way; only whether it is kept anywhere differs. Only the
-    plain hand cast (CR 601.2) and the permission-granted cast
-    (`_permission_cast_actions`) feed it - see `blocked_casts`'s own
-    docstring for why the keyword-option and alternative-cost loops below
-    are left out of this reporting.
+    once either way; only whether it is kept anywhere differs. Every loop
+    that asks `_why_cannot_cast_face`/`why_cannot_cast_restriction` below -
+    the plain hand cast (CR 601.2), the permission-granted cast
+    (`_permission_cast_actions`), the keyword/marker/granted cast-option
+    loop (flashback, escape, Adventure, and the rest CR 601.3e faces
+    included), and the CR 118.9 alternative-cost loop - feeds the same
+    `_record_blocked(blocked, ...)` call at the spot it used to `continue`
+    from, so a face refused through any of those paths gets exactly one row,
+    never a silent drop.
     """
     if not set(card.card.types) & _CASTABLE_TYPES:
         return []
@@ -1002,7 +1006,9 @@ def _cast_actions(
         # for the card otherwise.
         if option.pays_mana_cost:
             for face_name, mana in _base_cost_options(card):
-                if _why_cannot_cast_face(game, player, card, face_name) is not None:
+                refusal = _why_cannot_cast_face(game, player, card, face_name)
+                if refusal is not None:
+                    _record_blocked(blocked, card, face_name, refusal)
                     continue
                 actions.append(
                     _cast_action(
@@ -1018,15 +1024,19 @@ def _cast_actions(
                         splice_options=splice_options,
                     )
                 )
-        elif (
+        else:
             # CR 702.190a's window is the option's own timing, already
             # answered by `option.why_not` above; CR 117.1a's ordinary timing
             # is exactly what it overrides, so only CR 611.1's prohibitions
             # are left to ask.
-            why_cannot_cast_restriction(card, player, game, face=None)
-            if option.timing is CastTiming.OWN_DECLARE_BLOCKERS
-            else _why_cannot_cast_face(game, player, card, None)
-        ) is None:
+            option_refusal = (
+                why_cannot_cast_restriction(card, player, game, face=None)
+                if option.timing is CastTiming.OWN_DECLARE_BLOCKERS
+                else _why_cannot_cast_face(game, player, card, None)
+            )
+            if option_refusal is not None:
+                _record_blocked(blocked, card, None, option_refusal)
+                continue
             total = option.cost if option.cost is not None else TotalCost()
             actions.append(
                 _cast_action(
@@ -1065,7 +1075,9 @@ def _cast_actions(
             # the card itself is exempt (instant, flash, an `immediate`
             # permission) - `alternative.available` never asked either
             # question.
-            if _why_cannot_cast_face(game, player, card, None) is not None:
+            refusal = _why_cannot_cast_face(game, player, card, None)
+            if refusal is not None:
+                _record_blocked(blocked, card, None, refusal)
                 continue
             # `alternative.cost is None` is a real answer for a STATIC grant
             # (Omniscience: "nothing" is the whole cost, CR 107.3b), not a

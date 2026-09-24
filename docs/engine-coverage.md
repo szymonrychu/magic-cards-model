@@ -5133,8 +5133,15 @@ left out entirely, the same as `legal_actions`. `_cast_actions`/
 one walk that decides a face is refused is the one walk that reports it;
 `legal_actions` itself is unchanged, and the dispatch fingerprint and
 goldens do not move - no `EFFECTS`/`TRIGGER_EFFECTS`/`ACTIVATED_EFFECTS` row
-was added.
+was added. The plain hand cast and `_permission_cast_actions` were not the
+only per-face checks inside `_cast_actions`: the keyword/marker/granted
+cast-option loop (flashback, escape, Adventure) and the CR 118.9
+alternative-cost loop each ask the identical `_why_cannot_cast_face`/
+`why_cannot_cast_restriction` question and used to `continue` past a
+refusal there too - fixed to call the same `_record_blocked`, so a
+graveyard flashback sorcery or an exiled Adventure creature refused on
+timing is reported exactly like a hand card is.
 
 | Mechanic | Reader | Reported card | Off-pool proof | Test |
 |---|---|---|---|---|
-| CR 117.1a timing and CR 611.1 prohibition refusals on a `CAST` face, enumerated with the engine's own reason instead of dropped | `machines.legal_actions.blocked_casts`, `models.action.BlockedCast` | Ocelot Pride | Act of Treason (sorcery timing), Ambush Viper (a flash creature never blocked), Repudiate // Replicate (CR 709.3a: only the sorcery half of a split card blocks), Voice of Victory (a CR 611.1 prohibition, not a timing question) | `scenarios/test_blocked_casts.py` |
+| CR 117.1a timing and CR 611.1 prohibition refusals on a `CAST` face, enumerated with the engine's own reason instead of dropped | `machines.legal_actions.blocked_casts`, `models.action.BlockedCast` | Ocelot Pride | Act of Treason (sorcery timing), Ambush Viper (a flash creature never blocked), Repudiate // Replicate (CR 709.3a: only the sorcery half of a split card blocks), Voice of Victory (a CR 611.1 prohibition, not a timing question), Faithless Looting (a flashback sorcery blocked from the graveyard, the keyword-option loop), Bonecrusher Giant (its exiled Adventure creature half blocked on timing, the `pays_mana_cost=True` keyword-option branch) | `scenarios/test_blocked_casts.py` |

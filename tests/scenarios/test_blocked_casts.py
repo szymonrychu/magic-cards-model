@@ -39,7 +39,11 @@ with `mise run rules:find` in the session that wrote it:
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.casting import why_cannot_cast_now, why_cannot_cast_restriction
+from magic_cards_model.machines.casting import (
+    exile_adventured,
+    why_cannot_cast_now,
+    why_cannot_cast_restriction,
+)
 from magic_cards_model.machines.decisions import Decision, DecisionKind, DecisionPending
 from magic_cards_model.machines.legal_actions import blocked_casts
 from magic_cards_model.models import Zone
@@ -210,6 +214,118 @@ def test_split_card_blocks_only_the_sorcery_half():
     kinds = _cast_kinds(scenario, "alice")
     assert (card.id, "Repudiate") in kinds
     assert (card.id, "Replicate") not in kinds
+
+
+# -- the keyword/granted cast-option loop also has to report its refusals --
+#
+# `why_cannot_cast_now` deliberately defers a keyword-cast-option's own
+# timing to the option itself for any non-hand-zone card ("let
+# `KeywordCastOption.why_not` answer instead of guessing over it" - its own
+# docstring), and `KeywordCastOption.why_not` never actually asks CR 117.1a
+# (only the option's own shape: zone, marker, discard). So a graveyard or
+# exile keyword cast is never refused on CR 117.1a's timing through this
+# path - a separate, pre-existing gap this task does not touch. What DOES
+# still reach `_why_cannot_cast_face` for such a card is CR 611.1: a
+# rules-modifying prohibition, asked by `why_cannot_cast_restriction`
+# independently of zone or `option.why_not`. Grafdigger's Cage and Voice of
+# Victory below are that half, proven on real printings.
+
+
+def test_a_flashback_sorcery_blocked_by_a_prohibition_is_reported():
+    """Faithless Looting's flashback (CR 702.34a) reaches the graveyard
+    keyword-cast-option loop; Grafdigger's Cage's "Players can't cast
+    spells from graveyards or libraries" is a CR 611.1 prohibition that
+    still beats the flashback permission (CR 101.2, per
+    `test_zone_cast_prohibitions.py`). The loop's `pays_mana_cost=False`
+    branch computed this exact refusal and used to `continue` past it
+    without recording it."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            graveyard=["Faithless Looting"],
+            battlefield=["Mountain", "Grafdigger's Cage"],
+        )
+        .player("bob", battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    looting = scenario.find("Faithless Looting", Zone.GRAVEYARD, "alice")
+
+    expected_reason = why_cannot_cast_restriction(looting, "alice", scenario.game)
+    assert expected_reason is not None
+    assert "Grafdigger's Cage" in expected_reason
+
+    (row,) = [b for b in _blocked(scenario, "alice") if b.card_id == looting.id]
+    assert row.name == "Faithless Looting"
+    assert row.zone is Zone.GRAVEYARD
+    assert row.spell_face is None
+    assert row.reason == expected_reason
+    assert row.rule == "601.3"
+
+    assert (looting.id, None) not in _cast_kinds(scenario, "alice")
+
+
+def test_an_exiled_adventure_creature_blocked_by_a_prohibition_is_reported():
+    """CR 715.3d: once Bonecrusher Giant's Adventure half (Stomp) resolves,
+    the creature half is castable from exile through the same keyword-
+    cast-option loop, `pays_mana_cost=True` this time (the creature's own
+    `{2}{R}`). Voice of Victory's "Your opponents can't cast spells during
+    your turn" is a CR 611.1 prohibition on bob's turn, computed by that
+    branch and used to `continue` past without recording - and this card
+    sits in exile, never hand, so no other loop in `_cast_actions` covers
+    it either.
+
+    That `pays_mana_cost=True` branch asks `_why_cannot_cast_face` once per
+    `_base_cost_options(card)` entry, and an Adventure card's own entries
+    are its front (creature) face *and* its Adventure inset face together -
+    a second, pre-existing gap this task does not touch (`legal_actions`
+    already offers a spurious `spell_face="Stomp"` cast from exile once
+    Stomp has already resolved, current-`main` behaviour unrelated to this
+    finding). `blocked_casts` walks the same loop `_cast_actions` does, so
+    it faithfully reports both entries this option refuses, not a
+    hand-picked one."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Bonecrusher Giant"], battlefield=["Mountain"] * 5)
+        .player("bob", battlefield=["Grizzly Bears", "Voice of Victory"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain")
+    casting = scenario.cast("Bonecrusher Giant")
+    casting.cast_as_adventure()
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    stomp = scenario.resolve_top()
+    exile_adventured(scenario.game, stomp, "alice")
+
+    _advance_to(scenario, "bob", Step.PRECOMBAT_MAIN)
+    giant = scenario.find("Bonecrusher Giant", Zone.EXILE, "alice")
+
+    expected_reason = why_cannot_cast_restriction(giant, "alice", scenario.game)
+    assert expected_reason is not None
+    assert "Voice of Victory" in expected_reason
+
+    rows = {b.spell_face: b for b in _blocked(scenario, "alice") if b.card_id == giant.id}
+    # The creature face (`spell_face=None`) is the row this test targets -
+    # the exile-Adventure keyword option's own cast. `_base_cost_options`
+    # also names Stomp for this Adventure-layout card regardless of zone
+    # (see the docstring above), so the identical loop refuses that entry
+    # too; both get a row because `blocked_casts` never picks and chooses
+    # among what `_cast_actions` itself enumerates.
+    assert set(rows) == {None, "Stomp"}
+    for row in rows.values():
+        assert row.name == "Bonecrusher Giant"
+        assert row.zone is Zone.EXILE
+        assert row.reason == expected_reason
+        assert row.rule == "611.1"
+
+    assert (giant.id, None) not in _cast_kinds(scenario, "alice")
+    assert (giant.id, "Stomp") not in _cast_kinds(scenario, "alice")
 
 
 # -- CR 611.1: a rules-modifying prohibition, not a timing question ---------
