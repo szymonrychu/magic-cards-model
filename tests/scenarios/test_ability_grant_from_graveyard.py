@@ -139,7 +139,7 @@ def test_necrotic_ooze_ignores_noncreature_cards():
     assert texts(scenario, scenario.creature(OOZE)) == []
 
 
-def test_a_granted_tap_ability_still_needs_the_host_to_have_been_under_control_since_the_turn_began():
+def test_a_granted_tap_ability_still_obeys_summoning_sickness():
     """CR 302.6: a creature's {T} ability can't be activated unless it has
     been under its controller's control continuously since their most recent
     turn began - granted abilities included."""
