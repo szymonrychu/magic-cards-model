@@ -1400,6 +1400,13 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     card = case.printing
     lowered = ability.condition.lower()
     is_vehicle = crew_number(card) is not None
+    # Pack tactics' "if you attacked with creatures with total power N or
+    # greater this combat" (CR 207.2c): a 6-power partner attacks as well.
+    partners: tuple[str, ...] = (
+        ("Craw Wurm",)
+        if re.search(r"attacked with creatures with total power", ability.intervening_if or "")
+        else ()
+    )
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
         if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle):
@@ -1413,7 +1420,9 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 if is_vehicle:
                     extra = ("Serra Angel",)
                 if side == ALICE:
-                    scenario = _board(battlefield=(case.card, *extra), step=Step.DECLARE_ATTACKERS)
+                    scenario = _board(
+                        battlefield=(case.card, *extra, *partners), step=Step.DECLARE_ATTACKERS
+                    )
                 else:
                     scenario = _board(
                         battlefield=(case.card,),
@@ -1428,8 +1437,13 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 if attacker is not source and "equipped" in lowered:
                     source.attachment = TargetRef.to_card(attacker)
                 defender = BOB if side == ALICE else ALICE
+                alongside = (
+                    [_staged(scenario, partner, side) for partner in partners]
+                    if side == ALICE
+                    else []
+                )
                 try:
-                    scenario.attack_with(attacker, defending=defender)
+                    scenario.attack_with(attacker, *alongside, defending=defender)
                 except (ValueError, AssertionError) as error:
                     raise _Unavailable(str(error)) from error
                 return scenario, source, attacker, defender

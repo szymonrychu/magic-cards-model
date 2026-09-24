@@ -4204,6 +4204,13 @@ _MANA_SYMBOL_LETTER = re.compile(r"\{([wubrgc])\}")
 #: Renegade Rallier's and Fatal Push's own "a permanent left the battlefield
 #: under your control this turn", and the generic reminder-text order
 #: "a permanent you controlled left the battlefield this turn".
+#: Pack tactics (CR 207.2c's ability word): "you attacked with creatures
+#: with total power N or greater this combat" - Werewolf Pack Leader, Gnoll
+#: Hunter.
+_PACK_TACTICS_CLAUSE = re.compile(
+    r"^you attacked with creatures with total power (?P<threshold>\d+) or greater this combat$"
+)
+
 _REVOLT_CLAUSES = frozenset(
     {
         "a permanent left the battlefield under your control this turn",
@@ -4783,6 +4790,17 @@ def intervening_if_holds(
     descend_count = _descend_permanent_card_count_holds(game, clause, source)
     if descend_count is not None:
         return descend_count
+
+    pack_tactics = _PACK_TACTICS_CLAUSE.fullmatch(clause)
+    if pack_tactics is not None:
+        # CR 207.2c's pack tactics: the attack as declared (CR 508.1) - the
+        # power its attackers had then (`CombatMachine.declared_attacking_
+        # power`), which a later pump or departure does not rewrite. Only the
+        # active player declares attackers.
+        controller = source.controller or game.active_player.username
+        if controller != game.active_player.username:
+            return False
+        return game.combat.declared_attacking_power >= int(pack_tactics.group("threshold"))
 
     if clause in _REVOLT_CLAUSES:
         # CR 207.2c: Revolt is an ability word, so no numbered rule spells out

@@ -448,6 +448,13 @@ class CombatMachine(EngineModel):
     without un-setting this: the thing CR 508.8 asks about already happened.
     Only `clear` resets it, at the end of combat (CR 511.3).
     """
+    declared_attacking_power: int = 0
+    """The total power the creatures declared as attackers this combat had
+    as they were declared (CR 508.1) - pack tactics' "you attacked with
+    creatures with total power N or greater this combat" (CR 207.2c). A
+    history like `attacked_this_combat`: a creature put onto the battlefield
+    attacking never "attacked" (CR 508.4) and adds nothing, and a later
+    change to an attacker's power does not rewrite it. Reset by `clear`."""
 
     @property
     def attacker_ids(self) -> list[UUID]:
@@ -487,6 +494,7 @@ class CombatMachine(EngineModel):
         self.first_strike_damage_step = False
         self.first_strike_step_ids = []
         self.attacked_this_combat = False
+        self.declared_attacking_power = 0
 
 
 # -- declaring attackers ---------------------------------------------------
@@ -1024,6 +1032,7 @@ def declare_attacker(game: "Game", creature: CardState, defender: TargetRef) -> 
     game.combat.attacked_this_combat = True  # CR 508.8 reads the declaration
     attack = Attack(attacker_id=creature.id, defender=defender)
     game.combat.attacks.append(attack)
+    game.combat.declared_attacking_power += game.power_of(creature) or 0
     return attack
 
 

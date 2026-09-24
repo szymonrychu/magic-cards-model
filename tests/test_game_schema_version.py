@@ -989,3 +989,25 @@ def test_a_snapshot_written_before_source_keyed_prevention_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_SOURCE_KEYED_PREVENTION}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before `CombatMachine.declared_attacking_power`.
+_SCHEMA_VERSION_BEFORE_DECLARED_ATTACKING_POWER = 71
+
+
+def test_the_declared_attacking_power_bump_moved_the_version_past_seventy_one() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_DECLARED_ATTACKING_POWER
+
+
+def test_a_snapshot_written_before_declared_attacking_power_is_refused() -> None:
+    """A version-71 dump is refused rather than decoded as current: its
+    combat carries no `declared_attacking_power`, so a pack tactics trigger
+    on the stack would resolve as though nothing had attacked."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_DECLARED_ATTACKING_POWER
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_DECLARED_ATTACKING_POWER}",
+    ):
+        Game.model_validate(dumped)

@@ -5102,3 +5102,12 @@ Proof printings added: Glamdring, Foe-hammer // Gleam of Death, The
 Seriema, Cultivate, Kaho, Minamo Historian, Curator of Destinies. Bonecrusher
 Giant was already in the pool (used as a proof card for the adventure-face
 classifier fix without needing to be added).
+
+## C01 integration: pack tactics, every life loss raises its event
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| Pack tactics (CR 207.2c): "if you attacked with creatures with total power N or greater this combat" - the declared attackers' power as declared (`CombatMachine.declared_attacking_power`, CR 508.1, 508.4), cleared with combat (CR 511.3); schema 72 | `triggers._PACK_TACTICS_CLAUSE` in `intervening_if_holds` | Werewolf Pack Leader | Gnoll Hunter | `test_pack_tactics.py` |
+| "Whenever a player / an opponent loses life" fires on every life loss - an effect's "loses N life" (CR 119.3) and paid life (CR 119.4), not only damage | `Game.lose_life` (every former `Player.lose_life` caller) | The Master of Lake-town, Mindcrank | Sign in Blood (the loss) | `test_draw_count_and_life_loss_triggers.py` |
+| "Spend this mana only to cast a `<X>` spell or an `<Y>` spell" - the second phrase borrows the elided "cast" | `cost._spend_clauses` (`_SPEND_VERB`) | Maelstrom of the Spirit Dragon | - | `test_mana_spend_restrictions.py` |
+| a creature's own "can't be blocked [by ...]" / "can't block [...]" and "Equip abilities you activate that target this creature cost {N} less" credited as handled through their enforcing readers | `combat.reads_self_combat_restriction_line`, `keywords.is_equip_discount_for_this_line` | Duskwatch Hunter, Old Fat Spider, Gollum the Abandoned, Bilbo, Luckwearer, Dwarven Mauler | Questing Beast, The Mindskinner, Bloodghast, Zurgo Bellstriker, Changeling Outcast, Fervent Champion | `test_combat_restriction_credit.py` |

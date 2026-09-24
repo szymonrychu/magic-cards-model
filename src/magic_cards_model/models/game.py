@@ -3399,7 +3399,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 71
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 72
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3415,6 +3415,8 @@ class Game(EngineModel):
     #: `Game` through the battlefield (C01-T6).
     #: 71: `PreventionShield` gained `source_stamp`/`lasts_while` and
     #: `GraveyardArrival` gained `card_id` (C01-T7).
+    #: 72: `machines/combat.CombatMachine` gained `declared_attacking_power`
+    #: (pack tactics, C01 integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -4291,6 +4293,11 @@ class Game(EngineModel):
     Can't See Me's source-keyed prevention and Supper for Spiders' / Faith's
     Reward's "put there from the battlefield this turn" now resolve where a
     version-70 board did nothing, the second.
+
+    Bumped 71 -> 72 (C01 integration, pack tactics): `CombatMachine` gained
+    `declared_attacking_power` - the first bullet. A version-71 board in
+    combat would decode with no declared power, and a pack tactics trigger
+    already on the stack would do nothing - the second.
     """
 
     @model_validator(mode="before")
