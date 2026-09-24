@@ -80,6 +80,7 @@ from magic_cards_model.machines.combat import (
     reads_self_combat_restriction_line,
 )
 from magic_cards_model.machines.companion import reads_companion_line
+from magic_cards_model.machines.connive import is_connive_replacement_line, mentions_connive
 from magic_cards_model.machines.cost import (
     additional_cost_phrases,
     cost_announces_x,
@@ -868,6 +869,38 @@ def executed_keywords(printing: Card) -> dict[str, str]:
                 # be exact.
                 found["explore"] = "machines/effects.py (_parse_explores_clause, CR 701.44a-d)"
                 break
+
+    # Connive (CR 701.50a) is the same bare-word keyword-action shape as
+    # explore: `machines/connive.parse_connive_clause`, registered once in
+    # `_parse_mixed_clause`, gated on it matching this card's own text.
+    # `tests/scenarios/test_connive.py` proves it live.
+    if any(k.lower() == "connive" for k in printing.keywords):
+        texts = [
+            getattr(ability, "effect", None) or ability.text
+            for ability in parse_abilities(printing)
+            if ability.kind is not AbilityKind.STATIC
+        ]
+        if not texts:
+            text, _ = strip_reminder_text(printing.oracle_text or "")
+            texts.append(text)
+        normalized = [
+            _self_normalized_effect_text(
+                printing.name, text, legendary=Supertype.LEGENDARY in printing.supertypes
+            )
+            for text in texts
+        ]
+        if mentions_connive(normalized):
+            found["connive"] = "machines/connive.py (parse_connive_clause, CR 701.50a-f)"
+
+    # Boast (CR 702.142a) adds "Activate only if this creature attacked this
+    # turn and only once each turn" to the activated ability behind it, which
+    # `Game.why_cannot_activate` enforces off the parsed ability word.
+    if any(
+        (getattr(ability, "ability_word", None) or "").lower() == "boast"
+        for ability in parse_abilities(printing)
+        if ability.kind is AbilityKind.ACTIVATED
+    ):
+        found["boast"] = "models/game.py (why_cannot_activate, CR 702.142a)"
 
     return found
 
@@ -1876,6 +1909,10 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if reads_companion_line(printing, text):
         # CR 702.139a: `companion.companion_condition_satisfied` reads it.
         return HANDLED
+    if is_connive_replacement_line(text):
+        # CR 614.1a/701.50a: `connive._replacement_draws` reads it off the
+        # battlefield on every connive (Leader, Super-Genius).
+        return HANDLED
     return STATIC_UNAUDITED
 
 
@@ -2376,11 +2413,31 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     # actually be satisfied: the dying subject really is what this Aura is
     # attached to.
     enchanted_dies = ability.event is TriggerEvent.DIES and "enchanted" in ability.condition.lower()
+    # CR 301.5a: "an equipped creature you control attacks" (Swordsman, Sharp
+    # Scoundrel) is satisfied only by a subject an Equipment is attached to -
+    # a real pool Equipment, moved onto each candidate in turn.
+    equipment: CardState | None = None
+    if ability.event is TriggerEvent.ATTACKS and "an equipped creature" in (
+        ability.condition.lower()
+    ):
+        equipment_cards = _cards_by_subtype().get("Equipment", ())
+        if equipment_cards:
+            equipment = _synthetic_permanent(
+                equipment_cards[0],
+                controller="sweep_you",
+                token=False,
+                tapped=False,
+                counter_kind=None,
+            )
+            equipment.bind_to_game(game)
+            game.battlefield.append(equipment)
     for subject in states:
         if enchanted_dies:
             # `attached_to` is read off `attachment` (CR 301.5a) - not a
             # plain field of its own.
             source.attachment = TargetRef.to_card(subject)
+        if equipment is not None:
+            equipment.attachment = TargetRef.to_card(subject)
         if condition_matches(game, ability, source, controller, event_for(subject)):
             return True
     # CR 508.3d's own playerwide "you attack" event - no subject at all.

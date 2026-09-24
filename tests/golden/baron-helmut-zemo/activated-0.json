@@ -1,0 +1,95 @@
+{
+  "ability": "Boast — Exile any number of black cards from your graveyard with fifteen or more black mana symbols among their mana costs: Copy those exiled cards. You may cast up to three of the copies without paying their mana costs.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Baron Helmut Zemo@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Baron Helmut Zemo"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Doomsday Excruciator", "Divinity of Pride", "Griselbrand"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Baron Helmut Zemo",
+  "delta": {
+    "created": {
+      "Divinity of Pride@alice+1": {
+        "counters": {},
+        "zone": "stack"
+      },
+      "Doomsday Excruciator@alice+1": {
+        "counters": {},
+        "zone": "stack"
+      },
+      "Griselbrand@alice+1": {
+        "counters": {},
+        "zone": "stack"
+      }
+    },
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": ["Doomsday Excruciator@alice+1"],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "cast the copy of Doomsday Excruciator without paying its mana cost",
+        "source": "Baron Helmut Zemo"
+      },
+      {
+        "amount": 0,
+        "cards": ["Divinity of Pride@alice+1"],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "cast the copy of Divinity of Pride without paying its mana cost",
+        "source": "Baron Helmut Zemo"
+      },
+      {
+        "amount": 0,
+        "cards": ["Griselbrand@alice+1"],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "cast the copy of Griselbrand without paying its mana cost",
+        "source": "Baron Helmut Zemo"
+      }
+    ],
+    "fields_changed": ["cast_records", "spells_cast_this_turn"],
+    "notices": {},
+    "objects": {},
+    "players": {},
+    "stack": ["Doomsday Excruciator@alice+1", "Divinity of Pride@alice+1", "Griselbrand@alice+1"]
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 0,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}

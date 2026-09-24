@@ -5112,3 +5112,42 @@ classifier fix without needing to be added).
 | "Spend this mana only to cast a `<X>` spell or an `<Y>` spell" - the second phrase borrows the elided "cast" | `cost._spend_clauses` (`_SPEND_VERB`) | Maelstrom of the Spirit Dragon | - | `test_mana_spend_restrictions.py` |
 | a creature's own "can't be blocked [by ...]" / "can't block [...]" and "Equip abilities you activate that target this creature cost {N} less" credited as handled through their enforcing readers | `combat.reads_self_combat_restriction_line`, `keywords.is_equip_discount_for_this_line` | Duskwatch Hunter, Old Fat Spider, Gollum the Abandoned, Bilbo, Luckwearer, Dwarven Mauler | Questing Beast, The Mindskinner, Bloodghast, Zurgo Bellstriker, Changeling Outcast, Fervent Champion | `test_combat_restriction_credit.py` |
 | "if mana from a Treasure was spent to cast it" (CR 601.2h, CR 106.3's source of mana) - `ManaPool.treasure` / `ManaPayment.treasure_spent` / `CastRecord.treasure_mana_spent`; schema 73 | `triggers._TREASURE_MANA_SPENT_CLAUSE` in `intervening_if_holds`, `cost.is_treasure_source` | Smaug, Wicked Worm | Hired Hexblade | `test_treasure_mana_spent.py` |
+
+## C02-T1: connive, the connive replacement, owner library placement, Boast and its copy-cast, a multi-word flavor word
+
+A.I.M. Scientists, Baron Helmut Zemo, Baron Strucker, HYDRA Overlord, Kang,
+Temporal Tyrant, Leader, Super-Genius, M.O.D.O.K., Madame Masque, Red Room
+Recruit, Swordsman, Sharp Scoundrel, Trickster's Stratagem and Villainous
+Hideout were silent (or, for Leader's replacement, `static_unaudited`); every
+clause of each now sweeps `handled`, and the Connive and Boast keywords report
+an executing machine. CR numbers verified with `mise run rules:find`: 102.1, 106.6,
+107.4e, 107.4f, 108.3, 112.2a, 115.6, 118.3, 207.2c, 207.2d, 301.5a, 602.5b,
+602.5d, 603.2h, 608.2b, 608.2d, 611.3a, 613.1f, 613.4c, 614.1a, 614.5, 701.50a,
+701.50b, 701.50f, 702.142a, 704.5d, 704.5f, 707.10a, 707.12, 707.12a.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| Connive (CR 701.50a/b/f): "`<subject>` connives." for every subject - "it"/"he"/"she"/"this creature"/the card's own name (the source, by last known information if it has left), "it" naming the trigger event's own object ("another Villain you control enters, you may have it connive"; "an equipped creature you control attacks, it connives"), and "[up to one ]target `<quality>` you control" (the clause's own requirement picks its target out of a multi-target spell) - on triggers, activated abilities and spells | `connive.parse_connive_clause` (registered in `effects._parse_mixed_clause`), `connive.connive` | A.I.M. Scientists, Kang, Madame Masque, Red Room Recruit, Baron Helmut Zemo, Leader, Swordsman, M.O.D.O.K., Villainous Hideout, Trickster's Stratagem | Hypnotic Grifter, Mob Lookout, Doc Ock's Henchmen, Unstable Experiment, Psionic Snoop | `test_connive.py` |
+| "Do this only once each turn" (CR 603.2h) on an optional connive: declining the "you may" hands the once-each-turn budget back, since the action was not taken | `connive._release_once_per_turn` | Baron Strucker | - (no second legal printing; see MEMORY.md) | `test_connive.py` |
+| "If a creature you control would connive, instead you draw a card, then that creature connives." (CR 614.1a/614.5) - read fresh off the battlefield on every connive, gone with the line under a layer-6 removal (CR 613.1f) | `connive._replacement_draws`; `support` credits the line through `connive.is_connive_replacement_line` | Leader, Super-Genius | - (the only legal printing; proven across a trigger, an activation and a spell - see MEMORY.md) | `test_connive_replacement.py` |
+| "Whenever an equipped creature you control attacks" - only an attacker an Equipment is attached to (CR 301.5a) | `triggers._AN_EQUIPPED_CREATURE_RE` / `_has_equipment_attached` in `condition_matches`' ATTACKS branch | Swordsman, Sharp Scoundrel | - | `test_connive.py` |
+| "Activate only during your turn" / "... during an opponent's turn" (CR 602.5b, CR 102.1's active player) | `game._ACTIVATION_TURN_OWNER` in `Game.why_cannot_activate` | M.O.D.O.K. | - | `test_connive.py` |
+| A self-reference by a name ending in punctuation ("M.O.D.O.K. connives.") - bounded by "no word character either side" instead of `\b` | `abilities.self_reference_pattern` | M.O.D.O.K. | - | `test_connive.py` |
+| "attach up to one target Equipment you control to target creature you control" / "... to target attacking creature" - CR 115.6's "up to one" on the Equipment half | `effects._ATTACH_TARGET_EQUIPMENT_UP_TO_ONE_CREATURE_RE` (C01-T2's reader, widened) | Swordsman, Sharp Scoundrel | Raubahn, Bull of Ala Mhigo | `test_attach_equipment_effects.py` |
+| "The owner of target creature an opponent controls puts it into their library second from the top or on the bottom." - the owner chooses (CR 108.3/608.2d); the spell's second sentence still connives when the first target is gone (CR 608.2b) | `effects._parse_owner_puts_it_into_library_clause` (existing) | Trickster's Stratagem | Temporal Cleansing | `test_owner_library_placement.py` |
+| Boast (CR 702.142a): "Activate only if this creature attacked this turn and only once each turn", read off the parsed ability word | `Game.why_cannot_activate` | Baron Helmut Zemo | Axgard Braggart, Duskwielder | `test_boast_copy_cast.py` |
+| "Exile any number of `<colour>` cards from your graveyard with N or more `<colour>` mana symbols among their mana costs" (CR 107.4e/107.4f, CR 118.3) | `game._SYMBOL_THRESHOLD_EXILE_COST` / `_symbol_threshold_exile_component` in `Game.activation_cost` | Baron Helmut Zemo | - (the only legal printing; see MEMORY.md) | `test_boast_copy_cast.py` |
+| "Copy those exiled cards. You may cast up to N of the copies without paying their mana costs." (CR 707.12, 707.12a, 707.10a, 112.2a) - the copies made in exile, each offered individually, the uncast ones gone | `effects._parse_copy_cost_exiled_cards_and_cast` | Baron Helmut Zemo | - (the only legal printing; see MEMORY.md) | `test_boast_copy_cast.py` |
+| "Spend this mana only to cast a `<quality>` spell or to activate an ability of a `<quality>` source" (CR 106.6) - the singular "an ability of" and the repeated infinitive "to" after "or" | `cost._SPEND_ACTIVATE_CLAUSE`, `cost._spend_clauses` | Villainous Hideout | Cargo Ship | `test_mana_spend_restrictions.py` |
+| A static layer line behind a flavor word of three or more words (CR 207.2d): "Designed Only for Killing - Creatures your opponents control get -1/-1." - stripped, and the effect's `source_ability` is the printed line so CR 613.6's existence check finds it | `layers._ABILITY_WORD_RE` (up to five words), `layers._anthem_builder` via `_source_line_for` | M.O.D.O.K. | Waker of Waves (the debuff reader, no label) | `test_opponents_creatures_debuff.py` |
+
+Proof printings added: Hypnotic Grifter, Mob Lookout, Doc Ock's Henchmen,
+Unstable Experiment, Psionic Snoop, Raubahn, Bull of Ala Mhigo, Temporal
+Cleansing, Axgard Braggart, Duskwielder, Cargo Ship. The behavioural sweep drives the two
+new shapes it could not raise before: a boast activation stages the source's
+attack (`attacked_this_turn`), a symbol-threshold exile cost stages the
+richest black printings in the graveyard, and an "equipped creature you
+control attacks" trigger attaches a real Bonesplitter to the attacker.
+Connive N (CR 701.50d) is not read - no legal printing prints a count
+`effects.amount_expression` can evaluate (Raffine, Scheming Seer; Spymaster's
+Vault).

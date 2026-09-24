@@ -120,6 +120,7 @@ from magic_cards_model.models import Card, CardState, Color, Type, Zone
 from magic_cards_model.models.action import ActionKind
 from magic_cards_model.models.card import Layout
 from magic_cards_model.models.card_state import Choice, ChoiceKind, TargetRef
+from magic_cards_model.models.game import colored_symbol_count, symbol_threshold_exile_cost
 from magic_cards_model.models.token import PREDEFINED, create_predefined_tokens, token_copy_of
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.support import _probe_cards, card_support, in_target_formats
@@ -1409,6 +1410,14 @@ def _crew(scenario: PlayedScenario, vehicle: CardState) -> None:
         raise _Unavailable(f"crewing: {error}") from error
 
 
+#: A real Equipment (CR 301.5) to stage on an "equipped creature" attacker.
+_EQUIPMENT = "Bonesplitter"
+
+
+def _is_equipment(card: Card) -> bool:
+    return "Equipment" in card.subtypes
+
+
 def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     card = case.printing
     lowered = ability.condition.lower()
@@ -1419,6 +1428,12 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         ("Craw Wurm",)
         if re.search(r"attacked with creatures with total power", ability.intervening_if or "")
         else ()
+    )
+    # "Whenever an equipped creature you control attacks" on a non-Equipment
+    # source (Swordsman, Sharp Scoundrel, CR 301.5a): a real Equipment is
+    # staged and attached to the attacker.
+    equipment: tuple[str, ...] = (
+        (_EQUIPMENT,) if "an equipped creature" in lowered and not _is_equipment(card) else ()
     )
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
@@ -1434,7 +1449,8 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                     extra = ("Serra Angel",)
                 if side == ALICE:
                     scenario = _board(
-                        battlefield=(case.card, *extra, *partners), step=Step.DECLARE_ATTACKERS
+                        battlefield=(case.card, *extra, *partners, *equipment),
+                        step=Step.DECLARE_ATTACKERS,
                     )
                 else:
                     scenario = _board(
@@ -1448,7 +1464,8 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                     _crew(scenario, source)
                 attacker = source if probe is None else _staged(scenario, probe, side)
                 if attacker is not source and "equipped" in lowered:
-                    source.attachment = TargetRef.to_card(attacker)
+                    holder = _staged(scenario, _EQUIPMENT, ALICE) if equipment else source
+                    holder.attachment = TargetRef.to_card(attacker)
                 defender = BOB if side == ALICE else ALICE
                 alongside = (
                     [_staged(scenario, partner, side) for partner in partners]
@@ -2591,6 +2608,11 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
             game.add_counters(source, "loyalty", int(minus.group(1)))
     if ability.class_level_target is not None:
         source.class_level = ability.class_level_target - 1
+    if (ability.ability_word or "").lower() == "boast":
+        # CR 702.142a: "Activate only if this creature attacked this turn" -
+        # the attack is staged as the historical fact it is, the same way the
+        # level below a Class's bar is.
+        game.attacked_this_turn.add(source.id)
     profile = profile_for_text(ability.effect)
     if any(r.exiled_with_source for r in profile.requirements):
         # The source's own linked exile (CR 607.2a) fills when a creature
@@ -2615,6 +2637,17 @@ def _cost_choices(
     is paid with (CR 601.2b): the first ones the cost's own `CardRequirement`
     accepts, never the source itself unless the cost names it, lands last."""
     game = scenario.game
+    threshold = _symbol_threshold(game.activated_abilities(source)[index])
+    if threshold is not None:
+        # "Exile any number of <colour> cards from your graveyard with N or
+        # more <colour> mana symbols ..." (CR 118.3): every card of that
+        # colour in the graveyard, which is as many symbols as there are.
+        quality, _color, _needed = threshold
+        return {
+            "exiling": [
+                card for card in game.player(ALICE).graveyard if quality in card.card.colors
+            ]
+        }
     try:
         total = game.activation_cost(source, index, ALICE, x_value=x_value)
     except ValueError:
@@ -2664,10 +2697,48 @@ def _cost_material(case: Case) -> tuple[Material, ...]:
     return _cost_material_for(case.card, case.text)
 
 
+def _symbol_threshold(ability: ActivatedAbility) -> tuple[Any, Any, int] | None:
+    """The parts of a symbol-threshold exile cost piece on this ability, if any
+    (`models.game.symbol_threshold_exile_cost`)."""
+    for piece in ability.costs:
+        parts = symbol_threshold_exile_cost(piece.text)
+        if parts is not None:
+            return parts
+    return None
+
+
+def _symbol_threshold_material(threshold: tuple[Any, Any, int]) -> tuple[Material, ...]:
+    """Graveyard cards of the cost's colour carrying at least its threshold of
+    mana symbols between them, the richest printings in the pool first."""
+    quality, color, needed = threshold
+    ranked = sorted(
+        (
+            card
+            for card in _format_pool()
+            if not card.card_faces and quality in card.colors and not card.is_land
+        ),
+        key=lambda card: (-colored_symbol_count(card, color), card.name),
+    )
+    material: list[Material] = []
+    total = 0
+    for card in ranked:
+        if total >= needed:
+            break
+        count = colored_symbol_count(card, color)
+        if count <= 0:
+            break
+        material.append(Material(card.name, ALICE, Zone.GRAVEYARD))
+        total += count
+    return tuple(material) if total >= needed else ()
+
+
 @cache
 def _cost_material_for(card_name: str, text: str) -> tuple[Material, ...]:
     card = pool()[card_name]
     ability = _activated_ability(card, text)
+    threshold = _symbol_threshold(ability)
+    if threshold is not None:
+        return _symbol_threshold_material(threshold)
     saved = _STAGING.variant, _STAGING.material
     _STAGING.variant, _STAGING.material = QUIET, _target_material(ability.effect)
     try:

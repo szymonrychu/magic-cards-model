@@ -59,7 +59,7 @@
   "number": 0,
   "recipe": {
     "attempt": "put",
-    "index": 5,
+    "index": 6,
     "params": {
       "owner": "alice",
       "probe": "Abhorrent Oculus",

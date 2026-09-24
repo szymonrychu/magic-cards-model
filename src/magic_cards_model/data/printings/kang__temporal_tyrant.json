@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "fb96ee86-5139-472a-9c4b-8a8a4280fc7e",
+  "oracle_id": "b43350a8-fc4d-41ed-becd-f0277512bb5f",
+  "multiverse_ids": [],
+  "resource_id": "965E46BF99E2600DE50E054F9F042AC8E575DDB763094E4E3C58E6CE168253CF",
+  "mtgo_id": 152621,
+  "arena_id": 105112,
+  "tcgplayer_id": 696322,
+  "cardmarket_id": 890579,
+  "name": "Kang, Temporal Tyrant",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/fb96ee86-5139-472a-9c4b-8a8a4280fc7e",
+  "scryfall_uri": "https://scryfall.com/card/msh/217/kang-temporal-tyrant?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.jpg?1783902901",
+    "normal": "https://cards.scryfall.io/normal/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.jpg?1783902901",
+    "large": "https://cards.scryfall.io/large/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.jpg?1783902901",
+    "png": "https://cards.scryfall.io/png/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.png?1783902901",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.jpg?1783902901",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.jpg?1783902901",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.webp?1783902901",
+    "grid": "https://cards.scryfall.io/grid/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.webp?1783902901",
+    "display": "https://cards.scryfall.io/display/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.webp?1783902901",
+    "art": "https://cards.scryfall.io/art/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.webp?1783902901",
+    "crop": "https://cards.scryfall.io/crop/front/f/b/fb96ee86-5139-472a-9c4b-8a8a4280fc7e.webp?1783902901"
+  },
+  "mana_cost": "{2}{U}{B}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Human Villain",
+  "oracle_text": "Whenever Kang attacks, he connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.)\nWhenever you draw your second card each turn, each opponent loses 1 life and you gain 1 life.",
+  "power": "3",
+  "toughness": "4",
+  "colors": [
+    "B",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "U"
+  ],
+  "keywords": [
+    "Connive"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fb96ee86-5139-472a-9c4b-8a8a4280fc7e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab43350a8-fc4d-41ed-becd-f0277512bb5f&unique=prints",
+  "collector_number": "217",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "David Szabo",
+  "artist_ids": [
+    "4b065a8b-3d15-45cf-bd6f-f3736df6292b"
+  ],
+  "illustration_id": "8dac2820-ef3b-4770-b7e0-732d6d8fb360",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 10016,
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": "0.32",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.16",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKang%252C%2BTemporal%2BTyrant",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKang%252C%2BTemporal%2BTyrant",
+    "edhrec": "https://edhrec.com/route/?cc=Kang%2C+Temporal+Tyrant"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696322%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=890579&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152621?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

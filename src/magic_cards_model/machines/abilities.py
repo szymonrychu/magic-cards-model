@@ -2165,9 +2165,15 @@ def self_reference_pattern(name: str) -> str:
     candidate with - one word-bounded, empower-guarded
     (`_EMPOWER_KEYWORD_LOOKBEHIND`), longer-name-guarded
     (`_LONGER_NAME_CONTINUATION_LOOKAHEAD`) pattern shared so the two never
-    drift into reading CR 201.5/201.5c self-reference differently."""
+    drift into reading CR 201.5/201.5c self-reference differently.
+
+    The name is bounded by "no word character on either side" rather than by
+    `\b`: identical for a name that starts and ends in a letter, and the only
+    reading that works for one ending in punctuation - M.O.D.O.K.'s own
+    "M.O.D.O.K. connives." has no `\b` after its final period at all."""
     return (
-        rf"{_EMPOWER_KEYWORD_LOOKBEHIND}\b{re.escape(name)}\b{_LONGER_NAME_CONTINUATION_LOOKAHEAD}"
+        rf"{_EMPOWER_KEYWORD_LOOKBEHIND}(?<!\w){re.escape(name)}(?!\w)"
+        rf"{_LONGER_NAME_CONTINUATION_LOOKAHEAD}"
     )
 
 

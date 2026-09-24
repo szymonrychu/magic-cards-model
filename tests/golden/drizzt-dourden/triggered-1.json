@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Drizzt Do'Urden", "Abhorrent Oculus"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Drizzt Do'Urden", "Serra Angel"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -43,11 +43,11 @@
         "counters": [
           {},
           {
-            "+1/+1": 2
+            "+1/+1": 1
           }
         ],
-        "power": [3, 5],
-        "toughness": [3, 5]
+        "power": [3, 4],
+        "toughness": [3, 4]
       }
     },
     "players": {},
@@ -59,11 +59,11 @@
   "number": 1,
   "recipe": {
     "attempt": "other",
-    "index": 14,
+    "index": 30,
     "params": {
       "as_token": false,
       "owner": "alice",
-      "probe": "Abhorrent Oculus",
+      "probe": "Serra Angel",
       "removal": "destroy"
     },
     "variant": "quiet"

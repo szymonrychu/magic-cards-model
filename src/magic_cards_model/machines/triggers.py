@@ -2008,6 +2008,22 @@ def _mana_value_comparison(condition: str) -> tuple[int, str] | None:
 #: The "you control" here is the planeswalker's, never the attacker's.
 _ATTACKS_YOU_RE = re.compile(r"\battacks you(?P<planeswalker> or a planeswalker you control)?$")
 
+#: "an equipped creature you control" as a trigger subject (CR 301.5a) - the
+#: indefinite article is what separates it from an Equipment's own "equipped
+#: creature", the one creature that Equipment is attached to.
+_AN_EQUIPPED_CREATURE_RE = re.compile(r"\ban equipped creature\b")
+
+
+def _has_equipment_attached(game: "Game", subject_id: "UUID | None") -> bool:
+    """Whether an Equipment (CR 301.5) is attached to this permanent now."""
+    if subject_id is None:
+        return False
+    return any(
+        permanent.attached_to == subject_id
+        and "Equipment" in game.characteristics_of(permanent).subtypes
+        for permanent in game.battlefield
+    )
+
 
 def _attacks_you_holds(
     game: "Game",
@@ -2545,6 +2561,13 @@ def condition_matches(
             )
         if mine:
             return event.subject_id == source.id
+        if _AN_EQUIPPED_CREATURE_RE.search(lowered) and not _has_equipment_attached(
+            game, event.subject_id
+        ):
+            # CR 301.5a: "equipped creature" is a creature an Equipment is
+            # attached to - Swordsman, Sharp Scoundrel's "Whenever an
+            # equipped creature you control attacks" skips a bare attacker.
+            return False
         return _controller_clause_holds(
             condition, controller, event.subject_controller
         ) and _types_match(event.subject_types, condition)

@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Anafenza, the Foremost@alice#1",
-    "targets": ["Abhorrent Oculus@alice#1"],
+    "targets": ["A.I.M. Scientists@alice#1"],
     "x": 0
   },
   "board": {
@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Anafenza, the Foremost", "Abhorrent Oculus"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Anafenza, the Foremost", "A.I.M. Scientists"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -28,7 +28,7 @@
     },
     "step": "declare_attackers",
     "tapped": [
-      ["Abhorrent Oculus", "alice"]
+      ["A.I.M. Scientists", "alice"]
     ],
     "tokens": [],
     "variant": "quiet",
@@ -41,15 +41,15 @@
     "fields_changed": [],
     "notices": {},
     "objects": {
-      "Abhorrent Oculus@alice#1": {
+      "A.I.M. Scientists@alice#1": {
         "counters": [
           {},
           {
             "+1/+1": 1
           }
         ],
-        "power": [5, 6],
-        "toughness": [5, 6]
+        "power": [3, 4],
+        "toughness": [3, 4]
       }
     },
     "players": {},

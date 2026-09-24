@@ -15,7 +15,7 @@
     "players": {
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
-        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Prized Amalgam", "Aang, at the Crossroads // Aang, Destined Savior"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Prized Amalgam", "A.I.M. Scientists"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
@@ -40,7 +40,7 @@
     "notices": {},
     "objects": {},
     "players": {},
-    "stack": ["ability of Aang, at the Crossroads@alice#1: When Aang enters, look at the top five cards of your library. You may put a creature card with mana value 4 or less from among them onto the battlefield. Put the rest on the bottom of your library in a random order."]
+    "stack": ["ability of A.I.M. Scientists@alice#1: When this creature enters, it connives."]
   },
   "family": "triggered",
   "format": 1,
@@ -50,7 +50,7 @@
     "attempt": "exhume",
     "index": 4,
     "params": {
-      "probe": "Aang, at the Crossroads // Aang, Destined Savior"
+      "probe": "A.I.M. Scientists"
     },
     "variant": "quiet"
   }
