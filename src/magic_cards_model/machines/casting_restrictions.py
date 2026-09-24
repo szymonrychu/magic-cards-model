@@ -133,6 +133,12 @@ class CastingRuleKind:
     this turn." - every opponent of `controller` is barred from activating
     a loyalty ability (CR 602.5, CR 606.3) until the turn ends. Read by
     `Game.why_cannot_activate` through `loyalty_activation_restriction`."""
+    DRAW_COUNT_CANT_DRAW = "draw_count_cant_draw"
+    """Narset, Parter of Veils's "Each opponent can't draw more than one card
+    each turn." and Spirit of the Labyrinth's "each player" variant. Also
+    synthesised live, the identical shape `SPELL_COUNT_CANT_CAST` already uses
+    for casts, counted off `Game.cards_drawn_this_turn` instead of `Game.
+    spells_cast_this_turn` (CR 121.2b in place of CR 601.3)."""
     SPELLS_CANT_BE_COUNTERED_GRANT = "spells_cant_be_countered_grant"
     """Veil of Summer's "Spells you control can't be countered this turn."
     and Determined's "Other spells you control can't be countered this
@@ -881,6 +887,100 @@ def zone_cast_prohibition_source(
             if not _matches_type_filter(evaluated, match.group("filter")):
                 continue
             if origin in _prohibited_zones(match.group("zones")):
+                return source.name
+    return None
+
+
+#: Narset, Parter of Veils's and Spirit of the Labyrinth's exact printed
+#: static, verified against both pool printings: "Each opponent/player can't
+#: draw more than one card each turn." Reuses `_RESTRICTED_WHO` and the same
+#: `count_pattern` `_SPELL_COUNT_CAP_RE` already uses for the identical shape
+#: over casts (CR 121.2b's "individual card draws" in place of CR 601.3's
+#: casts).
+_DRAW_CAP_RE = re.compile(
+    rf"^{_RESTRICTED_WHO} can'?t draw more than {count_pattern('count')} cards? each turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def draw_cap_restriction(game: Any, drawer: str) -> CastingRuleEffect | None:
+    """Whatever stops `drawer` from drawing another card on *this specific
+    draw*, or None (CR 121.2b).
+
+    "Some effects say that a player can't draw more than one card each turn.
+    Such an effect applies to individual card draws. Instructions to draw
+    multiple cards may still be partially carried out." - so `Game.draw_cards`
+    asks this once per individual draw inside its own CR 121.2 loop, not once
+    per instruction: a "draw two cards" that would hit the cap on the second
+    draw still performs the first.
+
+    Read fresh off the battlefield on every call, per CR 611.3a, exactly like
+    `_live_blanket_cant_cast`'s identical cap over casts - Narset, Parter of
+    Veils's "each opponent" and Spirit of the Labyrinth's "each player" are the
+    same shape with a different subject, told apart by `_restricts`.
+    """
+    for source in list(getattr(game, "battlefield", [])):
+        controller = game.controller_of(source).username
+        for line in parse_abilities(source.card):
+            if line.kind is not AbilityKind.STATIC:
+                continue
+            match = _DRAW_CAP_RE.match((line.text or "").strip())
+            if match is None:
+                continue
+            if not _restricts(match.group("who"), source, controller, drawer):
+                continue
+            limit = parse_count(match.group("count"))
+            if limit is None:
+                continue
+            return CastingRuleEffect(
+                kind=CastingRuleKind.DRAW_COUNT_CANT_DRAW,
+                controller=controller,
+                source_name=source.name,
+                restricted_player=drawer,
+                amount=limit,
+            )
+    return None
+
+
+#: Ashiok, Dream Render's exact printed static, verified against the pool
+#: printing: "Spells and abilities your opponents control can't cause their
+#: controller to search their library." Narrow to this one sentence, matching
+#: `_SORCERY_SPEED_ONLY_RE`'s own precedent for a shape no other pool printing
+#: carries - CR 701.23 is Search, and CR 101.2's ordinary "can't" precedence
+#: is what makes it bind; there is no rule narrower than that naming this
+#: specific prohibition.
+_SEARCH_PROHIBITION_RE = re.compile(
+    r"^spells and abilities your opponents control can'?t cause their "
+    r"controller to search their library\.?$",
+    re.IGNORECASE,
+)
+
+
+def search_prohibition_source(game: Any, causer: str) -> str | None:
+    """The name of a live permanent whose static text stops `causer` from
+    being caused, by their own spell or ability, to search their own library,
+    or None.
+
+    "Their controller"/"their library" both name the same person - the
+    controller of the spell or ability doing the causing - so this only ever
+    stops a *self*-search: `Game.search_library`/`search_and_put` ask it only
+    when the player being searched is that same causer. A Bribery-style
+    "search target opponent's library" names a different searcher than the
+    spell's own controller and is untouched, exactly as the printed grammar
+    requires - Ashiok's own `-1` ("target player mills four cards") never
+    searches anything and is unaffected either way.
+    `causer` must be an opponent of the permanent's own controller ("your
+    opponents"), read the same live, never-cached way (CR 611.3a) every other
+    reader in this module already scans the battlefield.
+    """
+    for source in list(getattr(game, "battlefield", [])):
+        controller = game.controller_of(source).username
+        if controller == causer:
+            continue
+        for line in parse_abilities(source.card):
+            if line.kind is not AbilityKind.STATIC:
+                continue
+            if _SEARCH_PROHIBITION_RE.match((line.text or "").strip()):
                 return source.name
     return None
 

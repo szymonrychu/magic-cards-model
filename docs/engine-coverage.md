@@ -4530,3 +4530,38 @@ with `mise run rules:find`: 105.1, 109.2, 109.2c, 109.5, 117.3b, 201.4,
 Proof printings added: Stony Silence, Phyrexian Revoker, Thousand-Year Elixir,
 Patchwork Crawler, Drana and Linvala (plus the listed Cursed Totem and Damping
 Matrix). Schema 64 -> 65 for `ManaSpend.any_color`.
+
+## C00-T2: player casting, draw and search prohibitions
+
+High Noon, Teferi, Time Raveler and Voice of Victory's cast-count/timing
+statics, and Grafdigger's Cage's and Soulless Jailer's cast-from-zone
+statics, were already implemented by `machines/casting_restrictions.py`
+before this task; they were `static_unaudited` (present, unproven) and are
+now backed by scenario tests. Three genuinely new mechanisms were built:
+the per-turn draw cap, the search prohibition, and (in `machines/
+replacement.py`) a real fix to the enter-the-battlefield "can't" family -
+Soulless Jailer's "Permanent cards" clause was silently inert: `_CARD_TYPE_
+WORDS` had no entry for the word "permanent", so `_cant_enter_replacements`
+read `wanted is None` and skipped building the replacement outright. CR
+numbers verified with `mise run rules:find` (`rules:pull` first, effective
+September 25, 2026): 101.2, 110.1, 121.2b, 400.4a, 601.3, 604.1, 604.2,
+611.1, 611.2c, 611.3a, 613.11, 614.17, 614.17d, 701.23.
+
+| Mechanic | Reader | Reported card(s) | Off-pool proof | Test |
+|---|---|---|---|---|
+| "`<Creature/Permanent>` cards in graveyards [and libraries] can't enter the battlefield" - CR 614.17d's own "can't" family (not a replacement effect), the destination reset to the object's origin zone (CR 400.4a); widened to accept a bare "permanent" filter (no type restriction) and an optional "non`<type>`" exclusion, the same convention `_copy_candidates` already used for Clever Impersonator's "any nonland permanent" | `replacement._cant_enter_replacements`, `_cant_enter_applies`, `_CANT_ENTER_RE` | Grafdigger's Cage, Soulless Jailer | Kunoros, Hound of Athreos (single zone); Weathered Runestone ("Nonland permanent", two zones) | `test_graveyard_library_cast_and_enter_bans.py` |
+| "Each opponent/player can't draw more than one card each turn" - CR 121.2b's own per-individual-draw check, asked once per draw inside `Game.draw_cards`'s CR 121.2 loop rather than once per instruction, so a "draw two" against a cap of one still performs the first | `casting_restrictions.draw_cap_restriction`, `_DRAW_CAP_RE`, wired into `Game.draw_cards` | Narset, Parter of Veils | Spirit of the Labyrinth ("each player", not "each opponent") | `test_draw_limit.py` |
+| "Spells and abilities your opponents control can't cause their controller to search their library" - a self-search-only gate (the causer and the searcher are the same player, so a "search target opponent's library" shape is untouched by construction); wired into the shared `Game.search_library`/`search_and_put` funnel via a new `caused_by` parameter, threaded from the dominant "search your library for..." effect family (`_search_and_place_for`/`_build_search_clause`) | `casting_restrictions.search_prohibition_source`, `_SEARCH_PROHIBITION_RE` | Ashiok, Dream Render | Diabolic Tutor (an unrelated tutor exercising the same shared funnel) | `test_search_prohibition.py` |
+| "Each player can't cast more than one spell each turn" / "Each opponent can cast spells only any time they could cast a sorcery" / "Your opponents can't cast spells during your turn" - pre-existing readers, now proven | `casting_restrictions.blanket_cant_cast_restriction`, `sorcery_speed_restriction_source` | High Noon, Teferi Time Raveler, Voice of Victory | Rule of Law (identical text); Teferi, Mage of Zhalfir (identical static on an unrelated creature printing) | `test_cast_count_and_timing_prohibitions.py` |
+
+Proof printings added: Rule of Law, Teferi, Mage of Zhalfir, Kunoros, Hound
+of Athreos, Weathered Runestone, Spirit of the Labyrinth, Diabolic Tutor.
+
+Scope boundary, documented rather than silently narrowed: `caused_by` is
+wired only into the dominant "search your library for ..., put it ..., then
+shuffle" clause family (fetchlands, ordinary tutors) - not into the rarer
+"its controller may search ..." anaphoric shape (Ghost Quarter) or the
+top-of-library "reveal it, then shuffle and put that card on top" family
+(Mystical Tutor), neither of which any listed card for this task needs.
+Both default `caused_by` to `None` (unchanged prior behaviour) rather than
+silently guessing a controller.
