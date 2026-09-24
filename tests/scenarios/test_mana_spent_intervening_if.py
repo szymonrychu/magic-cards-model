@@ -91,6 +91,69 @@ def test_vexing_bauble_does_not_counter_a_spell_paid_with_mana():
 
 
 # --------------------------------------------------------------------------
+# Roiling Vortex: "if no mana was spent to cast that spell"
+# --------------------------------------------------------------------------
+
+
+def _vortex_board() -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Lightning Bolt", "Memnite"],
+            battlefield=["Roiling Vortex", "Mountain"],
+        )
+        .player("bob", library=["Forest"], hand=["Memnite"])
+    )
+
+
+def test_roiling_vortex_hits_whoever_casts_a_spell_for_no_mana():
+    """ "Whenever a player casts a spell, if no mana was spent to cast that
+    spell, this enchantment deals 5 damage to that player." - "that spell" is
+    the trigger's own spell (CR 603.4's intervening if), "that player" its
+    caster: here its own controller."""
+    scenario = _vortex_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.cast_onto_stack("Memnite")
+    assert scenario.game.intervening_if_notices == []
+    scenario.pass_until_resolved()  # the Vortex's trigger
+
+    assert scenario.player("alice").life == 15
+    assert scenario.player("bob").life == 20
+
+
+def test_roiling_vortex_hits_an_opponent_casting_for_no_mana():
+    """ "a player" - Bob casts Memnite on his own turn and takes the 5."""
+    scenario = (
+        Scenario()
+        .player("bob", library=["Forest"], hand=["Memnite"])
+        .player("alice", library=["Forest"], battlefield=["Roiling Vortex"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.cast_onto_stack("Memnite", username="bob")
+    scenario.pass_until_resolved()
+
+    assert scenario.player("bob").life == 15
+    assert scenario.player("alice").life == 20
+
+
+def test_roiling_vortex_ignores_a_spell_paid_with_mana():
+    scenario = _vortex_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (mountain,) = scenario.untapped_sources("Mountain")
+
+    scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[scenario.player("bob")])
+
+    assert scenario.stack_names() == ["Lightning Bolt"]
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 20
+
+
+# --------------------------------------------------------------------------
 # Wistfulness: "if {G}{G} was spent to cast it" / "if {U}{U} was spent to cast it"
 # --------------------------------------------------------------------------
 

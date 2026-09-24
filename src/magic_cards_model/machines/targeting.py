@@ -137,6 +137,14 @@ class ControllerRestriction(StrEnum):
     posture every restriction here takes when the caller cannot supply what
     it needs."""
 
+    PRIOR_TARGET_PLAYER = "prior_target_player"
+    """"... target creature that player or that planeswalker's controller
+    controls" after "target player or planeswalker" - Searing Blaze, Soul of
+    Shandalar. The creature must be controlled by the player chosen for the
+    requirement printed just before it, or by the chosen planeswalker's
+    controller (CR 601.2c). One target alone cannot say, so `rejects`
+    restricts nothing and `TargetingProfile.check` compares the pair."""
+
 
 class RetargetScope(StrEnum):
     """How many of a stack object's targets a CR 115.7 effect may change.
@@ -254,6 +262,14 @@ class CombatState(StrEnum):
 
 #: "Any target" is creatures, players, planeswalkers, and battles (CR 115.4).
 ANY_TARGET_TYPES = frozenset({Type.CREATURE, Type.PLANESWALKER, Type.BATTLE})
+
+
+#: Restrictions one target cannot be judged against on its own - no
+#: restriction at all, or `PRIOR_TARGET_PLAYER`'s pairing, which
+#: `TargetingProfile.check` judges across the whole announcement.
+_UNRESTRICTED_ALONE = frozenset(
+    {ControllerRestriction.ANY, ControllerRestriction.PRIOR_TARGET_PLAYER}
+)
 
 
 class TargetRequirement(EngineModel):
@@ -1282,7 +1298,7 @@ class TargetRequirement(EngineModel):
         # instead." CR 109.4 is why a card in a graveyard has none, and
         # "target card in your graveyard" is the phrase that needs the fallback.
         controller = getattr(target, "controller_or_owner", target.controller)
-        if self.controller is ControllerRestriction.ANY or controller is None:
+        if self.controller in _UNRESTRICTED_ALONE or controller is None:
             return None
         if self.controller is ControllerRestriction.EVENT_PLAYER:
             return self._rejects_event_player_control(target, controller)
@@ -1530,6 +1546,68 @@ class TargetingProfile(EngineModel):
 
         self._fill_slots(targets, caster, game, source_id)
         self._check_one_per_opponent(targets, caster, game, source_id)
+        self._check_prior_target_player(targets, caster, game, source_id)
+
+    def prior_target_player(
+        self,
+        dependent: TargetRequirement,
+        targets: Sequence[Any],
+        caster: str,
+        game: Any,
+        source_id: UUID | None = None,
+    ) -> str | None:
+        """The player `dependent`'s `PRIOR_TARGET_PLAYER` names: the target
+        chosen for the requirement printed just before it, if it is a player,
+        or that permanent's controller (Searing Blaze's "that player or that
+        planeswalker's controller"). `None` when no such target was chosen."""
+        position = next(
+            (index for index, found in enumerate(self.requirements) if found is dependent), None
+        )
+        if not position:
+            return None
+        anchor_requirement = self.requirements[position - 1]
+        for target in targets:
+            if anchor_requirement.rejects(target, caster, game, source_id) is not None:
+                continue
+            username = getattr(target, "username", None)
+            if isinstance(target, str):
+                return target
+            if username is not None:
+                return str(username)
+            found = getattr(target, "controller_or_owner", None) or getattr(
+                target, "controller", None
+            )
+            return None if found is None else str(found)
+        return None
+
+    def _check_prior_target_player(
+        self, targets: list[Any], caster: str, game: Any, source_id: UUID | None
+    ) -> None:
+        """`ControllerRestriction.PRIOR_TARGET_PLAYER`, across the whole
+        announcement (CR 601.2c)."""
+        for requirement in self.requirements:
+            if requirement.controller is not ControllerRestriction.PRIOR_TARGET_PLAYER:
+                continue
+            anchor = self.prior_target_player(requirement, targets, caster, game, source_id)
+            if anchor is None:
+                continue
+            position = self.requirements.index(requirement)
+            anchor_requirement = self.requirements[position - 1]
+            for target in targets:
+                if isinstance(target, str) or getattr(target, "username", None) is not None:
+                    continue
+                if anchor_requirement.rejects(target, caster, game, source_id) is None:
+                    continue
+                if requirement.rejects(target, caster, game, source_id) is not None:
+                    continue
+                found = getattr(target, "controller_or_owner", None) or getattr(
+                    target, "controller", None
+                )
+                if found is not None and str(found) != anchor:
+                    raise ValueError(
+                        f"{requirement.phrase} needs a creature {anchor} controls, and "
+                        f"{target.name} is not (CR 601.2c)"
+                    )
 
     def _check_one_per_opponent(
         self, targets: list[Any], caster: str, game: Any, source_id: UUID | None
@@ -2093,7 +2171,9 @@ _COMBAT_ADJECTIVES = {
 
 _CONTROL_CLAUSE = re.compile(
     r"^(?:that\s+)?(you\s+control|you\s+don't\s+control|an\s+opponent\s+controls|"
-    r"your\s+opponents\s+control|that\s+player\s+controls)\b",
+    r"your\s+opponents\s+control|"
+    r"that\s+player\s+or\s+that\s+planeswalker's\s+controller\s+controls|"
+    r"that\s+player\s+controls)\b",
     re.IGNORECASE,
 )
 _ZONE_CLAUSE = re.compile(
@@ -4455,4 +4535,7 @@ _CONTROLLERS = {
     "an opponent controls": ControllerRestriction.OPPONENT,
     "your opponents control": ControllerRestriction.OPPONENT,
     "that player controls": ControllerRestriction.EVENT_PLAYER,
+    "that player or that planeswalker's controller controls": (
+        ControllerRestriction.PRIOR_TARGET_PLAYER
+    ),
 }

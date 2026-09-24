@@ -4435,3 +4435,44 @@ verified with `mise run rules:find`: 103.8a, 107.1c, 107.3a, 108.3, 118.7a,
 | CR 103.8a's skip is of the whole step (CR 500.11, 614.10a): `Game.advance` walks past the starting player's first draw step, so no beginning event, no "at the beginning of your draw step" trigger, no priority; a CR 500.8 additional beginning phase's draw step that turn is not skipped | `Game._advance_past_checks`, `TurnMachine.skips_draw` (`resume_index`) | - | The Immortal Sun | `test_draw_an_additional_card.py`, `test_turn_based_actions.py`, `test_compound_trigger_conditions.py` |
 
 Proof printings added: Airbending Lesson, The Immortal Sun, Soul Seizer.
+
+## C00-T4: damage modification, prevention, split damage and life-gain bans
+
+Artist's Talent, Mjolnir, Hammer of Thor, Crystal Barricade, Searing Blaze,
+Smash to Smithereens, Exquisite Firecraft, Skullcrack and Roiling Vortex
+were silent, notice or `static_unaudited`; every clause of all eight now
+sweeps `handled`. `support._static_ability_category` credits a static line
+`machines/replacement.py` really performs (`performs_static_line`) and the
+battlefield rules-of-the-game lines `Game` reads (`is_player_rules_static_line`),
+which also moved ~40 pool cards' replacement lines (Rest in Peace, Doubling
+Season, Furnace of Rath, ...) from `static_unaudited` to `handled`. CR numbers
+verified with `mise run rules:find`: 102.1, 113.6g, 113.7a, 115.3, 119.7,
+120.1, 207.2a, 207.2c, 301.5a, 301.5b, 303.4b, 305.1, 400.7, 503.1a, 510.2,
+514.2, 601.2c, 603.2b, 603.4, 604.2, 604.5, 608.2b, 608.2c, 608.2h, 609.7b,
+611.1, 611.2c, 611.3a, 613.1f, 613.5, 614.1, 614.1a, 614.2, 614.5, 614.12a,
+615.1, 615.1a, 615.12, 700.16, 701.6a, 701.10g, 701.21a, 702.6a, 702.6c,
+702.16e, 715.3a, 716.2a.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "If a [`<quality>`] source you control would deal [noncombat] damage to `<recipients>`, it deals that much damage plus N / double (triple) that damage [to that player or permanent] instead." (CR 614.2, 609.7b, 701.10g) | `replacement._compile_damage_plus_amount` (`_SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE`, `_DAMAGE_RECIPIENTS`) | Artist's Talent | Solphim, Mayhem Dominus | `test_damage_increase_and_double.py` |
+| "Double all damage `<subject>` would deal." - equipped/enchanted creature, "(that) sources/creatures you control [of the chosen type]" | `replacement._double_all_damage_replacements` (read off the computed abilities, CR 613.1f) | Mjolnir, Hammer of Thor | Collective Inferno | `test_damage_increase_and_double.py` |
+| "Equip [quality] [cost]" (CR 702.6c) - "worthy" (CR 700.16), supertype, "token", card type or subtype; the first printed equip ability whose quality the target has is activated, and the quality is rechecked on resolution (CR 608.2b). An Equip line is read even when Scryfall's keyword list omits Equip | `abilities._parse_equip_with_quality`, `keywords.equip_quality_refusal`, `equip_activation` | Mjolnir, Hammer of Thor | Steelclaw Lance | `test_equip_quality.py` |
+| "Prevent all [non]combat damage that would be dealt to `<group>`." - [other] creatures/permanents you control, "you and ...", equipped/enchanted creature (CR 615.1a) | `replacement._compile_prevent_all_to_group` | Crystal Barricade | Mark of Asylum | `test_noncombat_damage_prevention.py` |
+| "Players can't gain life this turn." / "Your opponents can't gain life this turn." (CR 119.7, 611.2c, 514.2) - recorded `CastingRuleKind.PLAYERS_CANT_GAIN_LIFE` / `OPPONENTS_CANT_GAIN_LIFE` | `effects._parse_turn_rules_ban_clause`, `Game.life_gain_prohibited` | Skullcrack, Roiling Vortex | Atarka's Command | `test_lifegain_and_prevention_bans.py` |
+| "Damage can't be prevented [this turn]." / "Combat damage can't be prevented." (CR 615.12) - prevention effects apply and prevent nothing (additional effects still happen), shields are not reduced, protection prevents nothing | `CastingRuleKind.DAMAGE_CANT_BE_PREVENTED`, `Game.damage_cant_be_prevented`, `replacement._prevents_nothing`, `CardReplacement.prevention` | Skullcrack | Impractical Joke, Stomp, Leyline of Punishment | `test_lifegain_and_prevention_bans.py`, `test_noncombat_damage_prevention.py` |
+| "deals N damage to target player or planeswalker and N damage to target creature that player or that planeswalker's controller controls" - the dependent target checked at announcement (CR 601.2c) and on resolution (CR 608.2b) | `targeting.ControllerRestriction.PRIOR_TARGET_PLAYER`, `TargetingProfile.prior_target_player`, `effects._merge_split_damage_clauses` | Searing Blaze | Soul of Shandalar | `test_split_player_creature_damage.py` |
+| landfall "If you had a land enter the battlefield under your control this turn, ... deals M ... to that player or planeswalker and M damage to that creature instead" - the amounts put into the base instruction, targets kept (CR 614.1a) | `Game` condition `_CONDITION_LAND_ENTERED_THIS_TURN` (`turn_facts["land_entered"]`, recorded as a land enters), `effects._amount_substituted_base` | Searing Blaze | - (no other legal printing carries the landfall split) | `test_split_player_creature_damage.py` |
+| "Destroy target `<permanent>`. [If `<condition>`, ]`<this>` deals N damage to that `<permanent>`'s controller." - the controller read before the destroy (CR 608.2h), dealt even if the destroy did nothing | `effects._merge_destroy_then_damage_controller_clauses` | Smash to Smithereens | Destructive Revelry, Consign to the Pit | `test_destroy_then_damage_controller.py` |
+| spell mastery "If there are two or more instant and/or sorcery cards in your graveyard, ..." - the condition, and "this spell can't be countered" behind a condition (CR 113.6g, 604.5, 701.6a) | `Game` `_CONDITION_GRAVEYARD_CARDS` ("X and/or Y" quality), `casting_restrictions.conditionally_cannot_be_countered`, `effects._strip_conditional_cant_be_countered_line` | Exquisite Firecraft | Fiery Impulse, Unholy Hunger | `test_spell_mastery.py` |
+| "At the beginning of each player's upkeep, `<this>` deals N damage to them / to that player [equal to `<count>` they control]." (CR 603.2b) | `effects._DAMAGE_THAT_PLAYER_RE` (widened), `_parse_damage_that_player_clause` | Roiling Vortex | Karma | `test_each_upkeep_damage.py` |
+| "Whenever a player casts a spell, if no mana was spent to cast that spell, ..." - "that spell" read like "it" (CR 603.4) | `triggers._NO_MANA_SPENT_CLAUSE` | Roiling Vortex | - | `test_mana_spent_intervening_if.py` |
+
+Not modelled: CR 616.1's choice of order between two replacement effects on
+one damage event (Solphim beside Artist's Talent) is still the deterministic
+stand-in in `replacement.order_effects`, not the affected player's choice.
+
+Proof printings added: Solphim, Mayhem Dominus, Collective Inferno, Mark of
+Asylum, Soul of Shandalar, Destructive Revelry, Consign to the Pit, Fiery
+Impulse, Unholy Hunger, Impractical Joke, Atarka's Command, Karma, Steelclaw
+Lance.

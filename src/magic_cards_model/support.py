@@ -110,6 +110,7 @@ from magic_cards_model.machines.replacement import (
     _self_enters_modifiers,
     enters_as_copy_outcome,
     parse_replacement_effects,
+    performs_static_line,
     strip_reminder_text,
 )
 from magic_cards_model.machines.triggers import (
@@ -152,6 +153,7 @@ from magic_cards_model.models.card import (
     types_of,
 )
 from magic_cards_model.models.card_state import Counters, TargetRef
+from magic_cards_model.models.game import is_player_rules_static_line
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.snapshot import EngineModel
 
@@ -1734,6 +1736,16 @@ def _static_ability_category(printing: Card, text: str) -> str:
     self_enters = _self_enters_line_category(printing, text)
     if self_enters is not None:
         return self_enters
+    if performs_static_line(printing, text):
+        # CR 614.1 / CR 615.1: a replacement or prevention effect that
+        # `machines/replacement.py` compiles and `applicable_effects` applies
+        # from the battlefield (Solphim's double, Crystal Barricade's
+        # prevention, Mjolnir's "Double all damage ...").
+        return HANDLED
+    if is_player_rules_static_line(text):
+        # CR 119.7 / CR 615.12: `Game.life_gain_prohibited` and
+        # `Game.damage_cant_be_prevented` read these off the battlefield.
+        return HANDLED
     return STATIC_UNAUDITED
 
 

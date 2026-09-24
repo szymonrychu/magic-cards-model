@@ -591,26 +591,45 @@ def _drive(
 # ---------------------------------------------------------------------------
 
 
-def _pick(scenario: PlayedScenario, slots: Any, prefer: Any = None) -> list[Any]:
+def _pick(scenario: PlayedScenario, slots: Any, prefer: Any = None, *, text: str = "") -> list[Any]:
     """The first legal candidates of each target slot (CR 601.2c) - `prefer`
     first when it is one - at least one per slot even for an "up to"
     requirement, so the resolution has something to act on, never the same
     object twice."""
     chosen: list[Any] = []
     taken: set[Any] = set()
+    anchor: str | None = None
     for slot in slots:
         wanted = max(1, slot.minimum)
         if slot.maximum is not None:
             wanted = min(wanted, slot.maximum)
         options: list[Any] = [c for c in slot.candidates if c not in taken]
         options += [p for p in slot.player_candidates if p not in taken]
+        if anchor is not None and _PRIOR_TARGET_PLAYER_PHRASE in text and slot.candidates:
+            # Searing Blaze's dependent target (CR 601.2c): only a creature
+            # the player just chosen (or that planeswalker's controller)
+            # controls is a legal pairing.
+            options = [
+                option
+                for option in options
+                if not isinstance(option, str)
+                and scenario.game.controller_of(scenario.game.find_by_id(option)).username == anchor
+            ]
         if prefer in options:
             options.remove(prefer)
             options.insert(0, prefer)
         for option in options[:wanted]:
             taken.add(option)
-            chosen.append(option if isinstance(option, str) else scenario.game.find_by_id(option))
+            picked = option if isinstance(option, str) else scenario.game.find_by_id(option)
+            chosen.append(picked)
+            if isinstance(picked, str):
+                anchor = picked
+            elif picked is not None:
+                anchor = scenario.game.controller_of(picked).username
     return [c for c in chosen if c is not None]
+
+
+_PRIOR_TARGET_PLAYER_PHRASE = "that player or that planeswalker's controller controls"
 
 
 def _action_for(
@@ -645,7 +664,11 @@ def _cast(
         # The permission that lets it be cast from there (CR 715.3d's
         # Adventure, CR 702.34a's flashback) is announced as a keyword.
         keyword = action.keyword
-    targets = _pick(scenario, action.target_slots, prefer) if action is not None else []
+    targets = (
+        _pick(scenario, action.target_slots, prefer, text=spell.card.oracle_text or "")
+        if action is not None
+        else []
+    )
     try:
         casting = scenario.cast(spell.name, username, from_zone=from_zone, targets=targets or None)
         if keyword is not None:
@@ -2325,7 +2348,9 @@ def _activate(
         raise _Unavailable(f"refused: {refusal}")
     x_value = _x_for(ability)
     action = _action_for(scenario, ALICE, ActionKind.ACTIVATE, source.id, ability_index=index)
-    targets = _pick(scenario, action.target_slots) if action is not None else []
+    targets = (
+        _pick(scenario, action.target_slots, text=ability.effect) if action is not None else []
+    )
     choices = _cost_choices(scenario, source, index, x_value, off_zone=False)
     sacrificing = choices.get("sacrificing")
     if sacrificing is None and re.search(r"sacrifice (this|~)", ability.cost.lower()):
@@ -2453,7 +2478,11 @@ def _run_off_zone(case: Case, ability: ActivatedAbility) -> tuple[str, str]:
             action = _action_for(
                 scenario, ALICE, ActionKind.ACTIVATE_OFF_ZONE, state.id, ability_index=index
             )
-            targets = _pick(scenario, action.target_slots) if action is not None else []
+            targets = (
+                _pick(scenario, action.target_slots, text=ability.effect)
+                if action is not None
+                else []
+            )
             choices = _off_zone_choices(scenario, state, ability)
             try:
                 activation = off_zone_activation(

@@ -2842,6 +2842,38 @@ _KEYWORD_COST = re.compile(
 )
 
 
+#: CR 702.6c: "Equip abilities may further restrict what creatures may be
+#: chosen as legal targets. Such restrictions usually appear in the form
+#: 'Equip [quality]' or 'Equip [quality] creature.'" - Steelclaw Lance's
+#: "Equip Knight {1}", Blackblade Reforged's "Equip legendary creature {3}",
+#: Mjolnir, Hammer of Thor's "Equip worthy {1}" (CR 700.16).
+_EQUIP_WITH_QUALITY = re.compile(r"^Equip(?: (?P<quality>[^{}.:]+?))? (?P<cost>(?:\{[^}]+\})+)$")
+
+
+def _parse_equip_with_quality(
+    text: str, keywords: list[str], common: dict
+) -> KeywordAbility | None:
+    """`_EQUIP_WITH_QUALITY`'s line: the quality goes on `parameter`, the mana
+    on `cost`. Also reads a plain "Equip {N}" whose printing's own Scryfall
+    `keywords` list leaves Equip out (Mjolnir's lists only "Double") - CR
+    702.6a defines the word whatever the list says. A plain equip line on a
+    printing that does list Equip is left to the ordinary reader."""
+    match = _EQUIP_WITH_QUALITY.match(text.strip())
+    if match is None:
+        return None
+    quality = match.group("quality")
+    if quality is None and any(keyword.lower() == "equip" for keyword in keywords):
+        return None
+    return KeywordAbility(
+        **common,
+        keyword="Equip",
+        canonical="Equip",
+        cost=match.group("cost"),
+        cost_is_mana=True,
+        parameter=quality.strip() if quality else None,
+    )
+
+
 def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Ability]:
     """Read a line that is nothing but keywords (CR 702).
 
@@ -2854,6 +2886,10 @@ def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Abilit
     your hand.`, which is a keyword line *and* ends in a full stop. It is tried
     first, before the full stop disqualifies the line.
     """
+    equip_quality = _parse_equip_with_quality(text, keywords, common)
+    if equip_quality is not None:
+        return [equip_quality]
+
     # Longest first, so `First strike` wins over any shorter prefix.
     known = sorted(keywords, key=len, reverse=True)
 

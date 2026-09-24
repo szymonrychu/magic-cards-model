@@ -39,7 +39,8 @@ from pydantic import ConfigDict, Field
 
 from magic_cards_model.phrases import with_indefinite_article
 
-from ..models.card import Card, Type
+from ..data.subtypes import canonical_subtype
+from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import (
     CardState,
     Counter,
@@ -2086,6 +2087,62 @@ def has_equip(card: Card) -> bool:
     return _keyword(card, "equip") is not None
 
 
+def equip_quality_refusal(game: Any, quality: str | None, target: Any) -> str | None:
+    """Why `target` lacks an "Equip [quality]" ability's quality, or None
+    (CR 702.6c).
+
+    Read on the computed board (CR 613.5) while the creature is on the
+    battlefield. "worthy" is CR 700.16's "legendary, isn't a Villain, and is
+    red and/or white"; otherwise each word is a supertype ("legendary"), a
+    card type ("planeswalker"), "token", or a subtype ("Knight"), with an
+    optional trailing "creature". A word this does not read refuses, so an
+    unread restriction never widens what the ability may target."""
+    if quality is None:
+        return None
+    if not isinstance(target, CardState):
+        return f"Equip {quality} can only target a creature (CR 702.6c)"
+    chars = game.characteristics_of(target) if target.zone is Zone.BATTLEFIELD else target
+    subtypes = {subtype.lower() for subtype in chars.subtypes}
+    words = quality.strip().lower().split()
+    if words and words[-1] == "creature":
+        words = words[:-1]
+    if words == ["worthy"]:
+        worthy = (
+            Supertype.LEGENDARY in chars.supertypes
+            and "villain" not in subtypes
+            and bool({Color.RED, Color.WHITE} & set(chars.colors))
+        )
+        if worthy:
+            return None
+        return (
+            f"{target.name} is not worthy - it must be legendary, not a Villain, and red "
+            f"and/or white (CR 700.16, CR 702.6c)"
+        )
+    if not words:
+        return None
+    for word in words:
+        if word == "legendary":
+            holds = Supertype.LEGENDARY in chars.supertypes
+        elif word == "token":
+            holds = bool(getattr(target, "is_token", False))
+        elif word == "planeswalker":
+            holds = Type.PLANESWALKER in chars.types
+        else:
+            subtype = canonical_subtype(word)
+            if subtype is None:
+                return f"Equip {quality}: the quality {word!r} is not read (CR 702.6c)"
+            holds = subtype.lower() in subtypes
+        if not holds:
+            return f"Equip {quality} cannot target {target.name}, which is not {word} (CR 702.6c)"
+    return None
+
+
+def _equip_quality_of(raw: str) -> str | None:
+    """The "[quality]" of a printed "Equip [quality] [cost]" line, or None."""
+    match = re.match(r"^Equip (?P<quality>[^{}.:(]+?) (?:\{[^}]+\})+", raw.strip())
+    return match.group("quality").strip() if match else None
+
+
 def equip_activation(
     game: Any, equipment: CardState, target: CardState, player: str
 ) -> KeywordActivation:
@@ -2115,7 +2172,22 @@ def equip_activation(
     """
     from .targeting import profile_for_text
 
-    activation = unannounced_equip_activation(game, equipment, player)
+    # CR 702.6c: a card may print more than one equip ability ("Equip Knight
+    # {1}" and "Equip {3}"); the first, in printed order, whose quality the
+    # target has is the one activated.
+    candidates = [
+        ability
+        for ability in keyword_abilities(equipment.card)
+        if ability.canonical.lower() == "equip"
+    ]
+    refusals = [equip_quality_refusal(game, ability.parameter, target) for ability in candidates]
+    chosen = next(
+        (ability for ability, refusal in zip(candidates, refusals, strict=True) if refusal is None),
+        None,
+    )
+    if candidates and chosen is None:
+        raise ValueError(next(refusal for refusal in refusals if refusal is not None))
+    activation = unannounced_equip_activation(game, equipment, player, ability=chosen)
     profile_for_text(EQUIP_EFFECT).check([target], player, game, source_id=equipment.id)
     # CR 702.16b: the equip ability is "from a source with the stated quality"
     # whenever the Equipment has it, and a bare-text profile carries no source
@@ -2124,7 +2196,7 @@ def equip_activation(
     if refusal is not None:
         raise ValueError(refusal)
     activation.targets = [TargetRef.to_card(target)]
-    ability = _keyword(equipment.card, "equip")
+    ability = chosen or _keyword(equipment.card, "equip")
     reduction = ability.cost_reduction if ability is not None else None
     if reduction is not None and reduction.target_quality is not None:
         amount = target_cost_reduction_amount(reduction, target, game)
@@ -2148,12 +2220,15 @@ def equip_activation(
     return activation
 
 
-def unannounced_equip_activation(game: Any, equipment: CardState, player: str) -> KeywordActivation:
+def unannounced_equip_activation(
+    game: Any, equipment: CardState, player: str, *, ability: KeywordAbility | None = None
+) -> KeywordActivation:
     """An equip activation with no target announced yet: its cost, timing and
     rule, for a caller that asks about the activation before choosing
     (`legal_actions`). Never put this on the stack; `equip_activation` is the
-    one that announces a target."""
-    ability = _keyword(equipment.card, "equip")
+    one that announces a target. `ability` picks one of several printed equip
+    abilities (CR 702.6c); the first printed one otherwise."""
+    ability = ability or _keyword(equipment.card, "equip")
     if ability is None:
         raise ValueError(f"{equipment.name} has no equip ability ({KeywordRule.EQUIP})")
     cost = _keyword_cost(ability, player)
@@ -2223,6 +2298,10 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
         if not is_creature:
             continue  # CR 301.5: an Equipment can't legally be attached to a noncreature
         if game.controller_of(creature).username != activation.player:
+            continue
+        if equip_quality_refusal(game, _equip_quality_of(activation.ability.raw), creature):
+            # CR 702.6c / CR 608.2b: the target no longer has the quality this
+            # equip ability asked for, so it is illegal and nothing moves.
             continue
         if _protection_refusal_for_attachment(game, equipment, creature) is not None:
             # CR 608.2b's recheck of a target that gained protection in
