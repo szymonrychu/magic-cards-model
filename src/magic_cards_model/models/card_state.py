@@ -2495,17 +2495,19 @@ class CardState(EngineModel):
             self.last_known_keywords = None
         self.zone_change_stamp = new_id()
         self.zone = zone
-        if origin is Zone.EXILE and zone is not Zone.EXILE:
-            # CR 400.7: a suspend granted to a card in exile (Delay, Suspend)
-            # was granted to *that* object, and the card that leaves exile -
-            # cast off its last time counter, or moved any other way - is a
-            # new one. CR 702.62a's abilities function only in exile anyway,
-            # so dropping the line here is what keeps a card that is later
-            # exiled with time counters by something else from wrongly still
-            # "having suspend" (CR 702.62b).
-            self.granted_ability_texts = tuple(
-                line for line in self.granted_ability_texts if not _is_suspend_line(line)
-            )
+        if origin not in (Zone.BATTLEFIELD, Zone.STACK):
+            # CR 400.7: a card leaving a graveyard, hand, library or exile is
+            # a new object, and an ability granted to the old one is not its -
+            # a suspend granted in exile (Delay, Suspend) is gone once the card
+            # leaves exile, so a card later exiled with time counters by
+            # something else does not wrongly still "have suspend" (CR
+            # 702.62b). Only the stack-to-battlefield move carries a grant (CR
+            # 400.7a), and a permanent that has just left the battlefield keeps
+            # its grants through that one move so its own leaves-the-
+            # battlefield trigger can look back at them (CR 603.10a): Rivaz of
+            # the Claw's granted "When this creature dies, exile it." is read
+            # off the card in the graveyard, and is gone once it moves again.
+            self.granted_ability_texts = ()
         if not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
             # CR 702.103b carries bestowed across exactly one zone change:
             # "the permanent it becomes as it resolves will be a bestowed Aura

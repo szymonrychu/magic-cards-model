@@ -20436,6 +20436,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     cast_target_from_graveyard = _parse_cast_target_card_from_graveyard_clause(effect_text)
     if cast_target_from_graveyard is not None:
         return cast_target_from_graveyard
+    it_gains_quoted_ability = _parse_it_gains_quoted_ability_clause(effect_text)
+    if it_gains_quoted_ability is not None:
+        return it_gains_quoted_ability
     # S22's whole-text readers: each names its own object ("exiled with this
     # creature", "that card" after an exile, "them" after a count), so none
     # of them may be cut apart by the clause splitter below.
@@ -33600,6 +33603,42 @@ def _parse_it_gains_rebound_clause(clause: str, *, for_spell: bool) -> TargetedC
         spell = game.find_by_id(event.subject_id)
         if spell is not None and spell in game.stack:
             spell.granted_rebound = True
+
+    return effect
+
+
+#: "It gains "<ability>"." - Rivaz of the Claw's "Whenever you cast a Dragon
+#: creature spell from your graveyard, it gains "When this creature dies,
+#: exile it."" "It" is the spell whose casting triggered this, as
+#: `_IT_GAINS_REBOUND_RE` reads it; the quoted ability is written onto that
+#: spell the way CR 113.10's other "gains" grants are
+#: (`CardState.granted_ability_texts`), and CR 400.7a carries it onto the
+#: permanent the spell becomes. No duration is printed, so it lasts (CR
+#: 611.2a) until the object is gone (`CardState.move_to`, CR 400.7).
+_IT_GAINS_QUOTED_ABILITY_RE = re.compile(
+    r'^(?:it|that spell) gains ["\u201c](?P<ability>.+)["\u201d]\.?$', re.IGNORECASE | re.DOTALL
+)
+
+
+def _parse_it_gains_quoted_ability_clause(text: str) -> AbilityEffect | None:
+    """`_IT_GAINS_QUOTED_ABILITY_RE`'s shape, read whole - the quoted ability
+    ends in a full stop of its own, which the clause splitter would cut at."""
+    match = _IT_GAINS_QUOTED_ABILITY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    granted_text = match.group("ability").strip()
+    if not granted_text:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if not isinstance(spell, CardState) or spell.zone is not Zone.STACK:
+            return
+        if granted_text not in spell.granted_ability_texts:
+            spell.granted_ability_texts = (*spell.granted_ability_texts, granted_text)
 
     return effect
 

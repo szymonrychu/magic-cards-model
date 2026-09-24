@@ -56,6 +56,7 @@ from magic_cards_model.machines.casting import (
     hexproof_abilities_in,
     keyword_cast_options,
     player_keyword_grant_of_line,
+    reads_as_graveyard_cast_permission_line,
 )
 from magic_cards_model.machines.combat import (
     Keyword,
@@ -1725,6 +1726,10 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return HANDLED
     if reads_as_transforms_line(text):
         # CR 712.20: `effects.transform_permanent` applies it as it transforms.
+        return HANDLED
+    if reads_as_graveyard_cast_permission_line(text):
+        # CR 601.3: `casting.granted_cast_options` hands out the once-each-turn
+        # graveyard cast it grants (Rivaz of the Claw, Kess, Dissident Mage).
         return HANDLED
     if keyword_machine.as_enters_day_night(text, printing.name) is not None:
         # CR 731.1: "If it's neither day nor night, it becomes day as this
