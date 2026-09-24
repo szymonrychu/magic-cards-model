@@ -1186,6 +1186,31 @@ class ReflexiveDamageEqualToSubjectPowerConsequence(DelayedEffectSpecBase):
             game.deal_damage(target, amount, source=dealer)
 
 
+class ReflexiveWhenYouDoConsequence(DelayedEffectSpecBase):
+    """ "`<mandatory instruction>`. When you do, `<effect>`." (CR 603.12) -
+    Red Hulk's "put a +1/+1 counter on him. When you do, he deals damage
+    equal to the number of +1/+1 counters on him to any other target.",
+    `machines/effects.py`'s counter-then-reflexive reader. The effect half
+    names its own targets, so it is announced off `<effect>` alone (`printed_
+    ability`, CR 603.3d) and re-read from the text as it resolves.
+    """
+
+    kind: Literal["reflexive_when_you_do_consequence"] = "reflexive_when_you_do_consequence"
+
+    def printed_ability(self, trigger: "DelayedTrigger") -> TriggeredAbility | None:
+        return _reflexive_when_you_do_ability(trigger)
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import reflexive_consequence_effect
+
+        printed = _reflexive_when_you_do_ability(trigger)
+        if printed is None or printed.effect is None:
+            return
+        consequence = reflexive_consequence_effect(printed.effect)
+        if consequence is not None:
+            consequence(game, ability)
+
+
 class ReflexiveExileCopiedCard(DelayedEffectSpecBase):
     """Superior Spider-Man's "When you do, exile that card." (CR 603.12,
     `machines/replacement.py`'s `_choose_a_quality`-adjacent copy-choice
@@ -1692,6 +1717,7 @@ DelayedEffectSpec = Annotated[
     | ReflexiveCounterCountConsequence
     | ReflexiveAttachSubjectToTargetConsequence
     | ReflexiveDamageEqualToSubjectPowerConsequence
+    | ReflexiveWhenYouDoConsequence
     | ReflexiveExileCopiedCard
     | RevokeGrantedAbility
     | AddManaWhenLandTapped

@@ -150,6 +150,7 @@ from .delayed import (
     ReflexiveConsequence,
     ReflexiveCounterCountConsequence,
     ReflexiveDamageEqualToSubjectPowerConsequence,
+    ReflexiveWhenYouDoConsequence,
     ReflexiveMandatoryTokenDamageConsequence,
     ReflexivePayEnergyConsequence,
     ReturnEachExiledToBattlefieldUnderOwner,
@@ -22520,7 +22521,17 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
     if match is None:
         return None
     counted = count_expression(match.group("expr"))
-    if counted is None:
+    # Red Hulk's reflexive "... equal to the number of +1/+1 counters on him"
+    # - an amount read off the dealer itself (CR 608.2h), not a count of
+    # something its controller controls.
+    object_amount = (
+        None
+        if counted is not None
+        else amount_expression(
+            re.sub(r"\bon (?:him|her)\b", "on it", match.group("expr"), flags=re.IGNORECASE)
+        )
+    )
+    if counted is None and object_amount is None:
         return None
     recipient = match.group("recipient").lower()
     each_opponent = recipient == "each opponent"
@@ -22529,7 +22540,11 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source_or_last_known(game)
-        amount = counted(game, ability.controller)
+        amount = (
+            counted(game, ability.controller)
+            if counted is not None
+            else object_amount(game, ability.controller, source, 0)  # type: ignore[misc]
+        )
         if amount <= 0:
             return
         if each_opponent:
@@ -52982,6 +52997,95 @@ def _parse_return_self_then_may_attach_equipment(text: str) -> AbilityEffect | N
     return effect
 
 
+#: "put a +1/+1 counter on him. If he's attacking, untap him and there is
+#: an additional combat phase after this phase." (Bruce Banner // The
+#: Incredible Hulk's enrage) and "put a +1/+1 counter on him. When you do,
+#: he deals damage equal to the number of +1/+1 counters on him to any other
+#: target." (Red Hulk's) - a counter on the source (CR 122.1), then either a
+#: rider gated on the source attacking right now (CR 506.4) or CR 603.12's
+#: reflexive trigger, created only if the counter really was put.
+_SELF_COUNTER_THEN_RIDER_RE = re.compile(
+    r"^put an? \+1/\+1 counter on (?:it|him|her|this (?:creature|permanent))\.\s*"
+    r"(?:(?P<if_attacking>if (?:it's|he's|she's|this creature is) attacking, (?P<rider>.+))"
+    r"|when you do, (?P<reflexive>.+))$",
+    re.IGNORECASE | re.DOTALL,
+)
+#: "untap him and there is an additional combat phase after this phase." -
+#: CR 701.26b's untap of the source and CR 500.8's additional combat phase.
+_UNTAP_SELF_AND_ADDITIONAL_COMBAT_RE = re.compile(
+    r"^untap (?:it|him|her|this creature) and there is an additional combat phase "
+    r"after this phase\.?$",
+    re.IGNORECASE,
+)
+_LEGEND_PRONOUN_RE = re.compile(r"\b(?:he|she|him|her)\b", re.IGNORECASE)
+
+
+def _untap_self_and_additional_combat(text: str) -> AbilityEffect | None:
+    """`_UNTAP_SELF_AND_ADDITIONAL_COMBAT_RE`'s shape, or `None`."""
+    if _UNTAP_SELF_AND_ADDITIONAL_COMBAT_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            source.untap()
+        assert game.turn is not None
+        game.turn.insert_extra_phase(COMBAT_PHASE_STEPS)
+
+    return effect
+
+
+def _parse_self_counter_then_rider(text: str) -> AbilityEffect | None:
+    """`_SELF_COUNTER_THEN_RIDER_RE`'s shape, or `None`."""
+    match = _SELF_COUNTER_THEN_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    put_counter = parse_mixed_effect("Put a +1/+1 counter on this creature.")
+    if put_counter is None:
+        return None
+    if match.group("if_attacking") is not None:
+        rider_text = match.group("rider")
+        rider = _untap_self_and_additional_combat(rider_text) or parse_mixed_effect(
+            _LEGEND_PRONOUN_RE.sub("it", rider_text)
+        )
+        if rider is None:
+            return None
+
+        def attacking_rider(game: "Game", ability: AbilityOnStack) -> None:
+            put_counter(game, ability)
+            source = ability.source(game)
+            if source is not None and source.zone is Zone.BATTLEFIELD and game.is_attacking(source):
+                rider(game, ability)  # type: ignore[misc]
+
+        return attacking_rider
+    reflexive_effect = _LEGEND_PRONOUN_RE.sub(
+        lambda m: "it" if m.group(0).lower() in ("he", "she", "him", "her") else m.group(0),
+        match.group("reflexive").strip(),
+    )
+    reflexive_effect = reflexive_effect[:1].upper() + reflexive_effect[1:]
+    if reflexive_consequence_effect(reflexive_effect) is None:
+        return None
+    reflexive_text = f"When you do, {reflexive_effect[:1].lower()}{reflexive_effect[1:]}"
+
+    def counter_then_reflexive(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        before = source.counter_count(Counter.PLUS_ONE)
+        put_counter(game, ability)
+        if source.zone is not Zone.BATTLEFIELD or source.counter_count(Counter.PLUS_ONE) <= before:
+            return
+        game.create_reflexive_trigger(
+            text=reflexive_text,
+            controller=ability.controller,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            callback=ReflexiveWhenYouDoConsequence(),
+        )
+
+    return counter_then_reflexive
+
+
 def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffect | None:
     """The readers above, tried in turn on a resolving ability's whole text -
     `_ability_effect_or_notice` asks this first."""
@@ -52997,6 +53101,7 @@ def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffec
         _parse_attach_self_then_that_creature,
         _parse_put_type_from_hand_attach_if_subtype,
         _parse_return_self_then_may_attach_equipment,
+        _parse_self_counter_then_rider,
     ):
         found = reader(effect_text)
         if found is not None:
