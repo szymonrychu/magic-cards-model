@@ -1,0 +1,75 @@
+# Planeshift (pls)
+
+- Expansion: 034
+- Set code: `pls`
+- Release date: 2001-02-05
+- Cards in scope (Modern/Pioneer/Standard-legal): 21
+
+## Legality
+
+| Format | Legal cards |
+|---|---|
+| Modern | 21 |
+| Pioneer | 4 |
+| Standard | 0 |
+
+## Coverage
+
+| Bucket | Count | % |
+|---|---|---|
+| Full (handled + tested) | 2 | 9.5% |
+| Partial (unaudited) | 2 | 9.5% |
+| Not tested (handled, untested) | 10 | 47.6% |
+| Not working (silent / notice / error) | 7 | 33.3% |
+
+## Cards needing work
+
+| Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
+|---|---|---|---|---|---|
+| Gaea's Might | silent | Domain — Target creature gets +1/+1 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Lord of the Undead | silent | Other Zombie creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Maggot Carrier | silent | When this creature enters, each player loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Quirion Dryad | silent | Whenever you cast a spell that's white, blue, black, or red, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Shifting Sky | silent | All nonland permanents are the chosen color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Sunken Hope | silent | At the beginning of each player's upkeep, that player returns a creature they control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Warped Devotion | silent | Whenever a permanent is returned to a player's hand, that player discards a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Gaea's Herald | unaudited | Creature spells can't be countered. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Meddling Mage | unaudited | Spells with the chosen name can't be cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Diabolic Intent | handled | As an additional cost to cast this spell, sacrifice a creature. Search your library for a card, put that card into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Eladamri's Call | handled | Search your library for a creature card, reveal that card, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gainsay | handled | Counter target blue spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mana Cylix | handled |  |  | Y/-/- | not_tested |
+| Mogg Sentry | handled | Whenever an opponent casts a spell, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Slay | handled | Destroy target green creature. It can't be regenerated. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Star Compass | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stormscape Familiar | handled | White spells and black spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Terminate | handled | Destroy target creature. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Thornscape Battlemage | handled | When this creature enters, if it was kicked with its {R} kicker, it deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+
+## Fully supported
+
+<details>
+<summary>2 cards</summary>
+
+- Orim's Chant
+- Voice of All
+
+</details>
+
+## Missing mechanics
+
+| Mechanic (representative clause) | Cards | Count |
+|---|---|---|
+| All nonland permanents are the chosen color. | Shifting Sky | 1 |
+| At the beginning of each player's upkeep, that player returns a creature they control to its owner's hand. | Sunken Hope | 1 |
+| Creature spells can't be countered. | Gaea's Herald | 1 |
+| Domain — Target creature gets +1/+1 until end of turn for each basic land type among lands you control. | Gaea's Might | 1 |
+| Other Zombie creatures get +1/+1. | Lord of the Undead | 1 |
+| Spells with the chosen name can't be cast. | Meddling Mage | 1 |
+| When this creature enters, each player loses 1 life. | Maggot Carrier | 1 |
+| Whenever a permanent is returned to a player's hand, that player discards a card. | Warped Devotion | 1 |
+| Whenever you cast a spell that's white, blue, black, or red, put a +1/+1 counter on this creature. | Quirion Dryad | 1 |
+
+## Notes
+
+

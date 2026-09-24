@@ -1,0 +1,90 @@
+# Urza's Destiny (uds)
+
+- Expansion: 027
+- Set code: `uds`
+- Release date: 1999-06-07
+- Cards in scope (Modern/Pioneer/Standard-legal): 30
+
+## Legality
+
+| Format | Legal cards |
+|---|---|
+| Modern | 30 |
+| Pioneer | 5 |
+| Standard | 0 |
+
+## Coverage
+
+| Bucket | Count | % |
+|---|---|---|
+| Full (handled + tested) | 1 | 3.3% |
+| Partial (unaudited) | 3 | 10.0% |
+| Not tested (handled, untested) | 13 | 43.3% |
+| Not working (silent / notice / error) | 13 | 43.3% |
+
+## Cards needing work
+
+| Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
+|---|---|---|---|---|---|
+| Emperor Crocodile | silent | When you control no other creatures, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Eradicate | silent | Exile target nonblack creature. Search its controller's graveyard, hand, and library for all cards with the same name as that creature and exile them. Then that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Extruder | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Hunting Moa | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Plow Under | silent | Put two target lands on top of their owners' libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Quash | silent | Counter target instant or sorcery spell. Search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. The | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Scour | silent | Exile target enchantment. Search its controller's graveyard, hand, and library for all cards with the same name as that enchantment and exile them. Then that pl | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Sowing Salt | silent | Exile target nonbasic land. Search its controller's graveyard, hand, and library for all cards with the same name as that land and exile them. Then that player  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Splinter | silent | Exile target artifact. Search its controller's graveyard, hand, and library for all cards with the same name as that artifact and exile them. Then that player s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Thran Golem | silent | As long as this creature is enchanted, it gets +2/+2 and has flying, first strike, and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Trumpet Blast | silent | Attacking creatures get +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Bloodshot Cyclops | notice | {T}, Sacrifice a creature: This creature deals damage equal to the sacrificed creature's power to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Yavimaya Enchantress | notice | This creature gets +1/+1 for each enchantment on the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Storage Matrix | unaudited | As long as this artifact is untapped, each player chooses artifact, creature, or land during their untap step. That player can untap only permanents of the chos | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Thorn Elemental | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Urza's Incubator | unaudited | Creature spells of the chosen type cost {2} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Capashen Knight | handled | {1}{W}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Elvish Piper | handled | {G}, {T}: You may put a creature card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fodder Cannon | handled | {4}, {T}, Sacrifice a creature: This artifact deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Junk Diver | handled | When this creature dies, return another target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mantis Engine | handled | {2}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Master Healer | handled | {T}: Prevent the next 4 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rescue | handled | Return target permanent you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sanctimony | handled | Whenever an opponent taps a Mountain for mana, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Solidarity | handled | Creatures you control get +0/+5 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Soul Feast | handled | Target player loses 4 life and you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Temporal Adept | handled | {U}{U}{U}, {T}: Return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Thieving Magpie | handled | Whenever this creature deals damage to an opponent, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Yavimaya Elder | handled | When this creature dies, you may search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+
+## Fully supported
+
+<details>
+<summary>1 cards</summary>
+
+- Ancient Silverback
+
+</details>
+
+## Missing mechanics
+
+| Mechanic (representative clause) | Cards | Count |
+|---|---|---|
+| Echo | Extruder, Hunting Moa | 2 |
+| As long as this artifact is untapped, each player chooses artifact, creature, or land during their untap step. That player can untap only permanents of the chos | Storage Matrix | 1 |
+| As long as this creature is enchanted, it gets +2/+2 and has flying, first strike, and trample. | Thran Golem | 1 |
+| Attacking creatures get +2/+0 until end of turn. | Trumpet Blast | 1 |
+| Counter target instant or sorcery spell. Search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. The | Quash | 1 |
+| Creature spells of the chosen type cost {2} less to cast. | Urza's Incubator | 1 |
+| Exile target artifact. Search its controller's graveyard, hand, and library for all cards with the same name as that artifact and exile them. Then that player s | Splinter | 1 |
+| Exile target enchantment. Search its controller's graveyard, hand, and library for all cards with the same name as that enchantment and exile them. Then that pl | Scour | 1 |
+| Exile target nonbasic land. Search its controller's graveyard, hand, and library for all cards with the same name as that land and exile them. Then that player  | Sowing Salt | 1 |
+| Exile target nonblack creature. Search its controller's graveyard, hand, and library for all cards with the same name as that creature and exile them. Then that | Eradicate | 1 |
+| Put two target lands on top of their owners' libraries. | Plow Under | 1 |
+| {T}, Sacrifice a creature: This creature deals damage equal to the sacrificed creature's power to any target. | Bloodshot Cyclops | 1 |
+| This creature gets +1/+1 for each enchantment on the battlefield. | Yavimaya Enchantress | 1 |
+| When you control no other creatures, sacrifice this creature. | Emperor Crocodile | 1 |
+| You may have this creature assign its combat damage as though it weren't blocked. | Thorn Elemental | 1 |
+
+## Notes
+
+
