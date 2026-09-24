@@ -2547,9 +2547,11 @@ def _spell_faces(printing: Card) -> list[SpellFace]:
     if printing.layout is Layout.ADVENTURE and faces:
         # CR 715.1: an adventurer card's inset Adventure half (Bonecrusher
         # Giant // Stomp, Bilbo Baggins, Burglar // Take a Glance) is cast on
-        # its own (CR 715.2d - "you may cast the Adventure") with only its
-        # own name, mana cost, and printed text (CR 715.3b: "the spell has
-        # only its alternative characteristics"), the identical PREPARE
+        # its own (CR 715.3: the player chooses to cast the card as an
+        # Adventure) with only its own name, mana cost, and printed text
+        # (CR 715.3b: "the spell has only its alternative characteristics"),
+        # evaluating only the alternative characteristics to see if it can
+        # be cast (CR 715.3a), the identical PREPARE
         # shape immediately above this branch: both faces are returned here,
         # each read off its own `card_faces` entry rather than off the
         # printing's blank top-level `oracle_text`/`mana_cost` (both `None`

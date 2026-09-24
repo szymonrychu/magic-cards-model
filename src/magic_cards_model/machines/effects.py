@@ -15202,9 +15202,10 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
 #: library in a random order." The identical "reveal the top N, then decide
 #: what to do with them, then bottom the rest in a random order" template
 #: `_REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE` already reads above, only with no
-#: choice at all in the middle sentence - CR 701.19's "a random" means the
-#: engine itself picks, not the controller (`Random`, the same reproducible-
-#: seed convention every other library randomisation in this module keeps).
+#: choice at all in the middle sentence - the printed "a random" means the
+#: pick is made by chance, not by either player (`Random`, the same
+#: reproducible-seed convention every other library randomisation in this
+#: module keeps).
 _REVEAL_TOP_N_PUT_RANDOM_KIND_RE = re.compile(
     rf"^reveal the top (?P<n>{COUNT}) cards? of your library\. "
     r"put a random (?P<kind>[a-z]+) card from among (?:them|the revealed cards) "

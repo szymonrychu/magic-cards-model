@@ -1,7 +1,7 @@
 """Adventure face classification (`support.py`'s `_spell_faces`).
 
 CR 715.1: an adventurer card's inset Adventure half has its own name, mana
-cost, and printed text, cast on its own (CR 715.2d/715.3a) and read on the
+cost, and printed text, cast on its own (CR 715.3/715.3a) and read on the
 stack as "only its alternative characteristics" (CR 715.3b). Before this
 fix, `support._spell_faces` had no branch for `Layout.ADVENTURE`, so every
 adventure face fell through to the "everything else" arm, which reads only
@@ -49,7 +49,9 @@ session that wrote this file:
 
 - **CR 715.1** - "Adventurer cards have a two-part card frame ... The inset
   half is the one whose type line says Adventure."
-- **CR 715.2d/715.3a** - casting an adventurer card as an Adventure evaluates
+- **CR 715.3** - "As a player plays an adventurer card, the player chooses
+  whether they play the card normally or as an Adventure."
+- **CR 715.3a** - casting an adventurer card as an Adventure evaluates
   only the alternative (Adventure) characteristics.
 - **CR 715.3b** - "While on the stack as an Adventure, the spell has only its
   alternative characteristics."
