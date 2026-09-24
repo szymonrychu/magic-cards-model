@@ -75,6 +75,7 @@ from magic_cards_model.machines.abilities import (
     ActivatedAbility,
     TriggeredAbility,
     TriggerEvent,
+    has_mana_ability,
     keyword_abilities,
     parse_abilities,
 )
@@ -84,6 +85,7 @@ from magic_cards_model.machines.effects import transform_permanent
 from magic_cards_model.machines.keywords import (
     crew_activation,
     crew_number,
+    cycling_activation,
     off_zone_abilities,
     off_zone_activation,
 )
@@ -947,6 +949,22 @@ def _probes(case: Case, ability: TriggeredAbility, *, entering: bool) -> list[st
 # ---------------------------------------------------------------------------
 
 
+_BASIC_OF = {"W": "Plains", "U": "Island", "B": "Swamp", "R": "Mountain", "G": "Forest"}
+
+
+def _extra_lands_for(card: Card) -> tuple[str, ...]:
+    """Basics beyond the stock board's three of each, so a spell with more
+    coloured pips than that (Doomsday Excruciator's six {B}) can be cast
+    for its mana cost (CR 601.2g-h)."""
+    pips = re.findall(r"\{([WUBRG])\}", card.mana_cost or "")
+    stock = _LANDS.count("Plains")
+    return tuple(
+        basic
+        for colour, basic in _BASIC_OF.items()
+        for _ in range(max(0, pips.count(colour) - stock))
+    )
+
+
 def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     card = case.printing
     lowered = (ability.condition + " " + (ability.intervening_if or "")).lower()
@@ -989,7 +1007,7 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         for paying_with in payers:
 
             def cast(kicked: bool = kicked, paying_with: str | None = paying_with):
-                scenario = _board(hand=(card.name,))
+                scenario = _board(hand=(card.name,), battlefield=_extra_lands_for(card))
                 _stack_material(scenario)
                 _cast(scenario, card.name, kicked=kicked, paying_with=paying_with)
                 return scenario, None
@@ -1521,6 +1539,11 @@ def _player_event(case: Case, ability: TriggeredAbility, action: str) -> Iterato
     discarding, getting energy, being dealt noncombat damage, scrying -
     up to three times, for "your second/third card each turn"."""
     lowered = ability.condition.lower()
+    if action == "discard" and "this card" in lowered:
+        # CR 113.6: "When you discard this card" functions from the hand the
+        # card is discarded out of, so the source itself is what goes.
+        yield _discarding_itself(case)
+        return
     players = [BOB] if "opponent" in lowered else [ALICE, BOB]
     for player in players:
 
@@ -1546,6 +1569,100 @@ def _player_event(case: Case, ability: TriggeredAbility, action: str) -> Iterato
             return scenario, source_id
 
         yield happen
+
+
+def _discarding_itself(case: Case) -> Attempt:
+    def discard_it() -> tuple[PlayedScenario, Any]:
+        scenario = _board(hand=(case.card,))
+        _stack_material(scenario)
+        source = _last(scenario, case.card, Zone.HAND, ALICE)
+        scenario.game.discard_cards(ALICE, [source])
+        return scenario, None
+
+    return discard_it
+
+
+def _cycling_card() -> str:
+    """The first in-format pool card with cycling that is not a land - a card
+    to cycle when the source watches someone else's (CR 702.29a)."""
+    for card in _format_pool():
+        if card.is_land or card.card_faces:
+            continue
+        if any(k.canonical.lower() == "cycling" for k in keyword_abilities(card)):
+            return card.name
+    raise _Unavailable("no cycling card in the pool")
+
+
+def _cycle(scenario: PlayedScenario, card: CardState, player: str) -> None:
+    """Activate `card`'s cycling from `player`'s hand and leave it on the
+    stack (CR 702.29a, CR 602.2), paying automatically."""
+    game = scenario.game
+    try:
+        activation = cycling_activation(game, card, player, 0)
+        payment = activation.begin_paying()
+        payment.auto_tap(game.permanents_controlled_by(player))
+        payment.pay()
+        activation.activate()
+    except (ValueError, AssertionError) as error:
+        raise _Unavailable(f"cycling {card.name}: {error}") from error
+
+
+def _cycling(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """CR 702.29c: "When you cycle this card" - cycle the source from the
+    hand; "you cycle a card"/"another card" - cycle some other card with the
+    source in play, by whoever the condition names."""
+    lowered = ability.condition.lower()
+    if "this card" in lowered:
+
+        def cycle_it() -> tuple[PlayedScenario, Any]:
+            scenario = _board(hand=(case.card,))
+            _stack_material(scenario)
+            _cycle(scenario, _last(scenario, case.card, Zone.HAND, ALICE), ALICE)
+            return scenario, None
+
+        yield cycle_it
+        return
+    other = _cycling_card()
+    players = [BOB] if "opponent" in lowered else [ALICE, BOB]
+    for player in players:
+
+        def cycle_other(player: str = player) -> tuple[PlayedScenario, Any]:
+            hands = {"hand": (other,)} if player == ALICE else {"bob_hand": (other,)}
+            scenario, source_id = _home(case, ability, **hands)
+            _cycle(scenario, _last(scenario, other, Zone.HAND, player), player)
+            return scenario, source_id
+
+        yield cycle_other
+
+
+def _activating(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """CR 602.2: a player activates an ability that is not a mana ability
+    (CR 605.1a) - the first one that player's stock permanents can pay for,
+    with priority passed to them first (CR 602.2, CR 117.1b) when it is the
+    opponent."""
+    lowered = ability.condition.lower()
+    players = [BOB] if "opponent" in lowered else [ALICE, BOB]
+    for player in players:
+
+        def activate(player: str = player) -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability)
+            game = scenario.game
+            if scenario.priority_holder != player:
+                scenario.pass_priority(scenario.priority_holder)
+            for state in list(game.permanents_controlled_by(player)):
+                if state.id == source_id or has_mana_ability(state.card):
+                    continue
+                for index, _ in enumerate(game.activated_abilities(state)):
+                    if game.why_cannot_activate(state, index, player) is not None:
+                        continue
+                    try:
+                        scenario.activate(state, index=index, username=player, auto=True)
+                    except (ValueError, AssertionError):
+                        continue
+                    return scenario, source_id
+            raise _Unavailable(f"{player} has no ability to activate")
+
+        yield activate
 
 
 def _graveyard_leaving(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
@@ -1643,6 +1760,10 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _turning_face_up(case, ability)
         elif kind == "waterbends":
             yield from _bending(case, ability)
+        elif kind == "cycled":
+            yield from _cycling(case, ability)
+        elif kind == "ability_activated":
+            yield from _activating(case, ability)
     # Every kind also gets whole turns played with the source in play:
     # beginning-of-step, draw-step draws, untap steps and Saga chapters all
     # happen on their own there, and so does anything an attempt above
