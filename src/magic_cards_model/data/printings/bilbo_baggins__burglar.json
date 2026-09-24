@@ -1,0 +1,163 @@
+{
+  "object": "card",
+  "id": "6a109b3e-9f5b-4625-abb7-6b992c10530b",
+  "oracle_id": "fa85f9e6-69ff-4669-b70a-440aa7b16c97",
+  "multiverse_ids": [],
+  "resource_id": "90F17C481773318FBDF77D46057F43EBB6182C5241EE981BFC9CFB8FB9AD8BED",
+  "mtgo_id": 153988,
+  "arena_id": 103405,
+  "tcgplayer_id": 708801,
+  "cardmarket_id": 900319,
+  "name": "Bilbo Baggins, Burglar // Take a Glance",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/6a109b3e-9f5b-4625-abb7-6b992c10530b",
+  "scryfall_uri": "https://scryfall.com/card/hob/34/bilbo-baggins-burglar-take-a-glance?utm_source=api",
+  "layout": "adventure",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-29T11:06:34Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.jpg?1785323194",
+    "normal": "https://cards.scryfall.io/normal/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.jpg?1785323194",
+    "large": "https://cards.scryfall.io/large/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.jpg?1785323194",
+    "png": "https://cards.scryfall.io/png/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.png?1785323194",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.jpg?1785323194",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.jpg?1785323194",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.webp?1785323194",
+    "grid": "https://cards.scryfall.io/grid/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.webp?1785323194",
+    "display": "https://cards.scryfall.io/display/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.webp?1785323194",
+    "art": "https://cards.scryfall.io/art/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.webp?1785323194",
+    "crop": "https://cards.scryfall.io/crop/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.webp?1785323194"
+  },
+  "mana_cost": "{2}{U} // {U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Halfling Rogue // Sorcery \u2014 Adventure",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Scry"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Bilbo Baggins, Burglar",
+      "mana_cost": "{2}{U}",
+      "type_line": "Legendary Creature \u2014 Halfling Rogue",
+      "oracle_text": "When Bilbo Baggins enters, draw a card.",
+      "power": "2",
+      "toughness": "1",
+      "flavor_text": "\"Now it is the burglar's turn. You must go on and find out if all is perfectly safe and canny.\"\n\u2014Thorin",
+      "artist": "Kieran Yanner",
+      "artist_id": "aa7e89ed-d294-4633-9057-ce04dacfcfa4",
+      "illustration_id": "045fb2fc-0902-45ee-8b28-7ff46cca8b33"
+    },
+    {
+      "object": "card_face",
+      "name": "Take a Glance",
+      "mana_cost": "{U}",
+      "type_line": "Sorcery \u2014 Adventure",
+      "oracle_text": "Scry 2. (Then exile this card. You may cast the creature later from exile.)",
+      "artist": "Kieran Yanner",
+      "artist_id": "aa7e89ed-d294-4633-9057-ce04dacfcfa4"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6a109b3e-9f5b-4625-abb7-6b992c10530b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afa85f9e6-69ff-4669-b70a-440aa7b16c97&unique=prints",
+  "collector_number": "34",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"Now it is the burglar's turn. You must go on and find out if all is perfectly safe and canny.\"\n\u2014Thorin",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kieran Yanner",
+  "artist_ids": [
+    "aa7e89ed-d294-4633-9057-ce04dacfcfa4"
+  ],
+  "illustration_id": "045fb2fc-0902-45ee-8b28-7ff46cca8b33",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 19470,
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.19",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.07",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBilbo%2BBaggins%252C%2BBurglar%2B%252F%252F%2BTake%2Ba%2BGlance",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBilbo%2BBaggins%252C%2BBurglar%2B%252F%252F%2BTake%2Ba%2BGlance",
+    "edhrec": "https://edhrec.com/route/?cc=Bilbo+Baggins%2C+Burglar"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708801%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900319&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153988?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

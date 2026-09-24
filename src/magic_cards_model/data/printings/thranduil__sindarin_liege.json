@@ -1,0 +1,188 @@
+{
+  "object": "card",
+  "id": "481870ee-d1f7-421b-86e1-570ea933bbbc",
+  "oracle_id": "f6771d32-395e-4832-b33d-cbc12dff1516",
+  "multiverse_ids": [],
+  "resource_id": "FDE62BA367A19E448707FAC8654F64AFE922CA987C28F45C47E54F73371621AC",
+  "mtgo_id": 154270,
+  "arena_id": 103546,
+  "tcgplayer_id": 709076,
+  "cardmarket_id": 900444,
+  "name": "Thranduil, Sindarin Liege // Silvan Rally",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/481870ee-d1f7-421b-86e1-570ea933bbbc",
+  "scryfall_uri": "https://scryfall.com/card/hob/166/thranduil-sindarin-liege-silvan-rally?utm_source=api",
+  "layout": "adventure",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-30T11:59:07Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.jpg?1785412747",
+    "normal": "https://cards.scryfall.io/normal/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.jpg?1785412747",
+    "large": "https://cards.scryfall.io/large/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.jpg?1785412747",
+    "png": "https://cards.scryfall.io/png/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.png?1785412747",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.jpg?1785412747",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.jpg?1785412747",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.webp?1785412747",
+    "grid": "https://cards.scryfall.io/grid/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.webp?1785412747",
+    "display": "https://cards.scryfall.io/display/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.webp?1785412747",
+    "art": "https://cards.scryfall.io/art/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.webp?1785412747",
+    "crop": "https://cards.scryfall.io/crop/front/4/8/481870ee-d1f7-421b-86e1-570ea933bbbc.webp?1785412747"
+  },
+  "mana_cost": "{2}{G/U}{G/U} // {1}{G/U}{G/U}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Elf Noble // Sorcery \u2014 Adventure",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [
+    "Mill",
+    "Landfall"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Thranduil, Sindarin Liege",
+      "mana_cost": "{2}{G/U}{G/U}",
+      "type_line": "Legendary Creature \u2014 Elf Noble",
+      "oracle_text": "Other Elves you control get +1/+1.\nLandfall \u2014 Whenever a land you control enters, create a 1/1 green Elf creature token.",
+      "power": "2",
+      "toughness": "3",
+      "artist": "Justyna Dura",
+      "artist_id": "d2340aef-8ca9-4e0d-864c-6a4e8d5e350a",
+      "illustration_id": "00e37d8b-b1a5-4a83-a200-9cf983fcb547"
+    },
+    {
+      "object": "card_face",
+      "name": "Silvan Rally",
+      "mana_cost": "{1}{G/U}{G/U}",
+      "type_line": "Sorcery \u2014 Adventure",
+      "oracle_text": "Mill four cards, then put up to two land cards from among them into your hand. (Then exile this card. You may cast the creature later from exile.)",
+      "artist": "Justyna Dura",
+      "artist_id": "d2340aef-8ca9-4e0d-864c-6a4e8d5e350a"
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "761c7c31-c6c5-44e2-a845-f590542b6eda",
+      "component": "token",
+      "name": "Elf",
+      "type_line": "Token Creature \u2014 Elf",
+      "uri": "https://api.scryfall.com/cards/761c7c31-c6c5-44e2-a845-f590542b6eda"
+    },
+    {
+      "object": "related_card",
+      "id": "a84cd965-fe5f-42e5-9775-d0285fe84308",
+      "component": "combo_piece",
+      "name": "Thranduil, Sindarin Liege // Silvan Rally",
+      "type_line": "Legendary Creature \u2014 Elf Noble // Sorcery \u2014 Adventure",
+      "uri": "https://api.scryfall.com/cards/a84cd965-fe5f-42e5-9775-d0285fe84308"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/481870ee-d1f7-421b-86e1-570ea933bbbc/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af6771d32-395e-4832-b33d-cbc12dff1516&unique=prints",
+  "collector_number": "166",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Justyna Dura",
+  "artist_ids": [
+    "d2340aef-8ca9-4e0d-864c-6a4e8d5e350a"
+  ],
+  "illustration_id": "00e37d8b-b1a5-4a83-a200-9cf983fcb547",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 9814,
+  "penny_rank": 4879,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.instagram.com/p/DbYgeLIDAbC/?img_index=1",
+    "previewed_at": "2026-07-29"
+  },
+  "prices": {
+    "usd": "0.25",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": "0.19",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThranduil%252C%2BSindarin%2BLiege%2B%252F%252F%2BSilvan%2BRally",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThranduil%252C%2BSindarin%2BLiege%2B%252F%252F%2BSilvan%2BRally",
+    "edhrec": "https://edhrec.com/route/?cc=Thranduil%2C+Sindarin+Liege"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709076%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900444&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154270?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

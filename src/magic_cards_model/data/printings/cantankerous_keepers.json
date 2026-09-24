@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "fae46a70-a6d3-4584-859d-6c7425fb1508",
+  "oracle_id": "77c97dad-17cc-4a28-a48b-907c044d9034",
+  "multiverse_ids": [],
+  "resource_id": "5BBBB24998352F88CA57D0FF1267394210E83731662489D95D1076BDC403C896",
+  "mtgo_id": 154182,
+  "arena_id": 103502,
+  "tcgplayer_id": 708214,
+  "cardmarket_id": 899594,
+  "name": "Cantankerous Keepers",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/fae46a70-a6d3-4584-859d-6c7425fb1508",
+  "scryfall_uri": "https://scryfall.com/card/hob/122/cantankerous-keepers?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-27T11:40:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.jpg?1785152413",
+    "normal": "https://cards.scryfall.io/normal/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.jpg?1785152413",
+    "large": "https://cards.scryfall.io/large/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.jpg?1785152413",
+    "png": "https://cards.scryfall.io/png/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.png?1785152413",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.jpg?1785152413",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.jpg?1785152413",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.webp?1785152413",
+    "grid": "https://cards.scryfall.io/grid/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.webp?1785152413",
+    "display": "https://cards.scryfall.io/display/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.webp?1785152413",
+    "art": "https://cards.scryfall.io/art/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.webp?1785152413",
+    "crop": "https://cards.scryfall.io/crop/front/f/a/fae46a70-a6d3-4584-859d-6c7425fb1508.webp?1785152413"
+  },
+  "mana_cost": "{5}{G}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Elf Soldier",
+  "oracle_text": "Affinity for Elves (This spell costs {1} less to cast for each Elf you control.)\nWhen this creature enters, mill four cards, then put all Elf cards from among them into your hand.",
+  "power": "4",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Affinity",
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fae46a70-a6d3-4584-859d-6c7425fb1508/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A77c97dad-17cc-4a28-a48b-907c044d9034&unique=prints",
+  "collector_number": "122",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "The guards were decidedly less than pleased, upon waking, to find their prisoners escaped.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ramza Psyru",
+  "artist_ids": [
+    "868032ed-d6fa-46ec-aa35-3df428717633"
+  ],
+  "illustration_id": "328e0fde-a0fd-4a85-996e-52406f852620",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 17042,
+  "penny_rank": 4032,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "0.38",
+    "usd_etched": null,
+    "eur": "0.36",
+    "eur_foil": "0.25",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCantankerous%2BKeepers",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCantankerous%2BKeepers",
+    "edhrec": "https://edhrec.com/route/?cc=Cantankerous+Keepers"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708214%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=899594&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154182?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

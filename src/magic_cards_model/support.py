@@ -2544,6 +2544,46 @@ def _spell_faces(printing: Card) -> list[SpellFace]:
             )
             for face in faces
         ]
+    if printing.layout is Layout.ADVENTURE and faces:
+        # CR 715.1: an adventurer card's inset Adventure half (Bonecrusher
+        # Giant // Stomp, Bilbo Baggins, Burglar // Take a Glance) is cast on
+        # its own (CR 715.2d - "you may cast the Adventure") with only its
+        # own name, mana cost, and printed text (CR 715.3b: "the spell has
+        # only its alternative characteristics"), the identical PREPARE
+        # shape immediately above this branch: both faces are returned here,
+        # each read off its own `card_faces` entry rather than off the
+        # printing's blank top-level `oracle_text`/`mana_cost` (both `None`
+        # for an adventure card's combined printing, same as every other
+        # multi-faced layout `_spell_faces` already special-cases).
+        #
+        # Before this branch existed, an adventure card fell through to the
+        # "everything else" arm below, which reads only `printing.front_
+        # face` - the permanent creature half - so the Adventure half was
+        # never offered to `effect_for` as a spell face at all. It still had
+        # to go *somewhere*, and `parse_abilities` had already parsed its
+        # printed text as a bare `AbilityKind.STATIC` line (nothing on an
+        # Adventure's own sentence marks it triggered or activated) with
+        # `ability.face` set to the Adventure half's name - so
+        # `classify_clauses`' static-ability loop, gated only on `is_
+        # permanent` (true here, since the *card* has a permanent front),
+        # picked it up and judged it as though it were a static ability of
+        # the creature. `_static_ability_category` cannot parse spell
+        # resolution text as a layer effect, so every adventure face in the
+        # pool read `static_unaudited` regardless of whether `effect_for`
+        # could actually read it - Bonecrusher Giant // Stomp's own "Stomp
+        # deals 2 damage to any target" included. `spell_only_face_names`
+        # below (CR 712.11b's own comment) is what stops the now-correctly-
+        # dispatched clause from *also* being scored a second time by that
+        # static-ability loop.
+        return [
+            SpellFace(
+                face.name,
+                face.oracle_text or "",
+                face.mana_cost,
+                bool(set(types_of(face.type_line or "")) & _PERMANENT_TYPES),
+            )
+            for face in faces
+        ]
     front = printing.front_face
     name = front.name if front is not None else printing.name
     mana_cost = front.mana_cost if front is not None else printing.mana_cost
@@ -2661,9 +2701,17 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
     # resolution text, already judged whole as its "[spell]" clause above -
     # never a static ability of the permanent front, the same classifier
     # artifact CR 722.4's prepare-spell skip below exists for.
+    #
+    # CR 715.1's Adventure half is the identical shape: `_spell_faces`'s own
+    # `Layout.ADVENTURE` branch above already returns it as its own
+    # non-permanent face, dispatched through `effect_for`/`[spell]` there -
+    # this is what stops `parse_abilities`' bare `AbilityKind.STATIC` parse
+    # of that same printed text from being scored a *second* time as an
+    # unaudited static ability of the creature front (see that branch's own
+    # docstring for the classifier artifact this closes).
     spell_only_face_names = (
         {face.name for face in _spell_faces(printing) if not face.is_permanent}
-        if is_permanent and printing.layout is Layout.MODAL_DFC
+        if is_permanent and printing.layout in (Layout.MODAL_DFC, Layout.ADVENTURE)
         else set()
     )
 

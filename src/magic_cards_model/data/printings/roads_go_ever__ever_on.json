@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24",
+  "oracle_id": "3cd3cdc9-2ed2-4cdf-b58a-12c3a2ef218b",
+  "multiverse_ids": [],
+  "resource_id": "93672EE45E3AB5B548F345C604D31029E1B8439700F546CF6A926C3B4446E1E7",
+  "mtgo_id": 153964,
+  "arena_id": 103393,
+  "tcgplayer_id": 707273,
+  "cardmarket_id": 898482,
+  "name": "Roads Go Ever, Ever On",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24",
+  "scryfall_uri": "https://scryfall.com/card/hob/25/roads-go-ever-ever-on?utm_source=api",
+  "layout": "saga",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-21T22:37:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.jpg?1784673434",
+    "normal": "https://cards.scryfall.io/normal/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.jpg?1784673434",
+    "large": "https://cards.scryfall.io/large/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.jpg?1784673434",
+    "png": "https://cards.scryfall.io/png/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.png?1784673434",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.jpg?1784673434",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.jpg?1784673434",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.webp?1784673434",
+    "grid": "https://cards.scryfall.io/grid/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.webp?1784673434",
+    "display": "https://cards.scryfall.io/display/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.webp?1784673434",
+    "art": "https://cards.scryfall.io/art/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.webp?1784673434",
+    "crop": "https://cards.scryfall.io/crop/front/b/3/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24.webp?1784673434"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Enchantment \u2014 Saga",
+  "oracle_text": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)\nI \u2014 Search your library for up to two basic Plains cards, exile them, then shuffle. You gain 2 life.\nII, III \u2014 Put a card exiled with this Saga into its owner's hand.\nIV \u2014 Whenever you attack this turn, target creature you control gets +1/+1 until end of turn for each Plains you control.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b3c1ebd6-967f-4b8c-8f1f-442ce8c1da24/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3cd3cdc9-2ed2-4cdf-b58a-12c3a2ef218b&unique=prints",
+  "collector_number": "25",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Rovina Cai",
+  "artist_ids": [
+    "b64d0979-4028-4409-8285-eec2fa282dd4"
+  ],
+  "illustration_id": "f1a92eda-ef4f-485e-8794-e31eed1c14db",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 16876,
+  "penny_rank": 1189,
+  "preview": {
+    "source": "YuchenLiu",
+    "source_uri": "https://www.bilibili.com/opus/1227180840663908354",
+    "previewed_at": "2026-07-20"
+  },
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.23",
+    "eur_foil": "0.35",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRoads%2BGo%2BEver%252C%2BEver%2BOn",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRoads%2BGo%2BEver%252C%2BEver%2BOn",
+    "edhrec": "https://edhrec.com/route/?cc=Roads+Go+Ever%2C+Ever+On"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707273%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898482&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153964?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
