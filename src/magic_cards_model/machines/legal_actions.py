@@ -1332,6 +1332,22 @@ def _mana_descriptor(ability: Any, permanent: CardState) -> _ManaDescriptor:
     )
 
 
+def _admits_other_activators(game: Any, permanent: CardState) -> bool:
+    """Whether any activated ability of `permanent` lets a player other than
+    its controller activate it (CR 602.1b). The words are looked for in the
+    permanent's own text first, so the whole battlefield is not re-parsed for
+    every enumeration."""
+    texts = [permanent.oracle_text or "", *getattr(permanent, "granted_ability_texts", ())]
+    if not any("may activate this ability" in text.lower() for text in texts):
+        return False
+    from ..models.game import read_activation_instructions
+
+    return any(
+        read_activation_instructions(ability.instructions).who != "controller"
+        for ability in game.activated_abilities(permanent)
+    )
+
+
 def _battlefield_ability_actions(
     game: Any,
     player: str,
@@ -1339,10 +1355,17 @@ def _battlefield_ability_actions(
     candidate_scan: list[_ScannedCandidate],
     board: Any,
 ) -> list[Action]:
-    if permanent.controller != player:
-        return []
+    from ..models.game import read_activation_instructions
+
+    foreign = permanent.controller != player
     actions: list[Action] = []
     for index, ability in enumerate(game.activated_abilities(permanent)):
+        if foreign and read_activation_instructions(ability.instructions).who == "controller":
+            # CR 602.2: only an object's controller activates its abilities
+            # "unless the object specifically says otherwise" - CR 602.1b's
+            # "Only your opponents may activate this ability" / "Any player
+            # may activate this ability" is the only way in for anyone else.
+            continue
         if game.why_cannot_activate(permanent, index, player) is not None:
             continue
         is_mana = getattr(ability, "mana", None) is not None
@@ -2026,6 +2049,13 @@ def _legal_actions(
             turn_up = _turn_face_up_action(game, player, permanent, candidate_scan)
             if turn_up is not None:
                 actions.append(turn_up)
+    # CR 602.1b: an ability whose own instructions admit someone other than
+    # its controller ("Only your opponents may activate this ability") is
+    # offered to them too, from a permanent they do not control.
+    for permanent in game.battlefield:
+        if permanent.controller == player or not _admits_other_activators(game, permanent):
+            continue
+        actions.extend(_battlefield_ability_actions(game, player, permanent, candidate_scan, board))
 
     actions.extend(_attacker_actions(game, player))
     actions.extend(_blocker_actions(game, player))

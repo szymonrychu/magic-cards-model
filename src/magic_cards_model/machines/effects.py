@@ -10772,7 +10772,7 @@ def tap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
     """Tap each permanent this still legally targets (CR 701.26a)."""
     for target in game.resolve_targets(stack_object):
         if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-            target.tap_if_untapped()
+            game.tap_permanent(target)
 
 
 def untap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
@@ -10846,7 +10846,7 @@ def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         for target in game.resolve_targets(ability):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                target.tap_if_untapped()
+                game.tap_permanent(target)
                 target.exerted = True
 
     return effect
@@ -10881,7 +10881,7 @@ def _parse_tap_enchanted_then_unprepared_clause(text: str) -> AbilityEffect | No
         enchanted = game.find_by_id(enchanted_id)
         if enchanted is None or enchanted.zone is not Zone.BATTLEFIELD:
             return
-        enchanted.tap_if_untapped()
+        game.tap_permanent(enchanted)
         game.become_unprepared(enchanted)
 
     return effect
@@ -14287,6 +14287,54 @@ def _parse_exile_all_but_bottom_of_library_clause(
     return effect
 
 
+#: "exile that many cards from the bottom of your library" (The Temporal
+#: Anchor), "exile the top two cards of your library", "exile the bottom card
+#: of your library": N cards off one end of the controller's own library (CR
+#: 401.2 - the library's order is kept, and `library[0]` is the top). "that
+#: many" is the count channel's number (`that_many`), read as it resolves.
+_EXILE_FROM_OWN_LIBRARY_END_RE = re.compile(
+    rf"^exile (?:the (?P<end>top|bottom) (?:card|{count_pattern('n')} cards) of your library"
+    r"|(?P<that_many>that many) cards from the (?P<that_end>top|bottom) of your library)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_from_own_library_end_clause(clause: str) -> TargetedClause | None:
+    """`_EXILE_FROM_OWN_LIBRARY_END_RE`'s shape: one `Game.exile_cards` batch
+    (CR 603.2c's one event), however many the library still holds (CR 609.3:
+    only what can be done is done)."""
+    match = _EXILE_FROM_OWN_LIBRARY_END_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    carried = match.group("that_many") is not None
+    bottom = (match.group("end") or match.group("that_end")).lower() == "bottom"
+    n = parse_count(match.group("n")) if match.group("n") else 1
+    if n is None or n < 0:
+        return None
+    stripped = clause.strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        count = n
+        if carried:
+            counted = _that_many_or_notice(
+                game,
+                stripped,
+                source_id=stack_object.source_id,
+                source_name=stack_object.source_name,
+            )
+            if counted is None:
+                return
+            count = counted
+        if count <= 0:
+            return
+        library = list(game.controller_of(stack_object).library)
+        chosen = library[-count:] if bottom else library[:count]
+        if chosen:
+            game.exile_cards(chosen)
+
+    return effect  # type: ignore[return-value]
+
+
 _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
     r"^exile all cards that are (?P<quality>.+?) from all graveyards\.?$", re.IGNORECASE
 )
@@ -17424,6 +17472,10 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     )
     if exile_all_but_bottom is not None:
         return exile_all_but_bottom
+
+    exile_library_end = _parse_exile_from_own_library_end_clause(clause)
+    if exile_library_end is not None:
+        return exile_library_end
 
     if match := _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE.fullmatch(clause):
         matches = _graveyard_exile_quality_matcher(match.group("quality"))
@@ -25712,7 +25764,7 @@ def _tap_all_group_runner(
             and type_matches(game.characteristics_of(permanent))
             and _goad_group_member(game, controller, whose, targeted, permanent)
         ]
-        return [permanent for permanent in group if permanent.tap_if_untapped()]
+        return [permanent for permanent in group if game.tap_permanent(permanent)]
 
     return run
 
@@ -25765,7 +25817,7 @@ def _parse_tap_attached_clause(clause: str) -> TargetedClause | None:
     def effect(game: "Game", stack_object: "StackObject") -> None:
         attached = _attached_object(game, stack_object)
         if attached is not None:
-            attached.tap_if_untapped()
+            game.tap_permanent(attached)
 
     return effect
 
@@ -29362,7 +29414,7 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
         ) -> None:
             for referent in referents:
                 if referent.zone is Zone.BATTLEFIELD and referent.untapped:
-                    referent.tap()
+                    game.tap_permanent(referent)
 
         return tap_rider
 
@@ -34954,7 +35006,7 @@ def _parse_for_each_opponent_tap_clause(text: str, *, for_spell: bool) -> Abilit
     def effect(game: "Game", stack_object: "StackObject") -> None:
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                target.tap_if_untapped()
+                game.tap_permanent(target)
 
     return effect
 
@@ -34987,7 +35039,7 @@ def _parse_for_each_opponent_tap_then_stun_clause(
         tapped: list[CardState] = []
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                target.tap_if_untapped()
+                game.tap_permanent(target)
                 tapped.append(target)
         for permanent in tapped:
             if permanent.zone is Zone.BATTLEFIELD:

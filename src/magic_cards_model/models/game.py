@@ -4,8 +4,9 @@ import itertools
 import re
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from enum import StrEnum
+from functools import cache
 from random import Random
 from typing import Annotated, Any, ClassVar, Literal, NamedTuple
 from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
@@ -293,6 +294,7 @@ from ..machines.turn import (
     MAIN_PHASES,
     STEP_SEQUENCE,
     DayNight,
+    Phase,
     Step,
     TurnMachine,
     day_night_after_untap_check,
@@ -842,40 +844,149 @@ def _symbol_threshold_exile_component(
     return component
 
 
-#: CR 602.5d's timing restriction, in both templates WOTC prints it in:
-#: "Activate only as a sorcery" and the older "Activate only any time you could
-#: cast a sorcery". CR 307.5 makes them the same restriction.
-_SORCERY_TIMING = re.compile(
-    r"activate (?:this ability )?only (?:as a sorcery|any time you could cast a sorcery)",
-    re.IGNORECASE,
-)
-#: "Activate only during your turn" (Scientist Supreme of A.I.M., Sundial of
-#: the Infinite) - outside its controller's turn the ability is prohibited
-#: from being activated (CR 602.5), a restriction printed alone or joined to
-#: another ("... and only once each turn").
-_YOUR_TURN_ONLY = re.compile(r"activate (?:this ability )?only during your turn", re.IGNORECASE)
-#: CR 602.5b's per-turn limit, with its count read rather than assumed to be
-#: one: "Activate only once each turn" (Basking Rootwalla), "... and only once
-#: each turn" (Dragonkin Berserker's joined restriction), "Activate no more
-#: than twice each turn" (Vampire Bats), "no more than three times each turn"
-#: (Manaforge Cinder).
-_ACTIVATION_LIMIT = re.compile(
-    rf"\b(?:only|no more than) (?P<times>{MULTIPLIER}) each turn\b", re.IGNORECASE
-)
-#: CR 602.5b's turn-ownership restriction: "Activate only during your turn"
-#: (M.O.D.O.K.'s own Mental Organism) and its mirror "... during an
-#: opponent's turn". Read against whose turn it is, not against the phase.
-_ACTIVATION_TURN_OWNER = re.compile(
-    r"activate (?:this ability )?only during (?P<whose>your|an opponent's) turn",
-    re.IGNORECASE,
-)
-
 #: CR 602.5b's "Activate only if <condition>" restriction, the condition taken
 #: to the end of its sentence. A trailing "and only as a sorcery" / "and only
 #: once each turn" is a second restriction, read by its own check, and is cut
 #: off by `_activation_condition` before the condition is read.
 _ACTIVATE_ONLY_IF = re.compile(r"activate only if (?P<condition>[^.]+)", re.IGNORECASE)
 _AND_ONLY_TAIL = re.compile(r"\s+and only\b.*$", re.IGNORECASE)
+
+#: CR 602.1b: activation instructions "may state which players can activate
+#: that ability, may restrict when a player can activate the ability, or may
+#: define some aspect of the activation cost". Each instruction sentence opens
+#: with who may activate ("Only your opponents may activate this ability",
+#: "Any player may activate this ability") or with "Activate [this ability]"
+#: itself, and then lists its restrictions joined by "and"/"but".
+_WHO_MAY_ACTIVATE = re.compile(
+    r"(?P<who>only your opponents|any player) may activate this ability(?P<rest>.*)",
+    re.IGNORECASE,
+)
+_ACTIVATE_LEAD = re.compile(
+    r"activate (?:this ability )?(?P<rest>(?:only|no more than)\b.*)", re.IGNORECASE
+)
+#: Where one restriction of a sentence ends and the next begins: "... and only
+#: once each turn", "... but only if ...".
+_RESTRICTION_JOIN = re.compile(r",?\s*\b(?:and|but)\s+(?=(?:only|no more than)\b)", re.IGNORECASE)
+_RESTRICTION_PER_TURN = re.compile(
+    rf"(?:only|no more than) (?P<times>{MULTIPLIER}) each turn", re.IGNORECASE
+)
+_RESTRICTION_ONCE = re.compile(r"only once", re.IGNORECASE)
+_RESTRICTION_SORCERY = re.compile(
+    r"only (?:as a sorcery|any time you could cast a sorcery)", re.IGNORECASE
+)
+#: CR 602.5e: "Activate only as an instant" means only that the player must
+#: have priority - true of every activation this engine offers.
+_RESTRICTION_INSTANT = re.compile(
+    r"only (?:as an instant|any time you could cast an instant)", re.IGNORECASE
+)
+_RESTRICTION_IF = re.compile(r"only if (?P<condition>.+)", re.IGNORECASE)
+_RESTRICTION_DURING = re.compile(r"only during (?P<window>.+)", re.IGNORECASE)
+
+#: The steps an "Activate only during ... step" instruction names, by the name
+#: CR 500.1's turn structure gives them.
+_STEP_NAMES: dict[str, Step] = {
+    "untap": Step.UNTAP,
+    "upkeep": Step.UPKEEP,
+    "draw": Step.DRAW,
+    "beginning of combat": Step.BEGINNING_OF_COMBAT,
+    "declare attackers": Step.DECLARE_ATTACKERS,
+    "declare blockers": Step.DECLARE_BLOCKERS,
+    "combat damage": Step.COMBAT_DAMAGE,
+    "end of combat": Step.END_OF_COMBAT,
+    "end": Step.END_STEP,
+    "cleanup": Step.CLEANUP,
+}
+_ACTIVATION_WINDOW = re.compile(
+    r"(?:(?P<whose>your|an opponent's|each opponent's|each player's|each|the) )?"
+    r"(?:(?P<turn>turn)|(?P<combat>combat)"
+    r"|(?:(?P<main>precombat|postcombat) )?(?P<main_phase>main phase)"
+    rf"|(?P<step>{'|'.join(sorted(_STEP_NAMES, key=len, reverse=True))})(?: step)?)",
+    re.IGNORECASE,
+)
+
+
+@dataclass(frozen=True)
+class ActivationInstructions:
+    """Every CR 602.1b activation instruction an ability prints, read.
+
+    `who` is whose activation the ability admits: `"controller"` (CR 602.2's
+    default - "Only an object's controller ... can activate its activated
+    ability unless the object specifically says otherwise"), `"opponents"`
+    (the controller's opponents only) or `"any"`. `sorcery` is CR 602.5d's
+    timing, `per_turn` CR 602.5b's per-turn count (with the words that set it
+    in `per_turn_text`), `once` the never-reset "Activate only once", `windows`
+    the "during ..." phrases, `conditions` the "only if ..." conditions, and
+    `unread` every instruction this reads no meaning from - refused, never
+    allowed unchecked."""
+
+    who: str = "controller"
+    sorcery: bool = False
+    per_turn: int | None = None
+    per_turn_text: str | None = None
+    once: bool = False
+    windows: tuple[str, ...] = ()
+    conditions: tuple[str, ...] = ()
+    unread: tuple[str, ...] = ()
+
+
+@cache
+def read_activation_instructions(instructions: str | None) -> ActivationInstructions:
+    """`instructions` (`ActivatedAbility.instructions`, CR 602.1b) read into
+    `ActivationInstructions`. Text only - a condition's truth is asked later,
+    against a game, by `Game.activation_instruction_refusal`."""
+    who = "controller"
+    sorcery = once = False
+    per_turn: int | None = None
+    per_turn_text: str | None = None
+    windows: list[str] = []
+    conditions: list[str] = []
+    unread: list[str] = []
+    for sentence in re.split(r"(?<=\.)\s+", (instructions or "").strip()):
+        sentence = sentence.strip().rstrip(".").strip()
+        if not sentence:
+            continue
+        rest: str
+        if match := _WHO_MAY_ACTIVATE.fullmatch(sentence):
+            who = "opponents" if match.group("who").lower() == "only your opponents" else "any"
+            rest = match.group("rest")
+        elif match := _ACTIVATE_LEAD.fullmatch(sentence):
+            rest = match.group("rest")
+        else:
+            unread.append(sentence)
+            continue
+        for piece in _RESTRICTION_JOIN.split(rest.strip()):
+            piece = piece.strip()
+            if not piece:
+                continue
+            if limit := _RESTRICTION_PER_TURN.fullmatch(piece):
+                per_turn = parse_multiplier(limit.group("times")) or 1
+                per_turn_text = piece
+            elif _RESTRICTION_ONCE.fullmatch(piece):
+                once = True
+            elif _RESTRICTION_SORCERY.fullmatch(piece):
+                sorcery = True
+            elif _RESTRICTION_INSTANT.fullmatch(piece):
+                pass
+            elif during := _RESTRICTION_DURING.fullmatch(piece):
+                if _ACTIVATION_WINDOW.fullmatch(during.group("window")) is None:
+                    unread.append(f"Activate {piece}")
+                else:
+                    windows.append(during.group("window"))
+            elif only_if := _RESTRICTION_IF.fullmatch(piece):
+                conditions.append(only_if.group("condition").strip())
+            else:
+                unread.append(f"Activate {piece}")
+    return ActivationInstructions(
+        who=who,
+        sorcery=sorcery,
+        per_turn=per_turn,
+        per_turn_text=per_turn_text,
+        once=once,
+        windows=tuple(windows),
+        conditions=tuple(conditions),
+        unread=tuple(unread),
+    )
+
 
 #: The board conditions `Game.condition_holds` reads, shared by "Activate only
 #: if ..." (CR 602.5b) and a modal instruction's "If ..., choose N instead"
@@ -1314,9 +1425,19 @@ def condition_is_readable(condition: str) -> bool:
     `_CONDITION_PATTERNS`, in the same order, so a `True` here is read the
     same way once resolution actually asks.
     """
+    from ..machines import conditions
+
     text = condition.strip().rstrip(".").strip()
     if (alternatives := _condition_alternatives(text)) is not None:
         return all(condition_is_readable(part) for part in alternatives)
+    return builtin_condition_readable(text) or conditions.claims(text)
+
+
+def builtin_condition_readable(condition: str) -> bool:
+    """Whether one of `Game.builtin_condition_holds`' own `_CONDITION_*`
+    patterns matches `condition` whole - the built-in half of
+    `condition_is_readable`, which `machines/conditions.claims` asks too."""
+    text = condition.strip().rstrip(".").strip()
     return any(pattern.fullmatch(text) is not None for pattern in _CONDITION_PATTERNS)
 
 
@@ -1367,11 +1488,11 @@ def _card_type_named(quality: str) -> Type | None:
 def _activation_condition(instructions: str) -> str | None:
     """The condition of an "Activate only if <condition>" restriction (CR
     602.5b), without a trailing "and only as a sorcery"-style second
-    restriction, or None when the ability prints none."""
-    match = _ACTIVATE_ONLY_IF.search(instructions)
-    if match is None:
-        return None
-    return _AND_ONLY_TAIL.sub("", match.group("condition")).strip()
+    restriction, or None when the ability prints none - wherever in the
+    sentence the "only if" sits ("Activate only once each turn and only if
+    ...", "Any player may activate this ability but only if ...")."""
+    found = read_activation_instructions(instructions).conditions
+    return found[0] if found else None
 
 
 def _characteristic_word(word: str) -> Callable[[Characteristics], bool] | None:
@@ -2012,6 +2133,12 @@ class CastRecord(EngineModel):
     """How much of `mana_spent` came from a Treasure (CR 106.3's source of
     mana), from `ManaPayment.treasure_spent` - "if mana from a Treasure was
     spent to cast it" (`machines/triggers.intervening_if_holds`)."""
+    cast_step: Step | None = None
+    """The step the spell was cast in (CR 601.2i), and `cast_during_turn_of`
+    whose turn it was - "if you cast it during your main phase" (CR 505.1,
+    `machines/conditions/timing.py`) asks about the cast, not about now.
+    `None` for a copy, which was never cast (CR 707.10)."""
+    cast_during_turn_of: str | None = None
     kicked: int = 0
     """How many times a kicker cost was paid (CR 702.33d), copied from
     `Casting.kicked`."""
@@ -2391,6 +2518,34 @@ class CountersPutRecord(EngineModel):
     """Which incarnation of `card_id` (CR 400.7): a permanent that left the
     battlefield and came back is a new object the counters were never put
     on."""
+
+
+class DamageDealt(EngineModel):
+    """One damage event this turn (CR 120.1: "An object that deals damage is
+    the source of that damage"), with what its source was *as it dealt it*.
+
+    "If a Giant, Wizard, or spell you controlled dealt damage to it this turn"
+    (Aegar, the Freezing Flame) asks about the source's controller, types and
+    whether it was a spell at that moment - none of which an id looked up
+    later can answer once the source has died, resolved or changed hands, the
+    same reason `CombatDamageToPlayer` captures prowl's facts. Recorded from
+    every `TriggerEvent.DEALS_DAMAGE` event by `machines/conditions/history.
+    record`; cleared when a new turn begins."""
+
+    source_id: UUID | None = None
+    source_controller: str | None = None
+    source_types: tuple[Type, ...] = ()
+    """The source's types as it dealt the damage (CR 613.5's computed ones
+    for a permanent, the printed line for a spell)."""
+    source_subtypes: tuple[str, ...] = ()
+    source_was_spell: bool = False
+    """Whether the source was a spell on the stack (CR 109.2b) as it dealt
+    the damage."""
+    recipient_id: UUID | None = None
+    """The permanent dealt the damage, or `None` for a player."""
+    recipient_player: str | None = None
+    amount: int = 0
+    combat: bool = False
 
 
 #: CR 701.54c: "they get an emblem named The Ring".
@@ -2996,6 +3151,10 @@ class Game(EngineModel):
     so a departure event its move did not stamp with types still carries
     them - `emit` fills `subject_types`/`subject_subtypes` from here. Not
     persisted: it is read within the same move that wrote it."""
+    _paying_cost: tuple[str, str | None, str | None] | None = PrivateAttr(default=None)
+    """`(what, keyword, payer)` while a spell's or ability's total cost is
+    being paid (`paying_cost_of`), stamped onto every event raised meanwhile.
+    Not persisted: it opens and closes within one `CostPayment.pay`."""
     _returning_together: list[tuple[GameEvent, GameEvent]] | None = PrivateAttr(default=None)
     """The departure events of permanents returned to hand inside
     `returning_together`, raised together once the last of them has moved
@@ -3272,6 +3431,19 @@ class Game(EngineModel):
     Stage's own "if an opponent was dealt noncombat damage **last turn**"
     (CR 603.4), the same snapshot `spells_cast_last_turn` already takes."""
 
+    turn_counts: dict[str, dict[str, int]] = Field(default_factory=dict)
+    """A per-turn, per-player *count* ledger: `turn_counts[fact][player]` is
+    how many times `fact` has happened for `player` this turn - the counting
+    twin of `turn_facts`, for the conditions that ask "how many" or "the
+    first" rather than "did you" (CR 506.1's "the first combat phase of the
+    turn", counted per active player as each combat phase begins).
+    `note_turn_count`/`turn_count` are the write/read pair; nothing reads or
+    writes this dict directly. Cleared when a new turn begins, with
+    `turn_counts_last_turn` keeping the previous turn's counts."""
+
+    turn_counts_last_turn: dict[str, dict[str, int]] = Field(default_factory=dict)
+    """What `turn_counts` held during the turn before this one."""
+
     combat_damage_dealt_this_turn_by: SortedSet[UUID] = Field(default_factory=set)
     """The ids of every creature that has dealt combat damage this turn
     (CR 510.2) - a per-object "this turn" fact rather than a per-player one,
@@ -3320,6 +3492,11 @@ class Game(EngineModel):
     events` has already raised as `ExtraTriggerEvent.PUT_INTO_GRAVEYARD` -
     everything after it is the next batch (CR 603.2c). Reset with the ledger
     when a new turn begins."""
+
+    damage_dealt_this_turn: list[DamageDealt] = Field(default_factory=list)
+    """Every damage event this turn, with its source's controller and types
+    as it dealt the damage (`DamageDealt`). Written by `machines/conditions/
+    history.record`; cleared when a new turn begins."""
 
     graveyard_arrivals_this_turn: list[GraveyardArrival] = Field(default_factory=list)
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
@@ -3658,7 +3835,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 80
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 81
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3704,6 +3881,11 @@ class Game(EngineModel):
     #: 80: `SpendClause` gained `min_mana_value`/`requires_x_in_cost` and
     #: `ManaSpend` gained `mana_value`/`x_in_cost` (Helga, Skittish Seer's
     #: spend restriction, C02 integration).
+    #: 81: `Game` gained `turn_counts`/`turn_counts_last_turn` (the per-turn
+    #: count ledger) and `damage_dealt_this_turn`, `CastRecord` gained
+    #: `cast_step`/`cast_during_turn_of`, and `machines/triggers.GameEvent`
+    #: gained `declared_attacker` (EC2's condition reader;
+    #: renumbered from 74 at the EC round 1 merge).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6224,6 +6406,8 @@ class Game(EngineModel):
             card_id=spell.id,
             is_copy=is_copy,
             sneak_defender=sneak_defender,
+            cast_step=None if is_copy or self.turn is None else self.turn.step,
+            cast_during_turn_of=(None if is_copy or self.turn is None else self.turn.active_player),
         )
         self.forget_cast_record(spell)
         self.cast_records[spell.zone_change_stamp] = record
@@ -9178,6 +9362,67 @@ class Game(EngineModel):
             return False
         return source.controller is not None and source.controller != player
 
+    @contextmanager
+    def paying_cost_of(
+        self, what: str | None, keyword: str | None, payer: str | None
+    ) -> Iterator[None]:
+        """While a spell's (CR 601.2h) or an ability's (CR 602.2b) total cost
+        is paid, every event raised is marked as happening during that
+        payment (`GameEvent.during_cost_of`) - what a trigger event's own
+        "while casting a spell with emerge" qualifier asks (CR 603.2). `what`
+        None is a payment for neither, and marks nothing."""
+        if what is None:
+            yield
+            return
+        outer = self._paying_cost
+        self._paying_cost = (what, keyword, payer)
+        try:
+            yield
+        finally:
+            self._paying_cost = outer
+
+    def emit_became_tapped(
+        self,
+        permanent: CardState,
+        *,
+        declared_attacker: bool = False,
+        tapped_for_teamwork: bool = False,
+    ) -> None:
+        """Raise CR 701.26a's "becomes tapped" for `permanent`, which has just
+        been tapped - by a cost, by a mana ability, by an effect, or by being
+        declared as an attacker (CR 508.1f, `declared_attacker`), or to pay a
+        teamwork cost (`tapped_for_teamwork`).
+
+        The subject's types and subtypes are its *actual* ones (CR 613.5, off
+        `characteristics_of`): "a creature you control becomes tapped"
+        (Captain America, Living Legend) and "a Dwarf you control becomes
+        tapped" (Magda, Brazen Outlaw) ask what it is now, not what it printed."""
+        controller = self.controller_of(permanent).username
+        chars = self.characteristics_of(permanent)
+        self.emit(
+            GameEvent(
+                event=TriggerEvent.BECOMES_TAPPED,
+                subject_id=permanent.id,
+                subject_name=permanent.name,
+                subject_controller=controller,
+                subject_card=permanent.card,
+                subject_types=chars.types,
+                subject_subtypes=chars.subtypes,
+                player=controller,
+                declared_attacker=declared_attacker,
+                tapped_for_teamwork=tapped_for_teamwork,
+            )
+        )
+
+    def tap_permanent(self, permanent: CardState) -> bool:
+        """Tap `permanent` as an effect instructs, if it is untapped
+        (`CardState.tap_if_untapped`), raising "becomes tapped" when it
+        actually does (CR 701.26a). Returns whether it tapped."""
+        if not permanent.tap_if_untapped():
+            return False
+        self.emit_became_tapped(permanent)
+        return True
+
     def emit(self, event: GameEvent) -> list[AbilityOnStack]:
         """Something happened; work out what it triggered (CR 603.2).
 
@@ -9223,6 +9468,15 @@ class Game(EngineModel):
             event = event.model_copy(
                 update={"subject_types": left.types, "subject_subtypes": left.subtypes}
             )
+        if self._paying_cost is not None and event.during_cost_of is None:
+            what, keyword, payer = self._paying_cost
+            event = event.model_copy(
+                update={
+                    "during_cost_of": what,
+                    "during_cost_keyword": keyword,
+                    "during_cost_player": payer,
+                }
+            )
         with self._id_allocator_scope():
             # CR 702.131b's "any time" and CR 702.131d's "before the game
             # checks ... trigger conditions": a player who has just come to
@@ -9234,6 +9488,13 @@ class Game(EngineModel):
             # checks ... trigger conditions" - storied's enduring story, the
             # same timing as the city's blessing above.
             grant_enduring_stories(self)
+            # The turn-history condition readers' own ledger hook
+            # (`machines/conditions/history.record`): every event is noted as
+            # it happens, before any trigger condition below is read, so an
+            # intervening "if" about this turn (CR 603.4) already sees it.
+            from ..machines.conditions import history as condition_history
+
+            condition_history.record(self, event)
             sources: list[CardState] = list(self.battlefield)
             # CR 113.6m: "An ability whose cost or effect specifies that it moves
             # the object it's on out of a particular zone functions only in that
@@ -10358,6 +10619,18 @@ class Game(EngineModel):
         every consumer of this ledger asks - "did you", never "how many
         times"."""
         self.turn_facts.setdefault(fact, set()).add(player)
+
+    def note_turn_count(self, fact: str, player: str, amount: int = 1) -> None:
+        """Count `amount` more of `fact` for `player` this turn - `turn_counts`'
+        own write half."""
+        counts = self.turn_counts.setdefault(fact, {})
+        counts[player] = counts.get(player, 0) + amount
+
+    def turn_count(self, fact: str, player: str, *, last_turn: bool = False) -> int:
+        """How many times `fact` has happened for `player` this turn, or last
+        turn with `last_turn=True` (`turn_counts_last_turn`)."""
+        ledger = self.turn_counts_last_turn if last_turn else self.turn_counts
+        return ledger.get(fact, {}).get(player, 0)
 
     def turn_fact_holds(self, fact: str, player: str, *, last_turn: bool = False) -> bool:
         """Whether `fact` has happened for `player` this turn, or last turn
@@ -12148,6 +12421,18 @@ class Game(EngineModel):
             # order the put-back just made - the next reordering ends it.
             for state in (*on_top, *to_bottom):
                 self.look(state, player.username, source=source)
+            if to_bottom:
+                # CR 701.22a's choice to put cards on the bottom, as its own
+                # event (The Temporal Anchor's "Whenever you choose to put one
+                # or more cards on the bottom of your library while scrying").
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.LIBRARY_BOTTOM_CHOSEN,
+                        player=player.username,
+                        amount=len(to_bottom),
+                        keyword_action="scry",
+                    )
+                )
             return CardSplit(
                 moved=tuple(state.id for state in to_bottom),
                 top_order=tuple(state.id for state in on_top),
@@ -20320,8 +20605,9 @@ class Game(EngineModel):
                 )
         elif permanent.zone is not Zone.BATTLEFIELD:
             return f"{permanent.name} is in {permanent.zone.value}, not on the battlefield"
-        if self.controller_of(permanent).username != controller:
-            return f"{controller} does not control {permanent.name}"
+        refused_activator = self._activator_refusal(permanent, ability, controller)
+        if refused_activator is not None:
+            return refused_activator
         if not self._still_has_ability(permanent, ability):
             # CR 602.2: activating is putting *its* activated ability on the
             # stack, so the object has to still have it. CR 613.1f applies
@@ -20507,75 +20793,182 @@ class Game(EngineModel):
                     f"that aren't mana abilities during combat (CR 506.1)"
                 )
 
-        instructions = (ability.instructions or "").lower()
-        limit = _ACTIVATION_LIMIT.search(instructions)
-        if limit is not None:
-            # CR 602.5b: the restriction names how often, and `activations`
-            # already counts every activation this turn per permanent and
-            # ability, so the limit is only compared against it.
-            # `MULTIPLIER` only matches what `parse_multiplier` reads.
-            allowed = parse_multiplier(limit.group("times")) or 1
-            count = self._activation_count(permanent, index)
-            if allowed == 1 and count:
-                return f"{permanent.name}'s ability has already been activated this turn"
-            if count >= allowed:
+        return self.activation_instruction_refusal(ability, permanent, controller, index=index)
+
+    def _activator_refusal(
+        self, permanent: CardState, ability: ActivatedAbility, activator: str
+    ) -> str | None:
+        """Why `activator` may not activate this ability at all, or None.
+
+        CR 602.2: "Only an object's controller (or its owner, if it doesn't
+        have a controller) can activate its activated ability unless the
+        object specifically says otherwise", and CR 602.1b is where it says
+        so - "Only your opponents may activate this ability" (Knight of the
+        Holy Nimbus; "your" is the object's controller, CR 109.5) and "Any
+        player may activate this ability" (Oona's Prowler)."""
+        controller = self.controller_of(permanent).username
+        who = read_activation_instructions(ability.instructions).who
+        if who == "any":
+            return None
+        if who == "opponents":
+            if activator == controller:
                 return (
-                    f"{permanent.name}'s ability has already been activated "
-                    f"{limit.group('times').lower()} this turn, the most "
-                    f"{limit.group(0)!r} allows (CR 602.5b)"
+                    f"only {controller}'s opponents may activate {permanent.name}'s ability, "
+                    f"and {controller} controls it (CR 602.1b)"
                 )
-        if _YOUR_TURN_ONLY.search(instructions) and self.active_player.username != controller:
+            return None
+        if controller != activator:
+            return f"{activator} does not control {permanent.name}"
+        return None
+
+    def activation_instruction_refusal(
+        self,
+        ability: ActivatedAbility,
+        source: CardState,
+        activator: str,
+        *,
+        index: int | None = None,
+    ) -> str | None:
+        """Why the ability's own CR 602.1b activation instructions forbid
+        `activator` from activating it right now, or None.
+
+        Every instruction sentence is read (`read_activation_instructions`):
+
+        - **when** - CR 602.5d/CR 307.5's "as a sorcery"; "during your turn",
+          "during your upkeep", "during combat", "during the <name> step"
+          (CR 602.1b "may restrict when a player can activate the ability"),
+          checked against the turn machine, "your" being the activating
+          player (CR 109.5);
+        - **how often** - CR 602.5b's "only once each turn" / "no more than
+          twice each turn", counted by `activations` per object and ability,
+          and the never-reset "Activate only once", kept in `exhausted`;
+        - **only if** - the condition, asked of `condition_holds` for the
+          activating player.
+
+        An instruction nothing here reads is refused with this engine's own
+        reason rather than allowed unchecked, and so is a condition
+        `condition_holds` cannot read. CR 602.5b: all of it "continues to
+        apply to that object even if its controller changes" - which is why
+        the counts are keyed by the object and ability, never the player.
+
+        `index` is the ability's position in `activated_abilities(source)`,
+        the key its per-turn and once-only counts are kept under; without it a
+        counted restriction cannot be checked and is refused.
+        """
+        read = read_activation_instructions(ability.instructions)
+        name = source.name
+        for text in read.unread:
             return (
-                f"{permanent.name}'s ability can only be activated during its "
-                f"controller's turn, and it is {self.active_player.username}'s (CR 602.5)"
+                f'{name}\'s activation instruction "{text}" is not read by this engine, so '
+                "the activation is refused rather than allowed unchecked (CR 602.1b)"
             )
-        if _SORCERY_TIMING.search(instructions) and not self.can_cast_sorcery(controller):
+        if (read.per_turn is not None or read.once) and index is None:
             return (
-                f"{permanent.name}'s ability can only be activated as a sorcery: "
-                f"{controller}'s main phase, with the stack empty "
+                f"{name}'s ability is limited in how often it may be activated, and this "
+                "activation has no count to check that against, so it is refused rather "
+                "than allowed unchecked (CR 602.5b)"
+            )
+        if read.per_turn is not None and index is not None:
+            # CR 602.5b: `activations` already counts every activation this
+            # turn per object and ability, so the limit is only compared
+            # against it. `MULTIPLIER` only matches what `parse_multiplier`
+            # reads.
+            count = self._activation_count(source, index)
+            if read.per_turn == 1 and count:
+                return f"{name}'s ability has already been activated this turn"
+            if count >= read.per_turn:
+                limit = _RESTRICTION_PER_TURN.fullmatch(read.per_turn_text or "")
+                times = limit.group("times") if limit is not None else str(read.per_turn)
+                return (
+                    f"{name}'s ability has already been activated {times.lower()} this turn, "
+                    f"the most {read.per_turn_text!r} allows (CR 602.5b)"
+                )
+        if (
+            read.once
+            and index is not None
+            and self._activation_key(source, index) in self.exhausted
+        ):
+            return (
+                f"{name}'s ability may be activated only once, and it already has been (CR 602.5b)"
+            )
+        if read.sorcery and not self.can_cast_sorcery(activator):
+            return (
+                f"{name}'s ability can only be activated as a sorcery: "
+                f"{activator}'s main phase, with the stack empty "
                 f"(CR 602.5d, CR 307.5)"
             )
-        turn_owner = _ACTIVATION_TURN_OWNER.search(instructions)
-        if turn_owner is not None:
-            # CR 602.5b: "Activate only during your turn" is a restriction on
-            # the ability's use, checked against whose turn it is (CR 102.1's
-            # active player) - never against the ability's owner.
-            own_turn = self.active_player.username == controller
-            wants_own = turn_owner.group("whose").lower() == "your"
-            if own_turn is not wants_own:
-                whose = "its controller's" if wants_own else "an opponent's"
-                return (
-                    f"{permanent.name}'s ability can only be activated during {whose} "
-                    "turn (CR 602.5b)"
-                )
         if (ability.ability_word or "").lower() == "boast":
             # CR 702.142a: "Boast - [Cost]: [Effect]" means "[Cost]: [Effect].
             # Activate only if this creature attacked this turn and only once
             # each turn." The restriction is the keyword's own meaning, not
             # printed text (the reminder is stripped), so it is read off the
             # keyword here rather than off `instructions`.
-            if permanent.id not in self.attacked_this_turn:
+            if source.id not in self.attacked_this_turn:
                 return (
-                    f"{permanent.name} has not attacked this turn, so its boast ability "
+                    f"{name} has not attacked this turn, so its boast ability "
                     "cannot be activated (CR 702.142a)"
                 )
-            if self._activation_count(permanent, index):
-                return (
-                    f"{permanent.name}'s boast ability has already been activated this "
-                    "turn (CR 702.142a)"
-                )
-        condition = _activation_condition(ability.instructions or "")
-        if condition is not None:
-            held = self._activation_condition_holds(ability, controller, permanent)
+            if self._activation_count(source, index):
+                return f"{name}'s boast ability has already been activated this turn (CR 702.142a)"
+        for window in read.windows:
+            if not self._activation_window_holds(window, activator):
+                return f"{name}'s ability can only be activated during {window.lower()} (CR 602.1b)"
+        for condition in read.conditions:
+            held = self.condition_holds(activator, condition, source)
             if held is None:
                 return (
-                    f'{permanent.name}\'s activation restriction "Activate only if {condition}" '
+                    f'{name}\'s activation restriction "Activate only if {condition}" '
                     "is not read by this engine, so the activation is refused rather than "
                     "allowed unchecked (CR 602.5b)"
                 )
             if not held:
-                return f"{permanent.name}'s activation restriction is not met (CR 602.5b)"
+                return f"{name}'s activation restriction is not met (CR 602.5b)"
         return None
+
+    def _activation_window_holds(self, window: str, activator: str) -> bool:
+        """Whether "Activate only during `window`" admits `activator` now."""
+        match = _ACTIVATION_WINDOW.fullmatch(window)
+        turn = self.turn
+        if match is None or turn is None or turn.in_pregame:
+            return False
+        whose = (match.group("whose") or "").lower()
+        if whose == "your" and turn.active_player != activator:
+            return False
+        if whose in ("an opponent's", "each opponent's") and turn.active_player == activator:
+            return False
+        if match.group("turn"):
+            return True
+        if match.group("combat"):
+            return turn.phase is Phase.COMBAT
+        if match.group("main_phase"):
+            which = (match.group("main") or "").lower()
+            if which == "precombat":
+                return turn.step is Step.PRECOMBAT_MAIN
+            if which == "postcombat":
+                return turn.step is Step.POSTCOMBAT_MAIN
+            return turn.step in MAIN_PHASES
+        return turn.step is _STEP_NAMES[match.group("step").lower()]
+
+    def unread_activation_restrictions(
+        self, ability: ActivatedAbility, source: CardState
+    ) -> list[str]:
+        """Every CR 602.1b activation instruction of `ability` this engine does
+        not read, as printed - empty when every one is read. An "Activate only
+        if" condition counts as unread when `condition_holds` answers None
+        for it on this game. Never raises: the support classifier asks it of
+        every printing on a throwaway game."""
+        try:
+            read = read_activation_instructions(ability.instructions)
+            unread = list(read.unread)
+            controller = source.controller or source.owner
+            if controller is None:
+                controller = self.players[0].username if self.players else ""
+            for condition in read.conditions:
+                if self.condition_holds(controller, condition, source) is None:
+                    unread.append(f"Activate only if {condition}")
+            return unread
+        except Exception as error:  # noqa: BLE001 - a probe that raises is not read
+            return [f"{ability.instructions} ({type(error).__name__})"]
 
     def _activation_condition_holds(
         self, ability: ActivatedAbility, controller: str, source: CardState | None = None
@@ -20614,13 +21007,37 @@ class Game(EngineModel):
         the shapes that talk about it ("this card is suspended", "this
         artifact has N or more ... counters on it"); without one those are not
         read.
+
+        A shape none of those patterns reads is handed to the shared reader,
+        `machines/conditions.read_condition` - the registry every other
+        condition-asking path falls back to as well - so a template read there
+        (whose turn it is, a compound of two read halves) is read here too.
         """
         text = condition.strip().rstrip(".").strip()
         if (alternatives := _condition_alternatives(text)) is not None:
+            # The C1 rule every compound keeps (`machines/conditions`): read
+            # only when every half is read - a true half does not stand in
+            # for one nobody could check.
             answers = [self.condition_holds(controller, part, source) for part in alternatives]
-            if any(answers):
-                return True
-            return None if None in answers else False
+            if None in answers:
+                return None
+            return any(answers)
+        held = self.builtin_condition_holds(controller, text, source)
+        if held is not None:
+            return held
+        from ..machines import conditions
+
+        return conditions.read_condition(
+            conditions.ConditionContext(game=self, controller=controller, source=source), text
+        )
+
+    def builtin_condition_holds(
+        self, controller: str, condition: str, source: CardState | None = None
+    ) -> bool | None:
+        """`condition_holds`' own `_CONDITION_*` chain, without the fallback to
+        `machines/conditions.read_condition` - which asks this in turn, so the
+        two never recurse into each other."""
+        text = condition.strip().rstrip(".").strip()
         board = self.computed_board()
         controlled = self.permanents_controlled_by(controller)
         opponents = [player for player in self.players_in_game if player.username != controller]
@@ -22214,6 +22631,7 @@ class Game(EngineModel):
                 any_color=self.spends_mana_as_any_color(permanent, ability, controller),
             ),
         )
+        payment.paying_for = "ability"
         if announced is not None:
             self._announced_targets[key] = (announced, payment)
         self._opened_payments[key] = payment
@@ -22408,6 +22826,11 @@ class Game(EngineModel):
                 # battlefield). `key` is already `permanent.id`-scoped, so an
                 # object that leaves and returns (CR 400.7's new object) gets
                 # a fresh id and is not exhausted by its own past self.
+                self.exhausted.add(key)
+            if read_activation_instructions(ability.instructions).once:
+                # CR 602.5b: the printed "Activate only once" - never reset on
+                # a new turn, the same bookkeeping exhaust's own reminder
+                # "Activate only once" uses just above.
                 self.exhausted.add(key)
             if ability.power_up:
                 # CR 702.193a's own "Activate this ability only once" - the
@@ -23265,10 +23688,13 @@ class Game(EngineModel):
             # the Stage's own "dealt noncombat damage last turn" needs it.
             self.turn_facts_last_turn = self.turn_facts
             self.turn_facts = {}
+            self.turn_counts_last_turn = self.turn_counts
+            self.turn_counts = {}
             self.combat_damage_dealt_this_turn_by = set()
             self.combat_damage_to_players_this_turn = []
             self.counters_put_this_turn = []
             self.announce_batched_events()
+            self.damage_dealt_this_turn = []
             self.graveyard_arrivals_this_turn = []
             self.graveyard_arrivals_announced = 0
             self.next_spell_free_cast_grants = []
@@ -23323,6 +23749,12 @@ class Game(EngineModel):
         more than one in a turn)."""
         if step is Step.DRAW:
             self.cards_drawn_in_own_draw_step = {}
+        if step is Step.BEGINNING_OF_COMBAT and self.turn is not None:
+            # CR 506.1: every combat phase begins with its beginning of combat
+            # step, so counting that step counts combat phases - an
+            # additional one (CR 500.8) included - for "it's the first combat
+            # phase of the turn" (`machines/conditions/timing.py`).
+            self.note_turn_count("combat_phases", self.turn.active_player)
         if step is Step.END_STEP:
             # "Until your next end step" (CR 611.2a's stated duration) ends
             # the moment the named player's end step begins - see

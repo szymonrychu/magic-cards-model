@@ -59,7 +59,6 @@ from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
 from .abilities import (
-    TriggerEvent,
     keyword_abilities_in_lines,
     keywords_in_lines,
     layer_readable_sentences,
@@ -1107,28 +1106,9 @@ def declare_attacker(game: "Game", creature: CardState, defender: TargetRef) -> 
 
     if not has_keyword(creature, Keyword.VIGILANCE, game):
         creature.tap()  # CR 508.1f
-        # CR 613.5/712.8f: the subject's *actual* types/subtypes, read off
-        # the computed board the same way `Game._emit_attacks`' own ATTACKS
-        # event already does just below this call - Captain America, Living
-        # Legend's own "a creature you control becomes tapped" cannot match
-        # `_types_match`'s CR 205.2a card-type read at all with these left
-        # `None` (a required "creature" against an unknown subject type set
-        # answers False, not "unasked"), and Magda, Brazen Outlaw's own
-        # subtype-qualified "a Dwarf you control becomes tapped" needs
-        # `subject_subtypes` the identical way.
-        chars = game.characteristics_of(creature)
-        game.emit(
-            GameEvent(
-                event=TriggerEvent.BECOMES_TAPPED,
-                subject_id=creature.id,
-                subject_name=creature.name,
-                subject_controller=game.controller_of(creature).username,
-                subject_card=creature.card,
-                subject_types=chars.types,
-                subject_subtypes=chars.subtypes,
-                player=game.controller_of(creature).username,
-            )
-        )
+        # CR 613.5: the subject's actual types, as `Game.emit_became_tapped`
+        # documents.
+        game.emit_became_tapped(creature, declared_attacker=True)
 
     game.combat.attacked_this_combat = True  # CR 508.8 reads the declaration
     attack = Attack(attacker_id=creature.id, defender=defender)

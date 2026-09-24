@@ -490,7 +490,7 @@ class TapSubject(DelayedEffectSpecBase):
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         permanent = trigger.still_affects(game)
         if permanent is not None:
-            permanent.tap_if_untapped()
+            game.tap_permanent(permanent)
 
 
 class TransformSubject(DelayedEffectSpecBase):

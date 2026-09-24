@@ -532,6 +532,34 @@ class GameEvent(EngineModel):
     the same combat: that declaration is not `attacking_alone`, but each
     attacker is still `attacking_player_alone`."""
 
+    declared_attacker: bool = False
+    """`TriggerEvent.BECOMES_TAPPED` for a creature tapped because it was
+    declared as an attacker (CR 508.1f: "attacking simply causes creatures to
+    become tapped") - Verity Circle's "if it isn't being declared as an
+    attacker" (`machines/conditions/objects.py`) asks exactly this, of the
+    event itself, so CR 608.2a's recheck reads the same answer."""
+
+    during_cost_of: str | None = None
+    """`"spell"` or `"ability"` when this happened while that spell's
+    (CR 601.2h) or ability's (CR 602.2b) total cost was being paid - the
+    creature an emerge cost sacrificed, the permanents a craft cost exiled -
+    stamped by `Game.emit` from `Game.paying_cost_of`. A trigger event's own
+    "while casting a spell with emerge" / "while you're activating a craft
+    ability" qualifier reads this (CR 603.2,
+    `machines/conditions/events.py`)."""
+
+    during_cost_keyword: str | None = None
+    """The keyword that spell was cast with, or that ability expands,
+    lowercased (CR 702.119a's emerge, CR 702.167a's craft)."""
+
+    during_cost_player: str | None = None
+    """Who was paying that cost - the player casting or activating."""
+
+    keyword_action: str | None = None
+    """The keyword action this event happened during, when that is what a
+    trigger event's own "while <doing it>" qualifier asks: `"scry"` for a
+    `TriggerEvent.LIBRARY_BOTTOM_CHOSEN` made while scrying (CR 701.22a)."""
+
     mana_ability: bool = False
     """`ExtraTriggerEvent.ABILITY_ACTIVATED` for a mana ability (CR 605.3a:
     it is activated; CR 605.3b: without the stack) - a condition printed
@@ -3066,6 +3094,22 @@ def condition_matches(
                 return False
         return True
 
+    if ability.event is TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE:
+        # "When this creature is exiled from the battlefield" (Market Gnome),
+        # a leaves-the-battlefield ability that looks back (CR 603.10a).
+        if mine:
+            return event.subject_id == source.id
+        return _controller_clause_holds(
+            condition, controller, event.subject_controller
+        ) and _types_match(event.subject_types, condition)
+
+    if ability.event is TriggerEvent.LIBRARY_BOTTOM_CHOSEN:
+        # CR 701.22a's choice: "you choose" is the controller's own, "an
+        # opponent chooses" anyone else's.
+        if "an opponent" in lowered:
+            return event.player is not None and event.player != controller
+        return event.player == controller
+
     if ability.event is TriggerEvent.BECOMES_MONSTROUS:
         # CR 701.37a. Every printing in the pool - Polukranos, World Eater;
         # Arbor Colossus - prints only the self-referential "When [this
@@ -3584,10 +3628,14 @@ _CYCLE_CONDITION = re.compile(
 #: CR 602.2's activation, restricted by CR 605.1a's mana-ability test:
 #: "`<who>` activates an ability [of `<type list>`] that isn't a mana
 #: ability" - Flamescroll Celebrant's "an opponent", Burning-Tree Shaman's
-#: "a player", Immolation Shaman's "of an artifact, creature, or land".
+#: "a player", Immolation Shaman's "of an artifact, creature, or land", and
+#: Harsh Mentor's "... or land on the battlefield" (CR 109.2's "a type named
+#: without 'card', 'spell' or 'source'" already means one on the
+#: battlefield, which the branch reading it checks either way).
 _ABILITY_ACTIVATED_CONDITION = re.compile(
     r"^(?P<who>you|a player|an opponent) activates? an ability"
-    r"(?: of (?P<types>an? [a-z]+(?:(?:,\s*(?:or\s+)?|\s+or\s+)(?:an? )?[a-z]+)*))?"
+    r"(?: of (?P<types>an? [a-z]+(?:(?:,\s*(?:or\s+)?|\s+or\s+)(?:an? )?[a-z]+)*)"
+    r"(?: on the battlefield)?)?"
     r"(?P<not_mana> that isn't a mana ability)?$"
 )
 #: "Whenever day becomes night or night becomes day" (Gavony Dawnguard,
@@ -4186,6 +4234,7 @@ _LOOK_BACK_EVENTS = (
     TriggerEvent.IS_SACRIFICED,
     TriggerEvent.SPELL_IS_COUNTERED,
     TriggerEvent.LEAVES_THE_BATTLEFIELD,
+    TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
 )
 
 
@@ -4354,10 +4403,12 @@ def _first_spell_this_turn_holds(
     """CR 603.4: "if it's the first [type] spell ... you've cast this turn".
 
     Returns `None`, not False, when the clause isn't this shape at all, so the
-    caller can tell "read and false" from "not this pattern".
+    caller can tell "read and false" from "not this pattern" - and False, a
+    read answer, when it is this shape but there is no cast event to name
+    the spell "it" means.
     """
     match = _FIRST_SPELL_THIS_TURN.match(clause)
-    if match is None or event is None or event.subject_card is None:
+    if match is None:
         return None
     segments = [piece.strip() for piece in re.split(r",|\bor\b", match.group("segments"))]
     words: list[str] = []
@@ -4370,6 +4421,8 @@ def _first_spell_this_turn_holds(
         words.append(segment_match.group("word"))
     if not words:
         return None
+    if event is None or event.subject_card is None:
+        return False
 
     excluded = (match.group("excluded") or "").strip()
     controller = source.controller or game.active_player.username
@@ -4761,7 +4814,100 @@ def intervening_if_holds(
     event: "GameEvent | None" = None,
     source_stamp: UUID | None = None,
 ) -> bool:
-    """Whether an intervening *if* clause is true right now (CR 603.4, 608.2a).
+    """Whether an intervening *if* clause is true right now (CR 603.4, 608.2a),
+    failing closed on a clause nobody reads.
+
+    `intervening_if_answer` is the reading; this is the one place its None -
+    "no reader claims this clause" - becomes False with an
+    `InterveningIfNotice` recorded (`_fail_closed`), so CR 603.4's event check
+    and CR 608.2a's recheck on resolution both go through the same answer.
+    """
+    answer = intervening_if_answer(game, ability, source, event, source_stamp)
+    if answer is None:
+        return _fail_closed(game, ability, source)
+    return answer
+
+
+def event_qualifier_holds(
+    game: "Game",
+    ability: TriggeredAbility,
+    source: CardState,
+    controller: str,
+    event: GameEvent,
+) -> bool:
+    """Whether the trigger event happened the way `ability`'s own "while
+    <doing something>" qualifier says (CR 603.2) - True when it prints none.
+
+    Asked of the event as it occurs, through the shared condition readers
+    (`machines/conditions/events.py`). A qualifier nobody reads fails closed:
+    the ability does not trigger, and an `InterveningIfNotice` naming the
+    qualifier is recorded, the same trail an unread intervening "if" leaves.
+    """
+    qualifier = ability.event_qualifier
+    if not qualifier:
+        return True
+    from . import conditions
+
+    answer = conditions.read_condition(
+        conditions.ConditionContext(game, controller, source=source, event=event, ability=ability),
+        qualifier,
+    )
+    if answer is None:
+        game.intervening_if_notices.append(
+            InterveningIfNotice(source_id=source.id, source_name=source.name, clause=qualifier)
+        )
+        return False
+    return answer
+
+
+def event_qualifier_readable(ability: TriggeredAbility) -> bool:
+    """Whether the engine reads `ability`'s "while <doing something>"
+    qualifier: a reader claims it, and its bare trigger event is one the
+    engine raises. True when it prints none."""
+    if not ability.event_qualifier:
+        return True
+    from . import conditions
+
+    has_event = ability.event is not None or bool(_unread_trigger_events(ability.condition))
+    return has_event and conditions.claims(ability.event_qualifier)
+
+
+def intervening_if_readable(printing: Card, ability: TriggeredAbility) -> bool:
+    """Whether the engine reads `ability`'s intervening *if* at all - the probe
+    the support classifier asks, with no game of its own to ask it in.
+
+    Asked on a throwaway two-player `Game` with `printing` on the battlefield
+    as the ability's source and no event: every claimed clause answers True or
+    False there (False where it needs an event), so only an unclaimed clause
+    answers None. Any exception is read as unreadable, never raised.
+    """
+    if not (ability.intervening_if or "").strip():
+        return True
+    from ..models.game import Game
+    from ..models.player import Player
+
+    try:
+        game = Game(
+            players=[Player(username="you"), Player(username="opponent")],
+            schema_version=Game.CURRENT_SCHEMA_VERSION,
+        )
+        source = CardState(card=printing, zone=Zone.BATTLEFIELD, controller="you", owner="you")
+        source.bind_to_game(game)
+        game.battlefield.append(source)
+        return intervening_if_answer(game, ability, source, None) is not None
+    except Exception:  # noqa: BLE001 - a probe that raises is a clause not read
+        return False
+
+
+def intervening_if_answer(
+    game: "Game",
+    ability: TriggeredAbility,
+    source: CardState,
+    event: "GameEvent | None" = None,
+    source_stamp: UUID | None = None,
+) -> bool | None:
+    """Whether an intervening *if* clause is true right now (CR 603.4, 608.2a),
+    or None when no reader claims it.
 
     "When the trigger event occurs, the ability checks whether the stated
     condition is true. The ability triggers only if it's true" (CR 603.4);
@@ -4793,13 +4939,17 @@ def intervening_if_holds(
     pays the total cost, and `Casting.kicked` at the moment CR 601.2b announces
     which optional additional costs are being paid.
 
-    Anything else **fails closed**: CR 603.4 only lets the ability trigger if
-    the condition is true, and a condition this module cannot read is not
-    *known* to be true, so the ability does not trigger. This is the opposite
-    of the old default, which read anything it could not recognise as true -
-    fail-open is how an unkicked Sowing Mycospawn exiled a land. The refusal
-    is recorded on `game.intervening_if_notices` (`InterveningIfNotice`) so it
-    reads as an engine gap, not as a legal "nothing happened".
+    A clause none of those shapes reads is handed to the shared condition
+    reader, `machines/conditions.read_condition`, with this ability's event,
+    source, controller and source stamp - which reads `Game.condition_holds`'
+    own built-in board shapes, every registered template, and a compound of
+    two read halves. Only a clause nothing claims answers None, and
+    `intervening_if_holds` turns that None into a fail-closed False (CR 603.4
+    only lets the ability trigger if the condition is true, and a condition
+    nobody read is not *known* to be true) with an `InterveningIfNotice`, so it
+    reads as an engine gap, not as a legal "nothing happened". A branch whose
+    shape is read but whose `CastRecord` is gone answers False itself, with
+    the same notice.
     """
     clause = (ability.intervening_if or "").lower().strip()
     if not clause:
@@ -5184,7 +5334,19 @@ def intervening_if_holds(
     if typed_turn_fact is not None:
         return typed_turn_fact
 
-    return _fail_closed(game, ability, source)
+    from . import conditions
+
+    return conditions.read_condition(
+        conditions.ConditionContext(
+            game=game,
+            controller=controller_of_source(game, source),
+            source=source,
+            event=event,
+            ability=ability,
+            source_stamp=source_stamp,
+        ),
+        clause,
+    )
 
 
 #: "he's equipped" (Whiplash, Vengeful Engineer), "this creature is equipped"
@@ -5375,16 +5537,19 @@ def _ordinal_spell_cast_this_turn_holds(
     cast has already appended this very spell to, so the spell's 1-indexed
     position among that turn's spells of the named kind *is* the ordinal.
 
-    `None` when the clause is not this shape, or when there is no event to
-    identify the spell with, so the caller still fails closed.
+    `None` when the clause is not this shape, so the caller still fails
+    closed; False when it is but there is no event to identify the spell
+    with.
     """
     match = _ORDINAL_SPELL_CAST_THIS_TURN.match(clause)
-    if match is None or event is None or event.subject_id is None:
+    if match is None:
         return None
     ordinal = parse_ordinal(match.group("ordinal"))
     card_type = _TYPE_WORDS.get(match.group("word"))
     if ordinal is None or card_type is None:
         return None
+    if event is None or event.subject_id is None:
+        return False
     controller = source.controller or game.active_player.username
     of_that_kind = [
         state
@@ -6525,6 +6690,8 @@ def abilities_triggered_by(
                     continue
                 if source.zone not in zones_ability_functions_in(ability, source):
                     continue  # CR 113.6: doesn't function from the zone it's in.
+                if not event_qualifier_holds(game, ability, source, controller, event):
+                    continue  # CR 603.2: the event did not happen that way.
                 if not intervening_if_holds(game, ability, source, event):
                     continue  # CR 603.4: it does not trigger at all.
                 found.append((source, ability, controller))

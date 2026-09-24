@@ -1392,10 +1392,17 @@ class TriggerEvent(StrEnum):
     #: a permanent" look back in time.
     IS_SACRIFICED = "is_sacrificed"
     #: CR 701.26a: "To tap a permanent, turn it sideways from an upright
-    #: position." Nothing emits this yet: the taps the engine performs happen
-    #: inside cost payment (`machines/cost.py`) and attack declaration
-    #: (`machines/combat.py`), which have no emit call.
+    #: position." Raised by `Game.emit_became_tapped` wherever the engine taps
+    #: a permanent: a `{T}` or tap cost, a mana ability, an effect
+    #: (`Game.tap_permanent`), and an attack declaration (CR 508.1f).
     BECOMES_TAPPED = "becomes_tapped"
+    #: CR 701.22a: "put any number of them on the bottom of your library" -
+    #: The Temporal Anchor's "Whenever you choose to put one or more cards on
+    #: the bottom of your library while scrying". Raised by `Game.scry` once
+    #: the choice puts at least one card on the bottom, carrying how many
+    #: (`GameEvent.amount`) and the keyword action it was made during
+    #: (`GameEvent.keyword_action`).
+    LIBRARY_BOTTOM_CHOSEN = "library_bottom_chosen"
     #: CR 701.26b: "To untap a permanent, rotate it back to the upright
     #: position from a sideways position." Printed on Aerie Worshippers as
     #: "Whenever this creature becomes untapped".
@@ -1851,6 +1858,15 @@ class TriggeredAbility(BaseAbility):
     #: human reading a `LayerNotice`/decision prompt, not for re-parsing).
     #: `None` for every other `TriggeredAbility` - the ordinary, printed kind.
     chapter: int | None = None
+    #: CR 603.2: a "while <doing something>" qualifier printed after the
+    #: trigger condition - "while casting a spell with emerge" (Foul
+    #: Emissary), "while you're activating a craft ability" (Market Gnome),
+    #: "while scrying" (The Temporal Anchor). It says how the trigger event
+    #: happened, so it is part of the event and is asked of the event as it
+    #: occurs (`machines/triggers.condition_matches`), never rechecked on
+    #: resolution the way an intervening "if" is (CR 603.4, CR 608.2a) - by
+    #: then the casting is over. `condition` holds the event without it.
+    event_qualifier: str | None = None
 
 
 class StaticAbility(BaseAbility):
@@ -2683,8 +2699,18 @@ _ABILITY_WORD = re.compile(r"^(∞|[A-Z][A-Za-z'\-?! ]{2,30}?(?: \d+)?[!?]?)\s+�
 #: CR 603.1's three words, at the start of the line.
 _TRIGGER = re.compile(r"^(When|Whenever|At)\b\s*", re.IGNORECASE)
 
-#: CR 602.1b activation instructions, at the end of the effect.
-_INSTRUCTIONS = re.compile(r"(?:^|(?<=\.\s))((?:Activate|Any player may activate)\b[^.]*\.)\s*$")
+#: CR 602.1b activation instructions, at the end of the effect: "If an
+#: activated ability has any activation instructions, they appear last, after
+#: the ability's effect." Each one opens either with "Activate" or with who may
+#: activate it ("Any player may activate this ability", "Only your opponents
+#: may activate this ability" - Knight of the Holy Nimbus), and the previous
+#: sentence may end inside a quoted ability's own closing quote (Reef Roads'
+#: `... 2 greater." Activate only as a sorcery.`), which is still a sentence
+#: boundary.
+_INSTRUCTIONS = re.compile(
+    r"(?:^|(?<=\.\s)|(?<=\.[\"'”’]\s))"
+    r"((?:(?:Activate|Any player may activate|Only your opponents may activate)\b[^.]*\.\s*)+)$"
+)
 
 _REMINDER = re.compile(r"\([^()]*\)")
 _MANA_SHAPED = re.compile(r"^(?:\{[^{}]+\}\s*)+$|^\d+$|^X$")
@@ -3174,8 +3200,13 @@ def _match_keyword(token: str, known: list[str]) -> dict | None:
 #: comma-separated interior and all, up to and including the comma that
 #: follows "cast this turn". `machines/triggers._FIRST_SPELL_THIS_TURN` is
 #: what actually reads the captured clause; this only finds where it ends.
+#: Never across a sentence: Hurkyl, Master Wizard's "if you've cast a
+#: noncreature spell this turn, reveal the top five cards of your library.
+#: For each card type among noncreature spells you've cast this turn, ..."
+#: ends its clause at the first comma, and a lazy `.+?` ran on to the second
+#: sentence's "you've cast this turn," and swallowed the effect whole.
 _INTERVENING_IF_CAST_THIS_TURN_BOUNDARY = re.compile(
-    r"if\s(?P<clause>.+?\byou(?:'ve| have) cast this turn)\s*,\s*", re.IGNORECASE
+    r"if\s(?P<clause>[^.]+?\byou(?:'ve| have) cast this turn)\s*,\s*", re.IGNORECASE
 )
 
 #: "Whenever you cast an artifact, instant, or sorcery spell, `<effect>`."
@@ -3202,11 +3233,14 @@ _CAST_TYPE_LIST_CONDITION_BOUNDARY = re.compile(
 #: `_CAST_TYPE_LIST_CONDITION_BOUNDARY` reads for a cast, here naming the
 #: source of a CR 602.2 activation, with CR 605.1a's "that isn't a mana
 #: ability" closing it. `machines/triggers._ABILITY_ACTIVATED_CONDITION`
-#: reads the captured condition.
+#: reads the captured condition. Harsh Mentor prints the same list with
+#: "on the battlefield" after it and moves the mana-ability test into its
+#: intervening "if" ("..., if it isn't a mana ability, ..."), which the list's
+#: own commas used to cut in half.
 _ACTIVATES_TYPE_LIST_CONDITION_BOUNDARY = re.compile(
     r"^(?P<condition>(?:you|a player|an? opponent) activates? an ability of "
     r"an? [a-z]+(?:,\s*(?:an? )?[a-z]+)*(?:,)?\s+or\s+(?:an? )?[a-z]+"
-    r" that isn't a mana ability)\s*,\s*",
+    r"(?: on the battlefield)?(?: that isn't a mana ability)?)\s*,\s*",
     re.IGNORECASE,
 )
 
@@ -3489,8 +3523,11 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
             if len(clause_parts) < 2:
                 comma_if_unreadable = True
             else:
-                intervening_if = clause_parts[0][len("if ") :].strip()
-                rest = ", ".join(clause_parts[1:])
+                end = _intervening_if_end(clause_parts)
+                intervening_if = ", ".join(part.strip() for part in clause_parts[:end])[
+                    len("if ") :
+                ].strip()
+                rest = ", ".join(clause_parts[end:])
 
     once_per_turn = condition_once_per_turn
     stripped = _strip_once_per_turn_trailer(rest).strip()
@@ -3508,9 +3545,30 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
         # parser read it before compound splitting (no printing carries both
         # yet). Every other condition takes the comma-side "if".
         half_if, half_effect = intervening_if, rest
+        event_qualifier: str | None = None
         while_match = _CONDITION_WHILE_CLAUSE.search(half)
-        if while_match is not None:
+        if while_match is not None and _EVENT_QUALIFIER.match(half[while_match.end() :].strip()):
+            # "... while casting a spell with emerge" (Foul Emissary), "...
+            # while scrying" (The Temporal Anchor), "... while you're
+            # activating a craft ability" (Market Gnome): a "while" followed
+            # by what a player is *doing* says how the trigger event
+            # happened - part of the event itself (CR 603.2), not a state
+            # CR 603.4 checks again as the ability resolves (by then the
+            # casting is long over). The bare event is the condition, and
+            # the qualifier is asked of that event as it happens
+            # (`TriggeredAbility.event_qualifier`).
+            if comma_if_unreadable:
+                return None
+            event_qualifier = half[while_match.end() :].strip()
+            half = half[: while_match.start()].strip()
+        elif while_match is not None:
             half_if = half[while_match.end() :].strip()
+            if half_if.lower() == "saddled":
+                # CR 702.171b: "saddled" is a designation of the permanent,
+                # asked of the attacking permanent itself - "it's saddled",
+                # the object-state clause `machines/conditions/objects.py`
+                # reads, rather than the bare word.
+                half_if = "it's saddled"
             half = half[: while_match.start()].strip()
             half_effect = printed_rest
         elif comma_if_unreadable:
@@ -3524,9 +3582,44 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
                 effect=half_effect,
                 event=_trigger_event(half),
                 once_per_turn=once_per_turn,
+                event_qualifier=event_qualifier,
             )
         )
     return abilities
+
+
+#: What follows "while" when it describes how the trigger event happened
+#: rather than a state of the game: an action in progress, "while casting
+#: ...", "while scrying", "while you're activating ...".
+_EVENT_QUALIFIER = re.compile(r"^(?:you(?:'re| are) )?[a-z]+ing\b", re.IGNORECASE)
+
+
+#: A comma inside an intervening "if" that continues a list rather than ending
+#: the clause: the next item of a serial list - a single capitalized word
+#: ("a Giant, Wizard, or spell you controlled ...", Aegar, the Freezing
+#: Flame) or the list's closing "or"/"and" item - or a second "non-" qualifier
+#: after a first ("two or more nonland, nontoken permanents", Chrome
+#: Replicator). CR 603.4's clause ends at the comma before the effect, which
+#: is none of these.
+_IF_LIST_CONTINUATION = re.compile(r"^(?:(?:or|and|and/or)\s|[A-Z][\w'-]*$)")
+_IF_QUALIFIER_TAIL = re.compile(r"\bnon-?[a-z]+$", re.IGNORECASE)
+_IF_QUALIFIER_LEAD = re.compile(r"^non-?[a-z]+\s", re.IGNORECASE)
+
+
+def _intervening_if_end(parts: list[str]) -> int:
+    """How many of an "if ..., effect" text's top-level comma parts belong to
+    the intervening "if" clause - at least one, and never the last, which is
+    the effect (see `_IF_LIST_CONTINUATION`)."""
+    end = 1
+    while end < len(parts) - 1:
+        previous, following = parts[end - 1].strip(), parts[end].strip()
+        if _IF_LIST_CONTINUATION.match(following) or (
+            _IF_QUALIFIER_TAIL.search(previous) and _IF_QUALIFIER_LEAD.match(following)
+        ):
+            end += 1
+            continue
+        break
+    return end
 
 
 def _trigger_event(condition: str) -> TriggerEvent | None:
@@ -3575,6 +3668,16 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # specifically is `DIES`, not this.
     if "leaves the battlefield" in lowered:
         return TriggerEvent.LEAVES_THE_BATTLEFIELD
+    # CR 406.2's exile, from the battlefield specifically ("When this creature
+    # is exiled from the battlefield", Market Gnome) - the move
+    # `Game.exile_permanent` raises as its own event.
+    if re.search(r"\b(?:is|are) exiled from the battlefield\b", lowered):
+        return TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE
+    # CR 701.22a's choice, as The Temporal Anchor prints it.
+    if re.search(
+        r"\bchooses? to put one or more cards on the bottom of (?:your|their) library\b", lowered
+    ):
+        return TriggerEvent.LIBRARY_BOTTOM_CHOSEN
     # CR 700.4: "dies" means "is put into a graveyard from the battlefield" -
     # Flagstones of Trokair spells that phrase out instead of saying "dies",
     # and the two are the same event by definition. "die" (no s) is the

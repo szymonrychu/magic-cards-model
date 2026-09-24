@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["life_gained_amount_this_turn", "life_gained_this_turn", "turn_facts"],
+    "fields_changed": ["damage_dealt_this_turn", "life_gained_amount_this_turn", "life_gained_this_turn", "turn_counts", "turn_facts"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#2": {

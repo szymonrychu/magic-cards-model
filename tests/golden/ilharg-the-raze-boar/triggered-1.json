@@ -46,7 +46,7 @@
         "source": "Ilharg, the Raze-Boar"
       }
     ],
-    "fields_changed": ["reveals"],
+    "fields_changed": ["reveals", "turn_counts"],
     "notices": {},
     "objects": {
       "Ilharg, the Raze-Boar@alice#1": {

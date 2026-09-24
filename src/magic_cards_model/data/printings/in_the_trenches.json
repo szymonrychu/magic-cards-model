@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7",
+  "oracle_id": "1612a08f-fc1f-45cf-ae03-5f021a46869d",
+  "multiverse_ids": [
+    583593
+  ],
+  "mtgo_id": 104634,
+  "arena_id": 82492,
+  "tcgplayer_id": 451892,
+  "cardmarket_id": 681995,
+  "name": "In the Trenches",
+  "lang": "en",
+  "released_at": "2022-11-18",
+  "uri": "https://api.scryfall.com/cards/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7",
+  "scryfall_uri": "https://scryfall.com/card/bro/8/in-the-trenches?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:22:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.jpg?1783920131",
+    "normal": "https://cards.scryfall.io/normal/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.jpg?1783920131",
+    "large": "https://cards.scryfall.io/large/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.jpg?1783920131",
+    "png": "https://cards.scryfall.io/png/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.png?1783920131",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.jpg?1783920131",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.jpg?1783920131",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.webp?1783920131",
+    "grid": "https://cards.scryfall.io/grid/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.webp?1783920131",
+    "display": "https://cards.scryfall.io/display/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.webp?1783920131",
+    "art": "https://cards.scryfall.io/art/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.webp?1783920131",
+    "crop": "https://cards.scryfall.io/crop/front/7/1/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7.webp?1783920131"
+  },
+  "mana_cost": "{1}{W}{W}",
+  "cmc": 3.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Creatures you control get +1/+1.\n{5}{W}: Exile target nonland permanent you don't control until this enchantment leaves the battlefield. Activate only as a sorcery and only once.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set": "bro",
+  "set_name": "The Brothers' War",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abro&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bro?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/71ff86e9-1ce6-43cc-8135-f2adb1b6c5a7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1612a08f-fc1f-45cf-ae03-5f021a46869d&unique=prints",
+  "collector_number": "8",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "The battlefield became so pockmarked with craters and trenches that casualties were regularly attributed to \"fell in a hole.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "6a3380d9-8b89-4dd3-8123-5927108dfb15",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 9551,
+  "preview": {
+    "source": "CoolStuffInc",
+    "source_uri": "https://twitter.com/misterorange/status/1586149624640946176",
+    "previewed_at": "2022-10-28"
+  },
+  "prices": {
+    "usd": "0.36",
+    "usd_foil": "0.88",
+    "usd_etched": null,
+    "eur": "0.47",
+    "eur_foil": "0.79",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=583593&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIn%2Bthe%2BTrenches",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIn%2Bthe%2BTrenches",
+    "edhrec": "https://edhrec.com/route/?cc=In+the+Trenches"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F451892%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=681995&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/104634?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

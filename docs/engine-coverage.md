@@ -5569,3 +5569,64 @@ unaudited - the silent ones are "Pay {E}: ..." activations and "you get six
 | CR 603.12 energy payment, reflexive modal "choose one -" (CR 603.3c, 700.2b) | `_parse_reflexive_pay_energy_clause`, `reflexive_pay_consequence_effect` | Voltstorm Angel | none readable: Hylda of the Icy Crown (the only other "you may pay. When you do, choose one") has an unread trigger condition; Riddle Gate Gargoyle proves the reflexive energy reader | `tests/scenarios/test_reflexive_pay_energy_when_you_do.py` |
 | "this creature deals damage equal to its power to <target>" by LKI (CR 608.2h, 113.7a) | `_SELF_DEALS_DAMAGE_EQUAL_TO_ITS_STAT_RE`, `_self_deals_damage_equal_to_its_stat` | Cyclops Superconductor | Spikeshot Elder (activated, killed in response) | `test_reflexive_pay_energy_when_you_do.py`, `tests/scenarios/test_self_damage_equal_to_its_power.py` |
 | No printed non-mana symbol reaches `ManaCost.parse` | `ManaCost.try_parse` at every regex-fed site | the nine above | every {E} printing in the pool | `tests/test_energy_symbol_audit.py` |
+
+## EC2: one condition reader - registry, activation instructions, timing, parse boundaries, compounds
+
+Three paths ask "is this printed condition true?" - CR 603.4/608.2a's
+intervening "if" (`triggers.intervening_if_answer`), CR 602.1b's activation
+instructions (`Game.activation_instruction_refusal`, battlefield and
+off-battlefield alike) and `Game.condition_holds` (modal "If ..., choose N
+instead", "Activate only if"). Each now ends in one shared fallback,
+`machines/conditions.read_condition`: a registered `ConditionReader` (one
+module per family - `timing`, `board`, `cast_record`, `history`, `player`,
+`objects`), then `Game.builtin_condition_holds`' own `_CONDITION_*` chain,
+then the compound combinator. A reader that claims a clause always answers
+True/False (False when its context, e.g. the event, is missing); only an
+unclaimed clause is None, and None is what fails closed
+(`InterveningIfNotice`, an activation refused with the engine's reason). The
+classifier's probes land here too: `triggers.intervening_if_readable(printing,
+ability)` and `Game.unread_activation_restrictions(ability, source)`;
+`scripts/condition_inventory.py` runs both over the pool or an oracle dump.
+New persisted state (schema 81, 74 on the branch): `Game.turn_counts`/`turn_counts_last_turn`
+(per-turn count ledger, `note_turn_count`/`turn_count`; "combat_phases"
+counted as each beginning of combat begins), `Game.damage_dealt_this_turn`
+(`DamageDealt`, written by `conditions.history.record` from every
+`DEALS_DAMAGE` event - `Game.emit` calls the hook for every event),
+`CastRecord.cast_step`/`cast_during_turn_of`, `GameEvent.declared_attacker`.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "Activate only during your turn / an opponent's turn / your upkeep / combat / the `<name>` step / your main phase" (CR 602.1b), checked against the turn machine, "your" = the activating player (CR 109.5); still enforced after a control change (CR 602.5b) - was never read (fail-open) | `game.read_activation_instructions`, `Game._activation_window_holds` | Sundial of the Infinite | Disrupting Scepter, Hell's Caretaker (+ Soul Ransom's control change), Augur of Skulls, Kuldotha Phoenix (graveyard), Jade Statue, Desert, Balduvian Warlord | `test_activation_timing_instructions.py` |
+| Joined instructions: "... and only once each turn", "... and only if `<condition>`", "Activate only once each turn and only if ...", "but only if" - every piece read, none cut off | `read_activation_instructions` | Snowslope Hunter | Vivi Ornitier (mana ability), Kuldotha Phoenix (graveyard), Gutterbones, Essence Anchor | `test_activation_timing_instructions.py` |
+| "Activate only once" (never reset, CR 602.5b) - was never read | `Game.exhausted`, `read_activation_instructions` | Haunted Screen | In the Trenches | `test_activation_timing_instructions.py` |
+| Off-battlefield activations read every instruction (sorcery timing, during-your-upkeep, only-if) through the same reader - `KeywordActivation.why_not` used to read only "only if" | `KeywordActivation.why_not` -> `Game.activation_instruction_refusal` | Grim Reminder | Expendable Lackey, Kuldotha Phoenix, Gutterbones | `test_activation_timing_instructions.py`, `test_opponent_only_activation.py` |
+| Who may activate: "Only your opponents may activate this ability" / "Any player may activate this ability" (CR 602.1b, CR 602.2); offered by `legal_actions` to those players; the activator controls the ability (CR 602.2a) | `Game._activator_refusal`, `legal_actions._admits_other_activators` | Knight of the Holy Nimbus | Detention Vortex, Oona's Prowler, Soul Ransom (control change) | `test_opponent_only_activation.py` |
+| An activation instruction after a quoted ability's closing quote, or opening with who may activate, was left in the effect text | `abilities._INSTRUCTIONS` | Reef Roads | Geth, Thane of Contracts; Expendable Lackey | `test_opponent_only_activation.py` |
+| "if it's [not] your/their/an opponent's turn" ("their" = the event's player) | `conditions/timing.py` | Jeering Instigator | Scytheclaw Raptor, March of the World Ooze | `test_intervening_if_timing.py` |
+| "if it's your main phase" (CR 505.1) | `conditions/timing.py` | All-Out Assault | Moraug, Fury of Akoum | `test_intervening_if_timing.py` |
+| "if it's the first combat phase of the turn" (CR 506.1, CR 500.8) - `turn_count("combat_phases")` | `conditions/timing.py` | Finest Hour | Raph & Leo, Sibling Rivals | `test_intervening_if_timing.py` |
+| "if you're the defending player" (CR 506.2, 508.5) | `conditions/timing.py` | Kazuul, Tyrant of the Cliffs | - (only printing) | `test_intervening_if_timing.py` |
+| "if you cast it during your main phase" - `CastRecord.cast_step` | `conditions/timing.py` | Sentinel's Mark | - (only printing) | `test_intervening_if_timing.py` |
+| Compound "X and Y" / "X or Y" / "X or if Y": read only when every half is, each half by whatever reads it alone (an intervening-if half back through the triggered chain), against the same context | `conditions._read_compound` | Ran and Shaw | - | `test_compound_conditions.py` |
+| `Game.condition_holds`' built-in shapes ("you attacked this turn", "a creature died this turn", graveyard counts, ...) now read as intervening ifs too | `intervening_if_answer` -> `read_condition` -> `Game.builtin_condition_holds` | - | Ran and Shaw's graveyard-count half | `test_condition_registry.py`, `test_compound_conditions.py` |
+| Parse boundary: a list inside the "if" ("nonland, nontoken permanents"; "a Giant, Wizard, or spell ...") stays in the clause | `abilities._intervening_if_end` | Chrome Replicator, Aegar | - | `test_intervening_if_parse_boundaries.py` |
+| "you control N or more `<quality>` with the same name as one another" | `conditions/board.py` | Chrome Replicator | - (Mechanized Production's is an effect "if") | `test_intervening_if_parse_boundaries.py` |
+| "a `<list>` you controlled dealt damage to it this turn" (CR 120.1, 109.2b) - `Game.damage_dealt_this_turn` | `conditions/history.py` | Aegar, the Freezing Flame | - (only printing; its "is dealt excess damage" trigger event is not raised yet) | `test_intervening_if_parse_boundaries.py` |
+| "an opponent lost life this turn" (CR 119.3, 120.3a); "N or more cards / a card left your graveyard this turn" (CR 603.10a, `turn_counts`) | `conditions/history.py` | Gutterbones, Essence Anchor | Falkenrath Pit Fighter, Living History | `test_activation_timing_instructions.py` |
+| Parse boundary: a cast-this-turn "if" never crosses a sentence | `abilities._INTERVENING_IF_CAST_THIS_TURN_BOUNDARY` | Hurkyl, Master Wizard | - | `test_intervening_if_parse_boundaries.py` |
+| "while casting a spell with `<keyword>`" / "while you're activating a `<keyword>` ability" / "while scrying" is the trigger event's own qualifier (CR 603.2), not an intervening if: the bare event is the condition, the qualifier (`TriggeredAbility.event_qualifier`) is read off the event as it happens - `GameEvent.during_cost_of`/`during_cost_keyword`/`during_cost_player`, stamped by `Game.emit` while `CostPayment.pay` runs (`Game.paying_cost_of`, CR 601.2h/602.2b), and `GameEvent.keyword_action`; an unclaimed qualifier fails closed with an `InterveningIfNotice` | `conditions/events.py`, `triggers.event_qualifier_holds` | Foul Emissary, Market Gnome, The Temporal Anchor | Vexing Scuttler's emerge, Tithing Blade's craft | `test_intervening_if_parse_boundaries.py` |
+| "When this creature is exiled from the battlefield" (a look-back leaves-the-battlefield trigger, CR 603.10a) | `abilities._trigger_event` -> `LEAVES_BATTLEFIELD_TO_EXILE` | Market Gnome | - | `test_intervening_if_parse_boundaries.py` |
+| "Whenever you choose to put one or more cards on the bottom of your library" - CR 701.22a's choice, raised by `Game.scry` with the count (`TriggerEvent.LIBRARY_BOTTOM_CHOSEN`) | `triggers.condition_matches` | The Temporal Anchor | - (only printing) | `test_intervening_if_parse_boundaries.py` |
+| "exile that many cards from the bottom/top of your library", "exile the top/bottom N cards of your library" as a standalone clause (CR 401.2) | `effects._parse_exile_from_own_library_end_clause` | The Temporal Anchor | - | `test_intervening_if_parse_boundaries.py` |
+| Emerge / Emerge from `<quality>` (CR 702.119a-c): a hand alternative cost that sacrifices a `<quality>` permanent chosen at CR 601.2b and reduces the total cost by its mana value (generic only, CR 601.2f/118.7d) | `casting._option_from_keyword`, `Casting._reduce_by_emerged_permanent` | Wretched Gryff | Vexing Scuttler, Crabomination (from artifact) | `test_emerge.py` |
+| Craft with `<materials>` (CR 702.167a/b): sorcery-speed activation exiling itself plus the materials - "a `<type or subtype>`", "N `<quality>`", "one or more [`<quality>`]" - from permanents you control and/or cards in your graveyard, returning the card transformed (CR 712.14a). Not read: a material list ("a Dinosaur, a Merfolk, ...", which does not parse as a keyword line) and the linked "exiled cards used to craft it" (CR 702.167c) | `keywords.craft_activation`, `_craft_effect` | Clay-Fired Bricks | Tithing Blade, Waterlogged Hulk, Visage of Dread, Sunbird Standard | `test_craft.py` |
+| "attacks while saddled" keeps its clause as "it's saddled" (CR 702.171b; the reader is O2's) | `abilities._parse_triggered` | Brightfield Mustang | - | `test_intervening_if_parse_boundaries.py` |
+| "if it isn't a mana ability" on an activation trigger (CR 605.1a, `GameEvent.mana_ability`); Harsh Mentor's "... or land on the battlefield, if ..." cut apart | `conditions/objects.py`, `abilities._ACTIVATES_TYPE_LIST_CONDITION_BOUNDARY`, `triggers._ABILITY_ACTIVATED_CONDITION` | Rings of Brighthearth | Harsh Mentor | `test_intervening_if_parse_boundaries.py` |
+| "if it isn't being declared as an attacker" (CR 508.1f, `GameEvent.declared_attacker`); "a creature an opponent controls becomes tapped" read by type and controller - every tap raises `BECOMES_TAPPED` now (`Game.emit_became_tapped`: tap costs, mana abilities, effects through `Game.tap_permanent`, regeneration, attack declarations; CR 701.26a) | `conditions/objects.py`, `triggers.condition_matches` | Verity Circle | - (only printing) | `test_intervening_if_parse_boundaries.py` |
+| "you've cast N or more `<type list>` spells this turn" ("instant and/or sorcery", CR 205.2a) as an activation condition - Urabrask's used to be skipped entirely because its "only if" followed "only as a sorcery and" | `conditions/history.py` | Urabrask // The Great Work | - (the triggered twin is `triggers._SPELLS_CAST_THIS_TURN`) | `tests/test_behavioural_sweep.py` (busy variant) |
+
+The behavioural sweep stages what the new instructions and conditions ask
+for: an activation runs at the step its "Activate only during ..." names
+(`_activation_step`), and "an opponent lost life this turn" / "a card left
+your graveyard this turn" are made true on the stock board before the case
+(`_history_threshold`).

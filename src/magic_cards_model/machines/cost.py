@@ -88,7 +88,6 @@ from .abilities import (
     ActivatedAbility,
     CostKind,
     ManaAbility,
-    TriggerEvent,
     granted_mana_abilities,
     intrinsic_land_ability,
     parse_abilities,
@@ -97,7 +96,6 @@ from .abilities import (
 )
 from .combat import Keyword, has_keyword
 from .triggers import (
-    GameEvent,
     abilities_triggered_by,
     activated_abilities_from_lines,
     activated_abilities_of,
@@ -3007,21 +3005,13 @@ class CostComponent(EngineModel):
                 if game is not None:
                     # Tapping the permanent is the event (CR 701.26a); a unit
                     # test paying a component without a game emits nothing.
-                    game.emit(
-                        GameEvent(
-                            event=TriggerEvent.BECOMES_TAPPED,
-                            subject_id=card.id,
-                            subject_name=card.name,
-                            subject_controller=card.controller,
-                            subject_card=card.card,
-                            player=card.controller,
-                            # Agent Maria Hill's own "becomes tapped to pay
-                            # a teamwork cost" (`machines/triggers.GameEvent.
-                            # tapped_for_teamwork`) - `minimum_total_power`
-                            # is set only by `machines/teamwork.py`'s own
-                            # component, never by an ordinary tap cost.
-                            tapped_for_teamwork=self.minimum_total_power is not None,
-                        )
+                    # Agent Maria Hill's own "becomes tapped to pay a
+                    # teamwork cost" (`machines/triggers.GameEvent.
+                    # tapped_for_teamwork`) - `minimum_total_power` is set
+                    # only by `machines/teamwork.py`'s own component, never
+                    # by an ordinary tap cost.
+                    game.emit_became_tapped(
+                        card, tapped_for_teamwork=self.minimum_total_power is not None
                     )
         elif self.kind is ComponentKind.SACRIFICE:
             for card in self.cards:
@@ -5807,6 +5797,16 @@ class CostPayment(EngineModel):
     payer: str | None = None
     pool: ManaPool = Field(default_factory=ManaPool)
     step: CostStep = CostStep.PENDING
+    paying_for: str | None = None
+    """What this is the total cost of: `"spell"` while a spell is being cast
+    (CR 601.2h), `"ability"` while an ability is being activated (CR 602.2b),
+    None for any other payment. Every event paying it raises carries this
+    (`GameEvent.during_cost_of`), which is what a trigger event's own "while
+    casting a spell with emerge" / "while you're activating a craft ability"
+    qualifier reads (CR 603.2)."""
+    paying_for_keyword: str | None = None
+    """The keyword the spell is cast with or the ability expands, lowercased
+    (CR 702.119a's emerge, CR 702.167a's craft), when there is one."""
     tapped_for_mana: list[UUID] = Field(default_factory=list)
     """The ids of the sources this payment's own `tap_for_mana` calls tapped,
     matching `triggers_caused` below rather than holding the `CardState`s
@@ -6212,6 +6212,10 @@ class CostPayment(EngineModel):
         self._transition(CostStep.TAPPING)
 
         source.tap()
+        if self.game is not None:
+            # Tapping for mana is tapping (CR 106.12, CR 701.26a): the source
+            # became tapped, whatever else its ability goes on to do.
+            self.game.emit_became_tapped(source)
         self.tapped_for_mana.append(source.id)
         self._tapped_sources[source.id] = source
         if restriction is INFER_RESTRICTION:
@@ -6426,7 +6430,10 @@ class CostPayment(EngineModel):
         scopes do not cover it.
         """
         if self.game is not None:
-            with self.game._id_allocator_scope():
+            with (
+                self.game._id_allocator_scope(),
+                self.game.paying_cost_of(self.paying_for, self.paying_for_keyword, self.payer),
+            ):
                 return self._pay_impl()
         return self._pay_impl()
 

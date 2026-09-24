@@ -31,6 +31,7 @@ from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
 from ..numbers import VariableX, count_pattern, parse_amount, parse_count
+from ..phrases import with_indefinite_article
 from ..snapshot import EngineModel
 from .abilities import (
     AbilityKind,
@@ -214,6 +215,12 @@ class KeywordCastOption(EngineModel):
     The Great Work's rider. `Casting.cast()` copies it onto
     `CastRecord.exile_instead_of_graveyard`, the same record a
     `PlayPermission`'s identical rider already reaches."""
+    emerge_quality: str | None = None
+    """CR 702.119a/b: the quality of the permanent the emerge cost sacrifices
+    - "creature" for plain emerge, the printed [quality] for "Emerge from
+    [quality]" - and so the mark that the total cost is then reduced by that
+    permanent's mana value (`Casting._use_keyword`). None for every other
+    keyword."""
     once_per_turn_key: str | None = None
     """Set for "Once during each of your turns, you may cast ... from your
     graveyard" (Rivaz of the Claw, Gisa and Geralf, Kess, Dissident Mage):
@@ -374,6 +381,11 @@ def _turn_number(game: Any) -> int | None:
     return None if turn is None else int(turn.turn_number)
 
 
+#: CR 702.119b's "Emerge from [quality] [cost]", as `KeywordAbility.parameter`
+#: carries it once the parser finds no bare cost after the keyword.
+_EMERGE_FROM = re.compile(r"from (?P<quality>[a-z][a-z -]*?) (?P<cost>(?:\{[^}]+\})+)", re.I)
+
+
 def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
     """Build the cast option one keyword ability hands out, or None if it hands out none.
 
@@ -395,6 +407,36 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             zone=Zone.HAND,
             cost=cost,
             pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
+    if canonical == "emerge":
+        # CR 702.119a: "'Emerge [cost]' means 'You may cast this spell by
+        # paying [cost] and sacrificing a creature rather than paying its mana
+        # cost' and 'If you chose to pay this spell's emerge cost, its total
+        # cost is reduced by an amount of generic mana equal to the sacrificed
+        # creature's mana value.'" CR 702.119b's "Emerge from [quality]
+        # [cost]" sacrifices a [quality] permanent instead. The sacrifice is
+        # one more component of the alternative cost (chosen at CR 601.2b per
+        # CR 702.119c, paid at CR 601.2h); the reduction is applied once the
+        # permanent is chosen (`Casting._use_keyword`).
+        mana, quality = printed, "creature"
+        if mana is None and ability.parameter:
+            variant = _EMERGE_FROM.fullmatch(ability.parameter.strip())
+            if variant is not None:
+                mana, quality = variant.group("cost"), variant.group("quality").lower()
+        cost = (
+            total_cost_for_phrase(f"{mana}, Sacrifice {with_indefinite_article(quality)}")
+            if mana
+            else None
+        )
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.119b" if quality != "creature" else "CR 702.119a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            emerge_quality=quality,
             understood=cost is not None,
         )
 
@@ -4074,7 +4116,62 @@ class Casting(EngineModel):
         self.choose_alternative_cost(cost)
         if option.returns_unblocked_creature:
             self._note_returned_creature_defender(option)
+        if option.emerge_quality is not None:
+            self._reduce_by_emerged_permanent(option)
         return self.step
+
+    def _reduce_by_emerged_permanent(self, option: KeywordCastOption) -> None:
+        """CR 702.119a's second ability: the total cost is reduced by an
+        amount of generic mana equal to the sacrificed permanent's mana value.
+
+        CR 702.119c chooses the permanent now (CR 601.2b) and sacrifices it at
+        CR 601.2h, so it is checked now as well - a permanent of the right
+        quality (CR 702.119b), one the caster controls (CR 701.21a) - and
+        refused with its own reason rather than at payment. The reduction is
+        an ordinary CR 601.2f cost reduction: generic mana only, never below
+        {0} (CR 118.7d).
+        """
+        assert self.alternative_cost is not None
+        component = next(
+            component
+            for component in self.alternative_cost.components
+            if component.kind is ComponentKind.SACRIFICE
+        )
+        quality = option.emerge_quality or "creature"
+        if not component.cards:
+            raise ValueError(
+                f"{self.spell.name}'s {option.keyword} cost needs "
+                f"{with_indefinite_article(quality)} {self.caster} controls chosen to "
+                f"sacrifice ({option.rule}, CR 702.119c)"
+            )
+        chosen = component.cards[0]
+        if chosen.zone is not Zone.BATTLEFIELD:
+            raise ValueError(
+                f"{chosen.name} is not a permanent, so it cannot be sacrificed (CR 701.21a)"
+            )
+        controller = (
+            self.game.controller_of(chosen).username if self.game is not None else chosen.controller
+        )
+        if controller != self.caster:
+            raise ValueError(
+                f"{self.caster} does not control {chosen.name}, so cannot sacrifice it (CR 701.21a)"
+            )
+        requirement = component.requirement
+        mismatch = (
+            requirement.why_not(chosen, self.game, self.caster) if requirement is not None else None
+        )
+        if mismatch is not None:
+            raise ValueError(
+                f"{chosen.name} is not {with_indefinite_article(quality)} to sacrifice for "
+                f"{self.spell.name}'s {option.keyword} cost ({option.rule}): {mismatch}"
+            )
+        mana_value = int(
+            self.game.characteristics_of(chosen).mana_value
+            if self.game is not None
+            else chosen.mana_value
+        )
+        if mana_value > 0:
+            self.reduce_cost(ManaCost(generic=mana_value))
 
     def _note_returned_creature_defender(self, option: KeywordCastOption) -> None:
         """CR 702.190a/b: check the creature chosen to return, and remember
@@ -5557,6 +5654,8 @@ class Casting(EngineModel):
             # spells from exile" asks about where the cast *started*.
             spend=ManaSpend.casting(self.spell, zone=self.origin_zone, x_value=self.x_value),
         )
+        self.payment.paying_for = "spell"
+        self.payment.paying_for_keyword = (self.keyword_used or "").lower() or None
         if choices is not None:
             self.payment.choose(choices)
         return self.payment

@@ -1,0 +1,145 @@
+{
+  "object": "card",
+  "id": "ecc1027a-8c07-44a0-bdde-fa2844cff694",
+  "oracle_id": "0452be2a-e97a-4269-a9e3-b616265ecb2e",
+  "multiverse_ids": [],
+  "resource_id": "42D0D99A02089B0F750FB67577DE79D983C98101ED868D9A5B41D94DBEA67E7A",
+  "mtgo_id": 141463,
+  "arena_id": 102111,
+  "tcgplayer_id": 631015,
+  "cardmarket_id": 824167,
+  "name": "Vivi Ornitier",
+  "lang": "en",
+  "released_at": "2025-06-13",
+  "uri": "https://api.scryfall.com/cards/ecc1027a-8c07-44a0-bdde-fa2844cff694",
+  "scryfall_uri": "https://scryfall.com/card/fin/248/vivi-ornitier?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:36:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.jpg?1783906561",
+    "normal": "https://cards.scryfall.io/normal/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.jpg?1783906561",
+    "large": "https://cards.scryfall.io/large/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.jpg?1783906561",
+    "png": "https://cards.scryfall.io/png/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.png?1783906561",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.jpg?1783906561",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.jpg?1783906561",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.webp?1783906561",
+    "grid": "https://cards.scryfall.io/grid/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.webp?1783906561",
+    "display": "https://cards.scryfall.io/display/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.webp?1783906561",
+    "art": "https://cards.scryfall.io/art/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.webp?1783906561",
+    "crop": "https://cards.scryfall.io/crop/front/e/c/ecc1027a-8c07-44a0-bdde-fa2844cff694.webp?1783906561"
+  },
+  "mana_cost": "{1}{U}{R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Wizard",
+  "oracle_text": "{0}: Add X mana in any combination of {U} and/or {R}, where X is Vivi Ornitier's power. Activate only during your turn and only once each turn.\nWhenever you cast a noncreature spell, put a +1/+1 counter on Vivi Ornitier and it deals 1 damage to each opponent.",
+  "power": "0",
+  "toughness": "3",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "R",
+    "U"
+  ],
+  "legalities": {
+    "standard": "banned",
+    "future": "banned",
+    "historic": "not_legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set": "fin",
+  "set_name": "Final Fantasy",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afin&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fin?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ecc1027a-8c07-44a0-bdde-fa2844cff694/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0452be2a-e97a-4269-a9e3-b616265ecb2e&unique=prints",
+  "collector_number": "248",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Toni Infante",
+  "artist_ids": [
+    "958bbc4a-3420-439a-b261-c988b8e4b580"
+  ],
+  "illustration_id": "0c6fb581-2a08-4e71-8b6f-cce243d92eef",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond",
+    "ffix"
+  ],
+  "edhrec_rank": 1120,
+  "prices": {
+    "usd": "36.67",
+    "usd_foil": "46.88",
+    "usd_etched": null,
+    "eur": "30.87",
+    "eur_foil": "48.65",
+    "tix": "0.89"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVivi%2BOrnitier",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVivi%2BOrnitier",
+    "edhrec": "https://edhrec.com/route/?cc=Vivi+Ornitier"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F631015%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=824167&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/141463?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

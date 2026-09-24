@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "49293f77-5d7b-4106-b485-db6ce0ed37e6",
+  "oracle_id": "57f39ce2-ecbb-4262-8140-03aba5c4303f",
+  "multiverse_ids": [],
+  "resource_id": "725423774B30ABAF1A57EA490C2C12B089848F7D5D9A8FAEA5B57F271CFD22C0",
+  "mtgo_id": 147955,
+  "arena_id": 100623,
+  "tcgplayer_id": 673670,
+  "cardmarket_id": 868400,
+  "name": "Raph & Leo, Sibling Rivals",
+  "lang": "en",
+  "released_at": "2026-03-06",
+  "uri": "https://api.scryfall.com/cards/49293f77-5d7b-4106-b485-db6ce0ed37e6",
+  "scryfall_uri": "https://scryfall.com/card/tmt/166/raph-&-leo-sibling-rivals?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:54:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.jpg?1783904072",
+    "normal": "https://cards.scryfall.io/normal/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.jpg?1783904072",
+    "large": "https://cards.scryfall.io/large/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.jpg?1783904072",
+    "png": "https://cards.scryfall.io/png/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.png?1783904072",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.jpg?1783904072",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.jpg?1783904072",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.webp?1783904072",
+    "grid": "https://cards.scryfall.io/grid/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.webp?1783904072",
+    "display": "https://cards.scryfall.io/display/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.webp?1783904072",
+    "art": "https://cards.scryfall.io/art/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.webp?1783904072",
+    "crop": "https://cards.scryfall.io/crop/front/4/9/49293f77-5d7b-4106-b485-db6ce0ed37e6.webp?1783904072"
+  },
+  "mana_cost": "{1}{R/W}{R/W}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Mutant Ninja Turtle",
+  "oracle_text": "Whenever Raph & Leo attack, if it's the first combat phase of the turn, untap one or two target attacking creatures. After this phase, there is an additional combat phase.",
+  "power": "2",
+  "toughness": "4",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set": "tmt",
+  "set_name": "Teenage Mutant Ninja Turtles",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atmt&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tmt?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/49293f77-5d7b-4106-b485-db6ce0ed37e6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A57f39ce2-ecbb-4262-8140-03aba5c4303f&unique=prints",
+  "collector_number": "166",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "At odds as brothers, perfectly in sync as fighters.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Fajareka Setiawan",
+  "artist_ids": [
+    "0cc534e0-be18-4cb1-8521-50fabd0dac6f"
+  ],
+  "illustration_id": "9300b3d0-1574-4b15-bba4-e07edf68f6ef",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 8781,
+  "penny_rank": 8287,
+  "prices": {
+    "usd": "0.71",
+    "usd_foil": "0.91",
+    "usd_etched": null,
+    "eur": "0.50",
+    "eur_foil": "0.96",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRaph%2B%2526%2BLeo%252C%2BSibling%2BRivals",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRaph%2B%2526%2BLeo%252C%2BSibling%2BRivals",
+    "edhrec": "https://edhrec.com/route/?cc=Raph+%26+Leo%2C+Sibling+Rivals"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673670%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868400&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/147955?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

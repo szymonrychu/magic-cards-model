@@ -1211,3 +1211,28 @@ def test_a_snapshot_written_before_spend_mana_value_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_SPEND_MANA_VALUE}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before EC2's condition reader: `Game.turn_counts`/
+#: `turn_counts_last_turn`/`damage_dealt_this_turn`, `CastRecord.cast_step`/
+#: `cast_during_turn_of` and `GameEvent.declared_attacker`.
+_SCHEMA_VERSION_BEFORE_CONDITION_READER = 80
+
+
+def test_the_condition_reader_bump_moved_the_version_past_eighty() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_CONDITION_READER
+
+
+def test_a_snapshot_written_before_the_condition_reader_is_refused() -> None:
+    """A version-80 dump is refused rather than decoded as current: it has no
+    per-turn count ledger, so "it's the first combat phase of the turn" would
+    read an additional combat as the first, and its cast records carry no step
+    for "if you cast it during your main phase"."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_CONDITION_READER
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_CONDITION_READER}",
+    ):
+        Game.model_validate(dumped)

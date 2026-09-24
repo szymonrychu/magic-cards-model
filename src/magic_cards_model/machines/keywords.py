@@ -51,6 +51,7 @@ from ..models.card_state import (
 )
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
+from ..numbers import parse_count
 from ..snapshot import EngineModel
 from .abilities import (
     AbilityKind,
@@ -74,6 +75,7 @@ from .cost import (
     TotalCost,
     cumulative_upkeep_cost,
     discard_cost,
+    exile_cost,
     return_to_hand_cost,
     tap_cost,
     total_cost_for_phrase,
@@ -142,6 +144,7 @@ class KeywordRule(StrEnum):
     POWER_UP = "CR 702.193a"
     PARTNER_WITH = "CR 702.124j"
     ANNIHILATOR = "CR 702.86a"
+    CRAFT = "CR 702.167a"
 
 
 def executes(keyword: str) -> bool:
@@ -200,6 +203,11 @@ def executes(keyword: str) -> bool:
         # enters, if its evoke cost was paid, its controller sacrifices it" -
         # is `_evoke_ability`/`_evoke_effect` here.
         "evoke",
+        # CR 702.167a: `craft_activation`/`_craft_effect` here.
+        "craft",
+        # CR 702.119a: the alternative cost is `machines/casting.py`'s
+        # `keyword_cast_options`, the reduction `Casting._use_keyword`.
+        "emerge",
         # CR 702.176a. Four abilities in four places: the alternative cost is
         # `machines/casting.py`'s `keyword_cast_options`, the entering time
         # counters are `machines/replacement._impending_entering_counters`, the
@@ -1521,38 +1529,20 @@ class KeywordActivation(EngineModel):
                 f"sorcery: {self.player}'s main phase, with the stack empty "
                 f"({self.rule}, CR 307.5)"
             )
-        if self.rule != "CR 702.62b" and self.game is not None:
-            # CR 602.5b's "Activate only if <condition>" applies here exactly
-            # as it does to a battlefield activation
-            # (`Game.why_cannot_activate`'s own `Game._activation_condition_
-            # holds`, built on `Game.condition_holds`) - this entry point
-            # never reached that check at all, so Grim Repriser's own
-            # graveyard-functioning "Activate only if an opponent has been
-            # dealt noncombat damage this turn" was activatable whether or
-            # not it actually held. Skipped for `"CR 702.62b"` - Greater
-            # Gargadon's own "this card is suspended" restriction - which the
-            # branch just above already checks more precisely (and, unlike
-            # this generic reader, runs before the zone/controller checks
-            # above ever let a wrongly-zoned Gargadon reach it); every other
-            # zone rule's ability is free to also carry an ordinary "Activate
-            # only if" restriction of its own, unrelated to why it functions
-            # off the battlefield at all.
-            held = self.game._activation_condition_holds(  # noqa: SLF001
-                self.ability, self.player, self.card
-            )
-            if held is not True:
-                from ..models.game import _activation_condition  # avoids an import cycle
-
-                condition = _activation_condition(self.ability.instructions or "") or (
-                    self.ability.instructions or ""
-                )
-                if held is None:
-                    return (
-                        f"{self.card.name}'s activation restriction \"Activate only if "
-                        f'{condition}" is not read by this engine, so the activation is '
-                        "refused rather than allowed unchecked (CR 602.5b)"
-                    )
-                return f"{self.card.name}'s activation restriction is not met (CR 602.5b)"
+        if self.game is not None:
+            # CR 602.1b's activation instructions apply here exactly as they
+            # do to a battlefield activation - `Game.activation_instruction_
+            # refusal` is the one reader of them both go through: "Activate
+            # only if <condition>" (Grim Repriser's graveyard-functioning
+            # "... an opponent has been dealt noncombat damage this turn"),
+            # "Activate only as a sorcery" (Expendable Lackey's), "Activate
+            # only during your upkeep" (Grim Reminder's) - each once read
+            # nowhere on this entry point, so allowed at any time. An
+            # instruction nothing reads is refused rather than allowed
+            # unchecked.
+            refusal = self.game.activation_instruction_refusal(self.ability, self.card, self.player)
+            if refusal is not None:
+                return refusal
         return None
 
     def begin_paying(self) -> CostPayment:
@@ -1566,6 +1556,8 @@ class KeywordActivation(EngineModel):
             self.payment = CostPayment.for_total(
                 self.cost.assign_payer(self.player), game=self.game, payer=self.player
             )
+            self.payment.paying_for = "ability"
+            self.payment.paying_for_keyword = None if self.generic_effect else self.keyword.lower()
         return self.payment
 
     def activate(self) -> AbilityOnStack:
@@ -2022,6 +2014,187 @@ def _unearth_effect(activation: KeywordActivation) -> CardState | None:
         if trigger is not None:
             game.create_delayed_trigger(trigger)
         return entered
+
+
+# --------------------------------------------------------------------------
+# Craft (CR 702.167)
+# --------------------------------------------------------------------------
+
+
+def craft_abilities(card: Card) -> list[KeywordAbility]:
+    """Every craft ability printed on this card, in printed order (CR 702.167)."""
+    return [ability for ability in keyword_abilities(card) if ability.canonical.lower() == "craft"]
+
+
+#: "Craft with [materials] [cost]" as `KeywordAbility.parameter` carries it:
+#: "with artifact {2}{W}", "with two creatures {5}{B}", "with one or more {5}".
+_CRAFT_PARAMETER = re.compile(r"^with (?P<materials>.+?) (?P<cost>(?:\{[^}]+\})+)$", re.IGNORECASE)
+#: "one or more [quality]": at least one (CR 702.167a's "one or more other
+#: permanents you control and/or cards from your graveyard").
+_CRAFT_AT_LEAST_ONE = re.compile(r"^one or more(?: (?P<rest>.+))?$", re.IGNORECASE)
+
+
+class CraftMaterials(NamedTuple):
+    """What a craft ability exiles besides itself (CR 702.167a)."""
+
+    count: int
+    at_least: bool
+    """"one or more": `count` or more, not exactly `count`."""
+    quality: str | None
+    """The noun phrase each material must fit (CR 702.167b), None for any
+    permanent or card at all."""
+    printed: str
+    """The materials as printed ("two creatures"), for a refusal's reason."""
+
+
+def craft_materials(ability: KeywordAbility) -> tuple[CraftMaterials, str] | None:
+    """The materials and the mana cost of a "Craft with [materials] [cost]"
+    line, or None when either is not read."""
+    match = _CRAFT_PARAMETER.fullmatch((ability.parameter or "").strip())
+    if match is None:
+        return None
+    materials = match.group("materials").strip()
+    count, at_least, quality = 1, False, materials
+    at_least_one = _CRAFT_AT_LEAST_ONE.fullmatch(materials)
+    if at_least_one is not None:
+        at_least, quality = True, at_least_one.group("rest")
+    else:
+        first, _, rest = materials.partition(" ")
+        counted = parse_count(first) if rest else None
+        if counted is not None:
+            count, quality = counted, rest
+    return (
+        CraftMaterials(count=count, at_least=at_least, quality=quality, printed=materials),
+        match.group("cost"),
+    )
+
+
+def _craft_material_refusal(
+    game: Any,
+    crafter: CardState,
+    player: str,
+    materials: Sequence[CardState],
+    wanted: CraftMaterials,
+) -> str | None:
+    """Why `materials` cannot pay this craft's "Exile [materials]", or None
+    (CR 702.167a/b). Checked as the activation is announced (CR 602.2b), so a
+    wrong choice is refused with its own reason rather than at payment."""
+    from ..models.game import _permanent_quality
+
+    described = wanted.printed
+    if len(materials) != len({id(material) for material in materials}):
+        return f"a material was chosen twice for {crafter.name}'s craft ({KeywordRule.CRAFT})"
+    if len(materials) < wanted.count or (not wanted.at_least and len(materials) != wanted.count):
+        return (
+            f"{crafter.name}'s craft exiles {described} as materials, not {len(materials)} "
+            f"({KeywordRule.CRAFT})"
+        )
+    fits = _permanent_quality(wanted.quality) if wanted.quality else (lambda _chars: True)
+    if fits is None:
+        return (
+            f"{crafter.name}'s craft materials ({wanted.quality}) cannot be read, so it is not "
+            f"activated unchecked ({KeywordRule.CRAFT})"
+        )
+    for material in materials:
+        if material is crafter:
+            return (
+                f"{crafter.name} is exiled by its own craft cost, not as one of its materials "
+                f"({KeywordRule.CRAFT})"
+            )
+        if material.zone is Zone.BATTLEFIELD:
+            if game.controller_of(material).username != player:
+                return (
+                    f"{player} does not control {material.name}, so it is not a craft material "
+                    f"({KeywordRule.CRAFT}: permanents you control)"
+                )
+            characteristics: Any = game.characteristics_of(material)
+        elif material.zone is Zone.GRAVEYARD:
+            if material not in game.player(player).graveyard:
+                return (
+                    f"{material.name} is not in {player}'s graveyard, so it is not a craft "
+                    f"material ({KeywordRule.CRAFT})"
+                )
+            characteristics = material
+        else:
+            return (
+                f"{material.name} is in the {material.zone.value}: craft materials are "
+                f"permanents you control and cards in your graveyard ({KeywordRule.CRAFT})"
+            )
+        if not fits(characteristics):
+            return (
+                f"{material.name} is not {wanted.quality}, so it is not a material for "
+                f"{crafter.name}'s craft ({KeywordRule.CRAFT}, CR 702.167b)"
+            )
+    return None
+
+
+def craft_activation(
+    game: Any,
+    card: CardState,
+    player: str,
+    materials: Sequence[CardState],
+    index: int = 0,
+) -> KeywordActivation:
+    """Build the activation for a permanent's craft ability (CR 702.167a).
+
+    "'Craft with [materials] [cost]' means '[Cost], Exile this permanent,
+    Exile [materials] from among permanents you control and/or cards in your
+    graveyard: Return this card to the battlefield transformed under its
+    owner's control. Activate only as a sorcery.'" The same synthetic
+    `KeywordActivation` shape as outlast: the cost is the printed mana plus
+    two exile components - the permanent itself, and `materials`, one
+    component per zone they come from (CR 406.2). The materials are checked
+    now (CR 702.167b's type-or-card reading, `_craft_material_refusal`).
+    """
+    printed = craft_abilities(card.card)
+    if index >= len(printed):
+        raise ValueError(f"{card.name} has no craft ability number {index} ({KeywordRule.CRAFT})")
+    ability = printed[index]
+    read = craft_materials(ability)
+    if read is None:
+        raise ValueError(
+            f"{card.name}'s {ability.text!r} could not be read, so it cannot be activated "
+            f"({KeywordRule.CRAFT})"
+        )
+    wanted, mana = read
+    refusal = _craft_material_refusal(game, card, player, list(materials), wanted)
+    if refusal is not None:
+        raise ValueError(refusal)
+    on_battlefield = [m for m in materials if m.zone is Zone.BATTLEFIELD]
+    in_graveyard = [m for m in materials if m.zone is Zone.GRAVEYARD]
+    components = [exile_cost(card, payer=player, zone=Zone.BATTLEFIELD)]
+    if on_battlefield:
+        components.append(exile_cost(*on_battlefield, payer=player, zone=Zone.BATTLEFIELD))
+    if in_graveyard:
+        components.append(exile_cost(*in_graveyard, payer=player, zone=Zone.GRAVEYARD))
+    cost = TotalCost(mana=ManaCost.parse(mana), components=components)
+    return KeywordActivation(
+        card=card,
+        player=player,
+        keyword=ability.canonical,
+        rule=str(KeywordRule.CRAFT),
+        zone=Zone.BATTLEFIELD,
+        cost=cost,
+        sorcery_only=True,
+        ability=_synthetic_ability(
+            ability,
+            cost_text=f"{mana}, Exile this permanent, Exile the materials",
+            effect="Return this card to the battlefield transformed under its owner's control.",
+        ),
+        game=game,
+    )
+
+
+def _craft_effect(activation: KeywordActivation) -> CardState | None:
+    """CR 702.167a's effect: "Return this card to the battlefield transformed
+    under its owner's control" - the card the cost exiled, from exile.
+    CR 712.14a: a card that is not double-faced stays in exile."""
+    game = activation.game
+    card = activation.card
+    if game is None or card.zone is not Zone.EXILE or card.card.back_face is None:
+        return None
+    with game._id_allocator_scope():  # noqa: SLF001
+        return game.put_onto_battlefield(card, card.owner or activation.player, transformed=True)
 
 
 # --------------------------------------------------------------------------
@@ -5391,6 +5564,7 @@ KEYWORD_EFFECTS: dict[str, Callable[[KeywordActivation], Any]] = {
     "ninjutsu": _ninjutsu_effect,
     "commander ninjutsu": _ninjutsu_effect,
     "outlast": _outlast_effect,
+    "craft": _craft_effect,
 }
 
 
