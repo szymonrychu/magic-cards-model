@@ -1,0 +1,163 @@
+{
+  "object": "card",
+  "id": "135da718-affc-46ba-be57-c12c23b54dad",
+  "oracle_id": "a8b018a7-0350-4ee0-9582-8d391018bdee",
+  "multiverse_ids": [],
+  "resource_id": "D7FA65CA4B21C353C7A0356C8D4F5D7C93967D30C81D30D8D9A4A1940852403A",
+  "mtgo_id": 154048,
+  "arena_id": 103435,
+  "tcgplayer_id": 707490,
+  "cardmarket_id": 898943,
+  "name": "Azog, Moria's Ruin",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/135da718-affc-46ba-be57-c12c23b54dad",
+  "scryfall_uri": "https://scryfall.com/card/hob/61/azog-morias-ruin?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-23T09:13:48Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.jpg?1784798028",
+    "normal": "https://cards.scryfall.io/normal/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.jpg?1784798028",
+    "large": "https://cards.scryfall.io/large/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.jpg?1784798028",
+    "png": "https://cards.scryfall.io/png/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.png?1784798028",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.jpg?1784798028",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.jpg?1784798028",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.webp?1784798028",
+    "grid": "https://cards.scryfall.io/grid/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.webp?1784798028",
+    "display": "https://cards.scryfall.io/display/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.webp?1784798028",
+    "art": "https://cards.scryfall.io/art/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.webp?1784798028",
+    "crop": "https://cards.scryfall.io/crop/front/1/3/135da718-affc-46ba-be57-c12c23b54dad.webp?1784798028"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Goblin Soldier",
+  "oracle_text": "When Azog enters, destroy up to one other target creature. Its controller amasses Goblins X, where X is that creature's power. If you controlled that creature, draw a card. (To amass Goblins X, that player puts X +1/+1 counters on an Army they control. It's also a Goblin. If they don't control an Army, they create a 0/0 black Goblin Army creature token first.)",
+  "power": "1",
+  "toughness": "3",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Amass"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "0045408d-4ab9-48bf-84aa-c6d827682090",
+      "component": "token",
+      "name": "Goblin Army",
+      "type_line": "Token Creature \u2014 Goblin Army",
+      "uri": "https://api.scryfall.com/cards/0045408d-4ab9-48bf-84aa-c6d827682090"
+    },
+    {
+      "object": "related_card",
+      "id": "2e359014-f003-4dd6-bc97-ef2a5c515a23",
+      "component": "combo_piece",
+      "name": "Azog, Moria's Ruin",
+      "type_line": "Legendary Creature \u2014 Goblin Soldier",
+      "uri": "https://api.scryfall.com/cards/2e359014-f003-4dd6-bc97-ef2a5c515a23"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/135da718-affc-46ba-be57-c12c23b54dad/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa8b018a7-0350-4ee0-9582-8d391018bdee&unique=prints",
+  "collector_number": "61",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mikl\u00f3s Ligeti",
+  "artist_ids": [
+    "397e374b-b428-4bab-b198-372f7f4c2f40"
+  ],
+  "illustration_id": "667ecded-00b8-4cbe-a508-77614dbafe37",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11946,
+  "preview": {
+    "source": "abentu",
+    "source_uri": "https://www.bilibili.com/opus/1227349087410454531",
+    "previewed_at": "2026-07-20"
+  },
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.37",
+    "usd_etched": null,
+    "eur": "0.30",
+    "eur_foil": "0.30",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAzog%252C%2BMoria%2527s%2BRuin",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAzog%252C%2BMoria%2527s%2BRuin",
+    "edhrec": "https://edhrec.com/route/?cc=Azog%2C+Moria%27s+Ruin"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707490%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898943&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154048?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
