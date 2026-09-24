@@ -15,22 +15,54 @@ Verified this session with `mise run rules:find`:
 - **CR 118.12** - the sacrifice is an optional cost, checked as a choice at
   resolution, not as a later board fact.
 
-`Fall of Cair Andros` (off-pool, added with `scripts/add_card.py`, Modern-legal,
-verified against its own printed text) proves the excess-damage-into-amass
-composition is a real, non-HOB template rather than an invented one - its own
-"amass Orcs X, where X is that excess damage" is `machines/effects.amass`'s
-generic `subtype` reading unchanged from Bolg's own "Goblins"; only the
-trigger condition watching the damage differs (a static "whenever a creature
-is dealt excess damage", not this card's own sacrifice-then-damage
-paragraph), and that difference is exactly why this file exercises Bolg's own
-three-sentence shape directly rather than through that card.
+No off-pool second printing pairs excess damage with amass on this exact
+sacrifice-then-damage paragraph shape (Scryfall search, dated MEMORY.md
+line). `Fall of Cair Andros` was *found* but not added - its own "amass Orcs
+X, where X is that excess damage" fires off a different, static trigger
+condition ("whenever a creature is dealt excess damage") rather than Bolg's
+own optional-sacrifice-then-damage paragraph, so it is not a genuine second
+printing of this template and this file does not claim it as one. Bolg is
+HOB-only for this composition; the generic pieces it composes - `amass`'s
+`subtype` reading and CR 120.10 excess damage - are each independently
+proven elsewhere (`tests/scenarios/test_amass.py`,
+`tests/scenarios/test_amass_by_other_player.py`, and this file's own three
+tests below), per the HOB-only exception in the task's acceptance criteria.
 """
+
+import pathlib
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 
 from .harness import Scenario
+
+_PRINTINGS = (
+    pathlib.Path(__file__).resolve().parents[2] / "src" / "magic_cards_model" / "data" / "printings"
+)
+
+
+def test_docstring_never_claims_an_unadded_card_was_added_and_verified():
+    """Regression for a false generality-proof claim: this module's own
+    docstring once asserted `Fall of Cair Andros` was "added with
+    `scripts/add_card.py`... verified against its own printed text", but no
+    such printing was ever added (MEMORY.md's 2026-09-24 line records that
+    the search for an off-pool twin sharing Bolg's own sacrifice-then-damage
+    paragraph came up empty) and no test here exercises it. Any card this
+    docstring credits as "added with `scripts/add_card.py`" must actually
+    have a printing file, the same way `scripts/add_card.py` itself would
+    have written one."""
+    docstring = __doc__ or ""
+    added_claims = [
+        line for line in docstring.splitlines() if "added with `scripts/add_card.py`" in line
+    ]
+    for line in added_claims:
+        card_name = line.split("`")[1]
+        slug = "".join(c if c.isalnum() else "_" for c in card_name.strip().lower()).strip("_")
+        assert (_PRINTINGS / f"{slug}.json").exists(), (
+            f"docstring claims {card_name!r} was added with scripts/add_card.py, "
+            f"but no printing file exists for it"
+        )
 
 
 def test_excess_damage_over_a_2_toughness_creature_amasses_the_difference():
