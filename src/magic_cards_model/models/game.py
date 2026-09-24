@@ -17889,6 +17889,9 @@ class Game(EngineModel):
 
         if permission is not None:
             self.spend_play_permission_choice(permission)
+        # CR 406.3a: a card exiled face down "is turned face up just before
+        # the player announces that they are playing the card".
+        land.face_up = True
 
         # CR 305.2a counts "lands played as special actions and lands played
         # during the resolution of spells and abilities", so any future effect

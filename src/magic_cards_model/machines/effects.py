@@ -20987,6 +20987,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(effect_text)
     if counter_exile_may_cast is not None:
         return counter_exile_may_cast
+    face_down_exile_play = _parse_face_down_exile_play_clause(effect_text)
+    if face_down_exile_play is not None:
+        return face_down_exile_play
     cast_from_hand_then_exile = _parse_cast_from_hand_then_exile_clause(effect_text)
     if cast_from_hand_then_exile is not None:
         return cast_from_hand_then_exile
@@ -24371,6 +24374,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(whole)
     if counter_exile_may_cast is not None:
         return counter_exile_may_cast
+    face_down_exile_play = _parse_face_down_exile_play_clause(whole)
+    if face_down_exile_play is not None:
+        return face_down_exile_play
     condition_instead = _parse_condition_instead_clause(whole)
     if condition_instead is not None:
         return condition_instead
@@ -48230,3 +48236,92 @@ def _parse_exile_top_of_other_libraries_antecedent(
         return exiled
 
     return exile_tops, not targeted or match.group("n") is not None
+
+
+#: Exile the top `<n>` cards of a library face down, then a play permission
+#: that lasts "for as long as they remain exiled" - Flameshape's "Look at the
+#: top two cards of your library and exile them face down. For as long as
+#: they remain exiled, you may play them if you control a Wizard." and
+#: Expensive Taste's "Exile the top two cards of target opponent's library
+#: face down. You may look at and play those cards for as long as they remain
+#: exiled." Read whole: `split_effect_clauses` cuts both at the bare "and",
+#: stranding "exile them face down" and "play those cards" with nothing to
+#: point at (CR 608.2c).
+_FACE_DOWN_EXILE_PLAY_RE = re.compile(
+    rf"^(?:look at the top (?P<look_n>{COUNT}) cards of your library and exile them face down"
+    rf"|exile the top (?P<n>{COUNT}) cards of (?P<whose>your|target opponent's|target player's)"
+    r" library face down)\.\s*"
+    r"(?:for as long as (?:they|those cards) remain exiled, you may (?P<look1>look at and )?"
+    r"(?P<action1>play|cast) (?:them|those cards)(?: if (?P<condition>[^.]+))?"
+    r"|you may (?P<look2>look at and )?(?P<action2>play|cast) (?:them|those cards) for as long "
+    r"as they remain exiled)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_face_down_exile_play_clause(effect_text: str) -> TargetedClause | None:
+    """`_FACE_DOWN_EXILE_PLAY_RE`'s shape.
+
+    CR 406.3: the cards are exiled face down, and the effect's controller -
+    told to look at them first, or allowed to look at them after - may keep
+    looking (`Game.look`, recorded as the cards arrive in exile). CR 406.3a
+    lets the exiling effect allow them to be played, and turns a card face
+    up just before it is played. The permission (CR 601.3) goes to the
+    controller, pays the card's own mana cost, has no end but the card
+    leaving exile (CR 400.7), and carries "if `<condition>`" as a live
+    condition (`PlayPermission.condition`) - gated at parse time by
+    `condition_is_readable`, so an unread condition leaves the whole text
+    unread rather than silently dropped.
+    """
+    from ..models.game import condition_is_readable
+
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _FACE_DOWN_EXILE_PLAY_RE.fullmatch(whole)
+    if match is None:
+        return None
+    condition = match.group("condition")
+    if condition is not None and not condition_is_readable(condition):
+        return None
+    count = parse_count(match.group("look_n") or match.group("n"))
+    if count is None:
+        return None
+    whose = (match.group("whose") or "your").lower()
+    targeted = whose.startswith("target")
+    action_word = (match.group("action1") or match.group("action2")).lower()
+    action = PlayAction.PLAY if action_word == "play" else PlayAction.CAST
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        if targeted:
+            owners = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+        else:
+            owners = [game.player(controller)]
+        for owner in owners:
+            for card_state in list(owner.library[:count]):
+                moved = game.exile_permanent(card_state)
+                if moved is None or moved.zone is not Zone.EXILE:
+                    continue
+                moved.face_up = False
+                game.look(moved, controller, source=source_name)
+                game.grant_play_permission(
+                    moved,
+                    controller,
+                    action=action,
+                    pays_mana_cost=True,
+                    source_name=source_name,
+                    rule="CR 601.3",
+                    zone=Zone.EXILE,
+                    until_end_of_turn=False,
+                    condition=condition,
+                )
+
+    return effect
