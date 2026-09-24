@@ -422,6 +422,13 @@ class TargetRequirement(EngineModel):
     allows_players: bool = False
     allows_abilities: bool = False
     """True for "target activated or triggered ability" (CR 115.2, CR 113.1c)."""
+    ability_source_types: SortedFrozenSet[Type] = frozenset()
+    """"target activated or triggered ability you control from a creature
+    source" (Echo, Perceptive Prodigy; Scientist Supreme of A.I.M.'s
+    "artifact source"; Weaver of Harmony's "enchantment source") - the card
+    types the ability's source (CR 113.7) must have: its computed types while
+    it is on the battlefield, its last known ones once it has left (CR
+    113.7a). Empty means any source."""
     ability_kinds: SortedFrozenSet[AbilityKind] = frozenset()
     """Which of CR 113.3's categories an ability target must belong to, read
     off the phrase: `{TRIGGERED}` for Consign to Memory's "target triggered
@@ -561,6 +568,22 @@ class TargetRequirement(EngineModel):
     a `TargetRef`), like every other restriction here that needs more than the
     caller supplied."""
 
+    excludes_enchanted: bool = False
+    """"target creature other than enchanted creature" (Secret Invasion) - the
+    permanent the requirement's own source (an Aura) is attached to (CR
+    303.4b) cannot be chosen. Read off the plain words; not the source itself
+    (`excludes_source`), which is the Aura."""
+
+    total_mana_value_at_most: int | None = None
+    """"up to two target creatures with total mana value 6 or less" (The Super
+    Hero Civil War's chapter I) - like `distinct_controllers`, a restriction
+    *across* this requirement's targets: the sum of their mana values (CR
+    202.3) may not exceed the bound. CR 601.2c: the announcement has to be
+    "an appropriate object ... for each target the spell requires". Read
+    ahead of the per-target comparison scan, which would otherwise take it
+    for a bound on each target alone. Fails open for a target whose mana
+    value cannot be read."""
+
     share_a_card_type: bool = False
     """"two target nonland permanents that share a card type" (Burglar's Plot,
     Shifting Loyalties) - like `distinct_controllers`, a restriction *across*
@@ -696,7 +719,7 @@ class TargetRequirement(EngineModel):
         self, target: Any, caster: str, game: Any = None, source_id: UUID | None = None
     ) -> str | None:
         if getattr(target, "is_ability", False):
-            return self._rejects_ability(target, caster)
+            return self._rejects_ability(target, caster, game)
         if isinstance(target, CardState):
             return self._rejects_card(target, caster, game, source_id)
         if isinstance(target, TargetRef):
@@ -719,7 +742,7 @@ class TargetRequirement(EngineModel):
         """
         return self.allows_cards or self.allows_abilities
 
-    def _rejects_ability(self, target: Any, caster: str) -> str | None:
+    def _rejects_ability(self, target: Any, caster: str, game: Any = None) -> str | None:
         """CR 113.1c: an ability on the stack is an object, and can be targeted.
 
         CR 115.2 only lets a spell reach it when the spell says so, so a
@@ -736,6 +759,14 @@ class TargetRequirement(EngineModel):
         target_count = self._rejects_target_count(target)
         if target_count is not None:
             return target_count
+        if self.ability_source_types:
+            source_types = _ability_source_types(target, game)
+            if source_types is not None and not (source_types & self.ability_source_types):
+                wanted = " or ".join(sorted(t.value for t in self.ability_source_types))
+                return (
+                    f"{self.phrase} needs an ability from {with_indefinite_article(wanted)} "
+                    f"source, and {target.name}'s source is not one (CR 113.7)"
+                )
         controller = getattr(target, "controller", None)
         if self.controller is ControllerRestriction.ANY or controller is None:
             return None
@@ -757,6 +788,10 @@ class TargetRequirement(EngineModel):
             return f"{self.phrase} can only target a player, not {target.name}"
         if self.excludes_source and source_id is not None and target.id == source_id:
             return f"{self.phrase} cannot target {target.name}, which this is on"
+        if self.excludes_enchanted and game is not None and source_id is not None:
+            source = game.find_by_id(source_id)
+            if source is not None and getattr(source, "attached_to", None) == target.id:
+                return f"{self.phrase} cannot target {target.name}, the enchanted creature"
         if self.owned_by_caster and target.owner is not None and target.owner != caster:
             return f"{self.phrase} needs one {caster} owns, and {target.name} is {target.owner}'s"
         # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
@@ -1800,12 +1835,13 @@ class TargetingProfile(EngineModel):
         controllers: dict[int, set[str]] = {}
         shared_types: dict[int, frozenset[Type]] = {}
         filled: dict[int, int] = {}
+        totals: dict[int, float] = {}
 
         for target in targets:
             reasons: list[str] = []
             for index, slot in enumerate(slots):
                 reason = self._why_not(
-                    slot, target, caster, taken, game, source_id, controllers, shared_types
+                    slot, target, caster, taken, game, source_id, controllers, shared_types, totals
                 )
                 if reason is None:
                     slots.pop(index)
@@ -1823,6 +1859,7 @@ class TargetingProfile(EngineModel):
                         source_id,
                         controllers,
                         shared_types,
+                        totals,
                     )
                     if reason is None:
                         filled[id(requirement)] = filled.get(id(requirement), 0) + 1
@@ -1852,6 +1889,7 @@ class TargetingProfile(EngineModel):
         source_id: UUID | None = None,
         controllers: dict[int, set[str]] | None = None,
         shared_types: dict[int, frozenset[Type]] | None = None,
+        totals: dict[int, float] | None = None,
     ) -> str | None:
         """Why this requirement cannot take this target, CR 115.3 included.
 
@@ -1884,6 +1922,19 @@ class TargetingProfile(EngineModel):
                     f"{requirement.phrase} need targets that share a card type, and "
                     f"{target} shares none with the others (CR 601.2c)"
                 )
+        mana_value: float | None = None
+        if requirement.total_mana_value_at_most is not None and totals is not None:
+            mana_value = _computed_mana_value(target, game)
+            running = totals.get(id(requirement), 0)
+            if (
+                mana_value is not None
+                and running + mana_value > requirement.total_mana_value_at_most
+            ):
+                return (
+                    f"{requirement.phrase} need a total mana value of "
+                    f"{requirement.total_mana_value_at_most} or less, and {target} would bring "
+                    f"it to {running + mana_value:g} (CR 601.2c)"
+                )
         try:
             reference = TargetRef.coerce(target)
         except TypeError:
@@ -1898,6 +1949,8 @@ class TargetingProfile(EngineModel):
         if types is not None and shared_types is not None:
             common = shared_types.get(id(requirement))
             shared_types[id(requirement)] = types if common is None else common & types
+        if mana_value is not None and totals is not None:
+            totals[id(requirement)] = totals.get(id(requirement), 0) + mana_value
         return None
 
     def assign_to_owners(
@@ -2146,6 +2199,34 @@ _ABILITY_PHRASE = re.compile(
     r"^\s*(?:(?:activated|triggered|loyalty)\s+(?:or\s+|and\s+)?)*abilit(?:y|ies)\b",
     re.IGNORECASE,
 )
+
+
+#: The tail after "target activated or triggered ability": "you control",
+#: "from a[n] <card type> source", or both (Echo, Perceptive Prodigy).
+_ABILITY_YOU_CONTROL_FROM_SOURCE_RE = re.compile(
+    r"^(?P<you>you control)?\s*(?:from an? (?P<type>[a-z]+) source)?$", re.IGNORECASE
+)
+
+
+def _ability_source_types(target: Any, game: Any) -> frozenset[Type] | None:
+    """The card types of an ability's source (CR 113.7): computed while it is
+    on the battlefield, its last known information once it has left
+    (CR 113.7a), `None` when there is no source to read."""
+    source = None
+    if game is not None:
+        finder = getattr(target, "source", None)
+        if callable(finder):
+            source = finder(game)
+    if source is None:
+        source = getattr(target, "source_last_known", None)
+    if source is None:
+        return None
+    if getattr(source, "zone", None) is Zone.BATTLEFIELD and game is not None:
+        return frozenset(game.characteristics_of(source).types)
+    last_known = getattr(source, "last_known_types", None)
+    if last_known is not None:
+        return frozenset(last_known)
+    return frozenset(getattr(source, "types", ()) or ())
 
 
 def _ability_kinds_named(words: str) -> frozenset[AbilityKind]:
@@ -3377,6 +3458,21 @@ _SUPERTYPE_OR_QUALITY_CARD_RE = re.compile(
 )
 
 
+#: "target creature on the battlefield or creature card in a graveyard"
+#: (Taskmaster, Mercenary Mimic) - two disjuncts in two different zones: a
+#: permanent, or a card in a graveyard. Read as the first disjunct's own
+#: requirement plus an `alternatives` entry for the second (CR 115.1).
+_ON_THE_BATTLEFIELD_OR_CARD_RE = re.compile(
+    r"^\s*(?P<first>[a-z][\w -]*?) on the battlefield or "
+    r"(?P<second>[a-z][\w -]*?cards? in (?:a|your|an opponent's) graveyards?)\b",
+    re.IGNORECASE,
+)
+
+
+#: " other than enchanted creature" - see `TargetRequirement.excludes_enchanted`.
+_OTHER_THAN_ENCHANTED_RE = re.compile(r" other than enchanted creature\b", re.IGNORECASE)
+
+
 def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetRequirement | None:
     """Turn one "target ..." phrase into a requirement, or None if unreadable.
 
@@ -3422,6 +3518,37 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             update={
                 "phrase": f"{base.phrase} or {subtype_word} {noun_word}",
                 "alternatives": base.alternatives + (alternative,),
+            }
+        )
+    other_than_enchanted = _OTHER_THAN_ENCHANTED_RE.search(suffix)
+    if other_than_enchanted is not None:
+        base = _read_phrase(
+            prefix,
+            suffix[: other_than_enchanted.start()] + suffix[other_than_enchanted.end() :],
+            strict=strict,
+        )
+        if base is None:
+            return None
+        return base.model_copy(
+            update={
+                "phrase": f"{base.phrase} other than enchanted creature",
+                "excludes_enchanted": True,
+            }
+        )
+    battlefield_or_card = _ON_THE_BATTLEFIELD_OR_CARD_RE.match(suffix)
+    if battlefield_or_card is not None:
+        tail = suffix[battlefield_or_card.end() :]
+        base = _read_phrase(prefix, " " + battlefield_or_card.group("first") + tail, strict=strict)
+        alternative = _read_phrase(
+            prefix, " " + battlefield_or_card.group("second") + tail, strict=strict
+        )
+        if base is None or alternative is None:
+            return None
+        return base.model_copy(
+            update={
+                "phrase": f"{base.phrase} on the battlefield or "
+                + alternative.phrase.removeprefix("target "),
+                "alternatives": (*base.alternatives, alternative),
             }
         )
     supertype_or = _SUPERTYPE_OR_QUALITY_CARD_RE.match(suffix)
@@ -3488,6 +3615,35 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     ability = _ABILITY_PHRASE.match(noun_phrase)
     if ability is not None:
         tail = noun_phrase[ability.end() :].strip()
+        source_restricted = _ABILITY_YOU_CONTROL_FROM_SOURCE_RE.fullmatch(tail) if tail else None
+        if source_restricted is not None:
+            # "... ability you control[ from a[n] <type> source]" (Lithoform
+            # Engine; Echo, Perceptive Prodigy): the controller and the
+            # source's card type (CR 113.7).
+            source_type = source_restricted.group("type")
+            source_card_type = _TYPE_NOUNS.get(source_type.lower()) if source_type else None
+            if source_type and source_card_type is None:
+                return None
+            return TargetRequirement(
+                phrase="target " + " ".join(noun_phrase.split()).lower(),
+                count=count,
+                minimum=minimum,
+                unbounded=unbounded,
+                variable_count=variable,
+                allows_cards=False,
+                allows_abilities=True,
+                ability_kinds=_ability_kinds_named(ability.group(0)),
+                ability_source_types=(
+                    frozenset({source_card_type}) if source_card_type is not None else frozenset()
+                ),
+                controller=(
+                    ControllerRestriction.YOU
+                    if source_restricted.group("you")
+                    else ControllerRestriction.ANY
+                ),
+                zones=frozenset({Zone.STACK}),
+                excludes_source=excludes_source,
+            )
         if not tail:
             # CR 115.2(b): an ability on the stack is an object that cannot
             # exist on the battlefield, and a spell may target one when it
@@ -3786,6 +3942,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     # see `_SETS_BASE_POWER_TOUGHNESS_EFFECT`.
     rest = _SETS_BASE_POWER_TOUGHNESS_EFFECT.sub("", rest).strip()
 
+    total_mana_value_at_most, rest = _extract_total_mana_value(rest)
+
     comparison = _extract_comparison(rest)
     if comparison is _COMPARISON_UNREADABLE:
         # A comparison was clearly attempted and this parser could not finish
@@ -3983,6 +4141,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         comparison_x_definition=comparison_x_definition,
         distinct_controllers=distinct_controllers,
         share_a_card_type=share_a_card_type,
+        total_mana_value_at_most=total_mana_value_at_most,
         required_keyword=required_keyword,
         required_counter_kind=required_counter_kind,
     )
@@ -4506,6 +4665,40 @@ def _extract_share_a_card_type(rest: str) -> tuple[bool, str]:
     if match is None:
         return False, rest
     return True, rest[match.end() :].strip()
+
+
+#: "with total mana value `<n>` or less" - see
+#: `TargetRequirement.total_mana_value_at_most`.
+_TOTAL_MANA_VALUE_RE = re.compile(
+    r"^with total mana value (?P<n>\d+|[a-z]+) or less\b", re.IGNORECASE
+)
+
+
+def _extract_total_mana_value(rest: str) -> tuple[int | None, str]:
+    """Read a "with total mana value N or less" clause out of `rest`, or leave
+    it untouched when there is none."""
+    match = _TOTAL_MANA_VALUE_RE.match(rest)
+    if match is None:
+        return None, rest
+    raw = match.group("n")
+    bound = int(raw) if raw.isdigit() else parse_count(raw, article=False)
+    if bound is None:
+        return None, rest
+    return bound, rest[match.end() :].strip()
+
+
+def _computed_mana_value(target: Any, game: Any) -> float | None:
+    """A target's mana value for `total_mana_value_at_most`: the computed one
+    for a permanent (a copy effect changes it, CR 707.2), the printed one
+    elsewhere, `None` for a target without one (a bare id, a player)."""
+    mana_value = getattr(target, "mana_value", None)
+    if mana_value is None:
+        return None
+    if game is not None and getattr(target, "zone", None) is Zone.BATTLEFIELD:
+        characteristics_of = getattr(game, "characteristics_of", None)
+        if characteristics_of is not None:
+            return float(characteristics_of(target).mana_value)
+    return float(mana_value)
 
 
 def _computed_card_types(target: Any, game: Any) -> frozenset[Type] | None:

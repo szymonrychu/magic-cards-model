@@ -199,6 +199,11 @@ _PROBE_NONCREATURES = ["Bonesplitter", "Intangible Virtue"]
 #: Stock tools: an activated ability that targets (CR 115.1c), and a card
 #: with an adventure to cast a spell from exile with (CR 715.4).
 _TARGETING_TOOL = "Icy Manipulator"
+#: The stock tool is an artifact; a "target ... ability ... from a creature
+#: source" (Echo, Perceptive Prodigy, CR 113.7) needs a creature's ability on
+#: the stack instead - Mogg Fanatic's sacrifice ability, which no summoning
+#: sickness stops (CR 602.5a names only {T}/{Q} costs).
+_CREATURE_TARGETING_TOOL = "Mogg Fanatic"
 _ADVENTURER = "Bonecrusher Giant"
 
 
@@ -865,6 +870,9 @@ def _target_material(text: str) -> tuple[Material, ...]:
         material: list[Material] = []
         for requirement in profile.requirements:
             if _satisfied(stock, requirement):
+                continue
+            if Type.CREATURE in requirement.ability_source_types:
+                material.append(Material(_CREATURE_TARGETING_TOOL, ALICE, Zone.BATTLEFIELD))
                 continue
             if Zone.STACK in requirement.zones:
                 material.append(Material(_stack_probe(requirement), ALICE, Zone.STACK))
@@ -2728,7 +2736,10 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
         _settle(scenario)
         while game.stack:
             game.resolve_top()
-    if any(r.allows_abilities for r in profile.requirements):
+    if any(Type.CREATURE in r.ability_source_types for r in profile.requirements):
+        fanatic = _first(scenario, _CREATURE_TARGETING_TOOL, ALICE)
+        scenario.activate(fanatic, sacrificing=[fanatic], targets=[BOB])
+    elif any(r.allows_abilities for r in profile.requirements):
         tool = _first(scenario, _TARGETING_TOOL, ALICE)
         action = _action_for(scenario, ALICE, ActionKind.ACTIVATE, tool.id, ability_index=0)
         if action is not None:

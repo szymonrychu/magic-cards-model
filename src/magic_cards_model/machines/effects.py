@@ -254,6 +254,7 @@ from .turn import COMBAT_PHASE_STEPS, Step
 
 if TYPE_CHECKING:
     from ..models.game import Game, StackObject
+    from .layers import Modification
 
 Effect = Callable[["Game", CardState], None]
 AbilityEffect = Callable[["Game", AbilityOnStack], None]
@@ -18364,6 +18365,9 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     put_from_outside = _parse_put_from_outside_the_game_into_hand_spell(text)
     if put_from_outside is not None:
         return put_from_outside
+    c02_t6 = _c02_t6_spell_effect(text)
+    if c02_t6 is not None:
+        return c02_t6
     # A genuine layer sentence goes to the mode-scoped composer ahead of the
     # per-clause dispatcher: `parse_mixed_effect_for_spell` reads "Target
     # creature gets -3/-1 until end of turn." (Witherbloom Command's third
@@ -23464,6 +23468,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         put_or_else = _parse_may_put_card_from_hand_clause(effect_text, for_spell=False)
         if put_or_else is not None:
             return put_or_else
+    c02_t6 = _c02_t6_ability_effect(effect_text)
+    if c02_t6 is not None:
+        return c02_t6
     base_pt_become = _parse_base_pt_become_clause(effect_text)
     if base_pt_become is not None:
         return base_pt_become
@@ -27000,6 +27007,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     counter_resolution = _parse_counter_resolution_text(whole, for_spell=True)
     if counter_resolution is not None:
         return counter_resolution
+    c02_t6 = _c02_t6_spell_effect(whole)
+    if c02_t6 is not None:
+        return c02_t6
     dealt_damage_this_way = _parse_dealt_damage_this_way_die_to_exile(whole)
     if dealt_damage_this_way is not None:
         return dealt_damage_this_way
@@ -54046,5 +54056,302 @@ def _parse_cast_from_graveyard_now_clause(effect_text: str) -> AbilityEffect | N
             pays_mana_cost=not free,
             exile_instead_of_graveyard=exile_instead,
         )
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# C02-T6: copy, control change, loses-all-abilities and type/P-T readers
+# ---------------------------------------------------------------------------
+
+#: "If this `<noun>` isn't a creature, it becomes a `<N/N ... creature>` ..."
+#: - Iron Man Armor's "{2}: If this Equipment isn't a creature, it becomes a
+#: 0/0 Construct Hero artifact creature with flying and "..." until end of
+#: turn." and Great Hall of the Biblioplex's "{5}: If this land isn't a
+#: creature, it becomes a 2/4 Wizard creature with "..." It's still a land."
+#: The condition is checked as the ability resolves (CR 608.2c: an "if"
+#: instruction is followed only when it holds); "it" is the source itself, so
+#: the rest is read as the source's own animation sentence.
+_IF_SELF_ISNT_A_CREATURE_RE = re.compile(
+    r"^if this (?:artifact|equipment|land|enchantment|permanent|vehicle) isn'?t a creature, "
+    r"it (?P<rest>becomes .+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | None:
+    """`_IF_SELF_ISNT_A_CREATURE_RE`'s shape, when the rest is one of
+    `machines/layers.py`'s own animation sentences - or `None`."""
+    match = _IF_SELF_ISNT_A_CREATURE_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    layer_sentence = f"This permanent {match.group('rest')}"
+    if parsed_layer_effects(layer_sentence, static_only=False) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if game.characteristics_of(source).is_creature:
+            return
+        continuous_effects(game).create(
+            source,
+            targets=[source],
+            context=layer_context_for(game, game.controller_of(ability)),
+            ability_text=layer_sentence,
+            game=game,
+        )
+
+    return effect
+
+
+def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
+    """C02-T6's whole-text ability readers, tried ahead of the clause split
+    (each reads an instruction chain `_prepare_effect_clauses` would cut
+    apart): the animation gate above, then `machines/copy_effects.py`'s and
+    `machines/control_change.py`'s own readers."""
+    from .control_change import control_change_ability_effect
+    from .copy_effects import copy_ability_effect
+
+    for reader in (
+        _parse_if_self_isnt_a_creature_clause,
+        _parse_double_target_power_and_toughness_clause,
+        _parse_target_fights_other_target_clause,
+        _parse_return_with_rider_clause,
+        copy_ability_effect,
+        control_change_ability_effect,
+    ):
+        effect = reader(effect_text)
+        if effect is not None:
+            return effect
+    return None
+
+
+def _c02_t6_spell_effect(effect_text: str) -> Effect | None:
+    """The spell-side twin of `_c02_t6_ability_effect`."""
+    from .control_change import control_change_spell_effect
+    from .copy_effects import copy_spell_effect
+
+    for reader in (
+        _parse_double_target_power_and_toughness_clause,
+        _parse_target_fights_other_target_clause,
+        copy_spell_effect,
+        control_change_spell_effect,
+    ):
+        effect = reader(effect_text)
+        if effect is not None:
+            return effect
+    return None
+
+
+#: "Double target creature's power and toughness until end of turn." (Epic
+#: Fight's first mode, Choose Your Weapon's "Two-Weapon Fighting", Tifa's
+#: Limit Break's "Meteor Strikes") and its "Double the power and toughness of
+#: target creature ..." word order. CR 701.10b: "Doubling a creature's power
+#: and toughness gives it +X/+Y, where X is its power and Y is its
+#: toughness" as the spell or ability resolves; CR 701.10a makes it a
+#: modification, not a set - sublayer 7c (CR 613.4c). CR 701.10c's negative
+#: value (-X instead of +X) is the same arithmetic: X added to itself.
+_DOUBLE_TARGET_POWER_AND_TOUGHNESS_RE = re.compile(
+    r"^double (?:(?P<possessive>(?:up to one )?target [a-z ]*?creature(?: you control| an opponent "
+    r"controls)?)['’]s power and toughness|the power and toughness of "
+    r"(?P<phrase>(?:up to one )?target [a-z ]*?creature(?: you control| an opponent controls)?))"
+    r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_double_target_power_and_toughness_clause(
+    text: str,
+) -> Callable[["Game", "StackObject"], None] | None:
+    """`_DOUBLE_TARGET_POWER_AND_TOUGHNESS_RE`'s shape, on a spell, a mode or
+    an ability alike - the values are read once, as it resolves, through the
+    computed characteristics (CR 613.5), and the +X/+Y never recomputes."""
+    match = _DOUBLE_TARGET_POWER_AND_TOUGHNESS_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    phrase = match.group("possessive") or match.group("phrase")
+    if not _targets_understood(phrase, count_agnostic=False):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        store = continuous_effects(game)
+        for target in game.resolve_card_targets(stack_object):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            chars = game.characteristics_of(target)
+            if not chars.is_creature or chars.power is None or chars.toughness is None:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{source_name}: {target.name} gets "
+                        f"{chars.power:+d}/{chars.toughness:+d} (doubled)"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=modify_power_toughness(chars.power, chars.toughness),
+                )
+            )
+
+    return effect
+
+
+#: "Return `<it|him|her|them>` to the battlefield[ tapped] under `<its owner's|
+#: your>` control[ with `<n>` `<kind>` counter(s) on `<it>`]. `<It|She|That
+#: creature>` `<rider>`." - Hellcat, Undying Vigilante's "... with a +1/+1
+#: counter on her. She loses all abilities and gains haste." and Thunderbolts
+#: Conspiracy's "... with a finality counter on it. That creature is a Hero in
+#: addition to its other types." Read whole: the rider's subject is the
+#: object the return just made (CR 400.7), which only this reader knows.
+#:
+#: "It" is the triggering event's subject when the event names one (the
+#: Villain that died, not the Conspiracy), else the ability's own source.
+_RETURN_WITH_RIDER_RE = re.compile(
+    r"^return (?:it|him|her|them|that card|that creature) to the battlefield(?P<tapped> tapped)?"
+    r" under (?P<control>(?:its|his|her|their) owners?'?s?|your) control"
+    rf"(?: with (?P<amount>{COUNT}) (?P<kind>[+/\w-]+) counters? on (?:it|him|her|them))?\.\s*"
+    r"(?:it|he|she|they|that creature) (?P<rider>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+#: One rider predicate: "loses all abilities", "gains <keywords>", or "is
+#: a[n] <creature types> in addition to its other types" (CR 205.1b).
+_RETURN_RIDER_PREDICATE_RE = re.compile(
+    r"^(?:(?P<loses>loses all abilities)"
+    r"|gains (?P<keywords>[a-z][a-z ,]*?)"
+    r"|is an? (?P<types>[A-Za-z][A-Za-z' -]*?) in addition to its other types)$",
+    re.IGNORECASE,
+)
+
+
+def _return_rider_modifications(rider: str) -> "list[tuple[str, Layer, Modification]] | None":
+    """Each predicate of a return rider as its layer and modification (CR
+    613.1d/e/f), in printed order - or `None` for one this reader cannot
+    read (the whole ability then fails closed)."""
+    from .layers import _creature_type_words, _split_and_validate_keywords
+
+    parts: list[tuple[str, Layer, Modification]] = []
+    for predicate in re.split(r"\s+and\s+(?=loses|gains|is\b)", rider.strip()):
+        match = _RETURN_RIDER_PREDICATE_RE.fullmatch(predicate.strip())
+        if match is None:
+            return None
+        if match.group("loses"):
+            parts.append(("loses all abilities", Layer.ABILITY, lose_all_abilities))
+            continue
+        if match.group("keywords") is not None:
+            keywords = _split_and_validate_keywords(match.group("keywords"))
+            if keywords is None:
+                return None
+            parts.extend((f"gains {kw}", Layer.ABILITY, grant_ability(kw)) for kw in keywords)
+            continue
+        subtypes = _creature_type_words(match.group("types"))
+        if subtypes is None:
+            return None
+        parts.extend((f"is a {subtype}", Layer.TYPE, add_subtype(subtype)) for subtype in subtypes)
+    return parts
+
+
+def _parse_return_with_rider_clause(effect_text: str) -> AbilityEffect | None:
+    """`_RETURN_WITH_RIDER_RE`'s shape. The return happens only while the card
+    is still in the graveyard it went to (CR 608.2's ordinary "the object is
+    gone"); the rider's effects are indefinite (CR 611.2a: no duration
+    stated) and follow only the object the return made (CR 400.7)."""
+    match = _RETURN_WITH_RIDER_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    parts = _return_rider_modifications(match.group("rider"))
+    if not parts:
+        return None
+    tapped = match.group("tapped") is not None
+    under_owner = not match.group("control").lower().startswith("your")
+    counter_kind = _counter_kind(match.group("kind")) if match.group("kind") else None
+    counter_amount = parse_count(match.group("amount")) if match.group("amount") else None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        referent_id = (
+            event.subject_id
+            if event is not None and event.subject_id is not None
+            else ability.source_id
+        )
+        card = game.find_by_id(referent_id) if referent_id is not None else None
+        if card is None or card.zone is not Zone.GRAVEYARD:
+            return
+        controller = (card.owner or ability.controller) if under_owner else ability.controller
+        returned = game.put_onto_battlefield(card, controller, tapped=tapped)
+        if returned.zone is not Zone.BATTLEFIELD:
+            return
+        if counter_kind is not None and counter_amount:
+            game.add_counters(returned, counter_kind, counter_amount)
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for what, layer, modification in parts:
+            store.add(
+                ContinuousEffect(
+                    description=f"{ability.source_name}: {returned.name} {what}",
+                    layer=layer,
+                    timestamp=timestamp,
+                    selector=only_this_incarnation(returned, returned.zone_change_stamp),
+                    modification=modification,
+                ),
+                game,
+            )
+
+    return effect
+
+
+#: "`<target X>` fights up to one other target `<Y>`." - The Super Hero Civil
+#: War's chapter III ("Target creature you control fights up to one other
+#: target creature."). Unlike `_TARGET_FIGHTS_TARGET_RE`, the two fighters
+#: cannot be told apart by controller ("other" names no controller), so they
+#: are read by announcement position: the first target is the first fighter.
+#: CR 701.14b: if either is no longer a legal target, on the battlefield, or
+#: a creature, neither fights; CR 115.6: "up to one" chose none, no fight.
+_TARGET_FIGHTS_OTHER_TARGET_RE = re.compile(
+    r"^(?P<first>target .+?) fights (?P<second>(?:up to one )?(?:other|another) target .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_fights_other_target_clause(
+    text: str,
+) -> Callable[["Game", "StackObject"], None] | None:
+    """`_TARGET_FIGHTS_OTHER_TARGET_RE`'s shape, or `None`."""
+    match = _TARGET_FIGHTS_OTHER_TARGET_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("first").strip(), count_agnostic=True):
+        return None
+    if not _targets_understood(match.group("second").strip(), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        announced = list(stack_object.targets)
+        if len(announced) < 2:
+            return  # CR 115.6: no second fighter chosen.
+        legal = {
+            target.id: target
+            for target in game.resolve_card_targets(stack_object)
+            if target.zone is Zone.BATTLEFIELD
+        }
+        first = legal.get(announced[0].card_id) if announced[0].is_card else None
+        second = legal.get(announced[1].card_id) if announced[1].is_card else None
+        if first is None or second is None or first.id == second.id:
+            return  # CR 701.14b
+        if not game.characteristics_of(first).is_creature:
+            return  # CR 701.14b
+        if not game.characteristics_of(second).is_creature:
+            return  # CR 701.14b
+        _fight(game, first, second)
 
     return effect

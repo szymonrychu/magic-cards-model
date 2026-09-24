@@ -1,0 +1,145 @@
+{
+  "object": "card",
+  "id": "472db3f2-23df-46c1-86c6-f35fbe5ab4e3",
+  "oracle_id": "c6284597-1983-4a21-a461-724135220e0d",
+  "multiverse_ids": [],
+  "resource_id": "B2B758D53D29AC5281B240AD2594DDFC82DF3CF9D7C381FA188C5CF35320F698",
+  "mtgo_id": 152551,
+  "arena_id": 105077,
+  "tcgplayer_id": 696497,
+  "cardmarket_id": 891059,
+  "name": "Reptil, Dinomorpher",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/472db3f2-23df-46c1-86c6-f35fbe5ab4e3",
+  "scryfall_uri": "https://scryfall.com/card/msh/182/reptil-dinomorpher?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.jpg?1783902913",
+    "normal": "https://cards.scryfall.io/normal/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.jpg?1783902913",
+    "large": "https://cards.scryfall.io/large/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.jpg?1783902913",
+    "png": "https://cards.scryfall.io/png/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.png?1783902913",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.jpg?1783902913",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.jpg?1783902913",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.webp?1783902913",
+    "grid": "https://cards.scryfall.io/grid/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.webp?1783902913",
+    "display": "https://cards.scryfall.io/display/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.webp?1783902913",
+    "art": "https://cards.scryfall.io/art/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.webp?1783902913",
+    "crop": "https://cards.scryfall.io/crop/front/4/7/472db3f2-23df-46c1-86c6-f35fbe5ab4e3.webp?1783902913"
+  },
+  "mana_cost": "{G}",
+  "cmc": 1.0,
+  "type_line": "Legendary Creature \u2014 Human Hero",
+  "oracle_text": "Brontosaurus \u2014 {3}: Until end of turn, Reptil becomes a Dinosaur Hero with base power and toughness 3/5 and gains reach and vigilance.\nTyrannosaurus Rex \u2014 {6}: Until end of turn, Reptil becomes a Dinosaur Hero with base power and toughness 6/6 and gains trample.",
+  "power": "1",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Brontosaurus",
+    "Tyrannosaurus Rex"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/472db3f2-23df-46c1-86c6-f35fbe5ab4e3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac6284597-1983-4a21-a461-724135220e0d&unique=prints",
+  "collector_number": "182",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Paolo Parente",
+  "artist_ids": [
+    "d48dd097-720d-476a-8722-6a02854ae28b"
+  ],
+  "illustration_id": "300e63ab-52db-4ed7-b078-c22951e0219b",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 24959,
+  "preview": {
+    "source": "Li Sangyu",
+    "source_uri": "https://t.bilibili.com/1209512075351556096?spm_id_from=333.1387.list.card_time.click",
+    "previewed_at": "2026-06-02"
+  },
+  "prices": {
+    "usd": "0.12",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.13",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DReptil%252C%2BDinomorpher",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DReptil%252C%2BDinomorpher",
+    "edhrec": "https://edhrec.com/route/?cc=Reptil%2C+Dinomorpher"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696497%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891059&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152551?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

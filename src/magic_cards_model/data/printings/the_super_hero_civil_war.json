@@ -1,0 +1,145 @@
+{
+  "object": "card",
+  "id": "fbd1f333-5640-41f8-b9dd-1c322ac7724a",
+  "oracle_id": "11d74dc2-8c11-4d4b-b727-8216d2eb6b4e",
+  "multiverse_ids": [],
+  "resource_id": "9194BB55589BB50E25DB77A0C51F7CFC0659F4072B81E53107F3E6B88C0FB194",
+  "mtgo_id": 152651,
+  "arena_id": 105127,
+  "tcgplayer_id": 696498,
+  "cardmarket_id": 891062,
+  "name": "The Super Hero Civil War",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/fbd1f333-5640-41f8-b9dd-1c322ac7724a",
+  "scryfall_uri": "https://scryfall.com/card/msh/231/the-super-hero-civil-war?utm_source=api",
+  "layout": "saga",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:34:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.jpg?1783902897",
+    "normal": "https://cards.scryfall.io/normal/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.jpg?1783902897",
+    "large": "https://cards.scryfall.io/large/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.jpg?1783902897",
+    "png": "https://cards.scryfall.io/png/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.png?1783902897",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.jpg?1783902897",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.jpg?1783902897",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.webp?1783902897",
+    "grid": "https://cards.scryfall.io/grid/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.webp?1783902897",
+    "display": "https://cards.scryfall.io/display/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.webp?1783902897",
+    "art": "https://cards.scryfall.io/art/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.webp?1783902897",
+    "crop": "https://cards.scryfall.io/crop/front/f/b/fbd1f333-5640-41f8-b9dd-1c322ac7724a.webp?1783902897"
+  },
+  "mana_cost": "{3}{R}{W}",
+  "cmc": 5.0,
+  "type_line": "Enchantment \u2014 Saga",
+  "oracle_text": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI \u2014 Gain control of up to two target creatures with total mana value 6 or less for as long as this Saga remains on the battlefield.\nII \u2014 Creatures you control get +1/+1 and gain vigilance until end of turn.\nIII \u2014 Target creature you control fights up to one other target creature.",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [
+    "Fight"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fbd1f333-5640-41f8-b9dd-1c322ac7724a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A11d74dc2-8c11-4d4b-b727-8216d2eb6b4e&unique=prints",
+  "collector_number": "231",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Serena Malyon",
+  "artist_ids": [
+    "d9fee7a6-7c5e-48a5-8639-bba25abc8a06"
+  ],
+  "illustration_id": "076c2657-d8f9-4e6a-a4d3-b6827d6ddd11",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 19313,
+  "preview": {
+    "source": "PC Gamer",
+    "source_uri": "https://www.pcgamer.com/games/card-games/magic-the-gatherings-marvel-super-heroes-set-brings-back-completely-uncontroversial-and-universally-beloved-comics-event-civil-war/",
+    "previewed_at": "2026-06-02"
+  },
+  "prices": {
+    "usd": "0.25",
+    "usd_foil": "0.33",
+    "usd_etched": null,
+    "eur": "0.14",
+    "eur_foil": "0.37",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BSuper%2BHero%2BCivil%2BWar",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BSuper%2BHero%2BCivil%2BWar",
+    "edhrec": "https://edhrec.com/route/?cc=The+Super+Hero+Civil+War"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696498%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891062&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152651?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

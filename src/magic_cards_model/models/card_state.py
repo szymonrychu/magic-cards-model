@@ -35,6 +35,14 @@ PERMANENT_TYPES = frozenset(
 )
 
 
+#: The canonical line an effect that says a permanent "can't become untapped"
+#: puts on it in layer 6 (Frozen in Ice's static, Spider-Woman's "for as long
+#: as" one-shot) - read by `CardState.untap`, which every route to untapping
+#: passes through. Not an ability the permanent has: `layers.LoseAllAbilities`
+#: leaves it in place (see `RULE_EFFECT_TEXTS` there).
+CANT_BECOME_UNTAPPED_TEXT = "Can't become untapped."
+
+
 class TargetKind(StrEnum):
     """The two things a spell can point at (CR 115.1)."""
 
@@ -1356,6 +1364,16 @@ class CardState(EngineModel):
     move just made. Never persisted: the departure event is raised and its
     triggers found within that same move."""
 
+    _abilities_as_it_left: tuple[str, ...] | None = PrivateAttr(default=None)
+    """The computed ability lines this object had as it last left the
+    battlefield (CR 603.10a's look-back), taken by
+    `remember_last_known_power_toughness` while the layer engine still
+    answered for it; `None` when no board was bound. A leaves-the-battlefield
+    trigger it had *lost* by then (Hellcat returned with no abilities, a
+    creature under Humility) does not trigger - read by `machines/triggers.
+    triggered_abilities_on`. Never persisted: the departure's triggers are
+    collected within that same move, and any later move clears it."""
+
     def bind_to_game(self, game: Any) -> None:
         """Tell this object which game computes its characteristics (CR 613.5).
 
@@ -2293,6 +2311,15 @@ class CardState(EngineModel):
         self._note_tapped()
         return True
 
+    @property
+    def cant_become_untapped(self) -> bool:
+        """Whether an effect says this permanent "can't become untapped"
+        (Frozen in Ice, Spider-Woman, Secret Agent) - read off the computed
+        board (CR 613.5), where the layer-6 effect puts
+        `CANT_BECOME_UNTAPPED_TEXT`. False for an object no game has bound."""
+        computed = self.computed_characteristics
+        return computed is not None and CANT_BECOME_UNTAPPED_TEXT in computed.abilities
+
     def untap(self, *, exert_applies: bool = True) -> None:
         """Untap this card, unless it was exerted (CR 701.43a-b).
 
@@ -2333,6 +2360,12 @@ class CardState(EngineModel):
             return
         if not self.tapped:
             return  # CR 701.26b: nothing to untap, so nothing "would become untapped"
+        if self.cant_become_untapped:
+            # Frozen in Ice's "can't become untapped": every route to
+            # untapping is refused, the untap step's and an effect's alike -
+            # and ahead of a stun counter, which only replaces an untap that
+            # could have happened (CR 122.1d).
+            return
         if self.counters[Counter.STUN] > 0:
             self.counters.remove(Counter.STUN, 1)  # CR 122.1d
             return
@@ -2475,6 +2508,7 @@ class CardState(EngineModel):
         to record.
         """
         computed = self.computed_characteristics
+        self._abilities_as_it_left = None if computed is None else tuple(computed.abilities)
         power = None if computed is None else computed.power
         toughness = None if computed is None else computed.toughness
         self.last_known_power = None if power == self.printed_power else power
@@ -2502,6 +2536,11 @@ class CardState(EngineModel):
     def granted_as_it_left(self) -> tuple[str, ...]:
         """See `_granted_as_it_left`."""
         return self._granted_as_it_left
+
+    @property
+    def abilities_as_it_left(self) -> tuple[str, ...] | None:
+        """See `_abilities_as_it_left`."""
+        return self._abilities_as_it_left
 
     def move_to(self, zone: Zone) -> None:
         """Move to another zone, resetting the state a card loses on the way.
@@ -2537,6 +2576,7 @@ class CardState(EngineModel):
             self.last_known_types = None
             self.last_known_subtypes = None
             self.last_known_keywords = None
+            self._abilities_as_it_left = None
         self.zone_change_stamp = new_id()
         self.zone = zone
         self._granted_as_it_left = ()

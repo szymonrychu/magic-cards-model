@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "32ddd5ac-57ed-4e78-8932-a65980191f6e",
+  "oracle_id": "a8f25e67-2112-4355-9298-363ed04a5cb8",
+  "multiverse_ids": [],
+  "resource_id": "A4C284B46CA2C8A431DF42506FD2D609B6CFC7E74781F6E10EBFA8A7B529124C",
+  "mtgo_id": 152693,
+  "arena_id": 105148,
+  "tcgplayer_id": 696581,
+  "cardmarket_id": 891183,
+  "name": "Ultron, Artificial Malevolence",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/32ddd5ac-57ed-4e78-8932-a65980191f6e",
+  "scryfall_uri": "https://scryfall.com/card/msh/252/ultron-artificial-malevolence?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:34:49Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.jpg?1783902889",
+    "normal": "https://cards.scryfall.io/normal/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.jpg?1783902889",
+    "large": "https://cards.scryfall.io/large/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.jpg?1783902889",
+    "png": "https://cards.scryfall.io/png/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.png?1783902889",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.jpg?1783902889",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.jpg?1783902889",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.webp?1783902889",
+    "grid": "https://cards.scryfall.io/grid/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.webp?1783902889",
+    "display": "https://cards.scryfall.io/display/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.webp?1783902889",
+    "art": "https://cards.scryfall.io/art/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.webp?1783902889",
+    "crop": "https://cards.scryfall.io/crop/front/3/2/32ddd5ac-57ed-4e78-8932-a65980191f6e.webp?1783902889"
+  },
+  "mana_cost": "{3}",
+  "cmc": 3.0,
+  "type_line": "Legendary Artifact Creature \u2014 Robot Villain",
+  "oracle_text": "Whenever another nontoken artifact you control enters, you may pay {2}. If you do, create a token that's a copy of it. If the token isn't a creature, it becomes a 2/2 Robot Villain creature in addition to its other types.",
+  "power": "2",
+  "toughness": "4",
+  "colors": [],
+  "color_identity": [],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "957221ab-3614-446c-b436-f4f620d91a9c",
+      "component": "token",
+      "name": "Robot Villain",
+      "type_line": "Token Artifact Creature \u2014 Robot Villain",
+      "uri": "https://api.scryfall.com/cards/957221ab-3614-446c-b436-f4f620d91a9c"
+    },
+    {
+      "object": "related_card",
+      "id": "df9302a8-e918-429c-8853-133c489223f1",
+      "component": "combo_piece",
+      "name": "Ultron, Artificial Malevolence",
+      "type_line": "Legendary Artifact Creature \u2014 Robot Villain",
+      "uri": "https://api.scryfall.com/cards/df9302a8-e918-429c-8853-133c489223f1"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/32ddd5ac-57ed-4e78-8932-a65980191f6e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa8f25e67-2112-4355-9298-363ed04a5cb8&unique=prints",
+  "collector_number": "252",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "\"Father, humans served their purpose. My imperative now is to terminate them . . . and you.\"\n\u2014Ultron, to Hank Pym",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Nino Is",
+  "artist_ids": [
+    "ae717001-28ec-46e3-a07e-f16b6deaf9e2"
+  ],
+  "illustration_id": "07cc4371-e918-48a1-a689-91942058ee8c",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 4827,
+  "preview": {
+    "source": "IGN",
+    "source_uri": "https://de.ign.com/magic-the-gathering-6/152967/magic-the-gathering-so-stark-ist-die-ultron-karte-aus-marvel-super-heroes",
+    "previewed_at": "2026-06-03"
+  },
+  "prices": {
+    "usd": "8.44",
+    "usd_foil": "12.43",
+    "usd_etched": null,
+    "eur": "9.17",
+    "eur_foil": "9.73",
+    "tix": "0.13"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUltron%252C%2BArtificial%2BMalevolence",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUltron%252C%2BArtificial%2BMalevolence",
+    "edhrec": "https://edhrec.com/route/?cc=Ultron%2C+Artificial+Malevolence"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696581%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891183&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152693?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

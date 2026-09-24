@@ -14,7 +14,7 @@ from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
 from ..data.creature_types import creature_types
 from ..data.subtypes import canonical_subtype
-from ..ids import install_id_allocator, reset_id_allocator
+from ..ids import install_id_allocator, new_id, reset_id_allocator
 from ..machines import combat as combat_rules
 from ..machines.abilities import (
     AbilityKind,
@@ -849,6 +849,11 @@ _SORCERY_TIMING = re.compile(
     r"activate (?:this ability )?only (?:as a sorcery|any time you could cast a sorcery)",
     re.IGNORECASE,
 )
+#: "Activate only during your turn" (Scientist Supreme of A.I.M., Sundial of
+#: the Infinite) - outside its controller's turn the ability is prohibited
+#: from being activated (CR 602.5), a restriction printed alone or joined to
+#: another ("... and only once each turn").
+_YOUR_TURN_ONLY = re.compile(r"activate (?:this ability )?only during your turn", re.IGNORECASE)
 #: CR 602.5b's per-turn limit, with its count read rather than assumed to be
 #: one: "Activate only once each turn" (Basking Rootwalla), "... and only once
 #: each turn" (Dragonkin Berserker's joined restriction), "Activate no more
@@ -5136,6 +5141,7 @@ class Game(EngineModel):
                 state
                 for state in self.permanents_controlled_by(username)
                 if not self.characteristics_of(state).has_ability(DOESNT_UNTAP_TEXT)
+                and not state.cant_become_untapped
             ],
         )
 
@@ -8117,6 +8123,38 @@ class Game(EngineModel):
             )
             return copy
 
+    def copy_ability(
+        self, ability: AbilityOnStack, controller: str | None = None
+    ) -> AbilityOnStack:
+        """CR 707.10: put a copy of an activated or triggered ability onto the
+        stack - "a copy of an activated ability isn't activated", so no cost
+        is paid and nothing that watches activations sees it.
+
+        The copy "copies both the characteristics of the spell or ability and
+        all decisions made for it, including modes, targets, the value of X"
+        (CR 707.10), so it is the original object's own data under a fresh
+        id; CR 707.10b: it has the same source, and CR 707.10: it is
+        controlled by the player under whose control it was put on the stack.
+        A ward-style payment already made for the original is not the copy's
+        (`unless_payment` starts empty), and a delayed trigger's copy resolves
+        through the same delayed effect the original would have.
+        """
+        with self._id_allocator_scope():
+            data = ability.model_dump(mode="json")
+            data["id"] = str(new_id())
+            data["controller"] = controller or ability.controller
+            data["unless_payment"] = None
+            copy = AbilityOnStack.model_validate(data)
+            if copy.keyword_activation is not None:
+                copy.keyword_activation.game = self
+                if copy.keyword_activation.payment is not None:
+                    copy.keyword_activation.payment.game = self
+            pending = self.delayed_triggers.pending.get(ability.id)
+            if pending is not None:
+                self.delayed_triggers.pending[copy.id] = pending
+            self.stack.append(copy)
+            return copy
+
     def offer_new_targets_for_copy(
         self, copy: CardState, controller: str, *, source_name: str = "", source_id: str | None
     ) -> None:
@@ -9740,7 +9778,10 @@ class Game(EngineModel):
             return None if profile.min_targets > 0 else []
 
         minimum = min(profile.min_targets, len(candidates))
-        across = any(r.distinct_controllers or r.share_a_card_type for r in profile.requirements)
+        across = any(
+            r.distinct_controllers or r.share_a_card_type or r.total_mana_value_at_most is not None
+            for r in profile.requirements
+        )
         if any(r.one_per_opponent for r in profile.requirements):
             # CR 601.2c: one target per opponent with a legal choice. Each
             # controller's first candidate leads, so the default answer (the
@@ -15981,7 +16022,12 @@ class Game(EngineModel):
                         event=TriggerEvent.DIES,
                         subject_id=card_state.id,
                         subject_name=card_state.name,
-                        subject_controller=card_state.controller,
+                        # CR 603.10a: who controlled it as it died - layer 2
+                        # (a borrowed creature, CR 613.1b), not the stored
+                        # controller the zone change reset.
+                        subject_controller=(
+                            left_battlefield_chars.controller or card_state.controller
+                        ),
                         subject_card=card_state.card,
                         # CR 603.10a: dies is a look-back event - the
                         # snapshot taken above, while the permanent was still
@@ -20042,6 +20088,11 @@ class Game(EngineModel):
                     f"{limit.group('times').lower()} this turn, the most "
                     f"{limit.group(0)!r} allows (CR 602.5b)"
                 )
+        if _YOUR_TURN_ONLY.search(instructions) and self.active_player.username != controller:
+            return (
+                f"{permanent.name}'s ability can only be activated during its "
+                f"controller's turn, and it is {self.active_player.username}'s (CR 602.5)"
+            )
         if _SORCERY_TIMING.search(instructions) and not self.can_cast_sorcery(controller):
             return (
                 f"{permanent.name}'s ability can only be activated as a sorcery: "
