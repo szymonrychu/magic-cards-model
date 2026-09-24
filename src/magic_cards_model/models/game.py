@@ -17069,11 +17069,11 @@ class Game(EngineModel):
             # CR 113.6c: plus an "as long as this isn't on the battlefield"
             # grant, which applies exactly here (Grist, the Hunger Tide).
             return off_battlefield_characteristics_of(permanent)
-        chars = self.computed_board().of(permanent)
-        return self._supplement_characteristics(permanent, chars)
+        board = self.computed_board()
+        return self._supplement_characteristics(permanent, board.of(permanent), board)
 
     def _supplement_characteristics(
-        self, permanent: CardState, chars: Characteristics
+        self, permanent: CardState, chars: Characteristics, board: ComputedBoard
     ) -> Characteristics:
         """What `characteristics_of` adds on top of `computed_board`'s own
         answer - three gaps `machines/layers.py` (owned by a different task
@@ -17136,19 +17136,19 @@ class Game(EngineModel):
                     abilities = abilities + (line,)
                 elif not harnessed and present:
                     abilities = tuple(entry for entry in abilities if entry != line)
-        for keyword_text in self._group_keyword_grants_for(permanent, chars):
+        for keyword_text in self._group_keyword_grants_for(permanent, chars, board):
             if keyword_text not in abilities:
                 abilities = abilities + (keyword_text,)
         if abilities != chars.abilities:
             chars = chars.with_(abilities=abilities)
         if chars.power is None:
-            legendary_count = self._legendary_creature_count_power(permanent)
+            legendary_count = self._legendary_creature_count_power(permanent, board)
             if legendary_count is not None:
                 chars = chars.with_(power=legendary_count)
         return chars
 
     def _group_keyword_grants_for(
-        self, permanent: CardState, chars: Characteristics
+        self, permanent: CardState, chars: Characteristics, board: ComputedBoard
     ) -> tuple[str, ...]:
         """`_supplement_characteristics`'s own creature-half reader for a
         conditional group grant (`conditional_group_keyword_grant_of_line`) -
@@ -17163,7 +17163,7 @@ class Game(EngineModel):
         # under a control-changing effect that property asks
         # `characteristics_of`, which calls back into this method for every
         # other permanent - a mutual recursion across the whole battlefield.
-        board = self.computed_board()
+        # `board` is the one `characteristics_of` already computed.
         controller = chars.controller
         for source in self.battlefield:
             if board.of(source).controller != controller or source.id == permanent.id:
@@ -17193,7 +17193,9 @@ class Game(EngineModel):
                     granted.append(text)
         return tuple(granted)
 
-    def _legendary_creature_count_power(self, permanent: CardState) -> int | None:
+    def _legendary_creature_count_power(
+        self, permanent: CardState, board: ComputedBoard
+    ) -> int | None:
         """The count `_LEGENDARY_TYPE_COUNT_POWER_RE`'s own CDA names, or
         `None` when the permanent prints no such line at all.
 
@@ -17226,7 +17228,6 @@ class Game(EngineModel):
             card_type = Type(match.group("type").rstrip("s"))
         except ValueError:
             return None
-        board = self.computed_board()
         controller = board.of(permanent).controller
         return sum(
             1
