@@ -1189,3 +1189,25 @@ def test_a_snapshot_written_before_excludes_self_counts_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EXCLUDES_SELF_COUNTS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before `SpendClause.min_mana_value`/`requires_x_in_cost`
+#: (C02 integration, Helga, Skittish Seer's spend restriction).
+_SCHEMA_VERSION_BEFORE_SPEND_MANA_VALUE = 79
+
+
+def test_the_spend_mana_value_bump_moved_the_version_past_seventy_nine() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_SPEND_MANA_VALUE
+
+
+def test_a_snapshot_written_before_spend_mana_value_is_refused() -> None:
+    """A version-79 dump is refused: mana it holds from a restriction that
+    was unread then (and so permitted nothing) would decode as unread now."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_SPEND_MANA_VALUE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_SPEND_MANA_VALUE}",
+    ):
+        Game.model_validate(dumped)

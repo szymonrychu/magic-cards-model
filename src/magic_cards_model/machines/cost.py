@@ -620,9 +620,14 @@ _SPEND_RESTRICTION_SIGNAL = re.compile(r"[Ss]pend this mana only")
 #: "pay cumulative upkeep costs" (Snowfall) - CR 702.24a's cost as the thing
 #: the mana may pay.
 _SPEND_CUMULATIVE_UPKEEP_CLAUSE = re.compile(r"^pay cumulative upkeep costs?$", re.IGNORECASE)
+#: A trailing "with mana value N or greater" / "with {X} in its/their mana
+#: cost(s)" narrows the spell by CR 202.3's mana value or its printed cost
+#: (Helga, Skittish Seer).
 _SPEND_CAST_CLAUSE = re.compile(
     r"^cast (?P<quality>.*?) ?spells?"
     r"(?P<chosen> of the chosen type)?"
+    r"(?: with mana value (?P<min_mv>\d+) or greater"
+    r"|(?P<x_cost> with \{X\} in (?:its|their) mana costs?))?"
     r"(?: from (?P<zone>.+))?$",
     re.IGNORECASE,
 )
@@ -671,7 +676,8 @@ _TYPE_LIST_JOINERS = {"and", "or", "and/or"}
 #: printed word does not say which of the two roles it is in, so this split is
 #: only ever tried on a phrase the grammar has already failed to read as a
 #: single clause. See `_spend_clauses`.
-_SPEND_CLAUSE_SPLIT = re.compile(r" and/or | and | or ")
+#: "or" before "greater"/"less" is a mana value comparison, never a joiner.
+_SPEND_CLAUSE_SPLIT = re.compile(r" and/or | and | or (?!greater\b|less\b)")
 #: The verb a split "only to ..." phrase opens with, lent to a following
 #: phrase that elides it.
 _SPEND_VERB = re.compile(r"^(?:cast|activate|pay|unlock) ", re.IGNORECASE)
@@ -931,7 +937,14 @@ def _one_spend_clause(phrase: str, chosen_type: str | None) -> SpendClause | Non
             zone = _spend_zone(cast.group("zone"))
             if zone is None:
                 return None
-        return _spend_clause(cast.group("quality"), SpendPurpose.CAST_SPELL, chosen, zone)
+        clause = _spend_clause(cast.group("quality"), SpendPurpose.CAST_SPELL, chosen, zone)
+        if clause is None:
+            return None
+        if cast.group("min_mv") is not None:
+            clause = clause.model_copy(update={"min_mana_value": int(cast.group("min_mv"))})
+        if cast.group("x_cost") is not None:
+            clause = clause.model_copy(update={"requires_x_in_cost": True})
+        return clause
 
     activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
     if activate is not None:

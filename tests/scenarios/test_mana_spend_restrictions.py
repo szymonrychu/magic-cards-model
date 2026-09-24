@@ -1402,3 +1402,42 @@ def test_proof_cargo_ships_mana_refuses_a_creature_spell():
 
     with pytest.raises(ValueError):
         scenario.cast_onto_stack("Grizzly Bears", forest, username="alice")
+
+
+#: A noncreature spell with mana value 7 (Kindred Sorcery).
+SORCERY_FIVE = "All Is Dust"
+
+
+def test_a_mana_value_floor_or_an_x_in_the_cost_narrows_a_cast_clause():
+    """CR 106.6: Helga, Skittish Seer's "Spend this mana only to cast creature
+    spells with mana value 4 or greater or creature spells with {X} in their
+    mana costs." - two cast clauses, each narrowing "creature spells" by the
+    spell's mana value (CR 202.3) or by an {X} in its printed cost. The "or"
+    inside "4 or greater" is not a clause joiner."""
+    restriction = spend_restriction(card("Helga, Skittish Seer").oracle_text)
+    assert restriction is not None and restriction.understood
+    assert [clause.min_mana_value for clause in restriction.clauses] == [4, None]
+    assert [clause.requires_x_in_cost for clause in restriction.clauses] == [False, True]
+
+    def cast(name: str, x_value: int = 0) -> ManaSpend:
+        return ManaSpend.casting(card(name), zone=Zone.HAND, x_value=x_value)
+
+    assert restriction.allows(cast("Hill Giant")) is True
+    assert restriction.allows(cast("Grizzly Bears")) is False
+    assert restriction.allows(cast("Chamber Sentry")) is True
+    assert restriction.allows(cast(SORCERY_FIVE)) is False
+
+
+def test_x_counts_toward_a_spells_mana_value_on_the_stack():
+    """CR 202.3e: X is the number chosen for it while the object is on the
+    stack - Chamber Sentry cast for X=4 is a mana-value-4 creature spell."""
+    floor = spend_restriction(
+        "Spend this mana only to cast creature spells with mana value 4 or greater."
+    )
+    assert floor is not None and floor.understood
+    assert (
+        floor.allows(ManaSpend.casting(card("Chamber Sentry"), zone=Zone.HAND, x_value=4)) is True
+    )
+    assert (
+        floor.allows(ManaSpend.casting(card("Chamber Sentry"), zone=Zone.HAND, x_value=3)) is False
+    )

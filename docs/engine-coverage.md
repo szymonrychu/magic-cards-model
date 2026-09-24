@@ -5484,3 +5484,12 @@ CR 611.1 prohibition is reported exactly like a hand card is.
 | Mechanic | Reader | Reported card | Off-pool proof | Test |
 |---|---|---|---|---|
 | CR 117.1a timing and CR 611.1 prohibition refusals on a `CAST` face, enumerated with the engine's own reason instead of dropped | `machines.legal_actions.blocked_casts`, `models.action.BlockedCast` | Ocelot Pride | Act of Treason (sorcery timing), Ambush Viper (a flash creature never blocked), Repudiate // Replicate (CR 709.3a: only the sorcery half of a split card blocks), Voice of Victory (a CR 611.1 prohibition, not a timing question), Faithless Looting (a flashback sorcery blocked by a graveyard-casting prohibition, the keyword-option loop), Bonecrusher Giant (its exiled Adventure creature half blocked by a CR 611.1 prohibition, the `pays_mana_cost=True` keyword-option branch) | `scenarios/test_blocked_casts.py` |
+
+## C02 integration: enforced statics credited through their enforcing readers
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| look at the top card any time, play lands from the top, "`<quality>` spells you cast have improvise", a power-scaled instant/sorcery reduction, the power-up group discount and extra activation, a legendary-count power CDA | `Game.reads_enforced_static_line` | Daredevil, Man Without Fear; Ka-Zar of the Savage Land; Iron Lad, Diverging Destiny; Ironheart, Clever Champion; The Scarlet Witch; Hulk, Gamma Goliath; Wonder Man, Hollywood Hero; Super-Adaptoid | Inspiring Statuary | `test_c02_static_credit.py` |
+| "[As long as `<condition>`, ]you may cast spells as though they had flash." - credited only with a readable condition | `Game.flash_grant_condition_of_line` | Captain Mar-Vell, Space-Born | High Fae Trickster | `test_c02_static_credit.py` |
+| "`<this>` enters with a `<kind>` counter on him"; "As long as `<this>` has a `<kind>` counter on him, you and other `<subtype>` you control have `<keyword>`." | `keyword_counters.enters_with_counters_pronoun_fallback`, `conditional_group_keyword_grant_of_line` | Captain America, Super-Soldier | - | `test_c02_static_credit.py` |
+| "As an additional cost to cast this spell, `<cost>` or pay `<mana>`." on a permanent | `casting.reads_or_pay_additional_cost_line` | Titania, Rugged Rumbler | Bayou Groff | `test_c02_static_credit.py` |

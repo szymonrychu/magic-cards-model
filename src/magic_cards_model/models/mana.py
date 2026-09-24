@@ -572,6 +572,13 @@ class ManaSpend(EngineModel):
     the mana itself. A `{C}` symbol still wants colorless mana (colorless is
     not a color, CR 105.1) and `{S}` still wants snow mana."""
 
+    mana_value: float | None = None
+    """CR 202.3's mana value of the spell being cast - X counted as the number
+    chosen for it (CR 202.3e: the spell is on the stack by the time its cost
+    is paid). `None` for an activation, which has no spell to ask about."""
+    x_in_cost: bool = False
+    """Whether the spell being cast has an {X} in its mana cost."""
+
     @classmethod
     def _of(
         cls,
@@ -593,7 +600,9 @@ class ManaSpend(EngineModel):
         )
 
     @classmethod
-    def casting(cls, card: "HasCharacteristics", *, zone: Zone | None) -> "ManaSpend":
+    def casting(
+        cls, card: "HasCharacteristics", *, zone: Zone | None, x_value: int = 0
+    ) -> "ManaSpend":
         """Mana spent to cast `card` as a spell, out of `zone`.
 
         A spell is on the stack, which `Game.computed_board` does not cover, so
@@ -611,7 +620,18 @@ class ManaSpend(EngineModel):
         (CR 701.18a's own hedge) is exactly the guess Interdimensional Web
         Watch's "cast spells from exile" is about.
         """
-        return cls._of(SpendPurpose.CAST_SPELL, card, zone)
+        spend = cls._of(SpendPurpose.CAST_SPELL, card, zone)
+        printed = getattr(card, "mana_cost", None)
+        x_count = ManaCost.parse(printed).x_count if printed else 0
+        base = getattr(card, "mana_value", None)
+        if base is None:
+            base = getattr(card, "cmc", None) or 0.0
+        return spend.model_copy(
+            update={
+                "mana_value": float(base) + x_count * x_value,
+                "x_in_cost": x_count > 0,
+            }
+        )
 
     @classmethod
     def activating(cls, card: "HasCharacteristics", *, any_color: bool = False) -> "ManaSpend":
@@ -700,6 +720,11 @@ class SpendClause(EngineModel):
     """Interdimensional Web Watch's "from exile": the spell's CR 601.2a move
     must have started in this one of CR 400.1's zones. `None` asks nothing,
     like every other empty field here."""
+    min_mana_value: int | None = None
+    """Helga, Skittish Seer's "creature spells with mana value 4 or greater":
+    the spell's CR 202.3 mana value must reach this. `None` asks nothing."""
+    requires_x_in_cost: bool = False
+    """Helga's "creature spells with {X} in their mana costs"."""
 
     def accepts(self, spend: ManaSpend) -> bool:
         # `colorless` and `zone` are never alternatives: no printing offers
@@ -714,6 +739,12 @@ class SpendClause(EngineModel):
         # wrong one does, which is the fail-closed direction: a clause that
         # names a zone is not satisfied by a caller who could not say.
         if self.zone is not None and spend.zone is not self.zone:
+            return False
+        if self.min_mana_value is not None and (
+            spend.mana_value is None or spend.mana_value < self.min_mana_value
+        ):
+            return False
+        if self.requires_x_in_cost and not spend.x_in_cost:
             return False
         # CR 109.2: every negated type must be absent, independently of
         # `joined` and of whatever the positive qualities below ask - "not

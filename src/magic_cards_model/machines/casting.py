@@ -5497,7 +5497,7 @@ class Casting(EngineModel):
             # to the stack five steps ago, so the stack is the only answer the
             # object itself still has, and Interdimensional Web Watch's "cast
             # spells from exile" asks about where the cast *started*.
-            spend=ManaSpend.casting(self.spell, zone=self.origin_zone),
+            spend=ManaSpend.casting(self.spell, zone=self.origin_zone, x_value=self.x_value),
         )
         if choices is not None:
             self.payment.choose(choices)
