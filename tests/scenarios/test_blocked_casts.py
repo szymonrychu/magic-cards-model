@@ -38,6 +38,8 @@ with `mise run rules:find` in the session that wrote it:
   spell..."
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import (
     exile_adventured,
@@ -312,19 +314,78 @@ def test_an_exiled_adventure_creature_blocked_by_a_prohibition_is_reported():
 
     rows = {b.spell_face: b for b in _blocked(scenario, "alice") if b.card_id == giant.id}
     # The creature face (`spell_face=None`) is the row this test targets -
-    # the exile-Adventure keyword option's own cast. `_base_cost_options`
-    # also names Stomp for this Adventure-layout card regardless of zone
-    # (see the docstring above), so the identical loop refuses that entry
-    # too; both get a row because `blocked_casts` never picks and chooses
-    # among what `_cast_actions` itself enumerates.
-    assert set(rows) == {None, "Stomp"}
-    for row in rows.values():
-        assert row.name == "Bonecrusher Giant"
-        assert row.zone is Zone.EXILE
-        assert row.reason == expected_reason
-        assert row.rule == "611.1"
+    # the exile-Adventure keyword option's own cast, refused here only by
+    # Voice of Victory's CR 611.1 prohibition. `_base_cost_options` also
+    # names a `spell_face="Stomp"` entry for this Adventure-layout card
+    # regardless of zone (see the docstring above), and the identical loop
+    # refuses that entry too - but CR 715.3d makes an exiled Adventure
+    # card's Adventure half **permanently** uncastable this way, not merely
+    # blocked by Voice of Victory, so a `Stomp` row here would misreport a
+    # face that can never be cast as one this prohibition happens to be
+    # blocking. `test_the_stomp_face_of_an_exiled_adventure_card_is_never_
+    # a_legal_cast_not_merely_blocked` below documents that pre-existing
+    # gap as `xfail` rather than pinning it here.
+    assert None in rows
+    row = rows[None]
+    assert row.name == "Bonecrusher Giant"
+    assert row.zone is Zone.EXILE
+    assert row.reason == expected_reason
+    assert row.rule == "611.1"
 
     assert (giant.id, None) not in _cast_kinds(scenario, "alice")
+    assert (giant.id, "Stomp") not in _cast_kinds(scenario, "alice")
+
+
+@pytest.mark.xfail(
+    reason=(
+        "pre-existing gap, not this task's to fix: `_base_cost_options` "
+        "names a `spell_face='Stomp'` cast option for an Adventure-layout "
+        "card sitting in exile under the permission `exile_adventured` "
+        "grants, with no check that the Adventure half already resolved. "
+        "CR 715.3d: an exiled Adventure card 'can't be cast as an "
+        "Adventure this way' - full stop, not merely subject to whatever "
+        "timing or CR 611.1 prohibition happens to apply. Stomp is an "
+        "instant, so with nothing else prohibiting it, `_why_cannot_cast_"
+        "face` never refuses this spell_face and `legal_actions` reports "
+        "it as a legal CAST - not merely absent from `blocked_casts`, "
+        "which only reports refusals `_cast_actions` itself computes. "
+        "Fixing this means `_base_cost_options` must stop offering the "
+        "Adventure face once a card sits in exile after resolving as one, "
+        "which changes `_cast_actions`/`legal_actions` (CR 601.3), not "
+        "just `blocked_casts` - out of scope for FB3, which only reports "
+        "refusals `_cast_actions` already computes, never adds new ones."
+    ),
+    strict=True,
+)
+def test_the_stomp_face_of_an_exiled_adventure_card_is_never_a_legal_cast_not_merely_blocked():
+    """Same board as the prohibition test above, but without Voice of
+    Victory: nothing refuses the exiled Bonecrusher Giant's creature face
+    or its Stomp face on CR 117.1a timing (Stomp is an instant) or a CR
+    611.1 prohibition, so neither is a `blocked_casts` row - but CR 715.3d
+    still makes recasting Stomp from exile illegal, and `legal_actions`
+    should not list it as a legal CAST either."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Bonecrusher Giant"], battlefield=["Mountain"] * 5)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain")
+    casting = scenario.cast("Bonecrusher Giant")
+    casting.cast_as_adventure()
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    stomp = scenario.resolve_top()
+    exile_adventured(scenario.game, stomp, "alice")
+
+    _advance_to(scenario, "bob", Step.PRECOMBAT_MAIN)
+    giant = scenario.find("Bonecrusher Giant", Zone.EXILE, "alice")
+
+    rows = {b.spell_face: b for b in _blocked(scenario, "alice") if b.card_id == giant.id}
+    assert "Stomp" not in rows
     assert (giant.id, "Stomp") not in _cast_kinds(scenario, "alice")
 
 
