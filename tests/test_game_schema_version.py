@@ -826,3 +826,26 @@ def test_a_snapshot_written_before_source_times_transformed_is_refused() -> None
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_SOURCE_TIMES_TRANSFORMED}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before C00-T5's `CostComponent.link_to_permanent_id`.
+_SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK = 64
+
+
+def test_the_delve_exile_link_bump_moved_the_version_past_sixty_four() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK
+
+
+def test_a_snapshot_written_before_the_delve_exile_link_is_refused() -> None:
+    """A version-64 dump is refused rather than decoded as current: a pending
+    `AbilityOnStack.keyword_activation`/`.unless_payment`'s own exile
+    component in it carries no `link_to_permanent_id`, so CR 607.2q's own
+    "exiled with it" read would find nothing linked at all."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK}",
+    ):
+        Game.model_validate(dumped)

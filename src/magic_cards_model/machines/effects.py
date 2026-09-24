@@ -1515,6 +1515,54 @@ _OBJECT_COUNTER_COUNT_RE = re.compile(
 )
 
 
+#: The "and"/"or"/comma-joined card-type list `machines/replacement.
+#: _COUNTER_FOR_EACH`'s own "for each `<types>` card(s)/spell(s) ..." tail
+#: names - "instant and sorcery", Murktide Regent's and Ral, Leyline
+#: Prodigy's own shared wording, CR 205.2a's card types read the same
+#: "comma/and/or" grammar `machines/triggers._SPELLS_CAST_THIS_TURN` already
+#: reads for Arclight Phoenix's "you've cast three or more instant and
+#: sorcery spells this turn" - written fresh here rather than imported, since
+#: this module's own `_amount_term` is the reading site and the two live in
+#: different files for different callers (a triggered ability's intervening
+#: if there, an entering permanent's counter count here).
+_TYPE_LIST_SPLIT_RE = re.compile(r",|\band\b|\bor\b", re.IGNORECASE)
+
+
+def _read_type_word_list(text: str) -> frozenset[Type] | None:
+    """ "instant and sorcery" -> `{Type.INSTANT, Type.SORCERY}`, or `None` for
+    a list naming anything that is not one of CR 205.2a's fifteen card types -
+    fail closed rather than guess at an unlisted word."""
+    types: set[Type] = set()
+    for word in _TYPE_LIST_SPLIT_RE.split(text):
+        word = word.strip().lower()
+        if not word:
+            continue
+        card_type = next((kind for kind in Type if kind.value == word.rstrip("s")), None)
+        if card_type is None:
+            return None
+        types.add(card_type)
+    return frozenset(types) or None
+
+
+#: "instant and sorcery card exiled with it" (Murktide Regent) - CR 607.2q's
+#: link, written by `machines/objects_as_costs.delve` onto every card a
+#: delve payment exiles as `ExileAnnotation.linked_permanent_id`. `types`
+#: is optional the same way `_SPELLS_CAST_THIS_TURN_AMOUNT_RE` below's is -
+#: a bare "cards exiled with it" would count every one, though no printing in
+#: the pool omits the type list yet.
+_CARDS_EXILED_WITH_IT_RE = re.compile(
+    r"^(?:(?P<types>[a-z, ]+?) )?cards? exiled with it$", re.IGNORECASE
+)
+
+#: "instant and sorcery spell you've cast this turn" (Ral, Leyline Prodigy) -
+#: `Game.spells_cast_this_turn`'s own running per-player list, CR 601.2i's
+#: "any abilities that trigger when a spell is cast" moment being the same
+#: moment this list gains an entry.
+_SPELLS_CAST_THIS_TURN_AMOUNT_RE = re.compile(
+    r"^(?:(?P<types>[a-z, ]+?) )?spells? you'?ve cast this turn$", re.IGNORECASE
+)
+
+
 def _amount_term(term: str) -> AmountReader | None:
     """One term of `amount_expression`, or `None` when it is not readable."""
     text = term.strip()
@@ -1591,6 +1639,43 @@ def _amount_term(term: str) -> AmountReader | None:
             return max(value, 0) if value is not None else 0
 
         return read_object_characteristic
+    if match := _CARDS_EXILED_WITH_IT_RE.fullmatch(text):
+        types = None if match.group("types") is None else _read_type_word_list(match.group("types"))
+        if match.group("types") is not None and types is None:
+            return None
+
+        def count_cards_exiled_with_it(
+            game: "Game", _controller: str, obj: CardState | None, _x: int
+        ) -> int:
+            # CR 607.2q: only cards `machines/objects_as_costs.delve` (or
+            # another exile-while-paying-a-cost ability) linked to *this*
+            # entering object - `ExileAnnotation.links_to` matches on id
+            # alone, which is right here: the link was written while `obj`
+            # was still the spell on the stack, before its own zone change
+            # to the battlefield gave it a fresh `zone_change_stamp`.
+            if obj is None:
+                return 0
+            return sum(
+                1
+                for card in game.exile
+                if card.exile_annotation is not None
+                and card.exile_annotation.links_to(obj.id, None)
+                and (types is None or set(card.types) & types)
+            )
+
+        return count_cards_exiled_with_it
+    if match := _SPELLS_CAST_THIS_TURN_AMOUNT_RE.fullmatch(text):
+        types = None if match.group("types") is None else _read_type_word_list(match.group("types"))
+        if match.group("types") is not None and types is None:
+            return None
+
+        def count_spells_cast_this_turn(
+            game: "Game", controller: str, _obj: CardState | None, _x: int
+        ) -> int:
+            cast = game.spells_cast_this_turn.get(controller, [])
+            return sum(1 for state in cast if types is None or set(state.types) & types)
+
+        return count_spells_cast_this_turn
     counted = count_expression(text) or _devotion_count(text)
     if counted is not None:
         return lambda game, controller, _object, _x: counted(game, controller)

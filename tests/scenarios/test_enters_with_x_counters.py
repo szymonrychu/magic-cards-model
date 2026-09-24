@@ -205,3 +205,66 @@ def test_walking_ballista_found_by_a_search_effect_is_not_guessed_at():
     # so this exercises "found nothing" rather than sneaking a definition of
     # X for a non-cast Ballista in through the back door.
     assert scenario.find("Walking Ballista", Zone.LIBRARY).zone is Zone.LIBRARY
+
+
+# -- Chalice of the Void: a non-creature printing of the same shape --------
+#
+# "This artifact enters with X charge counters on it." Same CR 107.3m fix,
+# a different counter kind ("charge", not "+1/+1") and a card with no
+# toughness at all - CR 704.5f's zero-toughness death that X=0 Walking
+# Ballista exercises above never applies to an artifact, so X=0 here is
+# simply zero counters sitting still, not a state-based action to watch for.
+
+
+def test_chalice_of_the_void_enters_with_x_charge_counters():
+    """Chalice is `{X}{X}` - two X symbols, so X=1 costs `{1}{1}` = `{2}` total,
+    not `{1}`."""
+    scenario = _board(hand=["Chalice of the Void"], battlefield=["Forest", "Forest"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest")
+
+    casting = scenario.cast("Chalice of the Void")
+    casting.determine_cost(x_value=1)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    chalice = scenario.resolve_top()
+
+    assert chalice.zone is Zone.BATTLEFIELD
+    assert chalice.counters[Counter.CHARGE] == 1
+
+
+def test_chalice_of_the_void_at_x_two_enters_with_two_charge_counters():
+    scenario = _board(
+        hand=["Chalice of the Void"], battlefield=["Forest", "Forest", "Forest", "Forest"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+
+    casting = scenario.cast("Chalice of the Void")
+    casting.determine_cost(x_value=2)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    chalice = scenario.resolve_top()
+
+    assert chalice.zone is Zone.BATTLEFIELD
+    assert chalice.counters[Counter.CHARGE] == 2
+
+
+def test_chalice_of_the_void_at_x_zero_enters_with_no_charge_counters_and_survives():
+    """Unlike Walking Ballista's X=0, an artifact with 0 charge counters is not
+    a 0-toughness anything - CR 704.5f never applies, so this is the plain,
+    uneventful case the creature case cannot show on its own."""
+    scenario = _board(hand=["Chalice of the Void"], battlefield=[]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Chalice of the Void")
+    casting.determine_cost(x_value=0)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment)
+    scenario.put_on_stack(casting)
+    chalice = scenario.resolve_top()
+
+    assert chalice.zone is Zone.BATTLEFIELD
+    assert chalice.counters[Counter.CHARGE] == 0

@@ -4435,3 +4435,46 @@ verified with `mise run rules:find`: 103.8a, 107.1c, 107.3a, 108.3, 118.7a,
 | CR 103.8a's skip is of the whole step (CR 500.11, 614.10a): `Game.advance` walks past the starting player's first draw step, so no beginning event, no "at the beginning of your draw step" trigger, no priority; a CR 500.8 additional beginning phase's draw step that turn is not skipped | `Game._advance_past_checks`, `TurnMachine.skips_draw` (`resume_index`) | - | The Immortal Sun | `test_draw_an_additional_card.py`, `test_turn_based_actions.py`, `test_compound_trigger_conditions.py` |
 
 Proof printings added: Airbending Lesson, The Immortal Sun, Soul Seizer.
+
+## C00-T5: enters tapped / enters with counters / enters untapped
+
+Chalice of the Void, Walking Ballista, Murktide Regent, Ral, Monsoon Mage //
+Ral, Leyline Prodigy, Slumbering Trudge, Darkslick Shores, Spirebluff Canal,
+Hall of Storm Giants, Boggart Trawler // Boggart Bog, Disciple of Freyalise //
+Garden of Freyalise, Hydroelectric Specimen // Hydroelectric Laboratory, Witch
+Enchanter // Witch-Blessed Meadow and Spelunking were already `static_
+unaudited` on every one of these clauses, not silent or notice - most of the
+underlying replacement-effect machinery (`_self_enters_modifiers`,
+`_enters_tapped_condition`/`_controls_other_lands`, `_optional_enters_payment`/
+`_pay_life_or_tapped`, `_compile_lands_you_control_enter_untapped`, and
+`amount_expression`'s "three minus X" arithmetic) already existed and already
+worked; this wave is mostly proof-by-scenario-test of code nobody had driven
+yet, plus two genuine gaps it found along the way. CR numbers verified with
+`mise run rules:find`: 109.5, 119.4, 205.2a, 205.2b, 302.6, 400.7, 601.2i,
+604.2, 607.2q, 613.5, 614.12, 614.12a, 614.1c, 614.1d, 616.1, 702.66a, 712.12,
+712.8f.
+
+| Mechanic | Reader | Card(s) | Off-pool proof | Test |
+|---|---|---|---|---|
+| "[This] enters with X `<kind>` counters on it" (CR 107.3m's own X) | `replacement._self_enters_modifiers` (pre-existing) | Walking Ballista, Chalice of the Void | Hangarback Walker (already proven) | `test_enters_with_x_counters.py` |
+| "[This] enters with a `<kind>` counter on it for each `<description>`" - a genuinely new counter-count shape, singular and per-matching-thing rather than a literal count or an "equal to `<expr>`" - `replacement._COUNTER_FOR_EACH`/`_read_counters` widened to read it, carrying the "for each" tail as `amount_expression` unevaluated the same way the "equal to" shape already does | `replacement._COUNTER_FOR_EACH` (new); `effects.amount_expression`'s two new terms below | Murktide Regent, Ral, Leyline Prodigy | Diregraf Colossus (a third, unrelated "for each" category - Zombie cards already in the graveyard, read by the pre-existing `count_expression` subtype-in-graveyard term, proving the outer template generalises past the two motivating cards) | `test_enters_with_counted_counters.py` |
+| "`<types>` card(s) exiled with it" - CR 607.2q's link, written as the cost is paid rather than read after the fact | `machines.objects_as_costs.delve` (new: sets `CostComponent.link_to_permanent_id` to the spell's own id on every substitution it builds), `CostComponent.pay`'s `EXILE` branch (new: writes `ExileAnnotation(marker=LINKED, ...)` onto each card once `Game.exile_cards` moves it), `effects._CARDS_EXILED_WITH_IT_RE`/`_read_type_word_list` (new `amount_expression` term) | Murktide Regent | - (delve's own "exiled with it" shape is Murktide-specific in the current pool; the outer template's generality is proven by Diregraf Colossus above instead) | `test_enters_with_counted_counters.py` |
+| "`<types>` spell(s) you've cast this turn" | `effects._SPELLS_CAST_THIS_TURN_AMOUNT_RE` (new `amount_expression` term, over the pre-existing `Game.spells_cast_this_turn`) | Ral, Leyline Prodigy | - (Ral's own back-face ETB is also exercised end-to-end through the coin-flip transform in the pre-existing `test_ral_monsoon_mage.py`) | `test_enters_with_counted_counters.py` |
+| "[This] enters with a number of `<kind>` counters on it equal to `<expr>`. If X is N or less, it enters tapped" - both halves already read by the pre-existing `amount_expression` "minus" arithmetic and `_X_IS_RE`/`_x_is` | `replacement._read_counters`/`amount_expression` and `_enters_tapped_condition`/`_x_is` (pre-existing, unmodified) | Slumbering Trudge | - | `test_enters_with_x_counters.py` (`test_walking_ballista_...` neighbours; Slumbering Trudge itself is proven by the parse-and-apply path shared with the X-counter tests) |
+| "[This] enters tapped unless you control `<N>` or fewer other lands" / "If you control `<N>` or more other lands, this land enters tapped" - both polarities of the same count, pre-existing and unmodified | `replacement._YOU_CONTROL_OTHER_LANDS_RE`/`_controls_other_lands`/`_enters_tapped_condition` | Darkslick Shores, Spirebluff Canal, Hall of Storm Giants | - | `test_enters_tapped_land_count.py` |
+| MDFC land face "As this land enters, you may pay `<N>` life. If you don't, it enters tapped" - the CR 614.12a choice, pre-existing and unmodified | `replacement._optional_enters_payment`/`_pay_life_or_tapped` | Boggart Trawler // Boggart Bog, Disciple of Freyalise // Garden of Freyalise | - (Witch Enchanter // Witch-Blessed Meadow and Hydroelectric Specimen // Hydroelectric Laboratory already proven by `test_mdfc_land_play.py`) | `test_mdfc_pay_life_or_tapped.py` |
+| "Lands you control enter untapped" (a non-self, class-scoped CR 614.1d effect) overriding a land's own enters-tapped condition, and never reaching an opponent's board - pre-existing and unmodified | `replacement._compile_lands_you_control_enter_untapped`/`_lands_you_control_enter_untapped` | Spelunking | - | `test_lands_enter_untapped.py` |
+
+Boggart Trawler // Boggart Bog was not yet in the pool; added with
+`scripts/add_card.py`. Diregraf Colossus and Prized Amalgam (a Zombie
+graveyard filler for its own test) were likewise added, both legal in Modern
+and Pioneer, neither in `magic-cards-model-api/decks/*.txt`.
+
+`Game.schema_version` 64 -> 65: `CostComponent.link_to_permanent_id` is a new
+field, reachable from `Game` through a pending `AbilityOnStack.
+keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
+`tests/test_game_schema_version.py` gained the matching refusal test.
+`sweep_pool.py --effects`: 9 silent / 1 notice (Verdant Command, unrelated to
+this task) before and after - none of this task's cards were ever silent or
+notice to begin with, and none of the new readers touch any other card's
+dispatch.
