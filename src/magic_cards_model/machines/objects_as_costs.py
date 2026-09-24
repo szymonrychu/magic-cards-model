@@ -512,7 +512,7 @@ def delve(payment: CostPayment, spell: CardState, *cards: CardState) -> list[Cos
 
 
 def improvise(
-    payment: CostPayment, spell: CardState, *artifacts: CardState
+    payment: CostPayment, spell: CardState, *artifacts: CardState, granted: bool = False
 ) -> list[CostSubstitution]:
     """Tap `artifacts` to pay one generic symbol each of `spell`'s total cost.
 
@@ -528,8 +528,18 @@ def improvise(
     `CostPayment.substitute` rather than quietly tapping one for nothing, and
     the artifacts are tapped when the payment is paid, not now - so a cancelled
     payment leaves them untapped (CR 733.1).
+
+    `granted=True` is CR 113.6's "an effect can grant a permanent an ability
+    it doesn't have" (Ironheart, Clever Champion's own "Noncreature spells
+    you cast have improvise.") - the spell then genuinely has the ability by
+    the rules even though `spell.card`, the immutable printing, never carries
+    it (`CLAUDE.md`: "do not add game state to `Card`"). The caller
+    (`Game.has_granted_improvise`) is what actually reads that static grant;
+    this function only trusts the flag it is handed, the same division
+    `_offer_free_casts_from_among` already keeps between "is this legal" and
+    "do it".
     """
-    if not has_improvise(spell.card):
+    if not granted and not has_improvise(spell.card):
         raise ValueError(f"{spell.name} does not have improvise ({IMPROVISE_RULE})")
     offer = improvise_offer()
     return [_substitute(payment, offer, artifact, None) for artifact in artifacts]

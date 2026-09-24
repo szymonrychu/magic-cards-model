@@ -623,12 +623,23 @@ class StaticPrisonReturn(DelayedEffectSpecBase):
     603.7c's own check: same id, same zone, same incarnation) without forcing
     the trigger's single `subject_id` field to mean two different things at
     once.
+
+    `return_zone` is CR 610.3's own "previous zone": most CR 610.2 exiles of
+    this shape take a permanent off the battlefield (Oblivion Ring's own
+    template), so `Zone.BATTLEFIELD` is the default every existing caller
+    still gets un-changed. Cloak and Dagger, Entwined is the first printing in
+    the pool whose "exile a nonland card from their hand or the chosen
+    creature" can exile a *hand* card instead - CR 610.3 returns it to
+    whichever zone it actually left, not always the battlefield - so that
+    caller passes `Zone.HAND` explicitly when the chosen object was a hand
+    card.
     """
 
     kind: Literal["static_prison_return"] = "static_prison_return"
 
     exiled_id: UUID
     expected_stamp: UUID
+    return_zone: Zone = Zone.BATTLEFIELD
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         _drop_sibling_triggers(game, trigger)
@@ -639,7 +650,10 @@ class StaticPrisonReturn(DelayedEffectSpecBase):
             return  # CR 603.7c: gone, or a new incarnation - not this card any more.
         if card.owner is None:
             return
-        game.put_onto_battlefield(card, card.owner, tapped=False)
+        if self.return_zone is Zone.HAND:
+            game.return_to_hand(card)
+        else:
+            game.put_onto_battlefield(card, card.owner, tapped=False)
 
 
 class ReturnExiledCardAndAddCounters(DelayedEffectSpecBase):

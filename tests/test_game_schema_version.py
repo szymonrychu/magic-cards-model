@@ -1134,3 +1134,36 @@ def test_a_snapshot_written_before_batched_events_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATCHED_EVENTS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before C02-T7's `CardState.chosen_modal_options_this_turn`
+#: (The Vision's own per-turn "choose one that hasn't been chosen this turn
+#: -", reset every cleanup step, a sibling of C01-T6's never-reset
+#: `chosen_modal_options`) and `machines.delayed.StaticPrisonReturn.
+#: return_zone` (Cloak and Dagger, Entwined's CR 610.3 delayed return from a
+#: hand rather than only from the battlefield).
+_SCHEMA_VERSION_BEFORE_PER_TURN_MODAL_OPTIONS_AND_RETURN_ZONE = 77
+
+
+def test_the_per_turn_modal_options_bump_moved_the_version_past_seventy_seven() -> None:
+    assert (
+        Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_PER_TURN_MODAL_OPTIONS_AND_RETURN_ZONE
+    )
+
+
+def test_a_snapshot_written_before_per_turn_modal_options_and_return_zone_is_refused() -> None:
+    """A version-77 dump is refused rather than decoded as current: a
+    permanent in it carries no `chosen_modal_options_this_turn`, so The
+    Vision's per-turn "choose one that hasn't been chosen this turn -" would
+    read every prior turn's choices as still exclusive; and a pending
+    `StaticPrisonReturn` in it carries no `return_zone`, so Cloak and Dagger,
+    Entwined's CR 610.3 return of a card exiled from a hand would default to
+    the battlefield instead."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_PER_TURN_MODAL_OPTIONS_AND_RETURN_ZONE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_PER_TURN_MODAL_OPTIONS_AND_RETURN_ZONE}",
+    ):
+        Game.model_validate(dumped)

@@ -1498,7 +1498,7 @@ def _strip_leading_article(text: str) -> str:
 
 
 def _cast_spell_targets_condition_holds(
-    game: "Game", target_text: str, controller: str, event: GameEvent
+    game: "Game", target_text: str, controller: str, event: GameEvent, source: CardState
 ) -> bool | None:
     """Whether a CAST_SPELL condition's own "... that targets
     `<restriction>`" clause (CR 601.2c) is satisfied by the spell `event`
@@ -1514,10 +1514,34 @@ def _cast_spell_targets_condition_holds(
     about what "a creature you control" means. Imported at call time: `.
     targeting` imports `.combat`, which imports this module for `GameEvent`,
     so the two cannot import each other at module scope.
+
+    A restriction naming this ability's own source by name - Speedball, New
+    Warrior's own "a player casts a spell that targets Speedball" - is CR
+    201.5/201.5c self-reference, not one of `_read_phrase`'s target
+    *descriptions* (a type, a controller, a keyword): "Speedball" is a
+    proper name `_read_phrase`'s noun-phrase grammar has no way to read, the
+    same reason `self_reference_names`/`_self_referential` exist for every
+    other self-referential sentence in this module. Checked first, before
+    `_read_phrase` ever sees the text, so a self-naming restriction is a
+    literal identity check against `source.id` rather than an unreadable
+    phrase that falls to `None` and a spurious `CastConditionNotice`.
     """
+    from .abilities import self_reference_names
     from .targeting import _read_phrase
 
-    requirement = _read_phrase("", _strip_leading_article(target_text), strict=True)
+    stripped = _strip_leading_article(target_text).strip()
+    if stripped in self_reference_names(source.name, legendary=_is_legendary_source(source)):
+        if event.subject_id is None:
+            return False
+        spell = game.find_by_id(event.subject_id)
+        if spell is None:
+            return False
+        return any(
+            not target_ref.is_player and target_ref.card_id == source.id
+            for target_ref in spell.targets
+        )
+
+    requirement = _read_phrase("", stripped, strict=True)
     if requirement is None:
         return None
     if event.subject_id is None:
@@ -2785,7 +2809,9 @@ def condition_matches(
         if not _subtype_matches(event.subject_subtypes, subtype):
             return False
         if target_clause is not None:
-            holds = _cast_spell_targets_condition_holds(game, target_clause, controller, event)
+            holds = _cast_spell_targets_condition_holds(
+                game, target_clause, controller, event, source
+            )
             if holds is None:
                 game.cast_condition_notices.append(
                     CastConditionNotice(

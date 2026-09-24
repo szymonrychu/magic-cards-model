@@ -36,13 +36,17 @@ trigger ends up with no targets are told apart and both are recorded on
   condition's "creature" as a "cast a creature spell" restriction either
   (see `scenarios/test_frontline_heroism.py`, which replaces this file's old
   hand-placed-trigger staging now that Frontline Heroism's trigger fires for
-  real). The shape is *not* gone from the pool, though: a sweep of all 738
-  fixture cards finds three triggered abilities `profile_for_text` still
-  reports `understood=False` for - **Bonecrusher Giant**, **Loki, God of
-  Mischief** and **Stirring Hopesinger** - each one a "becomes the target
-  of ..." / "that targets ..." *condition* the parser mistakes for an
-  attempted targeting restriction of the ability's own. Bonecrusher Giant is
-  this file's live fixture for `UNPARSED`, played out for real.
+  real). A sweep of all 738 fixture cards once found three triggered
+  abilities `profile_for_text` still reported `understood=False` for -
+  **Bonecrusher Giant**, **Loki, God of Mischief** and **Stirring
+  Hopesinger** - each a "becomes the target of ..." / "that targets ..."
+  *condition* the parser mistook for an attempted targeting restriction of
+  the ability's own. Task C02-T7's own fix for Speedball, New Warrior's
+  identical shape closed all three at once: `Game._ask_trigger_targets` now
+  reads `TriggeredAbility.effect` rather than an ability's whole printed
+  text, so a condition's own stray "target" word is never scanned at all.
+  Bonecrusher Giant is this file's live fixture for that fix, played out
+  for real.
 - `NO_LEGAL_TARGET` - the restriction parsed fine, but nothing on the
   battlefield satisfies it. A legitimate game state (CR 608.2d's own
   "nobody says otherwise" default), not a bug, and not CR 608.2b's fizzle -
@@ -62,33 +66,30 @@ from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 
-def test_an_unparsed_restriction_is_logged_not_silent():
-    """Bonecrusher Giant, bolted: the trigger fires with nothing to point at.
+def test_bonecrusher_giants_condition_is_no_longer_misread_as_a_target():
+    """Bonecrusher Giant, bolted: the trigger fires with nothing to point at
+    - and, as this test's own predecessor predicted it should once fixed, no
+    longer through a false engine gap.
 
     Its printed trigger (verified with `resolve_cards`) is "Whenever this
     creature becomes the target of a spell, this creature deals 2 damage to
-    that spell's controller." `machines/targeting.py` cannot read "becomes the
-    target of a spell" - that phrase is the trigger's *condition*, describing
-    something that happened to this permanent, not a CR 601.2c target this
-    ability's own controller is asked to choose - so `profile_for_text` comes
-    back `understood=False` and CR 603.3d's "the remainder of the process for
-    putting a triggered ability on the stack is identical to the process for
-    casting a spell listed in rules 601.2c-d" is carried out with no target
-    chosen at all.
-
-    The assertion is deliberately about the *presence* of an engine gap: the
-    ability goes on the stack with `targets == []`, and
-    `Game.targeting_notices` says why, with `UNPARSED` rather than
-    `NO_LEGAL_TARGET`. A sweep of all 738 fixture cards found exactly three
-    triggered abilities still shaped this way - Bonecrusher Giant, Loki, God
-    of Mischief and Stirring Hopesinger - and every one of them is a
-    "becomes the target of" / "that targets" condition, not a real target.
-
-    **Rewrite this test if anyone teaches `machines/targeting.py` to read
-    "becomes the target of a spell".** The correct outcome then is that
-    Bonecrusher Giant's trigger is `understood=True` with no targeting
-    requirement of its own and *no notice at all* - and this test, asserting
-    the notice exists, would start failing for the right reason.
+    that spell's controller." "becomes the target of a spell" is CR 603.1's
+    trigger *condition* - a fact about something that already happened to
+    this permanent - never a CR 601.2c target this ability's own controller
+    is asked to choose. `Game._ask_trigger_targets` used to hand
+    `profile_for_text` the ability's *whole* printed text, condition
+    included, so the bare word "target" inside the condition read as an
+    attempted-but-unreadable targeting restriction of the ability's own
+    (`understood=False`, `TargetingNoticeKind.UNPARSED`) - task C02-T7's own
+    fix for Speedball, New Warrior's identical shape ("a player casts a
+    spell that targets Speedball") widened this to every triggered ability:
+    `_ask_trigger_targets` now reads `TriggeredAbility.effect` - the words
+    *after* the condition, already split off by `machines/abilities.py`'s
+    own parser - which names no target at all here, so the profile comes
+    back `understood=True` with no requirements and no notice is recorded.
+    A sweep of all 738 fixture cards found exactly three triggered abilities
+    shaped this way - Bonecrusher Giant, Loki, God of Mischief and Stirring
+    Hopesinger - and all three now read the same correct way.
     """
     scenario = (
         Scenario()
@@ -106,10 +107,7 @@ def test_an_unparsed_restriction_is_logged_not_silent():
     (ability,) = scenario.game.abilities_on_stack
     assert ability.source_name == "Bonecrusher Giant"
     assert ability.targets == []
-
-    (notice,) = scenario.game.targeting_notices
-    assert notice.kind is TargetingNoticeKind.UNPARSED
-    assert notice.source_name == "Bonecrusher Giant"
+    assert scenario.game.targeting_notices == []
 
 
 def test_no_legal_target_is_logged_differently_from_unparsed():

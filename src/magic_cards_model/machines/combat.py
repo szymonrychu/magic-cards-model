@@ -1229,6 +1229,33 @@ _CANT_BLOCK_OR_BE_BLOCKED_BY_RE = re.compile(
     r"can't block or be blocked by (?P<description>.+?)\.?$", re.IGNORECASE
 )
 
+#: "can't be blocked except by creatures with `<keyword>`." - Speed, Young
+#: Avenger's own granted rider ("target creature with haste can't be blocked
+#: this turn except by creatures with haste"; `machines/effects.py`'s
+#: `_TARGET_CANT_BE_BLOCKED_RE` grants exactly this text, verbatim, once the
+#: keyword names a real `Keyword` member). CR 509.1a's restriction with CR
+#: 509.1b's own "unless" shape folded onto it: the attacker still can't be
+#: blocked, except by a creature that itself has the named keyword right now
+#: (CR 613.5 - a blocker that gains the keyword mid-combat qualifies; one
+#: that loses it does not).
+_CANT_BE_BLOCKED_EXCEPT_BY_KEYWORD_RE = re.compile(
+    r"can't be blocked except by creatures with (?P<keyword>[a-z][a-z ]*?)\.?$", re.IGNORECASE
+)
+
+
+def block_exception_keyword(name: str) -> "Keyword | None":
+    """`name`, lowercased and stripped, as a `Keyword` member - or `None` when
+    it names something `evasion_restriction_refusal` has no keyword for. Kept
+    to a real `Keyword`, the same closed vocabulary `has_keyword` already
+    answers every other combat question against, so an exception naming a
+    keyword outside it fails closed (`looks_like_unparsed_evasion_
+    restriction`) rather than silently exempting nothing - or everything."""
+    try:
+        return Keyword(name.strip().lower())
+    except ValueError:
+        return None
+
+
 #: A bare card-type adjective inside a creature description - Hinterland
 #: Drake's "artifact creatures". Only the types the pool actually needs are
 #: read; an adjective this does not recognise, and is not a "non-<subtype>"
@@ -1356,6 +1383,21 @@ def evasion_restriction_refusal(
                     f'{attacker.name} can\'t be blocked by {description}: "{sentence}" (CR 509.1a)'
                 )
             continue
+        if match := _CANT_BE_BLOCKED_EXCEPT_BY_KEYWORD_RE.search(sentence):
+            keyword_name = match.group("keyword").strip()
+            keyword = block_exception_keyword(keyword_name)
+            if keyword is None:
+                # Not one of `Keyword`'s closed vocabulary - unread, so this
+                # sentence falls through to `looks_like_unparsed_evasion_
+                # restriction`'s fail-closed notice rather than being treated
+                # as either "nobody may block" or "everybody may".
+                continue
+            if has_keyword(blocker, keyword, game):
+                continue
+            return (
+                f"{attacker.name} can't be blocked except by creatures with "
+                f"{keyword_name}, and {blocker.name} doesn't have {keyword_name} (CR 509.1a)"
+            )
         if _CANT_BE_BLOCKED_BY_GREATER_POWER_RE.search(sentence):
             attacker_power = game.power_of(attacker)
             blocker_power = game.power_of(blocker)
@@ -1499,6 +1541,11 @@ def looks_like_unparsed_evasion_restriction(
             if _parse_creature_description(compound.group("description")) is None:
                 return True
             continue
+        exception = _CANT_BE_BLOCKED_EXCEPT_BY_KEYWORD_RE.search(sentence)
+        if exception is not None:
+            if block_exception_keyword(exception.group("keyword")) is None:
+                return True
+            continue
         if (
             _CANT_BE_BLOCKED_RE.search(sentence) is None
             and _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence) is None
@@ -1516,6 +1563,9 @@ def _reads_evasion_sentence(sentence: str) -> bool:
     compound = _CANT_BLOCK_OR_BE_BLOCKED_BY_RE.search(sentence)
     if compound is not None:
         return _parse_creature_description(compound.group("description")) is not None
+    exception = _CANT_BE_BLOCKED_EXCEPT_BY_KEYWORD_RE.search(sentence)
+    if exception is not None:
+        return block_exception_keyword(exception.group("keyword")) is not None
     return any(
         shape.search(sentence) is not None
         for shape in (
@@ -2413,10 +2463,19 @@ def _attack_requirement_match(line: str, name: str) -> "re.Match[str] | None":
     if match is None:
         return None
     subject = (match.group("subject") or "").strip().lower()
+    # CR 201.5c: a legendary permanent may refer to itself by a shortened
+    # version of its name - Ares, God of War's own printed line reads "Ares
+    # attacks each combat if able.", never the comma-suffixed full name.
+    # `_self_reference_names` is the same short-name vocabulary every other
+    # self-reference in this module already reads (`_self_reference_
+    # alternatives`), so this accepts exactly what those do rather than
+    # growing a second one.
     # "This token attacks each combat if able." - the quoted ability Alien
     # Invasion's Alien tokens are created with, a token's own text naming
     # itself "this token".
-    if subject not in ("", "this creature", "this permanent", "this token", name.lower()):
+    accepted = {"", "this creature", "this permanent", "this token"}
+    accepted.update(candidate.lower() for candidate in _self_reference_names(name))
+    if subject not in accepted:
         return None
     return match
 

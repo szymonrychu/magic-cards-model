@@ -1,0 +1,148 @@
+{
+  "object": "card",
+  "id": "9dd2d627-10fc-4045-8545-03bcf75e60ca",
+  "oracle_id": "ebedff30-ae43-4861-aab2-afe1fc88337e",
+  "multiverse_ids": [],
+  "resource_id": "B67229A6E341BB74DE6BE17A0BD47C5C8CDB2AB164A2D023651DBBE7DD925DEA",
+  "mtgo_id": 152319,
+  "arena_id": 104961,
+  "tcgplayer_id": 696548,
+  "cardmarket_id": 891158,
+  "name": "Ms. Marvel, Kamala Khan",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/9dd2d627-10fc-4045-8545-03bcf75e60ca",
+  "scryfall_uri": "https://scryfall.com/card/msh/67/ms-marvel-kamala-khan?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.jpg?1783902954",
+    "normal": "https://cards.scryfall.io/normal/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.jpg?1783902954",
+    "large": "https://cards.scryfall.io/large/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.jpg?1783902954",
+    "png": "https://cards.scryfall.io/png/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.png?1783902954",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.jpg?1783902954",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.jpg?1783902954",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.webp?1783902954",
+    "grid": "https://cards.scryfall.io/grid/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.webp?1783902954",
+    "display": "https://cards.scryfall.io/display/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.webp?1783902954",
+    "art": "https://cards.scryfall.io/art/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.webp?1783902954",
+    "crop": "https://cards.scryfall.io/crop/front/9/d/9dd2d627-10fc-4045-8545-03bcf75e60ca.webp?1783902954"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Mutant Inhuman Hero",
+  "oracle_text": "Reach, vigilance\nYou have no maximum hand size.\nEmbiggen Fist \u2014 Whenever you cast a spell that targets a creature you control, draw a card. Until end of turn, Ms. Marvel gains \"Ms. Marvel's base power is equal to the number of cards in your hand.\"",
+  "power": "1",
+  "toughness": "4",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Reach",
+    "Vigilance",
+    "Embiggen Fist"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9dd2d627-10fc-4045-8545-03bcf75e60ca/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aebedff30-ae43-4861-aab2-afe1fc88337e&unique=prints",
+  "collector_number": "67",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Smirtouille",
+  "artist_ids": [
+    "335767ca-7c6c-49fa-b21c-b352cb9a7a71"
+  ],
+  "illustration_id": "61fb9f9b-1cb6-43f7-a914-34a02f18bb97",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 15230,
+  "penny_rank": 6577,
+  "preview": {
+    "source": "CBR.com",
+    "source_uri": "https://www.cbr.com/mtg-marvel-super-heroes-exclusive-card-reveal-ms-marvel-kamala-khan/",
+    "previewed_at": "2026-06-03"
+  },
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": "0.48",
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": "0.32",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMs.%2BMarvel%252C%2BKamala%2BKhan",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMs.%2BMarvel%252C%2BKamala%2BKhan",
+    "edhrec": "https://edhrec.com/route/?cc=Ms.+Marvel%2C+Kamala+Khan"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696548%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891158&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152319?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "object": "card",
+  "id": "caf70fc5-87a0-4b4d-bedd-74dd09569bed",
+  "oracle_id": "88eeb519-5782-4732-bd34-81d1ee6dbc8f",
+  "multiverse_ids": [],
+  "resource_id": "D67CF72A3E391E0EE57817A8E1FB97D9A5F095156B5A9638C543D0DA5B2681E7",
+  "mtgo_id": 152535,
+  "arena_id": 105069,
+  "tcgplayer_id": 696667,
+  "cardmarket_id": 891336,
+  "name": "Ka-Zar of the Savage Land",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/caf70fc5-87a0-4b4d-bedd-74dd09569bed",
+  "scryfall_uri": "https://scryfall.com/card/msh/174/ka-zar-of-the-savage-land?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:16Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.jpg?1783902916",
+    "normal": "https://cards.scryfall.io/normal/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.jpg?1783902916",
+    "large": "https://cards.scryfall.io/large/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.jpg?1783902916",
+    "png": "https://cards.scryfall.io/png/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.png?1783902916",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.jpg?1783902916",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.jpg?1783902916",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.webp?1783902916",
+    "grid": "https://cards.scryfall.io/grid/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.webp?1783902916",
+    "display": "https://cards.scryfall.io/display/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.webp?1783902916",
+    "art": "https://cards.scryfall.io/art/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.webp?1783902916",
+    "crop": "https://cards.scryfall.io/crop/front/c/a/caf70fc5-87a0-4b4d-bedd-74dd09569bed.webp?1783902916"
+  },
+  "mana_cost": "{4}{G}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Human Barbarian Hero",
+  "oracle_text": "You may look at the top card of your library any time.\nYou may play lands from the top of your library.\nWhen Ka-Zar enters, create Zabu, a legendary 2/2 green Cat creature token with \"Landfall \u2014 Whenever a land you control enters, put a +1/+1 counter on Zabu.\"",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8ff55043-379e-400c-9847-30b75e4a1322",
+      "component": "token",
+      "name": "Zabu",
+      "type_line": "Token Legendary Creature \u2014 Cat",
+      "uri": "https://api.scryfall.com/cards/8ff55043-379e-400c-9847-30b75e4a1322"
+    },
+    {
+      "object": "related_card",
+      "id": "caf70fc5-87a0-4b4d-bedd-74dd09569bed",
+      "component": "combo_piece",
+      "name": "Ka-Zar of the Savage Land",
+      "type_line": "Legendary Creature \u2014 Human Barbarian Hero",
+      "uri": "https://api.scryfall.com/cards/caf70fc5-87a0-4b4d-bedd-74dd09569bed"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/caf70fc5-87a0-4b4d-bedd-74dd09569bed/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A88eeb519-5782-4732-bd34-81d1ee6dbc8f&unique=prints",
+  "collector_number": "174",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Paolo Parente",
+  "artist_ids": [
+    "d48dd097-720d-476a-8722-6a02854ae28b"
+  ],
+  "illustration_id": "3f61ac5b-7e0d-4526-a8b5-f1fab1217e93",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 15465,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.facebook.com/MagicTheGathering/posts/pfbid0azUXuYxsDiUkyxwRXsGfe2D2yNSeLogWrxMm8J94uzfQc4qYE2HPn8sP92fNPgywl",
+    "previewed_at": "2026-06-05"
+  },
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.32",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.15",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKa-Zar%2Bof%2Bthe%2BSavage%2BLand",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKa-Zar%2Bof%2Bthe%2BSavage%2BLand",
+    "edhrec": "https://edhrec.com/route/?cc=Ka-Zar+of+the+Savage+Land"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696667%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891336&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152535?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
