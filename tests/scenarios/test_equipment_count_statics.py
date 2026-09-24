@@ -7,8 +7,8 @@ every computation of the board (CR 611.3a, CR 613.5).
   second printing. The count is of CR 301.5's Equipment attached to the
   creature itself, never of Equipment its controller merely controls.
 - "`<this>` gets +N/+M for each other `<type>` you control" - Iron Man,
-  Master of Machines ("+1/+0 for each other artifact you control"), Rat
-  Colony ("for each other Rat you control", a subtype) and Leonardo, Big
+  Master of Machines ("+1/+0 for each other artifact you control"), Pride
+  Sovereign ("for each other Cat you control", a subtype) and Leonardo, Big
   Brother ("for each other creature you control") as the second printings:
   "other" leaves the source itself out of its own count.
 """
@@ -191,16 +191,19 @@ def test_iron_man_with_no_other_artifact_is_his_printed_self():
     assert _pt(scenario, iron_man) == (1, 4)
 
 
-def test_rat_colony_counts_other_rats_by_subtype():
+def test_pride_sovereign_counts_other_cats_by_subtype():
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Rat Colony", "Rat Colony", "Rat Colony", "Grizzly Bears"])
+        .player(
+            "alice",
+            battlefield=["Pride Sovereign", "Pride Sovereign", "Pride Sovereign", "Grizzly Bears"],
+        )
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    colonies = [s for s in scenario.game.battlefield if s.name == "Rat Colony"]
-    # Two *other* Rats each; the Bears is no Rat.
-    assert all(_pt(scenario, colony) == (4, 1) for colony in colonies)
+    sovereigns = [s for s in scenario.game.battlefield if s.name == "Pride Sovereign"]
+    # Two *other* Cats each; the Bears is no Cat.
+    assert all(_pt(scenario, sovereign) == (4, 4) for sovereign in sovereigns)
 
 
 def test_leonardo_counts_other_creatures_by_his_own_name():

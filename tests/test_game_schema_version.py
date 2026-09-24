@@ -1033,3 +1033,25 @@ def test_a_snapshot_written_before_treasure_mana_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_TREASURE_MANA}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before the self-pump counts' `excludes_self` (C02-T8).
+_SCHEMA_VERSION_BEFORE_EXCLUDES_SELF_COUNTS = 73
+
+
+def test_the_excludes_self_count_bump_moved_the_version_past_seventy_three() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EXCLUDES_SELF_COUNTS
+
+
+def test_a_snapshot_written_before_excludes_self_counts_is_refused() -> None:
+    """A version-73 dump is refused rather than decoded as current: a stored
+    "for each other artifact you control" count from before carried no
+    `excludes_self`, so it would count the pumped creature itself."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EXCLUDES_SELF_COUNTS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EXCLUDES_SELF_COUNTS}",
+    ):
+        Game.model_validate(dumped)

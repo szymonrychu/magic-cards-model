@@ -1036,12 +1036,15 @@ def _back_face(card: Card, ability: Any) -> bool:
     """Whether the ability is printed on a transforming card's back face
     (CR 712.2), so the source has to be staged transformed (CR 712.8e)."""
     faces = card.card_faces or []
-    return (
-        card.layout is Layout.TRANSFORM
-        and len(faces) > 1
-        and ability is not None
-        and ability.face == faces[1].name
+    # A modal double-faced card whose front face transforms into its back
+    # (Tony Stark's "Transform Tony Stark", Bruce Banner's) is staged the
+    # same way (CR 701.27a turns the back face up).
+    transforms = card.layout is Layout.TRANSFORM or (
+        card.layout is Layout.MODAL_DFC
+        and bool(faces)
+        and re.search(r"\btransform\b", faces[0].oracle_text or "", re.IGNORECASE) is not None
     )
+    return transforms and len(faces) > 1 and ability is not None and ability.face == faces[1].name
 
 
 def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardState:
@@ -1056,6 +1059,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     _attach(scenario, source)
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _chosen_parity(source, getattr(ability, "condition", None))
+    _equip_for_condition(scenario, source, ability)
     return source
 
 
@@ -1109,7 +1113,12 @@ def _home(case: Case, ability: TriggeredAbility, **extra: Any) -> tuple[PlayedSc
     if _functions_from_graveyard(card, ability):
         scenario = _board(graveyard=(card.name, *extra.pop("graveyard", ())), **extra)
         return scenario, _last(scenario, card.name, Zone.GRAVEYARD, ALICE).id
-    battlefield = (card.name, *extra.pop("battlefield", ()), *_named_partners(ability))
+    battlefield = (
+        card.name,
+        *extra.pop("battlefield", ()),
+        *_named_partners(ability),
+        *_equipment_partner(ability),
+    )
     staged: list[CardState] = []
     scenario = _board(
         battlefield=battlefield,
@@ -1118,6 +1127,33 @@ def _home(case: Case, ability: TriggeredAbility, **extra: Any) -> tuple[PlayedSc
     )
     _stack_material(scenario)
     return scenario, staged[0].id
+
+
+#: An intervening "if he's equipped" / "if this creature is equipped" (CR
+#: 603.4, CR 301.5a - Whiplash, Vengeful Engineer; Avacynian Missionaries):
+#: the source is staged with a real Equipment attached to it.
+_EQUIPPED_SELF_CONDITION = re.compile(
+    r"\b(?:it's|he's|she's|this (?:creature|permanent) is) equipped\b", re.IGNORECASE
+)
+_STAGED_EQUIPMENT = "Bonesplitter"
+
+
+def _equipment_partner(ability: Any) -> tuple[str, ...]:
+    """The Equipment a board stages beside a source whose intervening "if"
+    asks that it be equipped."""
+    if _EQUIPPED_SELF_CONDITION.search(getattr(ability, "intervening_if", None) or ""):
+        return (_STAGED_EQUIPMENT,)
+    return ()
+
+
+def _equip_for_condition(scenario: PlayedScenario, source: CardState, ability: Any) -> None:
+    """Attach the staged Equipment to the source (CR 301.5a)."""
+    if not _equipment_partner(ability):
+        return
+    for permanent in scenario.game.permanents_controlled_by(ALICE):
+        if permanent.name == _STAGED_EQUIPMENT and permanent.attached_to is None:
+            permanent.attachment = TargetRef.to_card(source)
+            return
 
 
 def _named_partners(ability: TriggeredAbility) -> tuple[str, ...]:
@@ -1434,7 +1470,8 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                     extra = ("Serra Angel",)
                 if side == ALICE:
                     scenario = _board(
-                        battlefield=(case.card, *extra, *partners), step=Step.DECLARE_ATTACKERS
+                        battlefield=(case.card, *extra, *partners, *_equipment_partner(ability)),
+                        step=Step.DECLARE_ATTACKERS,
                     )
                 else:
                     scenario = _board(

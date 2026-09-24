@@ -17,13 +17,12 @@ riders that follow the attach.
   reader, proven here.
 - "At the beginning of combat on your turn, you may put an artifact card
   from your hand onto the battlefield. If it's an Equipment, attach it to
-  The Invincible Iron Man." (Tony Stark // The Invincible Iron Man) - the put
-  is the reader Master Transmuter's "You may put an artifact card from your
-  hand onto the battlefield." already goes through; the Equipment attach
-  rider is printed on no other card.
+  The Invincible Iron Man." (Tony Stark // The Invincible Iron Man) - CR
+  608.2d's optional put, then an attach only when the permanent is an
+  Equipment; the whole sentence is printed on no other card.
 - "{3}{W}{B}: Return this card from your graveyard to the battlefield with a
   finality counter on him. Then you may attach an Equipment you control to
-  him." (Winter Soldier, Icy Assassin) - CR 122.1g's finality counter, then
+  him." (Winter Soldier, Icy Assassin) - CR 122.1h's finality counter, then
   an optional attach. The whole shape is printed on no other card; Resolute
   Strike's "you may attach an Equipment you control to it" is the second
   printing of the optional attach.
@@ -381,13 +380,13 @@ def test_iron_man_puts_an_equipment_from_hand_onto_the_battlefield_attached():
 
 
 def test_iron_man_puts_a_non_equipment_artifact_onto_the_battlefield_unattached():
-    scenario, iron_man = _iron_man_board(["Master Transmuter"])
+    scenario, iron_man = _iron_man_board(["Sol Ring"])
     scenario.will_take_the_may(True)
     scenario.advance()
     scenario.pass_until_resolved()
 
-    transmuter = scenario.find("Master Transmuter", Zone.BATTLEFIELD, "alice")
-    assert transmuter.attached_to is None
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    assert sol_ring.attached_to is None
 
 
 def test_iron_man_may_decline():

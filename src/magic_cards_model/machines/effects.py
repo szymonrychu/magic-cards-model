@@ -52927,7 +52927,7 @@ def _parse_put_type_from_hand_attach_if_subtype(text: str) -> AbilityEffect | No
 #: "Return this card from your graveyard to the battlefield with a finality
 #: counter on him. Then you may attach an Equipment you control to him."
 #: (Winter Soldier, Icy Assassin) - the graveyard return the plain sentence
-#: already reads (CR 122.1g's finality counter; Balustrade Wurm's "... on
+#: already reads (CR 122.1h's finality counter; Balustrade Wurm's "... on
 #: it."), then CR 608.2d's optional choice of an Equipment its controller
 #: controls, attached (CR 701.3a) to the card as the permanent it became.
 _RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE = re.compile(
@@ -53003,7 +53003,7 @@ def _parse_return_self_then_may_attach_equipment(text: str) -> AbilityEffect | N
 #: Incredible Hulk's enrage) and "put a +1/+1 counter on him. When you do,
 #: he deals damage equal to the number of +1/+1 counters on him to any other
 #: target." (Red Hulk's) - a counter on the source (CR 122.1), then either a
-#: rider gated on the source attacking right now (CR 506.4) or CR 603.12's
+#: rider gated on the source attacking right now (CR 508.1k) or CR 603.12's
 #: reflexive trigger, created only if the counter really was put.
 _SELF_COUNTER_THEN_RIDER_RE = re.compile(
     r"^put an? \+1/\+1 counter on (?:it|him|her|this (?:creature|permanent))\.\s*"

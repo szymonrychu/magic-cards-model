@@ -3423,7 +3423,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 73
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 74
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3443,6 +3443,9 @@ class Game(EngineModel):
     #: (pack tactics, C01 integration).
     #: 73: `ManaPool` gained `treasure` and `CastRecord` gained
     #: `treasure_mana_spent` (mana from a Treasure, C01 integration).
+    #: 74: `machines/layers.CountPermanentsControlledBy` and
+    #: `CountPermanentsWithSubtypeControlledBy` gained `excludes_self` ("for
+    #: each other artifact you control", C02-T8).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -16416,7 +16419,7 @@ class Game(EngineModel):
                 for permanent in self.battlefield
                 if permanent.mana_cost
             },
-            # CR 506.4: "Attacking tokens you control have flying" reads who
+            # CR 508.1k: "Attacking tokens you control have flying" reads who
             # is attacking, which is combat state, not a characteristic.
             attacking=frozenset(self.combat.attacker_ids),
         )

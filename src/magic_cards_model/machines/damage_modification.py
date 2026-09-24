@@ -101,8 +101,8 @@ def compile_damage_plus_source_characteristic(
         return recipient(game, controller, event)
 
     def apply(game: "Game", source: CardState, event: "ReplaceableEvent") -> None:
-        # CR 608.2h's "determined only once": the characteristic as this
-        # replacement applies, off the computed board (CR 613.5).
+        # The characteristic as this replacement applies, off the computed
+        # board (CR 613.5).
         value = game.power_of(source) if wants_power else game.toughness_of(source)
         event.amount += max(value or 0, 0)
 

@@ -26,7 +26,7 @@ The Marvel Hulks print riders after the same trigger (C02, MSH):
 
 - "If he's attacking, untap him and there is an additional combat phase after
   this phase." (Bruce Banner // The Incredible Hulk) - a condition on the
-  source's own attacking status (CR 506.4), CR 701.26b's untap and CR 500.8's
+  source's own attacking status (CR 508.1k), CR 701.26b's untap and CR 500.8's
   additional combat phase. The rider is printed on no other card; Snapping
   Sailback's plain "Enrage - Whenever this creature is dealt damage, put a
   +1/+1 counter on it." is the second printing of the trigger and counter,
@@ -234,7 +234,7 @@ def test_red_hulk_can_hit_a_creature():
 
 
 def test_red_hulk_cannot_target_himself():
-    """ "any other target": CR 115.10 - the source is not a legal target, so
+    """ "any other target" (CR 115.4): the source is not a legal target, so
     naming it is refused."""
     scenario = Scenario().player("alice", battlefield=["Red Hulk"]).player("bob").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)

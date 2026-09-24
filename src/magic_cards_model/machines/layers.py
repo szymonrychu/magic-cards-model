@@ -567,7 +567,7 @@ class CountPermanentsWithSubtypeControlledBy(CountBase):
     kind: Literal["permanents_with_subtype_controlled_by"] = "permanents_with_subtype_controlled_by"
     username: str | None = None
     subtype: str
-    #: "for each *other* Rat you control" (Rat Colony) - see
+    #: "for each *other* Cat you control" (Pride Sovereign) - see
     #: `CountPermanentsControlledBy.excludes_self`.
     excludes_self: bool = False
 
@@ -1226,7 +1226,7 @@ class PermanentsControlledByWithCounters(SelectorBase):
 
 class AttackingTokensControlledBy(SelectorBase):
     """ "Attacking [creature] tokens you control" (Okoye, Dora Milaje
-    Leader's first strike, Starry-Eyed Skyrider's flying) - CR 506.4's
+    Leader's first strike, Starry-Eyed Skyrider's flying) - CR 508.1k's
     attacking status is not a characteristic and never reaches the board, so
     the attacking ids are read off `LayerContext.attacking` when the effect is
     built, and the builder is rebuilt on every computation (CR 613.5): a token
@@ -3770,7 +3770,7 @@ def _self_pump_per_graveyard_card_batch_builder(
 #: own synthesised `Card.oracle_text`, read by this module's ordinary static-
 #: ability sweep the same as any printed creature's would be.
 #: "other" (Iron Man, Master of Machines' "for each other artifact you
-#: control", Rat Colony's "for each other Rat you control", Leonardo, Big
+#: control", Pride Sovereign's "for each other Cat you control", Leonardo, Big
 #: Brother's "for each other creature you control") leaves the source out of
 #: its own count.
 _SELF_PUMP_PER_CONTROLLED_PERMANENT_RE = re.compile(
@@ -4356,7 +4356,7 @@ _INDEFINITE_KEYWORD_AND_PROTECTION_GRANT_RE = re.compile(
 #: "Attacking creature tokens you control have first strike." (Okoye, Dora
 #: Milaje Leader); "Attacking tokens you control have flying." (Starry-Eyed
 #: Skyrider) - a layer 6 keyword grant (CR 613.1f) to a group picked out by
-#: token status (CR 111.1) and attacking status (CR 506.4).
+#: token status (CR 111.1) and attacking status (CR 508.1k).
 _ATTACKING_TOKENS_KEYWORD_GRANT_RE = re.compile(
     r"^attacking (?P<creature>creature )?tokens you control have "
     r"(?P<keywords>[a-z][a-z ,{}0-9]*?)\.?$",
@@ -9024,7 +9024,7 @@ def _leading_graveyard_count_gated_builder(
 
 
 def len_of(cards: Iterable[CardState]) -> int:
-    """How many cards - CR 110.4's "a card", no type filter."""
+    """How many cards - every card counts, with no type filter."""
     return sum(1 for _ in cards)
 
 
@@ -10250,12 +10250,15 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     +4/+4 until end of turn."
     """
     sentence = _strip_ability_word(_normalize_duration_first(sentence))
-    if match := _LEADING_GRAVEYARD_COUNT_GATED_SELF_STATIC_RE.fullmatch(sentence):
-        return _leading_graveyard_count_gated_builder(match, line=sentence)
-    if match := _ATTACKING_TOKENS_KEYWORD_GRANT_RE.fullmatch(sentence):
-        attacking_keywords = _split_and_validate_keywords(match.group("keywords"))
-        if attacking_keywords is None:
-            return None
+    if (match := _LEADING_GRAVEYARD_COUNT_GATED_SELF_STATIC_RE.fullmatch(sentence)) and (
+        leading_gated := _leading_graveyard_count_gated_builder(match, line=sentence)
+    ) is not None:
+        # A qualifier this does not read ("permanent cards", descend's own
+        # count) falls through to the readers below.
+        return leading_gated
+    if (match := _ATTACKING_TOKENS_KEYWORD_GRANT_RE.fullmatch(sentence)) and (
+        attacking_keywords := _split_and_validate_keywords(match.group("keywords"))
+    ) is not None:
         return _attacking_tokens_keyword_grant_builder(
             attacking_keywords, creatures_only=match.group("creature") is not None, line=sentence
         )
@@ -11876,7 +11879,7 @@ class LayerContext(EngineModel):
     #: battlefield than a life total does.
     enduring_story_players: frozenset[str] = frozenset()
 
-    #: The creatures attacking right now (CR 506.4), by id - `Game.combat`'s
+    #: The creatures attacking right now (CR 508.1k), by id - `Game.combat`'s
     #: attackers. Attacking status does not stand on the battlefield as a
     #: characteristic, so "attacking tokens you control have first strike"
     #: (`AttackingTokensControlledBy`) reads it from here.
