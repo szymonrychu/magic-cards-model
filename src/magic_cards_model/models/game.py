@@ -17156,9 +17156,14 @@ class Game(EngineModel):
         names the plural; "other" excludes the granting permanent itself.
         """
         granted: list[str] = []
-        controller = permanent.controller
+        # Controllers off the computed board, never `CardState.controller`:
+        # under a control-changing effect that property asks
+        # `characteristics_of`, which calls back into this method for every
+        # other permanent - a mutual recursion across the whole battlefield.
+        board = self.computed_board()
+        controller = chars.controller
         for source in self.battlefield:
-            if source.controller != controller or source.id == permanent.id:
+            if board.of(source).controller != controller or source.id == permanent.id:
                 continue
             for line in (source.oracle_text or "").splitlines():
                 conditional = conditional_group_keyword_grant_of_line(line)
@@ -17218,12 +17223,12 @@ class Game(EngineModel):
             card_type = Type(match.group("type").rstrip("s"))
         except ValueError:
             return None
-        controller = permanent.controller
         board = self.computed_board()
+        controller = board.of(permanent).controller
         return sum(
             1
             for other in self.battlefield
-            if other.controller == controller
+            if board.of(other).controller == controller
             and card_type in board.of(other).types
             and Supertype.LEGENDARY in board.of(other).supertypes
         )
@@ -18240,10 +18245,11 @@ class Game(EngineModel):
     #: have improvise. (Your artifacts can help cast those spells. ...)").
     _TRAILING_REMINDER_TEXT_RE: ClassVar[re.Pattern[str]] = re.compile(r"\s*\([^()]*\)\s*$")
 
-    def _static_line_without_ability_word(self, text: str) -> str:
-        match = self._ABILITY_WORD_PREFIX_RE.match(text.strip())
+    @classmethod
+    def _static_line_without_ability_word(cls, text: str) -> str:
+        match = cls._ABILITY_WORD_PREFIX_RE.match(text.strip())
         without_word = match.group("rest").strip() if match else text.strip()
-        return self._TRAILING_REMINDER_TEXT_RE.sub("", without_word).strip()
+        return cls._TRAILING_REMINDER_TEXT_RE.sub("", without_word).strip()
 
     def _looks_at_top_card_any_time_line(self, text: str) -> bool:
         """Whether one static line is "You may look at the top card of your
@@ -20030,6 +20036,44 @@ class Game(EngineModel):
                     return True
         return False
 
+    @classmethod
+    def flash_grant_condition_of_line(cls, text: str) -> str | None:
+        """`support.py`'s credit for `has_static_spells_flash_grant`: `None`
+        when one printed static line is not `_CAST_SPELLS_AS_THOUGH_FLASH_RE`'s
+        shape, `""` when it is and is unconditional, else its "as long as"
+        condition (which that reader asks `condition_holds` about)."""
+        match = cls._CAST_SPELLS_AS_THOUGH_FLASH_RE.fullmatch(
+            cls._static_line_without_ability_word(text)
+        )
+        if match is None:
+            return None
+        return (match.group("condition") or "").strip()
+
+    @classmethod
+    def reads_enforced_static_line(cls, text: str, card_name: str) -> bool:
+        """`support.py`'s credit: whether one printed static line is a shape
+        one of this class's own battlefield readers enforces, matched exactly
+        the way that reader matches it - `controls_look_at_top_permission`,
+        `land_from_top_of_library_permission`, `has_granted_improvise`,
+        `_type_mv_threshold_cost_less_self_power`, `_power_up_group_discount`,
+        `_power_up_activation_limit` and `_legendary_creature_count_power`."""
+        line = cls._static_line_without_ability_word(text)
+        return (
+            cls._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(line) is not None
+            or cls._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(line) is not None
+            or cls._SPELLS_YOU_CAST_HAVE_IMPROVISE_RE.fullmatch(line) is not None
+            or cls._TYPE_MV_THRESHOLD_COST_LESS_SELF_POWER_RE.fullmatch(
+                self_normalized_effect_text(card_name, text, legendary=True).strip()
+            )
+            is not None
+            or cls._POWER_UP_GROUP_DISCOUNT_RE.fullmatch(text.strip()) is not None
+            or text.strip() == cls._POWER_UP_EXTRA_ACTIVATION_TEXT
+            or _LEGENDARY_TYPE_COUNT_POWER_RE.fullmatch(
+                self_normalized_effect_text(card_name, text).strip()
+            )
+            is not None
+        )
+
     def has_first_spell_flash_grant(self, caster: str, spell: CardState) -> bool:
         """Whether some permanent `caster` controls grants `spell` CR
         702.8a's flash right now, through Radagast of Rhosgobel's own shape:
@@ -21212,7 +21256,7 @@ class Game(EngineModel):
     #: generally off the printed line (any number of card-name variants
     #: could print the identical sentence), not gated to Wonder Man's own
     #: name - `_power_up_activation_limit` is the reader.
-    _POWER_UP_EXTRA_ACTIVATION_TEXT = (
+    _POWER_UP_EXTRA_ACTIVATION_TEXT: ClassVar[str] = (
         "Each power-up ability of permanents you control can be activated an additional time."
     )
 
@@ -21483,7 +21527,7 @@ class Game(EngineModel):
                     exiles.clear()  # "any number of": every card named pays it
                     components.append(threshold)
                     continue
-                                # CR 201.5: Jessica Jones, Private Eye's own "Put a stun
+                    # CR 201.5: Jessica Jones, Private Eye's own "Put a stun
                 # counter on Jessica Jones" names itself by its printed name
                 # rather than "this creature" - `cost_component_for_phrase`
                 # already reads the normalized shape (`PLACE_COUNTERS`), so
@@ -21635,7 +21679,7 @@ class Game(EngineModel):
     #: printed number (CR 601.2f: any amount, not hardcoded to Hulk's own
     #: {3}) so a future printing of the identical template discounts by its
     #: own number rather than Hulk's.
-    _POWER_UP_GROUP_DISCOUNT_RE = re.compile(
+    _POWER_UP_GROUP_DISCOUNT_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^power-up abilities of other creatures you control cost \{(?P<amount>\d+)\} "
         r"less to activate\.?$",
         re.IGNORECASE,
@@ -21660,6 +21704,7 @@ class Game(EngineModel):
                 if match is not None:
                     total += int(match.group("amount"))
         return ManaCost.parse(f"{{{total}}}") if total else ManaCost()
+
     #: "This ability costs `<N>` less to activate if it targets a `<quality>`
     #: with power `<M>` or less/greater." (Raft Security Officer) - a
     #: reduction gated on the ability's own *chosen target*, CR 602.2b's own

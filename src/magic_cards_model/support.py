@@ -62,6 +62,7 @@ from magic_cards_model.machines.casting import (
     player_keyword_grant_of_line,
     reads_as_graveyard_cast_permission_line,
     reads_mandatory_additional_cost_line,
+    reads_or_pay_additional_cost_line,
     reads_printed_zone_permission_line,
 )
 from magic_cards_model.machines.casting_restrictions import (
@@ -117,6 +118,10 @@ from magic_cards_model.machines.effects import (
     resolve_modal_spell,
     split_effect_clauses,
     trigger_effect_for,
+)
+from magic_cards_model.machines.keyword_counters import (
+    conditional_group_keyword_grant_of_line,
+    enters_with_counters_pronoun_fallback,
 )
 from magic_cards_model.machines.layers import (
     LAYER_EFFECTS,
@@ -1922,6 +1927,29 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if is_connive_replacement_line(text):
         # CR 614.1a/701.50a: `connive._replacement_draws` reads it off the
         # battlefield on every connive (Leader, Super-Genius).
+        return HANDLED
+    if Game.reads_enforced_static_line(text, printing.name):
+        # `Game`'s own battlefield readers: look at the top card any time,
+        # play lands from the top, a granted improvise, The Scarlet Witch's
+        # power-scaled reduction, the power-up discount and extra activation,
+        # and the legendary-count power CDA.
+        return HANDLED
+    flash_grant = Game.flash_grant_condition_of_line(text)
+    if flash_grant is not None and (not flash_grant or condition_is_readable(flash_grant)):
+        # `Game.has_static_spells_flash_grant` reads it off the battlefield
+        # and asks `condition_holds` about an "as long as" condition.
+        return HANDLED
+    if enters_with_counters_pronoun_fallback(text) is not None:
+        # `Game.enter_the_battlefield` places the counters "on him/her"
+        # names when the ordinary "enters with" reader placed none.
+        return HANDLED
+    if conditional_group_keyword_grant_of_line(text) is not None:
+        # `Game._player_static_keyword_grants` (the player half) and
+        # `Game._group_keyword_grants_for` (the other creatures) read it off
+        # the battlefield while the named counter is there.
+        return HANDLED
+    if reads_or_pay_additional_cost_line(text):
+        # `casting.mandatory_additional_costs` charges either half.
         return HANDLED
     return STATIC_UNAUDITED
 

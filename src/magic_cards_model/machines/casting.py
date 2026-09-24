@@ -6677,6 +6677,26 @@ def reads_mandatory_additional_cost_line(text: str) -> bool:
     return total_cost_for_phrase(phrase) is not None
 
 
+def reads_or_pay_additional_cost_line(text: str) -> bool:
+    """Whether one printed line is a "[cost] or pay [mana]" additional cost
+    whose two halves `mandatory_additional_costs` can both charge (the mana
+    half by default, the other when the caster picks it) - `support.py`'s
+    credit for it on a permanent card (Bayou Groff, Titania, Rugged
+    Rumbler)."""
+    match = _ADDITIONAL_COST_LINE.match(text.strip())
+    if match is None:
+        return False
+    phrase = match.group("what")
+    if _OPTIONAL_ADDITIONAL_COST.match(phrase) or _BLIGHT_PHRASE.match(phrase):
+        return False
+    or_pay = _OR_PAY_TAIL.match(phrase)
+    return (
+        or_pay is not None
+        and total_cost_for_phrase(or_pay.group("primary")) is not None
+        and total_cost_for_phrase(or_pay.group("mana")) is not None
+    )
+
+
 def reads_printed_zone_permission_line(card: Card, text: str) -> bool:
     """Whether one printed line is wholly "You may cast this card from your
     <zone> using its <keyword> ability." and `keyword_cast_options` really
