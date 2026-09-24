@@ -19114,6 +19114,103 @@ def _parse_then_exile_self_and_return_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "<discard or mill>. If you discarded a <quality> card this way, <effect>." /
+#: "... If at least one <quality> card is milled this way, <effect>." - an
+#: instruction gated on what the sentence before it moved:
+#:
+#:   Vohar, Vodalian Desecrator    "Draw a card, then discard a card. If you
+#:                                 discarded an instant or sorcery card this
+#:                                 way, each opponent loses 1 life and you gain
+#:                                 1 life."
+#:   Liliana, Untouched by Death   "Mill three cards. If at least one Zombie
+#:                                 card is milled this way, each opponent loses
+#:                                 2 life and you gain 2 life."
+#:
+#: "This way" is anaphora for the cards the first sentence itself moved (CR
+#: 701.17c: a milled card is found in the zone it moved to), so the reader
+#: watches the controller's graveyard and exile across that one sentence
+#: rather than trusting a count.
+_THEN_IF_MOVED_THIS_WAY_RE = re.compile(
+    r"^(?P<prefix>.+?\.)\s*if (?:you (?P<verb_you>discarded|milled) (?:an?|one or more) "
+    r"(?P<quality_you>[a-z ,'-]+?) cards? this way"
+    r"|(?:at least one|an?|one or more) (?P<quality>[a-z ,'-]+?) cards? "
+    r"(?:is|was|are|were) (?P<verb>discarded|milled) this way), (?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _moved_quality_understood(quality: str) -> bool:
+    """Whether every word of a "<quality> card" phrase is one this engine can
+    check: a card type, supertype, subtype or colour, "or"/"and", or a
+    "non"-negation of one of those."""
+    known = (
+        {kind.value.lower() for kind in Type}
+        | {supertype.value.lower() for supertype in Supertype}
+        | {color.name.lower() for color in Color}
+        | {"or", "and", "colorless", "multicolored", "monocolored"}
+        | {word.lower() for word in subtype_vocabulary()}
+    )
+    words = [word for word in re.split(r"[\s,]+", quality.lower()) if word]
+    return bool(words) and all(
+        word in known
+        or (word.startswith("non") and word.removeprefix("non-").removeprefix("non") in known)
+        for word in words
+    )
+
+
+def _parse_then_if_moved_this_way_clause(text: str) -> AbilityEffect | None:
+    """`_THEN_IF_MOVED_THIS_WAY_RE`'s shape - the first sentence runs, then
+    the rest runs once if any card it moved to the controller's graveyard (or
+    exile, where a replacement sent it) matches the quality (CR 608.2c). A
+    leading sentence that is not a discard or a mill, a quality this engine
+    cannot check, or an unreadable rest leaves the whole paragraph unread."""
+    match = _THEN_IF_MOVED_THIS_WAY_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    verb = (match.group("verb_you") or match.group("verb") or "").lower()
+    quality = (match.group("quality_you") or match.group("quality") or "").strip()
+    prefix_text = match.group("prefix").strip()
+    if not re.search(r"\b(?:discard|mill)s?\b", prefix_text, re.IGNORECASE):
+        return None
+    if verb == "discarded" and not re.search(r"\bdiscard", prefix_text, re.IGNORECASE):
+        return None
+    if verb == "milled" and not re.search(r"\bmill", prefix_text, re.IGNORECASE):
+        return None
+    if not _moved_quality_understood(quality):
+        return None
+    leading = _ability_effect_or_notice(prefix_text)
+    rest = _ability_effect_or_notice(match.group("rest").strip())
+    if leading is None or rest is None:
+        return None
+    for part in (leading, rest):
+        if getattr(part, "__name__", "").endswith("notice_only"):
+            return part
+    matches = _quality_matcher(quality)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+
+        def public_objects() -> set[tuple[UUID, UUID]]:
+            return {
+                (card.id, card.zone_change_stamp)
+                for card in [*controller.graveyard, *game.exile]
+                if (card.owner or controller.username) == controller.username
+            }
+
+        before = public_objects()
+        leading(game, ability)
+        moved = [
+            card
+            for card in [*controller.graveyard, *game.exile]
+            if (card.id, card.zone_change_stamp) not in before
+            and (card.owner or controller.username) == controller.username
+        ]
+        if any(matches(card) for card in moved):
+            rest(game, ability)
+
+    return effect
+
+
 #: "Transform all Humans." (Moonmist) - a board sweep rather than the
 #: self-reference `_TRANSFORM_SELF_RE` reads. The subtype is a CR 205.3m
 #: creature type, written the way Oracle text always writes one: capitalized,
@@ -20986,6 +21083,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     then_exile_self_and_return = _parse_then_exile_self_and_return_clause(effect_text)
     if then_exile_self_and_return is not None:
         return then_exile_self_and_return
+    then_if_moved_this_way = _parse_then_if_moved_this_way_clause(effect_text)
+    if then_if_moved_this_way is not None:
+        return then_if_moved_this_way
     unread_conditional = _unreadable_conditional_clause(effect_text, for_spell=False)
     if unread_conditional is not None:
 
