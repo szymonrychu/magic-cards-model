@@ -471,6 +471,7 @@ def sequence(*effects: Effect) -> Effect:
     def effect(game: "Game", spell: CardState) -> None:
         for step in effects:
             step(game, spell)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -7473,6 +7474,7 @@ def _parse_may_put_card_from_hand_clause(text: str, *, for_spell: bool) -> Targe
         if not put:
             for clause in otherwise:
                 clause(game, stack_object)
+                game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -9435,6 +9437,7 @@ def _parse_comma_chained_player_clause(clause: str) -> ClauseEffect | None:
     def run(game: "Game", player: Player, source: str, source_id: str | None) -> None:
         for step in chain:
             step(game, player, source, source_id)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return run
 
@@ -10214,6 +10217,7 @@ def parse_player_effect(text: str) -> AbilityEffect | None:
         player = game.player(ability.controller)
         for clause in clauses:
             clause(game, player, ability.source_name, source_id_of(ability))
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -10232,6 +10236,7 @@ def parse_player_effect_for_spell(text: str) -> Effect | None:
         player = game.controller_of(spell)
         for clause in clauses:
             clause(game, player, spell.card.name, source_id_of(spell))
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -16953,6 +16958,7 @@ def parse_targeted_effect_for_spell(text: str) -> Effect | None:
     def effect(game: "Game", spell: CardState) -> None:
         for clause in clauses:
             clause(game, spell)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -16969,6 +16975,7 @@ def parse_targeted_effect(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         for clause in clauses:
             clause(game, ability)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -17676,6 +17683,7 @@ def _parse_token_list_clause(text: str, *, for_spell: bool) -> TargetedClause | 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         for clause in clauses:
             clause(game, stack_object)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -17800,6 +17808,7 @@ def _parse_target_player_mode(text: str) -> Effect | None:
             if isinstance(target, Player):
                 for clause_effect in parsed:
                     clause_effect(game, target, spell.card.name, source_id_of(spell))
+                    game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -24674,6 +24683,7 @@ def _parse_counter_threshold_whole_text(text: str, *, for_spell: bool) -> Target
     def effect(game: "Game", stack_object: "StackObject") -> None:
         for clause in pre:
             clause(game, stack_object)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
         put(game, stack_object)
         known: CardState | None = (
             stack_object.source_or_last_known(game)
@@ -24703,6 +24713,7 @@ def _parse_counter_threshold_whole_text(text: str, *, for_spell: bool) -> Target
                 return
         for item in items:
             item(game, stack_object, live)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -25719,6 +25730,7 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
     def run_chain(game: "Game", player: Player, source: str, source_id: str | None) -> None:
         for part in ordered:
             part(game, player, source, source_id)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return run_chain
 
@@ -30341,6 +30353,7 @@ def _parse_x_magnitude_body(body: str) -> Callable[["Game", Player, int], None] 
     def run(game: "Game", player: Player, amount: int) -> None:
         for step in steps:
             step(game, player, amount)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return run
 
@@ -36487,6 +36500,7 @@ def _parse_if_graveyard_count_clause(clause: str, *, for_spell: bool) -> Targete
                 assert inner_clauses is not None
                 for part in inner_clauses:
                     part(game, stack_object)
+                    game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -45407,6 +45421,7 @@ def _shared_subject_group_effect(
     def run_for_player(game: "Game", player: Player, source: str, source_id: str | None) -> None:
         for clause_effect in clause_effects:
             clause_effect(game, player, source, source_id)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     if subject == "you":
 
@@ -45492,6 +45507,7 @@ def _parse_shared_subject_sentence(sentence: str, *, for_spell: bool) -> Targete
     def effect(game: "Game", stack_object: "StackObject") -> None:
         for group_effect in group_effects:
             group_effect(game, stack_object)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -46550,6 +46566,7 @@ def parse_mixed_effect_for_spell(text: str) -> Effect | None:
     def effect(game: "Game", spell: CardState) -> None:
         for clause in clauses:
             clause(game, spell)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 
@@ -46579,6 +46596,7 @@ def parse_mixed_effect(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         for clause in clauses:
             clause(game, ability)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
 

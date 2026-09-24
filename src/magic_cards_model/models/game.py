@@ -13403,12 +13403,13 @@ class Game(EngineModel):
         since the last call: one `PERMANENTS_TAPPED` for the permanents tapped,
         one `PUT_INTO_GRAVEYARD` for the cards that reached a graveyard.
 
-        Called where one batch ends and the next begins - before and between
-        rounds of state-based actions (a resolution's or payment's own moves,
-        then each round's), and before triggers go on the stack (CR 603.3),
-        which catches a cost or a declaration. Several instructions of one
-        resolution therefore share one batch: the finest line the engine
-        draws is the resolution, not the instruction.
+        Called where one batch ends and the next begins - after each
+        instruction of a resolving spell or ability (CR 608.2c; every clause
+        runner in `machines/effects.py` calls it between its steps), before
+        and between rounds of state-based actions, and before triggers go on
+        the stack (CR 603.3), which catches a cost or a declaration. One
+        instruction moving several objects stays one event; two instructions
+        are two.
         """
         with self._id_allocator_scope():
             if self.tapped_since_last_batch:

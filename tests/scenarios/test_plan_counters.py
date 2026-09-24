@@ -732,3 +732,62 @@ def test_off_msh_flutterfox_flies_with_an_artifact_or_an_enchantment():
         scenario.start_at(Step.PRECOMBAT_MAIN)
 
         assert _has(scenario, scenario.creature("Flutterfox", "alice"), "Flying") is flies
+
+
+# -- the batch is one instruction, not one resolution (CR 603.2c) ------------
+
+
+def test_two_instructions_of_one_resolution_are_two_graveyard_events():
+    """Dusk Mangler's "each opponent sacrifices a creature of their choice,
+    discards a card, and loses 4 life" is three instructions (CR 608.2c): the
+    sacrifice and the discard each put a creature card into bob's graveyard
+    as their own event, so bob's Robot Domination triggers twice."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Dusk Mangler"], library=["Swamp"] * 4)
+        .player(
+            "bob",
+            battlefield=["Robot Domination", "Grizzly Bears"],
+            hand=["Savannah Lions"],
+            library=["Island"] * 6,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    plan = _plan(scenario, "Robot Domination", "bob")
+
+    scenario.put_onto_battlefield("Dusk Mangler", "alice")
+    _resolve_everything(scenario)
+
+    assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "bob").zone is Zone.GRAVEYARD
+    assert scenario.find("Savannah Lions", Zone.GRAVEYARD, "bob").zone is Zone.GRAVEYARD
+    assert plan.counters["plan"] == 2
+
+
+def test_one_instruction_tapping_two_creatures_is_still_one_event():
+    """Frost Breath's "Tap up to two target creatures" is one instruction:
+    splitting the batch per instruction must not split it per creature."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Rewrite History", "Grizzly Bears", "Savannah Lions"] + ["Island"] * 3,
+            hand=["Frost Breath"],
+            library=["Forest"] * 6,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    plan = _plan(scenario, "Rewrite History")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    lions = scenario.creature("Savannah Lions", "alice")
+
+    scenario.cast_and_resolve(
+        "Frost Breath",
+        *scenario.untapped_sources("Island", "Island", "Island"),
+        targets=[bears, lions],
+    )
+    _resolve_everything(scenario)
+
+    assert bears.tapped and lions.tapped
+    assert plan.counters["plan"] == 1
