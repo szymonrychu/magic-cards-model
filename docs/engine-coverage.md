@@ -4750,3 +4750,40 @@ and Thief of Existence were silent; every clause of each now sweeps
 Proof printings added: Archfiend of Ifnir, Enduring Curiosity, Frost Titan,
 Aid from the Cowl. The behavioural sweep's becomes-target driver now also has
 the opponent cast the probe spell, for "a spell an opponent controls".
+
+## S26: named and multi-number Saga chapters, trailing self exile-return, graveyard cast permissions
+
+Urabrask // The Great Work, Jill, Shiva's Dominant // Shiva, Warden of Ice,
+Jace, Vryn's Prodigy // Jace, Telepath Unbound and Rivaz of the Claw were
+silent (or failing closed); every clause of each now sweeps `handled`,
+Rivaz's once-each-turn static included (it was `static_unaudited`). CR
+numbers verified with `mise run rules:find`: 113.6b, 113.7a, 113.10, 115.2,
+115.6, 120.2b, 120.3a, 120.3c, 120.3e, 122.1d, 207.2c, 207.2d, 304.1, 307.1,
+400.7, 400.7a, 400.7h, 601.3, 603.2, 603.10a, 608.2b, 608.2c, 608.2h,
+611.2a, 611.2c, 611.3a, 611.3b, 614.1a, 701.9a, 701.17a, 701.17b, 701.17c,
+702.62b, 712.8e, 712.14, 712.14a, 714.2b, 714.2c, 714.3a, 714.4.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| a chapter's own name (CR 207.2d flavor word, or a CR 207.2c ability word) in front of its effect - "I, II - Mesmerize - ..." - is not part of the effect | `abilities._CHAPTER_NAME` in `_parse_chapter_line` | Jill, Shiva's Dominant | Summon: Fat Chocobo ("II, III, IV - Kerplunk"), Summon: Primal Garuda, Clive, Ifrit's Dominant, Joshua, Phoenix's Dominant | `test_saga_named_multi_chapters.py` |
+| a multi-number chapter line ("I, II - ...", CR 714.2c) builds its layer effect once per resolution, not once per numeral on the line (Slipstream's +1/+0 was applied twice) | `abilities._layer_readable_sentences_uncached` reads one chapter ability per line | - | Summon: Primal Garuda | `test_saga_named_multi_chapters.py` |
+| "`<effect>`. [If `<condition>`, ]exile `<this / its name / it>`, then return it to the battlefield[ transformed][ under ... control]." - the leading effect runs first, the condition is asked after it (CR 608.2c), and the return is the object that put the ability on the stack (`source_stamp`, CR 400.7), front face up by default (CR 712.14) or back face up when "transformed" (CR 712.14a) | `effects._parse_then_exile_self_and_return_clause` | Shiva, Warden of Ice; The Great Work; Jace, Vryn's Prodigy | Joshua, Phoenix's Dominant (unconditional), Clive, Ifrit's Dominant (conditional, front face) | `test_saga_named_multi_chapters.py`, `test_loot_threshold_transform.py` |
+| "`<this / it>` fights up to one other / another target creature" - the source excluded from its own target | `effects._SELF_FIGHTS_TARGET_RE` | - | Clive, Ifrit's Dominant | `test_saga_named_multi_chapters.py` |
+| "deals N damage to target player / opponent [or planeswalker] and each creature they control / that player [or that planeswalker's controller] controls" - one instruction, the group named by the target (CR 120.3a/c/e) | `effects._parse_damage_target_player_and_their_creatures_clause` (spells and abilities) | The Great Work I | Flame Wave | `test_damage_target_player_and_their_creatures.py` |
+| "You may cast target `<quality>` card from your graveyard this turn. [If that spell would be put into your graveyard, exile it instead.]" - a `PlayPermission` on the one card, the rider riding on it (CR 400.7h, 614.1a) | `effects._parse_cast_target_card_from_graveyard_clause` | Jace, Telepath Unbound -3 | Vohar, Vodalian Desecrator | `test_graveyard_cast_permission_exile.py` |
+| "[Until end of turn, ]you may cast `<quality>` spells from your / any graveyard[ this turn]. [If a spell cast this way would be put into a graveyard, exile it instead.]" - a CR 611.2c rule of the game for the turn, so a card that reaches a graveyard later is covered too | `casting_restrictions._GRAVEYARD_CAST_GRANT_RE`, `CastingRuleKind.GRAVEYARD_CAST_GRANT`, `casting._graveyard_cast_grant_option` | The Great Work III | Liliana, Untouched by Death -3 | `test_graveyard_cast_permission_exile.py` |
+| "Once during each of your turns, you may cast a `<quality>` spell from your graveyard. [exile rider]" - only on its controller's turn, once per granting object (CR 400.7), spent when the cast completes | `casting._once_each_turn_cast_from_graveyard`, `Game.once_per_turn_cast_permissions_used`, `KeywordCastOption.once_per_turn_key` | Rivaz of the Claw | Gisa and Geralf, Kess, Dissident Mage | `test_once_per_turn_graveyard_cast.py` |
+| a cast trigger's "from your graveyard" is where the spell came from, not a zone its source works in (CR 113.6b) - it now triggers from the battlefield | `triggers.zones_ability_functions_in` | Rivaz of the Claw | Secrets of the Dead | `test_cast_from_graveyard_trigger.py` |
+| "it gains "`<ability>`"" on the spell whose casting triggered it (CR 113.10), carried onto the permanent (CR 400.7a) | `effects._parse_it_gains_quoted_ability_clause` | Rivaz of the Claw | - (no other legal printing; see MEMORY.md) | `test_cast_from_graveyard_trigger.py` |
+| an ability granted to a card leaves with it: a card leaving a graveyard, hand, library or exile is a new object (CR 400.7), while a permanent just gone keeps its grants for its own leaves-the-battlefield trigger (CR 603.10a) | `CardState.move_to` | Rivaz of the Claw | - | `test_cast_from_graveyard_trigger.py` |
+| "`<discard / mill>`. If you discarded a `<quality>` card this way / at least one `<quality>` card is milled this way, `<effect>`." - asked about the cards that sentence moved (CR 701.17c) | `effects._parse_then_if_moved_this_way_clause` | - | Vohar, Vodalian Desecrator; Liliana, Untouched by Death +1 | `test_moved_this_way_condition.py` |
+| sweep: a back face's triggered and activated abilities are dispatched under that face's name and layer-judged on their own text, as `Game` does | `support._other_face` in `classify_clauses` | Jace, Telepath Unbound +1; Ifrit's chapters | - | `test_until_your_next_turn_pump.py` |
+
+Behavioural sweep: a "cast a spell from your graveyard" trigger is driven by
+casting a fitting probe out of the graveyard under an engine-granted
+permission (`_casting` in `tests/test_behavioural_sweep.py`).
+
+Proof printings added: Summon: Fat Chocobo, Summon: Primal Garuda, Clive,
+Ifrit's Dominant, Joshua, Phoenix's Dominant, Flame Wave, Vohar, Vodalian
+Desecrator, Liliana, Untouched by Death, Gisa and Geralf, Kess, Dissident
+Mage, Secrets of the Dead.

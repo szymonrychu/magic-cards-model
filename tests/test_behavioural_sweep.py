@@ -110,6 +110,7 @@ from magic_cards_model.machines.targeting import (
 )
 from magic_cards_model.machines.triggers import (
     AbilityOnStack,
+    _required_cast_origin_zone,
     _singular_subtype,
     _unread_trigger_events,
     triggered_abilities_of,
@@ -1527,6 +1528,32 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             return scenario, source_id
 
         yield adventure
+
+    if _required_cast_origin_zone(lowered) is Zone.GRAVEYARD:
+        # "Whenever you cast a <quality> spell from your graveyard" (Rivaz of
+        # the Claw, Secrets of the Dead): a probe card that fits the named
+        # quality is put in the graveyard and handed CR 601.3's permission
+        # to be cast from there by the engine's own `grant_play_permission`,
+        # then cast - the cast itself is the event.
+        probes = [
+            name
+            for name in [*_probes(case, ability, entering=False), *_PROBE_SPELLS]
+            if name in pool() and not pool()[name].is_land and not pool()[name].card_faces
+        ]
+        for probe in dict.fromkeys(probes):
+
+            def graveyard_probe(probe: str = probe):
+                scenario, source_id = _home(case, ability, graveyard=(probe,))
+                spell = _last(scenario, probe, Zone.GRAVEYARD, ALICE)
+                scenario.game.grant_play_permission(
+                    spell, ALICE, zone=Zone.GRAVEYARD, source_name="behavioural sweep"
+                )
+                _cast(scenario, probe, ALICE, from_zone=Zone.GRAVEYARD)
+                _drive(scenario, case, source_id)
+                return scenario, source_id
+
+            yield graveyard_probe
+        return
 
     if "opponent" in lowered:
         casters = [BOB]

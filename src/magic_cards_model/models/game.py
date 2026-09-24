@@ -3039,6 +3039,15 @@ class Game(EngineModel):
     trigger on the stack later in the same turn. Cleared when a new turn
     begins, alongside `activations`/`loyalty_activations`."""
 
+    once_per_turn_cast_permissions_used: dict[str, int] = Field(default_factory=dict)
+    """Which "Once during each of your turns, you may cast ... from your
+    graveyard" grants have been used this turn (Rivaz of the Claw, Gisa and
+    Geralf, Kess, Dissident Mage), keyed by the granting permanent as that
+    object (`machines/casting.once_per_turn_key`, CR 400.7) - a permanent
+    that leaves and returns is a new object with a use of its own. Written
+    by `Casting.cast()` when a spell is cast under the grant, and cleared
+    when a new turn begins."""
+
     resolving: StackObject | None = Field(default=None, exclude=True, repr=False)
     """The object currently resolving, or None (CR 608.2).
 
@@ -3280,8 +3289,8 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 66
-    #: 66: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 67
+    #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
@@ -4128,14 +4137,22 @@ class Game(EngineModel):
     less" and "that player controls" targets now resolve where a version-63
     board did nothing, the second.
 
-    Bumped 64 -> 65 (C00-T1, activation prohibitions and permissions):
+    Bumped 64 -> 65 (S26, graveyard cast permissions): `Game` gained
+    `once_per_turn_cast_permissions_used` and `CastingRuleEffect` gained
+    `spell_quality`/`any_graveyard`/`exile_instead`, the first bullet. Saga
+    chapters printed with a name, The Great Work's and Liliana, Untouched by
+    Death's turn-long graveyard permissions and Jace, Telepath Unbound's -3 now
+    resolve where a version-64 board did nothing, the second.
+
+    Bumped 65 -> 66 (C00-T1, activation prohibitions and permissions;
+    renumbered from 65 at the C00 integration):
     `ManaSpend` gained `any_color` (CR 609.4b), carried on an open
     `CostPayment.spend` - the first bullet. Pithing Needle's chosen-name
     prohibition, The Wandering Emperor's timing, Agatha's Soul Cauldron's
-    grant and any-color spend now apply where a version-64 board did nothing,
+    grant and any-color spend now apply where a version-65 board did nothing,
     the second.
 
-    Bumped 65 -> 66 (C00-T5, enters-state; renumbered from 65 at the C00
+    Bumped 66 -> 67 (C00-T5, enters-state; renumbered from 65 at the C00
     integration): `CostComponent` gained `link_to_permanent_id` (CR 607.2q),
     carried on a pending ability's own `CostPayment.components` - the first
     bullet.
@@ -21357,6 +21374,7 @@ class Game(EngineModel):
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
             self.once_per_turn_triggers = {}  # CR 603.2h restrictions are per turn too
+            self.once_per_turn_cast_permissions_used = {}  # "Once during each of your turns"
             # Snapshotted, not dropped: "last turn" is a question the
             # werewolves ask every upkeep (CR 603.4) and nothing else can
             # answer once this is cleared.

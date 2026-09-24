@@ -18,8 +18,10 @@ Verified this session with `mise run rules:find`:
   An `UNTIL_YOUR_NEXT_TURN` effect is not one of those, so it is not touched
   there - it is `Game.begin_turn_for` (called from the untap step) that ends
   it, per CR 611.2a above.
-- **CR 115.6a** - "up to one target" permits choosing zero or one legal
-  target; both cards here choose exactly one, a real target creature.
+- **CR 115.6** - "A spell or ability that requires targets may allow zero
+  targets to be chosen." - "up to one target" permits zero or one; the
+  parametrized cards choose exactly one, and Jace's own case below chooses
+  none.
 
 Two real printings, same shape, different numbers and different card type of
 origin (a `+2` and a `+1`, both loyalty abilities):
@@ -30,6 +32,10 @@ origin (a `+2` and a `+1`, both loyalty abilities):
   until your next turn.` - the off-set proof that the parser reads the shape
   and not this one card's exact sentence: a different planeswalker, a
   different loyalty cost, and a different magnitude.
+- **Jace, Telepath Unbound** (the back face of Jace, Vryn's Prodigy) -
+  `+1: Up to one target creature gets -2/-0 until your next turn.` - the same
+  shape on a transformed double-faced card, whose line the sweep used to judge
+  against the creature face's text and so reported silent.
 
 Both cards' only loyalty ability before this one on the stack is a static
 line (Garruk's exile-replacement, absent on Liliana), which `activated_
@@ -41,11 +47,17 @@ loyalty counters).
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Type
+from magic_cards_model.models.card_state import Counter
+from magic_cards_model.support import classify_clauses
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 PUMP_CARDS = [
     pytest.param("Garruk, Veiled Butcher", -4, -1, id="garruk"),
     pytest.param("Liliana, the Last Hope", -2, -1, id="liliana"),
+    pytest.param("Jace, Vryn's Prodigy", -2, 0, id="jace"),
 ]
 
 
@@ -64,9 +76,21 @@ def _board(card_name: str) -> Scenario:
     )
 
 
+def _walker(scenario: Scenario, card_name: str):
+    """The walker on alice's side. A double-faced card whose planeswalker is
+    its back face (Jace, Vryn's Prodigy // Jace, Telepath Unbound) is turned
+    to that face first - CR 712.8e: with its back face up it has only that
+    face's characteristics."""
+    walker = scenario.find(card_name, Zone.BATTLEFIELD, "alice")
+    if Type.PLANESWALKER not in scenario.game.characteristics_of(walker).types:
+        walker.transformed = True
+        walker.add_counters(Counter.LOYALTY, int(walker.up_face.loyalty or 0))
+    return walker
+
+
 def _activate_the_pump(scenario: Scenario, card_name: str, target) -> None:
     """Activate the walker's own index-0 loyalty ability, targeting `target`."""
-    walker = scenario.creature(card_name, "alice")
+    walker = _walker(scenario, card_name)
     scenario.activate(walker, index=0, username="alice", targets=[target])
     scenario.pass_until_resolved()
 
@@ -179,3 +203,33 @@ def test_the_pump_ends_the_instant_the_controllers_own_next_turn_begins(
         "alice's own next turn has begun, so CR 611.2a's stated duration is already over - "
         "not merely pending until this turn's own cleanup"
     )
+
+
+# --------------------------------------------------------------------------
+# "Up to one" may choose none, and the sweep reads a back face's own line
+# --------------------------------------------------------------------------
+
+
+def test_jace_may_choose_no_target_and_still_gains_the_loyalty() -> None:
+    """CR 115.6: "up to one" legally chooses zero; the +1 still costs (adds)
+    its loyalty and pumps nothing."""
+    scenario = _board("Jace, Vryn's Prodigy")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    walker = _walker(scenario, "Jace, Vryn's Prodigy")
+    scenario.activate(walker, index=0, username="alice", targets=[])
+    scenario.pass_until_resolved()
+
+    assert walker.counters[Counter.LOYALTY] == 6
+    characteristics = scenario.game.characteristics_of(bears)
+    assert (characteristics.power, characteristics.toughness) == (2, 2)
+
+
+def test_the_sweep_reads_the_back_face_pump_off_its_own_line() -> None:
+    """The +1 is printed on Jace, Telepath Unbound; `create_continuous_effect_
+    of_ability` reads the ability's own text at resolution, and the sweep has
+    to judge the same text rather than the creature face's."""
+    outcomes = {
+        outcome.text: outcome.category for outcome in classify_clauses(card("Jace, Vryn's Prodigy"))
+    }
+    assert outcomes["+1: Up to one target creature gets -2/-0 until your next turn."] == "handled"

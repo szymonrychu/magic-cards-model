@@ -56,6 +56,7 @@ from magic_cards_model.machines.casting import (
     hexproof_abilities_in,
     keyword_cast_options,
     player_keyword_grant_of_line,
+    reads_as_graveyard_cast_permission_line,
     reads_mandatory_additional_cost_line,
     reads_printed_zone_permission_line,
 )
@@ -1770,6 +1771,10 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if reads_as_transforms_line(text):
         # CR 712.20: `effects.transform_permanent` applies it as it transforms.
         return HANDLED
+    if reads_as_graveyard_cast_permission_line(text):
+        # CR 601.3: `casting.granted_cast_options` hands out the once-each-turn
+        # graveyard cast it grants (Rivaz of the Claw, Kess, Dissident Mage).
+        return HANDLED
     if keyword_machine.as_enters_day_night(text, printing.name) is not None:
         # CR 731.1: "If it's neither day nor night, it becomes day as this
         # creature enters" - `keywords.apply_as_enters_day_night`, run by
@@ -2569,6 +2574,25 @@ def _best(categories: list[str]) -> str:
     return max(categories, key=lambda category: _SEVERITY[category])
 
 
+def _other_face(printing: Card, ability: object) -> str | None:
+    """The name of the face `ability` is printed on, when that is not the
+    printing's front face - `None` for a front-face or single-faced ability.
+
+    A permanent turned to its other face (CR 712.8d/712.8e) is named for that
+    face, and `Game` dispatches its abilities under `CardState.name`, the up
+    face's own name - "Ifrit, Warden of Inferno", not the full "Clive, Ifrit's
+    Dominant // Ifrit, Warden of Inferno". CR 201.5's self-reference ("Ifrit
+    fights ...") is read off that name, and a continuous effect is read off
+    the ability's own text rather than the front face's (`create_continuous_
+    effect_of_ability`), so this sweep asks the same way for a back-face line.
+    """
+    face = getattr(ability, "face", None)
+    front = printing.front_face
+    if not face or front is None or face == front.name or face == printing.name:
+        return None
+    return face
+
+
 def classify_clauses(printing: Card) -> list[ClauseOutcome]:
     """Every clause of this card, judged on its own.
 
@@ -2715,9 +2739,11 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             # nonlegendary Treasure Map's "create three Treasure tokens" must
             # not be read as "create three this permanent tokens".
             legendary = Supertype.LEGENDARY in printing.supertypes
+            other_face = _other_face(printing, ability)
+            dispatch_name = other_face or printing.name
             activated_effects = [
                 activated_effect_for(
-                    printing.name, index, ability.effect, x_value=x_value, legendary=legendary
+                    dispatch_name, index, ability.effect, x_value=x_value, legendary=legendary
                 )
                 for x_value in x_candidates
             ]
@@ -2727,7 +2753,9 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             # per X candidate so a pump/keyword-grant judged here is judged
             # on the number that would actually be on the stack.
             ability_texts = [
-                substitute_x(ability.text, x_value) if x_value is not None else None
+                substitute_x(ability.text, x_value)
+                if x_value is not None
+                else (ability.text if other_face else None)
                 for x_value in x_candidates
             ]
             categories = [
@@ -2740,8 +2768,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 and category == HANDLED
                 and not _is_sentinel_effect(activated_effects[0])
                 and _effect_matched_inside_quotes(
-                    lambda text, i=index, legend=legendary: activated_effect_for(
-                        printing.name, i, text, legendary=legend
+                    lambda text, i=index, legend=legendary, name=dispatch_name: (
+                        activated_effect_for(name, i, text, legendary=legend)
                     ),
                     ability.effect,
                 )
@@ -2803,8 +2831,10 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 clauses.append(ClauseOutcome(SILENT, ability.text, "triggered (unread condition)"))
                 continue
             x_candidates = _etb_x_candidates(printing, ability)
+            other_face = _other_face(printing, ability)
+            dispatch_name = other_face or printing.name
             trigger_effects = [
-                trigger_effect_for(printing.name, ability.event, ability.effect, x_value=x_value)
+                trigger_effect_for(dispatch_name, ability.event, ability.effect, x_value=x_value)
                 for x_value in x_candidates
             ]
             effect = trigger_effects[0]
@@ -2812,7 +2842,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             if modal_category is not None:
                 category = modal_category
             else:
-                categories = [_dispatch_category(e, printing) for e in trigger_effects]
+                own_text = ability.text if other_face else None
+                categories = [_dispatch_category(e, printing, own_text) for e in trigger_effects]
                 category = _best(categories)
             # As with the spell face above: a trigger carrying both CR
             # 107.3m's substitution and a quoted span is not in this pool,
@@ -2822,8 +2853,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 and category == HANDLED
                 and not _is_sentinel_effect(effect)
                 and _effect_matched_inside_quotes(
-                    lambda text, event=ability.event: trigger_effect_for(
-                        printing.name, event, text
+                    lambda text, event=ability.event, name=dispatch_name: trigger_effect_for(
+                        name, event, text
                     ),
                     ability.effect,
                 )

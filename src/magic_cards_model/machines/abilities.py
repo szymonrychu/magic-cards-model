@@ -2431,7 +2431,17 @@ def _layer_readable_sentences_uncached(
     """
     sentences: list[str] = []
     for line in (text or "").split("\n"):
+        chapter_line_read = False
         for ability in _parse_line(line, list(known_keywords or []), face=""):
+            if isinstance(ability, TriggeredAbility) and ability.chapter is not None:
+                # CR 714.2c: "I, II - [Effect]" is one effect printed once and
+                # triggered at two thresholds - `_parse_chapter_line` returns
+                # one ability per numeral, all carrying the same text. Read it
+                # once, or a resolving chapter builds its effect once per
+                # numeral on the line.
+                if chapter_line_read:
+                    continue
+                chapter_line_read = True
             body: str | None = None
             if isinstance(ability, StaticAbility):
                 body = ability.text
@@ -2527,6 +2537,14 @@ def _roman_to_int(numeral: str) -> int | None:
     return total if total > 0 else None
 
 
+#: A chapter's own name in front of its effect - Shiva, Warden of Ice's
+#: "I, II — Mesmerize — Target creature can't be blocked this turn." CR 207.2d:
+#: a flavor word has "no special rules meaning", and CR 207.2c says the same of
+#: an ability word ("III — Domain — ..."), so the effect is the text after it.
+#: "Choose one —" is a modal instruction, not a name, and is kept.
+_CHAPTER_NAME = re.compile(r"^(?!Choose\b)[A-Z][^{}.:;—\n\"]{0,39}?\s+—\s+(?=\S)")
+
+
 def _parse_chapter_line(text: str, common: dict) -> list[TriggeredAbility] | None:
     """CR 107.15a: "'{rN}—[Effect]' means 'When one or more lore counters are
     put onto this Saga, if the number of lore counters on it was less than N
@@ -2550,7 +2568,7 @@ def _parse_chapter_line(text: str, common: dict) -> list[TriggeredAbility] | Non
         if value is None:
             return None
         chapters.append(value)
-    effect = match.group("effect").strip()
+    effect = _CHAPTER_NAME.sub("", match.group("effect").strip(), count=1).strip()
     if not effect:
         return None
     return [

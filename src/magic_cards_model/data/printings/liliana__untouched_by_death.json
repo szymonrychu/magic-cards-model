@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "a7939170-f84e-44c6-b8bc-a180cf7f85d9",
+  "oracle_id": "4f66489c-5a19-40ad-9126-461fa8231f1b",
+  "multiverse_ids": [
+    447242
+  ],
+  "mtgo_id": 68373,
+  "arena_id": 67892,
+  "tcgplayer_id": 169234,
+  "cardmarket_id": 360087,
+  "name": "Liliana, Untouched by Death",
+  "lang": "en",
+  "released_at": "2018-07-13",
+  "uri": "https://api.scryfall.com/cards/a7939170-f84e-44c6-b8bc-a180cf7f85d9",
+  "scryfall_uri": "https://scryfall.com/card/m19/106/liliana-untouched-by-death?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:22:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.jpg?1783934566",
+    "normal": "https://cards.scryfall.io/normal/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.jpg?1783934566",
+    "large": "https://cards.scryfall.io/large/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.jpg?1783934566",
+    "png": "https://cards.scryfall.io/png/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.png?1783934566",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.jpg?1783934566",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.jpg?1783934566",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.webp?1783934566",
+    "grid": "https://cards.scryfall.io/grid/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.webp?1783934566",
+    "display": "https://cards.scryfall.io/display/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.webp?1783934566",
+    "art": "https://cards.scryfall.io/art/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.webp?1783934566",
+    "crop": "https://cards.scryfall.io/crop/front/a/7/a7939170-f84e-44c6-b8bc-a180cf7f85d9.webp?1783934566"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Legendary Planeswalker \u2014 Liliana",
+  "oracle_text": "+1: Mill three cards. If at least one Zombie card is milled this way, each opponent loses 2 life and you gain 2 life.\n\u22122: Target creature gets -X/-X until end of turn, where X is the number of Zombies you control.\n\u22123: You may cast Zombie spells from your graveyard this turn.",
+  "loyalty": "4",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2f5f2509-56db-414d-9a7e-6e312ec3760c",
+  "set": "m19",
+  "set_name": "Core Set 2019",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/2f5f2509-56db-414d-9a7e-6e312ec3760c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am19&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m19?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a7939170-f84e-44c6-b8bc-a180cf7f85d9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4f66489c-5a19-40ad-9126-461fa8231f1b&unique=prints",
+  "collector_number": "106",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Bastien L. Deharme",
+  "artist_ids": [
+    "798f63ec-41ad-474e-9708-df08193345c6"
+  ],
+  "illustration_id": "a8b4a1f5-ec84-4b64-8186-a8c4709e4266",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 7178,
+  "penny_rank": 8614,
+  "prices": {
+    "usd": "1.69",
+    "usd_foil": "13.86",
+    "usd_etched": null,
+    "eur": "1.90",
+    "eur_foil": "8.37",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=447242&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLiliana%252C%2BUntouched%2Bby%2BDeath",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLiliana%252C%2BUntouched%2Bby%2BDeath",
+    "edhrec": "https://edhrec.com/route/?cc=Liliana%2C+Untouched+by+Death"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F169234%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=360087&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/68373?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

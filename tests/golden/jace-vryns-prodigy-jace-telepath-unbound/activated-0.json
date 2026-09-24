@@ -1,10 +1,10 @@
 {
-  "ability": "−9: You get an emblem with \"Whenever you cast a spell, target opponent mills five cards.\"",
+  "ability": "{T}: Draw a card, then discard a card. If there are five or more cards in your graveyard, exile Jace, then return him to the battlefield transformed under his owner's control.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
-    "source": "Jace, Telepath Unbound@alice#1",
+    "source": "Jace, Vryn's Prodigy@alice#1",
     "targets": [],
     "x": 0
   },
@@ -34,16 +34,37 @@
   },
   "card": "Jace, Vryn's Prodigy // Jace, Telepath Unbound",
   "delta": {
-    "created": {
-      "Jace, Telepath Unbound emblem@alice+1": {
-        "counters": {},
-        "zone": "command"
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": ["Forest@alice#4", "Grizzly Bears@alice#1", "Lightning Bolt@alice#1", "Opt@alice#1", "Forest@alice#6"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "discard 1 card(s)",
+        "source": "Jace, Vryn's Prodigy"
+      }
+    ],
+    "fields_changed": ["cards_discarded_this_turn", "cards_drawn_this_turn", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn"],
+    "notices": {},
+    "objects": {
+      "Forest@alice#6": {
+        "zone": ["library", "graveyard"]
+      },
+      "Jace, Vryn's Prodigy@alice#1": {
+        "counters": [
+          {},
+          {
+            "loyalty": 5
+          }
+        ],
+        "power": [0, null],
+        "tapped": [true, false],
+        "toughness": [2, null],
+        "transformed": [false, true]
       }
     },
-    "decisions": [],
-    "fields_changed": ["continuous_effects"],
-    "notices": {},
-    "objects": {},
     "players": {},
     "stack": []
   },

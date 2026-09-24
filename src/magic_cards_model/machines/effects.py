@@ -17207,6 +17207,56 @@ def _parse_grant_flashback_clause(effect_text: str) -> Effect | None:
     return effect
 
 
+#: "You may cast target <quality> card from your graveyard this turn. [If
+#: that spell would be put into your graveyard, exile it instead.]" - Jace,
+#: Telepath Unbound's -3 and Vohar, Vodalian Desecrator's sacrifice ability.
+#: CR 601.3's permission handed to one targeted card for the rest of the turn
+#: (CR 611.2a), with CR 614.1a's replacement riding on "that spell" - the
+#: object the card becomes as it is cast this way (CR 400.7h), which is why
+#: the rider is carried on the permission (`PlayPermission.exile_instead_of_
+#: graveyard`) rather than on the card.
+_CAST_TARGET_CARD_FROM_GRAVEYARD_RE = re.compile(
+    r"^you may cast (?P<phrase>target .+? card) from your graveyard this turn\.\s*"
+    r"(?P<rider>if that spell would be put into (?:your|a) graveyard, exile it instead\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_cast_target_card_from_graveyard_clause(text: str) -> TargetedClause | None:
+    """`_CAST_TARGET_CARD_FROM_GRAVEYARD_RE`'s shape.
+
+    The target is rechecked as the ability resolves (CR 608.2b); a card that
+    has left the graveyard since is a new object and is handed nothing.
+    """
+    match = _CAST_TARGET_CARD_FROM_GRAVEYARD_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    phrase = f"{match.group('phrase')} from your graveyard"
+    if not _targets_understood(phrase, battlefield_only=False):
+        return None
+    exile_instead = match.group("rider") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD:
+                game.grant_play_permission(
+                    target,
+                    controller,
+                    action=PlayAction.CAST,
+                    pays_mana_cost=True,
+                    source_name=source_name,
+                    zone=Zone.GRAVEYARD,
+                    rule="CR 601.3",
+                    exile_instead_of_graveyard=exile_instead,
+                )
+
+    return effect
+
+
 #: Past in Flames: "Each instant and sorcery card in your graveyard gains
 #: flashback until end of turn. The flashback cost is equal to its mana
 #: cost." The same CR 601.3-shaped grant `_GRANT_FLASHBACK_RE` already reads
@@ -19321,6 +19371,195 @@ def _parse_exile_self_then_return_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "<effect>. [If <condition>, ]exile <this object>, then return it to the
+#: battlefield[ transformed][ under its owner's/your control]." - an
+#: instruction that ends by sending its own source out and back:
+#:
+#:   Shiva, Warden of Ice III    "Tap all lands your opponents control. Exile
+#:                               Shiva, then return it to the battlefield
+#:                               (front face up)."
+#:   The True Scriptures III     "Put all creature cards from all graveyards
+#:                               onto the battlefield under your control.
+#:                               Exile this Saga, then return it ..."
+#:   Ifrit, Warden of Inferno    "Add {R}{R}{R}{R}. If Ifrit has three or more
+#:   II, III                     lore counters on it, exile it, then return it
+#:                               to the battlefield (front face up)."
+#:   Jace, Vryn's Prodigy        "Draw a card, then discard a card. If there
+#:                               are five or more cards in your graveyard,
+#:                               exile Jace, then return him to the
+#:                               battlefield transformed under his owner's
+#:                               control."
+#:
+#: The leading effect is whatever the ordinary dispatcher reads it as; this
+#: only owns the trailing return. The "(front face up)" reminder is stripped
+#: before any effect text is parsed (CR 207.2a), and it restates CR 712.14's
+#: default for a double-faced card put onto the battlefield from exile, so a
+#: return with no "transformed" is a front-face-up return.
+_THEN_EXILE_SELF_AND_RETURN_RE = re.compile(
+    r"^(?P<prefix>.+?\.)\s*(?:if (?P<condition>[^,]+), )?"
+    r"exile (?P<name>this [a-z]+|it|him|her|[^,.]+), then return (?:it|him|her)"
+    r" to the battlefield(?P<transformed> transformed)?"
+    r"(?: under (?:(?:its|his|her|their) owner'?s|your) control)?\s*\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_then_exile_self_and_return_clause(text: str) -> AbilityEffect | None:
+    """`_THEN_EXILE_SELF_AND_RETURN_RE`'s shape.
+
+    CR 608.2c: the leading effect runs first, and only then is the condition
+    asked - Jace counts his graveyard *after* his own discard. The condition
+    goes through `Game.condition_holds`, and one `condition_is_readable`
+    cannot place makes the whole paragraph unread rather than half-run.
+
+    The return is the source as it was when the ability was put on the stack
+    (`AbilityOnStack.source_stamp`, CR 400.7): a Saga that left and came back
+    in response is a new object this chapter knows nothing about. The object
+    that comes back is a new one as well, front face up by default (CR
+    712.14) or back face up when the sentence says "transformed" (CR
+    712.14a).
+    """
+    from ..models.game import condition_is_readable
+
+    match = _THEN_EXILE_SELF_AND_RETURN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    condition = match.group("condition")
+    if condition is not None and not condition_is_readable(condition):
+        return None
+    name_text = match.group("name").strip()
+    named = (
+        None
+        if name_text.lower().startswith("this ") or name_text.lower() in {"it", "him", "her"}
+        else name_text
+    )
+    transformed = match.group("transformed") is not None
+    leading = _ability_effect_or_notice(match.group("prefix").strip())
+    if leading is None:
+        return None
+    if getattr(leading, "__name__", "").endswith("notice_only"):
+        # The leading instruction fails closed; so does the whole paragraph.
+        return leading
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        leading(game, ability)
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if ability.source_stamp is not None and source.zone_change_stamp != ability.source_stamp:
+            return
+        if named is not None and named.lower() not in (source.name or "").lower():
+            return
+        if condition is not None and not game.condition_holds(
+            ability.controller, condition, source=source
+        ):
+            return
+        exiled = game.exile_permanent(source)
+        if exiled.zone is not Zone.EXILE:
+            return  # CR 111.8: a token refused the move; nothing to return.
+        owner = exiled.owner or ability.controller
+        game.put_onto_battlefield(exiled, owner, transformed=transformed)
+
+    return effect
+
+
+#: "<discard or mill>. If you discarded a <quality> card this way, <effect>." /
+#: "... If at least one <quality> card is milled this way, <effect>." - an
+#: instruction gated on what the sentence before it moved:
+#:
+#:   Vohar, Vodalian Desecrator    "Draw a card, then discard a card. If you
+#:                                 discarded an instant or sorcery card this
+#:                                 way, each opponent loses 1 life and you gain
+#:                                 1 life."
+#:   Liliana, Untouched by Death   "Mill three cards. If at least one Zombie
+#:                                 card is milled this way, each opponent loses
+#:                                 2 life and you gain 2 life."
+#:
+#: "This way" is anaphora for the cards the first sentence itself moved (CR
+#: 701.17c: a milled card is found in the zone it moved to), so the reader
+#: watches the controller's graveyard and exile across that one sentence
+#: rather than trusting a count.
+_THEN_IF_MOVED_THIS_WAY_RE = re.compile(
+    r"^(?P<prefix>.+?\.)\s*if (?:you (?P<verb_you>discarded|milled) (?:an?|one or more) "
+    r"(?P<quality_you>[a-z ,'-]+?) cards? this way"
+    r"|(?:at least one|an?|one or more) (?P<quality>[a-z ,'-]+?) cards? "
+    r"(?:is|was|are|were) (?P<verb>discarded|milled) this way), (?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _moved_quality_understood(quality: str) -> bool:
+    """Whether every word of a "<quality> card" phrase is one this engine can
+    check: a card type, supertype, subtype or colour, "or"/"and", or a
+    "non"-negation of one of those."""
+    known = (
+        {kind.value.lower() for kind in Type}
+        | {supertype.value.lower() for supertype in Supertype}
+        | {color.name.lower() for color in Color}
+        | {"or", "and", "colorless", "multicolored", "monocolored"}
+        | {word.lower() for word in subtype_vocabulary()}
+    )
+    words = [word for word in re.split(r"[\s,]+", quality.lower()) if word]
+    return bool(words) and all(
+        word in known
+        or (word.startswith("non") and word.removeprefix("non-").removeprefix("non") in known)
+        for word in words
+    )
+
+
+def _parse_then_if_moved_this_way_clause(text: str) -> AbilityEffect | None:
+    """`_THEN_IF_MOVED_THIS_WAY_RE`'s shape - the first sentence runs, then
+    the rest runs once if any card it moved to the controller's graveyard (or
+    exile, where a replacement sent it) matches the quality (CR 608.2c). A
+    leading sentence that is not a discard or a mill, a quality this engine
+    cannot check, or an unreadable rest leaves the whole paragraph unread."""
+    match = _THEN_IF_MOVED_THIS_WAY_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    verb = (match.group("verb_you") or match.group("verb") or "").lower()
+    quality = (match.group("quality_you") or match.group("quality") or "").strip()
+    prefix_text = match.group("prefix").strip()
+    if not re.search(r"\b(?:discard|mill)s?\b", prefix_text, re.IGNORECASE):
+        return None
+    if verb == "discarded" and not re.search(r"\bdiscard", prefix_text, re.IGNORECASE):
+        return None
+    if verb == "milled" and not re.search(r"\bmill", prefix_text, re.IGNORECASE):
+        return None
+    if not _moved_quality_understood(quality):
+        return None
+    leading = _ability_effect_or_notice(prefix_text)
+    rest = _ability_effect_or_notice(match.group("rest").strip())
+    if leading is None or rest is None:
+        return None
+    for part in (leading, rest):
+        if getattr(part, "__name__", "").endswith("notice_only"):
+            return part
+    matches = _quality_matcher(quality)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+
+        def public_objects() -> set[tuple[UUID, UUID]]:
+            return {
+                (card.id, card.zone_change_stamp)
+                for card in [*controller.graveyard, *game.exile]
+                if (card.owner or controller.username) == controller.username
+            }
+
+        before = public_objects()
+        leading(game, ability)
+        moved = [
+            card
+            for card in [*controller.graveyard, *game.exile]
+            if (card.id, card.zone_change_stamp) not in before
+            and (card.owner or controller.username) == controller.username
+        ]
+        if any(matches(card) for card in moved):
+            rest(game, ability)
+
+    return effect
+
+
 #: "Transform all Humans." (Moonmist) - a board sweep rather than the
 #: self-reference `_TRANSFORM_SELF_RE` reads. The subtype is a CR 205.3m
 #: creature type, written the way Oracle text always writes one: capitalized,
@@ -20743,6 +20982,17 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     look_top_keep_one_on_top = _parse_look_top_keep_one_on_top_clause(effect_text)
     if look_top_keep_one_on_top is not None:
         return look_top_keep_one_on_top
+    damage_target_player_and_theirs = _parse_damage_target_player_and_their_creatures_clause(
+        effect_text
+    )
+    if damage_target_player_and_theirs is not None:
+        return damage_target_player_and_theirs
+    cast_target_from_graveyard = _parse_cast_target_card_from_graveyard_clause(effect_text)
+    if cast_target_from_graveyard is not None:
+        return cast_target_from_graveyard
+    it_gains_quoted_ability = _parse_it_gains_quoted_ability_clause(effect_text)
+    if it_gains_quoted_ability is not None:
+        return it_gains_quoted_ability
     # S22's whole-text readers: each names its own object ("exiled with this
     # creature", "that card" after an exile, "them" after a count), so none
     # of them may be cut apart by the clause splitter below.
@@ -21296,6 +21546,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     composed = _compose_layer_effect_with_remainder_for_ability(effect_text)
     if composed is not None:
         return composed
+    then_exile_self_and_return = _parse_then_exile_self_and_return_clause(effect_text)
+    if then_exile_self_and_return is not None:
+        return then_exile_self_and_return
+    then_if_moved_this_way = _parse_then_if_moved_this_way_clause(effect_text)
+    if then_if_moved_this_way is not None:
+        return then_if_moved_this_way
     unread_conditional = _unreadable_conditional_clause(effect_text, for_spell=False)
     if unread_conditional is not None:
 
@@ -22486,6 +22742,95 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
         board = game.computed_board()
         for permanent in list(game.battlefield):
             if types & set(board.of(permanent).types):
+                game.deal_damage(permanent, amount, source=source)
+
+    return effect
+
+
+#: "<Source> deals N damage to target <player> and each creature <they
+#: control>." - one CR 608.2c instruction whose second recipient group is
+#: named by the first one's target, so the clause splitter's bare " and "
+#: cut would leave "each creature they control" with no player to read
+#: "they" against:
+#:
+#:   The Great Work I   "This Saga deals 3 damage to target opponent and each
+#:                      creature they control."
+#:   Flame Wave         "Flame Wave deals 4 damage to target player or
+#:                      planeswalker and each creature that player or that
+#:                      planeswalker's controller controls."
+#:
+#: The target is a player (or, where printed, a planeswalker, whose
+#: controller then owns the "each creature" half - CR 120.3c: the
+#: planeswalker takes the damage, not its controller).
+_DAMAGE_TARGET_PLAYER_AND_THEIR_CREATURES_RE = re.compile(
+    rf"^.*\bdeals? (?P<n>{AMOUNT}) damage to "
+    r"(?P<phrase>target (?:player|opponent)(?: or planeswalker)?) and each "
+    r"(?P<groups>[a-z]+(?:\s+and\s+[a-z]+)*) "
+    r"(?:they control|that player controls"
+    r"|that player or that planeswalker(?:'|\u2019)s controller controls)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_damage_target_player_and_their_creatures_clause(
+    text: str,
+) -> TargetedClause | None:
+    """`_DAMAGE_TARGET_PLAYER_AND_THEIR_CREATURES_RE`'s shape, for a spell and
+    an ability alike.
+
+    CR 608.2b: the target is rechecked as this resolves; an illegal one means
+    no player to name, so nothing is dealt at all. The amount is read once
+    (CR 608.2h) and dealt to the target first, then to each creature of the
+    group it names - one source (CR 120.2b), one resolution.
+    """
+    match = _DAMAGE_TARGET_PLAYER_AND_THEIR_CREATURES_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    if not _targets_understood(
+        match.group("phrase"), battlefield_only=False, allow_player_targets=True
+    ):
+        return None
+    amount_of = _resolve_multiplied_amount(match.group("n"), None, None)
+    if amount_of is None:
+        return None
+    types: set[Type] = set()
+    for word in re.split(r"\s+and\s+", match.group("groups")):
+        card_type = _singular_card_type(word.strip())
+        if card_type is None:
+            return None
+        types.add(card_type)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)
+        )
+        controller = game.controller_of(stack_object).username
+        targets = game.resolve_targets(stack_object)
+        if not targets:
+            return  # CR 608.2b
+        target = targets[0]
+        if isinstance(target, CardState):
+            if target.zone is not Zone.BATTLEFIELD:
+                return
+            victim = game.controller_of(target).username
+        else:
+            victim = target.username
+        amount = max(amount_of(game, controller), 0)
+        if amount <= 0:
+            return
+        board = game.computed_board()
+        recipients = [
+            permanent
+            for permanent in list(game.battlefield)
+            if permanent.controller == victim and types & set(board.of(permanent).types)
+        ]
+        game.deal_damage(target, amount, source=source)
+        for permanent in recipients:
+            if permanent.zone is Zone.BATTLEFIELD:
                 game.deal_damage(permanent, amount, source=source)
 
     return effect
@@ -23902,6 +24247,12 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     exile_card_then_token_copy = _parse_exile_card_then_token_copy_clause(whole, for_spell=True)
     if exile_card_then_token_copy is not None:
         return exile_card_then_token_copy
+    damage_target_player_and_theirs = _parse_damage_target_player_and_their_creatures_clause(whole)
+    if damage_target_player_and_theirs is not None:
+        return damage_target_player_and_theirs
+    cast_target_from_graveyard = _parse_cast_target_card_from_graveyard_clause(whole)
+    if cast_target_from_graveyard is not None:
+        return cast_target_from_graveyard
     target_attacks_if_able = _parse_target_attacks_if_able_clause(whole)
     if target_attacks_if_able is not None:
         return target_attacks_if_able
@@ -29769,7 +30120,12 @@ def _fight(game: "Game", a: CardState, b: CardState) -> None:
 #       with "loyalty" standing in for "power" on the planeswalker mode.
 
 _SELF_FIGHTS_TARGET_RE = re.compile(
-    r"^(?:it|this (?:creature|permanent)) fights (?P<phrase>(?:up to \S+ )?target .+)$",
+    # "up to one other target creature" (Ifrit, Warden of Inferno's Lunge) and
+    # "another target creature" are the same target with the source itself
+    # excluded - `profile_for_text` reads "other"/"another" as
+    # `excludes_source`, so the fight can never be the creature against itself.
+    r"^(?:it|this (?:creature|permanent)) fights "
+    r"(?P<phrase>(?:up to \S+ )?(?:other )?target .+|another target .+)$",
     re.IGNORECASE,
 )
 
@@ -33914,6 +34270,42 @@ def _parse_it_gains_rebound_clause(clause: str, *, for_spell: bool) -> TargetedC
         spell = game.find_by_id(event.subject_id)
         if spell is not None and spell in game.stack:
             spell.granted_rebound = True
+
+    return effect
+
+
+#: "It gains "<ability>"." - Rivaz of the Claw's "Whenever you cast a Dragon
+#: creature spell from your graveyard, it gains "When this creature dies,
+#: exile it."" "It" is the spell whose casting triggered this, as
+#: `_IT_GAINS_REBOUND_RE` reads it; the quoted ability is written onto that
+#: spell the way CR 113.10's other "gains" grants are
+#: (`CardState.granted_ability_texts`), and CR 400.7a carries it onto the
+#: permanent the spell becomes. No duration is printed, so it lasts (CR
+#: 611.2a) until the object is gone (`CardState.move_to`, CR 400.7).
+_IT_GAINS_QUOTED_ABILITY_RE = re.compile(
+    r'^(?:it|that spell) gains ["\u201c](?P<ability>.+)["\u201d]\.?$', re.IGNORECASE | re.DOTALL
+)
+
+
+def _parse_it_gains_quoted_ability_clause(text: str) -> AbilityEffect | None:
+    """`_IT_GAINS_QUOTED_ABILITY_RE`'s shape, read whole - the quoted ability
+    ends in a full stop of its own, which the clause splitter would cut at."""
+    match = _IT_GAINS_QUOTED_ABILITY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    granted_text = match.group("ability").strip()
+    if not granted_text:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if not isinstance(spell, CardState) or spell.zone is not Zone.STACK:
+            return
+        if granted_text not in spell.granted_ability_texts:
+            spell.granted_ability_texts = (*spell.granted_ability_texts, granted_text)
 
     return effect
 

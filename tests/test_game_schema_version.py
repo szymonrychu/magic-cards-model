@@ -828,16 +828,38 @@ def test_a_snapshot_written_before_source_times_transformed_is_refused() -> None
         Game.model_validate(dumped)
 
 
+#: The last version before S26's graveyard cast permissions.
+_SCHEMA_VERSION_BEFORE_GRAVEYARD_CAST_PERMISSIONS = 64
+
+
+def test_the_graveyard_cast_permission_bump_moved_the_version_past_sixty_four() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_GRAVEYARD_CAST_PERMISSIONS
+
+
+def test_a_snapshot_written_before_graveyard_cast_permissions_is_refused() -> None:
+    """A version-64 dump is refused rather than decoded as current: it has no
+    `once_per_turn_cast_permissions_used`, so a Rivaz of the Claw already used
+    this turn would decode as unused."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_GRAVEYARD_CAST_PERMISSIONS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_GRAVEYARD_CAST_PERMISSIONS}",
+    ):
+        Game.model_validate(dumped)
+
+
 #: The last version before C00-T1's `ManaSpend.any_color` (CR 609.4b).
-_SCHEMA_VERSION_BEFORE_SPEND_AS_ANY_COLOR = 64
+_SCHEMA_VERSION_BEFORE_SPEND_AS_ANY_COLOR = 65
 
 
-def test_the_spend_as_any_color_bump_moved_the_version_past_sixty_four() -> None:
+def test_the_spend_as_any_color_bump_moved_the_version_past_sixty_five() -> None:
     assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_SPEND_AS_ANY_COLOR
 
 
 def test_a_snapshot_written_before_spend_as_any_color_is_refused() -> None:
-    """A version-64 dump is refused rather than decoded as current: an open
+    """A version-65 dump is refused rather than decoded as current: an open
     activation payment in it carries no `ManaSpend.any_color`, so CR 609.4b's
     "as though it were mana of any color" would silently stop applying."""
     dumped = _a_played_game().model_dump(mode="json")
@@ -851,15 +873,15 @@ def test_a_snapshot_written_before_spend_as_any_color_is_refused() -> None:
 
 
 #: The last version before C00-T5's `CostComponent.link_to_permanent_id`.
-_SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK = 65
+_SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK = 66
 
 
-def test_the_delve_exile_link_bump_moved_the_version_past_sixty_five() -> None:
+def test_the_delve_exile_link_bump_moved_the_version_past_sixty_six() -> None:
     assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK
 
 
 def test_a_snapshot_written_before_the_delve_exile_link_is_refused() -> None:
-    """A version-65 dump is refused rather than decoded as current: a pending
+    """A version-66 dump is refused rather than decoded as current: a pending
     `AbilityOnStack.keyword_activation`/`.unless_payment`'s own exile
     component in it carries no `link_to_permanent_id`, so CR 607.2q's own
     "exiled with it" read would find nothing linked at all."""

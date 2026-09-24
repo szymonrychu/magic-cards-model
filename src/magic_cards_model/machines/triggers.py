@@ -3738,8 +3738,16 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
         return frozenset({Zone.COMMAND})
 
     # CR 113.6b: "An ability that states which zones it functions in functions
-    # only from those zones."
-    if "in your graveyard" in lowered or "from your graveyard" in lowered:
+    # only from those zones." A cast trigger's "from your graveyard" is not
+    # that: "Whenever you cast a Dragon creature spell from your graveyard"
+    # (Rivaz of the Claw, Secrets of the Dead) says where the *spell* came
+    # from - `_origin_zone_matches` reads it off the cast - and names no zone
+    # for its own source, which works from the battlefield like any other.
+    cast_origin = (
+        ability.event is TriggerEvent.CAST_SPELL
+        and _required_cast_origin_zone(lowered) is Zone.GRAVEYARD
+    )
+    if "in your graveyard" in lowered or ("from your graveyard" in lowered and not cast_origin):
         return frozenset({Zone.GRAVEYARD})
     if "opening hand" in lowered:
         return frozenset({Zone.HAND})
