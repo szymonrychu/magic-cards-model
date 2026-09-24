@@ -5771,6 +5771,75 @@ def _chosen_color_words(source: CardState) -> str:
     return f" of the chosen color ({word})"
 
 
+def chosen_creature_type_of(source: CardState) -> str | None:
+    """The creature type `source` chose as it entered (CR 614.12a's "choose
+    a creature type"), lowercased, or `None` if it recorded no such choice -
+    read off `CardState.choice` the same way `chosen_color_of` reads a
+    colour choice, both stored there by `machines/replacement.py`'s "as
+    [this] enters, choose ..." handling."""
+    chosen = source.choice
+    if chosen is None or chosen.kind is not ChoiceKind.CREATURE_TYPE or not chosen.value:
+        return None
+    return chosen.value.lower()
+
+
+#: An Unexpected Party's own "Creatures you control of the chosen type get
+#: +2/+2." - a CR 611.3 static anthem over the creature type
+#: `chosen_creature_type_of` reads off the same enchantment's own CR
+#: 614.12a entry choice (`_CHOOSE_A_CREATURE_TYPE_RE` in
+#: `machines/replacement.py`), the identical "of the chosen `<quality>`"
+#: pattern `_self_protection_from_chosen_color_builder` already gives a
+#: colour choice, just for CR 205.3m's own kind of choice instead.
+_CHOSEN_TYPE_ANTHEM_RE = re.compile(
+    r"^creatures you control of the chosen type get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _chosen_type_anthem_builder(power: int, toughness: int, *, line: str) -> EffectBuilder:
+    """`_CHOSEN_TYPE_ANTHEM_RE`'s shape: layer 7c (CR 613.4c), timestamped
+    off the source (CR 613.7a) and live (CR 611.3a) like every other anthem
+    in this module - `creatures_controlled_by_with_subtype` already reads
+    the computed board (CR 613.5) for a fixed subtype list; a one-item list
+    built from the chosen type at builder-call time is the identical
+    selector for a type that varies per-source instead.
+
+    No chosen type recorded (a permanent that somehow entered without the
+    choice) grants nothing rather than guessing one, the same way
+    `_self_protection_from_chosen_color_builder`'s own missing-colour case
+    does.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        chosen_type = chosen_creature_type_of(source)
+        if chosen_type is None:
+            return []
+        selector = creatures_controlled_by_with_subtype(source.controller, [chosen_type])
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: creatures you control of the chosen type "
+                    f"({chosen_type}) get {power:+d}/{toughness:+d}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=modify_power_toughness(power, toughness),
+            )
+        ]
+
+    return builder
+
+
 class CreatureQualifiers(EngineModel):
     """The qualifier words a printed anthem subject may carry, parsed once and
     handed to `_creature_group`.
@@ -9887,6 +9956,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         if keywords is None:
             return None
         return _lands_keyword_grant_builder(keywords, line=sentence)
+    if match := _CHOSEN_TYPE_ANTHEM_RE.fullmatch(sentence):
+        return _chosen_type_anthem_builder(
+            int(match.group("power")), int(match.group("toughness")), line=sentence
+        )
     if match := _SUBTYPE_ANTHEM_RE.fullmatch(sentence):
         subtypes = _subtype_list_words(match.group("subtypes"))
         if subtypes is None:

@@ -3191,6 +3191,28 @@ def _strip_once_per_turn_trailer(text: str) -> str:
 #: that point (none in the pool) is left alone.
 _CONDITION_WHILE_CLAUSE = re.compile(r"\bwhile\b", re.IGNORECASE)
 
+#: "... for the first time each turn" - CR 603.2h's own once-per-turn
+#: limiter, printed as part of the trigger **condition** itself rather than
+#: as `_ONCE_PER_TURN_TRAILER`'s trailing sentence on the ability's effect -
+#: Desert Were-Worm's own "Whenever you attack with creatures with total
+#: power 12 or greater for the first time each turn, ...". Stripped off the
+#: condition text before `_trigger_event`/`machines.triggers.condition_
+#: matches` ever see it, the same "read once, tag the ability" treatment
+#: `_strip_once_per_turn_trailer` already gives the trailing form -
+#: `machines/triggers.triggers_for` reads the resulting `once_per_turn` flag
+#: identically either way, keyed by the ability's whole printed text.
+_CONDITION_FOR_THE_FIRST_TIME_EACH_TURN_RE = re.compile(
+    r"\s+for the first time each turn$", re.IGNORECASE
+)
+
+
+def _strip_condition_once_per_turn_trailer(condition: str) -> tuple[str, bool]:
+    """`condition` with `_CONDITION_FOR_THE_FIRST_TIME_EACH_TURN_RE` cut off,
+    and whether it was present."""
+    stripped_condition = condition.strip()
+    stripped = _CONDITION_FOR_THE_FIRST_TIME_EACH_TURN_RE.sub("", stripped_condition)
+    return stripped, stripped != stripped_condition
+
 
 #: CR 603.1b: "A triggered ability may have more than one trigger condition".
 #: The printed joint is "[condition] and when[ever] [condition]" ahead of the
@@ -3284,6 +3306,8 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
 
         condition, rest = parts[0], ", ".join(parts[1:])
 
+    condition, condition_once_per_turn = _strip_condition_once_per_turn_trailer(condition)
+
     # The effect text as printed, before any comma-side "if" is lifted out:
     # a condition carrying its own "while" clause keeps this one (see below).
     printed_rest = rest
@@ -3313,7 +3337,7 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
                 intervening_if = clause_parts[0][len("if ") :].strip()
                 rest = ", ".join(clause_parts[1:])
 
-    once_per_turn = False
+    once_per_turn = condition_once_per_turn
     stripped = _strip_once_per_turn_trailer(rest).strip()
     if stripped != rest.strip():
         once_per_turn = True

@@ -4787,3 +4787,45 @@ Proof printings added: Summon: Fat Chocobo, Summon: Primal Garuda, Clive,
 Ifrit's Dominant, Joshua, Phoenix's Dominant, Flame Wave, Vohar, Vodalian
 Desecrator, Liliana, Untouched by Death, Gisa and Geralf, Kess, Dissident
 Mage, Secrets of the Dead.
+
+## C01-T4: attack triggers, evasion/blocking restrictions, typed group grants, mass and conditional damage
+
+Along the Crooked Way, An Unexpected Party // At the Door, Desert Were-Worm,
+Duskwatch Hunter, Eagle of the Great Shelf, Gollum the Abandoned, Old Fat
+Spider, Smaug the Magnificent, Wargling, Desolation of Smaug, Glóin the
+Mighty // Easy Pickings, The Black Arrow and Smaug, the Great Calamity //
+Spew Flame were silent or `static_unaudited`; every sweep-visible clause of
+each now reads `handled`, and the `static_unaudited` statics (evasion/
+blocking restrictions, and the adventure faces this task does not own the
+classifier for - see MEMORY.md) are proven by scenario test instead, per
+this round's acceptance criteria. CR numbers verified with `mise run
+rules:find`: 106.4, 106.6, 111.1, 118.12, 118.12a, 205.3m, 207.2c, 301.5a,
+500.8, 506.4, 506.4b, 508.1f, 508.3d, 509.1a, 509.1b, 511.3, 603.2h, 603.4,
+608.2c, 608.2h, 611.2c, 613.1f, 613.4c, 613.5, 614.12a, 615.6, 715.3, 715.3a,
+715.3d.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "This creature can't be blocked by tokens." (CR 509.1a) - a blocker's own token-ness (CR 111.1), read the same layer-aware way every other "can't be blocked ..." shape is | `combat._CANT_BE_BLOCKED_BY_TOKENS_RE`, `evasion_restriction_refusal` | Duskwatch Hunter | - (no other legal printing anywhere in this session's Scryfall snapshot; see MEMORY.md) | `test_blocking_restrictions.py` |
+| "This creature can't be blocked by creatures with power 2 or less." / "`<Name>` can't block." - both pre-existing shapes, exercised on their own listed printings | `combat._CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE`, `_parse_self_block_restriction` | Old Fat Spider, Gollum the Abandoned | Rimrock Knight (the "can't block" shape's pronoun-wording twin) | `test_blocking_restrictions.py` |
+| "Whenever you attack with creatures with total power N or greater[ for the first time each turn], `<effect>`." - a subject-less CR 508.3d declaration event qualified by the computed (CR 613.5) sum of every declared attacker's power, the trailing "for the first time each turn" stripped off the condition and folded into CR 603.2h's own once-per-turn gate the same way the trailing sentence form already is | `triggers.total_power_attack_threshold`, `abilities._strip_condition_once_per_turn_trailer` | Desert Were-Worm | - (no other legal printing carries the exact wording; see MEMORY.md) | `test_total_power_extra_combat.py` |
+| "Untap all attacking creatures." / "After this phase, there is an additional combat phase." (CR 500.8) - Desert Were-Worm's own attack-trigger effect, split from "an additional main phase" siblings this file already reads | `effects._parse_untap_all_attacking_clause`, `_parse_additional_combat_phase_only_clause` | Desert Were-Worm | Hellkite Charger | `test_total_power_extra_combat.py` |
+| "Whenever this creature attacks, it gets `<P>`/`<T>` until end of turn for each `<qualifier>`." - a self pump scaled by `_for_each_multiplier`'s own "(other) `<qualifier>` you control" count (CR 608.2h), "it" resolved against the attack condition's own subject (self, or "equipped/enchanted creature") | `effects._parse_self_pump_for_each_clause`, `_attack_trigger_pump_subject` | Eagle of the Great Shelf | Sigil of Valor (the "equipped creature" referent) | `test_attack_count_triggers.py` |
+| "Whenever `<this>` attacks, `<pronoun>` deals damage equal to the number of `<type>` you control to any target / to each opponent." - `count_expression`'s "the number of ... you control" reached from a "deals damage equal to" opening | `effects._parse_self_damage_equal_to_count_clause` | Smaug the Magnificent | Eivor, Battle-Ready (the "to each opponent" recipient) | `test_attack_count_triggers.py` |
+| Ferocious's own payoff, "`<condition>`, until end of turn, this creature gets `<P>`/`<T>` and creatures you control gain `<keyword>`." - a self pump and a mass keyword grant sharing one printed duration, split by the clause splitter's bare "and" and read as one CR 608.2c instruction | `effects._merge_self_pump_and_group_keyword_grant_clauses` | Wargling | - (no other legal printing carries the exact combined sentence; see MEMORY.md) | `test_ferocious_attack_trigger.py` |
+| "`<cost>`: `<types>` you control gain `<keyword>` until end of turn." - `_MASS_SUBTYPE_SUBJECT_RE` widened from a single bare CR 205.3m subtype to a comma/"and"-joined list, any one enough | `effects._MASS_SUBTYPE_SUBJECT_RE`, `_mass_creature_group_targets` | Along the Crooked Way | - (the widened list grammar itself has no printing outside this card; the single-subtype shape it extends is already proven by History of Benalia elsewhere) | `test_typed_group_keyword_grant.py` |
+| "As this enchantment enters, choose a creature type. Creatures you control of the chosen type get +2/+2." - a CR 611.3 static anthem over `chosen_creature_type_of`'s own CR 614.12a entry choice, the identical "of the chosen `<quality>`" pattern a colour choice already gets | `layers._chosen_type_anthem_builder`, `chosen_creature_type_of` | An Unexpected Party | - (no other legal printing carries this exact sentence; the mechanism itself is `_self_protection_from_chosen_color_builder`'s colour twin) | `test_chosen_type_anthem.py` |
+| "deals N damage to any target / to target creature. If a `<creature type>` is dealt damage this way, destroy it." - the destroy checked against `Game.deal_damage`'s own return (CR 615.6: prevented damage was never dealt), not the target's type before damage lands | `effects._merge_damage_any_target_then_destroy_if_type_clauses` | The Black Arrow | Silver Bolt | `test_mass_and_typed_damage.py` |
+| "deals N damage to each non-`<Subtype>` creature." / "... to each creature your opponents control." - both pre-existing filtered mass-damage shapes | `effects._GROUP_NON_SUBTYPE_RE`, `_GROUP_CONTROLLER_RE`, `_parse_damage_group_phrase` | Desolation of Smaug, Easy Pickings | - (both shapes already proven elsewhere; exercised here on their own listed printings) | `test_mass_and_typed_damage.py` |
+| "deals N damage to target creature." (an Adventure's own sorcery half, CR 715.3) - the plain, pre-existing single-target damage reader, read through the ordinary Adventure cast | `effects._parse_targeted_clause` | Spew Flame | - | `test_mass_and_typed_damage.py` |
+| "Add N mana in any combination of colors. Spend this mana only to cast `<type>` spells." - the pre-existing per-unit-colour production and CR 106.6 restriction reader (`machines/cost.spend_restriction`), read together as one CR 608.2c instruction across the clause splitter's period | `effects._merge_add_any_combination_mana_with_restriction_clauses` | Desolation of Smaug | Sarkhan, Fireblood | `test_restricted_any_color_mana.py` |
+
+`support._condition_can_fire`'s synthetic-occurrence tester learned the new
+subject-less total-power attack condition the same way it already knows
+`is_batched_attack_condition` - without that, Desert Were-Worm's own trigger
+sweeps `unmatchable_condition` (a genuine defect the sweep's own synthetic
+board has no real declared attack to try, not the condition itself failing).
+
+Proof printings added: Rimrock Knight, Hellkite Charger, Sigil of Valor,
+Eivor, Battle-Ready, Bonesplitter, Silver Bolt, Werewolf Pack Leader,
+Sarkhan, Fireblood.
