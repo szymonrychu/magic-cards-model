@@ -173,6 +173,13 @@ from ..machines.effects import (
     mode_effect_body,
     trigger_effect_for,
 )
+from ..machines.keyword_counters import (
+    conditional_group_keyword_grant_of_line,
+    consume_shield_counter,
+    enters_with_counters_pronoun_fallback,
+    has_shield_counter,
+    supplemental_keyword_counter_lines,
+)
 from ..machines.keywords import (
     apply_as_enters_day_night,
     apply_daybound_nightbound,
@@ -956,6 +963,19 @@ _LOYALTY_INSTANT_SPEED_STATIC_RE = re.compile(
 _SELF_LOYALTY_INSTANT_SPEED_RE = re.compile(
     r"^(?:as long as (?P<condition>[^,]+), )?you may activate (?:her|his|its|their) loyalty "
     r"abilities (?:on any player'?s turn )?any time you could cast an instant\.?$",
+    re.IGNORECASE,
+)
+
+#: "This permanent's"/`<card's own name>`'s power is equal to the number of
+#: legendary `<type>` you control." - Super-Adaptoid's own CDA (CR 604.3a),
+#: read here because `machines/layers.py::_QUALIFIER_COUNT_CDA_RE`'s own
+#: `qualifier` group is a single bare word and cannot read the two-word
+#: "legendary creatures" - see `Game._supplement_characteristics`'s own
+#: docstring. `<type>` is any CR 205.2a card type word, not hardcoded to
+#: "creatures" - Super-Adaptoid is the reported card, not the specification.
+_LEGENDARY_TYPE_COUNT_POWER_RE = re.compile(
+    r"^(?:this permanent's|[^.]+'s) power is equal to the number of "
+    r"legendary (?P<type>[a-z]+) you control\.?$",
     re.IGNORECASE,
 )
 #: CR 702.62b: "A card is 'suspended' if it's in the exile zone, has suspend,
@@ -3134,6 +3154,34 @@ class Game(EngineModel):
     strings its JSON order followed per-process hash randomisation, and a
     decode and re-dump could list the same keys differently."""
 
+    harnessed: SortedSet[str] = Field(default_factory=set)
+    """Which permanents are harnessed right now (CR 701.64a-b), keyed
+    `"<permanent id>:<zone_change_stamp>"` - `Game._harness_key`, the same
+    id-plus-incarnation scoping `exhausted` already uses, which is what
+    gives CR 701.64b's own "stays harnessed until it leaves the battlefield"
+    for free: a permanent that leaves and returns is a fresh CR 400.7 object
+    with a fresh stamp, so it is never harnessed by what its earlier self
+    was. Read by `Game.is_harnessed`, written by `Game.harness`; see
+    `machines/keyword_counters.py` for CR 702.186's own ∞ keyword this
+    designation gates. A `SortedSet` for the identical canonical-dump reason
+    `exhausted` is one."""
+
+    power_up_restricted_turns: SortedSet[int] = Field(default_factory=set)
+    """`TurnMachine.turns_taken` ordinals during which no power-up ability
+    (CR 702.193a) may be activated - Kang the Conqueror's own power-up rider,
+    "Take an extra turn after this one. During that turn, power-up abilities
+    can't be activated.": the extra turn CR 500.7 inserts directly after the
+    current one is the very next turn taken, so `turns_taken` (which "goes up
+    exactly once per turn that actually begins, extra ones included" - its
+    own docstring) is the ordinal the rider's own resolution records here,
+    ahead of time, and `why_cannot_activate` checks against once that turn
+    is actually the one under way. A `SortedSet` of ordinals rather than a
+    single one, so two Kangs in the same game each get their own restricted
+    turn recorded rather than the second overwriting the first; entries
+    older than the current turn are simply never matched again, and are left
+    rather than pruned - each is a handful of bytes for the life of the
+    game."""
+
     loyalty_activations: dict[str, int] = Field(default_factory=dict)
     """How often a loyalty ability of each permanent has been activated this
     turn, keyed by permanent id, for CR 606.3's once-per-turn rule - which is
@@ -3404,7 +3452,13 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 73
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 74
+    #: 74: `Game` gained `harnessed` (CR 701.64b's own designation) and
+    #: `power_up_restricted_turns` (Kang the Conqueror's own power-up
+    #: rider, CR 702.193a) - a snapshot written before either field decodes
+    #: with both missing, which would silently read as "nothing is
+    #: harnessed" and "no turn is power-up-restricted" for a game that
+    #: actually has one of either recorded.
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -10082,6 +10136,20 @@ class Game(EngineModel):
                         )
                 return card_state
 
+            if not event.counters:
+                # `machines/replacement.py::_ENTERS_WITH`'s own trailing
+                # group only ever reads "on it" - Captain America, Super-
+                # Soldier's own "enters with a shield counter on him" is
+                # UNPARSED there and places nothing. Not that file's to fix
+                # this round; `enters_with_counters_pronoun_fallback` is the
+                # supplemental reader, tried only when the ordinary pipeline
+                # placed nothing at all, so a printing it already handles is
+                # never double-counted. See that function's own docstring.
+                fallback = enters_with_counters_pronoun_fallback(card_state.oracle_text)
+                if fallback is not None:
+                    kind, amount = fallback
+                    event.counters[kind] = event.counters.get(kind, 0) + amount
+
             if (
                 attach_to is not None
                 and isinstance(attach_to, CardState)
@@ -14326,6 +14394,16 @@ class Game(EngineModel):
         computed board each time so the grant ends with its permanent (CR
         604.2) and an ability an effect removed grants nothing (CR 613.1f) -
         the same fresh read `player_protection_qualities` makes for Runed Halo.
+
+        Also Captain America, Super-Soldier's own "As long as ... has a
+        shield counter ..., you and other Heroes you control have
+        hexproof." - `machines/casting.py::player_keyword_grant_of_line`
+        (owned by a different task this round) only reads the bare "You have
+        `<keyword>`." shape, so `conditional_group_keyword_grant_of_line`
+        (`machines/keyword_counters.py`) is tried on the same lines as a
+        fallback, and the *player* half of its compound grant is what lands
+        here; the *creature* half is `_supplement_characteristics`'s own
+        business, on the other side of the identical condition check.
         """
         grants: list[tuple[str, list[str]]] = []
         board = self.computed_board()
@@ -14340,6 +14418,10 @@ class Game(EngineModel):
                 grant = player_keyword_grant_of_line(line)
                 if grant is not None:
                     grants.append(grant)
+                    continue
+                conditional = conditional_group_keyword_grant_of_line(line)
+                if conditional is not None and permanent.counters[conditional[0]] > 0:
+                    grants.append((conditional[2], []))
         return grants
 
     def player_hexproof(self, player: Player) -> tuple[bool, list[str]]:
@@ -14713,6 +14795,25 @@ class Game(EngineModel):
                 source=source,
             )
             apply_replacements(self, event)
+            if event.happens and event.amount > 0 and event.card is not None:
+                # CR 122.1c: "If damage would be dealt to this permanent,
+                # prevent that damage and remove a shield counter from it."
+                # A single hardcoded check at this one choke point, not a
+                # registered `ContinuousEffect`/replacement `apply_
+                # replacements` already ran - the identical shape CR
+                # 122.1d's stun counter already gets at its own one choke
+                # point (`CardState.untap`), and the reason is the same:
+                # this is engine-intrinsic support for a counter kind, not a
+                # printed ability `machines/replacement.py` (owned by a
+                # different task this round) discovers from oracle text.
+                # `event.card`, not `target`: CR 609.7b's own "the shield
+                # rechecks" posture is what every other check here already
+                # reads off the (possibly redirected) event, not the
+                # original argument.
+                recipient = event.card
+                if recipient.zone is Zone.BATTLEFIELD and has_shield_counter(recipient):
+                    consume_shield_counter(recipient)
+                    event.amount = 0  # `ReplaceableEvent.happens` reads this back.
             if not event.happens or event.amount <= 0:
                 return 0
 
@@ -15232,6 +15333,22 @@ class Game(EngineModel):
         """The rest of `destroy` - see its own docstring for why it is split out."""
         if is_indestructible(permanent, self):
             return permanent  # CR 702.12b
+        if has_shield_counter(permanent):
+            # CR 122.1c: "If this permanent would be destroyed as the result
+            # of an effect, instead remove a shield counter from it." A
+            # hardcoded pre-check ahead of `destruction_happens`'s own
+            # `apply_replacements` call, the identical shape indestructible
+            # just above already is - `machines/replacement.py` (owned by a
+            # different task this round) has no registered effect for a
+            # shield counter to discover, so this is where CR 122.1c's own
+            # "instead" has to happen instead. Consuming the counter here,
+            # ahead of the call, means a permanent regeneration *and* a
+            # shield counter would both stop is never asked to choose
+            # between them (CR 616.1) - a shield counter always answers
+            # first, the same "indestructible wins outright" simplification
+            # this method already makes for the pair just above it.
+            consume_shield_counter(permanent)
+            return permanent
         if not self.destruction_happens(permanent, regeneration_allowed=regeneration_allowed):
             return permanent
         return self.put_into_graveyard(permanent)
@@ -16432,7 +16549,167 @@ class Game(EngineModel):
             # CR 113.6c: plus an "as long as this isn't on the battlefield"
             # grant, which applies exactly here (Grist, the Hunger Tide).
             return off_battlefield_characteristics_of(permanent)
-        return self.computed_board().of(permanent)
+        chars = self.computed_board().of(permanent)
+        return self._supplement_characteristics(permanent, chars)
+
+    def _supplement_characteristics(
+        self, permanent: CardState, chars: Characteristics
+    ) -> Characteristics:
+        """What `characteristics_of` adds on top of `computed_board`'s own
+        answer - three gaps `machines/layers.py` (owned by a different task
+        this round, so not a file this task may edit) leaves, closed here
+        additively instead, on top of what it already computed:
+
+        - **CR 122.1b's indestructible/hexproof keyword counters**
+          (`supplemental_keyword_counter_lines`, see `machines/keyword_
+          counters.py`'s own docstring for why `machines/layers.py::
+          _keyword_counter_lines` does not already grant these two).
+        - **CR 702.186b's own harness gate** ("As long as this permanent is
+          harnessed, it has [Ability]") - an Infinity permanent's "∞ —
+          [Ability]" line (parsed as an ordinary triggered ability now that
+          `machines/abilities.py::_ABILITY_WORD` reads the ∞ keyword) is
+          present in `chars.abilities` only while `is_harnessed` says so;
+          removed otherwise. `machines/triggers.py::triggered_abilities_on`
+          already reads a printed line's absence from the computed board as
+          CR 613.1f removal (`rewritten_ability_lines`), which is exactly
+          what CR 702.186b's own "as long as" wording means - so gating the
+          line here is enough to gate the trigger itself, with nothing to
+          change in `machines/triggers.py`.
+        - **A CDA whose qualifier `machines/layers.py::_QUALIFIER_COUNT_CDA_
+          RE` cannot read** - that reader's `qualifier` group is a single
+          bare word, so Super-Adaptoid's own "Super-Adaptoid's power is
+          equal to the number of legendary creatures you control" (CR
+          604.3a) leaves `chars.power` undefined (`None`) rather than
+          computed. Supplemented only when `chars.power` is still `None` -
+          never overriding a value `_QUALIFIER_COUNT_CDA_RE` or any other
+          layer-7a reader already supplied - and only for the self-
+          referential "this permanent's/`<name>`'s power is equal to the
+          number of legendary `<type>` you control" shape, read generally
+          off the printed text rather than keyed to Super-Adaptoid's own
+          name.
+        - **The creature half of a conditional group grant `machines/
+          layers.py` has no reader for** - Captain America, Super-Soldier's
+          own "As long as Captain America has a shield counter on him, you
+          and other Heroes you control have hexproof.": every *other*
+          permanent with the named subtype, controlled by the granting
+          permanent's own controller, gets the keyword while the condition
+          holds. The player half of the identical grant is
+          `_player_static_keyword_grants`'s own business; see that method's
+          docstring for why both live in this file rather than in `machines/
+          casting.py`/`machines/layers.py`.
+        """
+        abilities = chars.abilities
+        supplemental = supplemental_keyword_counter_lines(chars.counters)
+        for line in supplemental:
+            if line not in abilities:
+                abilities = abilities + (line,)
+        infinity_lines = [
+            stripped
+            for raw in (permanent.oracle_text or "").splitlines()
+            if (stripped := raw.strip()).startswith("∞")
+        ]
+        if infinity_lines:
+            harnessed = self.is_harnessed(permanent)
+            for line in infinity_lines:
+                present = line in abilities
+                if harnessed and not present:
+                    abilities = abilities + (line,)
+                elif not harnessed and present:
+                    abilities = tuple(entry for entry in abilities if entry != line)
+        for keyword_text in self._group_keyword_grants_for(permanent, chars):
+            if keyword_text not in abilities:
+                abilities = abilities + (keyword_text,)
+        if abilities != chars.abilities:
+            chars = chars.with_(abilities=abilities)
+        if chars.power is None:
+            legendary_count = self._legendary_creature_count_power(permanent)
+            if legendary_count is not None:
+                chars = chars.with_(power=legendary_count)
+        return chars
+
+    def _group_keyword_grants_for(
+        self, permanent: CardState, chars: Characteristics
+    ) -> tuple[str, ...]:
+        """`_supplement_characteristics`'s own creature-half reader for a
+        conditional group grant (`conditional_group_keyword_grant_of_line`) -
+        see that method's own docstring. `subtype` is matched against
+        `chars.subtypes` both as printed ("Heroes") and singularised
+        ("Hero"), since `CardState.subtypes` stores the singular form
+        (Scryfall's own type-line spelling) while the grant's own sentence
+        names the plural; "other" excludes the granting permanent itself.
+        """
+        granted: list[str] = []
+        controller = permanent.controller
+        for source in self.battlefield:
+            if source.controller != controller or source.id == permanent.id:
+                continue
+            for line in (source.oracle_text or "").splitlines():
+                conditional = conditional_group_keyword_grant_of_line(line)
+                if conditional is None:
+                    continue
+                counter_kind, subtype, keyword = conditional
+                if source.counters[counter_kind] <= 0:
+                    continue
+                # CR 205.3's own subtypes have no fixed pluralisation rule
+                # ("Hero"/"Heroes" adds "-es"; most others just add "-s"),
+                # so every plausible singular is tried rather than one
+                # guessed shape - "Heroes" stripped of a bare trailing "s"
+                # gives "Heroe", which matches nothing, and would have
+                # silently refused this exact grant.
+                candidates = {subtype}
+                if subtype.lower().endswith("es"):
+                    candidates.add(subtype[:-2])
+                if subtype.lower().endswith("s"):
+                    candidates.add(subtype[:-1])
+                if not candidates & set(chars.subtypes):
+                    continue
+                text = keyword.title()
+                if text not in granted:
+                    granted.append(text)
+        return tuple(granted)
+
+    def _legendary_creature_count_power(self, permanent: CardState) -> int | None:
+        """The count `_LEGENDARY_TYPE_COUNT_POWER_RE`'s own CDA names, or
+        `None` when the permanent prints no such line at all.
+
+        Read directly off `self.battlefield`/`computed_board` rather than
+        through `machines/layers.py`'s own `Count` machinery (not this task's
+        file to add a "legendary" filter to) - a plain sum over the computed
+        board (CR 613.5), the identical live recompute every other CDA in
+        the pool already gets since `characteristics_of` is asked fresh every
+        time a caller wants a permanent's power.
+
+        `computed_board().of(other)`, not `self.characteristics_of(other)`:
+        `permanent` itself is a legendary creature under its own count (CR
+        608.2h counts "creatures you control", and CR 205.4a's legendary
+        supertype does not exclude the CDA's own source), so going back
+        through `characteristics_of` - which calls this very method through
+        `_supplement_characteristics` - would recurse into itself. Only
+        `power` needs the supplement this method exists to fill in;
+        `types`/`supertypes` are already right on the board `computed_board`
+        hands back on its own.
+        """
+        normalized = self_normalized_effect_text(permanent.name, permanent.oracle_text or "")
+        match = None
+        for line in normalized.splitlines():
+            match = _LEGENDARY_TYPE_COUNT_POWER_RE.fullmatch(line.strip())
+            if match is not None:
+                break
+        if match is None:
+            return None
+        try:
+            card_type = Type(match.group("type").rstrip("s"))
+        except ValueError:
+            return None
+        controller = permanent.controller
+        board = self.computed_board()
+        return sum(
+            1
+            for other in self.battlefield
+            if other.controller == controller
+            and card_type in board.of(other).types
+            and Supertype.LEGENDARY in board.of(other).supertypes
+        )
 
     def power_of(self, permanent: CardState) -> int | None:
         """This creature's power right now, layers included (CR 613.4, 613.5).
@@ -19319,12 +19596,33 @@ class Game(EngineModel):
         if ability.exhaust and self._activation_key(permanent, index) in self.exhausted:
             return f"{permanent.name}'s exhaust ability has already been activated (CR 702.177a)"
 
-        if ability.power_up and self._activation_key(permanent, index) in self.exhausted:
+        if ability.power_up:
             # CR 702.193a: "Activate this ability only once" - the exact same
             # never-cleared-per-turn restriction exhaust's own "Activate only
             # once" (CR 702.177a) already reads, so it reuses `exhausted`
-            # rather than a second set (see `ActivatedAbility.power_up`).
-            return f"{permanent.name}'s power-up ability has already been activated (CR 702.193a)"
+            # rather than a second set (see `ActivatedAbility.power_up`),
+            # widened by `_power_up_activations_used`/`_power_up_activation_
+            # limit` for Wonder Man, Hollywood Hero's own "Each power-up
+            # ability of permanents you control can be activated an
+            # additional time."
+            if self._power_up_activations_used(permanent, index) >= self._power_up_activation_limit(
+                permanent
+            ):
+                return (
+                    f"{permanent.name}'s power-up ability has already been activated (CR 702.193a)"
+                )
+            if self.turn.turns_taken in self.power_up_restricted_turns:
+                # Kang the Conqueror's own rider: "During that turn,
+                # power-up abilities can't be activated." - the turn is
+                # whichever one this ability's own earlier activation
+                # recorded in `power_up_restricted_turns`
+                # (`_DURING_THAT_TURN_POWER_UP_RESTRICTED_RE`'s effect,
+                # `machines/effects.py`), checked against the turn actually
+                # under way right now.
+                return (
+                    f"{permanent.name}'s power-up ability can't be activated this turn "
+                    "(CR 702.193a)"
+                )
 
         if ability.mana is None:
             # CR 702.61a: "As long as this spell is on the stack, players
@@ -20043,6 +20341,65 @@ class Game(EngineModel):
         """
         return f"{permanent.id}:{permanent.zone_change_stamp}:{index}"
 
+    #: Wonder Man, Hollywood Hero's own static: "Each power-up ability of
+    #: permanents you control can be activated an additional time." Read
+    #: generally off the printed line (any number of card-name variants
+    #: could print the identical sentence), not gated to Wonder Man's own
+    #: name - `_power_up_activation_limit` is the reader.
+    _POWER_UP_EXTRA_ACTIVATION_TEXT = (
+        "Each power-up ability of permanents you control can be activated an additional time."
+    )
+
+    def _power_up_activation_limit(self, permanent: CardState) -> int:
+        """How many times CR 702.193a lets `permanent`'s power-up ability be
+        activated - 1 ordinarily, or 2 while its controller controls a
+        source with Wonder Man, Hollywood Hero's own static line (see
+        `_POWER_UP_EXTRA_ACTIVATION_TEXT`).
+
+        Read off the computed board (CR 613.5) via `characteristics_of`, so
+        the extra activation is not available before Wonder Man resolves and
+        stops being available the moment he leaves - the same live check
+        every other static grant in this engine already gets.
+        """
+        controller = permanent.controller
+        for other in self.battlefield:
+            if other.controller != controller:
+                continue
+            if self.characteristics_of(other).has_ability(self._POWER_UP_EXTRA_ACTIVATION_TEXT):
+                return 2
+        return 1
+
+    def _power_up_activations_used(self, permanent: CardState, index: int) -> int:
+        """How many of `permanent`'s power-up activations `exhausted` already
+        records - `key` itself for the first (shared with `exhaust`'s own
+        bookkeeping, `activate_ability`'s own comment on why), `key:power-up-
+        extra` for the second Wonder Man's own extra activation allows."""
+        key = self._activation_key(permanent, index)
+        used = int(key in self.exhausted)
+        used += int(f"{key}:power-up-extra" in self.exhausted)
+        return used
+
+    def _harness_key(self, permanent: CardState) -> str:
+        """The key `harnessed` keys a permanent's own harnessed designation
+        by - `_activation_key`'s own id-plus-incarnation scoping, without the
+        ability index, since CR 701.64b's harnessed designation belongs to
+        the *permanent*, not to any one of its abilities."""
+        return f"{permanent.id}:{permanent.zone_change_stamp}"
+
+    def is_harnessed(self, permanent: CardState) -> bool:
+        """CR 701.64b: whether `permanent` is harnessed right now."""
+        return self._harness_key(permanent) in self.harnessed
+
+    def harness(self, permanent: CardState) -> None:
+        """CR 701.64a: "'Harness [this permanent]' means 'If this permanent
+        isn't harnessed, it becomes harnessed.'" A permanent not on the
+        battlefield cannot become harnessed - CR 701.64b calls it "a
+        designation permanents can have", and this keyword action is only
+        ever printed as an activated ability's own effect, which already
+        requires its source to still be a permanent to resolve meaningfully."""
+        if permanent.zone is Zone.BATTLEFIELD:
+            self.harnessed.add(self._harness_key(permanent))
+
     def _activation_handoff_key(self, permanent: CardState, index: int) -> str:
         """The key `begin_activating` hands an activation to `activate_ability`
         by (`announced_reveal_counts`, `_announced_targets`, `_opened_payments`).
@@ -20384,9 +20741,43 @@ class Game(EngineModel):
             # a clause of it - see `ActivationCostReduction`'s docstring).
             mana = mana.minus(self.activation_cost_reduction_for(permanent, ability, controller))
 
+        if ability.power_up:
+            mana = mana.minus(self._power_up_group_discount(permanent, controller))
+
         return TotalCost(
             mana=mana, components=components, waterbend_generic=waterbend_generic
         ).assign_payer(controller)
+
+    #: "Power-up abilities of other creatures you control cost `<N>` less to
+    #: activate." - Hulk, Gamma Goliath's own static, read generally off the
+    #: printed number (CR 601.2f: any amount, not hardcoded to Hulk's own
+    #: {3}) so a future printing of the identical template discounts by its
+    #: own number rather than Hulk's.
+    _POWER_UP_GROUP_DISCOUNT_RE = re.compile(
+        r"^power-up abilities of other creatures you control cost \{(?P<amount>\d+)\} "
+        r"less to activate\.?$",
+        re.IGNORECASE,
+    )
+
+    def _power_up_group_discount(self, permanent: CardState, controller: str) -> ManaCost:
+        """CR 601.2f/602.2b's own group discount on *another* permanent's
+        power-up ability - Hulk, Gamma Goliath's own static (`_POWER_UP_
+        GROUP_DISCOUNT_RE`), which never discounts its own power-up cost
+        ("other creatures"). Summed across every source of the text the
+        controller has, the same "reductions are cumulative" posture CR
+        601.2f already takes and `activation_cost`'s own docstring already
+        notes for the entered-this-turn/`cost_reduction` pair above it.
+        Read off the computed board (CR 613.5) via `characteristics_of`.
+        """
+        total = 0
+        for other in self.battlefield:
+            if other.controller != controller or other.id == permanent.id:
+                continue
+            for line in self.characteristics_of(other).abilities:
+                match = self._POWER_UP_GROUP_DISCOUNT_RE.fullmatch(line.strip())
+                if match is not None:
+                    total += int(match.group("amount"))
+        return ManaCost.parse(f"{{{total}}}") if total else ManaCost()
 
     def activation_cost_reduction_for(
         self, permanent: CardState, ability: ActivatedAbility, controller: str
@@ -21032,8 +21423,17 @@ class Game(EngineModel):
                 # CR 702.193a's own "Activate this ability only once" - the
                 # same bookkeeping as exhaust just above, reused rather than
                 # duplicated (see `why_cannot_activate`'s matching check and
-                # `ActivatedAbility.power_up`'s own docstring).
-                self.exhausted.add(key)
+                # `ActivatedAbility.power_up`'s own docstring). The *first*
+                # activation is recorded under the identical bare `key`
+                # exhaust uses, so a power-up card with no Wonder Man on the
+                # board dumps identically to before this widening; only a
+                # second activation - possible at all once `_power_up_
+                # activation_limit` says 2 - gets its own suffixed key, never
+                # colliding with `exhaust`'s own bare one.
+                if key not in self.exhausted:
+                    self.exhausted.add(key)
+                else:
+                    self.exhausted.add(f"{key}:power-up-extra")
             if ability.loyalty is not None:
                 # CR 606.3's once-per-turn rule is per permanent: having activated
                 # any loyalty ability of this planeswalker this turn, the next one

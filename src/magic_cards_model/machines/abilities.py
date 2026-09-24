@@ -2291,17 +2291,28 @@ def self_normalized_effect_text(card_name: str, effect_text: str, *, legendary: 
 
 
 #: A legendary card's own gendered subject pronoun opening an effect
-#: sentence - Hydro-Man, Fluid Felon's "he gets +1/+1 until end of turn."
-_LEGENDARY_SELF_PRONOUN_RE = re.compile(r"^(?:he|she) (?=\w)", re.IGNORECASE)
+#: sentence - Hydro-Man, Fluid Felon's "he gets +1/+1 until end of turn." -
+#: or opening any *later* sentence of a multi-sentence effect, the same
+#: CR 201.5c self-reference in a second clause - Abomination, Terrifying
+#: Titan's power-up rider "Put a +1/+1 counter on Abomination. He fights up
+#: to one target creature an opponent controls." "^" still matches a
+#: single-sentence effect exactly as before; `(?<=\. )` is the added
+#: sentence-boundary case, so a caller that hands this a whole multi-sentence
+#: effect (`activated_effect_for`'s own fallback, below) gets every self-
+#: pronoun sentence rewritten, not only the first.
+_LEGENDARY_SELF_PRONOUN_RE = re.compile(r"(?:^|(?<=\. ))(?:he|she) (?=\w)", re.IGNORECASE)
 
 
 def legendary_self_pronoun_normalized(sentence: str) -> str:
-    """`sentence` with a leading "he"/"she" rewritten to CR 700.7's "this
-    permanent". Called only for a legendary card's own triggered or activated
-    ability: Oracle text uses "he"/"she" only for the legend it is printed
-    on, the same self-reference CR 201.5c's shortened name makes (Hydro-Man,
-    Fluid Felon's "if Hydro-Man is a creature, he gets +1/+1")."""
-    return _LEGENDARY_SELF_PRONOUN_RE.sub("this permanent ", sentence, count=1)
+    """`sentence` with a leading "he"/"she" - at the very start, or opening
+    any later sentence - rewritten to CR 700.7's "this permanent". Called
+    only for a legendary card's own triggered or activated ability: Oracle
+    text uses "he"/"she" only for the legend it is printed on, the same
+    self-reference CR 201.5c's shortened name makes (Hydro-Man, Fluid
+    Felon's "if Hydro-Man is a creature, he gets +1/+1"). Every occurrence is
+    rewritten, not only the first - a legend's own pronoun always means the
+    same object, however many sentences an effect runs to."""
+    return _LEGENDARY_SELF_PRONOUN_RE.sub("this permanent ", sentence)
 
 
 def layer_readable_sentences(
@@ -2599,7 +2610,20 @@ def _parse_chapter_line(text: str, common: dict) -> list[TriggeredAbility] | Non
 #: never consults this module's own `Ability` classification, but fatal for
 #: a triggered one, whose `abilities_triggered_by`/`intervening_if_holds`
 #: only ever see a `TriggeredAbility`.
-_ABILITY_WORD = re.compile(r"^([A-Z][A-Za-z'\- ]{2,30}?(?: \d+)?)\s+—\s+(?=\S)")
+#:
+#: The bare "∞" alternative is CR 702.186a's own Infinity keyword: "∞ (the
+#: mathematical symbol for infinity) is a keyword found on Infinity cards.
+#: '∞' is followed by ability text." Not a capitalised word at all, so the
+#: ordinary `[A-Z]...` branch never matched it - The Mind Stone's own
+#: "∞ — At the beginning of your end step, ..." fell through to
+#: `StaticAbility` with the whole line as its text, the same fate an
+#: unstripped "Landfall —" would leave a triggered ability in. Stripped here
+#: the identical way every other em-dash keyword/ability-word is, so the rest
+#: reaches `_parse_triggered` as an ordinary "At the beginning of ..."
+#: condition; CR 702.186b's own "as long as this permanent is harnessed, it
+#: has [Ability]" gate is enforced elsewhere (`Game.characteristics_of`),
+#: not by this classification.
+_ABILITY_WORD = re.compile(r"^(∞|[A-Z][A-Za-z'\- ]{2,30}?(?: \d+)?)\s+—\s+(?=\S)")
 
 #: CR 603.1's three words, at the start of the line.
 _TRIGGER = re.compile(r"^(When|Whenever|At)\b\s*", re.IGNORECASE)

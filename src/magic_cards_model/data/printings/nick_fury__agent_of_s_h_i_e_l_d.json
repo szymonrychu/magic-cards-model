@@ -1,0 +1,151 @@
+{
+  "object": "card",
+  "id": "3aa6fc02-ef76-426b-accd-6c0ef88b2a5e",
+  "oracle_id": "62916107-14c0-4516-9fed-a032b1a80e5d",
+  "multiverse_ids": [],
+  "resource_id": "F230F8AF13378B8AED5B21C26FB73D6A7586368931D15F5A245DC835FE02F670",
+  "mtgo_id": 152233,
+  "arena_id": 104918,
+  "tcgplayer_id": 696536,
+  "cardmarket_id": 891151,
+  "name": "Nick Fury, Agent of S.H.I.E.L.D.",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e",
+  "scryfall_uri": "https://scryfall.com/card/msh/25/nick-fury-agent-of-shield?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:36:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.jpg?1783902971",
+    "normal": "https://cards.scryfall.io/normal/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.jpg?1783902971",
+    "large": "https://cards.scryfall.io/large/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.jpg?1783902971",
+    "png": "https://cards.scryfall.io/png/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.png?1783902971",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.jpg?1783902971",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.jpg?1783902971",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.webp?1783902971",
+    "grid": "https://cards.scryfall.io/grid/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.webp?1783902971",
+    "display": "https://cards.scryfall.io/display/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.webp?1783902971",
+    "art": "https://cards.scryfall.io/art/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.webp?1783902971",
+    "crop": "https://cards.scryfall.io/crop/front/3/a/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e.webp?1783902971"
+  },
+  "mana_cost": "{W}",
+  "cmc": 1.0,
+  "type_line": "Legendary Creature \u2014 Human Spy Hero",
+  "oracle_text": "Power-up \u2014 {W}{U}{B}{R}{G}: Put two +1/+1 counters on Nick Fury, then look at the top seven cards of your library. You may put a Hero, Equipment, or Vehicle card from among them onto the battlefield. If it's a double-faced card, you may transform it. Put the rest on the bottom of your library in a random order. (Activate each power-up ability only once. Reduce the cost by his mana cost if he entered this turn.)",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Power-up",
+    "Transform"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3aa6fc02-ef76-426b-accd-6c0ef88b2a5e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A62916107-14c0-4516-9fed-a032b1a80e5d&unique=prints",
+  "collector_number": "25",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Marco Turini",
+  "artist_ids": [
+    "711dbc87-1ce4-44b5-8652-10b96f61038a"
+  ],
+  "illustration_id": "abddd27f-104e-4488-9f16-3b9c65fef7cf",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 14546,
+  "penny_rank": 1482,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=T0U8g6tQj-Q",
+    "previewed_at": "2026-06-03"
+  },
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "0.35",
+    "usd_etched": null,
+    "eur": "0.22",
+    "eur_foil": "0.38",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNick%2BFury%252C%2BAgent%2Bof%2BS.H.I.E.L.D.",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNick%2BFury%252C%2BAgent%2Bof%2BS.H.I.E.L.D.",
+    "edhrec": "https://edhrec.com/route/?cc=Nick+Fury%2C+Agent+of+S.H.I.E.L.D."
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696536%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891151&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152233?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

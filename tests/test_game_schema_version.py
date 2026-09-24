@@ -1033,3 +1033,26 @@ def test_a_snapshot_written_before_treasure_mana_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_TREASURE_MANA}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before `Game.harnessed`/`Game.power_up_restricted_turns`.
+_SCHEMA_VERSION_BEFORE_HARNESS_AND_POWER_UP_RESTRICTION = 73
+
+
+def test_the_harness_and_power_up_restriction_bump_moved_the_version_past_seventy_three() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_HARNESS_AND_POWER_UP_RESTRICTION
+
+
+def test_a_snapshot_written_before_harness_and_power_up_restriction_is_refused() -> None:
+    """A version-73 dump is refused rather than decoded as current: it
+    carries no `harnessed`/`power_up_restricted_turns` fields at all, which
+    would silently read as "nothing is harnessed" and "no turn is power-up-
+    restricted" for a game that actually recorded one of either."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_HARNESS_AND_POWER_UP_RESTRICTION
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_HARNESS_AND_POWER_UP_RESTRICTION}",
+    ):
+        Game.model_validate(dumped)
