@@ -3985,13 +3985,10 @@ def dredge(game: Any, card: CardState, player: str) -> list[CardState]:
         owner = game.player(player)
         milled = list(owner.library[:count])
         for state in milled:
-            owner.move(state, Zone.GRAVEYARD)  # CR 701.17a
-            # CR 700.11/CR 400.6: dredge moves a card straight from library
-            # to graveyard without going through `Game.put_into_graveyard`,
-            # so it has to feed the ledger itself.
-            game._record_graveyard_arrival(  # noqa: SLF001
-                state, origin_zone=Zone.LIBRARY, permanent_types=None
-            )
+            # CR 701.17a, through `Game.put_into_graveyard` so a graveyard
+            # replacement (CR 614.1a) sees each milled card, and the CR
+            # 700.11/CR 400.6 arrival ledger is fed there.
+            game.put_into_graveyard(state)
         owner.cards_in(Zone.GRAVEYARD).remove(card)
         owner.add(card, Zone.HAND)
         card.move_to(Zone.HAND)
@@ -4134,13 +4131,13 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
         turn = getattr(getattr(game, "turn", None), "turn_number", None)
 
         if not madness_replaces_discard(card):
-            owner.move(card, Zone.GRAVEYARD)
-            # CR 700.11/CR 400.6: an ordinary discard moves straight from
-            # hand to graveyard without going through `Game.
-            # put_into_graveyard`, so it has to feed the ledger itself.
-            game._record_graveyard_arrival(  # noqa: SLF001
-                card, origin_zone=Zone.HAND, permanent_types=None
-            )
+            # CR 614.1a: through `Game.put_into_graveyard`, so a graveyard
+            # replacement (Rest in Peace's "from anywhere", Leyline of the
+            # Void's) still gets its look at a discarded card; that also feeds
+            # the CR 700.11/CR 400.6 arrival ledger.
+            game.put_into_graveyard(card)
+            if card.zone is not Zone.GRAVEYARD:
+                return card
             # CR 702.187b's "as long as you discarded this card this turn", recorded
             # on the card the far side of the move because that is the object the
             # clause is about. Not a count - `Game.cards_discarded_this_turn` is

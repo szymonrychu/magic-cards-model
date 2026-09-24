@@ -23369,6 +23369,72 @@ def _parse_draw_x_from_target_graveyard_from_library_clause(text: str) -> Effect
     return effect
 
 
+#: "If a creature dealt damage this way would die this turn, exile it
+#: instead." - Anger of the Gods' closing sentence; Underworld Fires' "a
+#: permanent", Serpentine Spike's and Pillar of Flame's "a creature" after a
+#: targeted rather than a group damage clause. CR 614.1a: a replacement effect
+#: the resolving spell creates, naming exactly the permanents its own damage
+#: clause dealt damage to (CR 120.3 - damage prevented is never dealt).
+_DEALT_DAMAGE_THIS_WAY_DIE_TO_EXILE_RE = re.compile(
+    r"^(?P<rest>.+?\.)\s+if an? (?P<quality>[a-z]+(?: or [a-z]+)*) dealt damage this way "
+    r"would die this turn, exile it instead\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: The quality words that rider names: CR 110.4's permanent types, or
+#: "permanent" for any of them.
+_DEALT_DAMAGE_QUALITY_TYPES: dict[str, Type] = {
+    "creature": Type.CREATURE,
+    "planeswalker": Type.PLANESWALKER,
+    "artifact": Type.ARTIFACT,
+    "enchantment": Type.ENCHANTMENT,
+    "land": Type.LAND,
+    "battle": Type.BATTLE,
+}
+
+
+def _parse_dealt_damage_this_way_die_to_exile(text: str) -> Effect | None:
+    """A damage-dealing spell followed by "If a `<quality>` dealt damage this
+    way would die this turn, exile it instead." (CR 614.1a, CR 700.4).
+
+    The leading text is read by the ordinary spell dispatcher; its damage is
+    recorded by source (`Game.recording_damage_from`) while it runs, and every
+    permanent of the named quality it actually dealt damage to is put on
+    `Game.die_to_exile_this_turn` - the same marker Essence Burn's targeted
+    "If that permanent would die this turn" uses, read by `machines/
+    replacement.py`'s `_die_to_exile_this_turn_effects` and ended by CR
+    514.2's cleanup. A leading text the dispatcher cannot read leaves this
+    unread too (fail closed).
+    """
+    match = _DEALT_DAMAGE_THIS_WAY_DIE_TO_EXILE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    words = match.group("quality").lower().split(" or ")
+    if words == ["permanent"]:
+        wanted: frozenset[Type] | None = None
+    elif all(word in _DEALT_DAMAGE_QUALITY_TYPES for word in words):
+        wanted = frozenset(_DEALT_DAMAGE_QUALITY_TYPES[word] for word in words)
+    else:
+        return None
+    rest = _spell_effect_or_notice(match.group("rest"))
+    if rest is None or _is_notice_only(rest):
+        return None
+
+    def dealt_damage_this_way_die_to_exile(game: "Game", spell: CardState) -> None:
+        with game.recording_damage_from(spell) as damaged:
+            rest(game, spell)
+        for permanent_id in damaged:
+            permanent = game.find_by_id(permanent_id)
+            if not isinstance(permanent, CardState) or permanent.zone is not Zone.BATTLEFIELD:
+                continue
+            if wanted is not None and not (wanted & set(game.characteristics_of(permanent).types)):
+                continue
+            if permanent.id not in game.die_to_exile_this_turn:
+                game.die_to_exile_this_turn.append(permanent.id)
+
+    return dealt_damage_this_way_die_to_exile
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -23383,6 +23449,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    dealt_damage_this_way = _parse_dealt_damage_this_way_die_to_exile(whole)
+    if dealt_damage_this_way is not None:
+        return dealt_damage_this_way
     exile_card_then_token_copy = _parse_exile_card_then_token_copy_clause(whole, for_spell=True)
     if exile_card_then_token_copy is not None:
         return exile_card_then_token_copy
@@ -23398,6 +23467,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     created_replacement = _parse_created_replacement_spell_text(whole)
     if created_replacement is not None:
         return created_replacement
+    created_replacement_then_rest = _parse_created_replacement_then_rest_spell_text(whole)
+    if created_replacement_then_rest is not None:
+        return created_replacement_then_rest
     draw_x_from_target_graveyard_from_library = (
         _parse_draw_x_from_target_graveyard_from_library_clause(whole)
     )
@@ -30231,6 +30303,35 @@ def _parse_created_replacement_spell_text(text: str) -> Effect | None:
             game.created_replacements.append(record)
 
     return effect
+
+
+#: A created replacement's sentence followed by more resolution text -
+#: Hallowed Moonlight's "Until end of turn, if a creature would enter and it
+#: wasn't cast, exile it instead. Draw a card." CR 608.2c: the instructions
+#: are followed in the order written, so the effect is created first.
+_LEADING_SENTENCE_RE = re.compile(r"^(?P<first>[^\n]+?\.)\s+(?P<rest>\S.*)$", re.DOTALL)
+
+
+def _parse_created_replacement_then_rest_spell_text(text: str) -> Effect | None:
+    """A spell whose first sentence creates a replacement effect
+    (`_parse_created_replacement_spell_text`) and whose remaining text the
+    ordinary spell dispatcher reads. Either half unread leaves the whole
+    unread (fail closed)."""
+    match = _LEADING_SENTENCE_RE.match(text.strip())
+    if match is None:
+        return None
+    created = _parse_created_replacement_spell_text(match.group("first"))
+    if created is None:
+        return None
+    rest = _spell_effect_or_notice(match.group("rest"))
+    if rest is None or _is_notice_only(rest):
+        return None
+
+    def created_replacement_then_rest(game: "Game", spell: CardState) -> None:
+        created(game, spell)
+        rest(game, spell)
+
+    return created_replacement_then_rest
 
 
 def _parse_created_replacement_ability_text(text: str) -> AbilityEffect | None:

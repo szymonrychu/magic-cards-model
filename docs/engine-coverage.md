@@ -4565,3 +4565,31 @@ top-of-library "reveal it, then shuffle and put that card on top" family
 (Mystical Tutor), neither of which any listed card for this task needs.
 Both default `caused_by` to `None` (unchanged prior behaviour) rather than
 silently guessing a controller.
+
+## C00-T3: graveyard, uncast-enter, dealt-damage-this-way, counter, draw and mana replacements
+
+Rest in Peace, Sanctifier en-Vec, Containment Priest, Anger of the Gods,
+Vizier of Remedies, Quantum Riddler and Damping Sphere now sweep every clause
+`handled`. The static readers for six of these already performed; what they
+lacked was an audit (`static_unaudited`) - `support._static_ability_category`
+now asks `replacement.performed_static_replacement_line`, which vouches only
+for the readers listed in `_AUDITED_STATIC_COMPILERS` plus mana production,
+each proven by the scenario file named below on a listed card and on a second
+printing. CR numbers verified with `mise run rules:find`: 103.6, 106.12,
+106.12a, 106.12b, 107.1b, 110.4, 111.1, 120.3, 120.3c, 121.2a, 121.6, 122.6,
+205.4a, 504.1, 514.2, 601.2, 603.2g, 604.2, 605.1a, 605.4a, 608.2c, 611.2a,
+613.1d, 614.1a, 614.5, 614.6, 614.7, 616.1, 616.1e, 616.1f, 700.4, 701.17a,
+702.52a, 702.187b.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "If a card [or token] would be put into [a / your / an opponent's] graveyard [from anywhere], exile it instead", and the colour-filtered "a black or red permanent, spell, or card not on the battlefield" (CR 614.1a). A discard (`keywords.discard`, so the cleanup discard too) and dredge's mill (`keywords.dredge`) now go through `Game.put_into_graveyard`, so the replacement sees them - both used to move the card straight to the graveyard | `replacement._compile_graveyard_exile` | Rest in Peace, Sanctifier en-Vec | Leyline of the Void | `test_graveyard_exile_replacement.py` |
+| "If a [nontoken] creature would enter and it wasn't cast, exile it instead" - one data spec (`EnterUncastExile`) for the static line and for the "Until end of turn, ..." created form (CR 611.2a, ended at CR 514.2) | `replacement.read_enter_uncast_exile`, `created_replacement_spec` | Containment Priest | Mistcaller (activated), Hallowed Moonlight (spell, no "nontoken") | `test_uncast_creature_exile_replacement.py` |
+| a created-replacement sentence followed by more resolution text (Hallowed Moonlight's "... Draw a card."), in the order written (CR 608.2c) | `effects._parse_created_replacement_then_rest_spell_text` | - | Hallowed Moonlight | `test_uncast_creature_exile_replacement.py` |
+| "`<damage clause>`. If a `<creature / permanent / type or type>` dealt damage this way would die this turn, exile it instead." - the damage clause's source is recorded (`Game.recording_damage_from`), every permanent of the quality it actually dealt damage to (CR 120.3; prevented damage is not dealt) goes on `Game.die_to_exile_this_turn` (Essence Burn's marker, ended at CR 514.2) | `effects._parse_dealt_damage_this_way_die_to_exile` | Anger of the Gods | Underworld Fires ("a permanent", planeswalkers too) | `test_damaged_creature_exile_replacement.py` |
+| "If one or more `<kind>` counters would be put on `<a subject>` [you control], that many [`<kind>` counters] plus/minus N ... instead" (CR 107.1b floors at zero, CR 614.5 once per effect) | `replacement.read_counter_amount` | Vizier of Remedies | Kami of Whispered Hopes | `test_counter_minus_one_replacement.py` |
+| "[As long as you have N or fewer cards in hand,] if you would draw one or more cards, you draw that many cards plus N instead" and "If you would draw a card [except the first one you draw in each of your draw steps], draw two cards instead" (CR 121.2a, 121.6) | `replacement._compile_draw_plus`, `_compile_draw_doubler[_except_draw_step]` | Quantum Riddler | Alhammarret's Archive | `test_draw_plus_one_replacement.py` |
+| "If a `<type>` is tapped for N or more mana, it produces {C} instead of any other type and amount" / "If you tap a [basic] `<type / permanent>` for mana, it produces `<twice / three times>` as much of that mana instead" (CR 106.12b). Applied as the mana ability resolves on both paths (`Game.activate_ability`'s mana branch, `CostPayment.tap_for_mana`) and in the auto-tap solver's candidate scan, so a plan counts what a source really makes; a plan naming replaced mana is mapped back to the production that becomes it. CR 616.1's order is chosen for the tapping player (most mana kept), CR 616.1f re-checking after each: a Forest under Nyxbloom Ancient and Damping Sphere is tripled, then dampened to one {C}; Ancient Tomb is dampened, then tripled | `replacement.read_mana_production`, `replace_mana_production`; `cost._replaced_options`, `_unreplaced_production` | Damping Sphere | Nyxbloom Ancient | `test_mana_production_replacement.py` |
+
+Proof printings added: Anger of the Gods (listed), Hallowed Moonlight,
+Mistcaller, Nyxbloom Ancient, Underworld Fires.
