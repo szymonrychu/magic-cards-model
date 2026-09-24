@@ -540,3 +540,71 @@ def test_another_adventurers_resolved_adventure_is_marked_too():
     assert rider.zone is Zone.EXILE
     assert rider.exile_annotation is not None
     assert rider.exile_annotation.marker is ExileMarker.ADVENTURED
+
+
+# -- CR 715.3d: "It can't be cast as an Adventure this way" -----------------
+
+
+def test_the_adventure_half_cannot_be_recast_from_the_adventured_exile():
+    """CR 715.3d: "For as long as that card remains exiled, that player may
+    play it. It can't be cast as an Adventure this way." The permission
+    `use_keyword("Adventure")` claims covers the creature face only, so
+    Stomp named on top of it is refused at CR 601.2i."""
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Bonecrusher Giant")
+    casting.cast_as_adventure()
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain"))
+    scenario.put_on_stack(casting)
+    assert scenario.resolve_top().zone is Zone.EXILE
+
+    again = scenario.cast("Bonecrusher Giant", from_zone=Zone.EXILE)
+    again.use_keyword("Adventure")
+    with pytest.raises(ValueError, match=r"CR 715\.3d"):
+        again.cast_as_adventure()
+    again.cancel()
+    assert again.spell.zone is Zone.EXILE
+
+    # Named first and claimed second, the finished cast is refused instead.
+    again = scenario.cast("Bonecrusher Giant", from_zone=Zone.EXILE)
+    again.cast_as_adventure()
+    again.use_keyword("Adventure")
+    again.choose_targets(["bob"])
+    scenario.pay_with(again.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain"))
+    with pytest.raises(ValueError, match=r"CR 715\.3d"):
+        again.cast()
+    again.cancel()
+    assert again.spell.zone is Zone.EXILE
+
+
+def test_another_adventurers_sorcery_half_cannot_be_recast_from_exile_either():
+    """The same limit on Lovestruck Beast's Heart's Desire (a sorcery with no
+    target): the permission's own shape, never Bonecrusher Giant's."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lovestruck Beast"], battlefield=["Forest"] * 4)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Lovestruck Beast")
+    casting.cast_as_adventure()
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest"))
+    scenario.put_on_stack(casting)
+    assert scenario.resolve_top().zone is Zone.EXILE
+
+    again = scenario.cast("Lovestruck Beast", from_zone=Zone.EXILE)
+    again.use_keyword("Adventure")
+    with pytest.raises(ValueError, match=r"CR 715\.3d"):
+        again.cast_as_adventure()
+    again.cancel()
+
+    beast = scenario.cast("Lovestruck Beast", from_zone=Zone.EXILE)
+    beast.use_keyword("Adventure")
+    scenario.pay_with(
+        beast.begin_paying(), *scenario.untapped_sources("Forest", "Forest", "Forest")
+    )
+    scenario.put_on_stack(beast)
+    assert scenario.resolve_top().zone is Zone.BATTLEFIELD

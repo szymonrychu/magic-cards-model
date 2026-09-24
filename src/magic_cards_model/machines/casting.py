@@ -147,6 +147,12 @@ class KeywordCastOption(EngineModel):
     timing: CastTiming = CastTiming.ANY
     marker: ExileMarker | None = None
     """The exile pile the card must be in (CR 406.4)."""
+    normal_face_only: bool = False
+    """True when the permission covers the card's normal characteristics and
+    never an alternative face named on top of it - CR 715.3d's adventured
+    exile: "It can't be cast as an Adventure this way". A cast claiming this
+    option with a face named is refused (`Casting._refuse_unless_allowed_
+    from_its_zone`), and `legal_actions` offers it no face row at all."""
     later_turn: bool = False
     """True when the card may only be cast on a turn after the one it was
     exiled on - plot (CR 702.170d), foretell, and warp all say so."""
@@ -796,6 +802,7 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
         # into its owner's graveyard as it resolves, its controller exiles it.
         # For as long as that card remains exiled, that player may play it."
         # Played normally, so its own mana cost and its own timing rules apply.
+        # "It can't be cast as an Adventure this way" - the creature face only.
         options.append(
             KeywordCastOption(
                 keyword="Adventure",
@@ -803,6 +810,7 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
                 zone=Zone.EXILE,
                 pays_mana_cost=True,
                 marker=ExileMarker.ADVENTURED,
+                normal_face_only=True,
             )
         )
     return options
@@ -2951,6 +2959,9 @@ class Casting(EngineModel):
     """True once `cast_fused` has announced both halves of a split card with
     fuse as one spell (CR 702.102a). `self.face` still names the left half
     while this is set - see `cast_fused`'s own docstring."""
+    keyword_normal_face_only: bool = False
+    """The claimed option's `KeywordCastOption.normal_face_only` (CR 715.3d),
+    set by `use_keyword` alongside `keyword_used`."""
     keyword_used: str | None = None
     """The keyword this spell is being cast with, if any (CR 601.2b).
 
@@ -3426,7 +3437,9 @@ class Casting(EngineModel):
         face = adventure_face(self.spell.card)
         if face is None:
             raise ValueError(f"{self.spell.name} has no Adventure (CR 715.1)")
-        refusal = self.face_cast_refusals.get(face.name)
+        refusal = self.face_cast_refusals.get(face.name) or self._normal_face_only_refusal(
+            face.name
+        )
         if refusal is not None:
             raise ValueError(refusal)
         self._enter_modes()
@@ -3993,6 +4006,7 @@ class Casting(EngineModel):
         option = min(usable, key=lambda candidate: candidate.once_per_turn_key is not None)
         self._enter_modes()
         self.keyword_used = option.keyword
+        self.keyword_normal_face_only = option.normal_face_only
         self.keyword_exiles_instead = option.exile_instead_of_graveyard
         self.keyword_once_per_turn_key = option.once_per_turn_key
         self.keyword_cost_paid = not option.pays_mana_cost
@@ -5610,6 +5624,9 @@ class Casting(EngineModel):
             )
             if refusal is not None:
                 raise ValueError(refusal)
+            refusal = self._normal_face_only_refusal(self.face)
+            if refusal is not None:
+                raise ValueError(refusal)
             if self.keyword_used is not None or self.permission_used is not None:
                 return
             if usable_play_permission(self.game, self._as_announced, self.caster) is not None:
@@ -5627,6 +5644,18 @@ class Casting(EngineModel):
         refusal = self.timing_refusals_unless_window.get(self.face or "")
         if refusal is not None:
             raise ValueError(refusal)
+
+    def _normal_face_only_refusal(self, face: str | None) -> str | None:
+        """CR 715.3d's "It can't be cast as an Adventure this way": the
+        claimed option (`keyword_normal_face_only`) covers the card's normal
+        characteristics only, so any face named on top of it is refused."""
+        if not self.keyword_normal_face_only or face is None:
+            return None
+        return (
+            f"{self.spell.name} may be cast from the {self.origin_zone.value} with "
+            f"{self.keyword_used} only as its normal face, not as {face}: "
+            f"it can't be cast as an Adventure this way (CR 715.3d)"
+        )
 
     def _unclaimed_zone_permission_message(self) -> str:
         """Name what CR 601.2b needed this announcement to claim, the way

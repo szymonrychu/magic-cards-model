@@ -1,0 +1,182 @@
+{
+  "object": "card",
+  "id": "4f80af9c-07a1-46f1-b869-146fda5922f4",
+  "oracle_id": "7e84aff5-2cb6-4214-befd-3d2de31229e5",
+  "multiverse_ids": [
+    567644
+  ],
+  "mtgo_id": 101202,
+  "tcgplayer_id": 273768,
+  "cardmarket_id": 662022,
+  "name": "Lovestruck Beast // Heart's Desire",
+  "lang": "en",
+  "released_at": "2022-06-10",
+  "uri": "https://api.scryfall.com/cards/4f80af9c-07a1-46f1-b869-146fda5922f4",
+  "scryfall_uri": "https://scryfall.com/card/clb/827/lovestruck-beast-hearts-desire?utm_source=api",
+  "layout": "adventure",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:00:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.jpg?1783922405",
+    "normal": "https://cards.scryfall.io/normal/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.jpg?1783922405",
+    "large": "https://cards.scryfall.io/large/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.jpg?1783922405",
+    "png": "https://cards.scryfall.io/png/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.png?1783922405",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.jpg?1783922405",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.jpg?1783922405",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.webp?1783922405",
+    "grid": "https://cards.scryfall.io/grid/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.webp?1783922405",
+    "display": "https://cards.scryfall.io/display/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.webp?1783922405",
+    "art": "https://cards.scryfall.io/art/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.webp?1783922405",
+    "crop": "https://cards.scryfall.io/crop/front/4/f/4f80af9c-07a1-46f1-b869-146fda5922f4.webp?1783922405"
+  },
+  "mana_cost": "{2}{G} // {G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Beast Noble // Sorcery \u2014 Adventure",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Lovestruck Beast",
+      "mana_cost": "{2}{G}",
+      "type_line": "Creature \u2014 Beast Noble",
+      "oracle_text": "This creature can't attack unless you control a 1/1 creature.",
+      "power": "5",
+      "toughness": "5",
+      "flavor_text": "His mind chose solitude, but his heart disagreed.",
+      "artist": "Kev Walker",
+      "artist_id": "f366a0ee-a0cd-466d-ba6a-90058c7a31a6",
+      "illustration_id": "5313c8d4-5dc9-484d-9b1f-5349de020e4e"
+    },
+    {
+      "object": "card_face",
+      "name": "Heart's Desire",
+      "mana_cost": "{G}",
+      "type_line": "Sorcery \u2014 Adventure",
+      "oracle_text": "Create a 1/1 white Human creature token. (Then exile this card. You may cast the creature later from exile.)",
+      "artist": "Kev Walker",
+      "artist_id": "f366a0ee-a0cd-466d-ba6a-90058c7a31a6"
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "64dad439-cae3-4f65-b6fb-c737321d322c",
+      "component": "token",
+      "name": "Human",
+      "type_line": "Token Creature \u2014 Human",
+      "uri": "https://api.scryfall.com/cards/64dad439-cae3-4f65-b6fb-c737321d322c"
+    },
+    {
+      "object": "related_card",
+      "id": "5e289bb3-f6de-450d-9f7e-77e2e70cb7cc",
+      "component": "combo_piece",
+      "name": "On an Adventure",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/5e289bb3-f6de-450d-9f7e-77e2e70cb7cc"
+    },
+    {
+      "object": "related_card",
+      "id": "4f80af9c-07a1-46f1-b869-146fda5922f4",
+      "component": "combo_piece",
+      "name": "Lovestruck Beast // Heart's Desire",
+      "type_line": "Creature \u2014 Beast Noble // Sorcery \u2014 Adventure",
+      "uri": "https://api.scryfall.com/cards/4f80af9c-07a1-46f1-b869-146fda5922f4"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5e4c3fe8-fd57-4b20-ad56-c03790a16cea",
+  "set": "clb",
+  "set_name": "Commander Legends: Battle for Baldur's Gate",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/5e4c3fe8-fd57-4b20-ad56-c03790a16cea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aclb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/clb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4f80af9c-07a1-46f1-b869-146fda5922f4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7e84aff5-2cb6-4214-befd-3d2de31229e5&unique=prints",
+  "collector_number": "827",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "His mind chose solitude, but his heart disagreed.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kev Walker",
+  "artist_ids": [
+    "f366a0ee-a0cd-466d-ba6a-90058c7a31a6"
+  ],
+  "illustration_id": "5313c8d4-5dc9-484d-9b1f-5349de020e4e",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 12914,
+  "penny_rank": 1670,
+  "prices": {
+    "usd": "0.20",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=567644&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLovestruck%2BBeast%2B%252F%252F%2BHeart%2527s%2BDesire",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLovestruck%2BBeast%2B%252F%252F%2BHeart%2527s%2BDesire",
+    "edhrec": "https://edhrec.com/route/?cc=Lovestruck+Beast"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F273768%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=662022&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/101202?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

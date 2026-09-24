@@ -1006,6 +1006,10 @@ def _cast_actions(
         # for the card otherwise.
         if option.pays_mana_cost:
             for face_name, mana in _base_cost_options(card):
+                if option.normal_face_only and face_name is not None:
+                    # CR 715.3d: "It can't be cast as an Adventure this way" -
+                    # never an option here, so never a `blocked_casts` row.
+                    continue
                 refusal = _why_cannot_cast_face(game, player, card, face_name)
                 if refusal is not None:
                     _record_blocked(blocked, card, face_name, refusal)
