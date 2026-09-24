@@ -34703,7 +34703,7 @@ _PLAY_PERMISSION_RE = re.compile(
     r"^(?P<leading>(?:until end of turn|until the end of your next turn"
     r"|until your next end step), )?"
     r"(?:you|they|that player) may (?P<action>cast|play) "
-    r"(?P<subject>it|that card|those cards|them)"
+    r"(?P<subject>it|that card|those cards|them|one of (?:those cards|them))"
     r"(?P<free> without paying (?:its|their) mana costs?)?"
     r"(?P<trailing> this turn| for as long as it remains exiled"
     r"| until the end of your next turn| until your next end step)?$",
@@ -34768,7 +34768,9 @@ def _parse_chosen_target_card_antecedent(
 #: search that exiled four cards, and "those cards" cannot refer to a single
 #: exiled top card. Refusing a mismatch is what keeps a future card's sentence
 #: from being read as a shape it is not.
-_PLURAL_PERMISSION_SUBJECTS = frozenset({"those cards", "them"})
+_PLURAL_PERMISSION_SUBJECTS = frozenset(
+    {"those cards", "them", "one of those cards", "one of them"}
+)
 
 #: "Search your library for any number of <quality> cards, exile them, then
 #: shuffle" - Ugin, Eye of the Storms' −11. Distinct from `_SEARCH_AND_PUT_RE`
@@ -35357,6 +35359,8 @@ def _parse_exile_then_play_permission_clauses(
         return None
     antecedent = _parse_chosen_target_card_antecedent(clauses[index])
     if antecedent is None:
+        antecedent = _parse_exile_top_of_other_libraries_antecedent(clauses[index])
+    if antecedent is None:
         antecedent = (
             _spell_safe_exile_antecedent(clauses[index])
             if for_spell
@@ -35399,6 +35403,16 @@ def _parse_exile_then_play_permission_clauses(
         exile_instead = True
         consumed += 1
 
+    pays_life = False
+    if index + consumed < len(clauses) and _PAY_LIFE_FOR_MANA_VALUE_RE.fullmatch(
+        clauses[index + consumed].strip()
+    ):
+        if free:
+            return None
+        pays_life = True
+        consumed += 1
+    one_of = permission.group("subject").lower().startswith("one of")
+
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
         source_name = (
@@ -35430,7 +35444,7 @@ def _parse_exile_then_play_permission_clauses(
                 card,
                 controller,
                 action=action,
-                pays_mana_cost=not free,
+                pays_mana_cost=not free and not pays_life,
                 source_name=source_name,
                 rule="CR 601.3",
                 zone=card.zone,
@@ -35441,6 +35455,8 @@ def _parse_exile_then_play_permission_clauses(
                     controller if duration is PermissionDuration.NEXT_END_STEP else None
                 ),
                 exile_instead_of_graveyard=exile_instead,
+                pays_life_for_mana_value=pays_life,
+                choice_group=stack_object.id if one_of else None,
             )
 
     return consumed, effect
@@ -48149,3 +48165,68 @@ def _parse_counter_exile_may_cast_free_clause(effect_text: str) -> TargetedClaus
             )
 
     return effect
+
+
+#: "If you cast a spell this way, pay life equal to its mana value rather
+#: than pay[ing] its mana cost." - Inside Information's and Nashi, Moon Sage's
+#: Scion's rider on the permission sentence before it: CR 118.9's
+#: alternative cost, required by the permission (CR 118.9b), carried on
+#: `PlayPermission.pays_life_for_mana_value`.
+_PAY_LIFE_FOR_MANA_VALUE_RE = re.compile(
+    r"^if you cast a spell this way, pay life equal to its mana value rather than "
+    r"pay(?:ing)? its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+#: "exile the top `<n>` cards of target `<player>`'s library" (Inside
+#: Information) and "exile the top card of each `<player>`'s library" (Nashi,
+#: Moon Sage's Scion) - libraries other than the controller's own, which
+#: `_EXILE_TOP_OF_YOUR_LIBRARY_RE` reads. The cards stay owned by their
+#: owners (CR 108.3); a permission after them goes to the controller.
+_EXILE_TOP_OF_OTHER_LIBRARIES_RE = re.compile(
+    rf"^exile the top (?:card|(?P<n>{COUNT}) cards) of "
+    r"(?:(?P<target>target (?:opponent|player))|each (?P<each>opponent|player))'s library$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_top_of_other_libraries_antecedent(
+    clause: str,
+) -> "tuple[ExileAntecedent, bool] | None":
+    """`_EXILE_TOP_OF_OTHER_LIBRARIES_RE`'s shape, as an antecedent for a
+    trailing play permission. A targeted library is rechecked on resolution
+    (CR 608.2b: an illegal target player is skipped); "each player" runs in
+    turn order starting with the active player (CR 101.4's APNAP order). A
+    library shorter than the count gives what it has."""
+    match = _EXILE_TOP_OF_OTHER_LIBRARIES_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n")) if match.group("n") else 1
+    if count is None:
+        return None
+    targeted = match.group("target") is not None
+    opponents_only = (match.group("each") or "").lower() == "opponent"
+
+    def exile_tops(game: "Game", stack_object: "StackObject") -> list[CardState]:
+        controller = game.controller_of(stack_object).username
+        if targeted:
+            players = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+        else:
+            players = [
+                game.player(username)
+                for username in game._turn_order_from_active()
+                if not (opponents_only and username == controller)
+            ]
+        exiled: list[CardState] = []
+        for player in players:
+            for _ in range(count):
+                if not player.library:
+                    break
+                exiled.append(game.exile_permanent(player.library[0]))
+        return exiled
+
+    return exile_tops, not targeted or match.group("n") is not None

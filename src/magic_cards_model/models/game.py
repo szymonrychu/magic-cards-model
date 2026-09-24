@@ -3298,10 +3298,13 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 67
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 68
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
+    #: 68: `machines/casting.PlayPermission` gained `pays_life_for_mana_value`
+    #: (CR 118.9b's required life alternative cost) and `choice_group` ("one of
+    #: those cards"), both reachable from `Game.play_permissions` (C01-T3).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -17300,6 +17303,8 @@ class Game(EngineModel):
         condition: str | None = None,
         exile_instead_of_graveyard: bool = False,
         until_next_end_step_of: str | None = None,
+        pays_life_for_mana_value: bool = False,
+        choice_group: UUID | None = None,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -17375,9 +17380,23 @@ class Game(EngineModel):
                 condition=condition,
                 exile_instead_of_graveyard=exile_instead_of_graveyard,
                 until_next_end_step_of=until_next_end_step_of,
+                pays_life_for_mana_value=pays_life_for_mana_value,
+                choice_group=choice_group,
             )
             self.play_permissions.append(permission)
             return permission
+
+    def spend_play_permission_choice(self, used: PlayPermission) -> None:
+        """ "You may play one of those cards": the card just played or cast
+        under `used` was the one, so every other permission the same
+        instruction handed out (`PlayPermission.choice_group`) ends now."""
+        if used.choice_group is None:
+            return
+        self.play_permissions = [
+            permission
+            for permission in self.play_permissions
+            if permission.choice_group != used.choice_group
+        ]
 
     def play_permission_for(
         self, card: CardState, player: str, action: PlayAction = PlayAction.CAST
@@ -17844,6 +17863,7 @@ class Game(EngineModel):
         refusal = self.why_cannot_play_land(username)
         if refusal is not None:
             raise ValueError(refusal)
+        permission: PlayPermission | None = None
         if land.zone is not Zone.HAND:
             # CR 305.1 plays a land "from their hand"; CR 701.18a's "from the
             # zone it's in (usually the hand)" is the wider action, and only an
@@ -17866,6 +17886,9 @@ class Game(EngineModel):
                     f"nothing allows {username} to play {land.name} from the "
                     f"{land.zone.value} (CR 305.1, CR 701.18a)"
                 )
+
+        if permission is not None:
+            self.spend_play_permission_choice(permission)
 
         # CR 305.2a counts "lands played as special actions and lands played
         # during the resolution of spells and abilities", so any future effect

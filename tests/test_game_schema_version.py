@@ -893,3 +893,27 @@ def test_a_snapshot_written_before_the_delve_exile_link_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before C01-T3's `PlayPermission.pays_life_for_mana_value`
+#: and `PlayPermission.choice_group`.
+_SCHEMA_VERSION_BEFORE_PAY_LIFE_PERMISSION = 67
+
+
+def test_the_pay_life_permission_bump_moved_the_version_past_sixty_seven() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_PAY_LIFE_PERMISSION
+
+
+def test_a_snapshot_written_before_the_pay_life_permission_is_refused() -> None:
+    """A version-67 dump is refused rather than decoded as current: a live
+    `PlayPermission` in it carries no `pays_life_for_mana_value`, so an
+    Inside Information grant would decode as a free cast (CR 118.9b), and no
+    `choice_group`, so "one of those cards" would decode as all of them."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_PAY_LIFE_PERMISSION
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_PAY_LIFE_PERMISSION}",
+    ):
+        Game.model_validate(dumped)

@@ -62,6 +62,7 @@ from .cost import (
     apply_modifications,
     cost_component_for_phrase,
     mana_value_cap_for,
+    pay_life_cost,
     place_counters_cost,
     return_to_hand_cost,
     static_free_cast_grant,
@@ -1534,6 +1535,20 @@ class PlayPermission(EngineModel):
     one. Carries `until_end_of_turn=False`, so `Game.cleanup_step`'s CR 514.2
     sweep leaves it alone on the turn it was granted."""
 
+    pays_life_for_mana_value: bool = False
+    """"If you cast a spell this way, pay life equal to its mana value rather
+    than pay its mana cost." (Inside Information, Nashi, Moon Sage's Scion) -
+    CR 118.9's alternative cost, one the permission requires (CR 118.9b), so
+    `pays_mana_cost` is `False` beside it: the mana cost is replaced, not
+    waived. `Casting.total_cost` adds the life (CR 119.4) from the spell's
+    mana value on the stack (CR 202.3e) when the total cost is determined
+    (CR 601.2f). A land played under the same grant pays nothing."""
+    choice_group: UUID | None = None
+    """"You may play **one of** those cards" (Nashi, Moon Sage's Scion): every
+    permission handed out by the one instruction carries the same id, and the
+    first card played or cast under any of them ends the rest
+    (`Game.spend_play_permission_choice`). `None` for a grant that covers
+    each card on its own ("those cards")."""
     bottom_if_unused: bool = False
     """Always `False` now, kept because consumers read it. Cascade used to set
     it for a hit left in exile under a permission; cascade now casts the hit
@@ -5020,6 +5035,16 @@ class Casting(EngineModel):
         mana = apply_modifications(base.with_x(self.x_value), increases, reductions, floor=floor)
 
         components = list(self.alternative_cost.components) if self.alternative_cost else []
+        if self.permission_used is not None and self.permission_used.pays_life_for_mana_value:
+            # CR 118.9b's required alternative cost: life equal to the spell's
+            # mana value as it will be on the stack (CR 202.3e: X counts).
+            components.append(
+                pay_life_cost(
+                    self.base_cost.with_x(self.x_value).converted,
+                    payer=self.caster,
+                    description="pay life equal to its mana value",
+                )
+            )
         for extra in extras:
             components.extend(extra.components)
         return TotalCost(mana=mana, components=components)
@@ -5768,6 +5793,8 @@ class Casting(EngineModel):
             if self.keyword_once_per_turn_key is not None:
                 # "Once during each of your turns": this cast is the once.
                 self.game.once_per_turn_cast_permissions_used[self.keyword_once_per_turn_key] = 1
+            if self.permission_used is not None:
+                self.game.spend_play_permission_choice(self.permission_used)
         return self.spell
 
     def _turn_face_down_if_cast_that_way(self) -> None:
