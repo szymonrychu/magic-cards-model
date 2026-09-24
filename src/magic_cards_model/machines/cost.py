@@ -3540,8 +3540,28 @@ def cost_announces_x(cost_text: str) -> bool:
     """Whether a printed cost has an X in it (CR 107.3a: "a mana cost,
     alternative cost, additional cost, and/or activation cost with an {X},
     [-X], or X in it") - `{X}` and Martyr of Sands's bare "Reveal X white
-    cards" alike."""
-    return re.search(r"\bX\b", cost_text or "") is not None
+    cards" alike - and "Remove any number of `<kind>` counters", whose number
+    is announced the same way (The Astonishing Ant-Man)."""
+    return (
+        re.search(r"\bX\b", cost_text or "") is not None
+        or _REMOVE_ANY_NUMBER_OF_COUNTERS.search(cost_text or "") is not None
+    )
+
+
+#: "Remove any number of `<kind>` counters" inside a printed cost.
+_REMOVE_ANY_NUMBER_OF_COUNTERS = re.compile(
+    r"\bremove any number of [\w+/−-]+ counters\b", re.IGNORECASE
+)
+
+
+def removes_announced_number_of_counters(cost_text: str) -> bool:
+    """Whether a printed activation cost removes a number of counters the
+    activator announced (CR 107.3a) - "Remove X ..." or "Remove any number of
+    ..." - which "that many"/"that much" in the effect then counts."""
+    return (
+        _REMOVE_ANY_NUMBER_OF_COUNTERS.search(cost_text or "") is not None
+        or re.search(r"\bremove x [\w+/−-]+ counters\b", cost_text or "", re.IGNORECASE) is not None
+    )
 
 
 def why_not_unblocked(game: Any, card: CardState) -> str | None:
@@ -4801,7 +4821,10 @@ _PHRASE_PLACE_COUNTERS = re.compile(
     re.IGNORECASE,
 )
 _PHRASE_REMOVE_COUNTERS = re.compile(
-    rf"^remove {_COST_COUNT} (?P<kind>[\w+/−-]+) counters? from {_COUNTER_SELF_SUBJECT}$",
+    rf"^remove (?:(?P<any_number>any number of)|{_COST_COUNT}) (?P<kind>[\w+/−-]+) counters? "
+    # The Astonishing Ant-Man's "from The Astonishing Ant-Man": CR 201.5's
+    # self-reference by name, filled in by `Game`'s `_cost_refers_to_self`.
+    rf"from (?:{_COUNTER_SELF_SUBJECT}|(?-i:[A-Z][\w,' -]*))$",
     re.IGNORECASE,
 )
 
@@ -5022,6 +5045,19 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         return place_counters_cost(None, count, counter_kind=kind, payer=payer, description=text)
 
     remove_counters = _PHRASE_REMOVE_COUNTERS.match(text)
+    if remove_counters is not None and remove_counters.group("any_number") is not None:
+        # "Remove any number of `<kind>` counters from `<this>`" (The
+        # Astonishing Ant-Man, Geistflame Reservoir): CR 107.3a's announced
+        # number, the same as an X - zero included.
+        component = remove_counters_cost(
+            None,
+            0,
+            counter_kind=_counter_kind_word(remove_counters.group("kind")),
+            payer=payer,
+            description=text,
+        )
+        component.variable_count = True
+        return component
     if remove_counters is not None:
         read = _cost_count(remove_counters.group("count"))
         if read is None or (read[1] and read[0]):

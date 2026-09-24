@@ -233,7 +233,13 @@ _CHOICE_SEPARATOR = re.compile(r",|\bor\b")
 #: as a triggered ability resolves, off `AbilityOnStack`, not as a mana
 #: ability resolves, off a tapped permanent.
 _SELF_CHARACTERISTIC_RE = re.compile(
-    r"^this (?:creature|permanent|artifact|land|source)'?s (?P<characteristic>power|toughness)$",
+    r"^(?:(?i:this (?:creature|permanent|artifact|land|source))"
+    # Doc Samson, Super Psychiatrist's and Helga, Skittish Seer's own "where
+    # X is Doc Samson's power" / "Helga's power": CR 201.5, a card naming
+    # itself means that object, and a mana ability is always printed on (and
+    # read off) its own source. Oracle capitalises a name, never a pronoun.
+    r"|(?-i:[A-Z][\w'-]*(?: [A-Z][\w'-]*)*))"
+    r"'?s (?P<characteristic>power|toughness)$",
     re.IGNORECASE,
 )
 #: "the number of soul counters on this artifact" (Seance Board) - CR 122.1's

@@ -1,0 +1,155 @@
+{
+  "object": "card",
+  "id": "40c202f1-6e0d-42f4-a41e-e0be3362d585",
+  "oracle_id": "6de67fad-0d01-443d-9ae0-4126ae903069",
+  "multiverse_ids": [],
+  "resource_id": "59509C9BB29AE983B5A3430592F08F69671053454558F41E011A3076CA7D7FE9",
+  "mtgo_id": 152389,
+  "arena_id": 104996,
+  "tcgplayer_id": 696659,
+  "cardmarket_id": 891331,
+  "name": "HYDRA Troopers",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/40c202f1-6e0d-42f4-a41e-e0be3362d585",
+  "scryfall_uri": "https://scryfall.com/card/msh/101/hydra-troopers?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:42Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.jpg?1783902942",
+    "normal": "https://cards.scryfall.io/normal/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.jpg?1783902942",
+    "large": "https://cards.scryfall.io/large/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.jpg?1783902942",
+    "png": "https://cards.scryfall.io/png/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.png?1783902942",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.jpg?1783902942",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.jpg?1783902942",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.webp?1783902942",
+    "grid": "https://cards.scryfall.io/grid/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.webp?1783902942",
+    "display": "https://cards.scryfall.io/display/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.webp?1783902942",
+    "art": "https://cards.scryfall.io/art/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.webp?1783902942",
+    "crop": "https://cards.scryfall.io/crop/front/4/0/40c202f1-6e0d-42f4-a41e-e0be3362d585.webp?1783902942"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Human Soldier Villain",
+  "oracle_text": "When this creature enters, create a tapped 2/1 black Villain creature token with menace if there are two or more creature cards in your graveyard. Otherwise, mill two cards. (Put the top two cards of your library into your graveyard.)",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Mill"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "cd76092f-0f5e-4890-996c-33f4f47c659c",
+      "component": "token",
+      "name": "Villain",
+      "type_line": "Token Creature \u2014 Villain",
+      "uri": "https://api.scryfall.com/cards/cd76092f-0f5e-4890-996c-33f4f47c659c"
+    },
+    {
+      "object": "related_card",
+      "id": "40c202f1-6e0d-42f4-a41e-e0be3362d585",
+      "component": "combo_piece",
+      "name": "HYDRA Troopers",
+      "type_line": "Creature \u2014 Human Soldier Villain",
+      "uri": "https://api.scryfall.com/cards/40c202f1-6e0d-42f4-a41e-e0be3362d585"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/40c202f1-6e0d-42f4-a41e-e0be3362d585/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6de67fad-0d01-443d-9ae0-4126ae903069&unique=prints",
+  "collector_number": "101",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Evil never lacks foot soldiers to do its will.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zoltan Boros",
+  "artist_ids": [
+    "1885e6cb-c827-4896-994e-3d0a027d602f"
+  ],
+  "illustration_id": "cc593ac8-663a-4e81-9888-fe8f3a89cce9",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 21753,
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.19",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.07",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHYDRA%2BTroopers",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHYDRA%2BTroopers",
+    "edhrec": "https://edhrec.com/route/?cc=HYDRA+Troopers"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696659%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891331&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152389?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -87,6 +87,9 @@ from magic_cards_model.machines.cost import (
     looks_like_unparsed_cost_modifier,
     waterbend_mana_cost,
 )
+from magic_cards_model.machines.counter_effects import (
+    parse_resolution_text as counter_resolution_text,
+)
 from magic_cards_model.machines.effects import (
     _YOU_AND_GROUP_SUBJECT_RE,
     _compose_layer_effect_with_remainder_for_ability_mode,
@@ -1962,6 +1965,7 @@ def _first_reading(mode_text: str, *, card_name: str | None = None) -> object | 
     (non-modal) triggered ability's own text.
     """
     for reader in (
+        counter_resolution_text,
         parse_mixed_effect,
         _compose_layer_effect_with_remainder_for_ability_mode,
         _parse_where_x_is_continuous_effect,
@@ -1975,6 +1979,7 @@ def _first_reading(mode_text: str, *, card_name: str | None = None) -> object | 
     if normalized == mode_text:
         return None
     for reader in (
+        counter_resolution_text,
         parse_mixed_effect,
         _compose_layer_effect_with_remainder_for_ability_mode,
         _parse_where_x_is_continuous_effect,

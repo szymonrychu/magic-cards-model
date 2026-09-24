@@ -701,6 +701,25 @@ class OnlyThisIncarnation(SelectorBase):
         return chars.card_id == self.card_id and chars.zone_change_stamp == self.stamp
 
 
+class CreatureControlledByWithId(SelectorBase):
+    """One creature, by id, and only while `username` controls it - Kid
+    Loki's "each creature you control that you've put one or more +1/+1
+    counters on this turn" names each such creature by the placement it
+    remembers (`machines/counter_effects`), and "you control" is still asked
+    of it now (CR 611.3a)."""
+
+    kind: Literal["creature_controlled_by_with_id"] = "creature_controlled_by_with_id"
+    username: str | None = None
+    card_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.is_creature
+            and chars.card_id == self.card_id
+            and chars.controller == self.username
+        )
+
+
 class EveryCreature(SelectorBase):
     kind: Literal["every_creature"] = "every_creature"
 
@@ -1208,6 +1227,7 @@ class WithChangeling(SelectorBase):
 Selector = Annotated[
     Only
     | OnlyThisIncarnation
+    | CreatureControlledByWithId
     | EveryCreature
     | SameNameAs
     | CreaturesControlledBy
@@ -10586,6 +10606,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     name, which is the whole of Blood Moon, Harbinger of the Seas, Dryad of the
     Ilysian Grove, Leyline of the Guildpact, Urborg, Yavimaya and Toph.
     """
+    from .counter_effects import parse_static_layer_sentence as counter_static_builder
+
+    if (counter_static := counter_static_builder(sentence)) is not None:
+        return counter_static
     if ring_bearer := _RING_BEARER_STATIC_RE.fullmatch(sentence):
         return _ring_bearer_static_builder(ring_bearer.group("predicates"), line=sentence)
     if (all_activated := all_activated_abilities_grant(sentence)) is not None:
@@ -11530,6 +11554,12 @@ class LayerContext(EngineModel):
     #: living in `turn_facts`. Ruric Thar's "hexproof as long as they haven't
     #: dealt combat damage yet" is the reader.
     combat_damage_dealt_this_turn: frozenset[UUID] = frozenset()
+
+    #: `Game.counters_put_this_turn` as `(putter, permanent id, kind)` - CR
+    #: 122.6's per-turn placement history, read by "as long as you've put one
+    #: or more +1/+1 counters on `<this>` this turn" and "each creature you
+    #: control that you've put ... on this turn" (`machines/counter_effects`).
+    counters_put_this_turn: tuple[tuple[str, UUID, str], ...] = ()
 
     #: Each player's Ring-bearer designation (CR 701.54a/b), as `(id,
     #: zone_change_stamp)` keyed by username - `Game.ring_bearer_designations`.

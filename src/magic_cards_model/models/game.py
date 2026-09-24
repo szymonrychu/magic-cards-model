@@ -2219,6 +2219,25 @@ class CombatDamageToPlayer(EngineModel):
     damage."""
 
 
+class CountersPutRecord(EngineModel):
+    """One instruction's counters put on one permanent this turn (CR 122.6),
+    with who put them (CR 122.6a) - what "you've put one or more +1/+1
+    counters on `<it>` this turn" (Beast, Erudite Aerialist; Kid Loki) and
+    "for each +1/+1 counter you've put on creatures under your control this
+    turn" (Iridescent Hornbeetle) look back at. The counters themselves are
+    no answer: one may have been removed, or annihilated (CR 704.5q), since.
+
+    `controller` and `types` are the permanent's when the counters landed -
+    "creatures under your control" is judged then, not now."""
+
+    putter: str
+    card_id: UUID
+    kind: str
+    amount: int
+    controller: str | None = None
+    types: tuple[Type, ...] = ()
+
+
 #: CR 701.54c: "they get an emblem named The Ring".
 RING_EMBLEM_NAME = "The Ring"
 
@@ -3095,6 +3114,13 @@ class Game(EngineModel):
     `record_combat_damage_to_player`; `prowl_condition_holds` is the reader.
     Cleared when a new turn begins."""
 
+    counters_put_this_turn: list[CountersPutRecord] = Field(default_factory=list)
+    """Every counter placement on a permanent this turn, one entry per
+    instruction and permanent, in order - see `CountersPutRecord`.
+    `_emit_counters_put` is the single writer; `LayerContext.
+    counters_put_this_turn` carries it to the statics that read it
+    (`machines/counter_effects.py`). Cleared when a new turn begins."""
+
     graveyard_arrivals_this_turn: list[GraveyardArrival] = Field(default_factory=list)
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
     per arrival - see `GraveyardArrival`'s own docstring for why this is one
@@ -3404,7 +3430,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 73
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 74
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3424,6 +3450,9 @@ class Game(EngineModel):
     #: (pack tactics, C01 integration).
     #: 73: `ManaPool` gained `treasure` and `CastRecord` gained
     #: `treasure_mana_spent` (mana from a Treasure, C01 integration).
+    #: 74: `Game` gained `counters_put_this_turn` (per-turn counter placement
+    #: history, CR 122.6/122.6a), and a `COUNTERS_PUT` event's `player` is
+    #: now who put the counters (C02-T4).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -13154,7 +13183,7 @@ class Game(EngineModel):
             new_total = permanent.add_counters(kind, event.amount)
             if str(kind) == str(Counter.LORE):
                 self._emit_lore_counters_added(permanent, event.amount)
-            self._emit_counters_put(permanent, str(kind), event.amount)
+            self._emit_counters_put(permanent, str(kind), event.amount, putter=event.putter)
             return new_total
 
     def proliferate(
@@ -13271,7 +13300,9 @@ class Game(EngineModel):
             )
         )
 
-    def _emit_counters_put(self, permanent: CardState, kind: str, amount: int) -> None:
+    def _emit_counters_put(
+        self, permanent: CardState, kind: str, amount: int, *, putter: str | None = None
+    ) -> None:
         """CR 122.6's generic "counters are put on this object" event.
 
         "Some spells and abilities refer to counters being put on an object.
@@ -13302,6 +13333,16 @@ class Game(EngineModel):
         # computed ones, not the printed type line (CR 613.1's starting
         # point) - a land animated by earthbend is a creature only there.
         chars = self.characteristics_of(permanent)
+        self.counters_put_this_turn.append(
+            CountersPutRecord(
+                putter=putter or permanent.controller,
+                card_id=permanent.id,
+                kind=kind,
+                amount=amount,
+                controller=permanent.controller,
+                types=chars.types,
+            )
+        )
         self.emit(
             GameEvent(
                 event=ExtraTriggerEvent.COUNTERS_PUT,
@@ -13313,7 +13354,8 @@ class Game(EngineModel):
                 subject_subtypes=chars.subtypes,
                 counter_kind=kind,
                 amount=amount,
-                player=permanent.controller,
+                # CR 122.6a: who put them - "whenever you put ..." asks this.
+                player=putter or permanent.controller,
             )
         )
 
@@ -16357,6 +16399,12 @@ class Game(EngineModel):
             active_player=self.turn.active_player if self.turn is not None else None,
             turn_facts={fact: frozenset(players) for fact, players in self.turn_facts.items()},
             combat_damage_dealt_this_turn=frozenset(self.combat_damage_dealt_this_turn_by),
+            # CR 122.6's per-turn placement history (Beast, Erudite
+            # Aerialist; Kid Loki), who put what kind on which permanent.
+            counters_put_this_turn=tuple(
+                (record.putter, record.card_id, record.kind)
+                for record in self.counters_put_this_turn
+            ),
             # CR 607.2a: Keen-Eyed Curator's "card types among cards exiled
             # with this creature" counts a pile in the shared exile zone.
             exile=tuple(self.exile),
@@ -21876,6 +21924,7 @@ class Game(EngineModel):
             self.turn_facts = {}
             self.combat_damage_dealt_this_turn_by = set()
             self.combat_damage_to_players_this_turn = []
+            self.counters_put_this_turn = []
             self.graveyard_arrivals_this_turn = []
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and
