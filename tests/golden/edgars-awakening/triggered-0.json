@@ -55,7 +55,7 @@
         "source": "Edgar's Awakening"
       }
     ],
-    "fields_changed": ["delayed_triggers"],
+    "fields_changed": ["became_tapped_count_this_turn", "delayed_triggers"],
     "notices": {},
     "objects": {
       "Swamp@alice#1": {

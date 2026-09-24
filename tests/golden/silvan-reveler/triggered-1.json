@@ -46,7 +46,7 @@
         "source": "Silvan Reveler"
       }
     ],
-    "fields_changed": ["known_carries"],
+    "fields_changed": ["became_tapped_count_this_turn", "known_carries"],
     "notices": {},
     "objects": {
       "Forest@alice#1": {

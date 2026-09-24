@@ -46,7 +46,7 @@
         "source": "Moonstone, Harsh Mistress"
       }
     ],
-    "fields_changed": ["play_permissions"],
+    "fields_changed": ["play_permissions", "turn_counts"],
     "notices": {},
     "objects": {
       "Opt@alice#2": {

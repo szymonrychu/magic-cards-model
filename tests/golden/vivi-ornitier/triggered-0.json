@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["damage_dealt_this_turn", "turn_facts"],
+    "fields_changed": ["counters_put_this_turn", "damage_dealt_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Vivi Ornitier@alice#1": {

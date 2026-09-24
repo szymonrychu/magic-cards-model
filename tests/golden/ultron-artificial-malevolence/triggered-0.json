@@ -55,7 +55,7 @@
         "source": null
       }
     ],
-    "fields_changed": ["continuous_effects", "creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn"],
+    "fields_changed": ["became_tapped_count_this_turn", "continuous_effects", "creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn"],
     "notices": {},
     "objects": {
       "Swamp@alice#1": {

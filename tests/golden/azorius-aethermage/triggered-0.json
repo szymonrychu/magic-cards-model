@@ -46,7 +46,7 @@
         "source": "Azorius Aethermage"
       }
     ],
-    "fields_changed": ["cards_drawn_this_turn"],
+    "fields_changed": ["became_tapped_count_this_turn", "cards_drawn_this_turn"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

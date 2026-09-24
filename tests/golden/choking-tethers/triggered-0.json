@@ -46,7 +46,7 @@
         "source": "Choking Tethers"
       }
     ],
-    "fields_changed": [],
+    "fields_changed": ["became_tapped_count_this_turn"],
     "notices": {},
     "objects": {
       "Memnite@alice#1": {

@@ -46,7 +46,7 @@
         "source": "Hellkite Charger"
       }
     ],
-    "fields_changed": ["turn"],
+    "fields_changed": ["became_tapped_count_this_turn", "turn"],
     "notices": {},
     "objects": {
       "Hellkite Charger@alice#1": {

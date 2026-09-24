@@ -46,11 +46,17 @@
         "source": "Skyline Scout"
       }
     ],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["became_tapped_count_this_turn", "continuous_effects"],
     "notices": {},
     "objects": {
       "Plains@alice#1": {
         "tapped": [false, true]
+      },
+      "Skyline Scout@alice#1": {
+        "granted": [
+          [],
+          ["Flying"]
+        ]
       },
       "Swamp@alice#1": {
         "tapped": [false, true]

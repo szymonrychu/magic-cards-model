@@ -46,9 +46,15 @@
         "source": "Frenzied Goblin"
       }
     ],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["became_tapped_count_this_turn", "continuous_effects"],
     "notices": {},
     "objects": {
+      "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["This creature can't block."]
+        ]
+      },
       "Mountain@alice#1": {
         "tapped": [false, true]
       }

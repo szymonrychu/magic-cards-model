@@ -52,7 +52,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "turn_facts"],
+    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts"],
     "notices": {},
     "objects": {
       "Serra Angel@alice#1": {
