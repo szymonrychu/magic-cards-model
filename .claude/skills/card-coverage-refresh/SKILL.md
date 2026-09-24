@@ -62,8 +62,17 @@ already assigned moves; see the generator's own docstring).
 git diff --stat docs/card_coverage/
 ```
 
-names every set whose numbers moved. For those (and any the human named),
-gather *why*:
+names every set whose numbers moved. **This only works when `docs/card_coverage/`
+is already tracked.** On the very first run of this skill in a repo (or worktree)
+- `git status --short docs/card_coverage/` shows `?? docs/card_coverage/` rather
+than a list of modified files - `git diff --stat` sees nothing to diff against
+and silently prints empty output, which reads exactly like "nothing changed"
+even though every set is brand new. Check `git status --short docs/card_coverage/`
+first: an untracked directory means treat *every* generated set as having
+"moved" (gather bug signal for all of them, not none) rather than trusting an
+empty diff.
+
+For those sets (and any the human named), gather *why*:
 
 - **MEMORY.md** - dated lines naming a card or mechanic as a known dead end
   or deferred decision. Read the whole file; it's small and every line
@@ -100,6 +109,18 @@ regenerated `status.md` counts:
 | Full rose from the previous state, or a `card-coverage-campaign` round is actively running for it | `in-progress` |
 | Otherwise, no work has started | `todo` |
 | A landed round's cards are all handled but the set contains cards blocked on a named, tracked engine limitation (SWEEP_DRIVER_GAPS, an documented `docs/engine-coverage.md` exception) | `done` with a `## Notes` line naming the exception - do not hold a set at `in-progress` forever waiting on something the campaign itself will never close |
+
+**Coverage numbers alone cannot tell you a round is `done`.** A round only
+implements the templates on its own task list; a set can legitimately sit at
+`done` well under 100% full (`hob` landed at 62% full/38% not-tested - untested-
+but-handled cards, not silent ones - and is still `done` by campaign say-so, not
+by the "Full = total" row above). `scripts/card_coverage.py`'s `SEED_ROUND_STATES`
+carries forward whatever state a set is already at, but nothing in this repo
+(no `campaign_rounds.json` or `STATE.md` exists here despite the generator's
+own docstring naming them as the seed source) records which round is *currently*
+running. When the coverage numbers don't unambiguously say `done`/`todo` by the
+table above, ask whoever is driving the campaign which round just landed or is
+in flight, rather than inferring it from the `status.md` bucket counts alone.
 
 Edit the `state` column directly (`plan.md`'s Campaign-order table); the
 generator will preserve it on the next run. Do the same review for `Round
