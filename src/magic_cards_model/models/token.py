@@ -785,6 +785,15 @@ def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> C
     return printed.model_copy(update={"id": new_card_id, "oracle_text": body})
 
 
+def _type_line_without_legendary(type_line: str) -> str:
+    """`type_line` with the legendary supertype (CR 205.4d) taken off its left
+    side - CR 707.9b's "except it isn't legendary"."""
+    left, dash, right = type_line.partition("\u2014")
+    kept = [word for word in left.split() if word != "Legendary"]
+    new_left = " ".join(kept)
+    return f"{new_left} {dash}{right}" if dash else new_left
+
+
 def _type_line_with_added_creature_type(type_line: str, subtype: str) -> str:
     """`type_line` plus `subtype`, as a creature "in addition to its other
     types" (CR 205.1b) - Astral Dragon's own "except they're 3/3 Dragon
@@ -821,6 +830,7 @@ def token_copy_of(
     power: int | None = None,
     toughness: int | None = None,
     added_creature_type: str | None = None,
+    not_legendary: bool = False,
     **options: Any,
 ) -> list[TokenState]:
     """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
@@ -876,6 +886,11 @@ def token_copy_of(
     a real, distinct value from "no exception clause was printed", not an
     edge case squeezed into `None`.
 
+    `not_legendary` is CR 707.9b once more - "except the tokens aren't
+    legendary" (The Notary Hobbits, Impostor Syndrome, Multiversal
+    Incursion): the legendary supertype is taken off the copiable type line,
+    so the copy is never subject to the legend rule alongside its original.
+
     **Not modelled**: CR 707.2's "as ... enters" power-and-toughness setting
     (a *different* rule from the "except" override above - that one reads a
     characteristic off the object as it arrives, this one is stated by the
@@ -906,7 +921,12 @@ def token_copy_of(
         extra_definitions = list(creation.extra)
 
         copiable = copiable_card_with_added_abilities(original.card, added_abilities)
-        if power is not None or toughness is not None or added_creature_type is not None:
+        if (
+            power is not None
+            or toughness is not None
+            or added_creature_type is not None
+            or not_legendary
+        ):
             update: dict[str, Any] = {}
             if power is not None:
                 update["power"] = str(power)
@@ -916,9 +936,14 @@ def token_copy_of(
                 update["type_line"] = _type_line_with_added_creature_type(
                     copiable.type_line, added_creature_type
                 )
+            if not_legendary:
+                update["type_line"] = _type_line_without_legendary(
+                    update.get("type_line", copiable.type_line)
+                )
             new_card_id = uuid5(
                 NAMESPACE_OID,
-                f"{_TOKEN_CARD_ID_PREFIX}:{copiable.id}:pt:{power}/{toughness}:type:{added_creature_type}",
+                f"{_TOKEN_CARD_ID_PREFIX}:{copiable.id}:pt:{power}/{toughness}:type:{added_creature_type}"
+                + (":nonlegendary" if not_legendary else ""),
             )
             copiable = copiable.model_copy(update={"id": new_card_id, **update})
 

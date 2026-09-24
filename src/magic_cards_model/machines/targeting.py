@@ -541,6 +541,15 @@ class TargetRequirement(EngineModel):
     a `TargetRef`), like every other restriction here that needs more than the
     caller supplied."""
 
+    share_a_card_type: bool = False
+    """"two target nonland permanents that share a card type" (Burglar's Plot,
+    Shifting Loyalties) - like `distinct_controllers`, a restriction *across*
+    this requirement's targets: every target chosen for it must have at least
+    one card type (CR 205.2a) in common with the others. CR 601.2c: the
+    announcement has to be "an appropriate object ... for each target the
+    spell requires". Card types are the computed ones (CR 613.1d) for a
+    permanent. Fails open for a target whose types cannot be read."""
+
     one_per_opponent: bool = False
     """"For each opponent, goad target creature that player controls."
     (Frenzied Gorespawn) - the mandatory twin of `_for_each_opponent_profile`'s
@@ -1739,11 +1748,14 @@ class TargetingProfile(EngineModel):
         unbounded = [r for r in self.requirements if r.unbounded]
         taken: dict[int, set[TargetRef]] = {}
         controllers: dict[int, set[str]] = {}
+        shared_types: dict[int, frozenset[Type]] = {}
 
         for target in targets:
             reasons: list[str] = []
             for index, slot in enumerate(slots):
-                reason = self._why_not(slot, target, caster, taken, game, source_id, controllers)
+                reason = self._why_not(
+                    slot, target, caster, taken, game, source_id, controllers, shared_types
+                )
                 if reason is None:
                     slots.pop(index)
                     break
@@ -1751,7 +1763,14 @@ class TargetingProfile(EngineModel):
             else:
                 for requirement in unbounded:
                     reason = self._why_not(
-                        requirement, target, caster, taken, game, source_id, controllers
+                        requirement,
+                        target,
+                        caster,
+                        taken,
+                        game,
+                        source_id,
+                        controllers,
+                        shared_types,
                     )
                     if reason is None:
                         break
@@ -1768,6 +1787,7 @@ class TargetingProfile(EngineModel):
         game: Any = None,
         source_id: UUID | None = None,
         controllers: dict[int, set[str]] | None = None,
+        shared_types: dict[int, frozenset[Type]] | None = None,
     ) -> str | None:
         """Why this requirement cannot take this target, CR 115.3 included.
 
@@ -1791,6 +1811,15 @@ class TargetingProfile(EngineModel):
                     f"{requirement.phrase} needs targets controlled by different players, "
                     f"and {controller} already controls one of them (CR 601.2c)"
                 )
+        types: frozenset[Type] | None = None
+        if requirement.share_a_card_type and shared_types is not None:
+            types = _computed_card_types(target, game)
+            common = shared_types.get(id(requirement))
+            if types is not None and common is not None and not (common & types):
+                return (
+                    f"{requirement.phrase} need targets that share a card type, and "
+                    f"{target} shares none with the others (CR 601.2c)"
+                )
         try:
             reference = TargetRef.coerce(target)
         except TypeError:
@@ -1802,6 +1831,9 @@ class TargetingProfile(EngineModel):
             already.add(reference)
         if controller is not None and controllers is not None:
             controllers.setdefault(id(requirement), set()).add(controller)
+        if types is not None and shared_types is not None:
+            common = shared_types.get(id(requirement))
+            shared_types[id(requirement)] = types if common is None else common & types
         return None
 
     def assign_to_owners(
@@ -3673,6 +3705,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     distinct_controllers, rest = _extract_distinct_controllers(rest)
 
+    share_a_card_type, rest = _extract_share_a_card_type(rest)
+
     required_keyword, rest = _extract_required_keyword(rest)
 
     attacked_this_turn, rest = _extract_attacked_this_turn(rest)
@@ -3835,6 +3869,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         comparison_count=comparison_count,
         comparison_x_definition=comparison_x_definition,
         distinct_controllers=distinct_controllers,
+        share_a_card_type=share_a_card_type,
         required_keyword=required_keyword,
         required_counter_kind=required_counter_kind,
     )
@@ -4331,6 +4366,34 @@ def _extract_distinct_controllers(rest: str) -> tuple[bool, str]:
     if match is None:
         return False, rest
     return True, rest[match.end() :].strip()
+
+
+#: "two target nonland permanents **that share a card type**" (Burglar's
+#: Plot, Shifting Loyalties) - see `TargetRequirement.share_a_card_type`.
+_SHARE_A_CARD_TYPE_RE = re.compile(r"^that share a card type\b", re.IGNORECASE)
+
+
+def _extract_share_a_card_type(rest: str) -> tuple[bool, str]:
+    """Read a "that share a card type" clause out of `rest`, or leave it
+    untouched when there is none."""
+    match = _SHARE_A_CARD_TYPE_RE.match(rest)
+    if match is None:
+        return False, rest
+    return True, rest[match.end() :].strip()
+
+
+def _computed_card_types(target: Any, game: Any) -> frozenset[Type] | None:
+    """A target's card types for `share_a_card_type`: the computed ones for a
+    permanent on the battlefield (CR 613.1d), the printed ones elsewhere, or
+    `None` for a target whose types cannot be read (a bare id, a player)."""
+    types = getattr(target, "types", None)
+    if types is None:
+        return None
+    if game is not None and getattr(target, "zone", None) is Zone.BATTLEFIELD:
+        characteristics_of = getattr(game, "characteristics_of", None)
+        if characteristics_of is not None:
+            return frozenset(characteristics_of(target).types)
+    return frozenset(types)
 
 
 #: A "with `<keyword>`" clause modifying the noun - "target creature you

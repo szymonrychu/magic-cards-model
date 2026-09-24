@@ -893,3 +893,28 @@ def test_a_snapshot_written_before_the_delve_exile_link_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before C01-T7's `PreventionShield.source_stamp`/
+#: `.lasts_while` and `GraveyardArrival.card_id`.
+_SCHEMA_VERSION_BEFORE_SOURCE_KEYED_PREVENTION = 67
+
+
+def test_the_source_keyed_prevention_bump_moved_the_version_past_sixty_seven() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_SOURCE_KEYED_PREVENTION
+
+
+def test_a_snapshot_written_before_source_keyed_prevention_is_refused() -> None:
+    """A version-67 dump is refused rather than decoded as current: a
+    prevention shield in it has no `source_stamp`/`lasts_while`, so CR 400.7's
+    new object and CR 611.2b's "for as long as" would both be lost, and its
+    graveyard ledger has no `card_id` to answer "put there from the
+    battlefield this turn"."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_SOURCE_KEYED_PREVENTION
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_SOURCE_KEYED_PREVENTION}",
+    ):
+        Game.model_validate(dumped)

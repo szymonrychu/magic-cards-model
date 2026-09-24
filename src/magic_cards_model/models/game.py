@@ -199,6 +199,7 @@ from ..machines.layers import (
     SPELLS_HAVE_SPLIT_SECOND_TEXT,
     Characteristics,
     ComputedBoard,
+    Condition,
     ContinuousEffect,
     ContinuousEffects,
     Duration,
@@ -1931,6 +1932,18 @@ class PreventionShield(EngineModel):
 
     source_id: UUID | None = None
     """CR 615.8: only damage from this specific source is prevented."""
+    source_stamp: UUID | None = None
+    """The `zone_change_stamp` of the `source_id` object the shield was made
+    for, when it was made for one particular object - Old Fat Spider Can't See
+    Me's "damage that would be dealt by up to one target creature". CR 400.7:
+    that creature leaving and returning is a new object the shield never
+    named, so damage from it is not prevented. `None` for a shield keyed to
+    a source id alone (the older CR 615.8 shapes)."""
+    lasts_while: Condition | None = None
+    """CR 611.2b's "for as long as ..." duration on a prevention effect - Old
+    Fat Spider's "for as long as this Saga remains on the battlefield". The
+    shield applies only while it holds; `until_end_of_turn` is False for
+    such a shield."""
     source_quality: str | None = None
     """CR 615.9 / CR 609.7b: only damage from a source with this property.
 
@@ -2078,6 +2091,13 @@ class GraveyardArrival(EngineModel):
     a sacrifice, a destroy effect). `None` for a card that was never on the
     battlefield on this trip - a discard, a mill, a countered or resolved
     spell leaving the stack."""
+    card_id: UUID | None = None
+    """Which card arrived - what "all creature cards in your opponents'
+    graveyards that were put there from the battlefield this turn" (Supper
+    for Spiders, Faith's Reward) asks. The card's *latest* arrival this turn
+    is the one that counts: a card that left the graveyard and came back is a
+    new object (CR 400.7) whose own trip decides. `None` only on a ledger
+    written before this field existed."""
 
 
 class CombatDamageToPlayer(EngineModel):
@@ -3289,10 +3309,12 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 67
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 68
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
+    #: 68: `PreventionShield` gained `source_stamp`/`lasts_while` and
+    #: `GraveyardArrival` gained `card_id` (C01-T7).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -4156,6 +4178,13 @@ class Game(EngineModel):
     integration): `CostComponent` gained `link_to_permanent_id` (CR 607.2q),
     carried on a pending ability's own `CostPayment.components` - the first
     bullet.
+
+    Bumped 67 -> 68 (C01-T7, layers, copy and control): `PreventionShield`
+    gained `source_stamp` (CR 400.7) and `lasts_while` (CR 611.2b), and
+    `GraveyardArrival` gained `card_id` - the first bullet. Old Fat Spider
+    Can't See Me's source-keyed prevention and Supper for Spiders' / Faith's
+    Reward's "put there from the battlefield this turn" now resolve where a
+    version-67 board did nothing, the second.
     """
 
     @model_validator(mode="before")
@@ -9224,7 +9253,7 @@ class Game(EngineModel):
             return None if profile.min_targets > 0 else []
 
         minimum = min(profile.min_targets, len(candidates))
-        across = any(r.distinct_controllers for r in profile.requirements)
+        across = any(r.distinct_controllers or r.share_a_card_type for r in profile.requirements)
         if any(r.one_per_opponent for r in profile.requirements):
             # CR 601.2c: one target per opponent with a legal choice. Each
             # controller's first candidate leads, so the default answer (the
@@ -14611,6 +14640,12 @@ class Game(EngineModel):
             event.source is None or event.source.id != shield.source_id
         ):
             return False
+        if shield.source_stamp is not None and (
+            event.source is None or event.source.zone_change_stamp != shield.source_stamp
+        ):
+            return False  # CR 400.7: a new object the shield never named
+        if shield.lasts_while is not None and not shield.lasts_while.holds_in(self):
+            return False  # CR 611.2b: the duration has ended
         if shield.excluded_source_subtypes and event.source is not None:
             # CR 609.7b's recheck, against the source's subtypes as they are
             # now. An anonymous source is not excluded by name, so it stays
@@ -15396,8 +15431,24 @@ class Game(EngineModel):
                 origin_zone=origin_zone,
                 is_permanent_card=bool(_PERMANENT_TYPES.intersection(card_state.types)),
                 permanent_types=permanent_types,
+                card_id=card_state.id,
             )
         )
+
+    def cards_put_into_graveyard_from_battlefield_this_turn(self, owner: str) -> list[CardState]:
+        """The cards in `owner`'s graveyard that were put there from the
+        battlefield this turn (Supper for Spiders, Faith's Reward) - each
+        still in that graveyard, and whose *latest* arrival this turn came off
+        the battlefield: a card that has since left the graveyard, or left and
+        came back some other way, is a new object (CR 400.7) this turn's
+        death does not describe. In graveyard order."""
+        latest: dict[UUID, Zone] = {}
+        for arrival in self.graveyard_arrivals_this_turn:
+            if arrival.card_id is not None and arrival.player == owner:
+                latest[arrival.card_id] = arrival.origin_zone
+        return [
+            card for card in self.player(owner).graveyard if latest.get(card.id) is Zone.BATTLEFIELD
+        ]
 
     def descended(self, username: str) -> bool:
         """CR 700.11: whether `username` "has descended this turn" - a
@@ -20480,7 +20531,17 @@ class Game(EngineModel):
         """
         self._refuse_if_over()
         with self._id_allocator_scope():
-            ability = self.activated_abilities(permanent)[index]
+            abilities = self.activated_abilities(permanent)
+            if index >= len(abilities) and permanent.zone is not Zone.BATTLEFIELD:
+                # CR 602.2a/113.7a: the ability was created on the stack as it
+                # was announced, and paying its cost - a granted "Sacrifice
+                # this artifact" (Supper for Spiders' Food) - moved the source,
+                # whose granted lines CR 400.7 has just cleared. The lines it
+                # had as it left are that ability's own text.
+                abilities = abilities + granted_activated_abilities_of(
+                    permanent._granted_as_it_left  # noqa: SLF001
+                )
+            ability = abilities[index]
             controller = controller or self.controller_of(permanent).username
             # CR 107.3a: a "Reveal X ..." cost's X is the number of cards
             # `begin_activating` revealed, unless the caller announced it.

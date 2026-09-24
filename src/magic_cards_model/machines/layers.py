@@ -1839,8 +1839,55 @@ class HasCounter(ConditionBase):
         return permanent.counters[self.counter] > 0
 
 
+#: The permanents whose `YouStillControl` is being asked right now - the
+#: re-entrancy guard below. Never persisted; empty between calls.
+_CONTROL_CONDITIONS_BEING_ASKED: set[UUID] = set()
+
+
+class YouStillControl(ConditionBase):
+    """ "For as long as you control this creature" (CR 611.2b) - Aegis Angel's
+    and Kyodai, Soul of Kamigawa's indestructible grant: the duration runs
+    while `controller` still controls this incarnation (the same
+    `zone_change_stamp` guard as `RemainsOnBattlefield`, CR 400.7) of the
+    permanent. Control is CR 613.1b's layer 2 answer, read through
+    `CardState.controller`.
+
+    Asking that computes the board, whose stored effects ask this condition
+    again. The inner question is answered "still running" by a re-entrancy
+    guard: the conditioned effect is never itself a layer 2 control change
+    (the only readers that build this condition grant keywords, layer 6), so
+    whether it is counted cannot change who controls the permanent.
+
+    Once control is lost the duration has ended for good (CR 611.2b does not
+    let it begin again), so a regained control does not revive it.
+    """
+
+    can_restart: ClassVar[bool] = True
+
+    kind: Literal["you_still_control"] = "you_still_control"
+    card_id: UUID
+    stamp: UUID
+    controller: str
+
+    def holds_in(self, game: Game) -> bool:
+        permanent = game.find_by_id(self.card_id)
+        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        if permanent.zone_change_stamp != self.stamp:
+            return False
+        if self.card_id in _CONTROL_CONDITIONS_BEING_ASKED:
+            return True
+        _CONTROL_CONDITIONS_BEING_ASKED.add(self.card_id)
+        try:
+            return permanent.controller == self.controller
+        finally:
+            _CONTROL_CONDITIONS_BEING_ASKED.discard(self.card_id)
+
+
 #: Whether a "for as long as" duration is still running (CR 611.2b).
-Condition = Annotated[RemainsOnBattlefield | HasCounter, Field(discriminator="kind")]
+Condition = Annotated[
+    RemainsOnBattlefield | HasCounter | YouStillControl, Field(discriminator="kind")
+]
 
 
 class OffBattlefieldCharacteristics(NamedTuple):
@@ -4912,6 +4959,66 @@ def _parse_self_becomes_creature_with_pt_ability(sentence: str) -> EffectBuilder
         count,
         Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE,
     )
+
+
+#: "<subject> gains <keyword(s)> for as long as this Saga remains on the
+#: battlefield." (Old Fat Spider Can't See Me's chapter I) and "... for as
+#: long as you control this creature." (Aegis Angel, Kyodai, Soul of
+#: Kamigawa): a layer 6 grant (CR 613.1f) with CR 611.2b's "for as long as"
+#: duration, which is the *source's* - the Saga, the Angel - not the
+#: target's.
+_KEYWORD_GRANT_FOR_AS_LONG_RE = re.compile(
+    rf"^(?:{_SUBJECT}) gains? (?P<keywords>[a-z][a-z ,]*?) for as long as "
+    r"(?:(?P<remains>this (?:saga|creature|enchantment|artifact|permanent|land)) "
+    r"remains on the battlefield"
+    r"|you control (?P<controls>this (?:saga|creature|enchantment|artifact|permanent|land)))"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+def _keyword_grant_for_as_long_builder(
+    keywords: Sequence[str], *, while_controlled: bool
+) -> EffectBuilder:
+    """`_KEYWORD_GRANT_FOR_AS_LONG_RE`'s shape. The condition is built off the
+    resolving ability's own source as it resolves: `RemainsOnBattlefield` for
+    "remains on the battlefield", `YouStillControl` (its controller now) for
+    "you control". A source already gone makes the condition false at once,
+    and CR 611.2b's "If the 'for as long as' duration never starts, the
+    effect does nothing" is then `ContinuousEffects.add`'s own refusal."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if source.zone_change_stamp is None:
+            return []
+        condition: Condition
+        if while_controlled:
+            if source.controller is None:
+                return []
+            condition = YouStillControl(
+                card_id=source.id, stamp=source.zone_change_stamp, controller=source.controller
+            )
+        else:
+            condition = RemainsOnBattlefield(card_id=source.id, stamp=source.zone_change_stamp)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {target.name} gains {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                duration=Duration.FOR_AS_LONG_AS,
+                condition=condition,
+                selector=only_this_incarnation(target, target.zone_change_stamp),
+                modification=grant_ability(keyword),
+            )
+            for target in targets
+            for keyword in keywords
+        ]
+
+    return builder
 
 
 #: "Nonbasic lands are Mountains." (Blood Moon, Magus of the Moon) / "Nonbasic
@@ -9610,6 +9717,13 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     self_becomes_creature_with_pt = _parse_self_becomes_creature_with_pt_ability(sentence)
     if self_becomes_creature_with_pt is not None:
         return self_becomes_creature_with_pt
+    if match := _KEYWORD_GRANT_FOR_AS_LONG_RE.fullmatch(sentence):
+        for_as_long_keywords = _split_and_validate_keywords(match.group("keywords"))
+        if for_as_long_keywords is None:
+            return None
+        return _keyword_grant_for_as_long_builder(
+            for_as_long_keywords, while_controlled=match.group("controls") is not None
+        )
     if match := _TARGET_AND_SAME_NAME_PUMP_RE.fullmatch(sentence):
         return _target_and_same_name_pump_builder(
             int(match.group("power")), int(match.group("toughness"))
@@ -9854,10 +9968,12 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             loses_abilities=match.group("loses") is not None,
         )
-    if match := _BECOMES_TYPE_IN_ADDITION_RE.fullmatch(sentence):
-        extra_type = _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())
-        if extra_type is None:
-            return None
+    if (match := _BECOMES_TYPE_IN_ADDITION_RE.fullmatch(sentence)) and (
+        extra_type := _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())
+    ) is not None:
+        # A creature type in the slot ("becomes an Avatar in addition to ...",
+        # Enter the Avatar State) is `_BECOMES_SUBTYPE_IN_ADDITION_RE`'s
+        # sentence, tried next - not a refusal here.
         type_keywords: list[str] = []
         if match.group("keywords") is not None:
             validated_keywords = _split_and_validate_keywords(match.group("keywords"))
