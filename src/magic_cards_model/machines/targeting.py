@@ -281,6 +281,11 @@ class TargetRequirement(EngineModel):
     phrase: str
     count: int = 1
     """The most targets this requirement takes. Ignored when `unbounded`."""
+    owned_by_caster: bool = False
+    """"target creature **you own**" (The Eagles Are Coming!) - CR 108.3's
+    owner, a different question from who controls it: a creature the caster
+    controls but an opponent owns is not one, and one the caster owns but an
+    opponent has taken is."""
     minimum: int = 1
     """The fewest it takes. Zero for "up to N" (CR 115.6) and for "any number
     of" (CR 107.1c); one for "one or two target creatures"."""
@@ -729,6 +734,8 @@ class TargetRequirement(EngineModel):
             return f"{self.phrase} can only target a player, not {target.name}"
         if self.excludes_source and source_id is not None and target.id == source_id:
             return f"{self.phrase} cannot target {target.name}, which this is on"
+        if self.owned_by_caster and target.owner is not None and target.owner != caster:
+            return f"{self.phrase} needs one {caster} owns, and {target.name} is {target.owner}'s"
         # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
         # second half of a two-kind noun list - see `or_any_spell`. The phrase
         # names no card type or zone for this half, so those two checks are
@@ -2171,7 +2178,7 @@ _COMBAT_ADJECTIVES = {
 #: word rather than a rule number that could not be verified.
 
 _CONTROL_CLAUSE = re.compile(
-    r"^(?:that\s+)?(you\s+control|you\s+don't\s+control|an\s+opponent\s+controls|"
+    r"^(?:that\s+)?(you\s+control|you\s+own|you\s+don't\s+control|an\s+opponent\s+controls|"
     r"your\s+opponents\s+control|"
     r"that\s+player\s+or\s+that\s+planeswalker's\s+controller\s+controls|"
     r"that\s+player\s+controls)\b",
@@ -2306,6 +2313,12 @@ def targeting_profile(card: Card) -> TargetingProfile:
             # wrongly demanding a target because the word "earthbend"
             # appears somewhere in its printed text.
             profile = _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
+        elif (kicked_alternative := kicked_instead_target_text(text or "")) is not None:
+            # "Choose target creature you own. If this spell was kicked,
+            # instead choose any number of target creatures you own." - read
+            # unkicked here; `Casting.targeting` and `Game._resolution_profile`
+            # read the kicked alternative once a kicker is paid (CR 601.2c).
+            profile = _parse(kicked_alternative[0])
         else:
             profile = _parse(text)
             profile = _with_aura_target(card, profile)
@@ -2315,6 +2328,28 @@ def targeting_profile(card: Card) -> TargetingProfile:
     # protected target, and it must be *this* call's `card`, never whichever
     # game's `Card` happened to populate the cache first.
     return profile.model_copy(update={"source_card": card})
+
+
+#: "Choose `<target phrase>`. If this spell was kicked, instead choose
+#: `<target phrase>`." - The Eagles Are Coming!: CR 601.2c's "A spell may
+#: require some targets only if an alternative or additional cost (such as a
+#: kicker cost) ... is paid" - the kicked spell's targets replace the
+#: unkicked ones (CR 614.1a's "instead"), rather than adding to them.
+_KICKED_INSTEAD_TARGETS_RE = re.compile(
+    r"^(?:kicker [^\n]*\n)?choose (?P<base>[^.\n]*\btargets?\b[^.\n]*)\.\s*"
+    r"if this spell was kicked, instead choose (?P<kicked>[^.\n]*\btargets?\b[^.\n]*)\.",
+    re.IGNORECASE,
+)
+
+
+def kicked_instead_target_text(text: str) -> tuple[str, str] | None:
+    """The unkicked and kicked "choose ..." sentences of a spell whose kicker
+    changes which targets it chooses (`_KICKED_INSTEAD_TARGETS_RE`), each
+    written as its own sentence for `profile_for_text`, or `None`."""
+    match = _KICKED_INSTEAD_TARGETS_RE.search(text.strip())
+    if match is None:
+        return None
+    return f"choose {match.group('base')}.", f"choose {match.group('kicked')}."
 
 
 def _with_aura_target(card: Card, profile: TargetingProfile) -> TargetingProfile:
@@ -3652,6 +3687,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     rest = " ".join(words[noun_end:])
     controller = ControllerRestriction.ANY
+    owned_by_caster = False
 
     # Read out of the way before the comparison scan sees it: this clause looks
     # exactly like a mana-value bound and is not one (see
@@ -3757,7 +3793,11 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     else:
         control_match = _CONTROL_CLAUSE.match(rest)
         if control_match is not None:
-            controller = _CONTROLLERS[re.sub(r"\s+", " ", control_match.group(1).lower())]
+            control_words = re.sub(r"\s+", " ", control_match.group(1).lower())
+            if control_words == "you own":
+                owned_by_caster = True
+            else:
+                controller = _CONTROLLERS[control_words]
 
     if strict and not _nothing_left_unread(
         rest, bare_card=bare_card, comparison_read=comparison_attribute is not None
@@ -3831,6 +3871,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         zones=frozenset(zones),
         or_any_spell=or_any_spell,
         controller=controller,
+        owned_by_caster=owned_by_caster,
         must_be_tapped=must_be_tapped,
         excludes_source=excludes_source or adjectives.excludes_source,
         exiled_with_source=exiled_with_source,

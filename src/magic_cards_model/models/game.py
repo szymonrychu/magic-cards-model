@@ -242,6 +242,7 @@ from ..machines.targeting import (
     RetargetScope,
     TargetingProfile,
     TargetRequirement,
+    kicked_instead_target_text,
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
@@ -263,6 +264,7 @@ from ..machines.triggers import (
     apnap_order,
     granted_activated_abilities_of,
     intervening_if_holds,
+    mana_ability_activated_event,
     mana_added_event,
     resolution_key,
     rewritten_ability_lines,
@@ -440,6 +442,18 @@ _COSTS_LESS_PER_CARD_TYPE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This spell costs {N} less to cast for each `<quality>` card in your
+#: graveyard." - The Dawning Archaic's "for each instant and sorcery card":
+#: every card in the caster's graveyard that is any one of the named types
+#: (CR 205.2a) counts once. The quality is read by `machines/effects.
+#: _quality_matcher`, with the printed "and" meaning "or" for one card (no
+#: card is both an instant and a sorcery).
+_COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE = re.compile(
+    r"costs \{(\d+)\} less to cast for each (?P<quality>(?!card type)[a-z, ]+?) card "
+    r"in your graveyard",
+    re.IGNORECASE,
+)
+
 #: CR 601.2f's *other* self-referential reduction shape: "This spell costs
 #: `<N>` less to cast if it targets a `<color>` spell." (Mystical Dispute).
 #: Unlike Emrakul's row above, the condition is not a fact about the board -
@@ -549,6 +563,7 @@ _AFFINITY_RE = re.compile(r"\baffinity for (?P<what>[A-Za-z]+)", re.IGNORECASE)
 #: label.
 _SELF_COST_REDUCTION_SHAPES = (
     _COSTS_LESS_PER_CARD_TYPE,
+    _COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE,
     _COSTS_LESS_PER_CARD_DISCARDED_RE,
     _COSTS_LESS_PER_BASIC_LAND_TYPE_RE,
     _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE,
@@ -975,6 +990,14 @@ _CONDITION_SELF_NO_COUNTERS = re.compile(
 _CONDITION_NOT_CAST_FROM_HAND = re.compile(
     r"this spell wasn'?t cast from (?:your )?hand", re.IGNORECASE
 )
+#: "this spell was cast from a graveyard" - Plunder the Trollshaws', Tidings
+#: of War's and Secrets of the Key's flashback rider: CR 601.2a's own "from
+#: where it is to the stack" zone, read off the resolving spell's own
+#: `CastRecord` (`source`) the same way `_CONDITION_NOT_CAST_FROM_HAND` is. A
+#: copy (CR 707.10) is never cast, so it was never cast from a graveyard.
+_CONDITION_CAST_FROM_GRAVEYARD = re.compile(
+    r"this spell was cast from (?:a|your) graveyard", re.IGNORECASE
+)
 #: "this spell's additional cost was paid" - Burning Curiosity's "If this
 #: spell's additional cost was paid, exile the top three cards instead." and
 #: Cinder Strike's "... instead if this spell's additional cost was paid."
@@ -1039,6 +1062,7 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_LIBRARY_EMPTY_RE,
     _CONDITION_CREATURE_DIED_THIS_TURN,
     _CONDITION_NOT_CAST_FROM_HAND,
+    _CONDITION_CAST_FROM_GRAVEYARD,
     _CONDITION_ADDITIONAL_COST_PAID,
     _CONDITION_SELF_ENTERED_THIS_TURN,
     _CONDITION_YOU_ATTACKED_THIS_TURN,
@@ -3290,10 +3314,17 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 68
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 69
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
+    #: 68: `Player` gained `has_enduring_story` (C01-T1).
+    #: 69: `machines/casting.PlayPermission` gained `pays_life_for_mana_value`
+    #: (CR 118.9b's required life alternative cost) and `choice_group` ("one of
+    #: those cards"), both reachable from `Game.play_permissions`;
+    #: `machines/triggers.GameEvent` gained `mana_ability` (a pending
+    #: trigger's event); `machines/delayed` gained the
+    #: `return_each_exiled_to_battlefield_under_owner` effect kind (C01-T3).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -7090,6 +7121,7 @@ class Game(EngineModel):
         mana_value_below: float | None = None,
         alternative_cost: TotalCost | None = None,
         pays_mana_cost: bool = False,
+        exile_instead_of_graveyard: bool = False,
     ) -> CardState | None:
         """CR 608.2g: cast `card` without paying its mana cost while the
         resolving spell or ability that allows it is still resolving - the one
@@ -7159,6 +7191,10 @@ class Game(EngineModel):
             zone=card.zone,
             until_end_of_turn=False,
             immediate=True,
+            # "If an instant or sorcery spell cast this way would be put into
+            # your graveyard, exile it instead" (Bilbo, The Dawning Archaic):
+            # CR 614.1a's rider rides on how this spell was cast.
+            exile_instead_of_graveyard=exile_instead_of_graveyard,
         )
         casting: Casting | None = None
         payment: CostPayment | None = None
@@ -13842,6 +13878,12 @@ class Game(EngineModel):
             except ValueError:
                 # Not a modal card after all; fall through to its plain text.
                 pass
+        kicked_alternative = kicked_instead_target_text(spell.oracle_text or "")
+        if kicked_alternative is not None:
+            # CR 601.2c's kicked targets, rechecked against the same sentence
+            # they were chosen under (CR 608.2b).
+            kicked = record is not None and record.kicked > 0
+            return profile_for_text(kicked_alternative[1 if kicked else 0])
         if spell.fused and spell.card.card_faces and len(spell.card.card_faces) == 2:
             # CR 702.102b/709.4b: the same combined-profile shape `Casting.
             # targeting` builds at announcement, rebuilt here for CR 608.2b's
@@ -17400,6 +17442,8 @@ class Game(EngineModel):
         condition: str | None = None,
         exile_instead_of_graveyard: bool = False,
         until_next_end_step_of: str | None = None,
+        pays_life_for_mana_value: bool = False,
+        choice_group: UUID | None = None,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -17475,9 +17519,23 @@ class Game(EngineModel):
                 condition=condition,
                 exile_instead_of_graveyard=exile_instead_of_graveyard,
                 until_next_end_step_of=until_next_end_step_of,
+                pays_life_for_mana_value=pays_life_for_mana_value,
+                choice_group=choice_group,
             )
             self.play_permissions.append(permission)
             return permission
+
+    def spend_play_permission_choice(self, used: PlayPermission) -> None:
+        """ "You may play one of those cards": the card just played or cast
+        under `used` was the one, so every other permission the same
+        instruction handed out (`PlayPermission.choice_group`) ends now."""
+        if used.choice_group is None:
+            return
+        self.play_permissions = [
+            permission
+            for permission in self.play_permissions
+            if permission.choice_group != used.choice_group
+        ]
 
     def play_permission_for(
         self, card: CardState, player: str, action: PlayAction = PlayAction.CAST
@@ -17944,6 +18002,7 @@ class Game(EngineModel):
         refusal = self.why_cannot_play_land(username)
         if refusal is not None:
             raise ValueError(refusal)
+        permission: PlayPermission | None = None
         if land.zone is not Zone.HAND:
             # CR 305.1 plays a land "from their hand"; CR 701.18a's "from the
             # zone it's in (usually the hand)" is the wider action, and only an
@@ -17966,6 +18025,12 @@ class Game(EngineModel):
                     f"nothing allows {username} to play {land.name} from the "
                     f"{land.zone.value} (CR 305.1, CR 701.18a)"
                 )
+
+        if permission is not None:
+            self.spend_play_permission_choice(permission)
+        # CR 406.3a: a card exiled face down "is turned face up just before
+        # the player announces that they are playing the card".
+        land.face_up = True
 
         # CR 305.2a counts "lands played as special actions and lands played
         # during the resolution of spells and abilities", so any future effect
@@ -18154,6 +18219,16 @@ class Game(EngineModel):
         if match is not None:
             types = {card_type for card in self.player(owner).graveyard for card_type in card.types}
             amount += int(match.group(1)) * len(types)
+
+        per_quality = _COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE.search(text)
+        if per_quality is not None:
+            from ..machines.effects import _card_description_is_readable, _quality_matcher
+
+            quality = re.sub(r"\s+and\s+", " or ", per_quality.group("quality"))
+            if _card_description_is_readable(quality):
+                matches = _quality_matcher(quality)
+                counted = sum(1 for card in self.player(owner).graveyard if matches(card))
+                amount += int(per_quality.group(1)) * counted
 
         discarded = _COSTS_LESS_PER_CARD_DISCARDED_RE.search(text)
         if discarded is not None:
@@ -18399,7 +18474,7 @@ class Game(EngineModel):
         return counted
 
     def static_cost_modifiers_for(
-        self, spell: CardState, caster: str | None = None
+        self, spell: CardState, caster: str | None = None, *, origin_zone: Zone | None = None
     ) -> tuple[list[ManaCost], list[ManaCost], int | None]:
         """Board-wide static cost increases, decreases, and the floor in play
         right now (CR 601.2f, 611.3).
@@ -18439,6 +18514,9 @@ class Game(EngineModel):
         already uses.
         """
         caster = caster or spell.controller or self.active_player.username
+        # CR 601.2a: where the spell was cast from - handed in by a casting
+        # already on the stack, read off the card before it has moved.
+        cast_from = origin_zone if origin_zone is not None else spell.zone
         increases: list[ManaCost] = []
         decreases: list[ManaCost] = []
         floor: int | None = None
@@ -18575,6 +18653,15 @@ class Game(EngineModel):
                     if permanent.controller != caster or effect.reduction is None:
                         continue
                     decreases.append(ManaCost.parse(effect.reduction))
+                elif effect.kind is CostModifierKind.ZONE_DECREASE:
+                    # Bilbo: "Spells you cast from anywhere other than your
+                    # hand" - the caster's own, by the zone cast from.
+                    if permanent.controller != caster:
+                        continue
+                    if (effect.from_zone is not None and cast_from is effect.from_zone) or (
+                        effect.not_from_zone is not None and cast_from is not effect.not_from_zone
+                    ):
+                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
                 elif effect.kind is CostModifierKind.COLOR_DECREASE:
                     if permanent.controller != caster:
                         continue
@@ -19366,6 +19453,14 @@ class Game(EngineModel):
                 return None
             record = self.cast_record(source)
             return record.is_copy or record.origin_zone is not Zone.HAND
+
+        if _CONDITION_CAST_FROM_GRAVEYARD.fullmatch(text):
+            # CR 601.2a's origin zone of the resolving spell itself; a copy
+            # (CR 707.10) was not cast at all, so it answers False.
+            if source is None:
+                return None
+            record = self.cast_record(source)
+            return not record.is_copy and record.origin_zone is Zone.GRAVEYARD
 
         if _CONDITION_ADDITIONAL_COST_PAID.fullmatch(text):
             # Read off `source`, the resolving spell; no spell, no answer.
@@ -20863,6 +20958,9 @@ class Game(EngineModel):
                     set_off.extend(
                         self.emit(tapped_for_mana_event(permanent, self, mana_added=produced_mana))
                     )
+                # CR 605.3a: a mana ability is activated like any other, only
+                # without the stack - "whenever you activate an ability" sees it.
+                set_off.extend(self.emit(mana_ability_activated_event(permanent, self)))
                 if produced_mana:
                     # Not CR 106.12's tap event but its sibling: an ability caused
                     # this player to add mana. Caged Sun's own condition asks about
@@ -20937,6 +21035,11 @@ class Game(EngineModel):
                     subject_controller=controller,
                     subject_card=permanent.card,
                     subject_types=self._activated_source_types(permanent),
+                    subject_subtypes=tuple(
+                        self.characteristics_of(permanent).subtypes
+                        if permanent.zone is Zone.BATTLEFIELD
+                        else permanent.subtypes
+                    ),
                     # Every ability this method activates is a battlefield
                     # permanent's; `machines/keywords.KeywordActivation` is
                     # the door for one that functions in another zone.

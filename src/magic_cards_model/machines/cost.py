@@ -104,6 +104,7 @@ from .triggers import (
     added_ability_lines,
     granted_activated_abilities_of,
     is_ability,
+    mana_ability_activated_event,
     mana_added_event,
     rewritten_ability_lines,
     tapped_for_mana_event,
@@ -3899,6 +3900,14 @@ class CostModifierKind(StrEnum):
     none of that colour. Controller-scoped ("you cast") the same way as
     `COLOR_DECREASE`/`TYPE_DECREASE`."""
 
+    ZONE_DECREASE = "zone_decrease"
+    """"Spells you cast from `<zone>` cost `{N}` less to cast." - Bilbo, Thief
+    in the Night's "from anywhere other than your hand". CR 601.2f reads the
+    zone the spell was cast from (CR 601.2a's "from where it is to the
+    stack"), carried in by `Casting.total_cost`. Exactly one of `from_zone`/
+    `not_from_zone` is set. Controller-scoped ("you cast") the same way as
+    `COLOR_DECREASE`/`TYPE_DECREASE`."""
+
     OPPONENT_TYPE_INCREASE = "opponent_type_increase"
     """"[<Qualifier> s]pells your opponents cast cost `{N}` more to cast." -
     Thalia, the Survivor's own "Noncreature spells your opponents cast cost
@@ -3970,6 +3979,12 @@ class CostModifierEffect(EngineModel):
     reduction: str | None = None
     """`SYMBOL_DECREASE` only: the printed mana symbols, "{W}{U}{B}{R}{G}" or
     "{1}", read back with `ManaCost.parse` when the cost is determined."""
+
+    from_zone: Zone | None = None
+    """`ZONE_DECREASE` only: "from your graveyard"/"from exile"."""
+
+    not_from_zone: Zone | None = None
+    """`ZONE_DECREASE` only: "from anywhere other than your hand"."""
 
     per_each: str | None = None
     """`TYPE_DECREASE` only: a "for each `<count>`" tail (Eluge's "for each
@@ -4121,6 +4136,20 @@ _SYMBOL_COST_DECREASE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Spells you cast from `<zone>` cost {N} less to cast." / "... from
+#: anywhere other than `<zone>` ..." - Bilbo, Thief in the Night.
+_ZONE_COST_DECREASE = re.compile(
+    r"^Spells you cast from (?P<other>anywhere other than )?(?P<zone>your hand|your graveyard"
+    r"|exile|your library) cost \{(?P<amount>\d+)\} less to cast\.$",
+    re.IGNORECASE,
+)
+_COST_ZONE_WORDS: dict[str, Zone] = {
+    "your hand": Zone.HAND,
+    "your graveyard": Zone.GRAVEYARD,
+    "exile": Zone.EXILE,
+    "your library": Zone.LIBRARY,
+}
+
 #: The subtype shape - Goblin Warchief's own "Goblin spells you cast cost {1}
 #: less to cast." One capitalised word that `canonical_subtype` places in
 #: CR 205.3's list; a card type or a color word never reaches here, because
@@ -4221,6 +4250,15 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
             kind=CostModifierKind.FLOOR,
             amount=total,
             requires_untapped=match.group("condition") is not None,
+        )
+    match = _ZONE_COST_DECREASE.fullmatch(text.strip())
+    if match is not None:
+        zone = _COST_ZONE_WORDS[match.group("zone").lower()]
+        return CostModifierEffect(
+            kind=CostModifierKind.ZONE_DECREASE,
+            amount=int(match.group("amount")),
+            from_zone=None if match.group("other") else zone,
+            not_from_zone=zone if match.group("other") else None,
         )
     match = _SYMBOL_COST_DECREASE.fullmatch(text.strip())
     if match is not None:
@@ -6064,6 +6102,8 @@ class CostPayment(EngineModel):
             set_off = [
                 *self.game.emit(tapped_for_mana_event(source, self.game, mana_added=produces)),
                 *self.game.emit(mana_added_event(source, self.game, mana_added=produces)),
+                # CR 605.3a: the mana ability was activated, too.
+                *self.game.emit(mana_ability_activated_event(source, self.game)),
             ]
             # CR 605.4a: the triggered mana abilities among them resolve now,
             # into this payment's pool (`Game.mana_pool_receiving`), with any

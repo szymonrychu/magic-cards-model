@@ -1593,6 +1593,40 @@ class ActOnEachSubject(DelayedEffectSpecBase):
                 game.return_to_hand(found)
 
 
+class ReturnEachExiledToBattlefieldUnderOwner(DelayedEffectSpecBase):
+    """ "Return those cards to the battlefield under their owner's control at
+    the beginning of the next end step" - Elrond, Moon-Reader's activation
+    and Eerie Interlude: one delayed triggered ability about every card its
+    own instruction exiled, where `ReturnSubjectToBattlefieldUnderOwner` is
+    about one.
+
+    CR 603.7c is applied card by card (`subjects` pairs each id with the
+    `zone_change_stamp` it had in exile): a card no longer in exile, or back
+    as a new object (CR 400.7), is skipped. The rest return together, one
+    event (CR 603.6a), each under its owner's control (CR 610.3c).
+    """
+
+    kind: Literal["return_each_exiled_to_battlefield_under_owner"] = (
+        "return_each_exiled_to_battlefield_under_owner"
+    )
+
+    subjects: tuple[tuple[UUID, UUID], ...]
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        found: list[CardState] = []
+        for subject_id, stamp in self.subjects:
+            card_state = game.find_by_id(subject_id)
+            if not isinstance(card_state, CardState) or card_state.zone is not Zone.EXILE:
+                continue
+            if card_state.zone_change_stamp != stamp or card_state.owner is None:
+                continue
+            found.append(card_state)
+        with game.entering_together():
+            for card_state in found:
+                assert card_state.owner is not None
+                game.put_onto_battlefield(card_state, card_state.owner, tapped=False)
+
+
 class ReturnSubjectFromGraveyardToBattlefield(DelayedEffectSpecBase):
     """ "Return this card from your graveyard to the battlefield [tapped] at
     the beginning of the next end step" - Prized Amalgam's own delayed return
@@ -1665,7 +1699,8 @@ DelayedEffectSpec = Annotated[
     | CountersAndKeywordsEventSubject
     | CreatedTriggeredAbility
     | ActOnEachSubject
-    | ReturnSubjectFromGraveyardToBattlefield,
+    | ReturnSubjectFromGraveyardToBattlefield
+    | ReturnEachExiledToBattlefieldUnderOwner,
     Field(discriminator="kind"),
 ]
 

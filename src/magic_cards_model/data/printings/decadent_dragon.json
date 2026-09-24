@@ -1,0 +1,188 @@
+{
+  "object": "card",
+  "id": "315cbbf7-a2ad-4565-9877-1e903d7fd797",
+  "oracle_id": "5df44b8d-b337-49d8-8427-34253f52cb47",
+  "multiverse_ids": [
+    629724
+  ],
+  "mtgo_id": 116796,
+  "arena_id": 86936,
+  "tcgplayer_id": 512172,
+  "cardmarket_id": 728114,
+  "name": "Decadent Dragon // Expensive Taste",
+  "lang": "en",
+  "released_at": "2023-09-08",
+  "uri": "https://api.scryfall.com/cards/315cbbf7-a2ad-4565-9877-1e903d7fd797",
+  "scryfall_uri": "https://scryfall.com/card/woe/223/decadent-dragon-expensive-taste?utm_source=api",
+  "layout": "adventure",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:57:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.jpg?1783915066",
+    "normal": "https://cards.scryfall.io/normal/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.jpg?1783915066",
+    "large": "https://cards.scryfall.io/large/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.jpg?1783915066",
+    "png": "https://cards.scryfall.io/png/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.png?1783915066",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.jpg?1783915066",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.jpg?1783915066",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.webp?1783915066",
+    "grid": "https://cards.scryfall.io/grid/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.webp?1783915066",
+    "display": "https://cards.scryfall.io/display/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.webp?1783915066",
+    "art": "https://cards.scryfall.io/art/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.webp?1783915066",
+    "crop": "https://cards.scryfall.io/crop/front/3/1/315cbbf7-a2ad-4565-9877-1e903d7fd797.webp?1783915066"
+  },
+  "mana_cost": "{2}{R}{R} // {2}{B}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Dragon // Instant \u2014 Adventure",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Flying",
+    "Treasure",
+    "Trample"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Decadent Dragon",
+      "mana_cost": "{2}{R}{R}",
+      "type_line": "Creature \u2014 Dragon",
+      "oracle_text": "Flying, trample\nWhenever this creature attacks, create a Treasure token.",
+      "power": "4",
+      "toughness": "4",
+      "artist": "Wylie Beckert",
+      "artist_id": "074daf3d-0849-4c4a-b5a5-c276384e81e5",
+      "illustration_id": "822f4129-50da-4d66-b6ac-2380c8fdcbb0"
+    },
+    {
+      "object": "card_face",
+      "name": "Expensive Taste",
+      "mana_cost": "{2}{B}",
+      "type_line": "Instant \u2014 Adventure",
+      "oracle_text": "Exile the top two cards of target opponent's library face down. You may look at and play those cards for as long as they remain exiled.",
+      "artist": "Wylie Beckert",
+      "artist_id": "074daf3d-0849-4c4a-b5a5-c276384e81e5"
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "73cbf189-a79b-4dca-8b29-33aef6306b5a",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/73cbf189-a79b-4dca-8b29-33aef6306b5a"
+    },
+    {
+      "object": "related_card",
+      "id": "8a717d27-596d-4341-b592-4f9777f778e5",
+      "component": "combo_piece",
+      "name": "Decadent Dragon // Expensive Taste",
+      "type_line": "Creature \u2014 Dragon // Instant \u2014 Adventure",
+      "uri": "https://api.scryfall.com/cards/8a717d27-596d-4341-b592-4f9777f778e5"
+    },
+    {
+      "object": "related_card",
+      "id": "fcf4c7fb-7859-4c11-8552-6817f5119d2e",
+      "component": "combo_piece",
+      "name": "On an Adventure",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/fcf4c7fb-7859-4c11-8552-6817f5119d2e"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set": "woe",
+  "set_name": "Wilds of Eldraine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/woe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/315cbbf7-a2ad-4565-9877-1e903d7fd797/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5df44b8d-b337-49d8-8427-34253f52cb47&unique=prints",
+  "collector_number": "223",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wylie Beckert",
+  "artist_ids": [
+    "074daf3d-0849-4c4a-b5a5-c276384e81e5"
+  ],
+  "illustration_id": "822f4129-50da-4d66-b6ac-2380c8fdcbb0",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3287,
+  "penny_rank": 2249,
+  "prices": {
+    "usd": "2.09",
+    "usd_foil": "2.12",
+    "usd_etched": null,
+    "eur": "0.69",
+    "eur_foil": "1.10",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629724&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDecadent%2BDragon%2B%252F%252F%2BExpensive%2BTaste",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDecadent%2BDragon%2B%252F%252F%2BExpensive%2BTaste",
+    "edhrec": "https://edhrec.com/route/?cc=Decadent+Dragon"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512172%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=728114&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/116796?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

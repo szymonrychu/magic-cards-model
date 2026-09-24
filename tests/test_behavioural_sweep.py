@@ -1824,6 +1824,9 @@ def _turning_face_up(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]
                 scenario, source_id = _home(case, ability, hand=(name,))
             _cast(scenario, name, keyword=keyword)
             scenario.game.resolve_top()
+            # A turned-face-up trigger that counters "target spell" (Kheru
+            # Spellsnatcher) needs one on the stack to aim at (CR 115.1).
+            _stack_material(scenario)
             face_down = next(
                 p for p in scenario.game.permanents_controlled_by(ALICE) if not p.face_up
             )
@@ -1980,15 +1983,20 @@ def _activating(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     opponent."""
     lowered = ability.condition.lower()
     players = [BOB] if "opponent" in lowered else [ALICE, BOB]
+    # CR 605.3a: a mana ability is activated too, so a condition without
+    # "that isn't a mana ability" (Elrond, Moon-Reader) is met by one.
+    mana_counts = "isn't a mana ability" not in lowered
+    extra = _activation_probes(lowered)
     for player in players:
 
         def activate(player: str = player) -> tuple[PlayedScenario, Any]:
-            scenario, source_id = _home(case, ability)
+            battlefield = {"battlefield": extra} if player == ALICE else {"bob_battlefield": extra}
+            scenario, source_id = _home(case, ability, **(battlefield if extra else {}))
             game = scenario.game
             if scenario.priority_holder != player:
                 scenario.pass_priority(scenario.priority_holder)
-            for state in list(game.permanents_controlled_by(player)):
-                if state.id == source_id or has_mana_ability(state.card):
+            for state in _activation_order(game, player, lowered):
+                if state.id == source_id or (has_mana_ability(state.card) and not mana_counts):
                     continue
                 for index, _ in enumerate(game.activated_abilities(state)):
                     if game.why_cannot_activate(state, index, player) is not None:
@@ -2001,6 +2009,55 @@ def _activating(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             raise _Unavailable(f"{player} has no ability to activate")
 
         yield activate
+
+
+def _activation_order(game: Any, player: str, condition: str) -> list[CardState]:
+    """The player's permanents, those the condition's own quality names first
+    ("an ability of a creature", "of an Elemental") so the activation is one
+    the trigger watches for."""
+    match = re.search(r"an ability of an? ([a-z]+)\b", condition)
+    permanents = list(game.permanents_controlled_by(player))
+    if match is None or "isn't a mana ability" in condition:
+        # The non-mana conditions keep the stock order their goldens pin.
+        return permanents
+    word = match.group(1)
+
+    def named(state: CardState) -> bool:
+        chars = game.characteristics_of(state)
+        types = {kind.value for kind in chars.types}
+        return word in types or word in {s.lower() for s in chars.subtypes}
+
+    return sorted(permanents, key=lambda state: not named(state))
+
+
+def _activation_probes(condition: str) -> tuple[str, ...]:
+    """A pool creature of the subtype "an ability of an `<subtype>`" names
+    (Ceaseless Searblades' "an Elemental", CR 205.3) with an activated
+    ability, put on the board so there is one to activate."""
+    match = re.search(r"an ability of an? ([a-z]+)\b", condition)
+    if (
+        match is not None
+        and match.group(1) == "creature"
+        and "isn't a mana ability" not in condition
+    ):
+        # A creature whose mana ability counts (CR 605.3a).
+        return ("Llanowar Elves",)
+    if match is None or match.group(1) in {
+        "artifact",
+        "creature",
+        "land",
+        "enchantment",
+        "planeswalker",
+        "permanent",
+    }:
+        return ()
+    subtype = match.group(1)
+    for card in _format_pool():
+        if card.card_faces or subtype not in {s.lower() for s in card.subtypes}:
+            continue
+        if any(isinstance(a, ActivatedAbility) for a in parse_abilities(card)):
+            return (card.name,)
+    return ()
 
 
 def _graveyard_leaving(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:

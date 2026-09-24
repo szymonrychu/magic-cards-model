@@ -4863,3 +4863,46 @@ rules:find`: 118.7a, 118.8a, 122.1, 122.1j, 205.3, 205.3g, 205.3m, 301.5a,
 
 Proof printings added: Blacksmith's Talent, Kyoshi Battle Fan, Cantankerous
 Keepers, Gryff's Boon, Fervent Champion, Super-Soldier Serum.
+
+## C01-T3: casting and playing from exile and graveyard, cast-from-graveyard conditions, ability grants from a graveyard, blink and delayed returns
+
+Bilbo, Thief in the Night; Gandalf, Goblins' Bane // Flameshape; Inside
+Information; Moment of Glory; Plunder the Trollshaws; Thranduil's Decree;
+Thranduil, the Elvenking; Tidings of War; Celebrate the Mountain-king;
+Elrond, Moon-Reader; Lake-town Mariners // Gone Fishing; Roll-Roll-Roll-Roll
+and The Eagles Are Coming! sweep `handled` on every clause, except the two
+Adventure faces (Flameshape, Gone Fishing), which the classifier still files
+as `static_unaudited` (that classifier is C01-T8's) and which are proven by
+scenario tests. CR numbers verified with `mise run rules:find`: 101.2,
+101.4, 102.3, 106.12a, 108.3, 109.2, 110.4b, 111.7, 111.8, 113.6, 115.6,
+118.9, 118.9b, 119.4, 120.3a, 201.5, 202.3e, 205.2a, 205.3, 302.6, 305.2a,
+400.7, 406.3, 406.3a, 514.2, 601.2a, 601.2b, 601.2c, 601.2f, 601.3, 602.2,
+603.2, 603.2c, 603.2h, 603.3, 603.6a, 603.7a, 603.7b, 603.7c, 605.3a, 605.3b,
+608.2b, 608.2c, 608.2d, 608.2g, 608.2h, 610.3, 610.3b, 610.3c, 611.2a,
+613.1f, 613.4c, 613.5, 614.1a, 700.7, 701.6a, 701.47a, 702.33d, 707.10.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| condition "this spell was cast from a graveyard" (CR 601.2a's origin zone off the `CastRecord`; a copy, CR 707.10, never was) - both the "instead" form (CR 614.1a) and the additive "If ..., also ..." form | `game._CONDITION_CAST_FROM_GRAVEYARD`, `effects._parse_condition_clause` ("also") | Plunder the Trollshaws, Tidings of War, Moment of Glory | Secrets of the Key | `test_cast_from_graveyard_conditions.py` |
+| "each other creature you control" on a spell excludes the spell's own targets (CR 608.2c) | `effects._parse_counter_each_other_creature_clause` | Moment of Glory | - | `test_cast_from_graveyard_conditions.py` |
+| "this creature gets `<layer phrase>` until end of turn and `<deals / loses / gains ...>`" - the layer half on the source (nothing once it is gone), the verb half from last known information (CR 608.2h) | `effects._parse_self_layer_and_verb_clause` | Gandalf, Goblins' Bane | Penregon Strongbull (activated, "this creature") | `test_self_pump_and_damage_each_opponent.py` |
+| "Counter target spell. If {a `<type>` spell / that spell} is countered this way, exile it instead ... You may cast that card without paying its mana cost for as long as it remains exiled." - CR 110.4b's permanent spell, a free CR 601.3 permission with no turn limit | `effects._parse_counter_exile_may_cast_free_clause` (spells and abilities) | Thranduil's Decree | Kheru Spellsnatcher (turned-face-up trigger) | `test_counter_exile_free_cast.py` |
+| "Exile the top `<n>` cards of target `<player>`'s / each player's library. `<duration>`, you may play {those cards / one of those cards}. If you cast a spell this way, pay life equal to its mana value rather than pay(ing) its mana cost." - a required alternative cost (CR 118.9b) of life (CR 119.4) equal to the mana value on the stack (CR 202.3e); "one of those cards" ends the rest once one is played or cast | `effects._parse_exile_top_of_other_libraries_antecedent`, `_PAY_LIFE_FOR_MANA_VALUE_RE`, `PlayPermission.pays_life_for_mana_value`/`choice_group`, `Casting.total_cost`, `Game.spend_play_permission_choice` | Inside Information | Nashi, Moon Sage's Scion | `test_play_exiled_pay_life.py` |
+| "Look at the top N cards of your library and exile them face down" / "Exile the top N cards of target opponent's library face down", then "you may [look at and] play them ... for as long as they remain exiled[ if `<condition>`]" - CR 406.3's look kept, CR 406.3a's turn face up (a played land too), a live `PlayPermission.condition` | `effects._parse_face_down_exile_play_clause`, `Game.play_land` | Flameshape | Expensive Taste (Decadent Dragon) | `test_face_down_exile_play_permission.py` |
+| "`<this>` has all activated abilities of all `<quality>` cards in {your graveyard / all graveyards}" - layer 6 (CR 613.1f) rebuilt with the board (CR 613.5); the quality a card type or a subtype; widened from C00-T1's linked-exile grant | `layers.all_activated_abilities_grant` (`graveyard_texts`) | Thranduil, the Elvenking | Necrotic Ooze ("As long as ... it has", all graveyards) | `test_ability_grant_from_graveyard.py` |
+| "For each opponent, exile up to one target `<X>` that player controls {until this `<type>` leaves the battlefield / and that player gains life equal to its power}" - CR 610.3 return (CR 610.3c under the owner; CR 610.3b nothing moves if the source already left) | `effects._parse_for_each_opponent_exile_clause` | Celebrate the Mountain-king | Luminate Primordial | `test_per_opponent_exile_until_leaves.py` |
+| "Whenever you activate an ability of `<a quality>`" with no "that isn't a mana ability" - mana abilities are activated too (CR 605.3a), raised as `ABILITY_ACTIVATED` with `GameEvent.mana_ability`; a subtype quality ("an Elemental") | `triggers._ABILITY_ACTIVATED_CONDITION`, `triggers.mana_ability_activated_event`, `CostPayment.tap_for_mana`, `Game.activate_ability` | Elrond, Moon-Reader | Ceaseless Searblades | `test_activate_creature_ability_trigger.py` |
+| "Exile `<targets>`, then return {it / them / those cards} to the battlefield under {its / their} owner's control" - every card exiled first, all returned as one event (CR 603.6a) | `effects._parse_exile_then_return_clause_pair` (`_RETURN_TO_BATTLEFIELD_RE` widened) | Gone Fishing | Displace | `test_blink_and_delayed_return.py` |
+| "[You may ]exile `<targets>`. [If you do, ]return {it / that card / those cards} to the battlefield under {its / their} owner's control at the beginning of the next end step" - all targets, one delayed ability for several (CR 603.7a, CR 603.7c card by card), the Saga chapter form, "If you do" | `effects._parse_delayed_blink_clauses`, `delayed.ReturnEachExiledToBattlefieldUnderOwner` | Roll-Roll-Roll-Roll, Elrond, Moon-Reader | Eerie Interlude, Sentinel of the Pearl Trident | `test_blink_and_delayed_return.py` |
+| Kicker's "Choose target `<X>` you own. If this spell was kicked, instead choose any number of target `<X>` you own. Return each chosen `<X>` to your hand. At the beginning of the next `<step>`, create `<a token>` for each `<X>` returned to your hand this way." - kicked targets replace the unkicked ones (CR 601.2c), "you own" is CR 108.3's owner, the delayed tail counts what really arrived | `targeting.kicked_instead_target_text`, `TargetRequirement.owned_by_caster`, `effects._parse_kicked_choose_return_delayed_clause` | The Eagles Are Coming! | - (only printing of the template, see MEMORY.md) | `test_blink_and_delayed_return.py` |
+| "Whenever `<this>` attacks, you may cast {an `<quality>` spell / target `<quality>` card} from your graveyard[ without paying its mana cost]. If {an `<quality>` spell cast this way / that spell} would be put into your graveyard, exile it instead." - a CR 608.2g cast, the rider carried on the cast (S26's `CastRecord.exile_instead_of_graveyard`) and on Bilbo only for an instant or sorcery | `effects._parse_cast_from_graveyard_now_clause`, `Game.cast_during_resolution(exile_instead_of_graveyard=)` | Bilbo, Thief in the Night | The Dawning Archaic | `test_attack_cast_from_graveyard.py` |
+| "Spells you cast from {`<zone>` / anywhere other than `<zone>`} cost {N} less to cast" - CR 601.2f by the zone cast from (CR 601.2a) | `cost._ZONE_COST_DECREASE`, `CostModifierKind.ZONE_DECREASE`, `Game.static_cost_modifiers_for(origin_zone=)` | Bilbo, Thief in the Night | - (only printing, see MEMORY.md) | `test_attack_cast_from_graveyard.py` |
+| "This spell costs {N} less to cast for each `<quality>` card in your graveyard" | `game._COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE` | - | The Dawning Archaic | `test_attack_cast_from_graveyard.py` |
+| an Oxford-comma type list ("artifact, instant, or sorcery") | `effects._quality_matcher`, `_card_description_is_readable` | Bilbo, Thief in the Night | - | `test_attack_cast_from_graveyard.py` |
+
+Proof printings added: Secrets of the Key, Penregon Strongbull, Kheru
+Spellsnatcher, Nashi, Moon Sage's Scion, Decadent Dragon // Expensive Taste,
+Necrotic Ooze, Luminate Primordial, Ceaseless Searblades, Displace, Eerie
+Interlude, Sentinel of the Pearl Trident, The Dawning Archaic (and Greenbelt
+Guardian as an Elf with a non-mana activated ability for the Thranduil
+tests).

@@ -504,6 +504,13 @@ class GameEvent(EngineModel):
     the same combat: that declaration is not `attacking_alone`, but each
     attacker is still `attacking_player_alone`."""
 
+    mana_ability: bool = False
+    """`ExtraTriggerEvent.ABILITY_ACTIVATED` for a mana ability (CR 605.3a:
+    it is activated; CR 605.3b: without the stack) - a condition printed
+    "that isn't a mana ability" must not meet it, and one that does not say
+    so (Elrond, Moon-Reader's "Whenever you activate an ability of a
+    creature") does."""
+
     zone_change_stamp: UUID | None = None
     """For a `TriggerEvent.DIES` event, `subject_id`'s own `CardState.
     zone_change_stamp` as it was the instant CR 700.4's move landed it in
@@ -3240,7 +3247,7 @@ _CYCLE_CONDITION = re.compile(
 _ABILITY_ACTIVATED_CONDITION = re.compile(
     r"^(?P<who>you|a player|an opponent) activates? an ability"
     r"(?: of (?P<types>an? [a-z]+(?:(?:,\s*(?:or\s+)?|\s+or\s+)(?:an? )?[a-z]+)*))?"
-    r" that isn't a mana ability$"
+    r"(?P<not_mana> that isn't a mana ability)?$"
 )
 #: "Whenever day becomes night or night becomes day" (Gavony Dawnguard,
 #: Brimstone Vandal), and either half on its own. CR 731.1a's two phrases,
@@ -3251,6 +3258,45 @@ _DAY_NIGHT_EVENTS: dict[str, ExtraTriggerEvent] = {
     "day becomes night": ExtraTriggerEvent.DAY_BECOMES_NIGHT,
     "night becomes day": ExtraTriggerEvent.NIGHT_BECOMES_DAY,
 }
+
+
+def _activated_source_subtype(types: str) -> str | None:
+    """The one subtype an "an ability of `<a quality>`" names, lowercased,
+    when that quality is a single subtype rather than card types - `None`
+    for a card-type list `_types_match` reads."""
+    from ..data.subtypes import canonical_subtype
+
+    words = types.split()
+    if len(words) != 2 or words[0].lower() not in {"a", "an"}:
+        return None
+    word = words[1]
+    if word.lower() in _TYPE_WORDS:
+        return None
+    subtype = canonical_subtype(word)
+    return subtype.lower() if subtype is not None else None
+
+
+def mana_ability_activated_event(source: CardState, game: "Game") -> GameEvent:
+    """`ExtraTriggerEvent.ABILITY_ACTIVATED` for a mana ability of `source`
+    that was just activated (CR 605.3a) - raised beside CR 106.12a's own tap
+    event by both places a mana ability resolves (`Game.activate_ability`'s
+    fast path and `CostPayment.tap_for_mana`), `mana_ability=True` so a
+    "that isn't a mana ability" condition is not met."""
+    on_battlefield = source.zone is Zone.BATTLEFIELD
+    characteristics = game.characteristics_of(source) if on_battlefield else None
+    controller = game.controller_of(source).username
+    return GameEvent(
+        event=ExtraTriggerEvent.ABILITY_ACTIVATED,
+        subject_id=source.id,
+        subject_name=source.name,
+        subject_controller=controller,
+        subject_card=source.card,
+        subject_types=tuple(characteristics.types if characteristics else source.types),
+        subject_subtypes=tuple(characteristics.subtypes if characteristics else source.subtypes),
+        origin_zone=Zone.BATTLEFIELD,
+        player=controller,
+        mana_ability=True,
+    )
 
 
 def _day_night_events_named(condition: str) -> frozenset[ExtraTriggerEvent]:
@@ -3595,13 +3641,22 @@ def _unread_condition_matches(
             return False
         if not _acting_player_matches(match.group("who"), controller, event.player):
             return False
+        if match.group("not_mana") is not None and event.mana_ability:
+            return False
         types = match.group("types")
         if types is None:
             return True
         # CR 109.2: a type named without "card", "spell" or "source" means a
         # permanent of that type on the battlefield - a creature card cycled
         # from a hand is not "a creature".
-        return event.origin_zone is Zone.BATTLEFIELD and _types_match(event.subject_types, types)
+        if event.origin_zone is not Zone.BATTLEFIELD:
+            return False
+        subtype = _activated_source_subtype(types)
+        if subtype is not None:
+            # CR 205.3: "an Elemental" (Ceaseless Searblades) - a subtype,
+            # read off the source as it was activated.
+            return subtype in {word.lower() for word in event.subject_subtypes or ()}
+        return _types_match(event.subject_types, types)
 
     if _RING_TEMPTS_YOU_CONDITION.match(condition):
         # CR 701.54d: "Whenever the Ring tempts you" - the ability's own

@@ -152,6 +152,7 @@ from .delayed import (
     ReflexiveDamageEqualToSubjectPowerConsequence,
     ReflexiveMandatoryTokenDamageConsequence,
     ReflexivePayEnergyConsequence,
+    ReturnEachExiledToBattlefieldUnderOwner,
     ReturnExiledCardAndAddCounters,
     ReturnRiderCounter,
     RevokeGrantedAbility,
@@ -5361,7 +5362,9 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
         return legendary_matches
     if lowered == "historic":
         return _historic
-    words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
+    # "artifact, instant, or sorcery" (Bilbo, Thief in the Night): the Oxford
+    # comma's ", or" is one separator, not a comma then an "or sorcery" word.
+    words = [word.strip() for word in re.split(r",\s*(?:or\s+)?|\s+or\s+", lowered) if word.strip()]
     matchers = [_quality_word_matcher(word) for word in words]
     if len(words) > 1 and all(word.startswith("non") for word in words):
 
@@ -5456,7 +5459,9 @@ def _card_description_is_readable(quality: str) -> bool:
         return _card_description_is_readable(lowered.removeprefix("basic "))
     if lowered == "historic":
         return True
-    words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
+    # "artifact, instant, or sorcery" (Bilbo, Thief in the Night): the Oxford
+    # comma's ", or" is one separator, not a comma then an "or sorcery" word.
+    words = [word.strip() for word in re.split(r",\s*(?:or\s+)?|\s+or\s+", lowered) if word.strip()]
     if not words:
         return False
     for word in words:
@@ -10758,7 +10763,11 @@ def _parse_counter_each_other_creature_clause(
     self-reference the other direction) - read from `stack_object`'s own
     source when it is a permanent, and excluding nothing when it is a spell
     (a resolving spell is never itself a creature on the battlefield to be
-    "other" than, CR 300.1).
+    "other" than, CR 300.1). On a spell that targeted creatures earlier in
+    its text - Moment of Glory's "Put a +1/+1 counter on target creature you
+    control. If this spell was cast from a graveyard, also put a +1/+1
+    counter on each other creature you control." - "other" is other than
+    those targets, the English reading CR 608.2c asks for.
     """
     match = _COUNTER_EACH_OTHER_CREATURE_RE.fullmatch(clause.strip())
     if match is None:
@@ -10773,8 +10782,15 @@ def _parse_counter_each_other_creature_clause(
         source = (
             stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
         )
+        excluded = (
+            {reference.card_id for reference in stack_object.targets if reference.is_card}
+            if isinstance(stack_object, CardState)
+            else set()
+        )
         for permanent in list(game.battlefield):
             if source is not None and permanent.id == source.id:
+                continue
+            if permanent.id in excluded:
                 continue
             if game.controller_of(permanent).username != controller:
                 continue
@@ -20973,6 +20989,18 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     may_transform_self_if_you_do = _parse_may_transform_self_if_you_do_clause(effect_text)
     if may_transform_self_if_you_do is not None:
         return may_transform_self_if_you_do
+    self_layer_and_verb = _parse_self_layer_and_verb_clause(effect_text)
+    if self_layer_and_verb is not None:
+        return self_layer_and_verb
+    cast_from_graveyard_now = _parse_cast_from_graveyard_now_clause(effect_text)
+    if cast_from_graveyard_now is not None:
+        return cast_from_graveyard_now
+    counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(effect_text)
+    if counter_exile_may_cast is not None:
+        return counter_exile_may_cast
+    face_down_exile_play = _parse_face_down_exile_play_clause(effect_text)
+    if face_down_exile_play is not None:
+        return face_down_exile_play
     cast_from_hand_then_exile = _parse_cast_from_hand_then_exile_clause(effect_text)
     if cast_from_hand_then_exile is not None:
         return cast_from_hand_then_exile
@@ -21402,6 +21430,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if for_each_opponent_destroy is not None:
         return for_each_opponent_destroy
+    for_each_opponent_exile = _parse_for_each_opponent_exile_clause(effect_text, for_spell=False)
+    if for_each_opponent_exile is not None:
+        return for_each_opponent_exile
     for_each_opponent_return_to_hand = _parse_for_each_opponent_return_to_hand_clause(
         effect_text, for_spell=False
     )
@@ -24395,6 +24426,15 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     citys_blessing_instead = _parse_citys_blessing_instead_clause(whole)
     if citys_blessing_instead is not None:
         return citys_blessing_instead
+    kicked_choose_return = _parse_kicked_choose_return_delayed_clause(whole)
+    if kicked_choose_return is not None:
+        return kicked_choose_return
+    counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(whole)
+    if counter_exile_may_cast is not None:
+        return counter_exile_may_cast
+    face_down_exile_play = _parse_face_down_exile_play_clause(whole)
+    if face_down_exile_play is not None:
+        return face_down_exile_play
     condition_instead = _parse_condition_instead_clause(whole)
     if condition_instead is not None:
         return condition_instead
@@ -25204,11 +25244,11 @@ def _parse_exile_if_mv_return_then_re_exile_clause(
 #: family, read here too since a blinked permanent arrives exactly the same
 #: way a reanimated one does (CR 614.12, 604.1a).
 _RETURN_TO_BATTLEFIELD_RE = re.compile(
-    r"^return (?:it|that (?:card|permanent|creature))"
+    r"^return (?:it|them|that (?:card|permanent|creature)|those (?:cards|permanents|creatures))"
     r" to the battlefield"
     r"(?P<tapped> tapped)?"
     r"(?P<transformed> transformed)?"
-    r"(?: under (?P<control>its owner's|your) control)?"
+    r"(?: under (?P<control>its owner's|their owners?'?s?|your) control)?"
     rf"(?: with an? (?:additional )?(?:(?P<counter_n>{COUNT}) )?(?P<counter>[a-z0-9+/-]+) "
     r"counters? on (?:it|them))?\.?$",
     re.IGNORECASE,
@@ -27025,26 +27065,37 @@ def _parse_exile_then_return_clause_pair(
         ((parse_count(counter_n_word) if counter_n_word else 1) or 1) if counter_word else 0
     )
 
+    owners_control = control is not None and control.lower() != "your"
+
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
+        exiled_cards: list[CardState] = []
         for target in game.resolve_targets(stack_object):
             if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
                 continue
             exiled = game.exile_permanent(target)
             if exiled.zone is not Zone.EXILE:
                 continue  # CR 111.8: a token refused the move; nothing to return.
-            owner = exiled.owner or controller
-            new_controller = owner if control == "its owner's" else controller
-            # CR 712.14a: "transformed" is how it *enters*, not something done
-            # to it afterwards - the difference is CR 306.5b's loyalty
-            # counters, which are put on as it enters and read off the face
-            # that is up. Transforming after the fact left a planeswalker back
-            # face on the battlefield at 0 loyalty, dead to CR 704.5i.
-            permanent = game.put_onto_battlefield(
-                exiled, new_controller, tapped=tapped, transformed=transformed
-            )
-            if counter_kind is not None and permanent.zone is Zone.BATTLEFIELD:
-                game.add_counters(permanent, counter_kind, counter_amount)
+            exiled_cards.append(exiled)
+        # "Exile two target creatures ..., then return them" (Gone Fishing,
+        # Displace): every card is exiled first and all of them return as
+        # one event (CR 603.6a), so each newcomer's enters ability sees the
+        # others.
+        with game.entering_together():
+            for exiled in exiled_cards:
+                owner = exiled.owner or controller
+                new_controller = owner if owners_control else controller
+                # CR 712.14a: "transformed" is how it *enters*, not something
+                # done to it afterwards - the difference is CR 306.5b's
+                # loyalty counters, which are put on as it enters and read
+                # off the face that is up. Transforming after the fact left a
+                # planeswalker back face on the battlefield at 0 loyalty,
+                # dead to CR 704.5i.
+                permanent = game.put_onto_battlefield(
+                    exiled, new_controller, tapped=tapped, transformed=transformed
+                )
+                if counter_kind is not None and permanent.zone is Zone.BATTLEFIELD:
+                    game.add_counters(permanent, counter_kind, counter_amount)
 
     return effect
 
@@ -32644,8 +32695,9 @@ def _look_at_target_hand(game: "Game", stack_object: "StackObject") -> None:
 #: its/their owner's control" - the blink idiom (Phelia, Blizzard Strix, Angel
 #: of Condemnation, Astral Drift all print it verbatim).
 _RETURN_TO_BATTLEFIELD_OWNER_RE = re.compile(
-    r"^return (?:it|that card|that creature|that permanent) to the battlefield "
-    r"under (?:its|their) owner'?s control$",
+    r"^(?:if you do, )?return (?:it|that card|that creature|that permanent|them"
+    r"|those (?:cards|creatures|permanents)) to the battlefield "
+    r"under (?:its|their) owners?'?s? control$",
     re.IGNORECASE,
 )
 
@@ -34201,7 +34253,14 @@ def _parse_delayed_blink_clauses(
     `DelayedTrigger`, the same way `_parse_anaphoric_clause_pair` closes over
     its own first clause's target.
     """
-    exile_match = _EXILE_TARGET_RE.fullmatch(clauses[index])
+    # "you may exile target ... If you do, return that card ..." (Sentinel of
+    # the Pearl Trident): CR 608.2d's optional exile, and "If you do" is the
+    # delayed return's own condition - nothing exiled, nothing returned.
+    first = clauses[index].strip()
+    optional = first.lower().startswith("you may ")
+    if optional:
+        first = first[len("you may ") :]
+    exile_match = _EXILE_TARGET_RE.fullmatch(first)
     if exile_match is None:
         return None
     if not _targets_understood(
@@ -34215,6 +34274,8 @@ def _parse_delayed_blink_clauses(
         return None
     step, verb = timing
     if not _RETURN_TO_BATTLEFIELD_OWNER_RE.fullmatch(verb):
+        return None
+    if optional and not verb.lower().startswith("if you do, "):
         return None
 
     consumed = 2
@@ -34236,32 +34297,67 @@ def _parse_delayed_blink_clauses(
             # CR 115.6: "up to one" chose zero, or CR 608.2b left nothing
             # legal - nothing to exile, so nothing to delay either.
             return
-        target = targets[0]
-        game.exile_permanent(target)
-        if target.zone is not Zone.EXILE:
-            # CR 111.8 refused it (a token that already left the battlefield
-            # once) - no delayed return for something that never left.
+        if optional and not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=controller,
+                prompt=f"exile {', '.join(target.name for target in targets)}",
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                affirmative_is_legal=True,
+            )
+        ):
+            return
+        exiled_cards: list[CardState] = []
+        for target in targets:
+            game.exile_permanent(target)
+            # CR 111.8 refused a token that already left the battlefield once -
+            # no delayed return for something that never left.
+            if target.zone is Zone.EXILE:
+                exiled_cards.append(target)
+        if not exiled_cards:
             return
 
+        if len(exiled_cards) > 1 and rider is None:
+            # "Return those cards ..." (Elrond, Moon-Reader; Eerie Interlude):
+            # one delayed ability returning every card it exiled together.
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=clauses[index + 1],
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
+                    controller=controller,
+                    source_id=source_id,
+                    source_name=source_name,
+                    effect=ReturnEachExiledToBattlefieldUnderOwner(
+                        subjects=tuple(
+                            (card_state.id, card_state.zone_change_stamp)
+                            for card_state in exiled_cards
+                        )
+                    ),
+                )
+            )
+            return
         blink_effect = (
             return_subject_to_battlefield_under_owner
             if rider is None
             else DelayedBlinkReturnWithRider(rider=rider)
         )
-        game.create_delayed_trigger(
-            DelayedTrigger(
-                text=clauses[index + 1],
-                event=TriggerEvent.BEGINNING_OF_STEP,
-                step=step,
-                controller=controller,
-                source_id=source_id,
-                source_name=source_name,
-                subject_id=target.id,
-                expected_zone=Zone.EXILE,
-                expected_stamp=target.zone_change_stamp,
-                effect=blink_effect,
+        for target in exiled_cards:
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=clauses[index + 1],
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
+                    controller=controller,
+                    source_id=source_id,
+                    source_name=source_name,
+                    subject_id=target.id,
+                    expected_zone=Zone.EXILE,
+                    expected_stamp=target.zone_change_stamp,
+                    effect=blink_effect,
+                )
             )
-        )
 
     return consumed, effect
 
@@ -35342,7 +35438,7 @@ _PLAY_PERMISSION_RE = re.compile(
     r"^(?P<leading>(?:until end of turn|until the end of your next turn"
     r"|until your next end step), )?"
     r"(?:you|they|that player) may (?P<action>cast|play) "
-    r"(?P<subject>it|that card|those cards|them)"
+    r"(?P<subject>it|that card|those cards|them|one of (?:those cards|them))"
     r"(?P<free> without paying (?:its|their) mana costs?)?"
     r"(?P<trailing> this turn| for as long as it remains exiled"
     r"| until the end of your next turn| until your next end step)?$",
@@ -35407,7 +35503,9 @@ def _parse_chosen_target_card_antecedent(
 #: search that exiled four cards, and "those cards" cannot refer to a single
 #: exiled top card. Refusing a mismatch is what keeps a future card's sentence
 #: from being read as a shape it is not.
-_PLURAL_PERMISSION_SUBJECTS = frozenset({"those cards", "them"})
+_PLURAL_PERMISSION_SUBJECTS = frozenset(
+    {"those cards", "them", "one of those cards", "one of them"}
+)
 
 #: "Search your library for any number of <quality> cards, exile them, then
 #: shuffle" - Ugin, Eye of the Storms' −11. Distinct from `_SEARCH_AND_PUT_RE`
@@ -35996,6 +36094,8 @@ def _parse_exile_then_play_permission_clauses(
         return None
     antecedent = _parse_chosen_target_card_antecedent(clauses[index])
     if antecedent is None:
+        antecedent = _parse_exile_top_of_other_libraries_antecedent(clauses[index])
+    if antecedent is None:
         antecedent = (
             _spell_safe_exile_antecedent(clauses[index])
             if for_spell
@@ -36038,6 +36138,16 @@ def _parse_exile_then_play_permission_clauses(
         exile_instead = True
         consumed += 1
 
+    pays_life = False
+    if index + consumed < len(clauses) and _PAY_LIFE_FOR_MANA_VALUE_RE.fullmatch(
+        clauses[index + consumed].strip()
+    ):
+        if free:
+            return None
+        pays_life = True
+        consumed += 1
+    one_of = permission.group("subject").lower().startswith("one of")
+
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
         source_name = (
@@ -36069,7 +36179,7 @@ def _parse_exile_then_play_permission_clauses(
                 card,
                 controller,
                 action=action,
-                pays_mana_cost=not free,
+                pays_mana_cost=not free and not pays_life,
                 source_name=source_name,
                 rule="CR 601.3",
                 zone=card.zone,
@@ -36080,6 +36190,8 @@ def _parse_exile_then_play_permission_clauses(
                     controller if duration is PermissionDuration.NEXT_END_STEP else None
                 ),
                 exile_instead_of_graveyard=exile_instead,
+                pays_life_for_mana_value=pays_life,
+                choice_group=stack_object.id if one_of else None,
             )
 
     return consumed, effect
@@ -41067,7 +41179,13 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
     leading = _LEADING_IF_CLAUSE_RE.fullmatch(stripped)
     if leading is not None:
         condition_text = leading.group("condition").strip()
-        consequence_text = leading.group("consequence").strip()
+        # "If `<condition>`, also `<consequence>`" (Moment of Glory's
+        # cast-from-a-graveyard rider): "also" marks the instruction as
+        # additional to the ones before it (CR 608.2c), which is already
+        # what running it after them means - it names no rule of its own.
+        consequence_text = re.sub(
+            r"^also\s+", "", leading.group("consequence").strip(), flags=re.IGNORECASE
+        )
     else:
         trailing = _TRAILING_IF_CLAUSE_RE.fullmatch(stripped)
         if trailing is None:
@@ -41747,6 +41865,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     for_each_opponent_destroy = _parse_for_each_opponent_destroy_clause(clause, for_spell=for_spell)
     if for_each_opponent_destroy is not None:
         return for_each_opponent_destroy  # type: ignore[return-value]
+    for_each_opponent_exile = _parse_for_each_opponent_exile_clause(clause, for_spell=for_spell)
+    if for_each_opponent_exile is not None:
+        return for_each_opponent_exile  # type: ignore[return-value]
     for_each_opponent_return_to_hand = _parse_for_each_opponent_return_to_hand_clause(
         clause, for_spell=for_spell
     )
@@ -48779,5 +48900,552 @@ def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
                     controller=controller,
                     source_name=source_name,
                 )
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# C01-T3: zone play, graveyard casting and blink readers
+# ---------------------------------------------------------------------------
+
+#: "This creature gets `<layer phrase>` until end of turn and `<verb phrase>`."
+#: - one sentence, two instructions sharing the one self-referencing subject
+#: (CR 700.7's "this creature", or the card's own name CR 201.5 lets it use,
+#: normalised to it by `trigger_effect_for`/`activated_effect_for` before
+#: this sees it): Gandalf, Goblins' Bane's cast trigger and Penregon
+#: Strongbull's activated ability, "... gets +1/+1 until end of turn and
+#: deals 1 damage to each opponent." `_CLAUSE_SEPARATOR`'s bare " and " cut
+#: strands the second half with no subject, and the layer fallback reads the
+#: whole sentence as one continuous effect it cannot build - so it is read
+#: whole here: the first half as its own CR 611.2a layer sentence, the
+#: second as the same subject's own instruction.
+_SELF_LAYER_AND_VERB_RE = re.compile(
+    r"^(?P<subject>this (?:creature|permanent)) (?P<layer>gets [^.]+? until end of turn) "
+    r"and (?P<rest>(?:deals|loses|gains) [^.]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_layer_and_verb_clause(effect_text: str) -> AbilityEffect | None:
+    """`_SELF_LAYER_AND_VERB_RE`'s shape: the layer half through
+    `_create_continuous_effect_of_ability_for_mode_text` (which does nothing
+    once the source has left the battlefield - there is no object left to
+    modify), then the verb half through `parse_mixed_effect`, whose damage
+    reader uses the source's last known information (CR 608.2h: "it's the
+    object as it exists - or as it most recently existed - that does it").
+    Either half unread leaves the whole sentence unread (CR 608.2c)."""
+    match = _SELF_LAYER_AND_VERB_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    subject = match.group("subject")
+    layer_sentence = f"{subject[0].upper()}{subject[1:]} {match.group('layer')}."
+    if not is_genuine_resolution_layer_sentence(layer_sentence):
+        return None
+    rest = parse_mixed_effect(f"{subject} {match.group('rest')}.")
+    if rest is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            continuous_effects(game).create(
+                source,
+                targets=[source],
+                context=layer_context_for(game, game.controller_of(ability)),
+                ability_text=layer_sentence,
+                game=game,
+            )
+        rest(game, ability)
+
+    return effect
+
+
+#: "Counter target `<qualifier>` spell. If {that spell|a `<type>` spell} is
+#: countered this way, exile it instead of putting it into its owner's
+#: graveyard. You may cast that card without paying its mana cost for as long
+#: as it remains exiled." - Thranduil's Decree ("a permanent spell") and
+#: Kheru Spellsnatcher's turned-face-up trigger ("that spell"). CR 701.6a's
+#: graveyard is replaced by exile (CR 614.1a) - for the "a `<type>` spell"
+#: form only when the countered spell is one (CR 110.4b's "permanent spell")
+#: - and CR 601.3's permission hands the exiled card to the countering
+#: object's controller ("you"), free (CR 118.9), with no "this turn" limit:
+#: "for as long as it remains exiled" is the permission's own CR 400.7 stamp.
+_COUNTER_EXILE_MAY_CAST_FREE_RE = re.compile(
+    rf"^counter target(?: {_SPELL_QUALIFIER})? spell\.\s*"
+    r"if (?:that spell|an? (?P<quality>permanent|creature|noncreature|artifact|enchantment"
+    r"|instant|sorcery|planeswalker) spell) is countered this way, exile it instead of "
+    r"putting it into its owner'?s graveyard\.\s*"
+    r"you may cast (?:that card|it) without paying its mana cost for as long as it "
+    r"remains exiled\.?$",
+    re.IGNORECASE,
+)
+
+
+def _counter_exile_quality_holds(spell: CardState, quality: str | None) -> bool:
+    """Whether the countered `spell` is the "a `<quality>` spell" the rider
+    names (CR 110.4b for "permanent"; a card type otherwise, CR 205.2a)."""
+    if quality is None:
+        return True
+    word = quality.lower()
+    if word == "permanent":
+        return spell.is_permanent
+    types = {type_.value.lower() for type_ in spell.types}
+    if word.startswith("non"):
+        return word[3:] not in types
+    return word in types
+
+
+def _parse_counter_exile_may_cast_free_clause(effect_text: str) -> TargetedClause | None:
+    """`_COUNTER_EXILE_MAY_CAST_FREE_RE`'s shape, read whole: the three
+    sentences are one CR 608.2c instruction, "it" and "that card" both CR
+    400.7 anaphora back to the countered spell. A spell that could not be
+    countered (CR 101.2's "can't be countered") stays on the stack and is
+    neither exiled nor handed out; a target already gone is skipped."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _COUNTER_EXILE_MAY_CAST_FREE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    quality = match.group("quality")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        for reference in stack_object.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            exiles = isinstance(target, CardState) and _counter_exile_quality_holds(target, quality)
+            countered = game.counter(target, to_exile=exiles)
+            if not exiles or countered in game.stack:
+                continue
+            assert isinstance(countered, CardState)
+            if countered.zone is not Zone.EXILE:
+                continue
+            game.grant_play_permission(
+                countered,
+                controller,
+                action=PlayAction.CAST,
+                pays_mana_cost=False,
+                source_name=source_name,
+                rule="CR 601.3",
+                zone=Zone.EXILE,
+                until_end_of_turn=False,
+            )
+
+    return effect
+
+
+#: "If you cast a spell this way, pay life equal to its mana value rather
+#: than pay[ing] its mana cost." - Inside Information's and Nashi, Moon Sage's
+#: Scion's rider on the permission sentence before it: CR 118.9's
+#: alternative cost, required by the permission (CR 118.9b), carried on
+#: `PlayPermission.pays_life_for_mana_value`.
+_PAY_LIFE_FOR_MANA_VALUE_RE = re.compile(
+    r"^if you cast a spell this way, pay life equal to its mana value rather than "
+    r"pay(?:ing)? its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+#: "exile the top `<n>` cards of target `<player>`'s library" (Inside
+#: Information) and "exile the top card of each `<player>`'s library" (Nashi,
+#: Moon Sage's Scion) - libraries other than the controller's own, which
+#: `_EXILE_TOP_OF_YOUR_LIBRARY_RE` reads. The cards stay owned by their
+#: owners (CR 108.3); a permission after them goes to the controller.
+_EXILE_TOP_OF_OTHER_LIBRARIES_RE = re.compile(
+    rf"^exile the top (?:card|(?P<n>{COUNT}) cards) of "
+    r"(?:(?P<target>target (?:opponent|player))|each (?P<each>opponent|player))'s library$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_top_of_other_libraries_antecedent(
+    clause: str,
+) -> "tuple[ExileAntecedent, bool] | None":
+    """`_EXILE_TOP_OF_OTHER_LIBRARIES_RE`'s shape, as an antecedent for a
+    trailing play permission. A targeted library is rechecked on resolution
+    (CR 608.2b: an illegal target player is skipped); "each player" runs in
+    turn order starting with the active player (CR 101.4's APNAP order). A
+    library shorter than the count gives what it has."""
+    match = _EXILE_TOP_OF_OTHER_LIBRARIES_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n")) if match.group("n") else 1
+    if count is None:
+        return None
+    targeted = match.group("target") is not None
+    opponents_only = (match.group("each") or "").lower() == "opponent"
+
+    def exile_tops(game: "Game", stack_object: "StackObject") -> list[CardState]:
+        controller = game.controller_of(stack_object).username
+        if targeted:
+            players = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+        else:
+            players = [
+                game.player(username)
+                for username in game._turn_order_from_active()
+                if not (opponents_only and username == controller)
+            ]
+        exiled: list[CardState] = []
+        for player in players:
+            for _ in range(count):
+                if not player.library:
+                    break
+                exiled.append(game.exile_permanent(player.library[0]))
+        return exiled
+
+    return exile_tops, not targeted or match.group("n") is not None
+
+
+#: Exile the top `<n>` cards of a library face down, then a play permission
+#: that lasts "for as long as they remain exiled" - Flameshape's "Look at the
+#: top two cards of your library and exile them face down. For as long as
+#: they remain exiled, you may play them if you control a Wizard." and
+#: Expensive Taste's "Exile the top two cards of target opponent's library
+#: face down. You may look at and play those cards for as long as they remain
+#: exiled." Read whole: `split_effect_clauses` cuts both at the bare "and",
+#: stranding "exile them face down" and "play those cards" with nothing to
+#: point at (CR 608.2c).
+_FACE_DOWN_EXILE_PLAY_RE = re.compile(
+    rf"^(?:look at the top (?P<look_n>{COUNT}) cards of your library and exile them face down"
+    rf"|exile the top (?P<n>{COUNT}) cards of (?P<whose>your|target opponent's|target player's)"
+    r" library face down)\.\s*"
+    r"(?:for as long as (?:they|those cards) remain exiled, you may (?P<look1>look at and )?"
+    r"(?P<action1>play|cast) (?:them|those cards)(?: if (?P<condition>[^.]+))?"
+    r"|you may (?P<look2>look at and )?(?P<action2>play|cast) (?:them|those cards) for as long "
+    r"as they remain exiled)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_face_down_exile_play_clause(effect_text: str) -> TargetedClause | None:
+    """`_FACE_DOWN_EXILE_PLAY_RE`'s shape.
+
+    CR 406.3: the cards are exiled face down, and the effect's controller -
+    told to look at them first, or allowed to look at them after - may keep
+    looking (`Game.look`, recorded as the cards arrive in exile). CR 406.3a
+    lets the exiling effect allow them to be played, and turns a card face
+    up just before it is played. The permission (CR 601.3) goes to the
+    controller, pays the card's own mana cost, has no end but the card
+    leaving exile (CR 400.7), and carries "if `<condition>`" as a live
+    condition (`PlayPermission.condition`) - gated at parse time by
+    `condition_is_readable`, so an unread condition leaves the whole text
+    unread rather than silently dropped.
+    """
+    from ..models.game import condition_is_readable
+
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _FACE_DOWN_EXILE_PLAY_RE.fullmatch(whole)
+    if match is None:
+        return None
+    condition = match.group("condition")
+    if condition is not None and not condition_is_readable(condition):
+        return None
+    count = parse_count(match.group("look_n") or match.group("n"))
+    if count is None:
+        return None
+    whose = (match.group("whose") or "your").lower()
+    targeted = whose.startswith("target")
+    action_word = (match.group("action1") or match.group("action2")).lower()
+    action = PlayAction.PLAY if action_word == "play" else PlayAction.CAST
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        if targeted:
+            owners = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+        else:
+            owners = [game.player(controller)]
+        for owner in owners:
+            for card_state in list(owner.library[:count]):
+                moved = game.exile_permanent(card_state)
+                if moved is None or moved.zone is not Zone.EXILE:
+                    continue
+                moved.face_up = False
+                game.look(moved, controller, source=source_name)
+                game.grant_play_permission(
+                    moved,
+                    controller,
+                    action=action,
+                    pays_mana_cost=True,
+                    source_name=source_name,
+                    rule="CR 601.3",
+                    zone=Zone.EXILE,
+                    until_end_of_turn=False,
+                    condition=condition,
+                )
+
+    return effect
+
+
+#: "For each opponent, exile up to one target `<X>` that player controls[
+#: until this `<type>` leaves the battlefield| and that player gains life
+#: equal to its power]." - Celebrate the Mountain-king's and Haytham Kenway's
+#: "until" form (CR 610.3) and Luminate Primordial's life rider. The
+#: per-opponent target is `machines/targeting._FOR_EACH_OPPONENT_TARGET_RE`'s
+#: (one "up to one" target per opponent, CR 115.6, distinct controllers).
+_FOR_EACH_OPPONENT_EXILE_RE = re.compile(
+    r"^for each opponent, exile up to one target (?P<desc>.+?) that player controls"
+    r"(?:(?P<until> until this (?:permanent|enchantment|artifact|creature|planeswalker) leaves "
+    r"the battlefield)|(?P<life> and that player gains life equal to its power))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_for_each_opponent_exile_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_FOR_EACH_OPPONENT_EXILE_RE`'s shape.
+
+    The "until" form is ability-only, like `_parse_exile_until_leaves_
+    battlefield_clause`: it watches its own source leave (CR 610.3), and CR
+    610.3b moves nothing when the source already left after the ability
+    triggered. Each exiled card returns under its owner's control (CR
+    610.3c) through `_watch_for_departure_and_return_exiled_card`. The life
+    rider's "that player" is the exiled permanent's controller as it left,
+    and "its power" its last known power (CR 608.2h).
+    """
+    match = _FOR_EACH_OPPONENT_EXILE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    until = match.group("until") is not None
+    if until and for_spell:
+        return None
+    phrase = _for_each_opponent_target_phrase(match.group("desc"))
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+    gains_life = match.group("life") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        source: CardState | None = None
+        if until:
+            assert isinstance(stack_object, AbilityOnStack)
+            source = stack_object.source(game)
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                return  # CR 610.3b: the source already left; nothing moves.
+        for target in targets:
+            former_controller = game.controller_of(target).username
+            power = game.characteristics_of(target).power or 0
+            exiled = game.exile_permanent(target)
+            if exiled.zone is not Zone.EXILE:
+                continue  # CR 111.8: a token refused the move.
+            if source is not None:
+                _watch_for_departure_and_return_exiled_card(game, source, exiled, controller)
+            if gains_life and power > 0:
+                game.gain_life(game.player(former_controller), power)
+
+    return effect
+
+
+#: "Choose `<targets>`. If this spell was kicked, instead choose `<targets>`.
+#: Return each chosen `<noun>` to `<hand>`.[ At the beginning of the next
+#: `<step>`, create `<a token>` for each `<noun>` returned to `<hand>` this
+#: way.]" - The Eagles Are Coming!. Which targets were chosen is settled at
+#: announcement (CR 601.2c, `machines/targeting.kicked_instead_target_text`),
+#: so resolution returns whatever was chosen and still legal (CR 608.2b),
+#: together (CR 603.2c), and the delayed tail (CR 603.7a) counts the cards
+#: that really arrived in a hand.
+_KICKED_CHOOSE_RETURN_DELAYED_RE = re.compile(
+    r"^choose (?P<base>[^.]*\btargets?\b[^.]*)\.\s*"
+    r"if this spell was kicked, instead choose (?P<kicked>[^.]*\btargets?\b[^.]*)\.\s*"
+    r"return each chosen (?P<noun>[a-z]+) to (?:your|its owner's|their owners'?) hands?\.?"
+    r"(?:\s*at the beginning of the next (?P<step>upkeep|end step), "
+    r"(?P<delayed>create an? .+? tokens?(?: with [^.]+?)?) for each (?P=noun) returned to "
+    r"(?:your|its owner's|their owners'?) hands? this way\.?)?$",
+    re.IGNORECASE,
+)
+
+_SINGLE_TOKEN_CLAUSE_RE = re.compile(
+    r"^create an? (?P<desc>.+?) token(?P<tail>(?: with [^.]+)?)$", re.IGNORECASE
+)
+
+
+def _parse_kicked_choose_return_delayed_clause(effect_text: str) -> Effect | None:
+    """`_KICKED_CHOOSE_RETURN_DELAYED_RE`'s shape.
+
+    The delayed half is a CR 603.7a delayed triggered ability made from its
+    own words (`CreatedTriggeredAbility`, triggering once, CR 603.7b), its
+    single token rewritten to the number of cards returned ("create a ...
+    token" -> "create N ... tokens"), read by the same token parser a printed
+    "create N ..." goes through - so the tokens are created together, as one
+    event. Nothing returned, nothing delayed.
+    """
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _KICKED_CHOOSE_RETURN_DELAYED_RE.fullmatch(whole)
+    if match is None:
+        return None
+    for phrase in (match.group("base"), match.group("kicked")):
+        if not _targets_understood(phrase, count_agnostic=True):
+            return None
+    step_word = (match.group("step") or "").lower()
+    step = {"upkeep": Step.UPKEEP, "end step": Step.END_STEP}.get(step_word)
+    delayed_clause = match.group("delayed")
+    token_match = None
+    if delayed_clause is not None:
+        token_match = _SINGLE_TOKEN_CLAUSE_RE.fullmatch(delayed_clause.strip())
+        if token_match is None:
+            return None
+        probe = f"create 2 {token_match.group('desc')} tokens{token_match.group('tail')}"
+        if parse_mixed_effect_for_spell(probe) is None:
+            return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        returned = 0
+        with game.returning_together():
+            for target in game.resolve_targets(spell):
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                    moved = game.return_to_hand(target)
+                    if moved is not None and moved.zone is Zone.HAND:
+                        returned += 1
+        if token_match is None or step is None or returned <= 0:
+            return
+        created = (
+            f"At the beginning of each {step_word}, create {returned} "
+            f"{token_match.group('desc')} tokens{token_match.group('tail')}."
+        )
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=f"At the beginning of the next {step_word}, {delayed_clause}.",
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=step,
+                controller=controller,
+                source_id=spell.id,
+                source_name=spell.name,
+                effect=CreatedTriggeredAbility(ability_text=created, source_card=spell.card),
+            )
+        )
+
+    return effect
+
+
+#: "you may cast {an? `<quality>` spell|target `<quality>` card} from your
+#: graveyard[ without paying its mana cost]. [If {an? `<quality>` spell cast
+#: this way|that spell} would be put into your graveyard, exile it instead.]"
+#: - Bilbo, Thief in the Night's and The Dawning Archaic's attack triggers:
+#: a cast made while the ability resolves (CR 608.2g), out of the
+#: controller's own graveyard, with CR 614.1a's exile rider carried on the
+#: cast (`CastRecord.exile_instead_of_graveyard`, the record S26's graveyard
+#: permissions write - `machines/replacement._stack_replacements` reads it).
+_CAST_FROM_GRAVEYARD_NOW_RE = re.compile(
+    r"^you may cast (?:an? (?P<quality>.+?) spell|(?P<target>target .+? card)) from your graveyard"
+    r"(?P<free> without paying its mana cost)?\.?"
+    r"(?:\s*if (?:an? (?P<rider_quality>.+?) spell cast this way|that spell) would be put "
+    r"into (?:your|a) graveyard, exile it instead\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_cast_from_graveyard_now_clause(effect_text: str) -> AbilityEffect | None:
+    """`_CAST_FROM_GRAVEYARD_NOW_RE`'s shape.
+
+    CR 608.2d: the "may" is offered only when a legal choice exists - a
+    graveyard card of the quality (or the targeted card, rechecked by CR
+    608.2b) that `Game.can_cast_during_resolution` finds castable - then
+    `DecisionKind.CHOOSE_CARDS` for which one, and `Game.cast_during_
+    resolution` casts it, paying its mana cost unless the text waives it
+    (CR 118.9). The rider applies to the spell only when it has the rider's
+    own quality ("an instant or sorcery spell cast this way"), or always for
+    "that spell".
+    """
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _CAST_FROM_GRAVEYARD_NOW_RE.fullmatch(whole)
+    if match is None:
+        return None
+    quality = match.group("quality")
+    target_phrase = match.group("target")
+    if quality is not None and not _card_description_is_readable(quality):
+        return None
+    if target_phrase is not None and not _targets_understood(
+        f"{target_phrase} from your graveyard", battlefield_only=False
+    ):
+        return None
+    matches_quality = _quality_matcher(quality) if quality is not None else None
+    has_rider = "exile it instead" in whole.lower()
+    rider_quality = match.group("rider_quality")
+    if rider_quality is not None and not _card_description_is_readable(rider_quality):
+        return None
+    rider_matches = _quality_matcher(rider_quality) if rider_quality is not None else None
+    free = match.group("free") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        caster = game.controller_of(ability).username
+        if target_phrase is not None:
+            pool = [
+                card
+                for card in game.resolve_targets(ability)
+                if isinstance(card, CardState) and card.zone is Zone.GRAVEYARD
+            ]
+        else:
+            pool = [
+                card
+                for card in game.player(caster).graveyard
+                if matches_quality is not None and matches_quality(card)
+            ]
+        candidates = [
+            card
+            for card in pool
+            if not card.card.is_land and game.can_cast_during_resolution(card, caster)
+        ]
+        described = (
+            with_indefinite_article(f"{quality} spell") if quality is not None else "that card"
+        )
+        cost_words = " without paying its mana cost" if free else ""
+        taken = game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=caster,
+                prompt=f"cast {described} from your graveyard{cost_words}",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                affirmative_is_legal=bool(candidates),
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        if not taken or not candidates:
+            return
+        chosen = candidates[0]
+        if len(candidates) > 1 or target_phrase is None:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=caster,
+                    prompt=f"choose a card to cast{cost_words}",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(card.id for card in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            chosen = {card.id: card for card in candidates}[chosen_ids[0]]
+        exile_instead = has_rider and (rider_matches is None or rider_matches(chosen))
+        game.cast_during_resolution(
+            chosen,
+            caster,
+            source_name=ability.source_name,
+            rule="CR 608.2g",
+            pays_mana_cost=not free,
+            exile_instead_of_graveyard=exile_instead,
+        )
 
     return effect

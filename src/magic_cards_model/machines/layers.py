@@ -9886,10 +9886,14 @@ def _ring_bearer_static_builder(predicates: str, *, line: str) -> EffectBuilder 
 #: only, CR 400.7); a battlefield pile is read off the board as layer 6 finds
 #: it (`GrantActivatedAbilitiesOf`).
 _HAS_ALL_ACTIVATED_ABILITIES_RE = re.compile(
-    r"^(?P<subject>this (?:creature|permanent|artifact)"
+    r"^(?:(?P<on_battlefield>as long as this (?:creature|permanent|artifact) is on the "
+    r"battlefield), )?"
+    r"(?P<subject>this (?:creature|permanent|artifact)|it"
     r"|creatures you control with (?:an? )?(?P<counter>[+-]\d+/[+-]\d+|[a-z]+) counters? on them)"
     r" (?:has|have) all activated abilities of all "
     r"(?:(?:(?P<pile_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards exiled with (?:this \w+|it)"
+    r"|(?:(?P<graveyard_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards in "
+    r"(?P<graveyard_whose>your graveyard|all graveyards)"
     r"|(?P<board_types>[a-z]+)(?P<board_whose> your opponents control| you control)?)\.?$",
     re.IGNORECASE,
 )
@@ -9910,6 +9914,39 @@ class AllActivatedAbilitiesGrant(NamedTuple):
     exile_types: tuple[Type, ...]
     board_types: tuple[Type, ...]
     board_whose: Literal["opponents", "you", "any"]
+    from_graveyard: bool = False
+    """A graveyard pile (C01-T3): Thranduil, the Elvenking's "all Elf cards in
+    your graveyard", Necrotic Ooze's "all creature cards in all graveyards".
+    Not a linked pile - every matching card there counts, as layer 6 finds
+    the graveyard each time the board is computed (CR 613.5)."""
+    graveyard_whose: Literal["you", "any"] = "any"
+    graveyard_types: tuple[Type, ...] = ()
+    graveyard_subtypes: tuple[str, ...] = ()
+
+    def graveyard_texts(self, source: CardState, context: LayerContext) -> tuple[str, ...]:
+        """The activated abilities of every matching card in the named
+        graveyard(s), each once: a card type (CR 205.2a) or a subtype (CR
+        205.3) the card has, or any card when neither is named."""
+        pile = (
+            context.graveyard_by_controller.get(source.controller or "", ())
+            if self.graveyard_whose == "you"
+            else context.graveyards
+        )
+        texts: list[str] = []
+        for card_state in pile:
+            if self.graveyard_types or self.graveyard_subtypes:
+                subtypes = {subtype.lower() for subtype in card_state.subtypes}
+                if not any(kind in card_state.types for kind in self.graveyard_types) and not any(
+                    subtype.lower() in subtypes for subtype in self.graveyard_subtypes
+                ):
+                    continue
+            lines = [
+                ability.raw
+                for ability in parse_abilities(card_state.card)
+                if isinstance(ability, ActivatedAbility)
+            ]
+            texts.extend(self_normalized_effect_text(card_state.name, line) for line in lines)
+        return tuple(dict.fromkeys(texts))
 
     def exile_texts(self, source: CardState, context: LayerContext) -> tuple[str, ...]:
         """The activated abilities of every matching card in `source`'s own
@@ -9964,11 +10001,30 @@ def all_activated_abilities_grant(sentence: str) -> AllActivatedAbilitiesGrant |
             return None
         return tuple(kind for kind in found if kind is not None)
 
-    from_exile = match.group("board_types") is None
+    graveyard_whose_text = (match.group("graveyard_whose") or "").lower()
+    from_graveyard = bool(graveyard_whose_text)
+    if match.group("subject").lower() == "it" and match.group("on_battlefield") is None:
+        return None
+    from_exile = match.group("board_types") is None and not from_graveyard
     exile_types = types_of(match.group("pile_types"))
     board_types = types_of(match.group("board_types"))
     if exile_types is None or board_types is None:
         return None
+    graveyard_types: list[Type] = []
+    graveyard_subtypes: list[str] = []
+    for word in re.split(
+        r",\s*|\s+(?:and|or)\s+|\s+", (match.group("graveyard_types") or "").strip()
+    ):
+        if not word or word.lower() in {"and", "or"}:
+            continue
+        kind = _card_type_word(word)
+        if kind is not None:
+            graveyard_types.append(kind)
+            continue
+        subtype = canonical_subtype(word)
+        if subtype is None:
+            return None
+        graveyard_subtypes.append(subtype)
     whose_text = (match.group("board_whose") or "").strip().lower()
     whose: Literal["opponents", "you", "any"] = (
         "opponents" if whose_text == "your opponents control" else "you" if whose_text else "any"
@@ -9980,6 +10036,10 @@ def all_activated_abilities_grant(sentence: str) -> AllActivatedAbilitiesGrant |
         exile_types=exile_types,
         board_types=board_types,
         board_whose=whose,
+        from_graveyard=from_graveyard,
+        graveyard_whose="you" if graveyard_whose_text == "your graveyard" else "any",
+        graveyard_types=tuple(graveyard_types),
+        graveyard_subtypes=tuple(graveyard_subtypes),
     )
 
 
@@ -9998,6 +10058,20 @@ def _all_activated_abilities_builder(
         context: LayerContext,
     ) -> list[ContinuousEffect]:
         selector = grant.selector(source)
+        if grant.from_graveyard:
+            return [
+                ContinuousEffect(
+                    description=f"{source.name}: grants {text}",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    order=order,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=selector,
+                    modification=grant_ability(text),
+                )
+                for order, text in enumerate(grant.graveyard_texts(source, context))
+            ]
         if not grant.from_exile:
             return [
                 ContinuousEffect(
