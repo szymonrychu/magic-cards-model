@@ -893,3 +893,27 @@ def test_a_snapshot_written_before_the_delve_exile_link_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before C01-T6's `CardState.chosen_modal_options`
+#: (Gollum, Riddle Master's own "choose one that hasn't been chosen -").
+_SCHEMA_VERSION_BEFORE_CHOSEN_MODAL_OPTIONS = 67
+
+
+def test_the_chosen_modal_options_bump_moved_the_version_past_sixty_seven() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_CHOSEN_MODAL_OPTIONS
+
+
+def test_a_snapshot_written_before_chosen_modal_options_is_refused() -> None:
+    """A version-67 dump is refused rather than decoded as current: a
+    permanent on the battlefield in it carries no `chosen_modal_options`, so
+    a "choose one that hasn't been chosen -" trigger would forget every mode
+    it had already picked and offer them all again."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_CHOSEN_MODAL_OPTIONS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_CHOSEN_MODAL_OPTIONS}",
+    ):
+        Game.model_validate(dumped)

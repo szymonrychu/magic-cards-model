@@ -2069,6 +2069,36 @@ def has_flash(card: Card) -> bool:
     return any(keyword.lower() == "flash" for keyword in card.keywords)
 
 
+#: Bard's Company's own "You may cast this spell as though it had flash if
+#: you control a Human." - CR 702.8a's flash exception, worded as a
+#: conditional grant on the spell's own printed text rather than the bare
+#: "Flash" keyword `has_flash` reads. The condition is captured whole and
+#: handed to `Game.condition_holds`, the same reader every other "if
+#: `<condition>`" clause in this engine already goes through (Ghalta the
+#: Immovable's own self cost reduction among them) - a condition that reader
+#: does not know is simply not a grant, never a guessed permission.
+_CONDITIONAL_FLASH_RE = re.compile(
+    r"^you may cast this spell as though it had flash if (?P<condition>[^.]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def conditional_flash_condition(text: str) -> str | None:
+    """The condition of a "You may cast this spell as though it had flash if
+    `<condition>`." line printed on this spell's own text, or `None` if the
+    text carries no such line.
+
+    Read one printed line at a time (never the whole multi-line text as one
+    regex) the same way `machines/cost.py`'s per-line self-reduction reader
+    does, since the grant is always its own sentence.
+    """
+    for line in (text or "").split("\n"):
+        match = _CONDITIONAL_FLASH_RE.fullmatch(line.strip())
+        if match is not None:
+            return match.group("condition").strip()
+    return None
+
+
 def has_split_second(card: Card) -> bool:
     """Whether this printing has split second (CR 702.61a), read the same
     way `has_flash` reads its own keyword - off the printing's own Scryfall
@@ -2326,6 +2356,11 @@ def why_cannot_cast_now(
         return None  # CR 702.8a
     if Type.SORCERY in types and has_sorcery_speed_flash_grant(game, caster):
         return None  # Teferi, Time Raveler's +1
+    condition = conditional_flash_condition(spell.oracle_text or "")
+    if condition is not None and game.condition_holds(caster, condition, spell) is True:
+        return None  # Bard's Company's own conditional flash grant
+    if game.has_first_spell_flash_grant(caster, spell):
+        return None  # Radagast of Rhosgobel's own first-creature-spell flash grant
     if spell.zone is not Zone.HAND and (
         castable_from(spell.card, spell.zone)
         or granted_cast_options(game, spell, caster, spell.zone)

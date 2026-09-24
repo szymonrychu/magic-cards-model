@@ -14,10 +14,15 @@ if its gift cost was paid, [effect]") is not modelled - see
 docs/engine-coverage.md.
 
 Proved generic on Crumb and Get It's "Gift a Food", a card outside the deck
-pool and outside this wave's brief.
+pool and outside this wave's brief, and again on Blooming Blast's own
+"Gift a Treasure" plus a conditional rider gated on the identical "if the
+gift was promised" condition Bilbo's Gambit's own "players can't cast spells
+this turn." reads (`machines.effects._parse_if_condition_players_cant_cast_
+clause`, CR 611.2c).
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting_restrictions import blanket_cant_cast_restriction
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -94,3 +99,136 @@ def test_crumb_and_get_it_gifts_a_food():
     food = [state for state in scenario.game.battlefield if state.name == "Food Token"]
     assert len(food) == 1
     assert food[0].controller == "bob"
+
+
+def test_bilbos_gambit_gifts_a_treasure_and_bounces_the_spell():
+    scenario = (
+        Scenario()
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("alice", hand=["Bilbo's Gambit"], battlefield=["Plains", "Plains"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)  # bob's own main phase - he is active first
+    bears = scenario.cast_onto_stack(
+        "Grizzly Bears",
+        *scenario.untapped_sources("Forest", "Forest", username="bob"),
+        username="bob",
+    )
+    scenario.pass_priority("bob")
+
+    gambit = scenario.find("Bilbo's Gambit", Zone.HAND, "alice")
+    (plains1, plains2) = scenario.untapped_sources("Plains", "Plains", username="alice")
+    scenario.game.cast(
+        gambit, "alice", targets=[bears], mana_sources=[plains1, plains2], gift="bob"
+    )
+    scenario.pass_until_resolved()
+
+    treasure = [state for state in scenario.game.battlefield if state.name == "Treasure Token"]
+    assert len(treasure) == 1
+    assert treasure[0].controller == "bob"
+    assert bears.zone is Zone.HAND, "the main effect still resolved too"
+
+
+def test_bilbos_gambit_without_the_gift_does_not_lock_out_casting():
+    scenario = (
+        Scenario()
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player(
+            "alice",
+            hand=["Bilbo's Gambit", "Lightning Bolt"],
+            battlefield=["Plains", "Plains", "Mountain"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.cast_onto_stack(
+        "Grizzly Bears",
+        *scenario.untapped_sources("Forest", "Forest", username="bob"),
+        username="bob",
+    )
+    scenario.pass_priority("bob")
+
+    gambit = scenario.find("Bilbo's Gambit", Zone.HAND, "alice")
+    (plains1, plains2) = scenario.untapped_sources("Plains", "Plains", username="alice")
+    scenario.game.cast(gambit, "alice", targets=[bears], mana_sources=[plains1, plains2])
+    scenario.pass_until_resolved()
+
+    assert blanket_cant_cast_restriction(scenario.game, "alice") is None
+    scenario.pass_priority("bob")
+    bolt = scenario.cast_and_resolve(
+        "Lightning Bolt",
+        *scenario.untapped_sources("Mountain", username="alice"),
+        username="alice",
+        targets=["bob"],
+    )
+    assert bolt.zone is Zone.GRAVEYARD
+
+
+def test_bilbos_gambit_with_the_gift_locks_out_casting_this_turn():
+    """CR 611.2c: recorded rather than read off the battlefield, since the
+    spell that made it is gone by the time anyone else tries to cast."""
+    scenario = (
+        Scenario()
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player(
+            "alice",
+            hand=["Bilbo's Gambit", "Lightning Bolt"],
+            battlefield=["Plains", "Plains", "Mountain"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.cast_onto_stack(
+        "Grizzly Bears",
+        *scenario.untapped_sources("Forest", "Forest", username="bob"),
+        username="bob",
+    )
+    scenario.pass_priority("bob")
+
+    gambit = scenario.find("Bilbo's Gambit", Zone.HAND, "alice")
+    (plains1, plains2) = scenario.untapped_sources("Plains", "Plains", username="alice")
+    scenario.game.cast(
+        gambit, "alice", targets=[bears], mana_sources=[plains1, plains2], gift="bob"
+    )
+    scenario.pass_until_resolved()
+
+    restriction = blanket_cant_cast_restriction(scenario.game, "alice")
+    assert restriction is not None and restriction.source_name == "Bilbo's Gambit"
+    # The restriction is unconditional (CR 601.3, 611.2c) - even the caster
+    # who promised the gift can't cast, unlike "your opponents can't cast".
+    assert blanket_cant_cast_restriction(scenario.game, "bob") is not None
+
+
+def test_blooming_blast_reads_the_identical_gift_a_treasure_template():
+    """Off-pool proof that "Gift a Treasure" itself generalizes: Blooming
+    Blast is the *only* other real printing of that exact keyword parameter
+    (Bilbo's Gambit is the other) - `_GIFT_EFFECTS["a treasure"]` runs
+    identically for it (CR 702.174j: the gift's own effect happens "before
+    any other spell abilities of the card", so it is unaffected by whatever
+    the rest of the card's text does).
+
+    Blooming Blast's own main effect is not asserted on here: its second
+    sentence ("If the gift was promised, Blooming Blast also deals 3 damage
+    to that creature's controller.") is a conditional-addition-to-damage
+    shape this engine does not yet read at all, which - by this file's own
+    fail-closed-per-clause design - takes the whole spell's resolution text
+    down with it (`docs/engine-coverage.md`); a gap outside this task's own
+    templates, not fixed here.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Blooming Blast"], battlefield=["Mountain", "Mountain"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    blast = scenario.find("Blooming Blast", Zone.HAND, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    (m1, m2) = scenario.untapped_sources("Mountain", "Mountain")
+
+    scenario.game.cast(blast, "alice", targets=[bears], mana_sources=[m1, m2], gift="bob")
+    scenario.pass_until_resolved()
+
+    treasure = [state for state in scenario.game.battlefield if state.name == "Treasure Token"]
+    assert len(treasure) == 1
+    assert treasure[0].controller == "bob"

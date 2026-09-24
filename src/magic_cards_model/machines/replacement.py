@@ -4906,6 +4906,9 @@ _CHOOSE_A_CARD_NAME_RE = re.compile(
 )
 
 _CHOOSE_A_CREATURE_TYPE_RE = re.compile(r"^choose a creature type\.?$", re.IGNORECASE)
+#: "choose odd or even" (Gollum, Riddle Master) - a fourth CR 614.12a choice
+#: shape, verified against the pool printing.
+_CHOOSE_ODD_OR_EVEN_RE = re.compile(r"^choose odd or even\.?$", re.IGNORECASE)
 
 #: The five colors' letter codes (CR 105.1), the closed universe
 #: `Game.ask` checks a color choice against. Card names and creature types
@@ -4916,7 +4919,7 @@ _COLOR_OPTIONS = tuple(
 
 
 def _classify_choice(replacement_text: str) -> ChoiceKind | None:
-    """Which of the three "as [this] enters, choose ..." shapes this is, if any."""
+    """Which of the four "as [this] enters, choose ..." shapes this is, if any."""
     text = replacement_text.strip()
     if _CHOOSE_A_COLOR_RE.match(text):
         return ChoiceKind.COLOR
@@ -4924,6 +4927,8 @@ def _classify_choice(replacement_text: str) -> ChoiceKind | None:
         return ChoiceKind.CARD_NAME
     if _CHOOSE_A_CREATURE_TYPE_RE.match(text):
         return ChoiceKind.CREATURE_TYPE
+    if _CHOOSE_ODD_OR_EVEN_RE.match(text):
+        return ChoiceKind.ODD_OR_EVEN
     return None
 
 
@@ -5087,13 +5092,16 @@ def _quality_options(kind: ChoiceKind) -> tuple[str, ...]:
 
     A color is one of CR 105.1's five. A creature type is one of CR 205.3m's
     list, read from the rules text (`data/creature_types.py`) - a land type
-    such as "Island" is not one, and neither is an empty string. A card name
+    such as "Island" is not one, and neither is an empty string. "Odd or
+    even" (Gollum, Riddle Master) is exactly those two words. A card name
     has no list to offer, so it stays open.
     """
     if kind is ChoiceKind.COLOR:
         return _COLOR_OPTIONS
     if kind is ChoiceKind.CREATURE_TYPE:
         return creature_types()
+    if kind is ChoiceKind.ODD_OR_EVEN:
+        return ("odd", "even")
     return ()
 
 
@@ -5175,10 +5183,19 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str, name_quality: str | None
         quality = kind.value.replace("_", " ")
         if name_quality is not None:
             quality = f"{name_quality} {quality}"
+        # "odd or even" (Gollum, Riddle Master) is a plain either/or, not a
+        # counted noun the other three kinds are - "choose an odd or even"
+        # would be wrong grammar for it, so it skips `with_indefinite_
+        # article`'s own noun-phrase reading.
+        prompt = (
+            f"choose {quality}"
+            if kind is ChoiceKind.ODD_OR_EVEN
+            else (f"choose {with_indefinite_article(quality)}")
+        )
         decision = Decision(
             kind=DecisionKind.CHOOSE_A_QUALITY,
             player=who,
-            prompt=f"choose {with_indefinite_article(quality)}",
+            prompt=prompt,
             source=card_name,
             source_id=source_id_of(source),
             options=_quality_options(kind),

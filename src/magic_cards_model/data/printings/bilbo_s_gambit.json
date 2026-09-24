@@ -1,0 +1,166 @@
+{
+  "object": "card",
+  "id": "45ad01f0-cda8-4931-82bb-cb4949e56ae9",
+  "oracle_id": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
+  "multiverse_ids": [],
+  "resource_id": "1C6F8971A16DD4F73F13FE01288FE07FF0D62B85D35FC01CD297035B89BF7E94",
+  "mtgo_id": 153922,
+  "arena_id": 103372,
+  "tcgplayer_id": 707524,
+  "cardmarket_id": 899329,
+  "name": "Bilbo's Gambit",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/45ad01f0-cda8-4931-82bb-cb4949e56ae9",
+  "scryfall_uri": "https://scryfall.com/card/hob/5/bilbos-gambit?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-24T12:06:58Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.jpg?1784894818",
+    "normal": "https://cards.scryfall.io/normal/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.jpg?1784894818",
+    "large": "https://cards.scryfall.io/large/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.jpg?1784894818",
+    "png": "https://cards.scryfall.io/png/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.png?1784894818",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.jpg?1784894818",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.jpg?1784894818",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.webp?1784894818",
+    "grid": "https://cards.scryfall.io/grid/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.webp?1784894818",
+    "display": "https://cards.scryfall.io/display/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.webp?1784894818",
+    "art": "https://cards.scryfall.io/art/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.webp?1784894818",
+    "crop": "https://cards.scryfall.io/crop/front/4/5/45ad01f0-cda8-4931-82bb-cb4949e56ae9.webp?1784894818"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Gift a Treasure (You may promise an opponent a gift as you cast this spell. If you do, they create a Treasure token before its other effects. It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")\nReturn target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Gift",
+    "Treasure"
+  ],
+  "produced_mana": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "d1892b78-7663-4cbd-a732-9a4b0b18d4c8",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/d1892b78-7663-4cbd-a732-9a4b0b18d4c8"
+    },
+    {
+      "object": "related_card",
+      "id": "fa74ca8a-8bcd-4dc5-ab2b-a2e18a70978e",
+      "component": "combo_piece",
+      "name": "Bilbo's Gambit",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/fa74ca8a-8bcd-4dc5-ab2b-a2e18a70978e"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/45ad01f0-cda8-4931-82bb-cb4949e56ae9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aef71ef07-8a35-41ec-a851-d95e9e3a221b&unique=prints",
+  "collector_number": "5",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Randy Gallegos",
+  "artist_ids": [
+    "a5048cc7-438a-4378-98e4-da99b78e1db0"
+  ],
+  "illustration_id": "670398fb-1d7c-4109-bbb2-c7ec52396d70",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 6038,
+  "preview": {
+    "source": "TCGplayer",
+    "source_uri": "https://bsky.app/profile/tcgplayer.com/post/3mrd7jltfri2u",
+    "previewed_at": "2026-07-23"
+  },
+  "prices": {
+    "usd": "1.24",
+    "usd_foil": "2.13",
+    "usd_etched": null,
+    "eur": "1.58",
+    "eur_foil": "1.60",
+    "tix": "0.08"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBilbo%2527s%2BGambit",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBilbo%2527s%2BGambit",
+    "edhrec": "https://edhrec.com/route/?cc=Bilbo%27s+Gambit"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707524%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=899329&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153922?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

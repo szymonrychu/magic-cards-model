@@ -3977,6 +3977,14 @@ class CostModifierEffect(EngineModel):
     each oil counter on this artifact") - the decrease is multiplied by that
     count, read afresh each time a cost is determined."""
 
+    grants_flash: bool = False
+    """`TYPE_DECREASE`/`first_each_turn` only: Radagast of Rhosgobel's own
+    trailing "and can be cast as though it had flash" - CR 702.8a's flash
+    exception, granted alongside the reduction rather than as a separate
+    sentence. Read by `Game.has_first_spell_flash_grant`, the activated-cost
+    twin of the reduction `_counted_type_decrease` already computes for the
+    same permanent."""
+
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
     "Noncreature": Type.CREATURE,
@@ -4069,17 +4077,21 @@ _TYPE_COST_DECREASE = re.compile(
 
 #: "The first instant or sorcery spell you cast each turn costs {3} less to
 #: cast." (Melek, Reforged Researcher), "The first creature spell you cast each
-#: turn costs {2} less to cast." (Conduit of Ruin's shape) and "The first
+#: turn costs {2} less to cast." (Conduit of Ruin's shape), "The first
 #: instant or sorcery spell you cast each turn costs {U} (or {1}) less to cast
 #: for each land you control with a flood counter on it." (Eluge, the
-#: Shoreless Sea) - a `TYPE_DECREASE` limited to the caster's first spell of
-#: the named types this turn, generic or one colored symbol per unit, with an
-#: optional "for each" count.
+#: Shoreless Sea), and Radagast of Rhosgobel's own "The first creature spell
+#: you cast each turn costs {2} less to cast and can be cast as though it had
+#: flash." - a `TYPE_DECREASE` limited to the caster's first spell of the
+#: named types this turn, generic or one colored symbol per unit, with an
+#: optional "for each" count and an optional trailing flash grant
+#: (`grants_flash`, read by `Game.has_first_spell_flash_grant`).
 _FIRST_SPELL_EACH_TURN_COST_DECREASE = re.compile(
     r"^The first (?P<types>(?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker)"
     r"(?: or (?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker))?) spell you cast "
     r"each turn costs \{(?P<symbol>\d+|[WUBRG])\}(?: \(or \{1\}\))? less to cast"
-    r"(?: for each (?P<each>[^.]+))?\.$",
+    r"(?: for each (?P<each>[^.]+))?"
+    r"(?P<flash> and can be cast as though it had flash)?\.$",
     re.IGNORECASE,
 )
 
@@ -4235,6 +4247,7 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
                 first_each_turn=True,
                 colored=colored,
                 per_each=each.strip() if each is not None else None,
+                grants_flash=match.group("flash") is not None,
             )
     match = _TYPE_COST_DECREASE.search(text)
     if match is not None:

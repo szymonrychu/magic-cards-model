@@ -7878,6 +7878,17 @@ def _damage_ability_targets_equal_to(
     return effect
 
 
+#: The Master of Lake-town's own "for each graveyard with seven or more
+#: cards in it." - CR 400.1's graveyard zone, one per player, counted the
+#: same board-wide way Obsidian Charmaw's "for each land your opponents
+#: control that could produce {C}" already is, just over every player's
+#: graveyard rather than a permanent quality.
+_GRAVEYARDS_WITH_N_OR_MORE_CARDS_RE = re.compile(
+    rf"^graveyards? with {count_pattern('count')} or more cards? in (?:it|them)$",
+    re.IGNORECASE,
+)
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -7963,6 +7974,21 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
             )
 
         return count_opponents_who_lost_life
+    graveyard_size_match = _GRAVEYARDS_WITH_N_OR_MORE_CARDS_RE.fullmatch(stripped)
+    if graveyard_size_match is not None:
+        threshold = parse_count(graveyard_size_match.group("count"))
+        if threshold is not None:
+
+            def count_graveyards_at_least(
+                game: "Game", _controller: str, _source_id: str | None
+            ) -> int:
+                # CR 400.1: every player's own graveyard is counted, not just
+                # the ability's controller's - The Master of Lake-town's own
+                # "for each graveyard with seven or more cards in it" says
+                # nothing about whose.
+                return sum(1 for player in game.players if len(player.graveyard) >= threshold)
+
+            return count_graveyards_at_least
     qualifier_reader = _for_each_qualifier_count(stripped)
     if qualifier_reader is not None:
         return qualifier_reader
@@ -11357,6 +11383,47 @@ def _parse_search_that_many_battlefield_clause(
             source=ability.source_name,
             source_id=source_id_of(ability),
         )
+
+    return effect
+
+
+#: The Master of Lake-town's own "Whenever a player loses life, that player
+#: mills that many cards." - CR 701.17a's mill, both "that player" and "that
+#: many" reading CR 607.1's anaphora onto the very trigger event (the player
+#: who lost life, and how much), never the ability's own controller/a printed
+#: number - so this is its own clause, not `_MILL_RE`'s ordinary "(you )
+#: mill(s) N cards" shape, whose `player` argument is always whoever the
+#: calling context hands it rather than the event's own subject.
+_THAT_PLAYER_MILLS_THAT_MANY_RE = re.compile(
+    r"^that player mills that many cards?\.?$", re.IGNORECASE
+)
+
+
+def _parse_that_player_mills_that_many_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_THAT_PLAYER_MILLS_THAT_MANY_RE`'s shape, or `None`."""
+    if for_spell:
+        return None
+    if _THAT_PLAYER_MILLS_THAT_MANY_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object) or stack_object.event is None:
+            return
+        username = stack_object.event.player
+        if username is None:
+            return
+        count = _that_many_or_notice(
+            game,
+            clause,
+            source_id=stack_object.source_id,
+            source_name=stack_object.source_name,
+            stack_object=stack_object,
+        )
+        if count is None or count <= 0:
+            return
+        _mill(game, game.player(username), count)
 
     return effect
 
@@ -16817,11 +16884,26 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
     profile = modal_trigger_profile(text)
     if profile is None:
         return None
+    exclusive = "hasn't been chosen" in profile.instruction.lower()
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         chosen = list(ability.modes)
         slices = [list(slice_) for slice_ in ability.mode_targets]
         if not chosen:
+            # Gollum, Riddle Master's own "that hasn't been chosen" - see
+            # `Game._announce_trigger_modes`'s own docstring for the ordinary
+            # path (CR 603.3c chooses modes as the ability goes on the
+            # stack); this fallback is only reached for an ability that
+            # somehow arrived at resolution with no mode recorded at all
+            # (a copy made elsewhere), so the same exclusion is applied here
+            # too rather than silently offering an already-used mode.
+            available_modes = profile.modes
+            source_state = ability.source(game) if exclusive else None
+            if exclusive and source_state is not None:
+                already = source_state.chosen_modal_options
+                available_modes = tuple(m for m in profile.modes if m.text not in already)
+            if not available_modes:
+                return
             chosen_text = game.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_A_MODE,
@@ -16829,12 +16911,17 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                     prompt="choose one",
                     source=ability.source_name,
                     source_id=source_id_of(ability),
-                    options=tuple(mode.text for mode in profile.modes),
+                    options=tuple(mode.text for mode in available_modes),
                 )
             )
-            mode = next((m for m in profile.modes if m.text == chosen_text), profile.modes[0])
+            mode = next((m for m in available_modes if m.text == chosen_text), available_modes[0])
             chosen = [mode.number]
             slices = [list(ability.targets)]
+            if exclusive and source_state is not None:
+                source_state.chosen_modal_options = (
+                    *source_state.chosen_modal_options,
+                    mode.text,
+                )
         original_targets = ability.targets
         try:
             for position, number in enumerate(chosen):
@@ -16846,6 +16933,24 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                     clause = _compose_layer_effect_with_remainder_for_ability_mode(mode_text)
                 if clause is None:
                     clause = _parse_where_x_is_continuous_effect(mode_text)
+                if clause is None:
+                    # CR 201.5's bare legendary first-name self-reference
+                    # (Gollum, Riddle Master's own "Put a +1/+1 counter on
+                    # Gollum.") - none of the three fallback readers above
+                    # normalize it themselves, so it is tried again, once,
+                    # against `ability.source_name`'s own rewrite to "this
+                    # creature" before falling to a notice.
+                    normalized_mode_text = _self_normalized_effect_text(
+                        ability.source_name, mode_text
+                    )
+                    if normalized_mode_text != mode_text:
+                        clause = parse_mixed_effect(normalized_mode_text)
+                        if clause is None:
+                            clause = _compose_layer_effect_with_remainder_for_ability_mode(
+                                normalized_mode_text
+                            )
+                        if clause is None:
+                            clause = _parse_where_x_is_continuous_effect(normalized_mode_text)
                 if clause is None:
                     game.mode_notices.append(
                         ModeNotice(
@@ -37275,6 +37380,40 @@ def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> Target
     return effect
 
 
+#: "Two target players each draw a card." (Gleaming Splendor) - CR 115.6's
+#: own exact-count target profile ("two target players", not "up to two"),
+#: each drawing independently: CR 121.1's ordinary draw, repeated once per
+#: legal target the same count-agnostic way `_targets_understood` already
+#: lets destroy/exile/tap/untap/return/put-counters repeat (see its own
+#: docstring) - draw is exactly as count-agnostic a verb as those.
+_N_TARGET_PLAYERS_EACH_DRAW_RE = re.compile(
+    rf"^{count_pattern('players')} target players each draws? {count_pattern('count')} cards?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_n_target_players_each_draw_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_N_TARGET_PLAYERS_EACH_DRAW_RE`'s shape, or `None` if this is not it."""
+    match = _N_TARGET_PLAYERS_EACH_DRAW_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    phrase = f"{match.group('players')} target players"
+    if not _targets_understood(phrase, allow_player_targets=True, count_agnostic=True):
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player):
+                game.draw_cards(target.username, count)
+
+    return effect
+
+
 #: "Target player shuffles." (Lantern of Insight) - CR 701.20a's shuffle,
 #: aimed at a chosen player rather than the controller's own library the way
 #: a trailing "then shuffle" after a search already reads it
@@ -38001,6 +38140,61 @@ def _merge_process_exile_if_you_do_clauses(
             return
         if _process_exiled_cards(game, player, count, source=source, source_id=source_id):
             consequence(game, stack_object)
+
+    return 2, effect
+
+
+#: Uncover the Moon-Letters' whole cast trigger: "Whenever you cast a
+#: noncreature spell, you may draw X cards, where X is the amount of mana
+#: spent to cast that spell. If you do, discard two cards." X is not CR
+#: 107.3a's announced X (the trigger's own source carries no {X} at all) - it
+#: is CR 601.2h's own mana-spent total on the *cast spell* the trigger
+#: watched (`AbilityOnStack.event`'s own subject), read off that spell's
+#: `CastRecord.mana_spent` the same way a self-referential "no mana was spent
+#: to cast it" intervening *if* already does in `machines/triggers.py`, just
+#: for a different object than the ability's own source.
+_DRAW_MANA_SPENT_CLAUSE_RE = re.compile(
+    r"^you may draw x cards,? where x is the amount of mana spent to cast that spell\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_draw_mana_spent_then_discard_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_DRAW_MANA_SPENT_CLAUSE_RE` followed by `_IF_YOU_DO_RE` - see the
+    banner comment above. Never a spell's own shape (nothing casts itself),
+    so `for_spell` is not read; the parameter is kept only for the shared
+    merger signature every caller in this dispatch loop already uses.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    if _DRAW_MANA_SPENT_CLAUSE_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
+    if if_match is None:
+        return None
+    consequence = parse_clause_effect(if_match.group("consequence").strip())
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        event = getattr(stack_object, "event", None)
+        spent = 0
+        if event is not None and event.subject_id is not None:
+            cast_spell = game.find_by_id(event.subject_id)
+            if cast_spell is not None:
+                record = game.cast_record_of(cast_spell)
+                if record is not None:
+                    spent = sum(record.mana_spent.values())
+        if not game.may(player, f"draw {spent} cards", source=source, source_id=source_id):
+            return
+        if spent:
+            game.draw_cards(player.username, spent)
+        consequence(game, player, source, source_id)
 
     return 2, effect
 
@@ -41342,6 +41536,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     target_player_draws = _parse_target_player_draws_clause(clause, for_spell=for_spell)
     if target_player_draws is not None:
         return target_player_draws
+    n_target_players_each_draw = _parse_n_target_players_each_draw_clause(
+        clause, for_spell=for_spell
+    )
+    if n_target_players_each_draw is not None:
+        return n_target_players_each_draw
     target_player_shuffles = _parse_target_player_shuffles_clause(clause, for_spell=for_spell)
     if target_player_shuffles is not None:
         return target_player_shuffles
@@ -41392,6 +41591,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if if_condition_you_win_the_game is not None:
         return if_condition_you_win_the_game
+    if_condition_players_cant_cast = _parse_if_condition_players_cant_cast_clause(
+        clause, for_spell=for_spell
+    )
+    if if_condition_players_cant_cast is not None:
+        return if_condition_players_cant_cast
     mass_return_from_graveyard = _parse_mass_return_from_graveyard_to_battlefield_clause(
         clause, for_spell=for_spell
     )
@@ -41427,6 +41631,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     recruit = _parse_recruit_clause(clause, for_spell=for_spell)
     if recruit is not None:
         return recruit
+    that_player_mills_that_many = _parse_that_player_mills_that_many_clause(
+        clause, for_spell=for_spell
+    )
+    if that_player_mills_that_many is not None:
+        return that_player_mills_that_many
     copy_this_spell = _parse_copy_this_spell_clause(clause, for_spell=for_spell)
     if copy_this_spell is not None:
         return copy_this_spell
@@ -42280,6 +42489,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_process_exile_if_you_do_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_draw_mana_spent_then_discard_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
@@ -44903,6 +45118,51 @@ def _parse_if_condition_you_win_the_game_clause(
     return effect
 
 
+#: "If the gift was promised, players can't cast spells this turn." (Bilbo's
+#: Gambit) - CR 611.2c's own rule-of-the-game restriction, gated on a
+#: printed condition rather than the unconditional shape a `_parse_if_
+#: condition_you_win_the_game_clause`-style trailing sentence already reads
+#: for a different consequence. Kept generic over the condition (any shape
+#: `Game.condition_holds` can read, not only "the gift was promised"), the
+#: same posture `_parse_if_condition_you_win_the_game_clause` takes - a
+#: future card gating "players can't cast spells this turn" on a different
+#: printed condition reads for free.
+_IF_CONDITION_PLAYERS_CANT_CAST_RE = re.compile(
+    r"^if (?P<condition>[^,]+),\s*players can'?t cast spells this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_if_condition_players_cant_cast_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_IF_CONDITION_PLAYERS_CANT_CAST_RE`'s shape - CR 611.2c: recorded on
+    `Game.casting_rule_effects` since the spell or ability that made it is
+    gone by the time anyone tries to cast, read back by `casting_restrictions.
+    blanket_cant_cast_restriction`."""
+    from ..models.game import condition_is_readable
+
+    match = _IF_CONDITION_PLAYERS_CANT_CAST_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    condition_text = match.group("condition").strip()
+    if not condition_is_readable(condition_text):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .casting_restrictions import create_players_cant_cast_restriction
+
+        controller = game.controller_of(stack_object)
+        source = stack_object.source(game) if is_ability(stack_object) else stack_object
+        source_name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if game.condition_holds(controller.username, condition_text, source):
+            game.casting_rule_effects.append(
+                create_players_cant_cast_restriction(controller.username, source_name)
+            )
+
+    return effect
+
+
 #: "Return all <description> from your graveyard to the battlefield[ tapped]."
 #: - Raise the Past, and Aftermath Analyst's own "Return all land cards from
 #: your graveyard to the battlefield tapped." CR 608.2f: the whole group
@@ -45850,7 +46110,15 @@ def _parse_attacking_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
 # `_parse_generic_token_descriptor` would have produced from "1/1 white Human
 # Soldier creature token".
 
-_RECRUIT_RE = re.compile(r"^recruit\.?$", re.IGNORECASE)
+#: Bare "recruit." (Lake-town Lookout, Bard's Company) as well as "you
+#: recruit." (The Queen of Dale's own "an opponent casts their first
+#: noncreature spell each turn, you recruit.") - the leading "you" is only
+#: ever needed for clarity once a trigger's own condition already names a
+#: different player ("an opponent") than the one who recruits, the same
+#: reason "you" shows up on some triggered effects and not others across the
+#: templating generally; the keyword action itself (CR 701.70a) is unchanged
+#: either way.
+_RECRUIT_RE = re.compile(r"^(?:you )?recruit\.?$", re.IGNORECASE)
 
 #: CR 701.70a's own token, spelled out because the keyword's own definition
 #: is what names it - there is no printed noun phrase on the card to read.

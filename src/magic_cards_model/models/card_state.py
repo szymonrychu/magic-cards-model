@@ -478,6 +478,11 @@ class ChoiceKind(StrEnum):
     COLOR = "color"
     CARD_NAME = "card_name"
     CREATURE_TYPE = "creature_type"
+    ODD_OR_EVEN = "odd_or_even"
+    """Gollum, Riddle Master's own "As Gollum enters, choose odd or even.
+    (Zero is even.)" - a fourth "as [this] enters, choose ..." shape,
+    `Choice.value` "odd" or "even". The parenthetical is the card's own
+    reminder text, not a separate numbered rule."""
 
 
 class Choice(EngineModel):
@@ -1161,6 +1166,21 @@ class CardState(EngineModel):
     Souls' chosen creature type) ever asks again for the same object's
     lifetime on the battlefield, so there is no rule that says it should be
     dropped on some other zone change either.
+    """
+
+    chosen_modal_options: tuple[str, ...] = ()
+    """Every mode text this object's own "choose one that hasn't been
+    chosen -" triggered ability has already picked (Gollum, Riddle Master's
+    own three-bullet trigger), oldest first. Not a `Choice` - CR 614.12a's
+    choice is made once, as this permanent enters, while this is a running
+    memory a *triggered ability of the permanent* extends every time it
+    resolves and picks a fresh mode, the same "modes tracked per object" the
+    printed "that hasn't been chosen" clause asks for. Kept on the object
+    itself, not on the ability, so it survives from one triggering to the
+    next the way `counters` does. Never reset by `move_to`: nothing in the
+    pool says a permanent that left and returned forgets which of its own
+    modes it already used, and Gollum's own three-mode trigger has no
+    reset clause at all.
     """
 
     spliced_text: tuple[str, ...] = ()
