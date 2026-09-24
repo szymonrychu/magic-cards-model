@@ -67,23 +67,23 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Echo | Extruder, Hunting Moa | 2 |
-| As long as this artifact is untapped, each player chooses artifact, creature, or land during their untap step. That player can untap only permanents of the chos | Storage Matrix | 1 |
-| As long as this creature is enchanted, it gets +2/+2 and has flying, first strike, and trample. | Thran Golem | 1 |
-| Attacking creatures get +2/+0 until end of turn. | Trumpet Blast | 1 |
-| Counter target instant or sorcery spell. Search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. The | Quash | 1 |
-| Creature spells of the chosen type cost {2} less to cast. | Urza's Incubator | 1 |
-| Exile target artifact. Search its controller's graveyard, hand, and library for all cards with the same name as that artifact and exile them. Then that player s | Splinter | 1 |
-| Exile target enchantment. Search its controller's graveyard, hand, and library for all cards with the same name as that enchantment and exile them. Then that pl | Scour | 1 |
-| Exile target nonbasic land. Search its controller's graveyard, hand, and library for all cards with the same name as that land and exile them. Then that player  | Sowing Salt | 1 |
-| Exile target nonblack creature. Search its controller's graveyard, hand, and library for all cards with the same name as that creature and exile them. Then that | Eradicate | 1 |
-| Put two target lands on top of their owners' libraries. | Plow Under | 1 |
-| {T}, Sacrifice a creature: This creature deals damage equal to the sacrificed creature's power to any target. | Bloodshot Cyclops | 1 |
-| This creature gets +1/+1 for each enchantment on the battlefield. | Yavimaya Enchantress | 1 |
-| When you control no other creatures, sacrifice this creature. | Emperor Crocodile | 1 |
-| You may have this creature assign its combat damage as though it weren't blocked. | Thorn Elemental | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| echo | 2 | Extruder, Hunting Moa | uds |
+| as long as ~ is enchanted, it gets +N/+N and has flying, first strike, and trample. | 1 | Thran Golem | uds |
+| as long as ~ is untapped, each player chooses artifact, creature, or land during their untap step. that player can untap only permanents of the chosen type ~. | 1 | Storage Matrix | uds |
+| attacking creatures get +N/+N until end of turn. | 1 | Trumpet Blast | uds |
+| counter target instant or sorcery spell. search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. the | 1 | Quash | uds |
+| creature spells of the chosen type cost {M} less to cast. | 1 | Urza's Incubator | uds |
+| exile target artifact. search its controller's graveyard, hand, and library for all cards with the same name as that artifact and exile them. then that player s | 1 | Splinter | uds |
+| exile target enchantment. search its controller's graveyard, hand, and library for all cards with the same name as that enchantment and exile them. then that pl | 1 | Scour | uds |
+| exile target nonbasic land. search its controller's graveyard, hand, and library for all cards with the same name as that land and exile them. then that player  | 1 | Sowing Salt | uds |
+| exile target nonblack creature. search its controller's graveyard, hand, and library for all cards with the same name as that creature and exile them. then that | 1 | Eradicate | uds |
+| put two target lands on top of their owners' libraries. | 1 | Plow Under | uds |
+| when you control no other creatures, sacrifice ~. | 1 | Emperor Crocodile | uds |
+| you may have ~ assign its combat damage as though it weren't blocked. | 1 | Thorn Elemental | uds |
+| {M}, sacrifice a creature: ~ deals damage equal to the sacrificed creature's power to any target. | 1 | Bloodshot Cyclops | uds |
+| ~ gets +N/+N for each enchantment on the battlefield. | 1 | Yavimaya Enchantress | uds |
 
 ## Notes
 

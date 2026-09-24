@@ -43,10 +43,10 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature is turned face up, return all other tapped creatures to their owners' hands. | Thousand Winds | 1 |
-| Zurgo attacks each combat if able. | Zurgo Helmsmasher | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when ~ is turned face up, return all other tapped creatures to their owners' hands. | 1 | Thousand Winds | ddn |
+| zurgo attacks each combat if able. | 1 | Zurgo Helmsmasher | ddn |
 
 ## Notes
 

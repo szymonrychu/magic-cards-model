@@ -116,40 +116,43 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Bloodthirst | Ghor-Clan Savage, Scab-Clan Mauler | 2 |
-| Creatures you control that are enchanted get +1/+1 and can't be blocked except by creatures with defender. | Guardian's Magemark, Infiltrator's Magemark | 2 |
-| This creature must be blocked by exactly one creature if able. | Goblin Fire Fiend, Nacatl War-Pride | 2 |
-| Whenever another creature you control enters, put a +1/+1 counter on that creature and a +1/+1 counter on this creature. | Juniper Order Ranger, Stalking Vengeance | 2 |
-| All Saprolings get +1/+1. | Thelonite Hermit | 1 |
-| As long as this creature is enchanted, it has "{T}: This creature deals 2 damage to target attacking or blocking creature." | Freewind Equenaut | 1 |
-| As this Equipment enters, choose a creature you control it could be attached to. If you do, it enters attached to that creature. | Grifter's Blade | 1 |
-| Choose a card type. Target opponent reveals their hand. Create two 1/1 green Saproling creature tokens for each card of the chosen type revealed this way. (Arti | Fertile Imagination | 1 |
-| Creature tokens get +1/+1. | Leyline of the Meek | 1 |
-| Destroy target artifact or enchantment. If {G} was spent to cast this spell, create two 1/1 green Saproling creature tokens. | Seed Spark | 1 |
-| {B}{B}{B}, {T}: Destroy target land. If that land was nonbasic, untap this creature. | Helldozer | 1 |
-| Each creature that's a Barbarian, a Warrior, or a Berserker gets +2/+2 and has haste. | Lovisa Coldeyes | 1 |
-| Enchanted creature gets +2/+2 and can't block. | Undying Rage | 1 |
-| Enchanted creature's activated abilities can't be activated. | Detainment Spell | 1 |
-| Forecast | Plumes of Peace | 1 |
-| Other green creatures you control get +1/+1. | Tolsimir Wolfblood | 1 |
-| Radiance — {T}: Prevent the next 1 damage that would be dealt to target creature and each other creature that shares a color with it this turn. | Wojek Apothecary | 1 |
-| Return target permanent to its owner's hand. Its controller loses 3 life. Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with | Clutch of the Undercity | 1 |
-| {2}, Reveal X blue cards from your hand, Sacrifice this creature: Counter target spell unless its controller pays {X}. | Martyr of Frost | 1 |
-| {B}, Sacrifice a creature: Destroy each creature with the same mana value as the sacrificed creature. | Sanguine Praetor | 1 |
-| Target attacking creature gets +X/+0 until end of turn. Draw a card at the beginning of the next turn's upkeep. | Balduvian Rage | 1 |
-| {2}{R}: Target creature can't block this creature this turn. | Burning-Tree Bloodscale | 1 |
-| This creature has flying as long as it's enchanted. | Skyrider Trainee | 1 |
-| Until end of turn, target creature gains trample and gets +X/+X, where X is the number of attacking creatures. | Strength in Numbers | 1 |
-| When this creature enters, put target creature on top of its owner's library. | Vedalken Dismisser | 1 |
-| When this creature enters, return a creature you control to its owner's hand. | Whitemane Lion | 1 |
-| When this creature enters, search your library for an Aura card that could enchant it. If this creature is still on the battlefield, put that Aura card onto the | Auratouched Mage | 1 |
-| When this creature enters, you gain protection from the color of your choice until end of turn. | Seht's Tiger | 1 |
-| Whenever a source deals damage to this creature, that source's controller mills that many cards. | Belltower Sphinx | 1 |
-| Whenever an Aura becomes attached to this creature, create two 1/1 green Saproling creature tokens. | Bramble Elemental | 1 |
-| Whenever Jedit Ojanen attacks or blocks, create a 2/2 green Cat Warrior creature token with forestwalk. | Jedit Ojanen of Efrava | 1 |
-| Whenever this creature attacks, you may pay {R}. If you do, target creature can't block this turn. | Frenzied Goblin | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| bloodthirst | 2 | Ghor-Clan Savage, Scab-Clan Mauler | psal |
+| Radiance | 1 | Wojek Apothecary | psal |
+| all saprolings get +N/+N. | 1 | Thelonite Hermit | psal |
+| as long as ~ is enchanted, it has "..." | 1 | Freewind Equenaut | psal |
+| as ~ enters, choose a creature you control it could be attached to. if you do, it enters attached to that creature. | 1 | Grifter's Blade | psal |
+| choose a card type. target opponent reveals their hand. create two N/N green saproling creature tokens for each card of the chosen type revealed ~. (artifact, b | 1 | Fertile Imagination | psal |
+| creature tokens get +N/+N. | 1 | Leyline of the Meek | psal |
+| creatures you control that are enchanted get +N/+N and can't be blocked except by creatures with defender. | 1 | Infiltrator's Magemark | psal |
+| creatures you control that are enchanted get +N/+N. | 1 | Guardian's Magemark | psal |
+| destroy target artifact or enchantment. if {M} was spent to cast ~, create two N/N green saproling creature tokens. | 1 | Seed Spark | psal |
+| each creature that's a barbarian, a warrior, or a berserker gets +N/+N and has haste. | 1 | Lovisa Coldeyes | psal |
+| enchanted creature gets +N/+N and can't block. | 1 | Undying Rage | psal |
+| enchanted creature"..."t be activated. | 1 | Detainment Spell | psal |
+| forecast | 1 | Plumes of Peace | psal |
+| other green creatures you control get +N/+N. | 1 | Tolsimir Wolfblood | psal |
+| return target permanent to its owner's hand. its controller loses N life. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the sam | 1 | Clutch of the Undercity | psal |
+| target attacking creature gets +N/+N until end of turn. draw a card at the beginning of the next turn's upkeep. | 1 | Balduvian Rage | psal |
+| until end of turn, target creature gains trample and gets +N/+N, where N is the number of attacking creatures. | 1 | Strength in Numbers | psal |
+| when ~ enters, put target creature on top of its owner's library. | 1 | Vedalken Dismisser | psal |
+| when ~ enters, return a creature you control to its owner's hand. | 1 | Whitemane Lion | psal |
+| when ~ enters, search your library for an aura card that could enchant it. if ~ is still on the battlefield, put that aura card onto the battlefield attached to | 1 | Auratouched Mage | psal |
+| when ~ enters, you gain protection from the color of your choice until end of turn. | 1 | Seht's Tiger | psal |
+| whenever a source deals damage to ~, that source's controller mills that many cards. | 1 | Belltower Sphinx | psal |
+| whenever an aura becomes attached to ~, create two N/N green saproling creature tokens. | 1 | Bramble Elemental | psal |
+| whenever another creature you control dies, it deals damage equal to its power to target player or planeswalker. | 1 | Stalking Vengeance | psal |
+| whenever another creature you control enters, put a +N/+N counter on that creature and a +N/+N counter on ~. | 1 | Juniper Order Ranger | psal |
+| whenever jedit ojanen attacks or blocks, create a N/N green cat warrior creature token with forestwalk. | 1 | Jedit Ojanen of Efrava | psal |
+| whenever ~ attacks, you may pay {M}. if you do, target creature can't block ~. | 1 | Frenzied Goblin | psal |
+| {M}, reveal N blue cards from your hand, sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Martyr of Frost | psal |
+| {M}, sacrifice a creature: destroy each creature with the same mana value as the sacrificed creature. | 1 | Sanguine Praetor | psal |
+| {M}{M}: target creature can't block ~ ~. | 1 | Burning-Tree Bloodscale | psal |
+| {M}{M}{M}, {M}: destroy target land. if that land was nonbasic, untap ~. | 1 | Helldozer | psal |
+| ~ has flying as long as it's enchanted. | 1 | Skyrider Trainee | psal |
+| ~ must be blocked by exactly one creature if able. | 1 | Nacatl War-Pride | psal |
+| ~ must be blocked if able. | 1 | Goblin Fire Fiend | psal |
 
 ## Notes
 

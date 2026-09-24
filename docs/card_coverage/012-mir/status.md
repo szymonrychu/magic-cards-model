@@ -68,20 +68,20 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of your upkeep, sacrifice this enchantment unless you sacrifice a Pegasus. | Sacred Mesa | 1 |
-| Change the text of target permanent by replacing all instances of one color word with another or one basic land type with another. (For example, you may change  | Mind Bend | 1 |
-| Destroy target creature. It can't be regenerated. Its controller reveals cards from the top of their library until they reveal a creature card. The player puts  | Polymorph | 1 |
-| Enchanted creature can't attack or block. | Pacifism | 1 |
-| Flanking | Zhalfirin Commander | 1 |
-| Hammer of Bogardan deals 3 damage to any target. {2}{R}{R}{R}: Return this card from your graveyard to your hand. Activate only during your upkeep. | Hammer of Bogardan | 1 |
-| Lands you control are Plains. | Celestial Dawn | 1 |
-| Maro's power and toughness are each equal to the number of cards in your hand. | Maro | 1 |
-| {U}, {T}: Put target creature you control on top of its owner's library. | Shadow Guildmage | 1 |
-| {2}, {T}, Sacrifice this artifact: Search target opponent's library for a card and exile it. Then that player shuffles. Until the beginning of your next upkeep, | Grinning Totem | 1 |
-| Target opponent discards a card at random, then discards a card. | Stupor | 1 |
-| Target player untaps all basic lands they control. | Early Harvest | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| at the beginning of your upkeep, sacrifice ~ unless you sacrifice a pegasus. | 1 | Sacred Mesa | mir |
+| change the text of target permanent by replacing all instances of one color word with another or one basic land type with another. (for example, you may change  | 1 | Mind Bend | mir |
+| destroy target creature. it can't be regenerated. its controller reveals cards from the top of their library until they reveal a creature card. the player puts  | 1 | Polymorph | mir |
+| enchanted creature can't attack or block. | 1 | Pacifism | mir |
+| flanking | 1 | Zhalfirin Commander | mir |
+| lands you control are plains. | 1 | Celestial Dawn | mir |
+| target opponent discards a card at random, then discards a card. | 1 | Stupor | mir |
+| target player untaps all basic lands they control. | 1 | Early Harvest | mir |
+| {M}, {M}, sacrifice ~: search target opponent"..."t played it, put it into its owner's graveyard. | 1 | Grinning Totem | mir |
+| {M}, {M}: put target creature you control on top of its owner's library. | 1 | Shadow Guildmage | mir |
+| ~ deals N damage to any target. {M}{M}{M}{M}: return ~ from your graveyard to your hand. activate only during your upkeep. | 1 | Hammer of Bogardan | mir |
+| ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Maro | mir |
 
 ## Notes
 

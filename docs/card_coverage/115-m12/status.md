@@ -3,24 +3,24 @@
 - Expansion: 115
 - Set code: `m12`
 - Release date: 2011-07-15
-- Cards in scope (Modern/Pioneer/Standard-legal): 93
+- Cards in scope (Modern/Pioneer/Standard-legal): 98
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 93 |
-| Pioneer | 19 |
+| Modern | 98 |
+| Pioneer | 21 |
 | Standard | 6 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 7 | 7.5% |
-| Partial (unaudited) | 3 | 3.2% |
-| Not tested (handled, untested) | 42 | 45.2% |
-| Not working (silent / notice / error) | 41 | 44.1% |
+| Full (handled + tested) | 7 | 7.1% |
+| Partial (unaudited) | 4 | 4.1% |
+| Not tested (handled, untested) | 45 | 45.9% |
+| Not working (silent / notice / error) | 42 | 42.9% |
 
 ## Cards needing work
 
@@ -32,6 +32,7 @@
 | Arachnus Web | silent | At the beginning of the end step, if enchanted creature's power is 4 or greater, destroy this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arbalest Elite | silent | {2}{W}, {T}: This creature deals 3 damage to target attacking or blocking creature. This creature doesn't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blood Ogre | silent | Bloodthirst | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Bloodlord of Vaasgoth | silent | Whenever you cast a Vampire creature spell, it gains bloodthirst 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodrage Vampire | silent | Bloodthirst | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Carnage Wurm | silent | Bloodthirst | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Circle of Flame | silent | Whenever a creature without flying attacks you or a planeswalker you control, this enchantment deals 1 damage to that creature. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
@@ -67,6 +68,7 @@
 | Crown of Empires | notice | {3}, {T}: Tap target creature. Gain control of that creature instead if you control artifacts named Scepter of Empires and Throne of Empires. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Crumbling Colossus | notice | When this creature attacks, sacrifice it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Primordial Hydra | notice | This creature has trample as long as it has ten or more +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Garruk's Horde | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grand Abolisher | unaudited | During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Personal Sanctuary | unaudited | During your turn, prevent all damage that would be dealt to you. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Skywinder Drake | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -78,6 +80,7 @@
 | Benalish Veteran | handled | Whenever this creature attacks, it gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bonebreaker Giant | handled |  |  | Y/-/- | not_tested |
 | Buried Ruin | handled | {2}, {T}, Sacrifice this land: Return target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Chandra's Phoenix | handled | Whenever an opponent is dealt damage by a red instant or sorcery spell you control or by a red planeswalker you control, return this card from your graveyard to | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chandra, the Firebrand | handled | +1: Chandra deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chasm Drake | handled | Whenever this creature attacks, target creature you control gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crimson Mage | handled | {R}: Target creature you control gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -98,6 +101,7 @@
 | Onyx Mage | handled | {1}{B}: Target creature you control gains deathtouch until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Peregrine Griffin | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Phantasmal Bear | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Phantasmal Dragon | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pride Guardian | handled | Whenever this creature blocks, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rune-Scarred Demon | handled | When this creature enters, search your library for a card, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rusted Sentinel | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -109,6 +113,7 @@
 | Swiftfoot Boots | handled | Equipped creature has hexproof and haste. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Taste of Blood | handled | Taste of Blood deals 1 damage to target player or planeswalker and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Titanic Growth | handled | Target creature gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Tormented Soul | handled | This creature can't block and can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trollhide | handled | Enchanted creature gets +2/+2 and has "{1}{G}: Regenerate this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wall of Torches | handled | Defender | machines/combat.py | Y/-/- | not_tested |
 | Wring Flesh | handled | Target creature gets -3/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -130,44 +135,46 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Bloodthirst | Blood Ogre, Bloodrage Vampire, Carnage Wurm, Duskhunter Bat, Furyborn Hellkite, Gorehorn Minotaurs, Lurking Crocodile, Stormblood Berserker, Vampire Outcasts | 9 |
-| −7: Any number of target players each draw twenty cards. | Jace, Memory Adept | 1 |
-| As long as you control a Griffin creature, this creature gets +3/+3 and has flying. | Griffin Rider | 1 |
-| At the beginning of the end step, if enchanted creature's power is 4 or greater, destroy this Aura. | Arachnus Web | 1 |
-| {G}: Choose one. Activate only once each turn. | Skinshifter | 1 |
-| Choose target creature you control. Whenever that creature deals combat damage to a player or planeswalker this turn, draw that many cards. | Hunter's Insight | 1 |
-| {1}, {T}: Create a 1/1 white Soldier creature token. Create five of those tokens instead if you control artifacts named Crown of Empires and Scepter of Empires. | Throne of Empires | 1 |
-| Destroy target land. Creatures without flying can't block this turn. | Tectonic Rift | 1 |
-| Draw a card. If a graveyard has twenty or more cards in it, draw three cards instead. | Visions of Beyond | 1 |
-| During your turn, prevent all damage that would be dealt to you. | Personal Sanctuary | 1 |
-| During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | Grand Abolisher | 1 |
-| {U}, {T}: Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way. | Jace's Archivist | 1 |
-| Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types. | Angelic Destiny | 1 |
-| {T}: Flip a coin. If you win the flip, this creature deals 2 damage to any target. If you lose the flip, this creature deals 2 damage to itself. | Goblin Bangchuckers | 1 |
-| For each creature you control, you may search your library for a creature card with the same name as that creature. Put those cards onto the battlefield, then s | Doubling Chant | 1 |
-| For each nonland permanent, choose a player at random. Then each player gains control of each permanent for which they were chosen. Untap those permanents. | Scrambleverse | 1 |
-| If you have less life than an opponent, you gain 6 life. If you control fewer creatures than an opponent, create three 1/1 white Soldier creature tokens. | Timely Reinforcements | 1 |
-| Illusion creatures you control get +1/+1 and have hexproof. | Lord of the Unreal | 1 |
-| {2}, {T}: Reveal the top card of your library. If it's a creature card, create a 1/1 green Saproling creature token. If it's a land card, put that card onto the | Druidic Satchel | 1 |
-| Tap an untapped Spider you control: Search your graveyard and/or library for a card named Arachnus Web and put it onto the battlefield attached to target creatu | Arachnus Spinner | 1 |
-| {3}, {T}: Tap target creature. Gain control of that creature instead if you control artifacts named Scepter of Empires and Throne of Empires. | Crown of Empires | 1 |
-| Target player chooses a card in their hand and discards the rest. | Monomania | 1 |
-| {T}: This artifact deals 1 damage to target player or planeswalker. It deals 3 damage instead if you control artifacts named Crown of Empires and Throne of Empi | Scepter of Empires | 1 |
-| This creature can block only creatures with flying. | Skywinder Drake | 1 |
-| {2}{W}, {T}: This creature deals 3 damage to target attacking or blocking creature. This creature doesn't untap during your next untap step. | Arbalest Elite | 1 |
-| This creature has trample as long as it has ten or more +1/+1 counters on it. | Primordial Hydra | 1 |
-| This creature is the chosen type in addition to its other types. | Adaptive Automaton | 1 |
-| When this creature attacks, sacrifice it at end of combat. | Crumbling Colossus | 1 |
-| When this creature enters, gain control of target artifact for as long as you control this creature. | Master Thief | 1 |
-| When this creature enters, reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the othe | Sphinx of Uthuun | 1 |
-| When this creature enters, target opponent skips their next combat phase. | Stonehorn Dignitary | 1 |
-| Whenever a creature an opponent controls becomes tapped, put a +1/+1 counter on this creature. | Gideon's Avenger | 1 |
-| Whenever a creature without flying attacks you or a planeswalker you control, this enchantment deals 1 damage to that creature. | Circle of Flame | 1 |
-| Whenever a creature you control enters, it deals damage equal to its power to any target. | Warstorm Surge | 1 |
-| Whenever combat damage is dealt to you or a planeswalker you control, if this card is in your graveyard, destroy target attacking creature, then put this card o | Vengeful Pharaoh | 1 |
-| White creatures you control get +2/+2 until end of turn. | Guardians' Pledge | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| bloodthirst | 9 | Blood Ogre, Bloodrage Vampire, Carnage Wurm, Duskhunter Bat, Furyborn Hellkite | m12 |
+| as long as you control a griffin creature, ~ gets +N/+N and has flying. | 1 | Griffin Rider | m12 |
+| at the beginning of the end step, if enchanted creature's power is N or greater, destroy ~. | 1 | Arachnus Web | m12 |
+| choose target creature you control. whenever that creature deals combat damage to a player or planeswalker ~, draw that many cards. | 1 | Hunter's Insight | m12 |
+| destroy target land. creatures without flying can't block ~. | 1 | Tectonic Rift | m12 |
+| draw a card. if a graveyard has twenty or more cards in it, draw three cards instead. | 1 | Visions of Beyond | m12 |
+| during your turn, prevent all damage that would be dealt to you. | 1 | Personal Sanctuary | m12 |
+| during your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | 1 | Grand Abolisher | m12 |
+| enchanted creature gets +N/+N, has flying and first strike, and is an angel in addition to its other types. | 1 | Angelic Destiny | m12 |
+| for each creature you control, you may search your library for a creature card with the same name as that creature. put those cards onto the battlefield, then s | 1 | Doubling Chant | m12 |
+| for each nonland permanent, choose a player at random. then each player gains control of each permanent for which they were chosen. untap those permanents. | 1 | Scrambleverse | m12 |
+| if you have less life than an opponent, you gain N life. if you control fewer creatures than an opponent, create three N/N white soldier creature tokens. | 1 | Timely Reinforcements | m12 |
+| illusion creatures you control get +N/+N and have hexproof. | 1 | Lord of the Unreal | m12 |
+| play with the top card of your library revealed. | 1 | Garruk's Horde | m12 |
+| tap an untapped spider you control: search your graveyard and/or library for a card named arachnus web and put it onto the battlefield attached to target creatu | 1 | Arachnus Spinner | m12 |
+| target player chooses a card in their hand and discards the rest. | 1 | Monomania | m12 |
+| when ~ attacks, sacrifice it at end of combat. | 1 | Crumbling Colossus | m12 |
+| when ~ enters, gain control of target artifact for as long as you control ~. | 1 | Master Thief | m12 |
+| when ~ enters, reveal the top five cards of your library. an opponent separates those cards into two piles. put one pile into your hand and the other into your  | 1 | Sphinx of Uthuun | m12 |
+| when ~ enters, target opponent skips their next combat phase. | 1 | Stonehorn Dignitary | m12 |
+| whenever a creature an opponent controls becomes tapped, put a +N/+N counter on ~. | 1 | Gideon's Avenger | m12 |
+| whenever a creature without flying attacks you or a planeswalker you control, ~ deals N damage to that creature. | 1 | Circle of Flame | m12 |
+| whenever a creature you control enters, it deals damage equal to its power to any target. | 1 | Warstorm Surge | m12 |
+| whenever combat damage is dealt to you or a planeswalker you control, if ~ is in your graveyard, destroy target attacking creature, then put ~ on top of your li | 1 | Vengeful Pharaoh | m12 |
+| whenever you cast a vampire creature spell, it gains bloodthirst N. | 1 | Bloodlord of Vaasgoth | m12 |
+| white creatures you control get +N/+N until end of turn. | 1 | Guardians' Pledge | m12 |
+| {M}, {M}: create a N/N white soldier creature token. create five of those tokens instead if you control artifacts named crown of empires and scepter of empires. | 1 | Throne of Empires | m12 |
+| {M}, {M}: each player discards their hand, then draws cards equal to the greatest number of cards a player discarded ~. | 1 | Jace's Archivist | m12 |
+| {M}, {M}: reveal the top card of your library. if it"..."s a land card, put that card onto the battlefield under your control. if it's a noncreature, nonland ca | 1 | Druidic Satchel | m12 |
+| {M}, {M}: tap target creature. gain control of that creature instead if you control artifacts named scepter of empires and throne of empires. | 1 | Crown of Empires | m12 |
+| {M}: choose one. activate only once each turn. | 1 | Skinshifter | m12 |
+| {M}: flip a coin. if you win the flip, ~ deals N damage to any target. if you lose the flip, ~ deals N damage to itself. | 1 | Goblin Bangchuckers | m12 |
+| {M}: ~ deals N damage to target player or planeswalker. it deals N damage instead if you control artifacts named crown of empires and throne of empires. | 1 | Scepter of Empires | m12 |
+| {M}{M}, {M}: ~ deals N damage to target attacking or blocking creature. ~ doesn't untap during your next untap step. | 1 | Arbalest Elite | m12 |
+| ~ can block only creatures with flying. | 1 | Skywinder Drake | m12 |
+| ~ has trample as long as it has ten or more +N/+N counters on it. | 1 | Primordial Hydra | m12 |
+| ~ is the chosen type in addition to its other types. | 1 | Adaptive Automaton | m12 |
+| −N: any number of target players each draw twenty cards. | 1 | Jace, Memory Adept | m12 |
 
 ## Notes
 

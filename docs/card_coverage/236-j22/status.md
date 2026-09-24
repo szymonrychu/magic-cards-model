@@ -42,10 +42,10 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {3}{W}: Put a +1/+1 counter on another target attacking creature you control. If that creature is a Cat, it gains first strike until end of turn. | Ingenious Leonin | 1 |
-| {3}{G}: This creature becomes a Werewolf. Put two +1/+1 counters on it and you draw a card. Activate only once. | Mild-Mannered Librarian | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| {M}{M}: put a +N/+N counter on another target attacking creature you control. if that creature is a cat, it gains first strike until end of turn. | 1 | Ingenious Leonin | j22 |
+| {M}{M}: ~ becomes a werewolf. put two +N/+N counters on it and you draw a card. activate only once. | 1 | Mild-Mannered Librarian | j22 |
 
 ## Notes
 

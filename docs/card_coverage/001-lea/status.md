@@ -153,39 +153,40 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of your upkeep, sacrifice a creature other than this creature. If you can't, this creature deals 7 damage to you. | Force of Nature, Lord of the Pit | 2 |
-| {W}: Enchanted creature gets +1/+1 until end of turn. | Blessing, Firebreathing | 2 |
-| All creatures able to block enchanted creature do so. | Lure | 1 |
-| As long as Gaea's Liege isn't attacking, its power and toughness are each equal to the number of Forests you control. As long as Gaea's Liege is attacking, its  | Gaea's Liege | 1 |
-| Black creatures get +1/+1. | Bad Moon | 1 |
-| Destroy all Plains. | Flashfires | 1 |
-| Disintegrate deals X damage to any target. If it's a creature, it can't be regenerated this turn, and if it would die this turn, exile it instead. | Disintegrate | 1 |
-| Earthquake deals X damage to each creature without flying and each player. | Earthquake | 1 |
-| Enchanted creature can't be blocked except by Walls. | Invisibility | 1 |
-| Enchanted creature has fear. | Fear | 1 |
-| Enchanted land has indestructible and can't be enchanted by other Auras. | Consecrate Land | 1 |
-| Enchanted land is a Swamp. | Evil Presence | 1 |
-| Hurricane deals X damage to each creature with flying and each player. | Hurricane | 1 |
-| Other Goblins get +1/+1 and have mountainwalk. | Goblin King | 1 |
-| Other Merfolk get +1/+1 and have islandwalk. | Lord of Atlantis | 1 |
-| Psionic Blast deals 4 damage to any target and 2 damage to you. | Psionic Blast | 1 |
-| {G}: Regenerate enchanted creature. | Regeneration | 1 |
-| {T}: Target creature you control with toughness less than this creature's power gains flying until end of turn. Destroy that creature at the beginning of the ne | Stone Giant | 1 |
-| {1}: The next time a blue source of your choice would deal damage to you this turn, prevent that damage. | Circle of Protection: Blue | 1 |
-| {1}: The next time a green source of your choice would deal damage to you this turn, prevent that damage. | Circle of Protection: Green | 1 |
-| {1}: The next time a red source of your choice would deal damage to you this turn, prevent that damage. | Circle of Protection: Red | 1 |
-| The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way. | Reverse Damage | 1 |
-| {1}: The next time a white source of your choice would deal damage to you this turn, prevent that damage. | Circle of Protection: White | 1 |
-| {2}: This artifact becomes a 3/6 Golem artifact creature until end of combat. Activate only during combat. | Jade Statue | 1 |
-| This creature can't be blocked by Walls. | Juggernaut | 1 |
-| {T}: This creature deals 2 damage to any target and 3 damage to you. | Orcish Artillery | 1 |
-| {R}: This creature gets +1/+0 until end of turn. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of th | Dragon Whelp | 1 |
-| When you control no Islands, sacrifice this creature. | Pirate Ship | 1 |
-| Whenever a land is put into a graveyard from the battlefield, this artifact deals 2 damage to that land's controller. | Dingus Egg | 1 |
-| Whenever this creature blocks or becomes blocked by a non-Wall creature, destroy that creature at end of combat. | Cockatrice | 1 |
-| Whenever this creature deals damage to an opponent, that player discards a card at random. | Hypnotic Specter | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| {M}: enchanted creature gets +N/+N until end of turn. | 2 | Blessing, Firebreathing | lea |
+| all creatures able to block enchanted creature do so. | 1 | Lure | lea |
+| as long as ~ isn't attacking, its power and toughness are each equal to the number of forests you control. as long as ~ is attacking, its power and toughness ar | 1 | Gaea's Liege | lea |
+| at the beginning of your upkeep, sacrifice a creature other than ~. if you can't, ~ deals N damage to you. | 1 | Lord of the Pit | lea |
+| at the beginning of your upkeep, ~ deals N damage to you unless you pay {M}{M}{M}{M}. | 1 | Force of Nature | lea |
+| black creatures get +N/+N. | 1 | Bad Moon | lea |
+| destroy all plains. | 1 | Flashfires | lea |
+| enchanted creature can't be blocked except by walls. | 1 | Invisibility | lea |
+| enchanted creature has ~. | 1 | Fear | lea |
+| enchanted land has indestructible and can't be enchanted by other auras. | 1 | Consecrate Land | lea |
+| enchanted land is a swamp. | 1 | Evil Presence | lea |
+| other goblins get +N/+N and have mountainwalk. | 1 | Goblin King | lea |
+| other merfolk get +N/+N and have islandwalk. | 1 | Lord of Atlantis | lea |
+| the next time a source of your choice would deal damage to you ~, prevent that damage. you gain life equal to the damage prevented ~. | 1 | Reverse Damage | lea |
+| when you control no islands, sacrifice ~. | 1 | Pirate Ship | lea |
+| whenever a land is put into a graveyard from the battlefield, ~ deals N damage to that land's controller. | 1 | Dingus Egg | lea |
+| whenever ~ blocks or becomes blocked by a non-wall creature, destroy that creature at end of combat. | 1 | Cockatrice | lea |
+| whenever ~ deals damage to an opponent, that player discards a card at random. | 1 | Hypnotic Specter | lea |
+| {M}: regenerate enchanted creature. | 1 | Regeneration | lea |
+| {M}: target creature you control with toughness less than ~ power gains flying until end of turn. destroy that creature at the beginning of the next end step. | 1 | Stone Giant | lea |
+| {M}: the next time a blue source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Blue | lea |
+| {M}: the next time a green source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Green | lea |
+| {M}: the next time a red source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Red | lea |
+| {M}: the next time a white source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: White | lea |
+| {M}: ~ becomes a N/N golem artifact creature until end of combat. activate only during combat. | 1 | Jade Statue | lea |
+| {M}: ~ deals N damage to any target and N damage to you. | 1 | Orcish Artillery | lea |
+| {M}: ~ gets +N/+N until end of turn. if ~ has been activated four or more times ~, sacrifice ~ at the beginning of the next end step. | 1 | Dragon Whelp | lea |
+| ~ can't be blocked by walls. | 1 | Juggernaut | lea |
+| ~ deals N damage to any target and N damage to you. | 1 | Psionic Blast | lea |
+| ~ deals N damage to any target. if it"..."t be regenerated ~, and if it would die ~, exile it instead. | 1 | Disintegrate | lea |
+| ~ deals N damage to each creature with flying and each player. | 1 | Hurricane | lea |
+| ~ deals N damage to each creature without flying and each player. | 1 | Earthquake | lea |
 
 ## Notes
 

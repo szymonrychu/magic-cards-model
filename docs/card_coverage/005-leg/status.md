@@ -66,17 +66,17 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of your upkeep, sacrifice Nicol Bolas unless you pay {U}{B}{R}. | Nicol Bolas | 1 |
-| Counter target instant or Aura spell that targets a permanent you control. | Avoid Fate | 1 |
-| Destroy target artifact. You gain life equal to its mana value. | Divine Offering | 1 |
-| Non-Eye creatures you control can't attack. | Evil Eye of Orms-by-Gore | 1 |
-| Other Kobold creatures you control get +1/+0. | Kobold Taskmaster | 1 |
-| Rampage | Craw Giant | 1 |
-| {T}: Target 1/1 creature gets +1/+2 until end of turn. | Pendelhaven | 1 |
-| This creature can't be blocked except by Walls and/or creatures with flying. | Elven Riders | 1 |
-| Whenever enchanted creature deals damage, you gain that much life. | Spirit Link | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| at the beginning of your upkeep, sacrifice ~ unless you pay {M}{M}{M}. | 1 | Nicol Bolas | leg |
+| counter target instant or aura spell that targets a permanent you control. | 1 | Avoid Fate | leg |
+| destroy target artifact. you gain life equal to its mana value. | 1 | Divine Offering | leg |
+| non-eye creatures you control can't attack. | 1 | Evil Eye of Orms-by-Gore | leg |
+| other kobold creatures you control get +N/+N. | 1 | Kobold Taskmaster | leg |
+| rampage | 1 | Craw Giant | leg |
+| whenever enchanted creature deals damage, you gain that much life. | 1 | Spirit Link | leg |
+| {M}: target N/N creature gets +N/+N until end of turn. | 1 | Pendelhaven | leg |
+| ~ can't be blocked except by walls and/or creatures with flying. | 1 | Elven Riders | leg |
 
 ## Notes
 

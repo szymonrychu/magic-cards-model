@@ -3,13 +3,13 @@
 - Expansion: 100
 - Set code: `roe`
 - Release date: 2010-04-23
-- Cards in scope (Modern/Pioneer/Standard-legal): 217
+- Cards in scope (Modern/Pioneer/Standard-legal): 220
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 217 |
+| Modern | 220 |
 | Pioneer | 22 |
 | Standard | 6 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 16 | 7.4% |
-| Partial (unaudited) | 10 | 4.6% |
-| Not tested (handled, untested) | 97 | 44.7% |
-| Not working (silent / notice / error) | 94 | 43.3% |
+| Full (handled + tested) | 16 | 7.3% |
+| Partial (unaudited) | 10 | 4.5% |
+| Not tested (handled, untested) | 97 | 44.1% |
+| Not working (silent / notice / error) | 97 | 44.1% |
 
 ## Cards needing work
 
@@ -44,11 +44,13 @@
 | Dormant Gomazoa | silent | Whenever you become the target of a spell, you may untap this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Echo Mage | silent | {U}{U}, {T}: Copy target instant or sorcery spell twice. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eldrazi Conscription | silent | Enchanted creature gets +10/+10 and has trample and annihilator 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Emrakul, the Aeons Torn | silent | When Emrakul is put into a graveyard from anywhere, its owner shuffles their graveyard into their library. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Enclave Cryptologist | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Explosive Revelation | silent | Choose any target. Reveal cards from the top of your library until you reveal a nonland card. Explosive Revelation deals damage equal to that card's mana value  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gideon Jura | silent | +2: During target opponent's next turn, creatures that player controls attack Gideon Jura if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gravitational Shift | silent | Creatures with flying get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gravity Well | silent | Whenever a creature with flying attacks, it loses flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Guul Draz Assassin | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hada Spy Patrol | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Halimar Wavewatch | silent | Level up {2} ({2}: Put a level counter on this. Level up only as a sorcery.) LEVEL 1-4 0/6 LEVEL 5+ 6/6 Islandwalk (This creature can't be blocked as long as de | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Harmless Assault | silent | Prevent all combat damage that would be dealt this turn by attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -70,6 +72,7 @@
 | Lay Bare | silent | Counter target spell. Look at its controller's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lighthouse Chronologist | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Lightmine Field | silent | Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Lord of Shatterskull Pass | silent | Whenever this creature attacks, it deals 6 damage to each creature defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lust for War | silent | Whenever enchanted creature becomes tapped, this Aura deals 3 damage to that creature's controller. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Mul Daya Channelers | silent | As long as the top card of your library is a creature card, this creature gets +3/+3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Narcolepsy | silent | At the beginning of each upkeep, if enchanted creature is untapped, tap it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -254,84 +257,104 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Level Up | Brimstone Mage, Enclave Cryptologist, Hada Spy Patrol, Hedron-Field Purists, Joraga Treespeaker, Kabira Vindicator, Kargan Dragonlord, Kazandu Tuskcaller, Lighthouse Chronologist, Null Champion, Zulaport Enforcer | 11 |
-| Level up {2} ({2}: Put a level counter on this. Level up only as a sorcery.) LEVEL 1-4 0/6 LEVEL 5+ 6/6 Islandwalk (This creature can't be blocked as long as de | Beastbreaker of Bala Ged, Caravan Escort, Halimar Wavewatch, Ikiral Outrider, Knight of Cliffhaven, Nirkana Cutthroat, Skywatcher Adept, Student of Warfare, Transcendent Master | 9 |
-| At the beginning of your end step, you may reveal the top card of your library. If you do, each opponent loses life equal to that card's mana value. | Baneful Omen, Demonic Appetite, Domestication, Near-Death Experience | 4 |
-| Whenever this creature deals combat damage to a player, sacrifice all other permanents you control and discard your hand. Exile the top six cards of your librar | Hellcarver Demon, Rapacious One, Surrakar Spellblade | 3 |
-| As an additional cost to cast this spell, reveal a creature card from your hand. Disaster Radius deals X damage to each creature your opponents control, where X | Disaster Radius, Induce Despair | 2 |
-| Prevent all combat damage that would be dealt this turn by attacking creatures. | Guard Gomazoa, Harmless Assault | 2 |
-| Target creature gets +1/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | Distortion Strike, Might of the Masses | 2 |
-| {1}{R}, {T}: This creature deals damage to target player or planeswalker equal to the number of creatures you control with defender. | Pestilence Demon, Vent Sentinel | 2 |
-| When this creature enters, put a +1/+1 counter on it for each card in your hand. If you do, discard your hand. | Thought Gorger, Venerated Teacher | 2 |
-| Activated abilities of creatures you control cost {2} less to activate. This effect can't reduce the mana in that cost to less than one mana. | Training Grounds | 1 |
-| After the second main phase this turn, there's an additional combat phase followed by an additional main phase. At the beginning of that combat, untap all creat | World at War | 1 |
-| As long as equipped creature has defender, it can attack as though it didn't have defender. | Warmonger's Chariot | 1 |
-| As long as the top card of your library is a creature card, this creature gets +3/+3. | Mul Daya Channelers | 1 |
-| At the beginning of combat on your turn, you may have target creature get +2/+0 until end of turn. | Battle-Rattle Shaman | 1 |
-| At the beginning of each upkeep, if enchanted creature is untapped, tap it. | Narcolepsy | 1 |
-| Attach target Aura you control to target creature. Draw a card. | Aura Finesse | 1 |
-| Auras attached to permanents you control have umbra armor. | Umbra Mystic | 1 |
-| {20}: Cast any number of Eldrazi spells from among cards you own outside the game without paying their mana costs. | Spawnsire of Ulamog | 1 |
-| Choose any target. Reveal cards from the top of your library until you reveal a nonland card. Explosive Revelation deals damage equal to that card's mana value  | Explosive Revelation | 1 |
-| {U}{U}, {T}: Copy target instant or sorcery spell twice. You may choose new targets for the copies. | Echo Mage | 1 |
-| Counter target spell if you control more creatures than that spell's controller. | Unified Will | 1 |
-| Counter target spell. Look at its controller's hand. | Lay Bare | 1 |
-| Counter target spell or ability that targets a permanent you control. This spell costs {7} less to cast if it targets a spell or ability that targets a creature | Not of This World | 1 |
-| Creatures with flying get +2/+0. | Gravitational Shift | 1 |
-| Creatures with power less than this creature's power can't block it. | Aura Gnarlid | 1 |
-| Draw cards equal to the number of cards in target opponent's hand. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | Recurring Insight | 1 |
-| Draw two cards, then shuffle a card from your hand into your library. | See Beyond | 1 |
-| +2: During target opponent's next turn, creatures that player controls attack Gideon Jura if able. | Gideon Jura | 1 |
-| Each creature you control with a level counter on it gets +2/+2. | Time of Heroes | 1 |
-| Each player's life total becomes the lowest life total among all players. | Repay in Kind | 1 |
-| Eldrazi Spawn creatures you control get +2/+1. | Broodwarden | 1 |
-| Enchanted creature gets +10/+10 and has trample and annihilator 2. | Eldrazi Conscription | 1 |
-| Enchanted land is a Swamp. | Contaminated Ground | 1 |
-| Equipped creature gets +1/+1 for each creature you control. | Pennon Blade | 1 |
-| Equipped creature gets +X/+X, where X is its mana value. | Hedron Matrix | 1 |
-| Exile X target cards from target player's graveyard. For each card exiled this way, that player loses 1 life and you gain 1 life. | Suffer the Past | 1 |
-| Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | Traitorous Instinct | 1 |
-| If you control an Eldrazi Spawn, create three 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." Otherwise, create one of t | Brood Birthing | 1 |
-| Instant and sorcery spells you control have rebound. | Cast Through Time | 1 |
-| Other creatures you control with defender get +0/+2. | Stalwart Shield-Bearers | 1 |
-| Other Merfolk creatures you control get +1/+1. | Coralhelm Commander | 1 |
-| {T}: Prevent the next 1 damage that would be dealt to you this turn. | Reinforced Bulwark | 1 |
-| Put target creature into its owner's library second from the top. Its controller gains 3 life. | Oust | 1 |
-| Return an instant card at random from your graveyard to your hand. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | Surreal Memoir | 1 |
-| 0: Reveal the top card of your library and put it into your hand. Sarkhan deals damage to himself equal to that card's mana value. | Sarkhan the Mad | 1 |
-| Sacrifice all creatures you control, then create that many 4/4 red Hellion creature tokens. | Hellion Eruption | 1 |
-| Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | Realms Uncharted | 1 |
-| Spells and abilities your opponents control can't cause you to sacrifice permanents. | Tajuru Preserver | 1 |
-| {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | Drana, Kalastria Bloodchief | 1 |
-| Target creature must be blocked this turn if able. Draw a card. | Irresistible Prey | 1 |
-| Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | Emerge Unscathed | 1 |
-| Target opponent reveals their hand. You choose a card from it. That player shuffles that card into their library. | Perish the Thought | 1 |
-| {5}, {T}: Target player mills X cards, where X is the number of cards in that player's graveyard. | Keening Stone | 1 |
-| Target player sacrifices a creature of their choice. You gain life equal to that creature's toughness. Rebound (If you cast this spell from your hand, exile it  | Consuming Vapors | 1 |
-| This creature can't be blocked except by three or more creatures. | Pathrazer of Ulamog | 1 |
-| This creature gets +3/+3 as long as you control a creature with three or more level counters on it. | Champion's Drake | 1 |
-| This creature gets +2/+2 for each Aura attached to it. | Kor Spiritdancer | 1 |
-| This spell costs {G} less to cast for each green creature you control. | Khalni Hydra | 1 |
-| {2}{U}: Untap enchanted creature. | Crab Umbra | 1 |
-| When Kozilek is put into a graveyard from anywhere, its owner shuffles their graveyard into their library. | Kozilek, Butcher of Truth | 1 |
-| When this creature enters, prevent all combat damage that other creatures would deal this turn. | Haze Frog | 1 |
-| When this creature enters, you may tap any number of untapped creatures you control. You gain 2 life for each creature tapped this way. | Jaddi Lifestrider | 1 |
-| When Ulamog is put into a graveyard from anywhere, its owner shuffles their graveyard into their library. | Ulamog, the Infinite Gyre | 1 |
-| Whenever a creature with flying attacks, it loses flying until end of turn. | Gravity Well | 1 |
-| Whenever a creature you control with power 2 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | Raid Bombardment | 1 |
-| Whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | It That Betrays | 1 |
-| Whenever another creature you control enters, you may have this creature become a copy of that creature until end of turn. | Renegade Doppelganger | 1 |
-| Whenever enchanted creature becomes tapped, this Aura deals 3 damage to that creature's controller. | Lust for War | 1 |
-| Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures. | Lightmine Field | 1 |
-| Whenever this creature attacks, switch its power and toughness until end of turn. | Valakut Fireboar | 1 |
-| Whenever this creature blocks or becomes blocked by a creature with power 1 or less, destroy this creature at end of combat. | Arrogant Bloodlord | 1 |
-| Whenever you become the target of a spell, you may untap this creature. | Dormant Gomazoa | 1 |
-| Whenever you're dealt damage, you may put that many charge counters on this artifact. | Angelheart Vial | 1 |
-| Wrap in Flames deals 1 damage to each of up to three target creatures. Those creatures can't block this turn. | Wrap in Flames | 1 |
-| You gain 2 life. Then if you have more life than an opponent, draw a card. Rebound (If you cast this spell from your hand, exile it as it resolves. At the begin | Survival Cache | 1 |
-| You may sacrifice four Eldrazi Spawn rather than pay this spell's mana cost. | Hand of Emrakul | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| level up | 12 | Brimstone Mage, Enclave Cryptologist, Guul Draz Assassin, Hada Spy Patrol, Hedron-Field Purists | roe |
+| +N: during target opponent's next turn, creatures that player controls attack ~ if able. | 1 | Gideon Jura | roe |
+| N: reveal the top card of your library and put it into your hand. sarkhan deals damage to himself equal to that card's mana value. | 1 | Sarkhan the Mad | roe |
+| activated abilities of creatures you control cost {M} less to activate. ~ can't reduce the mana in that cost to less than one mana. | 1 | Training Grounds | roe |
+| after the second main phase ~, there's an additional combat phase followed by an additional main phase. at the beginning of that combat, untap all creatures tha | 1 | World at War | roe |
+| as an additional cost to cast ~, reveal a creature card from your hand. target creature gets -N/-N until end of turn, where N is the revealed card's mana value. | 1 | Induce Despair | roe |
+| as an additional cost to cast ~, reveal a creature card from your hand. ~ deals N damage to each creature your opponents control, where N is the revealed card's | 1 | Disaster Radius | roe |
+| as long as equipped creature has defender, it can attack as though it didn't have defender. | 1 | Warmonger's Chariot | roe |
+| as long as the top card of your library is a creature card, ~ gets +N/+N. | 1 | Mul Daya Channelers | roe |
+| at the beginning of combat on your turn, you may have target creature get +N/+N until end of turn. | 1 | Battle-Rattle Shaman | roe |
+| at the beginning of each upkeep, if enchanted creature is untapped, tap it. | 1 | Narcolepsy | roe |
+| at the beginning of your end step, if enchanted creature's power is N or greater, sacrifice ~. | 1 | Domestication | roe |
+| at the beginning of your end step, you may reveal the top card of your library. if you do, each opponent loses life equal to that card's mana value. | 1 | Baneful Omen | roe |
+| at the beginning of your upkeep, if you have exactly N life, you win the game. | 1 | Near-Death Experience | roe |
+| at the beginning of your upkeep, sacrifice a creature. | 1 | Demonic Appetite | roe |
+| attach target aura you control to target creature. draw a card. | 1 | Aura Finesse | roe |
+| auras attached to permanents you control have umbra armor. | 1 | Umbra Mystic | roe |
+| choose any target. reveal cards from the top of your library until you reveal a nonland card. ~ deals damage equal to that card's mana value to that permanent o | 1 | Explosive Revelation | roe |
+| counter target spell if you control more creatures than that spell's controller. | 1 | Unified Will | roe |
+| counter target spell or ability that targets a permanent you control. ~ costs {M} less to cast if it targets a spell or ability that targets a creature you cont | 1 | Not of This World | roe |
+| counter target spell. look at its controller's hand. | 1 | Lay Bare | roe |
+| creatures with flying get +N/+N. | 1 | Gravitational Shift | roe |
+| creatures with power less than ~ power can't block it. | 1 | Aura Gnarlid | roe |
+| draw cards equal to the number of cards in target opponent's hand. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your next | 1 | Recurring Insight | roe |
+| draw two cards, then shuffle a card from your hand into your library. | 1 | See Beyond | roe |
+| each creature you control with a level counter on it gets +N/+N. | 1 | Time of Heroes | roe |
+| each player's life total becomes the lowest life total among all players. | 1 | Repay in Kind | roe |
+| eldrazi spawn creatures you control get +N/+N. | 1 | Broodwarden | roe |
+| enchanted creature gets +N/+N and has trample and annihilator N. | 1 | Eldrazi Conscription | roe |
+| enchanted land is a swamp. | 1 | Contaminated Ground | roe |
+| equipped creature gets +N/+N for each creature you control. | 1 | Pennon Blade | roe |
+| equipped creature gets +N/+N, where N is its mana value. | 1 | Hedron Matrix | roe |
+| exile N target cards from target player's graveyard. for each card exiled ~, that player loses N life and you gain N life. | 1 | Suffer the Past | roe |
+| gain control of target creature until end of turn. untap that creature. until end of turn, it gets +N/+N and gains haste. | 1 | Traitorous Instinct | roe |
+| if you control an eldrazi spawn, create three N/N colorless eldrazi spawn creature tokens. they have "..." otherwise, create one of those tokens. | 1 | Brood Birthing | roe |
+| instant and sorcery spells you control have rebound. | 1 | Cast Through Time | roe |
+| level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N first strike level N+ N/N double strike | 1 | Student of Warfare | roe |
+| level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N flying level N+ N/N flying | 1 | Skywatcher Adept | roe |
+| level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N flying level N+ N/N flying, vigilance | 1 | Knight of Cliffhaven | roe |
+| level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N level N+ N/N first strike | 1 | Caravan Escort | roe |
+| level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N level N+ N/N islandwalk (~ can't be blocked as long as defending play | 1 | Halimar Wavewatch | roe |
+| level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N lifelink level N+ N/N lifelink, indestructible | 1 | Transcendent Master | roe |
+| level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N vigilance level N+ N/N vigilance | 1 | Ikiral Outrider | roe |
+| level up {M}{M} ({M}{M}: put a level counter on this. level up only as a sorcery.) level N-N N/N deathtouch level N+ N/N first strike, deathtouch | 1 | Nirkana Cutthroat | roe |
+| level up {M}{M} ({M}{M}: put a level counter on this. level up only as a sorcery.) level N-N N/N level N+ N/N trample | 1 | Beastbreaker of Bala Ged | roe |
+| other creatures you control with defender get +N/+N. | 1 | Stalwart Shield-Bearers | roe |
+| other merfolk creatures you control get +N/+N. | 1 | Coralhelm Commander | roe |
+| prevent all combat damage that would be dealt to ~. | 1 | Guard Gomazoa | roe |
+| prevent all combat damage that would be dealt ~ by attacking creatures. | 1 | Harmless Assault | roe |
+| put target creature into its owner's library second from the top. its controller gains N life. | 1 | Oust | roe |
+| return an instant card at random from your graveyard to your hand. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your next | 1 | Surreal Memoir | roe |
+| sacrifice all creatures you control, then create that many N/N red hellion creature tokens. | 1 | Hellion Eruption | roe |
+| search your library for up to four land cards with different names and reveal them. an opponent chooses two of those cards. put the chosen cards into your grave | 1 | Realms Uncharted | roe |
+| spells and abilities your opponents control can't cause you to sacrifice permanents. | 1 | Tajuru Preserver | roe |
+| target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Distortion Strike | roe |
+| target creature gets +N/+N until end of turn for each creature you control. | 1 | Might of the Masses | roe |
+| target creature must be blocked ~ if able. draw a card. | 1 | Irresistible Prey | roe |
+| target creature you control gains protection from the color of your choice until end of turn. rebound (if you cast ~ from your hand, exile it as it resolves. at | 1 | Emerge Unscathed | roe |
+| target opponent reveals their hand. you choose a card from it. that player shuffles that card into their library. | 1 | Perish the Thought | roe |
+| target player sacrifices a creature of their choice. you gain life equal to that creature's toughness. rebound (if you cast ~ from your hand, exile it as it res | 1 | Consuming Vapors | roe |
+| when emrakul is put into a graveyard from anywhere, its owner shuffles their graveyard into their library. | 1 | Emrakul, the Aeons Torn | roe |
+| when kozilek is put into a graveyard from anywhere, its owner shuffles their graveyard into their library. | 1 | Kozilek, Butcher of Truth | roe |
+| when ulamog is put into a graveyard from anywhere, its owner shuffles their graveyard into their library. | 1 | Ulamog, the Infinite Gyre | roe |
+| when ~ enters, prevent all combat damage that other creatures would deal ~. | 1 | Haze Frog | roe |
+| when ~ enters, put a +N/+N counter on it for each card in your hand. if you do, discard your hand. | 1 | Thought Gorger | roe |
+| when ~ enters, put two level counters on each creature you control with level up. | 1 | Venerated Teacher | roe |
+| when ~ enters, you may tap any number of untapped creatures you control. you gain N life for each creature tapped ~. | 1 | Jaddi Lifestrider | roe |
+| whenever a creature with flying attacks, it loses flying until end of turn. | 1 | Gravity Well | roe |
+| whenever a creature you control with power N or less attacks, ~ deals N damage to the player or planeswalker that creature is attacking. | 1 | Raid Bombardment | roe |
+| whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | 1 | It That Betrays | roe |
+| whenever another creature you control enters, you may have ~ become a copy of that creature until end of turn. | 1 | Renegade Doppelganger | roe |
+| whenever enchanted creature becomes tapped, ~ deals N damage to that creature's controller. | 1 | Lust for War | roe |
+| whenever one or more creatures attack, ~ deals damage to each of those creatures equal to the number of attacking creatures. | 1 | Lightmine Field | roe |
+| whenever you become the target of a spell, you may untap ~. | 1 | Dormant Gomazoa | roe |
+| whenever you're dealt damage, you may put that many charge counters on ~. | 1 | Angelheart Vial | roe |
+| whenever ~ attacks, it deals N damage to each creature defending player controls. | 1 | Lord of Shatterskull Pass | roe |
+| whenever ~ attacks, switch its power and toughness until end of turn. | 1 | Valakut Fireboar | roe |
+| whenever ~ blocks or becomes blocked by a creature with power N or less, destroy ~ at end of combat. | 1 | Arrogant Bloodlord | roe |
+| whenever ~ deals combat damage to a player, create that many N/N colorless eldrazi spawn creature tokens. they have "..." | 1 | Rapacious One | roe |
+| whenever ~ deals combat damage to a player, sacrifice all other permanents you control and discard your hand. exile the top six cards of your library. you may c | 1 | Hellcarver Demon | roe |
+| whenever ~ deals combat damage to a player, you may draw N cards, where N is the number of charge counters on it. | 1 | Surrakar Spellblade | roe |
+| you gain N life. then if you have more life than an opponent, draw a card. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of y | 1 | Survival Cache | roe |
+| you may sacrifice four eldrazi spawn rather than pay ~ mana cost. | 1 | Hand of Emrakul | roe |
+| {M}, {M}: target player mills N cards, where N is the number of cards in that player's graveyard. | 1 | Keening Stone | roe |
+| {M}: cast any number of eldrazi spells from among cards you own outside the game without paying their mana costs. | 1 | Spawnsire of Ulamog | roe |
+| {M}: prevent the next N damage that would be dealt to you ~. | 1 | Reinforced Bulwark | roe |
+| {M}: ~ deals N damage to each creature and each player. | 1 | Pestilence Demon | roe |
+| {M}{M}, {M}: copy target instant or sorcery spell twice. you may choose new targets for the copies. | 1 | Echo Mage | roe |
+| {M}{M}, {M}: ~ deals damage to target player or planeswalker equal to the number of creatures you control with defender. | 1 | Vent Sentinel | roe |
+| {M}{M}: untap enchanted creature. | 1 | Crab Umbra | roe |
+| {M}{M}{M}: target creature gets -N/-N until end of turn and drana gets +N/+N until end of turn. | 1 | Drana, Kalastria Bloodchief | roe |
+| ~ can't be blocked except by three or more creatures. | 1 | Pathrazer of Ulamog | roe |
+| ~ costs {M} less to cast for each green creature you control. | 1 | Khalni Hydra | roe |
+| ~ deals N damage to each of up to three target creatures. those creatures can't block ~. | 1 | Wrap in Flames | roe |
+| ~ gets +N/+N as long as you control a creature with three or more level counters on it. | 1 | Champion's Drake | roe |
+| ~ gets +N/+N for each aura attached to it. | 1 | Kor Spiritdancer | roe |
 
 ## Notes
 

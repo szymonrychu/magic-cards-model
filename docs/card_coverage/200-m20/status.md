@@ -3,24 +3,24 @@
 - Expansion: 200
 - Set code: `m20`
 - Release date: 2019-07-12
-- Cards in scope (Modern/Pioneer/Standard-legal): 174
+- Cards in scope (Modern/Pioneer/Standard-legal): 175
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 174 |
-| Pioneer | 174 |
+| Modern | 175 |
+| Pioneer | 175 |
 | Standard | 11 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 16 | 9.2% |
+| Full (handled + tested) | 16 | 9.1% |
 | Partial (unaudited) | 4 | 2.3% |
-| Not tested (handled, untested) | 93 | 53.4% |
-| Not working (silent / notice / error) | 61 | 35.1% |
+| Not tested (handled, untested) | 94 | 53.7% |
+| Not working (silent / notice / error) | 61 | 34.9% |
 
 ## Cards needing work
 
@@ -29,6 +29,7 @@
 | Aerial Assault | silent | Destroy target tapped creature. You gain 1 life for each creature you control with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Agent of Treachery | silent | When this creature enters, gain control of target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani, Strength of the Pride | silent | 0: If you have at least 15 life more than your starting life total, exile Ajani and each artifact and creature your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Angelic Guardian | silent | Whenever one or more creatures you control attack, they gain indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Atemsis, All-Seeing | silent | Whenever Atemsis deals damage to an opponent, you may reveal your hand. If cards with at least six different mana values are revealed this way, that player lose | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bag of Holding | silent | Whenever you discard a card, exile that card from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battalion Foot Soldier | silent | When this creature enters, you may search your library for any number of cards named Battalion Foot Soldier, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -63,7 +64,6 @@
 | Pattern Matcher | silent | When this creature enters, you may search your library for a card with the same name as another creature you control, reveal it, put it into your hand, then shu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Portal of Sanctuary | silent | {1}, {T}: Return target creature you control and each Aura attached to it to their owners' hands. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Repeated Reverberation | silent | When you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability this turn, copy that spell or ability twice. You may choose new targets | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rienne, Angel of Rebirth | silent | Other multicolored creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Salvager of Ruin | silent | Sacrifice this creature: Choose target permanent card in your graveyard that was put there from the battlefield this turn. Return it to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scheming Symmetry | silent | Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scorch Spitter | silent | Whenever this creature attacks, it deals 1 damage to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -134,6 +134,7 @@
 | Healer of the Glade | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herald of the Sun | handled | {3}{W}: Put a +1/+1 counter on another target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Howling Giant | handled | When this creature enters, create two 2/2 green Wolf creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Immortal Phoenix | handled | When this creature dies, return it to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Imperial Outrider | handled |  |  | Y/Y/- | not_tested |
 | Infuriate | handled | Target creature gets +3/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ironroot Warlord | handled | Ironroot Warlord's power is equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -211,60 +212,73 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature enters, you may search your library and/or graveyard for a card named Mu Yanling, Celestial Wind, reveal it, and put it into your hand. If yo | Battalion Foot Soldier, Boneclad Necromancer, Ethereal Elk, Goldmane Griffin, Loxodon Lifechanter, Pattern Matcher, Sorin's Guide, Yanling's Harbinger | 8 |
-| This creature gets +2/+2 as long as there are three or more land cards in your graveyard. | Celestial Messenger, Elvish Reclaimer, Unchained Berserker, Vivien's Crocodile | 4 |
-| This creature enters with a +1/+1 counter on it for each different mana cost among nonland cards in your graveyard. | Embodiment of Agonies, Squad Captain | 2 |
-| +2: Until your next turn, up to one target creature gets -2/-0 and loses flying. | Mu Yanling, Celestial Wind, Mu Yanling, Sky Dancer | 2 |
-| Whenever another creature you control enters, this creature deals 2 damage to it. If a Dinosaur is dealt damage this way, this creature gets +2/+0 until end of  | Marauding Raptor, Overgrowth Elemental | 2 |
-| As an additional cost to cast this spell, sacrifice a creature. Return a creature card from your graveyard to the battlefield, then return another creature card | Blood for Bones | 1 |
-| −2: Chandra deals 4 damage to target creature and 2 damage to that creature's controller. | Chandra, Flame's Fury | 1 |
-| Chandra's Flame Wave deals 2 damage to target player and each creature that player controls. Search your library and/or graveyard for a card named Chandra, Flam | Chandra's Flame Wave | 1 |
-| {1}, {T}: Choose a card name, then reveal the top card of your library. If that card has the chosen name, sacrifice this artifact and draw three cards. Activate | Diviner's Lockbox | 1 |
-| Choose one — • Create two 3/3 colorless Golem artifact creature tokens. • Choose target artifact you control. Each other artifact you control becomes a copy of  | Masterful Replication | 1 |
-| Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top. | Scheming Symmetry | 1 |
-| Choose up to two target permanent cards in your graveyard that were put there from the battlefield this turn. Return them to the battlefield tapped. | Brought Back | 1 |
-| Counter target activated ability, triggered ability, or legendary spell. | Tale's End | 1 |
-| Creatures your opponents control can't have +1/+1 counters put on them. | Blightbeetle | 1 |
-| Destroy target tapped creature. You gain 1 life for each creature you control with flying. | Aerial Assault | 1 |
-| {1}{R}: Each creature you control named Pack Mastiff gets +1/+0 until end of turn. | Pack Mastiff | 1 |
-| +2: Each opponent gets an emblem with "At the beginning of your upkeep, this emblem deals 1 damage to you." | Chandra, Awakened Inferno | 1 |
-| Enchanted creature gets +0/+2 and assigns combat damage equal to its toughness rather than its power. | Gauntlets of Light | 1 |
-| Equipped creature gets +1/+1 and can't be blocked by more than one creature. | Wolfrider's Saddle | 1 |
-| Equipped creature gets +10/+10 and loses flying. | Colossus Hammer | 1 |
-| Exile target creature an opponent controls with mana value 2 or less and all other creatures that player controls with the same name as that creature. Then that | Legion's End | 1 |
-| {2}{W}{U}{B}{R}{G}: Exile the top three cards of your library. You may play them this turn without paying their mana costs. | Golos, Tireless Pilgrim | 1 |
-| Exile two legendary cards from your graveyard: Until end of turn, each legendary card in your graveyard gains "You may play this card from your graveyard." | Kethis, the Hidden Hand | 1 |
-| 0: If you have at least 15 life more than your starting life total, exile Ajani and each artifact and creature your opponents control. | Ajani, Strength of the Pride | 1 |
-| {3}, {T}: Look at the top three cards of your library. You may reveal a creature card of the chosen type from among them and put it into your hand. Put the rest | Icon of Ancestry | 1 |
-| Other creatures you control with flying get +1/+1. | Empyrean Eagle | 1 |
-| Other multicolored creatures you control get +1/+0. | Rienne, Angel of Rebirth | 1 |
-| {T}, Pay 1 life: Exile the top card of your library. | Mystic Forge | 1 |
-| Put target creature with power 4 or greater on the bottom of its owner's library. | Eternal Isolation | 1 |
-| Return all nonland permanents to their owners' hands. If you return four or more nontoken permanents you control this way, you may put a permanent card from you | Flood of Tears | 1 |
-| {1}, {T}: Return target creature you control and each Aura attached to it to their owners' hands. Activate only during your turn. | Portal of Sanctuary | 1 |
-| Sacrifice this creature: Choose target permanent card in your graveyard that was put there from the battlefield this turn. Return it to your hand. | Salvager of Ruin | 1 |
-| Sacrifice this creature: Counter target spell that targets you. | Cerulean Drake | 1 |
-| Spells your opponents cast that target this creature cost {2} more to cast. | Boreal Elemental | 1 |
-| Target creature gets +3/+3 until end of turn. It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | Growth Cycle | 1 |
-| {G}: This creature gains your choice of reach, trample, or haste until end of turn. | Shifting Ceratops | 1 |
-| This spell can't be countered. Target opponent reveals their hand. Exile all noncreature, nonland cards from that player's hand and graveyard. | Thought Distortion | 1 |
-| −8: Until end of turn, each Vampire you control gains "{T}: Gain control of target creature." | Sorin, Vampire Lord | 1 |
-| When this creature enters, choose one — • Double the number of +1/+1 counters on this creature. • This creature fights target creature you don't control. | Voracious Hydra | 1 |
-| When this creature enters, each opponent exiles a card from their hand. | Yarok's Fenlurker | 1 |
-| When this creature enters, gain control of target permanent. | Agent of Treachery | 1 |
-| When this creature enters, return another creature you control to its owner's hand. | Yarok's Wavecrasher | 1 |
-| When this creature enters, reveal the top five cards of your library. Put a land card from among them onto the battlefield and the rest into your graveyard. | Cavalier of Thorns | 1 |
-| When you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability this turn, copy that spell or ability twice. You may choose new targets | Repeated Reverberation | 1 |
-| Whenever Atemsis deals damage to an opponent, you may reveal your hand. If cards with at least six different mana values are revealed this way, that player lose | Atemsis, All-Seeing | 1 |
-| Whenever this creature attacks, choose target Elemental creature card in your graveyard with toughness less than this creature's toughness. Return that card to  | Thunderkin Awakener | 1 |
-| Whenever this creature attacks, it deals 1 damage to the player or planeswalker it's attacking. | Scorch Spitter | 1 |
-| Whenever you activate a loyalty ability of a Chandra planeswalker, you may pay {1}. If you do, copy that ability. You may choose new targets for the copy. | Chandra's Regulator | 1 |
-| Whenever you discard a card, exile that card from your graveyard. | Bag of Holding | 1 |
-| −2: You may cast target instant or sorcery card with mana value 3 or less from your graveyard. If that spell would be put into your graveyard, exile it instead. | Chandra, Acolyte of Flame | 1 |
-| You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost. | Sephara, Sky's Blade | 1 |
-| −3: You may put a Vampire creature card from your hand onto the battlefield. | Sorin, Imperious Bloodlord | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Choose one | 1 | Masterful Replication | m20 |
+| +N: each opponent gets an emblem with "..." | 1 | Chandra, Awakened Inferno | m20 |
+| +N: until your next turn, up to one target creature gets -N/-N and loses flying. | 1 | Mu Yanling, Sky Dancer | m20 |
+| +N: until your next turn, up to one target creature gets -N/-N. | 1 | Mu Yanling, Celestial Wind | m20 |
+| N: if you have at least N life more than your starting life total, exile ajani and each artifact and creature your opponents control. | 1 | Ajani, Strength of the Pride | m20 |
+| as an additional cost to cast ~, sacrifice a creature. return a creature card from your graveyard to the battlefield, then return another creature card from you | 1 | Blood for Bones | m20 |
+| choose two target players. each of them searches their library for a card, then shuffles and puts that card on top. | 1 | Scheming Symmetry | m20 |
+| choose up to two target permanent cards in your graveyard that were put there from the battlefield ~. return them to the battlefield tapped. | 1 | Brought Back | m20 |
+| counter target activated ability, triggered ability, or legendary spell. | 1 | Tale's End | m20 |
+| creatures your opponents control can't have +N/+N counters put on them. | 1 | Blightbeetle | m20 |
+| destroy target tapped creature. you gain N life for each creature you control with flying. | 1 | Aerial Assault | m20 |
+| enchanted creature gets +N/+N and assigns combat damage equal to its toughness rather than its power. | 1 | Gauntlets of Light | m20 |
+| equipped creature gets +N/+N and can't be blocked by more than one creature. | 1 | Wolfrider's Saddle | m20 |
+| equipped creature gets +N/+N and loses flying. | 1 | Colossus Hammer | m20 |
+| exile target creature an opponent controls with mana value N or less and all other creatures that player controls with the same name as that creature. then that | 1 | Legion's End | m20 |
+| exile two legendary cards from your graveyard: until end of turn, each legendary card in your graveyard gains "..." | 1 | Kethis, the Hidden Hand | m20 |
+| other creatures you control with flying get +N/+N. | 1 | Empyrean Eagle | m20 |
+| put target creature with power N or greater on the bottom of its owner's library. | 1 | Eternal Isolation | m20 |
+| return all nonland permanents to their owners' hands. if you return four or more nontoken permanents you control ~, you may put a permanent card from your hand  | 1 | Flood of Tears | m20 |
+| sacrifice ~: choose target permanent card in your graveyard that was put there from the battlefield ~. return it to your hand. | 1 | Salvager of Ruin | m20 |
+| sacrifice ~: counter target spell that targets you. | 1 | Cerulean Drake | m20 |
+| spells your opponents cast that target ~ cost {M} more to cast. | 1 | Boreal Elemental | m20 |
+| target creature gets +N/+N until end of turn. it gets an additional +N/+N until end of turn for each card named ~ in your graveyard. | 1 | Growth Cycle | m20 |
+| when you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability ~, copy that spell or ability twice. you may choose new targets for the | 1 | Repeated Reverberation | m20 |
+| when ~ enters, choose one — • double the number of +N/+N counters on ~. • ~ fights target creature you don't control. | 1 | Voracious Hydra | m20 |
+| when ~ enters, each opponent exiles a card from their hand. | 1 | Yarok's Fenlurker | m20 |
+| when ~ enters, gain control of target permanent. | 1 | Agent of Treachery | m20 |
+| when ~ enters, return another creature you control to its owner's hand. | 1 | Yarok's Wavecrasher | m20 |
+| when ~ enters, reveal the top five cards of your library. put a land card from among them onto the battlefield and the rest into your graveyard. | 1 | Cavalier of Thorns | m20 |
+| when ~ enters, you may exile target creature card from a graveyard. if you do, create a N/N black zombie creature token. | 1 | Boneclad Necromancer | m20 |
+| when ~ enters, you may have your life total become the total toughness of creatures you control. | 1 | Loxodon Lifechanter | m20 |
+| when ~ enters, you may search your library and/or graveyard for a card named ajani, inspiring leader, reveal it, and put it into your hand. if you search your l | 1 | Goldmane Griffin | m20 |
+| when ~ enters, you may search your library and/or graveyard for a card named mu yanling, celestial wind, reveal it, and put it into your hand. if you search you | 1 | Yanling's Harbinger | m20 |
+| when ~ enters, you may search your library and/or graveyard for a card named sorin, vampire lord, reveal it, and put it into your hand. if you search your libra | 1 | Sorin's Guide | m20 |
+| when ~ enters, you may search your library and/or graveyard for a card named vivien, nature's avenger, reveal it, and put it into your hand. if you search your  | 1 | Ethereal Elk | m20 |
+| when ~ enters, you may search your library for a card with the same name as another creature you control, reveal it, put it into your hand, then shuffle. | 1 | Pattern Matcher | m20 |
+| when ~ enters, you may search your library for any number of cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Battalion Foot Soldier | m20 |
+| whenever another creature you control dies, you gain N life. if that creature was an elemental, put a +N/+N counter on ~. | 1 | Overgrowth Elemental | m20 |
+| whenever another creature you control enters, ~ deals N damage to it. if a dinosaur is dealt damage ~, ~ gets +N/+N until end of turn. | 1 | Marauding Raptor | m20 |
+| whenever atemsis deals damage to an opponent, you may reveal your hand. if cards with at least six different mana values are revealed ~, that player loses the g | 1 | Atemsis, All-Seeing | m20 |
+| whenever one or more creatures you control attack, they gain indestructible until end of turn. | 1 | Angelic Guardian | m20 |
+| whenever you activate a loyalty ability of a chandra planeswalker, you may pay {M}. if you do, copy that ability. you may choose new targets for the copy. | 1 | Chandra's Regulator | m20 |
+| whenever you discard a card, exile that card from your graveyard. | 1 | Bag of Holding | m20 |
+| whenever ~ attacks, choose target elemental creature card in your graveyard with toughness less than ~ toughness. return that card to the battlefield tapped and | 1 | Thunderkin Awakener | m20 |
+| whenever ~ attacks, it deals N damage to the player or planeswalker it's attacking. | 1 | Scorch Spitter | m20 |
+| you may pay {M} and tap four untapped creatures you control with flying rather than pay ~ mana cost. | 1 | Sephara, Sky's Blade | m20 |
+| {M}, pay N life: exile the top card of your library. | 1 | Mystic Forge | m20 |
+| {M}, {M}: choose a card name, then reveal the top card of your library. if that card has the chosen name, sacrifice ~ and draw three cards. activate only as a s | 1 | Diviner's Lockbox | m20 |
+| {M}, {M}: look at the top three cards of your library. you may reveal a creature card of the chosen type from among them and put it into your hand. put the rest | 1 | Icon of Ancestry | m20 |
+| {M}, {M}: return target creature you control and each aura attached to it to their owners' hands. activate only during your turn. | 1 | Portal of Sanctuary | m20 |
+| {M}: ~ gains your choice of reach, trample, or haste until end of turn. | 1 | Shifting Ceratops | m20 |
+| {M}{M}: each creature you control named ~ gets +N/+N until end of turn. | 1 | Pack Mastiff | m20 |
+| {M}{M}{M}{M}{M}{M}: exile the top three cards of your library. you may play them ~ without paying their mana costs. | 1 | Golos, Tireless Pilgrim | m20 |
+| ~ can"..."s hand and graveyard. | 1 | Thought Distortion | m20 |
+| ~ deals N damage to target player and each creature that player controls. search your library and/or graveyard for a card named chandra, flame's fury, reveal it | 1 | Chandra's Flame Wave | m20 |
+| ~ enters with a +N/+N counter on it for each different mana cost among nonland cards in your graveyard. | 1 | Embodiment of Agonies | m20 |
+| ~ enters with a +N/+N counter on it for each other creature you control. | 1 | Squad Captain | m20 |
+| ~ gets +N/+N as long as it's attacking. | 1 | Unchained Berserker | m20 |
+| ~ gets +N/+N as long as there are three or more land cards in your graveyard. | 1 | Elvish Reclaimer | m20 |
+| ~ gets +N/+N as long as you control a vivien planeswalker. | 1 | Vivien's Crocodile | m20 |
+| ~ gets +N/+N as long as you control a yanling planeswalker. | 1 | Celestial Messenger | m20 |
+| −N: chandra deals N damage to target creature and N damage to that creature's controller. | 1 | Chandra, Flame's Fury | m20 |
+| −N: until end of turn, each vampire you control gains "..." | 1 | Sorin, Vampire Lord | m20 |
+| −N: you may cast target instant or sorcery card with mana value N or less from your graveyard. if that spell would be put into your graveyard, exile it instead. | 1 | Chandra, Acolyte of Flame | m20 |
+| −N: you may put a vampire creature card from your hand onto the battlefield. | 1 | Sorin, Imperious Bloodlord | m20 |
 
 ## Notes
 

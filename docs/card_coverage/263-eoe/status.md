@@ -289,107 +289,117 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature enters, create a Lander token. At the beginning of the end step on your next turn, sacrifice that token. | Biomechan Engineer, Biotech Specialist, Galactic Wayfarer, Glacier Godmaw, Kav Landseeker | 5 |
-| At the beginning of your end step, if you control two or more tapped creatures, put a +1/+1 counter on each creature you control other than this creature. | Dawnstrike Vanguard, Haliya, Guided by Light, The Endstone | 3 |
-| This spell costs {X} less to cast, where X is the number of differently named lands you control. | Fungal Colossus, Gigastorm Titan, Lashwhip Predator | 3 |
-| As an additional cost to cast this spell, sacrifice an artifact or creature. Return target creature or Spacecraft card with mana value 5 or less from your grave | Close Encounter, Scrounge for Eternity | 2 |
-| As long as you control an artifact, this creature gets +1/+0 and has deathtouch. | Cloudsculpt Technician, Gravblade Heavy | 2 |
-| Target creature gets -2/-2 until end of turn. Void — That creature gets -10/-10 until end of turn instead if a nonland permanent left the battlefield this turn  | Depressurize, Tragic Trajectory | 2 |
-| When this Aura enters, enchanted creature fights up to one target creature an opponent controls. | Meltstrider's Resolve, Pain for All | 2 |
-| When this creature enters, look at the top five cards of your library. You may reveal a Spacecraft card from among them and put it into your hand. Put the rest  | Famished Worldsire, Pulsar Squadron Ace | 2 |
-| Whenever this creature becomes tapped, another target creature you control gets +X/+X until end of turn, where X is this creature's power. | Hemosymbic Mite, Seedship Agrarian | 2 |
-| 20+ \| {T}: Add X mana of any one color, where X is the number of charge counters on The Eternity Elevator. | The Eternity Elevator | 1 |
-| Artifact cards and red creature cards in your hand have warp {2}{R}. | Tannuk, Steadfast Second | 1 |
-| Artifacts you control are Foods in addition to their other types and have "{2}, {T}, Sacrifice this artifact: You gain 3 life." | Ragost, Deft Gastronaut | 1 |
-| As long as an artifact entered the battlefield under your control this turn, this creature can attack as though it didn't have defender. | Mechan Shieldmate | 1 |
-| 2+ \| At the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness 2/2 and ga | Synthesizer Labship | 1 |
-| Choose odd or even. Destroy each creature with mana value of the chosen quality. Then gain control of all creatures until end of turn. Untap them. They gain has | Mutinous Massacre | 1 |
-| Cosmogoyf's power is equal to the number of cards you own in exile and its toughness is equal to that number plus 1. | Cosmogoyf | 1 |
-| Counter target spell. If the amount of mana spent to cast that spell was less than its mana value, you draw a card. | Unravel | 1 |
-| Counter target spell unless its controller pays {2}. If they do, you create a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this token: Search your  | Divert Disaster | 1 |
-| Create a Lander token. Then you may sacrifice an artifact. When you do, Lithobraking deals 2 damage to each creature. (A Lander token is an artifact with "{2},  | Lithobraking | 1 |
-| 12+ \| {3}{W}, {T}: Create a token that's a copy of target artifact or enchantment you control, except it's legendary. Activate only as a sorcery. | Adagia, Windswept Bastion | 1 |
-| Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the ne | Devastating Onslaught | 1 |
-| Creature spells you control can't be countered. | Frenzied Baloth | 1 |
-| Destroy all creatures, then any number of target players each mill half their library, rounded down. | Singularity Rupture | 1 |
-| Destroy all creatures with toughness X or less. You lose X life. If X is 6 or more, return a creature card put into a graveyard this way to the battlefield unde | Zero Point Ballad | 1 |
-| Destroy target artifact or enchantment. If its mana value was 2 or less, create a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this token: Search y | Seedship Impact | 1 |
-| Destroy target nonland permanent. Its controller creates a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this token: Search your library for a basic | Emergency Eject | 1 |
-| During your turn, other creatures you control get +1/+0. | Memorial Team Leader | 1 |
-| Each creature you control with toughness greater than its power stations permanents using its toughness rather than its power. | Tapestry Warden | 1 |
-| Exile all creatures and Spacecraft. | Beyond the Quiet | 1 |
-| {2}, {T}, Exile an artifact card from your graveyard: Put a +1/+1 counter on this creature, then it deals damage equal to its power to any target. | Rust Harvester | 1 |
-| Focus Fire deals X damage to target attacking or blocking creature, where X is 2 plus the number of creatures and/or Spacecraft you control. | Focus Fire | 1 |
-| Gain control of target artifact or creature until end of turn. Untap that permanent. It gains haste until end of turn. If it's a Spacecraft, put ten charge coun | Systems Override | 1 |
-| If one or more counters would be put on a creature, Spacecraft, or Planet you control, twice that many of each of those kinds of counters are put on it instead. | Loading Zone | 1 |
-| Orbital Plunge deals 6 damage to target creature. If excess damage was dealt this way, create a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this t | Orbital Plunge | 1 |
-| 2+ \| Other creatures you control get +1/+1. | Lumen-Class Frigate | 1 |
-| Other tapped legendary creatures you control have indestructible. | The Seriema | 1 |
-| 12+ \| {1}{B}, {T}, Pay 2 life, Sacrifice a creature: Draw cards equal to the sacrificed creature's power. Activate only as a sorcery. | Susur Secundi, Void Altar | 1 |
-| Plasma Bolt deals 2 damage to any target. Void — Plasma Bolt deals 3 damage instead if a nonland permanent left the battlefield this turn or a spell was warped  | Plasma Bolt | 1 |
-| {T}: Return target creature card from your graveyard to the battlefield. It's a Skeleton in addition to its other types and has no abilities. Activate only as a | Xu-Ifit, Osteoharmonist | 1 |
-| Return target nonland permanent to its owner's hand. If it was attacking, create a 1/1 colorless Drone artifact creature token with flying and "This token can b | Desculpting Blast | 1 |
-| 12+ \| {1}{R}, {T}, Sacrifice a land: Create a 2/2 colorless Robot artifact creature token, then creatures you control get +1/+0 and gain haste until end of tur | Kavaron, Memorial World | 1 |
-| {T}, Sacrifice another artifact: Exile the top X cards of your library, where X is one plus the mana value of the sacrificed artifact. You may play those cards  | Memorial Vault | 1 |
-| {6}, {T}, Sacrifice this artifact: Destroy target nonland permanent. This ability costs {3} less to activate if you attacked with a Spacecraft this turn. | Thaumaton Torpedo | 1 |
-| {7}, {T}, Sacrifice this artifact: Draw X cards, where X is the number of differently named lands you control. | All-Fates Scroll | 1 |
-| {10}, Sacrifice this creature: It deals 3 damage to any target. Target player draws three cards and gains 3 life. This ability costs {X} less to activate, where | Survey Mechan | 1 |
-| Spells you cast have affinity for artifacts. | Sami, Wildcat Captain | 1 |
-| Station (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery. It's an artifact creature at 3+ | Galvanizing Sawship | 1 |
-| Surveil 1, then you draw a card and lose 1 life. (To surveil 1, look at the top card of your library. You may put it into your graveyard.) Void — If a nonland p | Hymn of the Faller | 1 |
-| {3}{W}, {T}: Tap another target creature. This ability costs {2} less to activate if you control a creature with a +1/+1 counter on it. | Starport Security | 1 |
-| Target creature deals damage to itself equal to its power. If that creature has flying, it deals twice that much damage to itself instead. | Cut Propulsion | 1 |
-| Target creature you control gains double strike until end of turn. If it has a +1/+1 counter on it, draw a card. | Dual-Sun Technique | 1 |
-| Target creature you control gets +3/+2 until end of turn. If that creature was cast for its warp cost, it also gains trample and haste until end of turn. | Full Bore | 1 |
-| Target player mills cards equal to your life total. | Space-Time Anomaly | 1 |
-| The first time you would create one or more tokens each turn, you may instead create that many tokens that are copies of enchanted permanent. | Moonlit Meditation | 1 |
-| The second spell you cast each turn costs {2} less to cast. | Uthros Psionicist | 1 |
-| This creature can't be blocked if you've cast two or more spells this turn. | Illvoi Infiltrator | 1 |
-| This creature enters with a +1/+1 counter on it for each other creature and/or artifact you control. | Luxknight Breacher | 1 |
-| This creature gets +2/+0 as long as you've cast two or more spells this turn. | Brightspear Zealot | 1 |
-| This creature gets +X/+0, where X is the greatest mana value among other artifacts you control. | Emissary Escort | 1 |
-| {1}{R}: This Spacecraft gets +2/+0 until end of turn. | Debris Field Crusher | 1 |
-| 0: Untap target artifact or creature. If it's an artifact creature, put a +1/+1 counter on it. | Tezzeret, Cruel Captain | 1 |
-| {T}: Until end of turn, target creature gains "Whenever this creature is dealt damage, you draw that many cards and lose that much life." That creature's contro | Requiem Monolith | 1 |
-| Void — Whenever Alpharael attacks, if a nonland permanent left the battlefield this turn or a spell was warped this turn, defending player loses half their life | Alpharael, Stonechosen | 1 |
-| When Alpharael enters, draw two cards. Then discard two cards unless you discard an artifact card. | Alpharael, Dreaming Acolyte | 1 |
-| When enchanted creature becomes tapped or is dealt damage, destroy it. | Cryoshatter | 1 |
-| When Infinite Guideline Station enters, create a tapped 2/2 colorless Robot artifact creature token for each multicolored permanent you control. | Infinite Guideline Station | 1 |
-| When this artifact enters, exile all artifacts and creatures with mana value 2 or less until this artifact leaves the battlefield. | Pinnacle Starcage | 1 |
-| When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | Hardlight Containment | 1 |
-| When this creature dies, create a Lander token. | Beamsaw Prospector | 1 |
-| When this creature dies, each player creates a Lander token. | Edge Rover | 1 |
-| When this creature enters, choose one — • Put two +1/+1 counters on this creature. • Put target exiled card with warp on the bottom of its owner's library. | Blade of the Swarm | 1 |
-| When this creature enters, creatures your opponents control get -3/-0 until your next turn. | Mouth of the Storm | 1 |
-| When this creature enters, destroy up to one other target creature. If that creature wasn't dealt damage this turn, its controller draws two cards. | Faller's Faithful | 1 |
-| When this creature enters, each opponent exiles a card from their hand and may play that card for as long as it remains exiled. Each spell cast this way costs { | Lightstall Inquisitor | 1 |
-| When this creature enters, exile each opponent's graveyard. Create a Lander token. | Dauntless Scrapbot | 1 |
-| When this creature enters, if an opponent controls more lands than you, create a Lander token. | Sunstar Expansionist | 1 |
-| When this creature enters, target opponent may have you create two Lander tokens. If they don't, put two +1/+1 counters on this creature. | Terrapact Intimidator | 1 |
-| When this creature enters, until end of turn, target creature you control gets +X/+0 and target creature an opponent controls gets -0/-X, where X is the number  | Monoist Circuit-Feeder | 1 |
-| When this creature leaves the battlefield, draw a card, then you may put a permanent card with mana value less than or equal to the number of lands you control  | Anticausal Vestige | 1 |
-| When this enchantment enters, create a Lander token. | Bioengineered Future | 1 |
-| When this enchantment enters, if you cast it, shuffle your hand and graveyard into your library, then draw seven cards. | Weftwalking | 1 |
-| When this Equipment enters, create a 2/2 colorless Robot artifact creature token and attach this Equipment to it. | Auxiliary Boosters | 1 |
-| When this land enters, sacrifice it unless you tap an untapped permanent you control. | Command Bridge | 1 |
-| When this Spacecraft enters, it deals damage equal to the number of artifacts you control to target creature an opponent controls. | Warmaker Gunship | 1 |
-| When this Spacecraft enters, you may sacrifice a land or Lander. If you do, search your library for up to two basic land cards, put them onto the battlefield ta | Larval Scoutlander | 1 |
-| Whenever a creature you control dies, each opponent chooses a creature they control and exiles it. | Sothera, the Supervoid | 1 |
-| 1+ \| Whenever an opponent discards a card, they lose 3 life. | Entropic Battlecruiser | 1 |
-| Whenever enchanted creature attacks, put target creature card from defending player's graveyard onto the battlefield under your control tapped and attacking. | Chorale of the Void | 1 |
-| Whenever equipped creature attacks, choose up to one target creature. That creature can't be blocked this turn and has base power and toughness 1/1 until end of | Atomic Microsizer | 1 |
-| Whenever this creature attacks, you may sacrifice another creature or artifact. If you do, this creature gets +2/+0 until end of turn. | Comet Crawler | 1 |
-| Whenever this creature or another Kavu you control enters, exile the top card of your library. For as long as that card remains exiled, you may play it if you c | Possibility Technician | 1 |
-| Whenever this Spacecraft attacks, defending player mills four cards. | Specimen Freighter | 1 |
-| 10+ \| Whenever you attack, Dawnsire deals 100 damage to up to one target creature or planeswalker. | Dawnsire, Sunstar Dreadnought | 1 |
-| Whenever you attack, you may remove a +1/+1 counter from each of two creatures you control. If you do, draw a card and create a 2/2 colorless Robot artifact cre | Dyadrine, Synthesis Amalgam | 1 |
-| Whenever you put one or more +1/+1 counters on a creature you control, you may draw that many cards. Do this only once each turn. | Terrasymbiosis | 1 |
-| You draw two cards and lose 2 life. Void — If a nonland permanent left the battlefield this turn or a spell was warped this turn, instead you draw two cards and | Decode Transmissions | 1 |
-| You gain 2 life. Create a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battl | Sami's Curiosity | 1 |
-| You may look at the top card of your library any time. | Mm'menon, the Right Hand | 1 |
-| You may put an artifact or creature card from your hand onto the battlefield. That permanent gains haste, "When this permanent leaves the battlefield, it deals  | Terminal Velocity | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when ~ enters, create a lander token. | 5 | Bioengineered Future, Biomechan Engineer, Biotech Specialist, Galactic Wayfarer, Glacier Godmaw | eoe |
+| Void | 1 | Alpharael, Stonechosen | eoe |
+| N+ \| at the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness N/N and ga | 1 | Synthesizer Labship | eoe |
+| N+ \| other creatures you control get +N/+N. | 1 | Lumen-Class Frigate | eoe |
+| N+ \| whenever an opponent discards a card, they lose N life. | 1 | Entropic Battlecruiser | eoe |
+| N+ \| whenever you attack, dawnsire deals N damage to up to one target creature or planeswalker. | 1 | Dawnsire, Sunstar Dreadnought | eoe |
+| N+ \| {M}: add N mana of any one color, where N is the number of charge counters on ~. | 1 | The Eternity Elevator | eoe |
+| N+ \| {M}{M}, {M}, pay N life, sacrifice a creature: draw cards equal to the sacrificed creature's power. activate only as a sorcery. | 1 | Susur Secundi, Void Altar | eoe |
+| N+ \| {M}{M}, {M}, sacrifice a land: create a N/N colorless robot artifact creature token, then creatures you control get +N/+N and gain haste until end of turn | 1 | Kavaron, Memorial World | eoe |
+| N+ \| {M}{M}, {M}: create a token that"..."s legendary. activate only as a sorcery. | 1 | Adagia, Windswept Bastion | eoe |
+| N: untap target artifact or creature. if it's an artifact creature, put a +N/+N counter on it. | 1 | Tezzeret, Cruel Captain | eoe |
+| artifact cards and red creature cards in your hand have warp {M}{M}. | 1 | Tannuk, Steadfast Second | eoe |
+| artifacts you control are foods in addition to their other types and have "..." | 1 | Ragost, Deft Gastronaut | eoe |
+| as an additional cost to cast ~, choose a creature you control or a warped creature card you own in exile. ~ deals damage equal to the power of the chosen creat | 1 | Close Encounter | eoe |
+| as an additional cost to cast ~, sacrifice an artifact or creature. return target creature or spacecraft card with mana value N or less from your graveyard to t | 1 | Scrounge for Eternity | eoe |
+| as long as an artifact entered the battlefield under your control ~, ~ can attack as though it didn't have defender. | 1 | Mechan Shieldmate | eoe |
+| as long as you control an artifact, ~ gets +N/+N and has deathtouch. | 1 | Gravblade Heavy | eoe |
+| as long as you control an artifact, ~ gets +N/+N. | 1 | Cloudsculpt Technician | eoe |
+| at the beginning of your end step, draw a card if you've gained N or more life ~. | 1 | Haliya, Guided by Light | eoe |
+| at the beginning of your end step, if you control two or more tapped creatures, put a +N/+N counter on each creature you control other than ~. | 1 | Dawnstrike Vanguard | eoe |
+| at the beginning of your end step, your life total becomes half your starting life total, rounded up. | 1 | The Endstone | eoe |
+| choose odd or even. destroy each creature with mana value of the chosen quality. then gain control of all creatures until end of turn. untap them. they gain has | 1 | Mutinous Massacre | eoe |
+| counter target spell unless its controller pays {M}. if they do, you create a lander token. (it's an artifact with "...") | 1 | Divert Disaster | eoe |
+| counter target spell. if the amount of mana spent to cast that spell was less than its mana value, you draw a card. | 1 | Unravel | eoe |
+| create N tokens that are copies of target artifact or creature you control. those tokens gain haste until end of turn. sacrifice them at the beginning of the ne | 1 | Devastating Onslaught | eoe |
+| create a lander token. then you may sacrifice an artifact. when you do, ~ deals N damage to each creature. (a lander token is an artifact with "...") | 1 | Lithobraking | eoe |
+| creature spells you control can't be countered. | 1 | Frenzied Baloth | eoe |
+| destroy all creatures with toughness N or less. you lose N life. if N is N or more, return a creature card put into a graveyard ~ to the battlefield under your  | 1 | Zero Point Ballad | eoe |
+| destroy all creatures, then any number of target players each mill half their library, rounded down. | 1 | Singularity Rupture | eoe |
+| destroy target artifact or enchantment. if its mana value was N or less, create a lander token. (it's an artifact with "...") | 1 | Seedship Impact | eoe |
+| destroy target nonland permanent. its controller creates a lander token. (it's an artifact with "...") | 1 | Emergency Eject | eoe |
+| during your turn, other creatures you control get +N/+N. | 1 | Memorial Team Leader | eoe |
+| each creature you control with toughness greater than its power stations permanents using its toughness rather than its power. | 1 | Tapestry Warden | eoe |
+| exile all creatures and spacecraft. | 1 | Beyond the Quiet | eoe |
+| gain control of target artifact or creature until end of turn. untap that permanent. it gains haste until end of turn. if it's a spacecraft, put ten charge coun | 1 | Systems Override | eoe |
+| if one or more counters would be put on a creature, spacecraft, or planet you control, twice that many of each of those kinds of counters are put on it instead. | 1 | Loading Zone | eoe |
+| other tapped legendary creatures you control have indestructible. | 1 | The Seriema | eoe |
+| return target nonland permanent to its owner's hand. if it was attacking, create a N/N colorless drone artifact creature token with flying and "..." | 1 | Desculpting Blast | eoe |
+| spells you cast have affinity for artifacts. | 1 | Sami, Wildcat Captain | eoe |
+| station (tap another creature you control: put charge counters equal to its power on ~. station only as a sorcery. it's an artifact creature at N+.) N+ \| flyin | 1 | Galvanizing Sawship | eoe |
+| surveil N, then you draw a card and lose N life. (to surveil N, look at the top card of your library. you may put it into your graveyard.) void — if a nonland p | 1 | Hymn of the Faller | eoe |
+| target creature deals damage to itself equal to its power. if that creature has flying, it deals twice that much damage to itself instead. | 1 | Cut Propulsion | eoe |
+| target creature gets -N/-N until end of turn. then if that creature's power is N or less, destroy it. | 1 | Depressurize | eoe |
+| target creature gets -N/-N until end of turn. void — that creature gets -N/-N until end of turn instead if a nonland permanent left the battlefield ~ or a spell | 1 | Tragic Trajectory | eoe |
+| target creature you control gains double strike until end of turn. if it has a +N/+N counter on it, draw a card. | 1 | Dual-Sun Technique | eoe |
+| target creature you control gets +N/+N until end of turn. if that creature was cast for its warp cost, it also gains trample and haste until end of turn. | 1 | Full Bore | eoe |
+| target player mills cards equal to your life total. | 1 | Space-Time Anomaly | eoe |
+| the first time you would create one or more tokens each turn, you may instead create that many tokens that are copies of enchanted permanent. | 1 | Moonlit Meditation | eoe |
+| the second spell you cast each turn costs {M} less to cast. | 1 | Uthros Psionicist | eoe |
+| when alpharael enters, draw two cards. then discard two cards unless you discard an artifact card. | 1 | Alpharael, Dreaming Acolyte | eoe |
+| when enchanted creature becomes tapped or is dealt damage, destroy it. | 1 | Cryoshatter | eoe |
+| when ~ dies, create a lander token. | 1 | Beamsaw Prospector | eoe |
+| when ~ dies, each player creates a lander token. | 1 | Edge Rover | eoe |
+| when ~ enters, choose one — • put two +N/+N counters on ~. • put target exiled card with warp on the bottom of its owner's library. | 1 | Blade of the Swarm | eoe |
+| when ~ enters, create a N/N colorless robot artifact creature token and attach ~ to it. | 1 | Auxiliary Boosters | eoe |
+| when ~ enters, create a lander token. at the beginning of the end step on your next turn, sacrifice that token. | 1 | Kav Landseeker | eoe |
+| when ~ enters, create a tapped N/N colorless robot artifact creature token for each multicolored permanent you control. | 1 | Infinite Guideline Station | eoe |
+| when ~ enters, creatures your opponents control get -N/-N until your next turn. | 1 | Mouth of the Storm | eoe |
+| when ~ enters, destroy up to one other target creature. if that creature wasn't dealt damage ~, its controller draws two cards. | 1 | Faller's Faithful | eoe |
+| when ~ enters, each opponent exiles a card from their hand and may play that card for as long as it remains exiled. each spell cast ~ costs {M} more to cast. ea | 1 | Lightstall Inquisitor | eoe |
+| when ~ enters, enchanted creature deals damage equal to its power to any other target. | 1 | Pain for All | eoe |
+| when ~ enters, enchanted creature fights up to one target creature an opponent controls. | 1 | Meltstrider's Resolve | eoe |
+| when ~ enters, exile all artifacts and creatures with mana value N or less until ~ leaves the battlefield. | 1 | Pinnacle Starcage | eoe |
+| when ~ enters, exile each opponent's graveyard. create a lander token. | 1 | Dauntless Scrapbot | eoe |
+| when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | Hardlight Containment | eoe |
+| when ~ enters, if an opponent controls more lands than you, create a lander token. | 1 | Sunstar Expansionist | eoe |
+| when ~ enters, if you cast it, shuffle your hand and graveyard into your library, then draw seven cards. | 1 | Weftwalking | eoe |
+| when ~ enters, it deals damage equal to the number of artifacts you control to target creature an opponent controls. | 1 | Warmaker Gunship | eoe |
+| when ~ enters, look at the top N cards of your library, where N is ~ power. put any number of land cards from among them onto the battlefield tapped, then shuff | 1 | Famished Worldsire | eoe |
+| when ~ enters, look at the top five cards of your library. you may reveal a spacecraft card from among them and put it into your hand. put the rest on the botto | 1 | Pulsar Squadron Ace | eoe |
+| when ~ enters, sacrifice it unless you tap an untapped permanent you control. | 1 | Command Bridge | eoe |
+| when ~ enters, target opponent may have you create two lander tokens. if they don't, put two +N/+N counters on ~. | 1 | Terrapact Intimidator | eoe |
+| when ~ enters, until end of turn, target creature you control gets +N/+N and target creature an opponent controls gets -N/-N, where N is the number of artifacts | 1 | Monoist Circuit-Feeder | eoe |
+| when ~ enters, you may sacrifice a land or lander. if you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shu | 1 | Larval Scoutlander | eoe |
+| when ~ leaves the battlefield, draw a card, then you may put a permanent card with mana value less than or equal to the number of lands you control from your ha | 1 | Anticausal Vestige | eoe |
+| whenever a creature you control dies, each opponent chooses a creature they control and exiles it. | 1 | Sothera, the Supervoid | eoe |
+| whenever enchanted creature attacks, put target creature card from defending player's graveyard onto the battlefield under your control tapped and attacking. | 1 | Chorale of the Void | eoe |
+| whenever equipped creature attacks, choose up to one target creature. that creature can't be blocked ~ and has base power and toughness N/N until end of turn. | 1 | Atomic Microsizer | eoe |
+| whenever you attack, you may remove a +N/+N counter from each of two creatures you control. if you do, draw a card and create a N/N colorless robot artifact cre | 1 | Dyadrine, Synthesis Amalgam | eoe |
+| whenever you put one or more +N/+N counters on a creature you control, you may draw that many cards. do ~ once each turn. | 1 | Terrasymbiosis | eoe |
+| whenever ~ attacks, defending player mills four cards. | 1 | Specimen Freighter | eoe |
+| whenever ~ attacks, you may sacrifice another creature or artifact. if you do, ~ gets +N/+N until end of turn. | 1 | Comet Crawler | eoe |
+| whenever ~ becomes tapped, another target creature you control gets +N/+N until end of turn, where N is ~ power. | 1 | Hemosymbic Mite | eoe |
+| whenever ~ becomes tapped, create a lander token. | 1 | Seedship Agrarian | eoe |
+| whenever ~ or another kavu you control enters, exile the top card of your library. for as long as that card remains exiled, you may play it if you control a kav | 1 | Possibility Technician | eoe |
+| you draw two cards and lose N life. void — if a nonland permanent left the battlefield ~ or a spell was warped ~, instead you draw two cards and each opponent l | 1 | Decode Transmissions | eoe |
+| you gain N life. create a lander token. (it's an artifact with "...") | 1 | Sami's Curiosity | eoe |
+| you may look at the top card of your library any time. | 1 | Mm'menon, the Right Hand | eoe |
+| you may put an artifact or creature card from your hand onto the battlefield. that permanent gains haste, "..." and "..." | 1 | Terminal Velocity | eoe |
+| {M}, sacrifice another artifact: exile the top N cards of your library, where N is one plus the mana value of the sacrificed artifact. you may play those cards  | 1 | Memorial Vault | eoe |
+| {M}, sacrifice ~: it deals N damage to any target. target player draws three cards and gains N life. ~ costs {M} less to activate, where N is the number of diff | 1 | Survey Mechan | eoe |
+| {M}, {M}, exile an artifact card from your graveyard: put a +N/+N counter on ~, then it deals damage equal to its power to any target. | 1 | Rust Harvester | eoe |
+| {M}, {M}, sacrifice ~: destroy target nonland permanent. ~ costs {M} less to activate if you attacked with a spacecraft ~. | 1 | Thaumaton Torpedo | eoe |
+| {M}, {M}, sacrifice ~: draw N cards, where N is the number of differently named lands you control. | 1 | All-Fates Scroll | eoe |
+| {M}: return target creature card from your graveyard to the battlefield. it's a skeleton in addition to its other types and has no abilities. activate only as a | 1 | Xu-Ifit, Osteoharmonist | eoe |
+| {M}: until end of turn, target creature gains "..." that creature's controller may have ~ deal N damage to it. activate only as a sorcery. | 1 | Requiem Monolith | eoe |
+| {M}{M}, {M}: tap another target creature. ~ costs {M} less to activate if you control a creature with a +N/+N counter on it. | 1 | Starport Security | eoe |
+| {M}{M}: ~ gets +N/+N until end of turn. | 1 | Debris Field Crusher | eoe |
+| ~ can"..."ve cast two or more spells ~. | 1 | Illvoi Infiltrator | eoe |
+| ~ costs {M} less to cast if you've cast another spell ~. | 1 | Gigastorm Titan | eoe |
+| ~ costs {M} less to cast if your opponents control three or more creatures. | 1 | Lashwhip Predator | eoe |
+| ~ costs {M} less to cast, where N is the number of differently named lands you control. | 1 | Fungal Colossus | eoe |
+| ~ deals N damage to any target. void — ~ deals N damage instead if a nonland permanent left the battlefield ~ or a spell was warped ~. | 1 | Plasma Bolt | eoe |
+| ~ deals N damage to target attacking or blocking creature, where N is N plus the number of creatures and/or spacecraft you control. | 1 | Focus Fire | eoe |
+| ~ deals N damage to target creature. if excess damage was dealt ~, create a lander token. (it's an artifact with "...") | 1 | Orbital Plunge | eoe |
+| ~ enters with a +N/+N counter on it for each other creature and/or artifact you control. | 1 | Luxknight Breacher | eoe |
+| ~ gets +N/+N as long as you've cast two or more spells ~. | 1 | Brightspear Zealot | eoe |
+| ~ gets +N/+N, where N is the greatest mana value among other artifacts you control. | 1 | Emissary Escort | eoe |
+| ~'s power is equal to the number of cards you own in exile and its toughness is equal to that number plus N. | 1 | Cosmogoyf | eoe |
 
 ## Notes
 

@@ -38,9 +38,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Spells you control can't be countered. | Chimil, the Inner Sun | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| spells you control can't be countered. | 1 | Chimil, the Inner Sun | lcc |
 
 ## Notes
 

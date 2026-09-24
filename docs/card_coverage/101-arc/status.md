@@ -41,10 +41,10 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Chandra's Outrage deals 4 damage to target creature and 2 damage to that creature's controller. | Chandra's Outrage | 1 |
-| {2}, {T}: Flip a coin. If you win the flip, sacrifice this artifact and draw three cards. | Sorcerer's Strongbox | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| {M}, {M}: flip a coin. if you win the flip, sacrifice ~ and draw three cards. | 1 | Sorcerer's Strongbox | arc |
+| ~ deals N damage to target creature and N damage to that creature's controller. | 1 | Chandra's Outrage | arc |
 
 ## Notes
 

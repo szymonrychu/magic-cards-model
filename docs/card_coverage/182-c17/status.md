@@ -39,9 +39,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Whenever you cast a spell, put a +1/+1 counter on Ramos for each of that spell's colors. | Ramos, Dragon Engine | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| whenever you cast a spell, put a +N/+N counter on ramos for each of that spell's colors. | 1 | Ramos, Dragon Engine | c17 |
 
 ## Notes
 

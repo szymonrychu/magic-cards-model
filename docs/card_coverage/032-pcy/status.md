@@ -3,13 +3,13 @@
 - Expansion: 032
 - Set code: `pcy`
 - Release date: 2000-06-05
-- Cards in scope (Modern/Pioneer/Standard-legal): 18
+- Cards in scope (Modern/Pioneer/Standard-legal): 19
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 18 |
+| Modern | 19 |
 | Pioneer | 0 |
 | Standard | 0 |
 
@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Full (handled + tested) | 0 | 0.0% |
-| Partial (unaudited) | 2 | 11.1% |
-| Not tested (handled, untested) | 10 | 55.6% |
-| Not working (silent / notice / error) | 6 | 33.3% |
+| Partial (unaudited) | 3 | 15.8% |
+| Not tested (handled, untested) | 10 | 52.6% |
+| Not working (silent / notice / error) | 6 | 31.6% |
 
 ## Cards needing work
 
@@ -32,6 +32,7 @@
 | Lesser Gargadon | silent | Whenever this creature attacks or blocks, sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Panic Attack | silent | Up to three target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spiketail Hatchling | silent | Sacrifice this creature: Counter target spell unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Avatar of Hope | unaudited | If you have 3 or less life, this spell costs {6} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Avatar of Might | unaudited | If an opponent controls at least four more creatures than you, this spell costs {6} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Living Terrain | unaudited | Enchanted land is a 5/6 green Treefolk creature that's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Coastal Hornclaw | handled | Sacrifice a land: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -55,16 +56,17 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {2}{G}, {T}, Discard two cards: All lands target player controls become 3/3 creatures until end of turn. They're still lands. | Jolrael, Empress of Beasts | 1 |
-| Enchanted land is a 5/6 green Treefolk creature that's still a land. | Living Terrain | 1 |
-| Fear | Avatar of Woe | 1 |
-| If an opponent controls at least four more creatures than you, this spell costs {6} less to cast. | Avatar of Might | 1 |
-| Inflame deals 2 damage to each creature dealt damage this turn. | Inflame | 1 |
-| Sacrifice this creature: Counter target spell unless its controller pays {1}. | Spiketail Hatchling | 1 |
-| Up to three target creatures can't block this turn. | Panic Attack | 1 |
-| Whenever this creature attacks or blocks, sacrifice a land. | Lesser Gargadon | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| enchanted land is a N/N green treefolk creature that's still a land. | 1 | Living Terrain | pcy |
+| fear | 1 | Avatar of Woe | pcy |
+| if an opponent controls at least four more creatures than you, ~ costs {M} less to cast. | 1 | Avatar of Might | pcy |
+| if you have N or less life, ~ costs {M} less to cast. | 1 | Avatar of Hope | pcy |
+| sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Spiketail Hatchling | pcy |
+| up to three target creatures can't block ~. | 1 | Panic Attack | pcy |
+| whenever ~ attacks or blocks, sacrifice a land. | 1 | Lesser Gargadon | pcy |
+| {M}{M}, {M}, discard two cards: all lands target player controls become N/N creatures until end of turn. they're still lands. | 1 | Jolrael, Empress of Beasts | pcy |
+| ~ deals N damage to each creature dealt damage ~. | 1 | Inflame | pcy |
 
 ## Notes
 

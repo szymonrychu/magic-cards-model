@@ -43,11 +43,11 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Awaken | Sheer Drop | 1 |
-| Ingest | Dominator Drone | 1 |
-| When you cast this spell, target opponent exiles the top four cards of their library, then you may put any number of land cards that player owns from exile onto | Oblivion Sower | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| awaken | 1 | Sheer Drop | ddp |
+| ingest | 1 | Dominator Drone | ddp |
+| when you cast ~, target opponent exiles the top four cards of their library, then you may put any number of land cards that player owns from exile onto the batt | 1 | Oblivion Sower | ddp |
 
 ## Notes
 

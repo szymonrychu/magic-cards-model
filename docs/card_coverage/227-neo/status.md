@@ -304,106 +304,124 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Reconfigure | Acquisition Octopus, Armguard Familiar, Bronzeplate Boar, Chainflail Centipede, Leech Gauntlet, Lizard Blades, Ogre-Head Helm, Rabbit Battery, The Reality Chip, Webspinner Cuff | 10 |
-| As long as enchanted permanent is a creature, it gets +1/+1 for each creature and/or Vehicle you control. | Akki War Paint, Born to Drive, Careful Cultivation, Clawing Torment, Favor of Jukai, Gift of Wrath, Historian's Wisdom, Short Circuit, Twisted Embrace | 9 |
-| As an additional cost to cast this spell, you may exile any number of blue cards from your hand. This spell costs {2} less to cast for each card exiled this way | Anchor to Reality, March of Burgeoning Life, March of Reckless Joy, March of Swirling Mist | 4 |
-| Whenever a Samurai or Warrior you control attacks alone, untap it. If it's the first combat phase of the turn, there is an additional combat phase after this ph | Ancestral Katana, Asari Captain, Peerless Samurai, Raiyuu, Storm's Edge | 4 |
-| Whenever this creature deals combat damage to a player, you may remove a menace counter from it. When you do, that player reveals their hand and you choose a no | Biting-Palm Ninja, Covert Technician, Dokuchi Silencer, Kappa Tech-Wrecker | 4 |
-| At the beginning of your end step, choose target permanent card in your graveyard. You may sacrifice a permanent that shares a card type with the chosen card. I | Go-Shintai of Lost Wisdom, Kaito Shizuki, Spirit-Sister's Call | 3 |
-| As long as this creature is tapped, it's a Human Citizen with base power and toughness 1/1 and can't be blocked. | Futurist Operative, Orochi Merge-Keeper | 2 |
-| Modified creatures you control have trample. | Invigorating Hot Spring, Kodama of the West Tree | 2 |
-| Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until end of turn for each modified creature you controlled as you cast this spell. (E | Lethal Exploit, Regent's Authority | 2 |
-| This creature gets +1/+0 for each artifact and/or enchantment card in your graveyard. | Runaway Trash-Bot, Upriser Renegade | 2 |
-| Whenever this Vehicle becomes crewed for the first time each turn, until end of turn, this Vehicle becomes a copy of target nonlegendary creature that crewed it | Mindlink Mech, Mobilizer Mech | 2 |
-| As long as a card exiled with Eater of Virtue has flying, equipped creature has flying. The same is true for first strike, double strike, deathtouch, haste, hex | Eater of Virtue | 1 |
-| As long as you control five or more modified creatures, this creature gets +5/+5 and has trample. | Jugan Defends the Temple // Remnant of the Rising Star | 1 |
-| At the beginning of combat on your turn, you may pay {1} and sacrifice an artifact. If you do, create a 3/1 red Construct artifact creature token with haste. | Sokenzan Smelter | 1 |
-| Channel — {2}{U}, Discard this card: Counter target spell or ability unless its controller pays {3}. | Mirrorshell Crab | 1 |
-| Choose one — • Put two +1/+1 counters on target creature you control. • Put two lore counters on target Saga you control. The next time one or more enchantment  | Storyweave | 1 |
-| Choose one — • Target opponent exiles a creature they control. • Target opponent exiles an enchantment they control. | Debt to the Kami | 1 |
-| Create two 4/5 green Spirit creature tokens. For each of them, put your choice of a reach counter, a vigilance counter, or a trample counter on it. | Invoke the Ancients | 1 |
-| Create X 2/2 white Samurai creature tokens with vigilance. They gain menace and haste until end of turn. Each opponent creates X minus one 2/2 white Samurai cre | Eiganjo Uprising | 1 |
-| Destroy up to one target artifact, enchantment, or tapped creature. Then if you control an artifact and an enchantment, create a 2/2 white Samurai creature toke | Banishing Slash | 1 |
-| +1: Draw two cards. Then discard two cards unless you discard an artifact card. | Tezzeret, Betrayer of Flesh | 1 |
-| Enchanted land has "{T}: Add two mana of any one color." | Grafted Growth | 1 |
-| Enchanted land is a 4/5 green Spirit creature with vigilance and haste. It's still a land. | Harmonious Emergence | 1 |
-| Enchanted land is a 3/3 red Spirit creature with haste. It's still a land. | Crackling Emergence | 1 |
-| Enchanted permanent can't attack, block, or crew Vehicles. Its activated abilities can't be activated unless they're mana abilities. | Intercessor's Arrest | 1 |
-| Equipped creature gets +1/+1 for each +1/+1 counter on this Equipment. | Lion Sash | 1 |
-| Equipped creature has base power and toughness 5/5, has menace, and is a black Demon in addition to its other colors and types. | Blade of the Oni | 1 |
-| Equipped creature has flying and "You can't lose the game and your opponents can't win the game." | Cloudsteel Kirin | 1 |
-| {2}{R}, {T}: Exile the top card of your library. You may play that card this turn. When you exile a nonland card this way, Hidetsugu deals damage equal to the e | Hidetsugu, Devouring Chaos | 1 |
-| {5}, Exile this Vehicle and four other artifact creatures and/or Vehicles you control: Create Mechtitan, a legendary 10/10 Construct artifact creature token wit | Mechtitan Core | 1 |
-| Flame Discharge deals X damage to target creature or planeswalker. If you controlled a modified creature as you cast this spell, it deals X plus 2 damage instea | Flame Discharge | 1 |
-| Gain control of target artifact or creature. Untap it. | Invoke the Winds | 1 |
-| I — Creatures you don't control get -2/-0 until your next turn. | Behold the Unspeakable // Vision of the Unspeakable | 1 |
-| I, II — Each opponent creates a 1/1 black Rat Rogue creature token. | Tribute to Horobi // Echo of Death's Wail | 1 |
-| I, II — Each opponent sacrifices a creature of their choice unless they discard a card. | The Long Reach of Night // Animus of Night's Reach | 1 |
-| I, II — Target creature gets +1/+1 until end of turn for each artifact and/or enchantment you control. | Michiko's Reign of Truth // Portrait of Michiko | 1 |
-| I, II — You gain 2 life. Look at the top three cards of your library. Exile one of them face down with a hatching counter on it, then put the rest on the bottom | The Dragon-Kami Reborn // Dragon-Kami's Egg | 1 |
-| If a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | Isshin, Two Heavens as One | 1 |
-| II — Each player gains control of all permanents they own. | The Fall of Lord Konda // Fragment of Konda | 1 |
-| II — Put up to one target land card from your graveyard on top of your library. | Boseiju Reaches Skyward // Branch of Boseiju | 1 |
-| II — Return an artifact card from your graveyard to your hand. If you can't, draw a card. | Inventive Iteration // Living Breakthrough | 1 |
-| II — When you next cast a creature spell this turn, that creature enters with an additional +1/+1 counter on it. | Kumano Faces Kakkazan // Etching of Kumano | 1 |
-| Kami's Flare deals 3 damage to target creature or planeswalker. Kami's Flare also deals 2 damage to that permanent's controller if you control a modified creatu | Kami's Flare | 1 |
-| Look at the top five cards of your library. Exile one of them face down and put the rest on the bottom of your library in a random order. You may cast the exile | Discover the Impossible | 1 |
-| Modified creatures you control can attack as though they didn't have defender. | Guardians of Oboro | 1 |
-| O-Kagachi Made Manifest is all colors. | The Kami War // O-Kagachi Made Manifest | 1 |
-| Other enchantment creatures you control get +1/+1. | Weaver of Harmony | 1 |
-| Other Ninja and Rogue creatures you control get +1/+1. | Silver-Fur Master | 1 |
-| {2}, {T}, Remove a charge counter from this Vehicle: Draw a card. Then if there are no charge counters on this Vehicle, create a Treasure token and a 1/1 colorl | Reckoner Bankbuster | 1 |
-| Return all artifact and enchantment cards from your graveyard to the battlefield. | Brilliant Restoration | 1 |
-| {1}{G}, {T}, Return Shigeki to its owner's hand: Reveal the top four cards of your library. You may put a land card from among them onto the battlefield tapped. | Shigeki, Jukai Visionary | 1 |
-| Return target creature or Vehicle card from your graveyard to the battlefield. Then put two +1/+1 counters on that permanent if you control an artifact and an e | Okiba Salvage | 1 |
-| Return target permanent card from your graveyard to the battlefield, then distribute four +1/+1 counters among any number of creatures and/or Vehicles target pl | Invoke Justice | 1 |
-| {T}, Sacrifice an artifact with mana value X: Return target artifact card with mana value less than X from your graveyard to the battlefield. It gains haste unt | Scrap Welder | 1 |
-| {4}, Sacrifice this artifact: It deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | Dragonspark Reactor | 1 |
-| Spells you cast cost {1} less to cast for each target. | Hinata, Dawn-Crowned | 1 |
-| Target creature gets +X/+X until end of turn, where X is the greatest mana value among permanents you control. Untap it. | Boon of Boseiju | 1 |
-| Target creature you control deals damage equal to its power to each of X target creatures and/or planeswalkers. | Spinning Wheel Kick | 1 |
-| Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards that card. If you don't, put two +1/+1 counters on a  | Reckoner Shakedown | 1 |
-| Target opponent sacrifices a creature of their choice. If they can't, they lose 2 life and you draw a card. Then repeat this process for an enchantment and a pl | Invoke Despair | 1 |
-| Target player discards two cards. Ninjas and Rogues you control gain menace until end of turn. (They can't be blocked except by two or more creatures.) | Kaito's Pursuit | 1 |
-| {3}, {T}: Target Vehicle becomes an artifact creature until end of turn. | Mech Hangar | 1 |
-| {1}{G/U}: Tatsunari and target Frog you control can't be blocked this turn except by creatures with flying or reach. | Tatsunari, Toad Rider | 1 |
-| This creature crews Vehicles as though its power were 2 greater. | Hotshot Mechanic | 1 |
-| This creature enters with a +1/+1 counter on it if you control a modified creature. | Heir of the Ancient Fang | 1 |
-| This spell costs {1} less to cast for each modified creature you control. | Walking Skyscraper | 1 |
-| {2}: Until end of turn, equipped creature gets +X/+0, where X is the number of times this ability has resolved this turn. | Bronze Cudgels | 1 |
-| Until end of turn, target creature or Vehicle becomes an artifact creature with base power and toughness 4/5. Draw a card. | Suit Up | 1 |
-| When Ao dies, choose one — • Look at the top seven cards of your library. Put any number of nonland permanent cards with total mana value 4 or less from among t | Ao, the Dawn Sky | 1 |
-| When Junji dies, choose one — • Each opponent discards two cards and loses 2 life. • Put target non-Dragon creature card from a graveyard onto the battlefield u | Junji, the Midnight Sky | 1 |
-| When Kairi dies, choose one — • Return any number of target nonland permanents with total mana value 6 or less to their owners' hands. • Mill six cards, then re | Kairi, the Swirling Sky | 1 |
-| When Kotose enters, exile target card other than a basic land card from an opponent's graveyard. Search that player's graveyard, hand, and library for any numbe | Kotose, the Silent Spider | 1 |
-| When Satsuki dies, choose up to one — • Return target Saga or enchantment creature you control to its owner's hand. • Return target Saga card from your graveyar | Satsuki, the Living Lore | 1 |
-| When this Aura enters, put X +1/+1 counters on enchanted permanent. | Awakened Awareness | 1 |
-| When this Aura enters, tap enchanted permanent. If it's an Equipment, unattach it. | Tamiyo's Compleation | 1 |
-| When this creature dies, if it had counters on it, put those counters on target creature you control. | Iron Apprentice | 1 |
-| When this creature enters, choose one — • Return up to one target Ninja or Rogue creature card from your graveyard to your hand. • Put target creature card from | Kami of Restless Shadows | 1 |
-| When this creature enters, draw a card if a creature died this turn. Otherwise, each player sacrifices a creature of their choice. | Gravelighter | 1 |
-| When this creature enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | Dramatist's Puppet | 1 |
-| When this creature enters, look at the top five cards of your library. You may reveal a creature or enchantment card from among them and put it into your hand.  | Blossom Prancer | 1 |
-| When this creature enters, target creature can't block this turn. | Unstoppable Ogre | 1 |
-| When this creature enters, you may return an enchantment you control to its owner's hand. If you do, you gain 3 life. | Geothermal Kami | 1 |
-| When this Vehicle enters, it deals damage equal to twice the number of Vehicles you control to target creature or planeswalker an opponent controls. | Surgehacker Mech | 1 |
-| Whenever a nontoken artifact you control enters, you may pay {1}{U}. If you do, create a token that's a copy of that artifact. | Replication Specialist | 1 |
-| Whenever a Vehicle you control attacks, choose one — • That Vehicle gains first strike until end of turn. • Untap this creature. | Kitsune Ace | 1 |
-| Whenever an Aura you control enters, if you cast it, you may search your library for an Aura card with mana value less than or equal to that Aura and with a dif | Light-Paws, Emperor's Voice | 1 |
-| Whenever combat damage is dealt to you, remove an indestructible counter from Risona. | Risona, Asari Commander | 1 |
-| Whenever one or more artifacts you control leave the battlefield during your turn, create a 1/1 colorless Construct artifact creature token. This ability trigge | Oni-Cult Anvil | 1 |
-| Whenever this creature attacks, choose one — • Exile target creature card from a graveyard. When you do, create a 1/1 colorless Spirit creature token. • Exile t | Teachings of the Kirin // Kirin-Touched Orochi | 1 |
-| Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of | Thundering Raiju | 1 |
-| Whenever this creature becomes blocked, untap up to three lands you control. | Azusa's Many Journeys // Likeness of the Seeker | 1 |
-| Whenever this creature deals damage to a player, if it has dealt 10 or more damage to that player this turn, they lose the game. | Hidetsugu Consumes All // Vessel of the All-Consuming | 1 |
-| Whenever this creature or equipped creature becomes blocked, it deals 1 damage to defending player. | Simian Sling | 1 |
-| Whenever this Equipment becomes attached to a creature, tap that creature. | Enormous Energy Blade | 1 |
-| Whenever this Vehicle attacks, you may sacrifice another artifact or creature. If you do, put a +1/+1 counter on this Vehicle and it gains menace until end of t | Mukotai Soulripper | 1 |
-| Whenever you activate a ninjutsu ability, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library | Satoru Umezawa | 1 |
-| Whenever you discard a card, you may exile that card from your graveyard. If you do, you may play that card this turn. | Containment Construct | 1 |
-| You may cast up to two instant and/or sorcery spells with total mana value 6 or less from your graveyard and/or hand without paying their mana costs. If those s | Invoke Calamity | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| reconfigure | 10 | Acquisition Octopus, Armguard Familiar, Bronzeplate Boar, Chainflail Centipede, Leech Gauntlet | neo |
+| II | 4 | Boseiju Reaches Skyward // Branch of Boseiju, Inventive Iteration // Living Breakthrough, Kumano Faces Kakkazan // Etching of Kumano, The Fall of Lord Konda // Fragment of Konda | neo |
+| as long as enchanted permanent is a creature, it gets +N/+N. | 3 | Akki War Paint, Historian's Wisdom, Twisted Embrace | neo |
+| Choose one | 2 | Debt to the Kami, Storyweave | neo |
+| Channel | 1 | Mirrorshell Crab | neo |
+| I | 1 | Behold the Unspeakable // Vision of the Unspeakable | neo |
+| +N: draw two cards. then discard two cards unless you discard an artifact card. | 1 | Tezzeret, Betrayer of Flesh | neo |
+| as an additional cost to cast ~, sacrifice an artifact or creature. search your library for an equipment or vehicle card, put that card onto the battlefield, th | 1 | Anchor to Reality | neo |
+| as an additional cost to cast ~, you may exile any number of blue cards from your hand. ~ costs {M} less to cast for each card exiled ~. up to N target creature | 1 | March of Swirling Mist | neo |
+| as an additional cost to cast ~, you may exile any number of green cards from your hand. ~ costs {M} less to cast for each card exiled ~. choose target creature | 1 | March of Burgeoning Life | neo |
+| as an additional cost to cast ~, you may exile any number of red cards from your hand. ~ costs {M} less to cast for each card exiled ~. exile the top N cards of | 1 | March of Reckless Joy | neo |
+| as long as a card exiled with ~ has flying, equipped creature has flying. the same is true for first strike, double strike, deathtouch, haste, hexproof, indestr | 1 | Eater of Virtue | neo |
+| as long as enchanted permanent is a creature, it gets +N/+N and has menace. | 1 | Gift of Wrath | neo |
+| as long as enchanted permanent is a creature, it gets +N/+N and has reach and "..." | 1 | Careful Cultivation | neo |
+| as long as enchanted permanent is a creature, it gets +N/+N and has reach. | 1 | Favor of Jukai | neo |
+| as long as enchanted permanent is a creature, it gets +N/+N for each creature and/or vehicle you control. | 1 | Born to Drive | neo |
+| as long as enchanted permanent is a creature, it gets -N/-N and can't block. | 1 | Clawing Torment | neo |
+| as long as enchanted permanent is a creature, it gets -N/-N and loses flying. | 1 | Short Circuit | neo |
+| as long as you control five or more modified creatures, ~ gets +N/+N and has trample. | 1 | Jugan Defends the Temple // Remnant of the Rising Star | neo |
+| as long as ~ is modified, it has "..." | 1 | Orochi Merge-Keeper | neo |
+| as long as ~ is tapped, it"..."t be blocked. | 1 | Futurist Operative | neo |
+| at the beginning of combat on your turn, you may pay {M} and sacrifice an artifact. if you do, create a N/N red construct artifact creature token with haste. | 1 | Sokenzan Smelter | neo |
+| at the beginning of your end step, choose target permanent card in your graveyard. you may sacrifice a permanent that shares a card type with the chosen card. i | 1 | Spirit-Sister's Call | neo |
+| at the beginning of your end step, if kaito entered ~, he phases out. | 1 | Kaito Shizuki | neo |
+| at the beginning of your end step, you may pay {M}. when you do, target player mills N cards, where N is the number of shrines you control. | 1 | Go-Shintai of Lost Wisdom | neo |
+| create N N/N white samurai creature tokens with vigilance. they gain menace and haste until end of turn. each opponent creates N minus one N/N white samurai cre | 1 | Eiganjo Uprising | neo |
+| create two N/N green spirit creature tokens. for each of them, put your choice of a reach counter, a vigilance counter, or a trample counter on it. | 1 | Invoke the Ancients | neo |
+| destroy up to one target artifact, enchantment, or tapped creature. then if you control an artifact and an enchantment, create a N/N white samurai creature toke | 1 | Banishing Slash | neo |
+| enchanted land has "..." | 1 | Grafted Growth | neo |
+| enchanted land is a N/N green spirit creature with vigilance and haste. it's still a land. | 1 | Harmonious Emergence | neo |
+| enchanted land is a N/N red spirit creature with haste. it's still a land. | 1 | Crackling Emergence | neo |
+| enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Intercessor's Arrest | neo |
+| equipped creature gets +N/+N for each +N/+N counter on ~. | 1 | Lion Sash | neo |
+| equipped creature has base power and toughness N/N, has menace, and is a black demon in addition to its other colors and types. | 1 | Blade of the Oni | neo |
+| equipped creature has flying and "..." | 1 | Cloudsteel Kirin | neo |
+| gain control of target artifact or creature. untap it. | 1 | Invoke the Winds | neo |
+| i, ii — each opponent creates a N/N black rat rogue creature token. | 1 | Tribute to Horobi // Echo of Death's Wail | neo |
+| i, ii — each opponent sacrifices a creature of their choice unless they discard a card. | 1 | The Long Reach of Night // Animus of Night's Reach | neo |
+| i, ii — target creature gets +N/+N until end of turn for each artifact and/or enchantment you control. | 1 | Michiko's Reign of Truth // Portrait of Michiko | neo |
+| i, ii — you gain N life. look at the top three cards of your library. exile one of them face down with a hatching counter on it, then put the rest on the bottom | 1 | The Dragon-Kami Reborn // Dragon-Kami's Egg | neo |
+| if a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | 1 | Isshin, Two Heavens as One | neo |
+| look at the top five cards of your library. exile one of them face down and put the rest on the bottom of your library in a random order. you may cast the exile | 1 | Discover the Impossible | neo |
+| modified creatures you control can attack as though they didn't have defender. | 1 | Guardians of Oboro | neo |
+| modified creatures you control have haste. | 1 | Invigorating Hot Spring | neo |
+| modified creatures you control have trample. | 1 | Kodama of the West Tree | neo |
+| o-kagachi made manifest is all colors. | 1 | The Kami War // O-Kagachi Made Manifest | neo |
+| other enchantment creatures you control get +N/+N. | 1 | Weaver of Harmony | neo |
+| other ninja and rogue creatures you control get +N/+N. | 1 | Silver-Fur Master | neo |
+| return all artifact and enchantment cards from your graveyard to the battlefield. | 1 | Brilliant Restoration | neo |
+| return target creature or vehicle card from your graveyard to the battlefield. then put two +N/+N counters on that permanent if you control an artifact and an e | 1 | Okiba Salvage | neo |
+| return target permanent card from your graveyard to the battlefield, then distribute four +N/+N counters among any number of creatures and/or vehicles target pl | 1 | Invoke Justice | neo |
+| spells you cast cost {M} less to cast for each target. | 1 | Hinata, Dawn-Crowned | neo |
+| target creature gets +N/+N until end of turn, where N is the greatest mana value among permanents you control. untap it. | 1 | Boon of Boseiju | neo |
+| target creature gets +N/+N until end of turn. if it's an enchantment creature or legendary creature, instead put a +N/+N counter on it and it gets +N/+N until e | 1 | Regent's Authority | neo |
+| target creature gets -N/-N until end of turn. it gets an additional -N/-N until end of turn for each modified creature you controlled as you cast ~. (equipment, | 1 | Lethal Exploit | neo |
+| target creature you control deals damage equal to its power to each of N target creatures and/or planeswalkers. | 1 | Spinning Wheel Kick | neo |
+| target opponent reveals their hand. you may choose a nonland card from it. if you do, that player discards that card. if you don't, put two +N/+N counters on a  | 1 | Reckoner Shakedown | neo |
+| target opponent sacrifices a creature of their choice. if they can't, they lose N life and you draw a card. then repeat ~ for an enchantment and a planeswalker. | 1 | Invoke Despair | neo |
+| target player discards two cards. ninjas and rogues you control gain menace until end of turn. (they can't be blocked except by two or more creatures.) | 1 | Kaito's Pursuit | neo |
+| until end of turn, target creature or vehicle becomes an artifact creature with base power and toughness N/N. draw a card. | 1 | Suit Up | neo |
+| when ao dies, choose one — • look at the top seven cards of your library. put any number of nonland permanent cards with total mana value N or less from among t | 1 | Ao, the Dawn Sky | neo |
+| when junji dies, choose one — • each opponent discards two cards and loses N life. • put target non-dragon creature card from a graveyard onto the battlefield u | 1 | Junji, the Midnight Sky | neo |
+| when kairi dies, choose one — • return any number of target nonland permanents with total mana value N or less to their owners' hands. • mill six cards, then re | 1 | Kairi, the Swirling Sky | neo |
+| when kotose enters, exile target card other than a basic land card from an opponent"..."s graveyard, hand, and library for any number of cards with the same nam | 1 | Kotose, the Silent Spider | neo |
+| when satsuki dies, choose up to one — • return target saga or enchantment creature you control to its owner's hand. • return target saga card from your graveyar | 1 | Satsuki, the Living Lore | neo |
+| when ~ dies, if it had counters on it, put those counters on target creature you control. | 1 | Iron Apprentice | neo |
+| when ~ enters, choose one — • return up to one target ninja or rogue creature card from your graveyard to your hand. • put target creature card from your gravey | 1 | Kami of Restless Shadows | neo |
+| when ~ enters, draw a card if a creature died ~. otherwise, each player sacrifices a creature of their choice. | 1 | Gravelighter | neo |
+| when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Dramatist's Puppet | neo |
+| when ~ enters, it deals damage equal to twice the number of vehicles you control to target creature or planeswalker an opponent controls. | 1 | Surgehacker Mech | neo |
+| when ~ enters, look at the top five cards of your library. you may reveal a creature or enchantment card from among them and put it into your hand. put the rest | 1 | Blossom Prancer | neo |
+| when ~ enters, put N +N/+N counters on enchanted permanent. | 1 | Awakened Awareness | neo |
+| when ~ enters, tap enchanted permanent. if it's an equipment, unattach it. | 1 | Tamiyo's Compleation | neo |
+| when ~ enters, target creature can't block ~. | 1 | Unstoppable Ogre | neo |
+| when ~ enters, you may return an enchantment you control to its owner's hand. if you do, you gain N life. | 1 | Geothermal Kami | neo |
+| whenever a nontoken artifact you control enters, you may pay {M}{M}. if you do, create a token that's a copy of that artifact. | 1 | Replication Specialist | neo |
+| whenever a samurai or warrior you control attacks alone, it gets +N/+N until end of turn for each samurai or warrior you control. | 1 | Asari Captain | neo |
+| whenever a samurai or warrior you control attacks alone, the next spell you cast ~ costs {M} less to cast. | 1 | Peerless Samurai | neo |
+| whenever a samurai or warrior you control attacks alone, untap it. if it's the first combat phase of the turn, there is an additional combat phase after ~. | 1 | Raiyuu, Storm's Edge | neo |
+| whenever a samurai or warrior you control attacks alone, you may pay {M}. when you do, attach ~ to it. | 1 | Ancestral Katana | neo |
+| whenever a vehicle you control attacks, choose one — • that vehicle gains first strike until end of turn. • untap ~. | 1 | Kitsune Ace | neo |
+| whenever an aura you control enters, if you cast it, you may search your library for an aura card with mana value less than or equal to that aura and with a dif | 1 | Light-Paws, Emperor's Voice | neo |
+| whenever combat damage is dealt to you, remove an indestructible counter from risona. | 1 | Risona, Asari Commander | neo |
+| whenever one or more artifacts you control leave the battlefield during your turn, create a N/N colorless construct artifact creature token. ~ triggers only onc | 1 | Oni-Cult Anvil | neo |
+| whenever you activate a ninjutsu ability, look at the top three cards of your library. put one of them into your hand and the rest on the bottom of your library | 1 | Satoru Umezawa | neo |
+| whenever you discard a card, you may exile that card from your graveyard. if you do, you may play that card ~. | 1 | Containment Construct | neo |
+| whenever ~ attacks, choose one — • exile target creature card from a graveyard. when you do, create a N/N colorless spirit creature token. • exile target noncre | 1 | Teachings of the Kirin // Kirin-Touched Orochi | neo |
+| whenever ~ attacks, put a +N/+N counter on target creature you control. then ~ deals N damage to each opponent, where N is the number of modified creatures you  | 1 | Thundering Raiju | neo |
+| whenever ~ attacks, you may sacrifice another artifact or creature. if you do, put a +N/+N counter on ~ and it gains menace until end of turn. | 1 | Mukotai Soulripper | neo |
+| whenever ~ becomes attached to a creature, tap that creature. | 1 | Enormous Energy Blade | neo |
+| whenever ~ becomes blocked, untap up to three lands you control. | 1 | Azusa's Many Journeys // Likeness of the Seeker | neo |
+| whenever ~ becomes crewed for the first time each turn, until end of turn, ~ becomes a copy of target nonlegendary creature that crewed it ~, except it"..."s a  | 1 | Mindlink Mech | neo |
+| whenever ~ becomes crewed, up to one other target vehicle you control becomes an artifact creature until end of turn. | 1 | Mobilizer Mech | neo |
+| whenever ~ deals combat damage to a player, you may discard a creature card. when you do, destroy target creature or planeswalker that player controls. | 1 | Dokuchi Silencer | neo |
+| whenever ~ deals combat damage to a player, you may put an artifact card with mana value less than or equal to that damage from your hand onto the battlefield. | 1 | Covert Technician | neo |
+| whenever ~ deals combat damage to a player, you may remove a deathtouch counter from it. when you do, exile target artifact or enchantment that player controls. | 1 | Kappa Tech-Wrecker | neo |
+| whenever ~ deals combat damage to a player, you may remove a menace counter from it. when you do, that player reveals their hand and you choose a nonland card f | 1 | Biting-Palm Ninja | neo |
+| whenever ~ deals damage to a player, if it has dealt N or more damage to that player ~, they lose the game. | 1 | Hidetsugu Consumes All // Vessel of the All-Consuming | neo |
+| whenever ~ or equipped creature becomes blocked, it deals N damage to defending player. | 1 | Simian Sling | neo |
+| you may cast up to two instant and/or sorcery spells with total mana value N or less from your graveyard and/or hand without paying their mana costs. if those s | 1 | Invoke Calamity | neo |
+| {M}, exile ~ and four other artifact creatures and/or vehicles you control: create mechtitan, a legendary N/N construct artifact creature token with flying, vig | 1 | Mechtitan Core | neo |
+| {M}, sacrifice an artifact with mana value N: return target artifact card with mana value less than N from your graveyard to the battlefield. it gains haste unt | 1 | Scrap Welder | neo |
+| {M}, sacrifice ~: it deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | 1 | Dragonspark Reactor | neo |
+| {M}, {M}, remove a charge counter from ~: draw a card. then if there are no charge counters on ~, create a treasure token and a N/N colorless pilot creature tok | 1 | Reckoner Bankbuster | neo |
+| {M}, {M}: target vehicle becomes an artifact creature until end of turn. | 1 | Mech Hangar | neo |
+| {M}: until end of turn, equipped creature gets +N/+N, where N is the number of times ~ has resolved ~. | 1 | Bronze Cudgels | neo |
+| {M}{M}, {M}, return shigeki to its owner's hand: reveal the top four cards of your library. you may put a land card from among them onto the battlefield tapped. | 1 | Shigeki, Jukai Visionary | neo |
+| {M}{M}, {M}: exile the top card of your library. you may play that card ~. when you exile a nonland card ~, hidetsugu deals damage equal to the exiled card's ma | 1 | Hidetsugu, Devouring Chaos | neo |
+| {M}{M}: tatsunari and target frog you control can't be blocked ~ except by creatures with flying or reach. | 1 | Tatsunari, Toad Rider | neo |
+| ~ costs {M} less to cast for each modified creature you control. | 1 | Walking Skyscraper | neo |
+| ~ crews vehicles as though its power were N greater. | 1 | Hotshot Mechanic | neo |
+| ~ deals N damage to target creature or planeswalker. if you controlled a modified creature as you cast ~, it deals N plus N damage instead. (equipment, auras yo | 1 | Flame Discharge | neo |
+| ~ deals N damage to target creature or planeswalker. ~ also deals N damage to that permanent's controller if you control a modified creature. (equipment, auras  | 1 | Kami's Flare | neo |
+| ~ enters with a +N/+N counter on it if you control a modified creature. | 1 | Heir of the Ancient Fang | neo |
+| ~ gets +N/+N for each artifact and/or enchantment card in your graveyard. | 1 | Runaway Trash-Bot | neo |
+| ~ gets +N/+N for each other modified creature you control. | 1 | Upriser Renegade | neo |
 
 ## Notes
 

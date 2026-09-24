@@ -3,14 +3,14 @@
 - Expansion: 207
 - Set code: `m21`
 - Release date: 2020-07-03
-- Cards in scope (Modern/Pioneer/Standard-legal): 183
+- Cards in scope (Modern/Pioneer/Standard-legal): 182
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 183 |
-| Pioneer | 183 |
+| Modern | 182 |
+| Pioneer | 182 |
 | Standard | 8 |
 
 ## Coverage
@@ -19,8 +19,8 @@
 |---|---|---|
 | Full (handled + tested) | 8 | 4.4% |
 | Partial (unaudited) | 9 | 4.9% |
-| Not tested (handled, untested) | 92 | 50.3% |
-| Not working (silent / notice / error) | 74 | 40.4% |
+| Not tested (handled, untested) | 91 | 50.0% |
+| Not working (silent / notice / error) | 74 | 40.7% |
 
 ## Cards needing work
 
@@ -163,7 +163,6 @@
 | Pridemalkin | handled | When this creature enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rambunctious Mutt | handled | When this creature enters, destroy target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Read the Tides | handled | Choose one — • Draw three cards. • Return up to two target creatures to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Rin and Seri, Inseparable | handled | Whenever you cast a Dog spell, create a 1/1 green Cat creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rise Again | handled | Return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roaming Ghostlight | handled | When this creature enters, return up to one target non-Spirit creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rousing Read | handled | When this Aura enters, draw two cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -220,79 +219,91 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature enters, you may search your library and/or graveyard for a card named Chandra, Flame's Catalyst, reveal it, and put it into your hand. If you | Alpine Houndmaster, Aven Gagglemaster, Chandra's Firemaw, Crypt Lurker, Garruk's Warsteed, Teferi's Wavecaster | 6 |
-| At the beginning of your upkeep, you may search your library and/or graveyard for a Shrine card and put it onto the battlefield. If you search your library this | Gadrak, the Crown-Scourge, Sanctum of All, Sanctum of Calm Waters, Sanctum of Stone Fangs | 4 |
-| This spell costs {X} less to cast, where X is the total power of creatures you control. Volcanic Salvo deals 6 damage to each of up to two target creatures and/ | Stormwing Entity, Volcanic Salvo | 2 |
-| When this creature dies, you gain 1 life for each creature that died this turn. | Canopy Stalker, Conclave Mentor | 2 |
-| When this creature enters, each opponent creates a 1/1 red Pirate creature token with "This token can't block" and "Creatures you control attack each combat if  | Goremand, Pursued Whale | 2 |
-| Whenever a source you control deals noncombat damage to an opponent, this creature deals that much damage to target creature or planeswalker that player control | Chandra's Incinerator, Chandra's Pyreling | 2 |
-| As long as you control a creature with power 4 or greater, this creature can attack as though it didn't have defender. | Drowsing Tyrannodon | 1 |
-| As long as you've drawn two or more cards this turn, this creature gets +0/+2 and has vigilance. | Gnarled Sage | 1 |
-| At the beginning of combat on your turn, you may sacrifice another creature. If you do, this creature gets +2/+2 and gains trample until end of turn. | Dire Fleet Warmonger | 1 |
-| At the beginning of each end step, if a creature died this turn, you may put a loyalty counter on a Liliana planeswalker you control. | Liliana's Scrounger | 1 |
-| Attacking creatures you control get +1/+0. | Warded Battlements | 1 |
-| Choose a card name other than a basic land card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | Necromentia | 1 |
-| Choose one — • All creatures get -2/-2 until end of turn. • Remove two loyalty counters from each planeswalker. | Pestilent Haze | 1 |
-| Counter target spell unless its controller pays {1}. If you control a creature with flying, counter that spell unless its controller pays {4} instead. | Lofty Denial | 1 |
-| Create an X/X blue and red Weird creature token, where X is the number of instant and sorcery cards in your graveyard. Then you may return an instant or sorcery | Experimental Overload | 1 |
-| Creature spells with flying you cast cost {1} less to cast. | Watcher of the Spheres | 1 |
-| Destroy target creature. You may search your library and/or graveyard for a card named Liliana, Death Mage, reveal it, and put it into your hand. If you search  | Liliana's Scorn | 1 |
-| Discard a card: Tap this creature. It gains indestructible until end of turn. | Seasoned Hallowblade | 1 |
-| Discard a card: This creature can't be blocked this turn. | Ghostly Pilferer | 1 |
-| −8: Discard your hand, then draw seven cards. Until end of turn, you may cast spells from your hand without paying their mana costs. | Chandra, Flame's Catalyst | 1 |
-| +1: Discard your hand, then exile the top three cards of your library. Until end of turn, you may play cards exiled this way. | Chandra, Heart of Fire | 1 |
-| Double the power of target creature until end of turn. | Unleash Fury | 1 |
-| Draw a card, then draw cards equal to the number of cards named Frantic Inventory in your graveyard. | Frantic Inventory | 1 |
-| During your turn, this spell costs {2}{U}{U} less to cast. End the turn. (Exile all spells and abilities from the stack, including this card. The player whose t | Discontinuity | 1 |
-| Enchanted creature gets +3/+1, has flying, and is a Demon in addition to its other types. | Demonic Embrace | 1 |
-| Equipped creature gets +1/+1 for each soul counter on this Equipment. | Malefic Scythe | 1 |
-| Exile target creature. That creature's controller reveals cards from the top of their library until they reveal a creature card. That player puts that card onto | Transmogrify | 1 |
-| Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Add two mana of any one color. (The creature can attac | Traitorous Greed | 1 |
-| Kinetic Augur's power is equal to the number of instant and sorcery cards in your graveyard. | Kinetic Augur | 1 |
-| Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. If this spell was ca | See the Truth | 1 |
-| Other Cats you control get +1/+1 and have protection from Dogs. | Feline Sovereign | 1 |
-| Other creatures get -1/-1. | Kaervek, the Spiteful | 1 |
-| Play with the top card of your library revealed. | Conspicuous Snoop | 1 |
-| Put a +1/+1 counter on each of up to two target creatures. You may search your library and/or graveyard for a card named Basri, Devoted Paladin, reveal it, and  | Basri's Aegis | 1 |
-| Put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on that creature. | Invigorating Surge | 1 |
-| −3: Put target creature on top of its owner's library. | Teferi, Timeless Voyager | 1 |
-| {R}, Sacrifice this creature: It deals damage equal to its power to target creature or planeswalker. | Heartfire Immolator | 1 |
-| Scry 3, then reveal the top card of your library. If it's a creature or land card, draw a card. (To scry 3, look at the top three cards of your library, then pu | Track Down | 1 |
-| Soul Sear deals 5 damage to target creature or planeswalker. That permanent loses indestructible until end of turn. | Soul Sear | 1 |
-| Target creature gets +1/+1 and gains your choice of deathtouch or lifelink until end of turn. (Any amount of damage a creature with deathtouch deals to a creatu | Alchemist's Gift | 1 |
-| −2: Target creature you control deals damage equal to its power to another target creature. | Garruk, Savage Herald | 1 |
-| Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control. (Each deals damage equal to its power to t | Primal Might | 1 |
-| −7: Target opponent loses 2 life for each creature card in their graveyard. | Liliana, Death Mage | 1 |
-| Target player draws cards equal to half the number of cards in their library and loses half their life. Round up each time. | Peer into the Abyss | 1 |
-| This creature can block only creatures with flying. | Shacklegeist | 1 |
-| This creature can't be blocked as long as you've drawn two or more cards this turn. | Tome Anima | 1 |
-| {7}{R}: This creature deals damage equal to its power to target player or planeswalker. | Leafkin Avenger | 1 |
-| This creature gets +2/+2 as long as you control a Garruk planeswalker. | Predatory Wurm | 1 |
-| This creature gets +X/+0, where X is the greatest power among creature cards in your graveyard. | Carrion Grub | 1 |
-| This creature has lifelink as long as it has a +1/+1 counter on it. | Sigiled Contender | 1 |
-| Triple | Fiery Emancipation | 1 |
-| {4}{G}{G}: Until end of turn, creatures you control have base power and toughness X/X, where X is the number of cards in your hand. | Jolrael, Mwonvuli Recluse | 1 |
-| Until end of turn, target creature gets +0/+2 and another target creature gets -2/-0. | Rookie Mistake | 1 |
-| When Niambi enters, you may return another target creature you control to its owner's hand. If you do, you gain life equal to that creature's mana value. | Niambi, Esteemed Speaker | 1 |
-| When this artifact enters, exile all creature cards with mana value 3 or less from your graveyard until this artifact leaves the battlefield. | Idol of Endurance | 1 |
-| When this creature enters, draw X cards, where X is the number of creatures that died under your control this turn. | Liliana's Standard Bearer | 1 |
-| When this creature enters, if you control two or more nonland, nontoken permanents with the same name as one another, create a 4/4 colorless Construct artifact  | Chrome Replicator | 1 |
-| When this enchantment leaves the battlefield, you lose the game. | Nine Lives | 1 |
-| Whenever a creature you control with deathtouch deals damage to a planeswalker, destroy that planeswalker. | Hooded Blightfang | 1 |
-| Whenever another creature you control enters, this creature deals damage equal to that creature's power to any target. | Terror of the Peaks | 1 |
-| −2: Whenever one or more nontoken creatures attack this turn, create that many 1/1 white Soldier creature tokens that are tapped and attacking. | Basri Ket | 1 |
-| Whenever this creature attacks, prevent all combat damage that would be dealt this turn to Dogs you control. | Pack Leader | 1 |
-| Whenever this creature attacks, you may tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped th | Siege Striker | 1 |
-| Whenever this creature becomes blocked by a creature, that creature's controller loses 2 life and you gain 2 life. | Gloom Sower | 1 |
-| Whenever this creature deals combat damage to a player or planeswalker, look at that many cards from the top of your library. You may reveal a creature card or  | Garruk's Harbinger | 1 |
-| Whenever this creature or another Rogue you control enters, each opponent mills two cards. | Thieves' Guild Enforcer | 1 |
-| Whenever you gain life, target opponent loses that much life. | Vito, Thorn of the Dusk Rose | 1 |
-| You can't choose an untapped creature as this spell's target as you cast it. | Enthralling Hold | 1 |
-| You draw two cards and each opponent discards two cards. Each player loses 2 life. | Bad Deal | 1 |
-| You may look at the top card of your library any time, and you may play lands from the top of your library. | Radha, Heart of Keld | 1 |
-| You may spend mana as though it were mana of any color. | Chromatic Orrery | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Choose one | 1 | Pestilent Haze | m21 |
+| +N: discard your hand, then exile the top three cards of your library. until end of turn, you may play cards exiled ~. | 1 | Chandra, Heart of Fire | m21 |
+| as long as you control a creature with power N or greater, ~ can attack as though it didn't have defender. | 1 | Drowsing Tyrannodon | m21 |
+| as long as you've drawn two or more cards ~, ~ gets +N/+N and has vigilance. | 1 | Gnarled Sage | m21 |
+| at the beginning of combat on your turn, you may sacrifice another creature. if you do, ~ gets +N/+N and gains trample until end of turn. | 1 | Dire Fleet Warmonger | m21 |
+| at the beginning of each end step, if a creature died ~, you may put a loyalty counter on a liliana planeswalker you control. | 1 | Liliana's Scrounger | m21 |
+| at the beginning of your end step, create a treasure token for each nontoken creature that died ~. | 1 | Gadrak, the Crown-Scourge | m21 |
+| at the beginning of your first main phase, each opponent loses N life and you gain N life, where N is the number of shrines you control. | 1 | Sanctum of Stone Fangs | m21 |
+| at the beginning of your first main phase, you may draw N cards, where N is the number of shrines you control. if you do, discard a card. | 1 | Sanctum of Calm Waters | m21 |
+| at the beginning of your upkeep, you may search your library and/or graveyard for a shrine card and put it onto the battlefield. if you search your library ~, s | 1 | Sanctum of All | m21 |
+| attacking creatures you control get +N/+N. | 1 | Warded Battlements | m21 |
+| choose a card name other than a basic land card name. search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | 1 | Necromentia | m21 |
+| counter target spell unless its controller pays {M}. if you control a creature with flying, counter that spell unless its controller pays {M} instead. | 1 | Lofty Denial | m21 |
+| create an N/N blue and red weird creature token, where N is the number of instant and sorcery cards in your graveyard. then you may return an instant or sorcery | 1 | Experimental Overload | m21 |
+| creature spells with flying you cast cost {M} less to cast. | 1 | Watcher of the Spheres | m21 |
+| destroy target creature. you may search your library and/or graveyard for a card named liliana, death mage, reveal it, and put it into your hand. if you search  | 1 | Liliana's Scorn | m21 |
+| discard a card: tap ~. it gains indestructible until end of turn. | 1 | Seasoned Hallowblade | m21 |
+| discard a card: ~ can't be blocked ~. | 1 | Ghostly Pilferer | m21 |
+| double the power of target creature until end of turn. | 1 | Unleash Fury | m21 |
+| draw a card, then draw cards equal to the number of cards named ~ in your graveyard. | 1 | Frantic Inventory | m21 |
+| during your turn, ~ costs {M}{M}{M} less to cast. end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discard | 1 | Discontinuity | m21 |
+| enchanted creature gets +N/+N, has flying, and is a demon in addition to its other types. | 1 | Demonic Embrace | m21 |
+| equipped creature gets +N/+N for each soul counter on ~. | 1 | Malefic Scythe | m21 |
+| exile target creature. that creature's controller reveals cards from the top of their library until they reveal a creature card. that player puts that card onto | 1 | Transmogrify | m21 |
+| gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. add two mana of any one color. (the creature can attac | 1 | Traitorous Greed | m21 |
+| look at the top three cards of your library. put one of those cards into your hand and the rest on the bottom of your library in any order. if ~ was cast from a | 1 | See the Truth | m21 |
+| other cats you control get +N/+N and have protection from dogs. | 1 | Feline Sovereign | m21 |
+| other creatures get -N/-N. | 1 | Kaervek, the Spiteful | m21 |
+| play with the top card of your library revealed. | 1 | Conspicuous Snoop | m21 |
+| put a +N/+N counter on each of up to two target creatures. you may search your library and/or graveyard for a card named basri, devoted paladin, reveal it, and  | 1 | Basri's Aegis | m21 |
+| put a +N/+N counter on target creature you control, then double the number of +N/+N counters on that creature. | 1 | Invigorating Surge | m21 |
+| scry N, then reveal the top card of your library. if it's a creature or land card, draw a card. (to scry N, look at the top three cards of your library, then pu | 1 | Track Down | m21 |
+| target creature gets +N/+N and gains your choice of deathtouch or lifelink until end of turn. (any amount of damage a creature with deathtouch deals to a creatu | 1 | Alchemist's Gift | m21 |
+| target creature you control gets +N/+N until end of turn. then it fights up to one target creature you don't control. (each deals damage equal to its power to t | 1 | Primal Might | m21 |
+| target player draws cards equal to half the number of cards in their library and loses half their life. round up each time. | 1 | Peer into the Abyss | m21 |
+| triple | 1 | Fiery Emancipation | m21 |
+| until end of turn, target creature gets +N/+N and another target creature gets -N/-N. | 1 | Rookie Mistake | m21 |
+| when niambi enters, you may return another target creature you control to its owner"..."s mana value. | 1 | Niambi, Esteemed Speaker | m21 |
+| when ~ dies, you gain N life for each creature that died ~. | 1 | Canopy Stalker | m21 |
+| when ~ dies, you gain life equal to its power. | 1 | Conclave Mentor | m21 |
+| when ~ enters, draw N cards, where N is the number of creatures that died under your control ~. | 1 | Liliana's Standard Bearer | m21 |
+| when ~ enters, each opponent creates a N/N red pirate creature token with "..." and "..." | 1 | Pursued Whale | m21 |
+| when ~ enters, each opponent sacrifices a creature. | 1 | Goremand | m21 |
+| when ~ enters, exile all creature cards with mana value N or less from your graveyard until ~ leaves the battlefield. | 1 | Idol of Endurance | m21 |
+| when ~ enters, if you control two or more nonland, nontoken permanents with the same name as one another, create a N/N colorless construct artifact creature tok | 1 | Chrome Replicator | m21 |
+| when ~ enters, you gain N life for each creature you control with flying. | 1 | Aven Gagglemaster | m21 |
+| when ~ enters, you may sacrifice a creature or discard a creature card. if you do, draw a card. | 1 | Crypt Lurker | m21 |
+| when ~ enters, you may search your library and/or graveyard for a card named chandra, flame's catalyst, reveal it, and put it into your hand. if you search your | 1 | Chandra's Firemaw | m21 |
+| when ~ enters, you may search your library and/or graveyard for a card named garruk, savage herald, reveal it, and put it into your hand. if you search your lib | 1 | Garruk's Warsteed | m21 |
+| when ~ enters, you may search your library and/or graveyard for a card named teferi, timeless voyager, reveal it, and put it into your hand. if you search your  | 1 | Teferi's Wavecaster | m21 |
+| when ~ enters, you may search your library for a card named alpine watchdog and/or a card named igneous cur, reveal them, put them into your hand, then shuffle. | 1 | Alpine Houndmaster | m21 |
+| when ~ leaves the battlefield, you lose the game. | 1 | Nine Lives | m21 |
+| whenever a creature you control with deathtouch deals damage to a planeswalker, destroy that planeswalker. | 1 | Hooded Blightfang | m21 |
+| whenever a source you control deals noncombat damage to an opponent, ~ deals that much damage to target creature or planeswalker that player controls. | 1 | Chandra's Incinerator | m21 |
+| whenever a source you control deals noncombat damage to an opponent, ~ gets +N/+N and gains double strike until end of turn. | 1 | Chandra's Pyreling | m21 |
+| whenever another creature you control enters, ~ deals damage equal to that creature's power to any target. | 1 | Terror of the Peaks | m21 |
+| whenever you gain life, target opponent loses that much life. | 1 | Vito, Thorn of the Dusk Rose | m21 |
+| whenever ~ attacks, prevent all combat damage that would be dealt ~ to dogs you control. | 1 | Pack Leader | m21 |
+| whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Siege Striker | m21 |
+| whenever ~ becomes blocked by a creature, that creature's controller loses N life and you gain N life. | 1 | Gloom Sower | m21 |
+| whenever ~ deals combat damage to a player or planeswalker, look at that many cards from the top of your library. you may reveal a creature card or garruk plane | 1 | Garruk's Harbinger | m21 |
+| whenever ~ or another rogue you control enters, each opponent mills two cards. | 1 | Thieves' Guild Enforcer | m21 |
+| you can't choose an untapped creature as ~ target as you cast it. | 1 | Enthralling Hold | m21 |
+| you draw two cards and each opponent discards two cards. each player loses N life. | 1 | Bad Deal | m21 |
+| you may look at the top card of your library any time, and you may play lands from the top of your library. | 1 | Radha, Heart of Keld | m21 |
+| you may spend mana as though it were mana of any color. | 1 | Chromatic Orrery | m21 |
+| {M}, sacrifice ~: it deals damage equal to its power to target creature or planeswalker. | 1 | Heartfire Immolator | m21 |
+| {M}{M}: ~ deals damage equal to its power to target player or planeswalker. | 1 | Leafkin Avenger | m21 |
+| {M}{M}{M}: until end of turn, creatures you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Jolrael, Mwonvuli Recluse | m21 |
+| ~ can block only creatures with flying. | 1 | Shacklegeist | m21 |
+| ~ can"..."ve drawn two or more cards ~. | 1 | Tome Anima | m21 |
+| ~ costs {M} less to cast, where N is the total power of creatures you control. ~ deals N damage to each of up to two target creatures and/or planeswalkers. | 1 | Volcanic Salvo | m21 |
+| ~ costs {M}{M} less to cast if you've cast an instant or sorcery spell ~. | 1 | Stormwing Entity | m21 |
+| ~ deals N damage to target creature or planeswalker. that permanent loses indestructible until end of turn. | 1 | Soul Sear | m21 |
+| ~ gets +N/+N as long as you control a garruk planeswalker. | 1 | Predatory Wurm | m21 |
+| ~ gets +N/+N, where N is the greatest power among creature cards in your graveyard. | 1 | Carrion Grub | m21 |
+| ~ has lifelink as long as it has a +N/+N counter on it. | 1 | Sigiled Contender | m21 |
+| ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Kinetic Augur | m21 |
+| −N: discard your hand, then draw seven cards. until end of turn, you may cast spells from your hand without paying their mana costs. | 1 | Chandra, Flame's Catalyst | m21 |
+| −N: put target creature on top of its owner's library. | 1 | Teferi, Timeless Voyager | m21 |
+| −N: target creature you control deals damage equal to its power to another target creature. | 1 | Garruk, Savage Herald | m21 |
+| −N: target opponent loses N life for each creature card in their graveyard. | 1 | Liliana, Death Mage | m21 |
+| −N: whenever one or more nontoken creatures attack ~, create that many N/N white soldier creature tokens that are tapped and attacking. | 1 | Basri Ket | m21 |
 
 ## Notes
 

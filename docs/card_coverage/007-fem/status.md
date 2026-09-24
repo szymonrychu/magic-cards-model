@@ -43,9 +43,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| This creature can't attack if defending player controls an untapped creature with power 3 or greater. | Orgg | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| ~ can't attack if defending player controls an untapped creature with power N or greater. | 1 | Orgg | fem |
 
 ## Notes
 

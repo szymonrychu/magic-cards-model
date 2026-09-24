@@ -289,95 +289,125 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| As an additional cost to cast this spell, you may choose a creature type and behold two creatures of that type. Search your library for a creature card with man | Celestial Reunion, Champion of the Clachan, Champions of the Perfect, Champions of the Shoal, Kinsbaile Aspirant, Lys Alana Dignitary, Mudbutton Cursetosser, Silvergill Mentor, Soulbright Seeker | 9 |
-| Vivid — When this creature enters, reveal cards from the top of your library until you reveal X permanent cards, where X is the number of colors among permanent | Aurora Awakener, Explosive Prodigy, Kithkeeper, Luminollusk, Prismabasher, Shimmercreep, Shinestriker | 7 |
-| Whenever this creature enters or transforms into Sygg, Wanderwine Wisdom, target creature gains "Whenever this creature deals combat damage to a player or plane | Ashling, Rekindled // Ashling, Rimebound, Blighted Blackthorn, Brigid, Clachan's Heart // Brigid, Doun's Mind, Grub, Storied Matriarch // Grub, Notorious Auntie, Sygg, Wanderwine Wisdom // Sygg, Wanderbrine Shield, Trystan, Callous Cultivator // Trystan, Penitent Culler | 6 |
-| At the beginning of your end step, if you gained life this turn, exile cards from the top of your library until you exile a nonland card. You may cast that card | Bre of Clan Stoutarm, Creakwood Safewright, Gutsplitter Gang, Scuzzback Scrounger, Slumbering Walker | 5 |
-| Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Return one  | Appeal to Eirdu, Bloodline Bidding, Harmonized Crescendo, Wanderwine Farewell, Winnowing | 5 |
-| When this creature enters, you may blight 2. If you do, create two 1/1 black and red Goblin creature tokens. | Chaos Spewer, Dream Seizer, Pummeler for Hire, Sourbread Auntie | 4 |
-| When this Aura enters, enchanted creature fights up to one target creature an opponent controls. | Aquitect's Defenses, Gilt-Leaf's Embrace, Pitiless Fists | 3 |
-| Whenever another creature you control enters while this creature has a -1/-1 counter on it, remove a -1/-1 counter from this creature. | Bristlebane Battler, Heirloom Auntie, Reluctant Dounguard | 3 |
-| Whenever this creature attacks, you may put a creature card with mana value X or less from your hand onto the battlefield tapped and attacking, where X is the n | Gravelgill Scoundrel, Kinscaer Sentry, Meanders Guide | 3 |
-| Choose two — • Create a token that's a copy of target Goblin you control. • Creatures target player controls get +1/+1 and gain haste until end of turn. • Destr | Grub's Command, Sygg's Command | 2 |
-| {1}{R}, Remove a counter from this creature: Target creature can't block this turn. Activate only as a sorcery. | Brambleback Brute, Glen Elendra Guardian | 2 |
-| This creature gets +1/+1 for each creature you control and each creature card in your graveyard. | Boneclub Berserker, Moon-Vigil Adherents | 2 |
-| Vivid — At the beginning of your first main phase, reveal cards from the top of your library until you reveal X nonland cards, where X is the number of colors a | Glister Bairn, Sanar, Innovative First-Year | 2 |
-| Vivid — This spell costs {1} less to cast for each color among permanents you control. Tap up to two target creatures. Put a stun counter on each of them. (If a | Rime Chill, Wildvine Pummeler | 2 |
-| When this creature enters, choose up to one other target creature. Until end of turn, that creature has base power and toughness 4/4 and gains all creature type | Glamer Gifter, Selfless Safewright | 2 |
-| When this creature enters, target opponent reveals X cards from their hand, where X is the number of Goblins you control. You choose one of those cards. That pl | Gloom Ripper, Taster of Wares | 2 |
-| Whenever a creature you control attacks or blocks, it gets +X/+X until end of turn, where X is the difference between its power and toughness. | Doran, Besieged by Time, Thoughtweft Imbuer | 2 |
-| Whenever this creature becomes tapped while it has a -1/-1 counter on it, remove a -1/-1 counter from it. | Encumbered Reejerey, Tributary Vaulter | 2 |
-| Whenever you cast an instant or sorcery spell from your hand, exile that card with a dream counter on it instead of putting it into your graveyard as it resolve | Goliath Daydreamer, Spinerock Tyrant | 2 |
-| All creatures have haste. | Lavaleaper | 1 |
-| As long as another creature entered the battlefield under your control this turn, this creature gets +2/+0. | Bristlebane Outrider | 1 |
-| As long as equipped creature's toughness is greater than its power, it assigns combat damage equal to its toughness rather than its power. | Bark of Doran | 1 |
-| As long as this Equipment is attached to a creature, the first time you would create one or more tokens each turn, you may instead create that many tokens that  | Mirrormind Crown | 1 |
-| As this artifact enters, choose Elemental, Elf, Faerie, Giant, Goblin, Kithkin, Merfolk, or Treefolk. | Dawn-Blessed Pennant | 1 |
-| As this land enters, choose Elemental, Elf, Faerie, Giant, Goblin, Kithkin, Merfolk, or Treefolk. | Eclipsed Realms | 1 |
-| At the beginning of combat on your turn, you may blight 1. When you do, target creature gains haste until end of turn. | Warren Torchmaster | 1 |
-| At the beginning of each player's draw step, that player loses 3 life, searches their library for a card, puts it into their hand, then shuffles. | Mornsong Aria | 1 |
-| {1}{W}, Blight 1, Sacrifice this Aura: Exile enchanted creature. | Spiral into Solitude | 1 |
-| Boulder Dash deals 2 damage to any target and 1 damage to any other target. | Boulder Dash | 1 |
-| −6: Choose a creature type. You get an emblem with "Creatures you control of the chosen type get +3/+3 and have vigilance and hexproof." | Oko, Lorwyn Liege // Oko, Shadowmoor Scion | 1 |
-| Choose exactly two creatures you control. You draw X cards and the chosen creatures get +X/+X and gain trample until end of turn, where X is the difference betw | Spry and Mighty | 1 |
-| Choose one or both — • Target opponent exiles two cards from their hand. • Remove all counters from target creature. | Perfect Intimidation | 1 |
-| Create a token that's a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token." Flashback—{1}{R}, | Kindle the Inner Flame | 1 |
-| Creature spells you cast have convoke. | Eirdu, Carrier of Dawn // Isilu, Carrier of Twilight | 1 |
-| Creatures you control get +X/+X, where X is the number of creatures that entered the battlefield under your control this turn. | Kinbinding | 1 |
-| Creatures you control of the chosen type get +2/+2 and have first strike and trample. | Chronicle of Victory | 1 |
-| During your turn, you may cast creature spells from among cards you own exiled with this creature by removing three counters from among creatures you control in | Dawnhand Dissident | 1 |
-| Each noncreature spell you cast has conspire. | Raiding Schemes | 1 |
-| Each nonland permanent you control becomes a copy of target non-Aura permanent. | Mirrorform | 1 |
-| Each opponent exiles cards from the top of their library until they have exiled cards with total mana value 5 or greater this way. Until end of turn, you may ca | Dream Harvest | 1 |
-| Enchanted creature can't become untapped and can't have counters put on it. | Blossombind | 1 |
-| Enchanted creature loses all abilities and is a colorless Noggle with base power and toughness 1/1. | Noggle the Mind | 1 |
-| Enchanted land is the chosen color. | Shimmerwilds Growth | 1 |
-| End-Blaze Epiphany deals X damage to target creature. When that creature dies this turn, exile a number of cards from the top of your library equal to its power | End-Blaze Epiphany | 1 |
-| Equipped creature gets +1/+1 and is all creature types. | Stalactite Dagger | 1 |
-| Exile any number of target creatures. At the beginning of the next end step, return those cards to the battlefield tapped under their owners' control. Until you | Morningtide's Light | 1 |
-| −8: Look at the top X cards of your library, where X is your life total. You may put any number of nonland permanent cards with mana value 3 or less from among  | Ajani, Outland Chaperone | 1 |
-| Mill four cards, then you may return a permanent card from among them to your hand. (To mill four cards, put the top four cards of your library into your gravey | Midnight Tilling | 1 |
-| Other tapped creatures you control have indestructible. | Adept Watershaper | 1 |
-| Pay 1 life, Blight 2: Target opponent blights 2. Activate only as a sorcery. | Champion of the Weird | 1 |
-| Put two -1/-1 counters on each creature. | Darkness Descends | 1 |
-| {T}, Remove three charge counters from this artifact: When you next cast an instant or sorcery spell this turn, copy it. You may choose new targets for the copy | Rimefire Torque | 1 |
-| Return target creature card from your graveyard to the battlefield. Then if it isn't your main phase, blight 2. (Put two -1/-1 counters on a creature you contro | Dose of Dawnglow | 1 |
-| Spells you control can't be countered. | Hexing Squelcher | 1 |
-| Tap two untapped creatures you control: Copy target triggered ability you control. You may choose new targets for the copy. Activate only once each turn. | Kirol, Attentive First-Year | 1 |
-| Target creature gets +3/+3 until end of turn. If a creature entered the battlefield under your control this turn, draw a card. | Thoughtweft Charge | 1 |
-| {T}: Target creature you control becomes all colors until end of turn. | Tam, Mindful First-Year | 1 |
-| Target creature you control gains deathtouch and lifelink until end of turn. When that creature dies this turn, create a 2/2 black and green Elf creature token. | Scarblade's Malice | 1 |
-| {5}: Target Elf you control gets +2/+2 until end of turn. | Safewright Cavalry | 1 |
-| {G/W}: This creature becomes a Kithkin Scout with base power and toughness 2/3. | Figure of Fable | 1 |
-| This creature has hexproof as long as it's untapped. | Illusion Spinners | 1 |
-| This spell can't be countered. Counter all spells your opponents control and all abilities your opponents control. Create a 1/1 blue and black Faerie creature t | Glen Elendra's Answer | 1 |
-| This spell costs {X} less to cast, where X is the greatest mana value among Elementals you control. | Sunderflock | 1 |
-| Vivid — Squawkroaster's power is equal to the number of colors among permanents you control. | Squawkroaster | 1 |
-| Vivid — When this enchantment enters, search your library for up to X basic land cards, where X is the number of colors among permanents you control. Reveal tho | Prismatic Undercurrents | 1 |
-| When Abigale enters, up to one other target creature loses all abilities. Put a flying counter, a first strike counter, and a lifelink counter on that creature. | Abigale, Eloquent First-Year | 1 |
-| When Lluwen enters, mill four cards, then you may put a creature or land card from among the milled cards on top of your library. | Lluwen, Imperfect Naturalist | 1 |
-| When Rhys enters, another target creature you control gains persist until end of turn. | Rhys, the Evermore | 1 |
-| When this artifact enters and at the beginning of your upkeep, look at the top card of your library. If it's a card of the chosen type, you may reveal it and pu | Gathering Stone | 1 |
-| When this artifact enters, draw a card, then choose a color. This artifact becomes the chosen color. | Puca's Eye | 1 |
-| When this creature dies, if it had a -1/-1 counter on it, return it to the battlefield under its owner's control and it loses all abilities. | Retched Wretch | 1 |
-| When this creature enters, create a tapped Mutavault token. | Mutable Explorer | 1 |
-| When this creature enters, each creature target opponent controls loses all abilities, becomes a Coward in addition to its other types, and has base power and t | Curious Colossus | 1 |
-| When this creature enters, mill three cards. Then if there is an Elf card in your graveyard, each opponent loses 2 life and you gain 2 life. | Dawnhand Eulogist | 1 |
-| When this creature enters, untap each other Merfolk you control. | Deepway Navigator | 1 |
-| When this enchantment enters, you may blight 1. If you do, create two 1/1 black and red Goblin creature tokens. | Boggart Mischief | 1 |
-| Whenever another Elemental you control enters, it deals damage equal to its power to each opponent. | Champion of the Path | 1 |
-| Whenever High Perfect Morcant or another Elf you control enters, each opponent blights 1. | High Perfect Morcant | 1 |
-| Whenever Maralen or another Elf or Faerie you control enters, exile the top two cards of target opponent's library. | Maralen, Fae Ascendant | 1 |
-| Whenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. This ability | Twilight Diviner | 1 |
-| Whenever one or more permanent cards are put into your graveyard from anywhere while this creature has a -1/-1 counter on it, remove a -1/-1 counter from this c | Moonshadow | 1 |
-| Whenever this creature attacks, another target Elf you control gets +2/+1 until end of turn. | Vinebred Brawler | 1 |
-| Whenever this creature attacks, blight 1. | Shadow Urchin | 1 |
-| Whenever you attack, target attacking Goblin you control gets +1/+0 until end of turn. | Boggart Prankster | 1 |
-| Whenever you cast a spell during an opponent's turn, you may pay 1 life. If you do, draw a card. | Voracious Tome-Skimmer | 1 |
-| You may have this creature enter as a copy of any creature on the battlefield, except it has changeling. | Omni-Changeling | 1 |
-| {1}{R}: You may put a creature card with total power and toughness 5 or less from your hand onto the battlefield. That creature gains haste. At the beginning of | Meek Attack | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Vivid | 13 | Aurora Awakener, Explosive Prodigy, Glister Bairn, Kithkeeper, Luminollusk | ecl |
+| Choose two | 2 | Grub's Command, Sygg's Command | ecl |
+| as ~ enters, choose elemental, elf, faerie, giant, goblin, kithkin, merfolk, or treefolk. | 2 | Dawn-Blessed Pennant, Eclipsed Realms | ecl |
+| when ~ enters, you may blight N. if you do, create two N/N black and red goblin creature tokens. | 2 | Boggart Mischief, Sourbread Auntie | ecl |
+| whenever another creature you control enters while ~ has a -N/-N counter on it, remove a -N/-N counter from ~. | 2 | Bristlebane Battler, Reluctant Dounguard | ecl |
+| Choose one or both | 1 | Perfect Intimidation | ecl |
+| all creatures have haste. | 1 | Lavaleaper | ecl |
+| as an additional cost to cast ~, behold a goblin or pay {M}. | 1 | Mudbutton Cursetosser | ecl |
+| as an additional cost to cast ~, behold a kithkin and exile it. | 1 | Champion of the Clachan | ecl |
+| as an additional cost to cast ~, behold a kithkin or pay {M}. | 1 | Kinsbaile Aspirant | ecl |
+| as an additional cost to cast ~, behold a merfolk and exile it. | 1 | Champions of the Shoal | ecl |
+| as an additional cost to cast ~, behold a merfolk or pay {M}. | 1 | Silvergill Mentor | ecl |
+| as an additional cost to cast ~, behold an elemental or pay {M}. | 1 | Soulbright Seeker | ecl |
+| as an additional cost to cast ~, behold an elf and exile it. | 1 | Champions of the Perfect | ecl |
+| as an additional cost to cast ~, behold an elf or pay {M}. | 1 | Lys Alana Dignitary | ecl |
+| as an additional cost to cast ~, you may choose a creature type and behold two creatures of that type. search your library for a creature card with mana value N | 1 | Celestial Reunion | ecl |
+| as long as another creature entered the battlefield under your control ~, ~ gets +N/+N. | 1 | Bristlebane Outrider | ecl |
+| as long as equipped creature's toughness is greater than its power, it assigns combat damage equal to its toughness rather than its power. | 1 | Bark of Doran | ecl |
+| as long as ~ is attached to a creature, the first time you would create one or more tokens each turn, you may instead create that many tokens that are copies of | 1 | Mirrormind Crown | ecl |
+| at the beginning of combat on your turn, you may blight N. when you do, target creature gains haste until end of turn. | 1 | Warren Torchmaster | ecl |
+| at the beginning of each player's draw step, that player loses N life, searches their library for a card, puts it into their hand, then shuffles. | 1 | Mornsong Aria | ecl |
+| at the beginning of your end step, if there is an elf card in your graveyard and ~ has a -N/-N counter on it, remove a -N/-N counter from ~. | 1 | Creakwood Safewright | ecl |
+| at the beginning of your end step, if you gained life ~, exile cards from the top of your library until you exile a nonland card. you may cast that card without | 1 | Bre of Clan Stoutarm | ecl |
+| at the beginning of your end step, you may remove a counter from ~. when you do, return target creature card with power N or less from your graveyard to the bat | 1 | Slumbering Walker | ecl |
+| at the beginning of your first main phase, you may blight N. if you do, create a treasure token. | 1 | Scuzzback Scrounger | ecl |
+| at the beginning of your first main phase, you may blight N. if you don't, you lose N life. | 1 | Gutsplitter Gang | ecl |
+| choose exactly two creatures you control. you draw N cards and the chosen creatures get +N/+N and gain trample until end of turn, where N is the difference betw | 1 | Spry and Mighty | ecl |
+| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature"..." hands. then if you control a merfo | 1 | Wanderwine Farewell | ecl |
+| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature"..."t share a creature type with the ch | 1 | Winnowing | ecl |
+| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) choose a creature type. draw  | 1 | Harmonized Crescendo | ecl |
+| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) choose a creature type. retur | 1 | Bloodline Bidding | ecl |
+| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) one or two target creatures e | 1 | Appeal to Eirdu | ecl |
+| create a token that's a copy of target creature you control, except it has haste and "..." flashback—{M}{M}, behold three elementals. (you may cast ~ from your  | 1 | Kindle the Inner Flame | ecl |
+| creature spells you cast have convoke. | 1 | Eirdu, Carrier of Dawn // Isilu, Carrier of Twilight | ecl |
+| creatures you control get +N/+N, where N is the number of creatures that entered the battlefield under your control ~. | 1 | Kinbinding | ecl |
+| creatures you control of the chosen type get +N/+N and have first strike and trample. | 1 | Chronicle of Victory | ecl |
+| during your turn, you may cast creature spells from among cards you own exiled with ~ by removing three counters from among creatures you control in addition to | 1 | Dawnhand Dissident | ecl |
+| each noncreature spell you cast has conspire. | 1 | Raiding Schemes | ecl |
+| each nonland permanent you control becomes a copy of target non-aura permanent. | 1 | Mirrorform | ecl |
+| each opponent exiles cards from the top of their library until they have exiled cards with total mana value N or greater ~. until end of turn, you may cast card | 1 | Dream Harvest | ecl |
+| enchanted creature can"..."t have counters put on it. | 1 | Blossombind | ecl |
+| enchanted creature loses all abilities and is a colorless noggle with base power and toughness N/N. | 1 | Noggle the Mind | ecl |
+| enchanted land is the chosen color. | 1 | Shimmerwilds Growth | ecl |
+| equipped creature gets +N/+N and is all creature types. | 1 | Stalactite Dagger | ecl |
+| exile any number of target creatures. at the beginning of the next end step, return those cards to the battlefield tapped under their owners' control. until you | 1 | Morningtide's Light | ecl |
+| mill four cards, then you may return a permanent card from among them to your hand. (to mill four cards, put the top four cards of your library into your gravey | 1 | Midnight Tilling | ecl |
+| other tapped creatures you control have indestructible. | 1 | Adept Watershaper | ecl |
+| pay N life, blight N: target opponent blights N. activate only as a sorcery. | 1 | Champion of the Weird | ecl |
+| put two -N/-N counters on each creature. | 1 | Darkness Descends | ecl |
+| return target creature card from your graveyard to the battlefield. then if it isn't your main phase, blight N. (put two -N/-N counters on a creature you contro | 1 | Dose of Dawnglow | ecl |
+| spells you control can't be countered. | 1 | Hexing Squelcher | ecl |
+| tap two untapped creatures you control: copy target triggered ability you control. you may choose new targets for the copy. activate only once each turn. | 1 | Kirol, Attentive First-Year | ecl |
+| target creature gets +N/+N until end of turn. if a creature entered the battlefield under your control ~, draw a card. | 1 | Thoughtweft Charge | ecl |
+| target creature you control gains deathtouch and lifelink until end of turn. when that creature dies ~, create a N/N black and green elf creature token. | 1 | Scarblade's Malice | ecl |
+| when abigale enters, up to one other target creature loses all abilities. put a flying counter, a first strike counter, and a lifelink counter on that creature. | 1 | Abigale, Eloquent First-Year | ecl |
+| when lluwen enters, mill four cards, then you may put a creature or land card from among the milled cards on top of your library. | 1 | Lluwen, Imperfect Naturalist | ecl |
+| when rhys enters, another target creature you control gains persist until end of turn. | 1 | Rhys, the Evermore | ecl |
+| when ~ dies, if it had a -N/-N counter on it, return it to the battlefield under its owner's control and it loses all abilities. | 1 | Retched Wretch | ecl |
+| when ~ enters and at the beginning of your upkeep, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your grave | 1 | Gathering Stone | ecl |
+| when ~ enters, choose a creature type. other permanents you control of that type gain hexproof and indestructible until end of turn. | 1 | Selfless Safewright | ecl |
+| when ~ enters, choose up to one other target creature. until end of turn, that creature has base power and toughness N/N and gains all creature types. | 1 | Glamer Gifter | ecl |
+| when ~ enters, create a tapped mutavault token. | 1 | Mutable Explorer | ecl |
+| when ~ enters, draw a card, then choose a color. ~ becomes the chosen color. | 1 | Puca's Eye | ecl |
+| when ~ enters, each creature target opponent controls loses all abilities, becomes a coward in addition to its other types, and has base power and toughness N/N | 1 | Curious Colossus | ecl |
+| when ~ enters, enchanted creature fights up to one target creature an opponent controls. | 1 | Pitiless Fists | ecl |
+| when ~ enters, enchanted creature gains hexproof until end of turn. | 1 | Aquitect's Defenses | ecl |
+| when ~ enters, enchanted creature gains trample and indestructible until end of turn. | 1 | Gilt-Leaf's Embrace | ecl |
+| when ~ enters, mill three cards. then if there is an elf card in your graveyard, each opponent loses N life and you gain N life. | 1 | Dawnhand Eulogist | ecl |
+| when ~ enters, target creature you control gets +N/+N until end of turn and up to one target creature an opponent controls gets -N/-N until end of turn, where N | 1 | Gloom Ripper | ecl |
+| when ~ enters, target opponent reveals N cards from their hand, where N is the number of goblins you control. you choose one of those cards. that player exiles  | 1 | Taster of Wares | ecl |
+| when ~ enters, untap each other merfolk you control. | 1 | Deepway Navigator | ecl |
+| when ~ enters, you gain N life, where N is the greatest power among giants you control. | 1 | Pummeler for Hire | ecl |
+| when ~ enters, you may blight N. if you do, each opponent discards a card. | 1 | Dream Seizer | ecl |
+| when ~ enters, you may pay {M}. if you don't, blight N. | 1 | Chaos Spewer | ecl |
+| whenever a creature you control attacks alone, it gets +N/+N until end of turn, where N is the number of kithkin you control. | 1 | Thoughtweft Imbuer | ecl |
+| whenever a creature you control attacks or blocks, it gets +N/+N until end of turn, where N is the difference between its power and toughness. | 1 | Doran, Besieged by Time | ecl |
+| whenever another creature you control dies, surveil N, then remove a -N/-N counter from ~. | 1 | Heirloom Auntie | ecl |
+| whenever another elemental you control enters, it deals damage equal to its power to each opponent. | 1 | Champion of the Path | ecl |
+| whenever maralen or another elf or faerie you control enters, exile the top two cards of target opponent's library. | 1 | Maralen, Fae Ascendant | ecl |
+| whenever one or more other creatures you control enter, if they entered or were cast from a graveyard, create a token that's a copy of one of them. ~ triggers o | 1 | Twilight Diviner | ecl |
+| whenever one or more permanent cards are put into your graveyard from anywhere while ~ has a -N/-N counter on it, remove a -N/-N counter from ~. | 1 | Moonshadow | ecl |
+| whenever you attack, target attacking goblin you control gets +N/+N until end of turn. | 1 | Boggart Prankster | ecl |
+| whenever you cast a spell during an opponent's turn, you may pay N life. if you do, draw a card. | 1 | Voracious Tome-Skimmer | ecl |
+| whenever you cast an instant or sorcery spell from your hand, exile that card with a dream counter on it instead of putting it into your graveyard as it resolve | 1 | Goliath Daydreamer | ecl |
+| whenever you cast an instant or sorcery spell with a single target, you may copy it. if you do, those spells gain wither. you may choose new targets for the cop | 1 | Spinerock Tyrant | ecl |
+| whenever ~ attacks, another target elf you control gets +N/+N until end of turn. | 1 | Vinebred Brawler | ecl |
+| whenever ~ attacks, blight N. | 1 | Shadow Urchin | ecl |
+| whenever ~ attacks, you may put a creature card with mana value N or less from your hand onto the battlefield tapped and attacking, where N is the number of att | 1 | Kinscaer Sentry | ecl |
+| whenever ~ attacks, you may tap another untapped creature you control. if you do, ~ can't be blocked ~. | 1 | Gravelgill Scoundrel | ecl |
+| whenever ~ attacks, you may tap another untapped merfolk you control. when you do, return target creature card with mana value N or less from your graveyard to  | 1 | Meanders Guide | ecl |
+| whenever ~ becomes tapped while it has a -N/-N counter on it, remove a -N/-N counter from it. | 1 | Encumbered Reejerey | ecl |
+| whenever ~ becomes tapped, another target merfolk you control gets +N/+N until end of turn. | 1 | Tributary Vaulter | ecl |
+| whenever ~ enters or attacks, you may blight N. if you do, you draw a card and lose N life. | 1 | Blighted Blackthorn | ecl |
+| whenever ~ enters or transforms into ~, create a N/N green and white kithkin creature token. | 1 | Brigid, Clachan's Heart // Brigid, Doun's Mind | ecl |
+| whenever ~ enters or transforms into ~, mill three cards. then if there is an elf card in your graveyard, you gain N life. | 1 | Trystan, Callous Cultivator // Trystan, Penitent Culler | ecl |
+| whenever ~ enters or transforms into ~, return up to one target goblin card from your graveyard to your hand. | 1 | Grub, Storied Matriarch // Grub, Notorious Auntie | ecl |
+| whenever ~ enters or transforms into ~, target creature gains "..." until end of turn. | 1 | Sygg, Wanderwine Wisdom // Sygg, Wanderbrine Shield | ecl |
+| whenever ~ enters or transforms into ~, you may discard a card. if you do, draw a card. | 1 | Ashling, Rekindled // Ashling, Rimebound | ecl |
+| whenever ~ or another elf you control enters, each opponent blights N. | 1 | High Perfect Morcant | ecl |
+| you may have ~ enter as a copy of any creature on the battlefield, except it has changeling. | 1 | Omni-Changeling | ecl |
+| {M}, remove three charge counters from ~: when you next cast an instant or sorcery spell ~, copy it. you may choose new targets for the copy. | 1 | Rimefire Torque | ecl |
+| {M}: target creature you control becomes all colors until end of turn. | 1 | Tam, Mindful First-Year | ecl |
+| {M}: target elf you control gets +N/+N until end of turn. | 1 | Safewright Cavalry | ecl |
+| {M}: ~ becomes a kithkin scout with base power and toughness N/N. | 1 | Figure of Fable | ecl |
+| {M}{M}, blight N, sacrifice ~: exile enchanted creature. | 1 | Spiral into Solitude | ecl |
+| {M}{M}, remove a counter from ~: counter target noncreature spell. its controller draws a card. | 1 | Glen Elendra Guardian | ecl |
+| {M}{M}, remove a counter from ~: target creature can't block ~. activate only as a sorcery. | 1 | Brambleback Brute | ecl |
+| {M}{M}: you may put a creature card with total power and toughness N or less from your hand onto the battlefield. that creature gains haste. at the beginning of | 1 | Meek Attack | ecl |
+| ~ can't be countered. counter all spells your opponents control and all abilities your opponents control. create a N/N blue and black faerie creature token with | 1 | Glen Elendra's Answer | ecl |
+| ~ costs {M} less to cast, where N is the greatest mana value among elementals you control. | 1 | Sunderflock | ecl |
+| ~ deals N damage to any target and N damage to any other target. | 1 | Boulder Dash | ecl |
+| ~ deals N damage to target creature. when that creature dies ~, exile a number of cards from the top of your library equal to its power, then choose a card exil | 1 | End-Blaze Epiphany | ecl |
+| ~ gets +N/+N for each creature you control and each creature card in your graveyard. | 1 | Moon-Vigil Adherents | ecl |
+| ~ gets +N/+N for each other goblin you control. | 1 | Boneclub Berserker | ecl |
+| ~ has hexproof as long as it's untapped. | 1 | Illusion Spinners | ecl |
+| −N: choose a creature type. you get an emblem with "..." | 1 | Oko, Lorwyn Liege // Oko, Shadowmoor Scion | ecl |
+| −N: look at the top N cards of your library, where N is your life total. you may put any number of nonland permanent cards with mana value N or less from among  | 1 | Ajani, Outland Chaperone | ecl |
 
 ## Notes
 

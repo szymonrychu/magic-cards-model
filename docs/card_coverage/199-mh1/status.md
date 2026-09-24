@@ -246,90 +246,99 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Sliver creatures you control have "Whenever this creature is dealt damage, it deals that much damage to target player or planeswalker." | Cloudshredder Sliver, First Sliver's Chosen, Hollowhead Sliver, Lancer Sliver, Lavabelly Sliver, Scuttling Sliver, Spiteful Sliver, Tempered Sliver | 8 |
-| If it's not your turn, you may exile a red card from your hand rather than pay this spell's mana cost. Create two 3/1 red Elemental creature tokens with trample | Force of Despair, Force of Rage, Force of Virtue | 3 |
-| This creature gets +2/+2 as long as you had another creature enter the battlefield under your control this turn. | Eyekite, Murasa Behemoth, Saddled Rimestag | 3 |
-| At the beginning of your upkeep, if you control ten or more snow permanents, sacrifice Marit Lage's Slumber. If you do, create Marit Lage, a legendary 20/20 bla | Cabal Therapist, Marit Lage's Slumber | 2 |
-| Overload | Mind Rake, Stirring Address | 2 |
-| This spell costs {1} less to cast for each creature type among creatures you control. This effect can't reduce the amount of mana this spell costs by more than  | Igneous Elemental, Valiant Changeling | 2 |
-| When this creature enters, you may search your library for an artifact card with mana value 2, reveal that card, put it into your hand, then shuffle. | Rank Officer, Tribute Mage | 2 |
-| Whenever a creature you control enters, you gain 1 life. If this enchantment isn't a creature, it becomes a 3/3 Angel creature with flying in addition to its ot | Answered Prayers, Cunning Evasion | 2 |
-| Whenever equipped creature deals combat damage to a player, destroy up to one target planeswalker and up to one target artifact. | Sword of Sinew and Steel, Sword of Truth and Justice | 2 |
-| Abominable Treefolk's power and toughness are each equal to the number of snow permanents you control. | Abominable Treefolk | 1 |
-| All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control. | Dead of Winter | 1 |
-| {T}: Another target creature you control gains protection from colorless or from the color of your choice until end of turn. | Giver of Runes | 1 |
-| As long as another Aura is attached to enchanted creature, it has first strike and lifelink. | Face of Divinity | 1 |
-| As long as you control another snow permanent, enchanted creature doesn't untap during its controller's untap step. | Winter's Rest | 1 |
-| As long as you had another creature enter the battlefield under your control this turn, this creature has trample and indestructible. | Bellowing Elk | 1 |
-| As long as you've drawn two or more cards this turn, this creature has double strike. | Spinehorn Minotaur | 1 |
-| As this enchantment enters, choose Mirran or Phyrexian. | Mirrodin Besieged | 1 |
-| Attacking creatures you control get +1/+0. | Goblin Oriflamme | 1 |
-| Buyback | Recruit the Worthy | 1 |
-| Choose creature or land. Reveal the top four cards of your library. Put all cards of the chosen type revealed this way into your hand and the rest into your gra | Winding Way | 1 |
-| Choose one — • Counter target spell. • Target player draws two cards. • Gain control of target nonland permanent with mana value 1 or less. | Archmage's Charm | 1 |
-| Choose one — • Target creature gets -6/-0 until end of turn. • Switch target creature's power and toughness until end of turn. Entwine {B} (Choose both if you p | Twisted Reflection | 1 |
-| Choose one — • Target opponent reveals their hand and discards all colorless nonland cards. • Target opponent reveals their hand and discards all multicolored c | Shatter Assumptions | 1 |
-| Choose two — • Each opponent sacrifices a creature of their choice. • Exile all opponents' graveyards. • Create a 1/1 white and black Spirit creature token with | Kaya's Guile | 1 |
-| Counter target spell. Fateful hour — If you have 5 or less life, draw a card. | Spell Snuff | 1 |
-| Creatures of the chosen type your opponents control get -1/-1. | Plague Engineer | 1 |
-| Devour | Feaster of Fools | 1 |
-| Draw a card. Until end of turn, target creature gains trample and gets +1/+0 for each card you've drawn this turn. (A creature with trample can deal excess comb | Fists of Flame | 1 |
-| Each land card in your hand has cycling {R}. | Tectonic Reformation | 1 |
-| Each Sliver creature card in your graveyard has unearth {2}. | Dregscape Sliver | 1 |
-| Echo | Orcish Hellraiser | 1 |
-| Enchanted creature gets +0/+2 and assigns combat damage equal to its toughness rather than its power. | Treefolk Umbra | 1 |
-| Enchanted creature loses all abilities and is a Coward creature with base power and toughness 0/1. | Reprobation | 1 |
-| Equipped creature gets +3/+0 and is every creature type. | Amorphous Axe | 1 |
-| Evolve | Gluttonous Slug | 1 |
-| Exalted | Goblin Champion | 1 |
-| {3}{B}{G}, Exile a creature card from your graveyard: Create a 1/2 green Spider creature token with reach, then each opponent loses 1 life for each Spider you c | Rotwidow Pack | 1 |
-| Exile target creature you don't control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those | Winds of Abandon | 1 |
-| Exile the top six cards of your library. You may cast up to two sorcery spells with mana value 3 or less from among them without paying their mana costs. Put th | Collected Conjuring | 1 |
-| {1}{W}, Exile this card from your graveyard: Search your library for a card named Trustworthy Scout, reveal it, put it into your hand, then shuffle. | Trustworthy Scout | 1 |
-| Exploit | Silumgar Scavenger | 1 |
-| Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until e | Goatnap | 1 |
-| Hellbent — As long as you have no cards in hand, Sliver creatures you control have "{T}: This creature deals 1 damage to target player or planeswalker." | Bladeback Sliver | 1 |
-| Hellbent — Whenever this creature deals combat damage to a player, if you have no cards in hand, that player discards a card at random. | Headless Specter | 1 |
-| Level up {1} ({1}: Put a level counter on this. Level up only as a sorcery.) LEVEL 3-7 4/4 Protection from instants LEVEL 8+ 6/6 Protection from everything | Hexdrinker | 1 |
-| Modular | Scrapyard Recombiner | 1 |
-| Other creatures you control of the chosen type get +1/+1. | Morophon, the Boundless | 1 |
-| Other Sliver creatures you control have outlast {2}. | Enduring Sliver | 1 |
-| {1}{W}, {T}: Put target enchantment card from your graveyard on top of your library. | Hall of Heliod's Generosity | 1 |
-| Pyrophobia deals 3 damage to target creature. Cowards can't block this turn. | Pyrophobia | 1 |
-| Retrace | Throes of Chaos | 1 |
-| Return target creature to its owner's hand. Then that creature's controller may pay {U}{U}. If the player does, they may copy this spell and may choose a new ta | String of Disappearances | 1 |
-| Return X cards at random from your graveyard to your hand. Exile Reap the Past. | Reap the Past | 1 |
-| Sacrifice another creature: Until end of turn, this creature becomes a Dragon with base power and toughness 4/4, flying, and haste. | Bogardan Dragonheart | 1 |
-| {5}: Shuffle your library, then exile the top card. Until end of turn, you may play that card without paying its mana cost. | Urza, Lord High Artificer | 1 |
-| Sliver creatures you control get +2/+0. | Cleaving Sliver | 1 |
-| Sliver spells you cast have cascade. | The First Sliver | 1 |
-| Target creature gets -1/-1 until end of turn for each Swamp you control. | Defile | 1 |
-| Target creature you control gets +2/+2 until end of turn if its power is 2. Then it fights target creature you don't control. (Each deals damage equal to its po | Savage Swipe | 1 |
-| Target player mills four cards. You shuffle up to four cards from your graveyard into your library. Replicate {2}{U}{U} (When you cast this spell, copy it for e | Stream of Thought | 1 |
-| {W}: This creature can attack this turn as though it didn't have defender. | Wall of One Thousand Cuts | 1 |
-| {3}{G}: This creature gets +X/+X until end of turn, where X is the number of snow permanents you control. | Conifer Wurm | 1 |
-| This creature has deathtouch as long as you control at least three other snow permanents. | Ice-Fang Coatl | 1 |
-| Threshold — As long as there are seven or more cards in your graveyard, this creature gets +1/+1 and has vigilance. | Excavating Anurid | 1 |
-| Unblocked attacking Ninjas you control have lifelink. | Throatseeker | 1 |
-| Until end of turn, creatures you control get +2/+0 and gain all creature types. | Volatile Claws | 1 |
-| Until end of turn, target creature you control becomes a green Wurm with base power and toughness 6/4. Overload {4}{G}{G} (You may cast this spell for its overl | Scale Up | 1 |
-| Until end of turn, up to two target creatures each have base power and toughness 3/3, gain flying, and become blue Illusions in addition to their other colors a | Phantasmal Form | 1 |
-| Vanishing | Deep Forest Hermit | 1 |
-| When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature. | Smoke Shroud | 1 |
-| When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | On Thin Ice | 1 |
-| When this creature enters, up to two target creatures can't block this turn. | Quakefoot Cyclops | 1 |
-| When this creature leaves the battlefield, sacrifice a Mountain. | Alpine Guide | 1 |
-| When this enchantment enters, each opponent gains 10 life. | Aria of Flame | 1 |
-| Whenever a creature is exiled from the battlefield, put a +1/+1 counter on this creature. | Soulherder | 1 |
-| Whenever another snow permanent you control enters, you may have target player mill two cards. | Iceberg Cancrix | 1 |
-| Whenever this creature attacks, it deals damage to any target equal to the number of cards you've drawn this turn. | Thundering Djinn | 1 |
-| Whenever this creature deals combat damage to a player, that player exiles the top two cards of their library. Until end of turn, you may play those cards witho | Fallen Shinobi | 1 |
-| Whenever this land deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | Frostwalk Bastion | 1 |
-| Whenever you cast a permanent spell with a mana cost that contains {X}, double the value of X. | Unbound Flourishing | 1 |
-| Whenever you cycle this card or cycle another card while this enchantment is on the battlefield, you may exile target creature. If you do, return that card to t | Astral Drift | 1 |
-| You can't spend mana to cast this spell. | Hogaak, Arisen Necropolis | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| sliver creatures you control have "..." | 5 | Hollowhead Sliver, Lavabelly Sliver, Scuttling Sliver, Spiteful Sliver, Tempered Sliver | mh1 |
+| Choose one | 3 | Archmage's Charm, Shatter Assumptions, Twisted Reflection | mh1 |
+| Hellbent | 2 | Bladeback Sliver, Headless Specter | mh1 |
+| overload | 2 | Mind Rake, Stirring Address | mh1 |
+| Choose two | 1 | Kaya's Guile | mh1 |
+| Threshold | 1 | Excavating Anurid | mh1 |
+| all nonsnow creatures get -N/-N until end of turn, where N is the number of snow permanents you control. | 1 | Dead of Winter | mh1 |
+| as long as another aura is attached to enchanted creature, it has first strike and lifelink. | 1 | Face of Divinity | mh1 |
+| as long as you control another snow permanent, enchanted creature doesn"..."s untap step. | 1 | Winter's Rest | mh1 |
+| as long as you had another creature enter the battlefield under your control ~, ~ has trample and indestructible. | 1 | Bellowing Elk | mh1 |
+| as long as you've drawn two or more cards ~, ~ has double strike. | 1 | Spinehorn Minotaur | mh1 |
+| as ~ enters, choose mirran or phyrexian. | 1 | Mirrodin Besieged | mh1 |
+| at the beginning of your first main phase, you may sacrifice a creature. when you do, choose a nonland card name, then target player reveals their hand and disc | 1 | Cabal Therapist | mh1 |
+| at the beginning of your upkeep, if you control ten or more snow permanents, sacrifice ~. if you do, create marit lage, a legendary N/N black avatar creature to | 1 | Marit Lage's Slumber | mh1 |
+| attacking creatures you control get +N/+N. | 1 | Goblin Oriflamme | mh1 |
+| buyback | 1 | Recruit the Worthy | mh1 |
+| choose creature or land. reveal the top four cards of your library. put all cards of the chosen type revealed ~ into your hand and the rest into your graveyard. | 1 | Winding Way | mh1 |
+| counter target spell. fateful hour — if you have N or less life, draw a card. | 1 | Spell Snuff | mh1 |
+| creatures of the chosen type your opponents control get -N/-N. | 1 | Plague Engineer | mh1 |
+| devour | 1 | Feaster of Fools | mh1 |
+| draw a card. until end of turn, target creature gains trample and gets +N/+N for each card you"..."s attacking.) | 1 | Fists of Flame | mh1 |
+| each land card in your hand has cycling {M}. | 1 | Tectonic Reformation | mh1 |
+| each sliver creature card in your graveyard has unearth {M}. | 1 | Dregscape Sliver | mh1 |
+| echo | 1 | Orcish Hellraiser | mh1 |
+| enchanted creature gets +N/+N and assigns combat damage equal to its toughness rather than its power. | 1 | Treefolk Umbra | mh1 |
+| enchanted creature loses all abilities and is a coward creature with base power and toughness N/N. | 1 | Reprobation | mh1 |
+| equipped creature gets +N/+N and is every creature type. | 1 | Amorphous Axe | mh1 |
+| evolve | 1 | Gluttonous Slug | mh1 |
+| exalted | 1 | Goblin Champion | mh1 |
+| exile target creature you don't control. for each creature exiled ~, its controller searches their library for a basic land card. those players put those cards  | 1 | Winds of Abandon | mh1 |
+| exile the top six cards of your library. you may cast up to two sorcery spells with mana value N or less from among them without paying their mana costs. put th | 1 | Collected Conjuring | mh1 |
+| exploit | 1 | Silumgar Scavenger | mh1 |
+| gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if that creature is a goat, it also gets +N/+N until e | 1 | Goatnap | mh1 |
+| if it's not your turn, you may exile a black card from your hand rather than pay ~ mana cost. destroy all creatures that entered ~. | 1 | Force of Despair | mh1 |
+| if it's not your turn, you may exile a red card from your hand rather than pay ~ mana cost. create two N/N red elemental creature tokens with trample and haste. | 1 | Force of Rage | mh1 |
+| if it's not your turn, you may exile a white card from your hand rather than pay ~ mana cost. | 1 | Force of Virtue | mh1 |
+| level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N protection from instants level N+ N/N protection from everything | 1 | Hexdrinker | mh1 |
+| modular | 1 | Scrapyard Recombiner | mh1 |
+| other creatures you control of the chosen type get +N/+N. | 1 | Morophon, the Boundless | mh1 |
+| other sliver creatures you control have outlast {M}. | 1 | Enduring Sliver | mh1 |
+| retrace | 1 | Throes of Chaos | mh1 |
+| return N cards at random from your graveyard to your hand. exile ~. | 1 | Reap the Past | mh1 |
+| return target creature to its owner"..."s controller may pay {M}{M}. if the player does, they may copy ~ and may choose a new target for that copy. | 1 | String of Disappearances | mh1 |
+| sacrifice another creature: until end of turn, ~ becomes a dragon with base power and toughness N/N, flying, and haste. | 1 | Bogardan Dragonheart | mh1 |
+| sliver creatures you control get +N/+N. | 1 | Cleaving Sliver | mh1 |
+| sliver creatures you control have exalted. | 1 | First Sliver's Chosen | mh1 |
+| sliver creatures you control have first strike. | 1 | Lancer Sliver | mh1 |
+| sliver creatures you control have flying and haste. | 1 | Cloudshredder Sliver | mh1 |
+| sliver spells you cast have cascade. | 1 | The First Sliver | mh1 |
+| target creature gets -N/-N until end of turn for each swamp you control. | 1 | Defile | mh1 |
+| target creature you control gets +N/+N until end of turn if its power is N. then it fights target creature you don't control. (each deals damage equal to its po | 1 | Savage Swipe | mh1 |
+| target player mills four cards. you shuffle up to four cards from your graveyard into your library. replicate {M}{M}{M} (when you cast ~, copy it for each time  | 1 | Stream of Thought | mh1 |
+| unblocked attacking ninjas you control have lifelink. | 1 | Throatseeker | mh1 |
+| until end of turn, creatures you control get +N/+N and gain all creature types. | 1 | Volatile Claws | mh1 |
+| until end of turn, target creature you control becomes a green wurm with base power and toughness N/N. overload {M}{M}{M} (you may cast ~ for its overload cost. | 1 | Scale Up | mh1 |
+| until end of turn, up to two target creatures each have base power and toughness N/N, gain flying, and become blue illusions in addition to their other colors a | 1 | Phantasmal Form | mh1 |
+| vanishing | 1 | Deep Forest Hermit | mh1 |
+| when a ninja you control enters, you may return ~ from your graveyard to the battlefield attached to that creature. | 1 | Smoke Shroud | mh1 |
+| when ~ enters, each opponent gains N life. | 1 | Aria of Flame | mh1 |
+| when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | On Thin Ice | mh1 |
+| when ~ enters, up to two target creatures can't block ~. | 1 | Quakefoot Cyclops | mh1 |
+| when ~ enters, you may discard a card. if you do, create a N/N black zombie creature token. | 1 | Rank Officer | mh1 |
+| when ~ enters, you may search your library for an artifact card with mana value N, reveal that card, put it into your hand, then shuffle. | 1 | Tribute Mage | mh1 |
+| when ~ leaves the battlefield, sacrifice a mountain. | 1 | Alpine Guide | mh1 |
+| whenever a creature is exiled from the battlefield, put a +N/+N counter on ~. | 1 | Soulherder | mh1 |
+| whenever a creature you control becomes blocked, you may return it to its owner's hand. | 1 | Cunning Evasion | mh1 |
+| whenever a creature you control enters, you gain N life. if ~ isn't a creature, it becomes a N/N angel creature with flying in addition to its other types until | 1 | Answered Prayers | mh1 |
+| whenever another snow permanent you control enters, you may have target player mill two cards. | 1 | Iceberg Cancrix | mh1 |
+| whenever equipped creature deals combat damage to a player, destroy up to one target planeswalker and up to one target artifact. | 1 | Sword of Sinew and Steel | mh1 |
+| whenever equipped creature deals combat damage to a player, put a +N/+N counter on a creature you control, then proliferate. | 1 | Sword of Truth and Justice | mh1 |
+| whenever you cast a permanent spell with a mana cost that contains {M}, double the value of N. | 1 | Unbound Flourishing | mh1 |
+| whenever you cycle ~ or cycle another card while ~ is on the battlefield, you may exile target creature. if you do, return that card to the battlefield under it | 1 | Astral Drift | mh1 |
+| whenever ~ attacks, it deals damage to any target equal to the number of cards you've drawn ~. | 1 | Thundering Djinn | mh1 |
+| whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 1 | Frostwalk Bastion | mh1 |
+| whenever ~ deals combat damage to a player, that player exiles the top two cards of their library. until end of turn, you may play those cards without paying th | 1 | Fallen Shinobi | mh1 |
+| you can't spend mana to cast ~. | 1 | Hogaak, Arisen Necropolis | mh1 |
+| {M}: another target creature you control gains protection from colorless or from the color of your choice until end of turn. | 1 | Giver of Runes | mh1 |
+| {M}: shuffle your library, then exile the top card. until end of turn, you may play that card without paying its mana cost. | 1 | Urza, Lord High Artificer | mh1 |
+| {M}: ~ can attack ~ as though it didn't have defender. | 1 | Wall of One Thousand Cuts | mh1 |
+| {M}{M}, exile ~ from your graveyard: search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Trustworthy Scout | mh1 |
+| {M}{M}, {M}: put target enchantment card from your graveyard on top of your library. | 1 | Hall of Heliod's Generosity | mh1 |
+| {M}{M}: ~ gets +N/+N until end of turn, where N is the number of snow permanents you control. | 1 | Conifer Wurm | mh1 |
+| {M}{M}{M}, exile a creature card from your graveyard: create a N/N green spider creature token with reach, then each opponent loses N life for each spider you c | 1 | Rotwidow Pack | mh1 |
+| ~ costs {M} less to cast for each creature type among creatures you control. ~ can't reduce the amount of mana ~ costs by more than {M}. | 1 | Valiant Changeling | mh1 |
+| ~ costs {M} less to cast if there is a land card in your graveyard. | 1 | Igneous Elemental | mh1 |
+| ~ deals N damage to target creature. cowards can't block ~. | 1 | Pyrophobia | mh1 |
+| ~ gets +N/+N as long as there is a land card in your graveyard. | 1 | Murasa Behemoth | mh1 |
+| ~ gets +N/+N as long as you had another creature enter the battlefield under your control ~. | 1 | Saddled Rimestag | mh1 |
+| ~ gets +N/+N as long as you've drawn two or more cards ~. | 1 | Eyekite | mh1 |
+| ~ has deathtouch as long as you control at least three other snow permanents. | 1 | Ice-Fang Coatl | mh1 |
+| ~'s power and toughness are each equal to the number of snow permanents you control. | 1 | Abominable Treefolk | mh1 |
 
 ## Notes
 

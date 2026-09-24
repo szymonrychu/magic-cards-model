@@ -263,56 +263,55 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Awaken | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice, Ondu Rising, Planar Outburst, Rising Miasma, Ruinous Path, Rush of Ice, Scatter to the Winds | 11 |
-| Devoid (This card has no color.) Choose one or both — • Return target spell or creature to its owner's hand. • Brutal Expulsion deals 2 damage to target creatur | Brutal Expulsion, Call the Scions, Crumble to Dust, Grip of Desolation, Serpentine Spike, Transgress the Mind, Unnatural Aggression | 7 |
-| Ingest | Benthic Infiltrator, Culling Drone, Mist Intruder, Salvage Drone, Sludge Crawler, Vile Aggregate | 6 |
-| Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may  | Akoum Hellkite, Akoum Stonewaker, Emeria Shepherd, Guardian of Tazeem, Oran-Rief Hydra, Retreat to Valakut | 6 |
-| Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | Skyrider Elf, Tajuru Stalwart, Woodland Wanderer | 3 |
-| Other colorless creatures you control get +1/+0. | Ruination Guide, Tide Drifter | 2 |
-| When this land enters, you may look at the top five cards of your library. If you do, reveal up to one basic land card from among them, then put that card on to | Fertile Thicket, Mortuary Mire | 2 |
-| Whenever this creature attacks, defending player exiles two permanents they control. | Bane of Bala Ged, Silent Skimmer | 2 |
-| All creatures able to block this creature do so. | Breaker of Armies | 1 |
-| As an additional cost to cast this spell, reveal a colorless creature card from your hand. Exile target creature if its power is less than or equal to the revea | Titan's Presence | 1 |
-| As this creature enters, you may put two cards your opponents own from exile into their owners' graveyards. If you do, this creature enters with four +1/+1 coun | Ulamog's Despoiler | 1 |
-| At the beginning of your upkeep, sacrifice a creature. | Smothering Abomination | 1 |
-| Colorless spells you cast cost {1} less to cast. | Herald of Kozilek | 1 |
-| Converge — Create a 1/1 white Kor Ally creature token for each color of mana spent to cast this spell. | Unified Front | 1 |
-| Converge — Creatures your opponents control get -X/-0 until end of turn, where X is the number of colors of mana spent to cast this spell. Draw a card. | Roilmage's Trick | 1 |
-| Converge — Draw X cards, where X is the number of colors of mana spent to cast this spell. Then discard two cards. | Brilliant Spectrum | 1 |
-| Converge — Gain control of target creature if its power is less than or equal to the number of colors of mana spent to cast this spell. | Exert Influence | 1 |
-| Converge — Put X +1/+1 counters on target creature, where X is the number of colors of mana spent to cast this spell. That creature gains trample until end of t | Infuse with the Elements | 1 |
-| Converge — Radiant Flames deals X damage to each creature, where X is the number of colors of mana spent to cast this spell. | Radiant Flames | 1 |
-| Converge — Search your library for a creature, instant, or sorcery card with mana value less than or equal to the number of colors of mana spent to cast this sp | Bring to Light | 1 |
-| Converge — This enchantment enters with a crystal counter on it for each color of mana spent to cast it. | Prism Array | 1 |
-| Converge — You draw X cards and lose X life, where X is the number of colors of mana spent to cast this spell. | Painful Truths | 1 |
-| {3}{U}{B}: Draw a card. Each opponent exiles the top card of their library. | Fathom Feeder | 1 |
-| Enchanted creature gets -6/-0 and loses flying. | Tightening Coils | 1 |
-| If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove a +1/+1 counter from this creature. | Undergrowth Champion | 1 |
-| Prevent all combat damage that would be dealt this turn by creatures target opponent controls. Awaken 2—{4}{W} (If you cast this spell for {4}{W}, also put two  | Encircling Fissure | 1 |
-| Put target creature on top of its owner's library. Awaken 4—{4}{W}{U} (If you cast this spell for {4}{W}{U}, also put four +1/+1 counters on target land you con | Roil Spout | 1 |
-| Rally — Whenever Munda or another Ally you control enters, you may look at the top four cards of your library. If you do, reveal any number of Ally cards from a | Munda, Ambush Leader | 1 |
-| {2}{R}, Sacrifice another colorless creature: This creature deals damage equal to the sacrificed creature's power to any target. | Barrage Tyrant | 1 |
-| Take an extra turn after this one. Exile Part the Waterveil. Awaken 6—{6}{U}{U}{U} (If you cast this spell for {6}{U}{U}{U}, also put six +1/+1 counters on targ | Part the Waterveil | 1 |
-| Target creature gets +2/+2 until end of turn. Prevent all damage that would be dealt to that creature this turn by colorless sources. | Lithomancer's Focus | 1 |
-| This creature attacks each combat if able unless you control another Ally. | Reckless Cohort | 1 |
-| This creature can't be blocked by Eldrazi Scions. | Kor Castigator | 1 |
-| Until end of turn, colorless creatures you control gain "{T}: This creature deals damage equal to its power to target creature." | Gruesome Slaughter | 1 |
-| +1: Until end of turn, Gideon becomes a 5/5 Human Soldier Ally creature with indestructible that's still a planeswalker. Prevent all damage that would be dealt  | Gideon, Ally of Zendikar | 1 |
-| When this artifact enters, exile all creatures with power 5 or greater until this artifact leaves the battlefield. | Aligned Hedron Network | 1 |
-| When this creature dies, you may exile it. If you do, return target card from your graveyard to your hand. | Greenwarden of Murasa | 1 |
-| When this enchantment enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until this enchantment leaves the  | Quarantine Field | 1 |
-| When this land enters, target creature an opponent controls doesn't untap during its controller's next untap step. | Skyline Cascade | 1 |
-| When you cast this spell, you may search your library for a colorless creature card with mana value 7 or greater, reveal it, then shuffle and put that card on t | Conduit of Ruin | 1 |
-| Whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | Sire of Stagnation | 1 |
-| Whenever Drana deals combat damage to a player, put a +1/+1 counter on each attacking creature you control. | Drana, Liberator of Malakir | 1 |
-| Whenever equipped creature attacks, you may return a land you control to its owner's hand. If you do, the creature gets +2/+2 until end of turn. | Slab Hammer | 1 |
-| Whenever equipped creature becomes blocked by one or more colorless creatures, it gains deathtouch until end of turn. | Hedron Blade | 1 |
-| Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Ally. | Angelic Captain | 1 |
-| Whenever you cast an instant or sorcery spell that targets only Zada, copy that spell for each other creature you control that the spell could target. Each copy | Zada, Hedron Grinder | 1 |
-| Whenever you gain life, target opponent loses that much life. | Defiant Bloodlord | 1 |
-| Your opponents can't cast spells with even mana values. | Void Winnower | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Converge | 12 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements, Painful Truths | bfz |
+| awaken | 11 | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice | bfz |
+| Landfall | 6 | Akoum Hellkite, Akoum Stonewaker, Emeria Shepherd, Guardian of Tazeem, Oran-Rief Hydra | bfz |
+| ingest | 6 | Benthic Infiltrator, Culling Drone, Mist Intruder, Salvage Drone, Sludge Crawler | bfz |
+| other colorless creatures you control get +N/+N. | 2 | Ruination Guide, Tide Drifter | bfz |
+| Rally | 1 | Munda, Ambush Leader | bfz |
+| +N: until end of turn, gideon becomes a N/N human soldier ally creature with indestructible that's still a planeswalker. prevent all damage that would be dealt  | 1 | Gideon, Ally of Zendikar | bfz |
+| all creatures able to block ~ do so. | 1 | Breaker of Armies | bfz |
+| as an additional cost to cast ~, reveal a colorless creature card from your hand. exile target creature if its power is less than or equal to the revealed card' | 1 | Titan's Presence | bfz |
+| as ~ enters, you may put two cards your opponents own from exile into their owners' graveyards. if you do, ~ enters with four +N/+N counters on it. | 1 | Ulamog's Despoiler | bfz |
+| at the beginning of your upkeep, sacrifice a creature. | 1 | Smothering Abomination | bfz |
+| colorless spells you cast cost {M} less to cast. | 1 | Herald of Kozilek | bfz |
+| devoid (~ has no color.) choose one or both — • return target spell or creature to its owner's hand. • ~ deals N damage to target creature or planeswalker. if t | 1 | Brutal Expulsion | bfz |
+| devoid (~ has no color.) create two N/N colorless eldrazi scion creature tokens. they have "..." | 1 | Call the Scions | bfz |
+| devoid (~ has no color.) exile target creature and target land. | 1 | Grip of Desolation | bfz |
+| devoid (~ has no color.) exile target nonbasic land. search its controller's graveyard, hand, and library for any number of cards with the same name as that lan | 1 | Crumble to Dust | bfz |
+| devoid (~ has no color.) target creature you control fights target creature an opponent controls. if the creature an opponent controls would die ~, exile it ins | 1 | Unnatural Aggression | bfz |
+| devoid (~ has no color.) target player reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Transgress the Mind | bfz |
+| devoid (~ has no color.) ~ deals N damage to target creature, N damage to another target creature, and N damage to a third target creature. if a creature dealt  | 1 | Serpentine Spike | bfz |
+| enchanted creature gets -N/-N and loses flying. | 1 | Tightening Coils | bfz |
+| if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove a +N/+N counter from ~. | 1 | Undergrowth Champion | bfz |
+| prevent all combat damage that would be dealt ~ by creatures target opponent controls. awaken N—{M}{M} (if you cast ~ for {M}{M}, also put two +N/+N counters on | 1 | Encircling Fissure | bfz |
+| put target creature on top of its owner"..."s still a land.) | 1 | Roil Spout | bfz |
+| take an extra turn after ~. exile ~. awaken N—{M}{M}{M}{M} (if you cast ~ for {M}{M}{M}{M}, also put six +N/+N counters on target land you control and it become | 1 | Part the Waterveil | bfz |
+| target creature gets +N/+N until end of turn. prevent all damage that would be dealt to that creature ~ by colorless sources. | 1 | Lithomancer's Focus | bfz |
+| until end of turn, colorless creatures you control gain "..." | 1 | Gruesome Slaughter | bfz |
+| when you cast ~, you may search your library for a colorless creature card with mana value N or greater, reveal it, then shuffle and put that card on top. | 1 | Conduit of Ruin | bfz |
+| when ~ dies, you may exile it. if you do, return target card from your graveyard to your hand. | 1 | Greenwarden of Murasa | bfz |
+| when ~ enters, exile all creatures with power N or greater until ~ leaves the battlefield. | 1 | Aligned Hedron Network | bfz |
+| when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |
+| when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Skyline Cascade | bfz |
+| when ~ enters, you may look at the top five cards of your library. if you do, reveal up to one basic land card from among them, then put that card on top of you | 1 | Fertile Thicket | bfz |
+| when ~ enters, you may put target creature card from your graveyard on top of your library. | 1 | Mortuary Mire | bfz |
+| whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | 1 | Sire of Stagnation | bfz |
+| whenever drana deals combat damage to a player, put a +N/+N counter on each attacking creature you control. | 1 | Drana, Liberator of Malakir | bfz |
+| whenever equipped creature attacks, you may return a land you control to its owner's hand. if you do, the creature gets +N/+N until end of turn. | 1 | Slab Hammer | bfz |
+| whenever equipped creature becomes blocked by one or more colorless creatures, it gains deathtouch until end of turn. | 1 | Hedron Blade | bfz |
+| whenever you cast an instant or sorcery spell that targets only zada, copy that spell for each other creature you control that the spell could target. each copy | 1 | Zada, Hedron Grinder | bfz |
+| whenever you gain life, target opponent loses that much life. | 1 | Defiant Bloodlord | bfz |
+| whenever ~ attacks, defending player exiles two permanents they control. | 1 | Bane of Bala Ged | bfz |
+| whenever ~ attacks, defending player loses N life. | 1 | Silent Skimmer | bfz |
+| whenever ~ attacks, it gets +N/+N until end of turn for each other attacking ally. | 1 | Angelic Captain | bfz |
+| your opponents can't cast spells with even mana values. | 1 | Void Winnower | bfz |
+| {M}{M}, sacrifice another colorless creature: ~ deals damage equal to the sacrificed creature's power to any target. | 1 | Barrage Tyrant | bfz |
+| {M}{M}{M}: draw a card. each opponent exiles the top card of their library. | 1 | Fathom Feeder | bfz |
+| ~ attacks each combat if able unless you control another ally. | 1 | Reckless Cohort | bfz |
+| ~ can't be blocked by eldrazi scions. | 1 | Kor Castigator | bfz |
 
 ## Notes
 

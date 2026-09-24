@@ -3,13 +3,13 @@
 - Expansion: 082
 - Set code: `eve`
 - Release date: 2008-07-25
-- Cards in scope (Modern/Pioneer/Standard-legal): 178
+- Cards in scope (Modern/Pioneer/Standard-legal): 179
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 178 |
+| Modern | 179 |
 | Pioneer | 2 |
 | Standard | 1 |
 
@@ -19,8 +19,8 @@
 |---|---|---|
 | Full (handled + tested) | 3 | 1.7% |
 | Partial (unaudited) | 6 | 3.4% |
-| Not tested (handled, untested) | 79 | 44.4% |
-| Not working (silent / notice / error) | 90 | 50.6% |
+| Not tested (handled, untested) | 79 | 44.1% |
+| Not working (silent / notice / error) | 91 | 50.8% |
 
 ## Cards needing work
 
@@ -84,6 +84,7 @@
 | Noxious Hatchling | silent | Whenever you cast a black spell, remove a -1/-1 counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oona's Grace | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Outrage Shaman | silent | Chroma — When this creature enters, it deals damage to target creature equal to the number of red mana symbols in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Overbeing of Myth | silent | Overbeing of Myth's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primalcrux | silent | Chroma — This creature's power and toughness are each equal to the number of green mana symbols in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pyrrhic Revival | silent | Each player returns each creature card from their graveyard to the battlefield with an additional -1/-1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raven's Crime | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -215,79 +216,89 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Retrace | Call the Skybreaker, Cenn's Enlistment, Flame Jab, Monstrify, Oona's Grace, Raven's Crime, Savage Conception, Spitting Image, Syphon Life, Worm Harvest | 10 |
-| Whenever you cast a spell that's both red and white, this creature has base power and toughness 4/2 until end of turn and gains first strike until end of turn. | Battlegate Mimic, Leering Emblem, Nightsky Mimic, Riverfall Mimic, Shorecrasher Mimic, Woodlurker Mimic | 6 |
-| As long as enchanted creature is red, it gets +1/+1 and has "{R/W}: This creature gets +1/+0 until end of turn." | Clout of the Dominus, Edge of the Divinity, Favor of the Overbeing, Gift of the Deity, Scourge of the Nobilis | 5 |
-| At the beginning of your upkeep, you may gain control of target permanent until end of turn. If you do, untap it and it gains haste until end of turn. | Cache Raiders, Dominus of Fealty, Doomgape, Helix Pinnacle | 4 |
-| Chroma — When this creature enters, it gets +X/+0 until end of turn, where X is the number of red mana symbols in the mana costs of permanents you control. | Heartlash Cinder, Outrage Shaman, Springjack Shepherd | 3 |
-| When this creature enters, draw a card if you've cast another blue spell this turn. | Dream Thief, Regal Force | 2 |
-| Whenever you cast a white spell, this creature loses defender until end of turn. | Loyal Gyrfalcon, Voracious Hatchling | 2 |
-| Altar Golem's power and toughness are each equal to the number of creatures on the battlefield. | Altar Golem | 1 |
-| As this creature enters, choose an opponent. This creature enters with a -1/-1 counter on it for each creature that player controls. | Canker Abomination | 1 |
-| {1}{R/W}, {Q}: Attacking creatures get +1/+0 until end of turn. | Duergar Mine-Captain | 1 |
-| Attacking creatures you control get +2/+0. | Nobilis of War | 1 |
-| Cast this spell only if you've cast another green spell this turn. | Talara's Battalion | 1 |
-| Change the text of target spell or permanent by replacing all instances of one color word with another. Retrace (You may cast this card from your graveyard by d | Glamerdye | 1 |
-| Chaotic Backlash deals damage to target player equal to twice the number of white and/or blue permanents they control. | Chaotic Backlash | 1 |
-| Choose any number of target creatures. Each of those creatures gains persist until end of turn. (When it dies, if it had no -1/-1 counters on it, return it to t | Cauldron Haze | 1 |
-| Chroma — Each creature you control gets +1/+1 for each white mana symbol in its mana cost. | Light from Within | 1 |
-| Chroma — Reveal the top ten cards of your library. For each blue mana symbol in the mana costs of the revealed cards, target opponent mills a card. Then put the | Sanity Grinding | 1 |
-| Chroma — {2}, Sacrifice a creature: This enchantment deals damage to any target equal to the number of red mana symbols in the sacrificed creature's mana cost. | Fiery Bombardment | 1 |
-| Chroma — This creature's power and toughness are each equal to the number of green mana symbols in the mana costs of permanents you control. | Primalcrux | 1 |
-| Chroma — Umbra Stalker's power and toughness are each equal to the number of black mana symbols in the mana costs of cards in your graveyard. | Umbra Stalker | 1 |
-| {1}{U/R}{U/R}: Copy target instant or sorcery spell that targets you. You may choose new targets for the copy. | Mirror Sheen | 1 |
-| Destroy target nongreen creature. Its controller loses 3 life if you've cast another black spell this turn. | Soul Reap | 1 |
-| {2}{G/U}, {Q}: Double the number of each kind of counter on target permanent. | Gilder Bairn | 1 |
-| {2}: Draw a card if you have no cards in hand. | Idle Thoughts | 1 |
-| Each opponent who controls more creatures than you can't cast creature spells. The same is true for artifacts and enchantments. | Ward of Bones | 1 |
-| Each player returns each creature card from their graveyard to the battlefield with an additional -1/-1 counter on it. | Pyrrhic Revival | 1 |
-| Enchanted creature can't attack or block. | Recumbent Bliss | 1 |
-| Fear | Lingering Tormentor | 1 |
-| Gain control of target creature until end of turn. Untap that creature. It gets +X/+0 and gains haste until end of turn. | Unwilling Recruit | 1 |
-| If {B} was spent to cast this spell, you may have target creature get -3/-3 until end of turn. If {G} was spent to cast this spell, you may have target creature | Cankerous Thirst | 1 |
-| Other black creatures you control get +1/+1. | Creakwood Liege | 1 |
-| Other blue creatures you control get +1/+1. | Mindwrack Liege | 1 |
-| Other green creatures you control get +1/+1. | Murkfiend Liege | 1 |
-| Other red creatures you control get +1/+1. | Balefire Liege | 1 |
-| Other white creatures you control get +1/+1. | Deathbringer Liege | 1 |
-| Prevent all combat damage that would be dealt this turn if {W} was spent to cast this spell. Each player loses 1 life for each attacking creature they control i | Batwing Brume | 1 |
-| Prevent all damage that would be dealt to you and permanents you control this turn. | Endure | 1 |
-| Return all nonblue creatures to their owners' hands. | Inundate | 1 |
-| Sacrifice this creature: It deals damage equal to its power to target creature with flying. | Aerie Ouphes | 1 |
-| Search target player's library for up to X cards, where X is the number of Swamps you control, and exile them. Then that player shuffles. | Nightmare Incursion | 1 |
-| {U/R}: Switch this creature's power and toughness until end of turn. | Crag Puca | 1 |
-| Tap an untapped red creature you control other than this creature: This creature gets +X/+0 until end of turn, where X is the power of the creature tapped this  | Impelled Giant | 1 |
-| {U/R}: Target creature can't block this creature this turn. | Shrewd Hatchling | 1 |
-| {G/U}{G/U}: Target creature you control becomes the color or colors of your choice until end of turn. | Swirling Spriggan | 1 |
-| Target opponent reveals their hand. You choose a green or white creature card from it. You gain life equal to that creature card's toughness, then that player d | Talara's Bane | 1 |
-| {U}: Target permanent becomes blue in addition to its other colors until end of turn. | Indigo Faerie | 1 |
-| Target player can't play lands this turn if {R} was spent to cast this spell and can't cast creature spells this turn if {W} was spent to cast this spell. (Do b | Moonhold | 1 |
-| {2}: Target white creature gains persist until end of turn. | Antler Skulkin | 1 |
-| {R/W}: This creature becomes a Kithkin Spirit with base power and toughness 2/2. | Figure of Destiny | 1 |
-| This creature can't be blocked except by creatures with defender. | Noggle Bandit | 1 |
-| {2}{R}, {Q}: This creature deals damage equal to its power to any target. | Hateflayer | 1 |
-| This creature enters with two -1/-1 counters on it unless you've cast another red spell this turn. | Hotheaded Giant | 1 |
-| This creature gets +2/+2 for each Aura attached to it. | Evershrike | 1 |
-| This creature has trample as long as it has a -1/-1 counter on it. | Thunderblust | 1 |
-| Untap all creatures that attacked this turn. After this main phase, there is an additional combat phase followed by an additional main phase. Retrace (You may c | Waves of Aggression | 1 |
-| Until end of turn, target creature gains "{T}: Return target nonland permanent to its owner's hand." | Banishing Knack | 1 |
-| Vivid — {T}: For each color among permanents you control, add one mana of that color. | Bloom Tender | 1 |
-| When this creature enters, if you control two or more Swamps, you may have target player discard a card. | Hag Hedge-Mage | 1 |
-| When this creature enters, put a -1/-1 counter on each creature. | Soul Snuffers | 1 |
-| When this creature enters, return to your hand the creature card in your graveyard with the greatest power. If two or more cards are tied for greatest power, yo | Desecrator Hag | 1 |
-| When this creature enters, you gain 1 life for each black and/or red permanent target opponent controls. | Kithkin Zealot | 1 |
-| When this enchantment enters, search your library for any number of Plains cards, exile them, then shuffle. | Endless Horizons | 1 |
-| When this enchantment enters, you may pay {X}. If you do, create X 1/1 red and white Goblin Soldier creature tokens. | Rise of the Hobgoblins | 1 |
-| Whenever a permanent you control becomes untapped, this creature gets +1/+1 until end of turn. | Wake Thrasher | 1 |
-| Whenever Ashling deals combat damage to a player, choose target creature that player controls. The player sacrifices that creature. | Ashling, the Extinguisher | 1 |
-| Whenever Sapling of Colfenor attacks, reveal the top card of your library. If it's a creature card, you gain life equal to that card's toughness, lose life equa | Sapling of Colfenor | 1 |
-| Whenever this creature deals combat damage to a player, that player discards that many cards. | Needle Specter | 1 |
-| Whenever this creature deals damage to a player, that player can't gain life for the rest of the game. | Stigma Lasher | 1 |
-| Whenever you cast a black spell, remove a -1/-1 counter from this creature. | Noxious Hatchling | 1 |
-| Whenever you cast a green spell, remove a -1/-1 counter from this creature. | Sturdy Hatchling | 1 |
-| Whenever you cast a red spell, remove a -1/-1 counter from this creature. | Belligerent Hatchling | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| retrace | 10 | Call the Skybreaker, Cenn's Enlistment, Flame Jab, Monstrify, Oona's Grace | eve |
+| Chroma | 8 | Fiery Bombardment, Heartlash Cinder, Light from Within, Outrage Shaman, Primalcrux | eve |
+| Vivid | 1 | Bloom Tender | eve |
+| as long as enchanted creature is black, it gets +N/+N and has deathtouch. | 1 | Gift of the Deity | eve |
+| as long as enchanted creature is blue, it gets +N/+N and has shroud. | 1 | Clout of the Dominus | eve |
+| as long as enchanted creature is green, it gets +N/+N and has vigilance. | 1 | Favor of the Overbeing | eve |
+| as long as enchanted creature is red, it gets +N/+N and has "..." | 1 | Scourge of the Nobilis | eve |
+| as long as enchanted creature is white, it gets +N/+N. | 1 | Edge of the Divinity | eve |
+| as ~ enters, choose an opponent. ~ enters with a -N/-N counter on it for each creature that player controls. | 1 | Canker Abomination | eve |
+| at the beginning of your upkeep, if there are N or more tower counters on ~, you win the game. | 1 | Helix Pinnacle | eve |
+| at the beginning of your upkeep, return a permanent you control to its owner's hand. | 1 | Cache Raiders | eve |
+| at the beginning of your upkeep, sacrifice a creature. you gain life equal to that creature's toughness. | 1 | Doomgape | eve |
+| at the beginning of your upkeep, you may gain control of target permanent until end of turn. if you do, untap it and it gains haste until end of turn. | 1 | Dominus of Fealty | eve |
+| attacking creatures you control get +N/+N. | 1 | Nobilis of War | eve |
+| cast ~ only if you've cast another green spell ~. | 1 | Talara's Battalion | eve |
+| change the text of target spell or permanent by replacing all instances of one color word with another. retrace (you may cast ~ from your graveyard by discardin | 1 | Glamerdye | eve |
+| choose any number of target creatures. each of those creatures gains persist until end of turn. (when it dies, if it had no -N/-N counters on it, return it to t | 1 | Cauldron Haze | eve |
+| destroy target nongreen creature. its controller loses N life if you've cast another black spell ~. | 1 | Soul Reap | eve |
+| each opponent who controls more creatures than you can't cast creature spells. the same is true for artifacts and enchantments. | 1 | Ward of Bones | eve |
+| each player returns each creature card from their graveyard to the battlefield with an additional -N/-N counter on it. | 1 | Pyrrhic Revival | eve |
+| enchanted creature can't attack or block. | 1 | Recumbent Bliss | eve |
+| fear | 1 | Lingering Tormentor | eve |
+| gain control of target creature until end of turn. untap that creature. it gets +N/+N and gains haste until end of turn. | 1 | Unwilling Recruit | eve |
+| if {M} was spent to cast ~, you may have target creature get -N/-N until end of turn. if {M} was spent to cast ~, you may have target creature get +N/+N until e | 1 | Cankerous Thirst | eve |
+| other black creatures you control get +N/+N. | 1 | Creakwood Liege | eve |
+| other blue creatures you control get +N/+N. | 1 | Mindwrack Liege | eve |
+| other green creatures you control get +N/+N. | 1 | Murkfiend Liege | eve |
+| other red creatures you control get +N/+N. | 1 | Balefire Liege | eve |
+| other white creatures you control get +N/+N. | 1 | Deathbringer Liege | eve |
+| prevent all combat damage that would be dealt ~ if {M} was spent to cast ~. each player loses N life for each attacking creature they control if {M} was spent t | 1 | Batwing Brume | eve |
+| prevent all damage that would be dealt to you and permanents you control ~. | 1 | Endure | eve |
+| return all nonblue creatures to their owners' hands. | 1 | Inundate | eve |
+| sacrifice ~: it deals damage equal to its power to target creature with flying. | 1 | Aerie Ouphes | eve |
+| search target player's library for up to N cards, where N is the number of swamps you control, and exile them. then that player shuffles. | 1 | Nightmare Incursion | eve |
+| tap an untapped red creature you control other than ~: ~ gets +N/+N until end of turn, where N is the power of the creature tapped ~. | 1 | Impelled Giant | eve |
+| target opponent reveals their hand. you choose a green or white creature card from it. you gain life equal to that creature card's toughness, then that player d | 1 | Talara's Bane | eve |
+| target player can"..."t cast creature spells ~ if {M} was spent to cast ~. (do both if {M}{M} was spent.) | 1 | Moonhold | eve |
+| untap all creatures that attacked ~. after ~ phase, there is an additional combat phase followed by an additional main phase. retrace (you may cast ~ from your  | 1 | Waves of Aggression | eve |
+| until end of turn, target creature gains "..." | 1 | Banishing Knack | eve |
+| when ~ enters, draw a card for each green creature you control. | 1 | Regal Force | eve |
+| when ~ enters, draw a card if you've cast another blue spell ~. | 1 | Dream Thief | eve |
+| when ~ enters, if you control two or more swamps, you may have target player discard a card. | 1 | Hag Hedge-Mage | eve |
+| when ~ enters, put a -N/-N counter on each creature. | 1 | Soul Snuffers | eve |
+| when ~ enters, return to your hand the creature card in your graveyard with the greatest power. if two or more cards are tied for greatest power, you choose one | 1 | Desecrator Hag | eve |
+| when ~ enters, search your library for any number of plains cards, exile them, then shuffle. | 1 | Endless Horizons | eve |
+| when ~ enters, you gain N life for each black and/or red permanent target opponent controls. | 1 | Kithkin Zealot | eve |
+| when ~ enters, you may pay {M}. if you do, create N N/N red and white goblin soldier creature tokens. | 1 | Rise of the Hobgoblins | eve |
+| whenever a permanent you control becomes untapped, ~ gets +N/+N until end of turn. | 1 | Wake Thrasher | eve |
+| whenever ashling deals combat damage to a player, choose target creature that player controls. the player sacrifices that creature. | 1 | Ashling, the Extinguisher | eve |
+| whenever you cast a black spell, remove a -N/-N counter from ~. | 1 | Noxious Hatchling | eve |
+| whenever you cast a green spell, remove a -N/-N counter from ~. | 1 | Sturdy Hatchling | eve |
+| whenever you cast a red spell, remove a -N/-N counter from ~. | 1 | Belligerent Hatchling | eve |
+| whenever you cast a spell that"..."t be blocked ~. | 1 | Riverfall Mimic | eve |
+| whenever you cast a spell that's both black and green, ~ has base power and toughness N/N until end of turn and gains wither until end of turn. | 1 | Woodlurker Mimic | eve |
+| whenever you cast a spell that's both green and blue, ~ has base power and toughness N/N until end of turn and gains trample until end of turn. | 1 | Shorecrasher Mimic | eve |
+| whenever you cast a spell that's both red and white, ~ has base power and toughness N/N until end of turn and gains first strike until end of turn. | 1 | Battlegate Mimic | eve |
+| whenever you cast a spell that's both white and black, ~ has base power and toughness N/N until end of turn and gains flying until end of turn. | 1 | Nightsky Mimic | eve |
+| whenever you cast a spell, equipped creature gets +N/+N until end of turn. | 1 | Leering Emblem | eve |
+| whenever you cast a white spell, remove a -N/-N counter from ~. | 1 | Voracious Hatchling | eve |
+| whenever you cast a white spell, ~ loses defender until end of turn. | 1 | Loyal Gyrfalcon | eve |
+| whenever ~ attacks, reveal the top card of your library. if it"..."s toughness, lose life equal to its power, then put it into your hand. | 1 | Sapling of Colfenor | eve |
+| whenever ~ deals combat damage to a player, that player discards that many cards. | 1 | Needle Specter | eve |
+| whenever ~ deals damage to a player, that player can't gain life for the rest of the game. | 1 | Stigma Lasher | eve |
+| {M}: draw a card if you have no cards in hand. | 1 | Idle Thoughts | eve |
+| {M}: switch ~ power and toughness until end of turn. | 1 | Crag Puca | eve |
+| {M}: target creature can't block ~ ~. | 1 | Shrewd Hatchling | eve |
+| {M}: target permanent becomes blue in addition to its other colors until end of turn. | 1 | Indigo Faerie | eve |
+| {M}: target white creature gains persist until end of turn. | 1 | Antler Skulkin | eve |
+| {M}: ~ becomes a kithkin spirit with base power and toughness N/N. | 1 | Figure of Destiny | eve |
+| {M}{M}, {M}: attacking creatures get +N/+N until end of turn. | 1 | Duergar Mine-Captain | eve |
+| {M}{M}, {M}: double the number of each kind of counter on target permanent. | 1 | Gilder Bairn | eve |
+| {M}{M}, {M}: ~ deals damage equal to its power to any target. | 1 | Hateflayer | eve |
+| {M}{M}: target creature you control becomes the color or colors of your choice until end of turn. | 1 | Swirling Spriggan | eve |
+| {M}{M}{M}: copy target instant or sorcery spell that targets you. you may choose new targets for the copy. | 1 | Mirror Sheen | eve |
+| ~ can't be blocked except by creatures with defender. | 1 | Noggle Bandit | eve |
+| ~ deals damage to target player equal to twice the number of white and/or blue permanents they control. | 1 | Chaotic Backlash | eve |
+| ~ enters with two -N/-N counters on it unless you've cast another red spell ~. | 1 | Hotheaded Giant | eve |
+| ~ gets +N/+N for each aura attached to it. | 1 | Evershrike | eve |
+| ~ has trample as long as it has a -N/-N counter on it. | 1 | Thunderblust | eve |
+| ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Overbeing of Myth | eve |
+| ~'s power and toughness are each equal to the number of creatures on the battlefield. | 1 | Altar Golem | eve |
 
 ## Notes
 

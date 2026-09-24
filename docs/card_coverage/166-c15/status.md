@@ -38,9 +38,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Each player mills X cards. For each creature card put into a graveyard this way, you create a tapped 2/2 black Zombie creature token. (To mill a card, a player  | Dread Summons | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| each player mills N cards. for each creature card put into a graveyard ~, you create a tapped N/N black zombie creature token. (to mill a card, a player puts th | 1 | Dread Summons | c15 |
 
 ## Notes
 

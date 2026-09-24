@@ -94,26 +94,26 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Buyback | Elvish Fury, Whispers of the Muse | 2 |
-| Shadow | Dauthi Slayer, Soltari Priest | 2 |
-| Artifacts and lands enter tapped. | Root Maze | 1 |
-| As this artifact enters, choose an opponent and a card name other than a basic land card name. | Booby Trap | 1 |
-| Creatures with power 3 or greater don't untap during their controllers' untap steps. | Marble Titan | 1 |
-| Destroy all Islands. | Boil | 1 |
-| {T}: Gain control of target creature for as long as that creature is enchanted. | Rootwater Matriarch | 1 |
-| Islands don't untap during their controllers' untap steps. | Choke | 1 |
-| {U}: Return this Aura to its owner's hand. | Shimmering Wings | 1 |
-| Sacrifice a creature: Target opponent gains control of this artifact. | Jinxed Idol | 1 |
-| Sacrifice a creature: Target player mills cards equal to the sacrificed creature's power. | Altar of Dementia | 1 |
-| Sudden Impact deals damage to target player equal to the number of cards in that player's hand. | Sudden Impact | 1 |
-| Target creature can't block this turn. Draw a card. | Stun | 1 |
-| Target player takes an extra turn after this one. | Time Warp | 1 |
-| This creature can't attack unless defending player controls an Island. | Sea Monster | 1 |
-| {T}: Until end of turn, target creature has base power 1 or base toughness 1. | Vhati il-Dal | 1 |
-| When this creature enters, sacrifice it unless you sacrifice two Mountains. | Rathi Dragon | 1 |
-| Whenever a creature is dealt damage, destroy it. It can't be regenerated. | Death Pits of Rath | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| buyback | 2 | Elvish Fury, Whispers of the Muse | tmp |
+| shadow | 2 | Dauthi Slayer, Soltari Priest | tmp |
+| artifacts and lands enter tapped. | 1 | Root Maze | tmp |
+| as ~ enters, choose an opponent and a card name other than a basic land card name. | 1 | Booby Trap | tmp |
+| creatures with power N or greater don"..." untap steps. | 1 | Marble Titan | tmp |
+| destroy all islands. | 1 | Boil | tmp |
+| islands don"..." untap steps. | 1 | Choke | tmp |
+| sacrifice a creature: target opponent gains control of ~. | 1 | Jinxed Idol | tmp |
+| sacrifice a creature: target player mills cards equal to the sacrificed creature's power. | 1 | Altar of Dementia | tmp |
+| target creature can't block ~. draw a card. | 1 | Stun | tmp |
+| target player takes an extra turn after ~. | 1 | Time Warp | tmp |
+| when ~ enters, sacrifice it unless you sacrifice two mountains. | 1 | Rathi Dragon | tmp |
+| whenever a creature is dealt damage, destroy it. it can't be regenerated. | 1 | Death Pits of Rath | tmp |
+| {M}: gain control of target creature for as long as that creature is enchanted. | 1 | Rootwater Matriarch | tmp |
+| {M}: return ~ to its owner's hand. | 1 | Shimmering Wings | tmp |
+| {M}: until end of turn, target creature has base power N or base toughness N. | 1 | Vhati il-Dal | tmp |
+| ~ can't attack unless defending player controls an island. | 1 | Sea Monster | tmp |
+| ~ deals damage to target player equal to the number of cards in that player's hand. | 1 | Sudden Impact | tmp |
 
 ## Notes
 

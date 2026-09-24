@@ -142,68 +142,72 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Freerunning | Achilles Davenport, Brotherhood Ambushers, Distract the Guards, Eagle Vision, Escape Detection, Merciless Harlequin, Restart Sequence | 7 |
-| Freerunning {1}{B} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Look at th | Chain Assassination, Monastery Raid, Overpowering Attack, Petty Larceny, Viewpoint Synchronization | 5 |
-| When this Equipment enters, attach it to up to one target creature you control. Tap all creatures target opponent controls. | Assassin Gauntlet, Phantom Blade | 2 |
-| A deck can have any number of cards named Templar Knight. | Templar Knight | 1 |
-| All creatures have shroud. | Smoke Bomb | 1 |
-| As long as Ezio has two or more counters on it, it has first strike and is an Assassin in addition to its other types. | Ezio, Brash Novice | 1 |
-| As long as Ratonhnhaké꞉ton hasn't dealt damage yet, it has hexproof and can't be blocked. | Ratonhnhaké꞉ton | 1 |
-| As long as you have 30 or more life, equipped creature gets +5/+5 and has indestructible and "Prevent all damage that would be dealt to this creature." | Caduceus, Staff of Hermes | 1 |
-| Assassin spells you cast have freerunning {B}{B}. | Ezio Auditore da Firenze | 1 |
-| At the beginning of combat on your turn, if you control a legendary Assassin, this creature gets +1/+0 until end of turn and can't be blocked this turn. | Brotherhood Spy | 1 |
-| At the beginning of each player's upkeep, that player gains control of Alexios, untaps it, and puts a +1/+1 counter on it. It gains haste until end of turn. | Alexios, Deimos of Kosmos | 1 |
-| At the beginning of your end step, create a Treasure token for each tapped Assassin, Pirate, and/or Vehicle you control. | Edward Kenway | 1 |
-| Betrayal — Whenever a legendary creature with counters on it dies, draw a card for each counter on it. You lose 2 life. | Cleopatra, Exiled Pharaoh | 1 |
-| Choose one — • Let the World Burn — Destroy all artifacts and creatures. • Release Juno — Return target historic permanent card from your graveyard to the battl | What Must Be Done | 1 |
-| Choose one or both — • Return target creature to its owner's hand. • Target player searches their library and/or graveyard for a card named Ezio, Blade of Venge | Auditore Ambush | 1 |
-| Detain | Tax Collector | 1 |
-| {T}: Draw a card for each permanent you control but don't own. | Staff of Eden, Vault's Key | 1 |
-| During your turn, equipped creature has flying. | Hookblade | 1 |
-| During your turn, other historic creatures you control have double strike. | Bayek of Siwa | 1 |
-| Enchanted creature can't attack or block. | Detained by Legionnaires | 1 |
-| Equip abilities you activate cost {1} less to activate. | Bureau Headmaster | 1 |
-| Equipped creature has ward {2}, is an Assassin in addition to its other types, and can't be blocked. | Brotherhood Regalia | 1 |
-| Exile target nontoken creature you own and the top two cards of your library in a face-down pile, shuffle that pile, then cloak those cards. They enter tapped.  | Become Anonymous | 1 |
-| Havi has indestructible as long as there are four or more historic cards in your graveyard. | Havi, the All-Father | 1 |
-| I — Exile a permanent card from your graveyard. You gain life equal to its mana value. | The Aesir Escape Valhalla | 1 |
-| I, II, III — Mill three cards. You may put a historic card from among them into your hand. | Ballad of the Black Flag | 1 |
-| I — You and target opponent each draw two cards. | Fall of the First Civilization | 1 |
-| Lydia Frye can't be blocked by creatures with power 3 or greater. | Lydia Frye | 1 |
-| Misthios's Fury deals 3 damage to target creature. If you control an Equipment, Misthios's Fury also deals 2 damage to that creature's controller. | Misthios's Fury | 1 |
-| Other creatures you control are Assassins in addition to their other types. The same is true for creature spells you control and creature cards you own that are | Roshan, Hidden Magister | 1 |
-| Other Knights you control get +2/+2 and have protection from Assassins. | Haytham Kenway | 1 |
-| {T}, Pay 4 life, Sacrifice Apple of Eden: Look at target opponent's hand and exile those cards face down. You may play those cards this turn, and mana of any ty | Apple of Eden, Isu Relic | 1 |
-| Return each nonland permanent that's not historic to its owner's hand. (Artifacts, legendaries, and Sagas are historic.) | Desynchronization | 1 |
-| {B}, {T}, Sacrifice this artifact: Each equipped creature and Equipment you control gains deathtouch until end of turn. | Hemlock Vial | 1 |
-| Sokrates has hexproof as long as it's untapped. | Sokrates, Athenian Teacher | 1 |
-| Target creature gets +2/+2 until end of turn. If that creature is attacking, you may attach any number of Equipment you control to it. | Battlefield Improvisation | 1 |
-| {1}: This creature gains your choice of flying, deathtouch, or lifelink until end of turn. | Assassin Initiate | 1 |
-| This spell costs {X} less to cast, where X is the total mana value of historic permanents you control. | Excalibur, Sword of Eden | 1 |
-| {3}{U}{U}: Until end of turn, Thopters you control have base power and toughness X/X, where X is the number of cards in your hand. | Leonardo da Vinci | 1 |
-| {T}: Until your next turn, target legendary creature you control becomes a copy of target creature card in exile with a memory counter on it. Activate only as a | The Animus | 1 |
-| When a legendary creature you control attacks and isn't blocked, if this card is exiled, put it onto the battlefield attacking. | Senu, Keen-Eyed Protector | 1 |
-| When Adéwalé enters, reveal the top six cards of your library. Put an Assassin, Pirate, or Vehicle card from among them into your hand and the rest on the botto | Adéwalé, Breaker of Chains | 1 |
-| When Kassandra enters, search your graveyard, hand, and library for a card named The Spear of Leonidas, put it onto the battlefield, then shuffle. | Kassandra, Eagle Bearer | 1 |
-| When Shaun & Rebecca enters, search your graveyard, hand, and library for a card named The Animus and put it onto the battlefield, then shuffle. | Shaun & Rebecca, Agents | 1 |
-| When this creature enters, you may search your library for an artifact card, reveal it, then shuffle. Put that card into your hand if you control an Assassin. O | Loyal Inventor | 1 |
-| When this Equipment enters, you may search your library and/or graveyard for a card named Eivor, Battle-Ready, reveal it, and put it into your hand. If you sear | Raven Clan War-Axe | 1 |
-| When Yggdrasil enters, exile all creature cards from your graveyard. | Yggdrasil, Rebirth Engine | 1 |
-| Whenever a creature with flying attacks you or a planeswalker you control, this creature deals damage equal to its power to that creature. | Palazzo Archers | 1 |
-| Whenever a creature you control with deathtouch deals combat damage to a player, put that many +1/+1 counters on that creature. | Aveline de Grandpré | 1 |
-| Whenever Adrestia attacks, if an Assassin crewed it this turn, draw a card. Adrestia becomes an Assassin in addition to its other types until end of turn. | Adrestia | 1 |
-| Whenever Altaïr attacks, exile up to one target Assassin creature card from your graveyard with a memory counter on it. Then for each creature card you own in e | Altaïr Ibn-La'Ahad | 1 |
-| Whenever Desmond Miles deals combat damage to a player, surveil X, where X is the amount of damage it dealt to that player. | Desmond Miles | 1 |
-| Whenever Eivor deals combat damage to a player, you mill that many cards. You may put a Saga card and/or a land card from among them onto the battlefield. | Eivor, Wolf-Kissed | 1 |
-| Whenever equipped creature attacks, choose one — • Bull Rush — It gains double strike until end of turn. • Summon — Create Phobos, a legendary 3/2 red Horse cre | The Spear of Leonidas | 1 |
-| Whenever equipped creature attacks, tap target creature defending player controls and put a stun counter on it. Then Mjölnir deals damage to each opponent equal | Mjölnir, Storm Hammer | 1 |
-| Whenever you attack, you may pay {1}{R}. When you do, target creature can't block this turn. | Labyrinth Adversary | 1 |
-| Whenever you cast a historic spell, draw a card. Basim Ibn Ishaq can't be blocked this turn. This ability triggers only once each turn. | Basim Ibn Ishaq | 1 |
-| Whenever you discard an Island, Pirate, or Vehicle card, create a tapped Treasure token. | Mary Read and Anne Bonny | 1 |
-| Whenever you put a lore counter on a Saga you control, put a +1/+1 counter on up to one other target creature. | Sigurd, Jarl of Ravensthorpe | 1 |
-| You may look at the top card of your library any time. | Crystal Skull, Isu Spyglass | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| freerunning | 7 | Achilles Davenport, Brotherhood Ambushers, Distract the Guards, Eagle Vision, Escape Detection | acr |
+| I | 2 | Fall of the First Civilization, The Aesir Escape Valhalla | acr |
+| Betrayal | 1 | Cleopatra, Exiled Pharaoh | acr |
+| Choose one | 1 | What Must Be Done | acr |
+| Choose one or both | 1 | Auditore Ambush | acr |
+| a deck can have any number of cards named ~. | 1 | Templar Knight | acr |
+| all creatures have shroud. | 1 | Smoke Bomb | acr |
+| as long as ezio has two or more counters on it, it has first strike and is an assassin in addition to its other types. | 1 | Ezio, Brash Novice | acr |
+| as long as you have N or more life, equipped creature gets +N/+N and has indestructible and "..." | 1 | Caduceus, Staff of Hermes | acr |
+| as long as ~ hasn"..."t be blocked. | 1 | Ratonhnhaké꞉ton | acr |
+| assassin spells you cast have freerunning {M}{M}. | 1 | Ezio Auditore da Firenze | acr |
+| at the beginning of combat on your turn, if you control a legendary assassin, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Brotherhood Spy | acr |
+| at the beginning of each player's upkeep, that player gains control of alexios, untaps it, and puts a +N/+N counter on it. it gains haste until end of turn. | 1 | Alexios, Deimos of Kosmos | acr |
+| at the beginning of your end step, create a treasure token for each tapped assassin, pirate, and/or vehicle you control. | 1 | Edward Kenway | acr |
+| detain | 1 | Tax Collector | acr |
+| during your turn, equipped creature has flying. | 1 | Hookblade | acr |
+| during your turn, other historic creatures you control have double strike. | 1 | Bayek of Siwa | acr |
+| enchanted creature can't attack or block. | 1 | Detained by Legionnaires | acr |
+| equip abilities you activate cost {M} less to activate. | 1 | Bureau Headmaster | acr |
+| equipped creature has ward {M}, is an assassin in addition to its other types, and can't be blocked. | 1 | Brotherhood Regalia | acr |
+| exile target nontoken creature you own and the top two cards of your library in a face-down pile, shuffle that pile, then cloak those cards. they enter tapped.  | 1 | Become Anonymous | acr |
+| freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) destroy target creature. if | 1 | Chain Assassination | acr |
+| freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) exile the top two cards of  | 1 | Monastery Raid | acr |
+| freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) look at the top two cards o | 1 | Petty Larceny | acr |
+| freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) search your library for up  | 1 | Viewpoint Synchronization | acr |
+| freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) untap all creatures you con | 1 | Overpowering Attack | acr |
+| havi has indestructible as long as there are four or more historic cards in your graveyard. | 1 | Havi, the All-Father | acr |
+| i, ii, iii — mill three cards. you may put a historic card from among them into your hand. | 1 | Ballad of the Black Flag | acr |
+| other creatures you control are assassins in addition to their other types. the same is true for creature spells you control and creature cards you own that are | 1 | Roshan, Hidden Magister | acr |
+| other knights you control get +N/+N and have protection from assassins. | 1 | Haytham Kenway | acr |
+| return each nonland permanent that"..."s hand. (artifacts, legendaries, and sagas are historic.) | 1 | Desynchronization | acr |
+| sokrates has hexproof as long as it's untapped. | 1 | Sokrates, Athenian Teacher | acr |
+| target creature gets +N/+N until end of turn. if that creature is attacking, you may attach any number of equipment you control to it. | 1 | Battlefield Improvisation | acr |
+| when a legendary creature you control attacks and isn't blocked, if ~ is exiled, put it onto the battlefield attacking. | 1 | Senu, Keen-Eyed Protector | acr |
+| when adéwalé enters, reveal the top six cards of your library. put an assassin, pirate, or vehicle card from among them into your hand and the rest on the botto | 1 | Adéwalé, Breaker of Chains | acr |
+| when kassandra enters, search your graveyard, hand, and library for a card named the spear of leonidas, put it onto the battlefield, then shuffle. | 1 | Kassandra, Eagle Bearer | acr |
+| when shaun & rebecca enters, search your graveyard, hand, and library for a card named the animus and put it onto the battlefield, then shuffle. | 1 | Shaun & Rebecca, Agents | acr |
+| when yggdrasil enters, exile all creature cards from your graveyard. | 1 | Yggdrasil, Rebirth Engine | acr |
+| when ~ enters, attach it to up to one target creature you control. destroy up to one other target creature. | 1 | Phantom Blade | acr |
+| when ~ enters, attach it to up to one target creature you control. tap all creatures target opponent controls. | 1 | Assassin Gauntlet | acr |
+| when ~ enters, you may search your library and/or graveyard for a card named eivor, battle-ready, reveal it, and put it into your hand. if you search your libra | 1 | Raven Clan War-Axe | acr |
+| when ~ enters, you may search your library for an artifact card, reveal it, then shuffle. put that card into your hand if you control an assassin. otherwise, pu | 1 | Loyal Inventor | acr |
+| whenever a creature with flying attacks you or a planeswalker you control, ~ deals damage equal to its power to that creature. | 1 | Palazzo Archers | acr |
+| whenever a creature you control with deathtouch deals combat damage to a player, put that many +N/+N counters on that creature. | 1 | Aveline de Grandpré | acr |
+| whenever altaïr attacks, exile up to one target assassin creature card from your graveyard with a memory counter on it. then for each creature card you own in e | 1 | Altaïr Ibn-La'Ahad | acr |
+| whenever eivor deals combat damage to a player, you mill that many cards. you may put a saga card and/or a land card from among them onto the battlefield. | 1 | Eivor, Wolf-Kissed | acr |
+| whenever equipped creature attacks, choose one — • bull rush — it gains double strike until end of turn. • summon — create phobos, a legendary N/N red horse cre | 1 | The Spear of Leonidas | acr |
+| whenever equipped creature attacks, tap target creature defending player controls and put a stun counter on it. then mjölnir deals damage to each opponent equal | 1 | Mjölnir, Storm Hammer | acr |
+| whenever you attack, you may pay {M}{M}. when you do, target creature can't block ~. | 1 | Labyrinth Adversary | acr |
+| whenever you cast a historic spell, draw a card. ~ can't be blocked ~. ~ triggers only once each turn. | 1 | Basim Ibn Ishaq | acr |
+| whenever you discard an island, pirate, or vehicle card, create a tapped treasure token. | 1 | Mary Read and Anne Bonny | acr |
+| whenever you put a lore counter on a saga you control, put a +N/+N counter on up to one other target creature. | 1 | Sigurd, Jarl of Ravensthorpe | acr |
+| whenever ~ attacks, if an assassin crewed it ~, draw a card. ~ becomes an assassin in addition to its other types until end of turn. | 1 | Adrestia | acr |
+| whenever ~ deals combat damage to a player, surveil N, where N is the amount of damage it dealt to that player. | 1 | Desmond Miles | acr |
+| you may look at the top card of your library any time. | 1 | Crystal Skull, Isu Spyglass | acr |
+| {M}, pay N life, sacrifice apple of eden: look at target opponent"..."s hand. activate only as a sorcery. | 1 | Apple of Eden, Isu Relic | acr |
+| {M}, {M}, sacrifice ~: each equipped creature and equipment you control gains deathtouch until end of turn. | 1 | Hemlock Vial | acr |
+| {M}: draw a card for each permanent you control but don't own. | 1 | Staff of Eden, Vault's Key | acr |
+| {M}: until your next turn, target legendary creature you control becomes a copy of target creature card in exile with a memory counter on it. activate only as a | 1 | The Animus | acr |
+| {M}: ~ gains your choice of flying, deathtouch, or lifelink until end of turn. | 1 | Assassin Initiate | acr |
+| {M}{M}{M}: until end of turn, thopters you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Leonardo da Vinci | acr |
+| ~ can't be blocked by creatures with power N or greater. | 1 | Lydia Frye | acr |
+| ~ costs {M} less to cast, where N is the total mana value of historic permanents you control. | 1 | Excalibur, Sword of Eden | acr |
+| ~ deals N damage to target creature. if you control an equipment, ~ also deals N damage to that creature's controller. | 1 | Misthios's Fury | acr |
 
 ## Notes
 

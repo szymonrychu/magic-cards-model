@@ -3,13 +3,13 @@
 - Expansion: 053
 - Set code: `chk`
 - Release date: 2004-10-01
-- Cards in scope (Modern/Pioneer/Standard-legal): 281
+- Cards in scope (Modern/Pioneer/Standard-legal): 283
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 281 |
+| Modern | 283 |
 | Pioneer | 5 |
 | Standard | 3 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 17 | 6.0% |
-| Partial (unaudited) | 14 | 5.0% |
-| Not tested (handled, untested) | 110 | 39.1% |
-| Not working (silent / notice / error) | 140 | 49.8% |
+| Full (handled + tested) | 18 | 6.4% |
+| Partial (unaudited) | 14 | 4.9% |
+| Not tested (handled, untested) | 111 | 39.2% |
+| Not working (silent / notice / error) | 140 | 49.5% |
 
 ## Cards needing work
 
@@ -259,6 +259,7 @@
 | Rend Flesh | handled | Destroy target non-Spirit creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rend Spirit | handled | Destroy target Spirit. | the engine reads this text and performs it | Y/-/- | not_tested |
 | River Kaijin | handled |  |  | Y/-/- | not_tested |
+| Ryusei, the Falling Star | handled | When Ryusei dies, it deals 5 damage to each creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sakura-Tribe Elder | handled | Sacrifice this creature: Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seizan, Perverter of Truth | handled | At the beginning of each player's upkeep, that player loses 2 life and draws two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shinka, the Bloodsoaked Keep | handled | {R}, {T}: Target legendary creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -294,7 +295,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Azusa, Lost but Seeking
 - Ben-Ben, Akki Hermit
@@ -302,6 +303,7 @@
 - Desperate Ritual
 - Distress
 - Ghostly Prison
+- Glacial Ray
 - Honden of Cleansing Fire
 - Honden of Infinite Rage
 - Iname, Death Aspect
@@ -318,109 +320,132 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Bushido | Battle-Mad Ronin, Cursed Ronin, Devoted Retainer, Kitsune Blademaster, Konda, Lord of Eiganjo, Mothrider Samurai, Nezumi Ronin, Numai Outcast, Ronin Houndmaster, Samurai Enforcers, Samurai of the Pale Curtain, Sensei Golden-Tail | 12 |
-| Soulshift | Burr Grafter, Gibbering Kami, He Who Hungers, Hundred-Talon Kami, Kami of Lunacy, Kami of the Palace Fields, Scuttling Death, Thief of Hope, Thousand-legged Kami, Venerable Kumo, Vine Kami | 11 |
-| At the beginning of your upkeep, you may have target creature you control get +X/+X until end of turn, where X is the number of creatures you control. If you do | Gutwrencher Oni, Honden of Night's Reach, Junkyo Bell, Kuro, Pitlord, Oni Possession, Painwracker Oni, Pious Kitsune, Shisato, Whispering Hunter | 8 |
-| {2}: Reveal the top card of your library. If it's a land card, this creature gains "Whenever this creature deals damage to a creature, destroy that creature" un | Brutal Deceiver, Callous Deceiver, Cruel Deceiver, Feral Deceiver, Harsh Deceiver | 5 |
-| Whenever you cast a Spirit or Arcane spell, you may exile Hikari. If you do, return it to the battlefield under its owner's control at the beginning of the next | Hikari, Twilight Guardian, Kami of Fire's Roar, Kami of the Painted Road, Kami of the Waning Moon, Kodama of the South Tree | 5 |
-| Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | Kashi-Tribe Reaver, Kashi-Tribe Warriors, Matsu-Tribe Decoy, Orochi Ranger | 4 |
-| As an additional cost to cast this spell, you may sacrifice any number of Spirits. Target creature gets +3/+0 until end of turn. For each Spirit sacrificed this | Devouring Greed, Devouring Rage, Soulblast | 3 |
-| If a creature dealt damage by this creature this turn would die, exile it instead. | Frostwielder, Kumano's Pupils, Kumano, Master Yamabushi | 3 |
-| Other Snake creatures you control get +0/+1. | Sachi, Daughter of Seshiro, Seshiro the Anointed, Sosuke, Son of Seshiro | 3 |
-| As long as you control a legendary Samurai, this creature gets +1/+2 and has vigilance. | Konda's Hatamoto, Villainous Ogre | 2 |
-| Choose a nonland card name and a number greater than 0. Target player reveals their library. If that library contains exactly the chosen number of cards with th | Cranial Extraction, Mindblaze | 2 |
-| {2}{G}, {T}: Create a 1/1 green Snake creature token. If you control ten or more creatures, flip this creature. | Orochi Eggwatcher // Shidako, Broodmistress, Orochi Hatchery | 2 |
-| {T}: Prevent all damage that would be dealt to target legendary creature this turn. | Ethereal Haze, Kitsune Healer | 2 |
-| Remove a divinity counter from Myojin of Night's Reach: Each opponent discards their hand. | Myojin of Cleansing Fire, Myojin of Night's Reach | 2 |
-| {1}{W}: Return this Aura to its owner's hand. | Cage of Hands, Field of Reality | 2 |
-| {T}: Target creature gets -X/-X until end of turn, where X is the number of devotion counters on this creature. Activate only if you control a Demon. | Bloodthirsty Ogre, Strength of Cedars | 2 |
-| Whenever one or more creatures block, flip a coin. If you win the flip, each blocking creature is sacrificed by its controller. If you lose the flip, each block | Nature's Will, Tide of War | 2 |
-| All creatures get -1/-1. | Night of Souls' Betrayal | 1 |
-| All Rats have fear. | Marrow-Gnawer | 1 |
-| As this enchantment enters, choose a color word. | Swirl the Mists | 1 |
-| At the beginning of the end step, if this creature is enchanted by two or more Auras, flip it. | Kitsune Mystic // Autumn-Tail, Kitsune Sage | 1 |
-| {R}, {T}: Attacking creatures gain first strike until end of turn. | Akki Coalflinger | 1 |
-| Blocking creatures get +7/+7 until end of turn. | Hold the Line | 1 |
-| Counter target spell. If that spell is countered this way, put that card on your choice of the top or bottom of its owner's library instead of into that player' | Hinder | 1 |
-| Counter target Spirit or Arcane spell. | Hisoka's Defiance | 1 |
-| Creatures that share a color with equipped creature get +1/+1. | Konda's Banner | 1 |
-| Destroy target land. If that land was legendary, its controller sacrifices another land of their choice. | Feast of Worms | 1 |
-| {2}{U}, Discard a card: Counter target spell if it has the same mana value as the discarded card. | Hisoka, Minamo Sensei | 1 |
-| {2}{U}, {T}: Draw a card. If you have nine or more cards in hand, flip this creature. | Jushi Apprentice // Tomoya the Revealer | 1 |
-| {T}: Draw a card, then put this artifact on top of its owner's library. | Sensei's Divining Top | 1 |
-| Draw two cards, then discard a card. If you've cast a spell named Peer Through Depths and a spell named Reach Through Mists this turn, you may search your libra | Sift Through Sands | 1 |
-| Each other creature named Brothers Yamazaki gets +2/+2 and has haste. | Brothers Yamazaki | 1 |
-| Each other Samurai creature you control gets +1/+1 for each point of bushido it has. | Takeno, Samurai General | 1 |
-| Enchanted creature gets +2/+2 and attacks each combat if able. | Uncontrollable Anger | 1 |
-| {1}{B}: Exile target card from an opponent's graveyard. If no cards are in that graveyard, flip this creature. | Nezumi Graverobber // Nighteyes the Desecrator | 1 |
-| Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it. | Otherworldly Journey | 1 |
-| {3}, {T}: Exile target instant or sorcery spell that targets you. | Shell of the Last Kappa | 1 |
-| {6}, Exile Tatsumasa: Create a 5/5 blue Dragon Spirit creature token with flying. Return Tatsumasa to the battlefield under its owner's control when that token  | Tatsumasa, the Dragon's Fang | 1 |
-| {2}{B}, {T}: Exile up to three target cards from a single graveyard. | Rag Dealer | 1 |
-| Fear | Nezumi Cutthroat | 1 |
-| For each Spirit, return it to its owner's hand unless that player pays {3}. | Cut the Tethers | 1 |
-| Hanabi Blast deals 2 damage to any target. Return Hanabi Blast to its owner's hand, then discard a card at random. | Hanabi Blast | 1 |
-| If a player would draw a card, that player exiles that card face up instead. | Uba Mask | 1 |
-| Look at the top three cards of your library. You may put those cards on the bottom of your library in any order. If you do, return Petals of Insight to its owne | Petals of Insight | 1 |
-| Myojin of Infinite Rage enters with a divinity counter on it if you cast it from your hand. | Myojin of Infinite Rage | 1 |
-| Myojin of Life's Web enters with a divinity counter on it if you cast it from your hand. | Myojin of Life's Web | 1 |
-| Myojin of Seeing Winds enters with a divinity counter on it if you cast it from your hand. | Myojin of Seeing Winds | 1 |
-| Players can cast spells only during their own turns. | Dosan the Falling Leaf | 1 |
-| Players can't untap more than one artifact during their untap steps. | Imi Statue | 1 |
-| Prevent the next 3 damage that would be dealt to any target this turn. You gain life equal to the damage prevented this way. Splice onto Arcane {1}{W} (As you c | Candles' Glow | 1 |
-| Redistribute any number of players' life totals. (Each of those players gets one life total back.) | Reverse the Sands | 1 |
-| {G}: Regenerate enchanted creature. | Serpent Skin | 1 |
-| {2}{B}{B}, Remove X theft counters from this enchantment: Search your library for a nonland card with mana value X, reveal it, put it into your hand, then shuff | Night Dealings | 1 |
-| {3}, Return a land you control to its owner's hand: Counter target spell unless its controller pays {3}. | Soratami Savant | 1 |
-| Return all creatures you control to their owner's hand. | Part the Veil | 1 |
-| {4}, Return two lands you control to their owner's hand: Discard all the cards in your hand, then draw that many cards. | Soratami Seer | 1 |
-| Sacrifice any number of lands, then add that much {C}. | Mana Seism | 1 |
-| {G}{G}, Sacrifice this creature: Put target land on top of its owner's library. | Rootrunner | 1 |
-| Search your library for up to four cards with different names and reveal them. Target opponent chooses two of those cards. Put the chosen cards into your gravey | Gifts Ungiven | 1 |
-| Spirit creatures you control get +1/+1. | Long-Forgotten Gohei | 1 |
-| Switch target creature's power and toughness until end of turn. Splice onto Arcane {1}{R} (As you cast an Arcane spell, you may reveal this card from your hand  | Strange Inversion | 1 |
-| {1}, Tap an untapped creature you control: Untap enchanted creature. | Aura of Dominion | 1 |
-| Tapped creatures you control can block as though they were untapped. | Masako the Humorless | 1 |
-| {2}{B}{B}, {T}: Target creature deals damage to itself equal to its power. | Kiku, Night's Flower | 1 |
-| Target creature you control gains protection from the color of your choice until end of turn. Splice onto Arcane {W} (As you cast an Arcane spell, you may revea | Blessed Breath | 1 |
-| {1}{U}, {T}: Target creature you control other than this creature has shroud for as long as this creature remains tapped. | Hisoka's Guard | 1 |
-| {B}, {T}: Target legendary creature gains fear until end of turn. | Shizo, Death's Storehouse | 1 |
-| {1}{B}, {T}: Target opponent discards a card. Then if that player has no cards in hand, flip this creature. | Nezumi Shortfang // Stabwhisker the Odious | 1 |
-| Target opponent reveals their hand. That player exiles a card from it, then you exile a card from it. Repeat this process until all cards in that hand have been | Struggle for Sanity | 1 |
-| Target permanent's controller sacrifices it. If the player does, they reveal cards from the top of their library until they reveal a permanent card that shares  | Reweave | 1 |
-| {B}: Target player dealt damage by this creature this turn loses 1 life. | Wicked Akuba | 1 |
-| {1}: The next 1 damage that would be dealt to target legendary creature you control this turn is dealt to you instead. | Vassal's Duty | 1 |
-| {T}: This artifact deals 1 damage to target Spirit creature. If that creature would die this turn, exile it instead. | Nine-Ringed Bo | 1 |
-| {T}: This creature deals 1 damage to target creature that was dealt damage this turn. When that creature dies this turn, flip this creature. | Initiate of Blood // Goka the Unjust | 1 |
-| Untap all creatures you control. Samurai creatures you control get +1/+1 until end of turn. | Call to Glory | 1 |
-| Untap target nonlegendary creature and gain control of it until end of turn. That creature gains haste until end of turn. | Blind with Anger | 1 |
-| Up to three target creatures can't block this turn. | Unearthly Blizzard | 1 |
-| When a creature dealt damage by this creature this turn dies, flip this creature. | Bushi Tenderfoot // Kenzo the Hardhearted | 1 |
-| When Iname dies, you may exile it. If you do, return any number of target Spirit cards from your graveyard to your hand. | Iname, Life Aspect | 1 |
-| When Keiga dies, gain control of target creature. | Keiga, the Tide Star | 1 |
-| When Kokusho dies, each opponent loses 5 life. You gain life equal to the life lost this way. | Kokusho, the Evening Star | 1 |
-| When this creature dies, create a 1/1 colorless Spirit creature token for each Zubera that died this turn. | Dripping-Tongue Zubera | 1 |
-| When this creature dies, draw a card for each Zubera that died this turn. | Floating-Dream Zubera | 1 |
-| When this creature dies, each player loses 3 life. | Deathcurse Ogre | 1 |
-| When this creature dies, it deals damage to any target equal to the number of Zubera that died this turn. | Ember-Fist Zubera | 1 |
-| When this creature dies, target opponent discards a card for each Zubera that died this turn. | Ashen-Skin Zubera | 1 |
-| When this creature dies, you gain 2 life for each Zubera that died this turn. | Silent-Chant Zubera | 1 |
-| When this creature has flying, flip it. | Student of Elements // Tobita, Master of Winds | 1 |
-| When Yosei dies, target player skips their next untap step. Tap up to five target permanents that player controls. | Yosei, the Morning Star | 1 |
-| Whenever a creature becomes the target of a spell or ability, destroy that creature. | Horobi, Death's Wail | 1 |
-| Whenever a land enters, Zo-Zu deals 2 damage to that land's controller. | Zo-Zu the Punisher | 1 |
-| Whenever enchanted creature is dealt damage, its controller loses that much life. | Ragged Veins | 1 |
-| Whenever equipped creature deals damage to a blocking creature, this Equipment deals that much damage to each other creature defending player controls. | Kusari-Gama | 1 |
-| Whenever equipped creature dies, return that card to the battlefield under your control if it's a Samurai card. | Oathkeeper, Takeno's Daisho | 1 |
-| Whenever Godo attacks for the first time each turn, untap it and all Samurai you control. After this phase, there is an additional combat phase. | Godo, Bandit Warlord | 1 |
-| Whenever Nagao attacks, Samurai creatures you control get +1/+1 until end of turn. | Nagao, Bound by Honor | 1 |
-| Whenever this creature deals damage to an opponent, flip it. | Akki Lavarunner // Tok-Tok, Volcano Born | 1 |
-| Whenever you draw a card, exile the top card of your library face down. | Moonring Mirror | 1 |
-| Whenever you tap this land for mana, target opponent creates a 1/1 colorless Spirit creature token. | Forbidden Orchard | 1 |
-| You have no maximum hand size. | Graceful Adept | 1 |
-| {T}: You may put a land card from your hand onto the battlefield. If you control ten or more lands, flip this creature. | Budoka Gardener // Dokai, Weaver of Life | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| bushido | 12 | Battle-Mad Ronin, Cursed Ronin, Devoted Retainer, Kitsune Blademaster, Konda, Lord of Eiganjo | chk |
+| soulshift | 11 | Burr Grafter, Gibbering Kami, He Who Hungers, Hundred-Talon Kami, Kami of Lunacy | chk |
+| whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 4 | Kashi-Tribe Reaver, Kashi-Tribe Warriors, Matsu-Tribe Decoy, Orochi Ranger | chk |
+| other snake creatures you control get +N/+N. | 3 | Sachi, Daughter of Seshiro, Seshiro the Anointed, Sosuke, Son of Seshiro | chk |
+| ~ enters with a divinity counter on it if you cast it from your hand. | 3 | Myojin of Infinite Rage, Myojin of Life's Web, Myojin of Seeing Winds | chk |
+| if a creature dealt damage by ~ ~ would die, exile it instead. | 2 | Frostwielder, Kumano's Pupils | chk |
+| {M}{M}: return ~ to its owner's hand. | 2 | Cage of Hands, Field of Reality | chk |
+| all creatures get -N/-N. | 1 | Night of Souls' Betrayal | chk |
+| all rats have fear. | 1 | Marrow-Gnawer | chk |
+| as an additional cost to cast ~, sacrifice all creatures you control. ~ deals damage to any target equal to the total power of the sacrificed creatures. | 1 | Soulblast | chk |
+| as an additional cost to cast ~, you may sacrifice any number of spirits. target creature gets +N/+N until end of turn. for each spirit sacrificed ~, that creat | 1 | Devouring Rage | chk |
+| as an additional cost to cast ~, you may sacrifice any number of spirits. target player loses N life plus N life for each spirit sacrificed ~. you gain that muc | 1 | Devouring Greed | chk |
+| as long as you control a demon, ~ has "..." | 1 | Villainous Ogre | chk |
+| as long as you control a legendary samurai, ~ gets +N/+N and has vigilance. | 1 | Konda's Hatamoto | chk |
+| as ~ enters, choose a color word. | 1 | Swirl the Mists | chk |
+| at the beginning of the end step, if ~ is enchanted by two or more auras, flip it. | 1 | Kitsune Mystic // Autumn-Tail, Kitsune Sage | chk |
+| at the beginning of your upkeep, discard a card if you don't control an ogre. | 1 | Gutwrencher Oni | chk |
+| at the beginning of your upkeep, put a devotion counter on ~. then if a creature named eight-and-a-half-tails is on the battlefield, you gain N life for each de | 1 | Pious Kitsune | chk |
+| at the beginning of your upkeep, sacrifice a creature if you don't control an ogre. | 1 | Painwracker Oni | chk |
+| at the beginning of your upkeep, sacrifice a creature. | 1 | Oni Possession | chk |
+| at the beginning of your upkeep, sacrifice a snake. | 1 | Shisato, Whispering Hunter | chk |
+| at the beginning of your upkeep, sacrifice kuro unless you pay {M}{M}{M}{M}. | 1 | Kuro, Pitlord | chk |
+| at the beginning of your upkeep, target opponent discards a card for each shrine you control. | 1 | Honden of Night's Reach | chk |
+| at the beginning of your upkeep, you may have target creature you control get +N/+N until end of turn, where N is the number of creatures you control. if you do | 1 | Junkyo Bell | chk |
+| blocking creatures get +N/+N until end of turn. | 1 | Hold the Line | chk |
+| choose a nonland card name and a number greater than N. target player reveals their library. if that library contains exactly the chosen number of cards with th | 1 | Mindblaze | chk |
+| choose a nonland card name. search target player's graveyard, hand, and library for all cards with that name and exile them. then that player shuffles. | 1 | Cranial Extraction | chk |
+| counter target spell. if that spell is countered ~, put that card on your choice of the top or bottom of its owner"..."s graveyard. | 1 | Hinder | chk |
+| counter target spirit or arcane spell. | 1 | Hisoka's Defiance | chk |
+| creatures that share a color with equipped creature get +N/+N. | 1 | Konda's Banner | chk |
+| destroy target land. if that land was legendary, its controller sacrifices another land of their choice. | 1 | Feast of Worms | chk |
+| draw two cards, then discard a card. if you've cast a spell named peer through depths and a spell named reach through mists ~, you may search your library for a | 1 | Sift Through Sands | chk |
+| each other creature named ~ gets +N/+N and has haste. | 1 | Brothers Yamazaki | chk |
+| each other samurai creature you control gets +N/+N for each point of bushido it has. | 1 | Takeno, Samurai General | chk |
+| enchanted creature gets +N/+N and attacks each combat if able. | 1 | Uncontrollable Anger | chk |
+| exile target creature. at the beginning of the next end step, return that card to the battlefield under its owner's control with a +N/+N counter on it. | 1 | Otherworldly Journey | chk |
+| fear | 1 | Nezumi Cutthroat | chk |
+| for each spirit, return it to its owner's hand unless that player pays {M}. | 1 | Cut the Tethers | chk |
+| if a creature dealt damage by kumano ~ would die, exile it instead. | 1 | Kumano, Master Yamabushi | chk |
+| if a player would draw a card, that player exiles that card face up instead. | 1 | Uba Mask | chk |
+| look at the top three cards of your library. you may put those cards on the bottom of your library in any order. if you do, return ~ to its owner's hand. otherw | 1 | Petals of Insight | chk |
+| players can cast spells only during their own turns. | 1 | Dosan the Falling Leaf | chk |
+| players can't untap more than one artifact during their untap steps. | 1 | Imi Statue | chk |
+| prevent all damage that would be dealt by creatures ~. | 1 | Ethereal Haze | chk |
+| prevent the next N damage that would be dealt to any target ~. you gain life equal to the damage prevented ~. splice onto arcane {M}{M} (as you cast an arcane s | 1 | Candles' Glow | chk |
+| redistribute any number of players' life totals. (each of those players gets one life total back.) | 1 | Reverse the Sands | chk |
+| remove a divinity counter from ~: destroy all other creatures. | 1 | Myojin of Cleansing Fire | chk |
+| remove a divinity counter from ~: each opponent discards their hand. | 1 | Myojin of Night's Reach | chk |
+| return all creatures you control to their owner's hand. | 1 | Part the Veil | chk |
+| sacrifice any number of lands, then add that much {M}. | 1 | Mana Seism | chk |
+| search your library for up to four cards with different names and reveal them. target opponent chooses two of those cards. put the chosen cards into your gravey | 1 | Gifts Ungiven | chk |
+| spirit creatures you control get +N/+N. | 1 | Long-Forgotten Gohei | chk |
+| switch target creature's power and toughness until end of turn. splice onto arcane {M}{M} (as you cast an arcane spell, you may reveal ~ from your hand and pay  | 1 | Strange Inversion | chk |
+| tapped creatures you control can block as though they were untapped. | 1 | Masako the Humorless | chk |
+| target creature gets +N/+N until end of turn, where N is the number of lands you control. | 1 | Strength of Cedars | chk |
+| target creature you control gains protection from the color of your choice until end of turn. splice onto arcane {M} (as you cast an arcane spell, you may revea | 1 | Blessed Breath | chk |
+| target opponent reveals their hand. that player exiles a card from it, then you exile a card from it. repeat ~ until all cards in that hand have been exiled. th | 1 | Struggle for Sanity | chk |
+| target permanent's controller sacrifices it. if the player does, they reveal cards from the top of their library until they reveal a permanent card that shares  | 1 | Reweave | chk |
+| untap all creatures you control. samurai creatures you control get +N/+N until end of turn. | 1 | Call to Glory | chk |
+| untap target nonlegendary creature and gain control of it until end of turn. that creature gains haste until end of turn. | 1 | Blind with Anger | chk |
+| up to three target creatures can't block ~. | 1 | Unearthly Blizzard | chk |
+| when a creature dealt damage by ~ ~ dies, flip ~. | 1 | Bushi Tenderfoot // Kenzo the Hardhearted | chk |
+| when iname dies, you may exile it. if you do, return any number of target spirit cards from your graveyard to your hand. | 1 | Iname, Life Aspect | chk |
+| when keiga dies, gain control of target creature. | 1 | Keiga, the Tide Star | chk |
+| when kokusho dies, each opponent loses N life. you gain life equal to the life lost ~. | 1 | Kokusho, the Evening Star | chk |
+| when yosei dies, target player skips their next untap step. tap up to five target permanents that player controls. | 1 | Yosei, the Morning Star | chk |
+| when ~ dies, create a N/N colorless spirit creature token for each zubera that died ~. | 1 | Dripping-Tongue Zubera | chk |
+| when ~ dies, draw a card for each zubera that died ~. | 1 | Floating-Dream Zubera | chk |
+| when ~ dies, each player loses N life. | 1 | Deathcurse Ogre | chk |
+| when ~ dies, it deals damage to any target equal to the number of zubera that died ~. | 1 | Ember-Fist Zubera | chk |
+| when ~ dies, target opponent discards a card for each zubera that died ~. | 1 | Ashen-Skin Zubera | chk |
+| when ~ dies, you gain N life for each zubera that died ~. | 1 | Silent-Chant Zubera | chk |
+| when ~ has flying, flip it. | 1 | Student of Elements // Tobita, Master of Winds | chk |
+| whenever a creature becomes the target of a spell or ability, destroy that creature. | 1 | Horobi, Death's Wail | chk |
+| whenever a land enters, zo-zu deals N damage to that land's controller. | 1 | Zo-Zu the Punisher | chk |
+| whenever enchanted creature is dealt damage, its controller loses that much life. | 1 | Ragged Veins | chk |
+| whenever equipped creature deals damage to a blocking creature, ~ deals that much damage to each other creature defending player controls. | 1 | Kusari-Gama | chk |
+| whenever equipped creature dies, return that card to the battlefield under your control if it's a samurai card. | 1 | Oathkeeper, Takeno's Daisho | chk |
+| whenever godo attacks for the first time each turn, untap it and all samurai you control. after ~, there is an additional combat phase. | 1 | Godo, Bandit Warlord | chk |
+| whenever nagao attacks, samurai creatures you control get +N/+N until end of turn. | 1 | Nagao, Bound by Honor | chk |
+| whenever one or more creatures block, flip a coin. if you win the flip, each blocking creature is sacrificed by its controller. if you lose the flip, each block | 1 | Tide of War | chk |
+| whenever one or more creatures you control deal combat damage to a player, tap all lands that player controls and untap all lands you control. | 1 | Nature's Will | chk |
+| whenever you cast a spirit or arcane spell, each other creature you control gets +N/+N and gains trample until end of turn. | 1 | Kodama of the South Tree | chk |
+| whenever you cast a spirit or arcane spell, target creature can't block ~. | 1 | Kami of Fire's Roar | chk |
+| whenever you cast a spirit or arcane spell, target creature gains fear until end of turn. | 1 | Kami of the Waning Moon | chk |
+| whenever you cast a spirit or arcane spell, you may exile hikari. if you do, return it to the battlefield under its owner's control at the beginning of the next | 1 | Hikari, Twilight Guardian | chk |
+| whenever you cast a spirit or arcane spell, ~ gains protection from the color of your choice until end of turn. | 1 | Kami of the Painted Road | chk |
+| whenever you draw a card, exile the top card of your library face down. | 1 | Moonring Mirror | chk |
+| whenever you tap ~ for mana, target opponent creates a N/N colorless spirit creature token. | 1 | Forbidden Orchard | chk |
+| whenever ~ deals damage to an opponent, flip it. | 1 | Akki Lavarunner // Tok-Tok, Volcano Born | chk |
+| you have no maximum hand size. | 1 | Graceful Adept | chk |
+| {M}, exile tatsumasa: create a N/N blue dragon spirit creature token with flying. return tatsumasa to the battlefield under its owner's control when that token  | 1 | Tatsumasa, the Dragon's Fang | chk |
+| {M}, return a land you control to its owner's hand: counter target spell unless its controller pays {M}. | 1 | Soratami Savant | chk |
+| {M}, return two lands you control to their owner's hand: discard all the cards in your hand, then draw that many cards. | 1 | Soratami Seer | chk |
+| {M}, tap an untapped creature you control: untap enchanted creature. | 1 | Aura of Dominion | chk |
+| {M}, {M}: attacking creatures gain first strike until end of turn. | 1 | Akki Coalflinger | chk |
+| {M}, {M}: create a N/N green snake creature token for each charge counter on ~. | 1 | Orochi Hatchery | chk |
+| {M}, {M}: exile target instant or sorcery spell that targets you. | 1 | Shell of the Last Kappa | chk |
+| {M}, {M}: target legendary creature gains fear until end of turn. | 1 | Shizo, Death's Storehouse | chk |
+| {M}: draw a card, then put ~ on top of its owner's library. | 1 | Sensei's Divining Top | chk |
+| {M}: prevent all damage that would be dealt to target legendary creature ~. | 1 | Kitsune Healer | chk |
+| {M}: regenerate enchanted creature. | 1 | Serpent Skin | chk |
+| {M}: reveal the top card of your library. if it's a land card, untap ~ and it gets +N/+N until end of turn. activate only once each turn. | 1 | Harsh Deceiver | chk |
+| {M}: reveal the top card of your library. if it's a land card, ~ gains "..." until end of turn. activate only once each turn. | 1 | Cruel Deceiver | chk |
+| {M}: reveal the top card of your library. if it's a land card, ~ gets +N/+N and gains first strike until end of turn. activate only once each turn. | 1 | Brutal Deceiver | chk |
+| {M}: reveal the top card of your library. if it's a land card, ~ gets +N/+N and gains flying until end of turn. activate only once each turn. | 1 | Callous Deceiver | chk |
+| {M}: reveal the top card of your library. if it's a land card, ~ gets +N/+N and gains trample until end of turn. activate only once each turn. | 1 | Feral Deceiver | chk |
+| {M}: target creature gets -N/-N until end of turn, where N is the number of devotion counters on ~. activate only if you control a demon. | 1 | Bloodthirsty Ogre | chk |
+| {M}: target player dealt damage by ~ ~ loses N life. | 1 | Wicked Akuba | chk |
+| {M}: the next N damage that would be dealt to target legendary creature you control ~ is dealt to you instead. | 1 | Vassal's Duty | chk |
+| {M}: you may put a land card from your hand onto the battlefield. if you control ten or more lands, flip ~. | 1 | Budoka Gardener // Dokai, Weaver of Life | chk |
+| {M}: ~ deals N damage to target creature that was dealt damage ~. when that creature dies ~, flip ~. | 1 | Initiate of Blood // Goka the Unjust | chk |
+| {M}: ~ deals N damage to target spirit creature. if that creature would die ~, exile it instead. | 1 | Nine-Ringed Bo | chk |
+| {M}{M}, discard a card: counter target spell if it has the same mana value as the discarded card. | 1 | Hisoka, Minamo Sensei | chk |
+| {M}{M}, sacrifice ~: put target land on top of its owner's library. | 1 | Rootrunner | chk |
+| {M}{M}, {M}: create a N/N green snake creature token. if you control ten or more creatures, flip ~. | 1 | Orochi Eggwatcher // Shidako, Broodmistress | chk |
+| {M}{M}, {M}: draw a card. if you have nine or more cards in hand, flip ~. | 1 | Jushi Apprentice // Tomoya the Revealer | chk |
+| {M}{M}, {M}: exile up to three target cards from a single graveyard. | 1 | Rag Dealer | chk |
+| {M}{M}, {M}: target creature you control other than ~ has shroud for as long as ~ remains tapped. | 1 | Hisoka's Guard | chk |
+| {M}{M}, {M}: target opponent discards a card. then if that player has no cards in hand, flip ~. | 1 | Nezumi Shortfang // Stabwhisker the Odious | chk |
+| {M}{M}: exile target card from an opponent's graveyard. if no cards are in that graveyard, flip ~. | 1 | Nezumi Graverobber // Nighteyes the Desecrator | chk |
+| {M}{M}{M}, remove N theft counters from ~: search your library for a nonland card with mana value N, reveal it, put it into your hand, then shuffle. | 1 | Night Dealings | chk |
+| {M}{M}{M}, {M}: target creature deals damage to itself equal to its power. | 1 | Kiku, Night's Flower | chk |
+| ~ deals N damage to any target. return ~ to its owner's hand, then discard a card at random. | 1 | Hanabi Blast | chk |
 
 ## Notes
 

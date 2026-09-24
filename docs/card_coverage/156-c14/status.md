@@ -41,9 +41,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {3}{W}{W}: Attacking creatures you control get +X/+X until end of turn, where X is the number of attacking creatures. | Jazal Goldmane | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| {M}{M}{M}: attacking creatures you control get +N/+N until end of turn, where N is the number of attacking creatures. | 1 | Jazal Goldmane | c14 |
 
 ## Notes
 

@@ -3,13 +3,13 @@
 - Expansion: 086
 - Set code: `con`
 - Release date: 2009-02-06
-- Cards in scope (Modern/Pioneer/Standard-legal): 140
+- Cards in scope (Modern/Pioneer/Standard-legal): 141
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 140 |
+| Modern | 141 |
 | Pioneer | 8 |
 | Standard | 1 |
 
@@ -19,8 +19,8 @@
 |---|---|---|
 | Full (handled + tested) | 8 | 5.7% |
 | Partial (unaudited) | 6 | 4.3% |
-| Not tested (handled, untested) | 72 | 51.4% |
-| Not working (silent / notice / error) | 54 | 38.6% |
+| Not tested (handled, untested) | 72 | 51.1% |
+| Not working (silent / notice / error) | 55 | 39.0% |
 
 ## Cards needing work
 
@@ -47,6 +47,7 @@
 | Ignite Disorder | silent | Ignite Disorder deals 3 damage divided as you choose among one, two, or three target white and/or blue creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maelstrom Archangel | silent | Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magister Sphinx | silent | When this creature enters, target player's life total becomes 10. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Malfegor | silent | When Malfegor enters, discard your hand. Each opponent sacrifices a creature of their choice for each card discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manaforce Mace | silent | Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Martial Coup | silent | Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Meglonoth | silent | Whenever this creature blocks a creature, this creature deals damage to that creature's controller equal to this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -177,56 +178,58 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Exalted | Aven Squire, Frontline Sage, Giltspire Avenger, Noble Hierarch, Rhox Bodyguard | 5 |
-| At the beginning of your upkeep, each player loses 1 life. Put a +1/+1 counter on this creature for each 1 life lost this way. | Blood Tyrant, Esperzoa, Wall of Reverence, Wild Leotau | 4 |
-| Devour | Gluttonous Slime, Hellkite Hatchling | 2 |
-| Domain — Target creature gets -1/-1 until end of turn for each basic land type among lands you control. | Drag Down, Might of Alara | 2 |
-| Search your library for a white card, a blue card, a black card, a red card, and a green card. Reveal those cards, put them into your hand, then shuffle. | Conflux, Shard Convergence | 2 |
-| {T}: Target land you control becomes the basic land type of your choice until end of turn. | Grixis Illusionist, Unstable Frontier | 2 |
-| {W}{U}{B}{R}{G}: Until end of turn, this creature becomes an Angel, gets +3/+3, and gains flying and lifelink. | Dragonsoul Knight, Paragon of the Amesha | 2 |
-| As long as you control a red permanent, this creature gets +1/+0 and has first strike. | Ember Weaver | 1 |
-| As this creature enters, choose an opponent. | Nyxathid | 1 |
-| Banefire deals X damage to any target. If X is 5 or more, this spell can't be countered and the damage can't be prevented. | Banefire | 1 |
-| Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | Martial Coup | 1 |
-| Destroy target artifact or enchantment. If that permanent was blue or black, draw a card. | Filigree Fracture | 1 |
-| Destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | Wretched Banquet | 1 |
-| Domain — Aven Trailblazer's toughness is equal to the number of basic land types among lands you control. | Aven Trailblazer | 1 |
-| Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | Manaforce Mace | 1 |
-| Domain — Target player discards a card for each basic land type among lands you control. | Voices from the Void | 1 |
-| Domain — {3}: This creature gets +1/+0 until end of turn for each basic land type among lands you control. | Wandering Goblins | 1 |
-| Draw cards equal to the power of target creature you control. | Soul's Majesty | 1 |
-| −2: Gain control of target creature. | Nicol Bolas, Planeswalker | 1 |
-| If Progenitus would be put into a graveyard from anywhere, reveal Progenitus and shuffle it into its owner's library instead. | Progenitus | 1 |
-| Ignite Disorder deals 3 damage divided as you choose among one, two, or three target white and/or blue creatures. | Ignite Disorder | 1 |
-| {W}{U}, {T}: Put a bribery counter on target creature you don't control. Its controller draws a card. | Gwafa Hazid, Profiteer | 1 |
-| Quenchable Fire deals 3 damage to target player or planeswalker. It deals an additional 3 damage to that player or planeswalker at the beginning of your next up | Quenchable Fire | 1 |
-| {R}, {T}: Target creature can't block this turn. | Nacatl Hunt-Pride | 1 |
-| Target creature gains flying until end of turn. If you control a white permanent, return View from Above to its owner's hand. | View from Above | 1 |
-| Target opponent reveals cards from the top of their library until they reveal a creature card. That player puts all noncreature cards revealed this way into the | Telemin Performance | 1 |
-| {R}{G}{W}: This creature and each other creature with the same name as it get +3/+3 until end of turn. | Cylian Sunsinger | 1 |
-| This creature enters with X +1/+1 counters on it. If X is 5 or more, it enters with an additional X +1/+1 counters on it. | Apocalypse Hydra | 1 |
-| {W}{B}: This creature gains fear and vigilance until end of turn. | Scornful Aether-Lich | 1 |
-| {W}{U}{B}{R}{G}: This creature gets +2/+2 and gains fear until end of turn. Target creature gets -2/-2 until end of turn. Activate only during your turn. | Fleshformer | 1 |
-| This creature gets +1/+1 as long as you control another artifact. | Court Homunculus | 1 |
-| {U}{B}: This creature gets -2/-0 until end of turn and can't be blocked this turn. | Vectis Agents | 1 |
-| This creature has deathtouch as long as you control a green permanent. | Toxic Iguanar | 1 |
-| This creature has haste as long as you control a red permanent. | Cliffrunner Behemoth | 1 |
-| This spell can't be countered. Volcanic Fallout deals 2 damage to each creature and each player. | Volcanic Fallout | 1 |
-| When a creature dies, destroy enchanted creature. | Yoke of the Damned | 1 |
-| When Child of Alara dies, destroy all nonland permanents. They can't be regenerated. | Child of Alara | 1 |
-| When this creature attacks or blocks, sacrifice it at the beginning of the next end step. | Brackwater Elemental | 1 |
-| When this creature enters, it deals damage to any target equal to twice the number of Goblins it devoured. | Voracious Dragon | 1 |
-| When this creature enters, target player's life total becomes 10. | Magister Sphinx | 1 |
-| When this creature enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | Sphinx Summoner | 1 |
-| When this land enters, sacrifice it unless you pay {1}. | Rupture Spire | 1 |
-| Whenever another creature leaves the battlefield, you may have target player mill two cards. | Extractor Demon | 1 |
-| Whenever enchanted land becomes tapped, its controller loses 2 life. | Corrupted Roots | 1 |
-| Whenever this creature blocks a creature, this creature deals damage to that creature's controller equal to this creature's power. | Meglonoth | 1 |
-| Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | Maelstrom Archangel | 1 |
-| You have no maximum hand size. | Reliquary Tower | 1 |
-| You may cast this card from your graveyard by paying {W}{U}{B}{R}{G} rather than paying its mana cost. If you do, it enters with two +1/+1 counters on it. | Worldheart Phoenix | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Domain | 6 | Aven Trailblazer, Drag Down, Manaforce Mace, Might of Alara, Voices from the Void | con |
+| exalted | 5 | Aven Squire, Frontline Sage, Giltspire Avenger, Noble Hierarch, Rhox Bodyguard | con |
+| devour | 2 | Gluttonous Slime, Hellkite Hatchling | con |
+| {M}: target land you control becomes the basic land type of your choice until end of turn. | 2 | Grixis Illusionist, Unstable Frontier | con |
+| as long as you control a red permanent, ~ gets +N/+N and has first strike. | 1 | Ember Weaver | con |
+| as ~ enters, choose an opponent. | 1 | Nyxathid | con |
+| at the beginning of your end step, you may gain life equal to the power of target creature you control. | 1 | Wall of Reverence | con |
+| at the beginning of your upkeep, each player loses N life. put a +N/+N counter on ~ for each N life lost ~. | 1 | Blood Tyrant | con |
+| at the beginning of your upkeep, return an artifact you control to its owner's hand. | 1 | Esperzoa | con |
+| at the beginning of your upkeep, sacrifice ~ unless you pay {M}. | 1 | Wild Leotau | con |
+| create N N/N white soldier creature tokens. if N is N or more, destroy all other creatures. | 1 | Martial Coup | con |
+| destroy target artifact or enchantment. if that permanent was blue or black, draw a card. | 1 | Filigree Fracture | con |
+| destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | 1 | Wretched Banquet | con |
+| draw cards equal to the power of target creature you control. | 1 | Soul's Majesty | con |
+| if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Progenitus | con |
+| search your library for a plains card, an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Shard Convergence | con |
+| search your library for a white card, a blue card, a black card, a red card, and a green card. reveal those cards, put them into your hand, then shuffle. | 1 | Conflux | con |
+| target creature gains flying until end of turn. if you control a white permanent, return ~ to its owner's hand. | 1 | View from Above | con |
+| target opponent reveals cards from the top of their library until they reveal a creature card. that player puts all noncreature cards revealed ~ into their grav | 1 | Telemin Performance | con |
+| when a creature dies, destroy enchanted creature. | 1 | Yoke of the Damned | con |
+| when ~ attacks or blocks, sacrifice it at the beginning of the next end step. | 1 | Brackwater Elemental | con |
+| when ~ dies, destroy all nonland permanents. they can't be regenerated. | 1 | Child of Alara | con |
+| when ~ enters, discard your hand. each opponent sacrifices a creature of their choice for each card discarded ~. | 1 | Malfegor | con |
+| when ~ enters, it deals damage to any target equal to twice the number of goblins it devoured. | 1 | Voracious Dragon | con |
+| when ~ enters, sacrifice it unless you pay {M}. | 1 | Rupture Spire | con |
+| when ~ enters, target player's life total becomes N. | 1 | Magister Sphinx | con |
+| when ~ enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | 1 | Sphinx Summoner | con |
+| whenever another creature leaves the battlefield, you may have target player mill two cards. | 1 | Extractor Demon | con |
+| whenever enchanted land becomes tapped, its controller loses N life. | 1 | Corrupted Roots | con |
+| whenever ~ blocks a creature, ~ deals damage to that creature's controller equal to ~ power. | 1 | Meglonoth | con |
+| whenever ~ deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | 1 | Maelstrom Archangel | con |
+| you have no maximum hand size. | 1 | Reliquary Tower | con |
+| you may cast ~ from your graveyard by paying {M}{M}{M}{M}{M} rather than paying its mana cost. if you do, it enters with two +N/+N counters on it. | 1 | Worldheart Phoenix | con |
+| {M}, {M}: target creature can't block ~. | 1 | Nacatl Hunt-Pride | con |
+| {M}{M}, {M}: put a bribery counter on target creature you don't control. its controller draws a card. | 1 | Gwafa Hazid, Profiteer | con |
+| {M}{M}: ~ gains fear and vigilance until end of turn. | 1 | Scornful Aether-Lich | con |
+| {M}{M}: ~ gets -N/-N until end of turn and can't be blocked ~. | 1 | Vectis Agents | con |
+| {M}{M}{M}: ~ and each other creature with the same name as it get +N/+N until end of turn. | 1 | Cylian Sunsinger | con |
+| {M}{M}{M}{M}{M}: until end of turn, ~ becomes a dragon, gets +N/+N, and gains flying and trample. | 1 | Dragonsoul Knight | con |
+| {M}{M}{M}{M}{M}: until end of turn, ~ becomes an angel, gets +N/+N, and gains flying and lifelink. | 1 | Paragon of the Amesha | con |
+| {M}{M}{M}{M}{M}: ~ gets +N/+N and gains fear until end of turn. target creature gets -N/-N until end of turn. activate only during your turn. | 1 | Fleshformer | con |
+| ~ can't be countered. ~ deals N damage to each creature and each player. | 1 | Volcanic Fallout | con |
+| ~ deals N damage divided as you choose among one, two, or three target white and/or blue creatures. | 1 | Ignite Disorder | con |
+| ~ deals N damage to any target. if N is N or more, ~ can"..."t be prevented. | 1 | Banefire | con |
+| ~ deals N damage to target player or planeswalker. it deals an additional N damage to that player or planeswalker at the beginning of your next upkeep step unle | 1 | Quenchable Fire | con |
+| ~ enters with N +N/+N counters on it. if N is N or more, it enters with an additional N +N/+N counters on it. | 1 | Apocalypse Hydra | con |
+| ~ gets +N/+N as long as you control another artifact. | 1 | Court Homunculus | con |
+| ~ has deathtouch as long as you control a green permanent. | 1 | Toxic Iguanar | con |
+| ~ has haste as long as you control a red permanent. | 1 | Cliffrunner Behemoth | con |
+| −N: gain control of target creature. | 1 | Nicol Bolas, Planeswalker | con |
 
 ## Notes
 

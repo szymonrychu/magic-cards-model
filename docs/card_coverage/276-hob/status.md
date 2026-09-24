@@ -3,23 +3,23 @@
 - Expansion: 276
 - Set code: `hob`
 - Release date: 2026-08-14
-- Cards in scope (Modern/Pioneer/Standard-legal): 185
+- Cards in scope (Modern/Pioneer/Standard-legal): 186
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 185 |
-| Pioneer | 185 |
-| Standard | 185 |
+| Modern | 186 |
+| Pioneer | 186 |
+| Standard | 186 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 115 | 62.2% |
+| Full (handled + tested) | 116 | 62.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not tested (handled, untested) | 69 | 37.3% |
+| Not tested (handled, untested) | 69 | 37.1% |
 | Not working (silent / notice / error) | 1 | 0.5% |
 
 ## Cards needing work
@@ -100,7 +100,7 @@
 ## Fully supported
 
 <details>
-<summary>115 cards</summary>
+<summary>116 cards</summary>
 
 - Along the Crooked Way
 - An Unexpected Party // At the Door
@@ -209,6 +209,7 @@
 - Thranduil, the Elvenking
 - Through the Forest Gate
 - Tidings of War
+- Tom, Bert, and William
 - Troop of Ponies
 - Uncover the Moon-Letters
 - Velvetwing Butterflies // Gaze in Wonder
@@ -222,9 +223,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Target artifact or creature you control gains hexproof and indestructible until end of turn. (Then exile this card. You may cast the creature later from exile.) | Bofur, Reliable Guardian // Concerted Care | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| target artifact or creature you control gains hexproof and indestructible until end of turn. (then exile ~. you may cast the creature later from exile.) | 1 | Bofur, Reliable Guardian // Concerted Care | hob |
 
 ## Notes
 

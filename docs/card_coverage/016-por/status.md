@@ -76,16 +76,17 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Target opponent reveals their hand. You draw a card for each Mountain and red card in it. | Baleful Stare, Withering Gaze | 2 |
-| Creatures and lands target opponent controls don't untap during their next untap step. | Exhaustion | 1 |
-| Destroy all Islands. | Boiling Seas | 1 |
-| If target opponent has more cards in hand than you, draw cards equal to the difference. | Balance of Power | 1 |
-| Put target creature on top of its owner's library. | Time Ebb | 1 |
-| When this creature enters, sacrifice it unless you sacrifice three Forests. | Primeval Force | 1 |
-| When this creature enters, tap all other creatures. | Thundermare | 1 |
-| You gain 3 life for each creature attacking you. | Blessed Reversal | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| creatures and lands target opponent controls don't untap during their next untap step. | 1 | Exhaustion | por |
+| destroy all islands. | 1 | Boiling Seas | por |
+| if target opponent has more cards in hand than you, draw cards equal to the difference. | 1 | Balance of Power | por |
+| put target creature on top of its owner's library. | 1 | Time Ebb | por |
+| target opponent reveals their hand. you draw a card for each forest and green card in it. | 1 | Withering Gaze | por |
+| target opponent reveals their hand. you draw a card for each mountain and red card in it. | 1 | Baleful Stare | por |
+| when ~ enters, sacrifice it unless you sacrifice three forests. | 1 | Primeval Force | por |
+| when ~ enters, tap all other creatures. | 1 | Thundermare | por |
+| you gain N life for each creature attacking you. | 1 | Blessed Reversal | por |
 
 ## Notes
 

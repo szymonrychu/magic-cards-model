@@ -3,24 +3,24 @@
 - Expansion: 149
 - Set code: `jou`
 - Release date: 2014-05-02
-- Cards in scope (Modern/Pioneer/Standard-legal): 149
+- Cards in scope (Modern/Pioneer/Standard-legal): 161
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 149 |
-| Pioneer | 149 |
-| Standard | 2 |
+| Modern | 161 |
+| Pioneer | 161 |
+| Standard | 5 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 4 | 2.7% |
-| Partial (unaudited) | 7 | 4.7% |
-| Not tested (handled, untested) | 80 | 53.7% |
-| Not working (silent / notice / error) | 58 | 38.9% |
+| Full (handled + tested) | 6 | 3.7% |
+| Partial (unaudited) | 7 | 4.3% |
+| Not tested (handled, untested) | 88 | 54.7% |
+| Not working (silent / notice / error) | 60 | 37.3% |
 
 ## Cards needing work
 
@@ -31,6 +31,7 @@
 | Athreos, God of Passage | silent | Whenever another creature you own dies, return it to your hand unless target opponent pays 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blinding Flare | silent | Strive — This spell costs {R} more to cast for each target beyond the first. Any number of target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodcrazed Hoplite | silent | Whenever a +1/+1 counter is put on this creature, remove a +1/+1 counter from target creature an opponent controls. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
+| Brain Maggot | silent | When this creature enters, target opponent reveals their hand and you choose a nonland card from it. Exile that card until this creature leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cast into Darkness | silent | Enchanted creature gets -2/-0 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Countermand | silent | Counter target spell. Its controller mills four cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dakra Mystic | silent | {U}, {T}: Each player reveals the top card of their library. You may put the revealed cards into their owners' graveyards. If you don't, each player draws a car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -66,6 +67,7 @@
 | Rise of Eagles | silent | Create two 2/2 blue Bird enchantment creature tokens with flying. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ritual of the Returned | silent | Exile target creature card from your graveyard. Create a black Zombie creature token. Its power is equal to that card's power and its toughness is equal to that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sage of Hours | silent | Remove all +1/+1 counters from this creature: For each five counters removed this way, take an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Scourge of Fleets | silent | When this creature enters, return each creature your opponents control with toughness X or less to its owner's hand, where X is the number of Islands you contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sightless Brawler | silent | Enchanted creature gets +3/+2 and can't attack alone. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Solidarity of Heroes | silent | Strive — This spell costs {1}{G} more to cast for each target beyond the first. Choose any number of target creatures. Double the number of +1/+1 counters on ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spirespine | silent | Enchanted creature gets +4/+1 and blocks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,6 +99,7 @@
 | Akroan Mastiff | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Armory of Iroas | handled | Whenever equipped creature attacks, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aspect of Gorgon | handled | Enchanted creature gets +1/+3 and has deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Banishing Light | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bassara Tower Archer | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Chariot of Victory | handled | Equipped creature has first strike, trample, and haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cloaked Siren | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -104,12 +107,17 @@
 | Cruel Feeding | handled | Strive — This spell costs {2}{B} more to cast for each target beyond the first. Any number of target creatures each get +1/+0 and gain lifelink until end of tur | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crystalline Nautilus | handled | When this permanent becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cyclops of Eternal Fury | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dawnbringer Charioteers | handled | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Desecration Plague | handled | Destroy target enchantment or land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Desperate Stand | handled | Strive — This spell costs {R}{W} more to cast for each target beyond the first. Any number of target creatures each get +2/+0 and gain first strike and vigilanc | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dictate of Erebos | handled | Whenever a creature you control dies, each opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dictate of Heliod | handled | Creatures you control get +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dictate of Karametra | handled | Whenever a player taps a land for mana, that player adds one mana of any type that land produced. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dictate of Kruphix | handled | At the beginning of each player's draw step, that player draws an additional card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Dictate of the Twin Gods | handled | If a source would deal damage to a permanent or player, it deals double that damage to that permanent or player instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Doomwake Giant | handled | Constellation — Whenever this creature or another enchantment you control enters, creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eagle of the Watch | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Eidolon of Blossoms | handled | Constellation — Whenever this creature or another enchantment you control enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eidolon of Rhetoric | handled | Each player can't cast more than one spell each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eidolon of the Great Revel | handled | Whenever a player casts a spell with mana value 3 or less, this creature deals 2 damage to that player. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Extinguish All Hope | handled | Destroy all nonenchantment creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -156,7 +164,9 @@
 | Sigiled Starfish | handled | {T}: Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skybind | handled | Constellation — Whenever this enchantment or another enchantment you control enters, exile target nonenchantment permanent. Return that card to the battlefield  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyspear Cavalry | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Spawn of Thraxes | handled | When this creature enters, it deals damage to any target equal to the number of Mountains you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spiteful Blow | handled | Destroy target creature and target land. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Squelching Leeches | handled | Squelching Leeches's power and toughness are each equal to the number of Swamps you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strength from the Fallen | handled | Constellation — Whenever this enchantment or another enchantment you control enters, target creature gets +X/+X until end of turn, where X is the number of crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Supply-Line Cranes | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Temple of Epiphany | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -175,10 +185,12 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>6 cards</summary>
 
 - Aegis of the Gods
 - Aerial Formation
+- Hall of Triumph
+- Heroes' Bane
 - Launch the Fleet
 - Mana Confluence
 
@@ -186,54 +198,62 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Strive — This spell costs {2}{R} more to cast for each target beyond the first. Choose any number of target creatures you control. For each of them, create a to | Blinding Flare, Colossal Heroics, Harness by Force, Hour of Need, Nature's Panoply, Polymorphous Rush, Setessan Tactics, Silence the Believers, Solidarity of Heroes, Twinflame | 10 |
-| Constellation — Whenever this creature or another enchantment you control enters, prevent all damage that would be dealt to target creature this turn. | Dreadbringer Lampads, Goldenhide Ox, Harvestguard Alseids | 3 |
-| Enchanted creature gets +3/+2 and can't attack alone. | Cast into Darkness, Gnarled Scarhide, Sightless Brawler | 3 |
-| At the beginning of your upkeep, return an enchantment you control to its owner's hand. | Master of the Feast, Riptide Chimera | 2 |
-| Exile target creature card from your graveyard. Create a black Zombie creature token. Its power is equal to that card's power and its toughness is equal to that | Pharika, God of Affliction, Ritual of the Returned | 2 |
-| Inspired — Whenever this creature becomes untapped, you may discard a nonland card. If you do, search your library for a card with the same mana value as that c | Daring Thief, Disciple of Deceit | 2 |
-| {4}{W}: Prevent all damage that would be dealt to this creature by target creature this turn. | Iroas, God of Victory, Stonewise Fortifier | 2 |
-| Scry 3, then reveal the top card of your library. Draw cards equal to that card's mana value. (To scry 3, look at the top three cards of your library, then put  | Interpret the Signs, Stormchaser Chimera | 2 |
-| Whenever enchanted creature deals combat damage to a player, you may sacrifice this Aura. If you do, destroy target enchantment. | Flamespeaker's Will, Mortal Obstinacy | 2 |
-| As an additional cost to cast this spell, sacrifice a creature. Target player discards a number of cards equal to the sacrificed creature's power. | Tormented Thoughts | 1 |
-| Counter target spell. Its controller mills four cards. | Countermand | 1 |
-| Create two 2/2 blue Bird enchantment creature tokens with flying. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | Rise of Eagles | 1 |
-| Destroy target enchanted creature or enchantment creature. | Feast of Dreams | 1 |
-| Each instant and sorcery spell you cast costs {1} less to cast for each creature it targets. | Battlefield Thaumaturge | 1 |
-| {U}, {T}: Each player reveals the top card of their library. You may put the revealed cards into their owners' graveyards. If you don't, each player draws a car | Dakra Mystic | 1 |
-| Enchanted creature can't attack or block unless its controller pays {3}. | Oppressive Rays | 1 |
-| Enchanted creature gets +2/+2 and attacks each combat if able. | Mogis's Warhound | 1 |
-| Enchanted creature gets +4/+1 and blocks each combat if able. | Spirespine | 1 |
-| Enchanted creature gets +2/+2 as long as it's an enchantment. Otherwise, it gets -2/-2. | Nyx Infusion | 1 |
-| Enchanted creature has double strike as long as it's an enchantment. Otherwise, prevent all damage that would be dealt by enchanted creature. | Armament of Nyx | 1 |
-| Exile target enchantment. If the exiled card is a God card, search its controller's graveyard, hand, and library for any number of cards with the same name as t | Deicide | 1 |
-| Heroic — Whenever you cast a spell that targets this creature, this creature gets +2/+0 and gains intimidate until end of turn. | Akroan Line Breaker | 1 |
-| Inspired — Whenever King Macar becomes untapped, you may exile target creature. If you do, create a Gold token. | King Macar, the Gold-Cursed | 1 |
-| Other Centaur creatures you control get +1/+1 and have vigilance and trample. | Pheres-Band Warchief | 1 |
-| Other Minotaur creatures you control have deathtouch. | Felhide Petrifier | 1 |
-| Remove all +1/+1 counters from this creature: For each five counters removed this way, take an extra turn after this one. | Sage of Hours | 1 |
-| Return target creature and all Auras attached to it to their owners' hands. | Hubris | 1 |
-| Return up to one target instant card and up to one target sorcery card from your graveyard to your hand. Exile Pull from the Deep. | Pull from the Deep | 1 |
-| Reveal the first card you draw on each of your turns. Whenever you reveal a land card this way, draw a card. Whenever you reveal a nonland card this way, Kerano | Keranos, God of Storms | 1 |
-| Reveal the top six cards of your library. Put up to three enchantment cards from among them into your hand and the rest of the revealed cards into your graveyar | Kruphix's Insight | 1 |
-| {1}{G}, Sacrifice this creature: Create a 1/3 green Spider enchantment creature token with reach. | Renowned Weaver | 1 |
-| Spite of Mogis deals damage to target creature equal to the number of instant and sorcery cards in your graveyard. Scry 1. (Look at the top card of your library | Spite of Mogis | 1 |
-| Starfall deals 3 damage to target creature. If that creature is an enchantment, Starfall deals 3 damage to that creature's controller. | Starfall | 1 |
-| Target creature gets -X/-X until end of turn, where X is the number of cards in your hand. | Nightmarish End | 1 |
-| This creature can't attack unless defending player controls an enchantment or an enchanted permanent. | Godhunter Octopus | 1 |
-| When this creature becomes monstrous, create X X/X green Hydra creature tokens. | Hydra Broodmaster | 1 |
-| When this creature dies, destroy all permanents at the beginning of the next end step. | Bearer of the Heavens | 1 |
-| When this creature enters, look at the top X cards of your library, where X is the number of Forests you control. You may reveal a creature card from among them | Nessian Game Warden | 1 |
-| When this creature enters, put target creature into its owner's library just beneath the top X cards of that library, where X is the number of Plains you contro | Quarry Colossus | 1 |
-| When you're dealt combat damage, sacrifice this creature. | Swarmborn Giant | 1 |
-| Whenever a +1/+1 counter is put on this creature, remove a +1/+1 counter from target creature an opponent controls. | Bloodcrazed Hoplite | 1 |
-| Whenever another creature you own dies, return it to your hand unless target opponent pays 3 life. | Athreos, God of Passage | 1 |
-| Whenever equipped creature blocks or becomes blocked by one or more creatures, you may exile one of those creatures. | Godsend | 1 |
-| You control target player during that player's next turn. Exile Worst Fears. (You see all cards that player could see and make all decisions for them.) | Worst Fears | 1 |
-| You have no maximum hand size. | Kruphix, God of Horizons | 1 |
-| You may choose not to untap this artifact during your untap step. | Deserter's Quarters | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Strive | 10 | Blinding Flare, Colossal Heroics, Harness by Force, Hour of Need, Nature's Panoply | jou |
+| Constellation | 3 | Dreadbringer Lampads, Goldenhide Ox, Harvestguard Alseids | jou |
+| Inspired | 3 | Daring Thief, Disciple of Deceit, King Macar, the Gold-Cursed | jou |
+| Heroic | 1 | Akroan Line Breaker | jou |
+| as an additional cost to cast ~, sacrifice a creature. target player discards a number of cards equal to the sacrificed creature's power. | 1 | Tormented Thoughts | jou |
+| at the beginning of your upkeep, each opponent draws a card. | 1 | Master of the Feast | jou |
+| at the beginning of your upkeep, return an enchantment you control to its owner's hand. | 1 | Riptide Chimera | jou |
+| counter target spell. its controller mills four cards. | 1 | Countermand | jou |
+| create two N/N blue bird enchantment creature tokens with flying. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rise of Eagles | jou |
+| destroy target enchanted creature or enchantment creature. | 1 | Feast of Dreams | jou |
+| each instant and sorcery spell you cast costs {M} less to cast for each creature it targets. | 1 | Battlefield Thaumaturge | jou |
+| enchanted creature can't attack or block unless its controller pays {M}. | 1 | Oppressive Rays | jou |
+| enchanted creature gets +N/+N and attacks each combat if able. | 1 | Mogis's Warhound | jou |
+| enchanted creature gets +N/+N and blocks each combat if able. | 1 | Spirespine | jou |
+| enchanted creature gets +N/+N and can't attack alone. | 1 | Sightless Brawler | jou |
+| enchanted creature gets +N/+N and can't block. | 1 | Gnarled Scarhide | jou |
+| enchanted creature gets +N/+N as long as it's an enchantment. otherwise, it gets -N/-N. | 1 | Nyx Infusion | jou |
+| enchanted creature gets -N/-N and can't block. | 1 | Cast into Darkness | jou |
+| enchanted creature has double strike as long as it's an enchantment. otherwise, prevent all damage that would be dealt by enchanted creature. | 1 | Armament of Nyx | jou |
+| exile target creature card from your graveyard. create a black zombie creature token. its power is equal to that card"..."s toughness. | 1 | Ritual of the Returned | jou |
+| exile target enchantment. if the exiled card is a god card, search its controller's graveyard, hand, and library for any number of cards with the same name as t | 1 | Deicide | jou |
+| other centaur creatures you control get +N/+N and have vigilance and trample. | 1 | Pheres-Band Warchief | jou |
+| other minotaur creatures you control have deathtouch. | 1 | Felhide Petrifier | jou |
+| prevent all damage that would be dealt to attacking creatures you control. | 1 | Iroas, God of Victory | jou |
+| remove all +N/+N counters from ~: for each five counters removed ~, take an extra turn after ~. | 1 | Sage of Hours | jou |
+| return target creature and all auras attached to it to their owners' hands. | 1 | Hubris | jou |
+| return up to one target instant card and up to one target sorcery card from your graveyard to your hand. exile ~. | 1 | Pull from the Deep | jou |
+| reveal the first card you draw on each of your turns. whenever you reveal a land card ~, draw a card. whenever you reveal a nonland card ~, keranos deals N dama | 1 | Keranos, God of Storms | jou |
+| reveal the top six cards of your library. put up to three enchantment cards from among them into your hand and the rest of the revealed cards into your graveyar | 1 | Kruphix's Insight | jou |
+| scry N, then reveal the top card of your library. draw cards equal to that card's mana value. (to scry N, look at the top three cards of your library, then put  | 1 | Interpret the Signs | jou |
+| target creature gets -N/-N until end of turn, where N is the number of cards in your hand. | 1 | Nightmarish End | jou |
+| when you're dealt combat damage, sacrifice ~. | 1 | Swarmborn Giant | jou |
+| when ~ becomes monstrous, create N N/N green hydra creature tokens. | 1 | Hydra Broodmaster | jou |
+| when ~ dies, destroy all permanents at the beginning of the next end step. | 1 | Bearer of the Heavens | jou |
+| when ~ enters, look at the top N cards of your library, where N is the number of forests you control. you may reveal a creature card from among them and put it  | 1 | Nessian Game Warden | jou |
+| when ~ enters, put target creature into its owner's library just beneath the top N cards of that library, where N is the number of plains you control. | 1 | Quarry Colossus | jou |
+| when ~ enters, return each creature your opponents control with toughness N or less to its owner's hand, where N is the number of islands you control. | 1 | Scourge of Fleets | jou |
+| when ~ enters, target opponent reveals their hand and you choose a nonland card from it. exile that card until ~ leaves the battlefield. | 1 | Brain Maggot | jou |
+| whenever a +N/+N counter is put on ~, remove a +N/+N counter from target creature an opponent controls. | 1 | Bloodcrazed Hoplite | jou |
+| whenever another creature you own dies, return it to your hand unless target opponent pays N life. | 1 | Athreos, God of Passage | jou |
+| whenever enchanted creature deals combat damage to a player, you may sacrifice ~. if you do, destroy target artifact. | 1 | Flamespeaker's Will | jou |
+| whenever enchanted creature deals combat damage to a player, you may sacrifice ~. if you do, destroy target enchantment. | 1 | Mortal Obstinacy | jou |
+| whenever equipped creature blocks or becomes blocked by one or more creatures, you may exile one of those creatures. | 1 | Godsend | jou |
+| you control target player during that player's next turn. exile ~. (you see all cards that player could see and make all decisions for them.) | 1 | Worst Fears | jou |
+| you have no maximum hand size. | 1 | Kruphix, God of Horizons | jou |
+| you may choose not to untap ~ during your untap step. | 1 | Deserter's Quarters | jou |
+| {M}, {M}: each player reveals the top card of their library. you may put the revealed cards into their owners"..."t, each player draws a card. | 1 | Dakra Mystic | jou |
+| {M}{M}, sacrifice ~: create a N/N green spider enchantment creature token with reach. | 1 | Renowned Weaver | jou |
+| {M}{M}: exile target creature card from a graveyard. its owner creates a N/N black and green snake enchantment creature token with deathtouch. | 1 | Pharika, God of Affliction | jou |
+| {M}{M}: prevent all damage that would be dealt to ~ by target creature ~. | 1 | Stonewise Fortifier | jou |
+| {M}{M}{M}: scry N, then reveal the top card of your library. ~ gets +N/+N until end of turn, where N is that card's mana value. | 1 | Stormchaser Chimera | jou |
+| ~ can't attack unless defending player controls an enchantment or an enchanted permanent. | 1 | Godhunter Octopus | jou |
+| ~ deals N damage to target creature. if that creature is an enchantment, ~ deals N damage to that creature's controller. | 1 | Starfall | jou |
+| ~ deals damage to target creature equal to the number of instant and sorcery cards in your graveyard. scry N. (look at the top card of your library. you may put | 1 | Spite of Mogis | jou |
 
 ## Notes
 

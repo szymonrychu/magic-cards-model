@@ -3,14 +3,14 @@
 - Expansion: 049
 - Set code: `dst`
 - Release date: 2004-02-06
-- Cards in scope (Modern/Pioneer/Standard-legal): 160
+- Cards in scope (Modern/Pioneer/Standard-legal): 162
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 160 |
-| Pioneer | 3 |
+| Modern | 162 |
+| Pioneer | 4 |
 | Standard | 1 |
 
 ## Coverage
@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Full (handled + tested) | 3 | 1.9% |
-| Partial (unaudited) | 10 | 6.2% |
-| Not tested (handled, untested) | 71 | 44.4% |
-| Not working (silent / notice / error) | 76 | 47.5% |
+| Partial (unaudited) | 11 | 6.8% |
+| Not tested (handled, untested) | 72 | 44.4% |
+| Not working (silent / notice / error) | 76 | 46.9% |
 
 ## Cards needing work
 
@@ -110,6 +110,7 @@
 | Pristine Angel | unaudited | As long as this creature is untapped, it has protection from artifacts and from each color. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Psychic Overload | unaudited | Enchanted permanent has "Discard two artifact cards: Untap this permanent." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Serum Powder | unaudited | Any time you could mulligan and this card is in your hand, you may exile all the cards from your hand, then draw that many cards. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Shield of Kaldra | unaudited | Equipment named Sword of Kaldra, Shield of Kaldra, and Helm of Kaldra have indestructible. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tanglewalker | unaudited | Each creature you control can't be blocked as long as defending player controls an artifact land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Whispersilk Cloak | unaudited | Equipped creature can't be blocked and has shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ageless Entity | handled | Whenever you gain life, put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -124,6 +125,7 @@
 | Darksteel Brute | handled | {3}: This artifact becomes a 2/2 Beast artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Citadel | handled | Indestructible | machines/keywords.py | Y/Y/- | not_tested |
 | Darksteel Gargoyle | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Darksteel Ingot | handled | Indestructible | machines/keywords.py | Y/Y/- | not_tested |
 | Darksteel Pendant | handled | {1}, {T}: Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Demon's Horn | handled | Whenever a player casts a black spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dragon's Claw | handled | Whenever a player casts a red spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -197,80 +199,86 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Modular | Arcbound Bruiser, Arcbound Crusher, Arcbound Hybrid, Arcbound Lancer, Arcbound Ravager, Arcbound Slith, Arcbound Stinger, Arcbound Worker | 8 |
-| At the beginning of your upkeep, you may move a +1/+1 counter from target creature onto this creature. | Arcbound Fiend, Arcbound Overseer, Greater Harvester | 3 |
-| Whenever this creature deals combat damage to a creature, destroy that creature. The creature can't be regenerated. | Emissary of Despair, Emissary of Hope, Mephitic Ooze | 3 |
-| As long as this creature is untapped, it has protection from artifacts and from each color. | Auriok Glaivemaster, Pristine Angel | 2 |
-| {3}, {T}: Flip a coin. If you win the flip, create a 2/2 colorless Insect artifact creature token with flying named Wirefly. If you lose the flip, destroy all p | Goblin Archaeologist, Wirefly Hive | 2 |
-| Remove a +1/+1 counter from this creature: Put target artifact card from your graveyard on top of your library. | Arcbound Reclaimer, Spincrusher | 2 |
-| All combat damage that would be dealt to you this turn is dealt to target attacking creature instead. | Turn the Tables | 1 |
-| All creatures able to block equipped creature do so. | Nemesis Mask | 1 |
-| All permanents are artifacts in addition to their other types. | Mycosynth Lattice | 1 |
-| Any time you could mulligan and this card is in your hand, you may exile all the cards from your hand, then draw that many cards. | Serum Powder | 1 |
-| Artifact creatures you control gain flying until end of turn. | Magnetic Flux | 1 |
-| Artifacts you control have indestructible. | Darksteel Forge | 1 |
-| As long as a card exiled with this creature has flying, this creature has flying. The same is true for fear, first strike, double strike, haste, landwalk, prote | Death-Mask Duplicant | 1 |
-| {2}, {T}: Attacking creatures get +1/+0 until end of turn. | Thunderstaff | 1 |
-| Cast this spell only during the declare attackers step. Attacking creatures you control get +X/+0 until end of turn, where X is the number of attacking creature | Tears of Rage | 1 |
-| Choose one — • Creatures you control get +2/+2 until end of turn. • Until end of turn, creatures you control gain "Whenever this creature deals damage, you gain | Stir the Pride | 1 |
-| Choose one — • Look at the top five cards of target opponent's library, then put them back in any order. • Look at the top five cards of your library, then put  | Second Sight | 1 |
-| Choose one — • Until end of turn, whenever a creature is dealt damage, destroy it. • Until end of turn, whenever a creature dies, that creature's controller los | Shriveling Rot | 1 |
-| Counter target spell. That spell's controller may draw a card. | Vex | 1 |
-| Create a 3/3 green Beast creature token. Then if an opponent controls more creatures than you, return Pulse of the Tangle to its owner's hand. | Pulse of the Tangle | 1 |
-| Destroy target artifact and all other artifacts with the same name as that artifact. | Echoing Ruin | 1 |
-| Destroy target artifact. If that artifact had counters on it, put that many +1/+1 counters or charge counters on an artifact you control. | Dismantle | 1 |
-| Destroy target enchantment and all other enchantments with the same name as that enchantment. | Echoing Calm | 1 |
-| Destroy target Equipment. If that Equipment was attached to a creature, Unforge deals 2 damage to that creature. | Unforge | 1 |
-| Destroy target nonblack creature. It can't be regenerated. You gain control of all Equipment that were attached to it. (This effect lasts indefinitely.) | Murderous Spoils | 1 |
-| Draw two cards, then discard a card. Then if an opponent has more cards in hand than you, return Pulse of the Grid to its owner's hand. | Pulse of the Grid | 1 |
-| Each creature you control can't be blocked as long as defending player controls an artifact land. | Tanglewalker | 1 |
-| Each player loses X life, discards X cards, sacrifices X creatures of their choice, then sacrifices X lands of their choice. | Death Cloud | 1 |
-| Enchanted permanent has "Discard two artifact cards: Untap this permanent." | Psychic Overload | 1 |
-| Equipped creature can't be blocked and has shroud. | Whispersilk Cloak | 1 |
-| Equipped creature has first strike and "{T}, Unattach Surestrike Trident: This creature deals damage equal to its power to target player or planeswalker." | Surestrike Trident | 1 |
-| Fear | Dross Golem | 1 |
-| Flamebreak deals 3 damage to each creature without flying and each player. Creatures dealt damage this way can't be regenerated this turn. | Flamebreak | 1 |
-| If Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead. | Darksteel Colossus | 1 |
-| Imprint — {X}, {T}: You may exile an instant or sorcery card with mana value X from your hand. | Panoptic Mirror | 1 |
-| Look at the top X cards of your library, where X is the number of artifacts you control. Put one of those cards into your hand and the rest on the bottom of you | Machinate | 1 |
-| Myr creatures get +1/+1. | Myr Matrix | 1 |
-| Prevent all damage target spell would deal this turn. You gain life equal to the damage prevented this way. | Hallow | 1 |
-| Prevent the next 3 damage that would be dealt to target creature this turn. For each 1 damage prevented this way, put a +1/+1 counter on that creature. | Test of Faith | 1 |
-| Pulse of the Forge deals 4 damage to target player or planeswalker. Then if that player or that planeswalker's controller has more life than you, return Pulse o | Pulse of the Forge | 1 |
-| Put two +1/+1 counters on target creature and two +1/+1 counters on another target creature. | Stand Together | 1 |
-| Put two target artifacts on top of their owners' libraries. | Rebuking Ceremony | 1 |
-| Remove all counters from all permanents and exile all tokens. | Aether Snap | 1 |
-| Return all artifacts you control to their owner's hand. | Retract | 1 |
-| Return target nonland permanent and all other permanents with the same name as that permanent to their owners' hands. | Echoing Truth | 1 |
-| {1}: Target artifact creature can't block this creature this turn. | Auriok Siege Sled | 1 |
-| Target creature gets +1/+0 until end of turn for each artifact you control. | Hunger of the Nim | 1 |
-| {T}: Target land becomes an artifact in addition to its other types until end of turn. | Myr Landshaper | 1 |
-| Target opponent chooses an artifact card in their graveyard. Put that card onto the battlefield under your control. | Scrounge | 1 |
-| {X}, {T}: Target opponent reveals cards from the top of their library until an artifact card or X cards are revealed, whichever comes first. If an artifact card | Thought Dissector | 1 |
-| {1}{U}{U}: Target permanent becomes an artifact in addition to its other types. | Memnarch | 1 |
-| Target player loses 1 life for each tapped artifact they control. | Burden of Greed | 1 |
-| Target player reveals three cards from their hand and you choose one of them. That player discards that card. Then if that player has more cards in hand than yo | Pulse of the Dross | 1 |
-| This creature can block only creatures with flying. | Hoverguard Observer | 1 |
-| This creature has shroud as long as you control another artifact creature. | Drill-Skimmer | 1 |
-| {U}: Until end of turn, target artifact creature becomes blue and isn't an artifact. | Neurok Transmuter | 1 |
-| When this artifact has twenty or more charge counters on it, you win the game. | Darksteel Reactor | 1 |
-| When this Aura enters, unattach enchanted Equipment. | Carry Away | 1 |
-| When this creature enters or leaves the battlefield, choose a land of each basic land type, then destroy those lands. | Sundering Titan | 1 |
-| When this creature enters, sacrifice it unless you sacrifice an artifact. | Vulshok War Boar | 1 |
-| When this creature enters, target opponent puts a card from their hand on top of their library. | Chittering Rats | 1 |
-| When this creature enters, you skip your next two turns. | Eater of Days | 1 |
-| Whenever a nontoken creature enters, if this artifact is untapped, that creature's controller creates a 1/1 colorless Myr artifact creature token. | Genesis Chamber | 1 |
-| Whenever a player casts an artifact spell, that player gains control of this creature. | Drooling Ogre | 1 |
-| Whenever an artifact enters, remove a +1/+1 counter from this creature. | Karstoderm | 1 |
-| Whenever this creature attacks, create a colorless Construct artifact creature token named Twin that's attacking. Its power is equal to this creature's power an | Gemini Engine | 1 |
-| Whenever this creature attacks, put a +1/+1 counter on each attacking creature. | Fangren Firstborn | 1 |
-| Whenever you gain life, you may pay {X}, where X is less than or equal to the amount of life you gained. If you do, draw X cards. | Well of Lost Dreams | 1 |
-| Whenever you lose life, sacrifice a permanent for each 1 life you lost. | Lich's Tomb | 1 |
-| You gain 4 life. Then if an opponent has more life than you, return Pulse of the Fields to its owner's hand. | Pulse of the Fields | 1 |
-| You may activate equip abilities any time you could cast an instant. | Leonin Shikari | 1 |
-| {T}: You may put a creature card with mana value equal to the number of charge counters on this artifact from your hand onto the battlefield. | Aether Vial | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| modular | 8 | Arcbound Bruiser, Arcbound Crusher, Arcbound Hybrid, Arcbound Lancer, Arcbound Ravager | dst |
+| Choose one | 3 | Second Sight, Shriveling Rot, Stir the Pride | dst |
+| Imprint | 1 | Panoptic Mirror | dst |
+| all combat damage that would be dealt to you ~ is dealt to target attacking creature instead. | 1 | Turn the Tables | dst |
+| all creatures able to block equipped creature do so. | 1 | Nemesis Mask | dst |
+| all permanents are artifacts in addition to their other types. | 1 | Mycosynth Lattice | dst |
+| any time you could mulligan and ~ is in your hand, you may exile all the cards from your hand, then draw that many cards. | 1 | Serum Powder | dst |
+| artifact creatures you control gain flying until end of turn. | 1 | Magnetic Flux | dst |
+| artifacts you control have indestructible. | 1 | Darksteel Forge | dst |
+| as long as a card exiled with ~ has flying, ~ has flying. the same is true for fear, first strike, double strike, haste, landwalk, protection, and trample. | 1 | Death-Mask Duplicant | dst |
+| as long as ~ is equipped, it gets +N/+N and has first strike. | 1 | Auriok Glaivemaster | dst |
+| as long as ~ is untapped, it has protection from artifacts and from each color. | 1 | Pristine Angel | dst |
+| at the beginning of your upkeep, put a +N/+N counter on each creature you control with modular. | 1 | Arcbound Overseer | dst |
+| at the beginning of your upkeep, sacrifice a permanent. | 1 | Greater Harvester | dst |
+| at the beginning of your upkeep, you may move a +N/+N counter from target creature onto ~. | 1 | Arcbound Fiend | dst |
+| cast ~ only during the declare attackers step. attacking creatures you control get +N/+N until end of turn, where N is the number of attacking creatures. sacrif | 1 | Tears of Rage | dst |
+| counter target spell. that spell's controller may draw a card. | 1 | Vex | dst |
+| create a N/N green beast creature token. then if an opponent controls more creatures than you, return ~ to its owner's hand. | 1 | Pulse of the Tangle | dst |
+| destroy target artifact and all other artifacts with the same name as that artifact. | 1 | Echoing Ruin | dst |
+| destroy target artifact. if that artifact had counters on it, put that many +N/+N counters or charge counters on an artifact you control. | 1 | Dismantle | dst |
+| destroy target enchantment and all other enchantments with the same name as that enchantment. | 1 | Echoing Calm | dst |
+| destroy target equipment. if that equipment was attached to a creature, ~ deals N damage to that creature. | 1 | Unforge | dst |
+| destroy target nonblack creature. it can't be regenerated. you gain control of all equipment that were attached to it. (~ lasts indefinitely.) | 1 | Murderous Spoils | dst |
+| draw two cards, then discard a card. then if an opponent has more cards in hand than you, return ~ to its owner's hand. | 1 | Pulse of the Grid | dst |
+| each creature you control can't be blocked as long as defending player controls an artifact land. | 1 | Tanglewalker | dst |
+| each player loses N life, discards N cards, sacrifices N creatures of their choice, then sacrifices N lands of their choice. | 1 | Death Cloud | dst |
+| enchanted permanent has "..." | 1 | Psychic Overload | dst |
+| equipment named sword of kaldra, ~, and helm of kaldra have indestructible. | 1 | Shield of Kaldra | dst |
+| equipped creature can't be blocked and has shroud. | 1 | Whispersilk Cloak | dst |
+| equipped creature has first strike and "..." | 1 | Surestrike Trident | dst |
+| fear | 1 | Dross Golem | dst |
+| if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Darksteel Colossus | dst |
+| look at the top N cards of your library, where N is the number of artifacts you control. put one of those cards into your hand and the rest on the bottom of you | 1 | Machinate | dst |
+| myr creatures get +N/+N. | 1 | Myr Matrix | dst |
+| prevent all damage target spell would deal ~. you gain life equal to the damage prevented ~. | 1 | Hallow | dst |
+| prevent the next N damage that would be dealt to target creature ~. for each N damage prevented ~, put a +N/+N counter on that creature. | 1 | Test of Faith | dst |
+| put two +N/+N counters on target creature and two +N/+N counters on another target creature. | 1 | Stand Together | dst |
+| put two target artifacts on top of their owners' libraries. | 1 | Rebuking Ceremony | dst |
+| remove a +N/+N counter from ~: put target artifact card from your graveyard on top of your library. | 1 | Arcbound Reclaimer | dst |
+| remove a +N/+N counter from ~: ~ can't be blocked ~. | 1 | Spincrusher | dst |
+| remove all counters from all permanents and exile all tokens. | 1 | Aether Snap | dst |
+| return all artifacts you control to their owner's hand. | 1 | Retract | dst |
+| return target nonland permanent and all other permanents with the same name as that permanent to their owners' hands. | 1 | Echoing Truth | dst |
+| target creature gets +N/+N until end of turn for each artifact you control. | 1 | Hunger of the Nim | dst |
+| target opponent chooses an artifact card in their graveyard. put that card onto the battlefield under your control. | 1 | Scrounge | dst |
+| target player loses N life for each tapped artifact they control. | 1 | Burden of Greed | dst |
+| target player reveals three cards from their hand and you choose one of them. that player discards that card. then if that player has more cards in hand than yo | 1 | Pulse of the Dross | dst |
+| when ~ enters or leaves the battlefield, choose a land of each basic land type, then destroy those lands. | 1 | Sundering Titan | dst |
+| when ~ enters, sacrifice it unless you sacrifice an artifact. | 1 | Vulshok War Boar | dst |
+| when ~ enters, target opponent puts a card from their hand on top of their library. | 1 | Chittering Rats | dst |
+| when ~ enters, unattach enchanted equipment. | 1 | Carry Away | dst |
+| when ~ enters, you skip your next two turns. | 1 | Eater of Days | dst |
+| when ~ has twenty or more charge counters on it, you win the game. | 1 | Darksteel Reactor | dst |
+| whenever a nontoken creature enters, if ~ is untapped, that creature's controller creates a N/N colorless myr artifact creature token. | 1 | Genesis Chamber | dst |
+| whenever a player casts an artifact spell, that player gains control of ~. | 1 | Drooling Ogre | dst |
+| whenever an artifact enters, remove a +N/+N counter from ~. | 1 | Karstoderm | dst |
+| whenever you gain life, you may pay {M}, where N is less than or equal to the amount of life you gained. if you do, draw N cards. | 1 | Well of Lost Dreams | dst |
+| whenever you lose life, sacrifice a permanent for each N life you lost. | 1 | Lich's Tomb | dst |
+| whenever ~ attacks, create a colorless construct artifact creature token named twin that's attacking. its power is equal to ~ power and its toughness is equal t | 1 | Gemini Engine | dst |
+| whenever ~ attacks, put a +N/+N counter on each attacking creature. | 1 | Fangren Firstborn | dst |
+| whenever ~ deals combat damage to a creature, destroy that creature. the creature can't be regenerated. | 1 | Mephitic Ooze | dst |
+| whenever ~ deals combat damage to a player, that player loses N life for each artifact they control. | 1 | Emissary of Despair | dst |
+| whenever ~ deals combat damage to a player, you gain N life for each artifact that player controls. | 1 | Emissary of Hope | dst |
+| you gain N life. then if an opponent has more life than you, return ~ to its owner's hand. | 1 | Pulse of the Fields | dst |
+| you may activate equip abilities any time you could cast an instant. | 1 | Leonin Shikari | dst |
+| {M}, {M}: attacking creatures get +N/+N until end of turn. | 1 | Thunderstaff | dst |
+| {M}, {M}: flip a coin. if you win the flip, create a N/N colorless insect artifact creature token with flying named wirefly. if you lose the flip, destroy all p | 1 | Wirefly Hive | dst |
+| {M}, {M}: flip a coin. if you win the flip, destroy target artifact and untap ~. if you lose the flip, sacrifice ~. | 1 | Goblin Archaeologist | dst |
+| {M}, {M}: target opponent reveals cards from the top of their library until an artifact card or N cards are revealed, whichever comes first. if an artifact card | 1 | Thought Dissector | dst |
+| {M}: target artifact creature can't block ~ ~. | 1 | Auriok Siege Sled | dst |
+| {M}: target land becomes an artifact in addition to its other types until end of turn. | 1 | Myr Landshaper | dst |
+| {M}: until end of turn, target artifact creature becomes blue and isn't an artifact. | 1 | Neurok Transmuter | dst |
+| {M}: you may put a creature card with mana value equal to the number of charge counters on ~ from your hand onto the battlefield. | 1 | Aether Vial | dst |
+| {M}{M}{M}: target permanent becomes an artifact in addition to its other types. | 1 | Memnarch | dst |
+| ~ can block only creatures with flying. | 1 | Hoverguard Observer | dst |
+| ~ deals N damage to each creature without flying and each player. creatures dealt damage ~ can't be regenerated ~. | 1 | Flamebreak | dst |
+| ~ deals N damage to target player or planeswalker. then if that player or that planeswalker"..."s hand. | 1 | Pulse of the Forge | dst |
+| ~ has shroud as long as you control another artifact creature. | 1 | Drill-Skimmer | dst |
 
 ## Notes
 

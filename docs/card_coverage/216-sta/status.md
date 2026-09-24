@@ -38,9 +38,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Choose land or nonland. Reveal cards from the top of your library until you reveal a card of the chosen kind. Put that card into your hand and the rest on the b | Abundant Harvest | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| choose land or nonland. reveal cards from the top of your library until you reveal a card of the chosen kind. put that card into your hand and the rest on the b | 1 | Abundant Harvest | sta |
 
 ## Notes
 

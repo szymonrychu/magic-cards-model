@@ -3,24 +3,24 @@
 - Expansion: 064
 - Set code: `gpt`
 - Release date: 2006-02-03
-- Cards in scope (Modern/Pioneer/Standard-legal): 146
+- Cards in scope (Modern/Pioneer/Standard-legal): 149
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 146 |
-| Pioneer | 8 |
+| Modern | 149 |
+| Pioneer | 9 |
 | Standard | 5 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 9 | 6.2% |
-| Partial (unaudited) | 6 | 4.1% |
-| Not tested (handled, untested) | 64 | 43.8% |
-| Not working (silent / notice / error) | 67 | 45.9% |
+| Full (handled + tested) | 9 | 6.0% |
+| Partial (unaudited) | 7 | 4.7% |
+| Not tested (handled, untested) | 66 | 44.3% |
+| Not working (silent / notice / error) | 67 | 45.0% |
 
 ## Cards needing work
 
@@ -93,6 +93,7 @@
 | Ghostway | notice | Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Killer Instinct | notice | At the beginning of your upkeep, reveal the top card of your library. If it's a creature card, put it onto the battlefield. That creature gains haste until end  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thunderheads | notice | Replicate {2}{U} (When you cast this spell, copy it for each time you paid its replicate cost.) Create a 3/3 blue Weird creature token with defender and flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Djinn Illuminatus | unaudited | Each instant and sorcery spell you cast has replicate. The replicate cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leyline of Lifeforce | unaudited | Creature spells can't be countered. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leyline of Singularity | unaudited | All nonland permanents are legendary. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Pillory of the Sleepless | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -101,6 +102,7 @@
 | Ulasht, the Hate Seed | unaudited | Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Angel of Despair | handled | When this creature enters, destroy target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Borborygmos | handled | Whenever Borborygmos deals combat damage to a player, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Castigate | handled | Target opponent reveals their hand. You choose a nonland card from it and exile that card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Caustic Rain | handled | Exile target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cryptwailing | handled | {1}, Exile two creature cards from your graveyard: Target player discards a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crystal Seer | handled | When this creature enters, look at the top four cards of your library, then put them back in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -158,6 +160,7 @@
 | To Arms! | handled | Untap all creatures you control. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Torch Drake | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Train of Thought | handled | Replicate {1}{U} (When you cast this spell, copy it for each time you paid its replicate cost.) Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wee Dragonauts | handled | Whenever you cast an instant or sorcery spell, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wild Cantor | handled |  |  | Y/-/- | not_tested |
 | Wildsize | handled | Target creature gets +2/+2 and gains trample until end of turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Withstand | handled | Prevent the next 3 damage that would be dealt to any target this turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -183,65 +186,71 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Bloodthirst | Battering Wurm, Bloodscale Prowler, Gristleback, Petrified Wood-Kin, Skarrgan Firebird, Skarrgan Pit-Skulk | 6 |
-| Haunt | Absolver Thrull, Belfry Spirit, Blind Hunter, Exhumer Thrull, Orzhov Euthanist, Orzhov Pontiff | 6 |
-| Creatures you control that are enchanted get +1/+1 and have first strike. | Beastmaster's Magemark, Fencer's Magemark, Necromancer's Magemark | 3 |
-| Replicate {3}{U} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Choose target permane | Mimeofacture, Siege of Towers, Thunderheads | 3 |
-| At the beginning of your upkeep, reveal the top card of your library. If it's a creature card, put it onto the battlefield. That creature gains haste until end  | Agent of Masks, Killer Instinct | 2 |
-| Whenever this creature blocks a creature, you may return this creature to its owner's hand. If you do, you may put a creature card from your hand onto the battl | Aetherplasm, Vertigo Spawn | 2 |
-| All nonland permanents are legendary. | Leyline of Singularity | 1 |
-| As long as equipped creature is tapped, tapped creatures you control get +2/+0. | Sword of the Paruns | 1 |
-| {R}, {T}: Attacking creatures get +X/+0 until end of turn, where X is this creature's power. | Rabble-Rouser | 1 |
-| Choose a card name. Until your next turn, spells with the chosen name can't be cast and lands with the chosen name can't be played. Draw a card. | Conjurer's Ban | 1 |
-| {2}{U}: Copy target instant spell you control with mana value 2 or less. You may choose new targets for the copy. | Izzet Guildmage | 1 |
-| Create X 1/1 white Pegasus creature tokens with flying, where X is your life total. | Storm Herd | 1 |
-| Creature spells can't be countered. | Leyline of Lifeforce | 1 |
-| Destroy all enchantments target player controls. | Primeval Light | 1 |
-| Destroy target nonwhite, nonblack creature. Create a 1/1 white Spirit creature token with flying. Haunt (When this spell card is put into a graveyard after reso | Seize the Soul | 1 |
-| {X}, {T}: Each creature with mana value X can't attack or block this turn. | Droning Bureaucrats | 1 |
-| Each land gets +2/+2 as long as it's a creature. | Earth Surge | 1 |
-| {2}{B}: Each player loses 1 life. | Orzhov Guildmage | 1 |
-| Enchanted creature can't attack or block. | Pillory of the Sleepless | 1 |
-| {1}{B}: Enchanted creature gets +2/+2 until end of turn. | Shadow Lance | 1 |
-| Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step. | Ghostway | 1 |
-| {2}{U}{R}, {T}: Exile the top card of your library. Until your next turn, you may cast it if it's an instant or sorcery spell. | Nivix, Aerie of the Firemind | 1 |
-| Flip a coin. If you win the flip, take an extra turn after this one. | Stitch in Time | 1 |
-| Nonbasic landwalk | Dryad Sophisticate | 1 |
-| Parallectric Feedback deals damage to target spell's controller equal to that spell's mana value. | Parallectric Feedback | 1 |
-| {1}{U}: Return this Aura to its owner's hand. | Hypervolt Grasp | 1 |
-| {1}, Sacrifice a creature: Exile Ghost Council of Orzhova. Return it to the battlefield under its owner's control at the beginning of the next end step. | Ghost Council of Orzhova | 1 |
-| {W}, Sacrifice a creature: Target creature can't attack this turn. | Martyred Rusalka | 1 |
-| {2}{W}{B}, {T}, Sacrifice this artifact: Exile target nonland card from a graveyard, all other cards from graveyards with the same name as that card, and all pe | Moratorium Stone | 1 |
-| {1}, Sacrifice this creature: It deals damage equal to its power to any target. | Skarrgan Skybreaker | 1 |
-| Target creature with flying loses flying until end of turn. Crash Landing deals damage to that creature equal to the number of Forests you control. | Crash Landing | 1 |
-| Target player discards a card. Haunt (When this spell card is put into a graveyard after resolving, exile it haunting target creature.) When the creature this c | Cry of Contrition | 1 |
-| Target player draws two cards, then Cerebral Vortex deals damage to that player equal to the number of cards they've drawn this turn. | Cerebral Vortex | 1 |
-| The next sorcery spell you cast this turn can be cast as though it had flash. (It can be cast any time you could cast an instant.) Draw a card. | Quicken | 1 |
-| This creature can block only creatures with flying. | Stratozeppelid | 1 |
-| This creature can't be blocked except by creatures with flying. | Silhana Ledgewalker | 1 |
-| {T}: This creature deals damage equal to its power divided as you choose among any number of target creatures. Each of those creatures deals damage equal to its | Living Inferno | 1 |
-| This creature gets +1/+1 for each Aura attached to it. | Gatherer of Graces | 1 |
-| {3}: This creature gets +X/+0 until end of turn, where X is its power. | Feral Animist | 1 |
-| Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control. | Ulasht, the Hate Seed | 1 |
-| When this creature enters, exchange control of target land you control and target land an opponent controls. | Vedalken Plotter | 1 |
-| When this creature enters, if {W} was spent to cast it, target player skips their next combat phase. | Revenant Patriarch | 1 |
-| When this creature enters or the creature it haunts dies, each other creature has base power and toughness 1/1 until end of turn. | Graven Dominator | 1 |
-| When this creature enters, target opponent gains control of all other permanents you control. | Sky Swallower | 1 |
-| Whenever a creature attacks you, its controller loses 1 life. | Hissing Miasma | 1 |
-| Whenever a player casts an instant or sorcery spell, if that spell targets only this creature, copy the spell for each other creature that spell could target. E | Ink-Treader Nephilim | 1 |
-| Whenever an opponent casts a spell, that player sacrifices a permanent of their choice unless they pay {1}. | Spelltithe Enforcer | 1 |
-| Whenever an opponent discards a card, this creature gets +2/+2 and gains fear until end of turn. | Abyssal Nocturnus | 1 |
-| Whenever another creature enters, its controller loses 1 life. | Poisonbelly Ogre | 1 |
-| Whenever this creature attacks, each other attacking creature gains fear until end of turn. | Smogsteed Rider | 1 |
-| Whenever this creature attacks, exile the top card of your library. If it's a creature card, this creature gets +X/+Y until end of turn, where X is the exiled c | Bioplasm | 1 |
-| Whenever this creature attacks, it gains trample until end of turn if its power is 10 or greater. | Witch-Maw Nephilim | 1 |
-| Whenever this creature attacks, return target creature card from your graveyard to the battlefield tapped and attacking. | Yore-Tiller Nephilim | 1 |
-| Whenever this creature deals damage, you gain that much life. | Mourning Thrull | 1 |
-| Whenever this creature is dealt combat damage, you gain that much life and attacking player loses that much life. | Souls of the Faultless | 1 |
-| You gain 1 life for each player. Haunt (When this spell card is put into a graveyard after resolving, exile it haunting target creature.) When the creature this | Benediction of Moons | 1 |
-| You may have creatures you control assign their combat damage this turn as though they weren't blocked. | Predatory Focus | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| bloodthirst | 6 | Battering Wurm, Bloodscale Prowler, Gristleback, Petrified Wood-Kin, Skarrgan Firebird | gpt |
+| haunt | 6 | Absolver Thrull, Belfry Spirit, Blind Hunter, Exhumer Thrull, Orzhov Euthanist | gpt |
+| creatures you control that are enchanted get +N/+N. | 2 | Beastmaster's Magemark, Necromancer's Magemark | gpt |
+| all nonland permanents are legendary. | 1 | Leyline of Singularity | gpt |
+| as long as equipped creature is tapped, tapped creatures you control get +N/+N. | 1 | Sword of the Paruns | gpt |
+| at the beginning of your upkeep, each opponent loses N life. you gain life equal to the life lost ~. | 1 | Agent of Masks | gpt |
+| at the beginning of your upkeep, reveal the top card of your library. if it's a creature card, put it onto the battlefield. that creature gains haste until end  | 1 | Killer Instinct | gpt |
+| choose a card name. until your next turn, spells with the chosen name can"..."t be played. draw a card. | 1 | Conjurer's Ban | gpt |
+| create N N/N white pegasus creature tokens with flying, where N is your life total. | 1 | Storm Herd | gpt |
+| creature spells can't be countered. | 1 | Leyline of Lifeforce | gpt |
+| creatures you control that are enchanted get +N/+N and have first strike. | 1 | Fencer's Magemark | gpt |
+| destroy all enchantments target player controls. | 1 | Primeval Light | gpt |
+| destroy target nonwhite, nonblack creature. create a N/N white spirit creature token with flying. haunt (when ~ card is put into a graveyard after resolving, ex | 1 | Seize the Soul | gpt |
+| each instant and sorcery spell you cast has replicate. the replicate cost is equal to its mana cost. | 1 | Djinn Illuminatus | gpt |
+| each land gets +N/+N as long as it's a creature. | 1 | Earth Surge | gpt |
+| enchanted creature can't attack or block. | 1 | Pillory of the Sleepless | gpt |
+| exile each creature you control. return those cards to the battlefield under their owner's control at the beginning of the next end step. | 1 | Ghostway | gpt |
+| flip a coin. if you win the flip, take an extra turn after ~. | 1 | Stitch in Time | gpt |
+| nonbasic landwalk | 1 | Dryad Sophisticate | gpt |
+| replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost. you may choose new targets for the copies.) choose target permanent an opp | 1 | Mimeofacture | gpt |
+| replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost. you may choose new targets for the copies.) target mountain becomes a N/N  | 1 | Siege of Towers | gpt |
+| replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost.) create a N/N blue weird creature token with defender and flying. exile it | 1 | Thunderheads | gpt |
+| target creature with flying loses flying until end of turn. ~ deals damage to that creature equal to the number of forests you control. | 1 | Crash Landing | gpt |
+| target player discards a card. haunt (when ~ card is put into a graveyard after resolving, exile it haunting target creature.) when the creature ~ haunts dies,  | 1 | Cry of Contrition | gpt |
+| target player draws two cards, then ~ deals damage to that player equal to the number of cards they've drawn ~. | 1 | Cerebral Vortex | gpt |
+| the next sorcery spell you cast ~ can be cast as though it had flash. (it can be cast any time you could cast an instant.) draw a card. | 1 | Quicken | gpt |
+| ulasht enters with a +N/+N counter on it for each other red creature you control and a +N/+N counter on it for each other green creature you control. | 1 | Ulasht, the Hate Seed | gpt |
+| when ~ enters or the creature it haunts dies, each other creature has base power and toughness N/N until end of turn. | 1 | Graven Dominator | gpt |
+| when ~ enters, exchange control of target land you control and target land an opponent controls. | 1 | Vedalken Plotter | gpt |
+| when ~ enters, if {M} was spent to cast it, target player skips their next combat phase. | 1 | Revenant Patriarch | gpt |
+| when ~ enters, target opponent gains control of all other permanents you control. | 1 | Sky Swallower | gpt |
+| whenever a creature attacks you, its controller loses N life. | 1 | Hissing Miasma | gpt |
+| whenever a player casts an instant or sorcery spell, if that spell targets only ~, copy the spell for each other creature that spell could target. each copy tar | 1 | Ink-Treader Nephilim | gpt |
+| whenever an opponent casts a spell, that player sacrifices a permanent of their choice unless they pay {M}. | 1 | Spelltithe Enforcer | gpt |
+| whenever an opponent discards a card, ~ gets +N/+N and gains fear until end of turn. | 1 | Abyssal Nocturnus | gpt |
+| whenever another creature enters, its controller loses N life. | 1 | Poisonbelly Ogre | gpt |
+| whenever ~ attacks, each other attacking creature gains fear until end of turn. | 1 | Smogsteed Rider | gpt |
+| whenever ~ attacks, exile the top card of your library. if it"..."s power and y is its toughness. | 1 | Bioplasm | gpt |
+| whenever ~ attacks, it gains trample until end of turn if its power is N or greater. | 1 | Witch-Maw Nephilim | gpt |
+| whenever ~ attacks, return target creature card from your graveyard to the battlefield tapped and attacking. | 1 | Yore-Tiller Nephilim | gpt |
+| whenever ~ blocks a creature, tap that creature. that creature doesn"..."s next untap step. | 1 | Vertigo Spawn | gpt |
+| whenever ~ blocks a creature, you may return ~ to its owner's hand. if you do, you may put a creature card from your hand onto the battlefield blocking that cre | 1 | Aetherplasm | gpt |
+| whenever ~ deals damage, you gain that much life. | 1 | Mourning Thrull | gpt |
+| whenever ~ is dealt combat damage, you gain that much life and attacking player loses that much life. | 1 | Souls of the Faultless | gpt |
+| you gain N life for each player. haunt (when ~ card is put into a graveyard after resolving, exile it haunting target creature.) when the creature ~ haunts dies | 1 | Benediction of Moons | gpt |
+| you may have creatures you control assign their combat damage ~ as though they weren't blocked. | 1 | Predatory Focus | gpt |
+| {M}, sacrifice a creature: exile ~. return it to the battlefield under its owner's control at the beginning of the next end step. | 1 | Ghost Council of Orzhova | gpt |
+| {M}, sacrifice a creature: target creature can't attack ~. | 1 | Martyred Rusalka | gpt |
+| {M}, sacrifice ~: it deals damage equal to its power to any target. | 1 | Skarrgan Skybreaker | gpt |
+| {M}, {M}: attacking creatures get +N/+N until end of turn, where N is ~ power. | 1 | Rabble-Rouser | gpt |
+| {M}, {M}: each creature with mana value N can't attack or block ~. | 1 | Droning Bureaucrats | gpt |
+| {M}: ~ deals damage equal to its power divided as you choose among any number of target creatures. each of those creatures deals damage equal to its power to ~. | 1 | Living Inferno | gpt |
+| {M}: ~ gets +N/+N until end of turn, where N is its power. | 1 | Feral Animist | gpt |
+| {M}{M}: copy target instant spell you control with mana value N or less. you may choose new targets for the copy. | 1 | Izzet Guildmage | gpt |
+| {M}{M}: each player loses N life. | 1 | Orzhov Guildmage | gpt |
+| {M}{M}: enchanted creature gets +N/+N until end of turn. | 1 | Shadow Lance | gpt |
+| {M}{M}: return ~ to its owner's hand. | 1 | Hypervolt Grasp | gpt |
+| {M}{M}{M}, {M}, sacrifice ~: exile target nonland card from a graveyard, all other cards from graveyards with the same name as that card, and all permanents wit | 1 | Moratorium Stone | gpt |
+| {M}{M}{M}, {M}: exile the top card of your library. until your next turn, you may cast it if it's an instant or sorcery spell. | 1 | Nivix, Aerie of the Firemind | gpt |
+| ~ can block only creatures with flying. | 1 | Stratozeppelid | gpt |
+| ~ can't be blocked except by creatures with flying. | 1 | Silhana Ledgewalker | gpt |
+| ~ deals damage to target spell"..."s mana value. | 1 | Parallectric Feedback | gpt |
+| ~ gets +N/+N for each aura attached to it. | 1 | Gatherer of Graces | gpt |
 
 ## Notes
 

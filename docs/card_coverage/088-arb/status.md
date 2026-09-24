@@ -3,13 +3,13 @@
 - Expansion: 088
 - Set code: `arb`
 - Release date: 2009-04-30
-- Cards in scope (Modern/Pioneer/Standard-legal): 142
+- Cards in scope (Modern/Pioneer/Standard-legal): 143
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 142 |
+| Modern | 143 |
 | Pioneer | 2 |
 | Standard | 1 |
 
@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Full (handled + tested) | 4 | 2.8% |
-| Partial (unaudited) | 12 | 8.5% |
-| Not tested (handled, untested) | 64 | 45.1% |
-| Not working (silent / notice / error) | 62 | 43.7% |
+| Partial (unaudited) | 12 | 8.4% |
+| Not tested (handled, untested) | 64 | 44.8% |
+| Not working (silent / notice / error) | 63 | 44.1% |
 
 ## Cards needing work
 
@@ -34,6 +34,7 @@
 | Demonic Dread | silent | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Demonspine Whip | silent | {X}: Equipped creature gets +X/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Double Negative | silent | Counter up to two target spells. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Dragon Broodmother | silent | At the beginning of each upkeep, create a 1/1 red and green Dragon creature token with flying and devour 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drastic Revelation | silent | Discard your hand. Draw seven cards, then discard three cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Enigma Sphinx | silent | When this creature is put into your graveyard from the battlefield, put it into your library third from the top. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Esper Stormblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -179,65 +180,76 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| As long as you control another multicolored permanent, this creature gets +1/+1 and has first strike. | Bant Sureblade, Esper Stormblade, Grixis Grimblade, Jund Hackblade, Naya Hushblade | 5 |
-| You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | Fieldmist Borderpost, Firewild Borderpost, Mistvein Borderpost, Veinfire Borderpost, Wildfield Borderpost | 5 |
-| At the beginning of your upkeep, put a +1/+1 counter on each creature you control if you control a creature with power 5 or greater. Then you gain 10 life if yo | Aven Mimeomancer, Lightning Reaver, Mayael's Aria, Sen Triplets | 4 |
-| Exalted | Ardent Plea, Ethercaste Knight, Qasali Pridemage, Sigiled Behemoth | 4 |
-| When this creature enters, target player reveals a card at random from their hand, then loses life equal to that card's mana value. | Sanity Gnawers, Singe-Mind Ogre | 2 |
-| When this creature enters, you may have target creature block it this turn if able. | Giant Ambush Beetle, Marrow Chomper | 2 |
-| Whenever a creature you control attacks alone, you may search your library for an Aura card that could enchant that creature, put it onto the battlefield attach | Finest Hour, Sovereigns of Lost Alara | 2 |
-| As this creature enters, you may reveal any number of other artifact cards from your hand. This creature enters with a +1/+1 counter on it for each card reveale | Arsenal Thresher | 1 |
-| Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | Demonic Dread | 1 |
-| Choose a nonland card name. Target player reveals their hand. Thought Hemorrhage deals 3 damage to that player for each card with the chosen name revealed this  | Thought Hemorrhage | 1 |
-| Counter up to two target spells. | Double Negative | 1 |
-| Create X 1/1 white Bird Soldier creature tokens with flying, where X is the number of attacking creatures. | Flurry of Wings | 1 |
-| Creature spells you control with power 5 or greater can't be countered. | Spellbreaker Behemoth | 1 |
-| Destroy all blocking creatures and all blocked creatures. | Fight to the Death | 1 |
-| Destroy target nonland permanent and all other permanents with the same name as that permanent. | Maelstrom Pulse | 1 |
-| Devour | Gorger Wurm | 1 |
-| Discard your hand. Draw seven cards, then discard three cards at random. | Drastic Revelation | 1 |
-| During your turn, creatures you control get +2/+0. | Glory of Warfare | 1 |
-| Each other multicolored creature you control gets +1/+1 for each of its colors. | Knight of New Alara | 1 |
-| Enchanted creature gets +1/+1 for each creature you control. | Sigil of the Nayan Gods | 1 |
-| Enchanted land has shroud. | Trace of Abundance | 1 |
-| {X}: Equipped creature gets +X/+0 until end of turn. | Demonspine Whip | 1 |
-| Equipped creature has fear. | Mask of Riddles | 1 |
-| Exile all cards from target player's hand and graveyard. | Identity Crisis | 1 |
-| Exile target creature card from a graveyard, then create X 1/1 green Saproling creature tokens, where X is the exiled card's toughness. | Morbid Bloom | 1 |
-| Fear | Jhessian Zombies | 1 |
-| Gain control of target creature. Untap that creature. It gains haste until end of turn. Sacrifice it at the beginning of the next end step. | Slave of Bolas | 1 |
-| If you would draw a card, instead reveal the top three cards of your library. Put all creature cards revealed this way into your hand and the rest on the bottom | Sages of the Anima | 1 |
-| Intimidation Bolt deals 3 damage to target creature. Other creatures can't attack this turn. | Intimidation Bolt | 1 |
-| Lord of Extinction's power and toughness are each equal to the number of cards in all graveyards. | Lord of Extinction | 1 |
-| Return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | Soulquake | 1 |
-| Return target card from your graveyard to your hand. If you return a nonland card to your hand this way, Vengeful Rebirth deals damage equal to that card's mana | Vengeful Rebirth | 1 |
-| {T}, Sacrifice this artifact: You gain life equal to the total life lost by all players this turn. | Tainted Sigil | 1 |
-| Search your library for a permanent card with mana value X or less, put it onto the battlefield, then shuffle. | Wargate | 1 |
-| Skip your draw step. | Dragon Appeasement | 1 |
-| Target opponent reveals cards from the top of their library until four land cards are revealed. That player puts all cards revealed this way into their graveyar | Mind Funeral | 1 |
-| {U}{U}{B}{B}: Target player loses X life and mills X cards, where X is the number of Zombies you control. | Lich Lord of Unx | 1 |
-| The first spell you cast each turn has cascade. | Maelstrom Nexus | 1 |
-| {1}, {T}: This creature deals 1 damage to target creature. Tap that creature. | Stun Sniper | 1 |
-| Until end of turn, creatures you control get +1/+1 and creatures your opponents control get -1/-1. | Zealous Persecution | 1 |
-| Uril gets +2/+2 for each Aura attached to it. | Uril, the Miststalker | 1 |
-| When enchanted creature becomes the target of a spell or ability, exile that creature. | Crystallization | 1 |
-| When Karrthus enters, gain control of all Dragons, then untap all Dragons. | Karrthus, Tyrant of Jund | 1 |
-| When this creature enters, it deals damage to target player equal to the number of nonbasic lands that player controls. | Anathemancer | 1 |
-| When this creature enters, prevent all damage that would be dealt to artifact creatures this turn. | Ethersworn Shieldmage | 1 |
-| When this creature enters, put a creature you control on top of its owner's library. | Nulltread Gargantuan | 1 |
-| When this creature is put into your graveyard from the battlefield, put it into your library third from the top. | Enigma Sphinx | 1 |
-| When this enchantment enters, exile all creature cards from target player's graveyard, then create a 2/2 black Zombie creature token for each card exiled this w | Necromancer's Covenant | 1 |
-| Whenever a creature dealt damage by equipped creature this turn dies, you may exile that card. If you do, create a 2/2 black Zombie creature token. | Unscythe, Killer of Kings | 1 |
-| Whenever another artifact you control enters, this creature gets +1/+1 until end of turn and can't be blocked this turn. | Glassdust Hulk | 1 |
-| Whenever equipped creature attacks, it deals damage equal to its power to the player or planeswalker it's attacking. | Mage Slayer | 1 |
-| Whenever this creature attacks, defending player mills ten cards. | Nemesis of Reason | 1 |
-| Whenever this creature attacks, draw a card, then discard a card. This creature gets +X/+0 until end of turn, where X is the discarded card's mana value. | Spellbound Dragon | 1 |
-| Whenever this creature attacks, flip a coin. If you win the flip, this creature gets +1/+1 and gains flying until end of turn. | Skyclaw Thrash | 1 |
-| Whenever this creature becomes blocked, defending player loses 4 life. | Vedalken Ghoul | 1 |
-| Whenever Thraximundar attacks, defending player sacrifices a creature of their choice. | Thraximundar | 1 |
-| Whenever you cast a multicolored instant or sorcery spell, you may pay {1}. If you do, copy that spell. You may choose new targets for the copy. | Cloven Casting | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| you may pay {M} and return a basic land you control to its owner's hand rather than pay ~ mana cost. | 5 | Fieldmist Borderpost, Firewild Borderpost, Mistvein Borderpost, Veinfire Borderpost, Wildfield Borderpost | arb |
+| exalted | 4 | Ardent Plea, Ethercaste Knight, Qasali Pridemage, Sigiled Behemoth | arb |
+| as long as you control another multicolored permanent, ~ gets +N/+N and has deathtouch. | 1 | Grixis Grimblade | arb |
+| as long as you control another multicolored permanent, ~ gets +N/+N and has first strike. | 1 | Bant Sureblade | arb |
+| as long as you control another multicolored permanent, ~ gets +N/+N and has flying. | 1 | Esper Stormblade | arb |
+| as long as you control another multicolored permanent, ~ gets +N/+N and has haste. | 1 | Jund Hackblade | arb |
+| as long as you control another multicolored permanent, ~ gets +N/+N and has shroud. | 1 | Naya Hushblade | arb |
+| as ~ enters, you may reveal any number of other artifact cards from your hand. ~ enters with a +N/+N counter on it for each card revealed ~. | 1 | Arsenal Thresher | arb |
+| at the beginning of each upkeep, create a N/N red and green dragon creature token with flying and devour N. | 1 | Dragon Broodmother | arb |
+| at the beginning of your end step, ~ deals damage equal to the number of charge counters on it to each opponent. | 1 | Lightning Reaver | arb |
+| at the beginning of your upkeep, choose target opponent. ~, that player can"..."s hand ~. | 1 | Sen Triplets | arb |
+| at the beginning of your upkeep, put a +N/+N counter on each creature you control if you control a creature with power N or greater. then you gain N life if you | 1 | Mayael's Aria | arb |
+| at the beginning of your upkeep, you may put a feather counter on target creature. if you do, that creature has base power and toughness N/N and has flying for  | 1 | Aven Mimeomancer | arb |
+| cascade (when you cast ~, exile cards from the top of your library until you exile a nonland card that costs less. you may cast it without paying its mana cost. | 1 | Demonic Dread | arb |
+| choose a nonland card name. target player reveals their hand. ~ deals N damage to that player for each card with the chosen name revealed ~. search that player' | 1 | Thought Hemorrhage | arb |
+| counter up to two target spells. | 1 | Double Negative | arb |
+| create N N/N white bird soldier creature tokens with flying, where N is the number of attacking creatures. | 1 | Flurry of Wings | arb |
+| creature spells you control with power N or greater can't be countered. | 1 | Spellbreaker Behemoth | arb |
+| destroy all blocking creatures and all blocked creatures. | 1 | Fight to the Death | arb |
+| destroy target nonland permanent and all other permanents with the same name as that permanent. | 1 | Maelstrom Pulse | arb |
+| devour | 1 | Gorger Wurm | arb |
+| discard your hand. draw seven cards, then discard three cards at random. | 1 | Drastic Revelation | arb |
+| during your turn, creatures you control get +N/+N. | 1 | Glory of Warfare | arb |
+| each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |
+| enchanted creature gets +N/+N for each creature you control. | 1 | Sigil of the Nayan Gods | arb |
+| enchanted land has shroud. | 1 | Trace of Abundance | arb |
+| equipped creature has fear. | 1 | Mask of Riddles | arb |
+| exile all cards from target player's hand and graveyard. | 1 | Identity Crisis | arb |
+| exile target creature card from a graveyard, then create N N/N green saproling creature tokens, where N is the exiled card's toughness. | 1 | Morbid Bloom | arb |
+| fear | 1 | Jhessian Zombies | arb |
+| gain control of target creature. untap that creature. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Slave of Bolas | arb |
+| if you would draw a card, instead reveal the top three cards of your library. put all creature cards revealed ~ into your hand and the rest on the bottom of you | 1 | Sages of the Anima | arb |
+| return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | 1 | Soulquake | arb |
+| return target card from your graveyard to your hand. if you return a nonland card to your hand ~, ~ deals damage equal to that card's mana value to any target.  | 1 | Vengeful Rebirth | arb |
+| search your library for a permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Wargate | arb |
+| skip your draw step. | 1 | Dragon Appeasement | arb |
+| target opponent reveals cards from the top of their library until four land cards are revealed. that player puts all cards revealed ~ into their graveyard. | 1 | Mind Funeral | arb |
+| the first spell you cast each turn has cascade. | 1 | Maelstrom Nexus | arb |
+| until end of turn, creatures you control get +N/+N and creatures your opponents control get -N/-N. | 1 | Zealous Persecution | arb |
+| uril gets +N/+N for each aura attached to it. | 1 | Uril, the Miststalker | arb |
+| when enchanted creature becomes the target of a spell or ability, exile that creature. | 1 | Crystallization | arb |
+| when karrthus enters, gain control of all dragons, then untap all dragons. | 1 | Karrthus, Tyrant of Jund | arb |
+| when ~ enters, exile all creature cards from target player's graveyard, then create a N/N black zombie creature token for each card exiled ~. | 1 | Necromancer's Covenant | arb |
+| when ~ enters, it deals damage to target player equal to the number of nonbasic lands that player controls. | 1 | Anathemancer | arb |
+| when ~ enters, prevent all damage that would be dealt to artifact creatures ~. | 1 | Ethersworn Shieldmage | arb |
+| when ~ enters, put a creature you control on top of its owner's library. | 1 | Nulltread Gargantuan | arb |
+| when ~ enters, target player discards a card at random. | 1 | Sanity Gnawers | arb |
+| when ~ enters, target player reveals a card at random from their hand, then loses life equal to that card's mana value. | 1 | Singe-Mind Ogre | arb |
+| when ~ enters, you gain N life for each creature it devoured. | 1 | Marrow Chomper | arb |
+| when ~ enters, you may have target creature block it ~ if able. | 1 | Giant Ambush Beetle | arb |
+| when ~ is put into your graveyard from the battlefield, put it into your library third from the top. | 1 | Enigma Sphinx | arb |
+| whenever a creature dealt damage by equipped creature ~ dies, you may exile that card. if you do, create a N/N black zombie creature token. | 1 | Unscythe, Killer of Kings | arb |
+| whenever a creature you control attacks alone, if it's the first combat phase of the turn, untap that creature. after ~, there is an additional combat phase. | 1 | Finest Hour | arb |
+| whenever a creature you control attacks alone, you may search your library for an aura card that could enchant that creature, put it onto the battlefield attach | 1 | Sovereigns of Lost Alara | arb |
+| whenever another artifact you control enters, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Glassdust Hulk | arb |
+| whenever equipped creature attacks, it deals damage equal to its power to the player or planeswalker it's attacking. | 1 | Mage Slayer | arb |
+| whenever you cast a multicolored instant or sorcery spell, you may pay {M}. if you do, copy that spell. you may choose new targets for the copy. | 1 | Cloven Casting | arb |
+| whenever ~ attacks, defending player mills ten cards. | 1 | Nemesis of Reason | arb |
+| whenever ~ attacks, defending player sacrifices a creature of their choice. | 1 | Thraximundar | arb |
+| whenever ~ attacks, draw a card, then discard a card. ~ gets +N/+N until end of turn, where N is the discarded card's mana value. | 1 | Spellbound Dragon | arb |
+| whenever ~ attacks, flip a coin. if you win the flip, ~ gets +N/+N and gains flying until end of turn. | 1 | Skyclaw Thrash | arb |
+| whenever ~ becomes blocked, defending player loses N life. | 1 | Vedalken Ghoul | arb |
+| {M}, sacrifice ~: you gain life equal to the total life lost by all players ~. | 1 | Tainted Sigil | arb |
+| {M}, {M}: ~ deals N damage to target creature. tap that creature. | 1 | Stun Sniper | arb |
+| {M}: equipped creature gets +N/+N until end of turn. | 1 | Demonspine Whip | arb |
+| {M}{M}{M}{M}: target player loses N life and mills N cards, where N is the number of zombies you control. | 1 | Lich Lord of Unx | arb |
+| ~ deals N damage to target creature. other creatures can't attack ~. | 1 | Intimidation Bolt | arb |
+| ~'s power and toughness are each equal to the number of cards in all graveyards. | 1 | Lord of Extinction | arb |
 
 ## Notes
 

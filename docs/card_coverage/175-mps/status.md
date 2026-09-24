@@ -39,9 +39,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {8}, {T}: Search your library for a permanent card, put it onto the battlefield, then shuffle. | Planar Bridge | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| {M}, {M}: search your library for a permanent card, put it onto the battlefield, then shuffle. | 1 | Planar Bridge | mps |
 
 ## Notes
 

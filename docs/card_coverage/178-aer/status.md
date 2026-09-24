@@ -3,24 +3,24 @@
 - Expansion: 178
 - Set code: `aer`
 - Release date: 2017-01-20
-- Cards in scope (Modern/Pioneer/Standard-legal): 182
+- Cards in scope (Modern/Pioneer/Standard-legal): 185
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 182 |
-| Pioneer | 182 |
+| Modern | 185 |
+| Pioneer | 185 |
 | Standard | 1 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 11 | 6.0% |
-| Partial (unaudited) | 12 | 6.6% |
-| Not tested (handled, untested) | 103 | 56.6% |
-| Not working (silent / notice / error) | 56 | 30.8% |
+| Full (handled + tested) | 13 | 7.0% |
+| Partial (unaudited) | 12 | 6.5% |
+| Not tested (handled, untested) | 104 | 56.2% |
+| Not working (silent / notice / error) | 56 | 30.3% |
 
 ## Cards needing work
 
@@ -169,6 +169,7 @@
 | Renegade's Getaway | handled | Target permanent gains indestructible until end of turn. Create a 1/1 colorless Servo artifact creature token. (Effects that say "destroy" don't destroy a perma | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reservoir Walker | handled | When this creature enters, you gain 3 life and get {E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resourceful Return | handled | Return target creature card from your graveyard to your hand. If you control an artifact, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Reverse Engineer | handled | Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.) Draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ridgescale Tusker | handled | When this creature enters, put a +1/+1 counter on each other creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rogue Refiner | handled | When this creature enters, draw a card and you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scrapper Champion | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -201,16 +202,18 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>13 cards</summary>
 
 - Aether Chaser
 - Aid from the Cowl
 - Bastion Enforcer
 - Consulate Dreadnought
+- Fatal Push
 - Hinterland Drake
 - Hungry Flames
 - Merchant's Dockhand
 - Metallic Rebuke
+- Renegade Rallier
 - Walking Ballista
 - Whir of Invention
 - Winding Constrictor
@@ -219,63 +222,69 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Revolt — This creature enters with two +1/+1 counters on it if a permanent left the battlefield under your control this turn. | Greenwheel Liberator, Lifecraft Cavalry, Narnam Renegade, Night Market Aeronaut | 4 |
-| When this creature enters, you may search your library for an artifact card with mana value 3, reveal it, put it into your hand, then shuffle. | Aethertide Whale, Fourth Bridge Prowler, Peema Aether-Seer, Trophy Mage | 4 |
-| At the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one anoth | Gremlin Infestation, Mechanized Production, Scrounging Bandar | 3 |
-| As long as enchanted permanent is a Vehicle, it's a creature in addition to its other types. | Aerial Modification, Siege Modification | 2 |
-| Put X +1/+1 counters on target artifact you control. If it isn't a creature or Vehicle, it becomes a 0/0 Construct artifact creature. | Ajani, Valiant Protector, Lifecraft Awakening | 2 |
-| This creature can't be blocked by artifact creatures. | Audacious Infiltrator, Fen Hauler | 2 |
-| When this creature enters, target artifact you control gains "{T}: This artifact deals 2 damage to any target" for as long as you control this creature. | Quicksmith Rebel, Quicksmith Spy | 2 |
-| {1}{W}: Another target Vehicle you control becomes an artifact creature until end of turn. | Peacewalker Colossus | 1 |
-| At end of combat, if this Vehicle attacked or blocked this combat, put a velocity counter on it. Then if it has two or more velocity counters on it, sacrifice i | Daredevil Dragster | 1 |
-| Chandra's Revolution deals 4 damage to target creature. Tap target land. That land doesn't untap during its controller's next untap step. | Chandra's Revolution | 1 |
-| Choose one — • Destroy target artifact. • Creatures without flying can't block this turn. | Destructive Tampering | 1 |
-| Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.) | Disallow | 1 |
-| Create three 1/1 colorless Servo artifact creature tokens. You may cast a spell with mana value 3 or less from your hand without paying its mana cost. | Sram's Expertise | 1 |
-| Creatures you control get +1/+1 for each unity counter on this enchantment. | Call for Unity | 1 |
-| Destroy target artifact or enchantment. Revolt — If a permanent left the battlefield under your control this turn, you gain 3 life. | Decommission | 1 |
-| Destroy target creature. You may search your library and/or graveyard for a card named Tezzeret, Master of Metal, reveal it, and put it into your hand. If you s | Tezzeret's Betrayal | 1 |
-| Destroy X target artifacts and/or creatures. For each permanent destroyed this way, its controller reveals cards from the top of their library until an artifact | Indomitable Creativity | 1 |
-| Draw cards equal to the greatest power among creatures you control. You may cast a spell with mana value 5 or less from your hand without paying its mana cost. | Rishkar's Expertise | 1 |
-| Each creature you control with a counter on it has "{T}: Add {G}." | Rishkar, Peema Renegade | 1 |
-| Each opponent sacrifices a creature or planeswalker of their choice, then discards a card. You return a creature or planeswalker card from your graveyard to you | Dark Intimations | 1 |
-| Each opponent sacrifices an artifact creature and a nonartifact creature of their choice. | Perilous Predicament | 1 |
-| Enchanted land has "{T}: Add one mana of any color." | Unbridled Growth | 1 |
-| Exile target nonland card from your graveyard. Search your library for any number of cards with the same name as that card, reveal them, put them into your hand | Secret Salvage | 1 |
-| Gain control of target creature or Vehicle until end of turn. Untap it. It gains haste until end of turn. You may cast a spell with mana value 2 or less from yo | Kari Zev's Expertise | 1 |
-| If you would lose the game, instead exile this creature and your life total becomes equal to your starting life total. | Exquisite Archangel | 1 |
-| Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.) Target creature gets -X/-X  | Battle at the Bridge | 1 |
-| Monstrous Onslaught deals X damage divided as you choose among any number of target creatures, where X is the greatest power among creatures you control as you  | Monstrous Onslaught | 1 |
-| Nonartifact spells you cast have improvise. | Inspiring Statuary | 1 |
-| Pay {E}{E}, Sacrifice this enchantment: Each opponent loses 3 life. You gain life equal to the life lost this way. | Gonti's Machinations | 1 |
-| Pay {E}: This Vehicle gains lifelink until end of turn. | Aethersphere Harvester | 1 |
-| Put target artifact on the bottom of its owner's library. | Natural Obsolescence | 1 |
-| Return up to three target artifacts and/or creatures to their owners' hands. You may cast a spell with mana value 4 or less from your hand without paying its ma | Baral's Expertise | 1 |
-| +2: Reveal the top three cards of your library. Put all nonland permanent cards revealed this way into your hand and the rest on the bottom of your library in a | Ajani Unyielding | 1 |
-| Sacrifice Hope of Ghirapur: Until your next turn, target player who was dealt combat damage by Hope of Ghirapur this turn can't cast noncreature spells. | Hope of Ghirapur | 1 |
-| {W}, Sacrifice this creature: Return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | Restoration Specialist | 1 |
-| −3: Target opponent loses life equal to the number of artifacts you control. | Tezzeret, Master of Metal | 1 |
-| This creature can block an additional creature each combat. | Night Market Guard | 1 |
-| This creature is the chosen type in addition to its other types. | Metallic Mimic | 1 |
-| When a Vehicle you control attacks, exile enchanted creature. | Caught in the Brights | 1 |
-| When enchanted artifact is put into a graveyard, return that card to its owner's hand. | Tezzeret's Touch | 1 |
-| When this creature dies, reveal cards from the top of your library until you reveal a nonland card with mana value 3 or less. You may cast that card without pay | Treasure Keeper | 1 |
-| When this creature enters or dies, for each kind of counter on target permanent or player, give that permanent or player another counter of that kind. | Maulfist Revolutionary | 1 |
-| When this creature enters, pay {E}{E} . If you can't, return this creature to its owner's hand and you get {E}. | Greenbelt Rampager | 1 |
-| When this enchantment enters, exile all artifacts your opponents control until this enchantment leaves the battlefield. | Consulate Crackdown | 1 |
-| When this enchantment enters, you may search your library and/or graveyard for a card named Ajani, Valiant Protector, reveal it, and put it into your hand. If y | Ajani's Aid | 1 |
-| Whenever a nontoken artifact is put into your graveyard from the battlefield, return that card to your hand unless target opponent has this enchantment deal 3 d | Pia's Revolution | 1 |
-| Whenever a spell or ability you control counters a spell, you may draw a card. If you do, discard a card. | Baral, Chief of Compliance | 1 |
-| Whenever Kari Zev attacks, create Ragavan, a legendary 2/1 red Monkey creature token. Ragavan enters tapped and attacking. Exile that token at end of combat. | Kari Zev, Skyship Raider | 1 |
-| Whenever this creature attacks, return an artifact you control to its owner's hand. | Salvage Scuttler | 1 |
-| Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an addi | Lightning Runner | 1 |
-| Whenever this creature becomes tapped, target creature can't block this turn. | Renegade Wheelsmith | 1 |
-| Whenever this creature deals combat damage to a player, for each kind of counter on target permanent or player, give that permanent or player another counter of | Skyship Plunderer | 1 |
-| Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your grave | Scrap Trawler | 1 |
-| Whenever this creature enters or attacks, you get {E} for each creature you control. | Aetherwind Basker | 1 |
-| You may remove a loyalty counter from a planeswalker you control rather than pay Heart of Kiran's crew cost. | Heart of Kiran | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Revolt | 4 | Greenwheel Liberator, Lifecraft Cavalry, Narnam Renegade, Night Market Aeronaut | aer |
+| as long as enchanted permanent is a vehicle, it's a creature in addition to its other types. | 2 | Aerial Modification, Siege Modification | aer |
+| when ~ enters, target artifact you control gains "..." for as long as you control ~. | 2 | Quicksmith Rebel, Quicksmith Spy | aer |
+| ~ can't be blocked by artifact creatures. | 2 | Audacious Infiltrator, Fen Hauler | aer |
+| Choose one | 1 | Destructive Tampering | aer |
+| +N: reveal the top three cards of your library. put all nonland permanent cards revealed ~ into your hand and the rest on the bottom of your library in any orde | 1 | Ajani Unyielding | aer |
+| at end of combat, if ~ attacked or blocked ~, put a velocity counter on it. then if it has two or more velocity counters on it, sacrifice it and draw two cards. | 1 | Daredevil Dragster | aer |
+| at the beginning of your end step, ~ deals N damage to enchanted artifact's controller. | 1 | Gremlin Infestation | aer |
+| at the beginning of your upkeep, create a token that's a copy of enchanted artifact. then if you control eight or more artifacts with the same name as one anoth | 1 | Mechanized Production | aer |
+| at the beginning of your upkeep, you may move any number of +N/+N counters from ~ onto another target creature. | 1 | Scrounging Bandar | aer |
+| counter target spell, activated ability, or triggered ability. (mana abilities can't be targeted.) | 1 | Disallow | aer |
+| create three N/N colorless servo artifact creature tokens. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Sram's Expertise | aer |
+| creatures you control get +N/+N for each unity counter on ~. | 1 | Call for Unity | aer |
+| destroy N target artifacts and/or creatures. for each permanent destroyed ~, its controller reveals cards from the top of their library until an artifact or cre | 1 | Indomitable Creativity | aer |
+| destroy target artifact or enchantment. revolt — if a permanent left the battlefield under your control ~, you gain N life. | 1 | Decommission | aer |
+| destroy target creature. you may search your library and/or graveyard for a card named tezzeret, master of metal, reveal it, and put it into your hand. if you s | 1 | Tezzeret's Betrayal | aer |
+| draw cards equal to the greatest power among creatures you control. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Rishkar's Expertise | aer |
+| each creature you control with a counter on it has "..." | 1 | Rishkar, Peema Renegade | aer |
+| each opponent sacrifices a creature or planeswalker of their choice, then discards a card. you return a creature or planeswalker card from your graveyard to you | 1 | Dark Intimations | aer |
+| each opponent sacrifices an artifact creature and a nonartifact creature of their choice. | 1 | Perilous Predicament | aer |
+| enchanted land has "..." | 1 | Unbridled Growth | aer |
+| exile target nonland card from your graveyard. search your library for any number of cards with the same name as that card, reveal them, put them into your hand | 1 | Secret Salvage | aer |
+| gain control of target creature or vehicle until end of turn. untap it. it gains haste until end of turn. you may cast a spell with mana value N or less from yo | 1 | Kari Zev's Expertise | aer |
+| if you would lose the game, instead exile ~ and your life total becomes equal to your starting life total. | 1 | Exquisite Archangel | aer |
+| improvise (your artifacts can help cast ~. each artifact you tap after you're done activating mana abilities pays for {M}.) target creature gets -N/-N until end | 1 | Battle at the Bridge | aer |
+| nonartifact spells you cast have improvise. | 1 | Inspiring Statuary | aer |
+| pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |
+| pay {M}{M}, sacrifice ~: each opponent loses N life. you gain life equal to the life lost ~. | 1 | Gonti's Machinations | aer |
+| put N +N/+N counters on target artifact you control. if it isn't a creature or vehicle, it becomes a N/N construct artifact creature. | 1 | Lifecraft Awakening | aer |
+| put target artifact on the bottom of its owner's library. | 1 | Natural Obsolescence | aer |
+| return up to three target artifacts and/or creatures to their owners' hands. you may cast a spell with mana value N or less from your hand without paying its ma | 1 | Baral's Expertise | aer |
+| sacrifice ~: until your next turn, target player who was dealt combat damage by ~ ~ can't cast noncreature spells. | 1 | Hope of Ghirapur | aer |
+| when a vehicle you control attacks, exile enchanted creature. | 1 | Caught in the Brights | aer |
+| when enchanted artifact is put into a graveyard, return that card to its owner's hand. | 1 | Tezzeret's Touch | aer |
+| when ~ dies, reveal cards from the top of your library until you reveal a nonland card with mana value N or less. you may cast that card without paying its mana | 1 | Treasure Keeper | aer |
+| when ~ enters or dies, for each kind of counter on target permanent or player, give that permanent or player another counter of that kind. | 1 | Maulfist Revolutionary | aer |
+| when ~ enters, exile all artifacts your opponents control until ~ leaves the battlefield. | 1 | Consulate Crackdown | aer |
+| when ~ enters, pay {M}{M} . if you can"..."s hand and you get {M}. | 1 | Greenbelt Rampager | aer |
+| when ~ enters, you get an amount of {M} equal to the greatest power among creatures you control. | 1 | Peema Aether-Seer | aer |
+| when ~ enters, you get six {M} . | 1 | Aethertide Whale | aer |
+| when ~ enters, you may have target creature get -N/-N until end of turn. | 1 | Fourth Bridge Prowler | aer |
+| when ~ enters, you may search your library and/or graveyard for a card named ajani, valiant protector, reveal it, and put it into your hand. if you search your  | 1 | Ajani's Aid | aer |
+| when ~ enters, you may search your library for an artifact card with mana value N, reveal it, put it into your hand, then shuffle. | 1 | Trophy Mage | aer |
+| whenever a nontoken artifact is put into your graveyard from the battlefield, return that card to your hand unless target opponent has ~ deal N damage to them. | 1 | Pia's Revolution | aer |
+| whenever a spell or ability you control counters a spell, you may draw a card. if you do, discard a card. | 1 | Baral, Chief of Compliance | aer |
+| whenever kari zev attacks, create ragavan, a legendary N/N red monkey creature token. ragavan enters tapped and attacking. exile that token at end of combat. | 1 | Kari Zev, Skyship Raider | aer |
+| whenever ~ attacks, return an artifact you control to its owner's hand. | 1 | Salvage Scuttler | aer |
+| whenever ~ attacks, you get {M}{M} , then you may pay eight {M}. if you pay, untap all creatures you control, and after ~, there is an additional combat phase. | 1 | Lightning Runner | aer |
+| whenever ~ becomes tapped, target creature can't block ~. | 1 | Renegade Wheelsmith | aer |
+| whenever ~ deals combat damage to a player, for each kind of counter on target permanent or player, give that permanent or player another counter of that kind. | 1 | Skyship Plunderer | aer |
+| whenever ~ dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your graveyard with le | 1 | Scrap Trawler | aer |
+| whenever ~ enters or attacks, you get {M} for each creature you control. | 1 | Aetherwind Basker | aer |
+| you may remove a loyalty counter from a planeswalker you control rather than pay ~'s crew cost. | 1 | Heart of Kiran | aer |
+| {M}, sacrifice ~: return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | 1 | Restoration Specialist | aer |
+| {M}{M}: another target vehicle you control becomes an artifact creature until end of turn. | 1 | Peacewalker Colossus | aer |
+| ~ can block an additional creature each combat. | 1 | Night Market Guard | aer |
+| ~ deals N damage divided as you choose among any number of target creatures, where N is the greatest power among creatures you control as you cast ~. | 1 | Monstrous Onslaught | aer |
+| ~ deals N damage to target creature. tap target land. that land doesn"..."s next untap step. | 1 | Chandra's Revolution | aer |
+| ~ is the chosen type in addition to its other types. | 1 | Metallic Mimic | aer |
+| −N: put N +N/+N counters on target creature, where N is your life total. that creature gains trample until end of turn. | 1 | Ajani, Valiant Protector | aer |
+| −N: target opponent loses life equal to the number of artifacts you control. | 1 | Tezzeret, Master of Metal | aer |
 
 ## Notes
 

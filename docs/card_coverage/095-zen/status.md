@@ -3,24 +3,24 @@
 - Expansion: 095
 - Set code: `zen`
 - Release date: 2009-10-02
-- Cards in scope (Modern/Pioneer/Standard-legal): 217
+- Cards in scope (Modern/Pioneer/Standard-legal): 220
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 217 |
-| Pioneer | 24 |
-| Standard | 9 |
+| Modern | 220 |
+| Pioneer | 26 |
+| Standard | 11 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 18 | 8.3% |
+| Full (handled + tested) | 19 | 8.6% |
 | Partial (unaudited) | 9 | 4.1% |
-| Not tested (handled, untested) | 110 | 50.7% |
-| Not working (silent / notice / error) | 80 | 36.9% |
+| Not tested (handled, untested) | 112 | 50.9% |
+| Not working (silent / notice / error) | 80 | 36.4% |
 
 ## Cards needing work
 
@@ -128,6 +128,7 @@
 | Cobra Trap | handled | If a noncreature permanent under your control was destroyed this turn by a spell or ability an opponent controlled, you may pay {G} rather than pay this spell's | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crypt Ripper | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crypt of Agadeem | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Day of Judgment | handled | Destroy all creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Devout Lightcaster | handled | When this creature enters, exile target black permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disfigure | handled | Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Emeria Angel | handled | Landfall — Whenever a land you control enters, you may create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -186,6 +187,7 @@
 | Punishing Fire | handled | Punishing Fire deals 2 damage to any target. Whenever an opponent gains life, you may pay {R}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quest for the Gemblades | handled | Whenever a creature you control deals combat damage to a creature, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quest for the Gravelord | handled | Whenever a creature dies, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rampaging Baloths | handled | Landfall — Whenever a land you control enters, create a 4/4 green Beast creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ravenous Trap | handled | If an opponent had three or more cards put into their graveyard from anywhere this turn, you may pay {0} rather than pay this spell's mana cost. Exile target pl | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reckless Scholar | handled | {T}: Target player draws a card, then discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Savage Silhouette | handled | Enchanted creature gets +2/+2 and has "{1}{G}: Regenerate this creature." | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -229,7 +231,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Archive Trap
 - Arid Mesa
@@ -247,6 +249,7 @@
 - Scalding Tarn
 - Spell Pierce
 - Steppe Lynx
+- Valakut, the Molten Pinnacle
 - Vampire Hexmage
 - Verdant Catacombs
 
@@ -254,68 +257,90 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Whenever this creature or another Ally you control enters, target player reveals a number of cards from their hand equal to the number of Allies you control. Yo | Bala Ged Thief, Hagra Diabolist, Highland Berserker, Joraga Bard, Kabira Evangel, Kazuul Warlord, Murasa Pyromancer, Ondu Cleric, Seascape Aerialist, Tajuru Archer, Turntimber Ranger | 11 |
-| Landfall — Whenever a land you control enters, you may have target player lose 3 life. If you do, put three +1/+1 counters on Ob Nixilis. | Adventuring Gear, Eternity Vessel, Ob Nixilis, the Fallen, Roil Elemental, Shoal Serpent, Surrakar Marauder, Turntimber Basilisk | 7 |
-| Kicker {7} (You may pay an additional {7} as you cast this spell.) Search target player's library for up to three cards, exile them, then that player shuffles.  | Conqueror's Pledge, Elemental Appeal, Marsh Casualties, Rite of Replication, Sadistic Sacrament, Vines of Vastwood | 6 |
-| At the beginning of your upkeep, you may choose a card type. If you do, each player sacrifices a permanent of their choice of that type. | Eldrazi Monument, Felidar Sovereign, Living Tsunami, Vampire Lacerator, World Queller | 5 |
-| As long as this enchantment has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into y | Archmage Ascension, Beastmaster Ascension | 2 |
-| Intimidate | Bladetusk Boar, Halo Hunter | 2 |
-| Whenever a card is put into an opponent's graveyard from anywhere, if this enchantment has three or more quest counters on it, you may have that player lose 2 l | Bloodchief Ascension, Quest for Ancient Secrets | 2 |
-| Whenever this creature deals damage to an opponent, you may put a Goblin creature card from your hand onto the battlefield. | Ruinous Minotaur, Warren Instigator | 2 |
-| As long as an opponent has 10 or less life, this creature gets +2/+1 and has intimidate. | Guul Draz Vampire | 1 |
-| As long as this creature is equipped, it has double strike. | Kor Duelist | 1 |
-| −7: Cast any number of red instant and/or sorcery cards from your graveyard without paying their mana costs. | Chandra Ablaze | 1 |
-| Choose a color. White creatures you control gain protection from the chosen color until end of turn. | Brave the Elements | 1 |
-| Destroy target artifact or enchantment and up to one other target artifact or enchantment. | Relic Crush | 1 |
-| {B}{B}{B}, {T}: Destroy target creature. If that creature dies this way, create a black Vampire creature token. Its power is equal to that creature's power and  | Kalitas, Bloodchief of Ghet | 1 |
-| Destroy target land. Its controller discards a card. | Desecrated Earth | 1 |
-| Enchanted creature has base power and toughness 8/8 and has trample. | Gigantiform | 1 |
-| Enchanted land is an Island. | Spreading Seas | 1 |
-| Equipped creature can't be blocked by Vampires or Zombies. | Blazing Torch | 1 |
-| Equipped creature has nonbasic landwalk. | Trailblazer's Boots | 1 |
-| Gain control of target creature until end of turn. Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn. (It can attack and {T} t | Mark of Mutiny | 1 |
-| If an opponent drew three or more cards this turn, you may pay {R} rather than pay this spell's mana cost. Runeflare Trap deals damage to target player equal to | Runeflare Trap | 1 |
-| If this creature was kicked, it enters with two +1/+1 counters on it. | Aether Figment | 1 |
-| If this creature would die, put it on the bottom of its owner's library instead. | Nissa's Chosen | 1 |
-| If three or more creatures are attacking, you may pay {U} rather than pay this spell's mana cost. Attacking creatures get -3/-0 until end of turn. | Lethargy Trap | 1 |
-| Kicker—Tap an untapped Vampire you control. (You may tap a Vampire you control in addition to any other costs as you cast this spell.) Target opponent loses hal | Blood Tribute | 1 |
-| Other Kor creatures you control get +2/+2 for each Equipment attached to this creature. | Armament Master | 1 |
-| Play with the top card of your library revealed. | Oracle of Mul Daya | 1 |
-| Prevent all combat damage that would be dealt this turn by creatures without trample. | Tanglesap | 1 |
-| {1}{R}{R}: Put a blaze counter on target land without a blaze counter on it. For as long as that land has a blaze counter on it, it has "At the beginning of you | Obsidian Fireheart | 1 |
-| {T}: Put a +1/+1 counter on each green creature that entered this turn. | Oran-Rief, the Vastwood | 1 |
-| {U}, {T}: Put an eon counter on this land. Skip your next turn. | Magosi, the Waterveil | 1 |
-| {T}: Put this creature and each creature it's blocking on top of their owners' libraries, then those players shuffle. | Gomazoa | 1 |
-| Remove five quest counters from this enchantment and sacrifice it: Search your library for an Equipment card, put it onto the battlefield, attach it to a creatu | Quest for the Holy Relic | 1 |
-| Remove four quest counters from this enchantment and sacrifice it: If any source you control would deal damage to a permanent or player this turn, it deals doub | Quest for Pure Flame | 1 |
-| +1: Search your library for a card named Nissa's Chosen, put it onto the battlefield, then shuffle. | Nissa Revane | 1 |
-| Target creature gets +1/+1 until end of turn for each Forest you control. | Primal Bellow | 1 |
-| −3: Target opponent's life total becomes 10. | Sorin Markov | 1 |
-| Target player reveals their hand and discards all Trap cards. | Trapfinder's Trick | 1 |
-| This creature can block only creatures with flying. | Welkin Tern | 1 |
-| This creature gets +3/+3 as long as an opponent has no cards in hand. | Guul Draz Specter | 1 |
-| This creature has haste as long as an opponent has 10 or less life. | Bloodghast | 1 |
-| When enchanted creature is dealt damage, destroy it. | Mire Blight | 1 |
-| When this creature enters, draw three cards. Then if it wasn't kicked, discard three cards. | Sphinx of Lost Truths | 1 |
-| When this creature enters, each opponent loses life equal to the number of Vampires you control. You gain life equal to the life lost this way. | Malakir Bloodwitch | 1 |
-| When this creature enters, return a permanent you control to its owner's hand. | Kor Skyfisher | 1 |
-| When this creature enters, sacrifice it unless you sacrifice a land. | Scythe Tiger | 1 |
-| When this creature enters, target creature can't block this turn. | Goblin Shortcutter | 1 |
-| When this creature enters, you may attach target Equipment you control to target creature you control. | Kor Outfitter | 1 |
-| When this enchantment leaves the battlefield, return the exiled card to the battlefield under its owner's control. | Journey to Nowhere | 1 |
-| Whenever a creature an opponent controls enters, you may have that player lose 1 life. | Blood Seeker | 1 |
-| Whenever a creature you control enters, you may pay {2}{R}. If you do, that creature deals damage equal to its power to any target. | Electropotence | 1 |
-| Whenever a spell or ability you control counters a spell, you may create a 1/1 blue Merfolk creature token. | Lullmage Mentor | 1 |
-| Whenever an opponent shuffles their library, you may put a +1/+1 counter on this creature. | Cosi's Trickster | 1 |
-| Whenever enchanted creature deals combat damage to a player, double its controller's life total. | Celestial Mantle | 1 |
-| Whenever equipped creature attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. | Explorer's Scope | 1 |
-| Whenever equipped creature attacks, you may have target creature block it this turn if able. | Grappling Hook | 1 |
-| Whenever Lorthos attacks, you may pay {8}. If you do, tap up to eight target permanents. Those permanents don't untap during their controllers' next untap steps | Lorthos, the Tidemaker | 1 |
-| Whenever you cast an instant or sorcery spell while this enchantment has two or more quest counters on it, you may copy that spell. You may choose new targets f | Pyromancer Ascension | 1 |
-| You may look at the top card of your library any time. | Sphinx of Jwar Isle | 1 |
-| Your opponents can't cast spells of the chosen color. | Iona, Shield of Emeria | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Landfall | 7 | Adventuring Gear, Eternity Vessel, Ob Nixilis, the Fallen, Roil Elemental, Shoal Serpent | zen |
+| intimidate | 2 | Bladetusk Boar, Halo Hunter | zen |
+| +N: search your library for a card named nissa's chosen, put it onto the battlefield, then shuffle. | 1 | Nissa Revane | zen |
+| as long as an opponent has N or less life, ~ gets +N/+N and has intimidate. | 1 | Guul Draz Vampire | zen |
+| as long as ~ has seven or more quest counters on it, creatures you control get +N/+N. | 1 | Beastmaster Ascension | zen |
+| as long as ~ has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into your hand, then  | 1 | Archmage Ascension | zen |
+| as long as ~ is equipped, it has double strike. | 1 | Kor Duelist | zen |
+| at the beginning of your upkeep, if you have N or more life, you win the game. | 1 | Felidar Sovereign | zen |
+| at the beginning of your upkeep, sacrifice a creature. if you can't, sacrifice ~. | 1 | Eldrazi Monument | zen |
+| at the beginning of your upkeep, sacrifice ~ unless you return a land you control to its owner's hand. | 1 | Living Tsunami | zen |
+| at the beginning of your upkeep, you lose N life unless an opponent has N or less life. | 1 | Vampire Lacerator | zen |
+| at the beginning of your upkeep, you may choose a card type. if you do, each player sacrifices a permanent of their choice of that type. | 1 | World Queller | zen |
+| choose a color. white creatures you control gain protection from the chosen color until end of turn. | 1 | Brave the Elements | zen |
+| destroy target artifact or enchantment and up to one other target artifact or enchantment. | 1 | Relic Crush | zen |
+| destroy target land. its controller discards a card. | 1 | Desecrated Earth | zen |
+| enchanted creature has base power and toughness N/N and has trample. | 1 | Gigantiform | zen |
+| enchanted land is an island. | 1 | Spreading Seas | zen |
+| equipped creature can't be blocked by vampires or zombies. | 1 | Blazing Torch | zen |
+| equipped creature has nonbasic landwalk. | 1 | Trailblazer's Boots | zen |
+| gain control of target creature until end of turn. put a +N/+N counter on it and untap it. that creature gains haste until end of turn. (it can attack and {M} ~ | 1 | Mark of Mutiny | zen |
+| if an opponent drew three or more cards ~, you may pay {M} rather than pay ~ mana cost. ~ deals damage to target player equal to the number of cards in that pla | 1 | Runeflare Trap | zen |
+| if three or more creatures are attacking, you may pay {M} rather than pay ~ mana cost. attacking creatures get -N/-N until end of turn. | 1 | Lethargy Trap | zen |
+| if ~ was kicked, it enters with two +N/+N counters on it. | 1 | Aether Figment | zen |
+| if ~ would die, put it on the bottom of its owner's library instead. | 1 | Nissa's Chosen | zen |
+| kicker {M} (you may pay an additional {M} as you cast ~.) create a N/N red elemental creature token with trample and haste. exile it at the beginning of the nex | 1 | Elemental Appeal | zen |
+| kicker {M} (you may pay an additional {M} as you cast ~.) create a token that's a copy of target creature. if ~ was kicked, create five of those tokens instead. | 1 | Rite of Replication | zen |
+| kicker {M} (you may pay an additional {M} as you cast ~.) create six N/N white kor soldier creature tokens. if ~ was kicked, create twelve of those tokens inste | 1 | Conqueror's Pledge | zen |
+| kicker {M} (you may pay an additional {M} as you cast ~.) creatures target player controls get -N/-N until end of turn. if ~ was kicked, those creatures get -N/ | 1 | Marsh Casualties | zen |
+| kicker {M} (you may pay an additional {M} as you cast ~.) search target player"..."s library for up to fifteen cards, exile them, then that player shuffles. | 1 | Sadistic Sacrament | zen |
+| kicker {M} (you may pay an additional {M} as you cast ~.) target creature can't be the target of spells or abilities your opponents control ~. if ~ was kicked,  | 1 | Vines of Vastwood | zen |
+| kicker—tap an untapped vampire you control. (you may tap a vampire you control in addition to any other costs as you cast ~.) target opponent loses half their l | 1 | Blood Tribute | zen |
+| other kor creatures you control get +N/+N for each equipment attached to ~. | 1 | Armament Master | zen |
+| play with the top card of your library revealed. | 1 | Oracle of Mul Daya | zen |
+| prevent all combat damage that would be dealt ~ by creatures without trample. | 1 | Tanglesap | zen |
+| remove five quest counters from ~ and sacrifice it: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, | 1 | Quest for the Holy Relic | zen |
+| remove four quest counters from ~ and sacrifice it: if any source you control would deal damage to a permanent or player ~, it deals double that damage to that  | 1 | Quest for Pure Flame | zen |
+| target creature gets +N/+N until end of turn for each forest you control. | 1 | Primal Bellow | zen |
+| target player reveals their hand and discards all trap cards. | 1 | Trapfinder's Trick | zen |
+| when enchanted creature is dealt damage, destroy it. | 1 | Mire Blight | zen |
+| when ~ enters, draw three cards. then if it wasn't kicked, discard three cards. | 1 | Sphinx of Lost Truths | zen |
+| when ~ enters, each opponent loses life equal to the number of vampires you control. you gain life equal to the life lost ~. | 1 | Malakir Bloodwitch | zen |
+| when ~ enters, return a permanent you control to its owner's hand. | 1 | Kor Skyfisher | zen |
+| when ~ enters, sacrifice it unless you sacrifice a land. | 1 | Scythe Tiger | zen |
+| when ~ enters, target creature can't block ~. | 1 | Goblin Shortcutter | zen |
+| when ~ enters, you may attach target equipment you control to target creature you control. | 1 | Kor Outfitter | zen |
+| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Journey to Nowhere | zen |
+| whenever a card is put into an opponent's graveyard from anywhere, if ~ has three or more quest counters on it, you may have that player lose N life. if you do, | 1 | Bloodchief Ascension | zen |
+| whenever a card is put into your graveyard from anywhere, you may put a quest counter on ~. | 1 | Quest for Ancient Secrets | zen |
+| whenever a creature an opponent controls enters, you may have that player lose N life. | 1 | Blood Seeker | zen |
+| whenever a creature you control enters, you may pay {M}{M}. if you do, that creature deals damage equal to its power to any target. | 1 | Electropotence | zen |
+| whenever a spell or ability you control counters a spell, you may create a N/N blue merfolk creature token. | 1 | Lullmage Mentor | zen |
+| whenever an opponent shuffles their library, you may put a +N/+N counter on ~. | 1 | Cosi's Trickster | zen |
+| whenever enchanted creature deals combat damage to a player, double its controller's life total. | 1 | Celestial Mantle | zen |
+| whenever equipped creature attacks, look at the top card of your library. if it's a land card, you may put it onto the battlefield tapped. | 1 | Explorer's Scope | zen |
+| whenever equipped creature attacks, you may have target creature block it ~ if able. | 1 | Grappling Hook | zen |
+| whenever lorthos attacks, you may pay {M}. if you do, tap up to eight target permanents. those permanents don"..." next untap steps. | 1 | Lorthos, the Tidemaker | zen |
+| whenever you cast an instant or sorcery spell while ~ has two or more quest counters on it, you may copy that spell. you may choose new targets for the copy. | 1 | Pyromancer Ascension | zen |
+| whenever ~ deals damage to an opponent, sacrifice a land. | 1 | Ruinous Minotaur | zen |
+| whenever ~ deals damage to an opponent, you may put a goblin creature card from your hand onto the battlefield. | 1 | Warren Instigator | zen |
+| whenever ~ or another ally you control enters, target player reveals a number of cards from their hand equal to the number of allies you control. you choose one | 1 | Bala Ged Thief | zen |
+| whenever ~ or another ally you control enters, you may choose a color. if you do, allies you control gain protection from the chosen color until end of turn. | 1 | Kabira Evangel | zen |
+| whenever ~ or another ally you control enters, you may create a N/N green wolf creature token. if you do, put a +N/+N counter on ~. | 1 | Turntimber Ranger | zen |
+| whenever ~ or another ally you control enters, you may gain life equal to the number of allies you control. | 1 | Ondu Cleric | zen |
+| whenever ~ or another ally you control enters, you may have ally creatures you control gain first strike until end of turn. | 1 | Highland Berserker | zen |
+| whenever ~ or another ally you control enters, you may have ally creatures you control gain flying until end of turn. | 1 | Seascape Aerialist | zen |
+| whenever ~ or another ally you control enters, you may have ally creatures you control gain vigilance until end of turn. | 1 | Joraga Bard | zen |
+| whenever ~ or another ally you control enters, you may have target player lose life equal to the number of allies you control. | 1 | Hagra Diabolist | zen |
+| whenever ~ or another ally you control enters, you may have ~ deal damage to target creature equal to the number of allies you control. | 1 | Murasa Pyromancer | zen |
+| whenever ~ or another ally you control enters, you may have ~ deal damage to target creature with flying equal to the number of allies you control. | 1 | Tajuru Archer | zen |
+| whenever ~ or another ally you control enters, you may put a +N/+N counter on each ally creature you control. | 1 | Kazuul Warlord | zen |
+| you may look at the top card of your library any time. | 1 | Sphinx of Jwar Isle | zen |
+| your opponents can't cast spells of the chosen color. | 1 | Iona, Shield of Emeria | zen |
+| {M}, {M}: put an eon counter on ~. skip your next turn. | 1 | Magosi, the Waterveil | zen |
+| {M}: put a +N/+N counter on each green creature that entered ~. | 1 | Oran-Rief, the Vastwood | zen |
+| {M}: put ~ and each creature it"..." libraries, then those players shuffle. | 1 | Gomazoa | zen |
+| {M}{M}{M}, {M}: destroy target creature. if that creature dies ~, create a black vampire creature token. its power is equal to that creature"..."s toughness. | 1 | Kalitas, Bloodchief of Ghet | zen |
+| {M}{M}{M}: put a blaze counter on target land without a blaze counter on it. for as long as that land has a blaze counter on it, it has "..." | 1 | Obsidian Fireheart | zen |
+| ~ can block only creatures with flying. | 1 | Welkin Tern | zen |
+| ~ gets +N/+N as long as an opponent has no cards in hand. | 1 | Guul Draz Specter | zen |
+| ~ has haste as long as an opponent has N or less life. | 1 | Bloodghast | zen |
+| −N: cast any number of red instant and/or sorcery cards from your graveyard without paying their mana costs. | 1 | Chandra Ablaze | zen |
+| −N: target opponent's life total becomes N. | 1 | Sorin Markov | zen |
 
 ## Notes
 

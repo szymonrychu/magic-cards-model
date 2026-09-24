@@ -3,13 +3,13 @@
 - Expansion: 046
 - Set code: `mrd`
 - Release date: 2003-10-02
-- Cards in scope (Modern/Pioneer/Standard-legal): 267
+- Cards in scope (Modern/Pioneer/Standard-legal): 269
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 267 |
+| Modern | 269 |
 | Pioneer | 10 |
 | Standard | 5 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 16 | 6.0% |
+| Full (handled + tested) | 17 | 6.3% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not tested (handled, untested) | 147 | 55.1% |
-| Not working (silent / notice / error) | 94 | 35.2% |
+| Not tested (handled, untested) | 147 | 54.6% |
+| Not working (silent / notice / error) | 95 | 35.3% |
 
 ## Cards needing work
 
@@ -86,6 +86,7 @@
 | Spikeshot Goblin | silent | {R}, {T}: This creature deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spoils of the Vault | silent | Choose a card name. Reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. Exile all other cards r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sun Droplet | silent | Whenever you're dealt damage, put that many charge counters on this artifact. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Sword of Kaldra | silent | Whenever equipped creature deals damage to a creature, exile that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Synod Sanctum | silent | {2}, Sacrifice this artifact: Return all cards exiled with this artifact to the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Taj-Nar Swordsmith | silent | When this creature enters, you may pay {X}. If you do, search your library for an Equipment card with mana value X or less, put that card onto the battlefield,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tel-Jilad Stylus | silent | {T}: Put target permanent you own on the bottom of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -281,10 +282,11 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
+- Bonesplitter
 - Chalice of the Void
 - Damping Matrix
 - Frogmite
@@ -304,91 +306,103 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of each upkeep, each player exiles the top card of their library. The player who exiled the card with the greatest mana value takes an extra tu | Blinkmoth Urn, Fatespinner, Gate to the Aether, Quicksilver Fountain, Timesifter | 5 |
-| At the beginning of your upkeep, the player with the lowest life total gains control of this creature. If two or more players are tied for lowest life total, yo | Jinxed Choker, Loxodon Peacekeeper, Mindstorm Crown, Rust Elemental | 4 |
-| Equipped creature gets +1/+1 for each charge counter on this Equipment. | Banshee's Blade, Empyrial Plate, Golem-Skin Gauntlets, Nightmare Lash | 4 |
-| Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | Clockwork Beetle, Clockwork Condor, Clockwork Dragon, Clockwork Vorrac | 4 |
-| As long as this creature is equipped, each creature you control that's a Soldier or a Knight gets +1/+1. | Auriok Steelshaper, Leonin Den-Guard, Skyhunter Cub | 3 |
-| This creature gets +1/+1 for each untapped permanent your opponents control. | Copperhoof Vorrac, Loxodon Punisher, Myr Adapter | 3 |
-| Fear | Dross Prowler, Woebearer | 2 |
-| Imprint — When this artifact enters, you may have target player reveal their hand. If you do, choose a nonland card from it and exile that card. | Spellweaver Helix, Thought Prison | 2 |
-| Whenever this creature becomes blocked by an artifact creature, destroy that creature. | Duskworker, Ogre Leadfoot | 2 |
-| Whenever this creature deals combat damage to a creature, that creature's controller loses that much life. | Flayed Nim, Living Hive | 2 |
-| {T}: Add one mana of any of the exiled card's colors. | Chrome Mox | 1 |
-| All creatures able to block target creature this turn do so. | Bloodscent | 1 |
-| All creatures have haste. | Mass Hysteria | 1 |
-| Artifacts you control have hexproof. | Leonin Abunas | 1 |
-| As an additional cost to cast this spell, sacrifice an artifact. Put X +1/+1 counters on target creature, where X is the sacrificed artifact's mana value. | Forge Armor | 1 |
-| As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with | Duplicant | 1 |
-| Choose a card name. Reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. Exile all other cards r | Spoils of the Vault | 1 |
-| {2}, {T}: Choose a card name. Target opponent guesses whether a card with that name is in your hand. You may reveal your hand. If you do and your opponent guess | Liar's Pendulum | 1 |
-| Choose one — • Creatures target player controls attack this turn if able. • Creatures you control gain first strike until end of turn. Entwine {2} (Choose both  | Incite War | 1 |
-| Choose one — • Regenerate each creature you control. • Wail of the Nim deals 1 damage to each creature and each player. Entwine {B} (Choose both if you pay the  | Wail of the Nim | 1 |
-| Choose one — • Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. • You may play up to two additional lands | Journey of Discovery | 1 |
-| Choose one — • Tap two target creatures. • Creatures don't untap during target player's next untap step. Entwine {1} (Choose both if you pay the entwine cost.) | Blinding Beam | 1 |
-| Choose one — • Until end of turn, you gain control of target creature and it gains haste. • Sacrifice a creature. Grab the Reins deals damage equal to that crea | Grab the Reins | 1 |
-| Counter target spell unless its controller pays {1} for each artifact you control. | Override | 1 |
-| {X}, {T}: Create a token that's a copy of the exiled card. X is the mana value of that card. | Soul Foundry | 1 |
-| {T}: Destroy target artifact if its mana value is equal to the amount of unspent mana you have. | Glissa Sunseeker | 1 |
-| Destroy target land. If that land was nonbasic, Molten Rain deals 2 damage to the land's controller. | Molten Rain | 1 |
-| Each artifact spell costs {1} more to cast for each artifact its controller controls. | Hum of the Radix | 1 |
-| Each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | March of the Machines | 1 |
-| Each player returns to the battlefield all artifact, creature, enchantment, and land cards in their graveyard that were put there from the battlefield this turn | Second Sunrise | 1 |
-| Electrostatic Bolt deals 2 damage to target creature. If it's an artifact creature, Electrostatic Bolt deals 4 damage to it instead. | Electrostatic Bolt | 1 |
-| Enchanted artifact has "At the beginning of your upkeep, you lose 2 life." | Relic Bane | 1 |
-| Equipped creature gets +4/+2 and doesn't untap during its controller's untap step. | Vulshok Gauntlets | 1 |
-| Exile target attacking creature and all Equipment attached to it. | Soul Nova | 1 |
-| Flip a coin until you lose a flip or choose to stop flipping. If you lose a flip, Fiery Gambit has no effect. If you win one or more flips, Fiery Gambit deals 3 | Fiery Gambit | 1 |
-| If a player would draw a card, that player exiles the top card of one of their opponents' libraries face down instead. | Shared Fate | 1 |
-| If an artifact would deal damage to you, prevent 1 of that damage. | Sphere of Purity | 1 |
-| If you would flip a coin, instead flip two coins and ignore one. | Krark's Thumb | 1 |
-| {3}, {T} or {U}, {T}: Return target creature to its owner's hand unless its controller pays {1}. | Crystal Shard | 1 |
-| {2}, {T}: Prevent all damage that would be dealt this turn by a source of your choice that shares a color with the exiled card. | Mourner's Shield | 1 |
-| {2}{U}, {T}: Put target creature on the bottom of its owner's library. That creature's controller reveals cards from the top of their library until they reveal  | Proteus Staff | 1 |
-| {T}: Put target permanent you own on the bottom of your library. | Tel-Jilad Stylus | 1 |
-| {B}{B}: Return this card from your graveyard to the battlefield, then sacrifice a creature. Activate only during your upkeep. | Nim Devourer | 1 |
-| {3}{R}, Sacrifice an artifact: Bosh deals damage equal to the sacrificed artifact's mana value to any target. | Bosh, Iron Golem | 1 |
-| {4}, {T}, Sacrifice Mindslaver: You control target player during that player's next turn. | Mindslaver | 1 |
-| {2}, Sacrifice this artifact: It deals 2 damage to each attacking creature without flying. | Leonin Bladetrap | 1 |
-| {2}, Sacrifice this artifact: Return all cards exiled with this artifact to the battlefield under your control. | Synod Sanctum | 1 |
-| {6}, {T}, Sacrifice this artifact: Search your library for any number of artifact cards, exile them, then create that many 1/1 colorless Myr artifact creature t | Myr Incubator | 1 |
-| {U}, Sacrifice this creature: Counter target spell unless its controller pays {2}. | Wizard Replica | 1 |
-| Search your library for a nonland card and reveal it. Each opponent who cast a spell this turn with the same name as that card loses 6 life. Then shuffle. {B}{B | Grim Reminder | 1 |
-| Spend only black mana on X. Consume Spirit deals X damage to any target and you gain X life. | Consume Spirit | 1 |
-| Target creature gets -1/-1 until end of turn for each artifact you control. | Irradiate | 1 |
-| {T}: Target creature gets +X/+X until end of turn, where X is this creature's power. | Auriok Bladewarden | 1 |
-| Target permanent you control gains protection from artifacts or from the color of your choice until end of turn. | Razor Barrier | 1 |
-| Target player discards two cards unless they discard an artifact card. | Wrench Mind | 1 |
-| {1}, {T}: Target player draws a card, then discards a card. If that player discards an artifact card this way, untap this creature. | Lumengrid Augur | 1 |
-| This creature can't attack or block unless you pay {1} for each +1/+1 counter on it. | Myr Prototype | 1 |
-| This creature can't be blocked as long as defending player controls an artifact. | Neurok Spy | 1 |
-| {R}, {T}: This creature deals damage equal to its power to any target. | Spikeshot Goblin | 1 |
-| {U}: This creature gains all activated abilities of target creature until end of turn. | Quicksilver Elemental | 1 |
-| This creature has protection from each of the exiled card's card types. | Mirror Golem | 1 |
-| Unattach all Equipment from target creature. | Disarm | 1 |
-| When this creature dies, target opponent puts a card from their hand on top of their library. | Chimney Imp | 1 |
-| When this creature enters, attach all Equipment on the battlefield to it. | Vulshok Battlemaster | 1 |
-| When this creature enters, exile all cards from your library. | Leveler | 1 |
-| When this creature enters, if you cast it from your hand, destroy all nonartifact, nonblack creatures. They can't be regenerated. | Reiver Demon | 1 |
-| When this creature enters, look at target opponent's hand. | Wanderguard Sentry | 1 |
-| When this creature enters, put target artifact on top of its owner's library. | Looming Hoverguard | 1 |
-| When this creature enters, sacrifice it unless an opponent was dealt damage this turn. | War Elemental | 1 |
-| When this creature enters, you may pay {X}. If you do, search your library for an Equipment card with mana value X or less, put that card onto the battlefield,  | Taj-Nar Swordsmith | 1 |
-| Whenever a creature dealt damage by equipped creature this turn dies, return that card to the battlefield under your control. Attach this Equipment to that crea | Scythe of the Wretched | 1 |
-| Whenever a permanent becomes untapped, that permanent's controller mills a card. | Mesmeric Orb | 1 |
-| Whenever a spell or ability causes a player to shuffle their library, this artifact deals 2 damage to that player. | Psychogenic Probe | 1 |
-| Whenever an artifact, creature, or enchantment enters, its controller chooses target permanent another player controls that shares a card type with it. Exchange | Confusion in the Ranks | 1 |
-| Whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose 1 life. | Disciple of the Vault | 1 |
-| Whenever enchanted creature attacks or blocks, its controller loses 3 life. | Contaminated Bond | 1 |
-| Whenever enchanted creature becomes the target of a spell or ability, that spell or ability's controller gains control of that creature. | Fractured Loyalty | 1 |
-| Whenever equipped creature blocks or becomes blocked by a creature, destroy both creatures. | Dead-Iron Sledge | 1 |
-| Whenever equipped creature deals combat damage to a player, destroy all permanents other than this Equipment. | Worldslayer | 1 |
-| Whenever you're dealt damage, put that many charge counters on this artifact. | Sun Droplet | 1 |
-| You can't cast creature spells. | Grid Monitor | 1 |
-| You can't lose the game and your opponents can't win the game. | Platinum Angel | 1 |
-| You control enchanted artifact creature. | Domineer | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Choose one | 5 | Blinding Beam, Grab the Reins, Incite War, Journey of Discovery, Wail of the Nim | mrd |
+| whenever ~ attacks or blocks, remove a +N/+N counter from it at end of combat. | 4 | Clockwork Beetle, Clockwork Condor, Clockwork Dragon, Clockwork Vorrac | mrd |
+| Imprint | 2 | Spellweaver Helix, Thought Prison | mrd |
+| fear | 2 | Dross Prowler, Woebearer | mrd |
+| ~ gets +N/+N for each equipment attached to it. | 2 | Loxodon Punisher, Myr Adapter | mrd |
+| all creatures able to block target creature ~ do so. | 1 | Bloodscent | mrd |
+| all creatures have haste. | 1 | Mass Hysteria | mrd |
+| artifacts you control have hexproof. | 1 | Leonin Abunas | mrd |
+| as an additional cost to cast ~, sacrifice an artifact. put N +N/+N counters on target creature, where N is the sacrificed artifact's mana value. | 1 | Forge Armor | mrd |
+| as long as a card exiled with ~ is a creature card, ~ has the power, toughness, and creature types of the last creature card exiled with it. it's still a shapes | 1 | Duplicant | mrd |
+| as long as ~ is equipped, each creature you control that's a soldier or a knight gets +N/+N. | 1 | Auriok Steelshaper | mrd |
+| as long as ~ is equipped, it gets +N/+N and has flying. | 1 | Skyhunter Cub | mrd |
+| as long as ~ is equipped, it gets +N/+N and has vigilance. | 1 | Leonin Den-Guard | mrd |
+| at the beginning of each opponent's upkeep, that player chooses draw step, main phase, or combat phase. the player skips each instance of the chosen step or pha | 1 | Fatespinner | mrd |
+| at the beginning of each player"..."s an artifact, creature, enchantment, or land card, the player may put it onto the battlefield. | 1 | Gate to the Aether | mrd |
+| at the beginning of each player's first main phase, if ~ is untapped, that player adds {M} for each artifact they control. | 1 | Blinkmoth Urn | mrd |
+| at the beginning of each player's upkeep, that player puts a flood counter on target non-island land they control of their choice. that land is an island for as | 1 | Quicksilver Fountain | mrd |
+| at the beginning of each upkeep, each player exiles the top card of their library. the player who exiled the card with the greatest mana value takes an extra tu | 1 | Timesifter | mrd |
+| at the beginning of your end step, target opponent gains control of ~ and puts a charge counter on it. | 1 | Jinxed Choker | mrd |
+| at the beginning of your upkeep, draw a card if you had no cards in hand at the beginning of ~. if you had a card in hand, ~ deals N damage to you. | 1 | Mindstorm Crown | mrd |
+| at the beginning of your upkeep, sacrifice another artifact. if you can't, tap ~ and you lose N life. | 1 | Rust Elemental | mrd |
+| at the beginning of your upkeep, the player with the lowest life total gains control of ~. if two or more players are tied for lowest life total, you choose one | 1 | Loxodon Peacekeeper | mrd |
+| choose a card name. reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. exile all other cards r | 1 | Spoils of the Vault | mrd |
+| counter target spell unless its controller pays {M} for each artifact you control. | 1 | Override | mrd |
+| destroy target land. if that land was nonbasic, ~ deals N damage to the land's controller. | 1 | Molten Rain | mrd |
+| each artifact spell costs {M} more to cast for each artifact its controller controls. | 1 | Hum of the Radix | mrd |
+| each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | 1 | March of the Machines | mrd |
+| each player returns to the battlefield all artifact, creature, enchantment, and land cards in their graveyard that were put there from the battlefield ~. | 1 | Second Sunrise | mrd |
+| enchanted artifact has "..." | 1 | Relic Bane | mrd |
+| equipped creature gets +N/+N and doesn"..."s untap step. | 1 | Vulshok Gauntlets | mrd |
+| equipped creature gets +N/+N for each card in your hand. | 1 | Empyrial Plate | mrd |
+| equipped creature gets +N/+N for each charge counter on ~. | 1 | Banshee's Blade | mrd |
+| equipped creature gets +N/+N for each equipment attached to it. | 1 | Golem-Skin Gauntlets | mrd |
+| equipped creature gets +N/+N for each swamp you control. | 1 | Nightmare Lash | mrd |
+| exile target attacking creature and all equipment attached to it. | 1 | Soul Nova | mrd |
+| flip a coin until you lose a flip or choose to stop flipping. if you lose a flip, ~ has no effect. if you win one or more flips, ~ deals N damage to target crea | 1 | Fiery Gambit | mrd |
+| if a player would draw a card, that player exiles the top card of one of their opponents' libraries face down instead. | 1 | Shared Fate | mrd |
+| if an artifact would deal damage to you, prevent N of that damage. | 1 | Sphere of Purity | mrd |
+| if you would flip a coin, instead flip two coins and ignore one. | 1 | Krark's Thumb | mrd |
+| search your library for a nonland card and reveal it. each opponent who cast a spell ~ with the same name as that card loses N life. then shuffle. {M}{M}: retur | 1 | Grim Reminder | mrd |
+| spend only black mana on N. ~ deals N damage to any target and you gain N life. | 1 | Consume Spirit | mrd |
+| target creature gets -N/-N until end of turn for each artifact you control. | 1 | Irradiate | mrd |
+| target permanent you control gains protection from artifacts or from the color of your choice until end of turn. | 1 | Razor Barrier | mrd |
+| target player discards two cards unless they discard an artifact card. | 1 | Wrench Mind | mrd |
+| unattach all equipment from target creature. | 1 | Disarm | mrd |
+| when ~ dies, target opponent puts a card from their hand on top of their library. | 1 | Chimney Imp | mrd |
+| when ~ enters, attach all equipment on the battlefield to it. | 1 | Vulshok Battlemaster | mrd |
+| when ~ enters, exile all cards from your library. | 1 | Leveler | mrd |
+| when ~ enters, if you cast it from your hand, destroy all nonartifact, nonblack creatures. they can't be regenerated. | 1 | Reiver Demon | mrd |
+| when ~ enters, look at target opponent's hand. | 1 | Wanderguard Sentry | mrd |
+| when ~ enters, put target artifact on top of its owner's library. | 1 | Looming Hoverguard | mrd |
+| when ~ enters, sacrifice it unless an opponent was dealt damage ~. | 1 | War Elemental | mrd |
+| when ~ enters, you may pay {M}. if you do, search your library for an equipment card with mana value N or less, put that card onto the battlefield, then shuffle | 1 | Taj-Nar Swordsmith | mrd |
+| whenever a creature dealt damage by equipped creature ~ dies, return that card to the battlefield under your control. attach ~ to that creature. | 1 | Scythe of the Wretched | mrd |
+| whenever a permanent becomes untapped, that permanent's controller mills a card. | 1 | Mesmeric Orb | mrd |
+| whenever a spell or ability causes a player to shuffle their library, ~ deals N damage to that player. | 1 | Psychogenic Probe | mrd |
+| whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose N life. | 1 | Disciple of the Vault | mrd |
+| whenever an artifact, creature, or enchantment enters, its controller chooses target permanent another player controls that shares a card type with it. exchange | 1 | Confusion in the Ranks | mrd |
+| whenever enchanted creature attacks or blocks, its controller loses N life. | 1 | Contaminated Bond | mrd |
+| whenever enchanted creature becomes the target of a spell or ability, that spell or ability's controller gains control of that creature. | 1 | Fractured Loyalty | mrd |
+| whenever equipped creature blocks or becomes blocked by a creature, destroy both creatures. | 1 | Dead-Iron Sledge | mrd |
+| whenever equipped creature deals combat damage to a player, destroy all permanents other than ~. | 1 | Worldslayer | mrd |
+| whenever equipped creature deals damage to a creature, exile that creature. | 1 | Sword of Kaldra | mrd |
+| whenever you're dealt damage, put that many charge counters on ~. | 1 | Sun Droplet | mrd |
+| whenever ~ becomes blocked by an artifact creature, destroy that creature. | 1 | Ogre Leadfoot | mrd |
+| whenever ~ becomes blocked, regenerate it. | 1 | Duskworker | mrd |
+| whenever ~ deals combat damage to a creature, that creature's controller loses that much life. | 1 | Flayed Nim | mrd |
+| whenever ~ deals combat damage to a player, create that many N/N green insect creature tokens. | 1 | Living Hive | mrd |
+| you can"..."t win the game. | 1 | Platinum Angel | mrd |
+| you can't cast creature spells. | 1 | Grid Monitor | mrd |
+| you control enchanted artifact creature. | 1 | Domineer | mrd |
+| {M}, sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Wizard Replica | mrd |
+| {M}, sacrifice ~: it deals N damage to each attacking creature without flying. | 1 | Leonin Bladetrap | mrd |
+| {M}, sacrifice ~: return all cards exiled with ~ to the battlefield under your control. | 1 | Synod Sanctum | mrd |
+| {M}, {M} or {M}, {M}: return target creature to its owner's hand unless its controller pays {M}. | 1 | Crystal Shard | mrd |
+| {M}, {M}, sacrifice ~: search your library for any number of artifact cards, exile them, then create that many N/N colorless myr artifact creature tokens. then  | 1 | Myr Incubator | mrd |
+| {M}, {M}, sacrifice ~: you control target player during that player's next turn. | 1 | Mindslaver | mrd |
+| {M}, {M}: choose a card name. target opponent guesses whether a card with that name is in your hand. you may reveal your hand. if you do and your opponent guess | 1 | Liar's Pendulum | mrd |
+| {M}, {M}: create a token that's a copy of the exiled card. N is the mana value of that card. | 1 | Soul Foundry | mrd |
+| {M}, {M}: prevent all damage that would be dealt ~ by a source of your choice that shares a color with the exiled card. | 1 | Mourner's Shield | mrd |
+| {M}, {M}: target player draws a card, then discards a card. if that player discards an artifact card ~, untap ~. | 1 | Lumengrid Augur | mrd |
+| {M}, {M}: ~ deals damage equal to its power to any target. | 1 | Spikeshot Goblin | mrd |
+| {M}: add one mana of any of the exiled card's colors. | 1 | Chrome Mox | mrd |
+| {M}: destroy target artifact if its mana value is equal to the amount of unspent mana you have. | 1 | Glissa Sunseeker | mrd |
+| {M}: put target permanent you own on the bottom of your library. | 1 | Tel-Jilad Stylus | mrd |
+| {M}: target creature gets +N/+N until end of turn, where N is ~ power. | 1 | Auriok Bladewarden | mrd |
+| {M}: ~ gains all activated abilities of target creature until end of turn. | 1 | Quicksilver Elemental | mrd |
+| {M}{M}, sacrifice an artifact: bosh deals damage equal to the sacrificed artifact's mana value to any target. | 1 | Bosh, Iron Golem | mrd |
+| {M}{M}, {M}: put target creature on the bottom of its owner"..."s controller reveals cards from the top of their library until they reveal a creature card. the  | 1 | Proteus Staff | mrd |
+| {M}{M}: return ~ from your graveyard to the battlefield, then sacrifice a creature. activate only during your upkeep. | 1 | Nim Devourer | mrd |
+| ~ can't attack or block unless you pay {M} for each +N/+N counter on it. | 1 | Myr Prototype | mrd |
+| ~ can't be blocked as long as defending player controls an artifact. | 1 | Neurok Spy | mrd |
+| ~ deals N damage to target creature. if it's an artifact creature, ~ deals N damage to it instead. | 1 | Electrostatic Bolt | mrd |
+| ~ gets +N/+N for each untapped permanent your opponents control. | 1 | Copperhoof Vorrac | mrd |
+| ~ has protection from each of the exiled card's card types. | 1 | Mirror Golem | mrd |
 
 ## Notes
 

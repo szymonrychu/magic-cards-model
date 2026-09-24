@@ -43,12 +43,12 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Overload | Street Spasm | 1 |
-| {1}{B}{G}, Sacrifice another creature: Each opponent loses life equal to the sacrificed creature's power. | Jarad, Golgari Lich Lord | 1 |
-| Scavenge | Dreg Mangler | 1 |
-| {1}{B}{G}: Target creature gets +1/+1 and gains intimidate until end of turn. | Korozda Guildmage | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| overload | 1 | Street Spasm | ddj |
+| scavenge | 1 | Dreg Mangler | ddj |
+| {M}{M}{M}, sacrifice another creature: each opponent loses life equal to the sacrificed creature's power. | 1 | Jarad, Golgari Lich Lord | ddj |
+| {M}{M}{M}: target creature gets +N/+N and gains intimidate until end of turn. | 1 | Korozda Guildmage | ddj |
 
 ## Notes
 

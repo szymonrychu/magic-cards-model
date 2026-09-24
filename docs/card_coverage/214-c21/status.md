@@ -40,10 +40,10 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| As this artifact enters, you may have it become a copy of any creature on the battlefield until end of turn, except it has haste. | Cursed Mirror | 1 |
-| Whenever one or more cards are put into exile from your library and/or your graveyard, put a +1/+1 counter on Laelia. | Laelia, the Blade Reforged | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| as ~ enters, you may have it become a copy of any creature on the battlefield until end of turn, except it has haste. | 1 | Cursed Mirror | c21 |
+| whenever one or more cards are put into exile from your library and/or your graveyard, put a +N/+N counter on laelia. | 1 | Laelia, the Blade Reforged | c21 |
 
 ## Notes
 

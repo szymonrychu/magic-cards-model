@@ -3,24 +3,24 @@
 - Expansion: 107
 - Set code: `som`
 - Release date: 2010-10-01
-- Cards in scope (Modern/Pioneer/Standard-legal): 212
+- Cards in scope (Modern/Pioneer/Standard-legal): 215
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 212 |
-| Pioneer | 20 |
-| Standard | 3 |
+| Modern | 215 |
+| Pioneer | 21 |
+| Standard | 4 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 14 | 6.6% |
+| Full (handled + tested) | 15 | 7.0% |
 | Partial (unaudited) | 9 | 4.2% |
-| Not tested (handled, untested) | 119 | 56.1% |
-| Not working (silent / notice / error) | 70 | 33.0% |
+| Not tested (handled, untested) | 119 | 55.3% |
+| Not working (silent / notice / error) | 72 | 33.5% |
 
 ## Cards needing work
 
@@ -62,6 +62,7 @@
 | Infiltration Lens | silent | Whenever equipped creature becomes blocked by a creature, you may draw two cards. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Kemba, Kha Regent | silent | At the beginning of your upkeep, create a 2/2 white Cat creature token for each Equipment attached to Kemba. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Tangle | silent | Whenever this creature deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. Each | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Memoricide | silent | Choose a nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuffles | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mimic Vat | silent | Imprint — Whenever a nontoken creature dies, you may exile that card. If you do, return each other card exiled with this artifact to its owner's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Molten Psyche | silent | Each player shuffles the cards from their hand into their library, then draws that many cards. Metalcraft — If you control three or more artifacts, Molten Psych | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Molten-Tail Masticore | silent | At the beginning of your upkeep, sacrifice this creature unless you discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -80,6 +81,7 @@
 | Snapsail Glider | silent | Metalcraft — This creature has flying as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul Parry | silent | Prevent all damage one or two target creatures would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spikeshot Elder | silent | {1}{R}{R}: This creature deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Steel Hellkite | silent | {X}: Destroy each nonland permanent with mana value X whose controller was dealt combat damage by this creature this turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Strata Scythe | silent | Equipped creature gets +1/+1 for each land on the battlefield with the same name as the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunblast Angel | silent | When this creature enters, destroy all tapped creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunspear Shikari | silent | As long as this creature is equipped, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -228,7 +230,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Asceticism
 - Assault Strobe
@@ -244,87 +246,84 @@
 - Tangle Angler
 - True Conviction
 - Twisted Image
+- Wurmcoil Engine
 
 </details>
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of your upkeep, create a 2/2 white Cat creature token for each Equipment attached to Kemba. | Kemba, Kha Regent, Molten-Tail Masticore, Venser's Journal | 3 |
-| Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | Carapace Forger, Chrome Steed, Ghalma's Warden | 3 |
-| Metalcraft — As long as you control three or more artifacts, this creature gets +4/+4 and has trample. | Auriok Sunchaser, Ezuri's Brigade | 2 |
-| Arc Trail deals 2 damage to any target and 1 damage to any other target. | Arc Trail | 1 |
-| As an additional cost to cast this spell, sacrifice a creature. Destroy target creature. Its controller loses life equal to the number of creatures that died th | Flesh Allergy | 1 |
-| As long as this creature is equipped, it has first strike and lifelink. | Sunspear Shikari | 1 |
-| Choose two target creatures. Tap those creatures, then unattach all Equipment from them. | Fulgent Distraction | 1 |
-| Counter target spell that targets a permanent you control. | Turn Aside | 1 |
-| {X}, {T}: Create a token that's a copy of the exiled card. X is the mana value of that card. | Prototype Portal | 1 |
-| Create two 1/1 green Phyrexian Insect creature tokens with infect. (They deal damage to creatures in the form of -1/-1 counters and to players in the form of po | Carrion Call | 1 |
-| −1: Creatures can't be blocked this turn. | Venser, the Sojourner | 1 |
-| −5: Destroy all other permanents except for lands and tokens. | Elspeth Tirel | 1 |
-| {3}{R}: Destroy target artifact. This creature gets +X/+0 until end of turn, where X is that artifact's mana value. | Hoard-Smelter Dragon | 1 |
-| Each opponent loses X life. You gain life equal to the life lost this way. | Exsanguinate | 1 |
-| Each player shuffles the cards from their hand into their library, then draws that many cards. Metalcraft — If you control three or more artifacts, Molten Psych | Molten Psyche | 1 |
-| {2}{G}{G}{G}: Elf creatures you control get +3/+3 and gain trample until end of turn. | Ezuri, Renegade Leader | 1 |
-| Equipped creature can block an additional creature each combat. | Echo Circlet | 1 |
-| Equipped creature gets +1/+1 for each land on the battlefield with the same name as the exiled card. | Strata Scythe | 1 |
-| Equipped creature gets +2/+2, has intimidate, and is a black Zombie. | Nim Deathmantle | 1 |
-| Imprint — When this creature enters, look at the top four cards of your library, exile one face down, then put the rest on the bottom of your library in any ord | Clone Shell | 1 |
-| Imprint — Whenever a nontoken creature dies, you may exile that card. If you do, return each other card exiled with this artifact to its owner's graveyard. | Mimic Vat | 1 |
-| Intimidate | Bellowing Tanglewurm | 1 |
-| Metalcraft — Artifacts you control have shroud as long as you control three or more artifacts. | Indomitable Archangel | 1 |
-| Metalcraft — {U}: Exile this creature. Return it to the battlefield under your control at the beginning of the next end step. Activate only if you control three | Argent Sphinx | 1 |
-| Metalcraft — This artifact is a 5/5 Golem artifact creature as long as you control three or more artifacts. | Rusted Relic | 1 |
-| Metalcraft — This creature has double strike as long as you control three or more artifacts. | Auriok Edgewright | 1 |
-| Metalcraft — This creature has flying as long as you control three or more artifacts. | Snapsail Glider | 1 |
-| Metalcraft — This creature has protection from each color as long as you control three or more artifacts. | Etched Champion | 1 |
-| Other blue creatures you control get +1/+1. | Grand Architect | 1 |
-| Other creatures you control with infect get +1/+1. | Hand of the Praetors | 1 |
-| Other Myr creatures you control get +1/+1. | Myr Galvanizer | 1 |
-| Players can't search libraries. Any player may pay {2} for that player to ignore this effect until end of turn. | Leonin Arbiter | 1 |
-| Prevent all damage one or two target creatures would deal this turn. | Soul Parry | 1 |
-| {4}, {T}: Proliferate twice. | Contagion Engine | 1 |
-| {X}{B}: Put target artifact or creature card with mana value X from an opponent's graveyard onto the battlefield tapped under your control. Then that player mil | Geth, Lord of the Vault | 1 |
-| {2}, {T}, Remove a charge counter from this artifact: Create a 1/1 green Phyrexian Insect creature token with infect. | Trigon of Infestation | 1 |
-| {B}, Remove a -1/-1 counter from this creature: Put a -1/-1 counter on each other creature. | Carnifex Demon | 1 |
-| Reveal the top X cards of your library. You may put any number of permanent cards with mana value X or less from among them onto the battlefield. Then put all c | Genesis Wave | 1 |
-| {T}, Sacrifice this artifact: Target creature can't block this turn. | Panic Spellbomb | 1 |
-| {W}, Sacrifice this creature: Prevent all damage a source of your choice would deal to you this turn. | Auriok Replica | 1 |
-| Spells you cast that share a card type with the exiled card cost {2} less to cast. | Semblance Anvil | 1 |
-| Target creature gets +X/+X until end of turn. | Untamed Might | 1 |
-| Target opponent reveals the top card of their library. Cerebral Eruption deals damage equal to the revealed card's mana value to that player and each creature t | Cerebral Eruption | 1 |
-| Target player discards a card. If a land card is discarded this way, return Psychic Miasma to its owner's hand. | Psychic Miasma | 1 |
-| {T}: Target player mills X cards, where X is the number of charge counters on this artifact. | Grindclock | 1 |
-| Target player sacrifices an attacking creature of their choice. Metalcraft — That player sacrifices two attacking creatures of their choice instead if you contr | Dispense Justice | 1 |
-| The controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. That player puts that card | Shape Anew | 1 |
-| This creature can't be blocked as long as defending player controls an artifact. | Scrapdiver Serpent | 1 |
-| {1}{R}{R}: This creature deals damage equal to its power to any target. | Spikeshot Elder | 1 |
-| This creature gets +2/+0 for each Equipment attached to it. | Goblin Gaveleer | 1 |
-| Turn to Slag deals 5 damage to target creature. Destroy all Equipment attached to that creature. | Turn to Slag | 1 |
-| {1}: Until end of turn, this artifact becomes a Construct artifact creature with "This creature's power and toughness are each equal to the number of charge cou | Chimeric Mass | 1 |
-| When this creature enters, destroy all tapped creatures. | Sunblast Angel | 1 |
-| When this creature enters, return target artifact card from your graveyard to your hand. You gain life equal to that card's mana value. | Razor Hippogriff | 1 |
-| When this creature enters, sacrifice it unless you return an artifact you control to its owner's hand. | Glint Hawk | 1 |
-| When this land enters, you gain 1 life for each Locus on the battlefield. | Glimmerpost | 1 |
-| Whenever a creature you control dies, you may pay {X}. If you do, you gain X life. | Vigil for the Lost | 1 |
-| Whenever a player casts an instant or sorcery spell that targets only a single Golem, that player copies that spell for each other Golem that spell could target | Precursor Golem | 1 |
-| Whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | Viridian Revel | 1 |
-| Whenever an opponent casts a spell, that player loses 5 life unless they discard a card. | Painful Quandary | 1 |
-| Whenever another artifact you control enters, you may have this artifact become a 2/2 Bird artifact creature with flying until end of turn. | Glint Hawk Idol | 1 |
-| Whenever enchanted artifact becomes tapped, its controller gets a poison counter. | Relic Putrescence | 1 |
-| Whenever equipped creature becomes blocked by a creature, you may draw two cards. | Infiltration Lens | 1 |
-| Whenever this creature attacks, gain control of target Equipment an opponent controls until end of turn. Attach it to this creature. When you lose control of th | Ogre Geargrabber | 1 |
-| Whenever this creature attacks, untap each other creature you control. | Copperhorn Scout | 1 |
-| Whenever this creature attacks, you may tap X untapped Myr you control. If you do, this creature gets +X/+0 until end of turn and deals X damage to the player o | Myr Battlesphere | 1 |
-| Whenever this creature blocks or becomes blocked by a creature, destroy that creature. You gain life equal to that creature's toughness. | Engulfing Slagwurm | 1 |
-| Whenever this creature deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. Each | Liege of the Tangle | 1 |
-| Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | Grafted Exoskeleton | 1 |
-| Whenever you cast an artifact spell, you may have target creature get +2/+0 and gain deathtouch until end of turn. | Painsmith | 1 |
-| You gain 1 life for each creature on the battlefield. Prevent all combat damage that would be dealt this turn. | Blunt the Assault | 1 |
-| You may choose not to untap this creature during your untap step. | Rust Tick | 1 |
-| You may have this creature enter as a copy of any creature on the battlefield, except it's 7/7. | Quicksilver Gargantuan | 1 |
-| Your life total can't change. | Platinum Emperion | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Metalcraft | 11 | Argent Sphinx, Auriok Edgewright, Auriok Sunchaser, Carapace Forger, Chrome Steed | som |
+| Imprint | 2 | Clone Shell, Mimic Vat | som |
+| as an additional cost to cast ~, sacrifice a creature. destroy target creature. its controller loses life equal to the number of creatures that died ~. | 1 | Flesh Allergy | som |
+| as long as ~ is equipped, it has first strike and lifelink. | 1 | Sunspear Shikari | som |
+| at the beginning of your upkeep, create a N/N white cat creature token for each equipment attached to kemba. | 1 | Kemba, Kha Regent | som |
+| at the beginning of your upkeep, sacrifice ~ unless you discard a card. | 1 | Molten-Tail Masticore | som |
+| at the beginning of your upkeep, you gain N life for each card in your hand. | 1 | Venser's Journal | som |
+| choose a nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles | 1 | Memoricide | som |
+| choose two target creatures. tap those creatures, then unattach all equipment from them. | 1 | Fulgent Distraction | som |
+| counter target spell that targets a permanent you control. | 1 | Turn Aside | som |
+| create two N/N green phyrexian insect creature tokens with infect. (they deal damage to creatures in the form of -N/-N counters and to players in the form of po | 1 | Carrion Call | som |
+| each opponent loses N life. you gain life equal to the life lost ~. | 1 | Exsanguinate | som |
+| each player shuffles the cards from their hand into their library, then draws that many cards. metalcraft — if you control three or more artifacts, ~ deals dama | 1 | Molten Psyche | som |
+| equipped creature can block an additional creature each combat. | 1 | Echo Circlet | som |
+| equipped creature gets +N/+N for each land on the battlefield with the same name as the exiled card. | 1 | Strata Scythe | som |
+| equipped creature gets +N/+N, has intimidate, and is a black zombie. | 1 | Nim Deathmantle | som |
+| intimidate | 1 | Bellowing Tanglewurm | som |
+| other blue creatures you control get +N/+N. | 1 | Grand Architect | som |
+| other creatures you control with infect get +N/+N. | 1 | Hand of the Praetors | som |
+| other myr creatures you control get +N/+N. | 1 | Myr Galvanizer | som |
+| players can't search libraries. any player may pay {M} for that player to ignore ~ until end of turn. | 1 | Leonin Arbiter | som |
+| prevent all damage one or two target creatures would deal ~. | 1 | Soul Parry | som |
+| reveal the top N cards of your library. you may put any number of permanent cards with mana value N or less from among them onto the battlefield. then put all c | 1 | Genesis Wave | som |
+| spells you cast that share a card type with the exiled card cost {M} less to cast. | 1 | Semblance Anvil | som |
+| target creature gets +N/+N until end of turn. | 1 | Untamed Might | som |
+| target opponent reveals the top card of their library. ~ deals damage equal to the revealed card"..."s hand. | 1 | Cerebral Eruption | som |
+| target player discards a card. if a land card is discarded ~, return ~ to its owner's hand. | 1 | Psychic Miasma | som |
+| target player sacrifices an attacking creature of their choice. metalcraft — that player sacrifices two attacking creatures of their choice instead if you contr | 1 | Dispense Justice | som |
+| the controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. that player puts that card | 1 | Shape Anew | som |
+| when ~ enters, destroy all tapped creatures. | 1 | Sunblast Angel | som |
+| when ~ enters, return target artifact card from your graveyard to your hand. you gain life equal to that card's mana value. | 1 | Razor Hippogriff | som |
+| when ~ enters, sacrifice it unless you return an artifact you control to its owner's hand. | 1 | Glint Hawk | som |
+| when ~ enters, you gain N life for each locus on the battlefield. | 1 | Glimmerpost | som |
+| whenever a creature you control dies, you may pay {M}. if you do, you gain N life. | 1 | Vigil for the Lost | som |
+| whenever a player casts an instant or sorcery spell that targets only a single golem, that player copies that spell for each other golem that spell could target | 1 | Precursor Golem | som |
+| whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | 1 | Viridian Revel | som |
+| whenever an opponent casts a spell, that player loses N life unless they discard a card. | 1 | Painful Quandary | som |
+| whenever another artifact you control enters, you may have ~ become a N/N bird artifact creature with flying until end of turn. | 1 | Glint Hawk Idol | som |
+| whenever enchanted artifact becomes tapped, its controller gets a poison counter. | 1 | Relic Putrescence | som |
+| whenever equipped creature becomes blocked by a creature, you may draw two cards. | 1 | Infiltration Lens | som |
+| whenever you cast an artifact spell, you may have target creature get +N/+N and gain deathtouch until end of turn. | 1 | Painsmith | som |
+| whenever ~ attacks, gain control of target equipment an opponent controls until end of turn. attach it to ~. when you lose control of that equipment, unattach i | 1 | Ogre Geargrabber | som |
+| whenever ~ attacks, untap each other creature you control. | 1 | Copperhorn Scout | som |
+| whenever ~ attacks, you may tap N untapped myr you control. if you do, ~ gets +N/+N until end of turn and deals N damage to the player or planeswalker it's atta | 1 | Myr Battlesphere | som |
+| whenever ~ becomes unattached from a permanent, sacrifice that permanent. | 1 | Grafted Exoskeleton | som |
+| whenever ~ blocks or becomes blocked by a creature, destroy that creature. you gain life equal to that creature's toughness. | 1 | Engulfing Slagwurm | som |
+| whenever ~ deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. each of those la | 1 | Liege of the Tangle | som |
+| you gain N life for each creature on the battlefield. prevent all combat damage that would be dealt ~. | 1 | Blunt the Assault | som |
+| you may choose not to untap ~ during your untap step. | 1 | Rust Tick | som |
+| you may have ~ enter as a copy of any creature on the battlefield, except it's N/N. | 1 | Quicksilver Gargantuan | som |
+| your life total can't change. | 1 | Platinum Emperion | som |
+| {M}, remove a -N/-N counter from ~: put a -N/-N counter on each other creature. | 1 | Carnifex Demon | som |
+| {M}, sacrifice ~: prevent all damage a source of your choice would deal to you ~. | 1 | Auriok Replica | som |
+| {M}, sacrifice ~: target creature can't block ~. | 1 | Panic Spellbomb | som |
+| {M}, {M}, remove a charge counter from ~: create a N/N green phyrexian insect creature token with infect. | 1 | Trigon of Infestation | som |
+| {M}, {M}: create a token that's a copy of the exiled card. N is the mana value of that card. | 1 | Prototype Portal | som |
+| {M}, {M}: proliferate twice. | 1 | Contagion Engine | som |
+| {M}: destroy each nonland permanent with mana value N whose controller was dealt combat damage by ~ ~. activate only once each turn. | 1 | Steel Hellkite | som |
+| {M}: target player mills N cards, where N is the number of charge counters on ~. | 1 | Grindclock | som |
+| {M}: until end of turn, ~ becomes a construct artifact creature with "..." | 1 | Chimeric Mass | som |
+| {M}{M}: destroy target artifact. ~ gets +N/+N until end of turn, where N is that artifact's mana value. | 1 | Hoard-Smelter Dragon | som |
+| {M}{M}: put target artifact or creature card with mana value N from an opponent's graveyard onto the battlefield tapped under your control. then that player mil | 1 | Geth, Lord of the Vault | som |
+| {M}{M}{M}: ~ deals damage equal to its power to any target. | 1 | Spikeshot Elder | som |
+| {M}{M}{M}{M}: elf creatures you control get +N/+N and gain trample until end of turn. | 1 | Ezuri, Renegade Leader | som |
+| ~ can't be blocked as long as defending player controls an artifact. | 1 | Scrapdiver Serpent | som |
+| ~ deals N damage to any target and N damage to any other target. | 1 | Arc Trail | som |
+| ~ deals N damage to target creature. destroy all equipment attached to that creature. | 1 | Turn to Slag | som |
+| ~ gets +N/+N for each equipment attached to it. | 1 | Goblin Gaveleer | som |
+| −N: creatures can't be blocked ~. | 1 | Venser, the Sojourner | som |
+| −N: destroy all other permanents except for lands and tokens. | 1 | Elspeth Tirel | som |
 
 ## Notes
 

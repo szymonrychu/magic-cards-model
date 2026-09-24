@@ -3,14 +3,14 @@
 - Expansion: 061
 - Set code: `rav`
 - Release date: 2005-10-07
-- Cards in scope (Modern/Pioneer/Standard-legal): 245
+- Cards in scope (Modern/Pioneer/Standard-legal): 247
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 245 |
-| Pioneer | 19 |
+| Modern | 247 |
+| Pioneer | 20 |
 | Standard | 8 |
 
 ## Coverage
@@ -19,8 +19,8 @@
 |---|---|---|
 | Full (handled + tested) | 13 | 5.3% |
 | Partial (unaudited) | 16 | 6.5% |
-| Not tested (handled, untested) | 110 | 44.9% |
-| Not working (silent / notice / error) | 106 | 43.3% |
+| Not tested (handled, untested) | 111 | 44.9% |
+| Not working (silent / notice / error) | 107 | 43.3% |
 
 ## Cards needing work
 
@@ -53,6 +53,7 @@
 | Festival of the Guildpact | silent | Prevent the next X damage that would be dealt to you this turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flame Fusillade | silent | Until end of turn, permanents you control gain "{T}: This permanent deals 1 damage to any target." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Followed Footsteps | silent | At the beginning of your upkeep, create a token that's a copy of enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Gleancrawler | silent | At the beginning of your end step, return to your hand all creature cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Golgari Brownscale | silent | When this card is put into your hand from your graveyard, you gain 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Golgari Thug | silent | When this creature dies, put target creature card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grozoth | silent | When this creature enters, you may search your library for any number of cards that have mana value 9, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -240,6 +241,7 @@
 | Sewerdreg | handled | Sacrifice this creature: Exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shambling Shell | handled | Sacrifice this creature: Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Siege Wurm | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
+| Skyknight Legionnaire | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Sparkmage Apprentice | handled | When this creature enters, it deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stasis Cell | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stone-Seeder Hierophant | handled | Landfall — Whenever a land you control enters, untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -282,114 +284,122 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature enters, target opponent creates two 3/3 green Centaur creature tokens with protection from black. | Hunted Dragon, Hunted Horror, Hunted Lammasu, Hunted Phantasm, Hunted Troll | 5 |
-| At the beginning of your end step, destroy each creature with mana value equal to the number of +1/+1 counters on this creature. | Followed Footsteps, Mark of Eviction, Necroplasm | 3 |
-| Whenever this creature deals combat damage to a player, you may look at that player's hand. If you do, you may cast a spell from among those cards without payin | Mindleech Mass, Stinkweed Imp, Sunhome Enforcer | 3 |
-| At the beginning of each player's upkeep, that player sacrifices a creature of their choice. If the player can't, sacrifice this creature. | Bottled Cloister, Woebringer Demon | 2 |
-| ({B/G} can be paid with either {B} or {G}.) Regenerate target creature. At this turn's next end of combat, destroy all creatures that blocked or were blocked by | Gaze of the Gorgon, Shadow of Doubt | 2 |
-| Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Prevent all | Chant of Vitu-Ghazi, Hour of Reckoning | 2 |
-| Fear | Dimir House Guard, Undercity Shade | 2 |
-| Look at the top three cards of target player's library. Exile any number of those cards, then put the rest back in any order. Transmute {1}{B}{B} ({1}{B}{B}, Di | Dimir Machinations, Telling Time | 2 |
-| Radiance — Target creature and each other creature that shares a color with it gain haste until end of turn. | Surge of Zeal, Wojek Siren | 2 |
-| When this creature enters, sacrifice it unless you return an enchantment to its owner's hand. | Drake Familiar, Vindictive Mob | 2 |
-| When this creature enters, you may exchange control of target creature you control and target creature with power less than or equal to that creature's power an | Grozoth, Spawnbroker | 2 |
-| Activated abilities cost {2} more to activate unless they're mana abilities. | Suppression Field | 1 |
-| {2}{G}: All creatures able to block this creature this turn do so. | Mortipede | 1 |
-| All damage that would be dealt to you is dealt to equipped creature instead. | Pariah's Shield | 1 |
-| Artifacts, creatures, and lands your opponents control enter tapped. | Loxodon Gatekeeper | 1 |
-| As an additional cost to cast creature spells, you may pay any amount of mana. If you do, that creature enters with that many additional +1/+1 counters on it. | Chorus of the Conclave | 1 |
-| As long as the top card of your library is a creature card, creatures you control that share a color with that card get +1/+1. | Crown of Convergence | 1 |
-| As this creature enters, flip a coin. If the coin comes up heads, this creature enters as a 5/2 creature with haste. If it comes up tails, this creature enters  | Molten Sentry | 1 |
-| Cast this spell only before attackers are declared. You choose which creatures attack this turn. You choose which creatures block this turn and how those creatu | Master Warcraft | 1 |
-| Char deals 4 damage to any target and 2 damage to you. | Char | 1 |
-| {1}: Choose a basic land type. Each land you control becomes that type until end of turn. | Terraformer | 1 |
-| Choose a card name. Target player reveals cards from the top of their library until a card with that name is revealed. If it is, that player puts the rest of th | Tunnel Vision | 1 |
-| {T}: Choose a player. That player adds one mana of any color they choose. | Spectral Searchlight | 1 |
-| Counter target spell. If that spell is countered this way, put it into its owner's hand instead of into that player's graveyard. Draw a card. | Remand | 1 |
-| Counter target spell. If {B} was spent to cast this spell, that spell's controller mills X cards, where X is the spell's mana value. | Induce Paranoia | 1 |
-| Counter target spell unless its controller discards their hand. Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same  | Perplex | 1 |
-| {1}{R}: Creatures without defender can't block this creature this turn. | Sabertooth Alley Cat | 1 |
-| Creatures you control have vigilance as long as this creature is enchanted. | Gate Hound | 1 |
-| Damage that would be dealt by this creature can't be prevented. | Excruciator | 1 |
-| Destroy target land. If {B} was spent to cast this spell, all creatures get -1/-1 until end of turn. | Rolling Spoil | 1 |
-| Dogpile deals damage to any target equal to the number of attacking creatures you control. | Dogpile | 1 |
-| Each player chooses three permanents they control, then sacrifices the rest. | Razia's Purification | 1 |
-| Each player returns all creature cards from their graveyard to their hand. | Empty the Catacombs | 1 |
-| Each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. Each player puts all artifact, crea | Warp World | 1 |
-| Each player shuffles their graveyard into their library. | Mnemonic Nexus | 1 |
-| Enchanted creature gets +0/+2 for each other creature you control. | Conclave's Blessing | 1 |
-| Enchanted permanent can't attack or block, and its activated abilities can't be activated unless they're mana abilities. | Faith's Fetters | 1 |
-| {2}{W}{W}: Exile enchanted creature and all Auras attached to it. At the beginning of the next end step, return that card to the battlefield under its owner's c | Flickerform | 1 |
-| {1}{U}{B}: Exile target creature card from a graveyard. This creature becomes a copy of that card, except it has this ability. | Dimir Doppelganger | 1 |
-| Exile up to four target cards from a single graveyard. Transmute {1}{B}{B} ({1}{B}{B}, Discard this card: Search your library for a card with the same mana valu | Shred Memory | 1 |
-| If a source would deal damage to a permanent or player, it deals half that damage, rounded down, to that permanent or player instead. | Ghosts of the Innocent | 1 |
-| If damage would be dealt to this creature, put that many +1/+1 counters on it instead. | Phytohydra | 1 |
-| If Szadek would deal combat damage to a player, instead put that many +1/+1 counters on Szadek and that player mills that many cards. | Szadek, Lord of Secrets | 1 |
-| {2}, {T}: Look at the top card of target player's library. You may put that card into that player's graveyard. | Lurking Informant | 1 |
-| Look at the top five cards of your library. For each card, put that card into your graveyard unless you pay 2 life. Then put the rest into your hand. | Moonlight Bargain | 1 |
-| Other permanents you control have hexproof. | Privileged Position | 1 |
-| Players play with the top card of their libraries revealed. | Wizened Snitches | 1 |
-| Prevent all damage that this creature would deal to red creatures. | Indentured Oaf | 1 |
-| Prevent all damage that would be dealt to creatures you control by sources you control. | Light of Sanction | 1 |
-| {W}: Prevent the next 1 damage that would be dealt to this creature this turn. | Ordruun Commando | 1 |
-| Prevent the next X damage that would be dealt to you this turn. Draw a card. | Festival of the Guildpact | 1 |
-| {1}{B}{G}: Put a plague counter on this artifact or remove a plague counter from it. | Plague Boiler | 1 |
-| Radiance — Brightflame deals X damage to target creature and each other creature that shares a color with it. You gain life equal to the damage dealt this way. | Brightflame | 1 |
-| Radiance — Choose a color. Target creature and each other creature that shares a color with it gain protection from the chosen color until end of turn. | Bathe in Light | 1 |
-| Radiance — Cleansing Beam deals 2 damage to target creature and each other creature that shares a color with it. | Cleansing Beam | 1 |
-| Radiance — Destroy target enchantment and each other enchantment that shares a color with it. | Leave No Trace | 1 |
-| Radiance — {T}: This creature deals 1 damage to target creature and each other creature that shares a color with it. | Wojek Embermage | 1 |
-| Radiance — Untap target creature and each other creature that shares a color with it. Those creatures get +2/+0 until end of turn. | Rally the Righteous | 1 |
-| Radiance — Until end of turn, target creature and each other creature that shares a color with it gain "This creature can't block." | Incite Hysteria | 1 |
-| Rain of Embers deals 1 damage to each creature and each player. | Rain of Embers | 1 |
-| {B}: Regenerate enchanted creature. | Strands of Undeath | 1 |
-| {U}{B}: Remove a blood counter from this artifact. | Bloodletter Quill | 1 |
-| Return target creature card from your graveyard to the battlefield. If {G} was spent to cast this spell, that creature enters with an additional +1/+1 counter o | Vigor Mortis | 1 |
-| Return target creature you control and target creature you don't control to their owners' hands. | Peel from Reality | 1 |
-| Ribbons of Night deals 4 damage to target creature and you gain 4 life. If {U} was spent to cast this spell, draw a card. | Ribbons of Night | 1 |
-| {1}, Sacrifice a creature: Look at the top two cards of target opponent's library, then exile one of them. | Thoughtpicker Witch | 1 |
-| {2}, Sacrifice this artifact: Exile target creature. Return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | Voyager Staff | 1 |
-| {W}, Sacrifice this creature: Create a 1/1 white Spirit creature token with flying at the beginning of the next end step. | Transluminant | 1 |
-| {G}{W}, Sacrifice this creature: Regenerate each creature you control. | Loxodon Hierarch | 1 |
-| {1}{R}, Sacrifice this enchantment: It deals 3 damage to each tapped creature and each player. | Blockbuster | 1 |
-| Sacrifice three lands: This creature loses defender until end of turn. | Torpid Moloch | 1 |
-| Search your library for up to three creature cards, reveal them, then shuffle and put those cards on top in any order. | Congregation at Dawn | 1 |
-| Target creature becomes the color or colors of your choice until end of turn. Draw a card. | Quickchange | 1 |
-| {T}: Target creature can't attack or block this turn. | Thundersong Trumpeter | 1 |
-| {R}: Target creature can't block this creature this turn. | Screeching Griffin | 1 |
-| {1}{B}{G}, {T}: Target Forest becomes a 4/4 black and green Elemental Horror creature. It's still a land. | Woodwraith Corrupter | 1 |
-| Target player draws three cards. Then that player discards two cards unless they discard a land card. | Compulsive Research | 1 |
-| Target player sacrifices a creature of their choice. You draw cards equal to that creature's power. | Twisted Justice | 1 |
-| {T}: The next 3 damage that would be dealt to target creature you control this turn is dealt to another target creature instead. | Razia, Boros Archangel | 1 |
-| This creature can block an additional creature each combat. | Selesnya Sagittars | 1 |
-| {T}: This creature deals 4 damage to each creature without flying and each player. | Hammerfist Giant | 1 |
-| {4}: This creature loses defender until end of turn. | Tidewater Minion | 1 |
-| {R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost.  | Sunforger | 1 |
-| Untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. If {W} was spent to cast this spell, the creature g | Flash Conscription | 1 |
-| Until end of turn, permanents you control gain "{T}: This permanent deals 1 damage to any target." | Flame Fusillade | 1 |
-| {3}{B}{G}: Until end of turn, this land becomes a black and green Plant Zombie creature with "This creature's power and toughness are each equal to the number o | Svogthos, the Restless Tomb | 1 |
-| Until end of turn, you may cast target instant or sorcery card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, | Sins of the Past | 1 |
-| When enchanted creature deals combat damage to a player, sacrifice it and attach this Aura to a creature you control. If you do, untap all creatures you control | Breath of Fury | 1 |
-| When this card is put into your hand from your graveyard, you gain 2 life. | Golgari Brownscale | 1 |
-| When this creature dies, each player puts a card from their hand on top of their library. | Sadistic Augermage | 1 |
-| When this creature dies, put target creature card from your graveyard on top of your library. | Golgari Thug | 1 |
-| When this creature enters, each opponent loses 1 life for each creature they control. | Netherborn Phalanx | 1 |
-| Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on this creature. | Vulturous Zombie | 1 |
-| Whenever a nonartifact permanent you control enters, you may return another permanent you control that shares a permanent type with it to its owner's hand. | Cloudstone Curio | 1 |
-| Whenever a player casts a creature spell, each player returns all cards with the same name as that spell from their graveyard to the battlefield. | Bloodbond March | 1 |
-| Whenever a player casts an instant or sorcery card, exile it. Then that player copies each instant or sorcery card exiled with this enchantment. For each copy,  | Eye of the Storm | 1 |
-| Whenever Agrus Kos attacks, attacking red creatures get +2/+0 and attacking white creatures get +0/+2 until end of turn. | Agrus Kos, Wojek Veteran | 1 |
-| Whenever enchanted creature deals combat damage to a player, create that many 1/1 green Saproling creature tokens. | Pollenbright Wings | 1 |
-| Whenever this creature is dealt damage, it deals that much damage to each player. | Coalhauler Swine | 1 |
-| Whenever you cast a blue spell, exile the top card of target player's library. | Circu, Dimir Lobotomist | 1 |
-| Whenever you cast a creature spell, this enchantment becomes a 4/4 Illusion creature with flying in addition to its other types until end of turn. | Halcyon Glaze | 1 |
-| Whenever you cast a noncreature spell, counter that spell unless you sacrifice a creature. | Blood Funnel | 1 |
-| Whenever you cast a spell, put the cards in your hand on the bottom of your library in any order, then draw that many cards. | Mindmoil | 1 |
-| Whenever you sacrifice a black creature, you may pay 2 life. If you do, each other player sacrifices a creature of their choice. | Savra, Queen of the Golgari | 1 |
-| You can't choose an untapped permanent as this spell's target as you cast it. | Dream Leash | 1 |
-| You gain 1 life for each creature on the battlefield. If {W} was spent to cast this spell, untap all creatures you control. | Dryad's Caress | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Radiance | 9 | Bathe in Light, Brightflame, Cleansing Beam, Incite Hysteria, Leave No Trace | rav |
+| fear | 2 | Dimir House Guard, Undercity Shade | rav |
+| ({M} can be paid with either {M} or {M}.) players can't search libraries ~. draw a card. | 1 | Shadow of Doubt | rav |
+| ({M} can be paid with either {M} or {M}.) regenerate target creature. at ~ next end of combat, destroy all creatures that blocked or were blocked by it ~. | 1 | Gaze of the Gorgon | rav |
+| activated abilities cost {M} more to activate unless they're mana abilities. | 1 | Suppression Field | rav |
+| all damage that would be dealt to you is dealt to equipped creature instead. | 1 | Pariah's Shield | rav |
+| artifacts, creatures, and lands your opponents control enter tapped. | 1 | Loxodon Gatekeeper | rav |
+| as an additional cost to cast creature spells, you may pay any amount of mana. if you do, that creature enters with that many additional +N/+N counters on it. | 1 | Chorus of the Conclave | rav |
+| as long as the top card of your library is a creature card, creatures you control that share a color with that card get +N/+N. | 1 | Crown of Convergence | rav |
+| as ~ enters, flip a coin. if the coin comes up heads, ~ enters as a N/N creature with haste. if it comes up tails, ~ enters as a N/N creature with defender. | 1 | Molten Sentry | rav |
+| at the beginning of each opponent's upkeep, exile all cards from your hand face down. | 1 | Bottled Cloister | rav |
+| at the beginning of each player"..."t, sacrifice ~. | 1 | Woebringer Demon | rav |
+| at the beginning of your end step, destroy each creature with mana value equal to the number of +N/+N counters on ~. | 1 | Necroplasm | rav |
+| at the beginning of your end step, return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | Gleancrawler | rav |
+| at the beginning of your upkeep, create a token that's a copy of enchanted creature. | 1 | Followed Footsteps | rav |
+| at the beginning of your upkeep, return enchanted creature and all auras attached to that creature to their owners' hands. | 1 | Mark of Eviction | rav |
+| cast ~ only before attackers are declared. you choose which creatures attack ~. you choose which creatures block ~ and how those creatures block. | 1 | Master Warcraft | rav |
+| choose a card name. target player reveals cards from the top of their library until a card with that name is revealed. if it is, that player puts the rest of th | 1 | Tunnel Vision | rav |
+| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) destroy all nontoken creature | 1 | Hour of Reckoning | rav |
+| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) prevent all damage that would | 1 | Chant of Vitu-Ghazi | rav |
+| counter target spell unless its controller discards their hand. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the same mana val | 1 | Perplex | rav |
+| counter target spell. if that spell is countered ~, put it into its owner"..."s graveyard. draw a card. | 1 | Remand | rav |
+| counter target spell. if {M} was spent to cast ~, that spell"..."s mana value. | 1 | Induce Paranoia | rav |
+| creatures you control have vigilance as long as ~ is enchanted. | 1 | Gate Hound | rav |
+| damage that would be dealt by ~ can't be prevented. | 1 | Excruciator | rav |
+| destroy target land. if {M} was spent to cast ~, all creatures get -N/-N until end of turn. | 1 | Rolling Spoil | rav |
+| each player chooses three permanents they control, then sacrifices the rest. | 1 | Razia's Purification | rav |
+| each player returns all creature cards from their graveyard to their hand. | 1 | Empty the Catacombs | rav |
+| each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. each player puts all artifact, crea | 1 | Warp World | rav |
+| each player shuffles their graveyard into their library. | 1 | Mnemonic Nexus | rav |
+| enchanted creature gets +N/+N for each other creature you control. | 1 | Conclave's Blessing | rav |
+| enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Faith's Fetters | rav |
+| exile up to four target cards from a single graveyard. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the same mana value as ~,  | 1 | Shred Memory | rav |
+| if a source would deal damage to a permanent or player, it deals half that damage, rounded down, to that permanent or player instead. | 1 | Ghosts of the Innocent | rav |
+| if damage would be dealt to ~, put that many +N/+N counters on it instead. | 1 | Phytohydra | rav |
+| if szadek would deal combat damage to a player, instead put that many +N/+N counters on szadek and that player mills that many cards. | 1 | Szadek, Lord of Secrets | rav |
+| look at the top five cards of your library. for each card, put that card into your graveyard unless you pay N life. then put the rest into your hand. | 1 | Moonlight Bargain | rav |
+| look at the top three cards of target player's library. exile any number of those cards, then put the rest back in any order. transmute {M}{M}{M} ({M}{M}{M}, di | 1 | Dimir Machinations | rav |
+| look at the top three cards of your library. put one of those cards into your hand, one on top of your library, and one on the bottom of your library. | 1 | Telling Time | rav |
+| other permanents you control have hexproof. | 1 | Privileged Position | rav |
+| players play with the top card of their libraries revealed. | 1 | Wizened Snitches | rav |
+| prevent all damage that would be dealt to creatures you control by sources you control. | 1 | Light of Sanction | rav |
+| prevent all damage that ~ would deal to red creatures. | 1 | Indentured Oaf | rav |
+| prevent the next N damage that would be dealt to you ~. draw a card. | 1 | Festival of the Guildpact | rav |
+| return target creature card from your graveyard to the battlefield. if {M} was spent to cast ~, that creature enters with an additional +N/+N counter on it. | 1 | Vigor Mortis | rav |
+| return target creature you control and target creature you don"..." hands. | 1 | Peel from Reality | rav |
+| sacrifice three lands: ~ loses defender until end of turn. | 1 | Torpid Moloch | rav |
+| search your library for up to three creature cards, reveal them, then shuffle and put those cards on top in any order. | 1 | Congregation at Dawn | rav |
+| target creature becomes the color or colors of your choice until end of turn. draw a card. | 1 | Quickchange | rav |
+| target player draws three cards. then that player discards two cards unless they discard a land card. | 1 | Compulsive Research | rav |
+| target player sacrifices a creature of their choice. you draw cards equal to that creature's power. | 1 | Twisted Justice | rav |
+| untap target creature and gain control of it until end of turn. that creature gains haste until end of turn. if {M} was spent to cast ~, the creature gains "... | 1 | Flash Conscription | rav |
+| until end of turn, permanents you control gain "..." | 1 | Flame Fusillade | rav |
+| until end of turn, you may cast target instant or sorcery card from your graveyard without paying its mana cost. if that spell would be put into your graveyard, | 1 | Sins of the Past | rav |
+| when enchanted creature deals combat damage to a player, sacrifice it and attach ~ to a creature you control. if you do, untap all creatures you control and aft | 1 | Breath of Fury | rav |
+| when ~ dies, each player puts a card from their hand on top of their library. | 1 | Sadistic Augermage | rav |
+| when ~ dies, put target creature card from your graveyard on top of your library. | 1 | Golgari Thug | rav |
+| when ~ enters, each opponent loses N life for each creature they control. | 1 | Netherborn Phalanx | rav |
+| when ~ enters, sacrifice a creature. | 1 | Vindictive Mob | rav |
+| when ~ enters, sacrifice it unless you return an enchantment to its owner's hand. | 1 | Drake Familiar | rav |
+| when ~ enters, target opponent creates a N/N black horror creature token. | 1 | Hunted Lammasu | rav |
+| when ~ enters, target opponent creates five N/N red goblin creature tokens. | 1 | Hunted Phantasm | rav |
+| when ~ enters, target opponent creates four N/N blue faerie creature tokens with flying. | 1 | Hunted Troll | rav |
+| when ~ enters, target opponent creates three N/N white knight creature tokens with first strike. | 1 | Hunted Dragon | rav |
+| when ~ enters, target opponent creates two N/N green centaur creature tokens with protection from black. | 1 | Hunted Horror | rav |
+| when ~ enters, you may exchange control of target creature you control and target creature with power less than or equal to that creature's power an opponent co | 1 | Spawnbroker | rav |
+| when ~ enters, you may search your library for any number of cards that have mana value N, reveal them, put them into your hand, then shuffle. | 1 | Grozoth | rav |
+| when ~ is put into your hand from your graveyard, you gain N life. | 1 | Golgari Brownscale | rav |
+| whenever a card is put into an opponent's graveyard from anywhere, put a +N/+N counter on ~. | 1 | Vulturous Zombie | rav |
+| whenever a nonartifact permanent you control enters, you may return another permanent you control that shares a permanent type with it to its owner's hand. | 1 | Cloudstone Curio | rav |
+| whenever a player casts a creature spell, each player returns all cards with the same name as that spell from their graveyard to the battlefield. | 1 | Bloodbond March | rav |
+| whenever a player casts an instant or sorcery card, exile it. then that player copies each instant or sorcery card exiled with ~. for each copy, the player may  | 1 | Eye of the Storm | rav |
+| whenever agrus kos attacks, attacking red creatures get +N/+N and attacking white creatures get +N/+N until end of turn. | 1 | Agrus Kos, Wojek Veteran | rav |
+| whenever enchanted creature deals combat damage to a player, create that many N/N green saproling creature tokens. | 1 | Pollenbright Wings | rav |
+| whenever you cast a blue spell, exile the top card of target player's library. | 1 | Circu, Dimir Lobotomist | rav |
+| whenever you cast a creature spell, ~ becomes a N/N illusion creature with flying in addition to its other types until end of turn. | 1 | Halcyon Glaze | rav |
+| whenever you cast a noncreature spell, counter that spell unless you sacrifice a creature. | 1 | Blood Funnel | rav |
+| whenever you cast a spell, put the cards in your hand on the bottom of your library in any order, then draw that many cards. | 1 | Mindmoil | rav |
+| whenever you sacrifice a black creature, you may pay N life. if you do, each other player sacrifices a creature of their choice. | 1 | Savra, Queen of the Golgari | rav |
+| whenever ~ deals combat damage to a creature, destroy that creature. | 1 | Stinkweed Imp | rav |
+| whenever ~ deals combat damage to a player, you may look at that player's hand. if you do, you may cast a spell from among those cards without paying its mana c | 1 | Mindleech Mass | rav |
+| whenever ~ deals combat damage, you gain that much life. | 1 | Sunhome Enforcer | rav |
+| whenever ~ is dealt damage, it deals that much damage to each player. | 1 | Coalhauler Swine | rav |
+| you can't choose an untapped permanent as ~ target as you cast it. | 1 | Dream Leash | rav |
+| you gain N life for each creature on the battlefield. if {M} was spent to cast ~, untap all creatures you control. | 1 | Dryad's Caress | rav |
+| {M}, sacrifice a creature: look at the top two cards of target opponent's library, then exile one of them. | 1 | Thoughtpicker Witch | rav |
+| {M}, sacrifice ~: create a N/N white spirit creature token with flying at the beginning of the next end step. | 1 | Transluminant | rav |
+| {M}, sacrifice ~: exile target creature. return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | 1 | Voyager Staff | rav |
+| {M}, {M}: look at the top card of target player"..."s graveyard. | 1 | Lurking Informant | rav |
+| {M}: choose a basic land type. each land you control becomes that type until end of turn. | 1 | Terraformer | rav |
+| {M}: choose a player. that player adds one mana of any color they choose. | 1 | Spectral Searchlight | rav |
+| {M}: prevent the next N damage that would be dealt to ~ ~. | 1 | Ordruun Commando | rav |
+| {M}: regenerate enchanted creature. | 1 | Strands of Undeath | rav |
+| {M}: target creature can't attack or block ~. | 1 | Thundersong Trumpeter | rav |
+| {M}: target creature can't block ~ ~. | 1 | Screeching Griffin | rav |
+| {M}: the next N damage that would be dealt to target creature you control ~ is dealt to another target creature instead. | 1 | Razia, Boros Archangel | rav |
+| {M}: ~ deals N damage to each creature without flying and each player. | 1 | Hammerfist Giant | rav |
+| {M}: ~ loses defender until end of turn. | 1 | Tidewater Minion | rav |
+| {M}{M}, sacrifice ~: it deals N damage to each tapped creature and each player. | 1 | Blockbuster | rav |
+| {M}{M}, sacrifice ~: regenerate each creature you control. | 1 | Loxodon Hierarch | rav |
+| {M}{M}, unattach ~: search your library for a red or white instant card with mana value N or less and cast that card without paying its mana cost. then shuffle. | 1 | Sunforger | rav |
+| {M}{M}: all creatures able to block ~ ~ do so. | 1 | Mortipede | rav |
+| {M}{M}: creatures without defender can't block ~ ~. | 1 | Sabertooth Alley Cat | rav |
+| {M}{M}: remove a blood counter from ~. | 1 | Bloodletter Quill | rav |
+| {M}{M}{M}, {M}: target forest becomes a N/N black and green elemental horror creature. it's still a land. | 1 | Woodwraith Corrupter | rav |
+| {M}{M}{M}: exile enchanted creature and all auras attached to it. at the beginning of the next end step, return that card to the battlefield under its owner"... | 1 | Flickerform | rav |
+| {M}{M}{M}: exile target creature card from a graveyard. ~ becomes a copy of that card, except it has ~. | 1 | Dimir Doppelganger | rav |
+| {M}{M}{M}: put a plague counter on ~ or remove a plague counter from it. | 1 | Plague Boiler | rav |
+| {M}{M}{M}: until end of turn, ~ becomes a black and green plant zombie creature with "..." it's still a land. | 1 | Svogthos, the Restless Tomb | rav |
+| ~ can block an additional creature each combat. | 1 | Selesnya Sagittars | rav |
+| ~ deals N damage to any target and N damage to you. | 1 | Char | rav |
+| ~ deals N damage to each creature and each player. | 1 | Rain of Embers | rav |
+| ~ deals N damage to target creature and you gain N life. if {M} was spent to cast ~, draw a card. | 1 | Ribbons of Night | rav |
+| ~ deals damage to any target equal to the number of attacking creatures you control. | 1 | Dogpile | rav |
 
 ## Notes
 

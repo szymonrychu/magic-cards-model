@@ -3,13 +3,13 @@
 - Expansion: 122
 - Set code: `dka`
 - Release date: 2012-02-03
-- Cards in scope (Modern/Pioneer/Standard-legal): 145
+- Cards in scope (Modern/Pioneer/Standard-legal): 154
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 145 |
+| Modern | 154 |
 | Pioneer | 16 |
 | Standard | 2 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 13 | 9.0% |
-| Partial (unaudited) | 5 | 3.4% |
-| Not tested (handled, untested) | 62 | 42.8% |
-| Not working (silent / notice / error) | 65 | 44.8% |
+| Full (handled + tested) | 13 | 8.4% |
+| Partial (unaudited) | 6 | 3.9% |
+| Not tested (handled, untested) | 64 | 41.6% |
+| Not working (silent / notice / error) | 71 | 46.1% |
 
 ## Cards needing work
 
@@ -36,12 +36,14 @@
 | Clinging Mists | silent | Prevent all combat damage that would be dealt this turn. Fateful hour — If you have 5 or less life, tap all attacking creatures. Those creatures don't untap dur | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Echoes | silent | Whenever enchanted player casts an instant or sorcery spell, each other player may copy that spell and may choose new targets for the copy they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Misfortunes | silent | At the beginning of your upkeep, you may search your library for a Curse card that doesn't have the same name as a Curse attached to enchanted player, put it on | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Curse of Thirst | silent | At the beginning of enchanted player's upkeep, this Aura deals damage to that player equal to the number of Curses attached to them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Diregraf Captain | silent | Other Zombie creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drogskol Captain | silent | Other Spirit creatures you control get +1/+1 and have hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elbrus, the Binding Blade // Withengar Unbound | silent | When equipped creature deals combat damage to a player, unattach Elbrus, then transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiend of the Shadows | silent | Whenever this creature deals combat damage to a player, that player exiles a card from their hand. You may play that card for as long as it remains exiled. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flayer of the Hatebound | silent | Whenever this creature or another creature enters from your graveyard, that creature deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Forge Devil | silent | When this creature enters, it deals 1 damage to target creature and 1 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Gather the Townsfolk | silent | Create two 1/1 white Human creature tokens. Fateful hour — If you have 5 or less life, create five of those tokens instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gavony Ironwright | silent | Fateful hour — As long as you have 5 or less life, other creatures you control get +1/+4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Geralf's Messenger | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Geralf's Mindcrusher | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -62,7 +64,9 @@
 | Markov Warlord | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mikaeus, the Unhallowed | silent | Whenever a Human deals damage to you, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moonveil Dragon | silent | {R}: Each creature you control gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Nearheath Stalker | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Pyreheart Wolf | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Ravenous Demon // Archdemon of Greed | silent | At the beginning of your upkeep, sacrifice a Human. If you can't, tap this creature and it deals 9 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Relentless Skaabs | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Saving Grasp | silent | Return target creature you own to your hand. Flashback {W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scorch the Fields | silent | Destroy target land. Scorch the Fields deals 1 damage to each Human creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -71,6 +75,7 @@
 | Sorin, Lord of Innistrad | silent | −6: Destroy up to three target creatures and/or other planeswalkers. Return each card put into a graveyard this way to the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spiteful Shadows | silent | Whenever enchanted creature is dealt damage, it deals that much damage to its controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stormbound Geist | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Strangleroot Geist | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Stromkirk Captain | silent | Other Vampire creatures you control get +1/+1 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thraben Doomsayer | silent | Fateful hour — As long as you have 5 or less life, other creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tracker's Instincts | silent | Reveal the top four cards of your library. Put a creature card from among them into your hand and the rest into your graveyard. Flashback {2}{U} (You may cast t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -79,6 +84,7 @@
 | Vorapede | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Wrack with Madness | silent | Target creature deals damage to itself equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Young Wolf | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Zombie Apocalypse | silent | Return all Zombie creature cards from your graveyard to the battlefield tapped, then destroy all Humans. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Afflicted Deserter // Werewolf Ransacker | notice | Whenever this creature transforms into Werewolf Ransacker, you may destroy target artifact. If that artifact is put into a graveyard this way, this creature dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Counterlash | notice | Counter target spell. You may cast a spell that shares a card type with it from your hand without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Deadly Allure | notice | Target creature gains deathtouch until end of turn and must be blocked this turn if able. Flashback {G} (You may cast this card from your graveyard for its flas | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -93,6 +99,7 @@
 | Séance | notice | At the beginning of each upkeep, you may exile target creature card from your graveyard. If you do, create a token that's a copy of that card, except it's a Spi | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Curse of Bloodletting | unaudited | If a source would deal damage to enchanted player, it deals double that damage to that player instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Executioner's Hood | unaudited | Equipped creature has intimidate. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Gravecrawler | unaudited | You may cast this card from your graveyard as long as you control a Zombie. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Heavy Mattock | unaudited | As long as equipped creature is a Human, it gets an additional +1/+1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hinterland Hermit // Hinterland Scourge | unaudited | This creature must be blocked if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Warden of the Wall | unaudited | During turns other than yours, this artifact is a 2/3 Gargoyle artifact creature with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -128,8 +135,10 @@
 | Increasing Savagery | handled | Put five +1/+1 counters on target creature. If this spell was cast from a graveyard, put ten +1/+1 counters on that creature instead. Flashback {5}{G}{G} (You m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kessig Recluse | handled | Reach | machines/combat.py | Y/-/- | not_tested |
 | Lambholt Elder // Silverpelt Werewolf | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lingering Souls | handled | Create two 1/1 white Spirit creature tokens with flying. Flashback {1}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Markov Blademaster | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Midnight Guard | handled | Whenever another creature enters, untap this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mondronen Shaman // Tovolar's Magehunter | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mystic Retrieval | handled | Return target instant or sorcery card from your graveyard to your hand. Flashback {2}{R} (You may cast this card from your graveyard for its flashback cost. The | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nephalia Seakite | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Niblis of the Breath | handled | {U}, {T}: You may tap or untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -182,64 +191,72 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Undying | Geralf's Messenger, Geralf's Mindcrusher, Pyreheart Wolf, Relentless Skaabs, Sightless Ghoul, Stormbound Geist, Vengeful Vampire, Vorapede, Young Wolf | 9 |
-| At the beginning of your upkeep, you may look at the top five cards of your library. If you do, you may put a creature card that shares a creature type with enc | Call to the Kindred, Curse of Misfortunes, Feed the Pack | 3 |
-| Fateful hour — As long as you have 5 or less life, other creatures you control have vigilance. | Gavony Ironwright, Thraben Doomsayer, Village Survivors | 3 |
-| Intimidate | Highborn Ghoul, Immerwolf | 2 |
-| Sacrifice a creature: This creature gains indestructible until end of turn. If the sacrificed creature was a Human, put a +1/+1 counter on this creature. | Falkenrath Aristocrat, Falkenrath Torturer | 2 |
-| As long as equipped creature is a Human, it gets an additional +1/+1. | Heavy Mattock | 1 |
-| At the beginning of each upkeep, you may exile target creature card from your graveyard. If you do, create a token that's a copy of that card, except it's a Spi | Séance | 1 |
-| Counter target spell. You may cast a spell that shares a card type with it from your hand without paying its mana cost. | Counterlash | 1 |
-| Create five 1/1 white Human creature tokens. If this spell was cast from a graveyard, create ten of those tokens instead. Flashback {7}{W}{W} (You may cast this | Increasing Devotion | 1 |
-| Destroy target creature. If that creature was a Human, you gain life equal to its toughness. | Death's Caress | 1 |
-| Destroy target land. Scorch the Fields deals 1 damage to each Human creature. | Scorch the Fields | 1 |
-| −6: Destroy up to three target creatures and/or other planeswalkers. Return each card put into a graveyard this way to the battlefield under your control. | Sorin, Lord of Innistrad | 1 |
-| Discard all the cards in your hand, then draw that many cards. Flashback {5}{R} (You may cast this card from your graveyard for its flashback cost. Then exile i | Shattered Perception | 1 |
-| During turns other than yours, this artifact is a 2/3 Gargoyle artifact creature with flying. | Warden of the Wall | 1 |
-| {R}: Each creature you control gets +1/+0 until end of turn. | Moonveil Dragon | 1 |
-| Equipped creature has intimidate. | Executioner's Hood | 1 |
-| {2}{U}, {T}, Exile a creature card from your graveyard: Create a 2/2 black Zombie creature token, then put a +1/+1 counter on each Zombie creature you control. | Havengul Runebinder | 1 |
-| Exile all nonland permanents target player controls. Return the exiled cards to the battlefield under their owner's control at the beginning of the next end ste | Sudden Disappearance | 1 |
-| {T}: Gain control of target creature with power less than or equal to the number of creatures you control. | Beguiler of Wills | 1 |
-| If a source would deal damage to enchanted player, it deals double that damage to that player instead. | Curse of Bloodletting | 1 |
-| Other Spirit creatures you control get +1/+1 and have hexproof. | Drogskol Captain | 1 |
-| Other Vampire creatures you control get +1/+1 and have first strike. | Stromkirk Captain | 1 |
-| Other Zombie creatures you control get +1/+1. | Diregraf Captain | 1 |
-| Prevent all combat damage that would be dealt this turn. Fateful hour — If you have 5 or less life, tap all attacking creatures. Those creatures don't untap dur | Clinging Mists | 1 |
-| Put any number of target creature cards from your graveyard on top of your library. Draw a card. | Gravepurge | 1 |
-| Put target creature on top of its owner's library. | Griptide | 1 |
-| {3}, {T}, Remove all eyeball counters from this artifact: Look at the top X cards of your library, where X is the number of eyeball counters removed this way. P | Jar of Eyeballs | 1 |
-| Return target creature you own to your hand. Flashback {W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | Saving Grasp | 1 |
-| Reveal the top four cards of your library. Put a creature card from among them into your hand and the rest into your graveyard. Flashback {2}{U} (You may cast t | Tracker's Instincts | 1 |
-| {3}, {T}, Sacrifice this land: Return a creature card at random from your graveyard to your hand. | Haunted Fengraf | 1 |
-| Search your library for a card and put that card into your hand. If this spell was cast from a graveyard, instead search your library for two cards and put thos | Increasing Ambition | 1 |
-| Target creature an opponent controls deals damage equal to its power to each other creature that player controls, then each of those creatures deals damage equa | Alpha Brawl | 1 |
-| Target creature deals damage to itself equal to its power. | Wrack with Madness | 1 |
-| Target creature fights another target creature. (Each deals damage equal to its power to the other.) | Blood Feud | 1 |
-| Target creature gains deathtouch until end of turn and must be blocked this turn if able. Flashback {G} (You may cast this card from your graveyard for its flas | Deadly Allure | 1 |
-| Target permanent you control gains protection from the color of your choice until end of turn. Fateful hour — If you have 5 or less life, instead you and each p | Faith's Shield | 1 |
-| Target player mills X cards. If this spell was cast from a graveyard, that player mills twice that many cards instead. Flashback {X}{U} (You may cast this card  | Increasing Confusion | 1 |
-| This creature must be blocked if able. | Hinterland Hermit // Hinterland Scourge | 1 |
-| When equipped creature deals combat damage to a player, unattach Elbrus, then transform it. | Elbrus, the Binding Blade // Withengar Unbound | 1 |
-| When Helvault is put into a graveyard from the battlefield, return all cards exiled with it to the battlefield under their owners' control. | Helvault | 1 |
-| When this creature dies, return it to the battlefield transformed under your control at the beginning of the next end step. | Loyal Cathar // Unhallowed Cathar | 1 |
-| When this creature dies, target opponent discards a card at random. | Black Cat | 1 |
-| When this creature enters, it deals 1 damage to target creature and 1 damage to you. | Forge Devil | 1 |
-| When this creature enters, remove target attacking or blocking creature from combat. | Hollowhenge Spirit | 1 |
-| When this creature enters, tap target creature an opponent controls. That creature doesn't untap during its controller's untap step for as long as you control t | Dungeon Geists | 1 |
-| When this creature enters, up to two target creatures can't block this turn. | Markov Warlord | 1 |
-| Whenever a creature attacks you or a planeswalker you control, reveal the top card of your library. If it's a Forest card, remove that creature from combat. The | Lost in the Woods | 1 |
-| Whenever a Human deals damage to you, destroy it. | Mikaeus, the Unhallowed | 1 |
-| Whenever enchanted creature is dealt damage, it deals that much damage to its controller. | Spiteful Shadows | 1 |
-| Whenever enchanted player casts an instant or sorcery spell, each other player may copy that spell and may choose new targets for the copy they control. | Curse of Echoes | 1 |
-| Whenever this creature deals combat damage to a player, that player exiles a card from their hand. You may play that card for as long as it remains exiled. | Fiend of the Shadows | 1 |
-| Whenever this creature or another creature enters from your graveyard, that creature deals damage equal to its power to any target. | Flayer of the Hatebound | 1 |
-| Whenever this creature transforms into Werewolf Ransacker, you may destroy target artifact. If that artifact is put into a graveyard this way, this creature dea | Afflicted Deserter // Werewolf Ransacker | 1 |
-| You gain 2 life for each card in your graveyard, then shuffle your graveyard into your library. | Archangel's Light | 1 |
-| {T}: You gain 1 life. Then if you have at least 10 life more than your starting life total, transform this artifact. | Chalice of Life // Chalice of Death | 1 |
-| {1}: You may cast target creature card in a graveyard this turn. When you cast it this turn, this creature gains all activated abilities of that card until end  | Havengul Lich | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| undying | 11 | Geralf's Messenger, Geralf's Mindcrusher, Nearheath Stalker, Pyreheart Wolf, Relentless Skaabs | dka |
+| Fateful hour | 3 | Gavony Ironwright, Thraben Doomsayer, Village Survivors | dka |
+| intimidate | 2 | Highborn Ghoul, Immerwolf | dka |
+| as long as equipped creature is a human, it gets an additional +N/+N. | 1 | Heavy Mattock | dka |
+| at the beginning of each upkeep, you may exile target creature card from your graveyard. if you do, create a token that"..."s a spirit in addition to its other  | 1 | Séance | dka |
+| at the beginning of enchanted player's upkeep, ~ deals damage to that player equal to the number of curses attached to them. | 1 | Curse of Thirst | dka |
+| at the beginning of your end step, you may sacrifice a nontoken creature. if you do, create N N/N green wolf creature tokens, where N is the sacrificed creature | 1 | Feed the Pack | dka |
+| at the beginning of your upkeep, sacrifice a human. if you can't, tap ~ and it deals N damage to you. | 1 | Ravenous Demon // Archdemon of Greed | dka |
+| at the beginning of your upkeep, you may look at the top five cards of your library. if you do, you may put a creature card that shares a creature type with enc | 1 | Call to the Kindred | dka |
+| at the beginning of your upkeep, you may search your library for a curse card that doesn't have the same name as a curse attached to enchanted player, put it on | 1 | Curse of Misfortunes | dka |
+| counter target spell. you may cast a spell that shares a card type with it from your hand without paying its mana cost. | 1 | Counterlash | dka |
+| create five N/N white human creature tokens. if ~ was cast from a graveyard, create ten of those tokens instead. flashback {M}{M}{M} (you may cast ~ from your g | 1 | Increasing Devotion | dka |
+| create two N/N white human creature tokens. fateful hour — if you have N or less life, create five of those tokens instead. | 1 | Gather the Townsfolk | dka |
+| destroy target creature. if that creature was a human, you gain life equal to its toughness. | 1 | Death's Caress | dka |
+| destroy target land. ~ deals N damage to each human creature. | 1 | Scorch the Fields | dka |
+| discard all the cards in your hand, then draw that many cards. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Shattered Perception | dka |
+| during turns other than yours, ~ is a N/N gargoyle artifact creature with flying. | 1 | Warden of the Wall | dka |
+| equipped creature has intimidate. | 1 | Executioner's Hood | dka |
+| exile all nonland permanents target player controls. return the exiled cards to the battlefield under their owner's control at the beginning of the next end ste | 1 | Sudden Disappearance | dka |
+| if a source would deal damage to enchanted player, it deals double that damage to that player instead. | 1 | Curse of Bloodletting | dka |
+| other spirit creatures you control get +N/+N and have hexproof. | 1 | Drogskol Captain | dka |
+| other vampire creatures you control get +N/+N and have first strike. | 1 | Stromkirk Captain | dka |
+| other zombie creatures you control get +N/+N. | 1 | Diregraf Captain | dka |
+| prevent all combat damage that would be dealt ~. fateful hour — if you have N or less life, tap all attacking creatures. those creatures don"..."s next untap st | 1 | Clinging Mists | dka |
+| put any number of target creature cards from your graveyard on top of your library. draw a card. | 1 | Gravepurge | dka |
+| put target creature on top of its owner's library. | 1 | Griptide | dka |
+| return all zombie creature cards from your graveyard to the battlefield tapped, then destroy all humans. | 1 | Zombie Apocalypse | dka |
+| return target creature you own to your hand. flashback {M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Saving Grasp | dka |
+| reveal the top four cards of your library. put a creature card from among them into your hand and the rest into your graveyard. flashback {M}{M} (you may cast ~ | 1 | Tracker's Instincts | dka |
+| sacrifice a creature: ~ gains flying until end of turn. if the sacrificed creature was a human, put a +N/+N counter on ~. | 1 | Falkenrath Torturer | dka |
+| sacrifice a creature: ~ gains indestructible until end of turn. if the sacrificed creature was a human, put a +N/+N counter on ~. | 1 | Falkenrath Aristocrat | dka |
+| search your library for a card and put that card into your hand. if ~ was cast from a graveyard, instead search your library for two cards and put those cards i | 1 | Increasing Ambition | dka |
+| target creature an opponent controls deals damage equal to its power to each other creature that player controls, then each of those creatures deals damage equa | 1 | Alpha Brawl | dka |
+| target creature deals damage to itself equal to its power. | 1 | Wrack with Madness | dka |
+| target creature fights another target creature. (each deals damage equal to its power to the other.) | 1 | Blood Feud | dka |
+| target creature gains deathtouch until end of turn and must be blocked ~ if able. flashback {M} (you may cast ~ from your graveyard for its flashback cost. then | 1 | Deadly Allure | dka |
+| target permanent you control gains protection from the color of your choice until end of turn. fateful hour — if you have N or less life, instead you and each p | 1 | Faith's Shield | dka |
+| target player mills N cards. if ~ was cast from a graveyard, that player mills twice that many cards instead. flashback {M}{M} (you may cast ~ from your graveya | 1 | Increasing Confusion | dka |
+| when equipped creature deals combat damage to a player, unattach elbrus, then transform it. | 1 | Elbrus, the Binding Blade // Withengar Unbound | dka |
+| when ~ dies, return it to the battlefield transformed under your control at the beginning of the next end step. | 1 | Loyal Cathar // Unhallowed Cathar | dka |
+| when ~ dies, target opponent discards a card at random. | 1 | Black Cat | dka |
+| when ~ enters, it deals N damage to target creature and N damage to you. | 1 | Forge Devil | dka |
+| when ~ enters, remove target attacking or blocking creature from combat. | 1 | Hollowhenge Spirit | dka |
+| when ~ enters, tap target creature an opponent controls. that creature doesn"..."s untap step for as long as you control ~. | 1 | Dungeon Geists | dka |
+| when ~ enters, up to two target creatures can't block ~. | 1 | Markov Warlord | dka |
+| when ~ is put into a graveyard from the battlefield, return all cards exiled with it to the battlefield under their owners' control. | 1 | Helvault | dka |
+| whenever a creature attacks you or a planeswalker you control, reveal the top card of your library. if it's a forest card, remove that creature from combat. the | 1 | Lost in the Woods | dka |
+| whenever a human deals damage to you, destroy it. | 1 | Mikaeus, the Unhallowed | dka |
+| whenever enchanted creature is dealt damage, it deals that much damage to its controller. | 1 | Spiteful Shadows | dka |
+| whenever enchanted player casts an instant or sorcery spell, each other player may copy that spell and may choose new targets for the copy they control. | 1 | Curse of Echoes | dka |
+| whenever ~ deals combat damage to a player, that player exiles a card from their hand. you may play that card for as long as it remains exiled. | 1 | Fiend of the Shadows | dka |
+| whenever ~ or another creature enters from your graveyard, that creature deals damage equal to its power to any target. | 1 | Flayer of the Hatebound | dka |
+| whenever ~ transforms into werewolf ransacker, you may destroy target artifact. if that artifact is put into a graveyard ~, ~ deals N damage to that artifact's  | 1 | Afflicted Deserter // Werewolf Ransacker | dka |
+| you gain N life for each card in your graveyard, then shuffle your graveyard into your library. | 1 | Archangel's Light | dka |
+| you may cast ~ from your graveyard as long as you control a zombie. | 1 | Gravecrawler | dka |
+| {M}, {M}, remove all eyeball counters from ~: look at the top N cards of your library, where N is the number of eyeball counters removed ~. put one of them into | 1 | Jar of Eyeballs | dka |
+| {M}, {M}, sacrifice ~: return a creature card at random from your graveyard to your hand. | 1 | Haunted Fengraf | dka |
+| {M}: each creature you control gets +N/+N until end of turn. | 1 | Moonveil Dragon | dka |
+| {M}: gain control of target creature with power less than or equal to the number of creatures you control. | 1 | Beguiler of Wills | dka |
+| {M}: you gain N life. then if you have at least N life more than your starting life total, transform ~. | 1 | Chalice of Life // Chalice of Death | dka |
+| {M}: you may cast target creature card in a graveyard ~. when you cast it ~, ~ gains all activated abilities of that card until end of turn. | 1 | Havengul Lich | dka |
+| {M}{M}, {M}, exile a creature card from your graveyard: create a N/N black zombie creature token, then put a +N/+N counter on each zombie creature you control. | 1 | Havengul Runebinder | dka |
+| ~ must be blocked if able. | 1 | Hinterland Hermit // Hinterland Scourge | dka |
+| −N: destroy up to three target creatures and/or other planeswalkers. return each card put into a graveyard ~ to the battlefield under your control. | 1 | Sorin, Lord of Innistrad | dka |
 
 ## Notes
 

@@ -3,13 +3,13 @@
 - Expansion: 015
 - Set code: `vis`
 - Release date: 1997-02-03
-- Cards in scope (Modern/Pioneer/Standard-legal): 23
+- Cards in scope (Modern/Pioneer/Standard-legal): 24
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 23 |
+| Modern | 24 |
 | Pioneer | 3 |
 | Standard | 0 |
 
@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Full (handled + tested) | 0 | 0.0% |
-| Partial (unaudited) | 1 | 4.3% |
-| Not tested (handled, untested) | 14 | 60.9% |
-| Not working (silent / notice / error) | 8 | 34.8% |
+| Partial (unaudited) | 1 | 4.2% |
+| Not tested (handled, untested) | 14 | 58.3% |
+| Not working (silent / notice / error) | 9 | 37.5% |
 
 ## Cards needing work
 
@@ -30,6 +30,7 @@
 | Honorable Passage | silent | The next time a source of your choice would deal damage to any target this turn, prevent that damage. If damage from a red source is prevented this way, Honorab | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quicksand | silent | {T}, Sacrifice this land: Target attacking creature without flying gets -1/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Relentless Assault | silent | Untap all creatures that attacked this turn. After this main phase, there is an additional combat phase followed by an additional main phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Shrieking Drake | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stampeding Wildebeests | silent | At the beginning of your upkeep, return a green creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Summer Bloom | silent | You may play up to three additional lands this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Suq'Ata Lancer | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -60,17 +61,18 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards. | Teferi's Puzzle Box | 1 |
-| At the beginning of your upkeep, return a green creature you control to its owner's hand. | Stampeding Wildebeests | 1 |
-| Flanking | Suq'Ata Lancer | 1 |
-| {T}, Sacrifice this land: Target attacking creature without flying gets -1/-2 until end of turn. | Quicksand | 1 |
-| The next time a source of your choice would deal damage to any target this turn, prevent that damage. If damage from a red source is prevented this way, Honorab | Honorable Passage | 1 |
-| This creature can block only creatures with flying. | Cloud Elemental | 1 |
-| {X}: This creature deals X damage to each creature and each player. Spend only black mana on X. | Crypt Rats | 1 |
-| Untap all creatures that attacked this turn. After this main phase, there is an additional combat phase followed by an additional main phase. | Relentless Assault | 1 |
-| You may play up to three additional lands this turn. | Summer Bloom | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| at the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards. | 1 | Teferi's Puzzle Box | vis |
+| at the beginning of your upkeep, return a green creature you control to its owner's hand. | 1 | Stampeding Wildebeests | vis |
+| flanking | 1 | Suq'Ata Lancer | vis |
+| the next time a source of your choice would deal damage to any target ~, prevent that damage. if damage from a red source is prevented ~, ~ deals that much dama | 1 | Honorable Passage | vis |
+| untap all creatures that attacked ~. after ~ phase, there is an additional combat phase followed by an additional main phase. | 1 | Relentless Assault | vis |
+| when ~ enters, return a creature you control to its owner's hand. | 1 | Shrieking Drake | vis |
+| you may play up to three additional lands ~. | 1 | Summer Bloom | vis |
+| {M}, sacrifice ~: target attacking creature without flying gets -N/-N until end of turn. | 1 | Quicksand | vis |
+| {M}: ~ deals N damage to each creature and each player. spend only black mana on N. | 1 | Crypt Rats | vis |
+| ~ can block only creatures with flying. | 1 | Cloud Elemental | vis |
 
 ## Notes
 

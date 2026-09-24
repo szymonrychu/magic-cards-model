@@ -3,24 +3,24 @@
 - Expansion: 035
 - Set code: `apc`
 - Release date: 2001-06-04
-- Cards in scope (Modern/Pioneer/Standard-legal): 21
+- Cards in scope (Modern/Pioneer/Standard-legal): 22
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 21 |
-| Pioneer | 10 |
+| Modern | 22 |
+| Pioneer | 11 |
 | Standard | 1 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 3 | 14.3% |
-| Partial (unaudited) | 2 | 9.5% |
-| Not tested (handled, untested) | 13 | 61.9% |
-| Not working (silent / notice / error) | 3 | 14.3% |
+| Full (handled + tested) | 3 | 13.6% |
+| Partial (unaudited) | 2 | 9.1% |
+| Not tested (handled, untested) | 14 | 63.6% |
+| Not working (silent / notice / error) | 3 | 13.6% |
 
 ## Cards needing work
 
@@ -40,6 +40,7 @@
 | Mystic Snake | handled | When this creature enters, counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phyrexian Arena | handled | At the beginning of your upkeep, you draw a card and lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Phyrexian Gargantua | handled | When this creature enters, you draw two cards and you lose 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Phyrexian Rager | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Smash | handled | Destroy target artifact. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sylvan Messenger | handled | When this creature enters, reveal the top four cards of your library. Put all Elf cards revealed this way into your hand and the rest on the bottom of your libr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vindicate | handled | Destroy target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -58,13 +59,13 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield with two +1/+1 counters on it instead of putting it into | Dodecapod | 1 |
-| If Legacy Weapon would be put into a graveyard from anywhere, reveal Legacy Weapon and shuffle it into its owner's library instead. | Legacy Weapon | 1 |
-| {R}, Sacrifice this creature: It deals 6 damage to each creature and each player. | Bloodfire Colossus | 1 |
-| When this creature enters, destroy all other creatures you control. If it was kicked, destroy all other creatures instead. | Desolation Giant | 1 |
-| When this creature enters, reveal the top four cards of your library. Put all creature cards of the chosen type revealed this way into your hand and the rest on | Brass Herald | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield with two +N/+N counters on it instead of putting it into your gr | 1 | Dodecapod | apc |
+| if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Legacy Weapon | apc |
+| when ~ enters, destroy all other creatures you control. if it was kicked, destroy all other creatures instead. | 1 | Desolation Giant | apc |
+| when ~ enters, reveal the top four cards of your library. put all creature cards of the chosen type revealed ~ into your hand and the rest on the bottom of your | 1 | Brass Herald | apc |
+| {M}, sacrifice ~: it deals N damage to each creature and each player. | 1 | Bloodfire Colossus | apc |
 
 ## Notes
 

@@ -3,24 +3,24 @@
 - Expansion: 137
 - Set code: `dgm`
 - Release date: 2013-05-03
-- Cards in scope (Modern/Pioneer/Standard-legal): 137
+- Cards in scope (Modern/Pioneer/Standard-legal): 143
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 137 |
-| Pioneer | 137 |
-| Standard | 1 |
+| Modern | 143 |
+| Pioneer | 143 |
+| Standard | 2 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 6 | 4.4% |
-| Partial (unaudited) | 5 | 3.6% |
-| Not tested (handled, untested) | 71 | 51.8% |
-| Not working (silent / notice / error) | 55 | 40.1% |
+| Full (handled + tested) | 7 | 4.9% |
+| Partial (unaudited) | 6 | 4.2% |
+| Not tested (handled, untested) | 73 | 51.0% |
+| Not working (silent / notice / error) | 57 | 39.9% |
 
 ## Cards needing work
 
@@ -33,6 +33,7 @@
 | Blast of Genius | silent | Choose any target. Draw three cards, then discard a card. Blast of Genius deals damage equal to the discarded card's mana value to that permanent or player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Baron of Vizkopa | silent | As long as you have 30 or more life and an opponent has 10 or less life, this creature gets +6/+6 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boros Battleshaper | silent | At the beginning of each combat, up to one target creature attacks or blocks this combat if able and up to one target creature can't attack or block this combat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Breaking // Entering | silent | Put a creature card from a graveyard onto the battlefield under your control. It gains haste until end of turn. Fuse (You may cast one or both halves of this ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Carnage Gladiator | silent | Whenever a creature blocks, that creature's controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Catch // Release | silent | Each player sacrifices an artifact, a creature, an enchantment, a land, and a planeswalker of their choice. Fuse (You may cast one or both halves of this card f | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadbridge Chant | silent | At the beginning of your upkeep, choose a card at random in your graveyard. If it's a creature card, put it onto the battlefield. Otherwise, put it into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -65,6 +66,7 @@
 | Rakdos Drake | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ral Zarek | silent | −7: Flip five coins. Take an extra turn after this one for each coin that comes up heads. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reap Intellect | silent | Target opponent reveals their hand. You choose up to X nonland cards from it and exile them. For each card exiled this way, search that player's graveyard, hand | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Render Silent | silent | Counter target spell. Its controller can't cast spells this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Renegade Krasis | silent | Whenever this creature evolves, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Restore the Peace | silent | Return each creature that dealt damage this turn to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Riot Control | silent | You gain 1 life for each creature your opponents control. Prevent all damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -84,6 +86,7 @@
 | Blood Scrivener | unaudited | If you would draw a card while you have no cards in hand, instead you draw two cards and you lose 1 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Council of the Absolute | unaudited | As this creature enters, choose a noncreature, nonland card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Emmara Tandris | unaudited | Prevent all damage that would be dealt to creature tokens you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Melek, Izzet Paragon | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ruric Thar, the Unbowed | unaudited | Ruric Thar attacks each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Varolz, the Scar-Striped | unaudited | Each creature card in your graveyard has scavenge. The scavenge cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Advent of the Wurm | handled | Create a 5/5 green Wurm creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -116,6 +119,7 @@
 | Korozda Gorgon | handled | {2}, Remove a +1/+1 counter from a creature you control: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kraul Warrior | handled | {5}{G}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maw of the Obzedat | handled | Sacrifice a creature: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Maze's End | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mending Touch | handled | Regenerate target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mindstatic | handled | Counter target spell unless its controller pays {6}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murmuring Phantasm | handled | Defender | machines/combat.py | Y/Y/- | not_tested |
@@ -141,6 +145,7 @@
 | Scab-Clan Giant | handled | When this creature enters, it fights target creature an opponent controls chosen at random. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Selesnya Cluestone | handled | {G}{W}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Cluestone | handled | {G}{U}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sin Collector | handled | When this creature enters, target opponent reveals their hand. You choose an instant or sorcery card from it and exile that card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sire of Insanity | handled | At the beginning of each end step, each player discards their hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skylasher | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Smelt-Ward Gatekeepers | handled | When this creature enters, if you control two or more Gates, gain control of target creature an opponent controls until end of turn. Untap that creature. It gai | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -161,12 +166,13 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Beck // Call
 - Gleam of Battle
 - Notion Thief
 - Possibility Storm
+- Trostani's Summoner
 - Voice of Resurgence
 - Wear // Tear
 
@@ -174,60 +180,69 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Multicolored creatures you control have deathtouch. | Maze Abomination, Maze Behemoth, Maze Glider, Maze Rusher, Maze Sentinel | 5 |
-| At the beginning of your upkeep, choose a card at random in your graveyard. If it's a creature card, put it onto the battlefield. Otherwise, put it into your ha | Deadbridge Chant, Species Gorger | 2 |
-| Extort | Pontiff of Blight, Tithe Drinker | 2 |
-| Unleash | Exava, Rakdos Blood Witch, Rakdos Drake | 2 |
-| Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn and can attack this turn as though it didn't have defender. | Fluxcharger, Nivix Cyclops | 2 |
-| All creatures able to block target creature this turn do so. Fuse (You may cast one or both halves of this card from your hand.) | Armed // Dangerous | 1 |
-| As long as you have 30 or more life and an opponent has 10 or less life, this creature gets +6/+6 and has flying. | Blood Baron of Vizkopa | 1 |
-| As this creature enters, choose a noncreature, nonland card name. | Council of the Absolute | 1 |
-| At the beginning of each combat, up to one target creature attacks or blocks this combat if able and up to one target creature can't attack or block this combat | Boros Battleshaper | 1 |
-| Attacking creatures you control get +1/+0 and have menace. | Gruul War Chant | 1 |
-| Change the text of target permanent by replacing all instances of one color word with another or one basic land type with another until end of turn. Cipher (The | Trait Doctoring | 1 |
-| Choose any target. Draw three cards, then discard a card. Blast of Genius deals damage equal to the discarded card's mana value to that permanent or player. | Blast of Genius | 1 |
-| Choose target creature. Mill four cards, then that creature gets -1/-1 until end of turn for each land card in your graveyard. | Drown in Filth | 1 |
-| Cipher | Hidden Strings | 1 |
-| Counter target spell. At the beginning of your next first main phase, add X mana in any combination of colors, where X is that spell's mana value. | Plasm Capture | 1 |
-| Detain up to two target creatures your opponents control. (Until your next turn, those creatures can't attack or block and their activated abilities can't be ac | Lyev Decree | 1 |
-| {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land. | Vorel of the Hull Clade | 1 |
-| Each creature card in your graveyard has scavenge. The scavenge cost is equal to its mana cost. | Varolz, the Scar-Striped | 1 |
-| Each opponent loses two times X life. You gain life equal to the life lost this way. | Debt to the Deathless | 1 |
-| Each player sacrifices an artifact, a creature, an enchantment, a land, and a planeswalker of their choice. Fuse (You may cast one or both halves of this card f | Catch // Release | 1 |
-| Evolve | Battering Krasis | 1 |
-| Exile target creature card from a graveyard. Put X +1/+1 counters on target creature, where X is the power of the card you exiled. Fuse (You may cast one or bot | Flesh // Blood | 1 |
-| −7: Flip five coins. Take an extra turn after this one for each coin that comes up heads. | Ral Zarek | 1 |
-| If you would draw a card while you have no cards in hand, instead you draw two cards and you lose 1 life. | Blood Scrivener | 1 |
-| Monocolored creatures can't block this turn. | Awe for the Guilds | 1 |
-| Overload | Weapon Surge | 1 |
-| Populate. (Create a token that's a copy of a creature token you control.) | Wake the Reflections | 1 |
-| Prevent all damage that would be dealt to creature tokens you control. | Emmara Tandris | 1 |
-| Red creatures you control get +1/+0. | Legion's Initiative | 1 |
-| Return each creature that dealt damage this turn to its owner's hand. | Restore the Peace | 1 |
-| Return target creature card from your graveyard to your hand. Morgue Burst deals damage to any target equal to the power of the card returned this way. | Morgue Burst | 1 |
-| {1}{G}{U}, Return this Aura to its owner's hand: Put two +1/+1 counters on enchanted creature. | Krasis Incubation | 1 |
-| Ruric Thar attacks each combat if able. | Ruric Thar, the Unbowed | 1 |
-| Scavenge | Thrashing Mossdog | 1 |
-| Target creature gets +X/-X until end of turn, where X is the number of cards in your hand. | Warped Physique | 1 |
-| {3}{B}, {T}: Target opponent loses 2 life, then reveals a card at random from their hand. | Hired Torturer | 1 |
-| Target opponent reveals their hand. You choose up to X nonland cards from it and exile them. For each card exiled this way, search that player's graveyard, hand | Reap Intellect | 1 |
-| {U}: This creature can't be blocked this turn. | Aetherling | 1 |
-| Trouble deals damage to target player equal to the number of cards in that player's hand. Fuse (You may cast one or both halves of this card from your hand.) | Toil // Trouble | 1 |
-| Until end of turn, creatures you control gain "When this creature dies, it deals 2 damage to target creature an opponent controls." | Showstopper | 1 |
-| Until end of turn, target creature you control becomes a blue and red Dragon with base power and toughness 4/4, loses all abilities, and gains flying. Overload  | Dragonshift | 1 |
-| When Lavinia enters, detain each nonland permanent your opponents control with mana value 4 or less. | Lavinia of the Tenth | 1 |
-| When this creature enters, if you cast it from your hand, create a 1/1 white Bird creature token with flying, then populate. | Scion of Vitu-Ghazi | 1 |
-| Whenever a creature blocks, that creature's controller loses 1 life. | Carnage Gladiator | 1 |
-| Whenever a creature deals combat damage to you, destroy that creature. Create a 1/1 white and black Spirit creature token with flying. | Teysa, Envoy of Ghosts | 1 |
-| Whenever enchanted creature attacks or blocks, its controller loses 2 life. | Sinister Possession | 1 |
-| Whenever Mirko Vosk deals combat damage to a player, that player reveals cards from the top of their library until they reveal four land cards, then puts those  | Mirko Vosk, Mind Drinker | 1 |
-| Whenever one or more creatures you control deal combat damage to a player, if this card is in your graveyard, you may pay {3}. If you do, return this card to yo | Pyrewild Shaman | 1 |
-| Whenever this creature attacks a player and isn't blocked, that player's life total becomes 1. This creature assigns no combat damage this combat. | Master of Cruelties | 1 |
-| Whenever this creature attacks, other attacking creatures get +1/+1 until end of turn. | Jelenn Sphinx | 1 |
-| Whenever this creature evolves, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | Renegade Krasis | 1 |
-| You gain 1 life for each creature your opponents control. Prevent all damage that would be dealt to you this turn. | Riot Control | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| extort | 2 | Pontiff of Blight, Tithe Drinker | dgm |
+| unleash | 2 | Exava, Rakdos Blood Witch, Rakdos Drake | dgm |
+| all creatures able to block target creature ~ do so. fuse (you may cast one or both halves of ~ from your hand.) | 1 | Armed // Dangerous | dgm |
+| as long as you have N or more life and an opponent has N or less life, ~ gets +N/+N and has flying. | 1 | Blood Baron of Vizkopa | dgm |
+| as ~ enters, choose a noncreature, nonland card name. | 1 | Council of the Absolute | dgm |
+| at the beginning of each combat, up to one target creature attacks or blocks ~ if able and up to one target creature can't attack or block ~. | 1 | Boros Battleshaper | dgm |
+| at the beginning of your upkeep, choose a card at random in your graveyard. if it's a creature card, put it onto the battlefield. otherwise, put it into your ha | 1 | Deadbridge Chant | dgm |
+| at the beginning of your upkeep, return a creature you control to its owner's hand. | 1 | Species Gorger | dgm |
+| attacking creatures you control get +N/+N and have menace. | 1 | Gruul War Chant | dgm |
+| change the text of target permanent by replacing all instances of one color word with another or one basic land type with another until end of turn. cipher (the | 1 | Trait Doctoring | dgm |
+| choose any target. draw three cards, then discard a card. ~ deals damage equal to the discarded card's mana value to that permanent or player. | 1 | Blast of Genius | dgm |
+| choose target creature. mill four cards, then that creature gets -N/-N until end of turn for each land card in your graveyard. | 1 | Drown in Filth | dgm |
+| cipher | 1 | Hidden Strings | dgm |
+| counter target spell. at the beginning of your next first main phase, add N mana in any combination of colors, where N is that spell's mana value. | 1 | Plasm Capture | dgm |
+| counter target spell. its controller can't cast spells ~. | 1 | Render Silent | dgm |
+| detain up to two target creatures your opponents control. (until your next turn, those creatures can"..."t be activated.) | 1 | Lyev Decree | dgm |
+| each creature card in your graveyard has scavenge. the scavenge cost is equal to its mana cost. | 1 | Varolz, the Scar-Striped | dgm |
+| each opponent loses two times N life. you gain life equal to the life lost ~. | 1 | Debt to the Deathless | dgm |
+| each player sacrifices an artifact, a creature, an enchantment, a land, and a planeswalker of their choice. fuse (you may cast one or both halves of ~ from your | 1 | Catch // Release | dgm |
+| evolve | 1 | Battering Krasis | dgm |
+| exile target creature card from a graveyard. put N +N/+N counters on target creature, where N is the power of the card you exiled. fuse (you may cast one or bot | 1 | Flesh // Blood | dgm |
+| if you would draw a card while you have no cards in hand, instead you draw two cards and you lose N life. | 1 | Blood Scrivener | dgm |
+| monocolored creatures can't block ~. | 1 | Awe for the Guilds | dgm |
+| multicolored creatures you control have deathtouch. | 1 | Maze Abomination | dgm |
+| multicolored creatures you control have flying. | 1 | Maze Glider | dgm |
+| multicolored creatures you control have haste. | 1 | Maze Rusher | dgm |
+| multicolored creatures you control have trample. | 1 | Maze Behemoth | dgm |
+| multicolored creatures you control have vigilance. | 1 | Maze Sentinel | dgm |
+| overload | 1 | Weapon Surge | dgm |
+| play with the top card of your library revealed. | 1 | Melek, Izzet Paragon | dgm |
+| populate. (create a token that's a copy of a creature token you control.) | 1 | Wake the Reflections | dgm |
+| prevent all damage that would be dealt to creature tokens you control. | 1 | Emmara Tandris | dgm |
+| put a creature card from a graveyard onto the battlefield under your control. it gains haste until end of turn. fuse (you may cast one or both halves of ~ from  | 1 | Breaking // Entering | dgm |
+| red creatures you control get +N/+N. | 1 | Legion's Initiative | dgm |
+| return each creature that dealt damage ~ to its owner's hand. | 1 | Restore the Peace | dgm |
+| return target creature card from your graveyard to your hand. ~ deals damage to any target equal to the power of the card returned ~. | 1 | Morgue Burst | dgm |
+| ruric thar attacks each combat if able. | 1 | Ruric Thar, the Unbowed | dgm |
+| scavenge | 1 | Thrashing Mossdog | dgm |
+| target creature gets +N/-N until end of turn, where N is the number of cards in your hand. | 1 | Warped Physique | dgm |
+| target opponent reveals their hand. you choose up to N nonland cards from it and exile them. for each card exiled ~, search that player's graveyard, hand, and l | 1 | Reap Intellect | dgm |
+| trouble deals damage to target player equal to the number of cards in that player's hand. fuse (you may cast one or both halves of ~ from your hand.) | 1 | Toil // Trouble | dgm |
+| until end of turn, creatures you control gain "..." | 1 | Showstopper | dgm |
+| until end of turn, target creature you control becomes a blue and red dragon with base power and toughness N/N, loses all abilities, and gains flying. overload  | 1 | Dragonshift | dgm |
+| when lavinia enters, detain each nonland permanent your opponents control with mana value N or less. | 1 | Lavinia of the Tenth | dgm |
+| when ~ enters, if you cast it from your hand, create a N/N white bird creature token with flying, then populate. | 1 | Scion of Vitu-Ghazi | dgm |
+| whenever a creature blocks, that creature's controller loses N life. | 1 | Carnage Gladiator | dgm |
+| whenever a creature deals combat damage to you, destroy that creature. create a N/N white and black spirit creature token with flying. | 1 | Teysa, Envoy of Ghosts | dgm |
+| whenever enchanted creature attacks or blocks, its controller loses N life. | 1 | Sinister Possession | dgm |
+| whenever mirko vosk deals combat damage to a player, that player reveals cards from the top of their library until they reveal four land cards, then puts those  | 1 | Mirko Vosk, Mind Drinker | dgm |
+| whenever one or more creatures you control deal combat damage to a player, if ~ is in your graveyard, you may pay {M}. if you do, return ~ to your hand. | 1 | Pyrewild Shaman | dgm |
+| whenever you cast an instant or sorcery spell, you may switch ~ power and toughness until end of turn. | 1 | Fluxcharger | dgm |
+| whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn and can attack ~ as though it didn't have defender. | 1 | Nivix Cyclops | dgm |
+| whenever ~ attacks a player and isn"..."s life total becomes N. ~ assigns no combat damage ~. | 1 | Master of Cruelties | dgm |
+| whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Jelenn Sphinx | dgm |
+| whenever ~ evolves, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Renegade Krasis | dgm |
+| you gain N life for each creature your opponents control. prevent all damage that would be dealt to you ~. | 1 | Riot Control | dgm |
+| {M}: ~ can't be blocked ~. | 1 | Aetherling | dgm |
+| {M}{M}, {M}: double the number of each kind of counter on target artifact, creature, or land. | 1 | Vorel of the Hull Clade | dgm |
+| {M}{M}, {M}: target opponent loses N life, then reveals a card at random from their hand. | 1 | Hired Torturer | dgm |
+| {M}{M}{M}, return ~ to its owner's hand: put two +N/+N counters on enchanted creature. | 1 | Krasis Incubation | dgm |
+| −N: flip five coins. take an extra turn after ~ for each coin that comes up heads. | 1 | Ral Zarek | dgm |
 
 ## Notes
 

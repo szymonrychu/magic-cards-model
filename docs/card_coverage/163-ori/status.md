@@ -3,24 +3,24 @@
 - Expansion: 163
 - Set code: `ori`
 - Release date: 2015-07-17
-- Cards in scope (Modern/Pioneer/Standard-legal): 175
+- Cards in scope (Modern/Pioneer/Standard-legal): 181
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 175 |
-| Pioneer | 175 |
+| Modern | 181 |
+| Pioneer | 181 |
 | Standard | 8 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 11 | 6.3% |
-| Partial (unaudited) | 7 | 4.0% |
-| Not tested (handled, untested) | 85 | 48.6% |
-| Not working (silent / notice / error) | 72 | 41.1% |
+| Full (handled + tested) | 12 | 6.6% |
+| Partial (unaudited) | 7 | 3.9% |
+| Not tested (handled, untested) | 85 | 47.0% |
+| Not working (silent / notice / error) | 77 | 42.5% |
 
 ## Cards needing work
 
@@ -35,6 +35,7 @@
 | Blood-Cursed Knight | silent | As long as you control an enchantment, this creature gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Call of the Full Moon | silent | At the beginning of each upkeep, if a player cast two or more spells last turn, sacrifice this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra's Ignition | silent | Target creature you control deals damage equal to its power to each other creature and each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Chandra, Fire of Kaladesh // Chandra, Roaring Flame | silent | {T}: Chandra deals 1 damage to target player or planeswalker. If Chandra has dealt 3 or more damage this turn, exile her, then return her to the battlefield tra | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Citadel Castellan | silent | Renown | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Cleric of the Forward Order | silent | When this creature enters, you gain 2 life for each creature you control named Cleric of the Forward Order. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consul's Lieutenant | silent | Whenever this creature attacks, if it's renowned, other attacking creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -50,15 +51,19 @@
 | Graveblade Marauder | silent | Whenever this creature deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Helm of the Gods | silent | Equipped creature gets +1/+1 for each enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hixus, Prison Warden | silent | Whenever a creature deals combat damage to you, if Hixus entered this turn, exile that creature until Hixus leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Honored Hierarch | silent | As long as this creature is renowned, it has vigilance and "{T}: Add one mana of any color." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hydrolash | silent | Attacking creatures get -2/-0 until end of turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infectious Bloodlust | silent | Enchanted creature gets +2/+1, has haste, and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infinite Obliteration | silent | Choose a creature card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Knight of the Pilgrim's Road | silent | Renown | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Kytheon's Irregulars | silent | Renown | no machine in the engine executes this keyword | Y/Y/- | not_working |
+| Kytheon, Hero of Akros // Gideon, Battle-Forged | silent | At end of combat, if Kytheon and at least two other creatures attacked this combat, exile Kytheon, then return him to the battlefield transformed under his owne | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
+| Liliana, Heretical Healer // Liliana, Defiant Necromancer | silent | Whenever another nontoken creature you control dies, exile Liliana, Heretical Healer, then return her to the battlefield transformed under her owner's control.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necromantic Summons | silent | Put target creature card from a graveyard onto the battlefield under your control. Spell mastery — If there are two or more instant and/or sorcery cards in your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nightsnare | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards that card. If you don't, that player discards two car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Pilgrimage | silent | Search your library for up to two basic Forest cards, reveal those cards, and put one onto the battlefield tapped and the rest into your hand. Then shuffle. Spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Revelation | silent | Scry 5, then reveal the top card of your library. If it's a creature card, you draw cards equal to its power and you gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Nissa, Vastwood Seer // Nissa, Sage Animist | silent | −2: Create Ashaya, the Awoken World, a legendary 4/4 green Elemental creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Outland Colossus | silent | Renown | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pharika's Disciple | silent | Renown | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Prickleboar | silent | During your turn, this creature gets +2/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -194,7 +199,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Alhammarret's Archive
 - Boggart Brute
@@ -205,6 +210,7 @@
 - Fiery Impulse
 - Hallowed Moonlight
 - Hangarback Walker
+- Jace, Vryn's Prodigy // Jace, Telepath Unbound
 - Sigil of Valor
 - Unholy Hunger
 
@@ -212,70 +218,80 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Renown | Akroan Sergeant, Citadel Castellan, Firefiend Elemental, Knight of the Pilgrim's Road, Kytheon's Irregulars, Outland Colossus, Pharika's Disciple, Rhox Maulers, Scab-Clan Berserker, Stalwart Aven, Topan Freeblade, Undercity Troll, War Oracle | 13 |
-| When this creature enters, you may search your library for a nonlegendary green creature card with mana value 3 or less, put it onto the battlefield, then shuff | Cleric of the Forward Order, Gilt-Leaf Winnower, Woodland Bellower | 3 |
-| As long as this creature is untapped, creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | Archangel of Tithes, Goblin Glory Chaser | 2 |
-| As long as you control five or more enchantments, each other non-Aura enchantment you control is a creature in addition to its other types and has base power an | Blood-Cursed Knight, Starfield of Nyx | 2 |
-| Whenever a creature you control becomes blocked, it gets +1/+1 until end of turn. | Somberwald Alpha, Valeron Wardens | 2 |
-| As Alhammarret enters, each opponent reveals their hand. You choose the name of a nonland card revealed this way. | Alhammarret, High Arbiter | 1 |
-| At the beginning of each upkeep, if a player cast two or more spells last turn, sacrifice this Aura. | Call of the Full Moon | 1 |
-| At the beginning of your upkeep, choose one that hasn't been chosen — • This enchantment deals 4 damage to any target and you gain 4 life. • Target opponent dis | Demonic Pact | 1 |
-| Attacking creatures get -2/-0 until end of turn. Draw a card. | Hydrolash | 1 |
-| Attacking creatures you control get +1/+0. | War Horn | 1 |
-| Choose a creature card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuff | Infinite Obliteration | 1 |
-| Counter target instant or sorcery spell that targets you. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, you may copy  | Psychic Rebuttal | 1 |
-| Draw two cards. If you control no artifacts, discard a card. | Artificer's Epiphany | 1 |
-| During your turn, this creature gets +2/+0 and has first strike. | Prickleboar | 1 |
-| Each creature you control gets +3/+3 until end of turn and must be blocked this turn if able. | Joraga Invocation | 1 |
-| Each player shuffles all cards from their hand and all permanents they own into their library, then draws that many cards. Each player may put any number of lan | The Great Aurora | 1 |
-| Enchanted creature gets +2/+1, has haste, and attacks each combat if able. | Infectious Bloodlust | 1 |
-| Enchanted permanent can't attack or block, and its activated abilities can't be activated. | Suppression Bonds | 1 |
-| Equipped creature gets +1/+1 for each enchantment you control. | Helm of the Gods | 1 |
-| For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifi | Tragic Arrogance | 1 |
-| If a creature would deal damage to you, prevent 1 of that damage. | Orbs of Warding | 1 |
-| If an opponent would gain life, that player loses that much life instead. | Tainted Remedy | 1 |
-| If another red source you control would deal damage to a permanent or player, it deals that much damage plus 1 to that permanent or player instead. | Embermaw Hellion | 1 |
-| Non-Elf creatures get -2/-2 until end of turn. | Eyeblight Massacre | 1 |
-| Other creatures you control with flying get +1/+1. | Thunderclap Wyvern | 1 |
-| Other Elf creatures you control get +1/+1. | Dwynen, Gilt-Leaf Daen | 1 |
-| Prevent all combat damage that would be dealt this turn by creatures with power 4 or less. | Vine Snare | 1 |
-| Put target creature card from a graveyard onto the battlefield under your control. Spell mastery — If there are two or more instant and/or sorcery cards in your | Necromantic Summons | 1 |
-| Put target creature on top of its owner's library. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | Anchor to the Aether | 1 |
-| Ravaging Blaze deals X damage to target creature. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, Ravaging Blaze also d | Ravaging Blaze | 1 |
-| Regenerate target creature. Draw a card. (The next time the creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on | Dark Dabbling | 1 |
-| Return all nonland permanents with mana value X or less to their owners' hands. | Displacement Wave | 1 |
-| Reveal the top five cards of your library. You may put a creature card from among them into your hand. Put the rest into your graveyard. Spell mastery — If ther | Gather the Pack | 1 |
-| Reveal the top X cards of your library. Put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | Animist's Awakening | 1 |
-| {1}, {T}, Sacrifice this artifact: Target creature can't attack or block this turn. | Alchemist's Vial | 1 |
-| Scry 5, then reveal the top card of your library. If it's a creature card, you draw cards equal to its power and you gain life equal to its toughness. | Nissa's Revelation | 1 |
-| Search your library for up to two basic Forest cards, reveal those cards, and put one onto the battlefield tapped and the rest into your hand. Then shuffle. Spe | Nissa's Pilgrimage | 1 |
-| Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, you may cast this spell as though it had flash. (You may cast it any ti | Swift Reckoning | 1 |
-| Tap up to two target creatures. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, those creatures don't untap during thei | Send to Sleep | 1 |
-| Target creature gets +1/+1 until end of turn. Prevent all damage that would be dealt to it this turn. If it's renowned, untap it. | Enshrouding Mist | 1 |
-| Target creature you control deals damage equal to its power to each other creature and each opponent. | Chandra's Ignition | 1 |
-| Target creature you control gets +1/+0 and gains deathtouch until end of turn. Whenever a creature dealt damage by that creature dies this turn, its controller  | Touch of Moonglove | 1 |
-| Target opponent reveals the top seven cards of their library. You may cast an instant or sorcery spell from among them without paying its mana cost. Then that p | Talent of the Telepath | 1 |
-| Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards that card. If you don't, that player discards two car | Nightsnare | 1 |
-| This creature can't attack alone. | Bonded Construct | 1 |
-| This creature gets +2/+0 as long as you control another artifact. | Ramroller | 1 |
-| When this creature becomes renowned, you may search your library for an Equipment card, reveal it, put it into your hand, then shuffle. | Relic Seeker | 1 |
-| When this creature enters, create a 2/2 black Zombie creature token for each card named Undead Servant in your graveyard. | Undead Servant | 1 |
-| When this creature enters, creatures without flying can't block this turn. | Seismic Elemental | 1 |
-| When this creature enters, each player loses 2 life. | Rabid Bloodsucker | 1 |
-| When this creature enters, target opponent loses life equal to the number of Elves you control. | Shaman of the Pack | 1 |
-| Whenever a creature an opponent controls becomes the target of a spell or ability you control, gain control of that creature for as long as you control this cre | Willbreaker | 1 |
-| Whenever a creature card leaves an opponent's graveyard, you may discard a card. If you do, return this card from your graveyard to your hand. | Erebos's Titan | 1 |
-| Whenever a creature deals combat damage to you, if Hixus entered this turn, exile that creature until Hixus leaves the battlefield. | Hixus, Prison Warden | 1 |
-| Whenever a nontoken creature you control enters, you may pay {R}. If you do, create a token that's a copy of that creature. That token gains haste. Exile it at  | Flameshadow Conjuring | 1 |
-| Whenever equipped creature attacks, you may sacrifice this Equipment. If you do, this Equipment deals 2 damage to any target. | Throwing Knife | 1 |
-| Whenever this creature attacks, each opponent who doesn't control an Elf loses 1 life. | Thornbow Archer | 1 |
-| Whenever this creature attacks, if it's renowned, other attacking creatures you control get +1/+1 until end of turn. | Consul's Lieutenant | 1 |
-| Whenever this creature becomes blocked by a creature, it deals 2 damage to that creature. | Acolyte of the Inferno | 1 |
-| Whenever this creature deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | Graveblade Marauder | 1 |
-| Whenever you draw a card, target opponent mills two cards. If two nonland cards that share a color were milled this way, repeat this process. | Sphinx's Tutelage | 1 |
-| You may cast this spell as though it had flash if you pay {2} more to cast it. | Harbinger of the Tides | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| renown | 13 | Akroan Sergeant, Citadel Castellan, Firefiend Elemental, Knight of the Pilgrim's Road, Kytheon's Irregulars | ori |
+| Spell mastery | 1 | Swift Reckoning | ori |
+| as alhammarret enters, each opponent reveals their hand. you choose the name of a nonland card revealed ~. | 1 | Alhammarret, High Arbiter | ori |
+| as long as you control an enchantment, ~ gets +N/+N and has lifelink. | 1 | Blood-Cursed Knight | ori |
+| as long as you control five or more enchantments, each other non-aura enchantment you control is a creature in addition to its other types and has base power an | 1 | Starfield of Nyx | ori |
+| as long as ~ is renowned, it has menace. | 1 | Goblin Glory Chaser | ori |
+| as long as ~ is renowned, it has vigilance and "..." | 1 | Honored Hierarch | ori |
+| as long as ~ is untapped, creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Archangel of Tithes | ori |
+| at end of combat, if kytheon and at least two other creatures attacked ~, exile kytheon, then return him to the battlefield transformed under his owner's contro | 1 | Kytheon, Hero of Akros // Gideon, Battle-Forged | ori |
+| at the beginning of each upkeep, if a player cast two or more spells last turn, sacrifice ~. | 1 | Call of the Full Moon | ori |
+| at the beginning of your upkeep, choose one that hasn't been chosen — • ~ deals N damage to any target and you gain N life. • target opponent discards two cards | 1 | Demonic Pact | ori |
+| attacking creatures get -N/-N until end of turn. draw a card. | 1 | Hydrolash | ori |
+| attacking creatures you control get +N/+N. | 1 | War Horn | ori |
+| choose a creature card name. search target opponent's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuff | 1 | Infinite Obliteration | ori |
+| counter target instant or sorcery spell that targets you. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, you may copy  | 1 | Psychic Rebuttal | ori |
+| draw two cards. if you control no artifacts, discard a card. | 1 | Artificer's Epiphany | ori |
+| during your turn, ~ gets +N/+N and has first strike. | 1 | Prickleboar | ori |
+| each creature you control gets +N/+N until end of turn and must be blocked ~ if able. | 1 | Joraga Invocation | ori |
+| each player shuffles all cards from their hand and all permanents they own into their library, then draws that many cards. each player may put any number of lan | 1 | The Great Aurora | ori |
+| enchanted creature gets +N/+N, has haste, and attacks each combat if able. | 1 | Infectious Bloodlust | ori |
+| enchanted permanent can"..."t be activated. | 1 | Suppression Bonds | ori |
+| equipped creature gets +N/+N for each enchantment you control. | 1 | Helm of the Gods | ori |
+| for each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. then each player sacrifi | 1 | Tragic Arrogance | ori |
+| if a creature would deal damage to you, prevent N of that damage. | 1 | Orbs of Warding | ori |
+| if an opponent would gain life, that player loses that much life instead. | 1 | Tainted Remedy | ori |
+| if another red source you control would deal damage to a permanent or player, it deals that much damage plus N to that permanent or player instead. | 1 | Embermaw Hellion | ori |
+| non-elf creatures get -N/-N until end of turn. | 1 | Eyeblight Massacre | ori |
+| other creatures you control with flying get +N/+N. | 1 | Thunderclap Wyvern | ori |
+| other elf creatures you control get +N/+N. | 1 | Dwynen, Gilt-Leaf Daen | ori |
+| prevent all combat damage that would be dealt ~ by creatures with power N or less. | 1 | Vine Snare | ori |
+| put target creature card from a graveyard onto the battlefield under your control. spell mastery — if there are two or more instant and/or sorcery cards in your | 1 | Necromantic Summons | ori |
+| put target creature on top of its owner's library. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Anchor to the Aether | ori |
+| regenerate target creature. draw a card. (the next time the creature would be destroyed ~, instead tap it, remove it from combat, and heal all damage on it.) sp | 1 | Dark Dabbling | ori |
+| return all nonland permanents with mana value N or less to their owners' hands. | 1 | Displacement Wave | ori |
+| reveal the top N cards of your library. put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | 1 | Animist's Awakening | ori |
+| reveal the top five cards of your library. you may put a creature card from among them into your hand. put the rest into your graveyard. spell mastery — if ther | 1 | Gather the Pack | ori |
+| scry N, then reveal the top card of your library. if it's a creature card, you draw cards equal to its power and you gain life equal to its toughness. | 1 | Nissa's Revelation | ori |
+| search your library for up to two basic forest cards, reveal those cards, and put one onto the battlefield tapped and the rest into your hand. then shuffle. spe | 1 | Nissa's Pilgrimage | ori |
+| tap up to two target creatures. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, those creatures don"..." next untap ste | 1 | Send to Sleep | ori |
+| target creature gets +N/+N until end of turn. prevent all damage that would be dealt to it ~. if it's renowned, untap it. | 1 | Enshrouding Mist | ori |
+| target creature you control deals damage equal to its power to each other creature and each opponent. | 1 | Chandra's Ignition | ori |
+| target creature you control gets +N/+N and gains deathtouch until end of turn. whenever a creature dealt damage by that creature dies ~, its controller loses N  | 1 | Touch of Moonglove | ori |
+| target opponent reveals the top seven cards of their library. you may cast an instant or sorcery spell from among them without paying its mana cost. then that p | 1 | Talent of the Telepath | ori |
+| target opponent reveals their hand. you may choose a nonland card from it. if you do, that player discards that card. if you don't, that player discards two car | 1 | Nightsnare | ori |
+| when ~ becomes renowned, you may search your library for an equipment card, reveal it, put it into your hand, then shuffle. | 1 | Relic Seeker | ori |
+| when ~ enters, create a N/N black zombie creature token for each card named ~ in your graveyard. | 1 | Undead Servant | ori |
+| when ~ enters, creatures without flying can't block ~. | 1 | Seismic Elemental | ori |
+| when ~ enters, each player loses N life. | 1 | Rabid Bloodsucker | ori |
+| when ~ enters, target opponent loses life equal to the number of elves you control. | 1 | Shaman of the Pack | ori |
+| when ~ enters, you gain N life for each creature you control named ~. | 1 | Cleric of the Forward Order | ori |
+| when ~ enters, you may destroy target non-elf creature whose power and toughness aren't equal. | 1 | Gilt-Leaf Winnower | ori |
+| when ~ enters, you may search your library for a nonlegendary green creature card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Woodland Bellower | ori |
+| whenever a creature an opponent controls becomes the target of a spell or ability you control, gain control of that creature for as long as you control ~. | 1 | Willbreaker | ori |
+| whenever a creature card leaves an opponent's graveyard, you may discard a card. if you do, return ~ from your graveyard to your hand. | 1 | Erebos's Titan | ori |
+| whenever a creature deals combat damage to you, if hixus entered ~, exile that creature until hixus leaves the battlefield. | 1 | Hixus, Prison Warden | ori |
+| whenever a creature you control becomes blocked, it gets +N/+N until end of turn. | 1 | Somberwald Alpha | ori |
+| whenever a creature you control becomes renowned, draw a card. | 1 | Valeron Wardens | ori |
+| whenever a nontoken creature you control enters, you may pay {M}. if you do, create a token that's a copy of that creature. that token gains haste. exile it at  | 1 | Flameshadow Conjuring | ori |
+| whenever another nontoken creature you control dies, exile ~, then return her to the battlefield transformed under her owner's control. if you do, create a N/N  | 1 | Liliana, Heretical Healer // Liliana, Defiant Necromancer | ori |
+| whenever equipped creature attacks, you may sacrifice ~. if you do, ~ deals N damage to any target. | 1 | Throwing Knife | ori |
+| whenever you draw a card, target opponent mills two cards. if two nonland cards that share a color were milled ~, repeat ~. | 1 | Sphinx's Tutelage | ori |
+| whenever ~ attacks, each opponent who doesn't control an elf loses N life. | 1 | Thornbow Archer | ori |
+| whenever ~ attacks, if it's renowned, other attacking creatures you control get +N/+N until end of turn. | 1 | Consul's Lieutenant | ori |
+| whenever ~ becomes blocked by a creature, it deals N damage to that creature. | 1 | Acolyte of the Inferno | ori |
+| whenever ~ deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | 1 | Graveblade Marauder | ori |
+| you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Harbinger of the Tides | ori |
+| {M}, {M}, sacrifice ~: target creature can't attack or block ~. | 1 | Alchemist's Vial | ori |
+| {M}: chandra deals N damage to target player or planeswalker. if chandra has dealt N or more damage ~, exile her, then return her to the battlefield transformed | 1 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | ori |
+| ~ can't attack alone. | 1 | Bonded Construct | ori |
+| ~ deals N damage to target creature. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, ~ also deals N damage to that crea | 1 | Ravaging Blaze | ori |
+| ~ gets +N/+N as long as you control another artifact. | 1 | Ramroller | ori |
+| −N: create ashaya, the awoken world, a legendary N/N green elemental creature token. | 1 | Nissa, Vastwood Seer // Nissa, Sage Animist | ori |
 
 ## Notes
 

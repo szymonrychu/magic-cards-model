@@ -3,24 +3,24 @@
 - Expansion: 235
 - Set code: `bro`
 - Release date: 2022-11-18
-- Cards in scope (Modern/Pioneer/Standard-legal): 253
+- Cards in scope (Modern/Pioneer/Standard-legal): 256
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 253 |
-| Pioneer | 253 |
+| Modern | 256 |
+| Pioneer | 256 |
 | Standard | 6 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 16 | 6.3% |
+| Full (handled + tested) | 17 | 6.6% |
 | Partial (unaudited) | 13 | 5.1% |
-| Not tested (handled, untested) | 127 | 50.2% |
-| Not working (silent / notice / error) | 97 | 38.3% |
+| Not tested (handled, untested) | 127 | 49.6% |
+| Not working (silent / notice / error) | 99 | 38.7% |
 
 ## Cards needing work
 
@@ -84,6 +84,7 @@
 | Spotter Thopter | silent | When this creature enters, scry X, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steel Seraph | silent | At the beginning of combat on your turn, target creature you control gains your choice of flying, vigilance, or lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Su-Chi Cave Guard | silent | When this creature dies, add eight {C}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Surge Engine | silent | {U}: This creature loses defender and gains "This creature can't be blocked." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tawnos's Tinkering | silent | Put two +1/+1 counters on target artifact, creature, or land you control. Untap that permanent. If it isn't a creature, it becomes a 0/0 creature in addition to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tawnos, the Toymaker | silent | Whenever you cast a Beast or Bird creature spell, you may copy it, except the copy is an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi, Temporal Pilgrim | silent | −12: Target opponent chooses a permanent they control and returns it to its owner's hand. Then they shuffle each nonland permanent they control into its owner's | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -99,6 +100,7 @@
 | Urza's Sylex | silent | {2}{W}{W}, {T}, Exile Urza's Sylex: Each player chooses six lands they control. Destroy all other permanents. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza, Planeswalker | silent | +2: Artifact, instant, and sorcery spells you cast this turn cost {2} less to cast. You gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza, Powerstone Prodigy | silent | Whenever you discard one or more artifact cards, create a tapped Powerstone token. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
+| Urza, Prince of Kroog | silent | {6}: Create a token that's a copy of target artifact you control, except it's a 1/1 Soldier creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Woodcaller Automaton | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Arms Race | notice | {3}{R}: You may put an artifact card from your hand onto the battlefield. That artifact gains haste. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Battery Bearer | notice | Creatures you control have "{T}: Add {C}. This mana can't be spent to cast a nonartifact spell." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -267,7 +269,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Aeronaut Cavalry
 - Awaken the Woods
@@ -283,6 +285,7 @@
 - Mine Worker
 - Penregon Strongbull
 - Power Plant Worker
+- Recruitment Officer
 - The Stone Brain
 - Tower Worker
 
@@ -290,101 +293,106 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Prototype | Autonomous Assembler, Blitz Automaton, Combat Thresher, Cradle Clearcutter, Depth Charge Colossus, Fallaji Dragon Engine, Goring Warplow, Hulking Metamorph, Phyrexian Fleshgorger, Rust Goliath, Skitterbeam Battalion, Woodcaller Automaton | 12 |
-| At the beginning of your end step, if you've cast a noncreature spell this turn, reveal the top five cards of your library. For each card type among noncreature | Heavyweight Demolisher, Hurkyl, Master Wizard, Portal to Phyrexia | 3 |
-| As an additional cost to cast this spell, sacrifice an artifact. Create two tapped Powerstone tokens. If the sacrificed artifact was legendary, draw a card. (Th | Splitting the Powerstone, Warlord's Elite | 2 |
-| As long as you've drawn two or more cards this turn, this creature has deathtouch and lifelink. | Evangel of Synthesis, Trench Stalker | 2 |
-| When this creature enters, you and target opponent each create a tapped Powerstone token. | Boulderbranch Golem, Thran Spider | 2 |
-| Whenever you discard one or more artifact cards, create a tapped Powerstone token. This ability triggers only once each turn. | Mishra, Excavation Prodigy, Urza, Powerstone Prodigy | 2 |
-| {R}: Artifact creatures you control get +1/+0 until end of turn. | Artificer's Dragon | 1 |
-| +2: Artifact, instant, and sorcery spells you cast this turn cost {2} less to cast. You gain 2 life. | Urza, Planeswalker | 1 |
-| As long as it's your turn and you control four or more Mountains, this creature gets +X/+0, where X is the number of Mountains you control. | Sardian Cliffstomper | 1 |
-| As long as you control enchanted creature, it gets +2/+2. Otherwise, it can't block. | Mishra's Domination | 1 |
-| As this land enters, you may reveal a Soldier card from your hand. This land enters tapped unless you revealed a Soldier card this way or you control a Soldier. | Fortified Beachhead | 1 |
-| At the beginning of combat on your turn, target creature you control gains your choice of flying, vigilance, or lifelink until end of turn. | Steel Seraph | 1 |
-| Choose target opponent. Destroy target land that player controls. The Fall of Kroog deals 3 damage to that player and 1 damage to each creature they control. | The Fall of Kroog | 1 |
-| Choose two — • Choose target player. They may discard up to X cards. Then they draw a card for each card discarded this way. • This spell deals X damage to targ | Mishra's Command | 1 |
-| Choose two — • Create a 2/2 colorless Construct artifact creature token. • Put a +1/+1 counter on a creature you control. It gains double strike until end of tu | Kayla's Command | 1 |
-| Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | Urza's Command | 1 |
-| Choose two — • Put two +1/+1 counters on up to one creature. It gains lifelink until end of turn. • Destroy each creature with power 2 or less. • Return up to t | Gix's Command | 1 |
-| Creatures you control have "{T}: Add {C}. This mana can't be spent to cast a nonartifact spell." | Battery Bearer | 1 |
-| Creatures you control have vigilance and "{T}: Surveil 1." | Tocasia, Dig Site Mentor | 1 |
-| Creatures you control with mana value 3 or less get +1/+0. | Hero of the Dunes | 1 |
-| {4}, {T}: Discard all the cards in your hand, then draw that many cards. You may choose an artifact or creature card with mana value 1 you discarded this way, t | Queen Kayla bin-Kroog | 1 |
-| Draw cards equal to the mana value of target artifact or creature you control. An opponent gains control of that permanent. | Fateful Handoff | 1 |
-| During turns other than yours, this spell costs {3} more to cast. Return all nonland permanents to their owners' hands. End the turn. (Exile all spells and abil | Hurkyl's Final Meditation | 1 |
-| During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | Myrel, Shield of Argive | 1 |
-| {5}, {T}: Each opponent loses 2 life. This ability costs {1} less to activate for each creature card in your graveyard. | Battlefield Butcher | 1 |
-| Each player reveals a number of cards from the top of their library equal to the number of nonland permanents they control, puts all permanent cards they reveal | Over the Top | 1 |
-| Each player who controls an artifact or enchantment creates a 2/2 green Bear creature token. Then destroy all artifacts and enchantments. | Fade from History | 1 |
-| Enchanted creature can't attack or block, and its activated abilities can't be activated. | Prison Sentence | 1 |
-| Enchanted creature gets +1/+1 and has flying, haste, and "{1}: This creature gets +1/+0 until end of turn." It's a Dragon in addition to its other types. | Draconic Destiny | 1 |
-| Equipped creature gets +1/+1 for each Aura and Equipment attached to it and has ward {2}. | Thran Power Suit | 1 |
-| Exile all graveyards. Players can't cast noncreature spells this turn. Exile Calamity's Wake. | Calamity's Wake | 1 |
-| Exile target creature with mana value less than or equal to the number of Plains you control. Its controller gains 3 life. | Lay Down Arms | 1 |
-| Exile target nonland permanent an opponent controls and all tokens that player controls with the same name as that permanent. | Legions to Ashes | 1 |
-| Exile target nonland permanent. For as long as that card remains exiled, its owner may play it. A spell cast by an opponent this way costs {2} more to cast. | Soul Partition | 1 |
-| {2}, {T}, Exile The Stasis Coffin: You gain protection from everything until your next turn. | The Stasis Coffin | 1 |
-| Exile the top three cards of your library in a face-down pile, then exile the top three cards of your library in another face-down pile. Look at the cards in ea | Hostile Negotiations | 1 |
-| {2}{W}{W}, {T}, Exile Urza's Sylex: Each player chooses six lands they control. Destroy all other permanents. Activate only as a sorcery. | Urza's Sylex | 1 |
-| Gain control of target artifact or creature until end of turn. Untap it. It gains haste until end of turn. Create a tapped Powerstone token. (It's an artifact w | Sibling Rivalry | 1 |
-| If a red or artifact source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead. | Mechanized Warfare | 1 |
-| Look at the top seven cards of your library. Put up to X artifact and/or creature cards with mana value 3 or less from among them onto the battlefield. Put the  | Kayla's Reconstruction | 1 |
-| Obliterating Bolt deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | Obliterating Bolt | 1 |
-| Permanents you control have "Ward—Sacrifice a permanent." | Mishra, Tamer of Mak Fawa | 1 |
-| Prevent all damage that would be dealt to other attacking Soldiers you control. | Rescue Retriever | 1 |
-| Put two +1/+1 counters on target artifact, creature, or land you control. Untap that permanent. If it isn't a creature, it becomes a 0/0 creature in addition to | Tawnos's Tinkering | 1 |
-| Return target artifact or creature card with mana value 3 or less from your graveyard to the battlefield. If a creature enters this way, it enters with an addit | Recommission | 1 |
-| {2}{W}: Return target permanent you control to its owner's hand. If it has unearth, instead exile it, then return that card to its owner's hand. Activate only d | Meticulous Excavation | 1 |
-| {4}{B}{B}: Return this card from your graveyard to the battlefield with a +1/+1 counter on it. This ability costs {4} less to activate if an opponent controls f | Razorlash Transmogrant | 1 |
-| Sacrifice Hajar: Legendary creatures you control get +1/+0 and gain indestructible until end of turn. | Hajar, Loyal Bodyguard | 1 |
-| {1}, {T}, Sacrifice this artifact: Exile the top two cards of your library. Choose one of them. Until the end of your next turn, you may play that card. | Mishra's Research Desk | 1 |
-| {3}{G}{G}, Sacrifice this creature: Create an X/X colorless Golem artifact creature token, where X is three times this creature's power. It gains haste until en | Rootwire Amalgam | 1 |
-| +1: Scry 1. You may tap an untapped artifact you control. If you do, draw a card. | Saheeli, Filigree Master | 1 |
-| {1}, {T}: Target attacking Assembly-Worker gets +2/+2 until end of turn. | Mishra's Foundry | 1 |
-| −12: Target opponent chooses a permanent they control and returns it to its owner's hand. Then they shuffle each nonland permanent they control into its owner's | Teferi, Temporal Pilgrim | 1 |
-| Target opponent reveals their hand. You choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. Exile the ch | Dreams of Steel and Oil | 1 |
-| This creature can't be blocked by artifact creatures. | Argothian Sprite | 1 |
-| This creature enters with two +1/+1 counters on it unless two or more colors of mana were spent to cast it. | Steel Exemplar | 1 |
-| This creature gets +2/+0 as long as you control an Island. | Coastal Bulwark | 1 |
-| This creature has deathtouch as long as you control three or more artifacts. | Teething Wurmlet | 1 |
-| This land enters tapped unless you control a legendary green creature. | Argoth, Sanctum of Nature | 1 |
-| This spell can't be countered. Destroy target artifact. If its mana value was 1 or less, draw a card. | Raze to the Ground | 1 |
-| Unleash Shell deals 5 damage to target creature or planeswalker and 2 damage to that permanent's controller. | Unleash Shell | 1 |
-| {1}: Until end of turn, this creature gets -1/-1 and gains your choice of flying, vigilance, deathtouch, or haste. | Argivian Avenger | 1 |
-| When this Aura enters, enchanted creature gains first strike until end of turn. | Military Discipline | 1 |
-| When this creature dies, add eight {C}. Until end of turn, you don't lose this mana as steps and phases end. | Su-Chi Cave Guard | 1 |
-| When this creature dies, return another target creature card with mana value less than or equal to this creature's power from your graveyard to the battlefield. | Gurgling Anointer | 1 |
-| When this creature dies, target creature you don't control gets -1/-1 until end of turn. | Gnawing Vermin | 1 |
-| When this creature dies, you may gain 1 life for each creature card in your graveyard. If you do, exile this card from your graveyard. | Skyfisher Spider | 1 |
-| When this creature enters, choose up to two other target creatures you control. For each {W}{W} spent to cast this creature, put a +1/+1 counter on each of them | Clay Champion | 1 |
-| When this creature enters, create a tapped Powerstone token for each other creature you control. | Great Desert Prospector | 1 |
-| When this creature enters, exile target card from an opponent's graveyard. If it was a creature card, that player loses 1 life. | Carrion Locust | 1 |
-| When this creature enters, for each {U}{U} spent to cast it, draw a card. | Bladecoil Serpent | 1 |
-| When this creature enters, if you cast it, exile target instant or sorcery card with mana value less than or equal to this creature's power from your graveyard. | Arcane Proxy | 1 |
-| When this creature enters, mill three cards. You may put a Plains card or a creature card with mana value 3 or less from among the cards milled this way into yo | Airlift Chaplain | 1 |
-| When this creature enters, return up to one other target creature you control to its owner's hand. If it was a Soldier, put a +1/+1 counter on this creature. | Zephyr Sentinel | 1 |
-| When this creature enters, scry X, where X is its power. | Spotter Thopter | 1 |
-| When this creature leaves the battlefield, sacrifice a Powerstone. | Horned Stoneseeker | 1 |
-| Whenever a creature enters from your graveyard, you may attach this Equipment to it. | Dredging Claw | 1 |
-| Whenever an artifact you control enters, look at the top card of your library. If it's a land card, you may reveal it and put it into your hand. If you don't pu | Sarinth Steelseeker | 1 |
-| Whenever Feldon is dealt damage, exile that many cards from the top of your library. Choose one of them. Until the end of your next turn, you may play that card | Feldon, Ronom Excavator | 1 |
-| Whenever Mishra enters or attacks, choose three — • Target opponent discards two cards. • Mishra deals 3 damage to any target. • Destroy target artifact or plan | Mishra, Lost to Phyrexia | 1 |
-| Whenever one or more artifact and/or creature cards leave your graveyard during your turn, put a +1/+1 counter on target creature you control. | Thran Vigil | 1 |
-| Whenever one or more land cards are put into your graveyard from anywhere, you gain 2 life. | Titania, Voice of Gaea | 1 |
-| Whenever this creature attacks, defending player mills half their library, rounded up. | Terisian Mindbreaker | 1 |
-| Whenever this creature attacks, target attacking creature gets +X/+0 until end of turn, where X is this creature's power. | Iron-Craw Crusher | 1 |
-| Whenever this creature attacks, you may sacrifice another creature or artifact. If you do, this creature gains flying until end of turn. | Kill-Zone Acrobat | 1 |
-| Whenever you attack, each opponent loses X life and you gain X life, where X is the number of attacking creatures. If Mishra, Claimed by Gix and a creature name | Mishra, Claimed by Gix | 1 |
-| Whenever you cast a Beast or Bird creature spell, you may copy it, except the copy is an artifact in addition to its other types. | Tawnos, the Toymaker | 1 |
-| Whenever you choose to put one or more cards on the bottom of your library while scrying, exile that many cards from the bottom of your library. | The Temporal Anchor | 1 |
-| {T}: You and target opponent each draw a card. | Loran of the Third Path | 1 |
-| You gain 1 life for each creature on the battlefield. Prevent all combat damage that would be dealt this turn by creatures with power 3 or less. | Fog of War | 1 |
-| You may cast colorless spells and artifact spells as though they had flash. | Liberator, Urza's Battlethopter | 1 |
-| You may look at the top card of your library any time. | One with the Multiverse | 1 |
-| {3}{R}: You may put an artifact card from your hand onto the battlefield. That artifact gains haste. Sacrifice it at the beginning of the next end step. | Arms Race | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| prototype | 12 | Autonomous Assembler, Blitz Automaton, Combat Thresher, Cradle Clearcutter, Depth Charge Colossus | bro |
+| Choose two | 4 | Gix's Command, Kayla's Command, Mishra's Command, Urza's Command | bro |
+| +N: artifact, instant, and sorcery spells you cast ~ cost {M} less to cast. you gain N life. | 1 | Urza, Planeswalker | bro |
+| +N: scry N. you may tap an untapped artifact you control. if you do, draw a card. | 1 | Saheeli, Filigree Master | bro |
+| as an additional cost to cast ~, sacrifice an artifact. create two tapped powerstone tokens. if the sacrificed artifact was legendary, draw a card. (the tokens  | 1 | Splitting the Powerstone | bro |
+| as an additional cost to cast ~, tap two untapped artifacts, creatures, and/or lands you control. | 1 | Warlord's Elite | bro |
+| as long as it's your turn and you control four or more mountains, ~ gets +N/+N, where N is the number of mountains you control. | 1 | Sardian Cliffstomper | bro |
+| as long as you control enchanted creature, it gets +N/+N. otherwise, it can't block. | 1 | Mishra's Domination | bro |
+| as long as you've drawn two or more cards ~, ~ gets +N/+N and has menace. | 1 | Evangel of Synthesis | bro |
+| as long as you've drawn two or more cards ~, ~ has deathtouch and lifelink. | 1 | Trench Stalker | bro |
+| as ~ enters, you may reveal a soldier card from your hand. ~ enters tapped unless you revealed a soldier card ~ or you control a soldier. | 1 | Fortified Beachhead | bro |
+| at the beginning of combat on your turn, target creature you control gains your choice of flying, vigilance, or lifelink until end of turn. | 1 | Steel Seraph | bro |
+| at the beginning of your end step, if you"..."ve cast ~, you may put a card of that type from among the revealed cards into your hand. put the rest on the botto | 1 | Hurkyl, Master Wizard | bro |
+| at the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. it's a phyrexian in addition to its other ty | 1 | Portal to Phyrexia | bro |
+| at the beginning of your upkeep, tap ~ unless you pay {M}. | 1 | Heavyweight Demolisher | bro |
+| choose target opponent. destroy target land that player controls. ~ deals N damage to that player and N damage to each creature they control. | 1 | The Fall of Kroog | bro |
+| creatures you control have "..." | 1 | Battery Bearer | bro |
+| creatures you control have vigilance and "..." | 1 | Tocasia, Dig Site Mentor | bro |
+| creatures you control with mana value N or less get +N/+N. | 1 | Hero of the Dunes | bro |
+| draw cards equal to the mana value of target artifact or creature you control. an opponent gains control of that permanent. | 1 | Fateful Handoff | bro |
+| during turns other than yours, ~ costs {M} more to cast. return all nonland permanents to their owners' hands. end the turn. (exile all spells and abilities fro | 1 | Hurkyl's Final Meditation | bro |
+| during your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | 1 | Myrel, Shield of Argive | bro |
+| each player reveals a number of cards from the top of their library equal to the number of nonland permanents they control, puts all permanent cards they reveal | 1 | Over the Top | bro |
+| each player who controls an artifact or enchantment creates a N/N green bear creature token. then destroy all artifacts and enchantments. | 1 | Fade from History | bro |
+| enchanted creature can"..."t be activated. | 1 | Prison Sentence | bro |
+| enchanted creature gets +N/+N and has flying, haste, and "..." it's a dragon in addition to its other types. | 1 | Draconic Destiny | bro |
+| equipped creature gets +N/+N for each aura and equipment attached to it and has ward {M}. | 1 | Thran Power Suit | bro |
+| exile all graveyards. players can't cast noncreature spells ~. exile ~. | 1 | Calamity's Wake | bro |
+| exile target creature with mana value less than or equal to the number of plains you control. its controller gains N life. | 1 | Lay Down Arms | bro |
+| exile target nonland permanent an opponent controls and all tokens that player controls with the same name as that permanent. | 1 | Legions to Ashes | bro |
+| exile target nonland permanent. for as long as that card remains exiled, its owner may play it. a spell cast by an opponent ~ costs {M} more to cast. | 1 | Soul Partition | bro |
+| exile the top three cards of your library in a face-down pile, then exile the top three cards of your library in another face-down pile. look at the cards in ea | 1 | Hostile Negotiations | bro |
+| gain control of target artifact or creature until end of turn. untap it. it gains haste until end of turn. create a tapped powerstone token. (it"..."t be spent  | 1 | Sibling Rivalry | bro |
+| if a red or artifact source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus N instead. | 1 | Mechanized Warfare | bro |
+| look at the top seven cards of your library. put up to N artifact and/or creature cards with mana value N or less from among them onto the battlefield. put the  | 1 | Kayla's Reconstruction | bro |
+| permanents you control have "..." | 1 | Mishra, Tamer of Mak Fawa | bro |
+| prevent all damage that would be dealt to other attacking soldiers you control. | 1 | Rescue Retriever | bro |
+| put two +N/+N counters on target artifact, creature, or land you control. untap that permanent. if it isn't a creature, it becomes a N/N creature in addition to | 1 | Tawnos's Tinkering | bro |
+| return target artifact or creature card with mana value N or less from your graveyard to the battlefield. if a creature enters ~, it enters with an additional + | 1 | Recommission | bro |
+| sacrifice hajar: legendary creatures you control get +N/+N and gain indestructible until end of turn. | 1 | Hajar, Loyal Bodyguard | bro |
+| target opponent reveals their hand. you choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. exile the ch | 1 | Dreams of Steel and Oil | bro |
+| when ~ dies, add eight {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Su-Chi Cave Guard | bro |
+| when ~ dies, return another target creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Gurgling Anointer | bro |
+| when ~ dies, target creature you don't control gets -N/-N until end of turn. | 1 | Gnawing Vermin | bro |
+| when ~ dies, you may gain N life for each creature card in your graveyard. if you do, exile ~ from your graveyard. | 1 | Skyfisher Spider | bro |
+| when ~ enters, choose up to two other target creatures you control. for each {M}{M} spent to cast ~, put a +N/+N counter on each of them. | 1 | Clay Champion | bro |
+| when ~ enters, create a tapped powerstone token for each other creature you control. | 1 | Great Desert Prospector | bro |
+| when ~ enters, enchanted creature gains first strike until end of turn. | 1 | Military Discipline | bro |
+| when ~ enters, exile target card from an opponent's graveyard. if it was a creature card, that player loses N life. | 1 | Carrion Locust | bro |
+| when ~ enters, for each {M}{M} spent to cast it, draw a card. | 1 | Bladecoil Serpent | bro |
+| when ~ enters, if you cast it, exile target instant or sorcery card with mana value less than or equal to ~ power from your graveyard. copy that card. you may c | 1 | Arcane Proxy | bro |
+| when ~ enters, mill three cards. you may put a plains card or a creature card with mana value N or less from among the cards milled ~ into your hand. if you don | 1 | Airlift Chaplain | bro |
+| when ~ enters, return up to one other target creature you control to its owner's hand. if it was a soldier, put a +N/+N counter on ~. | 1 | Zephyr Sentinel | bro |
+| when ~ enters, scry N, where N is its power. | 1 | Spotter Thopter | bro |
+| when ~ enters, you and target opponent each create a tapped powerstone token. | 1 | Thran Spider | bro |
+| when ~ enters, you gain life equal to its power. | 1 | Boulderbranch Golem | bro |
+| when ~ leaves the battlefield, sacrifice a powerstone. | 1 | Horned Stoneseeker | bro |
+| whenever a creature enters from your graveyard, you may attach ~ to it. | 1 | Dredging Claw | bro |
+| whenever an artifact you control enters, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard. | 1 | Sarinth Steelseeker | bro |
+| whenever feldon is dealt damage, exile that many cards from the top of your library. choose one of them. until the end of your next turn, you may play that card | 1 | Feldon, Ronom Excavator | bro |
+| whenever mishra enters or attacks, choose three — • target opponent discards two cards. • mishra deals N damage to any target. • destroy target artifact or plan | 1 | Mishra, Lost to Phyrexia | bro |
+| whenever one or more artifact and/or creature cards leave your graveyard during your turn, put a +N/+N counter on target creature you control. | 1 | Thran Vigil | bro |
+| whenever one or more land cards are put into your graveyard from anywhere, you gain N life. | 1 | Titania, Voice of Gaea | bro |
+| whenever you attack, each opponent loses N life and you gain N life, where N is the number of attacking creatures. if ~ and a creature named phyrexian dragon en | 1 | Mishra, Claimed by Gix | bro |
+| whenever you cast a beast or bird creature spell, you may copy it, except the copy is an artifact in addition to its other types. | 1 | Tawnos, the Toymaker | bro |
+| whenever you choose to put one or more cards on the bottom of your library while scrying, exile that many cards from the bottom of your library. | 1 | The Temporal Anchor | bro |
+| whenever you discard one or more artifact cards, add {M}{M}. ~ triggers only once each turn. | 1 | Mishra, Excavation Prodigy | bro |
+| whenever you discard one or more artifact cards, create a tapped powerstone token. ~ triggers only once each turn. | 1 | Urza, Powerstone Prodigy | bro |
+| whenever ~ attacks, defending player mills half their library, rounded up. | 1 | Terisian Mindbreaker | bro |
+| whenever ~ attacks, target attacking creature gets +N/+N until end of turn, where N is ~ power. | 1 | Iron-Craw Crusher | bro |
+| whenever ~ attacks, you may sacrifice another creature or artifact. if you do, ~ gains flying until end of turn. | 1 | Kill-Zone Acrobat | bro |
+| you gain N life for each creature on the battlefield. prevent all combat damage that would be dealt ~ by creatures with power N or less. | 1 | Fog of War | bro |
+| you may cast colorless spells and artifact spells as though they had flash. | 1 | Liberator, Urza's Battlethopter | bro |
+| you may look at the top card of your library any time. | 1 | One with the Multiverse | bro |
+| {M}, {M}, exile ~: you gain protection from everything until your next turn. | 1 | The Stasis Coffin | bro |
+| {M}, {M}, sacrifice ~: exile the top two cards of your library. choose one of them. until the end of your next turn, you may play that card. | 1 | Mishra's Research Desk | bro |
+| {M}, {M}: discard all the cards in your hand, then draw that many cards. you may choose an artifact or creature card with mana value N you discarded ~, then do  | 1 | Queen Kayla bin-Kroog | bro |
+| {M}, {M}: each opponent loses N life. ~ costs {M} less to activate for each creature card in your graveyard. | 1 | Battlefield Butcher | bro |
+| {M}, {M}: target attacking assembly-worker gets +N/+N until end of turn. | 1 | Mishra's Foundry | bro |
+| {M}: artifact creatures you control get +N/+N until end of turn. | 1 | Artificer's Dragon | bro |
+| {M}: create a token that"..."s a N/N soldier creature in addition to its other types. | 1 | Urza, Prince of Kroog | bro |
+| {M}: until end of turn, ~ gets -N/-N and gains your choice of flying, vigilance, deathtouch, or haste. | 1 | Argivian Avenger | bro |
+| {M}: you and target opponent each draw a card. | 1 | Loran of the Third Path | bro |
+| {M}: ~ loses defender and gains "..." | 1 | Surge Engine | bro |
+| {M}{M}: return target permanent you control to its owner"..."s hand. activate only during your turn. | 1 | Meticulous Excavation | bro |
+| {M}{M}: you may put an artifact card from your hand onto the battlefield. that artifact gains haste. sacrifice it at the beginning of the next end step. | 1 | Arms Race | bro |
+| {M}{M}{M}, sacrifice ~: create an N/N colorless golem artifact creature token, where N is three times ~ power. it gains haste until end of turn. activate only a | 1 | Rootwire Amalgam | bro |
+| {M}{M}{M}, {M}, exile ~: each player chooses six lands they control. destroy all other permanents. activate only as a sorcery. | 1 | Urza's Sylex | bro |
+| {M}{M}{M}: return ~ from your graveyard to the battlefield with a +N/+N counter on it. ~ costs {M} less to activate if an opponent controls four or more nonbasi | 1 | Razorlash Transmogrant | bro |
+| ~ can't be blocked by artifact creatures. | 1 | Argothian Sprite | bro |
+| ~ can't be countered. destroy target artifact. if its mana value was N or less, draw a card. | 1 | Raze to the Ground | bro |
+| ~ deals N damage to target creature or planeswalker and N damage to that permanent's controller. | 1 | Unleash Shell | bro |
+| ~ deals N damage to target creature or planeswalker. if that creature or planeswalker would die ~, exile it instead. | 1 | Obliterating Bolt | bro |
+| ~ enters tapped unless you control a legendary green creature. | 1 | Argoth, Sanctum of Nature | bro |
+| ~ enters with two +N/+N counters on it unless two or more colors of mana were spent to cast it. | 1 | Steel Exemplar | bro |
+| ~ gets +N/+N as long as you control an island. | 1 | Coastal Bulwark | bro |
+| ~ has deathtouch as long as you control three or more artifacts. | 1 | Teething Wurmlet | bro |
+| −N: target opponent chooses a permanent they control and returns it to its owner"..."s library. | 1 | Teferi, Temporal Pilgrim | bro |
 
 ## Notes
 

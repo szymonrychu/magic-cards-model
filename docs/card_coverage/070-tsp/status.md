@@ -3,13 +3,13 @@
 - Expansion: 070
 - Set code: `tsp`
 - Release date: 2006-10-06
-- Cards in scope (Modern/Pioneer/Standard-legal): 266
+- Cards in scope (Modern/Pioneer/Standard-legal): 268
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 266 |
+| Modern | 268 |
 | Pioneer | 6 |
 | Standard | 3 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 18 | 6.8% |
-| Partial (unaudited) | 29 | 10.9% |
-| Not tested (handled, untested) | 92 | 34.6% |
-| Not working (silent / notice / error) | 127 | 47.7% |
+| Full (handled + tested) | 20 | 7.5% |
+| Partial (unaudited) | 29 | 10.8% |
+| Not tested (handled, untested) | 92 | 34.3% |
+| Not working (silent / notice / error) | 127 | 47.4% |
 
 ## Cards needing work
 
@@ -278,7 +278,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>20 cards</summary>
 
 - Ancestral Vision
 - Assembly-Worker
@@ -291,9 +291,11 @@
 - Greater Gargadon
 - Krosan Grip
 - Living End
+- Lotus Bloom
 - Mystical Teachings
 - Rift Bolt
 - Snapback
+- Sudden Shock
 - Sudden Spoiling
 - Tromp the Domains
 - Urza's Factory
@@ -303,126 +305,138 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| All Slivers have "{T}: Choose a card name. Target opponent reveals a card at random from their hand. If that card has the chosen name, that player discards it.  | Basal Sliver, Dementia Sliver, Gemhide Sliver, Harmonic Sliver, Mindlash Sliver, Opaline Sliver, Plague Sliver, Quilled Sliver, Screeching Sliver, Telekinetic Sliver | 10 |
-| Echo | Basalt Gargoyle, Firemaw Kavu, Flamecore Elemental, Mogg War Marshal, Subterranean Shambler, Tectonic Fiend | 6 |
-| Flanking | Benalish Cavalry, Cavalry Master, Gustcloak Cavalier, Pentarch Paladin, Skulking Knight | 5 |
-| All Sliver creatures have "Whenever a creature dealt damage by this creature this turn dies, put a +1/+1 counter on this creature." | Fungus Sliver, Psionic Sliver, Sedge Sliver, Vampiric Sliver | 4 |
-| Buyback | Demonic Collusion, Reiterate, Spell Burst, Wurmcalling | 4 |
-| All Sliver creatures get +2/+0. | Bonesplitter Sliver, Might Sliver, Watcher Sliver | 3 |
-| At the beginning of your upkeep, sacrifice a creature other than this creature. If you can't, this creature deals 7 damage to you. | Drifter il-Dal, Liege of the Pit, Sangrophage | 3 |
-| Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Counter target activated or tr | Angel's Grace, Trickbind, Word of Seizing | 3 |
-| Whenever an opponent casts a spell, if this card is suspended, that player may put a time counter on this card. | Deep-Sea Kraken, Kaervek the Merciless, Pardic Dragon | 3 |
-| As long as this creature is untapped, all combat damage that would be dealt to you by unblocked creatures is dealt to this creature instead. | Castle Raptors, Weathered Bodyguards | 2 |
-| Buyback {3} (You may pay an additional {3} as you cast this spell. If you do, put this card into your hand as it resolves.) Choose a counter on target permanent | Clockspinning, Evangelize | 2 |
-| If damage would be dealt to this creature, prevent that damage. Remove a +1/+1 counter from this creature. | Dralnu, Lich Lord, Phantom Wurm | 2 |
-| {2}: Search your library for a Dragon permanent card and put it into your graveyard. If you do, Scion of the Ur-Dragon becomes a copy of that card until end of  | Amrou Scout, Scion of the Ur-Dragon | 2 |
-| {2}: This creature can't be regenerated this turn. Only your opponents may activate this ability. | Amrou Seekers, Knight of the Holy Nimbus | 2 |
-| When this creature enters, you may search your library for a Forest card, put it onto the battlefield tapped under target player's control, then shuffle. | Nightshade Assassin, Yavimaya Dryad | 2 |
-| All Sliver creatures have double strike. | Fury Sliver | 1 |
-| All Sliver creatures have flanking. | Sidewinder Sliver | 1 |
-| All Sliver creatures have flying. | Pulmonic Sliver | 1 |
-| All Sliver creatures have haste. | Firewake Sliver | 1 |
-| All Sliver creatures have menace. | Two-Headed Sliver | 1 |
-| All Sliver creatures have reach. | Spinneret Sliver | 1 |
-| All Sliver creatures have shadow. | Shadow Sliver | 1 |
-| All Slivers are colorless. | Ghostflame Sliver | 1 |
-| As long as this artifact is a creature, it can block an additional creature each combat. | Foriysian Totem | 1 |
-| As this creature enters or is turned face up, you may choose another creature on the battlefield. If you do, until this creature is turned face down, it becomes | Vesuvan Shapeshifter | 1 |
-| At the beginning of enchanted player's first upkeep each turn, that player gets an additional upkeep step after this step. | Paradox Haze | 1 |
-| Buyback—Sacrifice three Islands. (You may sacrifice three Islands in addition to any other costs as you cast this spell. If you do, put this card into your hand | Walk the Aeons | 1 |
-| {3}, {T}: Choose a card name, then reveal a card at random from your hand. If that card has the chosen name, this creature deals 2 damage to any target. | Magus of the Scroll | 1 |
-| {T}: Choose target permanent you control or suspended card you own. If that permanent or card has a time counter on it, you may remove a time counter from it or | Jhoira's Timebug | 1 |
-| {3}, {T}: Create a 1/1 creature token of the chosen color and type. | Sarpadian Empires, Vol. VII | 1 |
-| Creature cards you own that aren't on the battlefield have flash. | Teferi, Mage of Zhalfir | 1 |
-| Creatures of the chosen color get +1/+1. | Gauntlet of Power | 1 |
-| {B}{B}: Creatures with shadow get +1/+0 until end of turn and creatures without shadow get -1/-0 until end of turn. | Stronghold Overseer | 1 |
-| Creatures you control are Slivers in addition to their other creature types. | Hivestone | 1 |
-| Damage that would reduce your life total to less than 1 reduces it to 1 instead. | Fortune Thief | 1 |
-| Destroy target artifact or enchantment with mana value X. It can't be regenerated. You gain X life. | Molder | 1 |
-| Destroy target creature. Its controller loses life equal to its power plus its toughness. Suspend 5—{1}{B} (Rather than cast this card from your hand, you may p | Phthisis | 1 |
-| {2}{B}, {T}, Discard a card: Each other player loses 2 life. You gain life equal to the life lost this way. | Urborg Syphon-Mage | 1 |
-| {1}{R}, {T}, Discard a card: Jaya Ballard deals 3 damage to any target. A creature dealt damage this way can't be regenerated this turn. | Jaya Ballard, Task Mage | 1 |
-| Discard a card: This creature gains shadow until end of turn. | Trespasser il-Vec | 1 |
-| {T}: Each 1/1 creature you control gets +1/+2 until end of turn. | Pendelhaven Elder | 1 |
-| Each Fungus creature gets +1/+1 for each spore counter on it. | Thelon of Havenwood | 1 |
-| Each player loses 1 life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | Smallpox | 1 |
-| Enchanted creature gets +1/+1, has reach, and can block creatures with shadow as though they didn't have shadow. | Aether Web | 1 |
-| {R}: Enchanted creature gets +1/+0 until end of turn. | Ghitu Firebreathing | 1 |
-| Enchanted creature has flying and "Sacrifice a creature: This creature gets +2/+1 until end of turn." | Fallen Ideal | 1 |
-| Enchanted creature has protection from the chosen color. This effect doesn't remove this Aura. | Pentarch Ward | 1 |
-| Enchanted creature has shadow. | Temporal Isolation | 1 |
-| {T}: Exile Mangara and target permanent. | Mangara of Corondor | 1 |
-| Exile target artifact or enchantment. If you cast this spell during your main phase, you may exile up to one other target artifact or enchantment. | Return to Dust | 1 |
-| Fear | Corpulent Corpse | 1 |
-| If a spell would deal damage to a permanent or player, prevent 1 damage that spell would deal to that permanent or player. | Plated Pegasus | 1 |
-| {1}{G}, {T}: If this creature is on the battlefield, it deals damage equal to its power to target attacking creature. That creature deals damage equal to its po | Durkwood Tracker | 1 |
-| Ixidron's power and toughness are each equal to the number of face-down creatures on the battlefield. | Ixidron | 1 |
-| Orcish Cannonade deals 2 damage to any target and 3 damage to you. Draw a card. | Orcish Cannonade | 1 |
-| Other creatures you control with flying get +0/+1. | Sprite Noble | 1 |
-| Other white creatures get +1/+1. | Celestial Crusader | 1 |
-| Prevent all damage that creatures would deal to players this turn. | Chameleon Blur | 1 |
-| {1}{U}, {T}: Put target artifact card from your graveyard on top of your library. | Academy Ruins | 1 |
-| Put target creature or land on top of its owner's library. | Temporal Eddy | 1 |
-| Put target face-up exiled card into its owner's graveyard. | Pull from Eternity | 1 |
-| {2}, Remove a +1/+1 counter from this creature: Target land becomes a 2/2 creature that's still a land. Put a +1/+1 counter on it. | Spike Tiller | 1 |
-| {1}{W}: Return this card from your graveyard to the battlefield tapped. You skip your next turn. | Chronosavant | 1 |
-| {4}, {T}: Reveal the top card of your library. If it has the same name as a card in your graveyard, put it into your graveyard. Otherwise, draw a card. | Candles of Leng | 1 |
-| Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put a card from the chosen pile into your ha | Truth or Tale | 1 |
-| Sacrifice Saffi Eriksdotter: When target creature is put into your graveyard this turn, return that card to the battlefield. | Saffi Eriksdotter | 1 |
-| Sacrifice this creature: Counter target spell unless its controller pays {2}. | Spiketail Drakeling | 1 |
-| {T}, Sacrifice this creature: Each player exiles all cards from their hand face down and draws seven cards. At the beginning of the next end step, each player d | Magus of the Jar | 1 |
-| Sacrifice this creature: It deals 2 damage to target creature with flying. That creature loses flying until end of turn. | Goblin Skycutter | 1 |
-| Shadow | Looter il-Kor | 1 |
-| Spells you cast cost {1} less to cast for each card with the same name as that spell in your graveyard. | Locket of Yesterdays | 1 |
-| Squall Line deals X damage to each creature with flying and each player. | Squall Line | 1 |
-| Sulfurous Blast deals 2 damage to each creature and each player. If you cast this spell during your main phase, Sulfurous Blast deals 3 damage to each creature  | Sulfurous Blast | 1 |
-| Suspend 6—{W} Each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices  | Restore Balance | 1 |
-| Suspend 3—{1}{G}{G} Starting with you, each player may put an artifact, creature, enchantment, or land card from their hand onto the battlefield. Repeat this pr | Hypergenesis | 1 |
-| Target creature gets +1/+0, becomes black, and gains shadow until end of turn. (It can block or be blocked by only creatures with shadow.) Flashback {1}{B} (You | Traitor's Clutch | 1 |
-| Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead. | Might of Old Krosa | 1 |
-| Target creature without flying can't block this turn. Storm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targe | Ground Rift | 1 |
-| Target player discards two cards. If you cast this spell during your main phase, that player discards four cards instead. | Haunting Hymn | 1 |
-| Target player draws four cards, then discards three cards. If you cast this spell during your main phase, instead that player draws four cards, then discards tw | Careful Consideration | 1 |
-| Target player reveals a card at random from their hand. Ignite Memories deals damage to that player equal to that card's mana value. Storm (When you cast this s | Ignite Memories | 1 |
-| Target player reveals their hand and the top card of their library. You choose a card revealed this way. That player puts the chosen card on the bottom of their | Psychotic Episode | 1 |
-| Target player sacrifices half the permanents they control of their choice, rounded down. Suspend 2—{2}{B}{B} (Rather than cast this card from your hand, you may | Curse of the Cabal | 1 |
-| Target spell or permanent becomes colorless. | Moonlace | 1 |
-| {0}: The next 1 damage that would be dealt to this creature this turn is dealt to target creature you control instead. | Outrider en-Kor | 1 |
-| {2}: This creature becomes colorless until end of turn. | Blazing Blade Askari | 1 |
-| This creature can block an additional creature each combat. | Foriysian Interceptor | 1 |
-| This creature can block creatures with shadow as though they didn't have shadow. | Aetherflame Wall | 1 |
-| This creature can block only creatures with flying. | Stormcloud Djinn | 1 |
-| {G}: This creature gains forestwalk until end of turn and deals 1 damage to you. | Wormwood Dryad | 1 |
-| {R}: This creature gains protection from red until end of turn. | Thick-Skinned Goblin | 1 |
-| {0}: This creature gets +3/+3 until end of turn. You skip your next turn. Activate only once each turn and only if this permanent is a creature. | Chronatog Totem | 1 |
-| {T}: Untap target attacking creature. Prevent all combat damage that would be dealt to and dealt by that creature this turn. | Ith, High Arcanist | 1 |
-| When a player casts a spell or a creature attacks, exile Norin. Return it to the battlefield under its owner's control at the beginning of the next end step. | Norin the Wary | 1 |
-| When this artifact is put into a graveyard from the battlefield, if it was a creature, return this card to its owner's hand. | Weatherseed Totem | 1 |
-| When this creature dies, target land becomes a Swamp. Exile this card. | Cyclopean Giant | 1 |
-| When this creature enters, return a permanent you control to its owner's hand. | Dream Stalker | 1 |
-| When this creature enters, switch target creature's power and toughness until end of turn. | Crookclaw Transmuter | 1 |
-| When this creature enters, tap all nonwhite creatures. | Ivory Giant | 1 |
-| When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | Faceless Devourer | 1 |
-| When you control no Islands, sacrifice this creature. | Slipstream Serpent | 1 |
-| Whenever a creature an opponent controls dies, you may pay {1}{B}. If you do, return that card to the battlefield under your control. If it's a creature, it's a | Lim-Dûl the Necromancer | 1 |
-| Whenever another creature is put into your graveyard from the battlefield, you may pay {B}. If you do, return this card from your graveyard to the battlefield. | Nether Traitor | 1 |
-| Whenever another Goblin you control becomes blocked, sacrifice it. If you do, it deals 4 damage to each creature blocking it. | Ib Halfheart, Goblin Tactician | 1 |
-| Whenever enchanted creature deals damage, you gain that much life. | Spirit Loop | 1 |
-| Whenever this creature attacks and isn't blocked, you may have it deal 1 damage to target creature. If you do, prevent all combat damage this creature would dea | Zealot il-Vec | 1 |
-| Whenever this creature attacks, if defending player controls no black permanents, it doesn't untap during your next untap step. | Spectral Force | 1 |
-| Whenever this creature attacks or blocks, remove a +1/+1 counter from it. If you do, it deals 1 damage to any target. | Clockwork Hydra | 1 |
-| Whenever this creature becomes blocked by a creature, destroy that creature. | Evil Eye of Urborg | 1 |
-| Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | Gorgon Recluse | 1 |
-| Whenever this creature deals combat damage to a player, that player loses 2 life at the beginning of their next draw step unless they pay {2} before that step. | Glass Asp | 1 |
-| Whenever this creature deals damage to a player, that player discards all the cards in their hand, then draws that many cards. | Barbed Shocker | 1 |
-| Whenever this creature is dealt damage, it deals that much damage to the chosen player. | Stuffy Doll | 1 |
-| Whenever this permanent is dealt damage, if it's a creature, sacrifice that many permanents. | Phyrexian Totem | 1 |
-| Whenever you cast a creature spell, create X 1/1 black Thrull creature tokens, where X is that spell's mana value. | Endrek Sahr, Master Breeder | 1 |
-| Whenever you cast an artifact spell, you may search your graveyard, hand, and/or library for a card with the same name as that spell and put it onto the battlef | Mishra, Artificer Prodigy | 1 |
-| You can't cast Serra Avenger during your first, second, or third turns of the game. | Serra Avenger | 1 |
-| You gain 2 life for each creature target player controls. Suspend 5—{1}{W} (Rather than cast this card from your hand, you may pay {1}{W} and exile it with five | Divine Congregation | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| all slivers have "..." | 10 | Basal Sliver, Dementia Sliver, Gemhide Sliver, Harmonic Sliver, Mindlash Sliver | tsp |
+| echo | 6 | Basalt Gargoyle, Firemaw Kavu, Flamecore Elemental, Mogg War Marshal, Subterranean Shambler | tsp |
+| flanking | 5 | Benalish Cavalry, Cavalry Master, Gustcloak Cavalier, Pentarch Paladin, Skulking Knight | tsp |
+| all sliver creatures have "..." | 4 | Fungus Sliver, Psionic Sliver, Sedge Sliver, Vampiric Sliver | tsp |
+| buyback | 4 | Demonic Collusion, Reiterate, Spell Burst, Wurmcalling | tsp |
+| all sliver creatures get +N/+N. | 3 | Bonesplitter Sliver, Might Sliver, Watcher Sliver | tsp |
+| all sliver creatures have double strike. | 1 | Fury Sliver | tsp |
+| all sliver creatures have flanking. | 1 | Sidewinder Sliver | tsp |
+| all sliver creatures have flying. | 1 | Pulmonic Sliver | tsp |
+| all sliver creatures have haste. | 1 | Firewake Sliver | tsp |
+| all sliver creatures have menace. | 1 | Two-Headed Sliver | tsp |
+| all sliver creatures have reach. | 1 | Spinneret Sliver | tsp |
+| all sliver creatures have shadow. | 1 | Shadow Sliver | tsp |
+| all slivers are colorless. | 1 | Ghostflame Sliver | tsp |
+| as long as ~ is a creature, it can block an additional creature each combat. | 1 | Foriysian Totem | tsp |
+| as long as ~ is untapped, all combat damage that would be dealt to you by unblocked creatures is dealt to ~ instead. | 1 | Weathered Bodyguards | tsp |
+| as long as ~ is untapped, it gets +N/+N. | 1 | Castle Raptors | tsp |
+| as ~ enters or is turned face up, you may choose another creature on the battlefield. if you do, until ~ is turned face down, it becomes a copy of that creature | 1 | Vesuvan Shapeshifter | tsp |
+| at the beginning of enchanted player's first upkeep each turn, that player gets an additional upkeep step after ~. | 1 | Paradox Haze | tsp |
+| at the beginning of your upkeep, sacrifice a creature other than ~. if you can't, ~ deals N damage to you. | 1 | Liege of the Pit | tsp |
+| at the beginning of your upkeep, sacrifice ~ unless you pay {M}. | 1 | Drifter il-Dal | tsp |
+| at the beginning of your upkeep, tap ~ unless you pay N life. | 1 | Sangrophage | tsp |
+| buyback {M} (you may pay an additional {M} as you cast ~. if you do, put ~ into your hand as it resolves.) choose a counter on target permanent or suspended car | 1 | Clockspinning | tsp |
+| buyback {M}{M}{M} (you may pay an additional {M}{M}{M} as you cast ~. if you do, put ~ into your hand as it resolves.) gain control of target creature of an opp | 1 | Evangelize | tsp |
+| buyback—sacrifice three islands. (you may sacrifice three islands in addition to any other costs as you cast ~. if you do, put ~ into your hand as it resolves.) | 1 | Walk the Aeons | tsp |
+| creature cards you own that aren't on the battlefield have flash. | 1 | Teferi, Mage of Zhalfir | tsp |
+| creatures of the chosen color get +N/+N. | 1 | Gauntlet of Power | tsp |
+| creatures you control are slivers in addition to their other creature types. | 1 | Hivestone | tsp |
+| damage that would reduce your life total to less than N reduces it to N instead. | 1 | Fortune Thief | tsp |
+| destroy target artifact or enchantment with mana value N. it can't be regenerated. you gain N life. | 1 | Molder | tsp |
+| destroy target creature. its controller loses life equal to its power plus its toughness. suspend N—{M}{M} (rather than cast ~ from your hand, you may pay {M}{M | 1 | Phthisis | tsp |
+| discard a card: ~ gains shadow until end of turn. | 1 | Trespasser il-Vec | tsp |
+| each fungus creature gets +N/+N for each spore counter on it. | 1 | Thelon of Havenwood | tsp |
+| each player loses N life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | 1 | Smallpox | tsp |
+| enchanted creature gets +N/+N, has reach, and can block creatures with shadow as though they didn't have shadow. | 1 | Aether Web | tsp |
+| enchanted creature has flying and "..." | 1 | Fallen Ideal | tsp |
+| enchanted creature has protection from the chosen color. ~ doesn't remove ~. | 1 | Pentarch Ward | tsp |
+| enchanted creature has shadow. | 1 | Temporal Isolation | tsp |
+| exile target artifact or enchantment. if you cast ~ during your main phase, you may exile up to one other target artifact or enchantment. | 1 | Return to Dust | tsp |
+| fear | 1 | Corpulent Corpse | tsp |
+| if a spell would deal damage to a permanent or player, prevent N damage that spell would deal to that permanent or player. | 1 | Plated Pegasus | tsp |
+| if damage would be dealt to dralnu, sacrifice that many permanents instead. | 1 | Dralnu, Lich Lord | tsp |
+| if damage would be dealt to ~, prevent that damage. remove a +N/+N counter from ~. | 1 | Phantom Wurm | tsp |
+| other creatures you control with flying get +N/+N. | 1 | Sprite Noble | tsp |
+| other white creatures get +N/+N. | 1 | Celestial Crusader | tsp |
+| prevent all damage that creatures would deal to players ~. | 1 | Chameleon Blur | tsp |
+| put target creature or land on top of its owner's library. | 1 | Temporal Eddy | tsp |
+| put target face-up exiled card into its owner's graveyard. | 1 | Pull from Eternity | tsp |
+| reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put a card from the chosen pile into your ha | 1 | Truth or Tale | tsp |
+| sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Spiketail Drakeling | tsp |
+| sacrifice ~: it deals N damage to target creature with flying. that creature loses flying until end of turn. | 1 | Goblin Skycutter | tsp |
+| sacrifice ~: when target creature is put into your graveyard ~, return that card to the battlefield. | 1 | Saffi Eriksdotter | tsp |
+| shadow | 1 | Looter il-Kor | tsp |
+| spells you cast cost {M} less to cast for each card with the same name as that spell in your graveyard. | 1 | Locket of Yesterdays | tsp |
+| split second (as long as ~ is on the stack, players can"..."t mana abilities.) counter target activated or triggered ability. if a permanent"..."t be activated  | 1 | Trickbind | tsp |
+| split second (as long as ~ is on the stack, players can"..."t mana abilities.) untap target permanent and gain control of it until end of turn. it gains haste u | 1 | Word of Seizing | tsp |
+| split second (as long as ~ is on the stack, players can"..."t mana abilities.) you can"..."t win the game ~. until end of turn, damage that would reduce your li | 1 | Angel's Grace | tsp |
+| suspend N—{M} each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices  | 1 | Restore Balance | tsp |
+| suspend N—{M}{M}{M} starting with you, each player may put an artifact, creature, enchantment, or land card from their hand onto the battlefield. repeat ~ until | 1 | Hypergenesis | tsp |
+| target creature gets +N/+N until end of turn. if you cast ~ during your main phase, that creature gets +N/+N until end of turn instead. | 1 | Might of Old Krosa | tsp |
+| target creature gets +N/+N, becomes black, and gains shadow until end of turn. (it can block or be blocked by only creatures with shadow.) flashback {M}{M} (you | 1 | Traitor's Clutch | tsp |
+| target creature without flying can't block ~. storm (when you cast ~, copy it for each spell cast before it ~. you may choose new targets for the copies.) | 1 | Ground Rift | tsp |
+| target player discards two cards. if you cast ~ during your main phase, that player discards four cards instead. | 1 | Haunting Hymn | tsp |
+| target player draws four cards, then discards three cards. if you cast ~ during your main phase, instead that player draws four cards, then discards two cards. | 1 | Careful Consideration | tsp |
+| target player reveals a card at random from their hand. ~ deals damage to that player equal to that card's mana value. storm (when you cast ~, copy it for each  | 1 | Ignite Memories | tsp |
+| target player reveals their hand and the top card of their library. you choose a card revealed ~. that player puts the chosen card on the bottom of their librar | 1 | Psychotic Episode | tsp |
+| target player sacrifices half the permanents they control of their choice, rounded down. suspend N—{M}{M}{M} (rather than cast ~ from your hand, you may pay {M} | 1 | Curse of the Cabal | tsp |
+| target spell or permanent becomes colorless. | 1 | Moonlace | tsp |
+| when a player casts a spell or a creature attacks, exile norin. return it to the battlefield under its owner's control at the beginning of the next end step. | 1 | Norin the Wary | tsp |
+| when you control no islands, sacrifice ~. | 1 | Slipstream Serpent | tsp |
+| when ~ dies, target land becomes a swamp. exile ~. | 1 | Cyclopean Giant | tsp |
+| when ~ enters, return a permanent you control to its owner's hand. | 1 | Dream Stalker | tsp |
+| when ~ enters, switch target creature's power and toughness until end of turn. | 1 | Crookclaw Transmuter | tsp |
+| when ~ enters, tap all nonwhite creatures. | 1 | Ivory Giant | tsp |
+| when ~ enters, you may reveal N black cards in your hand. if you do, target creature gets -N/-N until end of turn. | 1 | Nightshade Assassin | tsp |
+| when ~ enters, you may search your library for a forest card, put it onto the battlefield tapped under target player's control, then shuffle. | 1 | Yavimaya Dryad | tsp |
+| when ~ is put into a graveyard from the battlefield, if it was a creature, return ~ to its owner's hand. | 1 | Weatherseed Totem | tsp |
+| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Faceless Devourer | tsp |
+| whenever a creature an opponent controls dies, you may pay {M}{M}. if you do, return that card to the battlefield under your control. if it"..."s a zombie in ad | 1 | Lim-Dûl the Necromancer | tsp |
+| whenever an opponent casts a spell, if ~ is suspended, remove a time counter from it. | 1 | Deep-Sea Kraken | tsp |
+| whenever an opponent casts a spell, if ~ is suspended, that player may put a time counter on ~. | 1 | Pardic Dragon | tsp |
+| whenever an opponent casts a spell, kaervek deals damage equal to that spell's mana value to any target. | 1 | Kaervek the Merciless | tsp |
+| whenever another creature is put into your graveyard from the battlefield, you may pay {M}. if you do, return ~ from your graveyard to the battlefield. | 1 | Nether Traitor | tsp |
+| whenever another goblin you control becomes blocked, sacrifice it. if you do, it deals N damage to each creature blocking it. | 1 | Ib Halfheart, Goblin Tactician | tsp |
+| whenever enchanted creature deals damage, you gain that much life. | 1 | Spirit Loop | tsp |
+| whenever you cast a creature spell, create N N/N black thrull creature tokens, where N is that spell's mana value. | 1 | Endrek Sahr, Master Breeder | tsp |
+| whenever you cast an artifact spell, you may search your graveyard, hand, and/or library for a card with the same name as that spell and put it onto the battlef | 1 | Mishra, Artificer Prodigy | tsp |
+| whenever ~ attacks and isn't blocked, you may have it deal N damage to target creature. if you do, prevent all combat damage ~ would deal ~. | 1 | Zealot il-Vec | tsp |
+| whenever ~ attacks or blocks, remove a +N/+N counter from it. if you do, it deals N damage to any target. | 1 | Clockwork Hydra | tsp |
+| whenever ~ attacks, if defending player controls no black permanents, it doesn't untap during your next untap step. | 1 | Spectral Force | tsp |
+| whenever ~ becomes blocked by a creature, destroy that creature. | 1 | Evil Eye of Urborg | tsp |
+| whenever ~ blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | 1 | Gorgon Recluse | tsp |
+| whenever ~ deals combat damage to a player, that player loses N life at the beginning of their next draw step unless they pay {M} before that step. | 1 | Glass Asp | tsp |
+| whenever ~ deals damage to a player, that player discards all the cards in their hand, then draws that many cards. | 1 | Barbed Shocker | tsp |
+| whenever ~ is dealt damage, if it's a creature, sacrifice that many permanents. | 1 | Phyrexian Totem | tsp |
+| whenever ~ is dealt damage, it deals that much damage to the chosen player. | 1 | Stuffy Doll | tsp |
+| you can't cast ~ during your first, second, or third turns of the game. | 1 | Serra Avenger | tsp |
+| you gain N life for each creature target player controls. suspend N—{M}{M} (rather than cast ~ from your hand, you may pay {M}{M} and exile it with five time co | 1 | Divine Congregation | tsp |
+| {M}, remove a +N/+N counter from ~: target land becomes a N/N creature that's still a land. put a +N/+N counter on it. | 1 | Spike Tiller | tsp |
+| {M}, sacrifice ~: each player exiles all cards from their hand face down and draws seven cards. at the beginning of the next end step, each player discards thei | 1 | Magus of the Jar | tsp |
+| {M}, {M}: choose a card name, then reveal a card at random from your hand. if that card has the chosen name, ~ deals N damage to any target. | 1 | Magus of the Scroll | tsp |
+| {M}, {M}: create a N/N creature token of the chosen color and type. | 1 | Sarpadian Empires, Vol. VII | tsp |
+| {M}, {M}: reveal the top card of your library. if it has the same name as a card in your graveyard, put it into your graveyard. otherwise, draw a card. | 1 | Candles of Leng | tsp |
+| {M}, {M}: search your library for a rebel permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Amrou Scout | tsp |
+| {M}: choose target permanent you control or suspended card you own. if that permanent or card has a time counter on it, you may remove a time counter from it or | 1 | Jhoira's Timebug | tsp |
+| {M}: each N/N creature you control gets +N/+N until end of turn. | 1 | Pendelhaven Elder | tsp |
+| {M}: enchanted creature gets +N/+N until end of turn. | 1 | Ghitu Firebreathing | tsp |
+| {M}: exile mangara and target permanent. | 1 | Mangara of Corondor | tsp |
+| {M}: search your library for a dragon permanent card and put it into your graveyard. if you do, ~ becomes a copy of that card until end of turn. then shuffle. | 1 | Scion of the Ur-Dragon | tsp |
+| {M}: the next N damage that would be dealt to ~ ~ is dealt to target creature you control instead. | 1 | Outrider en-Kor | tsp |
+| {M}: untap target attacking creature. prevent all combat damage that would be dealt to and dealt by that creature ~. | 1 | Ith, High Arcanist | tsp |
+| {M}: ~ becomes colorless until end of turn. | 1 | Blazing Blade Askari | tsp |
+| {M}: ~ can't be regenerated ~. only your opponents may activate ~. | 1 | Knight of the Holy Nimbus | tsp |
+| {M}: ~ gains forestwalk until end of turn and deals N damage to you. | 1 | Wormwood Dryad | tsp |
+| {M}: ~ gains protection from red until end of turn. | 1 | Thick-Skinned Goblin | tsp |
+| {M}: ~ gets +N/+N until end of turn. you skip your next turn. activate only once each turn and only if ~ is a creature. | 1 | Chronatog Totem | tsp |
+| {M}{M}, {M}, discard a card: each other player loses N life. you gain life equal to the life lost ~. | 1 | Urborg Syphon-Mage | tsp |
+| {M}{M}, {M}, discard a card: jaya ballard deals N damage to any target. a creature dealt damage ~ can't be regenerated ~. | 1 | Jaya Ballard, Task Mage | tsp |
+| {M}{M}, {M}: if ~ is on the battlefield, it deals damage equal to its power to target attacking creature. that creature deals damage equal to its power to ~. | 1 | Durkwood Tracker | tsp |
+| {M}{M}, {M}: put target artifact card from your graveyard on top of your library. | 1 | Academy Ruins | tsp |
+| {M}{M}: creatures with shadow get +N/+N until end of turn and creatures without shadow get -N/-N until end of turn. | 1 | Stronghold Overseer | tsp |
+| {M}{M}: return ~ from your graveyard to the battlefield tapped. you skip your next turn. | 1 | Chronosavant | tsp |
+| ~ can block an additional creature each combat. | 1 | Foriysian Interceptor | tsp |
+| ~ can block creatures with shadow as though they didn't have shadow. | 1 | Aetherflame Wall | tsp |
+| ~ can block only creatures with flying. | 1 | Stormcloud Djinn | tsp |
+| ~ can't be blocked except by artifact creatures and/or white creatures. | 1 | Amrou Seekers | tsp |
+| ~ deals N damage to any target and N damage to you. draw a card. | 1 | Orcish Cannonade | tsp |
+| ~ deals N damage to each creature and each player. if you cast ~ during your main phase, ~ deals N damage to each creature and each player instead. | 1 | Sulfurous Blast | tsp |
+| ~ deals N damage to each creature with flying and each player. | 1 | Squall Line | tsp |
+| ~'s power and toughness are each equal to the number of face-down creatures on the battlefield. | 1 | Ixidron | tsp |
 
 ## Notes
 

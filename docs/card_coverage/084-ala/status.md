@@ -260,74 +260,77 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Exalted | Akrasan Squire, Angelic Benediction, Battlegrace Angel, Court Archers, Dawnray Archer, Guardians of Akrasa, Outrider of Jhess, Rafiq of the Many, Rhox Charger, Sighted-Caste Sorcerer, Sigiled Paladin, Waveskimmer Aven | 12 |
-| At the beginning of your end step, you gain 3 life if this creature is untapped. Otherwise, each opponent loses 3 life. | Archdemon of Unx, Mycoloth, Puppet Conjurer, Sphinx Sovereign | 4 |
-| Devour | Caldera Hellion, Predator Dragon, Thorn-Thrash Viashino, Thunder-Thrash Elder | 4 |
-| All damage that would be dealt to you is dealt to this creature instead. | Empyrial Archangel | 1 |
-| As long as the top card of your library is an artifact or creature card, this creature has all activated abilities of that card. | Skill Borrower | 1 |
-| Blightning deals 3 damage to target player or planeswalker. That player or that planeswalker's controller discards two cards. | Blightning | 1 |
-| Choose five permanents you control. For each of those permanents, you may search your library for a card with the same name as that permanent. Put those cards o | Clarion Ultimatum | 1 |
-| Choose one — • Destroy target artifact. • Put target creature on the bottom of its owner's library. • Counter target instant spell. | Bant Charm | 1 |
-| Count the number of cards in your library. Your life total becomes that number. | Invincible Hymn | 1 |
-| Counter target spell that targets you or a permanent you control. Draw a card. | Hindering Light | 1 |
-| {T}: Create an 8/8 Beast creature token that's red, green, and white. | Godsire | 1 |
-| Dragon creatures you control get +3/+3. | Crucible of Fire | 1 |
-| Each creature card in your graveyard has unearth {2}{B}. | Sedris, the Traitor King | 1 |
-| Each player who has cast a nonartifact spell this turn can't cast additional nonartifact spells. | Ethersworn Canonist | 1 |
-| Enchanted land is a Mountain, Forest, and Plains. | Lush Growth | 1 |
-| Equipped creature gets +1/+1 for each charge counter on this Equipment. | Sigil of Distinction | 1 |
-| Exile the top five cards of your library. An opponent separates those cards into two piles. You may play lands and cast spells from one of those piles. If you c | Brilliant Ultimatum | 1 |
-| Goblin creatures attack each combat if able. | Goblin Assault | 1 |
-| If a creature is attacking you and you control a Forest and a Plains, you may cast this creature without paying its mana cost and as though it had flash. | Qasali Ambusher | 1 |
-| If you would lose the game, instead shuffle your hand, your graveyard, and all permanents you own into your library, then draw seven cards and your life total b | Lich's Mirror | 1 |
-| {3}{R}{G}{W}, {T}: Look at the top five cards of your library. You may put a creature card with power 5 or greater from among them onto the battlefield. Put the | Mayael the Anima | 1 |
-| Players can't search libraries. | Mindlock Orb | 1 |
-| Players can't untap more than one creature during their untap steps. | Stoic Angel | 1 |
-| {1}{W}, {T}: Prevent all damage that would be dealt to target creature with power 5 or greater this turn. | Godtoucher | 1 |
-| {W}, {T}: Prevent the next 2 damage that would be dealt to you this turn. | Esper Battlemage | 1 |
-| Put target creature on top of its owner's library. | Excommunicate | 1 |
-| Put X +1/+1 counters on target creature, where X is that creature's power. | Soul's Might | 1 |
-| Return target creature to its owner's hand. Its controller draws a card. | Call to Heel | 1 |
-| {T}: Reveal any number of creature cards with power 5 or greater from your hand. Add {G} for each card revealed this way. | Sacellum Godspeaker | 1 |
-| Reveal the top card of your library and put that card into your hand. You lose life equal to its mana value. You may repeat this process any number of times. | Ad Nauseam | 1 |
-| Reveal the top three cards of your library. Target opponent may choose to put those cards into your hand. If they don't, put those cards into your graveyard and | Covenant of Minds | 1 |
-| {2}{R}, {T}, Sacrifice a black creature, a red creature, and a green creature: Search your library for a card named Hellkite Overlord, put it onto the battlefie | Dragon's Herald | 1 |
-| {2}{B}, {T}, Sacrifice a blue creature, a black creature, and a red creature: Search your library for a card named Prince of Thralls, put it onto the battlefiel | Demon's Herald | 1 |
-| {2}{W}, {T}, Sacrifice a green creature, a white creature, and a blue creature: Search your library for a card named Empyrial Archangel, put it onto the battlef | Angel's Herald | 1 |
-| {1}{G}, Sacrifice a non-Ooze creature: Create an X/X green Ooze creature token, where X is the sacrificed creature's power. Activate only as a sorcery. | Ooze Garden | 1 |
-| {2}{G}, {T}, Sacrifice a red creature, a green creature, and a white creature: Search your library for a card named Godsire, put it onto the battlefield, then s | Behemoth's Herald | 1 |
-| {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | Sphinx's Herald | 1 |
-| {T}, Sacrifice this artifact: Destroy all permanents except for artifacts and lands. Activate only during your upkeep. | Scourglass | 1 |
-| Skeletonize deals 3 damage to target creature. When a creature dealt damage this way dies this turn, create a 1/1 black Skeleton creature token with "{B}: Regen | Skeletonize | 1 |
-| Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. | Death Baron | 1 |
-| {R}, {T}: Target creature can't block this turn. | Grixis Battlemage | 1 |
-| Target creature you control deals damage equal to its power to any target. | Soul's Fire | 1 |
-| Target opponent sacrifices a creature of their choice, discards three cards, then loses 5 life. You return a creature card from your graveyard to your hand, dra | Cruel Ultimatum | 1 |
-| +1: Target permanent doesn't untap during its controller's next untap step. | Ajani Vengeant | 1 |
-| Target player discards a card at random. Cycling {5}{U}{B}{R} ({5}{U}{B}{R}, Discard this card: Draw a card.) When you cycle this card, target player discards t | Resounding Scream | 1 |
-| {U}{B}, {T}: Target player loses 1 life and reveals their hand. | Thoughtcutter Agent | 1 |
-| {R}, {T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature. | Vein Drinker | 1 |
-| {4}{G}: This creature deals 2 damage to each creature with flying and each player. | Rockcaster Platoon | 1 |
-| This creature gets +1/+1 as long as you control a Mountain. | Wild Nacatl | 1 |
-| This creature has flying as long as an artifact card is in your graveyard. | Windwright Mage | 1 |
-| Until end of turn, target creature you control gets +3/+3 and other creatures you control get +1/+1. | Sigil Blessing | 1 |
-| When enchanted creature dies, that creature's controller loses life equal to its toughness. | Banewasp Affliction | 1 |
-| When there are no cards in your graveyard, you lose the game. | Immortal Coil | 1 |
-| When this creature enters, draw a card for each creature it devoured. | Skullmulcher | 1 |
-| When this creature enters, return all other nonland permanents to their owners' hands. | Kederekt Leviathan | 1 |
-| When this creature enters, target player discards a card for each creature it devoured. | Tar Fiend | 1 |
-| When this creature leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | Realm Razer | 1 |
-| Whenever a creature dies, you may have this enchantment deal damage to target player equal to the number of cards in that player's hand. | Vicious Shadows | 1 |
-| Whenever a nontoken creature you control enters, you may pay {2}. If you do, create a token that's a copy of that creature, except it has haste and "At the begi | Minion Reflector | 1 |
-| Whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays 3 life. | Prince of Thralls | 1 |
-| Whenever a player taps a Mountain, Forest, or Plains for mana, that player adds one mana of any type that land produced. | Keeper of Progenitus | 1 |
-| Whenever equipped creature deals combat damage to a player, that player loses half their life, rounded up. | Quietus Spike | 1 |
-| Whenever you cast a spell, this creature gets +X/+X until end of turn, where X is that spell's mana value. | Manaplasm | 1 |
-| Whenever you gain life, you may pay {1}{W}. If you do, put a +1/+1 counter on target creature for each 1 life you gained. | Cradle of Vitality | 1 |
-| You gain life equal to target creature's power. | Soul's Grace | 1 |
-| You may sacrifice three artifacts rather than pay this spell's mana cost. | Salvage Titan | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| exalted | 12 | Akrasan Squire, Angelic Benediction, Battlegrace Angel, Court Archers, Dawnray Archer | ala |
+| devour | 4 | Caldera Hellion, Predator Dragon, Thorn-Thrash Viashino, Thunder-Thrash Elder | ala |
+| Choose one | 1 | Bant Charm | ala |
+| +N: target permanent doesn"..."s next untap step. | 1 | Ajani Vengeant | ala |
+| all damage that would be dealt to you is dealt to ~ instead. | 1 | Empyrial Archangel | ala |
+| as long as the top card of your library is an artifact or creature card, ~ has all activated abilities of that card. | 1 | Skill Borrower | ala |
+| at the beginning of your end step, you gain N life if ~ is untapped. otherwise, each opponent loses N life. | 1 | Sphinx Sovereign | ala |
+| at the beginning of your upkeep, create a N/N green saproling creature token for each +N/+N counter on ~. | 1 | Mycoloth | ala |
+| at the beginning of your upkeep, sacrifice a homunculus. | 1 | Puppet Conjurer | ala |
+| at the beginning of your upkeep, sacrifice a non-zombie creature, then create a N/N black zombie creature token. | 1 | Archdemon of Unx | ala |
+| choose five permanents you control. for each of those permanents, you may search your library for a card with the same name as that permanent. put those cards o | 1 | Clarion Ultimatum | ala |
+| count the number of cards in your library. your life total becomes that number. | 1 | Invincible Hymn | ala |
+| counter target spell that targets you or a permanent you control. draw a card. | 1 | Hindering Light | ala |
+| dragon creatures you control get +N/+N. | 1 | Crucible of Fire | ala |
+| each creature card in your graveyard has unearth {M}{M}. | 1 | Sedris, the Traitor King | ala |
+| each player who has cast a nonartifact spell ~ can't cast additional nonartifact spells. | 1 | Ethersworn Canonist | ala |
+| enchanted land is a mountain, forest, and plains. | 1 | Lush Growth | ala |
+| equipped creature gets +N/+N for each charge counter on ~. | 1 | Sigil of Distinction | ala |
+| exile the top five cards of your library. an opponent separates those cards into two piles. you may play lands and cast spells from one of those piles. if you c | 1 | Brilliant Ultimatum | ala |
+| goblin creatures attack each combat if able. | 1 | Goblin Assault | ala |
+| if a creature is attacking you and you control a forest and a plains, you may cast ~ without paying its mana cost and as though it had flash. | 1 | Qasali Ambusher | ala |
+| if you would lose the game, instead shuffle your hand, your graveyard, and all permanents you own into your library, then draw seven cards and your life total b | 1 | Lich's Mirror | ala |
+| players can't search libraries. | 1 | Mindlock Orb | ala |
+| players can't untap more than one creature during their untap steps. | 1 | Stoic Angel | ala |
+| put N +N/+N counters on target creature, where N is that creature's power. | 1 | Soul's Might | ala |
+| put target creature on top of its owner's library. | 1 | Excommunicate | ala |
+| return target creature to its owner's hand. its controller draws a card. | 1 | Call to Heel | ala |
+| reveal the top card of your library and put that card into your hand. you lose life equal to its mana value. you may repeat ~ any number of times. | 1 | Ad Nauseam | ala |
+| reveal the top three cards of your library. target opponent may choose to put those cards into your hand. if they don't, put those cards into your graveyard and | 1 | Covenant of Minds | ala |
+| skeletons you control and other zombies you control get +N/+N and have deathtouch. | 1 | Death Baron | ala |
+| target creature you control deals damage equal to its power to any target. | 1 | Soul's Fire | ala |
+| target opponent sacrifices a creature of their choice, discards three cards, then loses N life. you return a creature card from your graveyard to your hand, dra | 1 | Cruel Ultimatum | ala |
+| target player discards a card at random. cycling {M}{M}{M}{M} ({M}{M}{M}{M}, discard ~: draw a card.) when you cycle ~, target player discards two cards at rand | 1 | Resounding Scream | ala |
+| until end of turn, target creature you control gets +N/+N and other creatures you control get +N/+N. | 1 | Sigil Blessing | ala |
+| when enchanted creature dies, that creature's controller loses life equal to its toughness. | 1 | Banewasp Affliction | ala |
+| when there are no cards in your graveyard, you lose the game. | 1 | Immortal Coil | ala |
+| when ~ enters, draw a card for each creature it devoured. | 1 | Skullmulcher | ala |
+| when ~ enters, return all other nonland permanents to their owners' hands. | 1 | Kederekt Leviathan | ala |
+| when ~ enters, target player discards a card for each creature it devoured. | 1 | Tar Fiend | ala |
+| when ~ leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | 1 | Realm Razer | ala |
+| whenever a creature dies, you may have ~ deal damage to target player equal to the number of cards in that player's hand. | 1 | Vicious Shadows | ala |
+| whenever a nontoken creature you control enters, you may pay {M}. if you do, create a token that's a copy of that creature, except it has haste and "..." | 1 | Minion Reflector | ala |
+| whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays N life. | 1 | Prince of Thralls | ala |
+| whenever a player taps a mountain, forest, or plains for mana, that player adds one mana of any type that land produced. | 1 | Keeper of Progenitus | ala |
+| whenever equipped creature deals combat damage to a player, that player loses half their life, rounded up. | 1 | Quietus Spike | ala |
+| whenever you cast a spell, ~ gets +N/+N until end of turn, where N is that spell's mana value. | 1 | Manaplasm | ala |
+| whenever you gain life, you may pay {M}{M}. if you do, put a +N/+N counter on target creature for each N life you gained. | 1 | Cradle of Vitality | ala |
+| you gain life equal to target creature's power. | 1 | Soul's Grace | ala |
+| you may sacrifice three artifacts rather than pay ~ mana cost. | 1 | Salvage Titan | ala |
+| {M}, sacrifice ~: destroy all permanents except for artifacts and lands. activate only during your upkeep. | 1 | Scourglass | ala |
+| {M}, {M}: prevent the next N damage that would be dealt to you ~. | 1 | Esper Battlemage | ala |
+| {M}, {M}: target creature can't block ~. | 1 | Grixis Battlemage | ala |
+| {M}, {M}: ~ deals damage equal to its power to target creature. that creature deals damage equal to its power to ~. | 1 | Vein Drinker | ala |
+| {M}: create an N/N beast creature token that's red, green, and white. | 1 | Godsire | ala |
+| {M}: reveal any number of creature cards with power N or greater from your hand. add {M} for each card revealed ~. | 1 | Sacellum Godspeaker | ala |
+| {M}{M}, sacrifice a non-ooze creature: create an N/N green ooze creature token, where N is the sacrificed creature's power. activate only as a sorcery. | 1 | Ooze Garden | ala |
+| {M}{M}, {M}, sacrifice a black creature, a red creature, and a green creature: search your library for a card named hellkite overlord, put it onto the battlefie | 1 | Dragon's Herald | ala |
+| {M}{M}, {M}, sacrifice a blue creature, a black creature, and a red creature: search your library for a card named prince of thralls, put it onto the battlefiel | 1 | Demon's Herald | ala |
+| {M}{M}, {M}, sacrifice a green creature, a white creature, and a blue creature: search your library for a card named empyrial archangel, put it onto the battlef | 1 | Angel's Herald | ala |
+| {M}{M}, {M}, sacrifice a red creature, a green creature, and a white creature: search your library for a card named godsire, put it onto the battlefield, then s | 1 | Behemoth's Herald | ala |
+| {M}{M}, {M}, sacrifice a white creature, a blue creature, and a black creature: search your library for a card named sphinx sovereign, put it onto the battlefie | 1 | Sphinx's Herald | ala |
+| {M}{M}, {M}: prevent all damage that would be dealt to target creature with power N or greater ~. | 1 | Godtoucher | ala |
+| {M}{M}, {M}: target player loses N life and reveals their hand. | 1 | Thoughtcutter Agent | ala |
+| {M}{M}: ~ deals N damage to each creature with flying and each player. | 1 | Rockcaster Platoon | ala |
+| {M}{M}{M}{M}, {M}: look at the top five cards of your library. you may put a creature card with power N or greater from among them onto the battlefield. put the | 1 | Mayael the Anima | ala |
+| ~ deals N damage to target creature. when a creature dealt damage ~ dies ~, create a N/N black skeleton creature token with "..." | 1 | Skeletonize | ala |
+| ~ deals N damage to target player or planeswalker. that player or that planeswalker's controller discards two cards. | 1 | Blightning | ala |
+| ~ gets +N/+N as long as you control a mountain. | 1 | Wild Nacatl | ala |
+| ~ has flying as long as an artifact card is in your graveyard. | 1 | Windwright Mage | ala |
 
 ## Notes
 

@@ -38,9 +38,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {1}, {T}: Move a counter from target permanent you control onto a second target permanent. Activate only as a sorcery. | Nesting Grounds | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| {M}, {M}: move a counter from target permanent you control onto a second target permanent. activate only as a sorcery. | 1 | Nesting Grounds | c20 |
 
 ## Notes
 

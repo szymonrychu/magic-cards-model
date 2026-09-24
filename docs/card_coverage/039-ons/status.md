@@ -95,21 +95,21 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Fear | Gluttonous Zombie, Severed Legion | 2 |
-| Creatures of the chosen type have fear. | Cover of Darkness | 1 |
-| Each player chooses a creature type. Each player returns all creature cards of a type chosen this way from their graveyard to the battlefield. | Patriarch's Bidding | 1 |
-| Each player's life total becomes the number of creatures they control. | Biorhythm | 1 |
-| Enchanted land is an Island. | Sea's Claim | 1 |
-| If a creature you control would deal damage to a permanent or player, it deals double that damage instead. | Gratuitous Violence | 1 |
-| Play with the top card of your library revealed. | Future Sight | 1 |
-| Soldier creatures have vigilance. | Mobilization | 1 |
-| Target opponent puts the cards from their hand on top of their library. Search that player's library for that many cards. The player puts those cards into their | Head Games | 1 |
-| Target player reveals three cards from their hand and you choose one of them. That player discards that card. | Blackmail | 1 |
-| Target player shuffles their graveyard into their library. | Reminisce | 1 |
-| When this creature enters, you may put a basic land card from your hand onto the battlefield tapped. | Elvish Pioneer | 1 |
-| Whenever this creature attacks, it gets +2/+0 until end of turn for each other attacking Goblin. | Goblin Piledriver | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| fear | 2 | Gluttonous Zombie, Severed Legion | ons |
+| creatures of the chosen type have fear. | 1 | Cover of Darkness | ons |
+| each player chooses a creature type. each player returns all creature cards of a type chosen ~ from their graveyard to the battlefield. | 1 | Patriarch's Bidding | ons |
+| each player's life total becomes the number of creatures they control. | 1 | Biorhythm | ons |
+| enchanted land is an island. | 1 | Sea's Claim | ons |
+| if a creature you control would deal damage to a permanent or player, it deals double that damage instead. | 1 | Gratuitous Violence | ons |
+| play with the top card of your library revealed. | 1 | Future Sight | ons |
+| soldier creatures have vigilance. | 1 | Mobilization | ons |
+| target opponent puts the cards from their hand on top of their library. search that player's library for that many cards. the player puts those cards into their | 1 | Head Games | ons |
+| target player reveals three cards from their hand and you choose one of them. that player discards that card. | 1 | Blackmail | ons |
+| target player shuffles their graveyard into their library. | 1 | Reminisce | ons |
+| when ~ enters, you may put a basic land card from your hand onto the battlefield tapped. | 1 | Elvish Pioneer | ons |
+| whenever ~ attacks, it gets +N/+N until end of turn for each other attacking goblin. | 1 | Goblin Piledriver | ons |
 
 ## Notes
 

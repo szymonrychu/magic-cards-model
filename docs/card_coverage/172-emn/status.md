@@ -236,76 +236,74 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Emerge | Abundant Maw, Decimator of the Provinces, Drownyard Behemoth, Elder Deep-Fiend, It of the Horrid Swarm, Mockery of Nature, Vexing Scuttler, Wretched Gryff | 8 |
-| Delirium — This creature gets +3/+0 as long as there are four or more card types among cards in your graveyard. | Desperate Sentry, Gnarlwood Dryad, Grim Flayer | 3 |
-| Delirium — This creature gets +1/+1 and has trample as long as there are four or more card types among cards in your graveyard. | Backwoods Survivalists, Thraben Foulbloods | 2 |
-| Escalate {1} (Pay this cost for each mode chosen beyond the first.) Choose one or more — • Target player discards all the cards in their hand, then draws that m | Collective Defiance, Savage Alliance | 2 |
-| Target creature gets +1/+0 until end of turn. When that creature dies this turn, create a 3/2 colorless Eldrazi Horror creature token. | Give No Ground, Otherworldly Outburst | 2 |
-| When you cast this spell, target opponent reveals their hand. You choose from it a nonland card with mana value 3 or less and a card with mana value 4 or greate | Distended Mindbender, Lashweed Lurker | 2 |
-| As an additional cost to cast this spell, discard X cards. Nahiri's Wrath deals damage equal to the total mana value of the discarded cards to each of up to X t | Nahiri's Wrath | 1 |
-| At the beginning of your end step, if you both own and control Gisela and a creature named Bruna, the Fading Light, exile them, then meld them into Brisela, Voi | Gisela, the Broken Blade | 1 |
-| +1: Choose up to two target creatures. Until your next turn, whenever either of those creatures deals combat damage, you draw a card. | Tamiyo, Field Researcher | 1 |
-| Creature spells you cast cost {1} more to cast. | Geist-Fueled Scarecrow | 1 |
-| Creatures with power less than this creature's power can't block it. | Shrill Howler // Howling Chorus | 1 |
-| Delirium — Enchanted creature gets an additional +2/+2 as long as there are four or more card types among cards in your graveyard. | Strange Augmentation | 1 |
-| Delirium — {2}{G}, Sacrifice this enchantment: Return up to one target creature card and up to one target land card from your graveyard to your hand. Activate o | Crop Sigil | 1 |
-| Delirium — This creature can attack as though it didn't have defender as long as there are four or more card types among cards in your graveyard. | Geist of the Lonely Vigil | 1 |
-| Delirium — When this creature enters, if there are four or more card types among cards in your graveyard, creatures with power 2 or less can't block this turn. | Mournwillow | 1 |
-| {B}, {T}, Discard a card: Each player loses 2 life. | Skirsdag Supplicant | 1 |
-| Draw a card, then draw cards equal to the number of cards named Take Inventory in your graveyard. | Take Inventory | 1 |
-| Enchanted creature gets -X/-0, where X is the number of cards in your graveyard. | Spontaneous Mutation | 1 |
-| Enchanted creature has haste and "{T}, Discard a card: Draw a card." | Prophetic Ravings | 1 |
-| Enchanted permanent is a colorless land with "{T}: Add {C}" and loses all other card types and abilities. | Imprisoned in the Moon | 1 |
-| Equipped creature gets +3/+1 and must be blocked by an Eldrazi if able. | Slayer's Cleaver | 1 |
-| {T}: Exchange target opponent's life total with this creature's toughness. | Tree of Perdition | 1 |
-| Exile all other spells and counter all abilities. | Summary Dismissal | 1 |
-| Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it. | Long Road Home | 1 |
-| Galvanic Bombardment deals X damage to target creature, where X is 2 plus the number of cards named Galvanic Bombardment in your graveyard. | Galvanic Bombardment | 1 |
-| If a spell or ability an opponent controls causes you to discard a card, you may reveal that card and put it on top of your library instead of putting it anywhe | Nephalia Academy | 1 |
-| {T}: Mill two cards. Then if there is a colorless creature card in your graveyard, transform this creature. | Grizzled Angler // Grisly Anglerfish | 1 |
-| Prevent all damage that would be dealt this turn by non-Human sources. | Repel the Abominable | 1 |
-| Return up to one target instant card and up to one target sorcery card from your graveyard to your hand, then discard a card. Exile Shreds of Sanity. | Shreds of Sanity | 1 |
-| {5}, {T}, Sacrifice this artifact: Exile target creature card from your graveyard. Create a token that's a copy of that card, except it's 1/1, it's a Spirit in  | Soul Separator | 1 |
-| {3}{W}{W}, Sacrifice this Aura: Exile enchanted creature. | Choking Restraints | 1 |
-| {T}, Sacrifice this creature and any number of other non-Eldrazi creatures: Create a 3/2 colorless Eldrazi Horror creature token for each creature sacrificed th | Emrakul's Evangel | 1 |
-| Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {X}, where X is this creature's power. | Mausoleum Wanderer | 1 |
-| Skulk | Vampire Cutthroat | 1 |
-| {G}, {T}: Target attacking Human gets +1/+1 until end of turn. | Crossroads Consecrator | 1 |
-| Target opponent discards a card at random. Delirium — If there are four or more card types among cards in your graveyard, that player discards two cards at rand | Whispers of Emrakul | 1 |
-| Target opponent gains control of target permanent you control. | Harmless Offering | 1 |
-| Target opponent looks at the top four cards of your library and separates them into a face-down pile and a face-up pile. Put one pile into your hand and the oth | Fortune's Favor | 1 |
-| Target opponent loses 3 life and puts a card from their hand on top of their library. | Prying Questions | 1 |
-| Target player creates X 2/2 black Zombie creature tokens, then up to one target creature gets -1/-1 until end of turn for each Zombie that player controls. | Dark Salvation | 1 |
-| This creature can block an additional creature each combat. | Tangleclaw Werewolf // Fibrous Entangler | 1 |
-| This creature can block only creatures with flying. | Tattered Haunter | 1 |
-| This creature can't attack or block unless a player has no cards in hand. | Lupine Prototype | 1 |
-| Transform up to one target Werewolf you control. Creatures you control gain trample until end of turn. | Waxing Moon | 1 |
-| When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | Faith Unbroken | 1 |
-| When this creature attacks, up to one target creature defending player controls blocks it this combat if able. | Impetuous Devils | 1 |
-| When this creature becomes the target of a spell or ability an opponent controls, exile this creature. | Eternal Scourge | 1 |
-| When this creature enters, each other creature you control that's a Wolf or a Werewolf gets +0/+3 until end of turn. | Spirit of the Hunt | 1 |
-| When this creature enters, other Humans you control get +1/+1 and gain lifelink until end of turn. | Heron's Grace Champion | 1 |
-| When this creature enters, target creature an opponent controls doesn't untap during its controller's next untap step. | Fogwalker | 1 |
-| When this creature enters, you may have it fight target creature you don't control. | Somberwald Stag | 1 |
-| When this creature leaves the battlefield, the exiled card's owner may cast that card without paying its mana cost. | Spell Queller | 1 |
-| Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | Campaign of Vengeance | 1 |
-| Whenever a player casts a spell, remove a +1/+1 counter from this creature. If you do, create a 2/2 black Zombie creature token. | Noosegraf Mob | 1 |
-| Whenever a player casts an instant or sorcery spell that targets only this creature, that player copies that spell for each other creature they control that the | Mirrorwing Dragon | 1 |
-| Whenever an Equipment you control enters, you may attach it to target creature you control. | Sigarda's Aid | 1 |
-| Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying | Mind's Dilation | 1 |
-| Whenever equipped creature attacks, it doesn't untap during its controller's next untap step. | Stitcher's Graft | 1 |
-| Whenever this creature attacks, add {R} at the beginning of your next main phase this turn. | Conduit of Storms // Conduit of Emrakul | 1 |
-| Whenever this creature attacks, you may exile another target nontoken creature. If you do, this creature becomes a copy of that creature until end of turn. Retu | Identity Thief | 1 |
-| Whenever this creature blocks or becomes blocked by a creature, this creature deals 3 damage to that creature and 3 damage to that creature's controller. | Assembled Alphas | 1 |
-| Whenever this creature deals combat damage to a creature, that creature becomes a copy of this creature. | Permeating Mass | 1 |
-| Whenever this creature transforms into Ulrich, Uncontested Alpha, you may have it fight target non-Werewolf creature you don't control. | Ulrich of the Krallenhorde // Ulrich, Uncontested Alpha | 1 |
-| Whenever you discard a creature card, you may pay {2}. If you do, create a 3/2 colorless Eldrazi Horror creature token. | Wharf Infiltrator | 1 |
-| Wizards you control get +2/+1 and have flying. | Docent of Perfection // Final Iteration | 1 |
-| You may reveal an Eldrazi card you own from outside the game or choose a face-up Eldrazi card you own in exile. Put that card into your hand. | Coax from the Blind Eternities | 1 |
-| You may reveal this card from your opening hand. If you do, at the beginning of the first upkeep, your life total becomes 26. Your life total becomes 26. | Providence | 1 |
-| Your opponents can't cast spells with mana value 3 or less. | Brisela, Voice of Nightmares | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Delirium | 9 | Backwoods Survivalists, Crop Sigil, Desperate Sentry, Geist of the Lonely Vigil, Gnarlwood Dryad | emn |
+| emerge | 8 | Abundant Maw, Decimator of the Provinces, Drownyard Behemoth, Elder Deep-Fiend, It of the Horrid Swarm | emn |
+| +N: choose up to two target creatures. until your next turn, whenever either of those creatures deals combat damage, you draw a card. | 1 | Tamiyo, Field Researcher | emn |
+| as an additional cost to cast ~, discard N cards. ~ deals damage equal to the total mana value of the discarded cards to each of up to N target creatures and/or | 1 | Nahiri's Wrath | emn |
+| at the beginning of your end step, if you both own and control gisela and a creature named bruna, the fading light, exile them, then meld them into brisela, voi | 1 | Gisela, the Broken Blade | emn |
+| creature spells you cast cost {M} more to cast. | 1 | Geist-Fueled Scarecrow | emn |
+| creatures with power less than ~ power can't block it. | 1 | Shrill Howler // Howling Chorus | emn |
+| draw a card, then draw cards equal to the number of cards named ~ in your graveyard. | 1 | Take Inventory | emn |
+| enchanted creature gets -N/-N, where N is the number of cards in your graveyard. | 1 | Spontaneous Mutation | emn |
+| enchanted creature has haste and "..." | 1 | Prophetic Ravings | emn |
+| enchanted permanent is a colorless land with "..." and loses all other card types and abilities. | 1 | Imprisoned in the Moon | emn |
+| equipped creature gets +N/+N and must be blocked by an eldrazi if able. | 1 | Slayer's Cleaver | emn |
+| escalate {M} (pay ~ for each mode chosen beyond the first.) choose one or more — • creatures target player controls gain trample until end of turn. • ~ deals N  | 1 | Savage Alliance | emn |
+| escalate {M} (pay ~ for each mode chosen beyond the first.) choose one or more — • target player discards all the cards in their hand, then draws that many card | 1 | Collective Defiance | emn |
+| exile all other spells and counter all abilities. | 1 | Summary Dismissal | emn |
+| exile target creature. at the beginning of the next end step, return that card to the battlefield under its owner's control with a +N/+N counter on it. | 1 | Long Road Home | emn |
+| if a spell or ability an opponent controls causes you to discard a card, you may reveal that card and put it on top of your library instead of putting it anywhe | 1 | Nephalia Academy | emn |
+| prevent all damage that would be dealt ~ by non-human sources. | 1 | Repel the Abominable | emn |
+| return up to one target instant card and up to one target sorcery card from your graveyard to your hand, then discard a card. exile ~. | 1 | Shreds of Sanity | emn |
+| sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}, where N is ~ power. | 1 | Mausoleum Wanderer | emn |
+| skulk | 1 | Vampire Cutthroat | emn |
+| target creature gets +N/+N until end of turn and can block any number of creatures ~. | 1 | Give No Ground | emn |
+| target creature gets +N/+N until end of turn. when that creature dies ~, create a N/N colorless eldrazi horror creature token. | 1 | Otherworldly Outburst | emn |
+| target opponent discards a card at random. delirium — if there are four or more card types among cards in your graveyard, that player discards two cards at rand | 1 | Whispers of Emrakul | emn |
+| target opponent gains control of target permanent you control. | 1 | Harmless Offering | emn |
+| target opponent looks at the top four cards of your library and separates them into a face-down pile and a face-up pile. put one pile into your hand and the oth | 1 | Fortune's Favor | emn |
+| target opponent loses N life and puts a card from their hand on top of their library. | 1 | Prying Questions | emn |
+| target player creates N N/N black zombie creature tokens, then up to one target creature gets -N/-N until end of turn for each zombie that player controls. | 1 | Dark Salvation | emn |
+| transform up to one target werewolf you control. creatures you control gain trample until end of turn. | 1 | Waxing Moon | emn |
+| when you cast ~, target opponent reveals their hand. you choose from it a nonland card with mana value N or less and a card with mana value N or greater. that p | 1 | Distended Mindbender | emn |
+| when you cast ~, you may put target nonland permanent on top of its owner's library. | 1 | Lashweed Lurker | emn |
+| when ~ attacks, up to one target creature defending player controls blocks it ~ if able. | 1 | Impetuous Devils | emn |
+| when ~ becomes the target of a spell or ability an opponent controls, exile ~. | 1 | Eternal Scourge | emn |
+| when ~ enters, each other creature you control that's a wolf or a werewolf gets +N/+N until end of turn. | 1 | Spirit of the Hunt | emn |
+| when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | Faith Unbroken | emn |
+| when ~ enters, other humans you control get +N/+N and gain lifelink until end of turn. | 1 | Heron's Grace Champion | emn |
+| when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Fogwalker | emn |
+| when ~ enters, you may have it fight target creature you don't control. | 1 | Somberwald Stag | emn |
+| when ~ leaves the battlefield, the exiled card's owner may cast that card without paying its mana cost. | 1 | Spell Queller | emn |
+| whenever a creature you control attacks, defending player loses N life and you gain N life. | 1 | Campaign of Vengeance | emn |
+| whenever a player casts a spell, remove a +N/+N counter from ~. if you do, create a N/N black zombie creature token. | 1 | Noosegraf Mob | emn |
+| whenever a player casts an instant or sorcery spell that targets only ~, that player copies that spell for each other creature they control that the spell could | 1 | Mirrorwing Dragon | emn |
+| whenever an equipment you control enters, you may attach it to target creature you control. | 1 | Sigarda's Aid | emn |
+| whenever an opponent casts their first spell each turn, that player exiles the top card of their library. if it's a nonland card, you may cast it without paying | 1 | Mind's Dilation | emn |
+| whenever equipped creature attacks, it doesn"..."s next untap step. | 1 | Stitcher's Graft | emn |
+| whenever you discard a creature card, you may pay {M}. if you do, create a N/N colorless eldrazi horror creature token. | 1 | Wharf Infiltrator | emn |
+| whenever ~ attacks, add {M} at the beginning of your next main phase ~. | 1 | Conduit of Storms // Conduit of Emrakul | emn |
+| whenever ~ attacks, you may exile another target nontoken creature. if you do, ~ becomes a copy of that creature until end of turn. return the exiled card to th | 1 | Identity Thief | emn |
+| whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature and N damage to that creature's controller. | 1 | Assembled Alphas | emn |
+| whenever ~ deals combat damage to a creature, that creature becomes a copy of ~. | 1 | Permeating Mass | emn |
+| whenever ~ transforms into ulrich, uncontested alpha, you may have it fight target non-werewolf creature you don't control. | 1 | Ulrich of the Krallenhorde // Ulrich, Uncontested Alpha | emn |
+| wizards you control get +N/+N and have flying. | 1 | Docent of Perfection // Final Iteration | emn |
+| you may reveal an eldrazi card you own from outside the game or choose a face-up eldrazi card you own in exile. put that card into your hand. | 1 | Coax from the Blind Eternities | emn |
+| you may reveal ~ from your opening hand. if you do, at the beginning of the first upkeep, your life total becomes N. your life total becomes N. | 1 | Providence | emn |
+| your opponents can't cast spells with mana value N or less. | 1 | Brisela, Voice of Nightmares | emn |
+| {M}, sacrifice ~ and any number of other non-eldrazi creatures: create a N/N colorless eldrazi horror creature token for each creature sacrificed ~. | 1 | Emrakul's Evangel | emn |
+| {M}, {M}, discard a card: each player loses N life. | 1 | Skirsdag Supplicant | emn |
+| {M}, {M}, sacrifice ~: exile target creature card from your graveyard. create a token that"..."s N/N, it"..."s power and toughness equal to that card's toughnes | 1 | Soul Separator | emn |
+| {M}, {M}: target attacking human gets +N/+N until end of turn. | 1 | Crossroads Consecrator | emn |
+| {M}: exchange target opponent's life total with ~ toughness. | 1 | Tree of Perdition | emn |
+| {M}: mill two cards. then if there is a colorless creature card in your graveyard, transform ~. | 1 | Grizzled Angler // Grisly Anglerfish | emn |
+| {M}{M}{M}, sacrifice ~: exile enchanted creature. | 1 | Choking Restraints | emn |
+| ~ can block an additional creature each combat. | 1 | Tangleclaw Werewolf // Fibrous Entangler | emn |
+| ~ can block only creatures with flying. | 1 | Tattered Haunter | emn |
+| ~ can't attack or block unless a player has no cards in hand. | 1 | Lupine Prototype | emn |
+| ~ deals N damage to target creature, where N is N plus the number of cards named ~ in your graveyard. | 1 | Galvanic Bombardment | emn |
 
 ## Notes
 

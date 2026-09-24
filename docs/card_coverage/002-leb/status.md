@@ -38,9 +38,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {1}: The next time a black source of your choice would deal damage to you this turn, prevent that damage. | Circle of Protection: Black | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| {M}: the next time a black source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Black | leb |
 
 ## Notes
 

@@ -86,36 +86,40 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of your upkeep, each player exiles cards from the top of their library until they exile a nonland card. An opponent chooses a nonland card exil | Feast of the Victorious Dead, Nahiri's Resolve, Plargg and Nassari, Rocco, Street Chef, Tolarian Contempt | 5 |
-| As this enchantment enters, choose a planeswalker type. | Deification | 1 |
-| At the beginning of each combat, you may reveal the top card of your library. If you reveal a creature card this way, this creature becomes a copy of that card  | Vesuvan Drifter | 1 |
-| Choose target permanent card in your graveyard. If it has mana value 3 or less, you may put it onto the battlefield. If you don't put it onto the battlefield, p | Cosmic Rebirth | 1 |
-| Each instant and sorcery card in your graveyard that's exactly two colors has jump-start. | Niv-Mizzet, Supreme | 1 |
-| Each legendary permanent you control has ward {2}. | Gold-Forged Thopteryx | 1 |
-| Each other Human you control gets +1/+0 and has ward {1}. | Coppercoat Vanguard | 1 |
-| Each planeswalker with one or more loyalty counters on it loses all abilities and is a creature with power and toughness each equal to the number of loyalty cou | Spark Rupture | 1 |
-| Enchanted creature has ward {2} and "{T}: Add five mana in any combination of colors. Spend this mana only to cast spells." | Leyline Immersion | 1 |
-| Karn's power and toughness are each equal to the greatest mana value among artifacts you control. | Karn, Legacy Reforged | 1 |
-| {W}{U}{B}{R}{G}, {T}: Mill five cards. Put all creature cards with activated abilities that aren't mana abilities from among the milled cards into your hand. | Tazri, Stalwart Survivor | 1 |
-| Other permanents you control have hexproof. | Sigarda, Font of Blessings | 1 |
-| Return all noncreature, nonland permanents to their owners' hands. | Filter Out | 1 |
-| Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control. | Blot Out | 1 |
-| This creature has flying as long as a card exiled with it has flying. The same is true for first strike, double strike, deathtouch, haste, hexproof, indestructi | Urborg Scavengers | 1 |
-| Undergrowth — Distribute X +1/+1 counters among any number of target creatures you control, where X is the number of creature cards in your graveyard as you cas | Undercity Upheaval | 1 |
-| When The Kenriths' Royal Funeral enters, exile up to two target legendary creature cards from your graveyard. You draw X cards and you lose X life, where X is t | The Kenriths' Royal Funeral | 1 |
-| When this creature enters, destroy all other creatures that were dealt damage this turn. | Death-Rattle Oni | 1 |
-| When this creature enters, you may pay {G} up to three times. When you pay this cost one or more times, choose up to that many — • Destroy target artifact or en | Tranquil Frillback | 1 |
-| Whenever a creature you control attacks or enters attacking, you may pay {1}{R}. If you do, you may put a creature card with mana value less than that creature' | Arni Metalbrow | 1 |
-| Whenever a Dragon you control enters, you may have Sarkhan become a copy of it until end of turn, except its name is Sarkhan, Soul Aflame and it's legendary in  | Sarkhan, Soul Aflame | 1 |
-| Whenever an equipped creature you control attacks, exile the top card of your library. You may play that card this turn. You may cast Equipment spells this way  | Nahiri, Forged in Fury | 1 |
-| Whenever Calix or an enchanted creature you control deals combat damage to a player, you may create a token that's a copy of a nonlegendary enchantment you cont | Calix, Guided by Fate | 1 |
-| Whenever one or more Elves you control attack, they gain deathtouch until end of turn. | Tyvar the Bellicose | 1 |
-| Whenever one or more opponents each lose exactly 1 life, put a +1/+1 counter on Ob Nixilis. Exile the top card of your library. Until your next end step, you ma | Ob Nixilis, Captive Kingpin | 1 |
-| Whenever this creature is dealt damage, you gain that much life. | Metropolis Reformer | 1 |
-| Whenever you cast a Kraken, Leviathan, Octopus, or Serpent spell from your hand, look at the top X cards of your library, where X is that spell's mana value. Yo | Kiora, Sovereign of the Deep | 1 |
-| X can't be greater than the number of players in the game. Reveal cards from the top of your library until you reveal X land cards. Put those land cards onto th | Open the Way | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Undergrowth | 1 | Undercity Upheaval | mat |
+| N can't be greater than the number of players in the game. reveal cards from the top of your library until you reveal N land cards. put those land cards onto th | 1 | Open the Way | mat |
+| as ~ enters, choose a planeswalker type. | 1 | Deification | mat |
+| at the beginning of each combat, you may reveal the top card of your library. if you reveal a creature card ~, ~ becomes a copy of that card until end of turn,  | 1 | Vesuvan Drifter | mat |
+| at the beginning of your end step, each player exiles the top card of their library. until your next end step, each player may play the card they exiled ~. | 1 | Rocco, Street Chef | mat |
+| at the beginning of your end step, exile any number of nontoken artifacts and/or creatures you control. return those cards to the battlefield under their owner' | 1 | Nahiri's Resolve | mat |
+| at the beginning of your end step, for each opponent, choose up to one target creature they control with a rejection counter on it. that creature's owner puts i | 1 | Tolarian Contempt | mat |
+| at the beginning of your end step, if one or more creatures died ~, you gain that much life and distribute that many +N/+N counters among any number of creature | 1 | Feast of the Victorious Dead | mat |
+| at the beginning of your upkeep, each player exiles cards from the top of their library until they exile a nonland card. an opponent chooses a nonland card exil | 1 | Plargg and Nassari | mat |
+| choose target permanent card in your graveyard. if it has mana value N or less, you may put it onto the battlefield. if you don't put it onto the battlefield, p | 1 | Cosmic Rebirth | mat |
+| each instant and sorcery card in your graveyard that's exactly two colors has jump-start. | 1 | Niv-Mizzet, Supreme | mat |
+| each legendary permanent you control has ward {M}. | 1 | Gold-Forged Thopteryx | mat |
+| each other human you control gets +N/+N and has ward {M}. | 1 | Coppercoat Vanguard | mat |
+| each planeswalker with one or more loyalty counters on it loses all abilities and is a creature with power and toughness each equal to the number of loyalty cou | 1 | Spark Rupture | mat |
+| enchanted creature has ward {M} and "..." | 1 | Leyline Immersion | mat |
+| karn's power and toughness are each equal to the greatest mana value among artifacts you control. | 1 | Karn, Legacy Reforged | mat |
+| other permanents you control have hexproof. | 1 | Sigarda, Font of Blessings | mat |
+| return all noncreature, nonland permanents to their owners' hands. | 1 | Filter Out | mat |
+| target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control. | 1 | Blot Out | mat |
+| when ~ enters, destroy all other creatures that were dealt damage ~. | 1 | Death-Rattle Oni | mat |
+| when ~ enters, exile up to two target legendary creature cards from your graveyard. you draw N cards and you lose N life, where N is the greatest mana value amo | 1 | The Kenriths' Royal Funeral | mat |
+| when ~ enters, you may pay {M} up to three times. when you pay ~ one or more times, choose up to that many — • destroy target artifact or enchantment. • exile t | 1 | Tranquil Frillback | mat |
+| whenever a creature you control attacks or enters attacking, you may pay {M}{M}. if you do, you may put a creature card with mana value less than that creature' | 1 | Arni Metalbrow | mat |
+| whenever a dragon you control enters, you may have sarkhan become a copy of it until end of turn, except its name is ~ and it's legendary in addition to its oth | 1 | Sarkhan, Soul Aflame | mat |
+| whenever an equipped creature you control attacks, exile the top card of your library. you may play that card ~. you may cast equipment spells ~ without paying  | 1 | Nahiri, Forged in Fury | mat |
+| whenever calix or an enchanted creature you control deals combat damage to a player, you may create a token that's a copy of a nonlegendary enchantment you cont | 1 | Calix, Guided by Fate | mat |
+| whenever one or more elves you control attack, they gain deathtouch until end of turn. | 1 | Tyvar the Bellicose | mat |
+| whenever one or more opponents each lose exactly N life, put a +N/+N counter on ob nixilis. exile the top card of your library. until your next end step, you ma | 1 | Ob Nixilis, Captive Kingpin | mat |
+| whenever you cast a kraken, leviathan, octopus, or serpent spell from your hand, look at the top N cards of your library, where N is that spell's mana value. yo | 1 | Kiora, Sovereign of the Deep | mat |
+| whenever ~ is dealt damage, you gain that much life. | 1 | Metropolis Reformer | mat |
+| {M}{M}{M}{M}{M}, {M}: mill five cards. put all creature cards with activated abilities that aren't mana abilities from among the milled cards into your hand. | 1 | Tazri, Stalwart Survivor | mat |
+| ~ has flying as long as a card exiled with it has flying. the same is true for first strike, double strike, deathtouch, haste, hexproof, indestructible, lifelin | 1 | Urborg Scavengers | mat |
 
 ## Notes
 

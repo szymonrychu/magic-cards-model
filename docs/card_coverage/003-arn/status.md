@@ -50,12 +50,12 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {T}: Draw a card and reveal it. If it isn't a land card, discard it. | Sindbad | 1 |
-| This creature gets +1/+2 as long as you control a Forest. | Kird Ape | 1 |
-| When this creature dies, create a 4/4 red Bird creature token with flying at the beginning of the next end step. | Rukh Egg | 1 |
-| When you control no Islands, sacrifice this creature. | Dandân | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when you control no islands, sacrifice ~. | 1 | Dandân | arn |
+| when ~ dies, create a N/N red bird creature token with flying at the beginning of the next end step. | 1 | Rukh Egg | arn |
+| {M}: draw a card and reveal it. if it isn't a land card, discard it. | 1 | Sindbad | arn |
+| ~ gets +N/+N as long as you control a forest. | 1 | Kird Ape | arn |
 
 ## Notes
 

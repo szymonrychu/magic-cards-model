@@ -51,14 +51,14 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| All creatures get -1/-1 until end of turn for each Swamp you control. | Mutilate | 1 |
-| At the beginning of your upkeep, if twenty or more creature cards are in your graveyard, you win the game. | Mortal Combat | 1 |
-| Discard a card: Return enchanted creature to its owner's hand. | Ghostly Wings | 1 |
-| Prevent all damage a source of your choice would deal this turn. | Pay No Heed | 1 |
-| Target player discards a card for each Swamp you control. | Mind Sludge | 1 |
-| When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | Faceless Butcher | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| all creatures get -N/-N until end of turn for each swamp you control. | 1 | Mutilate | tor |
+| at the beginning of your upkeep, if twenty or more creature cards are in your graveyard, you win the game. | 1 | Mortal Combat | tor |
+| discard a card: return enchanted creature to its owner's hand. | 1 | Ghostly Wings | tor |
+| prevent all damage a source of your choice would deal ~. | 1 | Pay No Heed | tor |
+| target player discards a card for each swamp you control. | 1 | Mind Sludge | tor |
+| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Faceless Butcher | tor |
 
 ## Notes
 

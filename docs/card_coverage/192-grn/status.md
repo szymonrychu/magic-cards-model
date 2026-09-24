@@ -3,24 +3,24 @@
 - Expansion: 192
 - Set code: `grn`
 - Release date: 2018-10-05
-- Cards in scope (Modern/Pioneer/Standard-legal): 234
+- Cards in scope (Modern/Pioneer/Standard-legal): 233
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 234 |
-| Pioneer | 234 |
+| Modern | 233 |
+| Pioneer | 233 |
 | Standard | 8 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 9 | 3.8% |
+| Full (handled + tested) | 9 | 3.9% |
 | Partial (unaudited) | 6 | 2.6% |
-| Not tested (handled, untested) | 130 | 55.6% |
-| Not working (silent / notice / error) | 89 | 38.0% |
+| Not tested (handled, untested) | 129 | 55.4% |
+| Not working (silent / notice / error) | 89 | 38.2% |
 
 ## Cards needing work
 
@@ -178,7 +178,6 @@
 | Hired Poisoner | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Hunted Witness | handled | When this creature dies, create a 1/1 white Soldier creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hypothesizzle | handled | Draw two cards. Then you may discard a nonland card. When you do, Hypothesizzle deals 4 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Impervious Greatwurm | handled | Indestructible | machines/keywords.py | Y/Y/- | not_tested |
 | Inescapable Blaze | handled | This spell can't be countered. Inescapable Blaze deals 6 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspiring Unicorn | handled | Whenever this creature attacks, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Integrity // Intervention | handled | Target creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -271,76 +270,85 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Mentor | Barging Sergeant, Blade Instructor, Boros Challenger, Goblin Banneret, Hammer Dropper, Light of the Legion, Parhelion Patrol, Sunhome Stalwart, Tajic, Legion's Edge, Truefire Captain, Wojek Bodyguard | 11 |
-| Jump | Chemister's Insight, Direct Current, Maximize Altitude, Maximize Velocity, Quasiduplicate, Radical Idea, Sonic Assault | 7 |
-| Whenever you cast an instant or sorcery spell that targets only this creature, if you control one or more other creatures that spell could target, choose one of | Beamsplitter Mage, Erratic Cyclops, Smelt-Ward Minotaur, Thousand-Year Storm | 4 |
-| As long as this creature has three or more +1/+1 counters on it, it can attack as though it didn't have defender. | Pelt Collector, Thoughtbound Phantasm | 2 |
-| At the beginning of combat on your turn, choose up to one target creature you control. Until end of turn, that creature gets +2/+0, gains trample if it's red, a | Aurelia, Exemplar of Justice, Legion Warboss | 2 |
-| At the beginning of your upkeep, exile a creature card from your graveyard. If you do, put a +1/+1 counter on this creature. Otherwise, sacrifice it. | Charnel Troll, Trostani Discordant | 2 |
-| {X}{R}, {T}: Copy target instant or sorcery spell you control with mana value X. You may choose new targets for the copy. | Expansion // Explosion, League Guildmage | 2 |
-| When this creature enters, each player sacrifices a creature or planeswalker of their choice. Each player who can't discards a card. | Centaur Peacemaker, Plaguecrafter | 2 |
-| When this creature enters, you may search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle. | Affectionate Indrik, District Guide | 2 |
-| Whenever this creature attacks, you may tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped th | Ledev Champion, Skyline Scout | 2 |
-| Whenever this creature deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest int | Book Devourer, Thief of Sanity | 2 |
-| All creatures able to block this creature do so. | Ochran Assassin | 1 |
-| As long as you've cast an instant or sorcery spell this turn, this creature can attack as though it didn't have defender. | Piston-Fist Cyclops | 1 |
-| As long as you've surveilled this turn, this creature has deathtouch and "Whenever this creature deals combat damage to a player, you draw a card." | Darkblade Agent | 1 |
-| Beacon Bolt deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. Jump-start (You may c | Beacon Bolt | 1 |
-| Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. That player shuffles, then draws a | Unmoored Ego | 1 |
-| Choose a creature card with mana value 1 in your graveyard, then do the same for creature cards with mana value 2 and 3. Return those cards to the battlefield. | Gruesome Menagerie | 1 |
-| Cosmotronic Wave deals 1 damage to each creature your opponents control. Creatures your opponents control can't block this turn. | Cosmotronic Wave | 1 |
-| Counter target spell. Ionize deals 2 damage to that spell's controller. | Ionize | 1 |
-| Crackling Drake's power is equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | Crackling Drake | 1 |
-| Creatures you control gain indestructible. Take an extra turn after this one. At the beginning of that turn's end step, you lose the game. | Chance for Glory | 1 |
-| Creeping Chill deals 3 damage to each opponent and you gain 3 life. When Creeping Chill is put into your graveyard from your library, you may exile it. If you d | Creeping Chill | 1 |
-| Destroy target creature. You gain life equal to its toughness. You may search your library and/or graveyard for a card named Vraska, Regal Gorgon, reveal it, an | Vraska's Stoneglare | 1 |
-| {3}{R}: Destroy this enchantment. | Experimental Frenzy | 1 |
-| During your turn, creatures you control get +1/+0 and have trample. | Street Riot | 1 |
-| Each opponent returns a nonland permanent they control with the greatest mana value among permanents they control to its owner's hand, then discards a card. | Discovery // Dispersal | 1 |
-| Enchanted creature can't block, and its activated abilities can't be activated. | Demotion | 1 |
-| Enchanted land has "{T}: Add one mana of any color." | Urban Utopia | 1 |
-| Equipped creature gets +1/+0 for each Gate you control and has vigilance and menace. | Glaive of the Guildpact | 1 |
-| Exile all opponents' graveyards. You may cast spells from among those cards this turn, and mana of any type can be spent to cast them. At the beginning of the n | Mnemonic Betrayal | 1 |
-| Exile this enchantment: Shuffle your graveyard into your library. | Enhanced Surveillance | 1 |
-| −10: For each creature card in your graveyard, put a +1/+1 counter on each creature you control. | Vraska, Regal Gorgon | 1 |
-| Gain control of target creature with power 2 or less. | Connive // Concoct | 1 |
-| If you would draw a card, instead look at the top three cards of your library, then put one into your hand and the rest into your graveyard. | Underrealm Lich | 1 |
-| −3: Ral deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | Ral, Izzet Viceroy | 1 |
-| Return target creature to its owner's hand. You may search your library and/or graveyard for a card named Ral, Caller of Storms, reveal it, and put it into your | Ral's Dispersal | 1 |
-| Return X target creatures of the creature type of your choice to their owner's hand. | Selective Snare | 1 |
-| Search your library for up to two basic land cards and/or Gate cards, put them onto the battlefield tapped, then shuffle. | Circuitous Route | 1 |
-| Surveil 2, then choose an instant or sorcery card in your graveyard. You may cast it this turn. If that spell would be put into your graveyard, exile it instead | Mission Briefing | 1 |
-| Surveil 2, then draw two cards. Notion Rain deals 2 damage to you. (To surveil 2, look at the top two cards of your library, then put any number of them into yo | Notion Rain | 1 |
-| Switch the power and toughness of each of up to two target creatures until end of turn. | Invert // Invent | 1 |
-| Target creature deals damage to itself equal to its power. | Justice Strike | 1 |
-| {1}{U}, {T}: Target creature doesn't untap during its controller's next untap step. | House Guildmage | 1 |
-| Target creature gets +2/+2 until end of turn. You gain 1 life for each attacking creature you control. | Take Heart | 1 |
-| Target creature you control deals damage equal to its power to target player. Jump-start (You may cast this card from your graveyard by discarding a card in add | Gravitic Punch | 1 |
-| Target opponent may have Risk Factor deal 4 damage to them. If that player doesn't, you draw three cards. Jump-start (You may cast this card from your graveyard | Risk Factor | 1 |
-| Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. | Never Happened | 1 |
-| This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | Chamber Sentry | 1 |
-| This creature has flying as long as you've cast an instant or sorcery spell this turn. | Leapfrog | 1 |
-| {2}: This creature loses all abilities until end of turn. Any player may activate this ability. | Nullhide Ferox | 1 |
-| Undergrowth — Search your library for a black card with mana value less than or equal to the number of creature cards in your graveyard, reveal it, put it into  | Mausoleum Secrets | 1 |
-| Undergrowth — Target creature gets -X/-X until end of turn, where X is the number of creature cards in your graveyard. If that creature would die this turn, exi | Necrotic Wound | 1 |
-| Undergrowth — When you cast this spell, reveal the top X cards of your library, where X is the number of creature cards in your graveyard. You may put a green p | Hatchery Spider | 1 |
-| Untap all creatures you control. They gain hexproof and indestructible until end of turn. (They can't be the targets of spells or abilities your opponents contr | Join Shields | 1 |
-| When this creature enters, mill three cards. You may put a land card from your graveyard on top of your library. | Glowspore Shaman | 1 |
-| When this creature enters, put a +1/+1 counter on each creature that convoked it. | Venerated Loxodon | 1 |
-| When this creature enters, surveil 4. When you do, you may return target nonland permanent an opponent controls to its owner's hand. | Dream Eater | 1 |
-| When this enchantment enters, you may tap any number of untapped Gates you control. Draw a card for each Gate tapped this way. | Guild Summit | 1 |
-| When this land enters, sacrifice it unless you pay {1}. | Gateway Plaza | 1 |
-| Whenever Etrata deals combat damage to a player, exile target creature that player controls and put a hit counter on that card. That player loses the game if th | Etrata, the Silencer | 1 |
-| Whenever this creature attacks, creatures with defender can't block this turn. | Goblin Locksmith | 1 |
-| Whenever this creature attacks, if you control a Ral planeswalker, this creature gets +1/+0 for each card in your hand until end of turn. | Ral's Staticaster | 1 |
-| Whenever this creature attacks, it deals 1 damage to each creature defending player controls. | Swathcutter Giant | 1 |
-| Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature. | Ornery Goblin | 1 |
-| Whenever you surveil, if this card is in your graveyard, you may pay 3 life. If you do, return this card to your hand. | Blood Operative | 1 |
-| You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn. | Camaraderie | 1 |
-| {2}{U}, {T}: You may cast an instant or sorcery spell from your hand without paying its mana cost. | Omnispell Adept | 1 |
-| You may put two +1/+1 counters on a creature you control. Then all creatures get -4/-4 until end of turn. | Find // Finality | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| mentor | 11 | Barging Sergeant, Blade Instructor, Boros Challenger, Goblin Banneret, Hammer Dropper | grn |
+| jump | 7 | Chemister's Insight, Direct Current, Maximize Altitude, Maximize Velocity, Quasiduplicate | grn |
+| Undergrowth | 3 | Hatchery Spider, Mausoleum Secrets, Necrotic Wound | grn |
+| all creatures able to block ~ do so. | 1 | Ochran Assassin | grn |
+| as long as you"..."t have defender. | 1 | Piston-Fist Cyclops | grn |
+| as long as you've surveilled ~, ~ has deathtouch and "..." | 1 | Darkblade Agent | grn |
+| as long as ~ has three or more +N/+N counters on it, it can attack as though it didn't have defender. | 1 | Thoughtbound Phantasm | grn |
+| as long as ~ has three or more +N/+N counters on it, it has trample. | 1 | Pelt Collector | grn |
+| at the beginning of combat on your turn, choose up to one target creature you control. until end of turn, that creature gets +N/+N, gains trample if it"..."s wh | 1 | Aurelia, Exemplar of Justice | grn |
+| at the beginning of combat on your turn, create a N/N red goblin creature token. that token gains haste until end of turn and attacks ~ if able. | 1 | Legion Warboss | grn |
+| at the beginning of your end step, each player gains control of all creatures they own. | 1 | Trostani Discordant | grn |
+| at the beginning of your upkeep, exile a creature card from your graveyard. if you do, put a +N/+N counter on ~. otherwise, sacrifice it. | 1 | Charnel Troll | grn |
+| choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. that player shuffles, then draws a | 1 | Unmoored Ego | grn |
+| choose a creature card with mana value N in your graveyard, then do the same for creature cards with mana value N and N. return those cards to the battlefield. | 1 | Gruesome Menagerie | grn |
+| copy target instant or sorcery spell with mana value N or less. you may choose new targets for the copy. | 1 | Expansion // Explosion | grn |
+| counter target spell. ~ deals N damage to that spell's controller. | 1 | Ionize | grn |
+| creatures you control gain indestructible. take an extra turn after ~. at the beginning of that turn's end step, you lose the game. | 1 | Chance for Glory | grn |
+| destroy target creature. you gain life equal to its toughness. you may search your library and/or graveyard for a card named vraska, regal gorgon, reveal it, an | 1 | Vraska's Stoneglare | grn |
+| during your turn, creatures you control get +N/+N and have trample. | 1 | Street Riot | grn |
+| each opponent returns a nonland permanent they control with the greatest mana value among permanents they control to its owner's hand, then discards a card. | 1 | Discovery // Dispersal | grn |
+| enchanted creature can"..."t be activated. | 1 | Demotion | grn |
+| enchanted land has "..." | 1 | Urban Utopia | grn |
+| equipped creature gets +N/+N for each gate you control and has vigilance and menace. | 1 | Glaive of the Guildpact | grn |
+| exile all opponents"..." graveyards. exile ~. | 1 | Mnemonic Betrayal | grn |
+| exile ~: shuffle your graveyard into your library. | 1 | Enhanced Surveillance | grn |
+| gain control of target creature with power N or less. | 1 | Connive // Concoct | grn |
+| if you would draw a card, instead look at the top three cards of your library, then put one into your hand and the rest into your graveyard. | 1 | Underrealm Lich | grn |
+| return N target creatures of the creature type of your choice to their owner's hand. | 1 | Selective Snare | grn |
+| return target creature to its owner's hand. you may search your library and/or graveyard for a card named ral, caller of storms, reveal it, and put it into your | 1 | Ral's Dispersal | grn |
+| search your library for up to two basic land cards and/or gate cards, put them onto the battlefield tapped, then shuffle. | 1 | Circuitous Route | grn |
+| surveil N, then choose an instant or sorcery card in your graveyard. you may cast it ~. if that spell would be put into your graveyard, exile it instead. (to su | 1 | Mission Briefing | grn |
+| surveil N, then draw two cards. ~ deals N damage to you. (to surveil N, look at the top two cards of your library, then put any number of them into your graveya | 1 | Notion Rain | grn |
+| switch the power and toughness of each of up to two target creatures until end of turn. | 1 | Invert // Invent | grn |
+| target creature deals damage to itself equal to its power. | 1 | Justice Strike | grn |
+| target creature gets +N/+N until end of turn. you gain N life for each attacking creature you control. | 1 | Take Heart | grn |
+| target creature you control deals damage equal to its power to target player. jump-start (you may cast ~ from your graveyard by discarding a card in addition to | 1 | Gravitic Punch | grn |
+| target opponent may have ~ deal N damage to them. if that player doesn't, you draw three cards. jump-start (you may cast ~ from your graveyard by discarding a c | 1 | Risk Factor | grn |
+| target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. | 1 | Never Happened | grn |
+| untap all creatures you control. they gain hexproof and indestructible until end of turn. (they can"..."t destroy them.) | 1 | Join Shields | grn |
+| when ~ enters, each player gains N life. | 1 | Centaur Peacemaker | grn |
+| when ~ enters, each player sacrifices a creature or planeswalker of their choice. each player who can't discards a card. | 1 | Plaguecrafter | grn |
+| when ~ enters, mill three cards. you may put a land card from your graveyard on top of your library. | 1 | Glowspore Shaman | grn |
+| when ~ enters, put a +N/+N counter on each creature that convoked it. | 1 | Venerated Loxodon | grn |
+| when ~ enters, sacrifice it unless you pay {M}. | 1 | Gateway Plaza | grn |
+| when ~ enters, surveil N. when you do, you may return target nonland permanent an opponent controls to its owner's hand. | 1 | Dream Eater | grn |
+| when ~ enters, you may have it fight target creature you don't control. | 1 | Affectionate Indrik | grn |
+| when ~ enters, you may search your library for a basic land card or gate card, reveal it, put it into your hand, then shuffle. | 1 | District Guide | grn |
+| when ~ enters, you may tap any number of untapped gates you control. draw a card for each gate tapped ~. | 1 | Guild Summit | grn |
+| whenever etrata deals combat damage to a player, exile target creature that player controls and put a hit counter on that card. that player loses the game if th | 1 | Etrata, the Silencer | grn |
+| whenever you cast an instant or sorcery spell that targets only ~, if you control one or more other creatures that spell could target, choose one of those creat | 1 | Beamsplitter Mage | grn |
+| whenever you cast an instant or sorcery spell, copy it for each other instant and sorcery spell you've cast before it ~. you may choose new targets for the copi | 1 | Thousand-Year Storm | grn |
+| whenever you cast an instant or sorcery spell, target creature an opponent controls can't block ~. | 1 | Smelt-Ward Minotaur | grn |
+| whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn, where N is that spell's mana value. | 1 | Erratic Cyclops | grn |
+| whenever you surveil, if ~ is in your graveyard, you may pay N life. if you do, return ~ to your hand. | 1 | Blood Operative | grn |
+| whenever ~ attacks, creatures with defender can't block ~. | 1 | Goblin Locksmith | grn |
+| whenever ~ attacks, if you control a ral planeswalker, ~ gets +N/+N for each card in your hand until end of turn. | 1 | Ral's Staticaster | grn |
+| whenever ~ attacks, it deals N damage to each creature defending player controls. | 1 | Swathcutter Giant | grn |
+| whenever ~ attacks, you may pay {M}{M}. if you do, it gains flying until end of turn. | 1 | Skyline Scout | grn |
+| whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Ledev Champion | grn |
+| whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Ornery Goblin | grn |
+| whenever ~ deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest into their grav | 1 | Thief of Sanity | grn |
+| whenever ~ deals combat damage to a player, you may discard all the cards in your hand. if you do, draw that many cards. | 1 | Book Devourer | grn |
+| you gain N life and draw N cards, where N is the number of creatures you control. creatures you control get +N/+N until end of turn. | 1 | Camaraderie | grn |
+| you may put two +N/+N counters on a creature you control. then all creatures get -N/-N until end of turn. | 1 | Find // Finality | grn |
+| {M}: ~ loses all abilities until end of turn. any player may activate ~. | 1 | Nullhide Ferox | grn |
+| {M}{M}, {M}: copy target instant or sorcery spell you control with mana value N. you may choose new targets for the copy. | 1 | League Guildmage | grn |
+| {M}{M}, {M}: target creature doesn"..."s next untap step. | 1 | House Guildmage | grn |
+| {M}{M}, {M}: you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Omnispell Adept | grn |
+| {M}{M}: destroy ~. | 1 | Experimental Frenzy | grn |
+| ~ deals N damage to each creature your opponents control. creatures your opponents control can't block ~. | 1 | Cosmotronic Wave | grn |
+| ~ deals N damage to each opponent and you gain N life. when ~ is put into your graveyard from your library, you may exile it. if you do, ~ deals N damage to eac | 1 | Creeping Chill | grn |
+| ~ deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. jump-start (you may cast ~ from | 1 | Beacon Bolt | grn |
+| ~ enters with a +N/+N counter on it for each color of mana spent to cast it. | 1 | Chamber Sentry | grn |
+| ~ has flying as long as you've cast an instant or sorcery spell ~. | 1 | Leapfrog | grn |
+| ~'s power is equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | 1 | Crackling Drake | grn |
+| −N: for each creature card in your graveyard, put a +N/+N counter on each creature you control. | 1 | Vraska, Regal Gorgon | grn |
+| −N: ral deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | 1 | Ral, Izzet Viceroy | grn |
 
 ## Notes
 

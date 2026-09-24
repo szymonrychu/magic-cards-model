@@ -38,9 +38,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Attacking Vampires you control have deathtouch and lifelink. | Crossway Troublemakers | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| attacking vampires you control have deathtouch and lifelink. | 1 | Crossway Troublemakers | voc |
 
 ## Notes
 

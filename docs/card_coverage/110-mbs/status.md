@@ -3,24 +3,24 @@
 - Expansion: 110
 - Set code: `mbs`
 - Release date: 2011-02-04
-- Cards in scope (Modern/Pioneer/Standard-legal): 137
+- Cards in scope (Modern/Pioneer/Standard-legal): 142
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 137 |
-| Pioneer | 6 |
+| Modern | 142 |
+| Pioneer | 7 |
 | Standard | 2 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 6 | 4.4% |
-| Partial (unaudited) | 8 | 5.8% |
-| Not tested (handled, untested) | 80 | 58.4% |
-| Not working (silent / notice / error) | 43 | 31.4% |
+| Full (handled + tested) | 7 | 4.9% |
+| Partial (unaudited) | 8 | 5.6% |
+| Not tested (handled, untested) | 84 | 59.2% |
+| Not working (silent / notice / error) | 43 | 30.3% |
 
 ## Cards needing work
 
@@ -92,10 +92,13 @@
 | Flensermite | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Flesh-Eater Imp | handled | Sacrifice a creature: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glissa's Courier | handled | Landwalk | no code needed | Y/-/- | not_tested |
+| Glissa, the Traitor | handled | Whenever a creature an opponent controls dies, you may return target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnathosaur | handled | Sacrifice an artifact: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Go for the Throat | handled | Destroy target nonartifact creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Wardriver | handled | Battle Cry | machines/keywords.py | Y/-/- | not_tested |
 | Gust-Skimmer | handled | {U}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hellkite Igniter | handled | {1}{R}: This creature gets +X/+0 until end of turn, where X is the number of artifacts you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hero of Bladehold | handled | Whenever this creature attacks, create two 1/1 white Soldier creature tokens that are tapped and attacking. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hexplate Golem | handled |  |  | Y/-/- | not_tested |
 | Horrifying Revelation | handled | Target player discards a card, then mills a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ichor Wellspring | handled | When this artifact enters or is put into a graveyard from the battlefield, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -109,6 +112,7 @@
 | Massacre Wurm | handled | When this creature enters, creatures your opponents control get -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Master's Call | handled | Create two 1/1 colorless Myr artifact creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Metallic Mastery | handled | Gain control of target artifact until end of turn. Untap that artifact. It gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mirran Crusader | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Mirran Mettle | handled | Target creature gets +2/+2 until end of turn. Metalcraft — That creature gets +4/+4 until end of turn instead if you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mirran Spy | handled | Whenever you cast an artifact spell, you may untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Morbid Plunder | handled | Return up to two target creature cards from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -161,7 +165,7 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Accorder Paladin
 - Fuel for the Cause
@@ -169,57 +173,58 @@
 - Knowledge Pool
 - Lead the Stampede
 - Phyrexian Revoker
+- Thopter Assembly
 
 </details>
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Living weapon | Bonehoard, Flayer Husk, Mortarpod, Skinwing, Strandwalker | 5 |
-| At the beginning of your upkeep, you may look at the top card of your library. You may cast it without paying its mana cost if it's an instant or sorcery spell. | Cryptoplasm, Galvanoth | 2 |
-| Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | Ardent Recruit, Razorfield Rhino | 2 |
-| Put a -1/-1 counter on target creature. When that creature dies this turn, its controller gets a poison counter. | Vedalken Anatomist, Virulent Wound | 2 |
-| {T}: Attach target Equipment you control to target creature you control. | Brass Squire | 1 |
-| Attacking creatures get +1/+0 and gain first strike until end of turn. | Rally the Forces | 1 |
-| Burn the Impure deals 3 damage to target creature. If that creature has infect, Burn the Impure deals 3 damage to that creature's controller. | Burn the Impure | 1 |
-| Concussive Bolt deals 4 damage to target player or planeswalker. Metalcraft — If you control three or more artifacts, creatures controlled by that player or by  | Concussive Bolt | 1 |
-| Destroy all creatures, then create an X/X colorless Phyrexian Horror artifact creature token, where X is the number of creatures destroyed this way. | Phyrexian Rebirth | 1 |
-| Destroy target creature with flying. Its controller gets a poison counter. | Pistus Strike | 1 |
-| Equipped creature gets +2/+2 and can't block. | Copper Carapace | 1 |
-| Equipped creature gets +1/+1 and is an artifact in addition to its other types. | Silverskin Armor | 1 |
-| If Blightsteel Colossus would be put into a graveyard from anywhere, reveal Blightsteel Colossus and shuffle it into its owner's library instead. | Blightsteel Colossus | 1 |
-| If damage would be dealt to this creature, prevent that damage. Put a -1/-1 counter on this creature for each 1 damage prevented this way. | Phyrexian Hydra | 1 |
-| Look at the top seven cards of your library. You may put one of those cards onto the battlefield if it has the same name as a permanent. Put the rest on the bot | Mitotic Manipulation | 1 |
-| Metalcraft — As long as you control three or more artifacts, this creature gets +2/+2 and can attack as though it didn't have defender. | Spire Serpent | 1 |
-| Metalcraft — This creature has double strike as long as you control three or more artifacts. | Spiraling Duelist | 1 |
-| Psychosis Crawler's power and toughness are each equal to the number of cards in your hand. | Psychosis Crawler | 1 |
-| Put a -1/-1 counter on each attacking creature. | Choking Fumes | 1 |
-| Put any number of target artifact cards from your graveyard on top of your library. Draw a card. | Frantic Salvage | 1 |
-| Put target artifact, creature, or enchantment on top of its owner's library. | Banishment Decree | 1 |
-| Put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. Exile it at the beginning of the next end step. I | Gruesome Encore | 1 |
-| Put X -1/-1 counters on each creature. Shuffle Black Sun's Zenith into its owner's library. | Black Sun's Zenith | 1 |
-| Return all cards from your graveyard to your hand. Exile Praetor's Counsel. You have no maximum hand size for the rest of the game. | Praetor's Counsel | 1 |
-| Sacrifice this creature: Put a -1/-1 counter on target creature. Then if that creature's toughness is 1 or greater, regenerate it. | Gore Vassal | 1 |
-| Search your library for a card, exile it, then shuffle. Any opponent may have you put that card into your hand. If no player does, you draw three cards. | Distant Memories | 1 |
-| −1: Target artifact becomes an artifact creature with base power and toughness 5/5. | Tezzeret, Agent of Bolas | 1 |
-| {R}: Target creature can't block this creature this turn. | Spin Engine | 1 |
-| {4}, {T}: Target opponent loses 2 life, gets a poison counter, then mills six cards. | Decimator Web | 1 |
-| This artifact enters tapped and with three charge counters on it. | Sphere of the Suns | 1 |
-| This creature can block an additional creature each combat for each Equipment attached to this creature. | Kemba's Legion | 1 |
-| This creature can't attack or block unless it's equipped. | Training Drone | 1 |
-| This creature can't be blocked except by creatures with flying or reach. | Signal Pest | 1 |
-| This creature can't have counters put on it. | Melira's Keepers | 1 |
-| When this creature dies, each player loses 4 life. | Caustic Hound | 1 |
-| When this creature enters, you may search your library for an artifact card with mana value 6 or greater, reveal it, put it into your hand, then shuffle. | Treasure Mage | 1 |
-| When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | Leonin Relic-Warder | 1 |
-| Whenever a creature deals combat damage to you, that creature's controller gains control of this land. | Contested War Zone | 1 |
-| Whenever another artifact is put into a graveyard from the battlefield, this artifact deals 2 damage to that artifact's controller. | Magnetic Mine | 1 |
-| Whenever another nontoken artifact you control enters, you may pay {2}. If you do, create a token that's a copy of that artifact. | Mirrorworks | 1 |
-| Whenever equipped creature deals combat damage to a player, that player discards a card and you untap all lands you control. | Sword of Feast and Famine | 1 |
-| Whenever this creature attacks, attacking creatures gain flying and lifelink until end of turn. | Victory's Herald | 1 |
-| Whenever this creature attacks, creatures with power 1 or less can't block this turn. | Hero of Oxid Ridge | 1 |
-| You may cast artifact spells as though they had flash. | Shimmer Myr | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| living weapon | 5 | Bonehoard, Flayer Husk, Mortarpod, Skinwing, Strandwalker | mbs |
+| Metalcraft | 4 | Ardent Recruit, Razorfield Rhino, Spiraling Duelist, Spire Serpent | mbs |
+| at the beginning of your upkeep, you may have ~ become a copy of another target creature, except it has ~. | 1 | Cryptoplasm | mbs |
+| at the beginning of your upkeep, you may look at the top card of your library. you may cast it without paying its mana cost if it's an instant or sorcery spell. | 1 | Galvanoth | mbs |
+| attacking creatures get +N/+N and gain first strike until end of turn. | 1 | Rally the Forces | mbs |
+| destroy all creatures, then create an N/N colorless phyrexian horror artifact creature token, where N is the number of creatures destroyed ~. | 1 | Phyrexian Rebirth | mbs |
+| destroy target creature with flying. its controller gets a poison counter. | 1 | Pistus Strike | mbs |
+| equipped creature gets +N/+N and can't block. | 1 | Copper Carapace | mbs |
+| equipped creature gets +N/+N and is an artifact in addition to its other types. | 1 | Silverskin Armor | mbs |
+| if damage would be dealt to ~, prevent that damage. put a -N/-N counter on ~ for each N damage prevented ~. | 1 | Phyrexian Hydra | mbs |
+| if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Blightsteel Colossus | mbs |
+| look at the top seven cards of your library. you may put one of those cards onto the battlefield if it has the same name as a permanent. put the rest on the bot | 1 | Mitotic Manipulation | mbs |
+| put N -N/-N counters on each creature. shuffle ~ into its owner's library. | 1 | Black Sun's Zenith | mbs |
+| put a -N/-N counter on each attacking creature. | 1 | Choking Fumes | mbs |
+| put a -N/-N counter on target creature. when that creature dies ~, its controller gets a poison counter. | 1 | Virulent Wound | mbs |
+| put any number of target artifact cards from your graveyard on top of your library. draw a card. | 1 | Frantic Salvage | mbs |
+| put target artifact, creature, or enchantment on top of its owner's library. | 1 | Banishment Decree | mbs |
+| put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. exile it at the beginning of the next end step. i | 1 | Gruesome Encore | mbs |
+| return all cards from your graveyard to your hand. exile ~. you have no maximum hand size for the rest of the game. | 1 | Praetor's Counsel | mbs |
+| sacrifice ~: put a -N/-N counter on target creature. then if that creature's toughness is N or greater, regenerate it. | 1 | Gore Vassal | mbs |
+| search your library for a card, exile it, then shuffle. any opponent may have you put that card into your hand. if no player does, you draw three cards. | 1 | Distant Memories | mbs |
+| when ~ dies, each player loses N life. | 1 | Caustic Hound | mbs |
+| when ~ enters, you may search your library for an artifact card with mana value N or greater, reveal it, put it into your hand, then shuffle. | 1 | Treasure Mage | mbs |
+| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Leonin Relic-Warder | mbs |
+| whenever a creature deals combat damage to you, that creature's controller gains control of ~. | 1 | Contested War Zone | mbs |
+| whenever another artifact is put into a graveyard from the battlefield, ~ deals N damage to that artifact's controller. | 1 | Magnetic Mine | mbs |
+| whenever another nontoken artifact you control enters, you may pay {M}. if you do, create a token that's a copy of that artifact. | 1 | Mirrorworks | mbs |
+| whenever equipped creature deals combat damage to a player, that player discards a card and you untap all lands you control. | 1 | Sword of Feast and Famine | mbs |
+| whenever ~ attacks, attacking creatures gain flying and lifelink until end of turn. | 1 | Victory's Herald | mbs |
+| whenever ~ attacks, creatures with power N or less can't block ~. | 1 | Hero of Oxid Ridge | mbs |
+| you may cast artifact spells as though they had flash. | 1 | Shimmer Myr | mbs |
+| {M}, {M}: target opponent loses N life, gets a poison counter, then mills six cards. | 1 | Decimator Web | mbs |
+| {M}: attach target equipment you control to target creature you control. | 1 | Brass Squire | mbs |
+| {M}: target creature can't block ~ ~. | 1 | Spin Engine | mbs |
+| {M}{M}, {M}: put a -N/-N counter on target creature. you may tap or untap that creature. | 1 | Vedalken Anatomist | mbs |
+| ~ can block an additional creature each combat for each equipment attached to ~. | 1 | Kemba's Legion | mbs |
+| ~ can"..."s equipped. | 1 | Training Drone | mbs |
+| ~ can't be blocked except by creatures with flying or reach. | 1 | Signal Pest | mbs |
+| ~ can't have counters put on it. | 1 | Melira's Keepers | mbs |
+| ~ deals N damage to target creature. if that creature has infect, ~ deals N damage to that creature's controller. | 1 | Burn the Impure | mbs |
+| ~ deals N damage to target player or planeswalker. metalcraft — if you control three or more artifacts, creatures controlled by that player or by that planeswal | 1 | Concussive Bolt | mbs |
+| ~ enters tapped and with three charge counters on it. | 1 | Sphere of the Suns | mbs |
+| ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Psychosis Crawler | mbs |
+| −N: target artifact becomes an artifact creature with base power and toughness N/N. | 1 | Tezzeret, Agent of Bolas | mbs |
 
 ## Notes
 

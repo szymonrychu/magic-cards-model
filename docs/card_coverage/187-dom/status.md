@@ -3,24 +3,24 @@
 - Expansion: 187
 - Set code: `dom`
 - Release date: 2018-04-27
-- Cards in scope (Modern/Pioneer/Standard-legal): 231
+- Cards in scope (Modern/Pioneer/Standard-legal): 230
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 231 |
-| Pioneer | 231 |
+| Modern | 230 |
+| Pioneer | 230 |
 | Standard | 9 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 13 | 5.6% |
+| Full (handled + tested) | 13 | 5.7% |
 | Partial (unaudited) | 20 | 8.7% |
-| Not tested (handled, untested) | 124 | 53.7% |
-| Not working (silent / notice / error) | 74 | 32.0% |
+| Not tested (handled, untested) | 124 | 53.9% |
+| Not working (silent / notice / error) | 73 | 31.7% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Evra, Halcyon Witness | silent | {4}: Exchange your life total with Evra's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fall of the Thran | silent | II, III — Each player returns two land cards from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Final Parting | silent | Search your library for two cards. Put one into your hand and the other into your graveyard. Then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Firesong and Sunspeaker | silent | Red instant and sorcery spells you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garna, the Bloodflame | silent | When Garna enters, return to your hand all creature cards in your graveyard that were put there from anywhere this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ghitu Lavarunner | silent | As long as there are two or more instant and/or sorcery cards in your graveyard, this creature gets +1/+0 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gift of Growth | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Untap target creature. It gets +2/+2 until end of turn. If this spell was kicked, that creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -268,90 +267,93 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Look at the top X cards of your library. You may put any number of  | Kamahl's Druidic Vow, Karn's Temporal Sundering, Primevals' Glorious Rebirth, Urza's Ruinous Blast, Yawgmoth's Vile Offering | 5 |
-| If this creature was kicked, it enters with three +1/+1 counters on it. | Academy Drake, Baloth Gorger, Stronghold Confessor, Untamed Kavu | 4 |
-| This creature gets +2/+2 for each Aura and Equipment attached to it. | Benalish Honor Guard, Champion of the Flame, Tempest Djinn | 3 |
-| At the beginning of combat on your turn, for each Aura and Equipment attached to Valduk, create a 3/1 red Elemental creature token with trample and haste. Exile | Helm of the Host, Valduk, Keeper of the Flame | 2 |
-| {4}, {T}: Exile the top card of your library. | Precognition Field, Rona, Disciple of Gix | 2 |
-| Kicker {2} (You may pay an additional {2} as you cast this spell.) Untap target creature. It gets +2/+2 until end of turn. If this spell was kicked, that creatu | Gift of Growth, Saproling Migration | 2 |
-| A deck can have any number of cards named Rat Colony. | Rat Colony | 1 |
-| As long as there are two or more instant and/or sorcery cards in your graveyard, this creature gets +1/+0 and has haste. | Ghitu Lavarunner | 1 |
-| As long as you control a Teferi planeswalker, this creature gets +4/+0. | Teferi's Sentinel | 1 |
-| At the beginning of your upkeep, if this card is exiled with an egg counter on it, remove an egg counter from it. Then if this card has no egg counters on it, r | Darigaaz Reincarnated | 1 |
-| Aura and Equipment spells you cast cost {1} less to cast. | Danitha Capashen, Paragon | 1 |
-| Chandra's Outburst deals 4 damage to target player or planeswalker. Search your library and/or graveyard for a card named Chandra, Bold Pyromancer, reveal it, a | Chandra's Outburst | 1 |
-| Counter target noncreature spell. Untap up to three lands. | Unwind | 1 |
-| Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | Baird, Steward of Argive | 1 |
-| Creatures you control with first strike have double strike. | Kwende, Pride of Femeref | 1 |
-| Destroy target land. Up to two target creatures can't block this turn. | Seismic Shift | 1 |
-| {3}, {T}: Draw a card. Then discard a card unless you exile a historic card from your graveyard. | Urza's Tome | 1 |
-| During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard. | Muldrotha, the Gravetide | 1 |
-| During your turn, equipped creature has first strike. | Jousting Lance | 1 |
-| Enchanted creature gets +2/+2, has first strike, and is a Knight in addition to its other types. | Dub | 1 |
-| Enchanted creature has base power and toughness 0/4, has defender, loses all other abilities, and is a blue Wall in addition to its other colors and types. | Deep Freeze | 1 |
-| Enchanted creature is legendary, gets +1/+1, and has flying, vigilance, and lifelink. | On Serra's Wings | 1 |
-| Enchanted permanent has hexproof. | Curator's Ward | 1 |
-| Enchanted permanent is legendary. | In Bolas's Clutches | 1 |
-| Equipped creature gets +1/+1 for each land you control. | Blackblade Reforged | 1 |
-| {4}: Exchange your life total with Evra's power. | Evra, Halcyon Witness | 1 |
-| Exile target creature. Put two loyalty counters on a planeswalker you control. | Settle the Score | 1 |
-| Historic spells you cast cost {1} less to cast. | Jhoira's Familiar | 1 |
-| I, II — Until your next turn, creatures you control gain "{T}: Add one mana of any color." | Song of Freyalise | 1 |
-| If a source would deal damage to equipped creature, prevent 2 of that damage. | Shield of the Realm | 1 |
-| II, III — Each player returns two land cards from their graveyard to the battlefield. | Fall of the Thran | 1 |
-| III — Create an X/X black Nightmare Horror creature token, where X is half your life total, rounded up. It deals X damage to you. | Chainer's Torment | 1 |
-| III — Exile all opponents' graveyards. | Phyrexian Scriptures | 1 |
-| III — If a red source you control would deal damage to a permanent or player this turn, it deals that much damage plus 2 to that permanent or player instead. | The Flame of Keld | 1 |
-| III — Return all land cards from your graveyard to the battlefield, then shuffle your graveyard into your library. | The Mending of Dominaria | 1 |
-| III — Return all tapped creatures to their owners' hands. | Time of Ice | 1 |
-| III — Sacrifice a Mountain. If you do, this Saga deals 3 damage to each creature. | The First Eruption | 1 |
-| III — Target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | Triumph of Gerrard | 1 |
-| Look at the top three cards of your library. Put two of them into your hand and the other into your graveyard. Dark Bargain deals 2 damage to you. | Dark Bargain | 1 |
-| Multani gets +1/+1 for each land you control and each land card in your graveyard. | Multani, Yavimaya's Avatar | 1 |
-| Other Angels you control get +1/+1 and have lifelink. | Lyra Dawnbringer | 1 |
-| Prevent the next 3 damage that would be dealt to any target this turn by a source of your choice. You gain 3 life. | Healing Grace | 1 |
-| Put a +1/+1 counter on target creature you control if it's legendary. Then it fights target creature an opponent controls. (Each deals damage equal to its power | Ancient Animus | 1 |
-| −3: Put target nonland permanent into its owner's library third from the top. | Teferi, Hero of Dominaria | 1 |
-| Radiating Lightning deals 3 damage to target player and 1 damage to each creature that player controls. | Radiating Lightning | 1 |
-| Red instant and sorcery spells you control have lifelink. | Firesong and Sunspeaker | 1 |
-| +1: Reveal the top two cards of your library. An opponent chooses one of them. Put that card into your hand and exile the other with a silver counter on it. | Karn, Scion of Urza | 1 |
-| {1}, Sacrifice another creature: This creature gets +2/+2 until end of turn. If a Saproling was sacrificed this way, you gain 2 life. | Thallid Omnivore | 1 |
-| Sacrifice this creature: The chosen creature gains indestructible until end of turn. | Dauntless Bodyguard | 1 |
-| Search your library for two cards. Put one into your hand and the other into your graveyard. Then shuffle. | Final Parting | 1 |
-| Shanna can't be the target of abilities your opponents control. | Shanna, Sisay's Legacy | 1 |
-| {3}: Tap this creature. It gains indestructible until end of turn. | Drudge Sentinel | 1 |
-| Target creature gets +2/+1 until end of turn. If it's legendary, it also gains lifelink until end of turn. | Blessing of Belzenlok | 1 |
-| This creature can't be blocked if you've cast a historic spell this turn. | Relic Runner | 1 |
-| This creature gets -2/-0 as long as two or more creatures are blocking it. | Rampaging Cyclops | 1 |
-| This creature must be blocked if able. | Gaea's Protector | 1 |
-| Traxos enters tapped and doesn't untap during your untap step. | Traxos, Scourge of Kroog | 1 |
-| {T}: Until end of turn, target land you control becomes the basic land type of your choice in addition to its other types. | Navigator's Compass | 1 |
-| Until your next turn, all lands you control become 2/2 Elemental creatures with reach, indestructible, and haste. They're still lands. | Sylvan Awakening | 1 |
-| When Demonlord Belzenlok enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. If the card's mana  | Demonlord Belzenlok | 1 |
-| When enchanted creature dies, return that card to its owner's hand. | Demonic Vigor | 1 |
-| When Garna enters, return to your hand all creature cards in your graveyard that were put there from anywhere this turn. | Garna, the Bloodflame | 1 |
-| When Niambi enters, you may search your library and/or graveyard for a card named Teferi, Timebender, reveal it, and put it into your hand. If you search your l | Niambi, Faithful Healer | 1 |
-| When Slinn Voda enters, if it was kicked, return all creatures to their owners' hands except for Merfolk, Krakens, Leviathans, Octopuses, and Serpents. | Slinn Voda, the Rising Deep | 1 |
-| When this creature enters, tap target creature an opponent controls. It loses all abilities until end of turn. | Merfolk Trickster | 1 |
-| When this enchantment enters, choose four nonenchantment permanents you don't control and put an aim counter on each of them. | Haphazard Bombardment | 1 |
-| When Torgaar enters, up to one target player's life total becomes half their starting life total, rounded down. | Torgaar, Famine Incarnate | 1 |
-| Whenever Grunn attacks alone, double its power and toughness until end of turn. | Grunn, the Lonely King | 1 |
-| Whenever one or more creatures you control attack, add that much mana in any combination of {R} and/or {G}. Until end of turn, you don't lose this mana as steps | Grand Warlord Radha | 1 |
-| Whenever this creature attacks, flip two coins. If both coins come up heads, this creature gains double strike until end of turn. If both coins come up tails, t | Two-Headed Giant | 1 |
-| Whenever this creature blocks or becomes blocked by an equipped creature, destroy all Equipment attached to that creature at end of combat. | Corrosive Ooze | 1 |
-| Whenever Urgoros deals combat damage to a player, that player discards a card at random. If the player can't, you draw a card. | Urgoros, the Empty One | 1 |
-| Whenever you attack with three or more creatures, you may pay {2}{R}. If you do, return this card from your graveyard to the battlefield tapped and attacking. | Warcry Phoenix | 1 |
-| Whenever you cast a spell, if that spell was kicked, put a +1/+1 counter on Hallar, then Hallar deals damage equal to the number of +1/+1 counters on it to each | Hallar, the Firefletcher | 1 |
-| Whenever you lose life, for each 1 life you lost, exile a permanent you control or a card from your hand or graveyard. | Lich's Mastery | 1 |
-| You may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once. | Oath of Teferi | 1 |
-| You may cast historic spells as though they had flash. | Raff Capashen, Ship's Mage | 1 |
-| You may cast this card from your graveyard or from exile. | Squee, the Immortal | 1 |
-| You may pay {3}{U} and tap an untapped artifact you control rather than pay this spell's mana cost. | Zahid, Djinn of the Lamp | 1 |
-| You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast. | Jodah, Archmage Eternal | 1 |
-| {4}, {T}: You may put a historic permanent card from your hand onto the battlefield. | Thran Temporal Gateway | 1 |
-| You, planeswalkers you control, and other creatures you control have hexproof. | Shalai, Voice of Plenty | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| III | 7 | Chainer's Torment, Phyrexian Scriptures, The First Eruption, The Flame of Keld, The Mending of Dominaria | dom |
+| if ~ was kicked, it enters with three +N/+N counters on it. | 2 | Baloth Gorger, Untamed Kavu | dom |
+| if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Academy Drake, Stronghold Confessor | dom |
+| (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) exile all nonland permanents that aren't legendary. | 1 | Urza's Ruinous Blast | dom |
+| (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) look at the top N cards of your library. you may put any number of  | 1 | Kamahl's Druidic Vow | dom |
+| (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) put up to one target creature or planeswalker card from a graveyard | 1 | Yawgmoth's Vile Offering | dom |
+| (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) return all legendary permanent cards from your graveyard to the bat | 1 | Primevals' Glorious Rebirth | dom |
+| (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) target player takes an extra turn after ~. return up to one target  | 1 | Karn's Temporal Sundering | dom |
+| +N: reveal the top two cards of your library. an opponent chooses one of them. put that card into your hand and exile the other with a silver counter on it. | 1 | Karn, Scion of Urza | dom |
+| a deck can have any number of cards named ~. | 1 | Rat Colony | dom |
+| as long as there are two or more instant and/or sorcery cards in your graveyard, ~ gets +N/+N and has haste. | 1 | Ghitu Lavarunner | dom |
+| as long as you control a teferi planeswalker, ~ gets +N/+N. | 1 | Teferi's Sentinel | dom |
+| at the beginning of combat on your turn, create a token that"..."t legendary. that token gains haste. | 1 | Helm of the Host | dom |
+| at the beginning of combat on your turn, for each aura and equipment attached to valduk, create a N/N red elemental creature token with trample and haste. exile | 1 | Valduk, Keeper of the Flame | dom |
+| at the beginning of your upkeep, if ~ is exiled with an egg counter on it, remove an egg counter from it. then if ~ has no egg counters on it, return it to the  | 1 | Darigaaz Reincarnated | dom |
+| aura and equipment spells you cast cost {M} less to cast. | 1 | Danitha Capashen, Paragon | dom |
+| counter target noncreature spell. untap up to three lands. | 1 | Unwind | dom |
+| creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Baird, Steward of Argive | dom |
+| creatures you control with first strike have double strike. | 1 | Kwende, Pride of Femeref | dom |
+| destroy target land. up to two target creatures can't block ~. | 1 | Seismic Shift | dom |
+| during each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard. | 1 | Muldrotha, the Gravetide | dom |
+| during your turn, equipped creature has first strike. | 1 | Jousting Lance | dom |
+| enchanted creature gets +N/+N, has first strike, and is a knight in addition to its other types. | 1 | Dub | dom |
+| enchanted creature has base power and toughness N/N, has defender, loses all other abilities, and is a blue wall in addition to its other colors and types. | 1 | Deep Freeze | dom |
+| enchanted creature is legendary, gets +N/+N, and has flying, vigilance, and lifelink. | 1 | On Serra's Wings | dom |
+| enchanted permanent has hexproof. | 1 | Curator's Ward | dom |
+| enchanted permanent is legendary. | 1 | In Bolas's Clutches | dom |
+| equipped creature gets +N/+N for each land you control. | 1 | Blackblade Reforged | dom |
+| exile target creature. put two loyalty counters on a planeswalker you control. | 1 | Settle the Score | dom |
+| historic spells you cast cost {M} less to cast. | 1 | Jhoira's Familiar | dom |
+| i, ii — until your next turn, creatures you control gain "..." | 1 | Song of Freyalise | dom |
+| if a source would deal damage to equipped creature, prevent N of that damage. | 1 | Shield of the Realm | dom |
+| ii, iii — each player returns two land cards from their graveyard to the battlefield. | 1 | Fall of the Thran | dom |
+| kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
+| kicker {M} (you may pay an additional {M} as you cast ~.) untap target creature. it gets +N/+N until end of turn. if ~ was kicked, that creature gets +N/+N unti | 1 | Gift of Growth | dom |
+| look at the top three cards of your library. put two of them into your hand and the other into your graveyard. ~ deals N damage to you. | 1 | Dark Bargain | dom |
+| multani gets +N/+N for each land you control and each land card in your graveyard. | 1 | Multani, Yavimaya's Avatar | dom |
+| other angels you control get +N/+N and have lifelink. | 1 | Lyra Dawnbringer | dom |
+| prevent the next N damage that would be dealt to any target ~ by a source of your choice. you gain N life. | 1 | Healing Grace | dom |
+| put a +N/+N counter on target creature you control if it's legendary. then it fights target creature an opponent controls. (each deals damage equal to its power | 1 | Ancient Animus | dom |
+| sacrifice ~: the chosen creature gains indestructible until end of turn. | 1 | Dauntless Bodyguard | dom |
+| search your library for two cards. put one into your hand and the other into your graveyard. then shuffle. | 1 | Final Parting | dom |
+| shanna can't be the target of abilities your opponents control. | 1 | Shanna, Sisay's Legacy | dom |
+| target creature gets +N/+N until end of turn. if it's legendary, it also gains lifelink until end of turn. | 1 | Blessing of Belzenlok | dom |
+| traxos enters tapped and doesn't untap during your untap step. | 1 | Traxos, Scourge of Kroog | dom |
+| until your next turn, all lands you control become N/N elemental creatures with reach, indestructible, and haste. they're still lands. | 1 | Sylvan Awakening | dom |
+| when enchanted creature dies, return that card to its owner's hand. | 1 | Demonic Vigor | dom |
+| when garna enters, return to your hand all creature cards in your graveyard that were put there from anywhere ~. | 1 | Garna, the Bloodflame | dom |
+| when niambi enters, you may search your library and/or graveyard for a card named teferi, timebender, reveal it, and put it into your hand. if you search your l | 1 | Niambi, Faithful Healer | dom |
+| when slinn voda enters, if it was kicked, return all creatures to their owners' hands except for merfolk, krakens, leviathans, octopuses, and serpents. | 1 | Slinn Voda, the Rising Deep | dom |
+| when torgaar enters, up to one target player's life total becomes half their starting life total, rounded down. | 1 | Torgaar, Famine Incarnate | dom |
+| when ~ enters, choose four nonenchantment permanents you don't control and put an aim counter on each of them. | 1 | Haphazard Bombardment | dom |
+| when ~ enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. if the card's mana value is N or grea | 1 | Demonlord Belzenlok | dom |
+| when ~ enters, tap target creature an opponent controls. it loses all abilities until end of turn. | 1 | Merfolk Trickster | dom |
+| whenever grunn attacks alone, double its power and toughness until end of turn. | 1 | Grunn, the Lonely King | dom |
+| whenever one or more creatures you control attack, add that much mana in any combination of {M} and/or {M}. until end of turn, you don't lose ~ as steps and pha | 1 | Grand Warlord Radha | dom |
+| whenever urgoros deals combat damage to a player, that player discards a card at random. if the player can't, you draw a card. | 1 | Urgoros, the Empty One | dom |
+| whenever you attack with three or more creatures, you may pay {M}{M}. if you do, return ~ from your graveyard to the battlefield tapped and attacking. | 1 | Warcry Phoenix | dom |
+| whenever you cast a spell, if that spell was kicked, put a +N/+N counter on hallar, then hallar deals damage equal to the number of +N/+N counters on it to each | 1 | Hallar, the Firefletcher | dom |
+| whenever you lose life, for each N life you lost, exile a permanent you control or a card from your hand or graveyard. | 1 | Lich's Mastery | dom |
+| whenever ~ attacks, flip two coins. if both coins come up heads, ~ gains double strike until end of turn. if both coins come up tails, ~ gains menace until end  | 1 | Two-Headed Giant | dom |
+| whenever ~ blocks or becomes blocked by an equipped creature, destroy all equipment attached to that creature at end of combat. | 1 | Corrosive Ooze | dom |
+| you may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once. | 1 | Oath of Teferi | dom |
+| you may cast historic spells as though they had flash. | 1 | Raff Capashen, Ship's Mage | dom |
+| you may cast ~ from your graveyard or from exile. | 1 | Squee, the Immortal | dom |
+| you may pay {M}{M} and tap an untapped artifact you control rather than pay ~ mana cost. | 1 | Zahid, Djinn of the Lamp | dom |
+| you may pay {M}{M}{M}{M}{M} rather than pay the mana cost for spells you cast. | 1 | Jodah, Archmage Eternal | dom |
+| you, planeswalkers you control, and other creatures you control have hexproof. | 1 | Shalai, Voice of Plenty | dom |
+| {M}, sacrifice another creature: ~ gets +N/+N until end of turn. if a saproling was sacrificed ~, you gain N life. | 1 | Thallid Omnivore | dom |
+| {M}, {M}: draw a card. then discard a card unless you exile a historic card from your graveyard. | 1 | Urza's Tome | dom |
+| {M}, {M}: exile the top card of your library. | 1 | Rona, Disciple of Gix | dom |
+| {M}, {M}: you may put a historic permanent card from your hand onto the battlefield. | 1 | Thran Temporal Gateway | dom |
+| {M}: exchange your life total with evra's power. | 1 | Evra, Halcyon Witness | dom |
+| {M}: exile the top card of your library. | 1 | Precognition Field | dom |
+| {M}: tap ~. it gains indestructible until end of turn. | 1 | Drudge Sentinel | dom |
+| {M}: until end of turn, target land you control becomes the basic land type of your choice in addition to its other types. | 1 | Navigator's Compass | dom |
+| ~ can"..."ve cast a historic spell ~. | 1 | Relic Runner | dom |
+| ~ deals N damage to target player and N damage to each creature that player controls. | 1 | Radiating Lightning | dom |
+| ~ deals N damage to target player or planeswalker. search your library and/or graveyard for a card named chandra, bold pyromancer, reveal it, and put it into yo | 1 | Chandra's Outburst | dom |
+| ~ gets +N/+N for each aura and equipment attached to it. | 1 | Champion of the Flame | dom |
+| ~ gets +N/+N for each basic island you control. | 1 | Tempest Djinn | dom |
+| ~ gets +N/+N for each legendary creature you control. | 1 | Benalish Honor Guard | dom |
+| ~ gets -N/-N as long as two or more creatures are blocking it. | 1 | Rampaging Cyclops | dom |
+| ~ must be blocked if able. | 1 | Gaea's Protector | dom |
+| −N: put target nonland permanent into its owner's library third from the top. | 1 | Teferi, Hero of Dominaria | dom |
 
 ## Notes
 

@@ -38,9 +38,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Whenever one or more creatures you control attack, you gain 1 life for each attacking creature. | Ancestor Dragon | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| whenever one or more creatures you control attack, you gain N life for each attacking creature. | 1 | Ancestor Dragon | gs1 |
 
 ## Notes
 

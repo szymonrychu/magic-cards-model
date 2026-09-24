@@ -57,15 +57,15 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of your upkeep, you may sacrifice this land. If you do, return each card exiled with this land to the battlefield under its owner's control. | Safe Haven | 1 |
-| Inferno deals 6 damage to each creature and each player. | Inferno | 1 |
-| Prevent all damage that would be dealt to this creature by creatures. | Uncle Istvan | 1 |
-| {3}: Target creature gains islandwalk until end of turn. When this artifact leaves the battlefield this turn, destroy that creature. A creature destroyed this w | War Barge | 1 |
-| This creature enters tapped and doesn't untap during your untap step. | Leviathan | 1 |
-| Whenever this creature blocks or becomes blocked, you may pay {1}{G}. If you do, this creature gains first strike until end of turn. Otherwise, each creature bl | Spitting Slug | 1 |
-| You and target opponent each flip a coin. Mana Clash deals 1 damage to each player whose coin comes up tails. Repeat this process until both players' coins come | Mana Clash | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| at the beginning of your upkeep, you may sacrifice ~. if you do, return each card exiled with ~ to the battlefield under its owner's control. | 1 | Safe Haven | drk |
+| prevent all damage that would be dealt to ~ by creatures. | 1 | Uncle Istvan | drk |
+| whenever ~ blocks or becomes blocked, you may pay {M}{M}. if you do, ~ gains first strike until end of turn. otherwise, each creature blocking or blocked by ~ g | 1 | Spitting Slug | drk |
+| you and target opponent each flip a coin. ~ deals N damage to each player whose coin comes up tails. repeat ~ until both players' coins come up heads on the sam | 1 | Mana Clash | drk |
+| {M}: target creature gains islandwalk until end of turn. when ~ leaves the battlefield ~, destroy that creature. a creature destroyed ~ can't be regenerated. | 1 | War Barge | drk |
+| ~ deals N damage to each creature and each player. | 1 | Inferno | drk |
+| ~ enters tapped and doesn't untap during your untap step. | 1 | Leviathan | drk |
 
 ## Notes
 

@@ -45,11 +45,11 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {T}: For as long as this creature remains tapped, target tapped creature doesn't untap during its controller's untap step, and at the beginning of each of your  | Giant Oyster | 1 |
-| {1}{B}: Put a -1/-1 counter on enchanted creature. | Torture | 1 |
-| When this creature leaves the battlefield, exile all Serf tokens. | Sengir Autocrat | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when ~ leaves the battlefield, exile all serf tokens. | 1 | Sengir Autocrat | hml |
+| {M}: for as long as ~ remains tapped, target tapped creature doesn"..."s untap step, and at the beginning of each of your draw steps, put a -N/-N counter on tha | 1 | Giant Oyster | hml |
+| {M}{M}: put a -N/-N counter on enchanted creature. | 1 | Torture | hml |
 
 ## Notes
 

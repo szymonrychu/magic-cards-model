@@ -38,9 +38,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Whenever Lathril deals combat damage to a player, create that many 1/1 green Elf Warrior creature tokens. | Lathril, Blade of the Elves | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| whenever lathril deals combat damage to a player, create that many N/N green elf warrior creature tokens. | 1 | Lathril, Blade of the Elves | khc |
 
 ## Notes
 

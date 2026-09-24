@@ -309,115 +309,129 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Backup | Archpriest of Shadows, Bola Slinger, Boon-Bringer Valkyrie, Chomping Kavu, Consuming Aetherborn, Cragsmasher Yeti, Enduring Bondwarden, Fearless Skald, Gloomfang Mauler, Golden-Scale Aeronaut, Hangar Scrounger, Redcap Heelslasher, Saiba Cryptomancer, Scorn-Blade Berserker, Serpent-Blade Assailant, Sigiled Sentinel, Streetwise Negotiator | 17 |
-| Incubate | Assimilate Essence, Glissa, Herald of Predation, Searing Barb, Sunder the Gateway | 4 |
-| When this creature dies, incubate X, where X is its power. | Bloated Processor, Furnace Gremlin, Infected Defector, Injector Crocodile | 4 |
-| When this creature enters, incubate 3 X times. | Converter Beast, Elvish Vatkeeper, Norn's Inquisitor, Progenitor Exarch | 4 |
-| When this enchantment enters, incubate 4. | Corruption of Towashi, Gift of Compleation, Phyrexian Awakening, Sculpted Perfection | 4 |
-| Whenever this creature attacks, you may pay {3}{B}. When you do, return target creature card from your graveyard to the battlefield. It's a Phyrexian in additio | Seraph of New Capenna // Seraph of New Phyrexia, Terror of Towashi, Tidal Terror | 3 |
-| Whenever this creature deals combat damage to a player or battle, look at that many cards from the top of your library. You may reveal a creature or land card f | Attentive Skywarden, Doomskar Warrior, Rampaging Raptor | 3 |
-| Whenever you cast a spell that's exactly two colors, look at the top six cards of your library. You may reveal a card that's exactly two colors from among them  | Invasion of Ravnica // Guildpact Paragon, Joyful Stormsculptor, Tiller of Flesh | 3 |
-| As long as this creature's power is 5 or greater, it can attack as though it didn't have defender. | Invasion of Zendikar // Awakened Skyclave, Karsus Depthguard | 2 |
-| At the beginning of your first main phase, look at the top card of your library. You may reveal that card if it has three or more colored mana symbols in its ma | Invasion of Azgol // Ashen Reaper, Omnath, Locus of All | 2 |
-| Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Tap up to t | Complete the Circuit, Wicked Slumber | 2 |
-| {T}, Sacrifice another creature or artifact: Ayara deals X damage to target opponent or battle and you gain X life, where X is the sacrificed permanent's mana v | Ayara, Widow of the Realm // Ayara, Furnace Queen, Compleated Huntmaster | 2 |
-| When this creature enters, choose one — • Target opponent loses 2 life and you gain 2 life. • Choose target battle. If an opponent protects it, remove three def | Etched Host Doombringer, Seedpod Caretaker | 2 |
-| When this creature enters, look at the top six cards of your library. You may reveal up to two creature cards with mana value X or less from among them, where X | Knight-Errant of Eos, Overgrown Pest | 2 |
-| When this Siege enters, exile cards from the top of your library until you exile two nonland cards with mana value 4 or less. You may cast one of those two card | Invasion of Alara // Awaken the Maelstrom, Invasion of Kaldheim // Pyre of the World Tree | 2 |
-| When this Siege enters, search your library, graveyard, and/or outside the game for an instant or sorcery card you own, reveal it, and put it into your hand. If | Invasion of Arcavios // Invocation of the Founders, Invasion of Ikoria // Zilortha, Apex of Ikoria | 2 |
-| Whenever a creature you control becomes the target of a backup ability, copy that ability. You may choose new targets for the copy. This ability triggers only o | Mirror-Shield Hoplite, Tribute to the World Tree | 2 |
-| Aetherwing's power is equal to the number of artifacts you control. | Invasion of Kaladesh // Aetherwing, Golden-Scale Flagship | 1 |
-| As long as an opponent has eight or more cards in their graveyard, this creature can attack as though it didn't have defender and it can't be blocked. | Expedition Lookout | 1 |
-| As long as you control a transformed permanent, this creature has "When this creature dies, draw a card." | Oculus Whelp | 1 |
-| As long as you have one or fewer cards in hand, Djeru and Hazoret has vigilance and haste. | Djeru and Hazoret | 1 |
-| At the beginning of combat on your turn, another target creature gets +2/+2 and loses all abilities until end of turn. | Invasion of Muraganda // Primordial Plasm | 1 |
-| Choose one — • Into the Fire deals 2 damage to each creature, planeswalker, and battle. • Put any number of cards from your hand on the bottom of your library,  | Into the Fire | 1 |
-| {T}: Choose target battle. If an opponent protects it, remove a defense counter from it. Otherwise, put a defense counter on it. Activate only as a sorcery. | Portent Tracker | 1 |
-| Create two 3/2 red and white Warrior creature tokens with "Whenever this token and at least one other creature token attack, put a +1/+1 counter on this token." | Invasion of Kylem // Valor's Reach Tag Team | 1 |
-| Creatures you control have vigilance and "{T}: Add one mana of any color. Spend this mana only to cast a creature spell." | Inga and Esika | 1 |
-| {2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card. | Kogla and Yidaro | 1 |
-| Each player mills ten cards. For each player, choose a creature or planeswalker card in that player's graveyard. Put those cards onto the battlefield under your | Breach the Multiverse | 1 |
-| Each player mills three cards. Then you return up to two creature cards from your graveyard to your hand. (To mill three cards, a player puts the top three card | Unseal the Necropolis | 1 |
-| Enchanted creature gets -X/-0, where X is the number of cards in its controller's graveyard. | Disturbing Conversion | 1 |
-| Enchanted creature has base power and toughness 0/2, has defender, and loses all other abilities. | Stasis Field | 1 |
-| Enchanted permanent can't attack or block, and its activated abilities can't be activated unless they're mana abilities. | Realmbreaker's Grasp | 1 |
-| Ephara has lifelink and indestructible as long as you control at least three other enchantments. | Invasion of Theros // Ephara, Ever-Sheltering | 1 |
-| Exile all creatures. Incubate X, where X is the number of creatures exiled this way. (Create an Incubator token with X +1/+1 counters on it and "{2}: Transform  | Sunfall | 1 |
-| {2}{B}: Exile target card from a graveyard. If it was a creature card, create a 2/2 black Zombie creature token. | Invasion of Innistrad // Deluge of the Dead | 1 |
-| Exile target creature. Incubate 3. (Create an Incubator token with three +1/+1 counters on it and "{2}: Transform this token." It transforms into a 0/0 Phyrexia | Merciless Repurposing | 1 |
-| +1: Exile the top five cards of your library. Until the end of your next turn, you may cast an instant or sorcery spell from among those exiled cards. | Chandra, Hope's Beacon | 1 |
-| {B}, Exile this card from your graveyard: Incubate 2. Activate only as a sorcery. | Ichor Drinker | 1 |
-| Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals combat damage to a p | Furnace Reins | 1 |
-| I — Draw cards equal to the number of cards in your hand. You have no maximum hand size for as long as you control this Saga. | Jin-Gitaxias // The Great Synthesis | 1 |
-| If a noncreature source you control would deal damage to a creature, battle, or opponent, it deals that much damage plus 2 instead. | Invasion of Regatha // Disciples of the Inferno | 1 |
-| III — Put all creature cards from all graveyards onto the battlefield under your control. Exile this Saga, then return it to the battlefield . | Sheoldred // The True Scriptures | 1 |
-| Incubate 3. (Create an Incubator token with three +1/+1 counters on it and "{2}: Transform this token." It transforms into a 0/0 Phyrexian artifact creature.) D | Eyes of Gitaxias | 1 |
-| Incubate X twice, where X is the number of lands you control. (To incubate X, create an Incubator token with X +1/+1 counters on it and "{2}: Transform this tok | Glistening Dawn | 1 |
-| Look at the top three cards of your library. Put one of those cards into your hand, one into your graveyard, and one on the bottom of your library. | Moment of Truth | 1 |
-| Nahiri's Warcrafting deals 5 damage to target creature, planeswalker, or battle. Look at the top X cards of your library, where X is the excess damage dealt thi | Nahiri's Warcrafting | 1 |
-| Non-Phyrexian creatures enter tapped. | Phyrexian Censor | 1 |
-| Noncreature spells you cast have convoke. | Invasion of Segovia // Caetus, Sea Tyrant of Segovia | 1 |
-| {1}{R}{W}, {T}, Sacrifice a Spirit: Choose target card exiled with Quintorius. You may cast that card this turn without paying its mana cost. If that spell woul | Quintorius, Loremaster | 1 |
-| {T}, Sacrifice another creature: Draw a card. You may put a land card from your hand onto the battlefield tapped. If you control eight or more lands, repeat thi | Zimone and Dina | 1 |
-| {1}, Sacrifice this creature: It deals damage equal to its power to any target. | Voldaren Thrillseeker | 1 |
-| Target creature or land you control becomes a 4/4 Elemental creature with haste in addition to its other types until end of turn. It must be blocked this turn i | Vengeant Earth | 1 |
-| Target creature or planeswalker you control gains protection from colorless or from the color of your choice until end of turn. If it's a creature, put a +1/+1  | Angelic Intervention | 1 |
-| Target creature you control deals damage equal to its power to another target creature, planeswalker, or battle. | Cosmic Hunger | 1 |
-| {2}, {T}: Target opponent mills three cards. Put a land card from their graveyard onto the battlefield tapped under your control. It gains "If this land would l | Realmbreaker, the Invasion Tree | 1 |
-| Target opponent reveals their hand. You may choose a creature or battle card from it. If you do, that player discards that card. If you don't, incubate 3. (Crea | Traumatic Revelation | 1 |
-| Target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. Put two +1/+1 counters on up to one target artif | Fertilid's Favor | 1 |
-| This creature enters with two +1/+1 counters on it for each creature that convoked it. | Ancient Imperiosaur | 1 |
-| This creature gets +3/+0 as long as an opponent has eight or more cards in their graveyard. | Tenured Oilcaster | 1 |
-| This creature gets +1/+0 for each transformed permanent you control. | Mutagen Connoisseur | 1 |
-| This creature has first strike as long as another Knight entered the battlefield under your control this turn. | Swordsworn Cavalier | 1 |
-| This creature has indestructible as long as it attacked a battle this turn. | War Historian | 1 |
-| This spell can't be countered. Lithomantic Barrage deals 1 damage to target creature or planeswalker. It deals 5 damage instead if that target is white and/or b | Lithomantic Barrage | 1 |
-| Triple | City on Fire | 1 |
-| +1: Up to one target land you control becomes a 3/3 Elemental creature with vigilance, hexproof, and haste until your next turn. It's still a land. | Wrenn and Realmbreaker | 1 |
-| Up to two target creatures you control each get +1/+0 until end of turn. They each deal damage equal to their power to another target creature, planeswalker, or | Tandem Takedown | 1 |
-| Vertex Paladin's power and toughness are each equal to the number of creatures you control. | Invasion of Xerex // Vertex Paladin | 1 |
-| Volcanic Spite deals 3 damage to target creature, planeswalker, or battle. You may put a card from your hand on the bottom of your library. If you do, draw a ca | Volcanic Spite | 1 |
-| When Etali enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonl | Etali, Primal Conqueror // Etali, Primal Sickness | 1 |
-| When Hidetsugu and Kairi dies, exile the top card of your library. Target opponent loses life equal to its mana value. If it's an instant or sorcery card, you m | Hidetsugu and Kairi | 1 |
-| When this Aura enters, incubate 2. | Blighted Burgeoning | 1 |
-| When this creature dies, each player mills two cards. Then you may exile this card. When you do, put target creature or battle card from your graveyard on top o | Flitting Guerrilla | 1 |
-| When this creature enters, each player mills two cards. Then you may put an instant, sorcery, or battle card from your graveyard on top of your library. | Halo-Charged Skaab | 1 |
-| When this creature enters or dies, choose one — • Draw a card, then discard a card. • Shuffle up to four target cards with mana value 3 or greater from your gra | Oracle of Tragedy | 1 |
-| When this creature enters, put a flying counter on each creature that convoked it. | Zephyr Singer | 1 |
-| When this creature enters, search your library for a card, exile it face down, then shuffle. For as long as that card remains exiled, you may play it. | Hoarding Broodlord | 1 |
-| When this creature enters, you may pay {X}. When you do, you may cast target instant or sorcery card with mana value X from a graveyard without paying its mana  | Halo Forager | 1 |
-| When this creature transforms into Malady Invoker, target creature an opponent controls gets -0/-X until end of turn, where X is this creature's power. | Herbology Instructor // Malady Invoker | 1 |
-| When this enchantment enters, you gain 5 life and incubate 5. | Tangled Skyline | 1 |
-| When this Siege enters, create X 2/2 white and blue Knight creature tokens with vigilance. | Invasion of New Phyrexia // Teferi Akosa of Zhalfir | 1 |
-| When this Siege enters, it deals 3 damage to any other target and you gain 3 life. | Invasion of Ulgrotha // Grandmother Ravi Sengir | 1 |
-| When this Siege enters, look at target opponent's hand. You may exile a nonland card from it. For as long as that card remains exiled, its owner may play it. A  | Invasion of Gobakhan // Lightshield Array | 1 |
-| When this Siege enters, reveal any number of Dragon cards from your hand. When you do, this Siege deals X plus 2 damage to any other target, where X is the numb | Invasion of Tarkir // Defiant Thundermaw | 1 |
-| When this Siege enters, scry 3, then reveal the top card of your library. If it's a land or double-faced card, draw a card. | Invasion of Pyrulea // Gargantuan Slabhorn | 1 |
-| When this Vehicle enters, incubate 2. | Marauding Dreadship | 1 |
-| Whenever a source an opponent controls deals damage to you or a permanent you control, that source's controller loses 2 life unless they pay {1}. | Elesh Norn // The Argent Etchings | 1 |
-| Whenever a source deals damage to Rona, that source's controller exiles a card from their hand at random. If it's a land card, you may put it onto the battlefie | Rona, Herald of Invasion // Rona, Tolarian Obliterator | 1 |
-| Whenever equipped creature attacks, put a +1/+1 counter on that creature and each other creature you control that shares a creature type with it. | Invasion of New Capenna // Holy Frazzle-Cannon | 1 |
-| Whenever equipped creature deals combat damage to a player, surveil 2. Then you may cast an instant or sorcery spell with mana value 2 or less from your graveya | Sword of Once and Future | 1 |
-| Whenever Kroxa and Kunoros enters or attacks, you may exile five cards from your graveyard. When you do, return target creature card from your graveyard to the  | Kroxa and Kunoros | 1 |
-| Whenever Marchesa attacks, remove all counters from up to one target permanent. | Invasion of Fiora // Marchesa, Resolute Monarch | 1 |
-| Whenever one or more Dragons you control deal combat damage to a player or battle, look at the top three cards of your library. Put one of them into your hand a | Zurgo and Ojutai | 1 |
-| Whenever Rankle and Torbran deals combat damage to a player or battle, choose any number — • Each player creates a Treasure token. • Each player sacrifices a cr | Rankle and Torbran | 1 |
-| Whenever Thalia and The Gitrog Monster attacks, sacrifice a creature or land, then draw a card. | Thalia and The Gitrog Monster | 1 |
-| Whenever this creature attacks a battle, double its power until end of turn. | War-Trained Slasher | 1 |
-| Whenever this creature attacks, create a tapped and attacking token that's a copy of it. Put a +1/+1 counter on that token for each +1/+1 counter on this creatu | Sun-Blessed Guardian // Furnace-Blessed Conqueror | 1 |
-| Whenever this creature attacks, up to one other target creature has base power and toughness 5/5 until end of turn. | Gnottvold Hermit // Chrome Host Hulk | 1 |
-| Whenever this creature becomes blocked by a creature, the blocking creature gets -1/-1 until end of turn. | Order of the Mirror // Order of the Alabaster Host | 1 |
-| Whenever this creature or another Phyrexian you control enters, incubate 2. | Essence of Orthodoxy | 1 |
-| Whenever you attack, choose one — • Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other atta | Ghalta and Mavren | 1 |
-| Whenever you cast a noncreature spell, incubate X, where X is that spell's mana value. | Chrome Host Seedshark | 1 |
-| Whenever you cast your first instant or sorcery spell each turn, you may cast a spell with lesser mana value that shares a card type with it from your hand with | Baral and Kari Zev | 1 |
-| Winnowing Forces's power and toughness are each equal to the number of lands you control. | Invasion of Lorwyn // Winnowing Forces | 1 |
-| You and permanents you control gain hexproof until end of turn. Prevent all damage that black and/or red sources would deal to creatures you control this turn. | Surge of Salvation | 1 |
-| You may cast spells as though they had flash. | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | 1 |
-| You may have this creature enter as a copy of any creature card in a graveyard, except it's a 4/4 black Zombie in addition to its other colors and types. | Invasion of Amonkhet // Lazotep Convert | 1 |
-| You may look at the top card of your library any time. | Errant and Giada | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| backup | 17 | Archpriest of Shadows, Bola Slinger, Boon-Bringer Valkyrie, Chomping Kavu, Consuming Aetherborn | mom |
+| when ~ enters, incubate N. | 9 | Blighted Burgeoning, Converter Beast, Corruption of Towashi, Elvish Vatkeeper, Gift of Compleation | mom |
+| incubate | 4 | Assimilate Essence, Glissa, Herald of Predation, Searing Barb, Sunder the Gateway | mom |
+| when ~ dies, incubate N, where N is its power. | 2 | Bloated Processor, Furnace Gremlin | mom |
+| when ~ dies, incubate N. | 2 | Infected Defector, Injector Crocodile | mom |
+| Choose one | 1 | Into the Fire | mom |
+| I | 1 | Jin-Gitaxias // The Great Synthesis | mom |
+| III | 1 | Sheoldred // The True Scriptures | mom |
+| +N: exile the top five cards of your library. until the end of your next turn, you may cast an instant or sorcery spell from among those exiled cards. | 1 | Chandra, Hope's Beacon | mom |
+| +N: up to one target land you control becomes a N/N elemental creature with vigilance, hexproof, and haste until your next turn. it's still a land. | 1 | Wrenn and Realmbreaker | mom |
+| aetherwing's power is equal to the number of artifacts you control. | 1 | Invasion of Kaladesh // Aetherwing, Golden-Scale Flagship | mom |
+| as long as an opponent has eight or more cards in their graveyard, ~ can attack as though it didn"..."t be blocked. | 1 | Expedition Lookout | mom |
+| as long as you control a transformed permanent, ~ has "..." | 1 | Oculus Whelp | mom |
+| as long as you have one or fewer cards in hand, ~ has vigilance and haste. | 1 | Djeru and Hazoret | mom |
+| as long as ~ is on the battlefield, it's a land in addition to its other types. | 1 | Invasion of Zendikar // Awakened Skyclave | mom |
+| as long as ~ power is N or greater, it can attack as though it didn't have defender. | 1 | Karsus Depthguard | mom |
+| at the beginning of combat on your turn, another target creature gets +N/+N and loses all abilities until end of turn. | 1 | Invasion of Muraganda // Primordial Plasm | mom |
+| at the beginning of your end step, put a +N/+N counter on ~ if a permanent was put into a graveyard from the battlefield ~. | 1 | Invasion of Azgol // Ashen Reaper | mom |
+| at the beginning of your first main phase, look at the top card of your library. you may reveal that card if it has three or more colored mana symbols in its ma | 1 | Omnath, Locus of All | mom |
+| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) tap up to two target creature | 1 | Wicked Slumber | mom |
+| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) you may cast sorcery spells ~ | 1 | Complete the Circuit | mom |
+| create two N/N red and white warrior creature tokens with "..." | 1 | Invasion of Kylem // Valor's Reach Tag Team | mom |
+| creatures you control have vigilance and "..." | 1 | Inga and Esika | mom |
+| each player mills ten cards. for each player, choose a creature or planeswalker card in that player's graveyard. put those cards onto the battlefield under your | 1 | Breach the Multiverse | mom |
+| each player mills three cards. then you return up to two creature cards from your graveyard to your hand. (to mill three cards, a player puts the top three card | 1 | Unseal the Necropolis | mom |
+| enchanted creature gets -N/-N, where N is the number of cards in its controller's graveyard. | 1 | Disturbing Conversion | mom |
+| enchanted creature has base power and toughness N/N, has defender, and loses all other abilities. | 1 | Stasis Field | mom |
+| enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Realmbreaker's Grasp | mom |
+| ephara has lifelink and indestructible as long as you control at least three other enchantments. | 1 | Invasion of Theros // Ephara, Ever-Sheltering | mom |
+| exile all creatures. incubate N, where N is the number of creatures exiled ~. (create an incubator token with N +N/+N counters on it and "..." it transforms int | 1 | Sunfall | mom |
+| exile target creature. incubate N. (create an incubator token with three +N/+N counters on it and "..." it transforms into a N/N phyrexian artifact creature.) | 1 | Merciless Repurposing | mom |
+| gain control of target creature until end of turn. untap that creature. until end of turn, it gains haste and "..." (it's an artifact with "...") | 1 | Furnace Reins | mom |
+| if a noncreature source you control would deal damage to a creature, battle, or opponent, it deals that much damage plus N instead. | 1 | Invasion of Regatha // Disciples of the Inferno | mom |
+| incubate N twice, where N is the number of lands you control. (to incubate N, create an incubator token with N +N/+N counters on it and "..." it transforms into | 1 | Glistening Dawn | mom |
+| incubate N. (create an incubator token with three +N/+N counters on it and "..." it transforms into a N/N phyrexian artifact creature.) draw a card. | 1 | Eyes of Gitaxias | mom |
+| look at the top three cards of your library. put one of those cards into your hand, one into your graveyard, and one on the bottom of your library. | 1 | Moment of Truth | mom |
+| non-phyrexian creatures enter tapped. | 1 | Phyrexian Censor | mom |
+| noncreature spells you cast have convoke. | 1 | Invasion of Segovia // Caetus, Sea Tyrant of Segovia | mom |
+| target creature or land you control becomes a N/N elemental creature with haste in addition to its other types until end of turn. it must be blocked ~ if able. | 1 | Vengeant Earth | mom |
+| target creature or planeswalker you control gains protection from colorless or from the color of your choice until end of turn. if it"..."t be blocked, targeted | 1 | Angelic Intervention | mom |
+| target creature you control deals damage equal to its power to another target creature, planeswalker, or battle. | 1 | Cosmic Hunger | mom |
+| target opponent reveals their hand. you may choose a creature or battle card from it. if you do, that player discards that card. if you don't, incubate N. (crea | 1 | Traumatic Revelation | mom |
+| target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. put two +N/+N counters on up to one target artif | 1 | Fertilid's Favor | mom |
+| triple | 1 | City on Fire | mom |
+| up to two target creatures you control each get +N/+N until end of turn. they each deal damage equal to their power to another target creature, planeswalker, or | 1 | Tandem Takedown | mom |
+| vertex paladin's power and toughness are each equal to the number of creatures you control. | 1 | Invasion of Xerex // Vertex Paladin | mom |
+| when etali enters, each player exiles cards from the top of their library until they exile a nonland card. you may cast any number of spells from among the nonl | 1 | Etali, Primal Conqueror // Etali, Primal Sickness | mom |
+| when ~ dies, each player mills two cards. then you may exile ~. when you do, put target creature or battle card from your graveyard on top of your library. | 1 | Flitting Guerrilla | mom |
+| when ~ dies, exile the top card of your library. target opponent loses life equal to its mana value. if it's an instant or sorcery card, you may cast it without | 1 | Hidetsugu and Kairi | mom |
+| when ~ enters or dies, choose one — • draw a card, then discard a card. • shuffle up to four target cards with mana value N or greater from your graveyard into  | 1 | Oracle of Tragedy | mom |
+| when ~ enters, choose one — • put a +N/+N counter on target artifact or creature you control. • transform target incubator token you control. | 1 | Seedpod Caretaker | mom |
+| when ~ enters, choose one — • target opponent loses N life and you gain N life. • choose target battle. if an opponent protects it, remove three defense counter | 1 | Etched Host Doombringer | mom |
+| when ~ enters, create N N/N white and blue knight creature tokens with vigilance. | 1 | Invasion of New Phyrexia // Teferi Akosa of Zhalfir | mom |
+| when ~ enters, each player mills two cards. then you may put an instant, sorcery, or battle card from your graveyard on top of your library. | 1 | Halo-Charged Skaab | mom |
+| when ~ enters, exile all cards from your hand, then draw that many cards. until the end of your next turn, you may play cards exiled ~. | 1 | Invasion of Kaldheim // Pyre of the World Tree | mom |
+| when ~ enters, exile cards from the top of your library until you exile two nonland cards with mana value N or less. you may cast one of those two cards without | 1 | Invasion of Alara // Awaken the Maelstrom | mom |
+| when ~ enters, incubate N N times. | 1 | Progenitor Exarch | mom |
+| when ~ enters, it deals N damage to any other target and you gain N life. | 1 | Invasion of Ulgrotha // Grandmother Ravi Sengir | mom |
+| when ~ enters, look at target opponent's hand. you may exile a nonland card from it. for as long as that card remains exiled, its owner may play it. a spell cas | 1 | Invasion of Gobakhan // Lightshield Array | mom |
+| when ~ enters, look at the top five cards of your library. you may reveal a land or double-faced card from among them and put that card into your hand. put the  | 1 | Overgrown Pest | mom |
+| when ~ enters, look at the top six cards of your library. you may reveal up to two creature cards with mana value N or less from among them, where N is the numb | 1 | Knight-Errant of Eos | mom |
+| when ~ enters, put a flying counter on each creature that convoked it. | 1 | Zephyr Singer | mom |
+| when ~ enters, reveal any number of dragon cards from your hand. when you do, ~ deals N plus N damage to any other target, where N is the number of cards reveal | 1 | Invasion of Tarkir // Defiant Thundermaw | mom |
+| when ~ enters, scry N, then reveal the top card of your library. if it's a land or double-faced card, draw a card. | 1 | Invasion of Pyrulea // Gargantuan Slabhorn | mom |
+| when ~ enters, search your library and/or graveyard for a non-human creature card with mana value N or less and put it onto the battlefield. if you search your  | 1 | Invasion of Ikoria // Zilortha, Apex of Ikoria | mom |
+| when ~ enters, search your library for a card, exile it face down, then shuffle. for as long as that card remains exiled, you may play it. | 1 | Hoarding Broodlord | mom |
+| when ~ enters, search your library, graveyard, and/or outside the game for an instant or sorcery card you own, reveal it, and put it into your hand. if you sear | 1 | Invasion of Arcavios // Invocation of the Founders | mom |
+| when ~ enters, you gain N life and incubate N. | 1 | Tangled Skyline | mom |
+| when ~ enters, you may pay {M}. when you do, you may cast target instant or sorcery card with mana value N from a graveyard without paying its mana cost. if tha | 1 | Halo Forager | mom |
+| when ~ transforms into malady invoker, target creature an opponent controls gets -N/-N until end of turn, where N is ~ power. | 1 | Herbology Instructor // Malady Invoker | mom |
+| whenever a creature you control becomes the target of a backup ability, copy that ability. you may choose new targets for the copy. ~ triggers only once each tu | 1 | Mirror-Shield Hoplite | mom |
+| whenever a creature you control enters, draw a card if its power is N or greater. otherwise, put two +N/+N counters on it. | 1 | Tribute to the World Tree | mom |
+| whenever a source an opponent controls deals damage to you or a permanent you control, that source's controller loses N life unless they pay {M}. | 1 | Elesh Norn // The Argent Etchings | mom |
+| whenever a source deals damage to rona, that source"..."s a land card, you may put it onto the battlefield under your control. otherwise, you may cast it withou | 1 | Rona, Herald of Invasion // Rona, Tolarian Obliterator | mom |
+| whenever equipped creature attacks, put a +N/+N counter on that creature and each other creature you control that shares a creature type with it. | 1 | Invasion of New Capenna // Holy Frazzle-Cannon | mom |
+| whenever equipped creature deals combat damage to a player, surveil N. then you may cast an instant or sorcery spell with mana value N or less from your graveya | 1 | Sword of Once and Future | mom |
+| whenever marchesa attacks, remove all counters from up to one target permanent. | 1 | Invasion of Fiora // Marchesa, Resolute Monarch | mom |
+| whenever one or more dragons you control deal combat damage to a player or battle, look at the top three cards of your library. put one of them into your hand a | 1 | Zurgo and Ojutai | mom |
+| whenever you attack, choose one — • create a tapped and attacking N/N green dinosaur creature token with trample, where N is the greatest power among other atta | 1 | Ghalta and Mavren | mom |
+| whenever you cast a noncreature spell, incubate N, where N is that spell's mana value. | 1 | Chrome Host Seedshark | mom |
+| whenever you cast a spell that has convoke, ~ deals N damage to each opponent and each battle they protect. | 1 | Joyful Stormsculptor | mom |
+| whenever you cast a spell that targets one or more permanents, incubate N. | 1 | Tiller of Flesh | mom |
+| whenever you cast a spell that"..."s exactly two colors from among them and put it into your hand. put the rest on the bottom of your library in a random order. | 1 | Invasion of Ravnica // Guildpact Paragon | mom |
+| whenever you cast your first instant or sorcery spell each turn, you may cast a spell with lesser mana value that shares a card type with it from your hand with | 1 | Baral and Kari Zev | mom |
+| whenever ~ attacks a battle, double its power until end of turn. | 1 | War-Trained Slasher | mom |
+| whenever ~ attacks, create a tapped and attacking token that's a copy of it. put a +N/+N counter on that token for each +N/+N counter on ~. sacrifice that token | 1 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | mom |
+| whenever ~ attacks, sacrifice a creature or land, then draw a card. | 1 | Thalia and The Gitrog Monster | mom |
+| whenever ~ attacks, up to one other target creature has base power and toughness N/N until end of turn. | 1 | Gnottvold Hermit // Chrome Host Hulk | mom |
+| whenever ~ attacks, you may pay {M}{M}. when you do, return target creature card from your graveyard to the battlefield. it's a phyrexian in addition to its oth | 1 | Terror of Towashi | mom |
+| whenever ~ attacks, you may sacrifice another creature or artifact. if you do, ~ gets +N/+N until end of turn. | 1 | Seraph of New Capenna // Seraph of New Phyrexia | mom |
+| whenever ~ attacks, you may tap two other untapped creatures you control. if you do, ~ can't be blocked ~. | 1 | Tidal Terror | mom |
+| whenever ~ becomes blocked by a creature, the blocking creature gets -N/-N until end of turn. | 1 | Order of the Mirror // Order of the Alabaster Host | mom |
+| whenever ~ deals combat damage to a player or battle, choose any number — • each player creates a treasure token. • each player sacrifices a creature of their c | 1 | Rankle and Torbran | mom |
+| whenever ~ deals combat damage to a player or battle, look at that many cards from the top of your library. you may reveal a creature or land card from among th | 1 | Doomskar Warrior | mom |
+| whenever ~ deals combat damage to a player or battle, transform up to one target incubator token you control. | 1 | Attentive Skywarden | mom |
+| whenever ~ deals combat damage to an opponent, it deals that much damage to target planeswalker that player controls or battle that player protects. | 1 | Rampaging Raptor | mom |
+| whenever ~ enters or attacks, you may exile five cards from your graveyard. when you do, return target creature card from your graveyard to the battlefield. | 1 | Kroxa and Kunoros | mom |
+| whenever ~ or another phyrexian you control enters, incubate N. | 1 | Essence of Orthodoxy | mom |
+| winnowing forces's power and toughness are each equal to the number of lands you control. | 1 | Invasion of Lorwyn // Winnowing Forces | mom |
+| you and permanents you control gain hexproof until end of turn. prevent all damage that black and/or red sources would deal to creatures you control ~. | 1 | Surge of Salvation | mom |
+| you may cast spells as though they had flash. | 1 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | mom |
+| you may have ~ enter as a copy of any creature card in a graveyard, except it's a N/N black zombie in addition to its other colors and types. | 1 | Invasion of Amonkhet // Lazotep Convert | mom |
+| you may look at the top card of your library any time. | 1 | Errant and Giada | mom |
+| {M}, exile ~ from your graveyard: incubate N. activate only as a sorcery. | 1 | Ichor Drinker | mom |
+| {M}, sacrifice another creature or artifact: ayara deals N damage to target opponent or battle and you gain N life, where N is the sacrificed permanent's mana v | 1 | Ayara, Widow of the Realm // Ayara, Furnace Queen | mom |
+| {M}, sacrifice another creature: draw a card. you may put a land card from your hand onto the battlefield tapped. if you control eight or more lands, repeat ~ o | 1 | Zimone and Dina | mom |
+| {M}, sacrifice ~: it deals damage equal to its power to any target. | 1 | Voldaren Thrillseeker | mom |
+| {M}, {M}, sacrifice another creature or artifact: incubate N. | 1 | Compleated Huntmaster | mom |
+| {M}, {M}: target opponent mills three cards. put a land card from their graveyard onto the battlefield tapped under your control. it gains "..." | 1 | Realmbreaker, the Invasion Tree | mom |
+| {M}: choose target battle. if an opponent protects it, remove a defense counter from it. otherwise, put a defense counter on it. activate only as a sorcery. | 1 | Portent Tracker | mom |
+| {M}{M}: exile target card from a graveyard. if it was a creature card, create a N/N black zombie creature token. | 1 | Invasion of Innistrad // Deluge of the Dead | mom |
+| {M}{M}{M}, discard ~: destroy up to one target artifact or enchantment. shuffle ~ into your library from your graveyard, then draw a card. | 1 | Kogla and Yidaro | mom |
+| {M}{M}{M}, {M}, sacrifice a spirit: choose target card exiled with quintorius. you may cast that card ~ without paying its mana cost. if that spell would be put | 1 | Quintorius, Loremaster | mom |
+| ~ can't be countered. ~ deals N damage to target creature or planeswalker. it deals N damage instead if that target is white and/or blue. | 1 | Lithomantic Barrage | mom |
+| ~ deals N damage to target creature, planeswalker, or battle. look at the top N cards of your library, where N is the excess damage dealt ~. you may exile one o | 1 | Nahiri's Warcrafting | mom |
+| ~ deals N damage to target creature, planeswalker, or battle. you may put a card from your hand on the bottom of your library. if you do, draw a card. | 1 | Volcanic Spite | mom |
+| ~ enters with two +N/+N counters on it for each creature that convoked it. | 1 | Ancient Imperiosaur | mom |
+| ~ gets +N/+N as long as an opponent has eight or more cards in their graveyard. | 1 | Tenured Oilcaster | mom |
+| ~ gets +N/+N for each transformed permanent you control. | 1 | Mutagen Connoisseur | mom |
+| ~ has first strike as long as another knight entered the battlefield under your control ~. | 1 | Swordsworn Cavalier | mom |
+| ~ has indestructible as long as it attacked a battle ~. | 1 | War Historian | mom |
 
 ## Notes
 

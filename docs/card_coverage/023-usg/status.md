@@ -103,32 +103,32 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| All damage that would be dealt to you is dealt to enchanted creature instead. | Pariah | 1 |
-| Choose a color. Target player reveals their hand and discards all cards of that color. | Persecute | 1 |
-| Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped. | Victimize | 1 |
-| Corrupt deals damage to any target equal to the number of Swamps you control. You gain life equal to the damage dealt this way. | Corrupt | 1 |
-| Counter target spell. Untap up to four lands. | Rewind | 1 |
-| Enchanted creature gets +1/+1 for each Forest you control. | Blanchwood Armor | 1 |
-| {R}: Enchanted creature gets +1/+0 until end of turn. | Shiv's Embrace | 1 |
-| If a source would deal damage to you, prevent 1 of that damage. | Urza's Armor | 1 |
-| If you control a creature, damage that would reduce your life total to less than 1 reduces it to 1 instead. | Worship | 1 |
-| If you would draw a card, you may instead choose land or nonland and reveal cards from the top of your library until you reveal a card of the chosen kind. Put t | Abundance | 1 |
-| Prevent all damage that would be dealt this turn to up to two target creatures. | Redeem | 1 |
-| Return all green permanents to their owners' hands. | Hibernation | 1 |
-| Sacrifice this creature: The next time a source of your choice would deal damage to any target this turn, prevent that damage. | Sanctum Guardian | 1 |
-| Sacrifice this enchantment: Return to your hand all creature cards in your graveyard that were put there from the battlefield this turn. | No Rest for the Wicked | 1 |
-| Serra Avatar's power and toughness are each equal to your life total. | Serra Avatar | 1 |
-| Target player gains 2 life for each creature on the battlefield. | Congregate | 1 |
-| This creature can't attack unless a creature with greater power also attacks. | Okk | 1 |
-| This creature can't be blocked except by three or more creatures. | Phyrexian Colossus | 1 |
-| When enchanted land becomes tapped, destroy it. | Spreading Algae | 1 |
-| When this creature enters, target opponent gains control of it. | Sleeper Agent | 1 |
-| When this creature enters, you may put an Aura card from your hand onto the battlefield attached to this creature. | Academy Researchers | 1 |
-| Whenever a creature dies, that creature's controller may draw a card. | Fecundity | 1 |
-| Whenever a creature you control enters, you gain life equal to its toughness. | Angelic Chorus | 1 |
-| Your opponents play with their hands revealed. | Telepathy | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| all damage that would be dealt to you is dealt to enchanted creature instead. | 1 | Pariah | usg |
+| choose a color. target player reveals their hand and discards all cards of that color. | 1 | Persecute | usg |
+| choose two target creature cards in your graveyard. sacrifice a creature. if you do, return the chosen cards to the battlefield tapped. | 1 | Victimize | usg |
+| counter target spell. untap up to four lands. | 1 | Rewind | usg |
+| enchanted creature gets +N/+N for each forest you control. | 1 | Blanchwood Armor | usg |
+| if a source would deal damage to you, prevent N of that damage. | 1 | Urza's Armor | usg |
+| if you control a creature, damage that would reduce your life total to less than N reduces it to N instead. | 1 | Worship | usg |
+| if you would draw a card, you may instead choose land or nonland and reveal cards from the top of your library until you reveal a card of the chosen kind. put t | 1 | Abundance | usg |
+| prevent all damage that would be dealt ~ to up to two target creatures. | 1 | Redeem | usg |
+| return all green permanents to their owners' hands. | 1 | Hibernation | usg |
+| sacrifice ~: return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | No Rest for the Wicked | usg |
+| sacrifice ~: the next time a source of your choice would deal damage to any target ~, prevent that damage. | 1 | Sanctum Guardian | usg |
+| target player gains N life for each creature on the battlefield. | 1 | Congregate | usg |
+| when enchanted land becomes tapped, destroy it. | 1 | Spreading Algae | usg |
+| when ~ enters, target opponent gains control of it. | 1 | Sleeper Agent | usg |
+| when ~ enters, you may put an aura card from your hand onto the battlefield attached to ~. | 1 | Academy Researchers | usg |
+| whenever a creature dies, that creature's controller may draw a card. | 1 | Fecundity | usg |
+| whenever a creature you control enters, you gain life equal to its toughness. | 1 | Angelic Chorus | usg |
+| your opponents play with their hands revealed. | 1 | Telepathy | usg |
+| {M}: enchanted creature gets +N/+N until end of turn. | 1 | Shiv's Embrace | usg |
+| ~ can't attack unless a creature with greater power also attacks. | 1 | Okk | usg |
+| ~ can't be blocked except by three or more creatures. | 1 | Phyrexian Colossus | usg |
+| ~ deals damage to any target equal to the number of swamps you control. you gain life equal to the damage dealt ~. | 1 | Corrupt | usg |
+| ~'s power and toughness are each equal to your life total. | 1 | Serra Avatar | usg |
 
 ## Notes
 

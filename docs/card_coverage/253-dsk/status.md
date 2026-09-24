@@ -302,107 +302,122 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When you unlock this door, you may cast spells from your graveyard this turn, and if a card would be put into your graveyard from anywhere this turn, exile it i | Bottomless Pool // Locker Room, Central Elevator // Promising Stairs, Derelict Attic // Widow's Walk, Funeral Room // Awakening Hall, Glassworks // Shattered Yard, Grand Entryway // Elegant Rotunda, Greenhouse // Rickety Gazebo, Meat Locker // Drowned Diner, Mirror Room // Fractured Realm, Moldering Gym // Weight Room, Painter's Studio // Defaced Gallery, Restricted Office // Lecture Hall, Roaring Furnace // Steaming Sauna, Smoky Lounge // Misty Salon, Surgical Suite // Hospital Room, Ticket Booth // Tunnel of Hate, Underwater Tunnel // Slimy Aquarium, Walk-In Closet // Forgotten Cellar | 18 |
-| Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, surveil 2 if this is the first time this ability has resolved this turn | Balemurk Leech, Cult Healer, Dashing Bloodsucker, Entity Tracker, Erratic Apparition, Fear of Infinity, Gremlin Tamer, Infernal Phantom, Optimistic Scavenger, Scrabbling Skullcrab, Skullsnap Nuisance, Stalked Researcher, Unwilling Vessel, Victor, Valgavoth's Seneschal | 14 |
-| Survival — At the beginning of your second main phase, if Rip is tapped, reveal the top X cards of your library, where X is its power. Put any number of creatur | Acrobatic Cheerleader, Glimmer Seeker, Reluctant Role Model, Rip, Spawn Hunter, Rootwise Survivor | 5 |
-| When this Equipment enters, manifest dread, then attach this Equipment to that creature. | Conductive Machete, Cursed Windbreaker, Dissection Tools, Killer's Mask | 4 |
-| At the beginning of your end step, if a land entered the battlefield under your control this turn and you control a prime number of lands, create Primo, the Ind | Oblivious Bookworm, Unholy Annex // Ritual Chamber, Zimone, All-Questioning | 3 |
-| Whenever this creature deals combat damage to a player, choose one that hasn't been chosen — • Put two +1/+1 counters on this creature. • Draw a card. • This cr | Ghostly Keybearer, Silent Hallcreeper, Unstoppable Slasher | 3 |
-| As an additional cost to cast this spell, choose a creature you control or reveal a creature card from your hand. Monstrous Emergence deals damage equal to the  | Fear of Exposure, Monstrous Emergence | 2 |
-| Delirium — As long as there are four or more card types among cards in your graveyard, each opponent's maximum hand size is equal to seven minus the number of t | The Swarmweaver, Winter, Misanthropic Guide | 2 |
-| Delirium — This creature gets +1/+2 and has vigilance as long as there are four or more card types among cards in your graveyard. | Spineseeker Centipede, Wildfire Wickerfolk | 2 |
-| {4}{B}{G}, {T}, Sacrifice this creature: Create a number of 1/1 black and green Insect creature tokens with flying equal to the number of card types among cards | Broodspinner, Twitching Doll | 2 |
-| When this creature enters, each opponent sacrifices a nontoken enchantment of their choice, then sacrifices a nontoken creature of their choice. | Fanatic of the Harrowing, Vile Mutilator | 2 |
-| Whenever a creature you control dies, you may pay 3 life. If you do, return that card under your control with a finality counter on it. | Meathook Massacre II, Norin, Swift Survivalist | 2 |
-| As long as there are three or more cards exiled with this creature, it gets +3/+3 and has hexproof. | Veteran Survivor | 1 |
-| As long as this Aura entered this turn, enchanted creature has hexproof. | Shardmage's Rescue | 1 |
-| As long as you control four or more creature tokens, creature tokens you control have flying. | Toby, Beastie Befriender | 1 |
-| As long as you have at least 7 life more than your starting life total, creatures you control get +2/+2. | Leyline of Hope | 1 |
-| Choose one — • Counter target creature or enchantment spell. • Return one or two target creatures and/or enchantments you own to your hand. | Get Out | 1 |
-| Choose one — • Destroy all tapped creatures. • Destroy all untapped creatures. | Split Up | 1 |
-| Choose one — • Destroy target artifact. • Change the target of target spell or ability with a single target. • One or two target creatures can't block this turn | Untimely Malfunction | 1 |
-| Choose target creature you control and target creature an opponent controls. Delirium — If there are four or more card types among cards in your graveyard, put  | Beastie Beatdown | 1 |
-| Choose two target creatures controlled by the same opponent. That player chooses one of those creatures. Trial of Agony deals 5 damage to that creature, and the | Trial of Agony | 1 |
-| Counter target spell unless its controller pays {2}. If they do, surveil 2. (Look at the top two cards of your library, then put any number of them into your gr | Don't Make a Sound | 1 |
-| {1}, {T}: Create a token that's a copy of another target creature you control, except it's a 1/1 red Balloon creature in addition to its other colors and types  | The Jolly Balloon Man | 1 |
-| Create three 1/1 red Gremlin creature tokens. Gremlins you control gain menace, lifelink, and haste until end of turn. (A creature with menace can't be blocked  | Midnight Mayhem | 1 |
-| Creature spells you cast have convoke. | Dazzling Theater // Prop Room | 1 |
-| Creatures you control are the chosen type in addition to their other types. The same is true for creature spells you control and creature cards you own that are | Leyline of Transformation | 1 |
-| Creatures you control have "{T}: Add one mana of any color." | Enduring Vitality | 1 |
-| Creatures you control have base power and toughness each equal to the number of creatures you control. | Dollmaker's Shop // Porcelain Gallery | 1 |
-| Creatures your opponents control can be the targets of spells and abilities as though they didn't have hexproof. Ward abilities of those creatures don't trigger | Nowhere to Run | 1 |
-| Delirium — At the beginning of your end step, if there are four or more card types among cards in your graveyard, each opponent may sacrifice a nonland permanen | Osseous Sticktwister | 1 |
-| Delirium — Choose one. If there are four or more card types among cards in your graveyard, choose one or more instead. • Creatures your opponents control get -1 | Let's Play a Game | 1 |
-| Delirium — If a source you control would deal noncombat damage to a permanent or player while there are four or more card types among cards in your graveyard, i | The Rollercrusher Ride | 1 |
-| Delirium — This creature can't attack or block unless there are four or more card types among cards in your graveyard. | Patchwork Beastie | 1 |
-| Delirium — Whenever a source you control deals noncombat damage to an opponent, if there are four or more card types among cards in your graveyard, this creatur | Fear of Burning Alive | 1 |
-| Delirium — Whenever this creature enters or attacks, if there are four or more card types among cards in your graveyard, distribute two +1/+1 counters among one | Omnivorous Flytrap | 1 |
-| Destroy target creature. If a creature card is put into a graveyard this way, return it to the battlefield under your control. Sacrifice it at the beginning of  | Come Back Wrong | 1 |
-| Destroy target creature. Its controller manifests dread. (That player looks at the top two cards of their library, then puts one onto the battlefield face down  | Unwanted Remake | 1 |
-| {3}, Discard a card: Put three +1/+1 counters on this creature and it becomes a black Demon in addition to its other colors and types. Activate only once. | Possessed Goat | 1 |
-| Discard your hand. Then draw X cards, where X is the number of card types among cards in your graveyard. | Peer Past the Veil | 1 |
-| Draw two cards. Create a 1/1 white Glimmer enchantment creature token. | Glimmerburst | 1 |
-| Enchanted creature gets -3/-0 and loses all abilities. | Duskmourn's Domination | 1 |
-| Equipped creature gets +X/+0, where X is the number of rev counters on this Equipment. | Chainsaw | 1 |
-| Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card. | Vengeful Possession | 1 |
-| I, II, III — Mill two cards. If two cards that share a card type were milled this way, draw a card and repeat this process. | The Tale of Tamiyo | 1 |
-| If a card you didn't control would be put into an opponent's graveyard from anywhere, exile it instead. | Valgavoth, Terror Eater | 1 |
-| Impossible Inferno deals 6 damage to target creature. Delirium — If there are four or more card types among cards in your graveyard, exile the top card of your  | Impossible Inferno | 1 |
-| Manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and the other into your graveyard. Turn it  | Under the Skin | 1 |
-| Manifest dread X times, then put X +1/+1 counters on each of those creatures. (To manifest dread, look at the top two cards of your library, then put one onto t | Valgavoth's Onslaught | 1 |
-| Marvin has all activated abilities of creatures you control that don't have the same name as this creature. | Marvin, Murderous Mimic | 1 |
-| Mill three cards. Then you may return a creature or land card from your graveyard to your hand. Exile this card and two other cards named Say Its Name from your | Say Its Name | 1 |
-| Once each turn, you may pay {0} rather than pay the mana cost for a spell you cast from exile. | Charred Foyer // Warped Space | 1 |
-| Other tapped creatures you control have hexproof. | The Wandering Rescuer | 1 |
-| {7}: Put seven +1/+1 counters on this artifact. It becomes a 0/0 Spirit creature in addition to its other types. Activate only once. | Haunted Screen | 1 |
-| {1}{G}: Reveal target face-down permanent. If it's a creature card, you may turn it face up. | Hauntwoods Shrieker | 1 |
-| {3}, {T}, Sacrifice this artifact: Lock or unlock a door of target Room you control. Activate only as a sorcery. | Keys to the House | 1 |
-| {6}, {T}, Sacrifice this artifact: Put each creature card exiled with this artifact onto the battlefield under your control with a flying counter on it. Each of | Ghost Vacuum | 1 |
-| Search your library for a Demon card, reveal it, put it into your hand, then shuffle. Delirium — If there are four or more card types among cards in your gravey | Demonic Counsel | 1 |
-| {4}{U}{U}: Shuffle enchanted creature into its owner's library, then manifest dread. Activate only as a sorcery. | Stay Hidden, Stay Silent | 1 |
-| {1}{U}, {T}: Shuffle this creature and target creature with a stun counter on it into their owners' libraries. | Floodpits Drowner | 1 |
-| Tap one or two target untapped creatures you control. They each deal damage equal to their power to target creature an opponent controls. | Coordinated Clobbering | 1 |
-| Target creature gets +3/+0 until end of turn. When it dies this turn, manifest dread. (Look at the top two cards of your library. Put one onto the battlefield f | Turn Inside Out | 1 |
-| Target creature you control deals damage equal to its power to each other creature. Until end of turn, whenever a creature you control dies, exile the top card  | Waltz of Rage | 1 |
-| The owner of target artifact or enchantment an opponent controls shuffles it into their library. You may shuffle up to four target cards from your graveyard int | Cathartic Parting | 1 |
-| This creature can't be blocked by Glimmers. | Cynical Loner | 1 |
-| This creature enters with two -1/-1 counters on it if you cast it from your hand. | Patched Plaything | 1 |
-| This creature gets +3/+0 as long as there are two or more unlocked doors among Rooms you control. | Rampaging Soulrager | 1 |
-| This creature has first strike during your turn. | Razorkin Needlehead | 1 |
-| This creature must be blocked if able. | Fear of Being Hunted | 1 |
-| Unlock costs you pay cost {1} less. | Inquisitive Glimmer | 1 |
-| Until end of turn, target creature gets +2/+2, gains flying, and becomes a Horror enchantment creature in addition to its other types. | Jump Scare | 1 |
-| When enchanted creature is dealt damage, destroy it. | Cracked Skull | 1 |
-| When Marina Vendrell enters, reveal the top seven cards of your library. Put all enchantment cards from among them into your hand and the rest on the bottom of  | Marina Vendrell | 1 |
-| When Niko enters, create two Shard tokens. | Niko, Light of Hope | 1 |
-| When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield. | Sheltered by Ghosts | 1 |
-| When this Aura enters, target player sacrifices a creature of their choice other than enchanted creature. | Sporogenic Infection | 1 |
-| When this creature dies, look at the top five cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your ha | Living Phone | 1 |
-| When this creature enters, counter target spell. Its controller manifests dread. | Fear of Impostors | 1 |
-| When this creature enters, create a 1/1 white Glimmer enchantment creature token. | Tunnel Surveyor | 1 |
-| When this creature enters, return an enchantment card from your graveyard to your hand or unlock a locked door of a Room you control. | Ghostly Dancers | 1 |
-| When this creature enters, tap up to one target creature. If an opponent controls that creature, put a stun counter on it. | Fear of Immobility | 1 |
-| When this creature enters, you may discard a card or pay {2}. When you do, destroy target Room. | Anthropede | 1 |
-| When this creature leaves the battlefield, put each card exiled with it into its owner's hand. | Fear of Abduction | 1 |
-| When this Equipment enters, create a 1/1 white Glimmer enchantment creature token. | Glimmerlight | 1 |
-| When this Vehicle leaves the battlefield, the exiled card's owner manifests dread. | Unidentified Hovership | 1 |
-| Whenever Arabella attacks, it deals X damage to each opponent and you gain X life, where X is the number of creatures you control with power 2 or less. | Arabella, Abandoned Doll | 1 |
-| Whenever enchanted player is dealt damage, they lose half their life, rounded up. | Grievous Wound | 1 |
-| Whenever equipped creature attacks, you may sacrifice a permanent other than that creature or this Equipment. If you do, draw a card. | Saw | 1 |
-| Whenever one or more cards leave your graveyard, create a 2/2 black Horror enchantment creature token. This ability triggers only once each turn. | Defiled Crypt // Cadaver Lab | 1 |
-| Whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped. | Hedge Shredder | 1 |
-| Whenever this creature attacks, tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped this way. | Orphans of the Wheat | 1 |
-| Whenever this creature attacks, target creature defending player controls gets -2/-0 and loses flying until your next turn. | Fear of Falling | 1 |
-| Whenever this creature attacks, you may have it get +4/+0 until end of turn. If you do, sacrifice it at the beginning of the next end step. | Attack-in-the-Box | 1 |
-| Whenever you gain life, target opponent loses that much life. | Enduring Tenacity | 1 |
-| Whenever you lose life, discard that many cards. Then if you have no cards in hand, you lose the game. | Marina Vendrell's Grimoire | 1 |
-| Whenever you manifest dread, put a card you put into your graveyard this way into your hand. | Paranormal Analyst | 1 |
-| Whenever you turn a permanent face up, put a +1/+1 counter on it. | Growing Dread | 1 |
-| You may cast this card from your graveyard if a non-Zombie creature died this turn. If you do, this creature enters with a +1/+1 counter on it. | Undead Sprinter | 1 |
-| You may look at face-down creatures your opponents control any time. | Found Footage | 1 |
-| You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast. | Leyline of Mutation | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Eerie | 14 | Balemurk Leech, Cult Healer, Dashing Bloodsucker, Entity Tracker, Erratic Apparition | dsk |
+| Delirium | 10 | Fear of Burning Alive, Let's Play a Game, Omnivorous Flytrap, Osseous Sticktwister, Patchwork Beastie | dsk |
+| Survival | 5 | Acrobatic Cheerleader, Glimmer Seeker, Reluctant Role Model, Rip, Spawn Hunter, Rootwise Survivor | dsk |
+| when ~ enters, manifest dread, then attach ~ to that creature. | 4 | Conductive Machete, Cursed Windbreaker, Dissection Tools, Killer's Mask | dsk |
+| Choose one | 3 | Get Out, Split Up, Untimely Malfunction | dsk |
+| when ~ enters, create a N/N white glimmer enchantment creature token. | 2 | Glimmerlight, Tunnel Surveyor | dsk |
+| as an additional cost to cast ~, choose a creature you control or reveal a creature card from your hand. ~ deals damage equal to the power of the creature you c | 1 | Monstrous Emergence | dsk |
+| as an additional cost to cast ~, tap two untapped creatures and/or lands you control. | 1 | Fear of Exposure | dsk |
+| as long as there are three or more cards exiled with ~, it gets +N/+N and has hexproof. | 1 | Veteran Survivor | dsk |
+| as long as you control four or more creature tokens, creature tokens you control have flying. | 1 | Toby, Beastie Befriender | dsk |
+| as long as you have at least N life more than your starting life total, creatures you control get +N/+N. | 1 | Leyline of Hope | dsk |
+| as long as ~ entered ~, enchanted creature has hexproof. | 1 | Shardmage's Rescue | dsk |
+| at the beginning of your end step, draw a card. if you control a demon, each opponent loses N life and you gain N life. otherwise, you lose N life. | 1 | Unholy Annex // Ritual Chamber | dsk |
+| at the beginning of your end step, if a land entered the battlefield under your control ~ and you control a prime number of lands, create primo, the indivisible | 1 | Zimone, All-Questioning | dsk |
+| at the beginning of your end step, you may draw a card. if you do, discard a card unless a permanent entered the battlefield face down under your control ~ or y | 1 | Oblivious Bookworm | dsk |
+| choose target creature you control and target creature an opponent controls. delirium — if there are four or more card types among cards in your graveyard, put  | 1 | Beastie Beatdown | dsk |
+| choose two target creatures controlled by the same opponent. that player chooses one of those creatures. ~ deals N damage to that creature, and the other can't  | 1 | Trial of Agony | dsk |
+| counter target spell unless its controller pays {M}. if they do, surveil N. (look at the top two cards of your library, then put any number of them into your gr | 1 | Don't Make a Sound | dsk |
+| create three N/N red gremlin creature tokens. gremlins you control gain menace, lifelink, and haste until end of turn. (a creature with menace can't be blocked  | 1 | Midnight Mayhem | dsk |
+| creature spells you cast have convoke. | 1 | Dazzling Theater // Prop Room | dsk |
+| creatures you control are the chosen type in addition to their other types. the same is true for creature spells you control and creature cards you own that are | 1 | Leyline of Transformation | dsk |
+| creatures you control have "..." | 1 | Enduring Vitality | dsk |
+| creatures you control have base power and toughness each equal to the number of creatures you control. | 1 | Dollmaker's Shop // Porcelain Gallery | dsk |
+| creatures your opponents control can be the targets of spells and abilities as though they didn"..."t trigger. | 1 | Nowhere to Run | dsk |
+| destroy target creature. if a creature card is put into a graveyard ~, return it to the battlefield under your control. sacrifice it at the beginning of your ne | 1 | Come Back Wrong | dsk |
+| destroy target creature. its controller manifests dread. (that player looks at the top two cards of their library, then puts one onto the battlefield face down  | 1 | Unwanted Remake | dsk |
+| discard your hand. then draw N cards, where N is the number of card types among cards in your graveyard. | 1 | Peer Past the Veil | dsk |
+| draw two cards. create a N/N white glimmer enchantment creature token. | 1 | Glimmerburst | dsk |
+| enchanted creature gets -N/-N and loses all abilities. | 1 | Duskmourn's Domination | dsk |
+| equipped creature gets +N/+N, where N is the number of rev counters on ~. | 1 | Chainsaw | dsk |
+| gain control of target creature until end of turn. untap it. it gains haste until end of turn. you may discard a card. if you do, draw a card. | 1 | Vengeful Possession | dsk |
+| i, ii, iii — mill two cards. if two cards that share a card type were milled ~, draw a card and repeat ~. | 1 | The Tale of Tamiyo | dsk |
+| if a card you didn"..."s graveyard from anywhere, exile it instead. | 1 | Valgavoth, Terror Eater | dsk |
+| manifest dread N times, then put N +N/+N counters on each of those creatures. (to manifest dread, look at the top two cards of your library, then put one onto t | 1 | Valgavoth's Onslaught | dsk |
+| manifest dread. (look at the top two cards of your library. put one onto the battlefield face down as a N/N creature and the other into your graveyard. turn it  | 1 | Under the Skin | dsk |
+| marvin has all activated abilities of creatures you control that don't have the same name as ~. | 1 | Marvin, Murderous Mimic | dsk |
+| mill three cards. then you may return a creature or land card from your graveyard to your hand. exile ~ and two other cards named ~ from your graveyard: search  | 1 | Say Its Name | dsk |
+| once each turn, you may pay {M} rather than pay the mana cost for a spell you cast from exile. | 1 | Charred Foyer // Warped Space | dsk |
+| other tapped creatures you control have hexproof. | 1 | The Wandering Rescuer | dsk |
+| search your library for a demon card, reveal it, put it into your hand, then shuffle. delirium — if there are four or more card types among cards in your gravey | 1 | Demonic Counsel | dsk |
+| tap one or two target untapped creatures you control. they each deal damage equal to their power to target creature an opponent controls. | 1 | Coordinated Clobbering | dsk |
+| target creature gets +N/+N until end of turn. when it dies ~, manifest dread. (look at the top two cards of your library. put one onto the battlefield face down | 1 | Turn Inside Out | dsk |
+| target creature you control deals damage equal to its power to each other creature. until end of turn, whenever a creature you control dies, exile the top card  | 1 | Waltz of Rage | dsk |
+| the owner of target artifact or enchantment an opponent controls shuffles it into their library. you may shuffle up to four target cards from your graveyard int | 1 | Cathartic Parting | dsk |
+| unlock costs you pay cost {M} less. | 1 | Inquisitive Glimmer | dsk |
+| until end of turn, target creature gets +N/+N, gains flying, and becomes a horror enchantment creature in addition to its other types. | 1 | Jump Scare | dsk |
+| when enchanted creature is dealt damage, destroy it. | 1 | Cracked Skull | dsk |
+| when niko enters, create two shard tokens. | 1 | Niko, Light of Hope | dsk |
+| when you unlock ~, create a N/N white glimmer enchantment creature token. | 1 | Grand Entryway // Elegant Rotunda | dsk |
+| when you unlock ~, create a token that"..."s a reflection in addition to its other creature types. | 1 | Mirror Room // Fractured Realm | dsk |
+| when you unlock ~, create an N/N blue spirit creature token with flying, where N is the number of unlocked doors among rooms you control. | 1 | Smoky Lounge // Misty Salon | dsk |
+| when you unlock ~, destroy all creatures with power N or greater. | 1 | Restricted Office // Lecture Hall | dsk |
+| when you unlock ~, exile the top two cards of your library. you may play them until the end of your next turn. | 1 | Painter's Studio // Defaced Gallery | dsk |
+| when you unlock ~, manifest dread. | 1 | Ticket Booth // Tunnel of Hate | dsk |
+| when you unlock ~, mill four cards, then return up to two permanent cards from among them to your hand. | 1 | Greenhouse // Rickety Gazebo | dsk |
+| when you unlock ~, return all creature cards from your graveyard to the battlefield. | 1 | Funeral Room // Awakening Hall | dsk |
+| when you unlock ~, return target creature card with mana value N or less from your graveyard to the battlefield. | 1 | Surgical Suite // Hospital Room | dsk |
+| when you unlock ~, return up to one target creature to its owner's hand. | 1 | Bottomless Pool // Locker Room | dsk |
+| when you unlock ~, search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | 1 | Moldering Gym // Weight Room | dsk |
+| when you unlock ~, search your library for a room card that doesn't have the same name as a room you control, reveal it, put it into your hand, then shuffle. | 1 | Central Elevator // Promising Stairs | dsk |
+| when you unlock ~, surveil N. | 1 | Underwater Tunnel // Slimy Aquarium | dsk |
+| when you unlock ~, tap up to one target creature and put two stun counters on it. | 1 | Meat Locker // Drowned Diner | dsk |
+| when you unlock ~, you draw two cards and you lose N life. | 1 | Derelict Attic // Widow's Walk | dsk |
+| when you unlock ~, you may cast spells from your graveyard ~, and if a card would be put into your graveyard from anywhere ~, exile it instead. | 1 | Walk-In Closet // Forgotten Cellar | dsk |
+| when you unlock ~, ~ deals N damage to target creature an opponent controls. | 1 | Glassworks // Shattered Yard | dsk |
+| when you unlock ~, ~ deals damage equal to the number of cards in your hand to target creature an opponent controls. | 1 | Roaring Furnace // Steaming Sauna | dsk |
+| when ~ dies, look at the top five cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put the  | 1 | Living Phone | dsk |
+| when ~ enters, counter target spell. its controller manifests dread. | 1 | Fear of Impostors | dsk |
+| when ~ enters, each opponent sacrifices a nontoken enchantment of their choice, then sacrifices a nontoken creature of their choice. | 1 | Vile Mutilator | dsk |
+| when ~ enters, each player discards a card. if you discarded a card ~, draw a card. | 1 | Fanatic of the Harrowing | dsk |
+| when ~ enters, exile target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Sheltered by Ghosts | dsk |
+| when ~ enters, return an enchantment card from your graveyard to your hand or unlock a locked door of a room you control. | 1 | Ghostly Dancers | dsk |
+| when ~ enters, reveal the top seven cards of your library. put all enchantment cards from among them into your hand and the rest on the bottom of your library i | 1 | Marina Vendrell | dsk |
+| when ~ enters, tap up to one target creature. if an opponent controls that creature, put a stun counter on it. | 1 | Fear of Immobility | dsk |
+| when ~ enters, target player sacrifices a creature of their choice other than enchanted creature. | 1 | Sporogenic Infection | dsk |
+| when ~ enters, you may discard a card or pay {M}. when you do, destroy target room. | 1 | Anthropede | dsk |
+| when ~ leaves the battlefield, put each card exiled with it into its owner's hand. | 1 | Fear of Abduction | dsk |
+| when ~ leaves the battlefield, the exiled card's owner manifests dread. | 1 | Unidentified Hovership | dsk |
+| whenever a creature you control becomes blocked, you may exile it. you may play that card from exile ~. | 1 | Norin, Swift Survivalist | dsk |
+| whenever a creature you control dies, you may pay N life. if you do, return that card under your control with a finality counter on it. | 1 | Meathook Massacre II | dsk |
+| whenever arabella attacks, it deals N damage to each opponent and you gain N life, where N is the number of creatures you control with power N or less. | 1 | Arabella, Abandoned Doll | dsk |
+| whenever enchanted player is dealt damage, they lose half their life, rounded up. | 1 | Grievous Wound | dsk |
+| whenever equipped creature attacks, you may sacrifice a permanent other than that creature or ~. if you do, draw a card. | 1 | Saw | dsk |
+| whenever one or more cards leave your graveyard, create a N/N black horror enchantment creature token. ~ triggers only once each turn. | 1 | Defiled Crypt // Cadaver Lab | dsk |
+| whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped. | 1 | Hedge Shredder | dsk |
+| whenever you gain life, target opponent loses that much life. | 1 | Enduring Tenacity | dsk |
+| whenever you lose life, discard that many cards. then if you have no cards in hand, you lose the game. | 1 | Marina Vendrell's Grimoire | dsk |
+| whenever you manifest dread, put a card you put into your graveyard ~ into your hand. | 1 | Paranormal Analyst | dsk |
+| whenever you turn a permanent face up, put a +N/+N counter on it. | 1 | Growing Dread | dsk |
+| whenever ~ attacks, tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Orphans of the Wheat | dsk |
+| whenever ~ attacks, target creature defending player controls gets -N/-N and loses flying until your next turn. | 1 | Fear of Falling | dsk |
+| whenever ~ attacks, you may have it get +N/+N until end of turn. if you do, sacrifice it at the beginning of the next end step. | 1 | Attack-in-the-Box | dsk |
+| whenever ~ deals combat damage to a player, choose one that hasn't been chosen — • put two +N/+N counters on ~. • draw a card. • ~ becomes a copy of another tar | 1 | Silent Hallcreeper | dsk |
+| whenever ~ deals combat damage to a player, they lose half their life, rounded up. | 1 | Unstoppable Slasher | dsk |
+| whenever ~ deals combat damage to a player, unlock a locked door of up to one target room you control. | 1 | Ghostly Keybearer | dsk |
+| you may cast ~ from your graveyard if a non-zombie creature died ~. if you do, ~ enters with a +N/+N counter on it. | 1 | Undead Sprinter | dsk |
+| you may look at face-down creatures your opponents control any time. | 1 | Found Footage | dsk |
+| you may pay {M}{M}{M}{M}{M} rather than pay the mana cost for spells you cast. | 1 | Leyline of Mutation | dsk |
+| {M}, discard a card: put three +N/+N counters on ~ and it becomes a black demon in addition to its other colors and types. activate only once. | 1 | Possessed Goat | dsk |
+| {M}, sacrifice ~: create a N/N green spider creature token with reach for each counter on ~. activate only as a sorcery. | 1 | Twitching Doll | dsk |
+| {M}, {M}, sacrifice ~: lock or unlock a door of target room you control. activate only as a sorcery. | 1 | Keys to the House | dsk |
+| {M}, {M}, sacrifice ~: put each creature card exiled with ~ onto the battlefield under your control with a flying counter on it. each of them is a N/N spirit in | 1 | Ghost Vacuum | dsk |
+| {M}, {M}: create a token that"..."s a N/N red balloon creature in addition to its other colors and types and it has flying and haste. sacrifice it at the beginn | 1 | The Jolly Balloon Man | dsk |
+| {M}: put seven +N/+N counters on ~. it becomes a N/N spirit creature in addition to its other types. activate only once. | 1 | Haunted Screen | dsk |
+| {M}{M}, {M}: shuffle ~ and target creature with a stun counter on it into their owners' libraries. | 1 | Floodpits Drowner | dsk |
+| {M}{M}: reveal target face-down permanent. if it's a creature card, you may turn it face up. | 1 | Hauntwoods Shrieker | dsk |
+| {M}{M}{M}, {M}, sacrifice ~: create a number of N/N black and green insect creature tokens with flying equal to the number of card types among cards in your gra | 1 | Broodspinner | dsk |
+| {M}{M}{M}: shuffle enchanted creature into its owner's library, then manifest dread. activate only as a sorcery. | 1 | Stay Hidden, Stay Silent | dsk |
+| ~ can't be blocked by glimmers. | 1 | Cynical Loner | dsk |
+| ~ deals N damage to target creature. delirium — if there are four or more card types among cards in your graveyard, exile the top card of your library. you may  | 1 | Impossible Inferno | dsk |
+| ~ enters with two -N/-N counters on it if you cast it from your hand. | 1 | Patched Plaything | dsk |
+| ~ gets +N/+N as long as there are two or more unlocked doors among rooms you control. | 1 | Rampaging Soulrager | dsk |
+| ~ has first strike during your turn. | 1 | Razorkin Needlehead | dsk |
+| ~ must be blocked if able. | 1 | Fear of Being Hunted | dsk |
 
 ## Notes
 

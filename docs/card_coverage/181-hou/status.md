@@ -220,77 +220,88 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Afflict | Eternal of Harsh Truths, Frontline Devastator, Khenra Eternal, Manticore Eternal, Merciless Eternal, Spellweaver Eternal | 6 |
-| Aftermath | Appeal // Authority, Claim // Fame, Consign // Oblivion, Farm // Market, Grind // Dust | 5 |
-| Eternalize | Adorned Pouncer, Champion of Wits, Proven Combatant, Steadfast Sentinel | 4 |
-| When this creature enters, you may have target creature get +X/+X until end of turn, where X is this creature's power. | Bloodwater Entity, Resilient Khenra, Sunscourge Champion | 3 |
-| You may exert this creature as it attacks. When you do, it gets +1/+1 until end of turn and can't be blocked by creatures with power 2 or less this turn. | Khenra Scrapper, Oketra's Avenger, Rhonas's Stalwart | 3 |
-| Aftermath (Cast this spell only from your graveyard. Then exile it.) Look at the top card of your library. You may put it onto the battlefield if it's a creatur | Reason // Believe, Struggle // Survive | 2 |
-| At the beginning of each end step, enchanted player mills X cards, where X is the number of cards put into their graveyard from anywhere this turn. | Fraying Sanity, Neheb, the Eternal | 2 |
-| Search your library for up to X creature cards with different names that each have mana value X, reveal them, put them into your hand, then shuffle. | Samut, the Tested, Uncage the Menagerie | 2 |
-| This creature gets +1/+0 for each card with cycling in your graveyard. | Pride Sovereign, Vile Manifestation | 2 |
-| Whenever this creature deals combat damage to a player, that player discards that many cards. | Ammit Eternal, Dreamstealer | 2 |
-| Whenever you cast a noncreature spell, you may have this enchantment become a 3/3 Sphinx creature with flying in addition to its other types until end of turn. | Magmaroth, Riddleform | 2 |
-| Whenever you exert a creature, this creature deals 1 damage to each opponent and you gain 1 life. | Resolute Survivors, Vizier of the True | 2 |
-| All creatures lose indestructible until end of turn. Hour of Devastation deals 5 damage to each creature and each non-Bolas planeswalker. | Hour of Devastation | 1 |
-| Apocalypse Demon's power and toughness are each equal to the number of cards in your graveyard. | Apocalypse Demon | 1 |
-| As long as a creature has a -1/-1 counter on it, this creature has vigilance and deathtouch. | Tenacious Hunter | 1 |
-| As long as you control a Desert or there is a Desert card in your graveyard, this creature gets +1/+0 and has trample. | Sidewinder Naga | 1 |
-| At the beginning of combat on your turn, you may exile a creature card from your graveyard. If you do, create a token that's a copy of that card, except it's a  | God-Pharaoh's Gift | 1 |
-| At the beginning of enchanted player's upkeep, that player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card. | Torment of Scarabs | 1 |
-| Chandra's Defeat deals 5 damage to target red creature or red planeswalker. If that permanent is a Chandra planeswalker, you may discard a card. If you do, draw | Chandra's Defeat | 1 |
-| Choose one — • Target opponent exiles a creature they control. • Target opponent reveals their hand. You choose a nonland card from it. Exile that card. | Doomfall | 1 |
-| Counter target blue spell. If it was a Jace planeswalker spell, scry 2. | Jace's Defeat | 1 |
-| Counter target spell unless its controller pays {1} for each card in your graveyard. Cycling {2} ({2}, Discard this card: Draw a card.) | Countervailing Winds | 1 |
-| Create a 5/4 green Snake creature token. Lands you control don't untap during your next untap step. | Rhonas's Last Stand | 1 |
-| Creatures enchanted player controls lose all abilities and have base power and toughness 1/1. | Overwhelming Splendor | 1 |
-| Creatures target opponent controls attack this turn if able. During that player's next untap step, creatures they control don't untap. Cycling {2} ({2}, Discard | Imaginary Threats | 1 |
-| Destroy all creatures. Lands you control don't untap during your next untap step. | Bontu's Last Reckoning | 1 |
-| Draw two cards. Then discard a card unless you return a land you control to its owner's hand. | Tragic Lesson | 1 |
-| +1: Each opponent exiles two cards from their hand. | Nicol Bolas, God-Pharaoh | 1 |
-| +3: Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card. | Nicol Bolas, the Deceiver | 1 |
-| Enchanted creature can't attack or block, and its activated abilities can't be activated. | Desert's Hold | 1 |
-| Equipped creature gets +2/+0 and has afflict 1. | Dagger of the Worthy | 1 |
-| Exile target creature. If that creature was a God, its controller reveals their hand and exiles all cards from it with the same name as that creature. | Hour of Glory | 1 |
-| Exile target white creature that's attacking or blocking. If it was a Gideon planeswalker, you gain 5 life. | Gideon's Defeat | 1 |
-| Exile X target creature cards from your graveyard. For each card exiled this way, create a token that's a copy of that card, except it's a 4/4 black Zombie. | Hour of Eternity | 1 |
-| Gain control of target artifact, creature, or enchantment. Lands you control don't untap during your next untap step. | Kefnet's Last Word | 1 |
-| If a source would deal damage to a planeswalker you control, prevent 1 of that damage. | Djeru, With Eyes Open | 1 |
-| Majestic Myriarch's power and toughness are each equal to twice the number of creatures you control. | Majestic Myriarch | 1 |
-| Players can't get counters. | Solemnity | 1 |
-| Put a -1/-1 counter on target creature. Blur of Blades deals 2 damage to that creature's controller. | Blur of Blades | 1 |
-| Put three -1/-1 counters on target creature. Its controller loses 3 life unless they sacrifice another nonland permanent of their choice or discard a card. | Torment of Venom | 1 |
-| Refuse deals damage to target spell's controller equal to that spell's mana value. | Refuse // Cooperate | 1 |
-| Repeat the following process X times. Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card. | Torment of Hailfire | 1 |
-| Return any number of target permanents you own to your hand. | Leave // Chance | 1 |
-| {4}, {T}, Sacrifice this land: Return each creature card exiled with this land to the battlefield under its owner's control. | Endless Sands | 1 |
-| Search your library and graveyard for a card named Forest, a card named Brambleweft Behemoth, and a card named Nissa, Genesis Mage. Reveal those cards, put them | Nissa's Encouragement | 1 |
-| Shuffle your library, then exile the top four cards. You may cast any number of spells with mana value 5 or less from among them without paying their mana costs | Hazoret's Undying Fury | 1 |
-| This creature gets +1/+1 as long as you control a Desert. | Ramunap Hydra | 1 |
-| This creature has first strike as long as it's attacking. | Thorned Moloch | 1 |
-| This creature has lifelink as long as you control a Desert or there is a Desert card in your graveyard. | Solitary Camel | 1 |
-| Untap target creature. It gets +2/+2 until end of turn and can block an additional creature this turn. | Act of Heroism | 1 |
-| +2: Untap up to two target creatures and up to two target lands. | Nissa, Genesis Mage | 1 |
-| Until end of turn, creatures you control gain trample and "Whenever this creature deals combat damage to a player, draw a card." | Driven // Despair | 1 |
-| When this artifact enters, you may search your library and/or graveyard for a card named Nicol Bolas, the Deceiver, reveal it, and put it into your hand. If you | Visage of Bolas | 1 |
-| When this Aura enters, all damage that would be dealt this turn to you and permanents you control is dealt to enchanted creature instead. | Saving Grace | 1 |
-| When this creature enters, it deals 3 damage to each other creature. | Chaos Maw | 1 |
-| When this creature enters, scry 3, then reveal the top card of your library. You gain life equal to that card's mana value. | Sifter Wurm | 1 |
-| When this creature enters, target creature with power less than or equal to this creature's power can't block this turn. | Earthshaker Khenra | 1 |
-| When you cycle this card, counter target activated or triggered ability you don't control. | Nimble Obstructionist | 1 |
-| Whenever this creature attacks and isn't blocked, you may cast an instant or sorcery spell from your hand without paying its mana cost. | Wildfire Eternal | 1 |
-| Whenever this creature attacks, exile target card from defending player's graveyard. | Graven Abomination | 1 |
-| Whenever this creature attacks, if you control a Desert or there is a Desert card in your graveyard, target creature can't block this turn. | Gilded Cerodon | 1 |
-| Whenever Unesh or another Sphinx you control enters, reveal the top four cards of your library. An opponent separates those cards into two piles. Put one pile i | Unesh, Criosphinx Sovereign | 1 |
-| Whenever you activate an eternalize or embalm ability, draw a card. | Vizier of the Anointed | 1 |
-| Whenever you cast a spell with mana value equal to the number of doom counters on this enchantment, this enchantment deals that much damage to any target. Then  | Imminent Doom | 1 |
-| Whenever you cast an instant or sorcery spell, you may copy that spell. You may choose new targets for the copy. | Swarm Intelligence | 1 |
-| Whenever you cycle or discard a card, this creature gets +1/+0 until end of turn and can't be blocked this turn. | Cunning Survivor | 1 |
-| Whenever you put one or more -1/-1 counters on a creature, each opponent loses 1 life and you gain 1 life. | Obelisk Spider | 1 |
-| You may cast spells that have a cycling ability from your graveyard. | Abandoned Sarcophagus | 1 |
-| Your life total becomes equal to your starting life total. Lands you control don't untap during your next untap step. | Oketra's Last Mercy | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| afflict | 6 | Eternal of Harsh Truths, Frontline Devastator, Khenra Eternal, Manticore Eternal, Merciless Eternal | hou |
+| aftermath | 5 | Appeal // Authority, Claim // Fame, Consign // Oblivion, Farm // Market, Grind // Dust | hou |
+| eternalize | 4 | Adorned Pouncer, Champion of Wits, Proven Combatant, Steadfast Sentinel | hou |
+| Choose one | 1 | Doomfall | hou |
+| +N: each opponent exiles two cards from their hand. | 1 | Nicol Bolas, God-Pharaoh | hou |
+| +N: each opponent loses N life unless that player sacrifices a nonland permanent of their choice or discards a card. | 1 | Nicol Bolas, the Deceiver | hou |
+| +N: untap up to two target creatures and up to two target lands. | 1 | Nissa, Genesis Mage | hou |
+| aftermath (cast ~ only from your graveyard. then exile it.) each player shuffles their graveyard into their library. | 1 | Struggle // Survive | hou |
+| aftermath (cast ~ only from your graveyard. then exile it.) look at the top card of your library. you may put it onto the battlefield if it"..."t, put it into y | 1 | Reason // Believe | hou |
+| all creatures lose indestructible until end of turn. ~ deals N damage to each creature and each non-bolas planeswalker. | 1 | Hour of Devastation | hou |
+| as long as a creature has a -N/-N counter on it, ~ has vigilance and deathtouch. | 1 | Tenacious Hunter | hou |
+| as long as you control a desert or there is a desert card in your graveyard, ~ gets +N/+N and has trample. | 1 | Sidewinder Naga | hou |
+| at the beginning of combat on your turn, you may exile a creature card from your graveyard. if you do, create a token that"..."s a N/N black zombie. it gains ha | 1 | God-Pharaoh's Gift | hou |
+| at the beginning of each end step, enchanted player mills N cards, where N is the number of cards put into their graveyard from anywhere ~. | 1 | Fraying Sanity | hou |
+| at the beginning of each of your postcombat main phases, add {M} for each N life your opponents have lost ~. | 1 | Neheb, the Eternal | hou |
+| at the beginning of enchanted player's upkeep, that player loses N life unless they sacrifice a nonland permanent of their choice or discard a card. | 1 | Torment of Scarabs | hou |
+| counter target blue spell. if it was a jace planeswalker spell, scry N. | 1 | Jace's Defeat | hou |
+| counter target spell unless its controller pays {M} for each card in your graveyard. cycling {M} ({M}, discard ~: draw a card.) | 1 | Countervailing Winds | hou |
+| create a N/N green snake creature token. lands you control don't untap during your next untap step. | 1 | Rhonas's Last Stand | hou |
+| creatures enchanted player controls lose all abilities and have base power and toughness N/N. | 1 | Overwhelming Splendor | hou |
+| creatures target opponent controls attack ~ if able. during that player"..."t untap. cycling {M} ({M}, discard ~: draw a card.) | 1 | Imaginary Threats | hou |
+| destroy all creatures. lands you control don't untap during your next untap step. | 1 | Bontu's Last Reckoning | hou |
+| draw two cards. then discard a card unless you return a land you control to its owner's hand. | 1 | Tragic Lesson | hou |
+| enchanted creature can"..."t be activated. | 1 | Desert's Hold | hou |
+| equipped creature gets +N/+N and has afflict N. | 1 | Dagger of the Worthy | hou |
+| exile N target creature cards from your graveyard. for each card exiled ~, create a token that"..."s a N/N black zombie. | 1 | Hour of Eternity | hou |
+| exile target creature. if that creature was a god, its controller reveals their hand and exiles all cards from it with the same name as that creature. | 1 | Hour of Glory | hou |
+| exile target white creature that's attacking or blocking. if it was a gideon planeswalker, you gain N life. | 1 | Gideon's Defeat | hou |
+| gain control of target artifact, creature, or enchantment. lands you control don't untap during your next untap step. | 1 | Kefnet's Last Word | hou |
+| if a source would deal damage to a planeswalker you control, prevent N of that damage. | 1 | Djeru, With Eyes Open | hou |
+| players can't get counters. | 1 | Solemnity | hou |
+| put a -N/-N counter on target creature. ~ deals N damage to that creature's controller. | 1 | Blur of Blades | hou |
+| put three -N/-N counters on target creature. its controller loses N life unless they sacrifice another nonland permanent of their choice or discard a card. | 1 | Torment of Venom | hou |
+| repeat the following process N times. each opponent loses N life unless that player sacrifices a nonland permanent of their choice or discards a card. | 1 | Torment of Hailfire | hou |
+| return any number of target permanents you own to your hand. | 1 | Leave // Chance | hou |
+| search your library and graveyard for a card named forest, a card named brambleweft behemoth, and a card named nissa, genesis mage. reveal those cards, put them | 1 | Nissa's Encouragement | hou |
+| search your library for up to N creature cards with different names that each have mana value N, reveal them, put them into your hand, then shuffle. | 1 | Uncage the Menagerie | hou |
+| shuffle your library, then exile the top four cards. you may cast any number of spells with mana value N or less from among them without paying their mana costs | 1 | Hazoret's Undying Fury | hou |
+| untap target creature. it gets +N/+N until end of turn and can block an additional creature ~. | 1 | Act of Heroism | hou |
+| until end of turn, creatures you control gain trample and "..." | 1 | Driven // Despair | hou |
+| when you cycle ~, counter target activated or triggered ability you don't control. | 1 | Nimble Obstructionist | hou |
+| when ~ enters, all damage that would be dealt ~ to you and permanents you control is dealt to enchanted creature instead. | 1 | Saving Grace | hou |
+| when ~ enters, it deals N damage to each other creature. | 1 | Chaos Maw | hou |
+| when ~ enters, scry N, then reveal the top card of your library. you gain life equal to that card's mana value. | 1 | Sifter Wurm | hou |
+| when ~ enters, target creature with power less than or equal to ~ power can't block ~. | 1 | Earthshaker Khenra | hou |
+| when ~ enters, you gain life equal to its power. | 1 | Sunscourge Champion | hou |
+| when ~ enters, you may have target creature get +N/+N until end of turn, where N is ~ power. | 1 | Resilient Khenra | hou |
+| when ~ enters, you may put target instant or sorcery card from your graveyard on top of your library. | 1 | Bloodwater Entity | hou |
+| when ~ enters, you may search your library and/or graveyard for a card named nicol bolas, the deceiver, reveal it, and put it into your hand. if you search your | 1 | Visage of Bolas | hou |
+| whenever unesh or another sphinx you control enters, reveal the top four cards of your library. an opponent separates those cards into two piles. put one pile i | 1 | Unesh, Criosphinx Sovereign | hou |
+| whenever you activate an eternalize or embalm ability, draw a card. | 1 | Vizier of the Anointed | hou |
+| whenever you cast a noncreature spell, remove a -N/-N counter from ~. | 1 | Magmaroth | hou |
+| whenever you cast a noncreature spell, you may have ~ become a N/N sphinx creature with flying in addition to its other types until end of turn. | 1 | Riddleform | hou |
+| whenever you cast a spell with mana value equal to the number of doom counters on ~, ~ deals that much damage to any target. then put a doom counter on ~. | 1 | Imminent Doom | hou |
+| whenever you cast an instant or sorcery spell, you may copy that spell. you may choose new targets for the copy. | 1 | Swarm Intelligence | hou |
+| whenever you cycle or discard a card, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Cunning Survivor | hou |
+| whenever you exert a creature, tap target creature an opponent controls. | 1 | Vizier of the True | hou |
+| whenever you exert a creature, ~ deals N damage to each opponent and you gain N life. | 1 | Resolute Survivors | hou |
+| whenever you put one or more -N/-N counters on a creature, each opponent loses N life and you gain N life. | 1 | Obelisk Spider | hou |
+| whenever ~ attacks and isn't blocked, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Wildfire Eternal | hou |
+| whenever ~ attacks, exile target card from defending player's graveyard. | 1 | Graven Abomination | hou |
+| whenever ~ attacks, if you control a desert or there is a desert card in your graveyard, target creature can't block ~. | 1 | Gilded Cerodon | hou |
+| whenever ~ deals combat damage to a player, remove all -N/-N counters from it. | 1 | Ammit Eternal | hou |
+| whenever ~ deals combat damage to a player, that player discards that many cards. | 1 | Dreamstealer | hou |
+| you may cast spells that have a cycling ability from your graveyard. | 1 | Abandoned Sarcophagus | hou |
+| you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn and can't be blocked by creatures with power N or less ~. | 1 | Rhonas's Stalwart | hou |
+| you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 1 | Khenra Scrapper | hou |
+| you may exert ~ as it attacks. when you do, prevent all combat damage that would be dealt to it ~. | 1 | Oketra's Avenger | hou |
+| your life total becomes equal to your starting life total. lands you control don't untap during your next untap step. | 1 | Oketra's Last Mercy | hou |
+| {M}, {M}, sacrifice ~: return each creature card exiled with ~ to the battlefield under its owner's control. | 1 | Endless Sands | hou |
+| ~ deals N damage to target red creature or red planeswalker. if that permanent is a chandra planeswalker, you may discard a card. if you do, draw a card. | 1 | Chandra's Defeat | hou |
+| ~ deals damage to target spell"..."s mana value. | 1 | Refuse // Cooperate | hou |
+| ~ gets +N/+N as long as you control a desert. | 1 | Ramunap Hydra | hou |
+| ~ gets +N/+N for each card with cycling in your graveyard. | 1 | Vile Manifestation | hou |
+| ~ gets +N/+N for each other cat you control. | 1 | Pride Sovereign | hou |
+| ~ has first strike as long as it's attacking. | 1 | Thorned Moloch | hou |
+| ~ has lifelink as long as you control a desert or there is a desert card in your graveyard. | 1 | Solitary Camel | hou |
+| ~'s power and toughness are each equal to the number of cards in your graveyard. | 1 | Apocalypse Demon | hou |
+| ~'s power and toughness are each equal to twice the number of creatures you control. | 1 | Majestic Myriarch | hou |
+| −N: search your library for up to two creature and/or planeswalker cards, put them onto the battlefield, then shuffle. | 1 | Samut, the Tested | hou |
 
 ## Notes
 

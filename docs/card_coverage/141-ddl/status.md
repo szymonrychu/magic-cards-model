@@ -43,10 +43,10 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura. | Ordeal of Purphoros | 1 |
-| Whenever this creature attacks, each attacking Human gains flying until end of turn. | Cavalry Pegasus | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| whenever enchanted creature attacks, put a +N/+N counter on it. then if it has three or more +N/+N counters on it, sacrifice ~. | 1 | Ordeal of Purphoros | ddl |
+| whenever ~ attacks, each attacking human gains flying until end of turn. | 1 | Cavalry Pegasus | ddl |
 
 ## Notes
 

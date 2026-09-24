@@ -57,17 +57,19 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| As long as this card is in your graveyard and you control a Plains, creatures you control have first strike. | Valor, Wonder | 2 |
-| Whenever this creature deals combat damage to a player, that player exiles the top four cards of their library. If two or more of those cards have the same name | Cephalid Constable, Scalpelexis | 2 |
-| Any player may have Browbeat deal 5 damage to them. If no one does, target player draws three cards. | Browbeat | 1 |
-| As this creature enters, exile any number of creature cards from your graveyard. | Sutured Ghoul | 1 |
-| At the beginning of your upkeep, sacrifice this enchantment unless you discard a card. | Solitary Confinement | 1 |
-| Destroy target attacking creature. You gain life equal to its power. | Chastise | 1 |
-| {W}, {T}: Put target Aura card from a graveyard onto the battlefield under your control attached to a creature you control. | Nomad Mythmaker | 1 |
-| Threshold — As long as there are seven or more cards in your graveyard, this creature gets +3/+3 and has "{R}: This creature gets +1/+0 until end of turn." | Fledgling Dragon | 1 |
-| When this creature enters, you gain 1 life for each card in your graveyard. | Ancestor's Chosen | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Threshold | 1 | Fledgling Dragon | jud |
+| any player may have ~ deal N damage to them. if no one does, target player draws three cards. | 1 | Browbeat | jud |
+| as long as ~ is in your graveyard and you control a plains, creatures you control have first strike. | 1 | Valor | jud |
+| as long as ~ is in your graveyard and you control an island, creatures you control have flying. | 1 | Wonder | jud |
+| as ~ enters, exile any number of creature cards from your graveyard. | 1 | Sutured Ghoul | jud |
+| at the beginning of your upkeep, sacrifice ~ unless you discard a card. | 1 | Solitary Confinement | jud |
+| destroy target attacking creature. you gain life equal to its power. | 1 | Chastise | jud |
+| when ~ enters, you gain N life for each card in your graveyard. | 1 | Ancestor's Chosen | jud |
+| whenever ~ deals combat damage to a player, return up to that many target permanents that player controls to their owner's hand. | 1 | Cephalid Constable | jud |
+| whenever ~ deals combat damage to a player, that player exiles the top four cards of their library. if two or more of those cards have the same name, repeat ~. | 1 | Scalpelexis | jud |
+| {M}, {M}: put target aura card from a graveyard onto the battlefield under your control attached to a creature you control. | 1 | Nomad Mythmaker | jud |
 
 ## Notes
 

@@ -60,17 +60,17 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Each creature gets +1/+1 for each other creature on the battlefield that shares at least one creature type with it. | Coat of Arms | 1 |
-| Each creature you control can block an additional creature each combat. | High Ground | 1 |
-| Enchanted creature gets +2/+2 and can't block. | Maniacal Rage | 1 |
-| Put target card from your graveyard on top of your library. | Reclaim | 1 |
-| {0}: Remove target attacking creature you control from combat and untap it. | Reconnaissance | 1 |
-| {1}{B}, Sacrifice this creature: Look at target player's hand and choose a card from it. That player discards that card. Activate only as a sorcery. | Thrull Surgeon | 1 |
-| Whenever a creature enters, that creature's controller may have it deal damage equal to its power to any target of their choice. | Pandemonium | 1 |
-| Whenever this creature becomes blocked, it gets +1/+1 until end of turn for each creature blocking it. | Elvish Berserker | 1 |
-| You have no maximum hand size. | Spellbook | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| each creature gets +N/+N for each other creature on the battlefield that shares at least one creature type with it. | 1 | Coat of Arms | exo |
+| each creature you control can block an additional creature each combat. | 1 | High Ground | exo |
+| enchanted creature gets +N/+N and can't block. | 1 | Maniacal Rage | exo |
+| put target card from your graveyard on top of your library. | 1 | Reclaim | exo |
+| whenever a creature enters, that creature's controller may have it deal damage equal to its power to any target of their choice. | 1 | Pandemonium | exo |
+| whenever ~ becomes blocked, it gets +N/+N until end of turn for each creature blocking it. | 1 | Elvish Berserker | exo |
+| you have no maximum hand size. | 1 | Spellbook | exo |
+| {M}: remove target attacking creature you control from combat and untap it. | 1 | Reconnaissance | exo |
+| {M}{M}, sacrifice ~: look at target player's hand and choose a card from it. that player discards that card. activate only as a sorcery. | 1 | Thrull Surgeon | exo |
 
 ## Notes
 

@@ -46,11 +46,11 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| All creatures able to block this creature do so. | Elvish Bard | 1 |
-| Hail Storm deals 2 damage to each attacking creature and 1 damage to you and each creature you control. | Hail Storm | 1 |
-| Whenever this creature attacks and isn't blocked, defending player gets a poison counter. | Swamp Mosquito | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| all creatures able to block ~ do so. | 1 | Elvish Bard | all |
+| whenever ~ attacks and isn't blocked, defending player gets a poison counter. | 1 | Swamp Mosquito | all |
+| ~ deals N damage to each attacking creature and N damage to you and each creature you control. | 1 | Hail Storm | all |
 
 ## Notes
 

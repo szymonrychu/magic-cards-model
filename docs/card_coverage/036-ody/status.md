@@ -88,25 +88,25 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Enchanted land has "{T}: Create a 1/1 green Squirrel creature token." | Caustic Tar, Squirrel Nest | 2 |
-| At the beginning of your upkeep, if you have 200 or more cards in your library, you win the game. | Battle of Wits | 1 |
-| Cards in graveyards can't be the targets of spells or abilities. | Ground Seal | 1 |
-| Exile all cards from target player's graveyard other than basic land cards. For each card exiled this way, search that player's library for all cards with the s | Haunting Echoes | 1 |
-| Fear | Shadowmage Infiltrator | 1 |
-| Gain control of target Aura that's attached to a permanent. Attach it to another permanent it can enchant. | Aura Graft | 1 |
-| Magnivore's power and toughness are each equal to the number of sorcery cards in all graveyards. | Magnivore | 1 |
-| Mortivore's power and toughness are each equal to the number of creature cards in all graveyards. | Mortivore | 1 |
-| Tap all creatures without flying. | Deluge | 1 |
-| Target creature you control gains protection from the color of your choice until end of turn. Draw a card. | Shelter | 1 |
-| {1}{U}: Target player reveals the top card of their library. | Aven Windreader | 1 |
-| Target player takes two extra turns after this one. | Time Stretch | 1 |
-| This creature can't attack or block alone. | Ember Beast | 1 |
-| This creature gets +1/+1 for each other Squirrel on the battlefield. | Squirrel Mob | 1 |
-| Threshold — As long as there are seven or more cards in your graveyard, this creature gets +3/+3 and has flying. | Mystic Enforcer | 1 |
-| Whenever you cast an instant or sorcery spell, you may pay {3}. If you do, copy that spell. You may choose new targets for the copy. | Mirari | 1 |
-| Whenever you win a coin flip, put a luck counter on this enchantment. | Chance Encounter | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| enchanted land has "..." | 2 | Caustic Tar, Squirrel Nest | ody |
+| Threshold | 1 | Mystic Enforcer | ody |
+| at the beginning of your upkeep, if you have N or more cards in your library, you win the game. | 1 | Battle of Wits | ody |
+| cards in graveyards can't be the targets of spells or abilities. | 1 | Ground Seal | ody |
+| exile all cards from target player"..."s library for all cards with the same name as that card and exile them. then that player shuffles. | 1 | Haunting Echoes | ody |
+| fear | 1 | Shadowmage Infiltrator | ody |
+| gain control of target aura that's attached to a permanent. attach it to another permanent it can enchant. | 1 | Aura Graft | ody |
+| tap all creatures without flying. | 1 | Deluge | ody |
+| target creature you control gains protection from the color of your choice until end of turn. draw a card. | 1 | Shelter | ody |
+| target player takes two extra turns after ~. | 1 | Time Stretch | ody |
+| whenever you cast an instant or sorcery spell, you may pay {M}. if you do, copy that spell. you may choose new targets for the copy. | 1 | Mirari | ody |
+| whenever you win a coin flip, put a luck counter on ~. | 1 | Chance Encounter | ody |
+| {M}{M}: target player reveals the top card of their library. | 1 | Aven Windreader | ody |
+| ~ can't attack or block alone. | 1 | Ember Beast | ody |
+| ~ gets +N/+N for each other squirrel on the battlefield. | 1 | Squirrel Mob | ody |
+| ~'s power and toughness are each equal to the number of creature cards in all graveyards. | 1 | Mortivore | ody |
+| ~'s power and toughness are each equal to the number of sorcery cards in all graveyards. | 1 | Magnivore | ody |
 
 ## Notes
 

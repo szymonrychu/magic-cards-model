@@ -58,17 +58,17 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| All nonland permanents are the chosen color. | Shifting Sky | 1 |
-| At the beginning of each player's upkeep, that player returns a creature they control to its owner's hand. | Sunken Hope | 1 |
-| Creature spells can't be countered. | Gaea's Herald | 1 |
-| Domain — Target creature gets +1/+1 until end of turn for each basic land type among lands you control. | Gaea's Might | 1 |
-| Other Zombie creatures get +1/+1. | Lord of the Undead | 1 |
-| Spells with the chosen name can't be cast. | Meddling Mage | 1 |
-| When this creature enters, each player loses 1 life. | Maggot Carrier | 1 |
-| Whenever a permanent is returned to a player's hand, that player discards a card. | Warped Devotion | 1 |
-| Whenever you cast a spell that's white, blue, black, or red, put a +1/+1 counter on this creature. | Quirion Dryad | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Domain | 1 | Gaea's Might | pls |
+| all nonland permanents are the chosen color. | 1 | Shifting Sky | pls |
+| at the beginning of each player"..."s hand. | 1 | Sunken Hope | pls |
+| creature spells can't be countered. | 1 | Gaea's Herald | pls |
+| other zombie creatures get +N/+N. | 1 | Lord of the Undead | pls |
+| spells with the chosen name can't be cast. | 1 | Meddling Mage | pls |
+| when ~ enters, each player loses N life. | 1 | Maggot Carrier | pls |
+| whenever a permanent is returned to a player's hand, that player discards a card. | 1 | Warped Devotion | pls |
+| whenever you cast a spell that's white, blue, black, or red, put a +N/+N counter on ~. | 1 | Quirion Dryad | pls |
 
 ## Notes
 

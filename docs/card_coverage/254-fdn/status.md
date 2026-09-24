@@ -176,56 +176,55 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Create a token that's a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token." Flashback {2}{R}{ | Chandra, Flameshaper, Electroduplicate | 2 |
-| Raid — At the beginning of your end step, if you attacked this turn, return target creature card with mana value less than or equal to Alesha's power from your  | Alesha, Who Laughs at Fate, Perforating Artist | 2 |
-| As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types. | Skyknight Squire | 1 |
-| As long as your life total is greater than your starting life total, Elenda gets +1/+1 and has menace. Elenda gets an additional +5/+5 as long as your life tota | Elenda, Saint of Dusk | 1 |
-| Create two 1/1 blue Faerie creature tokens with flying. When you do, tap target creature an opponent controls. | Faebloom Trick | 1 |
-| Creatures you control of the chosen type get +1/+1 for each fellowship counter on this artifact. | Banner of Kinship | 1 |
-| Double target creature's power until end of turn. Flashback {4}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | Bulk Up | 1 |
-| {G}{U}, {T}: Double the number of each kind of counter on up to two target creatures and/or artifacts you control. | Zimone, Paradox Sculptor | 1 |
-| Draw a card for each different mana value among nonland permanents you control. | Lunar Insight | 1 |
-| During your turn, creatures you control with +1/+1 counters on them have first strike. | Inspiring Paladin | 1 |
-| During your turn, equipped creature gets +2/+0 and has first strike. | Quick-Draw Katana | 1 |
-| {T}: Exile target creature card from a graveyard that was put there this turn. Create a token that's a copy of it, except it's a Nightmare in addition to its ot | Abyssal Harvester | 1 |
-| Goblin Negotiation deals X damage to target creature. Create a number of 1/1 red Goblin creature tokens equal to the amount of excess damage dealt to that creat | Goblin Negotiation | 1 |
-| {1}{R}: If Kellan is a Scout, it becomes a Human Faerie Detective and gains "Whenever Kellan deals combat damage to a player, exile the top card of your library | Kellan, Planar Trailblazer | 1 |
-| Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Target creature you control gains indestructible until end of turn. If this spell was k | Divine Resilience | 1 |
-| {2}{W}: Look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your hand. Put the rest  | Squad Rallier | 1 |
-| {4}{G}{G}, {T}: Look at the top six cards of your library. You may reveal a creature card with mana value less than or equal to the number of lands you control  | Loot, Exuberant Explorer | 1 |
-| Morbid — When this creature enters, target creature an opponent controls gets -1/-1 until end of turn. If a creature died this turn, that creature gets -13/-13  | Tragic Banshee | 1 |
-| Put a +1/+1 counter on target creature. It gains flying until end of turn. Prevent all combat damage that would be dealt to it this turn. | Fleeting Flight | 1 |
-| Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | Goblin Boarders | 1 |
-| Raid — When this creature enters, if you attacked this turn, exile the top two cards of your library. Choose one of them. Until the end of your next turn, you m | Strongbox Raider | 1 |
-| {4}, {T}, Sacrifice this artifact: Each opponent loses life equal to the number of soul counters on this artifact. | Ravenous Amulet | 1 |
-| {2}{B}, Sacrifice this enchantment: Target opponent loses X life, where X is the amount of life you gained this turn. | Midnight Snack | 1 |
-| {2}{R}: Target creature can't block this turn. | Sower of Chaos | 1 |
-| This creature enters with eight revival counters on it if you cast it. | Nine-Lives Familiar | 1 |
-| {4}: This land becomes a 3/3 creature with vigilance and all creature types. It's still a land. | Soulstone Sanctuary | 1 |
-| Threshold — This creature can't be blocked as long as there are seven or more cards in your graveyard. | Cephalid Inkmage | 1 |
-| {R}: Until end of turn, another target Goblin you control gains flying and "When this creature deals combat damage, sacrifice it." | Dropkick Bomber | 1 |
-| +1: Up to one target creature you control can't be blocked this turn. Draw a card, then discard a card. | Kaito, Cunning Infiltrator | 1 |
-| When this creature dies, if it wasn't a Demon, return it to the battlefield under its owner's control with two +1/+1 counters on it. It's a Demon in addition to | Infernal Vessel | 1 |
-| When this creature dies, return another target non-Bear creature card with mana value less than or equal to this creature's power from your graveyard to the bat | Fiendish Panda | 1 |
-| When this creature enters, create a number of 1/1 white Rabbit creature tokens equal to the number of other creatures you control named Hare Apparent. | Hare Apparent | 1 |
-| When this creature enters, exile up to two target cards from a single graveyard. If at least one creature card was exiled this way, each opponent loses 2 life a | Soul-Shackled Zombie | 1 |
-| Whenever a creature you control deals combat damage during your turn, put that many +1/+1 counters on it. | Quilled Greatwurm | 1 |
-| Whenever a nontoken, non-Angel creature you control dies, return that card to the battlefield under its owner's control with a +1/+1 counter on it. It has flyin | Valkyrie's Call | 1 |
-| Whenever a source you control deals noncombat damage to an opponent, you draw that many cards. | Niv-Mizzet, Visionary | 1 |
-| Whenever an opponent discards a card, exile it from their graveyard with a stash counter on it. | Tinybones, Bauble Burglar | 1 |
-| Whenever an opponent loses life, you gain that much life. | Bloodthirsty Conqueror | 1 |
-| Whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. Put that card into your | Spinner of Souls | 1 |
-| Whenever equipped creature becomes untapped, remove a bait counter from this Equipment. If you do, create a 1/1 blue Fish creature token. | Fishing Pole | 1 |
-| Whenever this creature attacks, another target creature you control gains trample and gets +X/+X until end of turn, where X is this creature's power. | Ashroot Animist | 1 |
-| Whenever this creature attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to that card's m | Sphinx of Forgotten Lore | 1 |
-| Whenever this creature attacks, you may sacrifice another creature. If you do, draw a card and this creature can't be blocked this turn. | Vampire Gourmand | 1 |
-| Whenever this creature deals combat damage to a player, put that many incubation counters on it. | Drake Hatcher | 1 |
-| Whenever you put one or more +1/+1 counters on this creature, draw a card. This ability triggers only once each turn. | Exemplar of Light | 1 |
-| You can't lose the game and your opponents can't win the game. | Herald of Eternal Dawn | 1 |
-| You may cast spells as though they had flash. | High Fae Trickster | 1 |
-| You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield. Each player sacrifices thirteen creatures of  | Blasphemous Edict | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Raid | 4 | Alesha, Who Laughs at Fate, Goblin Boarders, Perforating Artist, Strongbox Raider | fdn |
+| Morbid | 1 | Tragic Banshee | fdn |
+| Threshold | 1 | Cephalid Inkmage | fdn |
+| +N: create a token that's a copy of target creature you control, except it has haste and "..." | 1 | Chandra, Flameshaper | fdn |
+| +N: up to one target creature you control can't be blocked ~. draw a card, then discard a card. | 1 | Kaito, Cunning Infiltrator | fdn |
+| as long as your life total is greater than your starting life total, elenda gets +N/+N and has menace. elenda gets an additional +N/+N as long as your life tota | 1 | Elenda, Saint of Dusk | fdn |
+| as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
+| create a token that's a copy of target creature you control, except it has haste and "..." flashback {M}{M}{M} (you may cast ~ from your graveyard for its flash | 1 | Electroduplicate | fdn |
+| create two N/N blue faerie creature tokens with flying. when you do, tap target creature an opponent controls. | 1 | Faebloom Trick | fdn |
+| creatures you control of the chosen type get +N/+N for each fellowship counter on ~. | 1 | Banner of Kinship | fdn |
+| double target creature's power until end of turn. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Bulk Up | fdn |
+| draw a card for each different mana value among nonland permanents you control. | 1 | Lunar Insight | fdn |
+| during your turn, creatures you control with +N/+N counters on them have first strike. | 1 | Inspiring Paladin | fdn |
+| during your turn, equipped creature gets +N/+N and has first strike. | 1 | Quick-Draw Katana | fdn |
+| kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature you control gains indestructible until end of turn. if ~ was kicked, instead any | 1 | Divine Resilience | fdn |
+| put a +N/+N counter on target creature. it gains flying until end of turn. prevent all combat damage that would be dealt to it ~. | 1 | Fleeting Flight | fdn |
+| when ~ dies, if it wasn"..."s control with two +N/+N counters on it. it's a demon in addition to its other types. | 1 | Infernal Vessel | fdn |
+| when ~ dies, return another target non-bear creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Fiendish Panda | fdn |
+| when ~ enters, create a number of N/N white rabbit creature tokens equal to the number of other creatures you control named ~. | 1 | Hare Apparent | fdn |
+| when ~ enters, exile up to two target cards from a single graveyard. if at least one creature card was exiled ~, each opponent loses N life and you gain N life. | 1 | Soul-Shackled Zombie | fdn |
+| whenever a creature you control deals combat damage during your turn, put that many +N/+N counters on it. | 1 | Quilled Greatwurm | fdn |
+| whenever a nontoken, non-angel creature you control dies, return that card to the battlefield under its owner's control with a +N/+N counter on it. it has flyin | 1 | Valkyrie's Call | fdn |
+| whenever a source you control deals noncombat damage to an opponent, you draw that many cards. | 1 | Niv-Mizzet, Visionary | fdn |
+| whenever an opponent discards a card, exile it from their graveyard with a stash counter on it. | 1 | Tinybones, Bauble Burglar | fdn |
+| whenever an opponent loses life, you gain that much life. | 1 | Bloodthirsty Conqueror | fdn |
+| whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. put that card into your | 1 | Spinner of Souls | fdn |
+| whenever equipped creature becomes untapped, remove a bait counter from ~. if you do, create a N/N blue fish creature token. | 1 | Fishing Pole | fdn |
+| whenever you put one or more +N/+N counters on ~, draw a card. ~ triggers only once each turn. | 1 | Exemplar of Light | fdn |
+| whenever ~ attacks, another target creature you control gains trample and gets +N/+N until end of turn, where N is ~ power. | 1 | Ashroot Animist | fdn |
+| whenever ~ attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. the flashback cost is equal to that card's mana cost. | 1 | Sphinx of Forgotten Lore | fdn |
+| whenever ~ attacks, you may sacrifice another creature. if you do, draw a card and ~ can't be blocked ~. | 1 | Vampire Gourmand | fdn |
+| whenever ~ deals combat damage to a player, put that many incubation counters on it. | 1 | Drake Hatcher | fdn |
+| you can"..."t win the game. | 1 | Herald of Eternal Dawn | fdn |
+| you may cast spells as though they had flash. | 1 | High Fae Trickster | fdn |
+| you may pay {M} rather than pay ~ mana cost if there are thirteen or more creatures on the battlefield. each player sacrifices thirteen creatures of their choic | 1 | Blasphemous Edict | fdn |
+| {M}, {M}, sacrifice ~: each opponent loses life equal to the number of soul counters on ~. | 1 | Ravenous Amulet | fdn |
+| {M}: exile target creature card from a graveyard that was put there ~. create a token that"..."s a nightmare in addition to its other types. then exile all othe | 1 | Abyssal Harvester | fdn |
+| {M}: until end of turn, another target goblin you control gains flying and "..." | 1 | Dropkick Bomber | fdn |
+| {M}: ~ becomes a N/N creature with vigilance and all creature types. it's still a land. | 1 | Soulstone Sanctuary | fdn |
+| {M}{M}, sacrifice ~: target opponent loses N life, where N is the amount of life you gained ~. | 1 | Midnight Snack | fdn |
+| {M}{M}, {M}: double the number of each kind of counter on up to two target creatures and/or artifacts you control. | 1 | Zimone, Paradox Sculptor | fdn |
+| {M}{M}: if kellan is a scout, it becomes a human faerie detective and gains "..." | 1 | Kellan, Planar Trailblazer | fdn |
+| {M}{M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put the rest  | 1 | Squad Rallier | fdn |
+| {M}{M}: target creature can't block ~. | 1 | Sower of Chaos | fdn |
+| {M}{M}{M}, {M}: look at the top six cards of your library. you may reveal a creature card with mana value less than or equal to the number of lands you control  | 1 | Loot, Exuberant Explorer | fdn |
+| ~ deals N damage to target creature. create a number of N/N red goblin creature tokens equal to the amount of excess damage dealt to that creature ~. | 1 | Goblin Negotiation | fdn |
+| ~ enters with eight revival counters on it if you cast it. | 1 | Nine-Lives Familiar | fdn |
 
 ## Notes
 

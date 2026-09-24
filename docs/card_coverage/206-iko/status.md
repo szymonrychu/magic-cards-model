@@ -3,24 +3,24 @@
 - Expansion: 206
 - Set code: `iko`
 - Release date: 2020-04-24
-- Cards in scope (Modern/Pioneer/Standard-legal): 228
+- Cards in scope (Modern/Pioneer/Standard-legal): 227
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 228 |
-| Pioneer | 228 |
+| Modern | 227 |
+| Pioneer | 227 |
 | Standard | 6 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 14 | 6.1% |
-| Partial (unaudited) | 21 | 9.2% |
-| Not tested (handled, untested) | 92 | 40.4% |
-| Not working (silent / notice / error) | 101 | 44.3% |
+| Full (handled + tested) | 14 | 6.2% |
+| Partial (unaudited) | 20 | 8.8% |
+| Not tested (handled, untested) | 92 | 40.5% |
+| Not working (silent / notice / error) | 101 | 44.5% |
 
 ## Cards needing work
 
@@ -147,7 +147,6 @@
 | Umori, the Collector | unaudited | Companion — Each nonland card in your starting deck shares a card type. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Unpredictable Cyclone | unaudited | If a cycling ability of another nonland card would cause you to draw a card, instead exile cards from the top of your library until you exile a card that shares | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Wingfold Pteron | unaudited | This creature enters with your choice of a flying counter or a hexproof counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Zilortha, Strength Incarnate | unaudited | Lethal damage dealt to creatures you control is determined by their power rather than their toughness. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adaptive Shimmerer | handled | This creature enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aegis Turtle | handled |  |  | Y/Y/Y | not_tested |
 | Almighty Brushwagg | handled | {3}{G}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -265,96 +264,124 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| This creature enters with your choice of two different counters on it from among menace, deathtouch, and lifelink. | Boot Nipper, Ferocious Tigorilla, Flycatcher Giraffid, Grimdancer, Helica Glider, Wingfold Pteron | 6 |
-| {1}{W}, {T}: Put a +1/+1 counter on each creature you control with vigilance. | Duskfang Mentor, Frillscare Mentor, Hornbash Mentor, Keensight Mentor, Wingspan Mentor | 5 |
-| Whenever this creature mutates, return any number of target creature cards with total power 10 or less from your graveyard to the battlefield. | Boneyard Lurker, Lore Drakkis, Necropanther, Nethroi, Apex of Death | 4 |
-| Whenever this creature mutates, you may cast target noncreature card with mana value 3 or less from your graveyard without paying its mana cost. | Cloudpiercer, Majestic Auricorn, Pouncing Shoreshark, Vadrok, Apex of Thunder | 4 |
-| Mutate | Brokkos, Apex of Forever, Parcelbeast, Sea-Dasher Octopus | 3 |
-| Target creature gets +7/+7 until end of turn. Up to one other target creature blocks it this turn if able. Cycling {2} ({2}, Discard this card: Draw a card.) | Heightened Reflexes, Monstrous Step, Will of the All-Hunter | 3 |
-| Whenever a creature you control with menace becomes blocked, defending player sacrifices a creature of their choice that's blocking it. | Essence Symbiote, Labyrinth Raptor, The Ozolith | 3 |
-| Whenever this creature mutates, create a red artifact token named Feather with "{1}, Sacrifice this token: Return target Phoenix card from your graveyard to the | Cubwarden, Everquill Phoenix, Trumpeting Gnarr | 3 |
-| Whenever this creature mutates, each opponent loses X life and you gain X life, where X is the number of times this creature has mutated. | Cavern Whisperer, Chittering Harvester, Insatiable Hemophage | 3 |
-| Whenever this creature mutates, put two +1/+1 counters on it. | Glowstone Recluse, Mysterious Egg, Vulpikeet | 3 |
-| At the beginning of your upkeep, draw a card if you control a creature with the greatest power among creatures on the battlefield. Otherwise, put a +1/+1 counte | Alert Heedbonder, Primal Empathy | 2 |
-| Companion — Each nonland card in your starting deck has a different name. | Lutri, the Spellchaser, Umori, the Collector | 2 |
-| When this creature enters, target opponent puts a deathtouch counter on a creature they control. | Hunted Nightmare, Patagia Tiger | 2 |
-| When you cycle this card, shuffle it into your library from your graveyard. If you've cycled a card named Yidaro, Wandering Monster four or more times this game | Sanctuary Smasher, Yidaro, Wandering Monster | 2 |
-| Whenever this creature mutates, destroy target creature or planeswalker an opponent controls. | Dirge Bat, Gemrazer | 2 |
-| Whenever this creature mutates, exile cards from the top of your library until you exile X permanent cards, where X is the number of times this creature has mut | Auspicious Starrix, Illuna, Apex of Wishes | 2 |
-| Whenever this creature mutates, other creatures you control get +X/+X until end of turn, where X is the number of times this creature has mutated. | Huntmaster Liger, Regal Leosaur | 2 |
-| As an additional cost to cast this spell, reveal a creature card from your hand. Charge of the Forever-Beast deals damage to target creature or planeswalker equ | Charge of the Forever-Beast | 1 |
-| As long as enchanted creature has vigilance, it assigns combat damage equal to its toughness rather than its power. | Solid Footing | 1 |
-| At the beginning of combat on your turn, choose a kind of counter at random that this creature doesn't have on it from among flying, first strike, deathtouch, h | Crystalline Giant | 1 |
-| Blitz of the Thunder-Raptor deals damage to target creature or planeswalker equal to the number of instant and sorcery cards in your graveyard. If that creature | Blitz of the Thunder-Raptor | 1 |
-| Choose odd or even. Exile each creature with mana value of the chosen quality. (Zero is even.) | Extinction Event | 1 |
-| Companion — No card in your starting deck has more than one of the same mana symbol in its mana cost. | Jegantha, the Wellspring | 1 |
-| Counter target spell that targets a permanent you control. Draw a card. | Keep Safe | 1 |
-| +1: Create a 3/3 green Beast creature token. Put your choice of a reach counter, a vigilance counter, or a trample counter on it. | Vivien, Monsters' Advocate | 1 |
-| Create a token that's a copy of target permanent. If {R}{G} was spent to cast this spell, instead create a token that's a copy of that permanent, except the tok | Mythos of Illuna | 1 |
-| Creatures you control with flying have "Spells your opponents cast that target this creature cost {2} more to cast." | Jubilant Skybonder | 1 |
-| Creatures you control with trample have "You may have this creature assign its combat damage as though it weren't blocked." | Proud Wildbonder | 1 |
-| Creatures you control with vigilance have "{1}, {T}: Tap target creature." | Frondland Felidar | 1 |
-| Destroy all nonland permanents your opponents control. | Ruinous Ultimatum | 1 |
-| Destroy target creature. Put a menace counter on a creature you control. (It can't be blocked except by two or more creatures.) | Blood Curdle | 1 |
-| Destroy target nonland permanent if it's a creature or if {G}{W} was spent to cast this spell. | Mythos of Nethroi | 1 |
-| Each creature spell you cast costs {1} less to cast if it has mutate. | Pollywog Symbiote | 1 |
-| Each creature you control with menace can't be blocked except by three or more creatures. | Sonorous Howlbonder | 1 |
-| Each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest. If {B} | Mythos of Snapdax | 1 |
-| Enchanted creature gets -2/-0 and loses all abilities. | Mystic Subdual | 1 |
-| Enchanted land has "{T}: Target creature gains trample and haste until end of turn." | Footfall Crater | 1 |
-| Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness. | Dire Tactics | 1 |
-| +1: Exile the top three cards of your library. Creature cards exiled this way gain "You may cast this card from exile as long as you control a Lukka planeswalke | Lukka, Coppercoat Outcast | 1 |
-| Fire Prophecy deals 3 damage to target creature. You may put a card from your hand on the bottom of your library. If you do, draw a card. | Fire Prophecy | 1 |
-| Flame Spill deals 4 damage to target creature. Excess damage is dealt to that creature's controller instead. | Flame Spill | 1 |
-| If a cycling ability of another nonland card would cause you to draw a card, instead exile cards from the top of your library until you exile a card that shares | Unpredictable Cyclone | 1 |
-| If a source you control with an odd mana value would deal damage to a permanent or player, it deals double that damage to that permanent or player instead. | Obosh, the Preypiercer | 1 |
-| If noncombat damage would be dealt to this creature, prevent that damage. Put a +1/+1 counter on this creature for each 1 damage prevented this way. | Stormwild Capridor | 1 |
-| If {U}{B} was spent to cast this spell, search your library for a card, put that card into your graveyard, then shuffle. Return up to two permanent cards from y | Mythos of Brokkos | 1 |
-| Legendary Humans you control have indestructible. | General's Enforcer | 1 |
-| Lethal damage dealt to creatures you control is determined by their power rather than their toughness. | Zilortha, Strength Incarnate | 1 |
-| Look at the top five cards of your library. Put any number of permanent cards from among them onto the battlefield and the rest into your hand. Exile Genesis Ul | Genesis Ultimatum | 1 |
-| Mythos of Vadrok deals 5 damage divided as you choose among any number of target creatures and/or planeswalkers. If {W}{U} was spent to cast this spell, until y | Mythos of Vadrok | 1 |
-| Once during each of your turns, you may cast a permanent spell with mana value 2 or less from your graveyard. | Lurrus of the Dream-Den | 1 |
-| Prevent all damage that would be dealt this turn by creatures your opponents control. | Thwart the Enemy | 1 |
-| Put a +1/+1 counter and a lifelink counter on target creature. | Unexpected Fangs | 1 |
-| Return any number of permanent cards with different names from your graveyard to the battlefield. | Eerie Ultimatum | 1 |
-| Return target creature card from your graveyard to the battlefield. When you do, it fights up to one target creature you don't control. (Each deals damage equal | Back for More | 1 |
-| {1}{G}: Return target Human you control to its owner's hand. Kogla gains indestructible until end of turn. | Kogla, the Titan Ape | 1 |
-| Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | Call of the Death-Dweller | 1 |
-| {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | Bushmeat Poacher | 1 |
-| {T}, Sacrifice this artifact: Target creature doesn't untap during its controller's next untap step. | Sleeper Dart | 1 |
-| {1}{B}: Search your library for a card named Whisper Squad, put it onto the battlefield tapped, then shuffle. | Whisper Squad | 1 |
-| Search your library for up to three monocolored cards with different names and exile them. An opponent chooses one of those cards. Shuffle that card into your l | Emergent Ultimatum | 1 |
-| Spells with flash you cast cost {1} less to cast and can't be countered. | Cunning Nightbonder | 1 |
-| {1}, {T}: Target creature can't block this turn. | Zirda, the Dawnwaker | 1 |
-| Target creature fights another target creature. (Each deals damage equal to its power to the other.) | Clash of Titans | 1 |
-| Target creature you control deals damage equal to its power to target creature you don't control. If the creature you control has trample, excess damage is deal | Ram Through | 1 |
-| Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. Cycling {1} ({1}, Discard this card: Draw a car | Memory Leak | 1 |
-| {T}: This creature deals X damage to any target, where X is the number of times this creature has mutated. | Porcuparrot | 1 |
-| This creature gets +1/+1 for each other creature you control with flying. | Skycat Sovereign | 1 |
-| This creature has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | Spelleater Wolverine | 1 |
-| This creature has protection from each mana value of the chosen quality. | Lavabrink Venturer | 1 |
-| This spell has flash as long as you control a permanent with flash. As an additional cost to cast this spell, sacrifice a creature. Destroy target creature. | Mutual Destruction | 1 |
-| When this creature enters, exile target card with a cycling ability from your graveyard. Until the end of your next turn, you may play that card. | Rooting Moloch | 1 |
-| When Yorion enters, exile any number of other nonland permanents you own and control. Return those cards to the battlefield at the beginning of the next end ste | Yorion, Sky Nomad | 1 |
-| Whenever a non-Human creature you control attacks, look at the top six cards of your library. You may put a Human creature card from among them onto the battlef | Winota, Joiner of Forces | 1 |
-| Whenever a nontoken creature you control dies, mill two cards. Then return a creature card with lesser mana value than the creature that died from your graveyar | Death's Oasis | 1 |
-| Whenever one or more creatures you control with trample deal combat damage to a player, create an X/X green Dinosaur Beast creature token with trample, where X  | Quartzwood Crasher | 1 |
-| Whenever this creature attacks, if it doesn't have first strike, put a first strike counter on it. | Momentum Rumbler | 1 |
-| Whenever this creature attacks, other Humans you control get +1/+0 until end of turn. | Perimeter Sergeant | 1 |
-| Whenever this creature attacks, you may have the base power and toughness of target Human you control become equal to this creature's power and toughness until  | Exuberant Wolfbear | 1 |
-| Whenever this creature mutates, draw a card. | Dreamtail Heron | 1 |
-| Whenever this creature mutates, it deals 4 damage to target creature or planeswalker an opponent controls and you gain 4 life. | Snapdax, Apex of the Hunt | 1 |
-| Whenever this creature mutates, search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | Migratory Greathorn | 1 |
-| Whenever this creature mutates, tap up to X target creatures, where X is the number of times this creature has mutated. Those creatures don't untap during their | Archipelagore | 1 |
-| Whenever this creature mutates, target creature an opponent controls gets -2/-2 until end of turn. | Zagoth Mamba | 1 |
-| Whenever you cast a noncreature spell, create an X/X blue Shark creature token with flying, where X is that spell's mana value. | Shark Typhoon | 1 |
-| Whenever you cycle a card, you may have this enchantment become a 5/4 Dinosaur creature with trample and haste in addition to its other types until end of turn. | Reptilian Reflection | 1 |
-| +1: You gain 2 life. Add {U}, {R}, or {W}. Spend this mana only to cast a noncreature spell. | Narset of the Ancient Way | 1 |
-| Your opponents can't cast spells from anywhere other than their hands. | Drannith Magistrate | 1 |
-| Zenith Flare deals X damage to any target and you gain X life, where X is the number of cards with a cycling ability in your graveyard. | Zenith Flare | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Companion | 3 | Jegantha, the Wellspring, Lutri, the Spellchaser, Umori, the Collector | iko |
+| mutate | 3 | Brokkos, Apex of Forever, Parcelbeast, Sea-Dasher Octopus | iko |
+| whenever ~ mutates, put a +N/+N counter on it. | 2 | Mysterious Egg, Vulpikeet | iko |
+| +N: create a N/N green beast creature token. put your choice of a reach counter, a vigilance counter, or a trample counter on it. | 1 | Vivien, Monsters' Advocate | iko |
+| +N: exile the top three cards of your library. creature cards exiled ~ gain "..." | 1 | Lukka, Coppercoat Outcast | iko |
+| +N: you gain N life. add {M}, {M}, or {M}. spend ~ only to cast a noncreature spell. | 1 | Narset of the Ancient Way | iko |
+| as an additional cost to cast ~, reveal a creature card from your hand. ~ deals damage to target creature or planeswalker equal to the revealed card's power. | 1 | Charge of the Forever-Beast | iko |
+| as long as enchanted creature has vigilance, it assigns combat damage equal to its toughness rather than its power. | 1 | Solid Footing | iko |
+| at the beginning of combat on your turn, choose a kind of counter at random that ~ doesn't have on it from among flying, first strike, deathtouch, hexproof, lif | 1 | Crystalline Giant | iko |
+| at the beginning of your end step, you gain N life for each creature you control with vigilance. | 1 | Alert Heedbonder | iko |
+| at the beginning of your upkeep, draw a card if you control a creature with the greatest power among creatures on the battlefield. otherwise, put a +N/+N counte | 1 | Primal Empathy | iko |
+| choose odd or even. exile each creature with mana value of the chosen quality. (zero is even.) | 1 | Extinction Event | iko |
+| counter target spell that targets a permanent you control. draw a card. | 1 | Keep Safe | iko |
+| create a token that"..."s a copy of that permanent, except the token has "..." | 1 | Mythos of Illuna | iko |
+| creatures you control with flying have "..." | 1 | Jubilant Skybonder | iko |
+| creatures you control with trample have "..." | 1 | Proud Wildbonder | iko |
+| creatures you control with vigilance have "..." | 1 | Frondland Felidar | iko |
+| destroy all nonland permanents your opponents control. | 1 | Ruinous Ultimatum | iko |
+| destroy target creature. put a menace counter on a creature you control. (it can't be blocked except by two or more creatures.) | 1 | Blood Curdle | iko |
+| destroy target nonland permanent if it's a creature or if {M}{M} was spent to cast ~. | 1 | Mythos of Nethroi | iko |
+| each creature spell you cast costs {M} less to cast if it has mutate. | 1 | Pollywog Symbiote | iko |
+| each creature you control with menace can't be blocked except by three or more creatures. | 1 | Sonorous Howlbonder | iko |
+| each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest. if {M} | 1 | Mythos of Snapdax | iko |
+| enchanted creature gets -N/-N and loses all abilities. | 1 | Mystic Subdual | iko |
+| enchanted land has "..." | 1 | Footfall Crater | iko |
+| exile target creature. if you don"..."s toughness. | 1 | Dire Tactics | iko |
+| if a cycling ability of another nonland card would cause you to draw a card, instead exile cards from the top of your library until you exile a card that shares | 1 | Unpredictable Cyclone | iko |
+| if a source you control with an odd mana value would deal damage to a permanent or player, it deals double that damage to that permanent or player instead. | 1 | Obosh, the Preypiercer | iko |
+| if noncombat damage would be dealt to ~, prevent that damage. put a +N/+N counter on ~ for each N damage prevented ~. | 1 | Stormwild Capridor | iko |
+| if {M}{M} was spent to cast ~, search your library for a card, put that card into your graveyard, then shuffle. return up to two permanent cards from your grave | 1 | Mythos of Brokkos | iko |
+| legendary humans you control have indestructible. | 1 | General's Enforcer | iko |
+| look at the top five cards of your library. put any number of permanent cards from among them onto the battlefield and the rest into your hand. exile ~. | 1 | Genesis Ultimatum | iko |
+| once during each of your turns, you may cast a permanent spell with mana value N or less from your graveyard. | 1 | Lurrus of the Dream-Den | iko |
+| prevent all damage that would be dealt ~ by creatures your opponents control. | 1 | Thwart the Enemy | iko |
+| put a +N/+N counter and a lifelink counter on target creature. | 1 | Unexpected Fangs | iko |
+| return any number of permanent cards with different names from your graveyard to the battlefield. | 1 | Eerie Ultimatum | iko |
+| return target creature card from your graveyard to the battlefield. when you do, it fights up to one target creature you don't control. (each deals damage equal | 1 | Back for More | iko |
+| return up to two target creature cards with total mana value N or less from your graveyard to the battlefield. put a deathtouch counter on either of them. then  | 1 | Call of the Death-Dweller | iko |
+| search your library for up to three monocolored cards with different names and exile them. an opponent chooses one of those cards. shuffle that card into your l | 1 | Emergent Ultimatum | iko |
+| spells with flash you cast cost {M} less to cast and can't be countered. | 1 | Cunning Nightbonder | iko |
+| target creature fights another target creature. (each deals damage equal to its power to the other.) | 1 | Clash of Titans | iko |
+| target creature gets +N/+N until end of turn. if it's blocking, instead put two +N/+N counters on it. cycling {M} ({M}, discard ~: draw a card.) | 1 | Will of the All-Hunter | iko |
+| target creature gets +N/+N until end of turn. put a first strike counter on it. | 1 | Heightened Reflexes | iko |
+| target creature gets +N/+N until end of turn. up to one other target creature blocks it ~ if able. cycling {M} ({M}, discard ~: draw a card.) | 1 | Monstrous Step | iko |
+| target creature you control deals damage equal to its power to target creature you don"..."s controller instead. | 1 | Ram Through | iko |
+| target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. cycling {M} ({M}, discard ~: draw a card.) | 1 | Memory Leak | iko |
+| when yorion enters, exile any number of other nonland permanents you own and control. return those cards to the battlefield at the beginning of the next end ste | 1 | Yorion, Sky Nomad | iko |
+| when you cycle ~, put a first strike counter on target creature you control. | 1 | Sanctuary Smasher | iko |
+| when you cycle ~, shuffle it into your library from your graveyard. if you've cycled a card named ~ four or more times ~, put it onto the battlefield from your  | 1 | Yidaro, Wandering Monster | iko |
+| when ~ enters, exile target card with a cycling ability from your graveyard. until the end of your next turn, you may play that card. | 1 | Rooting Moloch | iko |
+| when ~ enters, target human you control gets +N/+N until end of turn. | 1 | Patagia Tiger | iko |
+| when ~ enters, target opponent puts a deathtouch counter on a creature they control. | 1 | Hunted Nightmare | iko |
+| whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on ~. | 1 | The Ozolith | iko |
+| whenever a creature you control mutates, put a +N/+N counter on that creature and you gain N life. | 1 | Essence Symbiote | iko |
+| whenever a creature you control with menace becomes blocked, defending player sacrifices a creature of their choice that's blocking it. | 1 | Labyrinth Raptor | iko |
+| whenever a non-human creature you control attacks, look at the top six cards of your library. you may put a human creature card from among them onto the battlef | 1 | Winota, Joiner of Forces | iko |
+| whenever a nontoken creature you control dies, mill two cards. then return a creature card with lesser mana value than the creature that died from your graveyar | 1 | Death's Oasis | iko |
+| whenever one or more creatures you control with trample deal combat damage to a player, create an N/N green dinosaur beast creature token with trample, where N  | 1 | Quartzwood Crasher | iko |
+| whenever you cast a noncreature spell, create an N/N blue shark creature token with flying, where N is that spell's mana value. | 1 | Shark Typhoon | iko |
+| whenever you cycle a card, you may have ~ become a N/N dinosaur creature with trample and haste in addition to its other types until end of turn. | 1 | Reptilian Reflection | iko |
+| whenever ~ attacks, if it doesn't have first strike, put a first strike counter on it. | 1 | Momentum Rumbler | iko |
+| whenever ~ attacks, other humans you control get +N/+N until end of turn. | 1 | Perimeter Sergeant | iko |
+| whenever ~ attacks, you may have the base power and toughness of target human you control become equal to ~ power and toughness until end of turn. | 1 | Exuberant Wolfbear | iko |
+| whenever ~ mutates, create a N/N green beast creature token. | 1 | Trumpeting Gnarr | iko |
+| whenever ~ mutates, create a red artifact token named feather with "..." | 1 | Everquill Phoenix | iko |
+| whenever ~ mutates, create two N/N white cat creature tokens with lifelink. | 1 | Cubwarden | iko |
+| whenever ~ mutates, destroy target artifact or enchantment an opponent controls. | 1 | Gemrazer | iko |
+| whenever ~ mutates, destroy target creature or planeswalker an opponent controls. | 1 | Dirge Bat | iko |
+| whenever ~ mutates, draw a card. | 1 | Dreamtail Heron | iko |
+| whenever ~ mutates, each opponent discards a card. | 1 | Cavern Whisperer | iko |
+| whenever ~ mutates, each opponent loses N life and you gain N life, where N is the number of times ~ has mutated. | 1 | Insatiable Hemophage | iko |
+| whenever ~ mutates, each opponent sacrifices a creature of their choice. | 1 | Chittering Harvester | iko |
+| whenever ~ mutates, exile cards from the top of your library until you exile N permanent cards, where N is the number of times ~ has mutated. put those permanen | 1 | Auspicious Starrix | iko |
+| whenever ~ mutates, exile cards from the top of your library until you exile a nonland permanent card. put that card onto the battlefield or into your hand. | 1 | Illuna, Apex of Wishes | iko |
+| whenever ~ mutates, it deals N damage to target creature or planeswalker an opponent controls and you gain N life. | 1 | Snapdax, Apex of the Hunt | iko |
+| whenever ~ mutates, other creatures you control get +N/+N until end of turn, where N is the number of times ~ has mutated. | 1 | Huntmaster Liger | iko |
+| whenever ~ mutates, other creatures you control get +N/+N until end of turn. | 1 | Regal Leosaur | iko |
+| whenever ~ mutates, put two +N/+N counters on it. | 1 | Glowstone Recluse | iko |
+| whenever ~ mutates, return any number of target creature cards with total power N or less from your graveyard to the battlefield. | 1 | Nethroi, Apex of Death | iko |
+| whenever ~ mutates, return target creature card with mana value N or less from your graveyard to the battlefield. | 1 | Necropanther | iko |
+| whenever ~ mutates, return target instant or sorcery card from your graveyard to your hand. | 1 | Lore Drakkis | iko |
+| whenever ~ mutates, return target permanent card from your graveyard to your hand. | 1 | Boneyard Lurker | iko |
+| whenever ~ mutates, search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | 1 | Migratory Greathorn | iko |
+| whenever ~ mutates, tap up to N target creatures, where N is the number of times ~ has mutated. those creatures don"..."s next untap step. | 1 | Archipelagore | iko |
+| whenever ~ mutates, target creature an opponent controls gets -N/-N until end of turn. | 1 | Zagoth Mamba | iko |
+| whenever ~ mutates, you gain N life. | 1 | Majestic Auricorn | iko |
+| whenever ~ mutates, you may cast target noncreature card with mana value N or less from your graveyard without paying its mana cost. | 1 | Vadrok, Apex of Thunder | iko |
+| whenever ~ mutates, you may discard a card. if you do, draw a card. | 1 | Cloudpiercer | iko |
+| whenever ~ mutates, you may return target creature an opponent controls to its owner's hand. | 1 | Pouncing Shoreshark | iko |
+| your opponents can't cast spells from anywhere other than their hands. | 1 | Drannith Magistrate | iko |
+| {M}, sacrifice ~: target creature doesn"..."s next untap step. | 1 | Sleeper Dart | iko |
+| {M}, {M}, sacrifice another creature: you gain life equal to the sacrificed creature's toughness. draw a card. | 1 | Bushmeat Poacher | iko |
+| {M}, {M}: target creature can't block ~. | 1 | Zirda, the Dawnwaker | iko |
+| {M}: ~ deals N damage to any target, where N is the number of times ~ has mutated. | 1 | Porcuparrot | iko |
+| {M}{M}, {M}: put a +N/+N counter on each creature you control with flying. | 1 | Wingspan Mentor | iko |
+| {M}{M}, {M}: put a +N/+N counter on each creature you control with lifelink. | 1 | Duskfang Mentor | iko |
+| {M}{M}, {M}: put a +N/+N counter on each creature you control with menace. | 1 | Frillscare Mentor | iko |
+| {M}{M}, {M}: put a +N/+N counter on each creature you control with trample. | 1 | Hornbash Mentor | iko |
+| {M}{M}, {M}: put a +N/+N counter on each creature you control with vigilance. | 1 | Keensight Mentor | iko |
+| {M}{M}: return target human you control to its owner's hand. kogla gains indestructible until end of turn. | 1 | Kogla, the Titan Ape | iko |
+| {M}{M}: search your library for a card named ~, put it onto the battlefield tapped, then shuffle. | 1 | Whisper Squad | iko |
+| ~ deals N damage divided as you choose among any number of target creatures and/or planeswalkers. if {M}{M} was spent to cast ~, until your next turn, those per | 1 | Mythos of Vadrok | iko |
+| ~ deals N damage to any target and you gain N life, where N is the number of cards with a cycling ability in your graveyard. | 1 | Zenith Flare | iko |
+| ~ deals N damage to target creature. excess damage is dealt to that creature's controller instead. | 1 | Flame Spill | iko |
+| ~ deals N damage to target creature. you may put a card from your hand on the bottom of your library. if you do, draw a card. | 1 | Fire Prophecy | iko |
+| ~ deals damage to target creature or planeswalker equal to the number of instant and sorcery cards in your graveyard. if that creature or planeswalker would die | 1 | Blitz of the Thunder-Raptor | iko |
+| ~ enters with your choice of a deathtouch counter or a lifelink counter on it. | 1 | Boot Nipper | iko |
+| ~ enters with your choice of a flying counter or a first strike counter on it. | 1 | Helica Glider | iko |
+| ~ enters with your choice of a flying counter or a hexproof counter on it. | 1 | Wingfold Pteron | iko |
+| ~ enters with your choice of a reach counter or a vigilance counter on it. | 1 | Flycatcher Giraffid | iko |
+| ~ enters with your choice of a trample counter or a menace counter on it. | 1 | Ferocious Tigorilla | iko |
+| ~ enters with your choice of two different counters on it from among menace, deathtouch, and lifelink. | 1 | Grimdancer | iko |
+| ~ gets +N/+N for each other creature you control with flying. | 1 | Skycat Sovereign | iko |
+| ~ has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | 1 | Spelleater Wolverine | iko |
+| ~ has flash as long as you control a permanent with flash. as an additional cost to cast ~, sacrifice a creature. destroy target creature. | 1 | Mutual Destruction | iko |
+| ~ has protection from each mana value of the chosen quality. | 1 | Lavabrink Venturer | iko |
 
 ## Notes
 

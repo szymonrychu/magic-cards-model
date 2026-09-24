@@ -60,16 +60,16 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {T}: All damage that would be dealt to target creature this turn by a source of your choice is dealt to this creature instead. | Oracle's Attendants | 1 |
-| Each player loses 1 life for each creature they control. | Stronghold Discipline | 1 |
-| Enchanted creature gets +1/+1 and can't be blocked except by creatures with flying. | Treetop Bracers | 1 |
-| Other black creatures get +1/+1. | Ascendant Evincar | 1 |
-| When this creature blocks, at end of combat, destroy it and all creatures it blocked this turn. | Defiant Vanguard | 1 |
-| When this enchantment enters, sacrifice all creatures you control. | Death Pit Offering | 1 |
-| Whenever this creature deals combat damage to a player, that player skips their next combat phase. | Blinding Angel | 1 |
-| You may have this creature assign its combat damage as though it weren't blocked. | Rhox | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| each player loses N life for each creature they control. | 1 | Stronghold Discipline | nem |
+| enchanted creature gets +N/+N and can't be blocked except by creatures with flying. | 1 | Treetop Bracers | nem |
+| other black creatures get +N/+N. | 1 | Ascendant Evincar | nem |
+| when ~ blocks, at end of combat, destroy it and all creatures it blocked ~. | 1 | Defiant Vanguard | nem |
+| when ~ enters, sacrifice all creatures you control. | 1 | Death Pit Offering | nem |
+| whenever ~ deals combat damage to a player, that player skips their next combat phase. | 1 | Blinding Angel | nem |
+| you may have ~ assign its combat damage as though it weren't blocked. | 1 | Rhox | nem |
+| {M}: all damage that would be dealt to target creature ~ by a source of your choice is dealt to ~ instead. | 1 | Oracle's Attendants | nem |
 
 ## Notes
 

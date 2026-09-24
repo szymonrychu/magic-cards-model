@@ -3,13 +3,13 @@
 - Expansion: 080
 - Set code: `shm`
 - Release date: 2008-05-02
-- Cards in scope (Modern/Pioneer/Standard-legal): 272
+- Cards in scope (Modern/Pioneer/Standard-legal): 274
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 272 |
+| Modern | 274 |
 | Pioneer | 7 |
 | Standard | 1 |
 
@@ -19,8 +19,8 @@
 |---|---|---|
 | Full (handled + tested) | 18 | 6.6% |
 | Partial (unaudited) | 21 | 7.7% |
-| Not tested (handled, untested) | 105 | 38.6% |
-| Not working (silent / notice / error) | 128 | 47.1% |
+| Not tested (handled, untested) | 105 | 38.3% |
+| Not working (silent / notice / error) | 130 | 47.4% |
 
 ## Cards needing work
 
@@ -46,6 +46,7 @@
 | Crimson Wisps | silent | Target creature becomes red and gains haste until end of turn. (It can attack and {T} this turn.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crowd of Cinders | silent | Crowd of Cinders's power and toughness are each equal to the number of black permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cursecatcher | silent | Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Demigod of Revenge | silent | When you cast this spell, return all cards named Demigod of Revenge from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deus of Calamity | silent | Whenever this creature deals 6 or more damage to an opponent, destroy target land that player controls. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Din of the Fireherd | silent | Create a 5/5 black and red Elemental creature token. Target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dire Undercurrents | silent | Whenever a blue creature you control enters, you may have target player draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -128,6 +129,7 @@
 | Twilight Shepherd | silent | When this creature enters, return to your hand all cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tyrannize | silent | Target player discards their hand unless they pay 7 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Valleymaker | silent | {T}, Sacrifice a Forest: Choose a player. That player adds {G}{G}{G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Vexing Shusher | silent | {R/G}: Target spell can't be countered. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viridescent Wisps | silent | Target creature becomes green and gets +1/+0 until end of turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Swing | silent | Choose three target nonenchantment permanents. Destroy one of them at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wilt-Leaf Liege | silent | Other green creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -309,128 +311,151 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Conspire | Barkshell Blessing, Burn Trail, Disturbing Plot, Ghastly Discovery, Giantbaiting, Gleeful Sabotage, Memory Sluice, Mine Excavation, Traitor's Roar | 9 |
-| This creature gets +4/+8 as long as a library has twenty or fewer cards in it. | Ashenmoor Cohort, Ballynock Cohort, Briarberry Cohort, Crabapple Cohort, Isleback Spawn, Mudbrawler Cohort | 6 |
-| As long as enchanted creature is blue, it gets +1/+1 and has "Whenever this creature deals damage to an opponent, draw a card." | Fists of the Demigod, Helm of the Ghastlord, Runes of the Deus, Shield of the Oversoul, Steel of the Godhead | 5 |
-| This creature can't be blocked by black creatures. | Barrenton Cragtreads, Mudbrawler Raiders, Raven's Run Dragoon, Sootwalkers, Wanderbrine Rootcutters | 5 |
-| At the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | Biting Tether, Heartmender, Midnight Banshee, Puca's Mischief | 4 |
-| {W}, {T}: Remove a -1/-1 counter from target creature. If you do, you gain 2 life. | Chainbreaker, Woeleecher | 2 |
-| When this creature dies, put a -1/-1 counter on target creature for each -1/-1 counter on this creature. | Grief Tyrant, Lockjaw Snapper | 2 |
-| When this creature enters, you may discard your hand and draw cards equal to the damage dealt to target opponent this turn. | Knollspine Dragon, Medicine Runner | 2 |
-| Whenever a player casts a green spell, you may pay {1}. If you do, target creature gets +1/+1 until end of turn. | Intimidator Initiate, Nurturer Initiate | 2 |
-| Whenever this creature deals combat damage to a player, reveal the top card of your library and put that card into your hand. You gain life equal to its mana va | Augury Adept, Ghastlord of Fugue | 2 |
-| All cards that aren't on the battlefield, spells, and permanents are the chosen color in addition to their other colors. | Painter's Servant | 1 |
-| All damage is dealt as though its source had wither. | Everlasting Torment | 1 |
-| All permanents are enchantments in addition to their other types. | Enchanted Evening | 1 |
-| As an additional cost to cast this spell, sacrifice a creature. Rite of Consumption deals damage equal to the sacrificed creature's power to target player or pl | Rite of Consumption | 1 |
-| At the beginning of each end step, each opponent loses life equal to the life they lost this turn. | Wound Reflection | 1 |
-| Attacking creatures you control have lifelink. | Windbrisk Raptor | 1 |
-| Black creatures you control have wither. | Corrosive Mentor | 1 |
-| Blue creatures you control can't be blocked. | Deepchannel Mentor | 1 |
-| ({2/U} can be paid with any two mana or with {U}. This card's mana value is 6.) Look at the top five cards of your library. If you control more creatures than e | Advice from the Fae | 1 |
-| {X}{U/B}: Choose a color. Target opponent exiles the top X cards of their library. For each card of the chosen color exiled this way, create a 1/1 blue and blac | Oona, Queen of the Fae | 1 |
-| {T}: Choose any number of target creatures. Each of those creatures gains persist until end of turn. | Cauldron of Souls | 1 |
-| Choose three target nonenchantment permanents. Destroy one of them at random. | Wild Swing | 1 |
-| Counter target blue instant spell. | Guttural Response | 1 |
-| Counter target spell. Search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. Then that player shuff | Counterbore | 1 |
-| Counter target spell unless its controller pays {1} for each blue permanent you control. | Spell Syphon | 1 |
-| Create a 5/5 black and red Elemental creature token. Target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | Din of the Fireherd | 1 |
-| Create two 1/1 white Kithkin Soldier creature tokens if {W} was spent to cast this spell. Counter up to one target creature spell if {U} was spent to cast this  | Repel Intruders | 1 |
-| Creatures target player controls can't block this turn. Ember Gale deals 1 damage to each white and/or blue creature that player controls. | Ember Gale | 1 |
-| Creatures your opponents control with counters on them can't attack or block. | Kulrath Knight | 1 |
-| Crowd of Cinders's power and toughness are each equal to the number of black permanents you control. | Crowd of Cinders | 1 |
-| Destroy all artifacts and enchantments. You gain 2 life for each permanent destroyed this way. | Fracturing Gust | 1 |
-| Destroy all Auras and Equipment attached to target creature. | Strip Bare | 1 |
-| Destroy all nonwhite creatures. | Mass Calcify | 1 |
-| Destroy target creature. If that creature was green or white, its controller discards a card. | Gloomlance | 1 |
-| Destroy target creature with flying. If that creature was blue or black, create a 1/2 green Spider creature token with reach. (It can block creatures with flyin | Gloomwidow's Feast | 1 |
-| Draw cards equal to the number of cards target opponent discarded this turn. | Dream Salvage | 1 |
-| Drove of Elves's power and toughness are each equal to the number of green permanents you control. | Drove of Elves | 1 |
-| {R}{G}: Each blocked creature gets +1/+0 and gains trample until end of turn. | Tattermunge Witch | 1 |
-| Each other creature becomes a copy of target nonlegendary creature until end of turn. | Mirrorweave | 1 |
-| {B}{R}: Each player loses 1 life. | Spiteflame Witch | 1 |
-| Each red or green instant or sorcery spell you cast has conspire. | Wort, the Raidmother | 1 |
-| {2}{U}{B}: Each unblocked creature has base power and toughness 4/1 until end of turn. | Inkfathom Witch | 1 |
-| Enchanted creature attacks each combat if able. | Bloodshed Fever | 1 |
-| Enchanted creature gets +1/+1 for each Plains you control and has flying. | Armored Ascension | 1 |
-| Faerie Swarm's power and toughness are each equal to the number of blue permanents you control. | Faerie Swarm | 1 |
-| Firespout deals 3 damage to each creature without flying if {R} was spent to cast this spell and 3 damage to each creature with flying if {G} was spent to cast  | Firespout | 1 |
-| {4}{G/W}{G/W}, {T}: For each creature token you control, create a token that's a copy of that creature. | Rhys the Redeemed | 1 |
-| Green creatures you control have trample. | Roughshod Mentor | 1 |
-| Horde of Boggarts's power and toughness are each equal to the number of red permanents you control. | Horde of Boggarts | 1 |
-| If a card would be put into enchanted player's graveyard from anywhere, instead that card is revealed and put on the bottom of that player's library. | Wheel of Sun and Moon | 1 |
-| If a source would deal damage to this creature, prevent that damage. The source's controller draws cards equal to the damage prevented this way. | Swans of Bryn Argoll | 1 |
-| If this creature would be destroyed, regenerate it. | Mossbridge Troll | 1 |
-| If {U} was spent to cast this spell, return up to one target creature to its owner's hand. If {B} was spent to cast this spell, target player reveals their hand | River's Grasp | 1 |
-| Jaws of Stone deals X damage divided as you choose among any number of targets, where X is the number of Mountains you control as you cast this spell. | Jaws of Stone | 1 |
-| Kithkin Rabble's power and toughness are each equal to the number of white permanents you control. | Kithkin Rabble | 1 |
-| {W/U}, {Q}: Look at the top card of your library. You may exile that card. | Puresight Merrow | 1 |
-| {U}, {Q}: Move a counter from target creature onto a second target creature. | Leech Bonder | 1 |
-| Move all counters from target creature onto another target creature. | Fate Transfer | 1 |
-| Other black creatures you control get +1/+1. | Ashenmoor Liege | 1 |
-| Other blue creatures you control get +1/+1. | Glen Elendra Liege | 1 |
-| Other creatures have base power and toughness 1/1. | Godhead of Awe | 1 |
-| Other enchantments you control have shroud. | Greater Auramancy | 1 |
-| Other green creatures you control get +1/+1. | Wilt-Leaf Liege | 1 |
-| Other red creatures you control get +1/+1. | Boartusk Liege | 1 |
-| Other Scarecrow creatures you control get +1/+1. | Reaper King | 1 |
-| Other white creatures you control get +1/+1. | Thistledown Liege | 1 |
-| Prevent all damage target attacking or blocking creature would deal this turn. If that creature is black or red, destroy it. | Inquisitor's Snare | 1 |
-| Protection from blue, from black, and from red | Oversoul of Dusk | 1 |
-| Put a -1/-1 counter on target creature, two -1/-1 counters on another target creature, and three -1/-1 counters on a third target creature. | Incremental Blight | 1 |
-| Put target attacking or blocking creature on top of its owner's library. Conspire (As you cast this spell, you may tap two untapped creatures you control that s | Aethertow | 1 |
-| Red creatures you control have first strike. | Bloodmark Mentor | 1 |
-| Return a card at random from your graveyard to your hand, then reorder your graveyard as you choose. | Fossil Find | 1 |
-| Return all permanents to their owners' hands. Each player chooses up to seven cards in their hand, then shuffles the rest into their library. Each player loses  | Worldpurge | 1 |
-| Return target permanent to its owner's hand. If that permanent is red or green, put it on top of its owner's library instead. | Consign to Dream | 1 |
-| Return up to one target creature card from your graveyard to the battlefield if {B} was spent to cast this spell. Creatures target player controls get +2/+0 and | Torrent of Souls | 1 |
-| {2}{R/G}: Reveal the top card of your library. If it isn't a creature card, put it into your graveyard. Otherwise, put that card onto the battlefield. That crea | Impromptu Raid | 1 |
-| {T}, Sacrifice a Forest: Choose a player. That player adds {G}{G}{G}. | Valleymaker | 1 |
-| Sacrifice this artifact: Choose a basic land type. Each land you control becomes that type until end of turn. | Elsewhere Flask | 1 |
-| Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {1}. | Cursecatcher | 1 |
-| Starting with you, each player may pay any amount of life. Repeat this process until no one pays life. Each player creates a 1/1 black Rat creature token for ea | Plague of Vermin | 1 |
-| Target creature becomes black and gains fear until end of turn. (It can't be blocked except by artifact creatures and/or black creatures.) Draw a card. | Aphotic Wisps | 1 |
-| Target creature becomes green and gets +1/+0 until end of turn. Draw a card. | Viridescent Wisps | 1 |
-| Target creature becomes red and gains haste until end of turn. (It can attack and {T} this turn.) Draw a card. | Crimson Wisps | 1 |
-| {T}: Target creature becomes the color or colors of your choice until end of turn. | Scuttlemutt | 1 |
-| {2}{W}{W}, {Q}: Target creature gains protection from the color of its controller's choice until end of turn. | Pale Wayfarer | 1 |
-| Target creature's controller sacrifices it, then creates X 1/1 green and white Elf Warrior creature tokens, where X is that creature's power. | Mercy Killing | 1 |
-| {1}{U}, {Q}: Target opponent exiles the top card of their library. Until end of turn, you may play that card. | Knacksaw Clique | 1 |
-| Target player discards their hand unless they pay 7 life. | Tyrannize | 1 |
-| {1}: This creature becomes all colors until end of turn. | Scrapbasket | 1 |
-| This creature can block only creatures with flying. | Gloomwidow | 1 |
-| This creature can't attack unless defending player controls a blue permanent. | Whimwader | 1 |
-| This creature can't have counters put on it. | Tatterkite | 1 |
-| This creature has flying as long as you control a blue creature. | Wingrattle Scarecrow | 1 |
-| This creature has haste as long as you control a red creature. | Blazethorn Scarecrow | 1 |
-| This creature has persist as long as you control a black creature. | Rattleblaze Scarecrow | 1 |
-| This creature has vigilance as long as you control a white creature. | Watchwing Scarecrow | 1 |
-| This creature has wither as long as you control a green creature. | Thornwatch Scarecrow | 1 |
-| This creature must be blocked if able. | Inescapable Brute | 1 |
-| When this creature enters, attach all Auras enchanting target permanent to another permanent with the same controller. | Glamer Spinners | 1 |
-| When this creature enters, discard a card at random. If you discard a creature card this way, this creature deals damage equal to that card's power to target pl | Cragganwick Cremator | 1 |
-| When this creature enters, it deals damage equal to its power to any target. | Murderous Redcap | 1 |
-| When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of yo | Puppeteer Clique | 1 |
-| When this creature enters, return to your hand all cards in your graveyard that were put there from the battlefield this turn. | Twilight Shepherd | 1 |
-| When this creature enters, target permanent becomes the color or colors of your choice until end of turn. | Prismwake Merrow | 1 |
-| When you control no permanents of the chosen color, sacrifice this creature. | Lurebound Scarecrow | 1 |
-| Whenever a blue creature you control enters, you may have target player draw a card. | Dire Undercurrents | 1 |
-| Whenever a -1/-1 counter is put on a creature, you may create a 1/1 green Elf Warrior creature token. | Flourishing Defenses | 1 |
-| Whenever a creature an opponent controls enters, you may attach this Aura to that creature. | Prison Term | 1 |
-| Whenever a creature dies, you may pay {1}. If you do, this creature becomes a copy of that creature, except it has this ability. | Cemetery Puca | 1 |
-| Whenever a creature with flying attacks you, this enchantment deals 4 damage to it. | Raking Canopy | 1 |
-| Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | Wicker Warcrawler | 1 |
-| Whenever this creature attacks, you may have target creature lose flying until end of turn. | Kinscaer Harpoonist | 1 |
-| Whenever this creature becomes untapped, you may have target player discard a card. | Hollowsage | 1 |
-| Whenever this creature deals damage to an opponent, remove all -1/-1 counters from it. | Witherscale Wurm | 1 |
-| Whenever this creature deals 6 or more damage to an opponent, destroy target land that player controls. | Deus of Calamity | 1 |
-| White creatures you control have "{T}: You gain 1 life." | Resplendent Mentor | 1 |
-| You gain 1 life for each tapped artifact, creature, and land you control. | Toil to Renown | 1 |
-| You have protection from the chosen card name. | Runed Halo | 1 |
-| You may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | Memory Plunder | 1 |
-| You may put a green creature card from your hand onto the battlefield. | Dramatic Entrance | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| conspire | 9 | Barkshell Blessing, Burn Trail, Disturbing Plot, Ghastly Discovery, Giantbaiting | shm |
+| ({M} can be paid with any two mana or with {M}. ~ mana value is N.) look at the top five cards of your library. if you control more creatures than each other pl | 1 | Advice from the Fae | shm |
+| all cards that aren't on the battlefield, spells, and permanents are the chosen color in addition to their other colors. | 1 | Painter's Servant | shm |
+| all damage is dealt as though its source had wither. | 1 | Everlasting Torment | shm |
+| all permanents are enchantments in addition to their other types. | 1 | Enchanted Evening | shm |
+| as an additional cost to cast ~, sacrifice a creature. ~ deals damage equal to the sacrificed creature's power to target player or planeswalker. you gain life e | 1 | Rite of Consumption | shm |
+| as long as enchanted creature is black, it gets +N/+N and has wither. | 1 | Fists of the Demigod | shm |
+| as long as enchanted creature is blue, it gets +N/+N and has "..." | 1 | Helm of the Ghastlord | shm |
+| as long as enchanted creature is green, it gets +N/+N and has indestructible. | 1 | Shield of the Oversoul | shm |
+| as long as enchanted creature is red, it gets +N/+N and has double strike. | 1 | Runes of the Deus | shm |
+| as long as enchanted creature is white, it gets +N/+N and has lifelink. | 1 | Steel of the Godhead | shm |
+| at the beginning of each end step, each opponent loses life equal to the life they lost ~. | 1 | Wound Reflection | shm |
+| at the beginning of your upkeep, put a -N/-N counter on each nonblack creature. | 1 | Midnight Banshee | shm |
+| at the beginning of your upkeep, put a -N/-N counter on enchanted creature. | 1 | Biting Tether | shm |
+| at the beginning of your upkeep, remove a -N/-N counter from each creature you control. | 1 | Heartmender | shm |
+| at the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | 1 | Puca's Mischief | shm |
+| attacking creatures you control have lifelink. | 1 | Windbrisk Raptor | shm |
+| black creatures you control have wither. | 1 | Corrosive Mentor | shm |
+| blue creatures you control can't be blocked. | 1 | Deepchannel Mentor | shm |
+| choose three target nonenchantment permanents. destroy one of them at random. | 1 | Wild Swing | shm |
+| counter target blue instant spell. | 1 | Guttural Response | shm |
+| counter target spell unless its controller pays {M} for each blue permanent you control. | 1 | Spell Syphon | shm |
+| counter target spell. search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. then that player shuff | 1 | Counterbore | shm |
+| create a N/N black and red elemental creature token. target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | 1 | Din of the Fireherd | shm |
+| create two N/N white kithkin soldier creature tokens if {M} was spent to cast ~. counter up to one target creature spell if {M} was spent to cast ~. (do both if | 1 | Repel Intruders | shm |
+| creatures target player controls can't block ~. ~ deals N damage to each white and/or blue creature that player controls. | 1 | Ember Gale | shm |
+| creatures your opponents control with counters on them can't attack or block. | 1 | Kulrath Knight | shm |
+| destroy all artifacts and enchantments. you gain N life for each permanent destroyed ~. | 1 | Fracturing Gust | shm |
+| destroy all auras and equipment attached to target creature. | 1 | Strip Bare | shm |
+| destroy all nonwhite creatures. | 1 | Mass Calcify | shm |
+| destroy target creature with flying. if that creature was blue or black, create a N/N green spider creature token with reach. (it can block creatures with flyin | 1 | Gloomwidow's Feast | shm |
+| destroy target creature. if that creature was green or white, its controller discards a card. | 1 | Gloomlance | shm |
+| draw cards equal to the number of cards target opponent discarded ~. | 1 | Dream Salvage | shm |
+| each other creature becomes a copy of target nonlegendary creature until end of turn. | 1 | Mirrorweave | shm |
+| each red or green instant or sorcery spell you cast has conspire. | 1 | Wort, the Raidmother | shm |
+| enchanted creature attacks each combat if able. | 1 | Bloodshed Fever | shm |
+| enchanted creature gets +N/+N for each plains you control and has flying. | 1 | Armored Ascension | shm |
+| green creatures you control have trample. | 1 | Roughshod Mentor | shm |
+| if a card would be put into enchanted player"..."s library. | 1 | Wheel of Sun and Moon | shm |
+| if a source would deal damage to ~, prevent that damage. the source's controller draws cards equal to the damage prevented ~. | 1 | Swans of Bryn Argoll | shm |
+| if {M} was spent to cast ~, return up to one target creature to its owner's hand. if {M} was spent to cast ~, target player reveals their hand, you choose a non | 1 | River's Grasp | shm |
+| if ~ would be destroyed, regenerate it. | 1 | Mossbridge Troll | shm |
+| move all counters from target creature onto another target creature. | 1 | Fate Transfer | shm |
+| other black creatures you control get +N/+N. | 1 | Ashenmoor Liege | shm |
+| other blue creatures you control get +N/+N. | 1 | Glen Elendra Liege | shm |
+| other creatures have base power and toughness N/N. | 1 | Godhead of Awe | shm |
+| other enchantments you control have shroud. | 1 | Greater Auramancy | shm |
+| other green creatures you control get +N/+N. | 1 | Wilt-Leaf Liege | shm |
+| other red creatures you control get +N/+N. | 1 | Boartusk Liege | shm |
+| other scarecrow creatures you control get +N/+N. | 1 | Reaper King | shm |
+| other white creatures you control get +N/+N. | 1 | Thistledown Liege | shm |
+| prevent all damage target attacking or blocking creature would deal ~. if that creature is black or red, destroy it. | 1 | Inquisitor's Snare | shm |
+| protection from blue, from black, and from red | 1 | Oversoul of Dusk | shm |
+| put a -N/-N counter on target creature, two -N/-N counters on another target creature, and three -N/-N counters on a third target creature. | 1 | Incremental Blight | shm |
+| put target attacking or blocking creature on top of its owner's library. conspire (as you cast ~, you may tap two untapped creatures you control that share a co | 1 | Aethertow | shm |
+| red creatures you control have first strike. | 1 | Bloodmark Mentor | shm |
+| return a card at random from your graveyard to your hand, then reorder your graveyard as you choose. | 1 | Fossil Find | shm |
+| return all permanents to their owners' hands. each player chooses up to seven cards in their hand, then shuffles the rest into their library. each player loses  | 1 | Worldpurge | shm |
+| return target permanent to its owner"..."s library instead. | 1 | Consign to Dream | shm |
+| return up to one target creature card from your graveyard to the battlefield if {M} was spent to cast ~. creatures target player controls get +N/+N and gain has | 1 | Torrent of Souls | shm |
+| sacrifice ~: choose a basic land type. each land you control becomes that type until end of turn. | 1 | Elsewhere Flask | shm |
+| sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}. | 1 | Cursecatcher | shm |
+| starting with you, each player may pay any amount of life. repeat ~ until no one pays life. each player creates a N/N black rat creature token for each N life t | 1 | Plague of Vermin | shm |
+| target creature becomes black and gains fear until end of turn. (it can't be blocked except by artifact creatures and/or black creatures.) draw a card. | 1 | Aphotic Wisps | shm |
+| target creature becomes green and gets +N/+N until end of turn. draw a card. | 1 | Viridescent Wisps | shm |
+| target creature becomes red and gains haste until end of turn. (it can attack and {M} ~.) draw a card. | 1 | Crimson Wisps | shm |
+| target creature"..."s power. | 1 | Mercy Killing | shm |
+| target player discards their hand unless they pay N life. | 1 | Tyrannize | shm |
+| when you cast ~, return all cards named ~ from your graveyard to the battlefield. | 1 | Demigod of Revenge | shm |
+| when you control no permanents of the chosen color, sacrifice ~. | 1 | Lurebound Scarecrow | shm |
+| when ~ dies, put a -N/-N counter on each creature with a -N/-N counter on it. | 1 | Lockjaw Snapper | shm |
+| when ~ dies, put a -N/-N counter on target creature for each -N/-N counter on ~. | 1 | Grief Tyrant | shm |
+| when ~ enters, attach all auras enchanting target permanent to another permanent with the same controller. | 1 | Glamer Spinners | shm |
+| when ~ enters, discard a card at random. if you discard a creature card ~, ~ deals damage equal to that card's power to target player or planeswalker. | 1 | Cragganwick Cremator | shm |
+| when ~ enters, it deals damage equal to its power to any target. | 1 | Murderous Redcap | shm |
+| when ~ enters, put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. at the beginning of your next end  | 1 | Puppeteer Clique | shm |
+| when ~ enters, return to your hand all cards in your graveyard that were put there from the battlefield ~. | 1 | Twilight Shepherd | shm |
+| when ~ enters, target permanent becomes the color or colors of your choice until end of turn. | 1 | Prismwake Merrow | shm |
+| when ~ enters, you may discard your hand and draw cards equal to the damage dealt to target opponent ~. | 1 | Knollspine Dragon | shm |
+| when ~ enters, you may remove a counter from target permanent. | 1 | Medicine Runner | shm |
+| whenever a -N/-N counter is put on a creature, you may create a N/N green elf warrior creature token. | 1 | Flourishing Defenses | shm |
+| whenever a blue creature you control enters, you may have target player draw a card. | 1 | Dire Undercurrents | shm |
+| whenever a creature an opponent controls enters, you may attach ~ to that creature. | 1 | Prison Term | shm |
+| whenever a creature dies, you may pay {M}. if you do, ~ becomes a copy of that creature, except it has ~. | 1 | Cemetery Puca | shm |
+| whenever a creature with flying attacks you, ~ deals N damage to it. | 1 | Raking Canopy | shm |
+| whenever a player casts a green spell, you may pay {M}. if you do, target creature gets +N/+N until end of turn. | 1 | Nurturer Initiate | shm |
+| whenever a player casts a red spell, you may pay {M}. if you do, target creature can't block ~. | 1 | Intimidator Initiate | shm |
+| whenever ~ attacks or blocks, put a -N/-N counter on it at end of combat. | 1 | Wicker Warcrawler | shm |
+| whenever ~ attacks, you may have target creature lose flying until end of turn. | 1 | Kinscaer Harpoonist | shm |
+| whenever ~ becomes untapped, you may have target player discard a card. | 1 | Hollowsage | shm |
+| whenever ~ deals N or more damage to an opponent, destroy target land that player controls. | 1 | Deus of Calamity | shm |
+| whenever ~ deals combat damage to a player, reveal the top card of your library and put that card into your hand. you gain life equal to its mana value. | 1 | Augury Adept | shm |
+| whenever ~ deals combat damage to a player, that player reveals their hand. you choose a card from it. that player exiles that card. | 1 | Ghastlord of Fugue | shm |
+| whenever ~ deals damage to an opponent, remove all -N/-N counters from it. | 1 | Witherscale Wurm | shm |
+| white creatures you control have "..." | 1 | Resplendent Mentor | shm |
+| you gain N life for each tapped artifact, creature, and land you control. | 1 | Toil to Renown | shm |
+| you have protection from the chosen card name. | 1 | Runed Halo | shm |
+| you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | 1 | Memory Plunder | shm |
+| you may put a green creature card from your hand onto the battlefield. | 1 | Dramatic Entrance | shm |
+| {M}, sacrifice a forest: choose a player. that player adds {M}{M}{M}. | 1 | Valleymaker | shm |
+| {M}, {M}: look at the top card of your library. you may exile that card. | 1 | Puresight Merrow | shm |
+| {M}, {M}: move a counter from target creature onto a second target creature. | 1 | Leech Bonder | shm |
+| {M}, {M}: remove a -N/-N counter from target creature. | 1 | Chainbreaker | shm |
+| {M}, {M}: remove a -N/-N counter from target creature. if you do, you gain N life. | 1 | Woeleecher | shm |
+| {M}: choose any number of target creatures. each of those creatures gains persist until end of turn. | 1 | Cauldron of Souls | shm |
+| {M}: target creature becomes the color or colors of your choice until end of turn. | 1 | Scuttlemutt | shm |
+| {M}: target spell can't be countered. | 1 | Vexing Shusher | shm |
+| {M}: ~ becomes all colors until end of turn. | 1 | Scrapbasket | shm |
+| {M}{M}, {M}: target opponent exiles the top card of their library. until end of turn, you may play that card. | 1 | Knacksaw Clique | shm |
+| {M}{M}: choose a color. target opponent exiles the top N cards of their library. for each card of the chosen color exiled ~, create a N/N blue and black faerie  | 1 | Oona, Queen of the Fae | shm |
+| {M}{M}: each blocked creature gets +N/+N and gains trample until end of turn. | 1 | Tattermunge Witch | shm |
+| {M}{M}: each player loses N life. | 1 | Spiteflame Witch | shm |
+| {M}{M}: reveal the top card of your library. if it isn't a creature card, put it into your graveyard. otherwise, put that card onto the battlefield. that creatu | 1 | Impromptu Raid | shm |
+| {M}{M}{M}, {M}: for each creature token you control, create a token that's a copy of that creature. | 1 | Rhys the Redeemed | shm |
+| {M}{M}{M}, {M}: target creature gains protection from the color of its controller's choice until end of turn. | 1 | Pale Wayfarer | shm |
+| {M}{M}{M}: each unblocked creature has base power and toughness N/N until end of turn. | 1 | Inkfathom Witch | shm |
+| ~ can block only creatures with flying. | 1 | Gloomwidow | shm |
+| ~ can't attack unless defending player controls a blue permanent. | 1 | Whimwader | shm |
+| ~ can't be blocked by black creatures. | 1 | Raven's Run Dragoon | shm |
+| ~ can't be blocked by blue creatures. | 1 | Mudbrawler Raiders | shm |
+| ~ can't be blocked by green creatures. | 1 | Wanderbrine Rootcutters | shm |
+| ~ can't be blocked by red creatures. | 1 | Barrenton Cragtreads | shm |
+| ~ can't be blocked by white creatures. | 1 | Sootwalkers | shm |
+| ~ can't have counters put on it. | 1 | Tatterkite | shm |
+| ~ deals N damage divided as you choose among any number of targets, where N is the number of mountains you control as you cast ~. | 1 | Jaws of Stone | shm |
+| ~ deals N damage to each creature without flying if {M} was spent to cast ~ and N damage to each creature with flying if {M} was spent to cast ~. (do both if {M | 1 | Firespout | shm |
+| ~ gets +N/+N as long as a library has twenty or fewer cards in it. | 1 | Isleback Spawn | shm |
+| ~ gets +N/+N as long as you control another black creature. | 1 | Ashenmoor Cohort | shm |
+| ~ gets +N/+N as long as you control another blue creature. | 1 | Briarberry Cohort | shm |
+| ~ gets +N/+N as long as you control another green creature. | 1 | Crabapple Cohort | shm |
+| ~ gets +N/+N as long as you control another red creature. | 1 | Mudbrawler Cohort | shm |
+| ~ gets +N/+N as long as you control another white creature. | 1 | Ballynock Cohort | shm |
+| ~ has flying as long as you control a blue creature. | 1 | Wingrattle Scarecrow | shm |
+| ~ has haste as long as you control a red creature. | 1 | Blazethorn Scarecrow | shm |
+| ~ has persist as long as you control a black creature. | 1 | Rattleblaze Scarecrow | shm |
+| ~ has vigilance as long as you control a white creature. | 1 | Watchwing Scarecrow | shm |
+| ~ has wither as long as you control a green creature. | 1 | Thornwatch Scarecrow | shm |
+| ~ must be blocked if able. | 1 | Inescapable Brute | shm |
+| ~'s power and toughness are each equal to the number of black permanents you control. | 1 | Crowd of Cinders | shm |
+| ~'s power and toughness are each equal to the number of blue permanents you control. | 1 | Faerie Swarm | shm |
+| ~'s power and toughness are each equal to the number of green permanents you control. | 1 | Drove of Elves | shm |
+| ~'s power and toughness are each equal to the number of red permanents you control. | 1 | Horde of Boggarts | shm |
+| ~'s power and toughness are each equal to the number of white permanents you control. | 1 | Kithkin Rabble | shm |
 
 ## Notes
 

@@ -38,9 +38,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| You may have this enchantment enter as a copy of an enchantment you control, except it has "At the beginning of your upkeep, you may exile this enchantment. If  | Estrid's Invocation | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| you may have ~ enter as a copy of an enchantment you control, except it has "..." | 1 | Estrid's Invocation | c18 |
 
 ## Notes
 

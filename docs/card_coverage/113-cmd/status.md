@@ -43,10 +43,10 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this creature and you gain 1 life. | Scavenging Ooze | 1 |
-| Whenever Kaalia attacks an opponent, you may put an Angel, Demon, or Dragon creature card from your hand onto the battlefield tapped and attacking that opponent | Kaalia of the Vast | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| whenever kaalia attacks an opponent, you may put an angel, demon, or dragon creature card from your hand onto the battlefield tapped and attacking that opponent | 1 | Kaalia of the Vast | cmd |
+| {M}: exile target card from a graveyard. if it was a creature card, put a +N/+N counter on ~ and you gain N life. | 1 | Scavenging Ooze | cmd |
 
 ## Notes
 

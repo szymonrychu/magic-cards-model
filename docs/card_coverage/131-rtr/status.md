@@ -3,36 +3,38 @@
 - Expansion: 131
 - Set code: `rtr`
 - Release date: 2012-10-05
-- Cards in scope (Modern/Pioneer/Standard-legal): 215
+- Cards in scope (Modern/Pioneer/Standard-legal): 224
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 215 |
-| Pioneer | 215 |
-| Standard | 10 |
+| Modern | 224 |
+| Pioneer | 224 |
+| Standard | 11 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 12 | 5.6% |
-| Partial (unaudited) | 9 | 4.2% |
-| Not tested (handled, untested) | 95 | 44.2% |
-| Not working (silent / notice / error) | 99 | 46.0% |
+| Full (handled + tested) | 13 | 5.8% |
+| Partial (unaudited) | 11 | 4.9% |
+| Not tested (handled, untested) | 98 | 43.8% |
+| Not working (silent / notice / error) | 102 | 45.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Angel of Serenity | silent | When this creature leaves the battlefield, return the exiled cards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Archon of the Triumvirate | silent | Whenever this creature attacks, detain up to two target nonland permanents your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Axebane Guardian | silent | {T}: Add X mana in any combination of colors, where X is the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azor's Elocutors | silent | Whenever a source deals damage to you, remove a filibuster counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azorius Arrester | silent | When this creature enters, detain target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azorius Justiciar | silent | When this creature enters, detain up to two target creatures your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodfray Giant | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Blustersquall | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
+| Carnival Hellsteed | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chaos Imps | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chemister's Trick | silent | Target creature you don't control gets -2/-0 until end of turn and attacks this turn if able. Overload {3}{U}{R} (You may cast this spell for its overload cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chronic Flooding | silent | Whenever enchanted land becomes tapped, its controller mills three cards. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
@@ -42,6 +44,7 @@
 | Coursers' Accord | silent | Create a 3/3 green Centaur creature token, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cyclonic Rift | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Dead Reveler | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
+| Deadbridge Goliath | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Death's Presence | silent | Whenever a creature you control dies, put X +1/+1 counters on target creature you control, where X is the power of the creature that died. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deathrite Shaman | silent | {T}: Exile target land card from a graveyard. Add one mana of any color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Desecration Demon | silent | At the beginning of each combat, any opponent may sacrifice a creature of their choice. If a player does, tap this creature and put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -126,6 +129,8 @@
 | Grave Betrayal | notice | Whenever a creature you don't control dies, return it to the battlefield under your control with an additional +1/+1 counter on it at the beginning of the next  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rakdos Charm | notice | Choose one — • Exile target player's graveyard. • Destroy target artifact. • Each creature deals 1 damage to its controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chromatic Lantern | unaudited | Lands you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Dryad Militant | unaudited | If an instant or sorcery card would be put into a graveyard from anywhere, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Hypersonic Dragon | unaudited | You may cast sorcery spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Loxodon Smiter | unaudited | If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead of putting it into your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oak Street Innkeeper | unaudited | During turns other than yours, tapped creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Palisade Giant | unaudited | All damage that would be dealt to you and other permanents you control is dealt to this creature instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -158,7 +163,9 @@
 | Collective Blessing | handled | Creatures you control get +3/+3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Common Bond | handled | Put a +1/+1 counter on target creature. Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Concordia Pegasus | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Corpsejack Menace | handled | If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crosstown Courier | handled | Whenever this creature deals combat damage to a player, that player mills that many cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Cryptborn Horror | handled | This creature enters with X +1/+1 counters on it, where X is the total life lost by your opponents this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daggerdrome Imp | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Deviant Glee | handled | Enchanted creature gets +2/+1 and has "{R}: This creature gains trample until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drainpipe Vermin | handled | When this creature dies, you may pay {B}. If you do, target player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -172,6 +179,7 @@
 | Golgari Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Golgari Keyrune | handled | {B}{G}: This artifact becomes a 2/2 black and green Insect artifact creature with deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Golgari Longlegs | handled |  |  | Y/Y/- | not_tested |
+| Grove of the Guardian | handled | {3}{G}{W}, {T}, Tap two untapped creatures you control, Sacrifice this land: Create an 8/8 green and white Elemental creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hover Barrier | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Hussar Patrol | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Izzet Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -233,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Abrupt Decay
 - Azorius Guildgate
@@ -247,82 +255,96 @@
 - Precinct Captain
 - Rest in Peace
 - Selesnya Guildgate
+- Supreme Verdict
 
 </details>
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Unleash | Bloodfray Giant, Chaos Imps, Dead Reveler, Gore-House Chainwalker, Grim Roustabout, Rakdos Cackler, Spawn of Rix Maadi, Splatter Thug, Thrill-Kill Assassin | 9 |
-| Overload | Blustersquall, Cyclonic Rift, Dynacharge, Electrickery, Mizzium Mortars, Mizzium Skin, Teleportal, Vandalblast | 8 |
-| Scavenge | Drudge Beetle, Golgari Decoy, Korozda Monitor, Sewer Shambler, Slitherhead, Sluiceway Scorpion, Terrus Wurm, Zanikev Locust | 8 |
-| When this creature enters, detain up to two target creatures your opponents control. | Azorius Arrester, Azorius Justiciar, Isperia's Skywatch, Lyev Skyknight, Soulsworn Spirit | 5 |
-| At the beginning of your upkeep, target opponent reveals the top three cards of their library, may put a creature card from among them onto the battlefield, the | Conjured Currency, Growing Ranks, Guild Feud, Martial Law | 4 |
-| Enchanted land has "{T}: Prevent the next 1 damage that would be dealt to you this turn." | Racecourse Fury, Security Blockade, Underworld Connections, Urban Burgeoning | 4 |
-| At the beginning of each combat, any opponent may sacrifice a creature of their choice. If a player does, tap this creature and put a +1/+1 counter on it. | Desecration Demon, Havoc Festival | 2 |
-| Enchanted creature gets +1/+1 for each enchantment you control and has first strike. | Ethereal Armor, Righteous Authority | 2 |
-| {2}{G}{W}: Populate. | Rootborn Defenses, Vitu-Ghazi Guildmage | 2 |
-| Target creature you don't control gets -2/-0 until end of turn and attacks this turn if able. Overload {3}{U}{R} (You may cast this spell for its overload cost. | Chemister's Trick, Downsize | 2 |
-| +1: Until your next turn, whenever a creature an opponent controls attacks, it gets -1/-0 until end of turn. | Jace, Architect of Thought, Vraska the Unseen | 2 |
-| Whenever a creature you control dies, put X +1/+1 counters on target creature you control, where X is the power of the creature that died. | Death's Presence, Necropolis Regent | 2 |
-| Whenever this creature deals combat damage to a player, that player discards a card at random. | Rakdos Ringleader, Wayfaring Temple | 2 |
-| {T}: Add X mana in any combination of colors, where X is the number of creatures you control with defender. | Axebane Guardian | 1 |
-| All damage that would be dealt to you and other permanents you control is dealt to this creature instead. | Palisade Giant | 1 |
-| At the beginning of the upkeep of enchanted permanent's controller, that player sacrifices it unless they pay {X}, where X is its mana value. | Soul Tithe | 1 |
-| Choose one — • All creatures get -1/-1 until end of turn. • Destroy target enchantment. • Regenerate each creature you control. | Golgari Charm | 1 |
-| Choose one — • Creatures you control gain lifelink until end of turn. • Draw a card. • Put target attacking or blocking creature on top of its owner's library. | Azorius Charm | 1 |
-| Choose one — • Exile target player's graveyard. • Destroy target artifact. • Each creature deals 1 damage to its controller. | Rakdos Charm | 1 |
-| Counter target creature spell. Essence Backlash deals damage equal to that spell's power to its controller. | Essence Backlash | 1 |
-| Create a 3/3 green Centaur creature token, then populate. (Create a token that's a copy of a creature token you control.) | Coursers' Accord | 1 |
-| Create a 4/4 green Rhino creature token with trample, then populate. (Create a token that's a copy of a creature token you control.) | Horncaller's Chant | 1 |
-| Create a 1/1 white Bird creature token with flying, then populate. (Create a token that's a copy of a creature token you control.) | Eyes in the Skies | 1 |
-| Creatures can't attack you or planeswalkers you control unless their controller pays {X} for each of those creatures, where X is the number of enchantments you  | Sphere of Safety | 1 |
-| Destroy target artifact or enchantment, then populate. (Create a token that's a copy of a creature token you control.) | Sundering Growth | 1 |
-| Destroy target creature. Its controller discards a card. | Assassin's Strike | 1 |
-| Destroy target land. Its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | Destroy the Evidence | 1 |
-| Detain target creature an opponent controls. (Until your next turn, that creature can't attack or block and its activated abilities can't be activated.) Draw a  | Inaction Injunction | 1 |
-| {3}{W}{U}: Detain target nonland permanent an opponent controls. | New Prahv Guildmage | 1 |
-| {R}, {T}, Discard a card: This creature deals damage to target creature equal to the discarded card's mana value. | Mercurial Chemister | 1 |
-| During turns other than yours, tapped creatures you control have hexproof. | Oak Street Innkeeper | 1 |
-| Equipped creature gets +1/+0 for each of its colors. | Civic Saber | 1 |
-| Exile target creature, then populate. (Create a token that's a copy of a creature token you control.) | Trostani's Judgment | 1 |
-| {T}: Exile target land card from a graveyard. Add one mana of any color. | Deathrite Shaman | 1 |
-| Exile the top X cards of your library. You may cast instant and sorcery spells with mana value X or less from among them without paying their mana costs. Then p | Epic Experiment | 1 |
-| If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead of putting it into your graveyard. | Loxodon Smiter | 1 |
-| Lands you control have "{T}: Add one mana of any color." | Chromatic Lantern | 1 |
-| {T}, Pay 3 life: Flip a coin. If you win the flip, you gain 6 life. | Tavern Swindler | 1 |
-| Prevent all combat damage that would be dealt to you this turn. Populate. (Create a token that's a copy of a creature token you control.) | Druid's Deliverance | 1 |
-| Rakdos's Return deals X damage to target opponent or planeswalker. That player or that planeswalker's controller discards X cards. | Rakdos's Return | 1 |
-| Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {1}. | Judge's Familiar | 1 |
-| {2}{B}{R}, Sacrifice this creature: It deals damage equal to its power to target player or planeswalker. | Hellhole Flailer | 1 |
-| Search your library for an instant card with mana value 3, reveal it, and put it into your hand. Then repeat this process for instant cards with mana values 2 a | Firemind's Foresight | 1 |
-| Search your library for up to two creature cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle. | Jarad's Orders | 1 |
-| Shuffle all cards from your graveyard into your library. Target player mills that many cards. | Psychic Spiral | 1 |
-| Skull Rend deals 2 damage to each opponent. Those players each discard two cards at random. | Skull Rend | 1 |
-| {2}{U}, {T}: Target player mills X cards, where X is the number of creatures you control with defender. | Doorkeeper | 1 |
-| Target player reveals their hand. You gain life equal to the number of cards in that player's hand. | Search Warrant | 1 |
-| {B}{R}: Target player who lost life this turn loses 1 life. | Rix Maadi Guildmage | 1 |
-| This creature can attack as though it didn't have defender as long as you control a Gate. | Ogre Jailbreaker | 1 |
-| {T}: This creature deals 1 damage to target creature and each other creature with the same name as that creature. | Izzet Staticaster | 1 |
-| This spell can't be countered. Choose a nonland card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exil | Slaughter Games | 1 |
-| This spell can't be countered. Counter target spell you don't control. Overload {1}{U}{U}{R} (You may cast this spell for its overload cost. If you do, change " | Counterflux | 1 |
-| Until end of turn, target creature gets +1/+1 for each creature you control and gains trample. | Chorus of Might | 1 |
-| When this creature dies, flip a coin. If you lose the flip, it deals 4 damage to each creature and each player. | Volatile Rig | 1 |
-| When this creature enters, sacrifice it unless you return another creature you control to its owner's hand. | Faerie Impostor | 1 |
-| When this creature leaves the battlefield, return the exiled cards to their owners' hands. | Angel of Serenity | 1 |
-| When this enchantment enters, exile the top five cards of your library. | Search the City | 1 |
-| When this enchantment leaves the battlefield, return the exiled cards to the battlefield under their owner's control. | Detention Sphere | 1 |
-| When this land enters, sacrifice it unless you pay {1}. | Transguild Promenade | 1 |
-| When Worldspine Wurm is put into a graveyard from anywhere, shuffle it into its owner's library. | Worldspine Wurm | 1 |
-| Whenever a creature attacks you or a planeswalker you control, you may draw a card. | Isperia, Supreme Judge | 1 |
-| Whenever a creature you don't control dies, return it to the battlefield under your control with an additional +1/+1 counter on it at the beginning of the next  | Grave Betrayal | 1 |
-| Whenever a source deals damage to you, remove a filibuster counter from this creature. | Azor's Elocutors | 1 |
-| Whenever another creature you control enters, you gain life equal to that creature's toughness. | Trostani, Selesnya's Voice | 1 |
-| Whenever enchanted land becomes tapped, its controller mills three cards. | Chronic Flooding | 1 |
-| Whenever this creature attacks, each other creature you control gets +X/+X until end of turn, where X is this creature's power. | Wild Beastmaster | 1 |
-| Whenever you cast a spell, if it's at least one of the chosen colors, you gain 1 life for each of the chosen colors it is. | Tablet of the Guilds | 1 |
-| You can't cast Rakdos unless an opponent lost life this turn. | Rakdos, Lord of Riots | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| unleash | 10 | Bloodfray Giant, Carnival Hellsteed, Chaos Imps, Dead Reveler, Gore-House Chainwalker | rtr |
+| scavenge | 9 | Deadbridge Goliath, Drudge Beetle, Golgari Decoy, Korozda Monitor, Sewer Shambler | rtr |
+| overload | 8 | Blustersquall, Cyclonic Rift, Dynacharge, Electrickery, Mizzium Mortars | rtr |
+| enchanted land has "..." | 4 | Racecourse Fury, Security Blockade, Underworld Connections, Urban Burgeoning | rtr |
+| Choose one | 3 | Azorius Charm, Golgari Charm, Rakdos Charm | rtr |
+| when ~ enters, detain target creature an opponent controls. | 3 | Azorius Arrester, Isperia's Skywatch, Soulsworn Spirit | rtr |
+| +N: until your next turn, whenever a creature an opponent controls attacks, it gets -N/-N until end of turn. | 1 | Jace, Architect of Thought | rtr |
+| +N: until your next turn, whenever a creature deals combat damage to vraska, destroy that creature. | 1 | Vraska the Unseen | rtr |
+| all damage that would be dealt to you and other permanents you control is dealt to ~ instead. | 1 | Palisade Giant | rtr |
+| at the beginning of each combat, any opponent may sacrifice a creature of their choice. if a player does, tap ~ and put a +N/+N counter on it. | 1 | Desecration Demon | rtr |
+| at the beginning of each player's upkeep, that player loses half their life, rounded up. | 1 | Havoc Festival | rtr |
+| at the beginning of the upkeep of enchanted permanent's controller, that player sacrifices it unless they pay {M}, where N is its mana value. | 1 | Soul Tithe | rtr |
+| at the beginning of your upkeep, detain target creature an opponent controls. | 1 | Martial Law | rtr |
+| at the beginning of your upkeep, populate. | 1 | Growing Ranks | rtr |
+| at the beginning of your upkeep, target opponent reveals the top three cards of their library, may put a creature card from among them onto the battlefield, the | 1 | Guild Feud | rtr |
+| at the beginning of your upkeep, you may exchange control of ~ and target permanent you neither own nor control. | 1 | Conjured Currency | rtr |
+| counter target creature spell. ~ deals damage equal to that spell's power to its controller. | 1 | Essence Backlash | rtr |
+| create a N/N green centaur creature token, then populate. (create a token that's a copy of a creature token you control.) | 1 | Coursers' Accord | rtr |
+| create a N/N green rhino creature token with trample, then populate. (create a token that's a copy of a creature token you control.) | 1 | Horncaller's Chant | rtr |
+| create a N/N white bird creature token with flying, then populate. (create a token that's a copy of a creature token you control.) | 1 | Eyes in the Skies | rtr |
+| creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures, where N is the number of enchantments you  | 1 | Sphere of Safety | rtr |
+| destroy target artifact or enchantment, then populate. (create a token that's a copy of a creature token you control.) | 1 | Sundering Growth | rtr |
+| destroy target creature. its controller discards a card. | 1 | Assassin's Strike | rtr |
+| destroy target land. its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Destroy the Evidence | rtr |
+| detain target creature an opponent controls. (until your next turn, that creature can"..."t be activated.) draw a card. | 1 | Inaction Injunction | rtr |
+| during turns other than yours, tapped creatures you control have hexproof. | 1 | Oak Street Innkeeper | rtr |
+| enchanted creature gets +N/+N for each card in its controller's hand. | 1 | Righteous Authority | rtr |
+| enchanted creature gets +N/+N for each enchantment you control and has first strike. | 1 | Ethereal Armor | rtr |
+| equipped creature gets +N/+N for each of its colors. | 1 | Civic Saber | rtr |
+| exile target creature, then populate. (create a token that's a copy of a creature token you control.) | 1 | Trostani's Judgment | rtr |
+| exile the top N cards of your library. you may cast instant and sorcery spells with mana value N or less from among them without paying their mana costs. then p | 1 | Epic Experiment | rtr |
+| if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield instead of putting it into your graveyard. | 1 | Loxodon Smiter | rtr |
+| if an instant or sorcery card would be put into a graveyard from anywhere, exile it instead. | 1 | Dryad Militant | rtr |
+| lands you control have "..." | 1 | Chromatic Lantern | rtr |
+| populate | 1 | Rootborn Defenses | rtr |
+| prevent all combat damage that would be dealt to you ~. populate. (create a token that's a copy of a creature token you control.) | 1 | Druid's Deliverance | rtr |
+| sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}. | 1 | Judge's Familiar | rtr |
+| search your library for an instant card with mana value N, reveal it, and put it into your hand. then repeat ~ for instant cards with mana values N and N. then  | 1 | Firemind's Foresight | rtr |
+| search your library for up to two creature cards and reveal them. put one into your hand and the other into your graveyard. then shuffle. | 1 | Jarad's Orders | rtr |
+| shuffle all cards from your graveyard into your library. target player mills that many cards. | 1 | Psychic Spiral | rtr |
+| target creature you don't control gets -N/-N until end of turn and attacks ~ if able. overload {M}{M}{M} (you may cast ~ for its overload cost. if you do, chang | 1 | Chemister's Trick | rtr |
+| target creature you don't control gets -N/-N until end of turn. overload {M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its text to ". | 1 | Downsize | rtr |
+| target player reveals their hand. you gain life equal to the number of cards in that player's hand. | 1 | Search Warrant | rtr |
+| until end of turn, target creature gets +N/+N for each creature you control and gains trample. | 1 | Chorus of Might | rtr |
+| when ~ dies, flip a coin. if you lose the flip, it deals N damage to each creature and each player. | 1 | Volatile Rig | rtr |
+| when ~ enters, detain target nonland permanent an opponent controls. | 1 | Lyev Skyknight | rtr |
+| when ~ enters, detain up to two target creatures your opponents control. | 1 | Azorius Justiciar | rtr |
+| when ~ enters, exile the top five cards of your library. | 1 | Search the City | rtr |
+| when ~ enters, sacrifice it unless you pay {M}. | 1 | Transguild Promenade | rtr |
+| when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Faerie Impostor | rtr |
+| when ~ is put into a graveyard from anywhere, shuffle it into its owner's library. | 1 | Worldspine Wurm | rtr |
+| when ~ leaves the battlefield, return the exiled cards to the battlefield under their owner's control. | 1 | Detention Sphere | rtr |
+| when ~ leaves the battlefield, return the exiled cards to their owners' hands. | 1 | Angel of Serenity | rtr |
+| whenever a creature attacks you or a planeswalker you control, you may draw a card. | 1 | Isperia, Supreme Judge | rtr |
+| whenever a creature you control deals combat damage to a player, put that many +N/+N counters on it. | 1 | Necropolis Regent | rtr |
+| whenever a creature you control dies, put N +N/+N counters on target creature you control, where N is the power of the creature that died. | 1 | Death's Presence | rtr |
+| whenever a creature you don't control dies, return it to the battlefield under your control with an additional +N/+N counter on it at the beginning of the next  | 1 | Grave Betrayal | rtr |
+| whenever a source deals damage to you, remove a filibuster counter from ~. | 1 | Azor's Elocutors | rtr |
+| whenever another creature you control enters, you gain life equal to that creature's toughness. | 1 | Trostani, Selesnya's Voice | rtr |
+| whenever enchanted land becomes tapped, its controller mills three cards. | 1 | Chronic Flooding | rtr |
+| whenever you cast a spell, if it's at least one of the chosen colors, you gain N life for each of the chosen colors it is. | 1 | Tablet of the Guilds | rtr |
+| whenever ~ attacks, detain up to two target nonland permanents your opponents control. | 1 | Archon of the Triumvirate | rtr |
+| whenever ~ attacks, each other creature you control gets +N/+N until end of turn, where N is ~ power. | 1 | Wild Beastmaster | rtr |
+| whenever ~ deals combat damage to a player, populate. | 1 | Wayfaring Temple | rtr |
+| whenever ~ deals combat damage to a player, that player discards a card at random. | 1 | Rakdos Ringleader | rtr |
+| you can't cast rakdos unless an opponent lost life ~. | 1 | Rakdos, Lord of Riots | rtr |
+| you may cast sorcery spells as though they had flash. | 1 | Hypersonic Dragon | rtr |
+| {M}, pay N life: flip a coin. if you win the flip, you gain N life. | 1 | Tavern Swindler | rtr |
+| {M}, {M}, discard a card: ~ deals damage to target creature equal to the discarded card's mana value. | 1 | Mercurial Chemister | rtr |
+| {M}: add N mana in any combination of colors, where N is the number of creatures you control with defender. | 1 | Axebane Guardian | rtr |
+| {M}: exile target land card from a graveyard. add one mana of any color. | 1 | Deathrite Shaman | rtr |
+| {M}: ~ deals N damage to target creature and each other creature with the same name as that creature. | 1 | Izzet Staticaster | rtr |
+| {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Doorkeeper | rtr |
+| {M}{M}: target player who lost life ~ loses N life. | 1 | Rix Maadi Guildmage | rtr |
+| {M}{M}{M}, sacrifice ~: it deals damage equal to its power to target player or planeswalker. | 1 | Hellhole Flailer | rtr |
+| {M}{M}{M}: detain target nonland permanent an opponent controls. | 1 | New Prahv Guildmage | rtr |
+| {M}{M}{M}: populate. | 1 | Vitu-Ghazi Guildmage | rtr |
+| ~ can attack as though it didn't have defender as long as you control a gate. | 1 | Ogre Jailbreaker | rtr |
+| ~ can"..."s graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles. | 1 | Slaughter Games | rtr |
+| ~ can"..."t control. overload {M}{M}{M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its text to "...") | 1 | Counterflux | rtr |
+| ~ deals N damage to each opponent. those players each discard two cards at random. | 1 | Skull Rend | rtr |
+| ~ deals N damage to target opponent or planeswalker. that player or that planeswalker's controller discards N cards. | 1 | Rakdos's Return | rtr |
 
 ## Notes
 

@@ -3,14 +3,14 @@
 - Expansion: 078
 - Set code: `mor`
 - Release date: 2008-02-01
-- Cards in scope (Modern/Pioneer/Standard-legal): 147
+- Cards in scope (Modern/Pioneer/Standard-legal): 148
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 147 |
-| Pioneer | 11 |
+| Modern | 148 |
+| Pioneer | 12 |
 | Standard | 5 |
 
 ## Coverage
@@ -19,8 +19,8 @@
 |---|---|---|
 | Full (handled + tested) | 6 | 4.1% |
 | Partial (unaudited) | 6 | 4.1% |
-| Not tested (handled, untested) | 47 | 32.0% |
-| Not working (silent / notice / error) | 88 | 59.9% |
+| Not tested (handled, untested) | 47 | 31.8% |
+| Not working (silent / notice / error) | 89 | 60.1% |
 
 ## Cards needing work
 
@@ -39,6 +39,7 @@
 | Declaration of Naught | silent | {U}: Counter target spell with the chosen name. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Distant Melody | silent | Choose a creature type. Draw a card for each permanent you control of that type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Diviner's Wand | silent | Whenever a Wizard creature enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Door of Destinies | silent | Creatures you control of the chosen type get +1/+1 for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Earthbrawn | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Earwig Squad | silent | When this creature enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fendeep Summoner | silent | {T}: Up to two target Swamps each become 3/5 Treefolk Warrior creatures in addition to their other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -184,76 +185,84 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | Ink Dissolver, Kithkin Zephyrnaut, Leaf-Crowned Elder, Mudbutton Clanger, Nightshade Schemers, Pyroclast Consul, Sensation Gorger, Squeaking Pie Grubfellows, Wandering Graybeard, Waterspout Weavers, Winnower Patrol, Wolf-Skull Shaman | 12 |
-| Reinforce | Brighthearth Banneret, Burrenton Bombardier, Earthbrawn, Hunting Triad, Mosquito Guard, Rustic Clachan, Swell of Courage | 7 |
-| Prowl {5}{U} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Create X 1/1 black Faerie Rogue creature toke | Knowledge Exploitation, Noggin Whack, Notorious Throng | 3 |
-| {1}{G}, Remove a +1/+1 counter from this creature: Target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffle | Fertilid, Festercreep, Floodchaser | 3 |
-| Whenever a creature you control enters, you may look at the top X cards of your library, where X is that creature's power. If you do, put one of those cards on  | Cream of the Crop, Shared Animosity, Unstoppable Ash | 3 |
-| Champion | Lightning Crafter, Supreme Exemplar | 2 |
-| When this creature leaves the battlefield, choose an opponent. If that player has more cards in hand than you, draw cards equal to the difference. | Nevermaker, Slithermuse | 2 |
-| Whenever this creature attacks, you may put a Soldier creature card from your hand onto the battlefield tapped and attacking. | Order of the Golden Cricket, Preeminent Captain | 2 |
-| At the beginning of each player's draw step, that player loses 3 life, searches their library for a card, puts it into their hand, then shuffles. | Maralen of the Mornsong | 1 |
-| At the beginning of your upkeep, reveal the top card of your library. If it's a land card, put it into your graveyard and repeat this process. | Countryside Crusher | 1 |
-| Choose a creature type. Coordinated Barrage deals damage to target attacking or blocking creature equal to the number of permanents you control of the chosen ty | Coordinated Barrage | 1 |
-| Choose a creature type. Draw a card for each permanent you control of that type. | Distant Melody | 1 |
-| Choose a creature type. Roar of the Crowd deals damage to any target equal to the number of permanents you control of the chosen type. | Roar of the Crowd | 1 |
-| Choose a creature type. Target creature gets -1/-1 until end of turn for each permanent of the chosen type you control. | Pack's Disdain | 1 |
-| Choose a creature type. You gain 2 life for each permanent you control of that type. | Luminescent Rain | 1 |
-| Choose two target creatures that share no creature types. Those creatures fight each other. (Each deals damage equal to its power to the other.) | Rivals' Duel | 1 |
-| Clash | Redeem the Lost | 1 |
-| Clash with an opponent. If you win, target player discards two cards. Otherwise, that player discards a card. (Each clashing player reveals the top card of thei | Pulling Teeth | 1 |
-| {U}: Counter target spell with the chosen name. | Declaration of Naught | 1 |
-| Draw a card. Clash with an opponent. If you win, return Research the Deep to its owner's hand. (Each clashing player reveals the top card of their library, then | Research the Deep | 1 |
-| Each creature you control with a +1/+1 counter on it can block an additional creature each combat. | Cenn's Tactician | 1 |
-| Each other Rogue creature you control enters with an additional +1/+1 counter on it. | Oona's Blackguard | 1 |
-| Each other Warrior creature you control enters with an additional +1/+1 counter on it. | Bramblewood Paragon | 1 |
-| Each other Wizard creature you control enters with an additional +1/+1 counter on it. | Sage of Fables | 1 |
-| Enchanted land has "{T}: Target creature can't block this turn." | Hostile Realm | 1 |
-| Fear | Prickly Boggart | 1 |
-| Goblin spells and Rogue spells you cast cost {1} less to cast. | Frogtosser Banneret | 1 |
-| If a source would deal damage to a player, you may prevent X of that damage, where X is the number of Clerics you control. | Battletide Alchemist | 1 |
-| Kithkin spells and Soldier spells you cast cost {1} less to cast. | Ballyrush Banneret | 1 |
-| Knight creatures you control have double strike. | Kinsbaile Cavalier | 1 |
-| Merfolk spells and Wizard spells you cast cost {1} less to cast. | Stonybrook Banneret | 1 |
-| Other Archer creatures you control get +1/+1. | Greatbow Doyen | 1 |
-| Prevent all damage that would be dealt to creatures this turn. | Forfend | 1 |
-| {1}{W}: Put a +1/+1 counter on enchanted creature. | Daily Regimen | 1 |
-| Release the Ants deals 1 damage to any target. Clash with an opponent. If you win, return Release the Ants to its owner's hand. (Each clashing player reveals th | Release the Ants | 1 |
-| Return target creature card from a graveyard to its owner's hand. Clash with an opponent. If you win, return Revive the Fallen to its owner's hand. (Each clashi | Revive the Fallen | 1 |
-| Reveal cards from the top of your library until you reveal a land card. Put that card onto the battlefield and the rest on the bottom of your library in any ord | Recross the Paths | 1 |
-| Reveal the top seven cards of your library, then put those cards on the bottom of your library in any order. If a card named Stomping Slabs was revealed this wa | Stomping Slabs | 1 |
-| {1}{W}, {T}: Search your library for an Equipment card, put it onto the battlefield, attach it to a creature you control, then shuffle. | Stonehewer Giant | 1 |
-| Tap seven untapped Druids you control: Gain control of all lands target player controls. | Gilt-Leaf Archdruid | 1 |
-| Tap two untapped creatures you control that share a creature type: Exile enchanted creature. | Weight of Conscience | 1 |
-| Target player discards X cards at random. | Mind Shatter | 1 |
-| Target player sacrifices a creature of their choice. If a Goblin is sacrificed this way, that player creates two 1/1 black Goblin Rogue creature tokens, and tho | Warren Weirding | 1 |
-| {1}{R}, {T}: This creature deals X damage to any target and X damage to itself, where X is the number of Elemental cards in your graveyard. | Sunflare Shaman | 1 |
-| This creature gets +4/+4 for each other Giant you control. | Borderland Behemoth | 1 |
-| {2}{G}{G}: This creature gets +X/+X until end of turn, where X is its power. | Chameleon Colossus | 1 |
-| This creature has haste as long as a Warrior card is in your graveyard. | Vengeful Firebrand | 1 |
-| {1}: This land becomes a 2/2 creature with all creature types until end of turn. It's still a land. | Mutavault | 1 |
-| Titan's Revenge deals X damage to any target. Clash with an opponent. If you win, return Titan's Revenge to its owner's hand. (Each clashing player reveals the  | Titan's Revenge | 1 |
-| Treefolk spells and Shaman spells you cast cost {1} less to cast. | Bosk Banneret | 1 |
-| {T}: Up to two target Swamps each become 3/5 Treefolk Warrior creatures in addition to their other types until end of turn. | Fendeep Summoner | 1 |
-| When enchanted creature dies, you may return this card from your graveyard to the battlefield attached to a creature that shares a creature type with that creat | Reins of the Vinesteed | 1 |
-| When target creature dies this turn, return that card to the battlefield under its owner's control. | Graceful Reprieve | 1 |
-| When this creature dies, create a 1/1 white Kithkin Soldier creature token for each counter on it. | Kinsbaile Borderguard | 1 |
-| When this creature enters, each opponent may search their library for a creature card and put it onto the battlefield. Then each player who searched their libra | Boldwyr Heavyweights | 1 |
-| When this creature enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. Then that player shuffles. | Earwig Squad | 1 |
-| When this creature enters, put a +1/+1 counter on each other Shaman creature you control. | Rage Forger | 1 |
-| When Vendilion Clique enters, look at target player's hand. You may choose a nonland card from it. If you do, that player reveals the chosen card, puts it on th | Vendilion Clique | 1 |
-| Whenever a Goblin or Rogue you control deals combat damage to a player, if this card is in your graveyard, you may return this card to your hand. | Auntie's Snitch | 1 |
-| Whenever a Rogue creature enters, you may attach this Equipment to it. | Cloak and Dagger | 1 |
-| Whenever a Shaman creature enters, you may attach this Equipment to it. | Thornbite Staff | 1 |
-| Whenever a Soldier creature enters, you may attach this Equipment to it. | Veteran's Armaments | 1 |
-| Whenever a Warrior creature enters, you may attach this Equipment to it. | Obsidian Battle-Axe | 1 |
-| Whenever a Wizard creature enters, you may attach this Equipment to it. | Diviner's Wand | 1 |
-| Whenever another Treefolk creature you control enters, you may gain life equal to that creature's toughness. | Orchard Warden | 1 |
-| Whenever this creature becomes blocked, clash with an opponent. If you win, this creature deals 4 damage to each creature blocking it. | Fire Juggler | 1 |
-| Whenever this creature becomes tapped, exile the top three cards of target opponent's library face down. | Grimoire Thief | 1 |
-| You gain 10 life. Then if you have more life than an opponent, create a 5/5 white Giant Warrior creature token. | Feudkiller's Verdict | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Kinship | 12 | Ink Dissolver, Kithkin Zephyrnaut, Leaf-Crowned Elder, Mudbutton Clanger, Nightshade Schemers | mor |
+| reinforce | 7 | Brighthearth Banneret, Burrenton Bombardier, Earthbrawn, Hunting Triad, Mosquito Guard | mor |
+| champion | 2 | Lightning Crafter, Supreme Exemplar | mor |
+| ~ deals N damage to any target. clash with an opponent. if you win, return ~ to its owner's hand. (each clashing player reveals the top card of their library, t | 2 | Release the Ants, Titan's Revenge | mor |
+| at the beginning of each player's draw step, that player loses N life, searches their library for a card, puts it into their hand, then shuffles. | 1 | Maralen of the Mornsong | mor |
+| at the beginning of your upkeep, reveal the top card of your library. if it's a land card, put it into your graveyard and repeat ~. | 1 | Countryside Crusher | mor |
+| choose a creature type. draw a card for each permanent you control of that type. | 1 | Distant Melody | mor |
+| choose a creature type. target creature gets -N/-N until end of turn for each permanent of the chosen type you control. | 1 | Pack's Disdain | mor |
+| choose a creature type. you gain N life for each permanent you control of that type. | 1 | Luminescent Rain | mor |
+| choose a creature type. ~ deals damage to any target equal to the number of permanents you control of the chosen type. | 1 | Roar of the Crowd | mor |
+| choose a creature type. ~ deals damage to target attacking or blocking creature equal to the number of permanents you control of the chosen type. | 1 | Coordinated Barrage | mor |
+| choose two target creatures that share no creature types. those creatures fight each other. (each deals damage equal to its power to the other.) | 1 | Rivals' Duel | mor |
+| clash | 1 | Redeem the Lost | mor |
+| clash with an opponent. if you win, target player discards two cards. otherwise, that player discards a card. (each clashing player reveals the top card of thei | 1 | Pulling Teeth | mor |
+| creatures you control of the chosen type get +N/+N for each charge counter on ~. | 1 | Door of Destinies | mor |
+| draw a card. clash with an opponent. if you win, return ~ to its owner's hand. (each clashing player reveals the top card of their library, then puts that card  | 1 | Research the Deep | mor |
+| each creature you control with a +N/+N counter on it can block an additional creature each combat. | 1 | Cenn's Tactician | mor |
+| each other rogue creature you control enters with an additional +N/+N counter on it. | 1 | Oona's Blackguard | mor |
+| each other warrior creature you control enters with an additional +N/+N counter on it. | 1 | Bramblewood Paragon | mor |
+| each other wizard creature you control enters with an additional +N/+N counter on it. | 1 | Sage of Fables | mor |
+| enchanted land has "..." | 1 | Hostile Realm | mor |
+| fear | 1 | Prickly Boggart | mor |
+| goblin spells and rogue spells you cast cost {M} less to cast. | 1 | Frogtosser Banneret | mor |
+| if a source would deal damage to a player, you may prevent N of that damage, where N is the number of clerics you control. | 1 | Battletide Alchemist | mor |
+| kithkin spells and soldier spells you cast cost {M} less to cast. | 1 | Ballyrush Banneret | mor |
+| knight creatures you control have double strike. | 1 | Kinsbaile Cavalier | mor |
+| merfolk spells and wizard spells you cast cost {M} less to cast. | 1 | Stonybrook Banneret | mor |
+| other archer creatures you control get +N/+N. | 1 | Greatbow Doyen | mor |
+| prevent all damage that would be dealt to creatures ~. | 1 | Forfend | mor |
+| prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) create N N/N black faerie rogue creature tokens with flying, | 1 | Notorious Throng | mor |
+| prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) search target opponent's library for an instant or sorcery c | 1 | Knowledge Exploitation | mor |
+| prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) target player reveals three cards from their hand. you choos | 1 | Noggin Whack | mor |
+| return target creature card from a graveyard to its owner"..."s hand. (each clashing player reveals the top card of their library, then puts that card on their  | 1 | Revive the Fallen | mor |
+| reveal cards from the top of your library until you reveal a land card. put that card onto the battlefield and the rest on the bottom of your library in any ord | 1 | Recross the Paths | mor |
+| reveal the top seven cards of your library, then put those cards on the bottom of your library in any order. if a card named ~ was revealed ~, ~ deals N damage  | 1 | Stomping Slabs | mor |
+| tap seven untapped druids you control: gain control of all lands target player controls. | 1 | Gilt-Leaf Archdruid | mor |
+| tap two untapped creatures you control that share a creature type: exile enchanted creature. | 1 | Weight of Conscience | mor |
+| target player discards N cards at random. | 1 | Mind Shatter | mor |
+| target player sacrifices a creature of their choice. if a goblin is sacrificed ~, that player creates two N/N black goblin rogue creature tokens, and those toke | 1 | Warren Weirding | mor |
+| treefolk spells and shaman spells you cast cost {M} less to cast. | 1 | Bosk Banneret | mor |
+| when enchanted creature dies, you may return ~ from your graveyard to the battlefield attached to a creature that shares a creature type with that creature. | 1 | Reins of the Vinesteed | mor |
+| when target creature dies ~, return that card to the battlefield under its owner's control. | 1 | Graceful Reprieve | mor |
+| when ~ dies, create a N/N white kithkin soldier creature token for each counter on it. | 1 | Kinsbaile Borderguard | mor |
+| when ~ enters, each opponent may search their library for a creature card and put it onto the battlefield. then each player who searched their library ~ shuffle | 1 | Boldwyr Heavyweights | mor |
+| when ~ enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. then that player shuffles. | 1 | Earwig Squad | mor |
+| when ~ enters, look at target player's hand. you may choose a nonland card from it. if you do, that player reveals the chosen card, puts it on the bottom of the | 1 | Vendilion Clique | mor |
+| when ~ enters, put a +N/+N counter on each other shaman creature you control. | 1 | Rage Forger | mor |
+| when ~ leaves the battlefield, choose an opponent. if that player has more cards in hand than you, draw cards equal to the difference. | 1 | Slithermuse | mor |
+| when ~ leaves the battlefield, put target nonland permanent on top of its owner's library. | 1 | Nevermaker | mor |
+| whenever a creature you control attacks, it gets +N/+N until end of turn for each other attacking creature that shares a creature type with it. | 1 | Shared Animosity | mor |
+| whenever a creature you control becomes blocked, it gets +N/+N until end of turn. | 1 | Unstoppable Ash | mor |
+| whenever a creature you control enters, you may look at the top N cards of your library, where N is that creature's power. if you do, put one of those cards on  | 1 | Cream of the Crop | mor |
+| whenever a goblin or rogue you control deals combat damage to a player, if ~ is in your graveyard, you may return ~ to your hand. | 1 | Auntie's Snitch | mor |
+| whenever a rogue creature enters, you may attach ~ to it. | 1 | Cloak and Dagger | mor |
+| whenever a shaman creature enters, you may attach ~ to it. | 1 | Thornbite Staff | mor |
+| whenever a soldier creature enters, you may attach ~ to it. | 1 | Veteran's Armaments | mor |
+| whenever a warrior creature enters, you may attach ~ to it. | 1 | Obsidian Battle-Axe | mor |
+| whenever a wizard creature enters, you may attach ~ to it. | 1 | Diviner's Wand | mor |
+| whenever another treefolk creature you control enters, you may gain life equal to that creature's toughness. | 1 | Orchard Warden | mor |
+| whenever ~ attacks, you may pay {M}. if you do, it gains flying until end of turn. | 1 | Order of the Golden Cricket | mor |
+| whenever ~ attacks, you may put a soldier creature card from your hand onto the battlefield tapped and attacking. | 1 | Preeminent Captain | mor |
+| whenever ~ becomes blocked, clash with an opponent. if you win, ~ deals N damage to each creature blocking it. | 1 | Fire Juggler | mor |
+| whenever ~ becomes tapped, exile the top three cards of target opponent's library face down. | 1 | Grimoire Thief | mor |
+| you gain N life. then if you have more life than an opponent, create a N/N white giant warrior creature token. | 1 | Feudkiller's Verdict | mor |
+| {M}, remove a +N/+N counter from ~: target land becomes an island until end of turn. | 1 | Floodchaser | mor |
+| {M}: counter target spell with the chosen name. | 1 | Declaration of Naught | mor |
+| {M}: up to two target swamps each become N/N treefolk warrior creatures in addition to their other types until end of turn. | 1 | Fendeep Summoner | mor |
+| {M}: ~ becomes a N/N creature with all creature types until end of turn. it's still a land. | 1 | Mutavault | mor |
+| {M}{M}, remove a +N/+N counter from ~: all other creatures get -N/-N until end of turn. | 1 | Festercreep | mor |
+| {M}{M}, remove a +N/+N counter from ~: target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. | 1 | Fertilid | mor |
+| {M}{M}, {M}: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, then shuffle. | 1 | Stonehewer Giant | mor |
+| {M}{M}, {M}: ~ deals N damage to any target and N damage to itself, where N is the number of elemental cards in your graveyard. | 1 | Sunflare Shaman | mor |
+| {M}{M}: put a +N/+N counter on enchanted creature. | 1 | Daily Regimen | mor |
+| {M}{M}{M}: ~ gets +N/+N until end of turn, where N is its power. | 1 | Chameleon Colossus | mor |
+| ~ gets +N/+N for each other giant you control. | 1 | Borderland Behemoth | mor |
+| ~ has haste as long as a warrior card is in your graveyard. | 1 | Vengeful Firebrand | mor |
 
 ## Notes
 

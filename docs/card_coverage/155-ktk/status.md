@@ -262,68 +262,67 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Other Warrior creatures you control get +1/+0. | Chief of the Edge, Chief of the Scale | 2 |
-| When this creature is turned face up, target creature can't block this turn. | Dragon's Eye Savants, Horde Ambusher | 2 |
-| Whenever this creature attacks, target creature defending player controls blocks it this combat if able. | Avalanche Tusker, Mardu Roughrider | 2 |
-| All creatures able to block target creature this turn do so. Ferocious — That creature gains indestructible until end of turn if you control a creature with pow | Roar of Challenge | 1 |
-| At the beginning of your upkeep, you may pay {2}{B}. If you do, return a creature card at random from your graveyard to the battlefield. It gains flying, trampl | Kheru Lich Lord | 1 |
-| Barrage of Boulders deals 1 damage to each creature you don't control. Ferocious — If you control a creature with power 4 or greater, creatures can't block this | Barrage of Boulders | 1 |
-| Bring Low deals 3 damage to target creature. If that creature has a +1/+1 counter on it, Bring Low deals 5 damage to it instead. | Bring Low | 1 |
-| Burn Away deals 6 damage to target creature. When that creature dies this turn, exile its controller's graveyard. | Burn Away | 1 |
-| Choose one — • Mardu Charm deals 4 damage to target creature. • Create two 1/1 white Warrior creature tokens. They gain first strike until end of turn. • Target | Mardu Charm | 1 |
-| Choose one — • Put target creature on top of its owner's library. • Jeskai Charm deals 4 damage to target opponent or planeswalker. • Creatures you control get  | Jeskai Charm | 1 |
-| Choose one — • Target creature you control gets +1/+1 until end of turn. It fights target creature you don't control. • Counter target spell unless its controll | Temur Charm | 1 |
-| Choose up to one creature. Destroy the rest. | Duneblast | 1 |
-| Counter target spell unless its controller pays {X}. Mindswipe deals X damage to that spell's controller. | Mindswipe | 1 |
-| Crackling Doom deals 2 damage to each opponent. Each opponent sacrifices a creature with the greatest power among creatures that player controls. | Crackling Doom | 1 |
-| Crater's Claws deals X damage to any target. Ferocious — Crater's Claws deals X plus 2 damage instead if you control a creature with power 4 or greater. | Crater's Claws | 1 |
-| Creature spells you control can't be countered. | Surrak Dragonclaw | 1 |
-| Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Put target nonland permanent on top of its owner's library. | Set Adrift | 1 |
-| Destroy all creatures and all permanents attached to creatures. | End Hostilities | 1 |
-| Destroy target blocking creature. Creatures that were blocked by that creature this combat gain trample until end of turn. | Ride Down | 1 |
-| Destroy target creature. If that creature had a +1/+1 counter on it, create a 1/1 green Snake creature token. | Rite of the Serpent | 1 |
-| Each creature you control can block an additional creature each combat. | Brave the Sands | 1 |
-| Equipped creature has defender and "{2}, {T}: Other creatures you control gain trample and get +X/+X until end of turn, where X is this creature's power." | Dragon Throne of Tarkir | 1 |
-| {2}, Exile this artifact: Target player shuffles their graveyard into their library. Draw a card. | Cranial Archive | 1 |
-| Face-down creatures you control get +0/+1. | Secret Plans | 1 |
-| Ferocious — If you control a creature with power 4 or greater, you may cast this spell as though it had flash. | Dragon Grip | 1 |
-| If a nontoken creature an opponent owns would die or a creature card not on the battlefield would be put into an opponent's graveyard, exile that card instead. | Anafenza, the Foremost | 1 |
-| If a player would begin an extra turn, that player skips that turn instead. | Ugin's Nexus | 1 |
-| {1}{U}: Look at target face-down creature. | Smoke Teller | 1 |
-| Put a +1/+1 counter on target creature you control. It gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt d | Feat of Resistance | 1 |
-| Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | War-Name Aspirant | 1 |
-| Raid — When this creature enters, you lose 4 life unless you attacked this turn. | Bellowing Saddlebrute | 1 |
-| {1}, {T}, Remove a gem counter from this artifact: Target creature can't attack or block this turn. | Briber's Purse | 1 |
-| Return target creature to its owner's hand. Ferocious — If you control a creature with power 4 or greater, you may draw a card. If you do, discard a card. | Force Away | 1 |
-| Reveal the top eight cards of your library. You may put a creature card from among them onto the battlefield. Put the rest into your graveyard. Ferocious — If y | See the Unwritten | 1 |
-| Sacrifice another creature: This creature gains your choice of vigilance, lifelink, or haste until end of turn. | Butcher of the Horde | 1 |
-| {1}{G}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. | Kheru Dreadmaw | 1 |
-| Tap X target creatures. Ferocious — If you control a creature with power 4 or greater, those creatures don't untap during their controllers' next untap steps. | Icy Blast | 1 |
-| Target creature you control fights target creature you don't control. Ferocious — The creature you control gets +2/+2 until end of turn before it fights if you  | Savage Punch | 1 |
-| Target opponent exiles the top X cards of their library. You may cast any number of spells with mana value X or less from among them without paying their mana c | Villainous Wealth | 1 |
-| The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much  | Deflecting Palm | 1 |
-| This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it. | High Sentinels of Arashin | 1 |
-| This Equipment's equip ability costs {2} less to activate if it targets a colorless creature. | Ghostfire Blade | 1 |
-| Untap each creature you control with a +1/+1 counter on it during each other player's untap step. | Ivorytusk Fortress | 1 |
-| +1: Until end of turn, Sarkhan becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste. | Sarkhan, the Dragonspeaker | 1 |
-| +1: Until your next turn, creatures you control get +1/+0 and gain lifelink. | Sorin, Solemn Visitor | 1 |
-| When this creature attacks or blocks, sacrifice it at end of combat. | Mardu Blazebringer | 1 |
-| When this creature dies, create a 1/1 green Snake creature token for each +1/+1 counter on it. | Hooded Hydra | 1 |
-| When this creature dies, return it to the battlefield face down under your control. | Ashcloud Phoenix | 1 |
-| When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. Raid — If you attacked this turn, when you n | Howl of the Horde | 1 |
-| Whenever a Warrior you control deals combat damage to a player, you may pay 1 life. If you do, draw a card. | Raiders' Spoils | 1 |
-| Whenever another permanent you control enters, each opponent mills a card. | Altar of the Brood | 1 |
-| Whenever Narset attacks, exile the top four cards of your library. Until end of turn, you may cast noncreature spells from among those cards without paying thei | Narset, Enlightened Master | 1 |
-| Whenever one or more cards are put into exile from your graveyard, put that many +1/+1 counters on this creature. | Rakshasa Vizier | 1 |
-| Whenever one or more creature cards are put into your graveyard from your library, create a 2/2 black Zombie creature token. | Sidisi, Brood Tyrant | 1 |
-| Whenever this creature attacks, exile it. Return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on | Meandering Towershell | 1 |
-| Whenever this creature attacks, you gain 1 life for each attacking creature. | Wingmate Roc | 1 |
-| Whenever this creature or another creature you control is turned face up, untap that creature. | Pine Walker | 1 |
-| Whenever you activate this creature's outlast ability, create a 1/1 white Warrior creature token. | Herald of Anafenza | 1 |
-| {2}, {T}: You gain 1 life for each colorless creature you control. | Tomb of the Spirit Dragon | 1 |
-| You may look at the top card of your library and at face-down creatures you don't control any time. | Lens of Clarity | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Choose one | 3 | Jeskai Charm, Mardu Charm, Temur Charm | ktk |
+| Raid | 2 | Bellowing Saddlebrute, War-Name Aspirant | ktk |
+| other warrior creatures you control get +N/+N. | 2 | Chief of the Edge, Chief of the Scale | ktk |
+| Ferocious | 1 | Dragon Grip | ktk |
+| +N: until end of turn, sarkhan becomes a legendary N/N red dragon creature with flying, indestructible, and haste. | 1 | Sarkhan, the Dragonspeaker | ktk |
+| +N: until your next turn, creatures you control get +N/+N and gain lifelink. | 1 | Sorin, Solemn Visitor | ktk |
+| all creatures able to block target creature ~ do so. ferocious — that creature gains indestructible until end of turn if you control a creature with power N or  | 1 | Roar of Challenge | ktk |
+| at the beginning of your upkeep, you may pay {M}{M}. if you do, return a creature card at random from your graveyard to the battlefield. it gains flying, trampl | 1 | Kheru Lich Lord | ktk |
+| choose up to one creature. destroy the rest. | 1 | Duneblast | ktk |
+| counter target spell unless its controller pays {M}. ~ deals N damage to that spell's controller. | 1 | Mindswipe | ktk |
+| creature spells you control can't be countered. | 1 | Surrak Dragonclaw | ktk |
+| delve (each card you exile from your graveyard while casting ~ pays for {M}.) put target nonland permanent on top of its owner's library. | 1 | Set Adrift | ktk |
+| destroy all creatures and all permanents attached to creatures. | 1 | End Hostilities | ktk |
+| destroy target blocking creature. creatures that were blocked by that creature ~ gain trample until end of turn. | 1 | Ride Down | ktk |
+| destroy target creature. if that creature had a +N/+N counter on it, create a N/N green snake creature token. | 1 | Rite of the Serpent | ktk |
+| each creature you control can block an additional creature each combat. | 1 | Brave the Sands | ktk |
+| equipped creature has defender and "..." | 1 | Dragon Throne of Tarkir | ktk |
+| face-down creatures you control get +N/+N. | 1 | Secret Plans | ktk |
+| if a nontoken creature an opponent owns would die or a creature card not on the battlefield would be put into an opponent's graveyard, exile that card instead. | 1 | Anafenza, the Foremost | ktk |
+| if a player would begin an extra turn, that player skips that turn instead. | 1 | Ugin's Nexus | ktk |
+| put a +N/+N counter on target creature you control. it gains protection from the color of your choice until end of turn. (it can't be blocked, targeted, dealt d | 1 | Feat of Resistance | ktk |
+| return target creature to its owner's hand. ferocious — if you control a creature with power N or greater, you may draw a card. if you do, discard a card. | 1 | Force Away | ktk |
+| reveal the top eight cards of your library. you may put a creature card from among them onto the battlefield. put the rest into your graveyard. ferocious — if y | 1 | See the Unwritten | ktk |
+| sacrifice another creature: ~ gains your choice of vigilance, lifelink, or haste until end of turn. | 1 | Butcher of the Horde | ktk |
+| tap N target creatures. ferocious — if you control a creature with power N or greater, those creatures don"..." next untap steps. | 1 | Icy Blast | ktk |
+| target creature you control fights target creature you don't control. ferocious — the creature you control gets +N/+N until end of turn before it fights if you  | 1 | Savage Punch | ktk |
+| target opponent exiles the top N cards of their library. you may cast any number of spells with mana value N or less from among them without paying their mana c | 1 | Villainous Wealth | ktk |
+| the next time a source of your choice would deal damage to you ~, prevent that damage. if damage is prevented ~, ~ deals that much damage to that source's contr | 1 | Deflecting Palm | ktk |
+| untap each creature you control with a +N/+N counter on it during each other player's untap step. | 1 | Ivorytusk Fortress | ktk |
+| when you next cast an instant or sorcery spell ~, copy that spell. you may choose new targets for the copy. raid — if you attacked ~, when you next cast an inst | 1 | Howl of the Horde | ktk |
+| when ~ attacks or blocks, sacrifice it at end of combat. | 1 | Mardu Blazebringer | ktk |
+| when ~ dies, create a N/N green snake creature token for each +N/+N counter on it. | 1 | Hooded Hydra | ktk |
+| when ~ dies, return it to the battlefield face down under your control. | 1 | Ashcloud Phoenix | ktk |
+| when ~ is turned face up, look at target opponent's hand. | 1 | Dragon's Eye Savants | ktk |
+| when ~ is turned face up, target creature can't block ~. | 1 | Horde Ambusher | ktk |
+| whenever a warrior you control deals combat damage to a player, you may pay N life. if you do, draw a card. | 1 | Raiders' Spoils | ktk |
+| whenever another permanent you control enters, each opponent mills a card. | 1 | Altar of the Brood | ktk |
+| whenever narset attacks, exile the top four cards of your library. until end of turn, you may cast noncreature spells from among those cards without paying thei | 1 | Narset, Enlightened Master | ktk |
+| whenever one or more cards are put into exile from your graveyard, put that many +N/+N counters on ~. | 1 | Rakshasa Vizier | ktk |
+| whenever one or more creature cards are put into your graveyard from your library, create a N/N black zombie creature token. | 1 | Sidisi, Brood Tyrant | ktk |
+| whenever you activate ~ outlast ability, create a N/N white warrior creature token. | 1 | Herald of Anafenza | ktk |
+| whenever ~ attacks, exile it. return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on your next t | 1 | Meandering Towershell | ktk |
+| whenever ~ attacks, target creature can't block ~. | 1 | Mardu Roughrider | ktk |
+| whenever ~ attacks, target creature defending player controls blocks it ~ if able. | 1 | Avalanche Tusker | ktk |
+| whenever ~ attacks, you gain N life for each attacking creature. | 1 | Wingmate Roc | ktk |
+| whenever ~ or another creature you control is turned face up, untap that creature. | 1 | Pine Walker | ktk |
+| you may look at the top card of your library and at face-down creatures you don't control any time. | 1 | Lens of Clarity | ktk |
+| {M}, exile ~: target player shuffles their graveyard into their library. draw a card. | 1 | Cranial Archive | ktk |
+| {M}, {M}, remove a gem counter from ~: target creature can't attack or block ~. | 1 | Briber's Purse | ktk |
+| {M}, {M}: you gain N life for each colorless creature you control. | 1 | Tomb of the Spirit Dragon | ktk |
+| {M}{M}, sacrifice another creature: you gain life equal to the sacrificed creature's toughness. | 1 | Kheru Dreadmaw | ktk |
+| {M}{M}: look at target face-down creature. | 1 | Smoke Teller | ktk |
+| ~ deals N damage to any target. ferocious — ~ deals N plus N damage instead if you control a creature with power N or greater. | 1 | Crater's Claws | ktk |
+| ~ deals N damage to each creature you don"..."t block ~. | 1 | Barrage of Boulders | ktk |
+| ~ deals N damage to each opponent. each opponent sacrifices a creature with the greatest power among creatures that player controls. | 1 | Crackling Doom | ktk |
+| ~ deals N damage to target creature. if that creature has a +N/+N counter on it, ~ deals N damage to it instead. | 1 | Bring Low | ktk |
+| ~ deals N damage to target creature. when that creature dies ~, exile its controller's graveyard. | 1 | Burn Away | ktk |
+| ~ equip ability costs {M} less to activate if it targets a colorless creature. | 1 | Ghostfire Blade | ktk |
+| ~ gets +N/+N for each other creature you control with a +N/+N counter on it. | 1 | High Sentinels of Arashin | ktk |
 
 ## Notes
 

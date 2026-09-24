@@ -40,9 +40,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature enters, sacrifice it unless you return three basic lands you control to their owner's hand. | Ovinomancer | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when ~ enters, sacrifice it unless you return three basic lands you control to their owner's hand. | 1 | Ovinomancer | mgb |
 
 ## Notes
 

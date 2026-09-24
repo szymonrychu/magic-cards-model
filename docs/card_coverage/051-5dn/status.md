@@ -3,13 +3,13 @@
 - Expansion: 051
 - Set code: `5dn`
 - Release date: 2004-06-04
-- Cards in scope (Modern/Pioneer/Standard-legal): 160
+- Cards in scope (Modern/Pioneer/Standard-legal): 162
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 160 |
+| Modern | 162 |
 | Pioneer | 3 |
 | Standard | 0 |
 
@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Full (handled + tested) | 9 | 5.6% |
-| Partial (unaudited) | 19 | 11.9% |
-| Not tested (handled, untested) | 87 | 54.4% |
-| Not working (silent / notice / error) | 45 | 28.1% |
+| Partial (unaudited) | 19 | 11.7% |
+| Not tested (handled, untested) | 88 | 54.3% |
+| Not working (silent / notice / error) | 46 | 28.4% |
 
 ## Cards needing work
 
@@ -45,6 +45,7 @@
 | Ferropede | silent | Whenever this creature deals combat damage to a player, you may remove a counter from target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fold into Aether | silent | Counter target spell. If that spell is countered this way, its controller may put a creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grafted Wargear | silent | Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Helm of Kaldra | silent | {1}: If you control Equipment named Helm of Kaldra, Sword of Kaldra, and Shield of Kaldra, create Kaldra, a legendary 4/4 colorless Avatar creature token. Attac | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Krark-Clan Ogre | silent | {R}, Sacrifice an artifact: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lunar Avenger | silent | Remove a +1/+1 counter from this creature: This creature gains your choice of flying, first strike, or haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magnetic Theft | silent | Attach target Equipment to target creature. (Control of the Equipment doesn't change.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -154,6 +155,7 @@
 | Salvaging Station | handled | {T}: Return target noncreature artifact card with mana value 1 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sawtooth Thresher | handled | Remove two +1/+1 counters from this creature: It gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Screaming Fury | handled | Target creature gets +5/+0 and gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Serum Visions | handled | Draw a card. Scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shattered Dreams | handled | Target opponent reveals their hand. You choose an artifact card from it. That player discards that card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skyhunter Prowler | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Skyhunter Skirmisher | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -197,64 +199,68 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast. | Bringer of the Blue Dawn, Bringer of the Green Dawn, Bringer of the Red Dawn, Bringer of the White Dawn, Fist of Suns | 5 |
-| At the beginning of your upkeep, if this creature is on the battlefield, each player returns all cards named Myr Servitor from their graveyard to the battlefiel | Bringer of the Black Dawn, Cosmic Larva, Myr Servitor, Razormane Masticore | 4 |
-| At the beginning of each opponent's upkeep, this artifact deals 2 damage to that player unless they have exactly three or exactly four cards in hand. | Possessed Portal, Skullcage | 2 |
-| A deck can have any number of cards named Relentless Rats. | Relentless Rats | 1 |
-| Add {R} for each tapped land your opponents control. | Mana Geyser | 1 |
-| Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Untap all artifacts. | Blinkmoth Infusion | 1 |
-| Artifact creature spells you cast have affinity for artifacts. | Mycosynth Golem | 1 |
-| As an additional cost to cast this spell, sacrifice any number of creatures. Target creature gets +2/+2 until end of turn for each creature sacrificed this way. | Vicious Betrayal | 1 |
-| As long as Raksha Golden Cub is equipped, Cat creatures you control get +2/+2 and have double strike. | Raksha Golden Cub | 1 |
-| Attach target Equipment to target creature. (Control of the Equipment doesn't change.) | Magnetic Theft | 1 |
-| {T}: Attach target Equipment you control to target creature you control. | Auriok Windwalker | 1 |
-| Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | Spectral Shift | 1 |
-| Choose one — • Sacrifice any number of creatures. You gain 3 life for each creature sacrificed this way. • Pay any amount of life, then look at that many cards  | Plunge into Darkness | 1 |
-| Choose one — • Untap all lands you control. • Until end of turn, lands you control become 2/2 creatures that are still lands. Entwine {2}{G} (Choose both if you | Rude Awakening | 1 |
-| Counter target spell. If that spell is countered this way, its controller may put a creature card from their hand onto the battlefield. | Fold into Aether | 1 |
-| Destroy all creatures that dealt damage to you this turn. | Retaliate | 1 |
-| Destroy target creature. It can't be regenerated. You lose life equal to that creature's toughness. | Devour in Shadow | 1 |
-| Double target player's life total. Shuffle Beacon of Immortality into its owner's library. | Beacon of Immortality | 1 |
-| {3}, {T}: Double the amount of each type of unspent mana you have. | Doubling Cube | 1 |
-| Each creature has "When this creature dies, choose target opponent. That player puts this card from its owner's graveyard onto the battlefield under their contr | Endless Whispers | 1 |
-| Each creature you control is a Vampire in addition to its other creature types and has "Whenever this creature deals damage to a creature, put a +1/+1 counter o | Mephidross Vampire | 1 |
-| Each player returns all artifact cards from their graveyard to the battlefield. | Roar of Reclamation | 1 |
-| Enchanted artifact can't attack or block, and its activated abilities can't be activated. | Stasis Cocoon | 1 |
-| Enchanted artifact has "At the beginning of your upkeep, sacrifice this artifact unless you pay its mana cost." | Disruption Aura | 1 |
-| Equipped creature gets +1/+0 for each artifact you control. | Cranial Plating | 1 |
-| Equipped creature gets +X/+X, where X is the number of charge counters on this Equipment. | Opaline Bracers | 1 |
-| {5}: Exchange control of this artifact and target nonland permanent. | Avarice Totem | 1 |
-| For each color, return up to one target card of that color from your graveyard to your hand. Exile All Suns' Dawn. | All Suns' Dawn | 1 |
-| {2}, {T}: Gain control of target creature with power less than or equal to the number of Islands you control for as long as this artifact remains tapped. | Vedalken Shackles | 1 |
-| Imprint — When this creature enters, you may exile a card from your hand face down. | Summoner's Egg | 1 |
-| Lands you control have "{T}: Add one mana of any color." | Joiner Adept | 1 |
-| Modular | Arcbound Wanderer | 1 |
-| No more than one creature can attack each combat. | Silent Arbiter | 1 |
-| Players play with the top card of their libraries revealed. | Lantern of Insight | 1 |
-| Players skip their upkeep steps. | Eon Hub | 1 |
-| Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle Beacon of Unrest into its owner's library. | Beacon of Unrest | 1 |
-| Remove a +1/+1 counter from this creature: This creature gains your choice of flying, first strike, or haste until end of turn. | Lunar Avenger | 1 |
-| Remove two +1/+1 counters from this creature: Remove a counter from target permanent. | Spinal Parasite | 1 |
-| {R}, Sacrifice an artifact: Target creature can't block this turn. | Krark-Clan Ogre | 1 |
-| {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}, {T}, Sacrifice this artifact: Target player loses the game. | Door to Nothingness | 1 |
-| {G}, Sacrifice this creature: Counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | Ouphe Vandals | 1 |
-| Search target opponent's library for an artifact card and put that card onto the battlefield under your control. Then that player shuffles. | Acquire | 1 |
-| {3}: Switch this creature's power and toughness until end of turn. | Myr Quadropod | 1 |
-| Target opponent reveals their hand. You may copy an instant or sorcery card in it. If you do, you may cast the copy without paying its mana cost. | Reversal of Fortune | 1 |
-| Target player takes an extra turn after this one. Shuffle Beacon of Tomorrows into its owner's library. | Beacon of Tomorrows | 1 |
-| {X}{1}: This artifact becomes an X/X Construct artifact creature. Sacrifice it at the beginning of the next end step. | Chimeric Coils | 1 |
-| This creature blocks each combat if able. | Razorgrass Screen | 1 |
-| This creature can't be equipped. | Goblin Brawler | 1 |
-| When you control no other artifacts, sacrifice this creature. | Synod Centurion | 1 |
-| Whenever a player casts a spell, sacrifice a creature. | Desecration Elemental | 1 |
-| Whenever this creature attacks, attacking creatures gain trample until end of turn. | Fangren Pathcutter | 1 |
-| Whenever this creature blocks or becomes blocked by a creature, destroy that creature at end of combat. | Tangle Asp | 1 |
-| Whenever this creature deals combat damage to a player, you may remove a counter from target permanent. | Ferropede | 1 |
-| Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | Grafted Wargear | 1 |
-| You may cast spells as though they had flash. | Vedalken Orrery | 1 |
-| You may have this creature assign its combat damage as though it weren't blocked. | Tornado Elemental | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| you may pay {M}{M}{M}{M}{M} rather than pay ~ mana cost. | 4 | Bringer of the Blue Dawn, Bringer of the Green Dawn, Bringer of the Red Dawn, Bringer of the White Dawn | 5dn |
+| Choose one | 3 | Plunge into Darkness, Rude Awakening, Spectral Shift | 5dn |
+| Imprint | 1 | Summoner's Egg | 5dn |
+| a deck can have any number of cards named ~. | 1 | Relentless Rats | 5dn |
+| add {M} for each tapped land your opponents control. | 1 | Mana Geyser | 5dn |
+| affinity for artifacts (~ costs {M} less to cast for each artifact you control.) untap all artifacts. | 1 | Blinkmoth Infusion | 5dn |
+| artifact creature spells you cast have affinity for artifacts. | 1 | Mycosynth Golem | 5dn |
+| as an additional cost to cast ~, sacrifice any number of creatures. target creature gets +N/+N until end of turn for each creature sacrificed ~. | 1 | Vicious Betrayal | 5dn |
+| as long as ~ is equipped, cat creatures you control get +N/+N and have double strike. | 1 | Raksha Golden Cub | 5dn |
+| at the beginning of each end step, each player sacrifices a permanent of their choice unless they discard a card. | 1 | Possessed Portal | 5dn |
+| at the beginning of each opponent's upkeep, ~ deals N damage to that player unless they have exactly three or exactly four cards in hand. | 1 | Skullcage | 5dn |
+| at the beginning of your upkeep, if ~ is on the battlefield, each player returns all cards named ~ from their graveyard to the battlefield. | 1 | Myr Servitor | 5dn |
+| at the beginning of your upkeep, sacrifice ~ unless you discard a card. | 1 | Razormane Masticore | 5dn |
+| at the beginning of your upkeep, sacrifice ~ unless you sacrifice two lands. | 1 | Cosmic Larva | 5dn |
+| at the beginning of your upkeep, you may pay N life. if you do, search your library for a card, then shuffle and put that card on top. | 1 | Bringer of the Black Dawn | 5dn |
+| attach target equipment to target creature. (control of the equipment doesn't change.) | 1 | Magnetic Theft | 5dn |
+| counter target spell. if that spell is countered ~, its controller may put a creature card from their hand onto the battlefield. | 1 | Fold into Aether | 5dn |
+| destroy all creatures that dealt damage to you ~. | 1 | Retaliate | 5dn |
+| destroy target creature. it can"..."s toughness. | 1 | Devour in Shadow | 5dn |
+| double target player"..."s library. | 1 | Beacon of Immortality | 5dn |
+| each creature has "..." | 1 | Endless Whispers | 5dn |
+| each creature you control is a vampire in addition to its other creature types and has "..." | 1 | Mephidross Vampire | 5dn |
+| each player returns all artifact cards from their graveyard to the battlefield. | 1 | Roar of Reclamation | 5dn |
+| enchanted artifact can"..."t be activated. | 1 | Stasis Cocoon | 5dn |
+| enchanted artifact has "..." | 1 | Disruption Aura | 5dn |
+| equipped creature gets +N/+N for each artifact you control. | 1 | Cranial Plating | 5dn |
+| equipped creature gets +N/+N, where N is the number of charge counters on ~. | 1 | Opaline Bracers | 5dn |
+| for each color, return up to one target card of that color from your graveyard to your hand. exile ~. | 1 | All Suns' Dawn | 5dn |
+| lands you control have "..." | 1 | Joiner Adept | 5dn |
+| modular | 1 | Arcbound Wanderer | 5dn |
+| no more than one creature can attack each combat. | 1 | Silent Arbiter | 5dn |
+| players play with the top card of their libraries revealed. | 1 | Lantern of Insight | 5dn |
+| players skip their upkeep steps. | 1 | Eon Hub | 5dn |
+| put target artifact or creature card from a graveyard onto the battlefield under your control. shuffle ~ into its owner's library. | 1 | Beacon of Unrest | 5dn |
+| remove a +N/+N counter from ~: ~ gains your choice of flying, first strike, or haste until end of turn. | 1 | Lunar Avenger | 5dn |
+| remove two +N/+N counters from ~: remove a counter from target permanent. | 1 | Spinal Parasite | 5dn |
+| search target opponent's library for an artifact card and put that card onto the battlefield under your control. then that player shuffles. | 1 | Acquire | 5dn |
+| target opponent reveals their hand. you may copy an instant or sorcery card in it. if you do, you may cast the copy without paying its mana cost. | 1 | Reversal of Fortune | 5dn |
+| target player takes an extra turn after ~. shuffle ~ into its owner's library. | 1 | Beacon of Tomorrows | 5dn |
+| when you control no other artifacts, sacrifice ~. | 1 | Synod Centurion | 5dn |
+| whenever a player casts a spell, sacrifice a creature. | 1 | Desecration Elemental | 5dn |
+| whenever ~ attacks, attacking creatures gain trample until end of turn. | 1 | Fangren Pathcutter | 5dn |
+| whenever ~ becomes unattached from a permanent, sacrifice that permanent. | 1 | Grafted Wargear | 5dn |
+| whenever ~ blocks or becomes blocked by a creature, destroy that creature at end of combat. | 1 | Tangle Asp | 5dn |
+| whenever ~ deals combat damage to a player, you may remove a counter from target permanent. | 1 | Ferropede | 5dn |
+| you may cast spells as though they had flash. | 1 | Vedalken Orrery | 5dn |
+| you may have ~ assign its combat damage as though it weren't blocked. | 1 | Tornado Elemental | 5dn |
+| you may pay {M}{M}{M}{M}{M} rather than pay the mana cost for spells you cast. | 1 | Fist of Suns | 5dn |
+| {M}, sacrifice an artifact: target creature can't block ~. | 1 | Krark-Clan Ogre | 5dn |
+| {M}, sacrifice ~: counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | 1 | Ouphe Vandals | 5dn |
+| {M}, {M}: double the amount of each type of unspent mana you have. | 1 | Doubling Cube | 5dn |
+| {M}, {M}: gain control of target creature with power less than or equal to the number of islands you control for as long as ~ remains tapped. | 1 | Vedalken Shackles | 5dn |
+| {M}: attach target equipment you control to target creature you control. | 1 | Auriok Windwalker | 5dn |
+| {M}: exchange control of ~ and target nonland permanent. | 1 | Avarice Totem | 5dn |
+| {M}: if you control equipment named ~, sword of kaldra, and shield of kaldra, create kaldra, a legendary N/N colorless avatar creature token. attach those equip | 1 | Helm of Kaldra | 5dn |
+| {M}: switch ~ power and toughness until end of turn. | 1 | Myr Quadropod | 5dn |
+| {M}{M}: ~ becomes an N/N construct artifact creature. sacrifice it at the beginning of the next end step. | 1 | Chimeric Coils | 5dn |
+| {M}{M}{M}{M}{M}{M}{M}{M}{M}{M}, {M}, sacrifice ~: target player loses the game. | 1 | Door to Nothingness | 5dn |
+| ~ blocks each combat if able. | 1 | Razorgrass Screen | 5dn |
+| ~ can't be equipped. | 1 | Goblin Brawler | 5dn |
 
 ## Notes
 

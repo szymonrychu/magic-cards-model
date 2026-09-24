@@ -278,71 +278,93 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| You may exert this creature as it attacks. When you do, return target creature card with mana value 2 or less from your graveyard to the battlefield. | Ahn-Crop Champion, Ahn-Crop Crasher, Bitterblade Warrior, Champion of Rhonas, Devoted Crop-Mate, Emberhorn Minotaur, Glory-Bound Initiate, Glorybringer, Gust Walker, Hooded Brawler, Nef-Crop Entangler, Rhet-Crop Spearmaster, Tah-Crop Elite, Watchful Naga | 14 |
-| Embalm | Angel of Sanctions, Anointer Priest, Aven Initiate, Aven Wind Guide, Heart-Piercer Manticore, Honored Hydra, Labyrinth Guardian, Oketra's Attendant, Sacred Cat, Tah-Crop Skirmisher, Trueheart Duelist, Unwavering Initiate, Vizier of Many Faces | 13 |
-| Aftermath | Cut // Ribbons, Heaven // Earth, Mouth // Feed, Never // Return, Onward // Victory, Prepare // Fight, Spring // Mind, Start // Finish | 8 |
-| Aftermath (Cast this spell only from your graveyard. Then exile it.) Choose a card name. Until your next turn, your opponents can't cast spells with the chosen  | Destined // Lead, Dusk // Dawn, Failure // Comply, Rags // Riches, Reduce // Rubble | 5 |
-| Whenever you put one or more -1/-1 counters on this creature, remove a -1/-1 counter from another target creature you control. | Defiant Greatmaw, Hapatra, Vizier of Poisons, Nest of Scarabs | 3 |
-| As long as you have seven or more cards in hand, you may pay {0} rather than pay cycling costs. | Neheb, the Worthy, New Perspectives | 2 |
-| At the beginning of combat on your turn, you may have target creature you control get +2/+0 and gain haste until end of turn. If you do, sacrifice it at the beg | Hazoret's Favor, Temmet, Vizier of Naktamun | 2 |
-| Whenever this creature attacks, remove a -1/-1 counter from target creature you control and put a -1/-1 counter on up to one target creature defending player co | Decimator Beetle, Exemplar of Strength | 2 |
-| Whenever you exert a creature, creatures you control get +1/+0 until end of turn. | Battlefield Scavenger, Trueheart Twins | 2 |
-| Activated abilities of creature cards in your graveyard cost {1} less to activate. | Embalmer's Tools | 1 |
-| {1}{B}, {T}: All Zombies gain menace until end of turn. | Lord of the Accursed | 1 |
-| At the beginning of enchanted player's upkeep, that player sacrifices a creature or planeswalker of their choice. If the player can't, they lose 5 life. | Cruel Reality | 1 |
-| At the beginning of your first main phase, remove all flood counters from this enchantment. If no counters were removed this way, put a flood counter on this en | Bounty of the Luxa | 1 |
-| Attacking creatures get +2/+0 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) | Pursue Glory | 1 |
-| Bontu can't attack or block unless a creature died under your control this turn. | Bontu the Glorified | 1 |
-| Choose an artifact card name. Search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. Then that playe | Dispossess | 1 |
-| Creature spells you control can't be countered. | Prowling Serpopard | 1 |
-| Creatures with flying can't attack you or planeswalkers you control. | Sandwurm Convergence | 1 |
-| Damage can't be prevented this turn. If a source you control would deal damage this turn, it deals double that damage instead. | Insult // Injury | 1 |
-| −7: Destroy all non-Zombie creatures. | Liliana, Death's Majesty | 1 |
-| {2}, Discard a card: Put a -1/-1 counter on target creature. That creature can't block this turn. | Merciless Javelineer | 1 |
-| {3}{U}: Draw a card, then you may return a land you control to its owner's hand. | Kefnet the Mindful | 1 |
-| Enchanted creature can't attack or block. | Compulsory Rest | 1 |
-| Enchanted land has "{T}: Add two mana of any one color." | Gift of Paradise | 1 |
-| End the turn. (Exile all spells and abilities from the stack, including this card. The player whose turn it is discards down to their maximum hand size. Damage  | Glorious End | 1 |
-| Enigma Drake's power is equal to the number of instant and sorcery cards in your graveyard. | Enigma Drake | 1 |
-| Exile this creature: Each opponent chooses two cards in their graveyard and exiles the rest. | Watchers of the Dead | 1 |
-| Exile up to three target cards from a single graveyard. Cycling {B} ({B}, Discard this card: Draw a card.) | Scarab Feast | 1 |
-| Hazoret can't attack or block unless you have one or fewer cards in hand. | Hazoret the Fervent | 1 |
-| If a source an opponent controls would deal damage to you, prevent 1 of that damage. | Protection of the Hekma | 1 |
-| If a source you control would deal noncombat damage to a creature an opponent controls, put that many -1/-1 counters on that creature instead. | Soul-Scar Mage | 1 |
-| If this creature hasn't been exerted this turn, you may exert it as it attacks. When you do, untap all other creatures you control and after this phase, there i | Combat Celebrant | 1 |
-| If this spell was cast from your hand and you've cast another spell named Approach of the Second Sun this game, you win the game. Otherwise, put Approach of the | Approach of the Second Sun | 1 |
-| 0: Look at the top card of your library. If it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on Nissa, y | Nissa, Steward of Elements | 1 |
-| Oketra can't attack or block unless you control at least three other creatures. | Oketra the True | 1 |
-| Once each turn, you may pay {0} rather than pay the mana cost for a spell you cast with mana value X or less, where X is the number of time counters on this enc | As Foretold | 1 |
-| Other Cats you control get +1/+1 and have lifelink. | Regal Caracal | 1 |
-| Put a -1/-1 counter on each creature you don't control. You may search your library and/or graveyard for a card named Liliana, Death Wielder, reveal it, and put | Liliana's Influence | 1 |
-| Put target spell or nonland permanent into its owner's library second from the top. | Commit // Memory | 1 |
-| Return to your hand all cards in your graveyard that you cycled or discarded this turn. | Shadow of the Grave | 1 |
-| Rhonas can't attack or block unless you control another creature with power 4 or greater. | Rhonas the Indomitable | 1 |
-| {2}, {T}, Sacrifice this artifact: Search your graveyard, hand, and/or library for a card named God-Pharaoh's Gift and put it onto the battlefield. If you searc | Gate to the Afterlife | 1 |
-| {1}, {T}: Target creature can't attack this turn. Put a brick counter on this artifact. | Edifice of Authority | 1 |
-| Target creature gets +2/+2 until end of turn. You may remove a -1/-1 counter from it. | Shed Weakness | 1 |
-| This creature gets +1/+2 as long as you have one or fewer cards in hand. | Thresher Lizard | 1 |
-| This creature gets -1/-1 for each card in your hand. | Grim Strider | 1 |
-| +2: Untap all creatures you control. Those creatures get +1/+1 until end of turn. | Gideon, Martial Paragon | 1 |
-| Untap target creature. Prevent all damage that would be dealt to it this turn. Cycling {2} ({2}, Discard this card: Draw a card.) | Djeru's Resolve | 1 |
-| Untap up to two target creatures. They each get +2/+2 until end of turn. | Synchronized Strike | 1 |
-| +1: Until your next turn, prevent all damage target permanent would deal. | Gideon of the Trials | 1 |
-| When this Aura enters, target creature can't block this turn. | Cartouche of Zeal | 1 |
-| When this Aura enters, you may have enchanted creature fight target creature an opponent controls. | Cartouche of Strength | 1 |
-| When this creature dies, you may put a -1/-1 counter on target creature for each -1/-1 counter on this creature. | Soulstinger | 1 |
-| When this creature enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | Quarry Hauler | 1 |
-| When this creature enters, it deals X damage to target creature an opponent controls, where X is the number of instant and sorcery cards in your graveyard. | Warfire Javelineer | 1 |
-| When this creature enters, you may exile target creature if it attacked or blocked this turn. Return that card to the battlefield under its owner's control at t | Vizier of Deferment | 1 |
-| When this enchantment enters, you may search your library and/or graveyard for a card named Gideon, Martial Paragon, reveal it, and put it into your hand. If yo | Gideon's Resolve | 1 |
-| Whenever this creature attacks, other attacking creatures get +1/+0 until end of turn. | Honored Crop-Captain | 1 |
-| Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | Glyph Keeper | 1 |
-| Whenever you cast a creature spell, target creature an opponent controls doesn't untap during its controller's next untap step. | Kefnet's Monument | 1 |
-| X target creatures can't be blocked this turn. Until end of turn, those creatures gain "Whenever this creature deals combat damage to a player, draw a card." | Open into Wonder | 1 |
-| You may look at the top card of your library any time. | Vizier of the Menagerie | 1 |
-| Your opponents can't cast spells with the chosen name. | Gideon's Intervention | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| embalm | 13 | Angel of Sanctions, Anointer Priest, Aven Initiate, Aven Wind Guide, Heart-Piercer Manticore | akh |
+| aftermath | 8 | Cut // Ribbons, Heaven // Earth, Mouth // Feed, Never // Return, Onward // Victory | akh |
+| you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 2 | Hooded Brawler, Nef-Crop Entangler | akh |
+| +N: untap all creatures you control. those creatures get +N/+N until end of turn. | 1 | Gideon, Martial Paragon | akh |
+| +N: until your next turn, prevent all damage target permanent would deal. | 1 | Gideon of the Trials | akh |
+| N target creatures can't be blocked ~. until end of turn, those creatures gain "..." | 1 | Open into Wonder | akh |
+| N: look at the top card of your library. if it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on nissa, y | 1 | Nissa, Steward of Elements | akh |
+| activated abilities of creature cards in your graveyard cost {M} less to activate. | 1 | Embalmer's Tools | akh |
+| aftermath (cast ~ only from your graveyard. then exile it.) all creatures able to block target creature ~ do so. | 1 | Destined // Lead | akh |
+| aftermath (cast ~ only from your graveyard. then exile it.) choose a card name. until your next turn, your opponents can't cast spells with the chosen name. | 1 | Failure // Comply | akh |
+| aftermath (cast ~ only from your graveyard. then exile it.) each opponent chooses a creature they control. you gain control of those creatures. | 1 | Rags // Riches | akh |
+| aftermath (cast ~ only from your graveyard. then exile it.) return all creature cards with power N or less from your graveyard to your hand. | 1 | Dusk // Dawn | akh |
+| aftermath (cast ~ only from your graveyard. then exile it.) up to three target lands don"..."s next untap step. | 1 | Reduce // Rubble | akh |
+| as long as you have one or fewer cards in hand, minotaurs you control get +N/+N. | 1 | Neheb, the Worthy | akh |
+| as long as you have seven or more cards in hand, you may pay {M} rather than pay cycling costs. | 1 | New Perspectives | akh |
+| at the beginning of combat on your turn, target creature token you control gets +N/+N until end of turn and can't be blocked ~. | 1 | Temmet, Vizier of Naktamun | akh |
+| at the beginning of combat on your turn, you may have target creature you control get +N/+N and gain haste until end of turn. if you do, sacrifice it at the beg | 1 | Hazoret's Favor | akh |
+| at the beginning of enchanted player"..."t, they lose N life. | 1 | Cruel Reality | akh |
+| at the beginning of your first main phase, remove all flood counters from ~. if no counters were removed ~, put a flood counter on ~ and draw a card. otherwise, | 1 | Bounty of the Luxa | akh |
+| attacking creatures get +N/+N until end of turn. cycling {M} ({M}, discard ~: draw a card.) | 1 | Pursue Glory | akh |
+| bontu can't attack or block unless a creature died under your control ~. | 1 | Bontu the Glorified | akh |
+| choose an artifact card name. search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. then that playe | 1 | Dispossess | akh |
+| creature spells you control can't be countered. | 1 | Prowling Serpopard | akh |
+| creatures with flying can't attack you or planeswalkers you control. | 1 | Sandwurm Convergence | akh |
+| damage can't be prevented ~. if a source you control would deal damage ~, it deals double that damage instead. | 1 | Insult // Injury | akh |
+| enchanted creature can't attack or block. | 1 | Compulsory Rest | akh |
+| enchanted land has "..." | 1 | Gift of Paradise | akh |
+| end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to their maximum hand size. damage wears of | 1 | Glorious End | akh |
+| exile up to three target cards from a single graveyard. cycling {M} ({M}, discard ~: draw a card.) | 1 | Scarab Feast | akh |
+| exile ~: each opponent chooses two cards in their graveyard and exiles the rest. | 1 | Watchers of the Dead | akh |
+| hazoret can't attack or block unless you have one or fewer cards in hand. | 1 | Hazoret the Fervent | akh |
+| if a source an opponent controls would deal damage to you, prevent N of that damage. | 1 | Protection of the Hekma | akh |
+| if a source you control would deal noncombat damage to a creature an opponent controls, put that many -N/-N counters on that creature instead. | 1 | Soul-Scar Mage | akh |
+| if ~ hasn't been exerted ~, you may exert it as it attacks. when you do, untap all other creatures you control and after ~, there is an additional combat phase. | 1 | Combat Celebrant | akh |
+| if ~ was cast from your hand and you"..."s library seventh from the top and you gain N life. | 1 | Approach of the Second Sun | akh |
+| oketra can't attack or block unless you control at least three other creatures. | 1 | Oketra the True | akh |
+| once each turn, you may pay {M} rather than pay the mana cost for a spell you cast with mana value N or less, where N is the number of time counters on ~. | 1 | As Foretold | akh |
+| other cats you control get +N/+N and have lifelink. | 1 | Regal Caracal | akh |
+| put a -N/-N counter on each creature you don't control. you may search your library and/or graveyard for a card named liliana, death wielder, reveal it, and put | 1 | Liliana's Influence | akh |
+| put target spell or nonland permanent into its owner's library second from the top. | 1 | Commit // Memory | akh |
+| return to your hand all cards in your graveyard that you cycled or discarded ~. | 1 | Shadow of the Grave | akh |
+| rhonas can't attack or block unless you control another creature with power N or greater. | 1 | Rhonas the Indomitable | akh |
+| target creature gets +N/+N until end of turn. you may remove a -N/-N counter from it. | 1 | Shed Weakness | akh |
+| untap target creature. prevent all damage that would be dealt to it ~. cycling {M} ({M}, discard ~: draw a card.) | 1 | Djeru's Resolve | akh |
+| untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Synchronized Strike | akh |
+| when ~ dies, you may put a -N/-N counter on target creature for each -N/-N counter on ~. | 1 | Soulstinger | akh |
+| when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Quarry Hauler | akh |
+| when ~ enters, it deals N damage to target creature an opponent controls, where N is the number of instant and sorcery cards in your graveyard. | 1 | Warfire Javelineer | akh |
+| when ~ enters, target creature can't block ~. | 1 | Cartouche of Zeal | akh |
+| when ~ enters, you may exile target creature if it attacked or blocked ~. return that card to the battlefield under its owner's control at the beginning of the  | 1 | Vizier of Deferment | akh |
+| when ~ enters, you may have enchanted creature fight target creature an opponent controls. | 1 | Cartouche of Strength | akh |
+| when ~ enters, you may search your library and/or graveyard for a card named gideon, martial paragon, reveal it, and put it into your hand. if you search your l | 1 | Gideon's Resolve | akh |
+| whenever you cast a creature spell, target creature an opponent controls doesn"..."s next untap step. | 1 | Kefnet's Monument | akh |
+| whenever you exert a creature, creatures you control get +N/+N until end of turn. | 1 | Trueheart Twins | akh |
+| whenever you exert a creature, you may discard a card. if you do, draw a card. | 1 | Battlefield Scavenger | akh |
+| whenever you put one or more -N/-N counters on a creature, create a N/N green snake creature token with deathtouch. | 1 | Hapatra, Vizier of Poisons | akh |
+| whenever you put one or more -N/-N counters on a creature, create that many N/N black insect creature tokens. | 1 | Nest of Scarabs | akh |
+| whenever you put one or more -N/-N counters on ~, remove a -N/-N counter from another target creature you control. | 1 | Defiant Greatmaw | akh |
+| whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Honored Crop-Captain | akh |
+| whenever ~ attacks, remove a -N/-N counter from it. if you do, you gain N life. | 1 | Exemplar of Strength | akh |
+| whenever ~ attacks, remove a -N/-N counter from target creature you control and put a -N/-N counter on up to one target creature defending player controls. | 1 | Decimator Beetle | akh |
+| whenever ~ becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | 1 | Glyph Keeper | akh |
+| you may exert ~ as it attacks. when you do, creatures you control get +N/+N until end of turn. | 1 | Tah-Crop Elite | akh |
+| you may exert ~ as it attacks. when you do, draw a card. | 1 | Watchful Naga | akh |
+| you may exert ~ as it attacks. when you do, it deals N damage to target non-dragon creature an opponent controls. | 1 | Glorybringer | akh |
+| you may exert ~ as it attacks. when you do, it gets +N/+N and gains deathtouch until end of turn. | 1 | Bitterblade Warrior | akh |
+| you may exert ~ as it attacks. when you do, it gets +N/+N and gains first strike until end of turn. | 1 | Rhet-Crop Spearmaster | akh |
+| you may exert ~ as it attacks. when you do, it gets +N/+N and gains flying until end of turn. | 1 | Gust Walker | akh |
+| you may exert ~ as it attacks. when you do, it gets +N/+N and gains lifelink until end of turn. | 1 | Glory-Bound Initiate | akh |
+| you may exert ~ as it attacks. when you do, it gets +N/+N and gains menace until end of turn. | 1 | Emberhorn Minotaur | akh |
+| you may exert ~ as it attacks. when you do, return target creature card with mana value N or less from your graveyard to the battlefield. | 1 | Devoted Crop-Mate | akh |
+| you may exert ~ as it attacks. when you do, target creature can't block ~. | 1 | Ahn-Crop Crasher | akh |
+| you may exert ~ as it attacks. when you do, untap all other creatures you control. | 1 | Ahn-Crop Champion | akh |
+| you may exert ~ as it attacks. when you do, you may put a creature card from your hand onto the battlefield. | 1 | Champion of Rhonas | akh |
+| you may look at the top card of your library any time. | 1 | Vizier of the Menagerie | akh |
+| your opponents can't cast spells with the chosen name. | 1 | Gideon's Intervention | akh |
+| {M}, discard a card: put a -N/-N counter on target creature. that creature can't block ~. | 1 | Merciless Javelineer | akh |
+| {M}, {M}, sacrifice ~: search your graveyard, hand, and/or library for a card named god-pharaoh's gift and put it onto the battlefield. if you search your libra | 1 | Gate to the Afterlife | akh |
+| {M}, {M}: target creature can't attack ~. put a brick counter on ~. | 1 | Edifice of Authority | akh |
+| {M}{M}, {M}: all zombies gain menace until end of turn. | 1 | Lord of the Accursed | akh |
+| {M}{M}: draw a card, then you may return a land you control to its owner's hand. | 1 | Kefnet the Mindful | akh |
+| ~ gets +N/+N as long as you have one or fewer cards in hand. | 1 | Thresher Lizard | akh |
+| ~ gets -N/-N for each card in your hand. | 1 | Grim Strider | akh |
+| ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Enigma Drake | akh |
+| −N: destroy all non-zombie creatures. | 1 | Liliana, Death's Majesty | akh |
 
 ## Notes
 

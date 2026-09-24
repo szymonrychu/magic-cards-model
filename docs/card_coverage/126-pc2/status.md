@@ -39,9 +39,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Cast this spell only if you've cast another spell this turn. | Illusory Angel | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| cast ~ only if you've cast another spell ~. | 1 | Illusory Angel | pc2 |
 
 ## Notes
 

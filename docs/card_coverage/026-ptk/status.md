@@ -43,9 +43,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature enters, search your library for a creature card with power 2 or less, reveal it, put it into your hand, then shuffle. | Imperial Recruiter | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when ~ enters, search your library for a creature card with power N or less, reveal it, put it into your hand, then shuffle. | 1 | Imperial Recruiter | ptk |
 
 ## Notes
 

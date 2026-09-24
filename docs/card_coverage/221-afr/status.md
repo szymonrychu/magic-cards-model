@@ -3,24 +3,24 @@
 - Expansion: 221
 - Set code: `afr`
 - Release date: 2021-07-23
-- Cards in scope (Modern/Pioneer/Standard-legal): 256
+- Cards in scope (Modern/Pioneer/Standard-legal): 257
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 256 |
-| Pioneer | 256 |
+| Modern | 257 |
+| Pioneer | 257 |
 | Standard | 1 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 8 | 3.1% |
+| Full (handled + tested) | 9 | 3.5% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not tested (handled, untested) | 90 | 35.2% |
-| Not working (silent / notice / error) | 141 | 55.1% |
+| Not tested (handled, untested) | 90 | 35.0% |
+| Not working (silent / notice / error) | 141 | 54.9% |
 
 ## Cards needing work
 
@@ -278,7 +278,7 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Boots of Speed
 - Drizzt Do'Urden
@@ -286,6 +286,7 @@
 - Hall of Storm Giants
 - Hired Hexblade
 - Minsc, Beloved Ranger
+- Orb of Dragonkind
 - Wish
 - You Find the Villains' Lair
 
@@ -293,131 +294,148 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of your upkeep, choose target opponent. Until end of turn, that player can't cast spells, you may look at the top card of their library any tim | Monk Class, Sphere of Annihilation, Wandering Troubadour, Warlock Class, Xanathar, Guild Kingpin, Zombie Ogre | 6 |
-| {3}{R}: Until end of turn, this land becomes a 3/2 red Goblin creature with "Whenever this creature attacks, create a 1/1 red Goblin creature token that's tappe | Den of the Bugbear, Hive of the Eye Tyrant, Lair of the Hydra, Vorpal Sword, Werewolf Pack Leader | 5 |
-| Whenever this creature deals combat damage to a player, exile up to that many target cards from their graveyard. Put a +1/+1 counter on this creature for each c | Froghemoth, Shortcut Seeker, Westgate Regent, Yuan-Ti Fang-Blade, Yuan-Ti Malison | 5 |
-| When this creature enters, venture into the dungeon. | Cloister Gargoyle, Displacer Beast, Eccentric Apprentice, Veteran Dungeoneer | 4 |
-| Whenever a creature you control deals combat damage to a player, exile the top card of that player's library face down. You may look at it for as long as it rem | Fighter Class, Grazilaxx, Illithid Scholar, Old Gnawbone, Rogue Class | 4 |
-| Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, you may sacrifice another creature. Whe | Intrepid Outlander, Minion of the Mighty, Tiger-Tribe Hunter | 3 |
-| {2}{B}: Target creature gets +2/+0 until end of turn. If mana from a Treasure was spent to activate this ability, that creature also gains deathtouch until end  | Compelled Duel, Forsworn Paladin, Ray of Enfeeblement | 3 |
-| +1: Venture into the dungeon. | Ellywick Tumblestrum, Keen-Eared Sentry, You Find a Cursed Idol | 3 |
-| Whenever you roll one or more dice, target creature you control gets +2/+0 and gains menace until end of turn. | Barbarian Class, Brazen Dwarf, Feywild Trickster | 3 |
-| As long as this creature is equipped, it has menace. | Armory Veteran, Dwarfhold Champion | 2 |
-| Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | Feign Death, Mordenkainen's Polymorph | 2 |
-| {3}, {T}: Venture into the dungeon. Activate only as a sorcery. | Dungeon Map, Secret Door | 2 |
-| When this Aura enters, venture into the dungeon. | Find the Path, Precipitous Drop | 2 |
-| When this Class becomes level 3, target land you control becomes a creature with haste and "This creature's power and toughness are each equal to the number of  | Cleric Class, Druid Class | 2 |
-| When this creature enters, roll a d20. | Djinni Windseer, Swarming Goblins | 2 |
-| Whenever this creature attacks, roll a d20. | Hoarding Ogre, Sylvan Shepherd | 2 |
-| Whenever this creature attacks, venture into the dungeon. | Planar Ally, Triumphant Adventurer | 2 |
-| Animate Walking Statue — {1}{U}, {T}: Another target nontoken artifact you control becomes a 4/4 artifact creature for as long as The Blackstaff of Waterdeep re | The Blackstaff of Waterdeep | 1 |
-| As an additional cost to cast this spell, you may reveal a Dragon card from your hand or choose a Dragon you control. Dragon's Fire deals 3 damage to target cre | Dragon's Fire | 1 |
-| As long as you've completed a dungeon, this creature has double strike. | Gloom Stalker | 1 |
-| As this creature enters, you may reveal a Dragon card from your hand. If you do or if you control a Dragon, this creature enters with a +1/+1 counter on it. | Dragon's Disciple | 1 |
-| As this land enters, you may reveal a Dragon card from your hand. This land enters tapped unless you revealed a Dragon card this way or you control a Dragon. | Temple of the Dragon Queen | 1 |
-| At the beginning of combat on your turn, equipped creature or a creature you control named Vecna gets +X/+X until end of turn, where X is the number of cards in | Hand of Vecna | 1 |
-| Bear Form — During your turn, this creature is a Bear with base power and toughness 4/2. | Circle of the Moon Druid | 1 |
-| Bewitching Whispers — When Shessra enters, target creature blocks this turn if able. | Shessra, Death's Whisper | 1 |
-| Burning Hands deals 2 damage to target creature or planeswalker. If that permanent is green, Burning Hands deals 6 damage instead. | Burning Hands | 1 |
-| Choose one — • Break Their Chains — Destroy target artifact. • Interrogate Them — Exile the top three cards of target opponent's library. Choose one of them. Un | You Find Some Prisoners | 1 |
-| Choose one — • Fight the Current — Return target nonland permanent to its owner's hand. • Find a Crossing — Target creature gets +1/+0 until end of turn and can | You Come to a River | 1 |
-| Choose one — • Intimidate Them — Up to two target creatures can't block this turn. • Fend Them Off — Target creature gets +3/+1 until end of turn. | You Come to the Gnoll Camp | 1 |
-| Choose one — • Two-Weapon Fighting — Double target creature's power and toughness until end of turn. • Archery — This spell deals 5 damage to target creature wi | Choose Your Weapon | 1 |
-| Choose one. Until end of turn, target creature you control has that base power and toughness, becomes that creature type, and gains that ability. • 1/3 Turtle w | Wild Shape | 1 |
-| Choose target creature an opponent controls, then roll a d20. 1—9 \| Return it to its owner's hand. 10—19 \| Its owner puts it on their choice of the top or bot | Power of Persuasion | 1 |
-| Choose target player. Return half the creatures they control to their owner's hand, rounded up. | Split the Party | 1 |
-| Circle of Death — {5}{B}: Roll a d20. | Herald of Hadar | 1 |
-| Climb Over — {T}: Target Wall can't block this turn. | Fifty Feet of Rope | 1 |
-| Cone of Cold — When this creature enters, choose target creature an opponent controls, then roll a d20. | Scion of Stygia | 1 |
-| Counter target creature or planeswalker spell. Venture into the dungeon. (Enter the first room or advance to the next room.) | Bar the Gate | 1 |
-| Cunning Action — {3}{U}: This creature can't be blocked this turn. | Guild Thief | 1 |
-| Dark One's Own Luck — Whenever you roll one or more dice, Farideh gains flying and menace until end of turn. If any of those results was 10 or higher, draw a ca | Farideh, Devil's Chosen | 1 |
-| Destroy target non-Angel, non-Demon, non-Devil, non-Dragon creature. | Power Word Kill | 1 |
-| Dissolve — {X}{B}: Put target creature card with mana value X exiled with this creature into its owner's graveyard. | Gelatinous Cube | 1 |
-| Dominate Monster — When this creature enters, gain control of target creature for as long as you control this creature. | Mind Flayer | 1 |
-| Drag Below — When this creature enters, tap it and up to one target creature an opponent controls. They don't untap during their controllers' next untap steps. | Dragon Turtle | 1 |
-| Draw a card for each different mana value among nonland cards in your graveyard. | Sudden Insight | 1 |
-| Each creature you control gets +2/+0 for each Equipment attached to it. | Bruenor Battlehammer | 1 |
-| Each opponent exiles cards from the top of their library until that player has exiled cards with total mana value 20 or greater. | Tasha's Hideous Laughter | 1 |
-| Each Skeleton you control has trample, attacks each combat if able, and gets +X/+0, where X is the number of other Skeletons you control. | Skeletal Swarming | 1 |
-| Enchanted creature has flying and "Whenever this creature deals combat damage to a player, venture into the dungeon." | Fly | 1 |
-| Enchanted permanent is a Treasure artifact with "{T}, Sacrifice this artifact: Add one mana of any color," and it loses all other abilities. | Minimus Containment | 1 |
-| Equip {0}. Activate only once each turn. | Leather Armor | 1 |
-| Equipped creature can't be blocked as long as its power is 3 or less. | Thieves' Tools | 1 |
-| −10: Exchange your hand and library, then shuffle. You get an emblem with "You have no maximum hand size." | Mordenkainen | 1 |
-| {T}: Exile target instant or sorcery card from a graveyard. Roll a d20. Activate only as a sorcery. | Wizard's Spellbook | 1 |
-| {W}{W}{W}, {T}, Exile The Book of Exalted Deeds: Put an enlightened counter on target Angel. It gains "You can't lose the game and your opponents can't win the  | The Book of Exalted Deeds | 1 |
-| {T}, Exile The Book of Vile Darkness and artifacts you control named Eye of Vecna and Hand of Vecna: Create Vecna, a legendary 8/8 black Zombie God creature tok | The Book of Vile Darkness | 1 |
-| Farideh's Fireball deals 5 damage to target creature or planeswalker. Roll a d20. 1—9 \| Farideh's Fireball deals 2 damage to each player. 10—20 \| Farideh's Fi | Farideh's Fireball | 1 |
-| Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If mana from a Treasure was spent to cast this spell,  | Price of Loyalty | 1 |
-| Grant an Advantage — If you would roll one or more dice, instead roll that many dice plus one and ignore the lowest roll. | Pixie Guide | 1 |
-| If you would create one or more Treasure tokens, instead create those tokens plus an additional Treasure token. | Xorn | 1 |
-| Legendary creatures you control enter with an additional +1/+1 counter on them. | Bard Class | 1 |
-| Life Drain — Whenever a creature dealt damage by this creature this turn dies, create a tapped 2/2 black Zombie creature token and exile that card. | Wight | 1 |
-| Lightning Breath — When this creature enters, until your next turn, target creature an opponent controls gets -3/-0, up to one other target creature gets -2/-0, | Blue Dragon | 1 |
-| Other creatures you control enter with an additional +1/+1 counter on them for each mana from a Treasure spent to cast them. | Kalain, Reclusive Painter | 1 |
-| Pack tactics — Whenever Targ Nar attacks, if you attacked with creatures with total power 6 or greater this combat, attacking creatures get +1/+0 until end of t | Targ Nar, Demon-Fang Gnoll | 1 |
-| Poison Breath — When this creature enters, until end of turn, whenever a creature an opponent controls is dealt damage, destroy it. | Green Dragon | 1 |
-| Psionic Spells — When this creature enters, choose target instant or sorcery card in your graveyard, then roll a d20. | Aberrant Mind Sorcerer | 1 |
-| Put a +1/+1 counter on target creature. That creature gains haste until end of turn and can't be blocked by Walls this turn. Venture into the dungeon. (Enter th | Kick in the Door | 1 |
-| Rejuvenation — When this creature dies, exile it. If you do, exile the top card of your library. Until the end of your next turn, you may play one of those card | Flameskull | 1 |
-| {B}: Return all cards exiled with Asmodeus to their owner's hand and you lose that much life. | Asmodeus the Archfiend | 1 |
-| Return up to one target creature card from your graveyard to your hand. Venture into the dungeon. (Enter the first room or advance to the next room.) | Fates' Reversal | 1 |
-| Return X target cards with different mana values from your graveyard to your hand. If eight or more cards were returned to your hand this way, your life total b | Long Rest | 1 |
-| {3}{G}: Roll a d20. Activate only if this card is in your graveyard. | Loathsome Troll | 1 |
-| {2}, {T}: Roll a d20 and subtract the number of cards in your hand. If the result is 0 or less, discard your hand. | The Deck of Many Things | 1 |
-| Roll a d20. 1—9 \| Draw two cards. 10—19 \| Scry 2, then draw two cards. 20 \| Scry 3, then draw three cards. | Contact Other Plane | 1 |
-| Room abilities of dungeons you own trigger an additional time. | Hama Pashar, Ruin Seeker | 1 |
-| {5}, {T}, Sacrifice this artifact: Choose target creature, then roll a d20. | Spiked Pit Trap | 1 |
-| {4}, Sacrifice this artifact: Roll a d20. | Treasure Chest | 1 |
-| Search the Room — {5}{U}: Roll a d20. | Arcane Investigator | 1 |
-| {3}{G}, {T}: Search your library for a creature card with mana value equal to the number of harmony counters on Instrument of the Bards, reveal it, and put it i | Instrument of the Bards | 1 |
-| Siege Monster — When this creature enters, roll a d20. | Earth-Cult Elemental | 1 |
-| Sneak Attack — Whenever this creature attacks, roll a d20. | Lightfoot Rogue | 1 |
-| Spells your opponents cast during your turn cost {1} more to cast. | Paladin Class | 1 |
-| Split — When this creature dies, if it had two or more +1/+1 counters on it, create a token that's a copy of it at the beginning of the next end step. The token | Ochre Jelly | 1 |
-| {4}, {T}, Tap an untapped legendary creature you control: Venture into the dungeon. Activate only as a sorcery. | Dungeon Descent | 1 |
-| {3}, {T}, Tap another untapped creature you control: Venture into the dungeon. Activate only as a sorcery. | Ranger's Hawk | 1 |
-| Target artifact or creature becomes a copy of another target artifact or creature. | True Polymorph | 1 |
-| Target creature gets +2/+0 and gains first strike until end of turn. Up to one other target creature gets +0/+2 and gains lifelink until end of turn. | Rally Maneuver | 1 |
-| Target creature or planeswalker an opponent controls phases out. If that permanent is black, exile it instead. (If it phases out, treat it and anything attached | Divine Smite | 1 |
-| +1: Target creature without first strike, double strike, or vigilance can't attack or block until your next turn. | Grand Master of Flowers | 1 |
-| Target creature you control gets +1/+0 until end of turn for each mana from a Treasure that was spent to cast this spell. Then that creature deals damage equal  | Spoils of the Hunt | 1 |
-| Target opponent discards a card. If mana from a Treasure was spent to cast this spell, instead that player reveals their hand, you choose a nonland card from it | Devour Intellect | 1 |
-| Target opponent reveals their hand. You choose a nonland card from it. Exile that card. If an instant card or a card with flash is exiled this way, they lose 1  | Check for Traps | 1 |
-| Teleport — {3}{W}: This creature phases out. | Blink Dog | 1 |
-| The Tarrasque has haste and ward {10} as long as it was cast. | The Tarrasque | 1 |
-| {2}: This artifact becomes a Shapeshifter artifact creature with base power and toughness 3/3 until end of turn. | Mimic | 1 |
-| This creature attacks or blocks each combat if able. | Iron Golem | 1 |
-| {R}, {T}: This creature deals damage equal to the number of Goblins that entered the battlefield under your control this turn to any target. | Hobgoblin Bandit Lord | 1 |
-| This spell costs {U} less to cast for each instant and sorcery spell you've cast this turn. | Demilich | 1 |
-| Tragic Backstory — Cast this spell only if a creature died this turn. | Grim Wanderer | 1 |
-| When Acererak enters, if you haven't completed Tomb of Annihilation, return Acererak to its owner's hand and venture into the dungeon. | Acererak the Archlich | 1 |
-| When Barrowin enters, venture into the dungeon. | Barrowin of Clan Undurr | 1 |
-| When equipped creature dies, you may have this Equipment become a 2/1 Construct artifact creature with flying and ward {1}. If you do, it isn't an Equipment. | Dancing Sword | 1 |
-| When Icingdeath, Frost Tyrant dies, create Icingdeath, Frost Tongue, a legendary white Equipment artifact token with "Equipped creature gets +2/+0," "Whenever e | Icingdeath, Frost Tyrant | 1 |
-| When Orcus enters, choose one — • Each other creature gets -X/-X until end of turn. You lose X life. • Return up to X target creature cards with total mana valu | Orcus, Prince of Undeath | 1 |
-| When this Aura enters, if enchanted creature is red, tap it. | Ray of Frost | 1 |
-| When this creature dies, venture into the dungeon. | Clattering Skeletons | 1 |
-| When this creature enters, any number of other target creatures you control phase out. | Guardian of Faith | 1 |
-| When this Equipment enters, roll a d20. | Goblin Morningstar | 1 |
-| When Tiamat enters, if you cast it, search your library for up to five Dragon cards not named Tiamat that each have different names, reveal them, put them into  | Tiamat | 1 |
-| Whenever Delina attacks, choose target creature you control, then roll a d20. | Delina, Wild Mage | 1 |
-| Whenever equipped creature attacks alone, defending player loses 2 life and you gain 2 life. | Reaper's Talisman | 1 |
-| Whenever equipped creature attacks, venture into the dungeon. | Delver's Torch | 1 |
-| Whenever Iymrith deals combat damage to a player, draw a card. Then if you have fewer than three cards in hand, draw cards equal to the difference. | Iymrith, Desert Doom | 1 |
-| Whenever Nadaar enters or attacks, venture into the dungeon. | Nadaar, Selfless Paladin | 1 |
-| Whenever this creature is dealt damage, you and target opponent each draw a card. | Flumph | 1 |
-| Whenever you cast a creature or planeswalker spell, venture into the dungeon. This ability triggers only once each turn. | Varis, Silverymoon Ranger | 1 |
-| Whenever you cast an instant or sorcery spell, that spell deals damage to each opponent equal to the number of instant and sorcery spells you've cast this turn. | Sorcerer Class | 1 |
-| Whenever you complete a dungeon, you may return this card from your graveyard to your hand. | Dungeon Crawler | 1 |
-| Whenever Zalto is dealt damage, venture into the dungeon. | Zalto, Fire Giant Duke | 1 |
-| Wild Magic Surge — Whenever this creature attacks, roll a d20. | Chaos Channeler | 1 |
-| You have no maximum hand size. | Wizard Class | 1 |
-| You may cast this card from your graveyard if a creature not named Ebondeath, Dracolich died this turn. | Ebondeath, Dracolich | 1 |
-| You may look at the top card of your library any time. | Ranger Class | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when ~ enters, venture into the dungeon. | 6 | Cloister Gargoyle, Displacer Beast, Eccentric Apprentice, Find the Path, Precipitous Drop | afr |
+| Choose one | 4 | Choose Your Weapon, You Come to a River, You Come to the Gnoll Camp, You Find Some Prisoners | afr |
+| Pack tactics | 4 | Intrepid Outlander, Minion of the Mighty, Targ Nar, Demon-Fang Gnoll, Tiger-Tribe Hunter | afr |
+| when ~ enters, roll a dN. | 3 | Djinni Windseer, Goblin Morningstar, Swarming Goblins | afr |
+| whenever ~ deals combat damage to a player, venture into the dungeon. | 3 | Shortcut Seeker, Yuan-Ti Fang-Blade, Yuan-Ti Malison | afr |
+| venture into the dungeon | 2 | Keen-Eared Sentry, You Find a Cursed Idol | afr |
+| whenever ~ attacks, roll a dN. | 2 | Hoarding Ogre, Sylvan Shepherd | afr |
+| whenever ~ attacks, venture into the dungeon. | 2 | Planar Ally, Triumphant Adventurer | afr |
+| Animate Walking Statue | 1 | The Blackstaff of Waterdeep | afr |
+| Bear Form | 1 | Circle of the Moon Druid | afr |
+| Bewitching Whispers | 1 | Shessra, Death's Whisper | afr |
+| Circle of Death | 1 | Herald of Hadar | afr |
+| Climb Over | 1 | Fifty Feet of Rope | afr |
+| Cone of Cold | 1 | Scion of Stygia | afr |
+| Cunning Action | 1 | Guild Thief | afr |
+| Dark One's Own Luck | 1 | Farideh, Devil's Chosen | afr |
+| Dissolve | 1 | Gelatinous Cube | afr |
+| Dominate Monster | 1 | Mind Flayer | afr |
+| Drag Below | 1 | Dragon Turtle | afr |
+| Grant an Advantage | 1 | Pixie Guide | afr |
+| Life Drain | 1 | Wight | afr |
+| Lightning Breath | 1 | Blue Dragon | afr |
+| Poison Breath | 1 | Green Dragon | afr |
+| Psionic Spells | 1 | Aberrant Mind Sorcerer | afr |
+| Rejuvenation | 1 | Flameskull | afr |
+| Search the Room | 1 | Arcane Investigator | afr |
+| Siege Monster | 1 | Earth-Cult Elemental | afr |
+| Sneak Attack | 1 | Lightfoot Rogue | afr |
+| Split | 1 | Ochre Jelly | afr |
+| Teleport | 1 | Blink Dog | afr |
+| Tragic Backstory | 1 | Grim Wanderer | afr |
+| Wild Magic Surge | 1 | Chaos Channeler | afr |
+| +N: target creature without first strike, double strike, or vigilance can't attack or block until your next turn. | 1 | Grand Master of Flowers | afr |
+| +N: venture into the dungeon. | 1 | Ellywick Tumblestrum | afr |
+| as an additional cost to cast ~, you may reveal a dragon card from your hand or choose a dragon you control. ~ deals N damage to target creature or planeswalker | 1 | Dragon's Fire | afr |
+| as long as you've completed a dungeon, ~ has double strike. | 1 | Gloom Stalker | afr |
+| as long as ~ is equipped, it gets +N/+N. | 1 | Dwarfhold Champion | afr |
+| as long as ~ is equipped, it has menace. | 1 | Armory Veteran | afr |
+| as ~ enters, you may reveal a dragon card from your hand. if you do or if you control a dragon, ~ enters with a +N/+N counter on it. | 1 | Dragon's Disciple | afr |
+| as ~ enters, you may reveal a dragon card from your hand. ~ enters tapped unless you revealed a dragon card ~ or you control a dragon. | 1 | Temple of the Dragon Queen | afr |
+| at the beginning of combat on your turn, equipped creature or a creature you control named vecna gets +N/+N until end of turn, where N is the number of cards in | 1 | Hand of Vecna | afr |
+| at the beginning of your end step, each opponent loses life equal to the life they lost ~. | 1 | Warlock Class | afr |
+| at the beginning of your end step, if a creature died ~, venture into the dungeon. | 1 | Zombie Ogre | afr |
+| at the beginning of your end step, if you had a land enter the battlefield under your control ~, venture into the dungeon. | 1 | Wandering Troubadour | afr |
+| at the beginning of your upkeep, choose target opponent. until end of turn, that player can't cast spells, you may look at the top card of their library any tim | 1 | Xanathar, Guild Kingpin | afr |
+| at the beginning of your upkeep, exile the top card of your library. for as long as it remains exiled, it has "..." | 1 | Monk Class | afr |
+| at the beginning of your upkeep, exile ~, all creatures and planeswalkers with mana value less than or equal to the number of void counters on it, and all creat | 1 | Sphere of Annihilation | afr |
+| choose one. until end of turn, target creature you control has that base power and toughness, becomes that creature type, and gains that ability. • N/N turtle w | 1 | Wild Shape | afr |
+| choose target creature an opponent controls, then roll a dN. N—N \| return it to its owner's hand. N—N \| its owner puts it on their choice of the top or bottom | 1 | Power of Persuasion | afr |
+| choose target player. return half the creatures they control to their owner's hand, rounded up. | 1 | Split the Party | afr |
+| counter target creature or planeswalker spell. venture into the dungeon. (enter the first room or advance to the next room.) | 1 | Bar the Gate | afr |
+| destroy target non-angel, non-demon, non-devil, non-dragon creature. | 1 | Power Word Kill | afr |
+| draw a card for each different mana value among nonland cards in your graveyard. | 1 | Sudden Insight | afr |
+| each creature you control gets +N/+N for each equipment attached to it. | 1 | Bruenor Battlehammer | afr |
+| each opponent exiles cards from the top of their library until that player has exiled cards with total mana value N or greater. | 1 | Tasha's Hideous Laughter | afr |
+| each skeleton you control has trample, attacks each combat if able, and gets +N/+N, where N is the number of other skeletons you control. | 1 | Skeletal Swarming | afr |
+| enchanted creature has ~ing and "..." | 1 | Fly | afr |
+| enchanted permanent is a treasure artifact with "..." and it loses all other abilities. | 1 | Minimus Containment | afr |
+| equip {M}. activate only once each turn. | 1 | Leather Armor | afr |
+| equipped creature can't be blocked as long as its power is N or less. | 1 | Thieves' Tools | afr |
+| gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if mana from a treasure was spent to cast ~, that crea | 1 | Price of Loyalty | afr |
+| if you would create one or more treasure tokens, instead create those tokens plus an additional treasure token. | 1 | Xorn | afr |
+| legendary creatures you control enter with an additional +N/+N counter on them. | 1 | Bard Class | afr |
+| other creatures you control enter with an additional +N/+N counter on them for each mana from a treasure spent to cast them. | 1 | Kalain, Reclusive Painter | afr |
+| put a +N/+N counter on target creature. that creature gains haste until end of turn and can't be blocked by walls ~. venture into the dungeon. (enter the first  | 1 | Kick in the Door | afr |
+| return N target cards with different mana values from your graveyard to your hand. if eight or more cards were returned to your hand ~, your life total becomes  | 1 | Long Rest | afr |
+| return up to one target creature card from your graveyard to your hand. venture into the dungeon. (enter the first room or advance to the next room.) | 1 | Fates' Reversal | afr |
+| roll a dN. N—N \| draw two cards. N—N \| scry N, then draw two cards. N \| scry N, then draw three cards. | 1 | Contact Other Plane | afr |
+| room abilities of dungeons you own trigger an additional time. | 1 | Hama Pashar, Ruin Seeker | afr |
+| spells your opponents cast during your turn cost {M} more to cast. | 1 | Paladin Class | afr |
+| target artifact or creature becomes a copy of another target artifact or creature. | 1 | True Polymorph | afr |
+| target creature gets +N/+N and gains first strike until end of turn. up to one other target creature gets +N/+N and gains lifelink until end of turn. | 1 | Rally Maneuver | afr |
+| target creature gets +N/+N until end of turn and must be blocked ~ if able. | 1 | Compelled Duel | afr |
+| target creature gets -N/-N until end of turn. if that creature is white, it gets -N/-N until end of turn instead. | 1 | Ray of Enfeeblement | afr |
+| target creature or planeswalker an opponent controls phases out. if that permanent is black, exile it instead. (if it phases out, treat it and anything attached | 1 | Divine Smite | afr |
+| target creature you control gets +N/+N until end of turn for each mana from a treasure that was spent to cast ~. then that creature deals damage equal to its po | 1 | Spoils of the Hunt | afr |
+| target opponent discards a card. if mana from a treasure was spent to cast ~, instead that player reveals their hand, you choose a nonland card from it, then th | 1 | Devour Intellect | afr |
+| target opponent reveals their hand. you choose a nonland card from it. exile that card. if an instant card or a card with flash is exiled ~, they lose N life. o | 1 | Check for Traps | afr |
+| until end of turn, target creature becomes a dragon with base power and toughness N/N and gains flying. (it loses all other creature types.) | 1 | Mordenkainen's Polymorph | afr |
+| until end of turn, target creature gains "..." | 1 | Feign Death | afr |
+| when acererak enters, if you haven"..."s hand and venture into the dungeon. | 1 | Acererak the Archlich | afr |
+| when barrowin enters, venture into the dungeon. | 1 | Barrowin of Clan Undurr | afr |
+| when equipped creature dies, you may have ~ become a N/N construct artifact creature with flying and ward {M}. if you do, it isn't an equipment. | 1 | Dancing Sword | afr |
+| when orcus enters, choose one — • each other creature gets -N/-N until end of turn. you lose N life. • return up to N target creature cards with total mana valu | 1 | Orcus, Prince of Undeath | afr |
+| when ~ becomes level N, return target creature card from your graveyard to the battlefield. you gain life equal to that creature's toughness. | 1 | Cleric Class | afr |
+| when ~ becomes level N, target land you control becomes a creature with haste and "..." it's still a land. | 1 | Druid Class | afr |
+| when ~ dies, create icingdeath, frost tongue, a legendary white equipment artifact token with "..." "..." and equip {M}. | 1 | Icingdeath, Frost Tyrant | afr |
+| when ~ dies, venture into the dungeon. | 1 | Clattering Skeletons | afr |
+| when ~ enters, any number of other target creatures you control phase out. | 1 | Guardian of Faith | afr |
+| when ~ enters, if enchanted creature is red, tap it. | 1 | Ray of Frost | afr |
+| when ~ enters, if you cast it, search your library for up to five dragon cards not named ~ that each have different names, reveal them, put them into your hand, | 1 | Tiamat | afr |
+| whenever a creature you control attacks, up to one target creature blocks it ~ if able. | 1 | Fighter Class | afr |
+| whenever a creature you control becomes blocked, you may return it to its owner's hand. | 1 | Grazilaxx, Illithid Scholar | afr |
+| whenever a creature you control deals combat damage to a player, create that many treasure tokens. | 1 | Old Gnawbone | afr |
+| whenever a creature you control deals combat damage to a player, exile the top card of that player's library face down. you may look at it for as long as it rem | 1 | Rogue Class | afr |
+| whenever delina attacks, choose target creature you control, then roll a dN. | 1 | Delina, Wild Mage | afr |
+| whenever equipped creature attacks alone, defending player loses N life and you gain N life. | 1 | Reaper's Talisman | afr |
+| whenever equipped creature attacks, venture into the dungeon. | 1 | Delver's Torch | afr |
+| whenever iymrith deals combat damage to a player, draw a card. then if you have fewer than three cards in hand, draw cards equal to the difference. | 1 | Iymrith, Desert Doom | afr |
+| whenever nadaar enters or attacks, venture into the dungeon. | 1 | Nadaar, Selfless Paladin | afr |
+| whenever you cast a creature or planeswalker spell, venture into the dungeon. ~ triggers only once each turn. | 1 | Varis, Silverymoon Ranger | afr |
+| whenever you cast an instant or sorcery spell, that spell deals damage to each opponent equal to the number of instant and sorcery spells you've cast ~. | 1 | Sorcerer Class | afr |
+| whenever you complete a dungeon, you may return ~ from your graveyard to your hand. | 1 | Dungeon Crawler | afr |
+| whenever you roll one or more dice, create a N/N blue faerie dragon creature token with flying. | 1 | Feywild Trickster | afr |
+| whenever you roll one or more dice, target creature you control gets +N/+N and gains menace until end of turn. | 1 | Barbarian Class | afr |
+| whenever you roll one or more dice, ~ deals N damage to each opponent. | 1 | Brazen Dwarf | afr |
+| whenever zalto is dealt damage, venture into the dungeon. | 1 | Zalto, Fire Giant Duke | afr |
+| whenever ~ deals combat damage to a player, exile up to that many target cards from their graveyard. put a +N/+N counter on ~ for each creature card exiled ~. y | 1 | Froghemoth | afr |
+| whenever ~ deals combat damage to a player, put that many +N/+N counters on it. | 1 | Westgate Regent | afr |
+| whenever ~ is dealt damage, you and target opponent each draw a card. | 1 | Flumph | afr |
+| you have no maximum hand size. | 1 | Wizard Class | afr |
+| you may cast ~ from your graveyard if a creature not named ~ died ~. | 1 | Ebondeath, Dracolich | afr |
+| you may look at the top card of your library any time. | 1 | Ranger Class | afr |
+| {M}, exile ~ and artifacts you control named eye of vecna and hand of vecna: create vecna, a legendary N/N black zombie god creature token with indestructible a | 1 | The Book of Vile Darkness | afr |
+| {M}, sacrifice ~: roll a dN. | 1 | Treasure Chest | afr |
+| {M}, {M}, sacrifice ~: choose target creature, then roll a dN. | 1 | Spiked Pit Trap | afr |
+| {M}, {M}, tap an untapped legendary creature you control: venture into the dungeon. activate only as a sorcery. | 1 | Dungeon Descent | afr |
+| {M}, {M}, tap another untapped creature you control: venture into the dungeon. activate only as a sorcery. | 1 | Ranger's Hawk | afr |
+| {M}, {M}: roll a dN and subtract the number of cards in your hand. if the result is N or less, discard your hand. | 1 | The Deck of Many Things | afr |
+| {M}, {M}: venture into the dungeon. activate only as a sorcery. | 1 | Dungeon Map | afr |
+| {M}, {M}: ~ deals damage equal to the number of goblins that entered the battlefield under your control ~ to any target. | 1 | Hobgoblin Bandit Lord | afr |
+| {M}: exile target instant or sorcery card from a graveyard. roll a dN. activate only as a sorcery. | 1 | Wizard's Spellbook | afr |
+| {M}: return all cards exiled with asmodeus to their owner's hand and you lose that much life. | 1 | Asmodeus the Archfiend | afr |
+| {M}: ~ becomes a shapeshifter artifact creature with base power and toughness N/N until end of turn. | 1 | Mimic | afr |
+| {M}{M}, {M}: search your library for a creature card with mana value equal to the number of harmony counters on ~, reveal it, and put it into your hand. if that | 1 | Instrument of the Bards | afr |
+| {M}{M}: roll a dN. activate only if ~ is in your graveyard. | 1 | Loathsome Troll | afr |
+| {M}{M}: target creature gets +N/+N until end of turn. if mana from a treasure was spent to activate ~, that creature also gains deathtouch until end of turn. | 1 | Forsworn Paladin | afr |
+| {M}{M}: until end of turn, ~ becomes a N/N black beholder creature with menace and "..." it's still a land. | 1 | Hive of the Eye Tyrant | afr |
+| {M}{M}: until end of turn, ~ becomes a N/N red goblin creature with "..." it's still a land. | 1 | Den of the Bugbear | afr |
+| {M}{M}: until end of turn, ~ becomes an N/N green hydra creature. it"..."t be N. | 1 | Lair of the Hydra | afr |
+| {M}{M}: until end of turn, ~ has base power and toughness N/N, gains trample, and isn't a human. | 1 | Werewolf Pack Leader | afr |
+| {M}{M}: venture into the dungeon. activate only as a sorcery. | 1 | Secret Door | afr |
+| {M}{M}{M}, {M}, exile ~: put an enlightened counter on target angel. it gains "..." activate only as a sorcery. | 1 | The Book of Exalted Deeds | afr |
+| {M}{M}{M}{M}: until end of turn, ~ gains "..." | 1 | Vorpal Sword | afr |
+| ~ attacks or blocks each combat if able. | 1 | Iron Golem | afr |
+| ~ costs {M} less to cast for each instant and sorcery spell you've cast ~. | 1 | Demilich | afr |
+| ~ deals N damage to target creature or planeswalker. if that permanent is green, ~ deals N damage instead. | 1 | Burning Hands | afr |
+| ~ deals N damage to target creature or planeswalker. roll a dN. N—N \| ~ deals N damage to each player. N—N \| ~ deals N damage to each opponent. | 1 | Farideh's Fireball | afr |
+| ~ has haste and ward {M} as long as it was cast. | 1 | The Tarrasque | afr |
+| −N: exchange your hand and library, then shuffle. you get an emblem with "..." | 1 | Mordenkainen | afr |
 
 ## Notes
 

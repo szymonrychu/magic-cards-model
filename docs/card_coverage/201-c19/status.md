@@ -40,11 +40,11 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Discard a card: You may cast a creature spell from your graveyard this turn. Activate only once each turn. | Chainer, Nightmare Adept | 1 |
-| For each {B} in a cost, you may pay 2 life rather than pay that mana. | K'rrik, Son of Yawgmoth | 1 |
-| Return target permanent card with mana value 3 or less from your graveyard to the battlefield. If this spell was cast from a graveyard, you may copy this spell  | Sevinne's Reclamation | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| discard a card: you may cast a creature spell from your graveyard ~. activate only once each turn. | 1 | Chainer, Nightmare Adept | c19 |
+| for each {M} in a cost, you may pay N life rather than pay that mana. | 1 | K'rrik, Son of Yawgmoth | c19 |
+| return target permanent card with mana value N or less from your graveyard to the battlefield. if ~ was cast from a graveyard, you may copy ~ and may choose a n | 1 | Sevinne's Reclamation | c19 |
 
 ## Notes
 

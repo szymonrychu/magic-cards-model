@@ -3,13 +3,13 @@
 - Expansion: 072
 - Set code: `plc`
 - Release date: 2007-02-02
-- Cards in scope (Modern/Pioneer/Standard-legal): 161
+- Cards in scope (Modern/Pioneer/Standard-legal): 162
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 161 |
+| Modern | 162 |
 | Pioneer | 1 |
 | Standard | 0 |
 
@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Full (handled + tested) | 6 | 3.7% |
-| Partial (unaudited) | 13 | 8.1% |
-| Not tested (handled, untested) | 56 | 34.8% |
-| Not working (silent / notice / error) | 86 | 53.4% |
+| Partial (unaudited) | 13 | 8.0% |
+| Not tested (handled, untested) | 56 | 34.6% |
+| Not working (silent / notice / error) | 87 | 53.7% |
 
 ## Cards needing work
 
@@ -66,6 +66,7 @@
 | Merfolk Thaumaturgist | silent | {T}: Switch target creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Molten Firebird | silent | {4}{R}: Exile this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Null Profusion | silent | Whenever you play a card, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Oros, the Avenger | silent | Whenever Oros deals combat damage to a player, you may pay {2}{W}. If you do, Oros deals 3 damage to each nonwhite creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ovinize | silent | Until end of turn, target creature loses all abilities and has base power and toughness 0/1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pallid Mycoderm | silent | Sacrifice a Saproling: Each creature you control that's a Fungus or a Saproling gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phantasmagorian | silent | When you cast this spell, any player may discard three cards. If a player does, counter Phantasmagorian. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -198,85 +199,94 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Vanishing | Aven Riftwatcher, Calciderm, Chronozoa, Deadwood Treefolk, Keldon Marauders, Lavacore Elemental, Waning Wurm | 7 |
-| All Slivers have "{0}: If this permanent is on the battlefield, flip a coin. If you win the flip, exile this permanent and return it to the battlefield under it | Cautery Sliver, Darkheart Sliver, Frenetic Sliver, Necrotic Sliver, Poultice Sliver | 5 |
-| When you cast this spell, any player may pay half their life, rounded up. If a player does, counter Temporal Extortion. Take an extra turn after this one. | Brain Gorgers, Dash Hopes, Phantasmagorian, Temporal Extortion | 4 |
-| At the beginning of your upkeep, destroy the creature with the least power. It can't be regenerated. If two or more creatures are tied for least power, you choo | Enslave, Melancholy, Porphyry Nodes | 3 |
-| Echo | Hammerheim Deadeye, Stingscourger, Uktabi Drake | 3 |
-| When this creature enters, return three creatures you control to their owner's hand. | Dust Elemental, Stonecloaker, Stormfront Riders | 3 |
-| Until end of turn, target creature you control gains trample and gets +X/+0, where X is its power. Sacrifice it at the beginning of the next end step. | Fatal Frenzy, Ovinize | 2 |
-| When the last time counter is removed from this card while it's exiled, create a 2/2 black Knight creature token with flanking, protection from white, and haste | Riftmarked Knight, Veiling Oddity | 2 |
-| When this creature is turned face up, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permane | Shaper Parasite, Timebender | 2 |
-| Aeon Chronicler's power and toughness are each equal to the number of cards in your hand. | Aeon Chronicler | 1 |
-| All creatures have "At the beginning of your upkeep, sacrifice this creature unless you pay {1}." | Magus of the Tabernacle | 1 |
-| All damage that would be dealt this turn to target creature you control by a source of your choice is dealt to another target creature instead. | Kor Dirge | 1 |
-| All Forests and all Saprolings are 1/1 green Saproling creatures and Forest lands in addition to their other types. | Life and Limb | 1 |
-| All Sliver creatures get +1/+1. | Sinew Sliver | 1 |
-| All Sliver creatures have defender. | Dormant Sliver | 1 |
-| All Sliver creatures have first strike. | Spitting Sliver | 1 |
-| All Sliver creatures have haste. | Reflex Sliver | 1 |
-| All Sliver creatures have trample. | Battering Sliver | 1 |
-| All Sliver creatures have vigilance. | Synchronous Sliver | 1 |
-| Artifacts, creatures, and lands your opponents control enter tapped. | Frozen Aether | 1 |
-| As this creature enters, it becomes your choice of a 3/3 creature, a 2/2 creature with flying, or a 1/6 creature with defender. | Primal Plasma | 1 |
-| As this creature enters or is turned face up, it becomes your choice of 5/1 or 1/5. | Aquamorph Entity | 1 |
-| At the beginning of each player's upkeep, that player may put an artifact, creature, or land card from their hand onto the battlefield. | Braids, Conjurer Adept | 1 |
-| Change the target of target spell with a single target. You lose life equal to that spell's mana value. | Imp's Mischief | 1 |
-| Choose one — • Destroy target artifact. • Target creature gets +1/+1 and gains trample until end of turn. • Remove two time counters from target permanent or su | Fury Charm | 1 |
-| Choose one — • Prevent all combat damage that would be dealt this turn. • Regenerate target creature. • Counter target spell that targets you. | Dawn Charm | 1 |
-| Choose one — • Remove X time counters from target permanent or suspended card. • Put X time counters on target permanent with a time counter on it or suspended  | Timecrafting | 1 |
-| Choose target creature. Reveal cards from the top of your library until you reveal a nonland card. That creature gets +X/-X until end of turn, where X is that c | Erratic Mutation | 1 |
-| Counter target instant or sorcery spell. Its controller reveals cards from the top of their library until they reveal an instant or sorcery card. That player ma | Spellshift | 1 |
-| Counter target spell. Its controller discards a card. | Dismal Failure | 1 |
-| Counter target spell that targets a permanent you control. | Rebuff the Wicked | 1 |
-| Destroy target creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature token. | Pongify | 1 |
-| Detritivore's power and toughness are each equal to the number of nonbasic land cards in your opponents' graveyards. | Detritivore | 1 |
-| {1}{R}, {T}, Discard a card: Target creature can't be blocked this turn except by artifact creatures and/or red creatures. | Firefright Mage | 1 |
-| {2}{G}{G}, {T}, Discard a card: You gain 2 life for each card in your hand. | Sophic Centaur | 1 |
-| {T}: Draw a card and reveal it. If it isn't a land card, discard it. | Fa'adiyah Seer | 1 |
-| Enchanted creature can't attack or block. | Utopia Vow | 1 |
-| Enchanted creature gets +2/+0 and can't be blocked by creatures with flying. | Dust Corona | 1 |
-| Enchanted creature gets +1/+2 as long as it's white. Otherwise, it gets -2/-1. | Serra's Boon | 1 |
-| Enchanted creature gets +2/+2 for each Aura attached to it and has vigilance. | Auramancer's Guise | 1 |
-| {4}{R}: Exile this creature. | Molten Firebird | 1 |
-| For each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. Put those cards onto t | Dichotomancy | 1 |
-| Fungal Behemoth's power and toughness are each equal to the number of +1/+1 counters on creatures you control. | Fungal Behemoth | 1 |
-| If this creature was kicked, it enters with three +1/+1 counters on it and with haste. | Pouncing Wurm | 1 |
-| Kicker {3}{G} (You may pay an additional {3}{G} as you cast this spell.) Search your library for up to two Forest cards, put them onto the battlefield tapped, t | Hunting Wilds | 1 |
-| Other white creatures get +1/+1. | Crovax, Ascendant Hero | 1 |
-| Return each Aura card from your graveyard to the battlefield. Only creatures can be enchanted this way. (Aura cards that can't enchant a creature on the battlef | Retether | 1 |
-| Roiling Horror's power and toughness are each equal to your life total minus the life total of an opponent with the most life. | Roiling Horror | 1 |
-| Sacrifice a Saproling: Each creature you control that's a Fungus or a Saproling gets +1/+1 until end of turn. | Pallid Mycoderm | 1 |
-| {4}, {T}: Search your library for a Rebel permanent card with mana value 3 or less, put it onto the battlefield, then shuffle. | Blightspeaker | 1 |
-| Spells with the chosen name can't be cast. | Voidstone Gargoyle | 1 |
-| Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Choose target card in a gravey | Extirpate | 1 |
-| {T}: Switch target creature's power and toughness until end of turn. | Merfolk Thaumaturgist | 1 |
-| {3}, {T}: Tap target creature you control and target creature of an opponent's choice they control. Those creatures fight each other. | Magus of the Arena | 1 |
-| Target opponent chooses a card in your graveyard. You may pay {B}. If you do, repeat this process except that opponent can't choose a card already chosen for Sh | Shrouded Lore | 1 |
-| Target opponent reveals their hand. You may put a creature card from it onto the battlefield under your control. That creature gains haste. Sacrifice it at the  | Treacherous Urge | 1 |
-| Target player reveals their hand. You choose a nonland card with mana value X or less from it. That player discards that card. | Venarian Glimmer | 1 |
-| This creature can't be blocked except by artifact creatures and/or red creatures. | Skirk Shaman | 1 |
-| This creature gets +1/+1 as long as you control a Plains. | Hedge Troll | 1 |
-| {R}: This enchantment deals 1 damage to each creature and each player. | Pyrohemia | 1 |
-| Tidewalker's power and toughness are each equal to the number of time counters on it. | Tidewalker | 1 |
-| {0}: Until end of turn, this creature gets -1/-1 and gains your choice of double strike, protection from red, vigilance, or shadow. | Jodah's Avenger | 1 |
-| When this Aura leaves the battlefield, enchanted permanent's controller sacrifices it. | Reality Acid | 1 |
-| When this creature dies, if it had no time counters on it, create a 6/1 green Insect creature token with shroud. | Deadly Grub | 1 |
-| When this creature enters, any player may sacrifice a land of their choice. If a player does, put this creature on top of its owner's library. | Shivan Wumpus | 1 |
-| When this creature enters, if it was kicked with its {1}{B} kicker, tap target untapped creature and that creature deals damage equal to its power to its contro | Ana Battlemage | 1 |
-| When this creature enters, it deals an amount of damage of your choice to you and target creature. The damage can't be prevented. | Volcano Hellion | 1 |
-| When this creature enters, tap all other creatures. | Timbermare | 1 |
-| When you control no Swamps, sacrifice this creature. | Bog Serpent | 1 |
-| Whenever a creature enters, enchanted creature gets +2/+2 until end of turn. | Mantle of Leadership | 1 |
-| Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | Wild Pair | 1 |
-| Whenever a time counter is removed from this card while it's exiled, create a 1/1 white Soldier creature token. | Benalish Commander | 1 |
-| Whenever enchanted creature deals damage, you gain that much life. | Vampiric Link | 1 |
-| Whenever Intet deals combat damage to a player, you may pay {2}{U}. If you do, exile the top card of your library face down. You may look at that card for as lo | Intet, the Dreamer | 1 |
-| Whenever Teneb deals combat damage to a player, you may pay {2}{B}. If you do, put target creature card from a graveyard onto the battlefield under your control | Teneb, the Harvester | 1 |
-| Whenever you play a card, draw a card. | Null Profusion | 1 |
-| White creatures get +1/-1. | Sulfur Elemental | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| vanishing | 7 | Aven Riftwatcher, Calciderm, Chronozoa, Deadwood Treefolk, Keldon Marauders | plc |
+| all slivers have "..." | 5 | Cautery Sliver, Darkheart Sliver, Frenetic Sliver, Necrotic Sliver, Poultice Sliver | plc |
+| Choose one | 3 | Dawn Charm, Fury Charm, Timecrafting | plc |
+| echo | 3 | Hammerheim Deadeye, Stingscourger, Uktabi Drake | plc |
+| all creatures have "..." | 1 | Magus of the Tabernacle | plc |
+| all damage that would be dealt ~ to target creature you control by a source of your choice is dealt to another target creature instead. | 1 | Kor Dirge | plc |
+| all forests and all saprolings are N/N green saproling creatures and forest lands in addition to their other types. | 1 | Life and Limb | plc |
+| all sliver creatures get +N/+N. | 1 | Sinew Sliver | plc |
+| all sliver creatures have defender. | 1 | Dormant Sliver | plc |
+| all sliver creatures have first strike. | 1 | Spitting Sliver | plc |
+| all sliver creatures have haste. | 1 | Reflex Sliver | plc |
+| all sliver creatures have trample. | 1 | Battering Sliver | plc |
+| all sliver creatures have vigilance. | 1 | Synchronous Sliver | plc |
+| artifacts, creatures, and lands your opponents control enter tapped. | 1 | Frozen Aether | plc |
+| as ~ enters or is turned face up, it becomes your choice of N/N or N/N. | 1 | Aquamorph Entity | plc |
+| as ~ enters, it becomes your choice of a N/N creature, a N/N creature with flying, or a N/N creature with defender. | 1 | Primal Plasma | plc |
+| at the beginning of each player's upkeep, that player may put an artifact, creature, or land card from their hand onto the battlefield. | 1 | Braids, Conjurer Adept | plc |
+| at the beginning of your upkeep, destroy the creature with the least power. it can't be regenerated. if two or more creatures are tied for least power, you choo | 1 | Porphyry Nodes | plc |
+| at the beginning of your upkeep, enchanted creature deals N damage to its owner. | 1 | Enslave | plc |
+| at the beginning of your upkeep, sacrifice ~ unless you pay {M}. | 1 | Melancholy | plc |
+| change the target of target spell with a single target. you lose life equal to that spell's mana value. | 1 | Imp's Mischief | plc |
+| choose target creature. reveal cards from the top of your library until you reveal a nonland card. that creature gets +N/-N until end of turn, where N is that c | 1 | Erratic Mutation | plc |
+| counter target instant or sorcery spell. its controller reveals cards from the top of their library until they reveal an instant or sorcery card. that player ma | 1 | Spellshift | plc |
+| counter target spell that targets a permanent you control. | 1 | Rebuff the Wicked | plc |
+| counter target spell. its controller discards a card. | 1 | Dismal Failure | plc |
+| destroy target creature. it can't be regenerated. its controller creates a N/N green ape creature token. | 1 | Pongify | plc |
+| enchanted creature can't attack or block. | 1 | Utopia Vow | plc |
+| enchanted creature gets +N/+N and can't be blocked by creatures with flying. | 1 | Dust Corona | plc |
+| enchanted creature gets +N/+N as long as it's white. otherwise, it gets -N/-N. | 1 | Serra's Boon | plc |
+| enchanted creature gets +N/+N for each aura attached to it and has vigilance. | 1 | Auramancer's Guise | plc |
+| for each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. put those cards onto t | 1 | Dichotomancy | plc |
+| if ~ was kicked, it enters with three +N/+N counters on it and with haste. | 1 | Pouncing Wurm | plc |
+| kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) search your library for up to two forest cards, put them onto the battlefield tapped, then shuff | 1 | Hunting Wilds | plc |
+| other white creatures get +N/+N. | 1 | Crovax, Ascendant Hero | plc |
+| return each aura card from your graveyard to the battlefield. only creatures can be enchanted ~. (aura cards that can't enchant a creature on the battlefield re | 1 | Retether | plc |
+| sacrifice a saproling: each creature you control that's a fungus or a saproling gets +N/+N until end of turn. | 1 | Pallid Mycoderm | plc |
+| spells with the chosen name can't be cast. | 1 | Voidstone Gargoyle | plc |
+| split second (as long as ~ is on the stack, players can"..."t mana abilities.) choose target card in a graveyard other than a basic land card. search its owner' | 1 | Extirpate | plc |
+| target opponent chooses a card in your graveyard. you may pay {M}. if you do, repeat ~ except that opponent can't choose a card already chosen for ~. then put t | 1 | Shrouded Lore | plc |
+| target opponent reveals their hand. you may put a creature card from it onto the battlefield under your control. that creature gains haste. sacrifice it at the  | 1 | Treacherous Urge | plc |
+| target player reveals their hand. you choose a nonland card with mana value N or less from it. that player discards that card. | 1 | Venarian Glimmer | plc |
+| until end of turn, target creature loses all abilities and has base power and toughness N/N. | 1 | Ovinize | plc |
+| until end of turn, target creature you control gains trample and gets +N/+N, where N is its power. sacrifice it at the beginning of the next end step. | 1 | Fatal Frenzy | plc |
+| when the last time counter is removed from ~ while it"..."t be blocked ~. | 1 | Veiling Oddity | plc |
+| when the last time counter is removed from ~ while it's exiled, create a N/N black knight creature token with flanking, protection from white, and haste. | 1 | Riftmarked Knight | plc |
+| when you cast ~, any player may discard three cards. if a player does, counter ~. | 1 | Phantasmagorian | plc |
+| when you cast ~, any player may pay N life. if a player does, counter ~. counter target spell. | 1 | Dash Hopes | plc |
+| when you cast ~, any player may pay half their life, rounded up. if a player does, counter ~. take an extra turn after ~. | 1 | Temporal Extortion | plc |
+| when you cast ~, any player may sacrifice a creature of their choice. if a player does, counter ~. | 1 | Brain Gorgers | plc |
+| when you control no swamps, sacrifice ~. | 1 | Bog Serpent | plc |
+| when ~ dies, if it had no time counters on it, create a N/N green insect creature token with shroud. | 1 | Deadly Grub | plc |
+| when ~ enters, any player may sacrifice a land of their choice. if a player does, put ~ on top of its owner's library. | 1 | Shivan Wumpus | plc |
+| when ~ enters, if it was kicked with its {M}{M} kicker, tap target untapped creature and that creature deals damage equal to its power to its controller. | 1 | Ana Battlemage | plc |
+| when ~ enters, it deals an amount of damage of your choice to you and target creature. the damage can't be prevented. | 1 | Volcano Hellion | plc |
+| when ~ enters, return a creature you control to its owner's hand. | 1 | Stonecloaker | plc |
+| when ~ enters, return three creatures you control to their owner's hand. | 1 | Dust Elemental | plc |
+| when ~ enters, return two creatures you control to their owner's hand. | 1 | Stormfront Riders | plc |
+| when ~ enters, tap all other creatures. | 1 | Timbermare | plc |
+| when ~ is turned face up, choose one — • remove two time counters from target permanent or suspended card. • put two time counters on target permanent with a ti | 1 | Timebender | plc |
+| when ~ is turned face up, target creature gets +N/-N or -N/+N until end of turn. | 1 | Shaper Parasite | plc |
+| when ~ leaves the battlefield, enchanted permanent's controller sacrifices it. | 1 | Reality Acid | plc |
+| whenever a creature enters, enchanted creature gets +N/+N until end of turn. | 1 | Mantle of Leadership | plc |
+| whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | 1 | Wild Pair | plc |
+| whenever a time counter is removed from ~ while it's exiled, create a N/N white soldier creature token. | 1 | Benalish Commander | plc |
+| whenever enchanted creature deals damage, you gain that much life. | 1 | Vampiric Link | plc |
+| whenever intet deals combat damage to a player, you may pay {M}{M}. if you do, exile the top card of your library face down. you may look at that card for as lo | 1 | Intet, the Dreamer | plc |
+| whenever oros deals combat damage to a player, you may pay {M}{M}. if you do, oros deals N damage to each nonwhite creature. | 1 | Oros, the Avenger | plc |
+| whenever teneb deals combat damage to a player, you may pay {M}{M}. if you do, put target creature card from a graveyard onto the battlefield under your control | 1 | Teneb, the Harvester | plc |
+| whenever you play a card, draw a card. | 1 | Null Profusion | plc |
+| white creatures get +N/-N. | 1 | Sulfur Elemental | plc |
+| {M}, {M}: search your library for a rebel permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Blightspeaker | plc |
+| {M}, {M}: tap target creature you control and target creature of an opponent's choice they control. those creatures fight each other. | 1 | Magus of the Arena | plc |
+| {M}: draw a card and reveal it. if it isn't a land card, discard it. | 1 | Fa'adiyah Seer | plc |
+| {M}: switch target creature's power and toughness until end of turn. | 1 | Merfolk Thaumaturgist | plc |
+| {M}: until end of turn, ~ gets -N/-N and gains your choice of double strike, protection from red, vigilance, or shadow. | 1 | Jodah's Avenger | plc |
+| {M}: ~ deals N damage to each creature and each player. | 1 | Pyrohemia | plc |
+| {M}{M}, {M}, discard a card: target creature can't be blocked ~ except by artifact creatures and/or red creatures. | 1 | Firefright Mage | plc |
+| {M}{M}: exile ~. | 1 | Molten Firebird | plc |
+| {M}{M}{M}, {M}, discard a card: you gain N life for each card in your hand. | 1 | Sophic Centaur | plc |
+| ~ can't be blocked except by artifact creatures and/or red creatures. | 1 | Skirk Shaman | plc |
+| ~ gets +N/+N as long as you control a plains. | 1 | Hedge Troll | plc |
+| ~"..." graveyards. | 1 | Detritivore | plc |
+| ~'s power and toughness are each equal to the number of +N/+N counters on creatures you control. | 1 | Fungal Behemoth | plc |
+| ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Aeon Chronicler | plc |
+| ~'s power and toughness are each equal to the number of time counters on it. | 1 | Tidewalker | plc |
+| ~'s power and toughness are each equal to your life total minus the life total of an opponent with the most life. | 1 | Roiling Horror | plc |
 
 ## Notes
 

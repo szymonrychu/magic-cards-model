@@ -39,10 +39,10 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| As this creature enters, choose a number. | Sanctum Prelate | 1 |
-| When this creature enters, you may search your library for a creature card with toughness 2 or less, reveal it, put it into your hand, then shuffle. | Recruiter of the Guard | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| as ~ enters, choose a number. | 1 | Sanctum Prelate | cn2 |
+| when ~ enters, you may search your library for a creature card with toughness N or less, reveal it, put it into your hand, then shuffle. | 1 | Recruiter of the Guard | cn2 |
 
 ## Notes
 

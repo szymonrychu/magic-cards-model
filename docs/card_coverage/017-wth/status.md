@@ -62,18 +62,18 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Cone of Flame deals 1 damage to any target, 2 damage to another target, and 3 damage to a third target. | Cone of Flame | 1 |
-| Fear | Razortooth Rats | 1 |
-| Look at target player's hand and choose two cards from it. Put them on top of that player's library in any order. | Agonizing Memories | 1 |
-| Sacrifice this Aura: Return enchanted creature to its owner's hand. | Phantom Wings | 1 |
-| Target player shuffles up to three target cards from their graveyard into their library. Draw a card. When this card is put into your graveyard from your librar | Gaea's Blessing | 1 |
-| When this creature attacks or blocks, sacrifice it at end of combat. | Fog Elemental | 1 |
-| When this creature blocks, destroy it at end of combat. | Cinder Wall | 1 |
-| When this creature enters, sacrifice it unless you discard a creature card. | Hidden Horror | 1 |
-| When this creature enters, you may pay {1}{G}. If you do, search your library for a card named Llanowar Sentinel, put that card onto the battlefield, then shuff | Llanowar Sentinel | 1 |
-| You can't cast creature spells. | Steel Golem | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| fear | 1 | Razortooth Rats | wth |
+| look at target player"..."s library in any order. | 1 | Agonizing Memories | wth |
+| sacrifice ~: return enchanted creature to its owner's hand. | 1 | Phantom Wings | wth |
+| target player shuffles up to three target cards from their graveyard into their library. draw a card. when ~ is put into your graveyard from your library, shuff | 1 | Gaea's Blessing | wth |
+| when ~ attacks or blocks, sacrifice it at end of combat. | 1 | Fog Elemental | wth |
+| when ~ blocks, destroy it at end of combat. | 1 | Cinder Wall | wth |
+| when ~ enters, sacrifice it unless you discard a creature card. | 1 | Hidden Horror | wth |
+| when ~ enters, you may pay {M}{M}. if you do, search your library for a card named ~, put that card onto the battlefield, then shuffle. | 1 | Llanowar Sentinel | wth |
+| you can't cast creature spells. | 1 | Steel Golem | wth |
+| ~ deals N damage to any target, N damage to another target, and N damage to a third target. | 1 | Cone of Flame | wth |
 
 ## Notes
 

@@ -3,13 +3,13 @@
 - Expansion: 066
 - Set code: `dis`
 - Release date: 2006-05-05
-- Cards in scope (Modern/Pioneer/Standard-legal): 167
+- Cards in scope (Modern/Pioneer/Standard-legal): 169
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 167 |
+| Modern | 169 |
 | Pioneer | 7 |
 | Standard | 6 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 12 | 7.2% |
+| Full (handled + tested) | 13 | 7.7% |
 | Partial (unaudited) | 6 | 3.6% |
-| Not tested (handled, untested) | 45 | 26.9% |
-| Not working (silent / notice / error) | 104 | 62.3% |
+| Not tested (handled, untested) | 45 | 26.6% |
+| Not working (silent / notice / error) | 105 | 62.1% |
 
 ## Cards needing work
 
@@ -29,6 +29,7 @@
 | Aethermage's Touch | silent | Reveal the top four cards of your library. You may put a creature card from among them onto the battlefield. It gains "At the beginning of your end step, return | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Anthem of Rakdos | silent | Whenever a creature you control attacks, it gets +2/+0 until end of turn and this enchantment deals 1 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aquastrand Spider | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Avatar of Discord | silent | When this creature enters, sacrifice it unless you discard two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Azorius Herald | silent | When this creature enters, sacrifice it unless {U} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Azorius Ploy | silent | Prevent all combat damage target creature would deal this turn. Prevent all combat damage that would be dealt to target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Biomantic Mastery | silent | Draw a card for each creature target player controls, then draw a card for each creature another target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -185,13 +186,14 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
 - Blood Crypt
 - Bound // Determined
 - Breeding Pool
+- Coiling Oracle
 - Ghost Quarter
 - Grand Arbiter Augustin IV
 - Hallowed Fountain
@@ -204,100 +206,102 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Graft | Aquastrand Spider, Cytospawn Shambler, Helium Squirter, Novijen Sages, Plaxcaster Frogling, Simic Initiate, Sporeback Troll, Vigean Graftmage, Vigean Hydropon | 9 |
-| When this creature enters, sacrifice it unless you discard a noncreature card. | Azorius Herald, Court Hussar, Drekavac, Patagia Viper, Plaxmanta | 5 |
-| Forecast | Pride of the Clouds, Sky Hussar, Steeling Stance | 3 |
-| At the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | Elemental Resonance, Haazda Shield Mate | 2 |
-| Discard a card at random. If you do, Kindle the Carnage deals damage equal to that card's mana value to each creature. You may repeat this process any number of | Kindle the Carnage, Stormscale Anarch | 2 |
-| When this creature enters, target player discards a card. This creature deals damage to that player equal to that card's mana value. | Hellhole Rats, Loaming Shaman | 2 |
-| Whenever a creature you control attacks, it gets +2/+0 until end of turn and this enchantment deals 1 damage to you. | Anthem of Rakdos, Proper Burial | 2 |
-| As an additional cost to cast this spell, pay X life. Each other player loses X life. | Bond of Agony | 1 |
-| As long as this creature is enchanted, it gets +2/+2, has trample, and has "{R}: This creature gets +1/+0 until end of turn." | Flaring Flame-Kin | 1 |
-| Attacking creatures you control get +1/+0 until end of turn for each other attacking creature. | Hit // Run | 1 |
-| Cackling Flames deals 3 damage to any target. Hellbent — Cackling Flames deals 5 damage instead if you have no cards in hand. | Cackling Flames | 1 |
-| Cast this spell only during combat after blockers are declared. Create a 1/1 green Saproling creature token that's blocking target creature attacking you. Draw  | Flash Foliage | 1 |
-| Choose a card type, then reveal the top four cards of your library. Put all cards of the chosen type revealed this way into your hand and the rest into your gra | Vigean Intuition | 1 |
-| Choose a nonland card name. Target player reveals their hand. That player discards a card with that name. If they can't, you draw a card. | Brain Pry | 1 |
-| Choose a nonlegendary creature on the battlefield. Target creature becomes a copy of that creature until end of turn. | Cytoshape | 1 |
-| Counter all other spells. Draw a card for each spell countered this way. | Swift Silence | 1 |
-| Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.) | Voidslime | 1 |
-| {1}{W}: Creatures you control with defender can attack this turn as though they didn't have defender. | Wakestone Gargoyle | 1 |
-| Demonfire deals X damage to any target. If a creature dealt damage this way would die this turn, exile it instead. Hellbent — If you have no cards in hand, this | Demonfire | 1 |
-| Destroy all Auras and Equipment. | Pure // Simple | 1 |
-| {B}, {T}: Destroy target creature with power less than this creature's power. | Unliving Psychopath | 1 |
-| Draw a card for each creature target player controls, then draw a card for each creature another target player controls. | Biomantic Mastery | 1 |
-| Each player draws X cards. Forecast — {2}{U}, Reveal this card from your hand: Each player draws a card. (Activate only during your upkeep and only once each tu | Skyscribing | 1 |
-| Enchanted creature can't be the target of spells or abilities your opponents control. | Shielding Plax | 1 |
-| {W}: Enchanted creature gains vigilance until end of turn. | Ocular Halo | 1 |
-| Enchanted creature gets +0/+2 and can block creatures with landwalk abilities as though they didn't have those abilities. | Street Savvy | 1 |
-| Enchanted creature gets +1/+1 for each of its colors. | Blessing of the Nephilim | 1 |
-| Enchanted land has "{G}{U}, {T}: Create a 2/2 green and blue Drake creature token with flying." | Leafdrake Roost | 1 |
-| Equipped creature gets +1/+0 for each blood counter on this Equipment and has "{T}, Sacrifice a creature: Put a blood counter on Rakdos Riteknife." | Rakdos Riteknife | 1 |
-| Exile all cards from your hand face down. At the beginning of the next end step, return those cards to your hand, then draw a card. | Ignorant Bliss | 1 |
-| Experiment Kraj has all activated abilities of each other creature with a +1/+1 counter on it. | Experiment Kraj | 1 |
-| Fear | Ratcatcher | 1 |
-| Flip a coin. If it comes up heads, counter target instant or sorcery spell. If it comes up tails, copy that spell and you may choose new targets for the copy. | Odds // Ends | 1 |
-| {U}, {T}: Gain control of target creature with a +1/+1 counter on it for as long as this creature remains on the battlefield. | Cytoplast Manipulator | 1 |
-| Gain control of target monocolored creature. Forecast — {1}{U}, Reveal this card from your hand: Target creature becomes the color or colors of your choice unti | Govern the Guildless | 1 |
-| Hellbent — As long as you have no cards in hand, this creature gets +1/+0 and has "{B}: Regenerate this creature." | Gobhobbler Rats | 1 |
-| Hellbent — Enchanted creature gets an additional +2/+0 as long as you have no cards in hand. | Taste for Mayhem | 1 |
-| Hellbent — This creature can attack as though it didn't have defender as long as you have no cards in hand. | Slithering Shade | 1 |
-| Hellbent — This creature gets +2/+1 as long as you have no cards in hand. | Demon's Jester | 1 |
-| Hellbent — This creature has double strike as long as you have no cards in hand. | Rakdos Pit Dragon | 1 |
-| If a spell or ability would cause its controller to gain life, that player loses that much life instead. | Rain of Gore | 1 |
-| {1}{G}: Move a +1/+1 counter from target creature onto another target creature with the same controller. | Simic Guildmage | 1 |
-| Prevent all combat damage target creature would deal this turn. Prevent all combat damage that would be dealt to target creature this turn. | Azorius Ploy | 1 |
-| {4}{W}{U}, {T}: Prevent all damage a source of your choice would deal this turn. | Prahv, Spires of Order | 1 |
-| Prevent all damage that would be dealt to target multicolored creature this turn. For each 1 damage prevented this way, put a +1/+1 counter on that creature. | Brace for Impact | 1 |
-| {G}{U}, {T}: Put a +1/+1 counter on each creature that entered this turn. | Novijen, Heart of Progress | 1 |
-| Put target artifact or enchantment on the bottom of its owner's library. | Hide // Seek | 1 |
-| Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness. | Condemn | 1 |
-| Put target creature or enchantment card from an opponent's graveyard onto the battlefield under your control. | Crime // Punishment | 1 |
-| Return all creatures blocking or blocked by target creature to their owner's hand. | Trial // Error | 1 |
-| Return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | Rise // Fall | 1 |
-| Return up to three target creature cards with mana value 1 or less from your graveyard to the battlefield. Forecast — {5}{W}, Reveal this card from your hand: R | Proclamation of Rebirth | 1 |
-| Reveal a card from your hand. Search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. Hellbent — If you  | Infernal Tutor | 1 |
-| Reveal the top four cards of your library. You may put a creature card from among them onto the battlefield. It gains "At the beginning of your end step, return | Aethermage's Touch | 1 |
-| {T}: Reveal your hand and discard a card of target opponent's choice. Then that player reveals their hand and discards a card of your choice. Activate only as a | Rakdos Augermage | 1 |
-| {2}, Sacrifice a creature: Lyzolda deals 2 damage to any target if the sacrificed creature was red. Draw a card if the sacrificed creature was black. | Lyzolda, the Blood Witch | 1 |
-| {R}, Sacrifice this creature: Target creature can't block this turn. | Sandstorm Eidolon | 1 |
-| {B}, Sacrifice this creature: The next time damage would be dealt to target creature this turn, destroy that creature instead. | Kill-Suit Cultist | 1 |
-| Shuffle up to four cards you own from outside the game into your library. | Research // Development | 1 |
-| Skip your draw step. | Psychic Possession | 1 |
-| {U}: Switch this creature's power and toughness until end of turn. | Windreaver | 1 |
-| {3}, {T}: Tap target creature and put a +1/+1 counter on it. Until end of turn, that creature gains "{2}{G}{U}: Double the number of +1/+1 counters on this crea | Evolution Vat | 1 |
-| Target creature can block any number of creatures this turn. | Valor Made Real | 1 |
-| Target creature gets +2/+2 until end of turn for each of its colors. | Might of the Nephilim | 1 |
-| {3}, {T}: Target player exiles a card from their hand. Activate only as a sorcery. | Muse Vessel | 1 |
-| The next 1 damage that would be dealt to target creature this turn is dealt to another target creature instead. Draw a card. | Carom | 1 |
-| This creature can't be blocked by creatures with flying. | Gnat Alley Creeper | 1 |
-| {T}: This creature deals 1 damage to target creature and that creature's controller loses 1 life. | Rakdos Ickspitter | 1 |
-| This creature gets -4/-4 for each card in your hand. | Dread Slag | 1 |
-| Transguild Courier is all colors. | Transguild Courier | 1 |
-| Twinstrike deals 2 damage to each of two target creatures. Hellbent — Destroy those creatures instead if you have no cards in hand. | Twinstrike | 1 |
-| Until end of turn, all creatures become black and all lands become Swamps. | Nightcreep | 1 |
-| {1}{G}: Until end of turn, target creature with a +1/+1 counter on it gains "Whenever this creature deals combat damage to a creature, destroy that creature at  | Simic Basilisk | 1 |
-| Weight of Spires deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | Weight of Spires | 1 |
-| When a player other than this creature's owner controls it, that player sacrifices it. If the player does, this creature deals 7 damage to the player. | Bronze Bombshell | 1 |
-| When another creature enters, sacrifice this creature. If you do, this creature deals 4 damage to that creature. | Flame-Kin War Scout | 1 |
-| When this creature blocks, sacrifice it at end of combat. | Stoic Ephemera | 1 |
-| When this creature dies, search your library for any number of creature cards with total mana value 6 or less, put them onto the battlefield, then shuffle. | Protean Hulk | 1 |
-| When this creature enters, each player puts a creature card with mana value 3 or less from their graveyard onto the battlefield. | Crypt Champion | 1 |
-| When this creature enters, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | Cytoplast Root-Kin | 1 |
-| When this creature enters, you may pay {X}. If you do, target creature gets +X/+0 until end of turn. | Squealing Devil | 1 |
-| Whenever a creature an opponent controls becomes tapped, put a palliation counter on this enchantment. | Palliation Accord | 1 |
-| Whenever a player casts a noncreature spell, counter that spell. That player creates X 1/1 white and blue Bird creature tokens with flying, where X is the spell | Dovescape | 1 |
-| Whenever an opponent is dealt 3 or more damage by a single source, that player discards a card. | Pain Magnification | 1 |
-| Whenever an opponent taps a land for mana, tap all lands that player controls. | War's Toll | 1 |
-| Whenever enchanted creature attacks, if its power is 2 or less, it can't be blocked this turn. | Writ of Passage | 1 |
-| Whenever enchanted creature attacks or blocks, its controller loses 3 life. | Nettling Curse | 1 |
-| Whenever Isperia deals combat damage to a player, choose a card name. That player reveals their hand. If a card with the chosen name is revealed this way, searc | Isperia the Inscrutable | 1 |
-| Whenever Rakdos attacks, sacrifice half the non-Demon permanents you control, rounded up. | Rakdos the Defiler | 1 |
-| Whenever this creature deals damage, you gain that much life. | Paladin of Prahv | 1 |
-| Whenever this creature is dealt damage, discard that many cards. | Jagged Poppet | 1 |
-| Whenever you cast a blue creature spell, reveal the top card of your library. If it's a creature card, put that card into your hand. | Momir Vig, Simic Visionary | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| graft | 9 | Aquastrand Spider, Cytospawn Shambler, Helium Squirter, Novijen Sages, Plaxcaster Frogling | dis |
+| Hellbent | 5 | Demon's Jester, Gobhobbler Rats, Rakdos Pit Dragon, Slithering Shade, Taste for Mayhem | dis |
+| when ~ enters, sacrifice it unless {M} was spent to cast it. | 4 | Azorius Herald, Court Hussar, Patagia Viper, Plaxmanta | dis |
+| forecast | 3 | Pride of the Clouds, Sky Hussar, Steeling Stance | dis |
+| as an additional cost to cast ~, pay N life. each other player loses N life. | 1 | Bond of Agony | dis |
+| as long as ~ is enchanted, it gets +N/+N, has trample, and has "..." | 1 | Flaring Flame-Kin | dis |
+| at the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | 1 | Elemental Resonance | dis |
+| at the beginning of your upkeep, sacrifice ~ unless you pay {M}{M}. | 1 | Haazda Shield Mate | dis |
+| attacking creatures you control get +N/+N until end of turn for each other attacking creature. | 1 | Hit // Run | dis |
+| cast ~ only during combat after blockers are declared. create a N/N green saproling creature token that's blocking target creature attacking you. draw a card. | 1 | Flash Foliage | dis |
+| choose a card type, then reveal the top four cards of your library. put all cards of the chosen type revealed ~ into your hand and the rest into your graveyard. | 1 | Vigean Intuition | dis |
+| choose a nonland card name. target player reveals their hand. that player discards a card with that name. if they can't, you draw a card. | 1 | Brain Pry | dis |
+| choose a nonlegendary creature on the battlefield. target creature becomes a copy of that creature until end of turn. | 1 | Cytoshape | dis |
+| counter all other spells. draw a card for each spell countered ~. | 1 | Swift Silence | dis |
+| counter target spell, activated ability, or triggered ability. (mana abilities can't be targeted.) | 1 | Voidslime | dis |
+| destroy all auras and equipment. | 1 | Pure // Simple | dis |
+| discard a card at random. if you do, ~ deals damage equal to that card's mana value to each creature. you may repeat ~ any number of times. | 1 | Kindle the Carnage | dis |
+| draw a card for each creature target player controls, then draw a card for each creature another target player controls. | 1 | Biomantic Mastery | dis |
+| each player draws N cards. forecast — {M}{M}, reveal ~ from your hand: each player draws a card. (activate only during your upkeep and only once each turn.) | 1 | Skyscribing | dis |
+| enchanted creature can't be the target of spells or abilities your opponents control. | 1 | Shielding Plax | dis |
+| enchanted creature gets +N/+N and can block creatures with landwalk abilities as though they didn't have those abilities. | 1 | Street Savvy | dis |
+| enchanted creature gets +N/+N for each of its colors. | 1 | Blessing of the Nephilim | dis |
+| enchanted land has "..." | 1 | Leafdrake Roost | dis |
+| equipped creature gets +N/+N for each blood counter on ~ and has "..." | 1 | Rakdos Riteknife | dis |
+| exile all cards from your hand face down. at the beginning of the next end step, return those cards to your hand, then draw a card. | 1 | Ignorant Bliss | dis |
+| fear | 1 | Ratcatcher | dis |
+| flip a coin. if it comes up heads, counter target instant or sorcery spell. if it comes up tails, copy that spell and you may choose new targets for the copy. | 1 | Odds // Ends | dis |
+| gain control of target monocolored creature. forecast — {M}{M}, reveal ~ from your hand: target creature becomes the color or colors of your choice until end of | 1 | Govern the Guildless | dis |
+| if a spell or ability would cause its controller to gain life, that player loses that much life instead. | 1 | Rain of Gore | dis |
+| prevent all combat damage target creature would deal ~. prevent all combat damage that would be dealt to target creature ~. | 1 | Azorius Ploy | dis |
+| prevent all damage that would be dealt to target multicolored creature ~. for each N damage prevented ~, put a +N/+N counter on that creature. | 1 | Brace for Impact | dis |
+| put target artifact or enchantment on the bottom of its owner's library. | 1 | Hide // Seek | dis |
+| put target attacking creature on the bottom of its owner's library. its controller gains life equal to its toughness. | 1 | Condemn | dis |
+| put target creature or enchantment card from an opponent's graveyard onto the battlefield under your control. | 1 | Crime // Punishment | dis |
+| return all creatures blocking or blocked by target creature to their owner's hand. | 1 | Trial // Error | dis |
+| return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | 1 | Rise // Fall | dis |
+| return up to three target creature cards with mana value N or less from your graveyard to the battlefield. forecast — {M}{M}, reveal ~ from your hand: return ta | 1 | Proclamation of Rebirth | dis |
+| reveal a card from your hand. search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. hellbent — if you  | 1 | Infernal Tutor | dis |
+| reveal the top four cards of your library. you may put a creature card from among them onto the battlefield. it gains "..." then put the rest of the cards revea | 1 | Aethermage's Touch | dis |
+| shuffle up to four cards you own from outside the game into your library. | 1 | Research // Development | dis |
+| skip your draw step. | 1 | Psychic Possession | dis |
+| target creature can block any number of creatures ~. | 1 | Valor Made Real | dis |
+| target creature gets +N/+N until end of turn for each of its colors. | 1 | Might of the Nephilim | dis |
+| the next N damage that would be dealt to target creature ~ is dealt to another target creature instead. draw a card. | 1 | Carom | dis |
+| until end of turn, all creatures become black and all lands become swamps. | 1 | Nightcreep | dis |
+| when a player other than ~ owner controls it, that player sacrifices it. if the player does, ~ deals N damage to the player. | 1 | Bronze Bombshell | dis |
+| when another creature enters, sacrifice ~. if you do, ~ deals N damage to that creature. | 1 | Flame-Kin War Scout | dis |
+| when ~ blocks, sacrifice it at end of combat. | 1 | Stoic Ephemera | dis |
+| when ~ dies, search your library for any number of creature cards with total mana value N or less, put them onto the battlefield, then shuffle. | 1 | Protean Hulk | dis |
+| when ~ enters, each player puts a creature card with mana value N or less from their graveyard onto the battlefield. | 1 | Crypt Champion | dis |
+| when ~ enters, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Cytoplast Root-Kin | dis |
+| when ~ enters, sacrifice it unless you discard a noncreature card. | 1 | Drekavac | dis |
+| when ~ enters, sacrifice it unless you discard two cards. | 1 | Avatar of Discord | dis |
+| when ~ enters, target player discards a card. ~ deals damage to that player equal to that card's mana value. | 1 | Hellhole Rats | dis |
+| when ~ enters, target player shuffles any number of target cards from their graveyard into their library. | 1 | Loaming Shaman | dis |
+| when ~ enters, you may pay {M}. if you do, target creature gets +N/+N until end of turn. | 1 | Squealing Devil | dis |
+| whenever a creature an opponent controls becomes tapped, put a palliation counter on ~. | 1 | Palliation Accord | dis |
+| whenever a creature you control attacks, it gets +N/+N until end of turn and ~ deals N damage to you. | 1 | Anthem of Rakdos | dis |
+| whenever a creature you control dies, you gain life equal to that creature's toughness. | 1 | Proper Burial | dis |
+| whenever a player casts a noncreature spell, counter that spell. that player creates N N/N white and blue bird creature tokens with flying, where N is the spell | 1 | Dovescape | dis |
+| whenever an opponent is dealt N or more damage by a single source, that player discards a card. | 1 | Pain Magnification | dis |
+| whenever an opponent taps a land for mana, tap all lands that player controls. | 1 | War's Toll | dis |
+| whenever enchanted creature attacks or blocks, its controller loses N life. | 1 | Nettling Curse | dis |
+| whenever enchanted creature attacks, if its power is N or less, it can't be blocked ~. | 1 | Writ of Passage | dis |
+| whenever isperia deals combat damage to a player, choose a card name. that player reveals their hand. if a card with the chosen name is revealed ~, search your  | 1 | Isperia the Inscrutable | dis |
+| whenever rakdos attacks, sacrifice half the non-demon permanents you control, rounded up. | 1 | Rakdos the Defiler | dis |
+| whenever you cast a blue creature spell, reveal the top card of your library. if it's a creature card, put that card into your hand. | 1 | Momir Vig, Simic Visionary | dis |
+| whenever ~ deals damage, you gain that much life. | 1 | Paladin of Prahv | dis |
+| whenever ~ is dealt damage, discard that many cards. | 1 | Jagged Poppet | dis |
+| {M}, sacrifice a creature: lyzolda deals N damage to any target if the sacrificed creature was red. draw a card if the sacrificed creature was black. | 1 | Lyzolda, the Blood Witch | dis |
+| {M}, sacrifice ~: target creature can't block ~. | 1 | Sandstorm Eidolon | dis |
+| {M}, sacrifice ~: the next time damage would be dealt to target creature ~, destroy that creature instead. | 1 | Kill-Suit Cultist | dis |
+| {M}, {M}: destroy target creature with power less than ~ power. | 1 | Unliving Psychopath | dis |
+| {M}, {M}: gain control of target creature with a +N/+N counter on it for as long as ~ remains on the battlefield. | 1 | Cytoplast Manipulator | dis |
+| {M}, {M}: tap target creature and put a +N/+N counter on it. until end of turn, that creature gains "..." | 1 | Evolution Vat | dis |
+| {M}, {M}: target player exiles a card from their hand. activate only as a sorcery. | 1 | Muse Vessel | dis |
+| {M}: enchanted creature gains vigilance until end of turn. | 1 | Ocular Halo | dis |
+| {M}: reveal your hand and discard a card of target opponent's choice. then that player reveals their hand and discards a card of your choice. activate only as a | 1 | Rakdos Augermage | dis |
+| {M}: switch ~ power and toughness until end of turn. | 1 | Windreaver | dis |
+| {M}: ~ deals N damage to target creature and that creature's controller loses N life. | 1 | Rakdos Ickspitter | dis |
+| {M}{M}, discard a card at random: ~ deals N damage to any target. if the discarded card was multicolored, ~ deals N damage instead. | 1 | Stormscale Anarch | dis |
+| {M}{M}, {M}: put a +N/+N counter on each creature that entered ~. | 1 | Novijen, Heart of Progress | dis |
+| {M}{M}: creatures you control with defender can attack ~ as though they didn't have defender. | 1 | Wakestone Gargoyle | dis |
+| {M}{M}: move a +N/+N counter from target creature onto another target creature with the same controller. | 1 | Simic Guildmage | dis |
+| {M}{M}: until end of turn, target creature with a +N/+N counter on it gains "..." | 1 | Simic Basilisk | dis |
+| {M}{M}{M}, {M}: prevent all damage a source of your choice would deal ~. | 1 | Prahv, Spires of Order | dis |
+| ~ can't be blocked by creatures with flying. | 1 | Gnat Alley Creeper | dis |
+| ~ deals N damage to any target. hellbent — ~ deals N damage instead if you have no cards in hand. | 1 | Cackling Flames | dis |
+| ~ deals N damage to any target. if a creature dealt damage ~ would die ~, exile it instead. hellbent — if you have no cards in hand, ~ can"..."t be prevented. | 1 | Demonfire | dis |
+| ~ deals N damage to each of two target creatures. hellbent — destroy those creatures instead if you have no cards in hand. | 1 | Twinstrike | dis |
+| ~ deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | 1 | Weight of Spires | dis |
+| ~ gets -N/-N for each card in your hand. | 1 | Dread Slag | dis |
+| ~ has all activated abilities of each other creature with a +N/+N counter on it. | 1 | Experiment Kraj | dis |
+| ~ is all colors. | 1 | Transguild Courier | dis |
 
 ## Notes
 

@@ -3,14 +3,14 @@
 - Expansion: 202
 - Set code: `eld`
 - Release date: 2019-10-04
-- Cards in scope (Modern/Pioneer/Standard-legal): 269
+- Cards in scope (Modern/Pioneer/Standard-legal): 268
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 269 |
-| Pioneer | 269 |
+| Modern | 268 |
+| Pioneer | 268 |
 | Standard | 16 |
 
 ## Coverage
@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Full (handled + tested) | 21 | 7.8% |
-| Partial (unaudited) | 31 | 11.5% |
-| Not tested (handled, untested) | 128 | 47.6% |
-| Not working (silent / notice / error) | 89 | 33.1% |
+| Partial (unaudited) | 31 | 11.6% |
+| Not tested (handled, untested) | 128 | 47.8% |
+| Not working (silent / notice / error) | 88 | 32.8% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Happily Ever After | silent | At the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Irencrag Feat | silent | Add seven {R}. You can cast only one more spell this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Joust | silent | Choose target creature you control and target creature you don't control. The creature you control gets +2/+1 until end of turn if it's a Knight. Then those cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kenrith, the Returned King | silent | {4}{B}: Put target creature card from a graveyard onto the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Knights' Charge | silent | {6}{W}{B}, Sacrifice this enchantment: Return all Knight creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Korvold, Fae-Cursed King | silent | Whenever Korvold enters or attacks, sacrifice another permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lochmere Serpent | silent | {U}, Sacrifice an Island: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -306,105 +305,121 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Adamant — If at least three black mana was spent to cast this spell, mill four cards. You may choose a creature card in your graveyard. If you do, return it to  | Ardenvale Paladin, Cauldron's Gift, Embereth Paladin, Garenbrig Paladin, Henge Walker, Locthwain Paladin, Vantress Paladin | 7 |
-| As long as you control an artifact or enchantment, this creature has flying. | Flutterfox, Rowan's Battleguard, Shimmer Dragon | 3 |
-| Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. You may cast that card for as long as it remain | Covetous Urge, Memory Theft, Specter's Shriek | 3 |
-| {1}: This creature can't be blocked this turn except by creatures with haste. | Beloved Princess, Gingerbrute, Rampart Smasher | 3 |
-| At the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or car | Happily Ever After, Outlaws' Merriment | 2 |
-| Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | Frogify, Kenrith's Transformation | 2 |
-| This creature can't attack unless defending player has seven or more cards in their graveyard. | Lovestruck Beast // Heart's Desire, Vantress Gargoyle | 2 |
-| This spell costs {2} less to cast if an opponent controls a green permanent. | Embercleave, Oakhame Adversary | 2 |
-| When this creature enters, choose target Human or artifact an opponent controls. For as long as this creature remains on the battlefield, gain control of that p | Charming Prince, Opportunistic Dragon | 2 |
-| When this creature enters, create a number of 1/1 black Rat creature tokens equal to the number of opponents you have. | Chittering Witch, Gluttonous Troll | 2 |
-| When this creature enters, target Knight gains deathtouch and lifelink until end of turn. | Blacklance Paragon, Clackbridge Troll | 2 |
-| When this creature enters, you may search your library and/or graveyard for a card named Rowan, Fearless Sparkmage, reveal it, and put it into your hand. If you | Rowan's Stalwarts, Wicked Guardian | 2 |
-| When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library. | Mystic Sanctuary, Witch's Cottage | 2 |
-| Whenever this creature attacks, you may tap an untapped non-Human creature you control. If you do, this creature gets +1/+1 and gains trample until end of turn. | Embereth Skyblazer, Redcap Raiders | 2 |
-| Whenever this creature deals combat damage to a creature, tap that creature. It doesn't untap during its controller's next untap step. | Flaxen Intruder // Welcome Home, Queen of Ice // Rage of Winter | 2 |
-| A deck can have up to seven cards named Seven Dwarves. | Seven Dwarves | 1 |
-| Add one mana of any color. (Then exile this card. You may cast the creature later from exile.) | Rosethorn Acolyte // Seasonal Ritual | 1 |
-| Add seven {R}. You can cast only one more spell this turn. | Irencrag Feat | 1 |
-| At the beginning of combat on your turn, you may have target noncreature artifact you control become a 0/0 artifact creature. If you do, put four +1/+1 counters | Workshop Elders | 1 |
-| At the beginning of each player's upkeep, that player sacrifices a nonland, nontoken permanent of their choice. If that player can't, they discard a card, they  | Doom Foretold | 1 |
-| Attacking non-Human creatures you control get +1/+0 and have trample. | Ferocity of the Wilds | 1 |
-| Choose one — • Draw cards equal to the greatest power among non-Human creatures you control. • Non-Human creatures you control get +3/+3 until end of turn. | Return of the Wildspeaker | 1 |
-| Choose target creature you control and target creature you don't control. The creature you control gets +2/+1 until end of turn if it's a Knight. Then those cre | Joust | 1 |
-| Combat damage that would be dealt by creatures you control can't be prevented. | Questing Beast | 1 |
-| Counter target spell. Its controller mills three cards. | Didn't Say Please | 1 |
-| Create two 1/1 white Human creature tokens. Adamant — If at least three white mana was spent to cast this spell, you gain 1 life for each creature you control. | Rally for the Throne | 1 |
-| Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | Archon of Absolution | 1 |
-| Creatures entering or dying don't cause abilities to trigger. | Hushbringer | 1 |
-| Creatures of the creature type of your choice get -3/-3 until end of turn. | Witch's Vengeance | 1 |
-| Destroy all non-Giant creatures. (Then exile this card. You may cast the creature later from exile.) | Realm-Cloaked Giant // Cast Off | 1 |
-| Draw three cards. Adamant — If at least three blue mana was spent to cast this spell, scry 3. | Unexplained Vision | 1 |
-| Each creature you control that has an Adventure enters with an additional +1/+1 counter on it. | Mysterious Pathlighter | 1 |
-| {2}{U}, {T}: Each opponent mills cards equal to the number of cards in their hand. | Folio of Fancies | 1 |
-| Each other non-Human creature you control enters with an additional +1/+1 counter on it. | Grumgully, the Generous | 1 |
-| Enchanted creature can't attack or block, and its activated abilities can't be activated. | Trapped in the Tower | 1 |
-| Enchanted creature gets +1/+1 for each artifact and/or enchantment you control. | All That Glitters | 1 |
-| Enchanted creature gets +3/+3, has reach, and is a Giant in addition to its other types. | Tall as a Beanstalk | 1 |
-| Equipment you control have equip Knight {0}. | Syr Gwyn, Hero of Ashvale | 1 |
-| Equipped creature gets +1/+1 for each charge counter on this Equipment and has vigilance. | Mace of the Valiant | 1 |
-| Exile the top five cards of your library. You may play cards exiled this way until the end of your next turn. You may play an additional land this turn. | Escape to the Wilds | 1 |
-| {T}: For each color among permanents you control, add one mana of that color. | Faeburrow Elder | 1 |
-| If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove a +1/+1 counter from it. | Oathsworn Knight | 1 |
-| If this spell is the first spell you've cast this game, you may cast it without paying its mana cost. Look at the top five cards of your library. You may reveal | Once Upon a Time | 1 |
-| Non-Archon creatures have base power and toughness 3/3. | Harmonious Archon | 1 |
-| Other creatures you control with flying get +1/+0. | Alela, Artful Provocateur | 1 |
-| Put a +1/+1 counter on each creature you control. Adamant — If at least three white mana was spent to cast this spell, creatures you control gain vigilance unti | Silverflame Ritual | 1 |
-| Put a +1/+1 counter on target creature you control, then it fights target creature you don't control. (Each deals damage equal to its power to the other.) Adama | Outmuscle | 1 |
-| Put any number of target creature cards from your graveyard on top of your library. Draw a card. | Forever Young | 1 |
-| {4}{B}: Put target creature card from a graveyard onto the battlefield under its owner's control. | Kenrith, the Returned King | 1 |
-| Redcap Melee deals 4 damage to target creature or planeswalker. If a nonred permanent is dealt damage this way, you sacrifice a land. | Redcap Melee | 1 |
-| {1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artif | Wishclaw Talisman | 1 |
-| Return target card from your graveyard to your hand. Put up to one other target card from your graveyard on top of your library. Exile Once and Future. Adamant  | Once and Future | 1 |
-| Return target nonland permanent to its owner's hand. Draw a card. Adamant — If at least three blue mana was spent to cast this spell, create a Food token. (It's | Turn into a Pumpkin | 1 |
-| Return up to X target artifact and/or non-Aura enchantment cards each with mana value X or less from your graveyard to the battlefield. If X is 6 or more, those | Dance of the Manse | 1 |
-| −2: Rowan deals 1 damage to each of up to two target creatures. Those creatures can't block this turn. | Rowan, Fearless Sparkmage | 1 |
-| {U}, Sacrifice an Island: This creature can't be blocked this turn. | Lochmere Serpent | 1 |
-| {6}{W}{B}, Sacrifice this enchantment: Return all Knight creature cards from your graveyard to the battlefield. | Knights' Charge | 1 |
-| {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, u | Fabled Passage | 1 |
-| {2}{B}{B}, {T}, Sacrifice three Rats: Gain control of target creature. | Piper of the Swarm | 1 |
-| Scorching Dragonfire deals 3 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | Scorching Dragonfire | 1 |
-| Searing Barrage deals 5 damage to target creature. Adamant — If at least three red mana was spent to cast this spell, Searing Barrage deals 3 damage to that cre | Searing Barrage | 1 |
-| Shambling Suit's power is equal to the number of artifacts and/or enchantments you control. | Shambling Suit | 1 |
-| Slaying Fire deals 3 damage to any target. Adamant — If at least three red mana was spent to cast this spell, it deals 4 damage instead. | Slaying Fire | 1 |
-| Sundering Stroke deals 7 damage divided as you choose among one, two, or three targets. If at least seven red mana was spent to cast this spell, instead Sunderi | Sundering Stroke | 1 |
-| Syr Elenora's power is equal to the number of cards in your hand. | Syr Elenora, the Discerning | 1 |
-| +1: Target artifact or creature loses all abilities and becomes a green Elk creature with base power and toughness 3/3. | Oko, Thief of Crowns | 1 |
-| Target attacking creature gets +2/+2 until end of turn. Each attacking non-Human creature gains trample until end of turn. | Barge In | 1 |
-| Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard. | Festive Funeral | 1 |
-| Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on it. | Animating Faerie // Bring to Life | 1 |
-| Target player draws two cards and loses 2 life. Adamant — If at least three black mana was spent to cast this spell, create a Food token. (It's an artifact with | Foreboding Fruit | 1 |
-| This creature can block only creatures with flying. | Brazen Borrower // Petty Theft | 1 |
-| {7}: This creature gets +2/+0 and gains trample until end of turn. It can attack this turn as though it didn't have defender. | Roving Keep | 1 |
-| {1}{U}: This creature loses defender and becomes a Human until end of turn. | Wishful Merfolk | 1 |
-| 0: Until end of turn, Oko becomes a copy of target creature you control. Prevent all damage that would be dealt to him this turn. | Oko, the Trickster | 1 |
-| Up to three target creatures can't block this turn. Destroy any of them that are Walls. | Blow Your House Down | 1 |
-| When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact. | Midnight Clock | 1 |
-| When this creature enters, another target Knight you control gets +2/+2 and gains trample and haste until end of turn. | Burning-Yard Trainer | 1 |
-| When this creature enters, each opponent mills two cards. Then you scry 2. | Overwhelmed Apprentice | 1 |
-| When you cast this spell from your hand, copy it if you control an artifact, then copy it if you control an enchantment. You may choose new targets for the copi | Banish into Fable | 1 |
-| Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life and you gain 1 life. | Revenge of Ravens | 1 |
-| Whenever another green creature you control enters, put a +1/+1 counter on Yorvo. Then if that creature's power is greater than Yorvo's power, put another +1/+1 | Yorvo, Lord of Garenbrig | 1 |
-| Whenever another non-Human creature you control enters, you may pay {X}. When you do, put X +1/+1 counters on this creature. | Wildborn Preserver | 1 |
-| Whenever Korvold enters or attacks, sacrifice another permanent. | Korvold, Fae-Cursed King | 1 |
-| Whenever Rankle deals combat damage to a player, choose any number — • Each player discards a card. • Each player loses 1 life and draws a card. • Each player s | Rankle, Master of Pranks | 1 |
-| Whenever Syr Faren attacks, another target attacking creature gets +X/+X until end of turn, where X is Syr Faren's power. | Syr Faren, the Hengehammer | 1 |
-| Whenever this creature attacks, another target attacking Knight you control gets +1/+0 until end of turn. | Fervent Champion | 1 |
-| Whenever this creature attacks, create a number of 2/2 white Knight creature tokens with vigilance equal to the number of opponents you have. | Silverwing Squadron | 1 |
-| Whenever this creature attacks, if defending player has more cards in hand than you, exile the top card of their library. During any turn you attacked with a Ro | Robber of the Rich | 1 |
-| Whenever this creature attacks, other Knights you control get +1/+0 until end of turn. | Belle of the Brawl | 1 |
-| Whenever this creature deals damage to an opponent, that player discards a card at random. If the player does, they draw a card. | Skullknocker Ogre | 1 |
-| Wintermoor Commander's toughness is equal to the number of Knights you control. | Wintermoor Commander | 1 |
-| You gain X life and each opponent loses X life, where X is the number of Knights you control. | Smitten Swordmaster // Curry Favor | 1 |
-| You have no maximum hand size. | The Magic Mirror | 1 |
-| You may cast spells with mana value less than or equal to the number of lands you control without paying their mana costs. | Fires of Invention | 1 |
-| You may have this enchantment enter as a copy of any artifact or enchantment on the battlefield. | Mirrormade | 1 |
-| You may sacrifice a Food. If you do, target creature gets +5/+5 until end of turn. Otherwise, that creature gets +3/+3 until end of turn. | Insatiable Appetite | 1 |
-| You may sacrifice two Foods. If you do, create a 7/7 green Giant creature token. Otherwise, create three Food tokens. (They're artifacts with "{2}, {T}, Sacrifi | Giant Opportunity | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Adamant | 7 | Ardenvale Paladin, Cauldron's Gift, Embereth Paladin, Garenbrig Paladin, Henge Walker | eld |
+| Choose one | 1 | Return of the Wildspeaker | eld |
+| +N: target artifact or creature loses all abilities and becomes a green elk creature with base power and toughness N/N. | 1 | Oko, Thief of Crowns | eld |
+| N: until end of turn, oko becomes a copy of target creature you control. prevent all damage that would be dealt to him ~. | 1 | Oko, the Trickster | eld |
+| a deck can have up to seven cards named ~. | 1 | Seven Dwarves | eld |
+| add one mana of any color. (then exile ~. you may cast the creature later from exile.) | 1 | Rosethorn Acolyte // Seasonal Ritual | eld |
+| add seven {M}. you can cast only one more spell ~. | 1 | Irencrag Feat | eld |
+| as long as you control a rowan planeswalker, ~ gets +N/+N. | 1 | Rowan's Battleguard | eld |
+| as long as you control an artifact or enchantment, ~ has flying. | 1 | Flutterfox | eld |
+| as long as you control four or more artifacts, ~ has hexproof. | 1 | Shimmer Dragon | eld |
+| at the beginning of combat on your turn, you may have target noncreature artifact you control become a N/N artifact creature. if you do, put four +N/+N counters | 1 | Workshop Elders | eld |
+| at the beginning of each player"..."t, they discard a card, they lose N life, you draw a card, you gain N life, you create a N/N white knight creature token wit | 1 | Doom Foretold | eld |
+| at the beginning of your upkeep, choose one at random. create a red and white creature token with those characteristics. | 1 | Outlaws' Merriment | eld |
+| at the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or car | 1 | Happily Ever After | eld |
+| attacking non-human creatures you control get +N/+N and have trample. | 1 | Ferocity of the Wilds | eld |
+| choose target creature you control and target creature you don"..."s a knight. then those creatures fight each other. (each deals damage equal to its power to t | 1 | Joust | eld |
+| combat damage that would be dealt by creatures you control can't be prevented. | 1 | Questing Beast | eld |
+| counter target spell. its controller mills three cards. | 1 | Didn't Say Please | eld |
+| create two N/N white human creature tokens. adamant — if at least three white mana was spent to cast ~, you gain N life for each creature you control. | 1 | Rally for the Throne | eld |
+| creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Archon of Absolution | eld |
+| creatures entering or dying don't cause abilities to trigger. | 1 | Hushbringer | eld |
+| creatures of the creature type of your choice get -N/-N until end of turn. | 1 | Witch's Vengeance | eld |
+| destroy all non-giant creatures. (then exile ~. you may cast the creature later from exile.) | 1 | Realm-Cloaked Giant // Cast Off | eld |
+| draw three cards. adamant — if at least three blue mana was spent to cast ~, scry N. | 1 | Unexplained Vision | eld |
+| each creature you control that has an adventure enters with an additional +N/+N counter on it. | 1 | Mysterious Pathlighter | eld |
+| each other non-human creature you control enters with an additional +N/+N counter on it. | 1 | Grumgully, the Generous | eld |
+| enchanted creature can"..."t be activated. | 1 | Trapped in the Tower | eld |
+| enchanted creature gets +N/+N for each artifact and/or enchantment you control. | 1 | All That Glitters | eld |
+| enchanted creature gets +N/+N, has reach, and is a giant in addition to its other types. | 1 | Tall as a Beanstalk | eld |
+| enchanted creature loses all abilities and is a blue frog creature with base power and toughness N/N. | 1 | Frogify | eld |
+| enchanted creature loses all abilities and is a green elk creature with base power and toughness N/N. | 1 | Kenrith's Transformation | eld |
+| equipment you control have equip knight {M}. | 1 | Syr Gwyn, Hero of Ashvale | eld |
+| equipped creature gets +N/+N for each charge counter on ~ and has vigilance. | 1 | Mace of the Valiant | eld |
+| exile the top five cards of your library. you may play cards exiled ~ until the end of your next turn. you may play an additional land ~. | 1 | Escape to the Wilds | eld |
+| if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove a +N/+N counter from it. | 1 | Oathsworn Knight | eld |
+| if ~ is the first spell you've cast ~, you may cast it without paying its mana cost. look at the top five cards of your library. you may reveal a creature or la | 1 | Once Upon a Time | eld |
+| non-archon creatures have base power and toughness N/N. | 1 | Harmonious Archon | eld |
+| other creatures you control with flying get +N/+N. | 1 | Alela, Artful Provocateur | eld |
+| put a +N/+N counter on each creature you control. adamant — if at least three white mana was spent to cast ~, creatures you control gain vigilance until end of  | 1 | Silverflame Ritual | eld |
+| put a +N/+N counter on target creature you control, then it fights target creature you don't control. (each deals damage equal to its power to the other.) adama | 1 | Outmuscle | eld |
+| put any number of target creature cards from your graveyard on top of your library. draw a card. | 1 | Forever Young | eld |
+| return target card from your graveyard to your hand. put up to one other target card from your graveyard on top of your library. exile ~. adamant — if at least  | 1 | Once and Future | eld |
+| return target nonland permanent to its owner"..."s an artifact with "...") | 1 | Turn into a Pumpkin | eld |
+| return up to N target artifact and/or non-aura enchantment cards each with mana value N or less from your graveyard to the battlefield. if N is N or more, those | 1 | Dance of the Manse | eld |
+| syr elenora's power is equal to the number of cards in your hand. | 1 | Syr Elenora, the Discerning | eld |
+| target attacking creature gets +N/+N until end of turn. each attacking non-human creature gains trample until end of turn. | 1 | Barge In | eld |
+| target creature gets -N/-N until end of turn, where N is the number of cards in your graveyard. | 1 | Festive Funeral | eld |
+| target noncreature artifact you control becomes a N/N artifact creature. put four +N/+N counters on it. | 1 | Animating Faerie // Bring to Life | eld |
+| target opponent reveals their hand. you choose a nonland card from it. that player discards that card. you may put a card that has an adventure that player owns | 1 | Memory Theft | eld |
+| target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. you may cast that card for as long as it remain | 1 | Covetous Urge | eld |
+| target opponent reveals their hand. you may choose a nonland card from it. if you do, that player exiles that card. if a nonblack card is exiled ~, exile a card | 1 | Specter's Shriek | eld |
+| target player draws two cards and loses N life. adamant — if at least three black mana was spent to cast ~, create a food token. (it's an artifact with "...") | 1 | Foreboding Fruit | eld |
+| up to three target creatures can't block ~. destroy any of them that are walls. | 1 | Blow Your House Down | eld |
+| when the twelfth hour counter is put on ~, shuffle your hand and graveyard into your library, then draw seven cards. exile ~. | 1 | Midnight Clock | eld |
+| when you cast ~ from your hand, copy it if you control an artifact, then copy it if you control an enchantment. you may choose new targets for the copies. retur | 1 | Banish into Fable | eld |
+| when ~ enters untapped, you may put target creature card from your graveyard on top of your library. | 1 | Witch's Cottage | eld |
+| when ~ enters untapped, you may put target instant or sorcery card from your graveyard on top of your library. | 1 | Mystic Sanctuary | eld |
+| when ~ enters, another target knight you control gets +N/+N and gains trample and haste until end of turn. | 1 | Burning-Yard Trainer | eld |
+| when ~ enters, choose one — • scry N. • you gain N life. • exile another target creature you own. return it to the battlefield under your control at the beginni | 1 | Charming Prince | eld |
+| when ~ enters, choose target human or artifact an opponent controls. for as long as ~ remains on the battlefield, gain control of that permanent, it loses all a | 1 | Opportunistic Dragon | eld |
+| when ~ enters, create a number of N/N black rat creature tokens equal to the number of opponents you have. | 1 | Chittering Witch | eld |
+| when ~ enters, create a number of food tokens equal to the number of opponents you have. | 1 | Gluttonous Troll | eld |
+| when ~ enters, each opponent mills two cards. then you scry N. | 1 | Overwhelmed Apprentice | eld |
+| when ~ enters, target knight gains deathtouch and lifelink until end of turn. | 1 | Blacklance Paragon | eld |
+| when ~ enters, target opponent creates three N/N white goat creature tokens. | 1 | Clackbridge Troll | eld |
+| when ~ enters, you may have it deal N damage to another creature you control. if you do, draw a card. | 1 | Wicked Guardian | eld |
+| when ~ enters, you may search your library and/or graveyard for a card named rowan, fearless sparkmage, reveal it, and put it into your hand. if you search your | 1 | Rowan's Stalwarts | eld |
+| whenever a creature attacks you or a planeswalker you control, that creature's controller loses N life and you gain N life. | 1 | Revenge of Ravens | eld |
+| whenever another green creature you control enters, put a +N/+N counter on yorvo. then if that creature"..."s power, put another +N/+N counter on yorvo. | 1 | Yorvo, Lord of Garenbrig | eld |
+| whenever another non-human creature you control enters, you may pay {M}. when you do, put N +N/+N counters on ~. | 1 | Wildborn Preserver | eld |
+| whenever korvold enters or attacks, sacrifice another permanent. | 1 | Korvold, Fae-Cursed King | eld |
+| whenever rankle deals combat damage to a player, choose any number — • each player discards a card. • each player loses N life and draws a card. • each player s | 1 | Rankle, Master of Pranks | eld |
+| whenever syr faren attacks, another target attacking creature gets +N/+N until end of turn, where N is syr faren's power. | 1 | Syr Faren, the Hengehammer | eld |
+| whenever ~ attacks, another target attacking knight you control gets +N/+N until end of turn. | 1 | Fervent Champion | eld |
+| whenever ~ attacks, create a number of N/N white knight creature tokens with vigilance equal to the number of opponents you have. | 1 | Silverwing Squadron | eld |
+| whenever ~ attacks, if defending player has more cards in hand than you, exile the top card of their library. during any turn you attacked with a rogue, you may | 1 | Robber of the Rich | eld |
+| whenever ~ attacks, other knights you control get +N/+N until end of turn. | 1 | Belle of the Brawl | eld |
+| whenever ~ attacks, you may pay {M}{M}. if you do, creatures you control get +N/+N until end of turn, where N is the number of opponents you have. | 1 | Embereth Skyblazer | eld |
+| whenever ~ attacks, you may tap an untapped non-human creature you control. if you do, ~ gets +N/+N and gains trample until end of turn. | 1 | Redcap Raiders | eld |
+| whenever ~ deals combat damage to a creature, tap that creature. it doesn"..."s next untap step. | 1 | Queen of Ice // Rage of Winter | eld |
+| whenever ~ deals combat damage to a player, you may sacrifice it. when you do, destroy target artifact or enchantment. | 1 | Flaxen Intruder // Welcome Home | eld |
+| whenever ~ deals damage to an opponent, that player discards a card at random. if the player does, they draw a card. | 1 | Skullknocker Ogre | eld |
+| you gain N life and each opponent loses N life, where N is the number of knights you control. | 1 | Smitten Swordmaster // Curry Favor | eld |
+| you have no maximum hand size. | 1 | The Magic Mirror | eld |
+| you may cast spells with mana value less than or equal to the number of lands you control without paying their mana costs. | 1 | Fires of Invention | eld |
+| you may have ~ enter as a copy of any artifact or enchantment on the battlefield. | 1 | Mirrormade | eld |
+| you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Insatiable Appetite | eld |
+| you may sacrifice two foods. if you do, create a N/N green giant creature token. otherwise, create three food tokens. (they're artifacts with "...") | 1 | Giant Opportunity | eld |
+| {M}, sacrifice an island: ~ can't be blocked ~. | 1 | Lochmere Serpent | eld |
+| {M}, sacrifice ~: search your library for a basic land card, put it onto the battlefield tapped, then shuffle. then if you control four or more lands, untap tha | 1 | Fabled Passage | eld |
+| {M}, {M}, remove a wish counter from ~: search your library for a card, put it into your hand, then shuffle. an opponent gains control of ~. activate only durin | 1 | Wishclaw Talisman | eld |
+| {M}: for each color among permanents you control, add one mana of that color. | 1 | Faeburrow Elder | eld |
+| {M}: ~ can't be blocked ~ except by creatures with haste. | 1 | Gingerbrute | eld |
+| {M}: ~ gets +N/+N and gains trample until end of turn. it can attack ~ as though it didn't have defender. | 1 | Roving Keep | eld |
+| {M}{M}, {M}: each opponent mills cards equal to the number of cards in their hand. | 1 | Folio of Fancies | eld |
+| {M}{M}: ~ loses defender and becomes a human until end of turn. | 1 | Wishful Merfolk | eld |
+| {M}{M}{M}, sacrifice ~: return all knight creature cards from your graveyard to the battlefield. | 1 | Knights' Charge | eld |
+| {M}{M}{M}, {M}, sacrifice three rats: gain control of target creature. | 1 | Piper of the Swarm | eld |
+| ~ can block only creatures with flying. | 1 | Brazen Borrower // Petty Theft | eld |
+| ~ can't attack unless defending player has seven or more cards in their graveyard. | 1 | Vantress Gargoyle | eld |
+| ~ can't attack unless you control a N/N creature. | 1 | Lovestruck Beast // Heart's Desire | eld |
+| ~ can't be blocked by creatures with power N or greater. | 1 | Beloved Princess | eld |
+| ~ can't be blocked by knights or walls. | 1 | Rampart Smasher | eld |
+| ~ costs {M} less to cast for each attacking creature you control. | 1 | Embercleave | eld |
+| ~ costs {M} less to cast if an opponent controls a green permanent. | 1 | Oakhame Adversary | eld |
+| ~ deals N damage divided as you choose among one, two, or three targets. if at least seven red mana was spent to cast ~, instead ~ deals N damage to each of tho | 1 | Sundering Stroke | eld |
+| ~ deals N damage to any target. adamant — if at least three red mana was spent to cast ~, it deals N damage instead. | 1 | Slaying Fire | eld |
+| ~ deals N damage to target creature or planeswalker. if a nonred permanent is dealt damage ~, you sacrifice a land. | 1 | Redcap Melee | eld |
+| ~ deals N damage to target creature or planeswalker. if that creature or planeswalker would die ~, exile it instead. | 1 | Scorching Dragonfire | eld |
+| ~ deals N damage to target creature. adamant — if at least three red mana was spent to cast ~, ~ deals N damage to that creature's controller. | 1 | Searing Barrage | eld |
+| ~'s power is equal to the number of artifacts and/or enchantments you control. | 1 | Shambling Suit | eld |
+| ~'s toughness is equal to the number of knights you control. | 1 | Wintermoor Commander | eld |
+| −N: rowan deals N damage to each of up to two target creatures. those creatures can't block ~. | 1 | Rowan, Fearless Sparkmage | eld |
 
 ## Notes
 

@@ -283,74 +283,82 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Fabricate | Accomplished Automaton, Ambitious Aetherborn, Angel of Invention, Elegant Edgecrafters, Glint-Sleeve Artisan, Highspire Artisan, Iron League Steed, Marionette Master, Maulfist Squad, Peema Outrider, Propeller Pioneer, Visionary Augmenter, Weaponcraft Enthusiast | 13 |
-| As long as you control a Chandra planeswalker, this creature gets +1/+0 and has first strike. | Dhund Operative, Guardian of the Great Conduit, Renegade Firebrand | 3 |
-| When this creature enters, you may destroy another target creature. If a creature is destroyed this way, you gain life equal to its toughness. | Aviary Mechanic, Dukhara Scavenger, Noxious Gearhulk | 3 |
-| Whenever this creature crews a Vehicle, that Vehicle gains first strike until end of turn. | Gearshift Ace, Speedway Fanatic, Veteran Motorist | 3 |
-| Choose target creature. You get {E}{E} (two energy counters), then you may pay any amount of {E}. The creature gets -1/-1 until end of turn for each {E} paid th | Die Young, Harnessed Lightning | 2 |
-| When this creature enters, each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then  | Cataclysmic Gearhulk, Eager Construct | 2 |
-| Artifacts you control have hexproof. | Padeem, Consul of Innovation | 1 |
-| As an additional cost to cast this spell, sacrifice an artifact or creature. Draw cards equal to the mana value of the sacrificed permanent. | Morbid Curiosity | 1 |
-| At the beginning of your draw step, draw an additional card and remove two hour counters from this enchantment. | Midnight Oil | 1 |
-| {3}, {T}: Choose a counter on target permanent or player. Give that permanent or player another counter of that kind. | Animation Module | 1 |
-| Choose a nonartifact, nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. That player  | Lost Legacy | 1 |
-| Choose one — • Counter target spell. • You may choose new targets for target spell. • Copy target instant or sorcery spell. You may choose new targets for the c | Insidious Will | 1 |
-| Choose one or both — • Create a token that's a copy of target artifact. • Create a token that's a copy of target creature, except it's an artifact in addition t | Saheeli's Artistry | 1 |
-| Choose target artifact or creature. You get {E}{E}{E}{E} (four energy counters), then you may pay an amount of {E} equal to that permanent's mana value. If you  | Confiscation Coup | 1 |
-| Choose target creature. Exile the top card of your library. You may have Spark of Creativity deal damage to that creature equal to the exiled card's mana value. | Spark of Creativity | 1 |
-| −2: Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. That token gains haste. Exi | Saheeli Rai | 1 |
-| Creatures with no counters on them get -2/-2 until end of turn. | Hazardous Conditions | 1 |
-| Destroy all creatures. You gain 1 life for each creature destroyed this way. | Fumigate | 1 |
-| {T}, Discard a card: Up to one target creature can't be blocked this turn. | Key to the City | 1 |
-| Draw three cards. If you control no artifacts, discard a card. | Tezzeret's Ambition | 1 |
-| Each player may play an additional land on each of their turns. | Ghirapur Orrery | 1 |
-| Each Vehicle you control gets +1/+1 as long as it's a creature. | Depala, Pilot Exemplar | 1 |
-| Enchanted creature can't attack, block, or crew Vehicles. | Revoke Privileges | 1 |
-| Exchange control of target artifact you control and target artifact or creature you don't control. | Shrewd Negotiation | 1 |
-| Fateful Showdown deals damage to any target equal to the number of cards in your hand. Discard all the cards in your hand, then draw that many cards. | Fateful Showdown | 1 |
-| Liberating Combustion deals 6 damage to target creature. You may search your library and/or graveyard for a card named Chandra, Pyrogenius, reveal it, and put i | Liberating Combustion | 1 |
-| Look at the top ten cards of your library, exile up to two creature cards from among them, then shuffle. Target opponent may choose one of the exiled cards and  | Dubious Challenge | 1 |
-| Pay eight {E}: Return all other creatures to their owners' hands. Activate only as a sorcery. | Aethersquall Ancient | 1 |
-| Pay {E}{E}: Prevent all damage that would be dealt to you this turn by a source of your choice. | Consulate Surveillance | 1 |
-| {T}, Pay {E}: Tap target creature or planeswalker. Its activated abilities can't be activated this turn. | Deadlock Trap | 1 |
-| Pay {E}{E}: This creature can attack this turn as though it didn't have defender. | Hightide Hermit | 1 |
-| Pay {E}: This creature gains your choice of flying, vigilance, or lifelink until end of turn. | Multiform Wonder | 1 |
-| Pay {E}{E}{E}: This creature gets +X/+X until end of turn, where X is its power. | Electrostatic Pummeler | 1 |
-| Prevent all combat damage that would be dealt to players this turn. | Commencement of Festivities | 1 |
-| Return any number of target nonland, nontoken permanents you control to their owners' hands. Draw a card for each card returned to your hand this way. | Paradoxical Outcome | 1 |
-| Reveal cards from the top of your library until you reveal an artifact card. Put that card onto the battlefield and the rest on the bottom of your library in a  | Madcap Experiment | 1 |
-| −4: Reveal the top two cards of your library. Put all land cards from among them onto the battlefield and the rest into your hand. | Nissa, Nature's Artisan | 1 |
-| {1}, Sacrifice an artifact: Target creature can't block this turn. | Pia Nalaar | 1 |
-| {4}, {T}, Sacrifice this land: Mill five cards. Then you may put an artifact card from your graveyard on top of your library. | Sequestered Stash | 1 |
-| Search your library for a basic land card and put it onto the battlefield tapped. Search your library and graveyard for a card named Nissa, Nature's Artisan, re | Verdant Crescendo | 1 |
-| Target attacking creature gets +3/+3 until end of turn. If it's an artifact creature, it gains trample until end of turn. | Built to Smash | 1 |
-| Target creature can't block this turn. Draw a card. | Renegade Tactics | 1 |
-| Target creature gets +2/+2 until end of turn. If it's an artifact creature, it gains indestructible until end of turn. (Damage and effects that say "destroy" do | Built to Last | 1 |
-| {2}{G}: Target creature you control can't be blocked by creatures with power 2 or less this turn. | Ghirapur Guide | 1 |
-| This creature can block only creatures with flying. | Long-Finned Skywhale | 1 |
-| This creature can't attack alone. | Trusty Companion | 1 |
-| {5}{U}: This creature can't be blocked this turn. | Gearseeker Serpent | 1 |
-| This spell costs {X} less to cast, where X is the total mana value of noncreature artifacts you control. | Metalwork Colossus | 1 |
-| This Vehicle can't be blocked by creatures with power 2 or less. | Demolition Stomper | 1 |
-| +1: Untap target land you control. Until your next turn, it becomes a 5/5 Elemental creature with haste. It's still a land. | Nissa, Vital Force | 1 |
-| +1: Until your next turn, up to one target creature gets -3/-0 and its activated abilities can't be activated. | Dovin Baan | 1 |
-| Welding Sparks deals X damage to target creature, where X is 3 plus the number of artifacts you control. | Welding Sparks | 1 |
-| When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a ra | Gonti, Lord of Luxury | 1 |
-| When this creature enters, all other creatures get -2/-2 until end of turn. | Demon of Dark Schemes | 1 |
-| When this creature enters, move any number of +1/+1 counters from other permanents you control onto this creature. | Aetherborn Marauder | 1 |
-| When this creature enters, target opponent may have you draw three cards. If the player doesn't, you mill three cards, then this creature deals damage to that p | Combustible Gearhulk | 1 |
-| When this Vehicle enters, it becomes an artifact creature until end of turn. | Fleetwheel Cruiser | 1 |
-| Whenever a permanent you control is put into a graveyard, you get {E} . | Aetherworks Marvel | 1 |
-| Whenever an Artificer you control enters, you may attach this Equipment to it. | Inventor's Goggles | 1 |
-| Whenever an opponent casts a spell, if it has a single target, change the target to enchanted creature if able. | Captured by the Consulate | 1 |
-| Whenever this creature attacks, exile the top card of your library face down. | Bomat Courier | 1 |
-| Whenever this creature attacks, you may have other attacking creatures get +X/+X until end of turn, where X is this creature's power. | Cultivator of Blades | 1 |
-| Whenever this creature deals combat damage to a player, you get that many {E} . | Empyreal Voyager | 1 |
-| Whenever you cast a spell, you gain 1 life for each spell you've cast this turn. | Aetherflux Reservoir | 1 |
-| Whenever you cast an instant or sorcery spell, create an X/X colorless Construct artifact creature token, where X is that spell's mana value. | Metallurgic Summonings | 1 |
-| Whenever you cast your first spell each turn, reveal the top card of your library. You may cast it without paying its mana cost if it's a spell with lesser mana | Rashmi, Eternities Crafter | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| fabricate | 13 | Accomplished Automaton, Ambitious Aetherborn, Angel of Invention, Elegant Edgecrafters, Glint-Sleeve Artisan | kld |
+| Choose one | 1 | Insidious Will | kld |
+| Choose one or both | 1 | Saheeli's Artistry | kld |
+| +N: untap target land you control. until your next turn, it becomes a N/N elemental creature with haste. it's still a land. | 1 | Nissa, Vital Force | kld |
+| +N: until your next turn, up to one target creature gets -N/-N and its activated abilities can't be activated. | 1 | Dovin Baan | kld |
+| artifacts you control have hexproof. | 1 | Padeem, Consul of Innovation | kld |
+| as an additional cost to cast ~, sacrifice an artifact or creature. draw cards equal to the mana value of the sacrificed permanent. | 1 | Morbid Curiosity | kld |
+| as long as you control a chandra planeswalker, ~ gets +N/+N and has first strike. | 1 | Renegade Firebrand | kld |
+| as long as you control a nissa planeswalker, ~ gets +N/+N and has vigilance. | 1 | Guardian of the Great Conduit | kld |
+| as long as you control an artifact, ~ gets +N/+N and has deathtouch. | 1 | Dhund Operative | kld |
+| at the beginning of your draw step, draw an additional card and remove two hour counters from ~. | 1 | Midnight Oil | kld |
+| choose a nonartifact, nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. that player  | 1 | Lost Legacy | kld |
+| choose target artifact or creature. you get {M}{M}{M}{M} (four energy counters), then you may pay an amount of {M} equal to that permanent's mana value. if you  | 1 | Confiscation Coup | kld |
+| choose target creature. exile the top card of your library. you may have ~ deal damage to that creature equal to the exiled card"..."t, you may play that card u | 1 | Spark of Creativity | kld |
+| choose target creature. you get {M}{M} (two energy counters), then you may pay any amount of {M}. the creature gets -N/-N until end of turn for each {M} paid ~. | 1 | Die Young | kld |
+| choose target creature. you get {M}{M}{M} (three energy counters), then you may pay any amount of {M}. ~ deals that much damage to that creature. | 1 | Harnessed Lightning | kld |
+| creatures with no counters on them get -N/-N until end of turn. | 1 | Hazardous Conditions | kld |
+| destroy all creatures. you gain N life for each creature destroyed ~. | 1 | Fumigate | kld |
+| draw three cards. if you control no artifacts, discard a card. | 1 | Tezzeret's Ambition | kld |
+| each player may play an additional land on each of their turns. | 1 | Ghirapur Orrery | kld |
+| each vehicle you control gets +N/+N as long as it's a creature. | 1 | Depala, Pilot Exemplar | kld |
+| enchanted creature can't attack, block, or crew vehicles. | 1 | Revoke Privileges | kld |
+| exchange control of target artifact you control and target artifact or creature you don't control. | 1 | Shrewd Negotiation | kld |
+| look at the top ten cards of your library, exile up to two creature cards from among them, then shuffle. target opponent may choose one of the exiled cards and  | 1 | Dubious Challenge | kld |
+| pay eight {M}: return all other creatures to their owners' hands. activate only as a sorcery. | 1 | Aethersquall Ancient | kld |
+| pay {M}: ~ gains your choice of flying, vigilance, or lifelink until end of turn. | 1 | Multiform Wonder | kld |
+| pay {M}{M}: prevent all damage that would be dealt to you ~ by a source of your choice. | 1 | Consulate Surveillance | kld |
+| pay {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Hightide Hermit | kld |
+| pay {M}{M}{M}: ~ gets +N/+N until end of turn, where N is its power. | 1 | Electrostatic Pummeler | kld |
+| prevent all combat damage that would be dealt to players ~. | 1 | Commencement of Festivities | kld |
+| return any number of target nonland, nontoken permanents you control to their owners' hands. draw a card for each card returned to your hand ~. | 1 | Paradoxical Outcome | kld |
+| reveal cards from the top of your library until you reveal an artifact card. put that card onto the battlefield and the rest on the bottom of your library in a  | 1 | Madcap Experiment | kld |
+| search your library for a basic land card and put it onto the battlefield tapped. search your library and graveyard for a card named nissa, nature's artisan, re | 1 | Verdant Crescendo | kld |
+| target attacking creature gets +N/+N until end of turn. if it's an artifact creature, it gains trample until end of turn. | 1 | Built to Smash | kld |
+| target creature can't block ~. draw a card. | 1 | Renegade Tactics | kld |
+| target creature gets +N/+N until end of turn. if it"..."t destroy it.) | 1 | Built to Last | kld |
+| when gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a ra | 1 | Gonti, Lord of Luxury | kld |
+| when ~ enters, all other creatures get -N/-N until end of turn. | 1 | Demon of Dark Schemes | kld |
+| when ~ enters, each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices t | 1 | Cataclysmic Gearhulk | kld |
+| when ~ enters, each player may scry N. | 1 | Eager Construct | kld |
+| when ~ enters, it becomes an artifact creature until end of turn. | 1 | Fleetwheel Cruiser | kld |
+| when ~ enters, move any number of +N/+N counters from other permanents you control onto ~. | 1 | Aetherborn Marauder | kld |
+| when ~ enters, target opponent may have you draw three cards. if the player doesn't, you mill three cards, then ~ deals damage to that player equal to the total | 1 | Combustible Gearhulk | kld |
+| when ~ enters, you may destroy another target creature. if a creature is destroyed ~, you gain life equal to its toughness. | 1 | Noxious Gearhulk | kld |
+| when ~ enters, you may put target artifact or creature card from your graveyard on top of your library. | 1 | Dukhara Scavenger | kld |
+| when ~ enters, you may return another permanent you control to its owner's hand. | 1 | Aviary Mechanic | kld |
+| whenever a permanent you control is put into a graveyard, you get {M} . | 1 | Aetherworks Marvel | kld |
+| whenever an artificer you control enters, you may attach ~ to it. | 1 | Inventor's Goggles | kld |
+| whenever an opponent casts a spell, if it has a single target, change the target to enchanted creature if able. | 1 | Captured by the Consulate | kld |
+| whenever you cast a spell, you gain N life for each spell you've cast ~. | 1 | Aetherflux Reservoir | kld |
+| whenever you cast an instant or sorcery spell, create an N/N colorless construct artifact creature token, where N is that spell's mana value. | 1 | Metallurgic Summonings | kld |
+| whenever you cast your first spell each turn, reveal the top card of your library. you may cast it without paying its mana cost if it"..."t cast it, put it into | 1 | Rashmi, Eternities Crafter | kld |
+| whenever ~ attacks, exile the top card of your library face down. | 1 | Bomat Courier | kld |
+| whenever ~ attacks, you may have other attacking creatures get +N/+N until end of turn, where N is ~ power. | 1 | Cultivator of Blades | kld |
+| whenever ~ crews a vehicle, that vehicle gains first strike until end of turn. | 1 | Gearshift Ace | kld |
+| whenever ~ crews a vehicle, that vehicle gains haste until end of turn. | 1 | Speedway Fanatic | kld |
+| whenever ~ crews a vehicle, that vehicle gets +N/+N until end of turn. | 1 | Veteran Motorist | kld |
+| whenever ~ deals combat damage to a player, you get that many {M} . | 1 | Empyreal Voyager | kld |
+| {M}, discard a card: up to one target creature can't be blocked ~. | 1 | Key to the City | kld |
+| {M}, pay {M}: tap target creature or planeswalker. its activated abilities can't be activated ~. | 1 | Deadlock Trap | kld |
+| {M}, sacrifice an artifact: target creature can't block ~. | 1 | Pia Nalaar | kld |
+| {M}, {M}, sacrifice ~: mill five cards. then you may put an artifact card from your graveyard on top of your library. | 1 | Sequestered Stash | kld |
+| {M}, {M}: choose a counter on target permanent or player. give that permanent or player another counter of that kind. | 1 | Animation Module | kld |
+| {M}{M}: target creature you control can't be blocked by creatures with power N or less ~. | 1 | Ghirapur Guide | kld |
+| {M}{M}: ~ can't be blocked ~. | 1 | Gearseeker Serpent | kld |
+| ~ can block only creatures with flying. | 1 | Long-Finned Skywhale | kld |
+| ~ can't attack alone. | 1 | Trusty Companion | kld |
+| ~ can't be blocked by creatures with power N or less. | 1 | Demolition Stomper | kld |
+| ~ costs {M} less to cast, where N is the total mana value of noncreature artifacts you control. | 1 | Metalwork Colossus | kld |
+| ~ deals N damage to target creature, where N is N plus the number of artifacts you control. | 1 | Welding Sparks | kld |
+| ~ deals N damage to target creature. you may search your library and/or graveyard for a card named chandra, pyrogenius, reveal it, and put it into your hand. if | 1 | Liberating Combustion | kld |
+| ~ deals damage to any target equal to the number of cards in your hand. discard all the cards in your hand, then draw that many cards. | 1 | Fateful Showdown | kld |
+| −N: create a token that"..."s an artifact in addition to its other types. that token gains haste. exile it at the beginning of the next end step. | 1 | Saheeli Rai | kld |
+| −N: reveal the top two cards of your library. put all land cards from among them onto the battlefield and the rest into your hand. | 1 | Nissa, Nature's Artisan | kld |
 
 ## Notes
 

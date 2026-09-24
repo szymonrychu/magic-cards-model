@@ -3,13 +3,13 @@
 - Expansion: 025
 - Set code: `ulg`
 - Release date: 1999-02-15
-- Cards in scope (Modern/Pioneer/Standard-legal): 27
+- Cards in scope (Modern/Pioneer/Standard-legal): 28
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 27 |
+| Modern | 28 |
 | Pioneer | 4 |
 | Standard | 0 |
 
@@ -17,16 +17,17 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 3 | 11.1% |
+| Full (handled + tested) | 3 | 10.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not tested (handled, untested) | 18 | 66.7% |
-| Not working (silent / notice / error) | 6 | 22.2% |
+| Not tested (handled, untested) | 18 | 64.3% |
+| Not working (silent / notice / error) | 7 | 25.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Avalanche Riders | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Beast of Burden | silent | Beast of Burden's power and toughness are each equal to the number of creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bone Shredder | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Faerie Conclave | silent | {1}{U}: This land becomes a 2/1 blue Faerie creature with flying until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karmic Guide | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -64,12 +65,13 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Echo | Avalanche Riders, Bone Shredder, Karmic Guide | 3 |
-| Each spell costs {3} more to cast except during its controller's turn. | Defense Grid | 1 |
-| {1}{B}: This land becomes a 1/1 black Skeleton creature with "{B}: Regenerate this creature" until end of turn. It's still a land. | Spawning Pool | 1 |
-| {1}{U}: This land becomes a 2/1 blue Faerie creature with flying until end of turn. It's still a land. | Faerie Conclave | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| echo | 3 | Avalanche Riders, Bone Shredder, Karmic Guide | ulg |
+| each spell costs {M} more to cast except during its controller's turn. | 1 | Defense Grid | ulg |
+| {M}{M}: ~ becomes a N/N black skeleton creature with "..." until end of turn. it's still a land. | 1 | Spawning Pool | ulg |
+| {M}{M}: ~ becomes a N/N blue faerie creature with flying until end of turn. it's still a land. | 1 | Faerie Conclave | ulg |
+| ~'s power and toughness are each equal to the number of creatures on the battlefield. | 1 | Beast of Burden | ulg |
 
 ## Notes
 

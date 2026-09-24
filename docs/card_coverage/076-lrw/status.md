@@ -3,13 +3,13 @@
 - Expansion: 076
 - Set code: `lrw`
 - Release date: 2007-10-12
-- Cards in scope (Modern/Pioneer/Standard-legal): 279
+- Cards in scope (Modern/Pioneer/Standard-legal): 280
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 279 |
+| Modern | 280 |
 | Pioneer | 13 |
 | Standard | 4 |
 
@@ -19,8 +19,8 @@
 |---|---|---|
 | Full (handled + tested) | 23 | 8.2% |
 | Partial (unaudited) | 19 | 6.8% |
-| Not tested (handled, untested) | 119 | 42.7% |
-| Not working (silent / notice / error) | 118 | 42.3% |
+| Not tested (handled, untested) | 119 | 42.5% |
+| Not working (silent / notice / error) | 119 | 42.5% |
 
 ## Cards needing work
 
@@ -133,6 +133,7 @@
 | Wizened Cenn | silent | Other Kithkin creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woodland Guidance | silent | Return target card from your graveyard to your hand. Clash with an opponent. If you win, untap all Forests you control. (Each clashing player reveals the top ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wort, Boggart Auntie | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Wren's Run Packmaster | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Blades of Velis Vel | notice | Changeling (This card is every creature type.) Up to two target creatures each get +2/+0 and gain all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Brion Stoutarm | notice | {R}, {T}, Sacrifice another creature: Brion Stoutarm deals damage equal to the sacrificed creature's power to target player or planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fodder Launch | notice | As an additional cost to cast this spell, sacrifice a Goblin. Target creature gets -5/-5 until end of turn. Fodder Launch deals 5 damage to that creature's cont | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -316,110 +317,125 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Champion | Boggart Mob, Changeling Berserker, Changeling Hero, Changeling Titan, Nova Chaser, Thoughtweft Trio, Wanderwine Prophets | 7 |
-| As an additional cost to cast this spell, sacrifice a Goblin. Target creature gets -5/-5 until end of turn. Fodder Launch deals 5 damage to that creature's cont | Flamekin Bladewhirl, Fodder Launch, Goldmeadow Stalwart, Silvergill Adept, Wren's Run Vanquisher | 5 |
-| Changeling (This card is every creature type.) Until end of turn, target creature has base power and toughness 4/4, gains all creature types, and gains flying. | Blades of Velis Vel, Ego Erasure, Nameless Inversion, Shields of Velis Vel, Wings of Velis Vel | 5 |
-| This land enters tapped with two charge counters on it. | Vivid Crag, Vivid Creek, Vivid Grove, Vivid Marsh, Vivid Meadow | 5 |
-| When this creature enters, clash with an opponent. If you win, put a +1/+1 counter on this creature. | Adder-Staff Boggart, Bog Hoodlums, Nath's Elite, Oaken Brawler, Paperfin Rascal | 5 |
-| {W}, {T}: You may play the exiled card without paying its mana cost if you attacked with three or more creatures this turn. | Howltooth Hollow, Shelldock Isle, Spinerock Knoll, Windbrisk Heights | 4 |
-| At the beginning of your end step, clash with an opponent. If you win, gain control of enchanted creature. Otherwise, that player gains control of enchanted cre | Captivating Glance, Merrow Commerce, Nath of the Gilt-Leaf | 3 |
-| Fear | Shriekmaw, Squeaking Pie Sneak, Wort, Boggart Auntie | 3 |
-| As long as you control a Giant, this creature gets +1/+1 and has first strike. | Boggart Sprite-Chaser, Kithkin Greatheart | 2 |
-| Clash | Fistful of Force, Whirlpool Whelm | 2 |
-| Prevent all combat damage that would be dealt this turn. Clash with an opponent. If you win, creatures that player controls don't untap during the player's next | Dolmen Gate, Pollen Lullaby | 2 |
-| When this creature enters, it deals damage equal to the number of Giants you control to each non-Giant creature. | Cloudthresher, Thundercloud Shaman | 2 |
-| When this creature enters, target player reveals X cards from their hand, where X is the number of Faeries you control. You choose one of those cards. That play | Spiderwig Boggart, Thieving Sprite | 2 |
-| Whenever you cast a spell during an opponent's turn, you may have target creature get -1/-1 until end of turn. | Dreamspoiler Witches, Faerie Tauntings | 2 |
-| As long as a creature card with flying is in a graveyard, this creature has flying. The same is true for fear, first strike, double strike, deathtouch, haste, l | Cairn Wanderer | 1 |
-| At the beginning of combat on your turn, you may clash with an opponent. If you win, this creature gets +2/+0 and loses defender until end of turn. | Sentry Oak | 1 |
-| Choose a card name, then target player mills a card. If a card with the chosen name was milled this way, you gain life equal to its mana value. Draw a card. | Lammastide Weave | 1 |
-| Choose two — • Target player gains 7 life. • Put target noncreature permanent on top of its owner's library. • Target player shuffles their graveyard into their | Primal Command | 1 |
-| Counter target non-Faerie spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | Faerie Trickery | 1 |
-| Counter target spell. Clash with an opponent. If you win, at the beginning of your next main phase, you may add an amount of {C} equal to that spell's mana valu | Scattering Stroke | 1 |
-| Counter target spell unless its controller pays {X}. Clash with an opponent. If you win, that spell's controller mills four cards. (Each clashing player reveals | Broken Ambitions | 1 |
-| Create a token that's a copy of target creature, except it has haste and "At the beginning of the end step, exile this token." | Heat Shimmer | 1 |
-| Create two 1/1 blue Merfolk Wizard creature tokens. Tap four untapped Merfolk you control: Return this card from your graveyard to your hand. | Summon the School | 1 |
-| Create two 1/1 green Elf Warrior creature tokens. Clash with an opponent. If you win, those creatures gain deathtouch until end of turn. (Each clashing player r | Gilt-Leaf Ambush | 1 |
-| Dauntless Dourbark's power and toughness are each equal to the number of Forests you control plus the number of Treefolk you control. | Dauntless Dourbark | 1 |
-| Destroy target creature. Clash with an opponent. If you win, you gain life equal to that creature's toughness. (Each clashing player reveals the top card of the | Weed Strangle | 1 |
-| Destroy target enchantment. Clash with an opponent. If you win, destroy all enchantments your opponents control. (Each clashing player reveals the top card of t | Spring Cleaning | 1 |
-| Each creature assigns combat damage equal to its toughness rather than its power. | Doran, the Siege Tower | 1 |
-| Each creature with mana value of the chosen quality has haste. | Ashling's Prerogative | 1 |
-| Each creature with the greatest mana value has protection from each color. | Favor of the Mighty | 1 |
-| Enchanted creature can't be blocked and has shroud. | Protective Bubble | 1 |
-| Enchanted creature is a Treefolk with base power and toughness 0/4 and loses all abilities. | Lignify | 1 |
-| Enchanted permanent has "At the beginning of your end step, sacrifice this permanent and attach Nettlevine Blight to a creature or land you control." | Nettlevine Blight | 1 |
-| Equipped creature gets +1/+1 and is every creature type. | Runed Stalactite | 1 |
-| Goblins you control and Elementals you control have menace. | Caterwauling Boggart | 1 |
-| Jagged-Scar Archers's power and toughness are each equal to the number of Elves you control. | Jagged-Scar Archers | 1 |
-| Lash Out deals 3 damage to target creature. Clash with an opponent. If you win, Lash Out deals 3 damage to that creature's controller. (Each clashing player rev | Lash Out | 1 |
-| Noncreature spells with mana value 4 or greater can't be cast. | Gaddock Teeg | 1 |
-| Other Elemental creatures you control get +1/+1. | Incandescent Soulstoke | 1 |
-| Other Faerie creatures you control get +1/+1. | Scion of Oona | 1 |
-| Other Giant creatures you control get +2/+2 and have trample. | Sunrise Sovereign | 1 |
-| Other Goblin creatures you control get +1/+1. | Mad Auntie | 1 |
-| Other Kithkin creatures you control get +1/+1. | Wizened Cenn | 1 |
-| Other Merfolk creatures you control get +1/+1. | Merrow Reejerey | 1 |
-| Other Treefolk creatures you control get +1/+1. | Timber Protector | 1 |
-| {1}{W}: Prevent all damage that would be dealt to target tapped Merfolk or Kithkin creature this turn. | Wellgabber Apothecary | 1 |
-| {1}{R}: Put a +1/+1 counter on Ashling. If this is the third time this ability has resolved this turn, remove all +1/+1 counters from Ashling, and it deals that | Ashling the Pilgrim | 1 |
-| Put a +1/+1 counter on target creature, two +1/+1 counters on another target creature, and three +1/+1 counters on a third target creature. | Incremental Growth | 1 |
-| −8: Put all creature cards from all graveyards onto the battlefield under your control. | Liliana Vess | 1 |
-| Put any number of target creature cards from your graveyard on top of your library. Draw a card. | Footbottom Feast | 1 |
-| {W}: Put this Aura on top of its owner's library. | Soaring Hope | 1 |
-| Regenerate target creature. You gain life equal to that creature's toughness. | Heal the Scars | 1 |
-| Return target card from your graveyard to your hand. Clash with an opponent. If you win, untap all Forests you control. (Each clashing player reveals the top ca | Woodland Guidance | 1 |
-| Return target creature card from your graveyard to the battlefield with a mannequin counter on it. For as long as that creature has a mannequin counter on it, i | Makeshift Mannequin | 1 |
-| Reveal cards from the top of your library until you reveal three nonland cards. Put the nonland cards revealed this way into your hand, then put the rest of the | Fathom Trawl | 1 |
-| {R}, {T}, Sacrifice another creature: Brion Stoutarm deals damage equal to the sacrificed creature's power to target player or planeswalker. | Brion Stoutarm | 1 |
-| Sacrifice this creature: Prevent all damage a red source of your choice would deal this turn. | Burrenton Forge-Tender | 1 |
-| {1}{U}: Switch this creature's power and toughness until end of turn. | Turtleshell Changeling | 1 |
-| Target creature blocks target creature this turn if able. | Hunt Down | 1 |
-| {T}: Target creature gains all creature types until end of turn. | Amoeboid Changeling | 1 |
-| {T}: Target creature gets -X/-0 until end of turn, where X is the number of Merfolk and/or Faeries you control. | Silvergill Douser | 1 |
-| {T}: Target Goblin creature you control gets +1/+0 and gains flying until end of turn. Sacrifice that creature at the beginning of the next end step. | Lowland Oaf | 1 |
-| {T}: Target land becomes an Island until end of turn. | Streambed Aquitects | 1 |
-| {T}: Target land becomes the basic land type of your choice until end of turn. Activate only during your turn. | Tideshaper Mystic | 1 |
-| {2}{U}: Target Shapeshifter becomes a copy of target creature until your next turn. | Shapesharer | 1 |
-| This creature can block an additional creature each combat. | Lairwatch Giant | 1 |
-| This creature can't attack unless defending player controls an Island. | Ethereal Whiskergill | 1 |
-| This creature can't be blocked by creatures with power 4 or greater. | Goldmeadow Dodger | 1 |
-| {T}: Until end of turn, target Forest becomes an X/X Treefolk creature in addition to its other types, where X is the number of Elves you control. | Elvish Branchbender | 1 |
-| When a Faerie is championed with this creature, tap all lands target player controls. | Mistbind Clique | 1 |
-| When Guile is put into a graveyard from anywhere, shuffle it into its owner's library. | Guile | 1 |
-| When Hostility is put into a graveyard from anywhere, shuffle it into its owner's library. | Hostility | 1 |
-| When Purity is put into a graveyard from anywhere, shuffle it into its owner's library. | Purity | 1 |
-| When this Aura enters, untap enchanted creature. | Triclopean Sight | 1 |
-| When this creature dies, clash with an opponent. If you win, return this card to its owner's hand. | Ringskipper | 1 |
-| When this creature enters, each player's life total becomes the highest life total among all players. | Arbiter of Knollridge | 1 |
-| When this creature enters, gain control of target creature for as long as this creature remains on the battlefield. | Sower of Temptation | 1 |
-| When this creature enters, return target creature card from your graveyard to your hand. If that card is a Goblin card, this creature gains haste until end of t | Warren Pilferers | 1 |
-| When this creature enters, untap target Goat and gain control of it until end of turn. It gains haste until end of turn. | Goatnapper | 1 |
-| When this creature enters, up to two target creatures can't block this turn. | Glarewielder | 1 |
-| When this enchantment enters, exile the top seven cards of your library face down. | Colfenor's Plans | 1 |
-| When this enchantment leaves the battlefield, return the exiled card to the battlefield under its owner's control. | Oblivion Ring | 1 |
-| When Vigor is put into a graveyard from anywhere, shuffle it into its owner's library. | Vigor | 1 |
-| Whenever a creature deals damage to you, destroy it. | Dread | 1 |
-| Whenever a creature with toughness 4 or greater is put into your graveyard from the battlefield, you may exile it. | Colfenor's Urn | 1 |
-| Whenever a Merfolk you control becomes tapped, you may gain 1 life. | Judge of Currents | 1 |
-| Whenever a player casts a Kithkin spell, you may have target player lose 1 life. | Quill-Slinger Boggart | 1 |
-| Whenever an attacking Kithkin or Elf is put into your graveyard from the battlefield, you may draw a card. | Kithkin Mourncaller | 1 |
-| Whenever another nontoken Elf is put into your graveyard from the battlefield, you may create a 1/1 green Elf Warrior creature token. | Prowess of the Fair | 1 |
-| Whenever equipped creature dies, you may put a creature card from your hand onto the battlefield and attach this Equipment to it. | Deathrender | 1 |
-| Whenever this creature attacks, clash with an opponent. If you win, target creature gains double strike until end of turn. | Springjack Knight | 1 |
-| Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Kithkin. | Cenn's Heir | 1 |
-| Whenever this creature attacks, you may have target creature gain flying until end of turn. | Kinsbaile Balloonist | 1 |
-| Whenever you activate an ability, if it isn't a mana ability, you may pay {2}. If you do, copy that ability. You may choose new targets for the copy. | Rings of Brighthearth | 1 |
-| Whenever you cast a Treefolk spell, you may have target creature get +3/-3 until end of turn. | Thorntooth Witch | 1 |
-| Whenever you clash and win, you may draw a card. | Sylvan Echoes | 1 |
-| Whenever you clash, tap target creature an opponent controls. If you won, that creature doesn't untap during its controller's next untap step. | Entangling Trap | 1 |
-| Whenever you clash, you may pay {1}. If you do, create a 3/1 red Elemental Shaman creature token. If you won, that token gains haste until end of turn. | Rebellion of the Flamekin | 1 |
-| You lose 2 life and draw two cards, then clash with an opponent. If you win, repeat this process. (Each clashing player reveals the top card of their library, t | Hoarder's Greed | 1 |
-| {1}, {T}: You may cast a spell from your hand without paying its mana cost if it has the same name as a spell that was cast this turn. | Twinning Glass | 1 |
-| You may choose new targets for target instant or sorcery spell. Then copy that spell. You may choose new targets for the copy. | Wild Ricochet | 1 |
-| {W}{U}{B}{R}{G}: You may play target Elemental card from your graveyard without paying its mana cost. | Horde of Notions | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| champion | 8 | Boggart Mob, Changeling Berserker, Changeling Hero, Changeling Titan, Nova Chaser | lrw |
+| when ~ enters, clash with an opponent. if you win, put a +N/+N counter on ~. | 5 | Adder-Staff Boggart, Bog Hoodlums, Nath's Elite, Oaken Brawler, Paperfin Rascal | lrw |
+| ~ enters tapped with two charge counters on it. | 5 | Vivid Crag, Vivid Creek, Vivid Grove, Vivid Marsh, Vivid Meadow | lrw |
+| when ~ is put into a graveyard from anywhere, shuffle it into its owner's library. | 4 | Guile, Hostility, Purity, Vigor | lrw |
+| fear | 3 | Shriekmaw, Squeaking Pie Sneak, Wort, Boggart Auntie | lrw |
+| clash | 2 | Fistful of Force, Whirlpool Whelm | lrw |
+| Choose two | 1 | Primal Command | lrw |
+| as an additional cost to cast ~, reveal a kithkin card from your hand or pay {M}. | 1 | Goldmeadow Stalwart | lrw |
+| as an additional cost to cast ~, reveal a merfolk card from your hand or pay {M}. | 1 | Silvergill Adept | lrw |
+| as an additional cost to cast ~, reveal an elemental card from your hand or pay {M}. | 1 | Flamekin Bladewhirl | lrw |
+| as an additional cost to cast ~, reveal an elf card from your hand or pay {M}. | 1 | Wren's Run Vanquisher | lrw |
+| as an additional cost to cast ~, sacrifice a goblin. target creature gets -N/-N until end of turn. ~ deals N damage to that creature's controller. | 1 | Fodder Launch | lrw |
+| as long as a creature card with flying is in a graveyard, ~ has flying. the same is true for fear, first strike, double strike, deathtouch, haste, landwalk, lif | 1 | Cairn Wanderer | lrw |
+| as long as you control a faerie, ~ gets +N/+N and has flying. | 1 | Boggart Sprite-Chaser | lrw |
+| as long as you control a giant, ~ gets +N/+N and has first strike. | 1 | Kithkin Greatheart | lrw |
+| at the beginning of combat on your turn, you may clash with an opponent. if you win, ~ gets +N/+N and loses defender until end of turn. | 1 | Sentry Oak | lrw |
+| at the beginning of your end step, clash with an opponent. if you win, gain control of enchanted creature. otherwise, that player gains control of enchanted cre | 1 | Captivating Glance | lrw |
+| at the beginning of your end step, untap all merfolk you control. | 1 | Merrow Commerce | lrw |
+| at the beginning of your upkeep, you may have target opponent discard a card at random. | 1 | Nath of the Gilt-Leaf | lrw |
+| changeling (~ is every creature type.) creatures target player controls get +N/+N and gain all creature types until end of turn. | 1 | Shields of Velis Vel | lrw |
+| changeling (~ is every creature type.) creatures target player controls get -N/-N and lose all creature types until end of turn. | 1 | Ego Erasure | lrw |
+| changeling (~ is every creature type.) target creature gets +N/-N and loses all creature types until end of turn. | 1 | Nameless Inversion | lrw |
+| changeling (~ is every creature type.) until end of turn, target creature has base power and toughness N/N, gains all creature types, and gains flying. | 1 | Wings of Velis Vel | lrw |
+| changeling (~ is every creature type.) up to two target creatures each get +N/+N and gain all creature types until end of turn. | 1 | Blades of Velis Vel | lrw |
+| choose a card name, then target player mills a card. if a card with the chosen name was milled ~, you gain life equal to its mana value. draw a card. | 1 | Lammastide Weave | lrw |
+| counter target non-faerie spell. if that spell is countered ~, exile it instead of putting it into its owner's graveyard. | 1 | Faerie Trickery | lrw |
+| counter target spell unless its controller pays {M}. clash with an opponent. if you win, that spell's controller mills four cards. (each clashing player reveals | 1 | Broken Ambitions | lrw |
+| counter target spell. clash with an opponent. if you win, at the beginning of your next main phase, you may add an amount of {M} equal to that spell's mana valu | 1 | Scattering Stroke | lrw |
+| create a token that's a copy of target creature, except it has haste and "..." | 1 | Heat Shimmer | lrw |
+| create two N/N blue merfolk wizard creature tokens. tap four untapped merfolk you control: return ~ from your graveyard to your hand. | 1 | Summon the School | lrw |
+| create two N/N green elf warrior creature tokens. clash with an opponent. if you win, those creatures gain deathtouch until end of turn. (each clashing player r | 1 | Gilt-Leaf Ambush | lrw |
+| destroy target creature. clash with an opponent. if you win, you gain life equal to that creature's toughness. (each clashing player reveals the top card of the | 1 | Weed Strangle | lrw |
+| destroy target enchantment. clash with an opponent. if you win, destroy all enchantments your opponents control. (each clashing player reveals the top card of t | 1 | Spring Cleaning | lrw |
+| each creature assigns combat damage equal to its toughness rather than its power. | 1 | Doran, the Siege Tower | lrw |
+| each creature with mana value of the chosen quality has haste. | 1 | Ashling's Prerogative | lrw |
+| each creature with the greatest mana value has protection from each color. | 1 | Favor of the Mighty | lrw |
+| enchanted creature can't be blocked and has shroud. | 1 | Protective Bubble | lrw |
+| enchanted creature is a treefolk with base power and toughness N/N and loses all abilities. | 1 | Lignify | lrw |
+| enchanted permanent has "..." | 1 | Nettlevine Blight | lrw |
+| equipped creature gets +N/+N and is every creature type. | 1 | Runed Stalactite | lrw |
+| goblins you control and elementals you control have menace. | 1 | Caterwauling Boggart | lrw |
+| noncreature spells with mana value N or greater can't be cast. | 1 | Gaddock Teeg | lrw |
+| other elemental creatures you control get +N/+N. | 1 | Incandescent Soulstoke | lrw |
+| other faerie creatures you control get +N/+N. | 1 | Scion of Oona | lrw |
+| other giant creatures you control get +N/+N and have trample. | 1 | Sunrise Sovereign | lrw |
+| other goblin creatures you control get +N/+N. | 1 | Mad Auntie | lrw |
+| other kithkin creatures you control get +N/+N. | 1 | Wizened Cenn | lrw |
+| other merfolk creatures you control get +N/+N. | 1 | Merrow Reejerey | lrw |
+| other treefolk creatures you control get +N/+N. | 1 | Timber Protector | lrw |
+| prevent all combat damage that would be dealt to attacking creatures you control. | 1 | Dolmen Gate | lrw |
+| prevent all combat damage that would be dealt ~. clash with an opponent. if you win, creatures that player controls don"..."s next untap step. (each clashing pl | 1 | Pollen Lullaby | lrw |
+| put a +N/+N counter on target creature, two +N/+N counters on another target creature, and three +N/+N counters on a third target creature. | 1 | Incremental Growth | lrw |
+| put any number of target creature cards from your graveyard on top of your library. draw a card. | 1 | Footbottom Feast | lrw |
+| regenerate target creature. you gain life equal to that creature's toughness. | 1 | Heal the Scars | lrw |
+| return target card from your graveyard to your hand. clash with an opponent. if you win, untap all forests you control. (each clashing player reveals the top ca | 1 | Woodland Guidance | lrw |
+| return target creature card from your graveyard to the battlefield with a mannequin counter on it. for as long as that creature has a mannequin counter on it, i | 1 | Makeshift Mannequin | lrw |
+| reveal cards from the top of your library until you reveal three nonland cards. put the nonland cards revealed ~ into your hand, then put the rest of the reveal | 1 | Fathom Trawl | lrw |
+| sacrifice ~: prevent all damage a red source of your choice would deal ~. | 1 | Burrenton Forge-Tender | lrw |
+| target creature blocks target creature ~ if able. | 1 | Hunt Down | lrw |
+| when a faerie is championed with ~, tap all lands target player controls. | 1 | Mistbind Clique | lrw |
+| when ~ dies, clash with an opponent. if you win, return ~ to its owner's hand. | 1 | Ringskipper | lrw |
+| when ~ enters, each player's life total becomes the highest life total among all players. | 1 | Arbiter of Knollridge | lrw |
+| when ~ enters, exile the top seven cards of your library face down. | 1 | Colfenor's Plans | lrw |
+| when ~ enters, gain control of target creature for as long as ~ remains on the battlefield. | 1 | Sower of Temptation | lrw |
+| when ~ enters, it deals N damage to each creature with flying and each player. | 1 | Cloudthresher | lrw |
+| when ~ enters, it deals damage equal to the number of giants you control to each non-giant creature. | 1 | Thundercloud Shaman | lrw |
+| when ~ enters, return target creature card from your graveyard to your hand. if that card is a goblin card, ~ gains haste until end of turn. | 1 | Warren Pilferers | lrw |
+| when ~ enters, target creature gains fear until end of turn. | 1 | Spiderwig Boggart | lrw |
+| when ~ enters, target player reveals N cards from their hand, where N is the number of faeries you control. you choose one of those cards. that player discards  | 1 | Thieving Sprite | lrw |
+| when ~ enters, untap enchanted creature. | 1 | Triclopean Sight | lrw |
+| when ~ enters, untap target goat and gain control of it until end of turn. it gains haste until end of turn. | 1 | Goatnapper | lrw |
+| when ~ enters, up to two target creatures can't block ~. | 1 | Glarewielder | lrw |
+| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Oblivion Ring | lrw |
+| whenever a creature deals damage to you, destroy it. | 1 | Dread | lrw |
+| whenever a creature with toughness N or greater is put into your graveyard from the battlefield, you may exile it. | 1 | Colfenor's Urn | lrw |
+| whenever a merfolk you control becomes tapped, you may gain N life. | 1 | Judge of Currents | lrw |
+| whenever a player casts a kithkin spell, you may have target player lose N life. | 1 | Quill-Slinger Boggart | lrw |
+| whenever an attacking kithkin or elf is put into your graveyard from the battlefield, you may draw a card. | 1 | Kithkin Mourncaller | lrw |
+| whenever another nontoken elf is put into your graveyard from the battlefield, you may create a N/N green elf warrior creature token. | 1 | Prowess of the Fair | lrw |
+| whenever equipped creature dies, you may put a creature card from your hand onto the battlefield and attach ~ to it. | 1 | Deathrender | lrw |
+| whenever you activate an ability, if it isn't a mana ability, you may pay {M}. if you do, copy that ability. you may choose new targets for the copy. | 1 | Rings of Brighthearth | lrw |
+| whenever you cast a spell during an opponent's turn, you may have each opponent lose N life. | 1 | Faerie Tauntings | lrw |
+| whenever you cast a spell during an opponent's turn, you may have target creature get -N/-N until end of turn. | 1 | Dreamspoiler Witches | lrw |
+| whenever you cast a treefolk spell, you may have target creature get +N/-N until end of turn. | 1 | Thorntooth Witch | lrw |
+| whenever you clash and win, you may draw a card. | 1 | Sylvan Echoes | lrw |
+| whenever you clash, tap target creature an opponent controls. if you won, that creature doesn"..."s next untap step. | 1 | Entangling Trap | lrw |
+| whenever you clash, you may pay {M}. if you do, create a N/N red elemental shaman creature token. if you won, that token gains haste until end of turn. | 1 | Rebellion of the Flamekin | lrw |
+| whenever ~ attacks, clash with an opponent. if you win, target creature gains double strike until end of turn. | 1 | Springjack Knight | lrw |
+| whenever ~ attacks, it gets +N/+N until end of turn for each other attacking kithkin. | 1 | Cenn's Heir | lrw |
+| whenever ~ attacks, you may have target creature gain flying until end of turn. | 1 | Kinsbaile Balloonist | lrw |
+| you lose N life and draw two cards, then clash with an opponent. if you win, repeat ~. (each clashing player reveals the top card of their library, then puts th | 1 | Hoarder's Greed | lrw |
+| you may choose new targets for target instant or sorcery spell. then copy that spell. you may choose new targets for the copy. | 1 | Wild Ricochet | lrw |
+| {M}, {M}, sacrifice another creature: ~ deals damage equal to the sacrificed creature's power to target player or planeswalker. | 1 | Brion Stoutarm | lrw |
+| {M}, {M}: you may cast a spell from your hand without paying its mana cost if it has the same name as a spell that was cast ~. | 1 | Twinning Glass | lrw |
+| {M}, {M}: you may play the exiled card without paying its mana cost if a library has twenty or fewer cards in it. | 1 | Shelldock Isle | lrw |
+| {M}, {M}: you may play the exiled card without paying its mana cost if an opponent was dealt N or more damage ~. | 1 | Spinerock Knoll | lrw |
+| {M}, {M}: you may play the exiled card without paying its mana cost if each player has no cards in hand. | 1 | Howltooth Hollow | lrw |
+| {M}, {M}: you may play the exiled card without paying its mana cost if you attacked with three or more creatures ~. | 1 | Windbrisk Heights | lrw |
+| {M}: put ~ on top of its owner's library. | 1 | Soaring Hope | lrw |
+| {M}: target creature gains all creature types until end of turn. | 1 | Amoeboid Changeling | lrw |
+| {M}: target creature gets -N/-N until end of turn, where N is the number of merfolk and/or faeries you control. | 1 | Silvergill Douser | lrw |
+| {M}: target goblin creature you control gets +N/+N and gains flying until end of turn. sacrifice that creature at the beginning of the next end step. | 1 | Lowland Oaf | lrw |
+| {M}: target land becomes an island until end of turn. | 1 | Streambed Aquitects | lrw |
+| {M}: target land becomes the basic land type of your choice until end of turn. activate only during your turn. | 1 | Tideshaper Mystic | lrw |
+| {M}: until end of turn, target forest becomes an N/N treefolk creature in addition to its other types, where N is the number of elves you control. | 1 | Elvish Branchbender | lrw |
+| {M}{M}: prevent all damage that would be dealt to target tapped merfolk or kithkin creature ~. | 1 | Wellgabber Apothecary | lrw |
+| {M}{M}: put a +N/+N counter on ashling. if ~ the third time ~ has resolved ~, remove all +N/+N counters from ashling, and it deals that much damage to each crea | 1 | Ashling the Pilgrim | lrw |
+| {M}{M}: switch ~ power and toughness until end of turn. | 1 | Turtleshell Changeling | lrw |
+| {M}{M}: target shapeshifter becomes a copy of target creature until your next turn. | 1 | Shapesharer | lrw |
+| {M}{M}{M}{M}{M}: you may play target elemental card from your graveyard without paying its mana cost. | 1 | Horde of Notions | lrw |
+| ~ can block an additional creature each combat. | 1 | Lairwatch Giant | lrw |
+| ~ can't attack unless defending player controls an island. | 1 | Ethereal Whiskergill | lrw |
+| ~ can't be blocked by creatures with power N or greater. | 1 | Goldmeadow Dodger | lrw |
+| ~ deals N damage to target creature. clash with an opponent. if you win, ~ deals N damage to that creature's controller. (each clashing player reveals the top c | 1 | Lash Out | lrw |
+| ~'s power and toughness are each equal to the number of elves you control. | 1 | Jagged-Scar Archers | lrw |
+| ~'s power and toughness are each equal to the number of forests you control plus the number of treefolk you control. | 1 | Dauntless Dourbark | lrw |
+| −N: put all creature cards from all graveyards onto the battlefield under your control. | 1 | Liliana Vess | lrw |
 
 ## Notes
 

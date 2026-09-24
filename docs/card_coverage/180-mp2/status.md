@@ -40,9 +40,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of your upkeep, each opponent loses X life and you scry X, where X is the number of Zombies you control. | The Scarab God | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| at the beginning of your upkeep, each opponent loses N life and you scry N, where N is the number of zombies you control. | 1 | The Scarab God | mp2 |
 
 ## Notes
 

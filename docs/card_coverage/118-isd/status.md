@@ -3,24 +3,24 @@
 - Expansion: 118
 - Set code: `isd`
 - Release date: 2011-09-30
-- Cards in scope (Modern/Pioneer/Standard-legal): 234
+- Cards in scope (Modern/Pioneer/Standard-legal): 239
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 234 |
-| Pioneer | 33 |
-| Standard | 5 |
+| Modern | 239 |
+| Pioneer | 34 |
+| Standard | 6 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 21 | 9.0% |
-| Partial (unaudited) | 17 | 7.3% |
-| Not tested (handled, untested) | 132 | 56.4% |
-| Not working (silent / notice / error) | 64 | 27.4% |
+| Full (handled + tested) | 22 | 9.2% |
+| Partial (unaudited) | 17 | 7.1% |
+| Not tested (handled, untested) | 134 | 56.1% |
+| Not working (silent / notice / error) | 66 | 27.6% |
 
 ## Cards needing work
 
@@ -46,6 +46,7 @@
 | Curse of the Pierced Heart | silent | At the beginning of enchanted player's upkeep, this Aura deals 1 damage to that player or a planeswalker that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desperate Ravings | silent | Draw two cards, then discard a card at random. Flashback {2}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Divine Reckoning | silent | Each player chooses a creature they control. Destroy the rest. Flashback {5}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exil | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Elite Inquisitor | silent | First strike, vigilance Protection from Vampires, from Werewolves, and from Zombies | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiend Hunter | silent | When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frightful Delusion | silent | Counter target spell unless its controller pays {1}. That player discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Full Moon's Rise | silent | Werewolf creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -63,6 +64,7 @@
 | Kessig Cagebreakers | silent | Whenever this creature attacks, create a 2/2 green Wolf creature token that's tapped and attacking for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Make a Wish | silent | Return two cards at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manor Gargoyle | silent | {1}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Mayor of Avabruck // Howlpack Alpha | silent | Other Human creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memory's Journey | silent | Target player shuffles up to three target cards from their graveyard into their library. Flashback {G} (You may cast this card from your graveyard for its flash | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindshrieker | silent | {2}: Target player mills a card. This creature gets +X/+X until end of turn, where X is the milled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moldgraf Monstrosity | silent | When this creature dies, exile it, then return two creature cards at random from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -131,6 +133,8 @@
 | Dead Weight | handled | Enchanted creature gets -2/-2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Demonmail Hauberk | handled | Equipped creature gets +4/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deranged Assistant | handled | Mill | no code needed | Y/-/- | not_tested |
+| Devil's Play | handled | Devil's Play deals X damage to any target. Flashback {X}{R}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Diregraf Ghoul | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Doomed Traveler | handled | When this creature dies, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dream Twist | handled | Target player mills three cards. Flashback {1}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elder of Laurels | handled | {3}{G}: Target creature gets +X/+X until end of turn, where X is the number of creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -243,7 +247,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -260,6 +264,7 @@
 - Forbidden Alchemy
 - Intangible Virtue
 - Liliana of the Veil
+- Ludevic's Test Subject // Ludevic's Abomination
 - Moonmist
 - Parallel Lives
 - Past in Flames
@@ -271,81 +276,88 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| As long as equipped creature is a Human, it gets an additional +1/+0. | Butcher's Cleaver, Sharpened Pitchfork, Silver-Inlaid Dagger | 3 |
-| Intimidate | Brain Weevil, Gatstaf Shepherd // Gatstaf Howler, Spectral Rider | 3 |
-| At the beginning of your end step, if this creature didn't attack this turn, tap this creature, then transform it. | Charmbreaker Devils, Civilized Scholar // Homicidal Brute | 2 |
-| Other Spirit creatures you control get +1/+0. | Battleground Geist, Gallows Warden | 2 |
-| This creature can't be blocked except by creatures with flying or reach. | Orchard Spirit, Stromkirk Noble | 2 |
-| Whenever this creature deals combat damage to a player, it deals that much damage to each creature that player controls. | Balefire Dragon, Creepy Doll | 2 |
-| As an additional cost to cast this spell, exile a creature card from your graveyard. Corpse Lunge deals damage equal to the exiled card's power to target creatu | Corpse Lunge | 1 |
-| As long as this creature is in your graveyard, each Human creature you control enters with an additional +1/+1 counter on it. | Dearly Departed | 1 |
-| As long as you control a Human, this creature has hexproof and indestructible. | Angelic Overseer | 1 |
-| At the beginning of enchanted player's upkeep, this Aura deals 1 damage to that player or a planeswalker that player controls. | Curse of the Pierced Heart | 1 |
-| Attacking creatures you control get +1/+0. | Instigator Gang // Wildblood Pack | 1 |
-| Choose a permanent type. Return all cards of the chosen type from your graveyard to your hand. Flashback {5}{G}{G} (You may cast this card from your graveyard f | Creeping Renaissance | 1 |
-| {3}{R}: Choose any target, then mill three cards. This enchantment deals damage to that permanent or player equal to the greatest mana value among the milled ca | Heretic's Punishment | 1 |
-| Counter target spell unless its controller pays {1}. That player discards a card. | Frightful Delusion | 1 |
-| {1}{U}, {T}: Create a 2/2 blue Homunculus creature token, then sacrifice a creature. | Stitcher's Apprentice | 1 |
-| Creatures enchanted player controls attack each combat if able. | Curse of the Nightly Hunt | 1 |
-| Creatures enchanted player controls get -1/-1. | Curse of Death's Hold | 1 |
-| Creatures with flying your opponents control get -1/-0. | One-Eyed Scarecrow | 1 |
-| Creatures you control enter as a copy of this creature. | Essence of the Wild | 1 |
-| Destroy all enchantments. You gain 1 life for each enchantment destroyed this way. | Paraselene | 1 |
-| Destroy target non-Vampire, non-Werewolf, non-Zombie creature. | Victim of Night | 1 |
-| Draw two cards, then discard a card at random. Flashback {2}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | Desperate Ravings | 1 |
-| Each player chooses a creature they control. Destroy the rest. Flashback {5}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exil | Divine Reckoning | 1 |
-| Enchanted creature gets +2/+2 and attacks each combat if able. | Furor of the Bitten | 1 |
-| Enchanted creature gets +2/+2 as long as it's a Human. Otherwise, it can't attack or block. | Bonds of Faith | 1 |
-| Enchanted creature gets +X/+X, where X is the number of creature cards in your graveyard. | Wreath of Geists | 1 |
-| Enchanted creature has intimidate. | Gruesome Deformity | 1 |
-| Equipped creature has first strike and gets +X/+0, where X is the number of instant and sorcery cards in your graveyard. | Runechanter's Pike | 1 |
-| {T}: Exchange your life total with this creature's toughness. | Tree of Redemption | 1 |
-| Exile target creature and all other creatures with the same name as that creature. Flashback {5}{B}{B} (You may cast this card from your graveyard for its flash | Sever the Bloodline | 1 |
-| Grimgrin enters tapped and doesn't untap during your untap step. | Grimgrin, Corpse-Born | 1 |
-| If equipped creature would deal combat damage, it deals double that damage instead. | Inquisitor's Flail | 1 |
-| If you would draw a card while your library has no cards in it, you win the game instead. | Laboratory Maniac | 1 |
-| Morbid — When this creature enters, if a creature died this turn, return a creature card at random from your graveyard to your hand. | Woodland Sleuth | 1 |
-| {1}{R}: Olivia Voldaren deals 1 damage to another target creature. That creature becomes a Vampire in addition to its other types. Put a +1/+1 counter on Olivia | Olivia Voldaren | 1 |
-| Other Vampire creatures you control get +2/+2. | Bloodline Keeper // Lord of Lineage | 1 |
-| Prevent all combat damage that would be dealt to and dealt by enchanted creature. | Ghostly Possession | 1 |
-| Put target creature on top of its owner's library. Flashback {7}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | Grasp of Phantoms | 1 |
-| {T}, Remove three study counters from Grimoire of the Dead and sacrifice it: Put all creature cards from all graveyards onto the battlefield under your control. | Grimoire of the Dead | 1 |
-| Return target exiled card with flashback you own to your hand. | Runic Repetition | 1 |
-| Return two cards at random from your graveyard to your hand. | Make a Wish | 1 |
-| {1}, Sacrifice a creature: You gain life equal to the sacrificed creature's toughness. | Disciple of Griselbrand | 1 |
-| Search your library for a basic land card, reveal it, put it into your hand, then shuffle. Morbid — You may put that card onto the battlefield instead of puttin | Caravan Vigil | 1 |
-| Spells with the chosen name can't be cast. | Nevermore | 1 |
-| Sturmgeist's power and toughness are each equal to the number of cards in your hand. | Sturmgeist | 1 |
-| Target opponent sacrifices a creature of their choice. You gain life equal to that creature's toughness. | Tribute to Hunger | 1 |
-| {2}: Target player mills a card. This creature gets +X/+X until end of turn, where X is the milled card's mana value. | Mindshrieker | 1 |
-| {3}, {T}: Target player puts the bottom card of their library into their graveyard. If it's a creature card, you create a 2/2 black Zombie creature token. | Cellar Door | 1 |
-| Target player shuffles up to three target cards from their graveyard into their library. Flashback {G} (You may cast this card from your graveyard for its flash | Memory's Journey | 1 |
-| This creature enters with a +1/+1 counter on it for each other Zombie you control and each Zombie card in your graveyard. | Unbreathing Horde | 1 |
-| This creature gets +1/+1 for each creature your opponents control. | Scourge of Geier Reach | 1 |
-| This creature has haste as long as an opponent controls a Human. | Night Revelers | 1 |
-| {1}{U}: This creature's owner shuffles it into their library. If that player does, they reveal cards from the top of that library until a card named Mirror-Mad  | Mirror-Mad Phantasm | 1 |
-| {1}: Until end of turn, this creature loses defender and gains flying. | Manor Gargoyle | 1 |
-| Up to two target creatures can't block this turn. Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | Nightbird's Clutches | 1 |
-| Vampire creatures you control get +2/+0 and gain first strike until end of turn. (They deal combat damage before creatures without first strike.) | Vampiric Fury | 1 |
-| Werewolf creatures you control get +1/+0 and have trample. | Full Moon's Rise | 1 |
-| When Garruk has two or fewer loyalty counters on him, transform him. | Garruk Relentless // Garruk, the Veil-Cursed | 1 |
-| When this artifact enters, destroy all Curses attached to you. | Witchbane Orb | 1 |
-| When this creature dies, exile it, then return two creature cards at random from your graveyard to the battlefield. | Moldgraf Monstrosity | 1 |
-| When this creature dies, you may search your library for a Curse card, put it onto the battlefield attached to target player, then shuffle. | Bitterheart Witch | 1 |
-| When this creature enters, return a Zombie card at random from your graveyard to your hand. | Ghoulraiser | 1 |
-| When this creature enters, target creature can't block this turn. | Crossway Vampire | 1 |
-| When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | Fiend Hunter | 1 |
-| Whenever a creature card is put into an opponent's graveyard from their library, exile that card and create a 2/2 black Zombie creature token. | Undead Alchemist | 1 |
-| Whenever a creature dealt damage by this creature this turn dies, you gain life equal to that creature's toughness. | Abattoir Ghoul | 1 |
-| Whenever a nontoken creature you control dies, put a slime counter on this enchantment, then create a green Ooze creature token with "This token's power and tou | Gutter Grime | 1 |
-| Whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. The creature gets +1/+0 until en | Trepanation Blade | 1 |
-| Whenever equipped creature blocks or becomes blocked by a Vampire, destroy that creature. It can't be regenerated. | Wooden Stake | 1 |
-| Whenever this creature attacks, create a 2/2 green Wolf creature token that's tapped and attacking for each creature card in your graveyard. | Kessig Cagebreakers | 1 |
-| Whenever this creature attacks or blocks, other Humans you control get +1/+1 until end of turn. | Hamlet Captain | 1 |
-| You may cast this card from your graveyard. | Skaab Ruinator | 1 |
-| You may pay {0} rather than pay the mana cost for Zombie creature spells you cast. | Rooftop Storm | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| intimidate | 3 | Brain Weevil, Gatstaf Shepherd // Gatstaf Howler, Spectral Rider | isd |
+| other spirit creatures you control get +N/+N. | 2 | Battleground Geist, Gallows Warden | isd |
+| Morbid | 1 | Woodland Sleuth | isd |
+| as an additional cost to cast ~, exile a creature card from your graveyard. ~ deals damage equal to the exiled card's power to target creature. | 1 | Corpse Lunge | isd |
+| as long as equipped creature is a human, it gets +N/+N. | 1 | Sharpened Pitchfork | isd |
+| as long as equipped creature is a human, it gets an additional +N/+N. | 1 | Silver-Inlaid Dagger | isd |
+| as long as equipped creature is a human, it has lifelink. | 1 | Butcher's Cleaver | isd |
+| as long as you control a human, ~ has hexproof and indestructible. | 1 | Angelic Overseer | isd |
+| as long as ~ is in your graveyard, each human creature you control enters with an additional +N/+N counter on it. | 1 | Dearly Departed | isd |
+| at the beginning of enchanted player's upkeep, ~ deals N damage to that player or a planeswalker that player controls. | 1 | Curse of the Pierced Heart | isd |
+| at the beginning of your end step, if ~ didn't attack ~, tap ~, then transform it. | 1 | Civilized Scholar // Homicidal Brute | isd |
+| at the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand. | 1 | Charmbreaker Devils | isd |
+| attacking creatures you control get +N/+N. | 1 | Instigator Gang // Wildblood Pack | isd |
+| choose a permanent type. return all cards of the chosen type from your graveyard to your hand. flashback {M}{M}{M} (you may cast ~ from your graveyard for its f | 1 | Creeping Renaissance | isd |
+| counter target spell unless its controller pays {M}. that player discards a card. | 1 | Frightful Delusion | isd |
+| creatures enchanted player controls attack each combat if able. | 1 | Curse of the Nightly Hunt | isd |
+| creatures enchanted player controls get -N/-N. | 1 | Curse of Death's Hold | isd |
+| creatures with flying your opponents control get -N/-N. | 1 | One-Eyed Scarecrow | isd |
+| creatures you control enter as a copy of ~. | 1 | Essence of the Wild | isd |
+| destroy all enchantments. you gain N life for each enchantment destroyed ~. | 1 | Paraselene | isd |
+| destroy target non-vampire, non-werewolf, non-zombie creature. | 1 | Victim of Night | isd |
+| draw two cards, then discard a card at random. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Desperate Ravings | isd |
+| each player chooses a creature they control. destroy the rest. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Divine Reckoning | isd |
+| enchanted creature gets +N/+N and attacks each combat if able. | 1 | Furor of the Bitten | isd |
+| enchanted creature gets +N/+N as long as it"..."t attack or block. | 1 | Bonds of Faith | isd |
+| enchanted creature gets +N/+N, where N is the number of creature cards in your graveyard. | 1 | Wreath of Geists | isd |
+| enchanted creature has intimidate. | 1 | Gruesome Deformity | isd |
+| equipped creature has first strike and gets +N/+N, where N is the number of instant and sorcery cards in your graveyard. | 1 | Runechanter's Pike | isd |
+| exile target creature and all other creatures with the same name as that creature. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cos | 1 | Sever the Bloodline | isd |
+| first strike, vigilance protection from vampires, from werewolves, and from zombies | 1 | Elite Inquisitor | isd |
+| grimgrin enters tapped and doesn't untap during your untap step. | 1 | Grimgrin, Corpse-Born | isd |
+| if equipped creature would deal combat damage, it deals double that damage instead. | 1 | Inquisitor's Flail | isd |
+| if you would draw a card while your library has no cards in it, you win the game instead. | 1 | Laboratory Maniac | isd |
+| other human creatures you control get +N/+N. | 1 | Mayor of Avabruck // Howlpack Alpha | isd |
+| other vampire creatures you control get +N/+N. | 1 | Bloodline Keeper // Lord of Lineage | isd |
+| prevent all combat damage that would be dealt to and dealt by enchanted creature. | 1 | Ghostly Possession | isd |
+| put target creature on top of its owner's library. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Grasp of Phantoms | isd |
+| return target exiled card with flashback you own to your hand. | 1 | Runic Repetition | isd |
+| return two cards at random from your graveyard to your hand. | 1 | Make a Wish | isd |
+| search your library for a basic land card, reveal it, put it into your hand, then shuffle. morbid — you may put that card onto the battlefield instead of puttin | 1 | Caravan Vigil | isd |
+| spells with the chosen name can't be cast. | 1 | Nevermore | isd |
+| target opponent sacrifices a creature of their choice. you gain life equal to that creature's toughness. | 1 | Tribute to Hunger | isd |
+| target player shuffles up to three target cards from their graveyard into their library. flashback {M} (you may cast ~ from your graveyard for its flashback cos | 1 | Memory's Journey | isd |
+| up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Nightbird's Clutches | isd |
+| vampire creatures you control get +N/+N and gain first strike until end of turn. (they deal combat damage before creatures without first strike.) | 1 | Vampiric Fury | isd |
+| werewolf creatures you control get +N/+N and have trample. | 1 | Full Moon's Rise | isd |
+| when garruk has two or fewer loyalty counters on him, transform him. | 1 | Garruk Relentless // Garruk, the Veil-Cursed | isd |
+| when ~ dies, exile it, then return two creature cards at random from your graveyard to the battlefield. | 1 | Moldgraf Monstrosity | isd |
+| when ~ dies, you may search your library for a curse card, put it onto the battlefield attached to target player, then shuffle. | 1 | Bitterheart Witch | isd |
+| when ~ enters, destroy all curses attached to you. | 1 | Witchbane Orb | isd |
+| when ~ enters, return a zombie card at random from your graveyard to your hand. | 1 | Ghoulraiser | isd |
+| when ~ enters, target creature can't block ~. | 1 | Crossway Vampire | isd |
+| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Fiend Hunter | isd |
+| whenever a creature card is put into an opponent's graveyard from their library, exile that card and create a N/N black zombie creature token. | 1 | Undead Alchemist | isd |
+| whenever a creature dealt damage by ~ ~ dies, you gain life equal to that creature's toughness. | 1 | Abattoir Ghoul | isd |
+| whenever a nontoken creature you control dies, put a slime counter on ~, then create a green ooze creature token with "..." | 1 | Gutter Grime | isd |
+| whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. the creature gets +N/+N until en | 1 | Trepanation Blade | isd |
+| whenever equipped creature blocks or becomes blocked by a vampire, destroy that creature. it can't be regenerated. | 1 | Wooden Stake | isd |
+| whenever ~ attacks or blocks, other humans you control get +N/+N until end of turn. | 1 | Hamlet Captain | isd |
+| whenever ~ attacks, create a N/N green wolf creature token that's tapped and attacking for each creature card in your graveyard. | 1 | Kessig Cagebreakers | isd |
+| whenever ~ deals combat damage to a creature, flip a coin. if you win the flip, destroy that creature. | 1 | Creepy Doll | isd |
+| whenever ~ deals combat damage to a player, it deals that much damage to each creature that player controls. | 1 | Balefire Dragon | isd |
+| you may cast ~ from your graveyard. | 1 | Skaab Ruinator | isd |
+| you may pay {M} rather than pay the mana cost for zombie creature spells you cast. | 1 | Rooftop Storm | isd |
+| {M}, remove three study counters from ~ and sacrifice it: put all creature cards from all graveyards onto the battlefield under your control. they're black zomb | 1 | Grimoire of the Dead | isd |
+| {M}, sacrifice a creature: you gain life equal to the sacrificed creature's toughness. | 1 | Disciple of Griselbrand | isd |
+| {M}, {M}: target player puts the bottom card of their library into their graveyard. if it's a creature card, you create a N/N black zombie creature token. | 1 | Cellar Door | isd |
+| {M}: exchange your life total with ~ toughness. | 1 | Tree of Redemption | isd |
+| {M}: target player mills a card. ~ gets +N/+N until end of turn, where N is the milled card's mana value. | 1 | Mindshrieker | isd |
+| {M}: until end of turn, ~ loses defender and gains flying. | 1 | Manor Gargoyle | isd |
+| {M}{M}, {M}: create a N/N blue homunculus creature token, then sacrifice a creature. | 1 | Stitcher's Apprentice | isd |
+| {M}{M}: choose any target, then mill three cards. ~ deals damage to that permanent or player equal to the greatest mana value among the milled cards. | 1 | Heretic's Punishment | isd |
+| {M}{M}: ~ deals N damage to another target creature. that creature becomes a vampire in addition to its other types. put a +N/+N counter on ~. | 1 | Olivia Voldaren | isd |
+| {M}{M}: ~ owner shuffles it into their library. if that player does, they reveal cards from the top of that library until a card named ~ is revealed. the player | 1 | Mirror-Mad Phantasm | isd |
+| ~ can't be blocked by humans. | 1 | Stromkirk Noble | isd |
+| ~ can't be blocked except by creatures with flying or reach. | 1 | Orchard Spirit | isd |
+| ~ enters with a +N/+N counter on it for each other zombie you control and each zombie card in your graveyard. | 1 | Unbreathing Horde | isd |
+| ~ gets +N/+N for each creature your opponents control. | 1 | Scourge of Geier Reach | isd |
+| ~ has haste as long as an opponent controls a human. | 1 | Night Revelers | isd |
+| ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Sturmgeist | isd |
 
 ## Notes
 

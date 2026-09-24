@@ -3,13 +3,13 @@
 - Expansion: 056
 - Set code: `bok`
 - Release date: 2005-02-04
-- Cards in scope (Modern/Pioneer/Standard-legal): 157
+- Cards in scope (Modern/Pioneer/Standard-legal): 159
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 157 |
+| Modern | 159 |
 | Pioneer | 0 |
 | Standard | 0 |
 
@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Full (handled + tested) | 3 | 1.9% |
-| Partial (unaudited) | 10 | 6.4% |
-| Not tested (handled, untested) | 60 | 38.2% |
-| Not working (silent / notice / error) | 84 | 53.5% |
+| Partial (unaudited) | 10 | 6.3% |
+| Not tested (handled, untested) | 60 | 37.7% |
+| Not working (silent / notice / error) | 86 | 54.1% |
 
 ## Cards needing work
 
@@ -43,12 +43,14 @@
 | Genju of the Fens | silent | {2}: Until end of turn, enchanted Swamp becomes a 2/2 black Spirit creature with "{B}: This creature gets +1/+1 until end of turn." It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genju of the Fields | silent | {2}: Until end of turn, enchanted Plains becomes a 2/5 white Spirit creature with "Whenever this creature deals damage, its controller gains that much life." It | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genju of the Realm | silent | {2}: Enchanted land becomes a legendary 8/12 Spirit creature with trample until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Genju of the Spires | silent | {2}: Enchanted Mountain becomes a 6/1 red Spirit creature until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Harbinger of Spring | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Heartless Hidetsugu | silent | {T}: Heartless Hidetsugu deals damage to each player equal to half that player's life total, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Heed the Mists | silent | Mill a card, then draw cards equal to the milled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hired Muscle // Scarmaker | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hokori, Dust Drinker | silent | At the beginning of each player's upkeep, that player untaps a land they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Indebted Samurai | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Ink-Eyes, Servant of Oni | silent | Whenever Ink-Eyes deals combat damage to a player, you may put target creature card from that player's graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Isao, Enlightened Bushi | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Iwamori of the Open Fist | silent | When Iwamori enters, each opponent may put a legendary creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jetting Glasskite | silent | Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -194,77 +196,88 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | Budoka Pupil // Ichiga, Who Topples Oaks, Callow Jushi // Jaraku the Interloper, Cunning Bandit // Azamuki, Treachery Incarnate, Faithful Squire // Kaiso, Memory of Loyalty, Hired Muscle // Scarmaker, Mark of the Oni | 6 |
-| Bushido | Indebted Samurai, Isao, Enlightened Bushi, Kentaro, the Smiling Cat, Silverstorm Samurai, Takeno's Cavalry, Toshiro Umezawa | 6 |
-| Soulshift | Body of Jukai, Forked-Branch Garami, Harbinger of Spring, Moonlit Strider, Pus Kami | 5 |
-| At the beginning of your upkeep, add {G}. Until end of turn, you don't lose this mana as steps and phases end. | Chisei, Heart of Oceans, Sakura-Tribe Springcaller, Scourge of Numai | 3 |
-| Offering | Patron of the Akki, Patron of the Kitsune, Patron of the Moon | 3 |
-| At the beginning of each player's upkeep, that player adds {G}{G}{G}. Until end of turn, they don't lose this mana as steps and phases end. | Hokori, Dust Drinker, Shizuko, Caller of Autumn | 2 |
-| {2}: Until end of turn, enchanted Plains becomes a 2/5 white Spirit creature with "Whenever this creature deals damage, its controller gains that much life." It | Genju of the Fens, Genju of the Fields | 2 |
-| Whenever a creature you control deals combat damage to a player, add that much {G}. Until end of turn, you don't lose this mana as steps and phases end. | Ronin Warclub, Sakiko, Mother of Summer | 2 |
-| Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | Jetting Glasskite, Shimmering Glasskite | 2 |
-| Whenever this creature deals combat damage to a player, exile up to two target cards from that player's graveyard. | Skullsnatcher, Walker of Secret Ways | 2 |
-| Whenever this creature is dealt damage, it deals that much damage to you. | Kami of the Honored Dead, Shinka Gatekeeper | 2 |
-| Whenever you cast a Spirit or Arcane spell, you may search your library for an Aura card with enchant creature, reveal it, put it into your hand, then shuffle. | Kyoki, Sanity's Eclipse, Tallowisp | 2 |
-| All Spirits have "When this permanent enters, you may have it deal 3 damage to target non-Spirit creature." | Clash of Realities | 1 |
-| As an additional cost to cast this spell, sacrifice a creature. Target creature gets -X/-X until end of turn, where X is the sacrificed creature's power. | Call for Blood | 1 |
-| Counter target spell. That spell's controller reveals their hand, then discards each card with the same name as a card spliced onto that spell. | Minamo's Meddling | 1 |
-| Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability." | Kira, Great Glass-Spinner | 1 |
-| Creatures your opponents control attack each combat if able. | Fumiko the Lowblood | 1 |
-| Destroy target artifact or enchantment. You gain life equal to its mana value. | Terashi's Grasp | 1 |
-| {2}, Discard a Spirit or Arcane card: This artifact becomes an X/X Cat artifact creature until end of turn, where X is the discarded card's mana value. | Slumbering Tora | 1 |
-| Each enchantment deals 2 damage to its controller, then each Aura attached to a creature deals 2 damage to the creature it's attached to. | Aura Barbs | 1 |
-| Each permanent with a divinity counter on it has indestructible. | That Which Was Taken | 1 |
-| Each player shuffles their hand, graveyard, and all permanents they own into their library, then draws seven cards. Each player's life total becomes 7. | Sway of the Stars | 1 |
-| Each time target permanent would deal damage to a permanent or player this turn, it deals double that damage to that permanent or player instead. Splice onto Ar | Overblaze | 1 |
-| {2}: Enchanted Forest becomes a 4/4 green Spirit creature until end of turn. It's still a land. | Genju of the Cedars | 1 |
-| {2}: Enchanted Island becomes a 3/2 blue Spirit creature with flying until end of turn. It's still a land. | Genju of the Falls | 1 |
-| {2}: Enchanted land becomes a legendary 8/12 Spirit creature with trample until end of turn. It's still a land. | Genju of the Realm | 1 |
-| Fear | Crawling Filth | 1 |
-| First Volley deals 1 damage to target creature and 1 damage to that creature's controller. | First Volley | 1 |
-| Flames of the Blood Hand deals 4 damage to target player or planeswalker. The damage can't be prevented. If that player or that planeswalker's controller would  | Flames of the Blood Hand | 1 |
-| {T}: Heartless Hidetsugu deals damage to each player equal to half that player's life total, rounded down. | Heartless Hidetsugu | 1 |
-| If a creature dealt damage by enchanted creature this turn would die, exile it instead. | Kumano's Blessing | 1 |
-| If you would draw a card, look at the top three cards of your library instead. Put one of those cards into your hand and the rest on the bottom of your library  | Tomorrow, Azami's Familiar | 1 |
-| Kodama of the Center Tree has soulshift X, where X is the number of Spirits you control. | Kodama of the Center Tree | 1 |
-| Mill a card, then draw cards equal to the milled card's mana value. | Heed the Mists | 1 |
-| Permanents enter tapped. | Orb of Dreams | 1 |
-| Prevent all damage that would be dealt to and dealt by enchanted creature. | Heart of Light | 1 |
-| {T}: Prevent the next 1 damage that would be dealt to each creature and each player this turn. | Kitsune Palliator | 1 |
-| Put target land on top of its owner's library. | Uproot | 1 |
-| {0}: Regenerate enchanted creature. | Blessing of Leeches | 1 |
-| {1}, Remove X ki counters from this creature: For each counter removed, this creature gets +2/+0 until end of turn. | Blademane Baku | 1 |
-| Return all artifacts and enchantments to their owners' hands. | Reduce to Dreams | 1 |
-| {T}, Sacrifice three Spirits: Search your library for a legendary Spirit permanent card, put it onto the battlefield, then shuffle. | Lifespinner | 1 |
-| {1}{R}: Switch each creature's power and toughness until end of turn. | Mannichi, the Fevered Dream | 1 |
-| Target creature gains shroud until end of turn and can't be blocked this turn. (A creature with shroud can't be the target of spells or abilities.) Splice onto  | Veil of Secrecy | 1 |
-| Target creature gets +4/+4 until end of turn. If it's a Spirit, it gains trample until end of turn. | Unchecked Growth | 1 |
-| {2}, {T}: Target opponent exiles the top card of their library. You may play that card this turn. | Ornate Kanzashi | 1 |
-| Target player shuffles up to four target cards from their graveyard into their library. | Stream of Consciousness | 1 |
-| The "legend rule" doesn't apply. | Mirror Gallery | 1 |
-| {1}{W}: The next 1 damage that would be dealt to enchanted creature this turn is dealt to any target instead. | Ward of Piety | 1 |
-| {T}: The next time a source of your choice would deal damage this turn, that damage is dealt to Opal-Eye instead. | Opal-Eye, Konda's Yojimbo | 1 |
-| This creature can't attack unless you've cast a creature spell this turn. | Goblin Cohort | 1 |
-| This creature has protection from each color among permanents you control. | Empty-Shrine Kannushi | 1 |
-| Traproot Kami's toughness is equal to the number of Forests on the battlefield. | Traproot Kami | 1 |
-| {T}: Untap all Forests and all green creatures. Activate only once each turn. | Patron of the Orochi | 1 |
-| When Iwamori enters, each opponent may put a legendary creature card from their hand onto the battlefield. | Iwamori of the Open Fist | 1 |
-| When Yukora leaves the battlefield, sacrifice all non-Ogre creatures you control. | Yukora, the Prisoner | 1 |
-| Whenever a creature with power 1 or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the ne | Shirei, Shizo's Caretaker | 1 |
-| Whenever a legendary permanent other than Yomiji is put into a graveyard from the battlefield, return that card to its owner's hand. | Yomiji, Who Bars the Way | 1 |
-| Whenever a permanent is put into an opponent's graveyard, that player loses 1 life. | Patron of the Nezumi | 1 |
-| Whenever a player casts a spell, tap this creature. | Ogre Recluse | 1 |
-| Whenever equipped creature deals damage to a creature, tap that creature. That creature doesn't untap during its controller's untap step for as long as this Equ | Neko-Te | 1 |
-| Whenever this creature attacks, it gains "this creature can't be blocked" until end of turn unless defending player sacrifices a creature of their choice. | Ogre Marauder | 1 |
-| Whenever this creature attacks or blocks, you lose 1 life if you don't control a Demon. | Takenuma Bleeder | 1 |
-| Whenever this creature attacks, you may have it deal 1 damage to each creature defending player controls. | Ronin Cliffrider | 1 |
-| Whenever this creature deals damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | Matsu-Tribe Sniper | 1 |
-| You and target opponent each gain control of all creatures the other controls until end of turn. Untap those creatures. Those creatures gain haste until end of  | Twist Allegiance | 1 |
-| You may exile a black card with mana value X from your hand rather than pay this spell's mana cost. Target creature gets -X/-X until end of turn. | Sickening Shoal | 1 |
-| You may exile a red card with mana value X from your hand rather than pay this spell's mana cost. Target creature gets +X/+0 until end of turn. | Blazing Shoal | 1 |
-| You may exile a white card with mana value X from your hand rather than pay this spell's mana cost. The next X damage that a source of your choice would deal to | Shining Shoal | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| bushido | 6 | Indebted Samurai, Isao, Enlightened Bushi, Kentaro, the Smiling Cat, Silverstorm Samurai, Takeno's Cavalry | bok |
+| at the beginning of the end step, if there are two or more ki counters on ~, you may flip it. | 5 | Budoka Pupil // Ichiga, Who Topples Oaks, Callow Jushi // Jaraku the Interloper, Cunning Bandit // Azamuki, Treachery Incarnate, Faithful Squire // Kaiso, Memory of Loyalty, Hired Muscle // Scarmaker | bok |
+| soulshift | 5 | Body of Jukai, Forked-Branch Garami, Harbinger of Spring, Moonlit Strider, Pus Kami | bok |
+| offering | 3 | Patron of the Akki, Patron of the Kitsune, Patron of the Moon | bok |
+| whenever ~ becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | 2 | Jetting Glasskite, Shimmering Glasskite | bok |
+| all spirits have "..." | 1 | Clash of Realities | bok |
+| as an additional cost to cast ~, sacrifice a creature. target creature gets -N/-N until end of turn, where N is the sacrificed creature's power. | 1 | Call for Blood | bok |
+| at the beginning of each player"..."t lose ~ as steps and phases end. | 1 | Shizuko, Caller of Autumn | bok |
+| at the beginning of each player's upkeep, that player untaps a land they control. | 1 | Hokori, Dust Drinker | bok |
+| at the beginning of the end step, if you control no demons, sacrifice ~. | 1 | Mark of the Oni | bok |
+| at the beginning of your upkeep, add {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Sakura-Tribe Springcaller | bok |
+| at the beginning of your upkeep, sacrifice chisei unless you remove a counter from a permanent you control. | 1 | Chisei, Heart of Oceans | bok |
+| at the beginning of your upkeep, you lose N life if you don't control an ogre. | 1 | Scourge of Numai | bok |
+| counter target spell. that spell's controller reveals their hand, then discards each card with the same name as a card spliced onto that spell. | 1 | Minamo's Meddling | bok |
+| creatures you control have "..." | 1 | Kira, Great Glass-Spinner | bok |
+| creatures your opponents control attack each combat if able. | 1 | Fumiko the Lowblood | bok |
+| destroy target artifact or enchantment. you gain life equal to its mana value. | 1 | Terashi's Grasp | bok |
+| each enchantment deals N damage to its controller, then each aura attached to a creature deals N damage to the creature it's attached to. | 1 | Aura Barbs | bok |
+| each permanent with a divinity counter on it has indestructible. | 1 | That Which Was Taken | bok |
+| each player shuffles their hand, graveyard, and all permanents they own into their library, then draws seven cards. each player's life total becomes N. | 1 | Sway of the Stars | bok |
+| each time target permanent would deal damage to a permanent or player ~, it deals double that damage to that permanent or player instead. splice onto arcane {M} | 1 | Overblaze | bok |
+| fear | 1 | Crawling Filth | bok |
+| if a creature dealt damage by enchanted creature ~ would die, exile it instead. | 1 | Kumano's Blessing | bok |
+| if you would draw a card, look at the top three cards of your library instead. put one of those cards into your hand and the rest on the bottom of your library  | 1 | Tomorrow, Azami's Familiar | bok |
+| mill a card, then draw cards equal to the milled card's mana value. | 1 | Heed the Mists | bok |
+| permanents enter tapped. | 1 | Orb of Dreams | bok |
+| prevent all damage that would be dealt to and dealt by enchanted creature. | 1 | Heart of Light | bok |
+| put target land on top of its owner's library. | 1 | Uproot | bok |
+| return all artifacts and enchantments to their owners' hands. | 1 | Reduce to Dreams | bok |
+| target creature gains shroud until end of turn and can"..."t be the target of spells or abilities.) splice onto arcane—return a blue creature you control to its | 1 | Veil of Secrecy | bok |
+| target creature gets +N/+N until end of turn. if it's a spirit, it gains trample until end of turn. | 1 | Unchecked Growth | bok |
+| target player shuffles up to four target cards from their graveyard into their library. | 1 | Stream of Consciousness | bok |
+| the "..." doesn't apply. | 1 | Mirror Gallery | bok |
+| when iwamori enters, each opponent may put a legendary creature card from their hand onto the battlefield. | 1 | Iwamori of the Open Fist | bok |
+| when yukora leaves the battlefield, sacrifice all non-ogre creatures you control. | 1 | Yukora, the Prisoner | bok |
+| whenever a creature with power N or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the ne | 1 | Shirei, Shizo's Caretaker | bok |
+| whenever a creature you control deals combat damage to a player, add that much {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Sakiko, Mother of Summer | bok |
+| whenever a creature you control enters, attach ~ to that creature. | 1 | Ronin Warclub | bok |
+| whenever a legendary permanent other than yomiji is put into a graveyard from the battlefield, return that card to its owner's hand. | 1 | Yomiji, Who Bars the Way | bok |
+| whenever a permanent is put into an opponent's graveyard, that player loses N life. | 1 | Patron of the Nezumi | bok |
+| whenever a player casts a spell, tap ~. | 1 | Ogre Recluse | bok |
+| whenever equipped creature deals damage to a creature, tap that creature. that creature doesn"..."s untap step for as long as ~ remains on the battlefield. | 1 | Neko-Te | bok |
+| whenever ink-eyes deals combat damage to a player, you may put target creature card from that player's graveyard onto the battlefield under your control. | 1 | Ink-Eyes, Servant of Oni | bok |
+| whenever you cast a spirit or arcane spell, target opponent exiles a card from their hand. | 1 | Kyoki, Sanity's Eclipse | bok |
+| whenever you cast a spirit or arcane spell, you may search your library for an aura card with enchant creature, reveal it, put it into your hand, then shuffle. | 1 | Tallowisp | bok |
+| whenever ~ attacks or blocks, you lose N life if you don't control a demon. | 1 | Takenuma Bleeder | bok |
+| whenever ~ attacks, it gains "..." until end of turn unless defending player sacrifices a creature of their choice. | 1 | Ogre Marauder | bok |
+| whenever ~ attacks, you may have it deal N damage to each creature defending player controls. | 1 | Ronin Cliffrider | bok |
+| whenever ~ deals combat damage to a player, exile up to two target cards from that player's graveyard. | 1 | Skullsnatcher | bok |
+| whenever ~ deals combat damage to a player, look at that player's hand. | 1 | Walker of Secret Ways | bok |
+| whenever ~ deals damage to a creature, tap that creature and it doesn"..."s next untap step. | 1 | Matsu-Tribe Sniper | bok |
+| whenever ~ is dealt damage, it deals that much damage to you. | 1 | Shinka Gatekeeper | bok |
+| whenever ~ is dealt damage, you gain that much life. | 1 | Kami of the Honored Dead | bok |
+| you and target opponent each gain control of all creatures the other controls until end of turn. untap those creatures. those creatures gain haste until end of  | 1 | Twist Allegiance | bok |
+| you may exile a black card with mana value N from your hand rather than pay ~ mana cost. target creature gets -N/-N until end of turn. | 1 | Sickening Shoal | bok |
+| you may exile a red card with mana value N from your hand rather than pay ~ mana cost. target creature gets +N/+N until end of turn. | 1 | Blazing Shoal | bok |
+| you may exile a white card with mana value N from your hand rather than pay ~ mana cost. the next N damage that a source of your choice would deal to you and/or | 1 | Shining Shoal | bok |
+| {M}, discard a spirit or arcane card: ~ becomes an N/N cat artifact creature until end of turn, where N is the discarded card's mana value. | 1 | Slumbering Tora | bok |
+| {M}, remove N ki counters from ~: for each counter removed, ~ gets +N/+N until end of turn. | 1 | Blademane Baku | bok |
+| {M}, sacrifice three spirits: search your library for a legendary spirit permanent card, put it onto the battlefield, then shuffle. | 1 | Lifespinner | bok |
+| {M}, {M}: target opponent exiles the top card of their library. you may play that card ~. | 1 | Ornate Kanzashi | bok |
+| {M}: enchanted forest becomes a N/N green spirit creature until end of turn. it's still a land. | 1 | Genju of the Cedars | bok |
+| {M}: enchanted island becomes a N/N blue spirit creature with flying until end of turn. it's still a land. | 1 | Genju of the Falls | bok |
+| {M}: enchanted land becomes a legendary N/N spirit creature with trample until end of turn. it's still a land. | 1 | Genju of the Realm | bok |
+| {M}: enchanted mountain becomes a N/N red spirit creature until end of turn. it's still a land. | 1 | Genju of the Spires | bok |
+| {M}: prevent the next N damage that would be dealt to each creature and each player ~. | 1 | Kitsune Palliator | bok |
+| {M}: regenerate enchanted creature. | 1 | Blessing of Leeches | bok |
+| {M}: the next time a source of your choice would deal damage ~, that damage is dealt to opal-eye instead. | 1 | Opal-Eye, Konda's Yojimbo | bok |
+| {M}: untap all forests and all green creatures. activate only once each turn. | 1 | Patron of the Orochi | bok |
+| {M}: until end of turn, enchanted plains becomes a N/N white spirit creature with "..." it's still a land. | 1 | Genju of the Fields | bok |
+| {M}: until end of turn, enchanted swamp becomes a N/N black spirit creature with "..." it's still a land. | 1 | Genju of the Fens | bok |
+| {M}: ~ deals damage to each player equal to half that player's life total, rounded down. | 1 | Heartless Hidetsugu | bok |
+| {M}{M}: switch each creature's power and toughness until end of turn. | 1 | Mannichi, the Fevered Dream | bok |
+| {M}{M}: the next N damage that would be dealt to enchanted creature ~ is dealt to any target instead. | 1 | Ward of Piety | bok |
+| ~ can"..."ve cast a creature spell ~. | 1 | Goblin Cohort | bok |
+| ~ deals N damage to target creature and N damage to that creature's controller. | 1 | First Volley | bok |
+| ~ deals N damage to target player or planeswalker. the damage can"..."s controller would gain life ~, that player gains no life instead. | 1 | Flames of the Blood Hand | bok |
+| ~ has protection from each color among permanents you control. | 1 | Empty-Shrine Kannushi | bok |
+| ~ has soulshift N, where N is the number of spirits you control. | 1 | Kodama of the Center Tree | bok |
+| ~'s toughness is equal to the number of forests on the battlefield. | 1 | Traproot Kami | bok |
 
 ## Notes
 

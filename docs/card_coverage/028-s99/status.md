@@ -46,9 +46,9 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature blocks a creature, destroy that creature and this creature. | Loyal Sentry | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when ~ blocks a creature, destroy that creature and ~. | 1 | Loyal Sentry | s99 |
 
 ## Notes
 

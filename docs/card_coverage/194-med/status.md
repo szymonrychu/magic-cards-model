@@ -41,12 +41,12 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| +1: Add {R} or {G}. If that mana is spent on a creature spell, it gains riot. | Domri, Chaos Bringer | 1 |
-| +1: Exile up to two target cards from a single graveyard. You gain 2 life if at least one creature card was exiled this way. | Kaya, Orzhov Usurper | 1 |
-| +1: Up to one other target creature you control gains your choice of vigilance, lifelink, or indestructible until end of turn. | Gideon Blackblade | 1 |
-| +1: You draw a card. Each opponent exiles a card from their hand or a permanent they control. | Nicol Bolas, Dragon-God | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| +N: add {M} or {M}. if that mana is spent on a creature spell, it gains riot. | 1 | Domri, Chaos Bringer | med |
+| +N: exile up to two target cards from a single graveyard. you gain N life if at least one creature card was exiled ~. | 1 | Kaya, Orzhov Usurper | med |
+| +N: up to one other target creature you control gains your choice of vigilance, lifelink, or indestructible until end of turn. | 1 | Gideon Blackblade | med |
+| +N: you draw a card. each opponent exiles a card from their hand or a permanent they control. | 1 | Nicol Bolas, Dragon-God | med |
 
 ## Notes
 

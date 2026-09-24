@@ -3,13 +3,13 @@
 - Expansion: 103
 - Set code: `m11`
 - Release date: 2010-07-16
-- Cards in scope (Modern/Pioneer/Standard-legal): 103
+- Cards in scope (Modern/Pioneer/Standard-legal): 105
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 103 |
+| Modern | 105 |
 | Pioneer | 36 |
 | Standard | 3 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 13 | 12.6% |
-| Partial (unaudited) | 8 | 7.8% |
-| Not tested (handled, untested) | 56 | 54.4% |
-| Not working (silent / notice / error) | 26 | 25.2% |
+| Full (handled + tested) | 13 | 12.4% |
+| Partial (unaudited) | 8 | 7.6% |
+| Not tested (handled, untested) | 58 | 55.2% |
+| Not working (silent / notice / error) | 26 | 24.8% |
 
 ## Cards needing work
 
@@ -62,6 +62,7 @@
 | Obstinate Baloth | unaudited | If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead of putting it into your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Air Servant | handled | {2}{U}: Tap target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Pridemate | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Ancient Hellkite | handled | {R}: This creature deals 1 damage to target creature defending player controls. Activate only if this creature is attacking. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arc Runner | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Armored Cancrix | handled |  |  | Y/Y/- | not_tested |
 | Assault Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -104,6 +105,7 @@
 | Scroll Thief | handled | Whenever this creature deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stabbing Pain | handled | Target creature gets -1/-1 until end of turn. Tap that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stone Golem | handled |  |  | Y/Y/- | not_tested |
+| Sun Titan | handled | Whenever this creature enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sword of Vengeance | handled | Equipped creature gets +2/+0 and has first strike, vigilance, trample, and haste. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sylvan Ranger | handled | When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Temple Bell | handled | {T}: Each player draws a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -140,41 +142,42 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| This creature can't attack unless there are five or more Islands on the battlefield. | Bloodcrazed Goblin, Harbor Serpent | 2 |
-| All lands are Islands in addition to their other types. | Stormtide Leviathan | 1 |
-| Any number of target players each gain 6 life. | Hunters' Feast | 1 |
-| At the beginning of each player's upkeep, that player reveals a card at random from their hand. If it's a land card, the player puts it onto the battlefield. Ot | Wild Evocation | 1 |
-| At the beginning of your upkeep, put a +1/+1 counter on enchanted creature. | Primal Cocoon | 1 |
-| Each opponent loses 3 life. You gain life equal to the life lost this way. | Blood Tithe | 1 |
-| Each opponent who cast a spell this turn can't attack with creatures. | Angelic Arbiter | 1 |
-| Enchanted creature gets -1/-1 for each Swamp you control. | Quag Sickness | 1 |
-| Exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. Put all creature cards revealed this  | Mass Polymorph | 1 |
-| {4}, {T}: Exile target attacking creature an opponent controls. At the beginning of the next end step, return it to the battlefield tapped under its owner's con | Mystifying Maze | 1 |
-| If a red instant or sorcery spell you control would deal damage, it deals double that damage instead. | Fire Servant | 1 |
-| If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead of putting it into your graveyard. | Obstinate Baloth | 1 |
-| Other Knight creatures you control get +1/+1 and have indestructible. | Knight Exemplar | 1 |
-| Other Vampire creatures you control get +1/+1. | Captivating Vampire | 1 |
-| {X}: Prevent the next X damage that would be dealt to you this turn. If damage is prevented this way, this creature deals that much damage to target player or p | Vengeful Archon | 1 |
-| {T}: Put a +1/+1 counter on each artifact creature you control. | Steel Overseer | 1 |
-| Spells you control can't be countered by blue or black spells this turn, and creatures you control can't be the targets of blue or black spells this turn. | Autumn's Veil | 1 |
-| Target creature becomes red until end of turn and attacks this turn if able. | Incite | 1 |
-| This creature can't be the target of nongreen spells or abilities from nongreen sources. | Gaea's Revenge | 1 |
-| This spell can't be countered. Combust deals 5 damage to target white or blue creature. The damage can't be prevented. | Combust | 1 |
-| Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control. | Overwhelming Stampede | 1 |
-| {3}: Until end of turn, this creature loses defender and gains flying. | Gargoyle Sentinel | 1 |
-| When enchanted creature dies, its controller chooses target creature one of their opponents controls. Return this card from its owner's graveyard to the battlef | Necrotic Plague | 1 |
-| When this creature enters, you may search your library for up to three cards named Squadron Hawk, reveal them, put them into your hand, then shuffle. | Squadron Hawk | 1 |
-| When you control no permanents with phylactery counters on them, sacrifice this creature. | Phylactery Lich | 1 |
-| Whenever this creature attacks, each player chooses a card name. Then each player reveals the top card of their library. If the card a player revealed has the n | Conundrum Sphinx | 1 |
-| Whenever this creature attacks, you may have it deal damage equal to its power to target creature defending player controls. If you do, that creature deals dama | Cyclops Gladiator | 1 |
-| Whenever this creature deals combat damage to a player, that player reveals a card at random from their hand. | Merfolk Spy | 1 |
-| Whenever you draw a card, you may have target player mill a card. | Jace's Erasure | 1 |
-| {2}, {T}: You gain 5 life. Shuffle this artifact and your graveyard into their owner's library. | Elixir of Immortality | 1 |
-| You may cast spells as though they had flash. | Leyline of Anticipation | 1 |
-| You may choose new targets for target spell. | Redirect | 1 |
-| You may pay 6 life and sacrifice three black creatures rather than pay this spell's mana cost. | Demon of Death's Gate | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| all lands are islands in addition to their other types. | 1 | Stormtide Leviathan | m11 |
+| any number of target players each gain N life. | 1 | Hunters' Feast | m11 |
+| at the beginning of each player"..."s a land card, the player puts it onto the battlefield. otherwise, the player casts it without paying its mana cost if able. | 1 | Wild Evocation | m11 |
+| at the beginning of your upkeep, put a +N/+N counter on enchanted creature. | 1 | Primal Cocoon | m11 |
+| each opponent loses N life. you gain life equal to the life lost ~. | 1 | Blood Tithe | m11 |
+| each opponent who cast a spell ~ can't attack with creatures. | 1 | Angelic Arbiter | m11 |
+| enchanted creature gets -N/-N for each swamp you control. | 1 | Quag Sickness | m11 |
+| exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. put all creature cards revealed ~ ont | 1 | Mass Polymorph | m11 |
+| if a red instant or sorcery spell you control would deal damage, it deals double that damage instead. | 1 | Fire Servant | m11 |
+| if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield instead of putting it into your graveyard. | 1 | Obstinate Baloth | m11 |
+| other knight creatures you control get +N/+N and have indestructible. | 1 | Knight Exemplar | m11 |
+| other vampire creatures you control get +N/+N. | 1 | Captivating Vampire | m11 |
+| spells you control can"..."t be the targets of blue or black spells ~. | 1 | Autumn's Veil | m11 |
+| target creature becomes red until end of turn and attacks ~ if able. | 1 | Incite | m11 |
+| until end of turn, creatures you control gain trample and get +N/+N, where N is the greatest power among creatures you control. | 1 | Overwhelming Stampede | m11 |
+| when enchanted creature dies, its controller chooses target creature one of their opponents controls. return ~ from its owner's graveyard to the battlefield att | 1 | Necrotic Plague | m11 |
+| when you control no permanents with phylactery counters on them, sacrifice ~. | 1 | Phylactery Lich | m11 |
+| when ~ enters, you may search your library for up to three cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Squadron Hawk | m11 |
+| whenever you draw a card, you may have target player mill a card. | 1 | Jace's Erasure | m11 |
+| whenever ~ attacks, each player chooses a card name. then each player reveals the top card of their library. if the card a player revealed has the name they cho | 1 | Conundrum Sphinx | m11 |
+| whenever ~ attacks, you may have it deal damage equal to its power to target creature defending player controls. if you do, that creature deals damage equal to  | 1 | Cyclops Gladiator | m11 |
+| whenever ~ deals combat damage to a player, that player reveals a card at random from their hand. | 1 | Merfolk Spy | m11 |
+| you may cast spells as though they had flash. | 1 | Leyline of Anticipation | m11 |
+| you may choose new targets for target spell. | 1 | Redirect | m11 |
+| you may pay N life and sacrifice three black creatures rather than pay ~ mana cost. | 1 | Demon of Death's Gate | m11 |
+| {M}, {M}: exile target attacking creature an opponent controls. at the beginning of the next end step, return it to the battlefield tapped under its owner's con | 1 | Mystifying Maze | m11 |
+| {M}, {M}: you gain N life. shuffle ~ and your graveyard into their owner's library. | 1 | Elixir of Immortality | m11 |
+| {M}: prevent the next N damage that would be dealt to you ~. if damage is prevented ~, ~ deals that much damage to target player or planeswalker. | 1 | Vengeful Archon | m11 |
+| {M}: put a +N/+N counter on each artifact creature you control. | 1 | Steel Overseer | m11 |
+| {M}: until end of turn, ~ loses defender and gains flying. | 1 | Gargoyle Sentinel | m11 |
+| ~ can"..."t be prevented. | 1 | Combust | m11 |
+| ~ can't attack unless an opponent has been dealt damage ~. | 1 | Bloodcrazed Goblin | m11 |
+| ~ can't attack unless there are five or more islands on the battlefield. | 1 | Harbor Serpent | m11 |
+| ~ can't be the target of nongreen spells or abilities from nongreen sources. | 1 | Gaea's Revenge | m11 |
 
 ## Notes
 

@@ -293,104 +293,121 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When you cast this spell, up to two target players each manifest two cards from their hands. For each card manifested this way, you draw a card. | Breaker of Creation, Emrakul, the World Anew, Herigast, Erupting Nullkite, Hope-Ender Coatl, Kozilek, the Broken Reality, Wumpus Aberration | 6 |
-| Devoid (This card has no color.) Return target nonland permanent you don't control to its owner's hand. Whenever you cast a colorless spell with mana value 7 or | Abstruse Appropriation, Fanged Flames, Ugin's Binding, Unfathomable Truths | 4 |
-| Living weapon | Colossal Dreadmask, Cranial Ram, Drossclaw, Mandibular Kite | 4 |
-| Enchanted creature gets +1/+1 for each +1/+1 counter on this Aura and has reach and trample. | Glyph Elemental, Nyxborn Hydra, Strength of the Harvest // Haven of the Harvest | 3 |
-| Landfall — Whenever a land you control enters, you may pay {1}{G} if this permanent is attached to a creature you control. If you do, create a token that's a co | Reckless Pyrosurfer, Springheart Nantuko, Territory Culler | 3 |
-| You may sacrifice a nontoken green creature rather than pay this spell's mana cost. Search your library for up to two basic land cards, reveal those cards, put  | Flare of Cultivation, Flare of Fortitude, Flare of Malice | 3 |
-| At the beginning of your first main phase, mill three cards. Then you may pay {1} and 3 life. If you do, put a card from among those cards into your hand. | Electrozoa, Ripples of Undeath | 2 |
-| Enchanted creature gets +1/+1 and has afterlife 1. | Indebted Spirit, Nyxborn Unicorn | 2 |
-| Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | Amphibian Downpour, Trickster's Elk | 2 |
-| Modified creatures you control have lifelink. | Envoy of the Ancestors, Temperamental Oozewagg | 2 |
-| Whenever you cast a creature spell with mana value 4, 5, or 6, create two 0/1 colorless Eldrazi Spawn creature tokens with "Sacrifice this token: Add {C}." | Kozilek's Unsealing, Monstrous Vortex | 2 |
-| As an additional cost to cast this spell, sacrifice a creature or sacrifice a modified creature. (Equipment, Auras you control, and counters are modifications.) | Lethal Throwdown | 1 |
-| As long as another player controls enchanted creature, it can't attack or block. Otherwise, this Aura has umbra armor. | Dog Umbra | 1 |
-| As long as this permanent is a creature, it has prowess. | Triton Wavebreaker | 1 |
-| As this creature enters, it becomes your choice of a 3/3 creature with flying, a 2/5 creature with vigilance, or a 0/12 creature with defender. | Corrupted Shapeshifter | 1 |
-| At the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after this phase. | Shadow of the Second Sun | 1 |
-| Choose target spell, then flip a coin. If you win the flip, gain control of that spell and you may choose new targets for it. If you lose the flip, counter that | Invert Polarity | 1 |
-| Choose target spell. You get {E}{E} (two energy counters), then you may pay any amount of {E}. Counter that spell unless its controller pays {1} for each {E} pa | Aether Spike | 1 |
-| Choose up to one target artifact or creature card in your graveyard. You get {E}{E} (two energy counters). Then you may pay an amount of {E} equal to that card' | Jolted Awake | 1 |
-| Connive | Copycrook | 1 |
-| Creature tokens you control have evolve. | Propagator Drone | 1 |
-| Creatures you control have "Whenever this creature becomes the target of a spell or ability, reveal the top card of your library. If it's a land card, put it on | Nadu, Winged Wisdom | 1 |
-| Destroy target creature or planeswalker. You gain 1 life for each of its colors. | Breathe Your Last | 1 |
-| Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. Creatures without flying c | Sundering Eruption // Volcanic Fissure | 1 |
-| Draw two cards. Then discard a card at random unless you pay {E}{E} (two energy counters). | Rush of Inspiration // Crackling Falls | 1 |
-| During your turn, nonland permanent cards in your graveyard have retrace. | Six | 1 |
-| {4}{B}: Each opponent loses 2 life and you gain 2 life. This ability costs {4}{B} less to activate if you've drawn three or more cards this turn. Activate only  | Kami of Jealous Thirst | 1 |
-| Eldrazi you control have "{T}: Add one mana of any color." | Path of Annihilation | 1 |
-| Emerge | Twisted Riddlekeeper | 1 |
-| Enchantment spells you cast have affinity for Auras. | Pearl-Ear, Imperial Advisor | 1 |
-| {2}{C}: Exile enchanted creature. | Utter Insignificance | 1 |
-| Exile the top three cards of your library. You may play those cards this turn. At the beginning of the next end step, if any of those cards remain exiled, put t | Glimpse the Impossible | 1 |
-| Fabricate | Marionette Apprentice | 1 |
-| −6: Gain control of target creature. It becomes a Vampire in addition to its other types. Put a lifelink counter on it if you control a white permanent other th | Sorin of House Markov // Sorin, Ravenous Neonate | 1 |
-| I — Search your library for a card, exile it face down, then shuffle. | The Creation of Avacyn | 1 |
-| If a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time. | Echoes of Eternity | 1 |
-| If this creature was kicked, it enters with two +1/+1 counters and a trample counter on it and with haste. | Voidpouncer | 1 |
-| II — Create a 2/1 white Cat Warrior creature token, then put a vigilance counter on a creature you control. | Ajani Fells the Godsire | 1 |
-| III — Create a Spellgorger Weird token. | Ral and the Implicit Maze | 1 |
-| IV — Sacrifice any number of creatures. Search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures s | The Hunger Tide Rises | 1 |
-| Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Choose target creature with mana value 3 or less. If this spell was kicked, instead cho | Expel the Unworthy | 1 |
-| Land cards in your graveyard have dredge 2. | The Necrobloom | 1 |
-| Modular | Arcbound Condor | 1 |
-| Morbid — At the beginning of your end step, if a creature died this turn, populate. | Muster the Departed | 1 |
-| Nethergoyf's power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus 1. | Nethergoyf | 1 |
-| Noncreature spells you cast from exile have convoke. | Party Thrasher | 1 |
-| Other colorless creatures you control get +1/+1. | It That Heralds the End | 1 |
-| Other creatures have base power and toughness 2/2 and are Bears in addition to their other types. | Kudo, King Among Bears | 1 |
-| Overload | Fangs of Kalonia | 1 |
-| {T}, Pay {E}{E}: Exile the top card of your library. You may play it until you exile another card with this artifact. | Unstable Amulet | 1 |
-| Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn. | Bespoke Battlewagon | 1 |
-| Permanents you control have "Whenever one or more +1/+1 counters are put on this permanent, put an additional +1/+1 counter on it. This ability triggers only on | Cursed Wombat | 1 |
-| Players can't untap more than one nonbasic land during their untap steps. | Winter Moon | 1 |
-| Prototype | Frogmyr Enforcer | 1 |
-| Put a +1/+1 counter, a reach counter, and a deathtouch counter on target creature. Untap it. | Gift of the Viper | 1 |
-| Put a +1/+1 counter on target creature you control, then each modified creature you control deals damage equal to its power to target creature you don't control | Signature Slam | 1 |
-| Reinforce | Fowl Strike | 1 |
-| {T}: Return another target permanent you control and all Auras you control attached to it to their owner's hand. Activate only during your turn. | Essence Reliquary | 1 |
-| Return target artifact or creature card from your graveyard to your hand. Pyretic Rebirth deals damage equal to that card's mana value to up to one target creat | Pyretic Rebirth | 1 |
-| Revolt — As long as a permanent left the battlefield under your control this turn, if a source you control would deal noncombat damage to an opponent or a perma | Aether Revolt | 1 |
-| Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. | Shilgengar, Sire of Famine | 1 |
-| {5}{B}, Sacrifice this enchantment: Put target creature card from a graveyard onto the battlefield under your control. This ability costs {1} less to activate f | Quest for the Necropolis | 1 |
-| Skip your draw step. | Necrodominance | 1 |
-| {G}, {T}, Tap two untapped creatures you control: Reveal a card from your hand or the top card of your library. If you reveal a creature card this way, put it o | Eladamri, Korvecdal | 1 |
-| Target creature gets -3/-3 until end of turn. {1}{B}, Exile this card from your graveyard: Put a +1/+1 counter on target creature you control. Activate only as  | Wither and Bloom | 1 |
-| {B}, {T}: Target creature you control connives X, where X is the number of creatures that died this turn. | Spymaster's Vault | 1 |
-| {U}, {T}: The next spell you cast this turn has improvise. | Archway of Innovation | 1 |
-| This creature can block only creatures with flying. | Etherium Pteramander | 1 |
-| This creature has flying as long as it's modified. | Obstinate Gargoyle | 1 |
-| This spell costs {1} less to cast for each 1 life your opponents have lost this turn. Target opponent exiles the top three cards of their library. Until the end | Bloodsoaked Insight // Sanguine Morass | 1 |
-| Until end of turn, double target creature's power and it gains first strike. | Legion Leadership // Legion Stronghold | 1 |
-| Vanishing | Dreamtide Whale | 1 |
-| When Imskir enters, you draw X cards and you lose X life, where X is half the number of artifacts you control, rounded down. | Imskir Iron-Eater | 1 |
-| When Rosheen enters, mill six cards. You may put a card with {X} in its mana cost from among them into your hand. | Rosheen, Roaring Prophet | 1 |
-| When this creature enters, exchange control of this creature and target creature an opponent controls. If you do, you get {E}{E}{E}{E}, then sacrifice that crea | Volatile Stormdrake | 1 |
-| When this creature enters, look at the top six cards of your library. You may reveal an artifact or enchantment card from among them and put it into your hand.  | Rosecot Knight | 1 |
-| When this creature enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then s | Grim Servant | 1 |
-| When this creature enters, support 2. | Aerie Auxiliary | 1 |
-| When this creature enters, target opponent exiles the top card of their library, a card at random from their graveyard, and a card at random from their hand. Yo | Crabomination | 1 |
-| When this creature enters, you get {E}{E} . Then if you cast it from your hand, exile cards from the top of your library until you exile a nonland card. You may | Amped Raptor | 1 |
-| When this creature exploits a creature, gain control of target artifact or creature until end of turn. Untap that permanent. It gains haste until end of turn. | Infernal Captor | 1 |
-| When this enchantment enters, create two 1/1 red Gremlin creature tokens. Then you get an amount of {E} equal to the number of creatures you control. | Scurry of Gremlins | 1 |
-| Whenever a modified creature you control attacks, double the number of each kind of counter on it. Then for each nontoken permanent attached to it, create a tok | Arna Kennerüd, Skycaptain | 1 |
-| Whenever a player casts a noncreature spell, put a collection counter on this enchantment. Then if there are three or more collection counters on it, sacrifice  | Charitable Levy | 1 |
-| Whenever an opponent casts a spell, you may reveal the top card of your library. If you do, you may cast that card without paying its mana cost if the two spell | Powerbalance | 1 |
-| Whenever another nontoken permanent you control leaves the battlefield, choose one that hasn't been chosen this turn. Create a creature token with those charact | Genku, Future Shaper | 1 |
-| Whenever Grist or another creature you control enters, if it entered from your graveyard or you cast it from your graveyard, you may pay {G}. If you do, exile G | Grist, Voracious Larva // Grist, the Plague Swarm | 1 |
-| Whenever this creature attacks, other modified creatures you control get +X/+X until end of turn, where X is this creature's power. | Golden-Tail Trainer | 1 |
-| Whenever this creature attacks, put a +1/+1 counter on target modified creature you control. | Expanding Ooze | 1 |
-| Whenever this creature attacks, you may draw cards equal to its power. If you do, discard that many cards. | Horrid Shadowspinner | 1 |
-| Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. When you do, you may remove a counter from another target permanent or oppone | Etched Slith | 1 |
-| Whenever this creature enters or attacks, it connives. | Scurrilous Sentry | 1 |
-| You don't lose unspent red mana as steps and phases end. | Ashling, Flame Dancer | 1 |
-| You get {E}{E}{E} (three energy counters), then you may pay any amount of {E}. Each player may exile their hand and draw a number of cards equal to the amount o | Wheel of Potential | 1 |
-| You may cast creature spells with mana value 3 or less by paying {E} rather than paying their mana costs. If you cast a spell this way, you may cast it as thoug | Primal Prayers | 1 |
-| You may exert this creature as it attacks. When you do, target creature gets +X/+X until end of turn, where X is the number of counters on permanents you contro | Hydra Trainer | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| living weapon | 4 | Colossal Dreadmask, Cranial Ram, Drossclaw, Mandibular Kite | mh3 |
+| Landfall | 3 | Reckless Pyrosurfer, Springheart Nantuko, Territory Culler | mh3 |
+| I | 1 | The Creation of Avacyn | mh3 |
+| II | 1 | Ajani Fells the Godsire | mh3 |
+| III | 1 | Ral and the Implicit Maze | mh3 |
+| IV | 1 | The Hunger Tide Rises | mh3 |
+| Morbid | 1 | Muster the Departed | mh3 |
+| Revolt | 1 | Aether Revolt | mh3 |
+| as an additional cost to cast ~, sacrifice a creature or sacrifice a modified creature. (equipment, auras you control, and counters are modifications.) destroy  | 1 | Lethal Throwdown | mh3 |
+| as long as another player controls enchanted creature, it can't attack or block. otherwise, ~ has umbra armor. | 1 | Dog Umbra | mh3 |
+| as long as ~ is a creature, it has prowess. | 1 | Triton Wavebreaker | mh3 |
+| as ~ enters, it becomes your choice of a N/N creature with flying, a N/N creature with vigilance, or a N/N creature with defender. | 1 | Corrupted Shapeshifter | mh3 |
+| at the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after ~. | 1 | Shadow of the Second Sun | mh3 |
+| at the beginning of your first main phase, mill three cards. then you may pay {M} and N life. if you do, put a card from among those cards into your hand. | 1 | Ripples of Undeath | mh3 |
+| at the beginning of your first main phase, tap ~ unless you pay {M}. | 1 | Electrozoa | mh3 |
+| choose target spell, then flip a coin. if you win the flip, gain control of that spell and you may choose new targets for it. if you lose the flip, counter that | 1 | Invert Polarity | mh3 |
+| choose target spell. you get {M}{M} (two energy counters), then you may pay any amount of {M}. counter that spell unless its controller pays {M} for each {M} pa | 1 | Aether Spike | mh3 |
+| choose up to one target artifact or creature card in your graveyard. you get {M}{M} (two energy counters). then you may pay an amount of {M} equal to that card' | 1 | Jolted Awake | mh3 |
+| connive | 1 | Copycrook | mh3 |
+| creature tokens you control have evolve. | 1 | Propagator Drone | mh3 |
+| creatures you control have "..." | 1 | Nadu, Winged Wisdom | mh3 |
+| destroy target creature or planeswalker. you gain N life for each of its colors. | 1 | Breathe Your Last | mh3 |
+| destroy target land. its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. creatures without flying c | 1 | Sundering Eruption // Volcanic Fissure | mh3 |
+| devoid (~ has no color.) draw three cards and create a N/N colorless eldrazi spawn creature token with "..." | 1 | Unfathomable Truths | mh3 |
+| devoid (~ has no color.) exile target nonland permanent. you may cast that card for as long as it remains exiled, and you may spend colorless mana as though it  | 1 | Abstruse Appropriation | mh3 |
+| devoid (~ has no color.) return target nonland permanent you don"..."s hand. whenever you cast a colorless spell with mana value N or greater, you may exile ~ f | 1 | Ugin's Binding | mh3 |
+| devoid (~ has no color.) ~ deals N damage to target creature or planeswalker. if that creature or planeswalker would die ~, exile it instead. | 1 | Fanged Flames | mh3 |
+| draw two cards. then discard a card at random unless you pay {M}{M} (two energy counters). | 1 | Rush of Inspiration // Crackling Falls | mh3 |
+| during your turn, nonland permanent cards in your graveyard have retrace. | 1 | Six | mh3 |
+| eldrazi you control have "..." | 1 | Path of Annihilation | mh3 |
+| emerge | 1 | Twisted Riddlekeeper | mh3 |
+| enchanted creature gets +N/+N and has afterlife N. | 1 | Indebted Spirit | mh3 |
+| enchanted creature gets +N/+N and has mentor. | 1 | Nyxborn Unicorn | mh3 |
+| enchanted creature gets +N/+N for each +N/+N counter on ~ and has reach and trample. | 1 | Nyxborn Hydra | mh3 |
+| enchanted creature gets +N/+N for each +N/+N counter on ~. | 1 | Glyph Elemental | mh3 |
+| enchanted creature gets +N/+N for each creature and/or enchantment you control. | 1 | Strength of the Harvest // Haven of the Harvest | mh3 |
+| enchanted creature loses all abilities and is a blue frog creature with base power and toughness N/N. | 1 | Amphibian Downpour | mh3 |
+| enchanted creature loses all abilities and is a green elk creature with base power and toughness N/N. | 1 | Trickster's Elk | mh3 |
+| enchantment spells you cast have affinity for auras. | 1 | Pearl-Ear, Imperial Advisor | mh3 |
+| exile the top three cards of your library. you may play those cards ~. at the beginning of the next end step, if any of those cards remain exiled, put them into | 1 | Glimpse the Impossible | mh3 |
+| fabricate | 1 | Marionette Apprentice | mh3 |
+| if a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time. | 1 | Echoes of Eternity | mh3 |
+| if ~ was kicked, it enters with two +N/+N counters and a trample counter on it and with haste. | 1 | Voidpouncer | mh3 |
+| kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) choose target creature with mana value N or less. if ~ was kicked, instead choose target creatur | 1 | Expel the Unworthy | mh3 |
+| land cards in your graveyard have dredge N. | 1 | The Necrobloom | mh3 |
+| modified creatures you control have lifelink. | 1 | Envoy of the Ancestors | mh3 |
+| modified creatures you control have trample. | 1 | Temperamental Oozewagg | mh3 |
+| modular | 1 | Arcbound Condor | mh3 |
+| noncreature spells you cast from exile have convoke. | 1 | Party Thrasher | mh3 |
+| other colorless creatures you control get +N/+N. | 1 | It That Heralds the End | mh3 |
+| other creatures have base power and toughness N/N and are bears in addition to their other types. | 1 | Kudo, King Among Bears | mh3 |
+| overload | 1 | Fangs of Kalonia | mh3 |
+| pay {M}{M}{M}{M}: ~ becomes an artifact creature until end of turn. | 1 | Bespoke Battlewagon | mh3 |
+| permanents you control have "..." | 1 | Cursed Wombat | mh3 |
+| players can't untap more than one nonbasic land during their untap steps. | 1 | Winter Moon | mh3 |
+| prototype | 1 | Frogmyr Enforcer | mh3 |
+| put a +N/+N counter on target creature you control, then each modified creature you control deals damage equal to its power to target creature you don't control | 1 | Signature Slam | mh3 |
+| put a +N/+N counter, a reach counter, and a deathtouch counter on target creature. untap it. | 1 | Gift of the Viper | mh3 |
+| reinforce | 1 | Fowl Strike | mh3 |
+| return target artifact or creature card from your graveyard to your hand. ~ deals damage equal to that card's mana value to up to one target creature or planesw | 1 | Pyretic Rebirth | mh3 |
+| sacrifice another creature: create a blood token. if you sacrificed an angel ~, create a number of blood tokens equal to its toughness instead. | 1 | Shilgengar, Sire of Famine | mh3 |
+| skip your draw step. | 1 | Necrodominance | mh3 |
+| target creature gets -N/-N until end of turn. {M}{M}, exile ~ from your graveyard: put a +N/+N counter on target creature you control. activate only as a sorcer | 1 | Wither and Bloom | mh3 |
+| until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |
+| vanishing | 1 | Dreamtide Whale | mh3 |
+| when imskir enters, you draw N cards and you lose N life, where N is half the number of artifacts you control, rounded down. | 1 | Imskir Iron-Eater | mh3 |
+| when rosheen enters, mill six cards. you may put a card with {M} in its mana cost from among them into your hand. | 1 | Rosheen, Roaring Prophet | mh3 |
+| when you cast ~, counter target spell an opponent controls unless they pay {M}. | 1 | Hope-Ender Coatl | mh3 |
+| when you cast ~, gain control of all creatures target player controls. | 1 | Emrakul, the World Anew | mh3 |
+| when you cast ~, if {M} wasn't spent to cast it, target opponent may put a creature card from their hand onto the battlefield. | 1 | Wumpus Aberration | mh3 |
+| when you cast ~, up to two target players each manifest two cards from their hands. for each card manifested ~, you draw a card. | 1 | Kozilek, the Broken Reality | mh3 |
+| when you cast ~, you gain N life for each colorless permanent you control. | 1 | Breaker of Creation | mh3 |
+| when you cast ~, you may exile your hand. if you do, draw three cards. | 1 | Herigast, Erupting Nullkite | mh3 |
+| when ~ enters, create two N/N red gremlin creature tokens. then you get an amount of {M} equal to the number of creatures you control. | 1 | Scurry of Gremlins | mh3 |
+| when ~ enters, exchange control of ~ and target creature an opponent controls. if you do, you get {M}{M}{M}{M}, then sacrifice that creature unless you pay an a | 1 | Volatile Stormdrake | mh3 |
+| when ~ enters, look at the top six cards of your library. you may reveal an artifact or enchantment card from among them and put it into your hand. put the rest | 1 | Rosecot Knight | mh3 |
+| when ~ enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then shuffle. you  | 1 | Grim Servant | mh3 |
+| when ~ enters, support N. | 1 | Aerie Auxiliary | mh3 |
+| when ~ enters, target opponent exiles the top card of their library, a card at random from their graveyard, and a card at random from their hand. you may cast a | 1 | Crabomination | mh3 |
+| when ~ enters, you get {M}{M} . then if you cast it from your hand, exile cards from the top of your library until you exile a nonland card. you may cast that c | 1 | Amped Raptor | mh3 |
+| when ~ exploits a creature, gain control of target artifact or creature until end of turn. untap that permanent. it gains haste until end of turn. | 1 | Infernal Captor | mh3 |
+| whenever a modified creature you control attacks, double the number of each kind of counter on it. then for each nontoken permanent attached to it, create a tok | 1 | Arna Kennerüd, Skycaptain | mh3 |
+| whenever a player casts a noncreature spell, put a collection counter on ~. then if there are three or more collection counters on it, sacrifice it. if you do,  | 1 | Charitable Levy | mh3 |
+| whenever an opponent casts a spell, you may reveal the top card of your library. if you do, you may cast that card without paying its mana cost if the two spell | 1 | Powerbalance | mh3 |
+| whenever another nontoken permanent you control leaves the battlefield, choose one that hasn't been chosen ~. create a creature token with those characteristics | 1 | Genku, Future Shaper | mh3 |
+| whenever grist or another creature you control enters, if it entered from your graveyard or you cast it from your graveyard, you may pay {M}. if you do, exile g | 1 | Grist, Voracious Larva // Grist, the Plague Swarm | mh3 |
+| whenever you cast a creature spell with mana value N, N, or N, create two N/N colorless eldrazi spawn creature tokens with "..." | 1 | Kozilek's Unsealing | mh3 |
+| whenever you cast a creature spell with power N or greater, discover N, where N is that spell's mana value. | 1 | Monstrous Vortex | mh3 |
+| whenever ~ attacks, other modified creatures you control get +N/+N until end of turn, where N is ~ power. | 1 | Golden-Tail Trainer | mh3 |
+| whenever ~ attacks, put a +N/+N counter on target modified creature you control. | 1 | Expanding Ooze | mh3 |
+| whenever ~ attacks, you may draw cards equal to its power. if you do, discard that many cards. | 1 | Horrid Shadowspinner | mh3 |
+| whenever ~ deals combat damage to a player, put a +N/+N counter on it. when you do, you may remove a counter from another target permanent or opponent. | 1 | Etched Slith | mh3 |
+| whenever ~ enters or attacks, it connives. | 1 | Scurrilous Sentry | mh3 |
+| you don't lose unspent red mana as steps and phases end. | 1 | Ashling, Flame Dancer | mh3 |
+| you get {M}{M}{M} (three energy counters), then you may pay any amount of {M}. each player may exile their hand and draw a number of cards equal to the amount o | 1 | Wheel of Potential | mh3 |
+| you may cast creature spells with mana value N or less by paying {M} rather than paying their mana costs. if you cast a spell ~, you may cast it as though it ha | 1 | Primal Prayers | mh3 |
+| you may exert ~ as it attacks. when you do, target creature gets +N/+N until end of turn, where N is the number of counters on permanents you control. | 1 | Hydra Trainer | mh3 |
+| you may sacrifice a nontoken black creature rather than pay ~ mana cost. each opponent sacrifices a creature or planeswalker with the greatest mana value among  | 1 | Flare of Malice | mh3 |
+| you may sacrifice a nontoken green creature rather than pay ~ mana cost. search your library for up to two basic land cards, reveal those cards, put one onto th | 1 | Flare of Cultivation | mh3 |
+| you may sacrifice a nontoken white creature rather than pay ~ mana cost. until end of turn, your life total can't change, and permanents you control gain hexpro | 1 | Flare of Fortitude | mh3 |
+| {M}, pay {M}{M}: exile the top card of your library. you may play it until you exile another card with ~. | 1 | Unstable Amulet | mh3 |
+| {M}, {M}, tap two untapped creatures you control: reveal a card from your hand or the top card of your library. if you reveal a creature card ~, put it onto the | 1 | Eladamri, Korvecdal | mh3 |
+| {M}, {M}: target creature you control connives N, where N is the number of creatures that died ~. | 1 | Spymaster's Vault | mh3 |
+| {M}, {M}: the next spell you cast ~ has improvise. | 1 | Archway of Innovation | mh3 |
+| {M}: return another target permanent you control and all auras you control attached to it to their owner's hand. activate only during your turn. | 1 | Essence Reliquary | mh3 |
+| {M}{M}, sacrifice ~: put target creature card from a graveyard onto the battlefield under your control. ~ costs {M} less to activate for each quest counter on ~ | 1 | Quest for the Necropolis | mh3 |
+| {M}{M}: each opponent loses N life and you gain N life. ~ costs {M}{M} less to activate if you've drawn three or more cards ~. activate only once each turn. | 1 | Kami of Jealous Thirst | mh3 |
+| {M}{M}: exile enchanted creature. | 1 | Utter Insignificance | mh3 |
+| ~ can block only creatures with flying. | 1 | Etherium Pteramander | mh3 |
+| ~ costs {M} less to cast for each N life your opponents have lost ~. target opponent exiles the top three cards of their library. until the end of your next tur | 1 | Bloodsoaked Insight // Sanguine Morass | mh3 |
+| ~ has flying as long as it's modified. | 1 | Obstinate Gargoyle | mh3 |
+| ~'s power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus N. | 1 | Nethergoyf | mh3 |
+| −N: gain control of target creature. it becomes a vampire in addition to its other types. put a lifelink counter on it if you control a white permanent other th | 1 | Sorin of House Markov // Sorin, Ravenous Neonate | mh3 |
 
 ## Notes
 

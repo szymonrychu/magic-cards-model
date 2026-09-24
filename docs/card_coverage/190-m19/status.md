@@ -11,7 +11,7 @@
 |---|---|
 | Modern | 180 |
 | Pioneer | 180 |
-| Standard | 16 |
+| Standard | 17 |
 
 ## Coverage
 
@@ -19,8 +19,8 @@
 |---|---|---|
 | Full (handled + tested) | 7 | 3.9% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not tested (handled, untested) | 115 | 63.9% |
-| Not working (silent / notice / error) | 51 | 28.3% |
+| Not tested (handled, untested) | 116 | 64.4% |
+| Not working (silent / notice / error) | 50 | 27.8% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Liliana, the Necromancer | silent | −7: Destroy up to two target creatures. Put up to two creature cards from graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Militia Bugler | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirror Image | silent | You may have this creature enter as a copy of a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nexus of Fate | silent | Take an extra turn after this one. If Nexus of Fate would be put into a graveyard from anywhere, reveal Nexus of Fate and shuffle it into its owner's library in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Novice Knight | silent | As long as this creature is enchanted or equipped, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | One with the Machine | silent | Draw cards equal to the greatest mana value among artifacts you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Patient Rebuilding | silent | At the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -138,6 +137,7 @@
 | Isolate | handled | Exile target permanent with mana value 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Knight of the Tusk | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Knight's Pledge | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lathliss, Dragon Queen | handled | Whenever another nontoken Dragon you control enters, create a 5/5 red Dragon creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leonin Warleader | handled | Whenever this creature attacks, create two 1/1 white Cat creature tokens with lifelink that are tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lich's Caress | handled | Destroy target creature. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liliana's Spoils | handled | Target opponent discards a card. Look at the top five cards of your library. You may reveal a black card from among them and put it into your hand. Put the rest | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -217,58 +217,65 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| {5}{U}{U}: This creature can't be blocked this turn. | Frilled Sea Serpent, Lightning Mare, Plague Mare, Shield Mare, Surge Mare, Vine Mare | 6 |
-| As long as you control an artifact, this creature gets +2/+0 and has flying. | Aerial Engineer, Kargan Dragonrider, Tezzeret's Strider | 3 |
-| At the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard this way. | Liliana's Contract, Patient Rebuilding | 2 |
-| {3}{U}: Another target creature you control can't be blocked this turn except by Spirits. | Departed Deckhand | 1 |
-| As long as this creature is enchanted or equipped, it can attack as though it didn't have defender. | Novice Knight | 1 |
-| As this Aura enters, choose a creature. | Metamorphic Alteration | 1 |
-| At the beginning of combat on your turn, if you control three or more creatures, this creature gets +1/+1 until end of turn and you gain 1 life. | Leonin Vanguard | 1 |
-| At the beginning of each end step, if this creature attacked or blocked this turn, its owner shuffles it into their library. | Inferno Hellion | 1 |
-| Choose one — • Destroy all creatures. • Destroy all artifacts and enchantments. | Cleansing Nova | 1 |
-| −7: Destroy up to two target creatures. Put up to two creature cards from graveyards onto the battlefield under your control. | Liliana, the Necromancer | 1 |
-| Discard a card: Until end of turn, Chromium becomes a Human with base power and toughness 1/1, loses all abilities, and gains hexproof. It can't be blocked this | Chromium, the Mutable | 1 |
-| Draw cards equal to the greatest mana value among artifacts you control. | One with the Machine | 1 |
-| Each creature you control with defender assigns combat damage equal to its toughness rather than its power and can attack as though it didn't have defender. | Arcades, the Strategist | 1 |
-| Each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. Round up each ti | Fraying Omnipotence | 1 |
-| Enchanted creature gets +1/+0 and can't be blocked. | Aether Tunnel | 1 |
-| Equipped creature gets +2/+0, has vigilance, and is a Knight in addition to its other types. | Sigiled Sword of Valeron | 1 |
-| Exile target colorless creature. You gain life equal to its power. | Infernal Reckoning | 1 |
-| Exile the top seven cards of your library. Until end of turn, you may cast spells from among them. If this spell was cast from your hand, add ten mana of any on | Apex of Power | 1 |
-| {T}: Look at the top card of your library. If it's a land card, you may reveal it and put it into your hand. | Dryad Greenseeker | 1 |
-| Look at the top seven cards of your library. You may put a creature card from among them onto the battlefield. Put the rest on the bottom of your library in a r | Vivien's Invocation | 1 |
-| Palladia-Mors has hexproof as long as it hasn't dealt damage yet. | Palladia-Mors, the Ruiner | 1 |
-| −9: Put X +1/+1 counters on target creature, where X is your life total. | Ajani, Wise Counselor | 1 |
-| {5}{U}, {T}, Sacrifice this artifact: Creatures you control can't be blocked this turn. | Tezzeret's Gatebreaker | 1 |
-| +2: Sarkhan deals 1 damage to each opponent and each creature your opponents control. | Sarkhan, Dragonsoul | 1 |
-| {4}{G}{G}, {T}: Search your library for a card named Elvish Clancaller, put it onto the battlefield, then shuffle. | Elvish Clancaller | 1 |
-| Take an extra turn after this one. If Nexus of Fate would be put into a graveyard from anywhere, reveal Nexus of Fate and shuffle it into its owner's library in | Nexus of Fate | 1 |
-| {3}{R}: Target creature can't block this turn. | Siegebreaker Giant | 1 |
-| Target creature gets +3/+3 until end of turn. All creatures able to block it this turn do so. | Declare Dominance | 1 |
-| {4}, {T}: Target opponent exiles cards from the top of their library until they exile an instant or sorcery card. You may cast that card without paying its mana | Chaos Wand | 1 |
-| This creature can block an additional creature each combat. | Ghastbark Twins | 1 |
-| {5}{G}: This creature gets +3/+3 and becomes a Bear Berserker until end of turn. Activate only once each turn. | Ursine Champion | 1 |
-| This creature gets +1/+1 as long as you control an Ajani planeswalker. | Court Cleric | 1 |
-| {1}, {T}: Until end of turn, your opponents and creatures your opponents control with hexproof can be the targets of spells and abilities you control as though  | Detection Tower | 1 |
-| 0: Until your next turn, target artifact you control becomes a 5/5 creature in addition to its other types. | Tezzeret, Cruel Machinist | 1 |
-| When enchanted creature blocks, destroy it. | Dwindle | 1 |
-| When Lena enters, create a 1/1 white Soldier creature token for each nontoken creature you control. | Lena, Selfless Champion | 1 |
-| When this creature enters, choose one — • Remove all counters from target creature. It can't have counters put on it for as long as this creature remains on the | Suncleanser | 1 |
-| When this creature enters, look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your  | Militia Bugler | 1 |
-| When this creature enters, target artifact you control becomes an artifact creature with base power and toughness 5/5 for as long as this creature remains on th | Skilled Animator | 1 |
-| Whenever Goreclaw attacks, each creature you control with power 4 or greater gets +1/+1 and gains trample until end of turn. | Goreclaw, Terror of Qal Sisma | 1 |
-| Whenever Isareth attacks, you may pay {X}. When you do, return target creature card with mana value X from your graveyard to the battlefield with a corpse count | Isareth the Awakener | 1 |
-| Whenever one or more creature cards leave your graveyard, create a 1/1 black Bat creature token with flying. | Desecrated Tomb | 1 |
-| Whenever this creature attacks, you may sacrifice another creature. If you do, this creature gets +2/+2 until end of turn. | Brawl-Bash Ogre | 1 |
-| Whenever this creature is dealt damage, put that many +1/+1 counters on it. | Hungering Hydra | 1 |
-| Whenever Vaevictis Asmadi attacks, for each player, choose target permanent that player controls. Those players sacrifice those permanents. Each player who sacr | Vaevictis Asmadi, the Dire | 1 |
-| Whenever you activate an ability of a Sarkhan planeswalker, this creature deals 1 damage to any target. | Sarkhan's Whelp | 1 |
-| Whenever you become the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {1}. | Amulet of Safekeeping | 1 |
-| Whenever you draw a card, each opponent mills two cards. | Psychic Corrosion | 1 |
-| You gain 1 life. Target creature gets -X/-X until end of turn, where X is the amount of life you gained this turn. | Nightmare's Thirst | 1 |
-| You may have this creature enter as a copy of a creature you control. | Mirror Image | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Choose one | 1 | Cleansing Nova | m19 |
+| +N: sarkhan deals N damage to each opponent and each creature your opponents control. | 1 | Sarkhan, Dragonsoul | m19 |
+| N: until your next turn, target artifact you control becomes a N/N creature in addition to its other types. | 1 | Tezzeret, Cruel Machinist | m19 |
+| as long as you control a dragon, ~ has flying. | 1 | Kargan Dragonrider | m19 |
+| as long as you control a tezzeret planeswalker, ~ has menace. | 1 | Tezzeret's Strider | m19 |
+| as long as you control an artifact, ~ gets +N/+N and has flying. | 1 | Aerial Engineer | m19 |
+| as long as ~ is enchanted or equipped, it can attack as though it didn't have defender. | 1 | Novice Knight | m19 |
+| as ~ enters, choose a creature. | 1 | Metamorphic Alteration | m19 |
+| at the beginning of combat on your turn, if you control three or more creatures, ~ gets +N/+N until end of turn and you gain N life. | 1 | Leonin Vanguard | m19 |
+| at the beginning of each end step, if ~ attacked or blocked ~, its owner shuffles it into their library. | 1 | Inferno Hellion | m19 |
+| at the beginning of your upkeep, if you control four or more demons with different names, you win the game. | 1 | Liliana's Contract | m19 |
+| at the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard ~. | 1 | Patient Rebuilding | m19 |
+| discard a card: until end of turn, chromium becomes a human with base power and toughness N/N, loses all abilities, and gains hexproof. it can't be blocked ~. | 1 | Chromium, the Mutable | m19 |
+| draw cards equal to the greatest mana value among artifacts you control. | 1 | One with the Machine | m19 |
+| each creature you control with defender assigns combat damage equal to its toughness rather than its power and can attack as though it didn't have defender. | 1 | Arcades, the Strategist | m19 |
+| each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. round up each ti | 1 | Fraying Omnipotence | m19 |
+| enchanted creature gets +N/+N and can't be blocked. | 1 | Aether Tunnel | m19 |
+| equipped creature gets +N/+N, has vigilance, and is a knight in addition to its other types. | 1 | Sigiled Sword of Valeron | m19 |
+| exile target colorless creature. you gain life equal to its power. | 1 | Infernal Reckoning | m19 |
+| exile the top seven cards of your library. until end of turn, you may cast spells from among them. if ~ was cast from your hand, add ten mana of any one color. | 1 | Apex of Power | m19 |
+| look at the top seven cards of your library. you may put a creature card from among them onto the battlefield. put the rest on the bottom of your library in a r | 1 | Vivien's Invocation | m19 |
+| palladia-mors has hexproof as long as it hasn't dealt damage yet. | 1 | Palladia-Mors, the Ruiner | m19 |
+| target creature gets +N/+N until end of turn. all creatures able to block it ~ do so. | 1 | Declare Dominance | m19 |
+| when enchanted creature blocks, destroy it. | 1 | Dwindle | m19 |
+| when lena enters, create a N/N white soldier creature token for each nontoken creature you control. | 1 | Lena, Selfless Champion | m19 |
+| when ~ enters, choose one — • remove all counters from target creature. it can"..."t get counters for as long as ~ remains on the battlefield. | 1 | Suncleanser | m19 |
+| when ~ enters, look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Militia Bugler | m19 |
+| when ~ enters, target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Skilled Animator | m19 |
+| whenever goreclaw attacks, each creature you control with power N or greater gets +N/+N and gains trample until end of turn. | 1 | Goreclaw, Terror of Qal Sisma | m19 |
+| whenever isareth attacks, you may pay {M}. when you do, return target creature card with mana value N from your graveyard to the battlefield with a corpse count | 1 | Isareth the Awakener | m19 |
+| whenever one or more creature cards leave your graveyard, create a N/N black bat creature token with flying. | 1 | Desecrated Tomb | m19 |
+| whenever vaevictis asmadi attacks, for each player, choose target permanent that player controls. those players sacrifice those permanents. each player who sacr | 1 | Vaevictis Asmadi, the Dire | m19 |
+| whenever you activate an ability of a sarkhan planeswalker, ~ deals N damage to any target. | 1 | Sarkhan's Whelp | m19 |
+| whenever you become the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {M}. | 1 | Amulet of Safekeeping | m19 |
+| whenever you draw a card, each opponent mills two cards. | 1 | Psychic Corrosion | m19 |
+| whenever ~ attacks, you may sacrifice another creature. if you do, ~ gets +N/+N until end of turn. | 1 | Brawl-Bash Ogre | m19 |
+| whenever ~ is dealt damage, put that many +N/+N counters on it. | 1 | Hungering Hydra | m19 |
+| you gain N life. target creature gets -N/-N until end of turn, where N is the amount of life you gained ~. | 1 | Nightmare's Thirst | m19 |
+| you may have ~ enter as a copy of a creature you control. | 1 | Mirror Image | m19 |
+| {M}, {M}: target opponent exiles cards from the top of their library until they exile an instant or sorcery card. you may cast that card without paying its mana | 1 | Chaos Wand | m19 |
+| {M}, {M}: until end of turn, your opponents and creatures your opponents control with hexproof can be the targets of spells and abilities you control as though  | 1 | Detection Tower | m19 |
+| {M}: look at the top card of your library. if it's a land card, you may reveal it and put it into your hand. | 1 | Dryad Greenseeker | m19 |
+| {M}{M}, {M}, sacrifice ~: creatures you control can't be blocked ~. | 1 | Tezzeret's Gatebreaker | m19 |
+| {M}{M}: another target creature you control can't be blocked ~ except by spirits. | 1 | Departed Deckhand | m19 |
+| {M}{M}: target creature can't block ~. | 1 | Siegebreaker Giant | m19 |
+| {M}{M}: ~ gets +N/+N and becomes a bear berserker until end of turn. activate only once each turn. | 1 | Ursine Champion | m19 |
+| {M}{M}{M}, {M}: search your library for a card named ~, put it onto the battlefield, then shuffle. | 1 | Elvish Clancaller | m19 |
+| {M}{M}{M}: ~ can't be blocked ~. | 1 | Frilled Sea Serpent | m19 |
+| ~ can block an additional creature each combat. | 1 | Ghastbark Twins | m19 |
+| ~ can't be blocked by black creatures. | 1 | Vine Mare | m19 |
+| ~ can't be blocked by blue creatures. | 1 | Lightning Mare | m19 |
+| ~ can't be blocked by green creatures. | 1 | Surge Mare | m19 |
+| ~ can't be blocked by red creatures. | 1 | Shield Mare | m19 |
+| ~ can't be blocked by white creatures. | 1 | Plague Mare | m19 |
+| ~ gets +N/+N as long as you control an ajani planeswalker. | 1 | Court Cleric | m19 |
+| −N: destroy up to two target creatures. put up to two creature cards from graveyards onto the battlefield under your control. | 1 | Liliana, the Necromancer | m19 |
+| −N: put N +N/+N counters on target creature, where N is your life total. | 1 | Ajani, Wise Counselor | m19 |
 
 ## Notes
 

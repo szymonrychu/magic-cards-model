@@ -57,16 +57,16 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| As this creature enters, it becomes your choice of a 3/3 artifact creature, a 2/2 artifact creature with flying, or a 1/6 Wall artifact creature with defender i | Primal Clay | 1 |
-| At the beginning of the chosen player's upkeep, this artifact deals X damage to that player, where X is 3 minus the number of cards in their hand. | The Rack | 1 |
-| At the beginning of your upkeep, you may sacrifice an artifact. If you don't, tap this creature and it deals 2 damage to you. | Yawgmoth Demon | 1 |
-| Destroy all artifacts. They can't be regenerated. | Shatterstorm | 1 |
-| Destroy target artifact with mana value X. It can't be regenerated. Detonate deals X damage to that artifact's controller. | Detonate | 1 |
-| {T}, Exile this artifact: Shuffle your graveyard into your library. | Feldon's Cane | 1 |
-| Return all artifacts target player owns to their hand. | Hurkyl's Recall | 1 |
-| {2}: The next time an artifact source of your choice would deal damage to you this turn, prevent that damage. | Circle of Protection: Artifacts | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| as ~ enters, it becomes your choice of a N/N artifact creature, a N/N artifact creature with flying, or a N/N wall artifact creature with defender in addition t | 1 | Primal Clay | atq |
+| at the beginning of the chosen player's upkeep, ~ deals N damage to that player, where N is N minus the number of cards in their hand. | 1 | The Rack | atq |
+| at the beginning of your upkeep, you may sacrifice an artifact. if you don't, tap ~ and it deals N damage to you. | 1 | Yawgmoth Demon | atq |
+| destroy all artifacts. they can't be regenerated. | 1 | Shatterstorm | atq |
+| destroy target artifact with mana value N. it can"..."s controller. | 1 | Detonate | atq |
+| return all artifacts target player owns to their hand. | 1 | Hurkyl's Recall | atq |
+| {M}, exile ~: shuffle your graveyard into your library. | 1 | Feldon's Cane | atq |
+| {M}: the next time an artifact source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Artifacts | atq |
 
 ## Notes
 

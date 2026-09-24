@@ -63,13 +63,14 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature enters, return each other creature you control to its owner's hand. | Denizen of the Deep, Sea Drake | 2 |
-| Draw four cards, then discard three cards at random. | Goblin Lore | 1 |
-| When this creature enters, it deals 2 damage to each creature and each player. | Magma Giant | 1 |
-| Whenever this creature becomes blocked by a creature, destroy that creature. | Sylvan Basilisk | 1 |
-| You may have this creature assign its combat damage as though it weren't blocked. | Lone Wolf | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| draw four cards, then discard three cards at random. | 1 | Goblin Lore | p02 |
+| when ~ enters, it deals N damage to each creature and each player. | 1 | Magma Giant | p02 |
+| when ~ enters, return each other creature you control to its owner's hand. | 1 | Denizen of the Deep | p02 |
+| when ~ enters, return two target lands you control to their owner's hand. | 1 | Sea Drake | p02 |
+| whenever ~ becomes blocked by a creature, destroy that creature. | 1 | Sylvan Basilisk | p02 |
+| you may have ~ assign its combat damage as though it weren't blocked. | 1 | Lone Wolf | p02 |
 
 ## Notes
 

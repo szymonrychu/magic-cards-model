@@ -81,18 +81,18 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Choose a number. Destroy all artifacts and creatures with mana value equal to that number. Then target player reveals their hand and discards all nonland cards  | Void | 1 |
-| Creatures of the chosen color without flying can't attack you. | Teferi's Moat | 1 |
-| Domain — Look at the top X cards of your library, where X is the number of basic land types among lands you control. Put one of those cards into your hand and t | Worldly Counsel | 1 |
-| Kicker {2} (You may pay an additional {2} as you cast this spell.) Counter target spell if its mana value is 2 or less. If this spell was kicked, counter that s | Prohibit | 1 |
-| Other Elf creatures get +1/+1 and have forestwalk. | Elvish Champion | 1 |
-| Other enchantments you control have shroud. | Sterling Grove | 1 |
-| Reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the other into your graveyard. | Fact or Fiction | 1 |
-| Saproling creatures and other Treefolk creatures get +1/+1. | Verdeloth the Ancient | 1 |
-| This spell can't be countered. Destroy all artifacts, creatures, and lands. They can't be regenerated. | Obliterate | 1 |
-| You win the game if you control a land of each basic land type and a creature of each color. | Coalition Victory | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Domain | 1 | Worldly Counsel | inv |
+| choose a number. destroy all artifacts and creatures with mana value equal to that number. then target player reveals their hand and discards all nonland cards  | 1 | Void | inv |
+| creatures of the chosen color without flying can't attack you. | 1 | Teferi's Moat | inv |
+| kicker {M} (you may pay an additional {M} as you cast ~.) counter target spell if its mana value is N or less. if ~ was kicked, counter that spell if its mana v | 1 | Prohibit | inv |
+| other elf creatures get +N/+N and have forestwalk. | 1 | Elvish Champion | inv |
+| other enchantments you control have shroud. | 1 | Sterling Grove | inv |
+| reveal the top five cards of your library. an opponent separates those cards into two piles. put one pile into your hand and the other into your graveyard. | 1 | Fact or Fiction | inv |
+| saproling creatures and other treefolk creatures get +N/+N. | 1 | Verdeloth the Ancient | inv |
+| you win the game if you control a land of each basic land type and a creature of each color. | 1 | Coalition Victory | inv |
+| ~ can"..."t be regenerated. | 1 | Obliterate | inv |
 
 ## Notes
 

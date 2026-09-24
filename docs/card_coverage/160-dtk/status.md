@@ -3,24 +3,24 @@
 - Expansion: 160
 - Set code: `dtk`
 - Release date: 2015-03-27
-- Cards in scope (Modern/Pioneer/Standard-legal): 230
+- Cards in scope (Modern/Pioneer/Standard-legal): 233
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 230 |
-| Pioneer | 230 |
+| Modern | 233 |
+| Pioneer | 233 |
 | Standard | 7 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 9 | 3.9% |
-| Partial (unaudited) | 10 | 4.3% |
-| Not tested (handled, untested) | 119 | 51.7% |
-| Not working (silent / notice / error) | 92 | 40.0% |
+| Full (handled + tested) | 10 | 4.3% |
+| Partial (unaudited) | 11 | 4.7% |
+| Not tested (handled, untested) | 120 | 51.5% |
+| Not working (silent / notice / error) | 92 | 39.5% |
 
 ## Cards needing work
 
@@ -123,6 +123,7 @@
 | Dragon Hunter | unaudited | This creature can block Dragons as though it had reach. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Gate Smasher | unaudited | This Equipment can be attached only to a creature with toughness 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Keeper of the Lens | unaudited | You may look at face-down creatures you don't control any time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Orator of Ojutai | unaudited | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Qal Sisma Behemoth | unaudited | This creature can't attack or block unless you pay {2}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Scaleguard Sentinels | unaudited | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sheltered Aerie | unaudited | Enchanted land has "{T}: Add two mana of any one color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -204,6 +205,7 @@
 | Reduce in Stature | handled | Enchanted creature has base power and toughness 0/2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rending Volley | handled | This spell can't be countered. Rending Volley deals 4 damage to target white or blue creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resupply | handled | You gain 6 life. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Roast | handled | Roast deals 5 damage to target creature without flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruthless Deathfang | handled | Whenever you sacrifice a creature, target opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sabertooth Outrider | handled | Formidable — Whenever this creature attacks, if creatures you control have total power 8 or greater, this creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Salt Road Ambushers | handled | Whenever another permanent you control is turned face up, if it's a creature, put two +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -251,9 +253,10 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Ambuscade Shaman
+- Anticipate
 - Atarka's Command
 - Clone Legion
 - Collected Company
@@ -267,86 +270,102 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| When this creature exploits a creature, return to their owners' hands all creatures your opponents control with toughness less than the exploited creature's tou | Gurmag Drowner, Minister of Pain, Profaner of the Dead, Qarsi Sadist, Rakshasa Gravecaller, Sidisi's Faithful, Silumgar Butcher, Silumgar Sorcerer, Vulturous Aven | 9 |
-| When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | Acid-Spewer Dragon, Belltoll Dragon, Herdchaser Dragon, Shieldhide Dragon, Silumgar Spell-Eater, Stormwing Dragon | 6 |
-| As an additional cost to cast this spell, you may reveal a Dragon card from your hand. Draconic Roar deals 3 damage to target creature. If you revealed a Dragon | Draconic Roar, Dragonlord's Prerogative, Foul-Tongue Invocation, Scaleguard Sentinels, Silumgar's Scorn | 5 |
-| When this creature enters, bolster 1. | Aven Tactician, Sandcrafter Mage, Sandsteppe Scavenger | 3 |
-| Whenever you cast a noncreature spell, choose one — • Tap target creature. • This creature gains first strike and lifelink until end of turn. • Exile this creat | Elusive Spellfist, Ojutai Exemplars, Pristine Skywise | 3 |
-| As long as you control exactly one creature, that creature gets +2/+0 and has deathtouch and lifelink. | Deadly Wanderings, Dragonloft Idol | 2 |
-| {2}{W}: Bolster 1. | Echoes of the Kin Tree, Sunbringer's Touch | 2 |
-| When this creature enters, you may put a creature card with mana value 3 or less from your hand or graveyard onto the battlefield. That creature gains haste. Re | Foe-Razer Regent, Swift Warkite | 2 |
-| Attacking creatures get +2/+0 and gain trample until end of turn. | Volcanic Rush | 1 |
-| Attacking creatures you control have double strike. | Berserkers' Onslaught | 1 |
-| Bolster 4. (Choose a creature with the least toughness among creatures you control and put four +1/+1 counters on it.) | Dromoka's Gift | 1 |
-| Bolster 1, then put a +1/+1 counter on each creature you control with a +1/+1 counter on it. (To bolster 1, choose a creature with the least toughness among cre | Scale Blessing | 1 |
-| Choose one — • Destroy target blue or black noncreature permanent. • Permanents you control can't be the targets of blue or black spells your opponents control  | Display of Dominance | 1 |
-| Choose two — • Prevent all damage target instant or sorcery spell would deal this turn. • Target player sacrifices an enchantment of their choice. • Put a +1/+1 | Dromoka's Command | 1 |
-| Creature tokens get -2/-2. | Virulent Plague | 1 |
-| Creatures with power greater than this creature's power can't block it. | Silumgar Assassin | 1 |
-| Creatures with power less than this creature's power can't block it. | Den Protector | 1 |
-| Creatures without flying can't block this turn. | Magmatic Chasm | 1 |
-| Dash costs you pay cost {2} less . | Warbringer | 1 |
-| Destroy any number of target creatures. For each creature destroyed this way, its controller creates a 4/4 red Dragon creature token with flying. | Descent of the Dragons | 1 |
-| Destroy target attacking or blocking creature. Bolster 1. (Choose a creature with the least toughness among creatures you control and put a +1/+1 counter on it. | Enduring Victory | 1 |
-| Destroy target creature with flying. Bolster 2. (Choose a creature with the least toughness among creatures you control and put two +1/+1 counters on it.) | Pinion Feast | 1 |
-| Dragonlord Ojutai has hexproof as long as it's untapped. | Dragonlord Ojutai | 1 |
-| Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn. (Damage and effects that say "destr | Inspiring Call | 1 |
-| +1: Draw a card, then add one mana of any color. | Sarkhan Unbroken | 1 |
-| Enchanted creature gets +1/+1 for each +1/+1 counter on other creatures you control. | Gleam of Authority | 1 |
-| Enchanted land has "{T}: Add two mana of any one color." | Sheltered Aerie | 1 |
-| Exile target creature an opponent controls. That player reveals cards from the top of their library until a creature card is revealed. The player puts that card | Blessed Reincarnation | 1 |
-| {U}: Exile this creature, then return it to the battlefield face down under its owner's control. | Shorecrasher Elemental | 1 |
-| Formidable — {9}{G}{G}, {T}: Each player's life total becomes the number of creatures they control. Activate only if creatures you control have total power 8 or | Shaman of Forgotten Ways | 1 |
-| Formidable — {G}: This creature can attack this turn as though it didn't have defender. Activate only if creatures you control have total power 8 or greater. | Glade Watcher | 1 |
-| Formidable — {2}{R}: This creature has base power 8 until end of turn. Activate only if creatures you control have total power 8 or greater. | Crater Elemental | 1 |
-| Living Lore's power and toughness are each equal to the exiled card's mana value. | Living Lore | 1 |
-| +1: Look at the top card of your library. If it's a noncreature, nonland card, you may reveal it and put it into your hand. | Narset Transcendent | 1 |
-| Other Warrior creatures you control have vigilance. | Herald of Dromoka | 1 |
-| Other Zombie creatures you control get +1/+1. | Risen Executioner | 1 |
-| Prevent all combat damage that would be dealt this turn. You may look at each face-down creature that's attacking or blocking. | Revealing Wind | 1 |
-| Return target creature card from your graveyard to your hand. Target creature gets -X/-X until end of turn, where X is the toughness of the card returned this w | Foul Renewal | 1 |
-| Return target instant or sorcery card from your graveyard to your hand. Volcanic Vision deals damage equal to that card's mana value to each creature your oppon | Volcanic Vision | 1 |
-| {1}{B}, Sacrifice another Warrior creature: Target player loses X life and you gain X life, where X is the sacrificed creature's power. | Blood-Chin Fanatic | 1 |
-| Sarkhan's Rage deals 5 damage to any target. If you control no Dragons, Sarkhan's Rage deals 2 damage to you. | Sarkhan's Rage | 1 |
-| Target creature gets +3/+0 and gains lifelink until end of turn. Regenerate it. (Damage dealt by a creature with lifelink also causes its controller to gain tha | Butcher's Glee | 1 |
-| Target creature gets +2/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | Taigam's Strike | 1 |
-| {G}: Target creature with defender can attack this turn as though it didn't have defender. | Assault Formation | 1 |
-| Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | Center Soul | 1 |
-| Target opponent loses 1 life for each attacking creature you control. You gain that much life. | Foul-Tongue Shriek | 1 |
-| Target opponent sacrifices a green or white creature of their choice. If that player does, they lose 2 life. | Self-Inflicted Wound | 1 |
-| Target player shuffles their graveyard into their library. Draw a card. | Learn from the Past | 1 |
-| This creature can block Dragons as though it had reach. | Dragon Hunter | 1 |
-| This creature can't attack or block unless you pay {2}. | Qal Sisma Behemoth | 1 |
-| {2}{G}: This creature deals 1 damage to each other creature with flying. | Harbinger of the Hunt | 1 |
-| This creature enters with a +1/+1 counter on it for each other creature you control with a +1/+1 counter on it. | Avatar of the Resolute | 1 |
-| This creature gets +2/+2 for each Aura attached to it. | Graceblade Artisan | 1 |
-| This creature has flying as long as it has a +1/+1 counter on it. | Lightwalker | 1 |
-| This creature has reach as long as it has a +1/+1 counter on it. | Ainok Artillerist | 1 |
-| This Equipment can be attached only to a creature with toughness 4 or greater. | Gate Smasher | 1 |
-| {1}{G}: Turn this enchantment face down. | Obscuring Aether | 1 |
-| Until end of turn, target creature you control becomes a blue Dragon Illusion with base power and toughness 4/4, loses all abilities, and gains flying. | Dance of the Skywise | 1 |
-| When Dragonlord Silumgar enters, gain control of target creature or planeswalker for as long as you control Dragonlord Silumgar. | Dragonlord Silumgar | 1 |
-| When Sidisi exploits a creature, you may search your library for a card, put it into your hand, then shuffle. | Sidisi, Undead Vizier | 1 |
-| When this creature dies, put X +1/+1 counters on target creature you control, where X is the number of +1/+1 counters on this creature. | Servant of the Scale | 1 |
-| When this creature dies, you may put it on your choice of the top or bottom of its owner's library. | Arashin Sovereign | 1 |
-| When this creature enters, if you cast it from your hand and there are five or more other creatures on the battlefield, destroy all other creatures. | Deathbringer Regent | 1 |
-| When this creature enters, return a nonland permanent you control to its owner's hand. | Ancestral Statue | 1 |
-| When this creature enters, tap target creature an opponent controls. That creature doesn't untap during its controller's untap step for as long as you control t | Icefall Regent | 1 |
-| When this enchantment enters, exile target opponent's graveyard. | Hedonist's Trove | 1 |
-| Whenever a creature an opponent controls enters, attach this Aura to that creature. | Illusory Gains | 1 |
-| Whenever a creature you control enters, you may attach this Equipment to it. | Stormrider Rig | 1 |
-| Whenever a permanent you control is turned face up, you may return this card from your graveyard to the battlefield face up or face down. | Deathmist Raptor | 1 |
-| Whenever another nontoken creature you control enters, bolster 1. | Anafenza, Kin-Tree Spirit | 1 |
-| Whenever enchanted creature attacks, you may create a token that's a copy of that creature. Exile that token at end of combat. | Mirror Mockery | 1 |
-| Whenever this creature attacks, add {R}{R}{R}{G}{G}{G}. Until end of turn, you don't lose this mana as steps and phases end. | Savage Ventmaw | 1 |
-| Whenever this creature attacks, bolster 1. | Dromoka Captain | 1 |
-| Whenever this creature attacks, the next spell you cast this turn costs {1} less to cast. | Hardened Berserker | 1 |
-| Whenever this creature attacks, Warrior creatures you control gain menace until end of turn. | Blood-Chin Rager | 1 |
-| Whenever this creature becomes blocked by a creature, this creature deals 1 damage to that creature. | Kolaghan Aspirant | 1 |
-| Whenever this creature deals combat damage to a player, you may pay {2}. If you do, create a 2/2 black Zombie creature token and each opponent mills two cards. | Necromaster Dragon | 1 |
-| You may look at face-down creatures you don't control any time. | Keeper of the Lens | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when ~ is turned face up, put a +N/+N counter on each other dragon creature you control. | 5 | Acid-Spewer Dragon, Belltoll Dragon, Herdchaser Dragon, Shieldhide Dragon, Stormwing Dragon | dtk |
+| Formidable | 3 | Crater Elemental, Glade Watcher, Shaman of Forgotten Ways | dtk |
+| when ~ enters, bolster N. | 3 | Aven Tactician, Sandcrafter Mage, Sandsteppe Scavenger | dtk |
+| as an additional cost to cast ~, you may reveal a dragon card from your hand. | 2 | Orator of Ojutai, Scaleguard Sentinels | dtk |
+| Choose one | 1 | Display of Dominance | dtk |
+| Choose two | 1 | Dromoka's Command | dtk |
+| +N: draw a card, then add one mana of any color. | 1 | Sarkhan Unbroken | dtk |
+| +N: look at the top card of your library. if it's a noncreature, nonland card, you may reveal it and put it into your hand. | 1 | Narset Transcendent | dtk |
+| as an additional cost to cast ~, you may reveal a dragon card from your hand. counter target spell unless its controller pays {M}. if you revealed a dragon card | 1 | Silumgar's Scorn | dtk |
+| as an additional cost to cast ~, you may reveal a dragon card from your hand. if you revealed a dragon card or controlled a dragon as you cast ~, ~ can't be cou | 1 | Dragonlord's Prerogative | dtk |
+| as an additional cost to cast ~, you may reveal a dragon card from your hand. target player sacrifices a creature of their choice. if you revealed a dragon card | 1 | Foul-Tongue Invocation | dtk |
+| as an additional cost to cast ~, you may reveal a dragon card from your hand. ~ deals N damage to target creature. if you revealed a dragon card or controlled a | 1 | Draconic Roar | dtk |
+| as long as you control a dragon, ~ gets +N/+N and has flying and trample. | 1 | Dragonloft Idol | dtk |
+| as long as you control exactly one creature, that creature gets +N/+N and has deathtouch and lifelink. | 1 | Deadly Wanderings | dtk |
+| attacking creatures get +N/+N and gain trample until end of turn. | 1 | Volcanic Rush | dtk |
+| attacking creatures you control have double strike. | 1 | Berserkers' Onslaught | dtk |
+| bolster | 1 | Sunbringer's Touch | dtk |
+| bolster N, then put a +N/+N counter on each creature you control with a +N/+N counter on it. (to bolster N, choose a creature with the least toughness among cre | 1 | Scale Blessing | dtk |
+| bolster N. (choose a creature with the least toughness among creatures you control and put four +N/+N counters on it.) | 1 | Dromoka's Gift | dtk |
+| creature tokens get -N/-N. | 1 | Virulent Plague | dtk |
+| creatures with power greater than ~ power can't block it. | 1 | Silumgar Assassin | dtk |
+| creatures with power less than ~ power can't block it. | 1 | Den Protector | dtk |
+| creatures without flying can't block ~. | 1 | Magmatic Chasm | dtk |
+| dash costs you pay cost {M} less . | 1 | Warbringer | dtk |
+| destroy any number of target creatures. for each creature destroyed ~, its controller creates a N/N red dragon creature token with flying. | 1 | Descent of the Dragons | dtk |
+| destroy target attacking or blocking creature. bolster N. (choose a creature with the least toughness among creatures you control and put a +N/+N counter on it. | 1 | Enduring Victory | dtk |
+| destroy target creature with flying. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Pinion Feast | dtk |
+| draw a card for each creature you control with a +N/+N counter on it. those creatures gain indestructible until end of turn. (damage and effects that say "..."  | 1 | Inspiring Call | dtk |
+| enchanted creature gets +N/+N for each +N/+N counter on other creatures you control. | 1 | Gleam of Authority | dtk |
+| enchanted land has "..." | 1 | Sheltered Aerie | dtk |
+| exile target creature an opponent controls. that player reveals cards from the top of their library until a creature card is revealed. the player puts that card | 1 | Blessed Reincarnation | dtk |
+| other warrior creatures you control have vigilance. | 1 | Herald of Dromoka | dtk |
+| other zombie creatures you control get +N/+N. | 1 | Risen Executioner | dtk |
+| prevent all combat damage that would be dealt ~. you may look at each face-down creature that's attacking or blocking. | 1 | Revealing Wind | dtk |
+| return target creature card from your graveyard to your hand. target creature gets -N/-N until end of turn, where N is the toughness of the card returned ~. | 1 | Foul Renewal | dtk |
+| return target instant or sorcery card from your graveyard to your hand. ~ deals damage equal to that card's mana value to each creature your opponents control.  | 1 | Volcanic Vision | dtk |
+| target creature gets +N/+N and gains lifelink until end of turn. regenerate it. (damage dealt by a creature with lifelink also causes its controller to gain tha | 1 | Butcher's Glee | dtk |
+| target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Taigam's Strike | dtk |
+| target creature you control gains protection from the color of your choice until end of turn. rebound (if you cast ~ from your hand, exile it as it resolves. at | 1 | Center Soul | dtk |
+| target opponent loses N life for each attacking creature you control. you gain that much life. | 1 | Foul-Tongue Shriek | dtk |
+| target opponent sacrifices a green or white creature of their choice. if that player does, they lose N life. | 1 | Self-Inflicted Wound | dtk |
+| target player shuffles their graveyard into their library. draw a card. | 1 | Learn from the Past | dtk |
+| until end of turn, target creature you control becomes a blue dragon illusion with base power and toughness N/N, loses all abilities, and gains flying. | 1 | Dance of the Skywise | dtk |
+| when sidisi exploits a creature, you may search your library for a card, put it into your hand, then shuffle. | 1 | Sidisi, Undead Vizier | dtk |
+| when ~ dies, put N +N/+N counters on target creature you control, where N is the number of +N/+N counters on ~. | 1 | Servant of the Scale | dtk |
+| when ~ dies, you may put it on your choice of the top or bottom of its owner's library. | 1 | Arashin Sovereign | dtk |
+| when ~ enters, exile target opponent's graveyard. | 1 | Hedonist's Trove | dtk |
+| when ~ enters, gain control of target creature or planeswalker for as long as you control ~. | 1 | Dragonlord Silumgar | dtk |
+| when ~ enters, if you cast it from your hand and there are five or more other creatures on the battlefield, destroy all other creatures. | 1 | Deathbringer Regent | dtk |
+| when ~ enters, return a nonland permanent you control to its owner's hand. | 1 | Ancestral Statue | dtk |
+| when ~ enters, tap target creature an opponent controls. that creature doesn"..."s untap step for as long as you control ~. | 1 | Icefall Regent | dtk |
+| when ~ enters, you may have it fight target creature you don't control. | 1 | Foe-Razer Regent | dtk |
+| when ~ enters, you may put a creature card with mana value N or less from your hand or graveyard onto the battlefield. that creature gains haste. return it to y | 1 | Swift Warkite | dtk |
+| when ~ exploits a creature, counter target creature spell. | 1 | Silumgar Sorcerer | dtk |
+| when ~ exploits a creature, create two N/N black zombie creature tokens. | 1 | Rakshasa Gravecaller | dtk |
+| when ~ exploits a creature, creatures your opponents control get -N/-N until end of turn. | 1 | Minister of Pain | dtk |
+| when ~ exploits a creature, look at the top four cards of your library. put one of them into your hand and the rest into your graveyard. | 1 | Gurmag Drowner | dtk |
+| when ~ exploits a creature, return target creature to its owner's hand. | 1 | Sidisi's Faithful | dtk |
+| when ~ exploits a creature, return to their owners"..."s toughness. | 1 | Profaner of the Dead | dtk |
+| when ~ exploits a creature, target creature gets -N/-N until end of turn. | 1 | Silumgar Butcher | dtk |
+| when ~ exploits a creature, target opponent loses N life and you gain N life. | 1 | Qarsi Sadist | dtk |
+| when ~ exploits a creature, you draw two cards and you lose N life. | 1 | Vulturous Aven | dtk |
+| when ~ is turned face up, counter target spell unless its controller pays {M}. | 1 | Silumgar Spell-Eater | dtk |
+| whenever a creature an opponent controls enters, attach ~ to that creature. | 1 | Illusory Gains | dtk |
+| whenever a creature you control enters, you may attach ~ to it. | 1 | Stormrider Rig | dtk |
+| whenever a permanent you control is turned face up, you may return ~ from your graveyard to the battlefield face up or face down. | 1 | Deathmist Raptor | dtk |
+| whenever another nontoken creature you control enters, bolster N. | 1 | Anafenza, Kin-Tree Spirit | dtk |
+| whenever enchanted creature attacks, you may create a token that's a copy of that creature. exile that token at end of combat. | 1 | Mirror Mockery | dtk |
+| whenever you cast a noncreature spell, choose one — • tap target creature. • ~ gains first strike and lifelink until end of turn. • exile ~, then return it to t | 1 | Ojutai Exemplars | dtk |
+| whenever you cast a noncreature spell, untap ~. it gains protection from the color of your choice until end of turn. | 1 | Pristine Skywise | dtk |
+| whenever you cast a noncreature spell, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Elusive Spellfist | dtk |
+| whenever ~ attacks, add {M}{M}{M}{M}{M}{M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Savage Ventmaw | dtk |
+| whenever ~ attacks, bolster N. | 1 | Dromoka Captain | dtk |
+| whenever ~ attacks, the next spell you cast ~ costs {M} less to cast. | 1 | Hardened Berserker | dtk |
+| whenever ~ attacks, warrior creatures you control gain menace until end of turn. | 1 | Blood-Chin Rager | dtk |
+| whenever ~ becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Kolaghan Aspirant | dtk |
+| whenever ~ deals combat damage to a player, you may pay {M}. if you do, create a N/N black zombie creature token and each opponent mills two cards. | 1 | Necromaster Dragon | dtk |
+| you may look at face-down creatures you don't control any time. | 1 | Keeper of the Lens | dtk |
+| {M}: exile ~, then return it to the battlefield face down under its owner's control. | 1 | Shorecrasher Elemental | dtk |
+| {M}: target creature with defender can attack ~ as though it didn't have defender. | 1 | Assault Formation | dtk |
+| {M}{M}, sacrifice another warrior creature: target player loses N life and you gain N life, where N is the sacrificed creature's power. | 1 | Blood-Chin Fanatic | dtk |
+| {M}{M}: bolster N. | 1 | Echoes of the Kin Tree | dtk |
+| {M}{M}: turn ~ face down. | 1 | Obscuring Aether | dtk |
+| {M}{M}: ~ deals N damage to each other creature with flying. | 1 | Harbinger of the Hunt | dtk |
+| ~ can be attached only to a creature with toughness N or greater. | 1 | Gate Smasher | dtk |
+| ~ can block dragons as though it had reach. | 1 | Dragon Hunter | dtk |
+| ~ can't attack or block unless you pay {M}. | 1 | Qal Sisma Behemoth | dtk |
+| ~ deals N damage to any target. if you control no dragons, ~ deals N damage to you. | 1 | Sarkhan's Rage | dtk |
+| ~ enters with a +N/+N counter on it for each other creature you control with a +N/+N counter on it. | 1 | Avatar of the Resolute | dtk |
+| ~ gets +N/+N for each aura attached to it. | 1 | Graceblade Artisan | dtk |
+| ~ has flying as long as it has a +N/+N counter on it. | 1 | Lightwalker | dtk |
+| ~ has hexproof as long as it's untapped. | 1 | Dragonlord Ojutai | dtk |
+| ~ has reach as long as it has a +N/+N counter on it. | 1 | Ainok Artillerist | dtk |
+| ~"..."s mana value. | 1 | Living Lore | dtk |
 
 ## Notes
 

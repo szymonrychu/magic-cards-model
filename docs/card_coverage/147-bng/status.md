@@ -3,24 +3,24 @@
 - Expansion: 147
 - Set code: `bng`
 - Release date: 2014-02-07
-- Cards in scope (Modern/Pioneer/Standard-legal): 149
+- Cards in scope (Modern/Pioneer/Standard-legal): 160
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 149 |
-| Pioneer | 149 |
+| Modern | 160 |
+| Pioneer | 160 |
 | Standard | 3 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 7 | 4.7% |
-| Partial (unaudited) | 9 | 6.0% |
-| Not tested (handled, untested) | 70 | 47.0% |
-| Not working (silent / notice / error) | 63 | 42.3% |
+| Full (handled + tested) | 9 | 5.6% |
+| Partial (unaudited) | 10 | 6.2% |
+| Not tested (handled, untested) | 73 | 45.6% |
+| Not working (silent / notice / error) | 68 | 42.5% |
 
 ## Cards needing work
 
@@ -28,6 +28,7 @@
 |---|---|---|---|---|---|
 | Acolyte's Reward | silent | Prevent the next X damage that would be dealt to target creature this turn, where X is your devotion to white. If damage is prevented this way, Acolyte's Reward | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aerie Worshippers | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{U}. If you do, create a 2/2 blue Bird enchantment creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Arbiter of the Ideal | silent | Inspired — Whenever this creature becomes untapped, reveal the top card of your library. If it's an artifact, creature, or land card, you may put it onto the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archetype of Aggression | silent | Creatures your opponents control lose trample and can't have or gain trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archetype of Courage | silent | Creatures your opponents control lose first strike and can't have or gain first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archetype of Finality | silent | Creatures your opponents control lose deathtouch and can't have or gain deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -38,11 +39,13 @@
 | Eidolon of Countless Battles | silent | This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ephara's Enlightenment | silent | When this Aura enters, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fall of the Hammer | silent | Target creature you control deals damage equal to its power to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Fanatic of Xenagos | silent | Tribute | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fated Intervention | silent | Create two 3/3 green Centaur enchantment creature tokens. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Retribution | silent | Destroy all creatures and planeswalkers. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Return | silent | Put target creature card from a graveyard onto the battlefield under your control. It gains indestructible. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flame-Wreathed Phoenix | silent | When this creature enters, if tribute wasn't paid, it gains haste and "When this creature dies, return it to its owner's hand." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flitterstep Eidolon | silent | Enchanted creature gets +1/+1 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Forgestoker Dragon | silent | {1}{R}: This creature deals 1 damage to target creature. That creature can't block this combat. Activate only if this creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Forlorn Pseudamma | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{B}. If you do, create a 2/2 black Zombie enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gild | silent | Exile target creature. Create a Gold token. (It's an artifact with "Sacrifice this token: Add one mana of any color.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | God-Favored General | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{W}. If you do, create two 1/1 white Soldier enchantment creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -52,6 +55,7 @@
 | Mindreaver | silent | Heroic — Whenever you cast a spell that targets this creature, exile the top three cards of target player's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis, God of Slaughter | silent | At the beginning of each opponent's upkeep, Mogis deals 2 damage to that player unless they sacrifice a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nessian Demolok | silent | Tribute | no machine in the engine executes this keyword | Y/Y/- | not_working |
+| Nessian Wilds Ravager | silent | When this creature enters, if tribute wasn't paid, you may have this creature fight another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nullify | silent | Counter target creature or Aura spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oracle of Bones | silent | When this creature enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ornitharch | silent | Tribute | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -82,6 +86,7 @@
 | Crypsis | notice | Target creature you control gains protection from creatures your opponents control until end of turn. Untap it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Everflame Eidolon | notice | {R}: This creature gets +1/+0 until end of turn. If it's an Aura, enchanted creature gets +1/+0 until end of turn instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Eye Gouge | notice | Target creature gets -1/-1 until end of turn. If it's a Cyclops, destroy it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Fated Conflagration | notice | Fated Conflagration deals 5 damage to target creature or planeswalker. If it's your turn, scry 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fated Infatuation | notice | Create a token that's a copy of target creature you control. If it's your turn, scry 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Felhide Spiritbinder | notice | Inspired — Whenever this creature becomes untapped, you may pay {1}{R}. If you do, create a token that's a copy of another target creature, except it's an encha | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Phenax, God of Deception | notice | Creatures you control have "{T}: Target player mills X cards, where X is this creature's toughness." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -98,11 +103,13 @@
 | Marshmist Titan | unaudited | This spell costs {X} less to cast, where X is your devotion to black. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Noble Quarry | unaudited | All creatures able to block this creature or enchanted creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Stratus Walk | unaudited | Enchanted creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Tromokratis | unaudited | Tromokratis can't be blocked unless all creatures defending player controls block it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Akroan Conscriptor | handled | Heroic — Whenever you cast a spell that targets this creature, gain control of another target creature until end of turn. Untap that creature. It gains haste un | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Phalanx | handled | {2}{R}: Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Skyguard | handled | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ashiok's Adept | handled | Heroic — Whenever you cast a spell that targets this creature, each opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Asphyxiate | handled | Destroy target untapped creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bile Blight | handled | Target creature and all other creatures with the same name as that creature get -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Black Oak of Odunos | handled | {B}, Tap another untapped creature you control: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bolt of Keranos | handled | Bolt of Keranos deals 3 damage to any target. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Champion of Stray Souls | handled | {3}{B}{B}, {T}, Sacrifice X other creatures: Return X target creature cards from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -113,6 +120,7 @@
 | Cyclops of One-Eyed Pass | handled |  |  | Y/Y/- | not_tested |
 | Dawn to Dusk | handled | Choose one or both — • Return target enchantment card from your graveyard to your hand. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drown in Sorrow | handled | All creatures get -2/-2 until end of turn. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Eater of Hope | handled | {B}, Sacrifice another creature: Regenerate this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elite Skirmisher | handled | Heroic — Whenever you cast a spell that targets this creature, you may tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ephara's Radiance | handled | Enchanted creature has "{1}{W}, {T}: You gain 3 life." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ephara, God of the Polis | handled | As long as your devotion to white and blue is less than seven, Ephara isn't a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -157,6 +165,7 @@
 | Scouring Sands | handled | Scouring Sands deals 1 damage to each creature your opponents control. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Setessan Oathsworn | handled | Heroic — Whenever you cast a spell that targets this creature, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Setessan Starbreaker | handled | When this creature enters, you may destroy target Aura. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Silent Sentinel | handled | Whenever this creature attacks, you may return target enchantment card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siren Song Lyre | handled | Equipped creature has "{2}, {T}: Tap target creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sphinx's Disciple | handled | Inspired — Whenever this creature becomes untapped, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stormcaller of Keranos | handled | {1}{U}: Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -172,12 +181,14 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>9 cards</summary>
 
 - Deepwater Hypnotist
 - Fate Unraveler
 - Felhide Brawler
 - Heroes' Podium
+- Kiora's Follower
+- Pain Seer
 - Satyr Wayfinder
 - Spirit of the Labyrinth
 - Xenagos, God of Revels
@@ -186,60 +197,70 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Inspired — Whenever this creature becomes untapped, you may pay {1}{R}. If you do, create a token that's a copy of another target creature, except it's an encha | Aerie Worshippers, Felhide Spiritbinder, Forlorn Pseudamma, God-Favored General, Pheres-Band Raiders, Satyr Nyx-Smith, Servant of Tymaret, Siren of the Silent Song, Warchanter of Mogis | 9 |
-| Tribute | Nessian Demolok, Ornitharch, Pharagax Giant, Shrike Harpy, Snake of the Golden Grove, Thunder Brute | 6 |
-| Creatures your opponents control lose first strike and can't have or gain first strike. | Archetype of Aggression, Archetype of Courage, Archetype of Endurance, Archetype of Finality, Archetype of Imagination | 5 |
-| When this creature enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | Flame-Wreathed Phoenix, Oracle of Bones, Siren of the Fanged Coast | 3 |
-| Heroic — Whenever you cast a spell that targets this creature, you may pay {X}. If you do, put X +1/+1 counters on this creature. | Hero of Leina Tower, Mindreaver | 2 |
-| All creatures able to block this creature or enchanted creature do so. | Noble Quarry | 1 |
-| As long as this creature is enchanted, it can attack as though it didn't have defender. | Pillar of War | 1 |
-| At the beginning of each opponent's upkeep, Mogis deals 2 damage to that player unless they sacrifice a creature of their choice. | Mogis, God of Slaughter | 1 |
-| {T}: Choose a color. Add one mana of that color for each charge counter on this artifact. | Astral Cornucopia | 1 |
-| Counter target creature or Aura spell. | Nullify | 1 |
-| Counter target spell unless its controller pays {X}, where X is your devotion to blue. (Each {U} in the mana costs of permanents you control counts toward your  | Thassa's Rebuff | 1 |
-| Create a token that's a copy of target creature you control. If it's your turn, scry 2. | Fated Infatuation | 1 |
-| Create two 3/3 green Centaur enchantment creature tokens. If it's your turn, scry 2. | Fated Intervention | 1 |
-| Creatures with power less than the number of Islands you control can't block this creature. | Kraken of the Straits | 1 |
-| Creatures you control have "{T}: Target player mills X cards, where X is this creature's toughness." | Phenax, God of Deception | 1 |
-| Destroy all creatures and planeswalkers. If it's your turn, scry 2. | Fated Retribution | 1 |
-| Enchanted creature can block only creatures with flying. | Stratus Walk | 1 |
-| Enchanted creature gets +1/+1 and can't be blocked. | Flitterstep Eidolon | 1 |
-| Enchanted creature gets +1/+1 for each Wolf you control. | Raised by Wolves | 1 |
-| Enchanted creature has intimidate. | Grisly Transformation | 1 |
-| Exile target creature. Create a Gold token. (It's an artifact with "Sacrifice this token: Add one mana of any color.") | Gild | 1 |
-| Minotaur spells you cast cost {B}{R} less to cast. This effect reduces only the amount of colored mana you pay. | Ragemonger | 1 |
-| Play with the top card of your library revealed. | Courser of Kruphix | 1 |
-| Prevent the next X damage that would be dealt to target creature this turn, where X is your devotion to white. If damage is prevented this way, Acolyte's Reward | Acolyte's Reward | 1 |
-| Put target creature card from a graveyard onto the battlefield under your control. It gains indestructible. If it's your turn, scry 2. | Fated Return | 1 |
-| {U}: Put this creature and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | Vortex Elemental | 1 |
-| Return all creatures to their owners' hands except for Krakens, Leviathans, Octopuses, and Serpents. | Whelming Wave | 1 |
-| Search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. Shuffle, then scry | Peregrination | 1 |
-| Searing Blood deals 2 damage to target creature. When that creature dies this turn, Searing Blood deals 3 damage to the creature's controller. | Searing Blood | 1 |
-| Skyreaping deals damage to each creature with flying equal to your devotion to green. (Each {G} in the mana costs of permanents you control counts toward your d | Skyreaping | 1 |
-| Starting with you, each player separates all permanents they control into three piles. Then each player chooses one of their piles at random and sacrifices thos | Whims of the Fates | 1 |
-| Tap up to two target creatures. Those creatures don't untap during their controllers' next untap steps. Scry 1. (Look at the top card of your library. You may p | Sudden Storm | 1 |
-| Target creature blocks this turn if able. | Culling Mark | 1 |
-| Target creature gets -1/-1 until end of turn. If it's a Cyclops, destroy it. | Eye Gouge | 1 |
-| Target creature gets +X/+X until end of turn, where X is your devotion to green. (Each {G} in the mana costs of permanents you control counts toward your devoti | Aspect of Hydra | 1 |
-| Target creature you control deals damage equal to its power to another target creature. | Fall of the Hammer | 1 |
-| Target creature you control gains protection from creatures your opponents control until end of turn. Untap it. | Crypsis | 1 |
-| This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control. | Eidolon of Countless Battles | 1 |
-| This creature can't attack unless you return an enchantment you control to its owner's hand. | Floodtide Serpent | 1 |
-| This creature can't attack or block alone. | Loyal Pegasus | 1 |
-| {R}: This creature gets +1/+0 until end of turn. If it's an Aura, enchanted creature gets +1/+0 until end of turn instead. | Everflame Eidolon | 1 |
-| This spell costs {X} less to cast, where X is your devotion to black. | Marshmist Titan | 1 |
-| Until end of turn, creatures you control gain "{T}: This creature deals 1 damage to any target." | Lightning Volley | 1 |
-| Until end of turn, target creature gains "{T}: Return target nonland permanent to its owner's hand." | Retraction Helix | 1 |
-| +1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | Kiora, the Crashing Wave | 1 |
-| When this Aura enters, put a +1/+1 counter on enchanted creature. | Ephara's Enlightenment | 1 |
-| Whenever an instant or sorcery spell you control deals damage to an opponent, this creature deals that much damage to target creature that player controls. | Satyr Firedancer | 1 |
-| Whenever an opponent casts a spell, you may exchange control of this creature and that spell. If you do, you may choose new targets for the spell. | Perplexing Chimera | 1 |
-| Whenever Brimaz attacks, create a 1/1 white Cat Soldier creature token with vigilance that's attacking. | Brimaz, King of Oreskos | 1 |
-| Whenever enchanted creature attacks, it gets +X/+0 until end of turn, where X is your devotion to red. | Thunderous Might | 1 |
-| Whenever this creature or enchanted creature attacks, defending player loses 2 life. | Spiteful Returned | 1 |
-| You draw X cards and you lose X life, where X is your devotion to black. (Each {B} in the mana costs of permanents you control counts toward your devotion to bl | Sanguimancy | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Inspired | 10 | Aerie Worshippers, Arbiter of the Ideal, Felhide Spiritbinder, Forlorn Pseudamma, God-Favored General | bng |
+| tribute | 7 | Fanatic of Xenagos, Nessian Demolok, Ornitharch, Pharagax Giant, Shrike Harpy | bng |
+| Heroic | 2 | Hero of Leina Tower, Mindreaver | bng |
+| +N: until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | 1 | Kiora, the Crashing Wave | bng |
+| all creatures able to block ~ or enchanted creature do so. | 1 | Noble Quarry | bng |
+| as long as ~ is enchanted, it can attack as though it didn't have defender. | 1 | Pillar of War | bng |
+| at the beginning of each opponent's upkeep, mogis deals N damage to that player unless they sacrifice a creature of their choice. | 1 | Mogis, God of Slaughter | bng |
+| counter target creature or aura spell. | 1 | Nullify | bng |
+| counter target spell unless its controller pays {M}, where N is your devotion to blue. (each {M} in the mana costs of permanents you control counts toward your  | 1 | Thassa's Rebuff | bng |
+| create a token that"..."s your turn, scry N. | 1 | Fated Infatuation | bng |
+| create two N/N green centaur enchantment creature tokens. if it's your turn, scry N. | 1 | Fated Intervention | bng |
+| creatures with power less than the number of islands you control can't block ~. | 1 | Kraken of the Straits | bng |
+| creatures you control have "..." | 1 | Phenax, God of Deception | bng |
+| creatures your opponents control lose deathtouch and can't have or gain deathtouch. | 1 | Archetype of Finality | bng |
+| creatures your opponents control lose first strike and can't have or gain first strike. | 1 | Archetype of Courage | bng |
+| creatures your opponents control lose flying and can't have or gain flying. | 1 | Archetype of Imagination | bng |
+| creatures your opponents control lose hexproof and can't have or gain hexproof. | 1 | Archetype of Endurance | bng |
+| creatures your opponents control lose trample and can't have or gain trample. | 1 | Archetype of Aggression | bng |
+| destroy all creatures and planeswalkers. if it's your turn, scry N. | 1 | Fated Retribution | bng |
+| enchanted creature can block only creatures with flying. | 1 | Stratus Walk | bng |
+| enchanted creature gets +N/+N and can't be blocked. | 1 | Flitterstep Eidolon | bng |
+| enchanted creature gets +N/+N for each wolf you control. | 1 | Raised by Wolves | bng |
+| enchanted creature has intimidate. | 1 | Grisly Transformation | bng |
+| exile target creature. create a gold token. (it's an artifact with "...") | 1 | Gild | bng |
+| minotaur spells you cast cost {M}{M} less to cast. ~ reduces only the amount of colored mana you pay. | 1 | Ragemonger | bng |
+| play with the top card of your library revealed. | 1 | Courser of Kruphix | bng |
+| prevent the next N damage that would be dealt to target creature ~, where N is your devotion to white. if damage is prevented ~, ~ deals that much damage to any | 1 | Acolyte's Reward | bng |
+| put target creature card from a graveyard onto the battlefield under your control. it gains indestructible. if it's your turn, scry N. | 1 | Fated Return | bng |
+| return all creatures to their owners' hands except for krakens, leviathans, octopuses, and serpents. | 1 | Whelming Wave | bng |
+| search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. shuffle, then scry | 1 | Peregrination | bng |
+| starting with you, each player separates all permanents they control into three piles. then each player chooses one of their piles at random and sacrifices thos | 1 | Whims of the Fates | bng |
+| tap up to two target creatures. those creatures don"..." next untap steps. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Sudden Storm | bng |
+| target creature blocks ~ if able. | 1 | Culling Mark | bng |
+| target creature gets +N/+N until end of turn, where N is your devotion to green. (each {M} in the mana costs of permanents you control counts toward your devoti | 1 | Aspect of Hydra | bng |
+| target creature gets -N/-N until end of turn. if it's a cyclops, destroy it. | 1 | Eye Gouge | bng |
+| target creature you control deals damage equal to its power to another target creature. | 1 | Fall of the Hammer | bng |
+| target creature you control gains protection from creatures your opponents control until end of turn. untap it. | 1 | Crypsis | bng |
+| until end of turn, creatures you control gain "..." | 1 | Lightning Volley | bng |
+| until end of turn, target creature gains "..." | 1 | Retraction Helix | bng |
+| when ~ enters, if tribute wasn"..."s hand." | 1 | Flame-Wreathed Phoenix | bng |
+| when ~ enters, if tribute wasn't paid, gain control of target creature. | 1 | Siren of the Fanged Coast | bng |
+| when ~ enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Oracle of Bones | bng |
+| when ~ enters, if tribute wasn't paid, you may have ~ fight another target creature. | 1 | Nessian Wilds Ravager | bng |
+| when ~ enters, put a +N/+N counter on enchanted creature. | 1 | Ephara's Enlightenment | bng |
+| whenever an instant or sorcery spell you control deals damage to an opponent, ~ deals that much damage to target creature that player controls. | 1 | Satyr Firedancer | bng |
+| whenever an opponent casts a spell, you may exchange control of ~ and that spell. if you do, you may choose new targets for the spell. | 1 | Perplexing Chimera | bng |
+| whenever brimaz attacks, create a N/N white cat soldier creature token with vigilance that's attacking. | 1 | Brimaz, King of Oreskos | bng |
+| whenever enchanted creature attacks, it gets +N/+N until end of turn, where N is your devotion to red. | 1 | Thunderous Might | bng |
+| whenever ~ or enchanted creature attacks, defending player loses N life. | 1 | Spiteful Returned | bng |
+| you draw N cards and you lose N life, where N is your devotion to black. (each {M} in the mana costs of permanents you control counts toward your devotion to bl | 1 | Sanguimancy | bng |
+| {M}: choose a color. add one mana of that color for each charge counter on ~. | 1 | Astral Cornucopia | bng |
+| {M}: put ~ and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | 1 | Vortex Elemental | bng |
+| {M}: ~ gets +N/+N until end of turn. if it's an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Everflame Eidolon | bng |
+| {M}{M}: ~ deals N damage to target creature. that creature can't block ~. activate only if ~ is attacking. | 1 | Forgestoker Dragon | bng |
+| ~ and enchanted creature each get +N/+N for each creature you control and +N/+N for each aura you control. | 1 | Eidolon of Countless Battles | bng |
+| ~ can"..."s hand. | 1 | Floodtide Serpent | bng |
+| ~ can't attack or block alone. | 1 | Loyal Pegasus | bng |
+| ~ can't be blocked unless all creatures defending player controls block it. | 1 | Tromokratis | bng |
+| ~ costs {M} less to cast, where N is your devotion to black. | 1 | Marshmist Titan | bng |
+| ~ deals N damage to target creature or planeswalker. if it's your turn, scry N. | 1 | Fated Conflagration | bng |
+| ~ deals N damage to target creature. when that creature dies ~, ~ deals N damage to the creature's controller. | 1 | Searing Blood | bng |
+| ~ deals damage to each creature with flying equal to your devotion to green. (each {M} in the mana costs of permanents you control counts toward your devotion t | 1 | Skyreaping | bng |
 
 ## Notes
 

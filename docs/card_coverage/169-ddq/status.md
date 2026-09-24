@@ -43,11 +43,11 @@
 
 ## Missing mechanics
 
-| Mechanic (representative clause) | Cards | Count |
-|---|---|---|
-| Delirium — At the beginning of each opponent's upkeep, if there are four or more card types among cards in your graveyard, target creature that player controls  | Mindwrack Demon, Tooth Collector | 2 |
-| Draw three cards, untap up to two lands, then discard a card. | Pore Over the Pages | 1 |
-| Return target nonland permanent to its owner's hand. Then that player discards a card if you control a Zombie. | Compelling Deterrence | 1 |
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| Delirium | 2 | Mindwrack Demon, Tooth Collector | ddq |
+| draw three cards, untap up to two lands, then discard a card. | 1 | Pore Over the Pages | ddq |
+| return target nonland permanent to its owner's hand. then that player discards a card if you control a zombie. | 1 | Compelling Deterrence | ddq |
 
 ## Notes
 
