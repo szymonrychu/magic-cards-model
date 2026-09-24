@@ -136,6 +136,7 @@ from .keywords import (
     has_equip,
     off_zone_abilities,
     off_zone_activation,
+    turn_face_up_ban,
     turn_face_up_cost,
     unannounced_equip_activation,
     why_cannot_dredge,
@@ -1024,6 +1025,7 @@ def _land_actions(game: Any, player: str, card: CardState) -> list[Action]:
     if (
         card.zone is not Zone.HAND
         and game.play_permission_for(card, player, PlayAction.PLAY) is None
+        and game.graveyard_land_permission(card, player) is None
     ):
         return []
     actions: list[Action] = []
@@ -1091,7 +1093,7 @@ def _companion_action(
 def _turn_face_up_action(
     game: Any, player: str, permanent: CardState, candidate_scan: list[_ScannedCandidate]
 ) -> Action | None:
-    if why_cannot_turn_face_up(permanent) is not None:
+    if why_cannot_turn_face_up(permanent) is not None or turn_face_up_ban(game, permanent):
         return None
     total = turn_face_up_cost(permanent, player) or TotalCost()
     affordable, reason, pays_with = _cost_affordability(game, player, total, candidate_scan)

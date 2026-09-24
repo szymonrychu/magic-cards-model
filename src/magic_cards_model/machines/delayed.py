@@ -560,9 +560,14 @@ class ReturnEarthbentLand(DelayedEffectSpecBase):
 
 class DevourerOfDestinyFirstUpkeep(DelayedEffectSpecBase):
     """ "look at the top four cards of your library. You may put one of those
-    cards back on top of your library. Exile the rest." (Devourer of Destiny,
-    its own opening-hand rider - `machines/opening_hand.py`'s
-    `_devourer_of_destiny_rider`.)
+    cards back on top of your library. Exile the rest." (Devourer of Destiny.)
+
+    Retired: nothing creates this any more. The opening-hand rider that used
+    to is parsed now (`machines/opening_hand.read_rider`), and its delayed
+    trigger is a `CreatedTriggeredAbility` whose effect
+    `machines/effects._parse_look_top_keep_one_on_top_clause` reads off the
+    printed text. The kind stays only so the persisted shape of a `Game` - and
+    so `schema_version` - is unchanged; drop it with the next schema bump.
 
     `Game.look_at_top_and_split` asks CR 701.22a's shared look-then-split
     question; the "moved" half is read here as the card kept on top, so an

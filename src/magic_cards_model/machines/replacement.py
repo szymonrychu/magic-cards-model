@@ -4880,14 +4880,17 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
 #: new type, not a card carrying its own choice) is a *targeted* clause of a
 #: different shape entirely and is never routed through here.
 _CHOOSE_A_COLOR_RE = re.compile(r"^choose a color\.?$", re.IGNORECASE)
-#: "choose a card name", and CR 201.4a's "choose a card name with certain
-#: characteristics" - Phyrexian Revoker's and Voidstone Gargoyle's "choose a
-#: nonland card name", one card-type word (optionally "non"-prefixed) ahead of
-#: "card name". The word is kept (`card_name_quality`) so the answer can be
-#: checked against it.
+#: "choose a card name" (Pithing Needle), and CR 201.4a's "choose a card name
+#: with certain characteristics" - "choose a nonland card name" (Phyrexian
+#: Revoker, Voidstone Gargoyle), "choose a nonbasic land card name" (Alpine
+#: Moon): one or two supertype/card-type words, each optionally "non"-prefixed,
+#: ahead of "card name". They are kept (`card_name_quality`) so the answer can
+#: be checked against them.
 _CHOOSE_A_CARD_NAME_RE = re.compile(
-    r"^choose an? (?:(?P<quality>(?:non-?)?[a-z]+) )?card name\.?$", re.IGNORECASE
+    r"^choose an? (?:(?P<quality>(?:non-?)?[a-z]+(?: (?:non-?)?[a-z]+)?) )?card name\.?$",
+    re.IGNORECASE,
 )
+
 _CHOOSE_A_CREATURE_TYPE_RE = re.compile(r"^choose a creature type\.?$", re.IGNORECASE)
 
 #: The five colors' letter codes (CR 105.1), the closed universe
@@ -5027,6 +5030,17 @@ _WIRED_CHOSEN_COLOR_MANA_HINT_RE = re.compile(
 )
 
 
+#: "Lands your opponents control with the chosen name lose all land types and
+#: abilities, and they gain ..." (Alpine Moon) - read by `machines/layers.py`
+#: against `CardState.choice`. Excluded so a wired consumer is not reported as
+#: an unwired one.
+_WIRED_CHOSEN_NAME_LAYER_HINT_RE = re.compile(
+    r"^(?:lands|creatures|permanents)(?: your opponents control| you control)? "
+    r"with the chosen name lose all\b",
+    re.IGNORECASE,
+)
+
+
 def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNotice]:
     """Every sentence of `card`'s own text that reads back a CR 614.12a
     choice this wave does not perform - see `UnwiredChoiceNotice`.
@@ -5047,6 +5061,7 @@ def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNo
             or _WIRED_CHOSEN_COLOR_MANA_HINT_RE.search(sentence)
             or _WIRED_CHOSEN_NAME_PROHIBITION_HINT_RE.match(sentence)
             or _LAYER_HANDLED_SUBJECT_RE.match(sentence)
+            or _WIRED_CHOSEN_NAME_LAYER_HINT_RE.match(sentence)
         ):
             continue
         found.append(UnwiredChoiceNotice(source_id=source_id, source_name=card.name, text=sentence))
@@ -5069,9 +5084,9 @@ def _quality_options(kind: ChoiceKind) -> tuple[str, ...]:
 
 
 def card_name_quality(replacement_text: str) -> str | None:
-    """The characteristic a "choose a <quality> card name" choice carries
-    (CR 201.4a) - "nonland" for Phyrexian Revoker - or None for a plain
-    "choose a card name" or anything else."""
+    """The characteristics a "choose a <quality> card name" choice carries
+    (CR 201.4a) - "nonland" for Phyrexian Revoker, "nonbasic land" for Alpine
+    Moon - or None for a plain "choose a card name" or anything else."""
     match = _CHOOSE_A_CARD_NAME_RE.match(replacement_text.strip())
     if match is None or match.group("quality") is None:
         return None
@@ -5083,20 +5098,16 @@ def _card_name_quality_refusal(value: str, quality: str) -> str | None:
     (CR 201.4a: "the player must choose the name of a card whose Oracle text
     matches those characteristics"), or None.
 
-    Judged against the engine's own Scryfall printings
-    (`data.printing_pool.resolve_printing`); a name the pool does not hold
+    Each word of `quality` is a card type or supertype, optionally
+    "non"-prefixed, and all of them must hold. Judged against the engine's own
+    Scryfall printings (`data.printing_pool.resolve_printing`); a name the
+    pool does not hold, or a word that is neither a type nor a supertype,
     cannot be judged here and is accepted rather than refused on a guess. A
     split card is judged by the half named (CR 201.4b), which `resolve_
     printing`'s own face lookup already gives.
     """
     from ..data.printing_pool import resolve_printing
 
-    negated = quality.startswith("non")
-    word = quality.removeprefix("non").lstrip("-")
-    try:
-        card_type = Type(word)
-    except ValueError:
-        return None
     printing = resolve_printing(value)
     if printing is None:
         return None
@@ -5104,9 +5115,19 @@ def _card_name_quality_refusal(value: str, quality: str) -> str | None:
     for face in printing.card_faces or ():
         if face.name == value and face.type_line:
             types = set(types_of(face.type_line))
-    has_type = card_type in types
-    if has_type == negated:
-        return f"{value!r} is not a {quality} card name (CR 201.4a)"
+    supertypes = set(printing.supertypes)
+    for word in quality.split():
+        negated = word.startswith("non")
+        bare = word.removeprefix("non").lstrip("-") if negated else word
+        try:
+            has = Type(bare) in types
+        except ValueError:
+            try:
+                has = Supertype(bare) in supertypes
+            except ValueError:
+                return None
+        if has == negated:
+            return f"{value!r} is not {with_indefinite_article(quality)} card name (CR 201.4a)"
     return None
 
 
@@ -5137,10 +5158,13 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str, name_quality: str | None
         who = source.controller if source is not None else None
         if who is None:
             return
+        quality = kind.value.replace("_", " ")
+        if qualifier is not None:
+            quality = f"{qualifier} {quality}"
         decision = Decision(
             kind=DecisionKind.CHOOSE_A_QUALITY,
             player=who,
-            prompt=f"choose {with_indefinite_article(kind.value.replace('_', ' '))}",
+            prompt=f"choose {with_indefinite_article(quality)}",
             source=card_name,
             source_id=source_id_of(source),
             options=_quality_options(kind),

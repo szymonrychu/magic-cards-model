@@ -62,6 +62,7 @@ from magic_cards_model.machines.combat import (
     is_attack_requirement_line,
     is_blocked_by_at_most_one_line,
     is_group_attack_restriction_line,
+    is_self_card_count_restriction_line,
 )
 from magic_cards_model.machines.cost import (
     additional_cost_phrases,
@@ -98,12 +99,15 @@ from magic_cards_model.machines.effects import (
 )
 from magic_cards_model.machines.layers import (
     LAYER_EFFECTS,
+    additional_land_plays_of_line,
     looks_like_unparsed_layer_effect,
     off_battlefield_characteristics,
     parsed_layer_effects,
+    plays_lands_from_graveyard_line,
 )
 from magic_cards_model.machines.modes import modal_profile, substitute_x
 from magic_cards_model.machines.objects_as_costs import has_improvise
+from magic_cards_model.machines.opening_hand import OpeningHandAction, read_opening_hand_line
 from magic_cards_model.machines.replacement import (
     ENTERS_KINDS,
     ReplacementKind,
@@ -132,6 +136,7 @@ from magic_cards_model.machines.triggers import (
     TriggerEvent,
     _unread_trigger_events,
     condition_matches,
+    is_additional_trigger_line,
     is_batched_attack_condition,
     triggers_only_off_the_stack,
 )
@@ -1692,6 +1697,27 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return HANDLED
     if cost_modifier_effect(text) is not None:
         return HANDLED
+    if additional_land_plays_of_line(text) is not None or plays_lands_from_graveyard_line(text):
+        # CR 305.2 / CR 611.3d: `Game.land_allowance` and
+        # `Game.graveyard_land_permission` read the line off the board.
+        return HANDLED
+    if keyword_machine.is_turn_face_up_ban_line(text):
+        # CR 702.37e's special action refused: `keywords.turn_face_up_ban`,
+        # read by `Game.why_cannot_turn_face_up` and `legal_actions`.
+        return HANDLED
+    if is_self_card_count_restriction_line(text):
+        # CR 508.1c / 509.1b: `combat.self_card_count_restriction_refusal`
+        # refuses the attack or block while the zone holds too few cards.
+        return HANDLED
+    if is_additional_trigger_line(text):
+        # CR 603.2d: `triggers.additional_trigger_times` multiplies what an
+        # entrance the cause names makes trigger.
+        return HANDLED
+    opening_hand = read_opening_hand_line(printing.name, text)
+    if opening_hand is not None:
+        # CR 103.6a/103.6b: `Game.take_opening_hand_actions` offers what reads
+        # as an action and refuses, with an `OpeningHandNotice`, what does not.
+        return HANDLED if isinstance(opening_hand, OpeningHandAction) else NOTICE
     if looks_like_unparsed_layer_effect(text, static_only=True, card_name=printing.name):
         return NOTICE
     if looks_like_unparsed_cost_modifier(text):

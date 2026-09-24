@@ -4148,6 +4148,75 @@ def why_cannot_turn_face_up(permanent: CardState) -> str | None:
     return None
 
 
+#: "As long as enchanted creature is face down, it can't be turned face up."
+#: (Unable to Scream) - the ban an Aura or Equipment puts on what it is
+#: attached to.
+_ATTACHED_FACE_DOWN_CANT_TURN_UP_RE = re.compile(
+    r"^as long as (?P<attachment>enchanted|equipped) (?:creature|permanent) is face down, "
+    r"it can't be turned face up\.?$",
+    re.IGNORECASE,
+)
+
+#: "Permanents your opponents control can't be turned face up during your
+#: turn." (Karlov Watchdog) - a board-wide ban, scoped by controller and,
+#: optionally, by whose turn it is.
+_GROUP_CANT_TURN_UP_RE = re.compile(
+    r"^(?P<subject>permanents|creatures)(?P<scope> your opponents control| you control)? "
+    r"can't be turned face up(?P<your_turn> during your turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def is_turn_face_up_ban_line(text: str) -> bool:
+    """Whether a static line is one of the two ban shapes
+    `turn_face_up_ban` enforces - what `support.py` counts handled."""
+    line = text.strip()
+    return bool(
+        _ATTACHED_FACE_DOWN_CANT_TURN_UP_RE.fullmatch(line)
+        or _GROUP_CANT_TURN_UP_RE.fullmatch(line)
+    )
+
+
+def turn_face_up_ban(game: Any, permanent: CardState) -> str | None:
+    """Which permanent's static ability forbids turning this face-down
+    permanent face up right now, or None.
+
+    CR 702.37e's special action - and any other way of turning a permanent
+    face up - is what these abilities stop; the face-down permanent itself has
+    no text (CR 708.2), so the ban is read off the battlefield's computed
+    abilities (CR 613.5), re-asked every time (CR 611.3a): the Aura attached to
+    it (Unable to Scream), or a permanent whose controller's opponents control
+    it, during that controller's turn (Karlov Watchdog)."""
+    if permanent.face_up or permanent.zone is not Zone.BATTLEFIELD:
+        return None
+    board = game.computed_board()
+    active = game.turn.active_player if game.turn is not None else None
+    subject_types = board.of(permanent).types
+    for source in game.battlefield:
+        chars = board.of(source)
+        for line in chars.abilities:
+            text = line.strip()
+            if _ATTACHED_FACE_DOWN_CANT_TURN_UP_RE.fullmatch(text):
+                if source.attached_to == permanent.id:
+                    return f'{source.name} says "{text}", so it can\'t be turned face up'
+                continue
+            match = _GROUP_CANT_TURN_UP_RE.fullmatch(text)
+            if match is None:
+                continue
+            owner = chars.controller
+            if match["subject"].lower() == "creatures" and Type.CREATURE not in subject_types:
+                continue
+            scope = (match["scope"] or "").strip().lower()
+            if scope == "your opponents control" and permanent.controller == owner:
+                continue
+            if scope == "you control" and permanent.controller != owner:
+                continue
+            if match["your_turn"] and active != owner:
+                continue
+            return f'{source.name} says "{text}", so it can\'t be turned face up'
+    return None
+
+
 def turn_face_up_cost(permanent: CardState, player: str) -> TotalCost | None:
     """The morph cost this permanent pays to be turned face up (CR 702.37e)."""
     ability = morph_ability(permanent.card)

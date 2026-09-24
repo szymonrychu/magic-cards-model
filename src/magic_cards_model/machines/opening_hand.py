@@ -52,18 +52,26 @@ Two printed templates, and only two:
   on the battlefield[ with a N counter on it]."
 - **CR 103.6b**, `REVEAL`: "You may reveal this card from your opening hand."
 
-Either may be followed by a rider - a further sentence that does something the
-template itself does not describe. Gemstone Caverns' "If you do, exile a card
-from your hand" and Devourer of Destiny's "If you do, at the beginning of your
-first upkeep, ..." are the two in the card pool. A rider is *not* parsed: it is
-looked up by card name in `RIDERS`, exactly the way `machines/effects.py` and
-`machines/delayed.py` key their own hand-written behaviour, because the shapes
-have nothing in common with each other.
+Either may be followed by a rider - a trailing "If you do, ..." sentence that
+does something the template itself does not describe. A rider is *parsed*,
+never looked up by card name: `read_rider` splits it into CR 603.7's delayed
+timing, when it has one, and the effect text, which is read by the same
+`machines/effects.trigger_effect_for` every printed triggered ability goes
+through.
+
+- "If you do, at the beginning of your first upkeep, `<effect>`." (Devourer of
+  Destiny) and "If you do, at the beginning of the first upkeep, `<effect>`."
+  (Chancellor of the Forge) create a delayed triggered ability (CR 603.7) that
+  fires once (CR 603.7b) - on the holder's own first upkeep for "your", on the
+  game's first upkeep, whoever's it is, for "the".
+- "If you do, `<effect>`." with no timing (Gemstone Caverns' "exile a card from
+  your hand") is performed at once, as part of the action.
 
 ## Failing closed
 
 A paragraph that mentions "opening hand" and matches neither template, or that
-matches one but carries a rider with no `RIDERS` entry, produces an
+matches one but carries a rider whose timing or effect no reader recognises,
+produces an
 `OpeningHandNotice` and **no action at all**. The player is not offered a
 choice they could not actually carry out, and the game carries a record saying
 so - `Game.opening_hand_notices`. Silently offering the Leyline half of a card
@@ -73,7 +81,6 @@ card says.
 """
 
 import re
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
@@ -83,9 +90,9 @@ from pydantic import ConfigDict
 from ..models.card import Card
 from ..models.card_state import CardState
 from ..snapshot import EngineModel
-from .abilities import TriggerEvent
-from .decisions import Decision, DecisionKind, source_id_of
-from .delayed import DelayedTrigger, devourer_of_destiny_first_upkeep
+from .abilities import AbilityKind, TriggeredAbility, TriggerEvent, TriggerWord
+from .delayed import CreatedTriggeredAbility, DelayedTrigger
+from .triggers import AbilityOnStack
 from .turn import Step
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: the models build on the machines
@@ -93,11 +100,14 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle: the models build on the ma
     from ..models.player import Player
 
 __all__ = [
-    "RIDERS",
     "OpeningHandAction",
     "OpeningHandActionKind",
     "OpeningHandNotice",
+    "Rider",
+    "perform_rider",
     "read_opening_hand_actions",
+    "read_opening_hand_line",
+    "read_rider",
 ]
 
 
@@ -123,7 +133,8 @@ class OpeningHandAction:
     #: starting player). False for every other printing in the pool.
     requires_not_starting_player: bool = False
     #: The trailing sentence the template does not describe, as printed, or "".
-    #: A non-empty rider needs a `RIDERS` entry or the action is not offered.
+    #: A non-empty rider must be readable by `read_rider` or the action is not
+    #: offered.
     rider: str = ""
 
 
@@ -176,137 +187,174 @@ def read_opening_hand_actions(
     """
     actions: list[OpeningHandAction] = []
     notices: list[OpeningHandNotice] = []
-    text = card.oracle_text or ""
-
-    for paragraph in text.split("\n"):
-        line = paragraph.strip()
-        if "opening hand" not in line.lower():
-            continue
-
-        begin = _BEGIN_ON_BATTLEFIELD.match(line)
-        reveal = _REVEAL.match(line)
-        if begin is not None:
-            action = OpeningHandAction(
-                kind=OpeningHandActionKind.BEGIN_ON_BATTLEFIELD,
-                text=line,
-                counter=begin.group("counter"),
-                requires_not_starting_player=begin.group("restriction") is not None,
-                rider=begin.group("rider").strip(),
-            )
-        elif reveal is not None:
-            action = OpeningHandAction(
-                kind=OpeningHandActionKind.REVEAL,
-                text=line,
-                rider=reveal.group("rider").strip(),
-            )
-        else:
-            notices.append(
-                OpeningHandNotice(
-                    card_name=card.name,
-                    text=line,
-                    reason=(
-                        "mentions an opening hand but matches neither CR 103.6a's "
-                        "begin-on-the-battlefield template nor CR 103.6b's reveal one"
-                    ),
-                )
-            )
-            continue
-
-        if action.rider and card.name not in RIDERS:
-            notices.append(
-                OpeningHandNotice(
-                    card_name=card.name,
-                    text=line,
-                    reason=(
-                        f"CR 103.6's action carries a rider ({action.rider!r}) with no "
-                        f"entry in machines/opening_hand.py's RIDERS, so taking the "
-                        f"action would do less than the card says"
-                    ),
-                )
-            )
-            continue
-
-        actions.append(action)
-
+    for paragraph in (card.oracle_text or "").split("\n"):
+        read = read_opening_hand_line(card.name, paragraph)
+        if isinstance(read, OpeningHandAction):
+            actions.append(read)
+        elif read is not None:
+            notices.append(read)
     return actions, notices
+
+
+def read_opening_hand_line(
+    card_name: str, paragraph: str
+) -> OpeningHandAction | OpeningHandNotice | None:
+    """One oracle paragraph read as CR 103.6's action, a notice when it
+    mentions an opening hand but cannot be carried out in full, or None when
+    it is not about an opening hand at all. `support.py` asks this per line."""
+    line = paragraph.strip()
+    if "opening hand" not in line.lower():
+        return None
+
+    begin = _BEGIN_ON_BATTLEFIELD.match(line)
+    reveal = _REVEAL.match(line)
+    if begin is not None:
+        action = OpeningHandAction(
+            kind=OpeningHandActionKind.BEGIN_ON_BATTLEFIELD,
+            text=line,
+            counter=begin.group("counter"),
+            requires_not_starting_player=begin.group("restriction") is not None,
+            rider=begin.group("rider").strip(),
+        )
+    elif reveal is not None:
+        action = OpeningHandAction(
+            kind=OpeningHandActionKind.REVEAL,
+            text=line,
+            rider=reveal.group("rider").strip(),
+        )
+    else:
+        return OpeningHandNotice(
+            card_name=card_name,
+            text=line,
+            reason=(
+                "mentions an opening hand but matches neither CR 103.6a's "
+                "begin-on-the-battlefield template nor CR 103.6b's reveal one"
+            ),
+        )
+
+    if action.rider and read_rider(card_name, action.rider) is None:
+        return OpeningHandNotice(
+            card_name=card_name,
+            text=line,
+            reason=(
+                f"CR 103.6's action carries a rider ({action.rider!r}) whose timing "
+                f"or effect no reader recognises, so taking the action would do "
+                f"less than the card says"
+            ),
+        )
+    return action
 
 
 # -- riders: what the template does not describe ---------------------------
 
 
-def _gemstone_caverns_rider(game: "Game", card_state: CardState, player: "Player") -> None:
-    """ "If you do, exile a card from your hand." (Gemstone Caverns)
+#: "If you do, <body>" - CR 103.6's action is the antecedent of "do".
+_RIDER_RE = re.compile(r"^if you do, (?P<body>.+)$", re.IGNORECASE)
 
-    A cost the card charges for starting on the battlefield, paid after it is
-    already there - the sentence is "if you do", not "unless you do", so there
-    is no branch where the Caverns stays in hand. Which card is exiled is the
-    holder's choice, asked as CR 608.2d's `CHOOSE_CARDS` question the cleanup
-    discard already uses; an empty hand exiles nothing, because there is
-    nothing to choose.
+#: "at the beginning of your first upkeep, <effect>" / "at the beginning of
+#: the first upkeep, <effect>" - CR 603.7's delayed triggered ability, created
+#: by the action. "your" is the holder's own first upkeep; "the" is the game's
+#: first upkeep, whoever's turn it is.
+_FIRST_STEP_RE = re.compile(
+    r"^at the beginning of (?P<whose>your|the) first (?P<step>upkeep), (?P<effect>.+)$",
+    re.IGNORECASE,
+)
 
-    Nothing here is random, so nothing here needs the match seed: a replay with
-    the same declarations and the same scripted choice exiles the same card.
+#: The steps a "first <step>" rider can name, and the step each is.
+_FIRST_STEPS: dict[str, Step] = {"upkeep": Step.UPKEEP}
 
-    The exile goes through `Game.exile_cards`, never
-    `Player.move(state, Zone.EXILE)`. CR 400.1: "Each player has their own
-    library, hand, and graveyard. The other zones are shared by all players" -
-    so there is one exile zone, `Game.shared_zones[Zone.EXILE]`, and CR 406.2's
-    "put it into the exile zone" means that one. Exiling into a pile of the
-    holder's own left the card where `Game.exile`, `Game.all_targetables` and
-    every seat's board could not see it: paid, gone from hand, and nowhere.
+
+@dataclass(frozen=True)
+class Rider:
+    """A parsed opening-hand rider: its effect text and, for a delayed one,
+    the step it waits for and whose it is."""
+
+    #: The effect, as printed, with the "If you do," and any timing removed.
+    effect: str
+    #: CR 603.7's delayed timing - the step it waits for, or None to perform
+    #: the effect as part of the action itself.
+    step: Step | None = None
+    #: "your first <step>": only the holder's own step triggers it.
+    yours: bool = False
+
+
+def read_rider(card_name: str, rider: str) -> Rider | None:
+    """Read an opening-hand rider, or None when any part of it is unreadable.
+
+    The effect must be one `machines/effects.trigger_effect_for` really
+    performs - a fail-closed stand-in (`..._notice_only`) is not enough, since
+    offering the action would then do less than the card says.
     """
-    hand = list(player.hand)
-    if not hand:
-        return
-    chosen = game.ask(
-        Decision(
-            kind=DecisionKind.CHOOSE_CARDS,
-            player=player.username,
-            prompt="exile a card from your hand",
-            source=card_state.name,
-            source_id=source_id_of(card_state),
-            amount=1,
-            cards=tuple(state.id for state in hand),
+    from .effects import trigger_effect_for
+
+    match = _RIDER_RE.match(rider.strip())
+    if match is None:
+        return None
+    body = match.group("body").strip()
+    step: Step | None = None
+    yours = False
+    timed = _FIRST_STEP_RE.match(body)
+    if timed is not None:
+        step = _FIRST_STEPS[timed.group("step").lower()]
+        yours = timed.group("whose").lower() == "your"
+        body = timed.group("effect").strip()
+    event = TriggerEvent.BEGINNING_OF_STEP if step is not None else None
+    effect = trigger_effect_for(card_name, event, body)
+    if effect is None or getattr(effect, "__name__", "").endswith("notice_only"):
+        return None
+    return Rider(effect=body, step=step, yours=yours)
+
+
+def perform_rider(game: "Game", card_state: CardState, player: "Player", text: str) -> None:
+    """Carry out a rider `read_rider` already accepted.
+
+    A timed rider creates its delayed triggered ability (CR 603.7), fired once
+    (CR 603.7b, `remaining=1`): the created ability's own printed shape is
+    "At the beginning of your upkeep" or "At the beginning of each upkeep",
+    read by the same condition matcher and effect dispatcher every printed
+    trigger uses (`CreatedTriggeredAbility`), and "your" is further pinned to
+    the holder's own step with `only_when_active`.
+
+    An untimed rider is performed at once, as part of the action, by the
+    effect `trigger_effect_for` reads off its text, with the card as its
+    source and its holder as the player doing it.
+    """
+    from .effects import trigger_effect_for
+
+    rider = read_rider(card_state.card.name, text)
+    assert rider is not None  # `read_opening_hand_actions` refused it otherwise
+    if rider.step is not None:
+        whose = "your" if rider.yours else "each"
+        created = f"At the beginning of {whose} {rider.step.value}, {rider.effect}"
+        game.delayed_triggers.create(
+            DelayedTrigger(
+                text=created,
+                effect=CreatedTriggeredAbility(ability_text=created, source_card=card_state.card),
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=rider.step,
+                controller=player.username,
+                source_id=card_state.id,
+                source_name=card_state.name,
+                only_when_active=player.username if rider.yours else None,
+            )
         )
-    )
-    assert isinstance(chosen, tuple)
-    by_id = {state.id: state for state in hand}
-    game.exile_cards([by_id[card_id] for card_id in chosen])
-
-
-def _devourer_of_destiny_rider(game: "Game", card_state: CardState, player: "Player") -> None:
-    """ "If you do, at the beginning of your first upkeep, ..." (Devourer of Destiny)
-
-    A delayed triggered ability (CR 603.7): created now, by the opening-hand
-    action, and waiting for one particular step. "Your first upkeep" is the
-    next upkeep that is *this player's* - `only_when_active` is what makes it
-    theirs and `remaining=1` (CR 603.7b's default, "only once - the next time
-    its trigger event occurs") is what makes it the first.
-    """
-    game.delayed_triggers.create(
-        DelayedTrigger(
-            text=(
-                "At the beginning of your first upkeep, look at the top four cards of "
-                "your library. You may put one of those cards back on top of your "
-                "library. Exile the rest."
+        return
+    effect = trigger_effect_for(card_state.card.name, None, rider.effect)
+    assert effect is not None
+    effect(
+        game,
+        AbilityOnStack(
+            kind=AbilityKind.TRIGGERED,
+            ability=TriggeredAbility(
+                raw=text,
+                text=text,
+                face=card_state.name,
+                word=TriggerWord.WHEN,
+                condition="you take this opening-hand action",
+                effect=rider.effect,
             ),
-            effect=devourer_of_destiny_first_upkeep,
-            event=TriggerEvent.BEGINNING_OF_STEP,
-            step=Step.UPKEEP,
-            controller=player.username,
             source_id=card_state.id,
             source_name=card_state.name,
-            only_when_active=player.username,
-        )
+            controller=player.username,
+        ),
     )
-
-
-#: What a card's trailing "If you do, ..." sentence actually does, by card name.
-#: Hand-written for the same reason `machines/delayed.py`'s own registry is:
-#: the two riders in the pool have no shape in common, so there is nothing to
-#: parse. A card with a rider and no entry here is refused the action outright
-#: and reported on `Game.opening_hand_notices`; see this module's docstring.
-RIDERS: dict[str, Callable[["Game", CardState, "Player"], None]] = {
-    "Gemstone Caverns": _gemstone_caverns_rider,
-    "Devourer of Destiny": _devourer_of_destiny_rider,
-}

@@ -53,6 +53,7 @@ from magic_cards_model.phrases import with_indefinite_article
 from ..models.card import Type
 from ..models.card_state import CardState, Counter, TargetRef
 from ..models.zone import Zone
+from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
 from .abilities import (
     TriggerEvent,
@@ -531,9 +532,69 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
         # text the way the defender check above is.
         return f"{creature.name} can't attack this turn (CR 508.1c)"
 
-    return _defender_refusal(game, defender, active) or group_attack_restriction_refusal(
-        game, creature, defender
+    return (
+        self_card_count_restriction_refusal(game, creature, "attack")
+        or _defender_refusal(game, defender, active)
+        or group_attack_restriction_refusal(game, creature, defender)
     )
+
+
+#: A creature's own "can't attack [or block] unless there are N or more cards
+#: in <zone>" - Ketramose, the New Dawn's "Ketramose can't attack or block
+#: unless there are seven or more cards in exile." and Deep-Sea Terror's "This
+#: creature can't attack unless there are seven or more cards in your
+#: graveyard." CR 508.1c/509.1b's "can't attack/block unless some condition is
+#: met", the condition a count of one zone: the shared exile zone, the
+#: controller's own graveyard, or every graveyard (CR 400.1).
+_SELF_CANT_UNLESS_CARD_COUNT_RE = re.compile(
+    r"\bcan't (?P<what>attack or block|attack|block) unless there (?:is|are) "
+    rf"(?P<count>{COUNT}) or more cards? in (?P<zone>exile|your graveyard|all graveyards)\.?$",
+    re.IGNORECASE,
+)
+
+
+def is_self_card_count_restriction_line(text: str) -> bool:
+    """Whether a static line is `_SELF_CANT_UNLESS_CARD_COUNT_RE`'s shape with
+    a readable count - what `support.py` counts handled."""
+    match = _SELF_CANT_UNLESS_CARD_COUNT_RE.search(text.strip())
+    return match is not None and parse_count(match["count"], article=True) is not None
+
+
+def _cards_in(game: "Game", zone: str, controller: str | None) -> int:
+    """How many cards the restriction's zone holds right now."""
+    if zone == "exile":
+        return len(game.exile)
+    if zone == "all graveyards":
+        return sum(len(player.graveyard) for player in game.players_in_game)
+    if controller is None:
+        return 0
+    return len(game.player(controller).graveyard)
+
+
+def self_card_count_restriction_refusal(
+    game: "Game", creature: CardState, action: str
+) -> str | None:
+    """Why this creature's own "can't `action` unless there are N or more
+    cards in <zone>" stops it now, or None (CR 508.1c for "attack", CR 509.1b
+    for "block"). Read off its computed abilities (CR 613.5), so a creature
+    that lost the ability is not restricted, and counted at the moment asked
+    (CR 611.3a)."""
+    subjects = _self_reference_alternatives(creature)
+    subject = re.compile(rf"^(?:{'|'.join(re.escape(name) for name in subjects)})\b", re.IGNORECASE)
+    rule = "CR 508.1c" if action == "attack" else "CR 509.1b"
+    for sentence in _computed_ability_sentences(creature, game):
+        match = _SELF_CANT_UNLESS_CARD_COUNT_RE.search(sentence)
+        if match is None or not subject.search(sentence):
+            continue
+        if action not in match["what"].lower().split(" or "):
+            continue
+        needed = parse_count(match["count"], article=True)
+        if needed is None:
+            continue
+        have = _cards_in(game, match["zone"].lower(), creature.controller)
+        if have < needed:
+            return f'{creature.name} can\'t {action}: "{sentence}" - there are {have} ({rule})'
+    return None
 
 
 #: CR 508.1c: a permanent's static "can't attack" restriction on creatures in
@@ -1484,7 +1545,9 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
             )
         )
 
-    self_restriction = self_block_restriction_refusal(game, blocker, attacker)
+    self_restriction = self_block_restriction_refusal(
+        game, blocker, attacker
+    ) or self_card_count_restriction_refusal(game, blocker, "block")
     if self_restriction is not None:
         return self_restriction
     if looks_like_unparsed_self_block_restriction(blocker, game) and not any(
