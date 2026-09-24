@@ -1,0 +1,456 @@
+# The Lord of the Rings: Tales of Middle-earth (ltr)
+
+- Expansion: 240
+- Set code: `ltr`
+- Release date: 2023-06-23
+- Cards in scope (Modern/Pioneer/Standard-legal): 281
+
+## Legality
+
+| Format | Legal cards |
+|---|---|
+| Modern | 281 |
+| Pioneer | 0 |
+| Standard | 0 |
+
+## Coverage
+
+| Bucket | Count | % |
+|---|---|---|
+| Tested | 17 | 6.0% |
+| Works (untested) | 130 | 46.3% |
+| Partial (unaudited) | 22 | 7.8% |
+| Not working | 112 | 39.9% |
+
+## Cards needing work
+
+| Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
+|---|---|---|---|---|---|
+| Andúril, Flame of the West | silent | Whenever equipped creature attacks, create two tapped 1/1 white Spirit creature tokens with flying. If that creature is legendary, instead create two of those t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Aragorn, Company Leader | silent | Whenever the Ring tempts you, if you chose a creature other than Aragorn as your Ring-bearer, put your choice of a counter from among first strike, vigilance, d | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Assault on Osgiliath | silent | Amass Orcs X, then Goblins and Orcs you control gain double strike and haste until end of turn. (To amass Orcs X, put X +1/+1 counters on an Army you control. I | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Bag End Porter | silent | Whenever this creature attacks, it gets +X/+X until end of turn, where X is the number of legendary creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Battle-Scarred Goblin | silent | Whenever this creature becomes blocked, it deals 1 damage to each creature blocking it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Bill the Pony | silent | Sacrifice a Food: Until end of turn, target creature you control assigns combat damage equal to its toughness rather than its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Borne Upon a Wind | silent | You may cast spells this turn as though they had flash. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Breaking of the Fellowship | silent | Target creature an opponent controls deals damage equal to its power to another target creature that player controls. The Ring tempts you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Call of the Ring | silent | Whenever you choose a creature as your Ring-bearer, you may pay 2 life. If you do, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Celeborn the Wise | silent | Whenever you scry, Celeborn gets +1/+1 until end of turn for each card looked at while scrying this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Council's Deliberation | silent | Draw a card. Whenever you scry, if you control an Island, you may exile this card from your graveyard. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Dawn of a New Age | silent | At the beginning of your end step, remove a hope counter from this enchantment. If you do, draw a card. Then if this enchantment has no hope counters on it, sac | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Display of Power | silent | This spell can't be copied. Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Doors of Durin | silent | Whenever you attack, scry 2, then you may reveal the top card of your library. If a creature card is revealed this way, put it onto the battlefield tapped and a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| East-Mark Cavalier | silent | Whenever this creature deals damage to a Goblin or Orc, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Elven Farsight | silent | Scry 3, then you may reveal the top card of your library. If a creature card is revealed this way, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Ent's Fury | silent | Put a +1/+1 counter on target creature you control if its power is 4 or greater. Then that creature gets +1/+1 until end of turn and fights target creature you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Entish Restoration | silent | Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If you control a creature with power 4 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Errand-Rider of Gondor | silent | When this creature enters, draw a card. Then if you don't control a legendary creature, put a card from your hand on the bottom of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Fall of Cair Andros | silent | Whenever a creature an opponent controls is dealt excess noncombat damage, amass Orcs X, where X is that excess damage. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Fall of Gil-galad | silent | III — Until end of turn, target creature you control gains "When this creature dies, draw two cards." Then that creature fights up to one other target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Fangorn, Tree Shepherd | silent | Whenever one or more Treefolk you control attack, add twice that much {G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Faramir, Prince of Ithilien | silent | At the beginning of your end step, choose an opponent. At the beginning of that player's next end step, you draw a card if they didn't attack you that turn. Oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Fear, Fire, Foes! | silent | Damage can't be prevented this turn. Fear, Fire, Foes! deals X damage to target creature and 1 damage to each other creature with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Fire of Orthanc | silent | Destroy target artifact or land. Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Foray of Orcs | silent | Amass Orcs 2. When you do, Foray of Orcs deals X damage to target creature an opponent controls, where X is the amassed Army's power. (To amass Orcs 2, put two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Friendly Rivalry | silent | Target creature you control and up to one other target legendary creature you control each deal damage equal to their power to target creature you don't control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Frodo, Determined Hero | silent | Whenever Frodo enters or attacks, you may attach target Equipment you control with mana value 2 or 3 to Frodo. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Frodo, Sauron's Bane | silent | {W/B}{W/B}: If Frodo is a Citizen, it becomes a Halfling Scout with base power and toughness 2/3 and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Galadriel of Lothlórien | silent | Whenever you scry, you may reveal the top card of your library. If a land card is revealed this way, put it onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Gandalf's Sanction | silent | Gandalf's Sanction deals X damage to target creature, where X is the number of instant and sorcery cards in your graveyard. Excess damage is dealt to that creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Gimli's Axe | silent | As long as equipped creature is legendary, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Gimli, Mournful Avenger | silent | Whenever another creature you control dies, put a +1/+1 counter on Gimli. When this ability resolves for the third time this turn, Gimli fights up to one target | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Glamdring | silent | Equipped creature has first strike and gets +1/+0 for each instant and sorcery card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Glorfindel, Dauntless Rescuer | silent | Whenever you scry, choose one and Glorfindel gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Goblin Fireleaper | silent | When this creature dies, it deals damage equal to its power to target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Goldberry, River-Daughter | silent | {T}: Move a counter of each kind not on Goldberry from another target permanent you control onto Goldberry. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Gollum, Scheming Guide | silent | Whenever Gollum attacks, look at the top two cards of your library, put them back in any order, then choose land or nonland. An opponent guesses whether the top | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Gríma Wormtongue | silent | {T}, Sacrifice another creature: Target player loses 1 life. If the sacrificed creature was legendary, amass Orcs 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Hew the Entwood | silent | Sacrifice any number of lands. Reveal the top X cards of your library, where X is the number of lands sacrificed this way. Choose any number of artifact and/or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Hobbit's Sting | silent | Hobbit's Sting deals X damage to target creature, where X is the number of creatures you control plus the number of Foods you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Isolation at Orthanc | silent | Put target creature into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| King of the Oathbreakers | silent | Whenever King of the Oathbreakers or another Spirit you control becomes the target of a spell, it phases out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Legolas, Counter of Kills | silent | Whenever you scry, if Legolas is tapped, you may untap it. Do this only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Legolas, Master Archer | silent | Whenever you cast a spell that targets a creature you don't control, Legolas deals damage equal to its power to up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Lembas | silent | When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Lobelia Sackville-Baggins | silent | When Lobelia enters, exile target creature card from an opponent's graveyard that was put there from the battlefield this turn, then create X Treasure tokens, w | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Long List of the Ents | silent | I, II, III, IV, V, VI — Note a creature type that hasn't been noted for this Saga. When you next cast a creature spell of that type this turn, that creature ent | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Lost to Legend | silent | Put target nonland historic permanent into its owner's library fourth from the top. (Artifacts, legendaries, and Sagas are historic.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Minas Tirith Garrison | silent | Whenever this creature attacks, you may tap any number of untapped Humans you control. Draw a card for each Human tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Mirkwood Channeler | silent | At the beginning of combat on your turn, target Elf you control gains trample and gets +X/+X until end of turn, where X is the number of Forests you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Mount Doom | silent | {5}{B}{R}, {T}, Sacrifice Mount Doom and a legendary artifact: Choose up to two creatures, then destroy the rest. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Nasty End | silent | As an additional cost to cast this spell, sacrifice a creature. Draw two cards. If the sacrificed creature was legendary, draw three cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Nimrodel Watcher | silent | Whenever you scry, this creature gets +1/+0 until end of turn and can't be blocked this turn. This ability triggers only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Now for Wrath, Now for Ruin! | silent | Put a +1/+1 counter on each creature you control. They gain vigilance until end of turn. The Ring tempts you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Oath of the Grey Host | silent | I — You and target opponent each create a Food token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| One Ring to Rule Them All | silent | I — The Ring tempts you, then each player mills cards equal to your Ring-bearer's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Palantír of Orthanc | silent | At the beginning of your end step, put an influence counter on Palantír of Orthanc and scry 2. Then target opponent may have you draw a card. If that player doe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Pippin, Guard of the Citadel | silent | {T}: Another target creature you control gains protection from the card type of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Press the Enemy | silent | Return target spell or nonland permanent an opponent controls to its owner's hand. You may cast an instant or sorcery spell with equal or lesser mana value from | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Radagast the Brown | silent | Whenever Radagast or another nontoken creature you control enters, look at the top X cards of your library, where X is that creature's mana value. You may revea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Rangers of Ithilien | silent | When this creature enters, gain control of up to one target creature with lesser power for as long as you control this creature. Then the Ring tempts you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Riders of the Mark | silent | At the beginning of your end step, if this creature attacked this turn, return it to its owner's hand. If you do, create a number of 1/1 white Human Soldier cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Ringsight | silent | The Ring tempts you. Search your library for a card that shares a color with a legendary creature you control, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Rosie Cotton of South Lane | silent | Whenever you create a token, put a +1/+1 counter on target creature you control other than Rosie Cotton. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Samwise the Stouthearted | silent | When Samwise enters, choose up to one target permanent card in your graveyard that was put there from the battlefield this turn. Return it to your hand. Then th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Saruman of Many Colors | silent | Whenever you cast your second spell each turn, each opponent mills two cards. When one or more cards are milled this way, exile target enchantment, instant, or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Sauron's Ransom | silent | Choose an opponent. They look at the top four cards of your library and separate them into a face-down pile and a face-up pile. Put one pile into your hand and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Scroll of Isildur | silent | I — Gain control of up to one target artifact for as long as you control this Saga. The Ring tempts you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Shadow of the Enemy | silent | Exile all creature cards from target player's graveyard. You may cast spells from among those cards for as long as they remain exiled, and mana of any type can  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Shadowfax, Lord of Horses | silent | Whenever Shadowfax attacks, you may put a creature card with lesser power from your hand onto the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Shagrat, Loot Bearer | silent | Whenever Shagrat attacks, attach up to one target Equipment to it. Then amass Orcs X, where X is the number of Equipment attached to Shagrat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Shelob, Child of Ungoliant | silent | Whenever another creature dealt damage this turn by a Spider you controlled dies, create a token that's a copy of that creature, except it's a Food artifact wit | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Sméagol, Helpful Guide | silent | Whenever the Ring tempts you, target opponent reveals cards from the top of their library until they reveal a land card. Put that card onto the battlefield tapp | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Snarling Warg | silent | As long as you control a Goblin or Orc, this creature gets +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Sting, the Glinting Dagger | silent | At the beginning of each combat, untap equipped creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Storm of Saruman | silent | Whenever you cast your second spell each turn, copy it, except the copy isn't legendary. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Surrounded by Orcs | silent | Amass Orcs 3, then target player mills X cards, where X is the amassed Army's power. (To amass Orcs 3, put three +1/+1 counters on an Army you control. It's als | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Tale of Tinúviel | silent | III — Up to two target creatures you control each gain lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| The Mouth of Sauron | silent | When The Mouth of Sauron enters, target player mills three cards. Then amass Orcs X, where X is the number of instant and sorcery cards in that player's graveya | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| The One Ring | silent | When The One Ring enters, if you cast it, you gain protection from everything until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| The Ring Goes South | silent | The Ring tempts you. Then reveal cards from the top of your library until you reveal X land cards, where X is the number of legendary creatures you control. Put | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| There and Back Again | silent | I — Up to one target creature can't block for as long as you control this Saga. The Ring tempts you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Tom Bombadil | silent | Whenever the final chapter ability of a Saga you control resolves, reveal cards from the top of your library until you reveal a Saga card. Put that card onto th | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Treason of Isengard | silent | Put up to one target instant or sorcery card from your graveyard on top of your library. Amass Orcs 2. (To amass Orcs 2, put two +1/+1 counters on an Army you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Voracious Fell Beast | silent | When this creature enters, each opponent sacrifices a creature of their choice. Create a Food token for each creature sacrificed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Witch-king of Angmar | silent | Whenever one or more creatures deal combat damage to you, each opponent sacrifices a creature of their choice that dealt combat damage to you this turn. The Rin | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Witch-king, Bringer of Ruin | silent | Whenever Witch-king attacks, defending player sacrifices a creature with the least power among creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Éowyn, Lady of Rohan | silent | At the beginning of combat on your turn, target creature gains your choice of first strike or vigilance until end of turn. If that creature is equipped, it gain | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Bill Ferny, Bree Swindler | notice | Whenever Bill Ferny becomes blocked, choose one — • Create a Treasure token. • Target opponent gains control of target Horse you control. If they do, remove Bil | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Eagle of Deliverance | notice | When this creature enters, put an indestructible counter on another target creature you control. Draw a card if that creature's power is 2 or less. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Eastfarthing Farmer | notice | When this creature enters, create a Food token. When you do, target creature you control gets +1/+1 until end of turn for each Food you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Fires of Mount Doom | notice | When Fires of Mount Doom enters, it deals 2 damage to target creature an opponent controls. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Flowering of the White Tree | notice | Legendary creatures you control get +2/+1 and have ward {1}. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Gimli's Fury | notice | Target creature gets +3/+2 until end of turn. If it's legendary, it also gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Glorious Gale | notice | Counter target creature spell. If it was a legendary spell, the Ring tempts you. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Gollum's Bite | notice | Target creature gets -2/-2 until end of turn. {3}{B}, Exile this card from your graveyard: The Ring tempts you. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Gorbag of Minas Morgul | notice | Whenever a Goblin or Orc you control deals combat damage to a player, you may sacrifice it. When you do, choose one — • Draw a card. • Create a Treasure token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Grishnákh, Brash Instigator | notice | When Grishnákh enters, amass Orcs 2. When you do, until end of turn, gain control of target nonlegendary creature an opponent controls with power less than or e | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Isildur's Fateful Strike | notice | (You may cast a legendary instant only if you control a legendary creature or planeswalker.) Destroy target creature. If its controller has more than four cards | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Lost Isle Calling | notice | {4}{U}{U}, Exile this enchantment: Draw a card for each verse counter on this enchantment. If it had seven or more verse counters on it, take an extra turn afte | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Merry, Esquire of Rohan | notice | Merry has first strike as long as it's equipped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Nimble Hobbit | notice | Whenever this creature attacks, you may sacrifice a Food or pay {2}{W}. When you do, tap target creature an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Old Man Willow | notice | Whenever Old Man Willow attacks, you may sacrifice another creature or a token. When you do, target creature an opponent controls gets -2/-2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Pippin's Bravery | notice | You may sacrifice a Food. If you do, target creature gets +4/+4 until end of turn. Otherwise, that creature gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Ringwraiths | notice | When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. If that creature is legendary, its controller loses 3 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Rush the Room | notice | Target creature gets +1/+0 and gains first strike until end of turn. If it's a Goblin or Orc, it also gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Sauron, the Necromancer | notice | Whenever Sauron attacks, exile target creature card from your graveyard. Create a tapped and attacking token that's a copy of that card, except it's a 3/3 black | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Smite the Deathless | notice | Smite the Deathless deals 3 damage to target creature. That creature loses indestructible until end of turn. If that creature would die this turn, exile it inst | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Strider, Ranger of the North | notice | Landfall — Whenever a land you control enters, target creature gets +1/+1 until end of turn. Then if that creature has power 4 or greater, it gains first strike | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Uglúk of the White Hand | notice | Whenever another creature you control dies, put a +1/+1 counter on Uglúk. If that creature was a Goblin or Orc, put two +1/+1 counters on Uglúk instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Éowyn, Fearless Knight | notice | When Éowyn enters, exile target creature an opponent controls with greater power. Legendary creatures you control gain protection from each of that creature's c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Arwen, Mortal Queen | unaudited | Arwen enters with an indestructible counter on her. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Barad-dûr | unaudited | Barad-dûr enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Bilbo's Ring | unaudited | During your turn, equipped creature has hexproof and can't be blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Elven Chorus | unaudited | You may look at the top card of your library any time. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Fog on the Barrow-Downs | unaudited | Enchanted creature is a Spirit and can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Forge Anew | unaudited | During your turn, you may activate equip abilities any time you could cast an instant. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Frodo Baggins | unaudited | As long as Frodo Baggins is your Ring-bearer, it must be blocked if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Gandalf the White | unaudited | You may cast legendary spells and artifact spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Gandalf, Friend of the Shire | unaudited | You may cast sorcery spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Gwaihir the Windlord | unaudited | This spell costs {2} less to cast as long as you've drawn two or more cards this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Mauhúr, Uruk-hai Captain | unaudited | If one or more +1/+1 counters would be put on an Army, Goblin, or Orc you control, that many plus one +1/+1 counters are put on it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Minas Tirith | unaudited | Minas Tirith enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Mines of Moria | unaudited | Mines of Moria enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Nazgûl | unaudited | A deck can have up to nine cards named Nazgûl. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Peregrin Took | unaudited | If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Phial of Galadriel | unaudited | If you would draw a card while you have no cards in hand, draw two cards instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Rivendell | unaudited | Rivendell enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Sharkey, Tyrant of the Shire | unaudited | Mana of any type can be spent to activate Sharkey's abilities. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| The Balrog, Durin's Bane | unaudited | This spell costs {1} less to cast for each permanent sacrificed this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| The Shire | unaudited | The Shire enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| The Watcher in the Water | unaudited | The Watcher in the Water enters tapped with nine stun counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Troll of Khazad-dûm | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Aragorn and Arwen, Wed | handled | Whenever Aragorn and Arwen enters or attacks, put a +1/+1 counter on each other creature you control. You gain 1 life for each other creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Aragorn, the Uniter | handled | Whenever you cast a white spell, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Arwen Undómiel | handled | Whenever you scry, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Arwen's Gift | handled | This spell costs {1} less to cast if you control two or more legendary creatures. Scry 2, then draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Banish from Edoras | handled | This spell costs {2} less to cast if it targets a tapped creature. Exile target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Barrow-Blade | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bewitching Leechcraft | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bilbo, Retired Burglar | handled | When Bilbo enters or leaves the battlefield, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Birthday Escape | handled | Draw a card. The Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bitter Downfall | handled | This spell costs {3} less to cast if it targets a creature that was dealt damage this turn. Destroy target creature. Its controller loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bombadil's Song | handled | Target creature you control gets +1/+1 and gains hexproof until end of turn. The Ring tempts you. (A creature with hexproof can't be the target of spells or abi | the engine reads this text and performs it | Y/-/- | not_tested |
+| Book of Mazarbul | handled | I — Amass Orcs 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Boromir, Warden of the Tower | handled | Whenever an opponent casts a spell, if no mana was spent to cast it, counter that spell. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Brandywine Farmer | handled | When this creature enters or leaves the battlefield, create a Food token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Butterbur, Bree Innkeeper | handled | At the beginning of your end step, if you don't control a Food, create a Food token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Captain of Umbar | handled | {1}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cast into the Fire | handled | Choose one — • Cast into the Fire deals 1 damage to each of up to two target creatures. • Exile target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Chance-Met Elves | handled | Whenever you scry, put a +1/+1 counter on this creature. This ability triggers only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cirith Ungol Patrol | handled | {1}, {T}, Sacrifice another creature: Draw a card, then create a Food token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Deceive the Messenger | handled | Target creature gets -3/-0 until end of turn. Amass Orcs 1. (Put a +1/+1 counter on an Army you control. It's also an Orc. If you don't control an Army, create  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Denethor, Ruling Steward | handled | At the beginning of your end step, if a creature died under your control this turn, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dreadful as the Storm | handled | Target creature has base power and toughness 5/5 until end of turn. The Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dunland Crebain | handled | When this creature enters, amass Orcs 2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dúnedain Blade | handled | Equipped creature gets +2/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dúnedain Rangers | handled | Landfall — Whenever a land you control enters, if you don't control a Ring-bearer, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Eagles of the North | handled | When this creature enters, creatures you control get +1/+0 and gain first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Easterling Vanguard | handled | When this creature dies, amass Orcs 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Elanor Gardner | handled | When Elanor enters, create a Food token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Elrond, Lord of Rivendell | handled | Whenever Elrond or another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Elrond, Master of Healing | handled | Whenever you scry, put a +1/+1 counter on each of up to X target creatures, where X is the number of cards looked at while scrying this way. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Elvish Mariner | handled | Whenever this creature attacks, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Enraged Huorn | handled | When this creature enters, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ent-Draught Basin | handled | {X}, {T}: Put a +1/+1 counter on target creature with power X. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Erebor Flamesmith | handled | Whenever you cast an instant or sorcery spell, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Erkenbrand, Lord of Westfold | handled | Whenever Erkenbrand or another Human you control enters, creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Escape from Orthanc | handled | Target creature gets +1/+3 and gains flying until end of turn. Untap it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Esquire of the King | handled | {4}{W}, {T}: Creatures you control get +1/+1 until end of turn. This ability costs {2} less to activate if you control a legendary creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Faramir, Field Commander | handled | At the beginning of your end step, if a creature died under your control this turn, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fiery Inscription | handled | When this enchantment enters, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Galadhrim Bow | handled | When this Equipment enters, attach it to target creature you control. Untap that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Galadhrim Guide | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Galadriel, Gift-Giver | handled | Whenever Galadriel enters or attacks, choose one — • Put a +1/+1 counter on another target creature. • Create a Food token. • Create a Treasure token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gandalf the Grey | handled | Whenever you cast an instant or sorcery spell, choose one that hasn't been chosen — • You may tap or untap target permanent. • Gandalf deals 3 damage to each op | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gandalf, White Rider | handled | Whenever you cast a spell, creatures you control get +1/+0 until end of turn. Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gift of Strands | handled | When this Aura enters, scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gothmog, Morgul Lieutenant | handled | When Gothmog enters, amass Orcs 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Great Hall of the Citadel | handled |  |  | Y/-/- | not_tested |
+| Grey Havens Navigator | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Haradrim Spearmaster | handled | At the beginning of combat on your turn, another target creature you control gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Haunt of the Dead Marshes | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hithlain Knots | handled | Tap target creature. Scry 1. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Horn of Gondor | handled | When Horn of Gondor enters, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Horn of the Mark | handled | Whenever two or more creatures you control attack a player, look at the top five cards of your library. You may reveal a creature card from among them and put i | the engine reads this text and performs it | Y/-/- | not_tested |
+| Horses of the Bruinen | handled | Return up to two target creatures to their owners' hands. Scry 1. The Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Improvised Club | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. Improvised Club deals 4 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Inherited Envelope | handled | When this artifact enters, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ioreth of the Healing House | handled | {T}: Untap another target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ithilien Kingfisher | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Knights of Dol Amroth | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Landroval, Horizon Witness | handled | Whenever two or more creatures you control attack a player, target attacking creature without flying gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lash of the Balrog | handled | As an additional cost to cast this spell, sacrifice a creature or pay {4}. Destroy target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lothlórien Lookout | handled | Whenever this creature attacks, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lotho, Corrupt Shirriff | handled | Whenever a player casts their second spell each turn, you lose 1 life and create a Treasure token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Many Partings | handled | Search your library for a basic land card, reveal it, put it into your hand, then shuffle. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this | the engine reads this text and performs it | Y/-/- | not_tested |
+| March from the Black Gate | handled | When this enchantment enters and whenever an Army you control attacks, amass Orcs 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Meneldor, Swift Savior | handled | Whenever Meneldor deals combat damage to a player, exile up to one target creature you own, then return it to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Meriadoc Brandybuck | handled | Whenever one or more Halflings you control attack a player, create a Food token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mirkwood Bats | handled | Whenever you create or sacrifice a token, each opponent loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mirkwood Spider | handled | Whenever this creature attacks, target legendary creature you control gains deathtouch until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mirror of Galadriel | handled | {5}, {T}: Scry 1, then draw a card. This ability costs {1} less to activate for each legendary creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mirrormere Guardian | handled | When this creature dies, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mithril Coat | handled | When Mithril Coat enters, attach it to target legendary creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mordor Muster | handled | You draw a card and you lose 1 life. Amass Orcs 1. (Put a +1/+1 counter on an Army you control. It's also an Orc. If you don't control an Army, create a 0/0 bla | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mordor Trebuchet | handled | Whenever you attack with one or more Goblins and/or Orcs, create a 2/1 colorless Construct artifact creature token with flying named Ballistic Boulder that's ta | the engine reads this text and performs it | Y/-/- | not_tested |
+| Morgul-Knife Wound | handled | Enchanted creature gets -3/-0 and has "At the beginning of your upkeep, exile this creature unless you pay 2 life." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Moria Marauder | handled | Whenever a Goblin or Orc you control deals combat damage to a player, exile the top card of your library. You may play that card this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mushroom Watchdogs | handled | Sacrifice a Food: Put a +1/+1 counter on this creature. It gains vigilance until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Olog-hai Crusher | handled | This creature can't block unless you control a Goblin or Orc. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Orcish Medicine | handled | Target creature gains your choice of lifelink or indestructible until end of turn. Amass Orcs 1. (Put a +1/+1 counter on an Army you control. It's also an Orc.  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Pelargir Survivor | handled | {5}{U}, {T}: Target player mills three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Prince Imrahil the Fair | handled | Whenever you draw your second card each turn, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Protector of Gondor | handled | When this creature enters, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Quarrel's End | handled | As an additional cost to cast this spell, discard a card. Draw two cards and create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Quickbeam, Upstart Ent | handled | Whenever Quickbeam or another Treefolk you control enters, up to two target creatures each get +2/+2 and gain trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rally at the Hornburg | handled | Create two 1/1 white Human Soldier creature tokens. Humans you control gain haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ranger's Firebrand | handled | Ranger's Firebrand deals 2 damage to any target. The Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Relentless Rohirrim | handled | When this creature enters, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Reprieve | handled | Return target spell to its owner's hand. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Revive the Shire | handled | Return target permanent card from your graveyard to your hand. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.") | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rising of the Day | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rohirrim Lancer | handled | When this creature dies, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sam's Desperate Rescue | handled | Return target creature card from your graveyard to your hand. The Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Samwise Gamgee | handled | Whenever another nontoken creature you control enters, create a Food token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Saradoc, Master of Buckland | handled | Whenever Saradoc or another nontoken creature you control with power 2 or less enters, create a 1/1 white Halfling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Saruman the White | handled | Whenever you cast your second spell each turn, amass Orcs 2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Saruman's Trickery | handled | Counter target spell. Amass Orcs 1. (Put a +1/+1 counter on an Army you control. It's also an Orc. If you don't control an Army, create a 0/0 black Orc Army cre | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sauron, the Dark Lord | handled | Whenever an opponent casts a spell, amass Orcs 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sauron, the Lidless Eye | handled | When Sauron enters, gain control of target creature an opponent controls until end of turn. Untap it. It gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Second Breakfast | handled | Up to two target creatures each get +2/+1 until end of turn. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.") | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shadow Summoning | handled | Create two tapped 1/1 white Spirit creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shelob's Ambush | handled | Target creature gets +1/+2 and gains deathtouch until end of turn. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shire Scarecrow | handled | Defender | machines/combat.py | Y/-/- | not_tested |
+| Shire Shirriff | handled | When this creature enters, you may sacrifice a token. When you do, exile target creature an opponent controls until this creature leaves the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shire Terrace | handled | {1}, {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shortcut to Mushrooms | handled | When this enchantment enters, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shower of Arrows | handled | Destroy target artifact, enchantment, or creature with flying. Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Slip On the Ring | handled | Exile target creature you own, then return it to the battlefield under your control. The Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Soldier of the Grey Host | handled | When this creature enters, target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Soothing of Sméagol | handled | Return target nontoken creature to its owner's hand. The Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Spiteful Banditry | handled | When this enchantment enters, it deals X damage to each creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stalwarts of Osgiliath | handled | When this creature enters, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stew the Coneys | handled | Target creature you control deals damage equal to its power to target creature you don't control. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifi | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stone of Erech | handled | If a creature an opponent controls would die, exile it instead. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Swarming of Moria | handled | Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") Amass Orcs 2. (Put two +1/+1 counters on an Army you co | the engine reads this text and performs it | Y/-/- | not_tested |
+| The Balrog, Flame of Udûn | handled | When a legendary creature an opponent controls dies, put The Balrog on the bottom of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
+| The Bath Song | handled | I, II — Draw two cards, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| The Black Breath | handled | Creatures your opponents control get -1/-1 until end of turn. The Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| The Grey Havens | handled | When The Grey Havens enters, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| The Torment of Gollum | handled | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. Amass Orcs 2. (Put two +1/+1 counters on an Army you cont | the engine reads this text and performs it | Y/-/- | not_tested |
+| Théoden, King of Rohan | handled | Whenever Théoden or another Human you control enters, target creature gains double strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Uruk-hai Berserker | handled | When this creature enters, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| War of the Last Alliance | handled | I, II — Search your library for a legendary creature card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Warbeast of Gorgoroth | handled | Whenever this creature or another creature you control with power 4 or greater dies, amass Orcs 2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Westfold Rider | handled | Sacrifice this creature: Destroy target artifact or enchantment. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Willow-Wind | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wizard's Rockets | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wose Pathfinder | handled | {6}{G}, {T}: Another target creature gets +3/+3 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| You Cannot Pass! | handled | Destroy target creature that blocked or was blocked by a legendary creature this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Éomer of the Riddermark | handled | Whenever Éomer attacks, if you control a creature with the greatest power among creatures on the battlefield, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Éomer, Marshal of Rohan | handled | Whenever one or more other attacking legendary creatures you control die, untap all creatures you control. After this phase, there is an additional combat phase | the engine reads this text and performs it | Y/-/- | not_tested |
+
+## Fully supported
+
+<details>
+<summary>17 cards</summary>
+
+- Claim the Precious
+- Delighted Halfling
+- Flame of Anor
+- Generous Ent
+- Gimli, Counter of Kills
+- Glóin, Dwarf Emissary
+- Gollum, Patient Plotter
+- Grond, the Gatebreaker
+- Last March of the Ents
+- Lórien Revealed
+- Oliphaunt
+- Orcish Bowmasters
+- Rise of the Witch-king
+- Stern Scolding
+- The Battle of Bywater
+- Took Reaper
+- Warg Rider
+
+</details>
+
+## Missing mechanics
+
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| ~ enters tapped unless you control a legendary creature. | 5 | Barad-dûr, Minas Tirith, Mines of Moria, Rivendell, The Shire | ltr |
+| Landfall | 1 | Strider, Ranger of the North | ltr |
+| (you may cast a legendary instant only if you control a legendary creature or planeswalker.) destroy target creature. if its controller has more than four cards | 1 | Isildur's Fateful Strike | ltr |
+| a deck can have up to nine cards named ~. | 1 | Nazgûl | ltr |
+| amass orcs N, then goblins and orcs you control gain double strike and haste until end of turn. (to amass orcs N, put N +N/+N counters on an army you control. i | 1 | Assault on Osgiliath | ltr |
+| amass orcs N, then target player mills N cards, where N is the amassed army"..."s also an orc. if you don't control an army, create a N/N black orc army creatur | 1 | Surrounded by Orcs | ltr |
+| amass orcs N. when you do, ~ deals N damage to target creature an opponent controls, where N is the amassed army"..."s also an orc. if you don't control an army | 1 | Foray of Orcs | ltr |
+| arwen enters with an indestructible counter on her. | 1 | Arwen, Mortal Queen | ltr |
+| as an additional cost to cast ~, sacrifice a creature. draw two cards. if the sacrificed creature was legendary, draw three cards instead. | 1 | Nasty End | ltr |
+| as long as equipped creature is legendary, it has menace. | 1 | Gimli's Axe | ltr |
+| as long as you control a goblin or orc, ~ gets +N/+N. | 1 | Snarling Warg | ltr |
+| as long as ~ is your ring-bearer, it must be blocked if able. | 1 | Frodo Baggins | ltr |
+| at the beginning of combat on your turn, target creature gains your choice of first strike or vigilance until end of turn. if that creature is equipped, it gain | 1 | Éowyn, Lady of Rohan | ltr |
+| at the beginning of combat on your turn, target elf you control gains trample and gets +N/+N until end of turn, where N is the number of forests you control. | 1 | Mirkwood Channeler | ltr |
+| at the beginning of each combat, untap equipped creature. | 1 | Sting, the Glinting Dagger | ltr |
+| at the beginning of your end step, choose an opponent. at the beginning of that player"..."t attack you that turn. otherwise, create three N/N white human soldi | 1 | Faramir, Prince of Ithilien | ltr |
+| at the beginning of your end step, if ~ attacked ~, return it to its owner's hand. if you do, create a number of N/N white human soldier creature tokens equal t | 1 | Riders of the Mark | ltr |
+| at the beginning of your end step, put an influence counter on ~ and scry N. then target opponent may have you draw a card. if that player doesn't, you mill N c | 1 | Palantír of Orthanc | ltr |
+| at the beginning of your end step, remove a hope counter from ~. if you do, draw a card. then if ~ has no hope counters on it, sacrifice it and you gain N life. | 1 | Dawn of a New Age | ltr |
+| choose an opponent. they look at the top four cards of your library and separate them into a face-down pile and a face-up pile. put one pile into your hand and  | 1 | Sauron's Ransom | ltr |
+| counter target creature spell. if it was a legendary spell, the ring tempts you. | 1 | Glorious Gale | ltr |
+| damage can't be prevented ~. ~ deals N damage to target creature and N damage to each other creature with the same controller. | 1 | Fear, Fire, Foes! | ltr |
+| destroy target artifact or land. creatures without flying can't block ~. | 1 | Fire of Orthanc | ltr |
+| draw a card. whenever you scry, if you control an island, you may exile ~ from your graveyard. if you do, draw a card. | 1 | Council's Deliberation | ltr |
+| during your turn, equipped creature has hexproof and can't be blocked. | 1 | Bilbo's Ring | ltr |
+| during your turn, you may activate equip abilities any time you could cast an instant. | 1 | Forge Anew | ltr |
+| enchanted creature is a spirit and can't attack or block. | 1 | Fog on the Barrow-Downs | ltr |
+| equipped creature has first strike and gets +N/+N for each instant and sorcery card in your graveyard. | 1 | Glamdring | ltr |
+| exile all creature cards from target player's graveyard. you may cast spells from among those cards for as long as they remain exiled, and mana of any type can  | 1 | Shadow of the Enemy | ltr |
+| gain control of up to one target artifact for as long as you control ~. the ring tempts you. | 1 | Scroll of Isildur | ltr |
+| if one or more +N/+N counters would be put on an army, goblin, or orc you control, that many plus one +N/+N counters are put on it instead. | 1 | Mauhúr, Uruk-hai Captain | ltr |
+| if one or more tokens would be created under your control, those tokens plus an additional food token are created instead. | 1 | Peregrin Took | ltr |
+| if you would draw a card while you have no cards in hand, draw two cards instead. | 1 | Phial of Galadriel | ltr |
+| legendary creatures you control get +N/+N and have ward {M}. | 1 | Flowering of the White Tree | ltr |
+| mana of any type can be spent to activate sharkey's abilities. | 1 | Sharkey, Tyrant of the Shire | ltr |
+| merry has first strike as long as it's equipped. | 1 | Merry, Esquire of Rohan | ltr |
+| note a creature type that hasn't been noted for ~. when you next cast a creature spell of that type ~, that creature enters with an additional +N/+N counter on  | 1 | Long List of the Ents | ltr |
+| put a +N/+N counter on each creature you control. they gain vigilance until end of turn. the ring tempts you. | 1 | Now for Wrath, Now for Ruin! | ltr |
+| put a +N/+N counter on target creature you control if its power is N or greater. then that creature gets +N/+N until end of turn and fights target creature you  | 1 | Ent's Fury | ltr |
+| put target creature into its owner's library second from the top. | 1 | Isolation at Orthanc | ltr |
+| put target nonland historic permanent into its owner's library fourth from the top. (artifacts, legendaries, and sagas are historic.) | 1 | Lost to Legend | ltr |
+| put up to one target instant or sorcery card from your graveyard on top of your library. amass orcs N. (to amass orcs N, put two +N/+N counters on an army you c | 1 | Treason of Isengard | ltr |
+| return target spell or nonland permanent an opponent controls to its owner's hand. you may cast an instant or sorcery spell with equal or lesser mana value from | 1 | Press the Enemy | ltr |
+| sacrifice a food: until end of turn, target creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Bill the Pony | ltr |
+| sacrifice a land. search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. if you control a creature with power N | 1 | Entish Restoration | ltr |
+| sacrifice any number of lands. reveal the top N cards of your library, where N is the number of lands sacrificed ~. choose any number of artifact and/or land ca | 1 | Hew the Entwood | ltr |
+| scry N, then you may reveal the top card of your library. if a creature card is revealed ~, draw a card. | 1 | Elven Farsight | ltr |
+| target creature an opponent controls deals damage equal to its power to another target creature that player controls. the ring tempts you. | 1 | Breaking of the Fellowship | ltr |
+| target creature gets +N/+N and gains first strike until end of turn. if it's a goblin or orc, it also gains haste until end of turn. | 1 | Rush the Room | ltr |
+| target creature gets +N/+N until end of turn. if it's legendary, it also gains trample until end of turn. | 1 | Gimli's Fury | ltr |
+| target creature gets -N/-N until end of turn. {M}{M}, exile ~ from your graveyard: the ring tempts you. activate only as a sorcery. | 1 | Gollum's Bite | ltr |
+| target creature you control and up to one other target legendary creature you control each deal damage equal to their power to target creature you don't control | 1 | Friendly Rivalry | ltr |
+| the ring tempts you, then each player mills cards equal to your ring-bearer's power. | 1 | One Ring to Rule Them All | ltr |
+| the ring tempts you. search your library for a card that shares a color with a legendary creature you control, reveal it, put it into your hand, then shuffle. | 1 | Ringsight | ltr |
+| the ring tempts you. then reveal cards from the top of your library until you reveal N land cards, where N is the number of legendary creatures you control. put | 1 | The Ring Goes South | ltr |
+| until end of turn, target creature you control gains "..." then that creature fights up to one other target creature. | 1 | Fall of Gil-galad | ltr |
+| up to one target creature can't block for as long as you control ~. the ring tempts you. | 1 | There and Back Again | ltr |
+| up to two target creatures you control each gain lifelink until end of turn. | 1 | Tale of Tinúviel | ltr |
+| when grishnákh enters, amass orcs N. when you do, until end of turn, gain control of target nonlegendary creature an opponent controls with power less than or e | 1 | Grishnákh, Brash Instigator | ltr |
+| when lobelia enters, exile target creature card from an opponent"..."s power. | 1 | Lobelia Sackville-Baggins | ltr |
+| when samwise enters, choose up to one target permanent card in your graveyard that was put there from the battlefield ~. return it to your hand. then the ring t | 1 | Samwise the Stouthearted | ltr |
+| when ~ dies, it deals damage equal to its power to target creature an opponent controls. | 1 | Goblin Fireleaper | ltr |
+| when ~ enters, create a food token. when you do, target creature you control gets +N/+N until end of turn for each food you control. | 1 | Eastfarthing Farmer | ltr |
+| when ~ enters, draw a card. then if you don't control a legendary creature, put a card from your hand on the bottom of your library. | 1 | Errand-Rider of Gondor | ltr |
+| when ~ enters, each opponent sacrifices a creature of their choice. create a food token for each creature sacrificed ~. | 1 | Voracious Fell Beast | ltr |
+| when ~ enters, gain control of up to one target creature with lesser power for as long as you control ~. then the ring tempts you. | 1 | Rangers of Ithilien | ltr |
+| when ~ enters, if you cast it, you gain protection from everything until your next turn. | 1 | The One Ring | ltr |
+| when ~ enters, it deals N damage to target creature an opponent controls. destroy all equipment attached to that creature. | 1 | Fires of Mount Doom | ltr |
+| when ~ enters, put an indestructible counter on another target creature you control. draw a card if that creature's power is N or less. | 1 | Eagle of Deliverance | ltr |
+| when ~ enters, target creature an opponent controls gets -N/-N until end of turn. if that creature is legendary, its controller loses N life. | 1 | Ringwraiths | ltr |
+| when ~ enters, target player mills three cards. then amass orcs N, where N is the number of instant and sorcery cards in that player's graveyard. | 1 | The Mouth of Sauron | ltr |
+| when ~ is put into a graveyard from the battlefield, its owner shuffles it into their library. | 1 | Lembas | ltr |
+| when éowyn enters, exile target creature an opponent controls with greater power. legendary creatures you control gain protection from each of that creature's c | 1 | Éowyn, Fearless Knight | ltr |
+| whenever a creature an opponent controls is dealt excess noncombat damage, amass orcs N, where N is that excess damage. | 1 | Fall of Cair Andros | ltr |
+| whenever a goblin or orc you control deals combat damage to a player, you may sacrifice it. when you do, choose one — • draw a card. • create a treasure token. | 1 | Gorbag of Minas Morgul | ltr |
+| whenever another creature dealt damage ~ by a spider you controlled dies, create a token that"..."s a food artifact with "..." and it loses all other card types | 1 | Shelob, Child of Ungoliant | ltr |
+| whenever another creature you control dies, put a +N/+N counter on gimli. when ~ resolves for the third time ~, gimli fights up to one target creature you don't | 1 | Gimli, Mournful Avenger | ltr |
+| whenever another creature you control dies, put a +N/+N counter on uglúk. if that creature was a goblin or orc, put two +N/+N counters on uglúk instead. | 1 | Uglúk of the White Hand | ltr |
+| whenever bill ferny becomes blocked, choose one — • create a treasure token. • target opponent gains control of target horse you control. if they do, remove bil | 1 | Bill Ferny, Bree Swindler | ltr |
+| whenever equipped creature attacks, create two tapped N/N white spirit creature tokens with flying. if that creature is legendary, instead create two of those t | 1 | Andúril, Flame of the West | ltr |
+| whenever frodo enters or attacks, you may attach target equipment you control with mana value N or N to frodo. | 1 | Frodo, Determined Hero | ltr |
+| whenever gollum attacks, look at the top two cards of your library, put them back in any order, then choose land or nonland. an opponent guesses whether the top | 1 | Gollum, Scheming Guide | ltr |
+| whenever one or more creatures deal combat damage to you, each opponent sacrifices a creature of their choice that dealt combat damage to you ~. the ring tempts | 1 | Witch-king of Angmar | ltr |
+| whenever one or more treefolk you control attack, add twice that much {M}. | 1 | Fangorn, Tree Shepherd | ltr |
+| whenever radagast or another nontoken creature you control enters, look at the top N cards of your library, where N is that creature"..."t share a creature type | 1 | Radagast the Brown | ltr |
+| whenever sauron attacks, exile target creature card from your graveyard. create a tapped and attacking token that"..."s a N/N black wraith with menace. at the b | 1 | Sauron, the Necromancer | ltr |
+| whenever shadowfax attacks, you may put a creature card with lesser power from your hand onto the battlefield tapped and attacking. | 1 | Shadowfax, Lord of Horses | ltr |
+| whenever shagrat attacks, attach up to one target equipment to it. then amass orcs N, where N is the number of equipment attached to shagrat. | 1 | Shagrat, Loot Bearer | ltr |
+| whenever the final chapter ability of a saga you control resolves, reveal cards from the top of your library until you reveal a saga card. put that card onto th | 1 | Tom Bombadil | ltr |
+| whenever the ring tempts you, if you chose a creature other than aragorn as your ring-bearer, put your choice of a counter from among first strike, vigilance, d | 1 | Aragorn, Company Leader | ltr |
+| whenever the ring tempts you, target opponent reveals cards from the top of their library until they reveal a land card. put that card onto the battlefield tapp | 1 | Sméagol, Helpful Guide | ltr |
+| whenever witch-king attacks, defending player sacrifices a creature with the least power among creatures they control. | 1 | Witch-king, Bringer of Ruin | ltr |
+| whenever you attack, scry N, then you may reveal the top card of your library. if a creature card is revealed ~, put it onto the battlefield tapped and attackin | 1 | Doors of Durin | ltr |
+| whenever you cast a spell that targets a creature you don't control, legolas deals damage equal to its power to up to one target creature. | 1 | Legolas, Master Archer | ltr |
+| whenever you cast your second spell each turn, copy it, except the copy isn't legendary. you may choose new targets for the copy. | 1 | Storm of Saruman | ltr |
+| whenever you cast your second spell each turn, each opponent mills two cards. when one or more cards are milled ~, exile target enchantment, instant, or sorcery | 1 | Saruman of Many Colors | ltr |
+| whenever you choose a creature as your ring-bearer, you may pay N life. if you do, draw a card. | 1 | Call of the Ring | ltr |
+| whenever you create a token, put a +N/+N counter on target creature you control other than rosie cotton. | 1 | Rosie Cotton of South Lane | ltr |
+| whenever you scry, celeborn gets +N/+N until end of turn for each card looked at while scrying ~. | 1 | Celeborn the Wise | ltr |
+| whenever you scry, choose one and glorfindel gets +N/+N until end of turn. | 1 | Glorfindel, Dauntless Rescuer | ltr |
+| whenever you scry, if legolas is tapped, you may untap it. do ~ once each turn. | 1 | Legolas, Counter of Kills | ltr |
+| whenever you scry, you may reveal the top card of your library. if a land card is revealed ~, put it onto the battlefield tapped. | 1 | Galadriel of Lothlórien | ltr |
+| whenever you scry, ~ gets +N/+N until end of turn and can't be blocked ~. ~ triggers only once each turn. | 1 | Nimrodel Watcher | ltr |
+| whenever ~ attacks, it gets +N/+N until end of turn, where N is the number of legendary creatures you control. | 1 | Bag End Porter | ltr |
+| whenever ~ attacks, you may sacrifice a food or pay {M}{M}. when you do, tap target creature an opponent controls. | 1 | Nimble Hobbit | ltr |
+| whenever ~ attacks, you may sacrifice another creature or a token. when you do, target creature an opponent controls gets -N/-N until end of turn. | 1 | Old Man Willow | ltr |
+| whenever ~ attacks, you may tap any number of untapped humans you control. draw a card for each human tapped ~. | 1 | Minas Tirith Garrison | ltr |
+| whenever ~ becomes blocked, it deals N damage to each creature blocking it. | 1 | Battle-Scarred Goblin | ltr |
+| whenever ~ deals damage to a goblin or orc, destroy that creature. | 1 | East-Mark Cavalier | ltr |
+| whenever ~ or another spirit you control becomes the target of a spell, it phases out. | 1 | King of the Oathbreakers | ltr |
+| you and target opponent each create a food token. | 1 | Oath of the Grey Host | ltr |
+| you may cast legendary spells and artifact spells as though they had flash. | 1 | Gandalf the White | ltr |
+| you may cast sorcery spells as though they had flash. | 1 | Gandalf, Friend of the Shire | ltr |
+| you may cast spells ~ as though they had flash. draw a card. | 1 | Borne Upon a Wind | ltr |
+| you may look at the top card of your library any time. | 1 | Elven Chorus | ltr |
+| you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Pippin's Bravery | ltr |
+| {M}, sacrifice another creature: target player loses N life. if the sacrificed creature was legendary, amass orcs N. | 1 | Gríma Wormtongue | ltr |
+| {M}: another target creature you control gains protection from the card type of your choice until end of turn. | 1 | Pippin, Guard of the Citadel | ltr |
+| {M}: move a counter of each kind not on goldberry from another target permanent you control onto goldberry. | 1 | Goldberry, River-Daughter | ltr |
+| {M}{M}: if frodo is a citizen, it becomes a halfling scout with base power and toughness N/N and lifelink. | 1 | Frodo, Sauron's Bane | ltr |
+| {M}{M}{M}, exile ~: draw a card for each verse counter on ~. if it had seven or more verse counters on it, take an extra turn after ~. activate only as a sorcer | 1 | Lost Isle Calling | ltr |
+| {M}{M}{M}, {M}, sacrifice ~ and a legendary artifact: choose up to two creatures, then destroy the rest. activate only as a sorcery. | 1 | Mount Doom | ltr |
+| ~ can't be blocked except by three or more creatures. | 1 | Troll of Khazad-dûm | ltr |
+| ~ can't be copied. copy any number of target instant and/or sorcery spells. you may choose new targets for the copies. | 1 | Display of Power | ltr |
+| ~ costs {M} less to cast as long as you've drawn two or more cards ~. | 1 | Gwaihir the Windlord | ltr |
+| ~ costs {M} less to cast for each permanent sacrificed ~. | 1 | The Balrog, Durin's Bane | ltr |
+| ~ deals N damage to target creature, where N is the number of creatures you control plus the number of foods you control. | 1 | Hobbit's Sting | ltr |
+| ~ deals N damage to target creature, where N is the number of instant and sorcery cards in your graveyard. excess damage is dealt to that creature's controller  | 1 | Gandalf's Sanction | ltr |
+| ~ deals N damage to target creature. that creature loses indestructible until end of turn. if that creature would die ~, exile it instead. | 1 | Smite the Deathless | ltr |
+| ~ enters tapped with nine stun counters on it. | 1 | The Watcher in the Water | ltr |
+
+## Notes
+
+

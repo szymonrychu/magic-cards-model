@@ -1,0 +1,44 @@
+# Neon Dynasty Commander (nec)
+
+- Expansion: 226
+- Set code: `nec`
+- Release date: 2022-02-18
+- Cards in scope (Modern/Pioneer/Standard-legal): 1
+
+## Legality
+
+| Format | Legal cards |
+|---|---|
+| Modern | 1 |
+| Pioneer | 0 |
+| Standard | 0 |
+
+## Coverage
+
+| Bucket | Count | % |
+|---|---|---|
+| Tested | 1 | 100.0% |
+| Works (untested) | 0 | 0.0% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 0 | 0.0% |
+
+## Cards needing work
+
+None - every card in scope is fully supported.
+
+## Fully supported
+
+<details>
+<summary>1 cards</summary>
+
+- Kappa Cannoneer
+
+</details>
+
+## Missing mechanics
+
+None.
+
+## Notes
+
+

@@ -11,3 +11,4 @@ build/
 .claude/worktrees/
 .survey-cache/
 .rules/
+.scryfall-cache/

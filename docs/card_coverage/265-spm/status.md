@@ -1,0 +1,315 @@
+# Marvel's Spider-Man (spm)
+
+- Expansion: 265
+- Set code: `spm`
+- Release date: 2025-09-26
+- Cards in scope (Modern/Pioneer/Standard-legal): 187
+
+## Legality
+
+| Format | Legal cards |
+|---|---|
+| Modern | 187 |
+| Pioneer | 187 |
+| Standard | 187 |
+
+## Coverage
+
+| Bucket | Count | % |
+|---|---|---|
+| Tested | 13 | 7.0% |
+| Works (untested) | 84 | 44.9% |
+| Partial (unaudited) | 10 | 5.3% |
+| Not working | 80 | 42.8% |
+
+## Cards needing work
+
+| Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
+|---|---|---|---|---|---|
+| Alien Symbiosis | silent | Enchanted creature gets +1/+1, has menace, and is a Symbiote in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Arachne, Psionic Weaver | silent | Web-slinging | no machine in the engine executes this keyword | Y/Y/Y | not_working |
+| Aunt May | silent | Whenever another creature you control enters, you gain 1 life. If it's a Spider, put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Black Cat, Cunning Thief | silent | When Black Cat enters, look at the top nine cards of target opponent's library, exile two of them face down, then put the rest on the bottom of their library in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Chameleon, Master of Disguise | silent | You may have Chameleon enter as a copy of a creature you control, except his name is Chameleon, Master of Disguise. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Cheering Crowd | silent | At the beginning of each player's first main phase, that player may put a +1/+1 counter on this creature. If they do, they add {C} for each counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Cosmic Spider-Man | silent | At the beginning of combat on your turn, other Spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Doc Ock's Henchmen | silent | Whenever this creature attacks, it connives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Doc Ock's Tentacles | silent | Whenever a creature you control with mana value 5 or greater enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Doctor Octopus, Master Planner | silent | At the beginning of your end step, if you have fewer than eight cards in hand, draw cards equal to the difference. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Ezekiel Sims, Spider-Totem | silent | At the beginning of combat on your turn, target Spider you control gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Friendly Neighborhood | silent | Enchanted land has "{1}, {T}: Target creature gets +1/+1 until end of turn for each creature you control. Activate only as a sorcery." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Gwen Stacy // Ghost-Spider | silent | When Gwen Stacy enters, exile the top card of your library. You may play that card for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Gwenom, Remorseless | silent | Whenever Gwenom attacks, until end of turn, you may look at the top card of your library any time and you may play cards from the top of your library. If you ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Iron Spider, Stark Upgrade | silent | {T}: Put a +1/+1 counter on each artifact creature and/or Vehicle you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| J. Jonah Jameson | silent | When J. Jonah Jameson enters, suspect up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Jackal, Genius Geneticist | silent | Whenever you cast a creature spell with mana value equal to Jackal's power, copy that spell, except the copy isn't legendary. Then put a +1/+1 counter on Jackal | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Lady Octopus, Inspired Inventor | silent | Whenever you draw your first or second card each turn, put an ingenuity counter on Lady Octopus. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
+| Living Brain, Mechanical Marvel | silent | At the beginning of combat on your turn, target non-Equipment artifact you control becomes an artifact creature with base power and toughness 3/3 until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Lizard, Connors's Curse | silent | Lizard Formula — When Lizard, Connors's Curse enters, up to one other target creature loses all abilities and becomes a green Lizard creature with base power an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Maximum Carnage | silent | I — Until your next turn, each creature attacks each combat if able and attacks a player other than you if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Mechanical Mobster | silent | When this creature enters, exile up to one target card from a graveyard. Target creature you control connives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Miles Morales // Ultimate Spider-Man | silent | Whenever you attack, double the number of each kind of counter on each Spider and legendary creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Mob Lookout | silent | When this creature enters, target creature you control connives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Molten Man, Inferno Incarnate | silent | When Molten Man leaves the battlefield, sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Mysterio, Master of Illusion | silent | When Mysterio enters, create a 3/3 blue Illusion Villain creature token for each nontoken Villain you control. Exile those tokens when Mysterio leaves the battl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Norman Osborn // Green Goblin | silent | Whenever Norman Osborn deals combat damage to a player, he connives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Parker Luck | silent | At the beginning of your end step, two target players each reveal the top card of their library. They each lose life equal to the mana value of the card reveale | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Peter Parker's Camera | silent | {2}, {T}, Remove a film counter from this artifact: Copy target activated or triggered ability you control. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Prowler, Clawed Thief | silent | Whenever another Villain you control enters, Prowler connives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Rent Is Due | silent | At the beginning of your end step, you may tap two untapped creatures and/or Treasures you control. If you do, draw a card. Otherwise, sacrifice this enchantmen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Rhino's Rampage | silent | Target creature you control gets +1/+0 until end of turn. It fights target creature an opponent controls. When excess damage is dealt to the creature an opponen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Sandman, Shifting Scoundrel | silent | {3}{G}{G}: Return this card and target land card from your graveyard to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Scarlet Spider, Ben Reilly | silent | Web-slinging | no machine in the engine executes this keyword | Y/Y/Y | not_working |
+| Scarlet Spider, Kaine | silent | When Scarlet Spider enters, you may discard a card. If you do, put a +1/+1 counter on him. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Scorpion, Seething Striker | silent | At the beginning of your end step, if a creature died this turn, target creature you control connives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Selfless Police Captain | silent | When this creature leaves the battlefield, put its +1/+1 counters on target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Silk, Web Weaver | silent | Web-slinging | no machine in the engine executes this keyword | Y/Y/Y | not_working |
+| Spider-Ham, Peter Porker | silent | Animal May-Ham — Other Spiders, Boars, Bats, Bears, Birds, Cats, Dogs, Frogs, Jackals, Lizards, Mice, Otters, Rabbits, Raccoons, Rats, Squirrels, Turtles, and W | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spider-Man 2099 | silent | At the beginning of your end step, if you've played a land or cast a spell this turn from anywhere other than your hand, Spider-Man 2099 deals damage equal to h | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spider-Man India | silent | Pavitr's Sevā — Whenever you cast a creature spell, put a +1/+1 counter on target creature you control. It gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spider-Man No More | silent | Enchanted creature is a Citizen with base power and toughness 1/1. It has defender and loses all other abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spider-Man Noir | silent | Whenever a creature you control attacks alone, put a +1/+1 counter on it. Then surveil X, where X is the number of counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spider-Man, Brooklyn Visionary | silent | Web-slinging | no machine in the engine executes this keyword | Y/Y/Y | not_working |
+| Spider-Man, Web-Slinger | silent | Web-slinging | no machine in the engine executes this keyword | Y/Y/Y | not_working |
+| Spider-Punk | silent | Riot | no machine in the engine executes this keyword | Y/Y/Y | not_working |
+| Spider-Sense | silent | Web-slinging {U} (You may cast this spell for {U} if you also return a tapped creature you control to its owner's hand.) Counter target instant spell, sorcery s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spider-Slayer, Hatred Honed | silent | Whenever Spider-Slayer deals damage to a Spider, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spider-Suit | silent | Equipped creature gets +2/+2 and is a Spider Hero in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spider-UK | silent | Web-slinging | no machine in the engine executes this keyword | Y/Y/Y | not_working |
+| Spider-Verse | silent | Whenever you cast a spell from anywhere other than your hand, you may copy it. If you do, you may choose new targets for the copy. If the copy is a permanent sp | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spiders-Man, Heroic Horde | silent | Web-slinging | no machine in the engine executes this keyword | Y/Y/Y | not_working |
+| Spinneret and Spiderling | silent | Whenever Spinneret and Spiderling deals 4 or more damage, exile the top card of your library. Until the end of your next turn, you may play that card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
+| Stegron the Dinosaur Man | silent | Dinosaur Formula — {1}{R}, Discard this card: Until end of turn, target creature you control gets +3/+1 and becomes a Dinosaur in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Superior Foes of Spider-Man | silent | Whenever you cast a spell with mana value 4 or greater, you may exile the top card of your library. If you do, you may play that card until you exile another ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Symbiote Spider-Man | silent | Whenever this creature deals combat damage to a player, look at that many cards from the top of your library. Put one of them into your hand and the rest into y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Terrific Team-Up | silent | This spell costs {2} less to cast if you control a permanent with mana value 4 or greater. One or two target creatures you control each get +1/+0 until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| The Clone Saga | silent | II — When you next cast a creature spell this turn, copy it, except the copy isn't legendary. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| The Death of Gwen Stacy | silent | II — Each player may discard a card. Each player who doesn't loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| The Soul Stone | silent | {6}{B}, {T}, Exile a creature you control: Harness The Soul Stone. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| The Spot's Portal | silent | Put target creature on the bottom of its owner's library. You lose 2 life unless you control a Villain. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| The Spot, Living Portal | silent | When The Spot enters, exile up to one target nonland permanent and up to one target nonland permanent card from a graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Unstable Experiment | silent | Target player draws a card, then up to one target creature you control connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Urban Retreat | silent | {2}, Return a tapped creature you control to its owner's hand: Put this card from your hand onto the battlefield. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Vulture, Scheming Scavenger | silent | Whenever Vulture attacks, other Villains you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Wall Crawl | silent | Spiders you control get +1/+1 and can't be blocked by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Wisecrack | silent | Target creature deals damage equal to its power to itself. If that creature is attacking, Wisecrack deals 2 damage to that creature's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| With Great Power . . . | silent | Enchanted creature gets +2/+2 for each Aura and Equipment attached to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Carnage, Crimson Chaos | notice | When Carnage enters, return target creature card with mana value 3 or less from your graveyard to the battlefield. It gains "This creature attacks each combat i | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Eddie Brock // Venom, Lethal Protector | notice | Whenever Venom attacks, you may sacrifice another creature. If you do, draw X cards, then you may put a permanent card with mana value X or less from your hand  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Heroes' Hangout | notice | Choose one — • Date Night — Exile the top two cards of your library. Choose one of them. Until the end of your next turn, you may play that card. • Patrol Night | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Hide on the Ceiling | notice | Exile X target artifacts and/or creatures. Return the exiled cards to the battlefield under their owners' control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Kraven's Last Hunt | notice | I — Mill five cards. When you do, this Saga deals damage equal to the greatest power among creature cards in your graveyard to target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Origin of Spider-Man | notice | II — Put a +1/+1 counter on target creature you control. It becomes a legendary Spider Hero in addition to its other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Secret Identity | notice | Choose one — • Conceal — Until end of turn, target creature you control becomes a Citizen with base power and toughness 1/1 and gains hexproof. • Reveal — Until | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Shocker, Unshakable | notice | Vibro-Shock Gauntlets — When Shocker enters, he deals 2 damage to target creature and 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Shriek, Treblemaker | notice | At the beginning of your first main phase, you may discard a card. When you do, target creature can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Skyward Spider | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Strength of Will | notice | Until end of turn, target creature you control gains indestructible and "Whenever this creature is dealt damage, put that many +1/+1 counters on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Thwip! | notice | Target creature gets +2/+2 and gains flying until end of turn. If it's a Spider, you gain 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Anti-Venom, Horrifying Healer | unaudited | If damage would be dealt to Anti-Venom, prevent that damage and put that many +1/+1 counters on him. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Doc Ock, Sinister Scientist | unaudited | As long as there are eight or more cards in your graveyard, Doc Ock has base power and toughness 8/8. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Electro, Assaulting Battery | unaudited | You don't lose unspent red mana as steps and phases end. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Kraven, Proud Predator | unaudited | Top of the Food Chain — Kraven's power is equal to the greatest mana value among permanents you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Madame Web, Clairvoyant | unaudited | You may look at the top card of your library any time. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Morlun, Devourer of Spiders | unaudited | Morlun enters with X +1/+1 counters on him. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Multiversal Passage | unaudited | As this land enters, choose a basic land type. Then you may pay 2 life. If you don't, it enters tapped. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Peter Parker // Amazing Spider-Man | unaudited | Each legendary spell you cast that's one or more colors has web-slinging {G}{W}{U}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Spider-Woman, Stunning Savior | unaudited | Venom Blast — Artifacts and creatures your opponents control enter tapped. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Wraith, Vicious Vigilante | unaudited | Fear Gas — Wraith can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Agent Venom | handled | Whenever another nontoken creature you control dies, you draw a card and lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Amazing Acrobatics | handled | Choose one or both — • Counter target spell. • Tap one or two target creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Angry Rabble | handled | Whenever you cast a spell with mana value 4 or greater, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Araña, Heart of the Spider | handled | Whenever you attack, put a +1/+1 counter on target attacking creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Bagel and Schmear | handled | Share — {W}, {T}, Sacrifice this artifact: Put a +1/+1 counter on up to one target creature. Draw a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Beetle, Legacy Criminal | handled | {1}{U}, Exile this card from your graveyard: Put a +1/+1 counter on target creature. It gains flying until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Behold the Sinister Six! | handled | Return up to six target creature cards with different names from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Biorganic Carapace | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| City Pigeon | handled | When this creature leaves the battlefield, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Common Crook | handled | When this creature dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Costume Closet | handled | This artifact enters with two +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Daily Bugle Building | handled | Smear Campaign — {1}, {T}: Target legendary creature gains menace until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Daily Bugle Reporters | handled | When this creature enters, choose one — • Puff Piece — Put a +1/+1 counter on each of up to two target creatures. • Investigative Journalism — Return target cre | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Damage Control Crew | handled | When this creature enters, choose one — • Repair — Return target card with mana value 4 or greater from your graveyard to your hand. • Impound — Exile target ar | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Eerie Gravestone | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Flying Octobot | handled | Whenever another Villain you control enters, put a +1/+1 counter on this creature. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Gallant Citizen | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Green Goblin, Revenant | handled | Whenever Green Goblin attacks, discard a card. Then draw a card for each card you've discarded this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Grow Extra Arms | handled | This spell costs {1} less to cast if it targets a Spider. Target creature gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Guy in the Chair | handled | Web Support — {2}{G}, {T}: Put a +1/+1 counter on target Spider. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Hobgoblin, Mantled Marauder | handled | Whenever you discard a card, Hobgoblin gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Hot Dog Cart | handled | When this artifact enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Inner Demons Gangsters | handled | Discard a card: This creature gets +1/+0 and gains menace until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Kapow! | handled | Put a +1/+1 counter on target creature you control. It fights target creature an opponent controls. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Kraven the Hunter | handled | Whenever a creature an opponent controls with the greatest power among creatures that player controls dies, draw a card and put a +1/+1 counter on Kraven the Hu | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Kraven's Cats | handled | {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Lurking Lizards | handled | Whenever you cast a spell with mana value 4 or greater, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Mary Jane Watson | handled | Whenever a Spider you control enters, draw a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Masked Meower | handled | Discard a card, Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Merciless Enforcers | handled | {3}{B}: This creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Morbius the Living Vampire | handled | {U}{B}, Exile this card from your graveyard: Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your libr | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Mysterio's Phantasm | handled | Whenever this creature attacks, mill a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| News Helicopter | handled | When this creature enters, create a 1/1 green and white Human Citizen creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Ominous Asylum | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Oscorp Industries | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Oscorp Research Team | handled | {6}{U}: Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Passenger Ferry | handled | Whenever this Vehicle attacks, you may pay {U}. When you do, another target attacking creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Pictures of Spider-Man | handled | When this artifact enters, look at the top five cards of your library. You may reveal up to two creature cards from among them and put them into your hand. Put  | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Professional Wrestler | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Pumpkin Bombardment | handled | As an additional cost to cast this spell, discard a card or pay {2}. Pumpkin Bombardment deals 3 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Radioactive Spider | handled | Fateful Bite — {2}, Sacrifice this creature: Search your library for a Spider Hero card, reveal it, put it into your hand, then shuffle. Activate only as a sorc | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Raging Goblinoids | handled | Mayhem | machines/casting.py | Y/Y/Y | not_tested |
+| Rhino, Barreling Brute | handled | Whenever Rhino attacks, if you've cast a spell with mana value 4 or greater this turn, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Risky Research | handled | Surveil 2, then draw two cards. You lose 2 life. (To surveil 2, look at the top two cards of your library, then put any number of them into your graveyard and t | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Robotics Mastery | handled | When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Rocket-Powered Goblin Glider | handled | When this Equipment enters, if it was cast from your graveyard, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Romantic Rendezvous | handled | Discard a card, then draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| SP//dr, Piloted by Peni | handled | When SP//dr enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sandman's Quicksand | handled | Mayhem {3}{B} (You may cast this card from your graveyard for {3}{B} if you discarded it this turn. Timing rules still apply.) All creatures get -2/-2 until end | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Savage Mansion | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Scorpion's Sting | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Silver Sable, Mercenary Leader | handled | When Silver Sable enters, put a +1/+1 counter on another target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sinister Hideout | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spectacular Spider-Man | handled | {1}: Spectacular Spider-Man gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spectacular Tactics | handled | Choose one — • Put a +1/+1 counter on target creature you control. It gains hexproof until end of turn. • Destroy target creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spider Manifestation | handled | Whenever you cast a spell with mana value 4 or greater, untap this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spider-Bot | handled | When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spider-Byte, Web Warden | handled | When Spider-Byte enters, return up to one target nonland permanent to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spider-Girl, Legacy Hero | handled | During your turn, Spider-Girl has flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spider-Gwen, Free Spirit | handled | Whenever Spider-Gwen becomes tapped, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spider-Islanders | handled | Mayhem | machines/casting.py | Y/Y/Y | not_tested |
+| Spider-Mobile | handled | Whenever this Vehicle attacks or blocks, it gets +1/+1 until end of turn for each Spider you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spider-Rex, Daring Dino | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
+| Starling, Aerial Ally | handled | When Starling enters, another target creature you control gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Steel Wrecking Ball | handled | When this artifact enters, it deals 5 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Suburban Sanctuary | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Subway Train | handled | When this Vehicle enters, you may pay {G}. If you do, search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sudden Strike | handled | Destroy target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sun-Spider, Nimble Webber | handled | During your turn, Sun-Spider has flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Supportive Parents | handled |  |  | Y/Y/Y | not_tested |
+| Taxi Driver | handled | {1}, {T}: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Tombstone, Career Criminal | handled | When Tombstone enters, return target Villain card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Ultimate Green Goblin | handled | At the beginning of your upkeep, discard a card, then create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| University Campus | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Venom's Hunger | handled | This spell costs {2} less to cast if you control a Villain. Destroy target creature. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Venom, Evil Unleashed | handled | {2}{B}, Exile this card from your graveyard: Put two +1/+1 counters on target creature. It gains deathtouch until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Venomized Cat | handled | When this creature enters, mill two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Vibrant Cityscape | handled | {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Web Up | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Web of Life and Destiny | handled | At the beginning of combat on your turn, look at the top five cards of your library. You may put a creature card from among them onto the battlefield. Put the r | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Web-Shooters | handled | Equipped creature gets +1/+1 and has reach and "Whenever this creature attacks, tap target creature an opponent controls." | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Web-Warriors | handled | When this creature enters, put a +1/+1 counter on each other creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Whoosh! | handled | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Return target nonland permanent to its owner's hand. If this spell was kicked, draw a c | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Wild Pack Squad | handled | At the beginning of combat on your turn, up to one target creature gains first strike and vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+
+## Fully supported
+
+<details>
+<summary>13 cards</summary>
+
+- Electro's Bolt
+- Flash Thompson, Spider-Fan
+- Hydro-Man, Fluid Felon
+- Impostor Syndrome
+- Interdimensional Web Watch
+- Mister Negative
+- Prison Break
+- School Daze
+- Scout the City
+- Shadow of the Goblin
+- Superior Spider-Man
+- Swarm, Being of Bees
+- Villainous Wrath
+
+</details>
+
+## Missing mechanics
+
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| web-slinging | 7 | Arachne, Psionic Weaver, Scarlet Spider, Ben Reilly, Silk, Web Weaver, Spider-Man, Brooklyn Visionary, Spider-Man, Web-Slinger | spm |
+| Choose one | 2 | Heroes' Hangout, Secret Identity | spm |
+| Dinosaur Formula | 1 | Stegron the Dinosaur Man | spm |
+| Fear Gas | 1 | Wraith, Vicious Vigilante | spm |
+| Lizard Formula | 1 | Lizard, Connors's Curse | spm |
+| Venom Blast | 1 | Spider-Woman, Stunning Savior | spm |
+| animal may-ham — other spiders, boars, bats, bears, birds, cats, dogs, frogs, jackals, lizards, mice, otters, rabbits, raccoons, rats, squirrels, turtles, and w | 1 | Spider-Ham, Peter Porker | spm |
+| as long as there are eight or more cards in your graveyard, doc ock has base power and toughness N/N. | 1 | Doc Ock, Sinister Scientist | spm |
+| as ~ enters, choose a basic land type. then you may pay N life. if you don't, it enters tapped. | 1 | Multiversal Passage | spm |
+| at the beginning of combat on your turn, other spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | 1 | Cosmic Spider-Man | spm |
+| at the beginning of combat on your turn, target non-equipment artifact you control becomes an artifact creature with base power and toughness N/N until end of t | 1 | Living Brain, Mechanical Marvel | spm |
+| at the beginning of combat on your turn, target spider you control gets +N/+N until end of turn. | 1 | Ezekiel Sims, Spider-Totem | spm |
+| at the beginning of each player's first main phase, that player may put a +N/+N counter on ~. if they do, they add {M} for each counter on it. | 1 | Cheering Crowd | spm |
+| at the beginning of your end step, if a creature died ~, target creature you control connives. | 1 | Scorpion, Seething Striker | spm |
+| at the beginning of your end step, if you have fewer than eight cards in hand, draw cards equal to the difference. | 1 | Doctor Octopus, Master Planner | spm |
+| at the beginning of your end step, if you've played a land or cast a spell ~ from anywhere other than your hand, ~ deals damage equal to his power to any target | 1 | Spider-Man 2099 | spm |
+| at the beginning of your end step, two target players each reveal the top card of their library. they each lose life equal to the mana value of the card reveale | 1 | Parker Luck | spm |
+| at the beginning of your end step, you may tap two untapped creatures and/or treasures you control. if you do, draw a card. otherwise, sacrifice ~. | 1 | Rent Is Due | spm |
+| at the beginning of your first main phase, you may discard a card. when you do, target creature can't block ~. | 1 | Shriek, Treblemaker | spm |
+| each legendary spell you cast that's one or more colors has web-slinging {M}{M}{M}. | 1 | Peter Parker // Amazing Spider-Man | spm |
+| each player may discard a card. each player who doesn't loses N life. | 1 | The Death of Gwen Stacy | spm |
+| enchanted creature gets +N/+N for each aura and equipment attached to it. | 1 | With Great Power . . . | spm |
+| enchanted creature gets +N/+N, has menace, and is a symbiote in addition to its other types. | 1 | Alien Symbiosis | spm |
+| enchanted creature is a citizen with base power and toughness N/N. it has defender and loses all other abilities. | 1 | Spider-Man No More | spm |
+| enchanted land has "..." | 1 | Friendly Neighborhood | spm |
+| equipped creature gets +N/+N and is a spider hero in addition to its other types. | 1 | Spider-Suit | spm |
+| exile N target artifacts and/or creatures. return the exiled cards to the battlefield under their owners' control at the beginning of the next end step. | 1 | Hide on the Ceiling | spm |
+| if damage would be dealt to anti-venom, prevent that damage and put that many +N/+N counters on him. | 1 | Anti-Venom, Horrifying Healer | spm |
+| mill five cards. when you do, ~ deals damage equal to the greatest power among creature cards in your graveyard to target creature. | 1 | Kraven's Last Hunt | spm |
+| morlun enters with N +N/+N counters on him. | 1 | Morlun, Devourer of Spiders | spm |
+| pavitr's sevā — whenever you cast a creature spell, put a +N/+N counter on target creature you control. it gains flying until end of turn. | 1 | Spider-Man India | spm |
+| put a +N/+N counter on target creature you control. it becomes a legendary spider hero in addition to its other types. | 1 | Origin of Spider-Man | spm |
+| put target creature on the bottom of its owner's library. you lose N life unless you control a villain. | 1 | The Spot's Portal | spm |
+| riot | 1 | Spider-Punk | spm |
+| spiders you control get +N/+N and can't be blocked by creatures with defender. | 1 | Wall Crawl | spm |
+| target creature deals damage equal to its power to itself. if that creature is attacking, ~ deals N damage to that creature's controller. | 1 | Wisecrack | spm |
+| target creature gets +N/+N and gains flying until end of turn. if it's a spider, you gain N life. | 1 | Thwip! | spm |
+| target creature you control gets +N/+N until end of turn. it fights target creature an opponent controls. when excess damage is dealt to the creature an opponen | 1 | Rhino's Rampage | spm |
+| target player draws a card, then up to one target creature you control connives. (draw a card, then discard a card. if you discarded a nonland card, put a +N/+N | 1 | Unstable Experiment | spm |
+| top of the food chain — kraven's power is equal to the greatest mana value among permanents you control. | 1 | Kraven, Proud Predator | spm |
+| until end of turn, target creature you control gains indestructible and "..." | 1 | Strength of Will | spm |
+| until your next turn, each creature attacks each combat if able and attacks a player other than you if able. | 1 | Maximum Carnage | spm |
+| vibro-shock gauntlets — when shocker enters, he deals N damage to target creature and N damage to that creature's controller. | 1 | Shocker, Unshakable | spm |
+| web-slinging {M} (you may cast ~ for {M} if you also return a tapped creature you control to its owner's hand.) counter target instant spell, sorcery spell, or  | 1 | Spider-Sense | spm |
+| when black cat enters, look at the top nine cards of target opponent's library, exile two of them face down, then put the rest on the bottom of their library in | 1 | Black Cat, Cunning Thief | spm |
+| when carnage enters, return target creature card with mana value N or less from your graveyard to the battlefield. it gains "..." and "..." | 1 | Carnage, Crimson Chaos | spm |
+| when molten man leaves the battlefield, sacrifice a land. | 1 | Molten Man, Inferno Incarnate | spm |
+| when mysterio enters, create a N/N blue illusion villain creature token for each nontoken villain you control. exile those tokens when mysterio leaves the battl | 1 | Mysterio, Master of Illusion | spm |
+| when scarlet spider enters, you may discard a card. if you do, put a +N/+N counter on him. | 1 | Scarlet Spider, Kaine | spm |
+| when the spot enters, exile up to one target nonland permanent and up to one target nonland permanent card from a graveyard. | 1 | The Spot, Living Portal | spm |
+| when you next cast a creature spell ~, copy it, except the copy isn't legendary. | 1 | The Clone Saga | spm |
+| when ~ enters, exile the top card of your library. you may play that card for as long as you control ~. | 1 | Gwen Stacy // Ghost-Spider | spm |
+| when ~ enters, exile up to one target card from a graveyard. target creature you control connives. | 1 | Mechanical Mobster | spm |
+| when ~ enters, suspect up to one target creature. | 1 | J. Jonah Jameson | spm |
+| when ~ enters, target creature you control connives. | 1 | Mob Lookout | spm |
+| when ~ leaves the battlefield, put its +N/+N counters on target creature you control. | 1 | Selfless Police Captain | spm |
+| whenever a creature you control attacks alone, put a +N/+N counter on it. then surveil N, where N is the number of counters on it. | 1 | Spider-Man Noir | spm |
+| whenever a creature you control with mana value N or greater enters, you may attach ~ to it. | 1 | Doc Ock's Tentacles | spm |
+| whenever another creature you control enters, you gain N life. if it's a spider, put a +N/+N counter on it. | 1 | Aunt May | spm |
+| whenever another villain you control enters, prowler connives. | 1 | Prowler, Clawed Thief | spm |
+| whenever gwenom attacks, until end of turn, you may look at the top card of your library any time and you may play cards from the top of your library. if you ca | 1 | Gwenom, Remorseless | spm |
+| whenever spider-slayer deals damage to a spider, destroy that creature. | 1 | Spider-Slayer, Hatred Honed | spm |
+| whenever venom attacks, you may sacrifice another creature. if you do, draw N cards, then you may put a permanent card with mana value N or less from your hand  | 1 | Eddie Brock // Venom, Lethal Protector | spm |
+| whenever vulture attacks, other villains you control gain flying until end of turn. | 1 | Vulture, Scheming Scavenger | spm |
+| whenever you attack, double the number of each kind of counter on each spider and legendary creature you control. | 1 | Miles Morales // Ultimate Spider-Man | spm |
+| whenever you cast a creature spell with mana value equal to jackal"..."t legendary. then put a +N/+N counter on jackal. | 1 | Jackal, Genius Geneticist | spm |
+| whenever you cast a spell from anywhere other than your hand, you may copy it. if you do, you may choose new targets for the copy. if the copy is a permanent sp | 1 | Spider-Verse | spm |
+| whenever you cast a spell with mana value N or greater, you may exile the top card of your library. if you do, you may play that card until you exile another ca | 1 | Superior Foes of Spider-Man | spm |
+| whenever you draw your first or second card each turn, put an ingenuity counter on lady octopus. | 1 | Lady Octopus, Inspired Inventor | spm |
+| whenever ~ attacks, it connives. | 1 | Doc Ock's Henchmen | spm |
+| whenever ~ deals N or more damage, exile the top card of your library. until the end of your next turn, you may play that card. | 1 | Spinneret and Spiderling | spm |
+| whenever ~ deals combat damage to a player, he connives. | 1 | Norman Osborn // Green Goblin | spm |
+| whenever ~ deals combat damage to a player, look at that many cards from the top of your library. put one of them into your hand and the rest into your graveyar | 1 | Symbiote Spider-Man | spm |
+| you don't lose unspent red mana as steps and phases end. | 1 | Electro, Assaulting Battery | spm |
+| you may have chameleon enter as a copy of a creature you control, except his name is ~. | 1 | Chameleon, Master of Disguise | spm |
+| you may look at the top card of your library any time. | 1 | Madame Web, Clairvoyant | spm |
+| {M}, return a tapped creature you control to its owner's hand: put ~ from your hand onto the battlefield. activate only as a sorcery. | 1 | Urban Retreat | spm |
+| {M}, {M}, remove a film counter from ~: copy target activated or triggered ability you control. you may choose new targets for the copy. | 1 | Peter Parker's Camera | spm |
+| {M}: put a +N/+N counter on each artifact creature and/or vehicle you control. | 1 | Iron Spider, Stark Upgrade | spm |
+| {M}{M}, {M}, exile a creature you control: harness ~. | 1 | The Soul Stone | spm |
+| {M}{M}{M}: return ~ and target land card from your graveyard to the battlefield tapped. | 1 | Sandman, Shifting Scoundrel | spm |
+| ~ costs {M} less to cast if you control a permanent with mana value N or greater. one or two target creatures you control each get +N/+N until end of turn. they | 1 | Terrific Team-Up | spm |
+| ~ has flying as long as it's modified. | 1 | Skyward Spider | spm |
+
+## Notes
+
+
