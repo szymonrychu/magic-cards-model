@@ -2989,6 +2989,10 @@ class Game(EngineModel):
     so a departure event its move did not stamp with types still carries
     them - `emit` fills `subject_types`/`subject_subtypes` from here. Not
     persisted: it is read within the same move that wrote it."""
+    _paying_cost: tuple[str, str | None, str | None] | None = PrivateAttr(default=None)
+    """`(what, keyword, payer)` while a spell's or ability's total cost is
+    being paid (`paying_cost_of`), stamped onto every event raised meanwhile.
+    Not persisted: it opens and closes within one `CostPayment.pay`."""
     _returning_together: list[tuple[GameEvent, GameEvent]] | None = PrivateAttr(default=None)
     """The departure events of permanents returned to hand inside
     `returning_together`, raised together once the last of them has moved
@@ -9038,6 +9042,53 @@ class Game(EngineModel):
             return False
         return source.controller is not None and source.controller != player
 
+    @contextmanager
+    def paying_cost_of(
+        self, what: str | None, keyword: str | None, payer: str | None
+    ) -> Iterator[None]:
+        """While a spell's (CR 601.2h) or an ability's (CR 602.2b) total cost
+        is paid, every event raised is marked as happening during that
+        payment (`GameEvent.during_cost_of`) - what a trigger event's own
+        "while casting a spell with emerge" qualifier asks (CR 603.2). `what`
+        None is a payment for neither, and marks nothing."""
+        if what is None:
+            yield
+            return
+        outer = self._paying_cost
+        self._paying_cost = (what, keyword, payer)
+        try:
+            yield
+        finally:
+            self._paying_cost = outer
+
+    def emit_became_tapped(self, permanent: CardState, *, declared_attacker: bool = False) -> None:
+        """Raise CR 701.26a's "becomes tapped" for `permanent`, which has just
+        been tapped - by a cost, by a mana ability, by an effect, or by being
+        declared as an attacker (CR 508.1f, `declared_attacker`)."""
+        controller = self.controller_of(permanent).username
+        self.emit(
+            GameEvent(
+                event=TriggerEvent.BECOMES_TAPPED,
+                subject_id=permanent.id,
+                subject_name=permanent.name,
+                subject_controller=controller,
+                subject_card=permanent.card,
+                subject_types=tuple(permanent.types),
+                subject_subtypes=tuple(permanent.subtypes),
+                player=controller,
+                declared_attacker=declared_attacker,
+            )
+        )
+
+    def tap_permanent(self, permanent: CardState) -> bool:
+        """Tap `permanent` as an effect instructs, if it is untapped
+        (`CardState.tap_if_untapped`), raising "becomes tapped" when it
+        actually does (CR 701.26a). Returns whether it tapped."""
+        if not permanent.tap_if_untapped():
+            return False
+        self.emit_became_tapped(permanent)
+        return True
+
     def emit(self, event: GameEvent) -> list[AbilityOnStack]:
         """Something happened; work out what it triggered (CR 603.2).
 
@@ -9069,6 +9120,15 @@ class Game(EngineModel):
             left = self._left_battlefield_characteristics[event.subject_id]
             event = event.model_copy(
                 update={"subject_types": left.types, "subject_subtypes": left.subtypes}
+            )
+        if self._paying_cost is not None and event.during_cost_of is None:
+            what, keyword, payer = self._paying_cost
+            event = event.model_copy(
+                update={
+                    "during_cost_of": what,
+                    "during_cost_keyword": keyword,
+                    "during_cost_player": payer,
+                }
             )
         with self._id_allocator_scope():
             # CR 702.131b's "any time" and CR 702.131d's "before the game
@@ -11906,6 +11966,18 @@ class Game(EngineModel):
             # order the put-back just made - the next reordering ends it.
             for state in (*on_top, *to_bottom):
                 self.look(state, player.username, source=source)
+            if to_bottom:
+                # CR 701.22a's choice to put cards on the bottom, as its own
+                # event (The Temporal Anchor's "Whenever you choose to put one
+                # or more cards on the bottom of your library while scrying").
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.LIBRARY_BOTTOM_CHOSEN,
+                        player=player.username,
+                        amount=len(to_bottom),
+                        keyword_action="scry",
+                    )
+                )
             return CardSplit(
                 moved=tuple(state.id for state in to_bottom),
                 top_order=tuple(state.id for state in on_top),
@@ -21196,6 +21268,7 @@ class Game(EngineModel):
                 any_color=self.spends_mana_as_any_color(permanent, ability, controller),
             ),
         )
+        payment.paying_for = "ability"
         if announced is not None:
             self._announced_targets[key] = (announced, payment)
         self._opened_payments[key] = payment

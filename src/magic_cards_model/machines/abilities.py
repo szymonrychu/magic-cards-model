@@ -1386,10 +1386,17 @@ class TriggerEvent(StrEnum):
     #: a permanent" look back in time.
     IS_SACRIFICED = "is_sacrificed"
     #: CR 701.26a: "To tap a permanent, turn it sideways from an upright
-    #: position." Nothing emits this yet: the taps the engine performs happen
-    #: inside cost payment (`machines/cost.py`) and attack declaration
-    #: (`machines/combat.py`), which have no emit call.
+    #: position." Raised by `Game.emit_became_tapped` wherever the engine taps
+    #: a permanent: a `{T}` or tap cost, a mana ability, an effect
+    #: (`Game.tap_permanent`), and an attack declaration (CR 508.1f).
     BECOMES_TAPPED = "becomes_tapped"
+    #: CR 701.22a: "put any number of them on the bottom of your library" -
+    #: The Temporal Anchor's "Whenever you choose to put one or more cards on
+    #: the bottom of your library while scrying". Raised by `Game.scry` once
+    #: the choice puts at least one card on the bottom, carrying how many
+    #: (`GameEvent.amount`) and the keyword action it was made during
+    #: (`GameEvent.keyword_action`).
+    LIBRARY_BOTTOM_CHOSEN = "library_bottom_chosen"
     #: CR 701.26b: "To untap a permanent, rotate it back to the upright
     #: position from a sideways position." Printed on Aerie Worshippers as
     #: "Whenever this creature becomes untapped".
@@ -1845,6 +1852,15 @@ class TriggeredAbility(BaseAbility):
     #: human reading a `LayerNotice`/decision prompt, not for re-parsing).
     #: `None` for every other `TriggeredAbility` - the ordinary, printed kind.
     chapter: int | None = None
+    #: CR 603.2: a "while <doing something>" qualifier printed after the
+    #: trigger condition - "while casting a spell with emerge" (Foul
+    #: Emissary), "while you're activating a craft ability" (Market Gnome),
+    #: "while scrying" (The Temporal Anchor). It says how the trigger event
+    #: happened, so it is part of the event and is asked of the event as it
+    #: occurs (`machines/triggers.condition_matches`), never rechecked on
+    #: resolution the way an intervening "if" is (CR 603.4, CR 608.2a) - by
+    #: then the casting is over. `condition` holds the event without it.
+    event_qualifier: str | None = None
 
 
 class StaticAbility(BaseAbility):
@@ -3451,7 +3467,7 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
         # parser read it before compound splitting (no printing carries both
         # yet). Every other condition takes the comma-side "if".
         half_if, half_effect = intervening_if, rest
-        event_qualified = False
+        event_qualifier: str | None = None
         while_match = _CONDITION_WHILE_CLAUSE.search(half)
         if while_match is not None and _EVENT_QUALIFIER.match(half[while_match.end() :].strip()):
             # "... while casting a spell with emerge" (Foul Emissary), "...
@@ -3460,12 +3476,13 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
             # by what a player is *doing* says how the trigger event
             # happened - part of the event itself (CR 603.2), not a state
             # CR 603.4 checks again as the ability resolves (by then the
-            # casting is long over). It stays in the condition, and the
-            # event is left unread so the ability never triggers on the
-            # bare event this parser can see.
-            event_qualified = True
+            # casting is long over). The bare event is the condition, and
+            # the qualifier is asked of that event as it happens
+            # (`TriggeredAbility.event_qualifier`).
             if comma_if_unreadable:
                 return None
+            event_qualifier = half[while_match.end() :].strip()
+            half = half[: while_match.start()].strip()
         elif while_match is not None:
             half_if = half[while_match.end() :].strip()
             if half_if.lower() == "saddled":
@@ -3485,8 +3502,9 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
                 condition=half,
                 intervening_if=half_if,
                 effect=half_effect,
-                event=None if event_qualified else _trigger_event(half),
+                event=_trigger_event(half),
                 once_per_turn=once_per_turn,
+                event_qualifier=event_qualifier,
             )
         )
     return abilities
@@ -3572,6 +3590,16 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # specifically is `DIES`, not this.
     if "leaves the battlefield" in lowered:
         return TriggerEvent.LEAVES_THE_BATTLEFIELD
+    # CR 406.2's exile, from the battlefield specifically ("When this creature
+    # is exiled from the battlefield", Market Gnome) - the move
+    # `Game.exile_permanent` raises as its own event.
+    if re.search(r"\b(?:is|are) exiled from the battlefield\b", lowered):
+        return TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE
+    # CR 701.22a's choice, as The Temporal Anchor prints it.
+    if re.search(
+        r"\bchooses? to put one or more cards on the bottom of (?:your|their) library\b", lowered
+    ):
+        return TriggerEvent.LIBRARY_BOTTOM_CHOSEN
     # CR 700.4: "dies" means "is put into a graveyard from the battlefield" -
     # Flagstones of Trokair spells that phrase out instead of saying "dies",
     # and the two are the same event by definition. "die" (no s) is the

@@ -214,8 +214,74 @@ def test_while_casting_stays_part_of_the_trigger_event():
     rechecked on resolution, when the casting is long over (CR 608.2a)."""
     (_, sacrificed) = _triggered("Foul Emissary")
     assert sacrificed.intervening_if is None
-    assert sacrificed.condition == "you sacrifice this creature while casting a spell with emerge"
-    assert sacrificed.event is None
+    assert sacrificed.condition == "you sacrifice this creature"
+    assert sacrificed.event_qualifier == "casting a spell with emerge"
+    assert sacrificed.event is TriggerEvent.IS_SACRIFICED
+
+
+def _emissary_board(hand: str, lands: list[str]):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=[hand],
+            battlefield=["Foul Emissary", *lands],
+            library=["Island"] * 4,
+        )
+        .player("bob", library=["Island"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _horrors(scenario):
+    return [
+        state.name
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.name == "Eldrazi Horror Token"
+    ]
+
+
+def test_sacrificed_while_casting_with_emerge_triggers_and_resolves():
+    """Foul Emissary sacrificed to Wretched Gryff's emerge cost (CR 702.119a):
+    the sacrifice happened while a spell with emerge was being cast, so the
+    trigger fires and makes its 3/2 Horror."""
+    scenario = _emissary_board("Wretched Gryff", ["Island"] * 3)
+    emissary = scenario.creature("Foul Emissary", "alice")
+    scenario.game.cast(
+        scenario.find("Wretched Gryff", Zone.HAND, "alice"),
+        "alice",
+        keyword="emerge",
+        choosing=[emissary],
+        mana_sources=scenario.untapped_sources(*["Island"] * 3),
+    )
+    assert (
+        "Foul Emissary's triggered ability"
+        in [a.source_name + "'s triggered ability" for a in scenario.game.pending_triggers]
+        or "Foul Emissary's triggered ability" in scenario.stack_names()
+    )
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+    assert _horrors(scenario) == ["Eldrazi Horror Token"]
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_a_second_emerge_printing_sets_it_off_too():
+    """Vexing Scuttler's emerge, not the Gryff's: the qualifier asks for any
+    spell cast with emerge."""
+    scenario = _emissary_board("Vexing Scuttler", ["Island"] * 4)
+    emissary = scenario.creature("Foul Emissary", "alice")
+    scenario.game.cast(
+        scenario.find("Vexing Scuttler", Zone.HAND, "alice"),
+        "alice",
+        keyword="emerge",
+        choosing=[emissary],
+        mana_sources=scenario.untapped_sources(*["Island"] * 4),
+    )
+    scenario.game.put_triggers_on_stack()
+    assert "Foul Emissary's triggered ability" in scenario.stack_names()
 
 
 def test_a_sacrifice_not_while_casting_with_emerge_triggers_nothing():
@@ -248,8 +314,138 @@ def test_while_you_are_activating_stays_part_of_the_event():
     same shape, with its subject spelled out."""
     (_, gnome) = _triggered("Market Gnome")
     assert gnome.intervening_if is None
-    assert gnome.condition.endswith("while you're activating a craft ability")
-    assert gnome.event is None
+    assert gnome.condition == "this creature is exiled from the battlefield"
+    assert gnome.event_qualifier == "you're activating a craft ability"
+    assert gnome.event is TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE
+
+
+def _craft_board(crafter: str, lands: list[str], *, graveyard: list[str] | None = None):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[crafter, "Market Gnome", *lands],
+            graveyard=list(graveyard or []),
+            library=["Plains"] * 4,
+        )
+        .player("bob", library=["Plains"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _craft(scenario, crafter, materials, lands):
+    from magic_cards_model.machines.keywords import craft_activation
+
+    activation = craft_activation(scenario.game, crafter, "alice", materials)
+    payment = activation.begin_paying()
+    scenario.pay_with(payment, *lands)
+    activation.activate()
+    return activation
+
+
+def test_exiled_while_activating_craft_triggers_and_resolves():
+    """Market Gnome exiled as Clay-Fired Bricks's craft material (CR 702.167a):
+    exiled from the battlefield while alice activates a craft ability, so it
+    triggers - 1 life and a card."""
+    scenario = _craft_board("Clay-Fired Bricks", ["Plains"] * 7)
+    landmark = scenario.find("Clay-Fired Bricks", Zone.BATTLEFIELD, "alice")
+    gnome = scenario.creature("Market Gnome", "alice")
+    hand = len(scenario.player("alice").hand)
+    _craft(scenario, landmark, [gnome], scenario.untapped_sources(*["Plains"] * 7))
+    scenario.game.put_triggers_on_stack()
+    assert "Market Gnome's triggered ability" in scenario.stack_names()
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 21
+    assert len(scenario.player("alice").hand) == hand + 1
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_exiled_by_something_else_triggers_nothing():
+    """Exiled by an effect, with no craft being activated: nothing."""
+    scenario = _craft_board("Clay-Fired Bricks", ["Plains"] * 7)
+    gnome = scenario.creature("Market Gnome", "alice")
+    scenario.game.exile_permanent(gnome)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_a_second_crafter_sets_it_off_too():
+    """Tithing Blade's "Craft with creature" takes the Gnome (an artifact
+    creature) as its creature material."""
+    scenario = _craft_board("Tithing Blade", ["Swamp"] * 5)
+    blade = scenario.find("Tithing Blade", Zone.BATTLEFIELD, "alice")
+    gnome = scenario.creature("Market Gnome", "alice")
+    _craft(scenario, blade, [gnome], scenario.untapped_sources(*["Swamp"] * 5))
+    scenario.game.put_triggers_on_stack()
+    assert "Market Gnome's triggered ability" in scenario.stack_names()
+
+
+# -- "while scrying" -----------------------------------------------------------
+
+
+def test_while_scrying_is_the_bottom_choices_own_qualifier():
+    (_, bottom, _) = [a for a in parse_abilities(card("The Temporal Anchor"))]
+    assert isinstance(bottom, TriggeredAbility)
+    assert bottom.condition == ("you choose to put one or more cards on the bottom of your library")
+    assert bottom.event_qualifier == "scrying"
+    assert bottom.event is TriggerEvent.LIBRARY_BOTTOM_CHOSEN
+
+
+def _anchor_board():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["The Temporal Anchor"],
+            library=["Plains", "Island", "Swamp", "Mountain", "Forest"],
+        )
+        .player("bob", library=["Plains"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_bottoming_while_scrying_triggers_and_exiles_that_many_from_the_bottom():
+    """Scry 2, both to the bottom: the choice triggers, and the resolution
+    exiles that many - two - cards from the bottom of the library."""
+    scenario = _anchor_board()
+    (top, second) = scenario.top_of_library(2, username="alice")
+    scenario.scry_bottoming(top, second, username="alice")
+    scenario.game.scry(scenario.player("alice"), 2)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["The Temporal Anchor's triggered ability"]
+    scenario.pass_until_resolved()
+    assert {state.name for state in scenario.game.exile} == {top.name, second.name}
+    assert [state.name for state in scenario.player("alice").library] == [
+        "Swamp",
+        "Mountain",
+        "Forest",
+    ]
+
+
+def test_keeping_everything_on_top_triggers_nothing():
+    """None put on the bottom is no choice to put "one or more" there."""
+    scenario = _anchor_board()
+    scenario.scry_keeping_everything_on_top(username="alice")
+    scenario.game.scry(scenario.player("alice"), 2)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
+
+
+def test_surveilling_into_the_graveyard_is_not_scrying():
+    scenario = _anchor_board()
+    (top,) = scenario.top_of_library(1, username="alice")
+    scenario.surveil_to_graveyard(top, username="alice")
+    scenario.game.surveil(scenario.player("alice"), 1)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
 
 
 def test_while_saddled_is_the_permanents_own_state():
@@ -339,6 +535,81 @@ def test_the_attack_declarations_own_tap_carries_that_it_was_one():
         is True
     )
     assert conditions.read_condition(ConditionContext(scenario.game, "bob"), clause) is False
+
+
+def _verity_board(bob_battlefield: list[str], *, alice_battlefield: list[str] | None = None):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Verity Circle", *(alice_battlefield or [])],
+            library=["Plains"] * 4,
+        )
+        .player("bob", battlefield=bob_battlefield, library=["Plains"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_a_creature_tapped_for_mana_sets_off_verity_circle():
+    """Verity Circle: "Whenever a creature an opponent controls becomes
+    tapped, if it isn't being declared as an attacker, you may draw a card."
+    Bob taps Llanowar Elves for mana (CR 106.12, CR 701.26a): it became
+    tapped, not as an attacker."""
+    scenario = _verity_board(["Llanowar Elves"])
+    elves = scenario.creature("Llanowar Elves", "bob")
+    elves.summoning_sick = False
+    scenario.pass_priority("alice")
+    scenario.activate(elves, username="bob")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Verity Circle's triggered ability"]
+    hand = len(scenario.player("alice").hand)
+    scenario.will_take_the_may(username="alice")
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").hand) == hand + 1
+
+
+def test_a_creature_tapped_by_an_effect_sets_off_verity_circle():
+    """Verity Circle's own "{4}{U}: Tap target creature without flying" taps
+    bob's Grizzly Bears by an effect (CR 701.26a)."""
+    scenario = _verity_board(["Grizzly Bears"], alice_battlefield=["Island"] * 5)
+    circle = scenario.find("Verity Circle", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.activate(circle, *scenario.untapped_sources(*["Island"] * 5), targets=[bears])
+    scenario.pass_until_resolved()
+    assert bears.tapped
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Verity Circle's triggered ability"]
+
+
+def test_a_creature_declared_as_an_attacker_does_not_trigger():
+    """CR 603.4: the clause is false as the event happens - the tap is the
+    attack declaration's own (CR 508.1f)."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears"], library=["Plains"] * 3)
+        .player("bob", battlefield=["Verity Circle"], library=["Plains"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.summoning_sick = False
+    scenario.attack_with(bears)
+    assert bears.tapped
+    scenario.game.put_triggers_on_stack()
+    assert "Verity Circle's triggered ability" not in scenario.stack_names()
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_alices_own_creature_becoming_tapped_does_not_trigger():
+    scenario = _verity_board([], alice_battlefield=["Llanowar Elves"])
+    elves = scenario.creature("Llanowar Elves", "alice")
+    elves.summoning_sick = False
+    scenario.activate(elves)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
 
 
 def test_the_mana_ability_clause_needs_an_activation_event():

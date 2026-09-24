@@ -59,7 +59,6 @@ from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
 from .abilities import (
-    TriggerEvent,
     keyword_abilities_in_lines,
     keywords_in_lines,
     layer_readable_sentences,
@@ -1018,17 +1017,7 @@ def declare_attacker(game: "Game", creature: CardState, defender: TargetRef) -> 
 
     if not has_keyword(creature, Keyword.VIGILANCE, game):
         creature.tap()  # CR 508.1f
-        game.emit(
-            GameEvent(
-                event=TriggerEvent.BECOMES_TAPPED,
-                subject_id=creature.id,
-                subject_name=creature.name,
-                subject_controller=game.controller_of(creature).username,
-                subject_card=creature.card,
-                player=game.controller_of(creature).username,
-                declared_attacker=True,
-            )
-        )
+        game.emit_became_tapped(creature, declared_attacker=True)
 
     game.combat.attacked_this_combat = True  # CR 508.8 reads the declaration
     attack = Attack(attacker_id=creature.id, defender=defender)

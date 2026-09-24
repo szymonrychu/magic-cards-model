@@ -83,3 +83,29 @@ def test_a_recut_clause_is_judged_by_the_cards_unlisted_clauses():
         {"Some Card": {"the old cut"}},
     )
     assert report["P"][0][3] == "unread"
+
+
+def test_a_listed_clause_with_nothing_left_to_judge_it_by_is_unread():
+    """A listed clause the parser no longer prints anywhere, with no other
+    clause of that kind on the card, is not read: nothing reads it."""
+    report = cluster_report(
+        {"P": [("intervening-if", "Some Card", "a clause the parser dropped")]},
+        {"Some Card": []},
+        {"Some Card": {"a clause the parser dropped"}},
+    )
+    assert report["P"][0][3] == "unread"
+
+
+def test_a_trigger_events_own_qualifier_is_probed():
+    """ "When you sacrifice this creature while casting a spell with emerge" -
+    the "while" qualifier is part of the trigger event (CR 603.2), not an
+    intervening "if", and it is probed where the cluster files list it."""
+    assert Probed(INTERVENING_IF, "Foul Emissary", "casting a spell with emerge", True) in probe(
+        card("Foul Emissary")
+    )
+    assert Probed(
+        INTERVENING_IF, "Market Gnome", "you're activating a craft ability", True
+    ) in probe(card("Market Gnome"))
+    assert Probed(INTERVENING_IF, "The Temporal Anchor", "scrying", True) in probe(
+        card("The Temporal Anchor")
+    )

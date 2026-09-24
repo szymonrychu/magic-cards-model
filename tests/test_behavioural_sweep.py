@@ -95,6 +95,8 @@ from magic_cards_model.machines.casting import MarkedExile
 from magic_cards_model.machines.cost import ComponentKind, cost_component_for_phrase
 from magic_cards_model.machines.effects import transform_permanent
 from magic_cards_model.machines.keywords import (
+    craft_abilities,
+    craft_activation,
     crew_activation,
     crew_number,
     cycling_activation,
@@ -1992,6 +1994,9 @@ def _player_event(case: Case, ability: TriggeredAbility, action: str) -> Iterato
                     game.deal_damage(game.player(player), 1, source=memnite)
                 elif action == "scry":
                     game.scry(player, 1)
+                elif action == "scry to the bottom":
+                    scenario.scry_bottoming(game.player(player).library[0], username=player)
+                    game.scry(player, 1)
                 if _drive(scenario, case, source_id) is not None:
                     break
             return scenario, source_id
@@ -2189,8 +2194,88 @@ def _playing_exiled(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     yield play_exiled
 
 
+#: A trigger event's own "while <doing something>" qualifier (CR 603.2), as
+#: `machines/conditions/events.py` reads it: the keyword whose cast or
+#: activation the event happened during.
+_WHILE_CASTING = re.compile(r"^(?:you(?:'re| are) )?casting an? spell with (?P<keyword>[a-z-]+)$")
+_WHILE_ACTIVATING = re.compile(
+    r"^(?:you(?:'re| are) )?activating an? (?P<keyword>[a-z-]+) ability$"
+)
+
+
+@cache
+def _keyword_casters(keyword: str) -> tuple[str, ...]:
+    """In-format pool printings that can be cast from a hand with `keyword`
+    (CR 601.2b's alternative cost), by name."""
+    from magic_cards_model.machines.casting import keyword_cast_options
+
+    found = [
+        printing
+        for printing in _format_pool()
+        if any(
+            option.keyword.lower() == keyword and option.understood and option.zone is Zone.HAND
+            for option in keyword_cast_options(printing)
+        )
+    ]
+    return tuple(sorted(p.name for p in found))
+
+
+@cache
+def _keyword_activators(keyword: str) -> tuple[str, ...]:
+    """In-format pool printings with a `keyword` activated ability this sweep
+    can build with objects chosen for its cost (craft's materials)."""
+    return tuple(
+        printing.name
+        for printing in _format_pool()
+        if keyword == "craft" and craft_abilities(printing)
+    )
+
+
+def _qualified(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """The event raised the way its qualifier says: the source sacrificed or
+    exiled as a cost of a spell cast with the named keyword (emerge's
+    sacrifice, CR 702.119a) or of an ability the keyword expands (craft's
+    materials, CR 702.167a), or a scry's choice (CR 701.22a)."""
+    qualifier = (ability.event_qualifier or "").lower()
+    if qualifier == "scrying":
+        yield from _player_event(case, ability, "scry to the bottom")
+        return
+    if match := _WHILE_CASTING.fullmatch(qualifier):
+        for spell in _keyword_casters(match.group("keyword")):
+
+            def cast_with(spell: str = spell, keyword: str = match.group("keyword")):
+                scenario, source_id = _home(case, ability, hand=(spell,))
+                game = scenario.game
+                game.cast(
+                    _last(scenario, spell, Zone.HAND, ALICE),
+                    ALICE,
+                    keyword=keyword,
+                    choosing=[game.find_by_id(source_id)],
+                    mana_sources=_mana_sources(scenario, ALICE),
+                )
+                return scenario, source_id
+
+            yield cast_with
+    if match := _WHILE_ACTIVATING.fullmatch(qualifier):
+        for activator in _keyword_activators(match.group("keyword")):
+
+            def activate_with(activator: str = activator):
+                scenario, source_id = _home(case, ability, battlefield=(activator,))
+                game = scenario.game
+                crafter = _staged(scenario, activator)
+                activation = craft_activation(game, crafter, ALICE, [game.find_by_id(source_id)])
+                payment = activation.begin_paying()
+                scenario.auto_pay(payment, username=ALICE)
+                activation.activate()
+                return scenario, source_id
+
+            yield activate_with
+
+
 def _attempts(case: Case) -> Iterator[Attempt]:
     ability = _trigger_ability(case.printing, case.text)
+    if ability.event_qualifier:
+        yield from _qualified(case, ability)
     kinds = case.kind.split("+")
     for kind in kinds:
         if kind == TriggerEvent.ENTERS_THE_BATTLEFIELD.value:
@@ -2200,6 +2285,10 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _leaving(case, ability, kind)
         elif kind in ("attacks", "blocks", "combat_damage_to_players", "becomes_tapped"):
             yield from _combat(case, ability)
+            if kind == "becomes_tapped":
+                # CR 701.26a: a mana ability's {T} taps a permanent too - the
+                # tap no attack declaration makes (CR 508.1f).
+                yield from _tapping_for_mana(case, ability)
         elif kind == TriggerEvent.DEALS_DAMAGE.value:
             lowered = ability.condition.lower()
             if "is dealt damage" in lowered and "noncombat" not in lowered:

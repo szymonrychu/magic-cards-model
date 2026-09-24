@@ -19,12 +19,19 @@ Every in-format printing (Modern, Pioneer or Standard, banned included -
 oracle-cards JSON-lines dump instead of the scenario pool
 (`src/magic_cards_model/data/printings`).
 
+A trigger condition's own "while <doing something>" qualifier (CR 603.2:
+part of the trigger event, not an intervening "if") is probed alongside the
+intervening "if" clauses, since the cluster files list it as one: read when
+a registered reader claims it and its bare trigger event is one the engine
+raises (`triggers.event_qualifier_readable`).
+
 `--clusters` reads the named cluster files (`<ID>.tsv`, tab-separated kind,
 card, clause) from `--cluster-dir` and reports, per cluster, how many of its
 listed clauses are still unread; `--unread` lists them. A listed clause the
 parser now cuts differently (a parse-boundary fix) is matched to the card's
-current clauses of the same kind that no cluster file lists. The exit status
-is always 0: this measures, it does not gate.
+current clauses of the same kind that no cluster file lists - and is unread
+when there are none left. The exit status is always 0: this measures, it
+does not gate.
 """
 
 from __future__ import annotations
@@ -44,7 +51,11 @@ from magic_cards_model.machines.abilities import (
     TriggeredAbility,
     parse_abilities,
 )
-from magic_cards_model.machines.triggers import intervening_if_readable, triggered_abilities_of
+from magic_cards_model.machines.triggers import (
+    event_qualifier_readable,
+    intervening_if_readable,
+    triggered_abilities_of,
+)
 from magic_cards_model.models import CardState, Game, Player, Zone
 from magic_cards_model.models.card import Card
 from magic_cards_model.support import in_target_formats
@@ -131,6 +142,18 @@ def probe(printing: Card) -> list[Probed]:
     seen: set[tuple[str, str]] = set()
     game_and_source: tuple[Game, CardState] | None = None
     for ability in abilities:
+        if isinstance(ability, TriggeredAbility) and ability.event_qualifier:
+            key = (ability.text, ability.event_qualifier)
+            if key not in seen:
+                seen.add(key)
+                found.append(
+                    Probed(
+                        INTERVENING_IF,
+                        printing.name,
+                        ability.event_qualifier,
+                        event_qualifier_readable(ability),
+                    )
+                )
         if isinstance(ability, TriggeredAbility) and ability.intervening_if:
             key = (ability.text, ability.intervening_if)
             if key in seen:
@@ -218,13 +241,14 @@ def cluster_report(
                 read = all(row.read for row in exact)
             else:
                 # The parser cuts this clause differently now: judge the
-                # card's clauses of this kind that no cluster lists.
+                # card's clauses of this kind that no cluster lists. With
+                # none left the clause was dropped, not read.
                 unlisted = [
                     row
                     for row in current
                     if _matching_key(kind, row.clause) not in listed_elsewhere[name]
                 ]
-                read = all(row.read for row in unlisted)
+                read = bool(unlisted) and all(row.read for row in unlisted)
             verdicts.append((kind, name, clause, "read" if read else "unread"))
         report[cluster_id] = verdicts
     return report

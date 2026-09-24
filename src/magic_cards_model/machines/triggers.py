@@ -511,6 +511,27 @@ class GameEvent(EngineModel):
     attacker" (`machines/conditions/objects.py`) asks exactly this, of the
     event itself, so CR 608.2a's recheck reads the same answer."""
 
+    during_cost_of: str | None = None
+    """`"spell"` or `"ability"` when this happened while that spell's
+    (CR 601.2h) or ability's (CR 602.2b) total cost was being paid - the
+    creature an emerge cost sacrificed, the permanents a craft cost exiled -
+    stamped by `Game.emit` from `Game.paying_cost_of`. A trigger event's own
+    "while casting a spell with emerge" / "while you're activating a craft
+    ability" qualifier reads this (CR 603.2,
+    `machines/conditions/events.py`)."""
+
+    during_cost_keyword: str | None = None
+    """The keyword that spell was cast with, or that ability expands,
+    lowercased (CR 702.119a's emerge, CR 702.167a's craft)."""
+
+    during_cost_player: str | None = None
+    """Who was paying that cost - the player casting or activating."""
+
+    keyword_action: str | None = None
+    """The keyword action this event happened during, when that is what a
+    trigger event's own "while <doing it>" qualifier asks: `"scry"` for a
+    `TriggerEvent.LIBRARY_BOTTOM_CHOSEN` made while scrying (CR 701.22a)."""
+
     mana_ability: bool = False
     """`ExtraTriggerEvent.ABILITY_ACTIVATED` for a mana ability (CR 605.3a:
     it is activated; CR 605.3b: without the stack) - a condition printed
@@ -2929,7 +2950,30 @@ def condition_matches(
         ) and _types_match(event.subject_types, condition)
 
     if ability.event in (TriggerEvent.BECOMES_TAPPED, TriggerEvent.BECOMES_UNTAPPED):
-        return mine and event.subject_id == source.id
+        if mine:
+            return event.subject_id == source.id
+        # "Whenever a creature an opponent controls becomes tapped" (Verity
+        # Circle): anything that became tapped, narrowed by type and
+        # controller the way every other non-self event is (CR 701.26a).
+        return _controller_clause_holds(
+            condition, controller, event.subject_controller
+        ) and _types_match(event.subject_types, condition)
+
+    if ability.event is TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE:
+        # "When this creature is exiled from the battlefield" (Market Gnome),
+        # a leaves-the-battlefield ability that looks back (CR 603.10a).
+        if mine:
+            return event.subject_id == source.id
+        return _controller_clause_holds(
+            condition, controller, event.subject_controller
+        ) and _types_match(event.subject_types, condition)
+
+    if ability.event is TriggerEvent.LIBRARY_BOTTOM_CHOSEN:
+        # CR 701.22a's choice: "you choose" is the controller's own, "an
+        # opponent chooses" anyone else's.
+        if "an opponent" in lowered:
+            return event.player is not None and event.player != controller
+        return event.player == controller
 
     if ability.event is TriggerEvent.BECOMES_MONSTROUS:
         # CR 701.37a. Every printing in the pool - Polukranos, World Eater;
@@ -3971,6 +4015,7 @@ _LOOK_BACK_EVENTS = (
     TriggerEvent.IS_SACRIFICED,
     TriggerEvent.SPELL_IS_COUNTERED,
     TriggerEvent.LEAVES_THE_BATTLEFIELD,
+    TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
 )
 
 
@@ -4547,6 +4592,50 @@ def intervening_if_holds(
     if answer is None:
         return _fail_closed(game, ability, source)
     return answer
+
+
+def event_qualifier_holds(
+    game: "Game",
+    ability: TriggeredAbility,
+    source: CardState,
+    controller: str,
+    event: GameEvent,
+) -> bool:
+    """Whether the trigger event happened the way `ability`'s own "while
+    <doing something>" qualifier says (CR 603.2) - True when it prints none.
+
+    Asked of the event as it occurs, through the shared condition readers
+    (`machines/conditions/events.py`). A qualifier nobody reads fails closed:
+    the ability does not trigger, and an `InterveningIfNotice` naming the
+    qualifier is recorded, the same trail an unread intervening "if" leaves.
+    """
+    qualifier = ability.event_qualifier
+    if not qualifier:
+        return True
+    from . import conditions
+
+    answer = conditions.read_condition(
+        conditions.ConditionContext(game, controller, source=source, event=event, ability=ability),
+        qualifier,
+    )
+    if answer is None:
+        game.intervening_if_notices.append(
+            InterveningIfNotice(source_id=source.id, source_name=source.name, clause=qualifier)
+        )
+        return False
+    return answer
+
+
+def event_qualifier_readable(ability: TriggeredAbility) -> bool:
+    """Whether the engine reads `ability`'s "while <doing something>"
+    qualifier: a reader claims it, and its bare trigger event is one the
+    engine raises. True when it prints none."""
+    if not ability.event_qualifier:
+        return True
+    from . import conditions
+
+    has_event = ability.event is not None or bool(_unread_trigger_events(ability.condition))
+    return has_event and conditions.claims(ability.event_qualifier)
 
 
 def intervening_if_readable(printing: Card, ability: TriggeredAbility) -> bool:
@@ -6222,6 +6311,8 @@ def abilities_triggered_by(
                     continue
                 if source.zone not in zones_ability_functions_in(ability, source):
                     continue  # CR 113.6: doesn't function from the zone it's in.
+                if not event_qualifier_holds(game, ability, source, controller, event):
+                    continue  # CR 603.2: the event did not happen that way.
                 if not intervening_if_holds(game, ability, source, event):
                     continue  # CR 603.4: it does not trigger at all.
                 found.append((source, ability, controller))
