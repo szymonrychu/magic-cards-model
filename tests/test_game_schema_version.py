@@ -1011,3 +1011,25 @@ def test_a_snapshot_written_before_declared_attacking_power_is_refused() -> None
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_DECLARED_ATTACKING_POWER}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before `ManaPool.treasure`/`CastRecord.treasure_mana_spent`.
+_SCHEMA_VERSION_BEFORE_TREASURE_MANA = 72
+
+
+def test_the_treasure_mana_bump_moved_the_version_past_seventy_two() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_TREASURE_MANA
+
+
+def test_a_snapshot_written_before_treasure_mana_is_refused() -> None:
+    """A version-72 dump is refused rather than decoded as current: its pools
+    and cast records carry no Treasure provenance, so "if mana from a Treasure
+    was spent to cast it" would read false for a spell that was."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_TREASURE_MANA
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_TREASURE_MANA}",
+    ):
+        Game.model_validate(dumped)

@@ -220,6 +220,19 @@ def is_snow_source(source: CardState, game: Any = None) -> bool:
     return Supertype.SNOW in source.supertypes
 
 
+def is_treasure_source(source: CardState, game: Any = None) -> bool:
+    """Whether mana from this permanent is mana from a Treasure (CR 106.3:
+    the source of mana is the source of the ability that produced it) -
+    read off the computed board where it still is, else off what it last was
+    (a Treasure's own mana ability sacrifices it as a cost, CR 111.10a)."""
+    if game is not None and source.zone is Zone.BATTLEFIELD:
+        try:
+            return "Treasure" in game.characteristics_of(source).subtypes
+        except (AttributeError, KeyError):
+            pass
+    return "Treasure" in source.subtypes
+
+
 # --------------------------------------------------------------------------
 # CR 602.5: an activation's own restriction, asked on the payment path
 # --------------------------------------------------------------------------
@@ -5569,6 +5582,7 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
     return ManaPool(
         floating=dict(pool.floating),
         snow=dict(pool.snow),
+        treasure=dict(pool.treasure),
         restricted=[entry.model_copy(deep=True) for entry in pool.restricted],
         spend_effects=[tagged.model_copy(deep=True) for tagged in pool.spend_effects],
         retained=[entry.model_copy(deep=True) for entry in pool.retained],
@@ -6113,6 +6127,7 @@ class CostPayment(EngineModel):
             snow=is_snow_source(source, self.game),
             restriction=restriction,
             spend_effect=spend_effect,
+            treasure=is_treasure_source(source, self.game),
         )
         if self.game is not None:
             # CR 405.6c: the mana ability's other effect happens with the mana,
@@ -6523,6 +6538,7 @@ class CostPayment(EngineModel):
             return
         pool.floating = dict(self.pool.floating)
         pool.snow = dict(self.pool.snow)
+        pool.treasure = dict(self.pool.treasure)
         pool.restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
         pool.retained = [entry.model_copy(deep=True) for entry in self.pool.retained]
 
@@ -6559,6 +6575,7 @@ class CostPayment(EngineModel):
             return
         pool.floating = dict(self._preexisting.floating)
         pool.snow = dict(self._preexisting.snow)
+        pool.treasure = dict(self._preexisting.treasure)
         pool.restricted = [entry.model_copy(deep=True) for entry in self._preexisting.restricted]
         pool.retained = [entry.model_copy(deep=True) for entry in self._preexisting.retained]
 

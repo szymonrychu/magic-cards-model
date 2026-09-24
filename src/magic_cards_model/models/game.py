@@ -107,6 +107,7 @@ from ..machines.cost import (
     discard_cost,
     exile_cost,
     increase,
+    is_treasure_source,
     looks_like_unparsed_cost_modifier,
     loyalty_cost,
     mana_candidate_scan,
@@ -1864,6 +1865,10 @@ class CastRecord(EngineModel):
     without going through `Casting` at all - the two are indistinguishable here,
     which is why `any_mana_spent` is the question to ask rather than truthiness
     of the dict alone when that distinction matters."""
+    treasure_mana_spent: int = 0
+    """How much of `mana_spent` came from a Treasure (CR 106.3's source of
+    mana), from `ManaPayment.treasure_spent` - "if mana from a Treasure was
+    spent to cast it" (`machines/triggers.intervening_if_holds`)."""
     kicked: int = 0
     """How many times a kicker cost was paid (CR 702.33d), copied from
     `Casting.kicked`."""
@@ -3399,7 +3404,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 72
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 73
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3417,6 +3422,8 @@ class Game(EngineModel):
     #: `GraveyardArrival` gained `card_id` (C01-T7).
     #: 72: `machines/combat.CombatMachine` gained `declared_attacking_power`
     #: (pack tactics, C01 integration).
+    #: 73: `ManaPool` gained `treasure` and `CastRecord` gained
+    #: `treasure_mana_spent` (mana from a Treasure, C01 integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -4298,6 +4305,12 @@ class Game(EngineModel):
     `declared_attacking_power` - the first bullet. A version-71 board in
     combat would decode with no declared power, and a pack tactics trigger
     already on the stack would do nothing - the second.
+
+    Bumped 72 -> 73 (C01 integration, mana from a Treasure): `ManaPool`
+    gained `treasure` and `CastRecord` gained `treasure_mana_spent` - the
+    first bullet. A version-72 pool would decode its Treasure mana as plain
+    mana, and Smaug, Wicked Worm's trigger on a spell already cast with it
+    would not resolve - the second.
     """
 
     @model_validator(mode="before")
@@ -5815,6 +5828,7 @@ class Game(EngineModel):
         x_value: int = 0,
         mana_spent: dict[Color, int] | None = None,
         spend_effects: list[str] | None = None,
+        treasure_mana_spent: int = 0,
         kicked: int = 0,
         replicated: int = 0,
         offspring_paid: bool = False,
@@ -5876,6 +5890,7 @@ class Game(EngineModel):
             x_value=x_value,
             mana_spent=dict(mana_spent or {}),
             spend_effects=tuple(spend_effects or ()),
+            treasure_mana_spent=0 if is_copy else treasure_mana_spent,
             kicked=kicked,
             replicated=replicated,
             offspring_paid=offspring_paid,
@@ -21173,9 +21188,13 @@ class Game(EngineModel):
                     if ability.mana.spend_effect
                     else None
                 )
+                from_treasure = is_treasure_source(permanent, self)
                 for produced in produced_mana:
                     self.player(controller).mana_pool.add(
-                        produced, restriction=restriction, spend_effect=spend_effect
+                        produced,
+                        restriction=restriction,
+                        spend_effect=spend_effect,
+                        treasure=from_treasure,
                     )
                 # CR 405.6c: "If a mana ability both produces mana and has
                 # another effect, the mana is produced and the other effect

@@ -5813,6 +5813,11 @@ class Casting(EngineModel):
                         else []
                     )
                 ],
+                treasure_mana_spent=(
+                    sum(self.payment.mana_payment.treasure_spent.values())
+                    if self.payment is not None and self.payment.mana_payment is not None
+                    else 0
+                ),
                 kicked=self.kicked,
                 replicated=self.replicated,
                 offspring_paid=self.offspring_paid,

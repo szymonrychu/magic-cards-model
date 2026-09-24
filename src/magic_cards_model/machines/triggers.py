@@ -4199,6 +4199,12 @@ _MANA_SPENT_CLAUSE = re.compile(
     r"^(?P<symbols>(?:\{[wubrgc]\})+) was spent to cast (?:it|that spell)$"
 )
 _MANA_SYMBOL_LETTER = re.compile(r"\{([wubrgc])\}")
+#: "mana from a Treasure was spent to cast it" (Smaug, Wicked Worm; Hired
+#: Hexblade) - CR 601.2h's spent mana by its CR 106.3 source,
+#: `CastRecord.treasure_mana_spent`.
+_TREASURE_MANA_SPENT_CLAUSE = re.compile(
+    r"^mana from a treasure was spent to cast (?:it|that spell)$"
+)
 
 #: CR 207.2c's Revolt ability word, both printed phrasings in the pool:
 #: Renegade Rallier's and Fatal Push's own "a permanent left the battlefield
@@ -4653,6 +4659,12 @@ def intervening_if_holds(
         if record is None:
             return _fail_closed(game, ability, source)
         return not record.any_mana_spent
+
+    if _TREASURE_MANA_SPENT_CLAUSE.match(clause):
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        return record.treasure_mana_spent > 0
 
     mana_match = _MANA_SPENT_CLAUSE.match(clause)
     if mana_match is not None:

@@ -1248,6 +1248,19 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
             yield cast
 
+    if "mana from a treasure" in lowered:
+        # "if mana from a Treasure was spent to cast it" (CR 106.3): a
+        # Treasure's mana floats first, and the pool pays before the lands.
+
+        def cast_with_treasure() -> tuple[PlayedScenario, Any]:
+            scenario = _board(hand=(card.name,), battlefield=_extra_lands_for(card))
+            _stack_material(scenario)
+            _treasure_mana_for(scenario, card.name, ALICE)
+            _cast(scenario, card.name)
+            return scenario, None
+
+        yield cast_with_treasure
+
 
 def _other_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     lowered = ability.condition.lower()
@@ -1588,6 +1601,9 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     else:
         casters = [ALICE]
     during_your_turn = "during your turn" in lowered
+    # "if mana from a Treasure was spent to cast it" (CR 106.3): the caster
+    # floats a Treasure's mana first, which the pool spends before any land.
+    treasure_paid = "mana from a treasure" in (ability.intervening_if or "").lower()
     # The stock spells, then a spell of the quality the condition names ("a
     # Zombie spell" - Diregraf Colossus, which no stock spell is) from the
     # engine's own probe finder.
@@ -1609,6 +1625,8 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 else:
                     scenario, source_id = _home(case, ability, bob_hand=(probe,), active=BOB)
                 for _ in range(2 if caster == ALICE else 1):
+                    if treasure_paid:
+                        _treasure_mana_for(scenario, probe, caster)
                     if caster == scenario.game.active_player.username:
                         _cast(scenario, probe, caster)
                     else:
@@ -1618,6 +1636,13 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 return scenario, source_id
 
             yield cast_probe
+
+
+def _treasure_mana_for(scenario: PlayedScenario, probe: str, username: str) -> None:
+    """Sacrifice a fresh Treasure for one mana of the probe's first colour."""
+    (treasure,) = create_predefined_tokens(scenario.game, "Treasure", username)
+    colors = pool()[probe].colors if probe in pool() else []
+    scenario.game.activate_ability(treasure, 0, username, color=colors[0] if colors else Color.RED)
 
 
 def _mana_sources(scenario: PlayedScenario, username: str) -> list[CardState]:

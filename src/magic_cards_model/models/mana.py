@@ -937,6 +937,10 @@ class ManaPayment(EngineModel):
     `machines/casting.Casting._move_to_the_stack`, at CR 601.2h - reads this
     to record on the spell what the mana it was paid with does to it.
     """
+    treasure_spent: dict[Color, int] = Field(default_factory=dict)
+    """How much of `spend` came from a Treasure (CR 106.3's source of mana) -
+    "if mana from a Treasure was spent to cast it". A sub-count of the
+    untagged mana spent, like `snow_spent`; read onto `CastRecord`."""
     retained_spent: list[RetainedMana] = Field(default_factory=list)
     """How much of `spend` was retained mana (CR 500.5a/500.5b), and under
     which scope - `restricted_spent`'s third sibling, read back by `pay` so
@@ -1075,6 +1079,13 @@ class ManaPool(EngineModel):
 
     floating: dict[Color, int] = Field(default_factory=dict)
     snow: dict[Color, int] = Field(default_factory=dict)
+    treasure: dict[Color, int] = Field(default_factory=dict)
+    """The part of `floating` a Treasure produced (CR 106.3: the source of
+    mana is the source of the ability that produced it) - what "if mana from
+    a Treasure was spent to cast it" asks after. It narrows nothing: a
+    Treasure's mana carries no CR 106.6 tag, so it is always among the
+    untagged, non-snow mana, and a payment spends it before other mana of
+    the same colour (CR 118.3a leaves which mana to the payer)."""
     restricted: list[RestrictedMana] = Field(default_factory=list)
     """The CR 106.6-restricted part of `floating`, one entry per distinct
     restriction. Never more than `floating` holds of that colour; the rest of
@@ -1128,6 +1139,7 @@ class ManaPool(EngineModel):
         restriction: "ManaRestriction | None" = None,
         spend_effect: "ManaSpendEffect | None" = None,
         retain_until: "ManaRetentionScope | None" = None,
+        treasure: bool = False,
     ) -> None:
         if amount < 0:
             raise ValueError("cannot add a negative amount of mana")
@@ -1135,6 +1147,15 @@ class ManaPool(EngineModel):
         self.floating[color] = self.floating.get(color, 0) + amount
         if snow:
             self.snow[color] = self.snow.get(color, 0) + amount
+        if (
+            treasure
+            and amount
+            and not snow
+            and restriction is None
+            and spend_effect is None
+            and retain_until is None
+        ):
+            self.treasure[color] = self.treasure.get(color, 0) + amount
         if restriction is not None and amount:
             entry = self._entry_for(restriction)
             entry.amounts[color] = entry.amounts.get(color, 0) + amount
@@ -1153,6 +1174,7 @@ class ManaPool(EngineModel):
         restriction: "ManaRestriction | None" = None,
         spend_effect: "ManaSpendEffect | None" = None,
         retain_until: "ManaRetentionScope | None" = None,
+        treasure: bool = False,
     ) -> None:
         for color in colors:
             self.add(
@@ -1161,6 +1183,7 @@ class ManaPool(EngineModel):
                 restriction=restriction,
                 spend_effect=spend_effect,
                 retain_until=retain_until,
+                treasure=treasure,
             )
 
     def empty(self, *, expiring: frozenset[ManaRetentionScope] = frozenset()) -> None:
@@ -1186,6 +1209,7 @@ class ManaPool(EngineModel):
                 floating[color] = floating.get(color, 0) + amount
         self.floating = floating
         self.snow = {}
+        self.treasure = {}
         self.restricted = []
         self.spend_effects = []
         self.retained = surviving
@@ -1310,6 +1334,8 @@ class ManaPool(EngineModel):
                 self.floating[color] = left
             for color, amount in payment.snow_spent.items():
                 self.snow[color] = max(self.snow.get(color, 0) - amount, 0)
+            for color, amount in payment.treasure_spent.items():
+                self.treasure[color] = max(self.treasure.get(color, 0) - amount, 0)
             for taken in payment.restricted_spent:
                 entry = self._entry_for(taken.restriction)
                 for color, amount in taken.amounts.items():
@@ -1327,6 +1353,7 @@ class ManaPool(EngineModel):
 
         self.floating = {color: n for color, n in self.floating.items() if n > 0}
         self.snow = {color: n for color, n in self.snow.items() if n > 0}
+        self.treasure = {color: n for color, n in self.treasure.items() if n > 0}
         for entry in self.restricted:
             entry.amounts = {color: n for color, n in entry.amounts.items() if n > 0}
         self.restricted = [entry for entry in self.restricted if entry.amounts]
@@ -1357,6 +1384,7 @@ class ManaPool(EngineModel):
 
         spend: Counter[Color] = Counter()
         snow_spent: Counter[Color] = Counter()
+        untagged_spent: Counter[Color] = Counter()
         restricted_spent: dict[int, Counter[Color]] = {}
         effects_spent: dict[int, Counter[Color]] = {}
         retained_spent: dict[int, Counter[Color]] = {}
@@ -1364,6 +1392,12 @@ class ManaPool(EngineModel):
             spend[color] += amount
             if is_snow:
                 snow_spent[color] += amount
+            elif (slot, effect_slot, retained_slot) == (
+                UNRESTRICTED,
+                NO_SPEND_EFFECT,
+                NOT_RETAINED,
+            ):
+                untagged_spent[color] += amount
             if slot != UNRESTRICTED:
                 restricted_spent.setdefault(slot, Counter())[color] += amount
             if effect_slot != NO_SPEND_EFFECT:
@@ -1374,6 +1408,11 @@ class ManaPool(EngineModel):
             options=tuple(options),
             spend=dict(spend),
             snow_spent=dict(snow_spent),
+            treasure_spent={
+                color: taken
+                for color, amount in untagged_spent.items()
+                if (taken := min(amount, self.treasure.get(color, 0))) > 0
+            },
             restricted_spent=[
                 RestrictedMana(restriction=self.restricted[slot].restriction, amounts=dict(taken))
                 for slot, taken in sorted(restricted_spent.items())
