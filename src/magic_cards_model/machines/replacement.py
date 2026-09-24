@@ -108,6 +108,7 @@ on the battlefield. Dakmor Salvage therefore reports only "This land enters
 tapped."
 """
 
+import functools
 import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
@@ -1896,24 +1897,6 @@ def _kalitas_applies(game: "Game", source: CardState, event: ReplaceableEvent) -
     )
 
 
-def _containment_priest_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-    """ "If a nontoken creature would enter and it wasn't cast, exile it instead."
-
-    "Nontoken" is enforced (CR 111.1, CR 111.6). A token exiled by this would be
-    a token in a zone other than the battlefield, which CR 704.5d would make
-    cease to exist - the card deliberately does not do that, and now neither does
-    the engine.
-    """
-    card = event.card
-    return (
-        event.kind is EventKind.ENTERS_BATTLEFIELD
-        and not event.was_cast
-        and card is not None
-        and not is_token(card)
-        and Type.CREATURE in card.types
-    )
-
-
 def _scale_amount(multiplier: int = 1, addend: int = 0) -> Apply:
     """ "twice that many", "three times that many", "that many plus one",
     "that many minus one", "that much life plus 1" - one replacement, read as
@@ -2320,23 +2303,37 @@ def _compile_dies_exile(effect: ReplacementEffect) -> CardReplacement | None:
     return None
 
 
-# -- "if a nontoken creature would enter and it wasn't cast, exile it instead" --
+# -- "if a [nontoken] creature would enter and it wasn't cast, exile it instead" --
+#
+# Containment Priest's static line; Mistcaller's and Hallowed Moonlight's
+# "Until end of turn, ..." created form of the same sentence (`EnterUncastExile`
+# is the one reader for both, see `created_replacement_spec`).
 
 _ENTERS_UNCAST_EVENT_RE = re.compile(
-    r"^a nontoken creature would enter and it wasn.?t cast$", re.IGNORECASE
+    r"^an? (?P<nontoken>nontoken )?(?P<type>[a-z]+) would enter(?: the battlefield)?"
+    r" and it wasn.?t cast$",
+    re.IGNORECASE,
 )
 
 
-def _compile_enters_uncast_exile(effect: ReplacementEffect) -> CardReplacement | None:
+def read_enter_uncast_exile(effect: ReplacementEffect) -> "EnterUncastExile | None":
+    """`EnterUncastExile`'s reader, shared by the static and created forms."""
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
     if (effect.replacement or "").strip().rstrip(".").lower() != "exile it":
         return None
-    if not _ENTERS_UNCAST_EVENT_RE.match((effect.event or "").strip()):
+    match = _ENTERS_UNCAST_EVENT_RE.match((effect.event or "").strip())
+    if match is None:
         return None
-    return CardReplacement(
-        label=effect.text, applies=_containment_priest_applies, apply=_exile_instead
-    )
+    wanted = _CARD_TYPE_WORDS.get(match.group("type").lower())
+    if wanted is None:
+        return None
+    return EnterUncastExile(types=(wanted,), nontoken=match.group("nontoken") is not None)
+
+
+def _compile_enters_uncast_exile(effect: ReplacementEffect) -> CardReplacement | None:
+    spec = read_enter_uncast_exile(effect)
+    return None if spec is None else _static_form(effect.text, spec)
 
 
 # -- "if a source would deal damage ..., it deals double/triple that damage ... instead" --
@@ -3566,7 +3563,7 @@ def _compile_draw_skip(effect: ReplacementEffect) -> CardReplacement | None:
 
 
 def _static_form(
-    label: str, spec: "DrawSkipReplacement | CounterAmountReplacement"
+    label: str, spec: "DrawSkipReplacement | CounterAmountReplacement | EnterUncastExile"
 ) -> CardReplacement:
     """A created-form spec as a permanent's static replacement: "you" is the
     permanent's controller."""
@@ -3701,6 +3698,253 @@ def replacements_of_state(
         if compiled is not None:
             found.append(compiled)
     return found
+
+
+# --------------------------------------------------------------------------
+# Mana production (CR 106.12, CR 106.12b)
+# --------------------------------------------------------------------------
+#
+# "If a land is tapped for two or more mana, it produces {C} instead of any
+# other type and amount." (Damping Sphere) and "If you tap a permanent for
+# mana, it produces three times as much of that mana instead." (Nyxbloom
+# Ancient; Mana Reflection's "twice", Virtue of Strength's "a basic land").
+#
+# CR 106.12: to "tap [a permanent] for mana" is to activate one of its mana
+# abilities with {T} in its cost. CR 106.12b: a replacement effect that
+# applies if a permanent "is tapped for mana" or for mana of a specific type
+# and/or amount "modifies the mana production event while such an ability is
+# resolving and producing mana". So the event is the production itself - what
+# the ability would add - and the replacement rewrites that list of mana
+# before it reaches the pool. The ability's other effects (Ancient Tomb's 2
+# damage) are not production and are untouched.
+#
+# Not routed through `apply_replacements`: a mana ability resolves inside
+# cost payment and inside the auto-tap solver's pure planning pass, which
+# asks the same question once per candidate source. `replace_mana_production`
+# gathers only these effects (cheaply, off each permanent's printed text) and
+# runs CR 616.1's loop itself.
+
+#: The whole sentence. "you tap" is the active voice (the effect's controller
+#: must be the one tapping); "is tapped" is anybody's. "for two or more mana"
+#: is the amount condition CR 106.12b names ("of a specific ... amount").
+_MANA_PRODUCTION_RE = re.compile(
+    r"^if (?:(?P<you>you) tap (?P<you_subject>an? [a-z ]+?)|(?P<subject>an? [a-z ]+?) is tapped)"
+    r" for (?:(?P<least>[\w-]+) or more )?mana, it produces"
+    r" (?:(?P<colorless>\{C\} instead of any other type and amount)"
+    rf"|(?P<mult>{MULTIPLIER}) as much of that mana instead)\.?$",
+    re.IGNORECASE,
+)
+
+
+class ManaProductionReplacement(EngineModel):
+    """One mana-production replacement (CR 106.12b), read off its sentence.
+
+    `types` `None` is "a permanent"; otherwise the tapped permanent must have
+    one of them (computed, CR 613.1d - an animated land is still a land).
+    `basic` is "a basic land" (CR 205.4a's supertype). `at_least` is "for two
+    or more mana". `colorless_instead` replaces type and amount with a single
+    {C}; otherwise `multiplier` repeats each mana produced that many times.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["mana_production"] = "mana_production"
+    you_tap: bool = False
+    types: tuple[Type, ...] | None = None
+    basic: bool = False
+    at_least: int = 1
+    colorless_instead: bool = False
+    multiplier: int = 1
+
+    def applies(
+        self,
+        game: "Game",
+        controller: str | None,
+        source: CardState,
+        tapper: str | None,
+        produced: list[Color],
+    ) -> bool:
+        if not produced or len(produced) < self.at_least:
+            return False
+        if self.you_tap and (tapper is None or tapper != controller):
+            return False
+        if self.types is None and not self.basic:
+            return True
+        if source.zone is Zone.BATTLEFIELD:
+            chars = game.characteristics_of(source)
+            types, supertypes = chars.types, chars.supertypes
+        else:
+            types, supertypes = tuple(source.types), tuple(source.card.supertypes)
+        if self.basic and Supertype.BASIC not in supertypes:
+            return False
+        return self.types is None or any(wanted in types for wanted in self.types)
+
+    def apply(self, produced: list[Color]) -> list[Color]:
+        if self.colorless_instead:
+            return [Color.COLORLESS]
+        return [color for color in produced for _ in range(self.multiplier)]
+
+
+def read_mana_production(sentence: str) -> ManaProductionReplacement | None:
+    """The mana-production replacement a sentence prints, or `None`."""
+    match = _MANA_PRODUCTION_RE.fullmatch(" ".join(sentence.strip().split()))
+    if match is None:
+        return None
+    words = (match.group("you_subject") or match.group("subject")).lower().split()[1:]
+    basic = bool(words) and words[0] == "basic"
+    if basic:
+        words = words[1:]
+    if len(words) != 1:
+        return None
+    if words[0] == "permanent":
+        types: tuple[Type, ...] | None = None
+    elif words[0] in _CARD_TYPE_WORDS:
+        types = (_CARD_TYPE_WORDS[words[0]],)
+    else:
+        return None
+    at_least = 1
+    if match.group("least") is not None:
+        least = parse_count(match.group("least"))
+        if least is None:
+            return None
+        at_least = least
+    multiplier = 1
+    if match.group("mult") is not None:
+        parsed = parse_multiplier(match.group("mult"))
+        if parsed is None:
+            return None
+        multiplier = parsed
+    return ManaProductionReplacement(
+        you_tap=match.group("you") is not None,
+        types=types,
+        basic=basic,
+        at_least=at_least,
+        colorless_instead=match.group("colorless") is not None,
+        multiplier=multiplier,
+    )
+
+
+@functools.cache
+def _mana_production_specs(oracle_text: str) -> tuple[ManaProductionReplacement, ...]:
+    """Every mana-production replacement in one printed text, one per
+    sentence that reads - cached by text, since the auto-tap solver asks for
+    every permanent's on every scan."""
+    specs: list[ManaProductionReplacement] = []
+    for line in oracle_text.split("\n"):
+        stripped, _reminder = strip_reminder_text(line)
+        for sentence in _SENTENCE_SPLIT.split(stripped.strip()):
+            spec = read_mana_production(sentence)
+            if spec is not None:
+                specs.append(spec)
+    return tuple(specs)
+
+
+def mana_production_effects(
+    game: "Game",
+) -> list[tuple[str, CardState, ManaProductionReplacement]]:
+    """Every mana-production replacement on the battlefield, as (CR 614.5
+    key, source permanent, spec), in battlefield order. CR 604.2: a static
+    ability's effect exists while its permanent is on the battlefield."""
+    found: list[tuple[str, CardState, ManaProductionReplacement]] = []
+    for permanent in game.battlefield:
+        text = permanent.class_ability_text or ""
+        for index, spec in enumerate(_mana_production_specs(text)):
+            found.append((f"{permanent.id}:mana:{index}", permanent, spec))
+    return found
+
+
+def replace_mana_production(
+    game: "Game",
+    source: CardState,
+    produced: Iterable[Color],
+    *,
+    tapper: str | None = None,
+    effects: list[tuple[str, CardState, ManaProductionReplacement]] | None = None,
+) -> list[Color]:
+    """What tapping `source` for `produced` really adds (CR 106.12b).
+
+    CR 616.1: the affected player - the one tapping - chooses which
+    applicable effect to apply; CR 616.1f: after each, only the effects that
+    now apply are considered, so a Forest's single {G} tripled by Nyxbloom
+    Ancient is then a land tapped for three mana that Damping Sphere does
+    apply to. CR 614.5: each effect applies at most once. With nobody to ask
+    here (this runs mid-payment and inside the solver's planning pass), the
+    choice is made for the tapping player the way `auto_tap` picks a dual
+    land's colour: the order that leaves the most mana, ties broken by
+    battlefield order.
+
+    `effects` is `mana_production_effects(game)`, hoisted by a caller asking
+    about many sources over one battlefield.
+    """
+    mana = list(produced)
+    if effects is None:
+        effects = mana_production_effects(game)
+    if not effects:
+        return mana
+    who = tapper if tapper is not None else source.controller
+
+    def best(current: list[Color], applied: frozenset[str]) -> list[Color]:
+        result = current
+        for key, permanent, spec in effects:
+            if key in applied:
+                continue
+            if not spec.applies(game, permanent.controller, source, who, current):
+                continue
+            candidate = best(spec.apply(current), applied | {key})
+            if result is current or len(candidate) > len(result):
+                result = candidate
+        return result
+
+    return best(mana, frozenset())
+
+
+def is_mana_production_line(text: str) -> bool:
+    """Whether one printed static line is a mana-production replacement this
+    module performs."""
+    return bool(_mana_production_specs(text))
+
+
+#: The static-replacement readers `performed_static_replacement_line` vouches
+#: for, each proven by a scenario file on a listed card and on a second
+#: printing: graveyard-bound exile (`test_graveyard_exile_replacement.py`),
+#: uncast-enter exile (`test_uncast_creature_exile_replacement.py`), counter
+#: quantity (`test_counter_minus_one_replacement.py`) and draw quantity
+#: (`test_draw_plus_one_replacement.py`). A compiler not listed here may well
+#: work; it is simply not audited by this function.
+_AUDITED_STATIC_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = (
+    _compile_graveyard_exile,
+    _compile_enters_uncast_exile,
+    _compile_counter_doubler,
+    _compile_draw_plus,
+    _compile_draw_doubler,
+    _compile_draw_doubler_except_draw_step,
+)
+
+
+def performed_static_replacement_line(card: Card, text: str) -> bool:
+    """Whether every sentence of one printed static line is a replacement
+    effect this module really performs from the battlefield - read by one of
+    `_AUDITED_STATIC_COMPILERS` exactly as `replacements_of_state` would read
+    it, or a mana-production replacement (`test_mana_production_replacement.py`).
+
+    Fail-closed per sentence: a line where any sentence carrying a
+    replacement cue is unread is not vouched for.
+    """
+    if is_mana_production_line(text):
+        return True
+    effects = _parse_oracle_text(text, face=None, names=_names_of(card))
+    if not effects:
+        return False
+    for effect in effects:
+        if effect.from_trigger or _compile(effect) is None:
+            return False
+        if not any(
+            (effect.condition is None or compiler in _CONDITION_AWARE_COMPILERS)
+            and compiler(effect) is not None
+            for compiler in _AUDITED_STATIC_COMPILERS
+        ):
+            return False
+    return True
 
 
 # --------------------------------------------------------------------------
@@ -5938,10 +6182,41 @@ class EnterUnderYourControl(EngineModel):
             event.card.controller = controller
 
 
+class EnterUncastExile(EngineModel):
+    """ "If a [nontoken] creature would enter and it wasn't cast, exile it
+    instead." - Containment Priest's static line, Mistcaller's and Hallowed
+    Moonlight's "Until end of turn, ..." created form (CR 614.1a).
+
+    "Wasn't cast" is `ReplaceableEvent.was_cast` (CR 601.2 defines casting).
+    "Nontoken" excludes tokens (CR 111.1) - a token exiled this way would only
+    cease to exist, and the printing that says "nontoken" deliberately does
+    not do that; the one that does not say it (Hallowed Moonlight) does.
+    `types` is read off the entering object as it would exist on the
+    battlefield (CR 614.12). No "you" anywhere: every player's creatures.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["enter_uncast_exile"] = "enter_uncast_exile"
+    types: tuple[Type, ...] = (Type.CREATURE,)
+    nontoken: bool = True
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        card = event.card
+        if event.kind is not EventKind.ENTERS_BATTLEFIELD or event.was_cast or card is None:
+            return False
+        if self.nontoken and is_token(card):
+            return False
+        return any(wanted in card.types for wanted in self.types)
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        event.destination = Zone.EXILE
+
+
 #: What a `CreatedReplacement` does - a `kind`-tagged union, refused at decode
 #: for an unknown tag rather than silently doing nothing.
 CreatedReplacementSpec = Annotated[
-    DrawSkipReplacement | CounterAmountReplacement | EnterUnderYourControl,
+    DrawSkipReplacement | CounterAmountReplacement | EnterUnderYourControl | EnterUncastExile,
     Field(discriminator="kind"),
 ]
 
@@ -6019,7 +6294,7 @@ def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
     if entering is not None:
         return entering
     for effect in _parse_sentence(body, ()):
-        for reader in (read_draw_skip, read_counter_amount):
+        for reader in (read_draw_skip, read_counter_amount, read_enter_uncast_exile):
             spec = reader(effect)
             if spec is not None:
                 return spec

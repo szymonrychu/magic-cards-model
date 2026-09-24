@@ -1236,6 +1236,89 @@ def _auto_tap_candidates(
 _ScannedCandidate = tuple[CardState, list[list[Color]], ManaRestriction | None, bool, int]
 
 
+def _mana_production_effects(game: Any) -> list[Any]:
+    """`machines.replacement.mana_production_effects`, or nothing without a
+    game. Imported late: `machines/replacement.py` imports `machines/casting.py`,
+    which imports this module."""
+    if game is None:
+        return []
+    from .replacement import mana_production_effects
+
+    return mana_production_effects(game)
+
+
+def _replace_production(
+    context: "CostPayment | _SpendContext",
+    source: CardState,
+    produced: Sequence[Color],
+    effects: list[Any],
+) -> list[Color]:
+    """What tapping `source` for `produced` really adds (CR 106.12b) - see
+    `machines.replacement.replace_mana_production`."""
+    from .replacement import replace_mana_production
+
+    return replace_mana_production(
+        context.game,
+        source,
+        produced,
+        tapper=context.payer or source.controller,
+        effects=effects,
+    )
+
+
+def _replaced_options(
+    context: "CostPayment | _SpendContext",
+    source: CardState,
+    options: list[list[Color]],
+    effects: list[Any],
+) -> list[list[Color]]:
+    """Each production in `options`, replaced, with duplicates dropped - a
+    choice of "two mana of any one color" is one {C} five times over under
+    Damping Sphere."""
+    replaced: list[list[Color]] = []
+    for option in options:
+        production = _replace_production(context, source, option, effects)
+        if sorted(production) not in (sorted(seen) for seen in replaced):
+            replaced.append(production)
+    return replaced
+
+
+def _unreplaced_production(
+    context: "CostPayment | _SpendContext",
+    source: CardState,
+    wanted: Sequence[Color],
+    effects: list[Any],
+) -> list[Color] | None:
+    """The production one of `source`'s `{T}` mana abilities offers that CR
+    106.12b's replacements turn into `wanted`, or `None`. Any mana a
+    triggered mana ability adds after the ability's own (CR 605.4a) is kept
+    as the tail, the way `_with_triggered_mana` appended it."""
+    game = context.game
+    land_types, own_counters, has_imprinted_card = _mana_context(context, source)
+    productions: list[list[Color]] = []
+    for _index, activation in tappable_mana_activations(source, game):
+        ability = activation.mana
+        if ability is None:
+            continue
+        options, any_color = ability.effective(
+            land_types,
+            own_counters,
+            has_imprinted_card,
+            **_mana_narrowings(context, source, ability),
+        )
+        options, _any = _narrow_to_defined_colors(
+            options, any_color, _among_colors(activation.effect, context, source)
+        )
+        productions.extend(options)
+    wanted = list(wanted)
+    for cut in range(len(wanted), 0, -1):
+        own, extra = sorted(wanted[:cut]), wanted[cut:]
+        for production in productions:
+            if sorted(_replace_production(context, source, production, effects)) == own:
+                return list(production) + extra
+    return None
+
+
 def _scan_mana_candidates(
     payment: "CostPayment | _SpendContext",
     sources: Iterable[CardState],
@@ -1277,6 +1360,10 @@ def _scan_mana_candidates(
     paying_life: set[tuple[Any, int]] = set()
     life_cost: dict[tuple[Any, int], int] = {}
     trigger_sources = mana_trigger_sources(payment.game) if payment.payer is not None else []
+    # CR 106.12b: what a source is planned for is what it really produces,
+    # after any mana-production replacement - Damping Sphere's Ancient Tomb
+    # is one mana to this solver, Nyxbloom Ancient's Forest three.
+    production_effects = _mana_production_effects(payment.game)
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
             continue
@@ -1310,6 +1397,8 @@ def _scan_mana_candidates(
             )
             if not options:
                 continue
+            if production_effects:
+                options = _replaced_options(payment, source, options, production_effects)
             if trigger_sources:
                 options = _with_triggered_mana(payment, source, options, trigger_sources)
             candidates.append((source, options, restriction, any_color, index))
@@ -5782,6 +5871,17 @@ class CostPayment(EngineModel):
         activated, refusals, produces, triggered_colors = _activated_mana_ability_with_triggers(
             self, source, produces, restriction
         )
+        production_effects = _mana_production_effects(self.game)
+        if activated is None and production_effects:
+            # A plan from the auto-tap solver names the *replaced* production
+            # (CR 106.12b) - one {C} for Ancient Tomb under Damping Sphere -
+            # which no ability of the source prints; find the production the
+            # ability makes that is replaced into it.
+            unreplaced = _unreplaced_production(self, source, produces, production_effects)
+            if unreplaced is not None:
+                activated, refusals, produces, triggered_colors = (
+                    _activated_mana_ability_with_triggers(self, source, unreplaced, restriction)
+                )
         if activated is None:
             made = "".join(f"{{{color.value}}}" for color in produces) or "no mana"
             if refusals:
@@ -5818,6 +5918,11 @@ class CostPayment(EngineModel):
             if activated.ability.spend_effect
             else None
         )
+        if production_effects and self.game is not None:
+            # CR 106.12b: the production event is modified as the ability
+            # resolves; what reaches the pool (and what "tapped for mana"
+            # triggers see, CR 106.12a) is the replaced mana.
+            produces = _replace_production(self, source, produces, production_effects)
         self.pool.add_all(
             produces,
             snow=is_snow_source(source, self.game),

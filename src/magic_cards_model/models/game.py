@@ -229,6 +229,7 @@ from ..machines.replacement import (
     UnreadableCopyExceptionNotice,
     UnwiredChoiceNotice,
     apply_replacements,
+    replace_mana_production,
 )
 from ..machines.targeting import (
     RetargetScope,
@@ -2552,6 +2553,10 @@ class Game(EngineModel):
     `returning_together`, raised together once the last of them has moved
     (CR 603.10a). `None` outside one. Not persisted: the block opens and
     closes within one resolving effect or one cost payment."""
+    _damage_recorders: dict[UUID, list[UUID]] = PrivateAttr(default_factory=dict)
+    """Per damage source currently being watched by `recording_damage_from`,
+    the permanents it has actually dealt damage to (CR 120.3), in order. Not
+    persisted: the block opens and closes within one resolving effect."""
     _returned_to_hand_batch: tuple[GameEvent, ...] = PrivateAttr(default=())
     """The `LEAVES_BATTLEFIELD_TO_HAND` events being raised right now as one
     event (`returned_to_hand_batch`). Empty outside `_announce_returns`. Not
@@ -4137,6 +4142,24 @@ class Game(EngineModel):
         allocated = uuid5(NAMESPACE_OID, f"{self.game_uid}:{self.objects_created}")
         self.objects_created += 1
         return allocated
+
+    @contextmanager
+    def recording_damage_from(self, source: CardState) -> Iterator[list[UUID]]:
+        """Collect, for the span of the block, every permanent `source`
+        deals damage to - damage that was actually dealt, after prevention
+        (CR 615.1a) - for a rider that names the permanents "dealt damage
+        this way" (Anger of the Gods' "If a creature dealt damage this way
+        would die this turn, exile it instead")."""
+        recorded: list[UUID] = []
+        previous = self._damage_recorders.get(source.id)
+        self._damage_recorders[source.id] = recorded
+        try:
+            yield recorded
+        finally:
+            if previous is None:
+                self._damage_recorders.pop(source.id, None)
+            else:
+                self._damage_recorders[source.id] = previous
 
     @contextmanager
     def _id_allocator_scope(self) -> Iterator[None]:
@@ -14035,6 +14058,8 @@ class Game(EngineModel):
                     self.deal_damage_to_player(target, event.amount)
             else:
                 self._apply_damage_to_permanent(target, event.amount, as_counters=infect or wither)
+                if source is not None and source.id in self._damage_recorders:
+                    self._damage_recorders[source.id].append(target.id)
             # CR 613.5: the source's characteristics for this event are the
             # computed ones while it is still a permanent - a land animated
             # by earthbend is a creature only there - and the printed type
@@ -20140,6 +20165,15 @@ class Game(EngineModel):
                 # source that leaves the battlefield takes nothing back with it.
                 # `permanent` is passed only to resolve "the chosen type"
                 # (CR 614.12a records the answer on the object that was asked).
+                # CR 106.12b: a replacement effect watching a permanent "tapped
+                # for mana" modifies this production event as the ability
+                # resolves - Damping Sphere's single {C}, Nyxbloom Ancient's
+                # three times as much. Only a `{T}` ability is being tapped for
+                # mana (CR 106.12).
+                if any(piece.kind is CostKind.TAP for piece in ability.costs):
+                    produced_mana = replace_mana_production(
+                        self, permanent, produced_mana, tapper=controller
+                    )
                 restriction = spend_restriction(ability.effect, permanent)
                 # CR 106.6's other clause, tagged onto the same mana and for the
                 # same reason: "have an additional effect that affects the spell

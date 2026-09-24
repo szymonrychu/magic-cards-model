@@ -110,6 +110,7 @@ from magic_cards_model.machines.replacement import (
     _self_enters_modifiers,
     enters_as_copy_outcome,
     parse_replacement_effects,
+    performed_static_replacement_line,
     strip_reminder_text,
 )
 from magic_cards_model.machines.triggers import (
@@ -1734,6 +1735,11 @@ def _static_ability_category(printing: Card, text: str) -> str:
     self_enters = _self_enters_line_category(printing, text)
     if self_enters is not None:
         return self_enters
+    if performed_static_replacement_line(printing, text):
+        # CR 614.1a: a replacement effect `machines/replacement.py` reads off
+        # this very line and `applicable_effects` (or, for CR 106.12b's mana
+        # production, `replace_mana_production`) performs from the battlefield.
+        return HANDLED
     return STATIC_UNAUDITED
 
 
