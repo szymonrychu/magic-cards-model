@@ -4467,6 +4467,13 @@ class Game(EngineModel):
     where it came from, so this is how a prevention effect limited to *combat*
     damage tells the two apart."""
 
+    _combat_damage_this_step: dict[UUID, int] | None = None
+    """Damage marked on each permanent during the combat damage step now being
+    dealt (CR 510.2: one simultaneous event) - what "all other damage already
+    dealt to him" (Wolverine, Fierce Fighter) must not count as already
+    dealt. A fresh ledger as each combat damage step begins, `None` outside
+    one."""
+
     automatic_turn_based_actions: bool = True
     """Whether `advance` performs the step's turn-based actions itself (CR 703.3).
 
@@ -14759,6 +14766,9 @@ class Game(EngineModel):
                     self.deal_damage_to_player(target, event.amount)
             else:
                 self._apply_damage_to_permanent(target, event.amount, as_counters=infect or wither)
+                ledger = self._combat_damage_this_step
+                if event.combat and ledger is not None and not (infect or wither):
+                    ledger[target.id] = ledger.get(target.id, 0) + event.amount
                 if source is not None and source.id in self._damage_recorders:
                     self._damage_recorders[source.id].append(target.id)
             # CR 613.5: the source's characteristics for this event are the
@@ -17337,10 +17347,18 @@ class Game(EngineModel):
         needs to know.
         """
         self._dealing_combat_damage = True
+        self._combat_damage_this_step = {}
         try:
             return combat_rules.combat_damage_step(self)
         finally:
             self._dealing_combat_damage = False
+            self._combat_damage_this_step = None
+
+    def combat_damage_marked_this_step(self, permanent: CardState) -> int:
+        """Damage marked on `permanent` so far in the combat damage step being
+        dealt right now (CR 510.2) - 0 outside one."""
+        ledger = self._combat_damage_this_step
+        return 0 if ledger is None else ledger.get(permanent.id, 0)
 
     def combat_damage(self) -> list[tuple[Targetable, int]]:
         """Run every combat damage step this combat needs (CR 510.1, 510.4).

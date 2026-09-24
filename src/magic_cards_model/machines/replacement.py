@@ -131,6 +131,10 @@ from ..snapshot import EngineModel
 from .abilities import keywords_in_lines, self_reference_names
 from .casting import PlayAction
 from .combat import Keyword
+from .damage_modification import (
+    compile_damage_plus_source_characteristic,
+    compile_heal_other_damage,
+)
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import ReflexiveExileCopiedCard
 
@@ -3927,6 +3931,8 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_enters_uncast_exile,
     _compile_damage_multiplier,
     _compile_damage_plus_amount,
+    compile_damage_plus_source_characteristic,
+    compile_heal_other_damage,
     _compile_prevent_damage_and_mill,
     _compile_self_prevent_combat_damage,
     _compile_prevent_all_to_group,
