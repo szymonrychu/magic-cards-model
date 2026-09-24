@@ -2506,11 +2506,22 @@ class CardState(EngineModel):
             self.granted_ability_texts = tuple(
                 line for line in self.granted_ability_texts if not _is_suspend_line(line)
             )
-        if not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
+        if zone is not origin and not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
             # CR 702.103b carries bestowed across exactly one zone change:
             # "the permanent it becomes as it resolves will be a bestowed Aura
-            # permanent". Every other move is CR 400.7's new object, which
-            # nobody cast bestowed.
+            # permanent". Every other *actual* move is CR 400.7's new object,
+            # which nobody cast bestowed.
+            #
+            # `zone is not origin` excludes `Game.put_on_stack` re-stating the
+            # zone of a spell already on the stack (see the identical
+            # `spliced_text` guard just below): CR 400.7's "new object" is
+            # about a card that actually changes zones, and restating the
+            # zone it is already in is not that - a bestowed spell cast with
+            # `use_keyword("Bestow")` used to lose the flag the instant
+            # `Game._put_on_stack` ran its own `move_to(Zone.STACK)`, before
+            # CR 601.2f's cost was even paid, so it could never resolve as
+            # the Aura CR 702.103b promises. Detective's Phoenix (hardcast
+            # and cast from the graveyard alike) is the proof this was wrong.
             self.bestowed = False
         # CR 400.7: see `cast_with_keyword` - set again by `Game.enter_the_
         # battlefield` for the one move that carries a cast spell's choice.
