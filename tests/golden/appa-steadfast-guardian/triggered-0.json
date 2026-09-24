@@ -1,5 +1,5 @@
 {
-  "ability": "Whenever you cast a spell from exile, create a 1/1 white Ally creature token.",
+  "ability": "When Appa enters, airbend any number of other target nonland permanents you control.",
   "action": {
     "controller": "alice",
     "modes": [],
@@ -14,9 +14,9 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Appa, Steadfast Guardian"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Bonecrusher Giant"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Appa, Steadfast Guardian"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -34,38 +34,24 @@
   },
   "card": "Appa, Steadfast Guardian",
   "delta": {
-    "created": {
-      "Ally Token@alice+1": {
-        "attached_to": null,
-        "class_level": 1,
-        "controller": "alice",
-        "counters": {},
-        "damage": 0,
-        "face_up": true,
-        "granted": [],
-        "monstrous": false,
-        "power": 1,
-        "tapped": false,
-        "toughness": 1,
-        "transformed": false,
-        "zone": "battlefield"
-      }
-    },
+    "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": [],
     "notices": {},
     "objects": {},
     "players": {},
-    "stack": ["Bonecrusher Giant@alice#1"]
+    "stack": []
   },
   "family": "triggered",
   "format": 1,
-  "kind": "cast_spell",
+  "kind": "enters_the_battlefield",
   "number": 0,
   "recipe": {
-    "attempt": "adventure",
+    "attempt": "put",
     "index": 0,
-    "params": {},
+    "params": {
+      "tapped": false
+    },
     "variant": "quiet"
   }
 }

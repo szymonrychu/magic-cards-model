@@ -1,5 +1,5 @@
 {
-  "ability": "At the beginning of your upkeep, draw a card.",
+  "ability": "When this creature enters, if it was cast, each player exiles all but the bottom six cards of their library face down.",
   "action": {
     "controller": "alice",
     "modes": [],
@@ -14,9 +14,9 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Doomsday Excruciator"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Swamp", "Swamp", "Swamp"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Doomsday Excruciator"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -26,7 +26,7 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
-    "step": null,
+    "step": "precombat_main",
     "tapped": [],
     "tokens": [],
     "variant": "quiet",
@@ -36,11 +36,152 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cards_drawn_this_turn"],
+    "fields_changed": [],
     "notices": {},
     "objects": {
       "Forest@alice#6": {
-        "zone": ["library", "hand"]
+        "zone": ["library", "exile"]
+      },
+      "Forest@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@alice#8": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@alice#9": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@bob#7": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#4": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#8": {
+        "zone": ["library", "exile"]
+      },
+      "Island@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Island@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Island@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Island@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#4": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#4": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#10": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#11": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#8": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#9": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@bob#6": {
+        "zone": ["library", "exile"]
       }
     },
     "players": {},
@@ -48,12 +189,15 @@
   },
   "family": "triggered",
   "format": 1,
-  "kind": "beginning_of_step",
+  "kind": "enters_the_battlefield",
   "number": 0,
   "recipe": {
-    "attempt": "staged",
-    "index": 0,
-    "params": {},
+    "attempt": "cast",
+    "index": 1,
+    "params": {
+      "kicked": false,
+      "paying_with": null
+    },
     "variant": "quiet"
   }
 }

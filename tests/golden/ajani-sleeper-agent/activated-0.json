@@ -1,11 +1,11 @@
 {
-  "ability": "−3: Distribute three +1/+1 counters among up to three target creatures. They gain vigilance until end of turn.",
+  "ability": "+1: Reveal the top card of your library. If it's a creature or planeswalker card, put it into your hand. Otherwise, you may put it on the bottom of your library.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Ajani, Sleeper Agent@alice#1",
-    "targets": ["Memnite@alice#1"],
+    "targets": [],
     "x": 0
   },
   "board": {
@@ -35,21 +35,20 @@
   "card": "Ajani, Sleeper Agent",
   "delta": {
     "created": {},
-    "decisions": [],
-    "fields_changed": [],
-    "notices": {},
-    "objects": {
-      "Memnite@alice#1": {
-        "counters": [
-          {},
-          {
-            "+1/+1": 3
-          }
-        ],
-        "power": [1, 4],
-        "toughness": [1, 4]
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "put Forest on the bottom of your library",
+        "source": "Ajani, Sleeper Agent"
       }
-    },
+    ],
+    "fields_changed": ["reveals"],
+    "notices": {},
+    "objects": {},
     "players": {},
     "stack": []
   },
