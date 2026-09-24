@@ -46,7 +46,7 @@
         "source": "Jill, Shiva's Dominant"
       }
     ],
-    "fields_changed": ["permanents_left_battlefield_this_turn"],
+    "fields_changed": ["permanents_left_battlefield_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Forest@bob#1": {

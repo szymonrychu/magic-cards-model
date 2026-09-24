@@ -516,3 +516,45 @@ def test_every_static_line_is_handled(name):
     for clause in card_support(card(name)).clauses:
         if clause.kind == "static":
             assert clause.outcome == "handled", (name, clause.text, clause.outcome)
+
+
+# -- Storm's cast trigger --------------------------------------------------------
+
+
+def test_storm_gives_the_targeted_creatures_flying():
+    """ "Whenever you cast a spell that targets one or more creatures, those
+    creatures gain flying until end of turn." - "those creatures" are the
+    spell's own creature targets (CR 601.2c)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Giant Growth"],
+            battlefield=["Storm, Windrider", "Grizzly Bears", "Hill Giant", "Forest"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    scenario.cast_onto_stack("Giant Growth", *scenario.untapped_sources("Forest"), targets=[bears])
+    while scenario.stack_names():
+        scenario.pass_until_resolved()
+
+    assert has_keyword(bears, "flying", scenario.game)
+    assert not has_keyword(giant, "flying", scenario.game), "not a target"
+
+
+def test_storm_ignores_a_spell_targeting_only_a_player():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Storm, Windrider", "Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_onto_stack(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=["bob"]
+    )
+    assert scenario.stack_names() == ["Lightning Bolt"]
+    assert scenario.game.cast_condition_notices == []

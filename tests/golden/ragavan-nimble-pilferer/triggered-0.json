@@ -52,7 +52,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "play_permissions"],
+    "fields_changed": ["continuous_effects", "play_permissions", "turn_facts"],
     "notices": {},
     "objects": {
       "Forest@bob#4": {

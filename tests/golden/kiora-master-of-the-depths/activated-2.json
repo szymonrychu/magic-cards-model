@@ -123,7 +123,7 @@
         "source": "Kiora, Master of the Depths emblem"
       }
     ],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["continuous_effects", "turn_facts"],
     "notices": {},
     "objects": {},
     "players": {},

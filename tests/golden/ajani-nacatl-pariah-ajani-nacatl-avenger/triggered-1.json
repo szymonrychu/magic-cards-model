@@ -46,7 +46,7 @@
         "source": "Ajani, Nacatl Pariah"
       }
     ],
-    "fields_changed": ["permanents_left_battlefield_this_turn"],
+    "fields_changed": ["permanents_left_battlefield_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Ajani, Nacatl Pariah@alice#1": {

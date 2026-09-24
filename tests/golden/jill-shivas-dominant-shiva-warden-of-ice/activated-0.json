@@ -46,7 +46,7 @@
         "source": "Shiva, Warden of Ice"
       }
     ],
-    "fields_changed": ["permanents_left_battlefield_this_turn"],
+    "fields_changed": ["permanents_left_battlefield_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Jill, Shiva's Dominant@alice#1": {

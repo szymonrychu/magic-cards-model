@@ -1489,6 +1489,10 @@ def _cast_spell_targets_condition_holds(
     """
     from .targeting import _read_phrase
 
+    # Storm, Windrider's "a spell that targets one or more creatures": any
+    # one of the spell's targets fitting is enough, the same test as "a
+    # creature".
+    target_text = re.sub(r"^one or more\s+", "", target_text.strip(), flags=re.IGNORECASE)
     requirement = _read_phrase("", _strip_leading_article(target_text), strict=True)
     if requirement is None:
         return None

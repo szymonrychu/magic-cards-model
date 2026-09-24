@@ -53223,6 +53223,60 @@ def _parse_may_pay_life_then_rider(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "those creatures gain flying until end of turn." after "Whenever you cast
+#: a spell that targets one or more creatures" (Storm, Windrider) - "those
+#: creatures" are the triggering spell's own targets that are creatures
+#: (CR 601.2c), each granted the keywords for CR 611.2a's duration. Any
+#: other trigger's "those creatures" is left to the batched-attack reader.
+_THOSE_CREATURES_GAIN_RE = re.compile(
+    r"^those creatures gain (?P<keywords>[a-z][a-z ,]*?) until end of turn\.?$", re.IGNORECASE
+)
+
+
+def _parse_cast_spell_targets_gain(text: str) -> AbilityEffect | None:
+    """`_THOSE_CREATURES_GAIN_RE` for a cast trigger, or `None`."""
+    match = _THOSE_CREATURES_GAIN_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    keywords = split_and_validate_keywords(match.group("keywords"))
+    batched = _parse_batched_attack_group_pump_clause(text)
+    if keywords is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.event is not TriggerEvent.CAST_SPELL:
+            if batched is not None:
+                batched(game, ability)
+            return
+        spell = game.find_by_id(event.subject_id) if event.subject_id else None
+        if spell is None:
+            return
+        store = game.continuous_effects
+        for target_ref in spell.targets:
+            if target_ref.is_player or target_ref.card_id is None:
+                continue
+            creature = game.find_by_id(target_ref.card_id)
+            if creature is None or creature.zone is not Zone.BATTLEFIELD:
+                continue
+            if not game.characteristics_of(creature).is_creature:
+                continue
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{ability.source_name}: {creature.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        source_id=ability.source_id,
+                        selector=only_this_incarnation(creature, creature.zone_change_stamp),
+                        modification=grant_ability(keyword),
+                    )
+                )
+
+    return effect
+
+
 def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffect | None:
     """The readers above, tried in turn on a resolving ability's whole text -
     `_ability_effect_or_notice` asks this first."""
@@ -53242,6 +53296,7 @@ def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffec
         _parse_may_pay_then_drain_total,
         _parse_until_eot_assigns_toughness,
         _parse_may_pay_life_then_rider,
+        _parse_cast_spell_targets_gain,
     ):
         found = reader(effect_text)
         if found is not None:

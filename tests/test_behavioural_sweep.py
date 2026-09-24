@@ -1060,6 +1060,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _chosen_parity(source, getattr(ability, "condition", None))
     _equip_for_condition(scenario, source, ability)
+    _enter_for_condition(scenario, ability)
     return source
 
 
@@ -1144,6 +1145,44 @@ def _equipment_partner(ability: Any) -> tuple[str, ...]:
     if _EQUIPPED_SELF_CONDITION.search(getattr(ability, "intervening_if", None) or ""):
         return (_STAGED_EQUIPMENT,)
     return ()
+
+
+#: An intervening "if a(n) `<type>` entered the battlefield under your
+#: control this turn" (Iron Man, Master of Machines; Avengers Assemble!'s
+#: "or a Hero entered ...", CR 603.4): a real permanent of that type or
+#: subtype is put onto the battlefield as the board is staged, so the turn's
+#: own record of it is there when the trigger checks.
+_TYPED_ENTERED_CONDITION = re.compile(
+    r"\ban? (?P<quality>[A-Za-z]+) entered the battlefield under your control this turn\b",
+    re.IGNORECASE,
+)
+
+
+def _enter_for_condition(scenario: PlayedScenario, ability: Any) -> None:
+    """Put a pool permanent matching a typed "entered this turn" condition
+    onto the battlefield under the source's controller."""
+    match = _TYPED_ENTERED_CONDITION.search(getattr(ability, "intervening_if", None) or "")
+    if match is None:
+        return
+    quality = match.group("quality").lower()
+    wanted_type = next((kind for kind in Type if kind.value == quality), None)
+    for printing in _format_pool():
+        if printing.card_faces or not set(printing.types) & _PERMANENT_TYPES:
+            continue
+        if wanted_type is not None:
+            if wanted_type not in printing.types:
+                continue
+        elif quality.removesuffix("s") not in {sub.lower() for sub in printing.subtypes}:
+            continue
+        if "enters" in (printing.oracle_text or "").lower():
+            continue  # no entering trigger of its own to crowd the stack
+        state = card_state(printing.name)
+        scenario.game.player(ALICE).add(state, Zone.HAND)
+        try:
+            scenario.game.put_onto_battlefield(state, ALICE)
+        except ValueError:
+            continue
+        return
 
 
 def _equip_for_condition(scenario: PlayedScenario, source: CardState, ability: Any) -> None:
