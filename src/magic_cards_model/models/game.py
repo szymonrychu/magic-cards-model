@@ -765,8 +765,9 @@ _SORCERY_TIMING = re.compile(
     re.IGNORECASE,
 )
 #: "Activate only during your turn" (Scientist Supreme of A.I.M., Sundial of
-#: the Infinite) - a restriction on when the ability may be activated
-#: (CR 602.5b), alone or joined to another ("... and only once each turn").
+#: the Infinite) - outside its controller's turn the ability is prohibited
+#: from being activated (CR 602.5), a restriction printed alone or joined to
+#: another ("... and only once each turn").
 _YOUR_TURN_ONLY = re.compile(r"activate (?:this ability )?only during your turn", re.IGNORECASE)
 #: CR 602.5b's per-turn limit, with its count read rather than assumed to be
 #: one: "Activate only once each turn" (Basking Rootwalla), "... and only once
@@ -19411,7 +19412,7 @@ class Game(EngineModel):
         if _YOUR_TURN_ONLY.search(instructions) and self.active_player.username != controller:
             return (
                 f"{permanent.name}'s ability can only be activated during its "
-                f"controller's turn, and it is {self.active_player.username}'s (CR 602.5b)"
+                f"controller's turn, and it is {self.active_player.username}'s (CR 602.5)"
             )
         if _SORCERY_TIMING.search(instructions) and not self.can_cast_sorcery(controller):
             return (
