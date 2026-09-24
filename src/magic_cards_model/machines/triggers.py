@@ -278,6 +278,15 @@ class ExtraTriggerEvent(StrEnum):
     #: `Game.set_day_night`, only when a designation is replaced.
     DAY_BECOMES_NIGHT = "day_becomes_night"
     NIGHT_BECOMES_DAY = "night_becomes_day"
+    #: CR 701.54d: "Some abilities trigger 'Whenever the Ring tempts you.' The
+    #: Ring tempts a player whenever they complete the actions in 701.54a,
+    #: even if some or all of those actions were impossible." Nazgul's
+    #: "Whenever the Ring tempts you, put a +1/+1 counter on each Wraith you
+    #: control". `GameEvent.player` is the player tempted, `GameEvent.
+    #: subject_id` the creature they chose as Ring-bearer (`None` when they
+    #: controlled none), `GameEvent.amount` how many times the Ring has now
+    #: tempted them. **Emitted by:** `Game.ring_tempts`, and nowhere else.
+    RING_TEMPTS_YOU = "ring_tempts_you"
 
 
 class GameEvent(EngineModel):
@@ -2169,6 +2178,19 @@ def condition_matches(
     if event.event is not ability.event:
         return False
 
+    if ring_bearer := _RING_BEARER_SUBJECT.match(condition):
+        # CR 701.54e: "your Ring-bearer" is one particular creature - the
+        # ability's controller's Ring-bearer right now - so the condition is
+        # that creature's own self-referential one ("Whenever your
+        # Ring-bearer attacks" is "Whenever this creature attacks", asked of
+        # the Ring-bearer). The Ring's own abilities (CR 701.54c) are printed
+        # this way on an emblem, which is never itself the subject.
+        bearer = game.ring_bearer_of(controller)
+        if bearer is None:
+            return False
+        rebound = ability.model_copy(update={"condition": f"this creature {ring_bearer['rest']}"})
+        return condition_matches(game, rebound, bearer, controller, event)
+
     if ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD:
         if not _entry_qualifier_matches(game, condition, event):
             return False
@@ -3157,6 +3179,10 @@ def _returned_to_hand_matches(
 #: Wizard Class's "When this Class becomes level 2". Self-referential: the
 #: level is the Class's own (CR 716.2b).
 _CLASS_BECOMES_LEVEL_CONDITION = re.compile(r"^(?P<subject>.+?) becomes level (?P<level>\d+)$")
+#: CR 701.54d: "Whenever the Ring tempts you" / "When the Ring tempts you".
+_RING_TEMPTS_YOU_CONDITION = re.compile(r"^the ring tempts you$", re.IGNORECASE)
+#: CR 701.54e's "your Ring-bearer" as a trigger condition's subject.
+_RING_BEARER_SUBJECT = re.compile(r"^your ring-bearer (?P<rest>.+)$", re.IGNORECASE)
 
 #: CR 702.29c's "When you cycle this card" (Vizier of Tumbling Sands,
 #: Windcaller Aven, Choking Tethers), and the non-self "you cycle a card" /
@@ -3277,6 +3303,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.CYCLED})
     if _ABILITY_ACTIVATED_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.ABILITY_ACTIVATED})
+    if _RING_TEMPTS_YOU_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.RING_TEMPTS_YOU})
     bending = _bending_events_named(lowered)
     if bending:
         return bending
@@ -3519,6 +3547,11 @@ def _unread_condition_matches(
         # permanent of that type on the battlefield - a creature card cycled
         # from a hand is not "a creature".
         return event.origin_zone is Zone.BATTLEFIELD and _types_match(event.subject_types, types)
+
+    if _RING_TEMPTS_YOU_CONDITION.match(condition):
+        # CR 701.54d: "Whenever the Ring tempts you" - the ability's own
+        # controller has to be the player tempted.
+        return event.event is ExtraTriggerEvent.RING_TEMPTS_YOU and event.player == controller
 
     bending_events = _bending_events_named(condition)
     if bending_events:

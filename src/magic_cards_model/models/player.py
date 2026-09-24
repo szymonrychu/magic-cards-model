@@ -299,6 +299,30 @@ class Player(EngineModel):
     who drops back under ten permanents keeps it, and this field is never
     cleared on a new turn the way `life_gained_this_turn` is."""
 
+    ring_tempted_count: int = 0
+    """How many times the Ring has tempted this player this game (CR 701.54).
+
+    CR 701.54c grows The Ring emblem's abilities with this count ("As long as
+    the Ring has tempted that player two or more times, ..."), and CR 701.54d
+    counts a tempt "even if some or all of those actions were impossible", so
+    it rises on every tempt - with or without a creature to choose. Kept on
+    the player rather than read off the emblem because the count is the rule's
+    own state; `Game.ring_tempts` rewrites the emblem's text from it."""
+
+    ring_bearer_id: UUID | None = None
+    """The `CardState.id` of this player's Ring-bearer (CR 701.54a/b), or
+    `None`. An id, never the object - see `companion_id` below.
+
+    CR 701.54b makes Ring-bearer a designation *of the permanent*; it lives
+    here because each player has at most one, and CR 701.54e's "is your
+    Ring-bearer" is read through `Game.ring_bearer_of`, which also asks
+    `ring_bearer_stamp` and control - so a stale id is never an answer."""
+
+    ring_bearer_stamp: UUID | None = None
+    """`CardState.zone_change_stamp` of the Ring-bearer when it was chosen.
+    CR 400.7: a permanent that leaves the battlefield and comes back is a new
+    object, which never had the designation."""
+
     companion_id: UUID | None = None
     """The `CardState.id` of this player's chosen companion (CR 702.139a),
     once `load_deck` has verified its printed condition against the mainboard

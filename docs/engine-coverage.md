@@ -4348,3 +4348,27 @@ verified with `mise run rules:find`: 731.1, 731.1a, 731.2, 731.2a, 731.2b,
 Not modelled: CR 731.2a/731.2b's shared-team-turns variant (CR 805) and an
 effect granting daybound/nightbound to a card that does not print it (no such
 printing exists; the pre-filter reads the printed keywords).
+
+## S30: the Ring tempts you (CR 701.54)
+
+Gollum, Patient Plotter was silent: nothing in the engine knew what "the Ring
+tempts you" meant. Every clause now sweeps `handled`. CR numbers verified with
+`mise run rules:find`: 114.2, 114.3, 114.4, 205.4b, 400.7, 509.1a, 509.3d,
+511.2, 603.3, 603.6c, 603.7c, 603.7d, 603.7e, 608.2d, 613.1d, 613.1f, 613.5,
+701.21a, 701.54a-e, 704.5j.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "the Ring tempts you" as a clause, spell or ability (CR 701.54a-d): the emblem named The Ring on the first tempt (CR 701.54c, CR 114.2), the Ring-bearer chosen among the controller's creatures (CR 608.2d, asked only when there is more than one), the count raised even with no creature to choose (CR 701.54d) | `effects._parse_ring_tempts_you_clause`, `Game.ring_tempts`; `keywords.executes` knows the word | Gollum's leaves-the-battlefield trigger | Took Reaper (dies), Claim the Precious (spell, after a targeted clause), Nazgul (enters) | `test_ring_tempts_you.py` |
+| Ring count and Ring-bearer designation (CR 701.54a/b/e): per player, ended by a new Ring-bearer, by a zone change (CR 400.7) or for good by another player gaining control | `Player.ring_tempted_count`/`ring_bearer_id`/`ring_bearer_stamp`, `Game.ring_bearer_of`, `Game.drop_ring_bearers_controlled_by_others` (called from `ContinuousEffects._note_control_change`) | - | Act of Treason on the Ring-bearer | `test_ring_tempts_you.py` |
+| The Ring's abilities by level (CR 701.54c): the emblem's text is rewritten from the count in the rule's own words (`RING_EMBLEM_ABILITIES`), so the ordinary readers below read it | `Game.ring_tempts`, `ring_emblem_text`, `_emblem_card` | - | - | `test_ring_tempts_you.py` |
+| "Your Ring-bearer is legendary and can't be blocked by creatures with greater power." - layer 4 supertype (CR 613.1d, CR 205.4b) and a layer 6 "This creature can't be blocked by creatures with greater power." on the Ring-bearer (CR 509.1a) | `layers._RING_BEARER_STATIC_RE`/`_ring_bearer_static_builder`, new `AddSupertype`, `LayerContext.ring_bearers`; `combat._CANT_BE_BLOCKED_BY_GREATER_POWER_RE` | - | - | `test_ring_tempts_you.py` |
+| "Whenever your Ring-bearer attacks / becomes blocked by a creature / deals combat damage to a player" (CR 701.54e, CR 509.3d once per blocker) | `triggers._RING_BEARER_SUBJECT`: the condition is asked as "this creature ..." of the controller's Ring-bearer | - | - | `test_ring_tempts_you.py` |
+| "the blocking creature's controller sacrifices it at end of combat" - a delayed trigger about the blocker (CR 603.7c, CR 511.2), sacrificed by whoever controls it then (CR 701.21a) | `effects._parse_blocking_creature_sacrificed_clause`, `delayed.SacrificedByItsController` | - | - | `test_ring_tempts_you.py` |
+| "Whenever the Ring tempts you" (CR 701.54d) | `ExtraTriggerEvent.RING_TEMPTS_YOU`, `triggers._RING_TEMPTS_YOU_CONDITION` | - | Nazgul | `test_ring_tempts_you.py` |
+
+Proof printings added: Nazgul, Took Reaper, Claim the Precious. Not read yet
+(no listed card needs them): Call of the Ring's "Whenever you choose a
+creature as your Ring-bearer" event and the "if you chose a creature other
+than `<self>` as your Ring-bearer" intervening *if* (Faramir, Gandalf,
+Galadriel, Aragorn).

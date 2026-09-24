@@ -162,6 +162,7 @@ from .delayed import (
     return_earthbent_land,
     return_subject_to_battlefield_under_owner,
     return_subject_to_hand,
+    sacrificed_by_its_controller,
 )
 from .layers import (
     BASIC_LAND_TYPES,
@@ -31490,6 +31491,98 @@ def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
 
 
 # --------------------------------------------------------------------------
+# The Ring tempts you (CR 701.54) - the same shape as amass just above: a CR
+# 701 keyword action embedded in another ability's or spell's effect text
+# (Gollum, Patient Plotter's "When Gollum leaves the battlefield, the Ring
+# tempts you."; Claim the Precious' "Destroy target creature. The Ring tempts
+# you."). `Game.ring_tempts` performs it.
+# --------------------------------------------------------------------------
+
+#: "the Ring tempts you" - optionally led by "then", the way Samwise the
+#: Stouthearted and Rangers of Ithilien print it after another instruction.
+_RING_TEMPTS_YOU_RE = re.compile(r"^(?:then,?\s+)?the ring tempts you$", re.IGNORECASE)
+
+
+def _parse_ring_tempts_you_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "The Ring tempts you." as one clause among however many the card
+    prints around it. It targets nothing (CR 701.54a's "choose a creature you
+    control" is CR 608.2d's choice, asked by `Game.ring_tempts`), and "you"
+    is the spell's or ability's controller, so the same clause works for a
+    spell and an ability alike."""
+    if _RING_TEMPTS_YOU_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        game.ring_tempts(
+            game.controller_of(stack_object).username,
+            source_name=source,
+            source_id=source_id_of(stack_object),
+        )
+
+    return effect
+
+
+#: "the blocking creature's controller sacrifices it at end of combat" - The
+#: Ring's third ability (CR 701.54c), read as a delayed triggered ability (CR
+#: 603.7, CR 511.2) about the blocking creature its own "becomes blocked by a
+#: creature" trigger names. `_parse_delayed_timing_clause` has already split
+#: off the timing; this is the verb phrase left over.
+_BLOCKING_CREATURE_SACRIFICED_RE = re.compile(
+    r"^the blocking creature's controller sacrifices (?:it|that creature)$", re.IGNORECASE
+)
+
+
+def _parse_blocking_creature_sacrificed_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "[At <timing>,] the blocking creature's controller sacrifices it [at
+    <timing>]." - an ability only (a spell has no block event to read), whose
+    "blocking creature" is its trigger event's blocker: a CR 509.1a blocking
+    pair's `GameEvent.subject_id` is always the blocker, which is also what
+    CR 509.3d's "becomes blocked by a creature" triggers once for.
+
+    The delayed ability waits for the step (CR 511.2 for "end of combat") and
+    sacrifices the blocker through its controller *then*
+    (`SacrificedByItsController`, CR 701.21a), unless it has left the
+    battlefield in the meantime (CR 603.7c)."""
+    if for_spell:
+        return None
+    timing = _parse_delayed_timing_clause(clause)
+    if timing is None:
+        return None
+    step, verb = timing
+    if _BLOCKING_CREATURE_SACRIFICED_RE.fullmatch(verb) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.event is not TriggerEvent.BLOCKS or event.subject_id is None:
+            return
+        blocker = game.find_by_id(event.subject_id)
+        if not isinstance(blocker, CardState) or blocker.zone is not Zone.BATTLEFIELD:
+            return
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=clause,
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=step,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                subject_id=blocker.id,
+                expected_zone=Zone.BATTLEFIELD,
+                expected_stamp=blocker.zone_change_stamp,
+                effect=sacrificed_by_its_controller,
+            )
+        )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
 # Empower Jace (CR 701.71) - Reality Fracture's own keyword action, the same
 # shape as earthbend and amass just above: embedded in another ability's or
 # spell's effect text rather than a keyword ability of its own, so it lives
@@ -39595,6 +39688,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     amass_clause = _parse_amass_clause(clause, for_spell=for_spell)
     if amass_clause is not None:
         return amass_clause
+    ring_tempts_clause = _parse_ring_tempts_you_clause(clause, for_spell=for_spell)
+    if ring_tempts_clause is not None:
+        return ring_tempts_clause
+    blocker_sacrificed = _parse_blocking_creature_sacrificed_clause(clause, for_spell=for_spell)
+    if blocker_sacrificed is not None:
+        return blocker_sacrificed
     empower_jace_clause = _parse_empower_jace_clause(clause, for_spell=for_spell)
     if empower_jace_clause is not None:
         return empower_jace_clause

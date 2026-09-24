@@ -258,6 +258,11 @@ def executes(keyword: str) -> bool:
         # another ability's effect text (Orcish Bowmasters' "Then amass Orcs
         # 1."). Listed here for the same reason the two above are.
         "amass",
+        # CR 701.54a, the same shape once more: `models/game.Game.ring_tempts`
+        # performs it (the emblem, the Ring-bearer choice, the count), reached
+        # through `machines/effects._parse_ring_tempts_you_clause` from inside
+        # another ability's or spell's effect text.
+        "the ring tempts you",
         # CR 701.16a, the same shape once more: `machines/effects.investigate`
         # performs it, reached through `_parse_investigate_clause` from
         # inside another ability's effect text.

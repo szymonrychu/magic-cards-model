@@ -1944,6 +1944,38 @@ class CombatDamageToPlayer(EngineModel):
     damage."""
 
 
+#: CR 701.54c: "they get an emblem named The Ring".
+RING_EMBLEM_NAME = "The Ring"
+
+#: CR 701.54c's abilities of The Ring, in the order the rule grants them: the
+#: first from the first tempt, and each further one "as long as the Ring has
+#: tempted that player" two, three and four or more times. Written in the
+#: rule's own words so the ordinary readers - `machines/layers.py`'s static
+#: parser, `machines/triggers.py`'s conditions and `machines/effects.py`'s
+#: clauses - read them off the emblem exactly as they would off a card.
+RING_EMBLEM_ABILITIES: tuple[str, ...] = (
+    "Your Ring-bearer is legendary and can't be blocked by creatures with greater power.",
+    "Whenever your Ring-bearer attacks, draw a card, then discard a card.",
+    "Whenever your Ring-bearer becomes blocked by a creature, the blocking creature's "
+    "controller sacrifices it at end of combat.",
+    "Whenever your Ring-bearer deals combat damage to a player, each opponent loses 3 life.",
+)
+
+
+def _emblem_card(name: str, text: str) -> Card:
+    """An emblem's object (CR 114.3): no characteristics but its name and
+    abilities. Built through `TokenDefinition`, whose card id is a pure
+    function of those - two emblems with different text never share one."""
+    definition = TokenDefinition(types=(), name=name, rules_text=text.strip())
+    return definition.to_card().model_copy(update={"layout": Layout.EMBLEM, "type_line": "Emblem"})
+
+
+def ring_emblem_text(tempted: int) -> str:
+    """The Ring's rules text for a player the Ring has tempted `tempted`
+    times (CR 701.54c) - every ability up to that level, one per line."""
+    return "\n".join(RING_EMBLEM_ABILITIES[: max(1, min(tempted, len(RING_EMBLEM_ABILITIES)))])
+
+
 class SchemaVersionMismatch(RuntimeError):
     """A `Game` snapshot's `schema_version` does not match this build's
     `Game.CURRENT_SCHEMA_VERSION`, or the snapshot has no `schema_version` at
@@ -3044,7 +3076,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 61
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 62
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3865,6 +3897,14 @@ class Game(EngineModel):
     Daybound/nightbound permanents already in the pool now transform, and
     "whenever day becomes night or night becomes day" and "enters or
     transforms into" triggers now fire, the second bullet.
+
+    Bumped 61 -> 62 (S30, the Ring tempts you): `Player` gained
+    `ring_tempted_count`, `ring_bearer_id` and `ring_bearer_stamp` (CR
+    701.54), the `Modification` union gained `AddSupertype`, the
+    `DelayedEffectSpec` union gained `SacrificedByItsController` and
+    `ExtraTriggerEvent` gained `RING_TEMPTS_YOU` - the bump rule's first
+    bullet. Gollum, Patient Plotter's leaves-the-battlefield trigger, already
+    in the pool, now tempts where a version-61 game did nothing, the second.
     """
 
     @model_validator(mode="before")
@@ -5398,21 +5438,19 @@ class Game(EngineModel):
             self.resolving = None
             self._forget_counts()
 
-    def create_emblem(self, owner: str, text: str, source_name: str) -> CardState:
+    def create_emblem(
+        self, owner: str, text: str, source_name: str, *, name: str | None = None
+    ) -> CardState:
         """Put an emblem with `text`'s abilities into the command zone (CR
         114.2): "[Player] gets an emblem with [ability]" - owned and controlled
         by that player. CR 114.3: it has no characteristics but those
         abilities, so its object carries only them (`Layout.EMBLEM`, no types,
-        no cost, no colour); its name is a label, "<source> emblem". CR 114.4:
-        its abilities function in the command zone - see `emit` and
-        `machines/triggers.zones_ability_functions_in`."""
+        no cost, no colour); its name is a label, "<source> emblem", unless a
+        rule names the emblem itself (`name` - CR 701.54c's "an emblem named
+        The Ring"). CR 114.4: its abilities function in the command zone - see
+        `emit` and `machines/triggers.zones_ability_functions_in`."""
         with self._id_allocator_scope():
-            definition = TokenDefinition(
-                types=(), name=f"{source_name} emblem", rules_text=text.strip()
-            )
-            card = definition.to_card().model_copy(
-                update={"layout": Layout.EMBLEM, "type_line": "Emblem"}
-            )
+            card = _emblem_card(name or f"{source_name} emblem", text)
             emblem = CardState(card=card, zone=Zone.COMMAND, controller=owner, owner=owner)
             emblem.bind_to_game(self)
             self.shared_zones[Zone.COMMAND].append(emblem)
@@ -5427,6 +5465,130 @@ class Game(EngineModel):
             and state.card.layout is Layout.EMBLEM
             and state.controller == username
         ]
+
+    def ring_emblem_of(self, username: str) -> CardState | None:
+        """`username`'s emblem named The Ring (CR 701.54c), or `None` before
+        the Ring has ever tempted them."""
+        return next(
+            (emblem for emblem in self.emblems_of(username) if emblem.name == RING_EMBLEM_NAME),
+            None,
+        )
+
+    def ring_bearer_of(self, username: str) -> CardState | None:
+        """`username`'s Ring-bearer, or `None` (CR 701.54e): true only of a
+        creature "on the battlefield under your control" that has the
+        designation. The designation belongs to one object (CR 400.7, the
+        stamp) and ends for good once another player gains control of it (CR
+        701.54a, `drop_ring_bearers_controlled_by_others`)."""
+        player = self.player(username)
+        if player.ring_bearer_id is None:
+            return None
+        found = self.find_by_id(player.ring_bearer_id)
+        if not isinstance(found, CardState) or found.zone is not Zone.BATTLEFIELD:
+            return None
+        if found.zone_change_stamp != player.ring_bearer_stamp:
+            return None
+        if self.controller_of(found).username != username:
+            return None
+        return found
+
+    def ring_bearer_designations(self) -> dict[str, tuple[UUID, UUID]]:
+        """Every player's live Ring-bearer designation, as `(id, stamp)` -
+        what `machines/layers.LayerContext.ring_bearers` carries to the layer
+        engine. Deliberately not `ring_bearer_of`: that asks for control,
+        which is the computed board this feeds, so it would recurse. Control
+        is enforced where it changes instead
+        (`drop_ring_bearers_controlled_by_others`)."""
+        return {
+            player.username: (player.ring_bearer_id, player.ring_bearer_stamp)
+            for player in self.players
+            if player.ring_bearer_id is not None and player.ring_bearer_stamp is not None
+        }
+
+    def drop_ring_bearers_controlled_by_others(self) -> None:
+        """CR 701.54a: a creature is its player's Ring-bearer "until another
+        creature becomes your Ring-bearer or another player gains control of
+        it". Called whenever a layer 2 control effect is stored (`machines/
+        layers.ContinuousEffects._note_control_change`), the only way control
+        of a permanent changes after it enters in this engine: a Ring-bearer
+        now controlled by someone else loses the designation, and does not get
+        it back when control returns."""
+        for player in self.players:
+            if player.ring_bearer_id is None:
+                continue
+            found = self.find_by_id(player.ring_bearer_id)
+            if (
+                isinstance(found, CardState)
+                and found.zone is Zone.BATTLEFIELD
+                and self.controller_of(found).username != player.username
+            ):
+                player.ring_bearer_id = None
+                player.ring_bearer_stamp = None
+
+    def ring_tempts(
+        self, username: str, *, source_name: str, source_id: str | None = None
+    ) -> CardState | None:
+        """CR 701.54a-d: the Ring tempts `username`. Returns the creature
+        chosen as their Ring-bearer, or `None` when they control none.
+
+        In the rule's own order: the emblem named The Ring first, if they have
+        none (CR 701.54c: "before choosing a creature"); then the choice of a
+        creature they control (CR 608.2d, asked only when there is more than
+        one to choose between); then the count, which rises whether or not
+        anything could be chosen (CR 701.54d); then the emblem's abilities for
+        that count (CR 701.54c); then the event a "Whenever the Ring tempts
+        you" ability watches (CR 701.54d)."""
+        player = self.player(username)
+        emblem = self.ring_emblem_of(username)
+        if emblem is None:
+            emblem = self.create_emblem(
+                username, ring_emblem_text(1), source_name, name=RING_EMBLEM_NAME
+            )
+        creatures = [
+            permanent
+            for permanent in self.permanents_controlled_by(username)
+            if self.characteristics_of(permanent).is_creature
+        ]
+        chosen: CardState | None = None
+        if len(creatures) == 1:
+            chosen = creatures[0]
+        elif creatures:
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=username,
+                    prompt="choose a creature you control to be your Ring-bearer",
+                    source=source_name,
+                    amount=1,
+                    cards=tuple(creature.id for creature in creatures),
+                    source_id=source_id,
+                )
+            )
+            assert isinstance(answer, tuple)
+            chosen = next(creature for creature in creatures if creature.id == answer[0])
+        if chosen is not None:
+            player.ring_bearer_id = chosen.id
+            player.ring_bearer_stamp = chosen.zone_change_stamp
+        player.ring_tempted_count += 1
+        text = ring_emblem_text(player.ring_tempted_count)
+        if emblem.card.oracle_text != text:
+            # A new printing for the emblem's new abilities, not an edit of the
+            # old one: a card's parsed abilities are memoised on `Card.id`
+            # (`machines/abilities.parse_abilities`), and `_emblem_card`'s id is
+            # a pure function of the text, so the same level always reads the
+            # same way and a replay mints the same card.
+            emblem.card = _emblem_card(RING_EMBLEM_NAME, text)
+        self.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.RING_TEMPTS_YOU,
+                player=username,
+                subject_id=chosen.id if chosen is not None else None,
+                subject_name=chosen.name if chosen is not None else None,
+                subject_controller=username if chosen is not None else None,
+                amount=player.ring_tempted_count,
+            )
+        )
+        return chosen
 
     def _forget_counts(self) -> None:
         self._linked_count = None
@@ -15294,6 +15456,10 @@ class Game(EngineModel):
             # CR 607.2a: Keen-Eyed Curator's "card types among cards exiled
             # with this creature" counts a pile in the shared exile zone.
             exile=tuple(self.exile),
+            # CR 701.54c: The Ring's static ability applies to its
+            # controller's Ring-bearer, a designation the layer engine cannot
+            # see on the battlefield either.
+            ring_bearers=self.ring_bearer_designations(),
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a

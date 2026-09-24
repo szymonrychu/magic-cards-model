@@ -1180,6 +1180,22 @@ class AddType(ModificationBase):
         return chars.with_(types=chars.types + (self.card_type,))
 
 
+class AddSupertype(ModificationBase):
+    """Layer 4 (CR 613.1d, which names supertypes among what a type-changing
+    effect changes): gain a supertype on top of the ones already there. CR
+    205.4b: "When an object gains or loses a supertype, it retains any other
+    supertypes it had." The Ring's "Your Ring-bearer is legendary" (CR
+    701.54c) is the reader."""
+
+    kind: Literal["add_supertype"] = "add_supertype"
+    supertype: Supertype
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        if self.supertype in chars.supertypes:
+            return chars
+        return chars.with_(supertypes=chars.supertypes + (self.supertype,))
+
+
 #: The card types whose subtypes are a closed list of their own: artifact
 #: types (CR 205.3g), enchantment types (CR 205.3h), land types (CR 205.3i),
 #: the spell types instants and sorceries share (CR 205.3k), and the battle
@@ -1550,6 +1566,7 @@ Modification = Annotated[
     | GrantAbility
     | GrantAbilityInstance
     | AddType
+    | AddSupertype
     | RemoveType
     | AddSubtype
     | AddEveryCreatureType
@@ -9154,6 +9171,79 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     return _parse_static_layer_sentence(sentence)
 
 
+#: CR 701.54e's "your Ring-bearer" as the subject of a static ability - The
+#: Ring's own "Your Ring-bearer is legendary and can't be blocked by creatures
+#: with greater power." (CR 701.54c). The predicates are read one by one by
+#: `_ring_bearer_static_builder`.
+_RING_BEARER_STATIC_RE = re.compile(r"^your ring-bearer (?P<predicates>.+?)\.?$", re.IGNORECASE)
+
+
+def _ring_bearer_static_builder(predicates: str, *, line: str) -> EffectBuilder | None:
+    """ "Your Ring-bearer <predicate> [and <predicate>]": "is legendary" is a
+    layer 4 supertype addition (CR 613.1d, CR 205.4b), and a "can't be
+    blocked ..." restriction is a layer 6 ability the Ring-bearer has (CR
+    613.1f) - granted as "This creature can't be blocked ..." so
+    `machines/combat.evasion_restriction_refusal` reads it off the
+    Ring-bearer's own computed abilities like any printed restriction. Any
+    other predicate leaves the whole sentence unread (`None`) rather than
+    half-applied.
+
+    Applied to the emblem controller's Ring-bearer as `LayerContext.
+    ring_bearers` names it right now - rebuilt on every board computation
+    (CR 613.5), so the effect moves the moment the designation does."""
+    legendary = False
+    grants: list[str] = []
+    for predicate in re.split(r"\s+and\s+", predicates.strip()):
+        lowered = predicate.strip().lower()
+        if lowered == "is legendary":
+            legendary = True
+        elif lowered.startswith("can't be blocked"):
+            grants.append(f"This creature {predicate.strip()}.")
+        else:
+            return None
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        designation = context.ring_bearers.get(source.controller)
+        if designation is None:
+            return []
+        card_id, stamp = designation
+        selector = OnlyThisIncarnation(card_id=card_id, stamp=stamp)
+        source_ability = _source_line_for(source, line)
+        effects: list[ContinuousEffect] = []
+        if legendary:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: your Ring-bearer is legendary (CR 701.54c)",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=source_ability,
+                    selector=selector,
+                    modification=AddSupertype(supertype=Supertype.LEGENDARY),
+                )
+            )
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: your Ring-bearer has '{text}' (CR 701.54c)",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=source_ability,
+                selector=selector,
+                modification=grant_ability(text),
+            )
+            for text in grants
+        )
+        return effects
+
+    return builder
+
+
 def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     """The board-wide and filtered *static* shapes (CR 611.3), split out of
     `_parse_layer_sentence` only to keep either function readable - the two are
@@ -9163,6 +9253,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     name, which is the whole of Blood Moon, Harbinger of the Seas, Dryad of the
     Ilysian Grove, Leyline of the Guildpact, Urborg, Yavimaya and Toph.
     """
+    if ring_bearer := _RING_BEARER_STATIC_RE.fullmatch(sentence):
+        return _ring_bearer_static_builder(ring_bearer.group("predicates"), line=sentence)
     if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
         return _self_protection_from_chosen_color_builder(line=sentence)
     if match := _EACH_ANTHEM_PER_OTHER_CREATURE_RE.fullmatch(sentence):
@@ -10015,6 +10107,13 @@ class LayerContext(EngineModel):
     #: living in `turn_facts`. Ruric Thar's "hexproof as long as they haven't
     #: dealt combat damage yet" is the reader.
     combat_damage_dealt_this_turn: frozenset[UUID] = frozenset()
+
+    #: Each player's Ring-bearer designation (CR 701.54a/b), as `(id,
+    #: zone_change_stamp)` keyed by username - `Game.ring_bearer_designations`.
+    #: The Ring's "Your Ring-bearer is legendary and ..." (CR 701.54c) is an
+    #: emblem's static ability, and the emblem cannot see which permanent
+    #: carries the designation any more than Tarmogoyf can see a graveyard.
+    ring_bearers: Mapping[str, tuple[UUID, UUID]] = Field(default_factory=dict)
 
     def has_turn_fact(self, fact: str, player: str | None) -> bool:
         """Whether `player` is on this turn's ledger for `fact` - `False` for
@@ -10929,6 +11028,9 @@ class ContinuousEffects(EngineModel):
         bound = game if game is not None else cast("Game | None", self._game)
         if bound is not None:
             bound.note_hideaway_viewers()
+            # CR 701.54a: a Ring-bearer another player gains control of stops
+            # being its player's Ring-bearer, for good.
+            bound.drop_ring_bearers_controlled_by_others()
 
     def has_control_effect(self, game: Game | None = None) -> bool:
         """Whether any stored effect is a layer 2 control change (CR 613.1b).

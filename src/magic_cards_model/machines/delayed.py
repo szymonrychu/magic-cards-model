@@ -225,6 +225,25 @@ class SacrificeSubject(DelayedEffectSpecBase):
             game.put_into_graveyard(permanent)
 
 
+class SacrificedByItsController(DelayedEffectSpecBase):
+    """ "... the blocking creature's controller sacrifices it at end of
+    combat." (The Ring's third ability, CR 701.54c) - the subject is
+    sacrificed by whoever controls it when this resolves, not by the delayed
+    ability's own controller (CR 603.7d/e make that the Ring's owner, who is
+    the blocker's opponent). CR 701.21a: "To sacrifice a permanent, its
+    controller moves it from the battlefield directly to its owner's
+    graveyard", so this is `Game.sacrifice` and its sacrifice events, not a
+    bare move. CR 603.7c stops it reaching a permanent that already left.
+    """
+
+    kind: Literal["sacrificed_by_its_controller"] = "sacrificed_by_its_controller"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is not None:
+            game.sacrifice(permanent)
+
+
 class SacrificeEach(DelayedEffectSpecBase):
     """ "Sacrifice them at the beginning of the next end step." - one delayed
     triggered ability about several objects, where `SacrificeSubject` is about
@@ -1501,6 +1520,7 @@ DelayedEffectSpec = Annotated[
     ExileWarped
     | GrantExtraTurn
     | SacrificeSubject
+    | SacrificedByItsController
     | SacrificeEach
     | ExileSubjectAtNextEndStep
     | ReturnSubjectToBattlefieldUnderOwner
@@ -1548,6 +1568,7 @@ DelayedEffectSpec = Annotated[
 exile_warped = ExileWarped()
 grant_extra_turn = GrantExtraTurn()
 sacrifice_subject = SacrificeSubject()
+sacrificed_by_its_controller = SacrificedByItsController()
 exile_subject_at_next_end_step = ExileSubjectAtNextEndStep()
 return_subject_to_battlefield_under_owner = ReturnSubjectToBattlefieldUnderOwner()
 return_subject_to_hand = ReturnSubjectToHand()

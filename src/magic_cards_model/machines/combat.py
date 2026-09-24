@@ -928,6 +928,14 @@ _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE = re.compile(
     r"can't be blocked by creatures with power (?P<power>\d+) or less\.?$", re.IGNORECASE
 )
 
+#: "can't be blocked by creatures with greater power" - a comparison against
+#: the attacker's own power rather than a printed number. The Ring grants it
+#: to its controller's Ring-bearer (CR 701.54c); CR 509.1a is the block it
+#: refuses.
+_CANT_BE_BLOCKED_BY_GREATER_POWER_RE = re.compile(
+    r"can't be blocked by creatures with greater power\.?$", re.IGNORECASE
+)
+
 #: Realm of Koh's Spirit token: "can't block or be blocked by <description>."
 #: - one shared description restricting both halves of the compound: the
 #: "be blocked by" half is an evasion restriction read here, and the "can't
@@ -1063,6 +1071,20 @@ def evasion_restriction_refusal(
                     f'{attacker.name} can\'t be blocked by {description}: "{sentence}" (CR 509.1a)'
                 )
             continue
+        if _CANT_BE_BLOCKED_BY_GREATER_POWER_RE.search(sentence):
+            attacker_power = game.power_of(attacker)
+            blocker_power = game.power_of(blocker)
+            if (
+                attacker_power is not None
+                and blocker_power is not None
+                and blocker_power > attacker_power
+            ):
+                return (
+                    f"{attacker.name} can't be blocked by creatures with greater power, and "
+                    f"{blocker.name} has power {blocker_power} to its {attacker_power} "
+                    "(CR 509.1a)"
+                )
+            continue
         if match := _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence):
             threshold = int(match.group("power"))
             blocker_power = game.power_of(blocker)
@@ -1189,6 +1211,7 @@ def looks_like_unparsed_evasion_restriction(
         if (
             _CANT_BE_BLOCKED_RE.search(sentence) is None
             and _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence) is None
+            and _CANT_BE_BLOCKED_BY_GREATER_POWER_RE.search(sentence) is None
         ):
             return True
     return False
