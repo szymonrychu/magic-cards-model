@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Purphoros, God of the Forge"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Purphoros, God of the Forge"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Aang, at the Crossroads // Aang, Destined Savior"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -52,10 +52,10 @@
   "number": 0,
   "recipe": {
     "attempt": "put",
-    "index": 2,
+    "index": 3,
     "params": {
       "owner": "alice",
-      "probe": "Purphoros, God of the Forge",
+      "probe": "Aang, at the Crossroads // Aang, Destined Savior",
       "tapped": false
     },
     "variant": "quiet"

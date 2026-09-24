@@ -64,7 +64,7 @@
         "source": "Gix, Yawgmoth Praetor"
       }
     ],
-    "fields_changed": ["continuous_effects", "lands_played"],
+    "fields_changed": ["continuous_effects", "lands_played", "turn_facts"],
     "notices": {},
     "objects": {
       "Forest@bob#4": {

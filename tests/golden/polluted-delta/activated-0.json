@@ -46,7 +46,7 @@
         "source": "Polluted Delta"
       }
     ],
-    "fields_changed": ["continuous_effects", "shuffles_performed"],
+    "fields_changed": ["continuous_effects", "shuffles_performed", "turn_facts"],
     "notices": {},
     "objects": {
       "Island@alice#5": {

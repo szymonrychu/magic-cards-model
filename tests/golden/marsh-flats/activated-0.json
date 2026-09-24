@@ -46,7 +46,7 @@
         "source": "Marsh Flats"
       }
     ],
-    "fields_changed": ["continuous_effects", "shuffles_performed"],
+    "fields_changed": ["continuous_effects", "shuffles_performed", "turn_facts"],
     "notices": {},
     "objects": {
       "Swamp@alice#5": {

@@ -36,12 +36,12 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["turn_facts"],
+    "fields_changed": [],
     "notices": {},
     "objects": {},
     "players": {
       "bob": {
-        "life": [20, 19]
+        "life": [18, 17]
       }
     },
     "stack": ["Bonecrusher Giant@alice#1"]

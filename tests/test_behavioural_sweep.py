@@ -1562,8 +1562,18 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     else:
         casters = [ALICE]
     during_your_turn = "during your turn" in lowered
+    # The stock spells, then a spell of the quality the condition names ("a
+    # Zombie spell" - Diregraf Colossus, which no stock spell is) from the
+    # engine's own probe finder.
+    fitted = [
+        card.name
+        for card in _probe_cards(case.printing, ability.condition, entering=False) or []
+        if card.name in pool()
+        and not pool()[card.name].is_land
+        and not pool()[card.name].card_faces
+    ]
     for caster in casters:
-        for probe in _PROBE_SPELLS:
+        for probe in dict.fromkeys([*_PROBE_SPELLS, *fitted]):
 
             def cast_probe(probe: str = probe, caster: str = caster):
                 if caster == ALICE:

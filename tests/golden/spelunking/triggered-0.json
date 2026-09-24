@@ -55,7 +55,7 @@
         "source": "Spelunking"
       }
     ],
-    "fields_changed": ["cards_drawn_this_turn", "continuous_effects"],
+    "fields_changed": ["cards_drawn_this_turn", "continuous_effects", "turn_facts"],
     "notices": {},
     "objects": {
       "Forest@alice#4": {

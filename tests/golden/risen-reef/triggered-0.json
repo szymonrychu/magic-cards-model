@@ -46,7 +46,7 @@
         "source": "Risen Reef"
       }
     ],
-    "fields_changed": ["continuous_effects", "reveals"],
+    "fields_changed": ["continuous_effects", "reveals", "turn_facts"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

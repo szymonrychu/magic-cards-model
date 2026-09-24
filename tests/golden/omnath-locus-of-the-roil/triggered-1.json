@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Omnath, Locus of the Roil", "Ashmouth Hound"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Omnath, Locus of the Roil", "Ancient Greenwarden"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Abstergo Entertainment"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -39,18 +39,20 @@
     "fields_changed": ["cards_drawn_this_turn"],
     "notices": {},
     "objects": {
-      "Forest@alice#6": {
+      "Grizzly Bears@alice#3": {
         "zone": ["library", "hand"]
       },
       "Omnath, Locus of the Roil@alice#1": {
         "counters": [
-          {},
           {
             "+1/+1": 1
+          },
+          {
+            "+1/+1": 2
           }
         ],
-        "power": [3, 4],
-        "toughness": [3, 4]
+        "power": [4, 5],
+        "toughness": [4, 5]
       }
     },
     "players": {},

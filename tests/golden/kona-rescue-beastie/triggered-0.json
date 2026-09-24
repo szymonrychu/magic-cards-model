@@ -55,7 +55,7 @@
         "source": "Kona, Rescue Beastie"
       }
     ],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["continuous_effects", "turn_facts"],
     "notices": {},
     "objects": {
       "Island@alice#4": {
