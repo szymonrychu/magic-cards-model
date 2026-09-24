@@ -43,7 +43,10 @@ from tests.scenarios.test_board_snapshot import ALICE_PERMANENTS, BOB_PERMANENTS
 #: state-based action rounds (the losers check and the equipment check after
 #: it), two state trigger sweeps, the entering permanent's replacement,
 #: loyalty, lore and enters-event reads, and the trigger scan for the event.
-BOARDS_PER_COMMAND = 16
+#: Storied's "any time you control three ..." check (CR 702.195a, read off
+#: the computed board before triggers are matched, CR 702.195c) is one more
+#: scan per command, not per permanent.
+BOARDS_PER_COMMAND = 17
 
 SMALL_ALICE = ["Forest", "Forest", "Glorious Anthem", "Llanowar Elves"]
 SMALL_BOB = BOB_PERMANENTS[:2]
