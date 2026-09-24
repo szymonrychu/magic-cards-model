@@ -6598,11 +6598,10 @@ def order_effects(
     """Put the applicable effects in the order they will be applied (CR 616.1).
 
     The rules hand the choice to the affected object's controller, one effect at
-    a time, and there is nobody here to ask. This was `Game.put_triggers_on_stack`'s
-    gap for CR 603.3b too, until `Game._order_triggers_by_controller` started
-    putting that one to the player; CR 616.1 has no such question yet. The
-    stand-in is deterministic: the effects that player
-    controls come first, then everybody else's, each group in battlefield order.
+    a time; `choose_effect` puts that question. This is the order it offers the
+    options in, and the order an unscripted player takes: the effects that
+    player controls come first, then everybody else's, each group in
+    battlefield order.
 
     CR 616.1a-d's forced choices are checked first even so, because they are not
     a matter of preference: a self-replacement effect (CR 614.15) must be chosen
@@ -6616,13 +6615,74 @@ def order_effects(
     ordered = list(candidates)
     chooser = event.chooser(game)
     ordered.sort(
-        key=lambda effect: (
-            0 if effect.controls_entry else 1,  # CR 616.1b, before a copy effect
-            0 if effect.copy_as_it_enters else 1,  # CR 616.1c, before the free choice
-            0 if effect.controller == chooser else 1,
-        )
+        key=lambda effect: (*_forced_tier(effect), 0 if effect.controller == chooser else 1)
     )
     return ordered
+
+
+def _forced_tier(effect: ApplicableEffect) -> tuple[int, int]:
+    """CR 616.1b, then 616.1c: the tiers a free choice (CR 616.1e) comes after."""
+    return (0 if effect.controls_entry else 1, 0 if effect.copy_as_it_enters else 1)
+
+
+def choose_effect(
+    game: "Game", event: ReplaceableEvent, candidates: Iterable[ApplicableEffect]
+) -> ApplicableEffect:
+    """The one effect to apply next, chosen by the affected player (CR 616.1).
+
+    "The affected object's controller (or its owner if it has no controller)
+    or the affected player chooses one to apply." CR 616.1a-c narrow the
+    choice to the forced tier first; within whatever tier is left, the chooser
+    is asked through `Game.ask` - a "choose one" among named options, the
+    question `CHOOSE_A_MODE` already puts, rather than a new kind every client
+    would have to learn. The prompt carries CR 616.1 so a seat can tell it
+    from a modal spell's.
+
+    Nothing is asked when there is no choice: one effect in the tier, no
+    affected player, or every option being the same printed effect under the
+    same controller (two Solphims - either order is the same order). CR 616.1f
+    repeats the process after each application, and `apply_replacements`
+    calls this again each time, so the second of two effects is never asked
+    about.
+    """
+    ordered = order_effects(game, event, candidates)
+    tier = [effect for effect in ordered if _forced_tier(effect) == _forced_tier(ordered[0])]
+    chooser = event.chooser(game)
+    distinct = {(effect.name, effect.label, effect.controller) for effect in tier}
+    if len(tier) < 2 or chooser is None or len(distinct) < 2:
+        return ordered[0]
+    options = _effect_options(tier)
+    answer = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_A_MODE,
+            player=chooser,
+            prompt=(
+                "choose which replacement or prevention effect applies first (CR 616.1): "
+                + "; ".join(
+                    f"{option} - {effect.label}"
+                    for option, effect in zip(options, tier, strict=True)
+                )
+            ),
+            options=options,
+        )
+    )
+    return tier[options.index(answer)] if answer in options else tier[0]
+
+
+def _effect_options(tier: list[ApplicableEffect]) -> tuple[str, ...]:
+    """One distinct name per effect: the source's name where that alone tells
+    them apart, else "name: label", numbered only if even that repeats."""
+    names = [effect.name for effect in tier]
+    options = [
+        name if names.count(name) == 1 else f"{name}: {effect.label}"
+        for name, effect in zip(names, tier, strict=True)
+    ]
+    seen: dict[str, int] = {}
+    for index, option in enumerate(options):
+        if options.count(option) > 1:
+            seen[option] = seen.get(option, 0) + 1
+            options[index] = f"{option} ({seen[option]})"
+    return tuple(options)
 
 
 def apply_replacements(game: "Game", event: ReplaceableEvent) -> ReplaceableEvent:
@@ -6638,7 +6698,7 @@ def apply_replacements(game: "Game", event: ReplaceableEvent) -> ReplaceableEven
         candidates = applicable_effects(game, event)
         if not candidates:
             return event
-        chosen = order_effects(game, event, candidates)[0]
+        chosen = choose_effect(game, event, candidates)
         event.applied.add(chosen.key)
         event.history.append(f"{chosen.name}: {chosen.label}")
         chosen.apply(game, chosen.source, event)

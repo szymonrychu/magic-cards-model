@@ -23,10 +23,13 @@ combat damage, which a "noncombat" template leaves untouched.
 
 Every CR number here was looked up with `mise run rules:find` in the session
 that wrote this file: 614.1a, 614.2, 609.7b, 120.1, 510.2, 716.2a, 301.5a,
-614.12a, 614.5.
+614.12a, 614.5, 616.1, 616.1e, 616.1f.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Choice, ChoiceKind
 from tests.scenarios.harness import Scenario
@@ -105,18 +108,86 @@ def test_solphim_leaves_combat_damage_alone():
     assert scenario.player("bob").life == 18
 
 
-def test_solphim_and_artists_talent_both_apply_once_each():
-    """CR 614.5: each replacement effect gets one opportunity at the event.
-    Doubling and +2 both apply; whichever order the affected player picks,
-    3 damage becomes more than either effect alone would make it."""
+def _solphim_and_talent() -> Scenario:
     scenario = _solphim_board(battlefield=["Artist's Talent"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.find("Artist's Talent", Zone.BATTLEFIELD, "alice").class_level = 3
+    return scenario
+
+
+def _replacement_order_questions(scenario: Scenario) -> list:
+    return [
+        q
+        for q in scenario.questions_asked()
+        if q.kind is DecisionKind.CHOOSE_A_MODE and "CR 616.1" in q.prompt
+    ]
+
+
+def test_solphim_and_artists_talent_ask_the_affected_player_which_applies_first():
+    """CR 616.1: the *affected player* - Bob, not the sources' controller -
+    chooses which of the two applies first, and is asked exactly once: after
+    the first applies only one is left (CR 616.1f), which is no choice."""
+    scenario = _solphim_and_talent()
     bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+
+    scenario.game.deal_damage(scenario.player("bob"), 3, source=bolt)
+
+    (question,) = _replacement_order_questions(scenario)
+    assert question.player == "bob"
+    assert sorted(question.options) == ["Artist's Talent", "Solphim, Mayhem Dominus"]
+
+
+def test_affected_player_doubling_first_takes_eight():
+    """CR 614.5: each applies once. Doubling first: 3 -> 6 -> 8."""
+    scenario = _solphim_and_talent()
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+    scenario.will_choose_mode("Solphim, Mayhem Dominus", username="bob")
 
     dealt = scenario.game.deal_damage(scenario.player("bob"), 3, source=bolt)
 
-    assert dealt in (8, 10)
+    assert dealt == 8
+
+
+def test_affected_player_plus_two_first_takes_ten():
+    """The other order: 3 -> 5 -> 10. Only the chooser's answer differs."""
+    scenario = _solphim_and_talent()
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+    scenario.will_choose_mode("Artist's Talent", username="bob")
+
+    dealt = scenario.game.deal_damage(scenario.player("bob"), 3, source=bolt)
+
+    assert dealt == 10
+
+
+def test_damage_to_a_permanent_asks_its_controller():
+    """CR 616.1: "the affected object's controller" - Bob's Serra Angel."""
+    scenario = _solphim_and_talent()
+    angel = scenario.creature("Serra Angel", "bob")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+
+    scenario.game.deal_damage(angel, 1, source=bolt)
+
+    (question,) = _replacement_order_questions(scenario)
+    assert question.player == "bob"
+
+
+def test_an_answer_naming_neither_effect_is_refused():
+    """CR 616.1e: one of the *applicable* effects - nothing else."""
+    scenario = _solphim_and_talent()
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+    scenario.will_choose_mode("Leyline of Punishment", username="bob")
+
+    with pytest.raises(ValueError, match="not among"):
+        scenario.game.deal_damage(scenario.player("bob"), 3, source=bolt)
+
+
+def test_one_applicable_effect_asks_nothing():
+    scenario = _solphim_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+
+    assert scenario.game.deal_damage(scenario.player("bob"), 3, source=bolt) == 6
+    assert _replacement_order_questions(scenario) == []
 
 
 # -- Artist's Talent level 3 and Tomik: "that much damage plus N" -------------
