@@ -70,6 +70,7 @@ from ..machines.casting_restrictions import (
     CastingRuleKind,
     cannot_be_countered,
     combat_lockdown_restriction_source,
+    conditionally_cannot_be_countered,
     draw_cap_restriction,
     loyalty_activation_restriction,
     search_prohibition_source,
@@ -759,9 +760,11 @@ _CONDITION_TYPES_AMONG_GRAVEYARD = re.compile(
 #: Threshold: "there are seven or more cards in your graveyard" (Barbarian
 #: Ring), qualified - "six or more creature cards" (Gate to the Afterlife),
 #: "eight or more permanent cards" (Uchbenbak) - or "... cards are in your
-#: graveyard".
+#: graveyard". Spell mastery (CR 207.2c) prints a two-word quality, "two or
+#: more instant and/or sorcery cards in your graveyard" - either type counts.
 _CONDITION_GRAVEYARD_CARDS = re.compile(
-    rf"(?:there (?:is|are) )?{count_pattern('count')} or more (?:(?P<quality>[\w-]+) )?"
+    rf"(?:there (?:is|are) )?{count_pattern('count')} or more "
+    r"(?:(?P<quality>[\w-]+(?: and/or [\w-]+)?) )?"
     r"cards? (?:are |is )?in your graveyard",
     re.IGNORECASE,
 )
@@ -962,6 +965,13 @@ _CONDITION_SELF_ENTERED_THIS_TURN = re.compile(
 #: declared one or more attackers this turn (CR 508.1), recorded as the
 #: `turn_facts["attacked"]` fact by `declare_attackers`.
 _CONDITION_YOU_ATTACKED_THIS_TURN = re.compile(r"you attacked this turn", re.IGNORECASE)
+#: Landfall's "you had a land enter the battlefield under your control this
+#: turn" (Searing Blaze; CR 207.2c: the ability word is only a label), read
+#: off the `turn_facts["land_entered"]` fact `_announce_entry` records.
+_CONDITION_LAND_ENTERED_THIS_TURN = re.compile(
+    r"(?:you had a land enter|a land entered) the battlefield under your control this turn",
+    re.IGNORECASE,
+)
 
 #: Every shape `condition_holds` reads, in the same order it tries them -
 #: kept as one tuple, rather than re-deriving it, so `condition_is_readable`
@@ -998,6 +1008,7 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_ADDITIONAL_COST_PAID,
     _CONDITION_SELF_ENTERED_THIS_TURN,
     _CONDITION_YOU_ATTACKED_THIS_TURN,
+    _CONDITION_LAND_ENTERED_THIS_TURN,
 )
 
 
@@ -1165,6 +1176,12 @@ def _card_quality(word: str | None) -> Callable[[CardState], bool] | None:
     if word is None:
         return lambda state: True
     lowered = word.lower()
+    if " and/or " in lowered:
+        # Spell mastery's "instant and/or sorcery" card: either quality.
+        parts = [_card_quality(part.strip()) for part in lowered.split(" and/or ")]
+        if any(part is None for part in parts):
+            return None
+        return lambda state: any(part(state) for part in parts)  # type: ignore[misc]
     if lowered.startswith("non") and len(lowered) > 4:
         inner = _card_quality(lowered.removeprefix("non").lstrip("-"))
         if inner is None:
@@ -1239,6 +1256,25 @@ _LIFE_GAIN_PROHIBITION_RE = re.compile(
 #: matched only to fail closed with a notice rather than let it read as
 #: permission, exactly as `_LOOKS_LIKE_ACTIVATION_PROHIBITION_RE` does.
 _LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE = re.compile(r"\bcan't gain life\b", re.IGNORECASE)
+
+#: Leyline of Punishment's, Sunspine Lynx's "Damage can't be prevented." and
+#: Frenzied Baloth's "Combat damage can't be prevented." - CR 615.12, read by
+#: `Game.damage_cant_be_prevented` while the permanent is on the battlefield.
+_DAMAGE_CANT_BE_PREVENTED_RE = re.compile(
+    r"^(?P<combat>combat )?damage can'?t be prevented\.?$", re.IGNORECASE
+)
+
+
+def is_player_rules_static_line(text: str) -> bool:
+    """Whether a permanent's static line is one of the rules-of-the-game
+    effects `Game` reads straight off the battlefield: "Players can't gain
+    life." (`life_gain_prohibited`, CR 119.7) or "[Combat] damage can't be
+    prevented." (`damage_cant_be_prevented`, CR 615.12)."""
+    line = text.strip()
+    return bool(
+        _LIFE_GAIN_PROHIBITION_RE.match(line) or _DAMAGE_CANT_BE_PREVENTED_RE.fullmatch(line)
+    )
+
 
 #: "You may activate abilities of creatures you control as though those
 #: creatures had haste." - Tyvar, Jubilant Brawler's and Shang-Chi, Master of
@@ -9874,6 +9910,11 @@ class Game(EngineModel):
         """Raise the enters events for a permanent that is now on the battlefield."""
         with self._id_allocator_scope():
             event = self._enters_event(card_state)
+            if Type.LAND in (event.subject_types or ()) and card_state.controller:
+                # Landfall's own "If you had a land enter the battlefield
+                # under your control this turn" (Searing Blaze) - a fact of
+                # the turn, still true once the land has left again.
+                self.record_turn_fact("land_entered", card_state.controller)
             origin = self._entry_origins.pop(card_state.id, None)
             if origin is not None:
                 event = event.model_copy(update={"origin_zone": origin})
@@ -12731,6 +12772,45 @@ class Game(EngineModel):
                 if not self._still_has_static_line(source, text):
                     continue
                 return f"{username} can't gain life: {source.name} says so (CR 119.7, CR 611.1)"
+        # A resolved spell's or ability's "Players can't gain life this turn." /
+        # "Your opponents can't gain life this turn." (CR 611.2c: recorded,
+        # since its source is gone; CR 514.2 ends it in the cleanup step).
+        for effect in self.casting_rule_effects:
+            if effect.kind == CastingRuleKind.PLAYERS_CANT_GAIN_LIFE or (
+                effect.kind == CastingRuleKind.OPPONENTS_CANT_GAIN_LIFE
+                and effect.controller != username
+            ):
+                return (
+                    f"{username} can't gain life this turn: {effect.source_name} says so "
+                    "(CR 119.7, CR 611.2c)"
+                )
+        return None
+
+    def damage_cant_be_prevented(self, event: ReplaceableEvent) -> str | None:
+        """Why this damage can't be prevented, or None (CR 615.12).
+
+        Two sources: a resolved "Damage can't be prevented this turn."
+        (Skullcrack, recorded on `casting_rule_effects`), and a permanent's
+        static "Damage can't be prevented." / "Combat damage can't be
+        prevented." (Leyline of Punishment, Frenzied Baloth), read fresh off
+        the battlefield like `life_gain_prohibited` (CR 604.2, CR 611.3a).
+        """
+        if event.kind is not EventKind.DAMAGE:
+            return None
+        for effect in self.casting_rule_effects:
+            if effect.kind == CastingRuleKind.DAMAGE_CANT_BE_PREVENTED:
+                return f"{effect.source_name}: damage can't be prevented this turn (CR 615.12)"
+        for source in list(self.battlefield):
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                match = _DAMAGE_CANT_BE_PREVENTED_RE.fullmatch(text)
+                if match is None or (match.group("combat") and not event.combat):
+                    continue
+                if not self._still_has_static_line(source, text):
+                    continue
+                return f"{source.name}: damage can't be prevented (CR 615.12)"
         return None
 
     def add_counters(
@@ -14687,7 +14767,11 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             if spell not in self.stack:
                 raise ValueError(f"{spell.name} is not on the stack")
-            if cannot_be_countered(spell) or spell_protected_from_countering(self, spell):
+            if (
+                cannot_be_countered(spell)
+                or conditionally_cannot_be_countered(self, spell)
+                or spell_protected_from_countering(self, spell)
+            ):
                 return spell
             self.stack.remove(spell)
             if isinstance(spell, CardState):
@@ -19058,6 +19142,9 @@ class Game(EngineModel):
 
         if _CONDITION_YOU_ATTACKED_THIS_TURN.fullmatch(text):
             return self.turn_fact_holds("attacked", controller)
+
+        if _CONDITION_LAND_ENTERED_THIS_TURN.fullmatch(text):
+            return self.turn_fact_holds("land_entered", controller)
 
         return None
 

@@ -219,6 +219,7 @@ from .targeting import (
     COMPARISON_CLAUSE_PATTERN,
     ControllerRestriction,
     RetargetScope,
+    TargetingProfile,
     permanent_description,
     profile_for_text,
     spell_profile_for_text,
@@ -3859,8 +3860,17 @@ def damage_each_player_spell(amount: int) -> Effect:
 #: Both phrasings resolve through the same `event.player or event.subject_
 #: controller` read below; there is no second mechanism here, only a second
 #: way the same referent is printed.
+#:
+#: "Them" is the same anaphor again - Roiling Vortex's "At the beginning of
+#: each player's upkeep, this enchantment deals 1 damage to them." (CR 603.2b:
+#: the step's own `GameEvent.player` is the active player) - and the amount
+#: may be counted for that player instead of printed: Karma's "deals damage
+#: to that player equal to the number of Swamps they control", where "they"
+#: is that player too, so the count is read off their board, not the
+#: controller's.
 _DAMAGE_THAT_PLAYER_RE = re.compile(
-    rf".*\bdeals? (?P<n>{COUNT}) damage to (?:that player|that creature'?s controller)\.?$",
+    rf".*\bdeals? (?:(?P<n>{COUNT}) )?damage to (?:that player|them|that creature'?s controller)"
+    r"(?: equal to (?P<equal>[^.]+))?\.?$",
     re.IGNORECASE,
 )
 
@@ -3870,11 +3880,24 @@ def _parse_damage_that_player_clause(text: str, *, for_spell: bool) -> AbilityEf
     if for_spell:
         return None
     match = _DAMAGE_THAT_PLAYER_RE.fullmatch(text.strip())
-    if match is None:
+    if match is None or (match.group("n") is None) == (match.group("equal") is None):
         return None
-    amount = parse_count(match.group("n"))
-    if amount is None:
-        return None
+    if match.group("n") is not None:
+        fixed = parse_count(match.group("n"))
+        if fixed is None:
+            return None
+
+        def amount_for(game: "Game", username: str, fixed: int = fixed) -> int:
+            return fixed
+
+    else:
+        expression = match.group("equal").strip()
+        if _YOU_OR_YOUR_RE.search(expression):
+            return None  # names the controller, not that player - fail closed
+        counted = count_expression(_THEY_CONTROL_RE.sub("you control", expression))
+        if counted is None:
+            return None
+        amount_for = counted
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         event = ability.event
@@ -3882,6 +3905,9 @@ def _parse_damage_that_player_clause(text: str, *, for_spell: bool) -> AbilityEf
             return
         username = event.player or event.subject_controller
         if username is None:
+            return
+        amount = amount_for(game, username)  # CR 608.2h: read as it resolves
+        if amount <= 0:
             return
         game.deal_damage(game.player(username), amount, source=ability.source_or_last_known(game))
 
@@ -8808,6 +8834,29 @@ _X_CAP_LINE_RE = re.compile(
 _CANT_BE_COUNTERED_LINE_RE = re.compile(
     r"^This spell can't be countered\.\s*", re.IGNORECASE | re.MULTILINE
 )
+#: The same static quality behind a condition - Exquisite Firecraft's spell
+#: mastery line, "If there are two or more instant and/or sorcery cards in
+#: your graveyard, this spell can't be countered." It functions on the stack
+#: (CR 113.6g, CR 604.5) and is read there by `casting_restrictions.
+#: conditionally_cannot_be_countered`; it is not an instruction, so it is
+#: stripped here only when that reader can read the condition - an unread
+#: condition stays in the text and leaves the spell unread.
+_CONDITIONAL_CANT_BE_COUNTERED_LINE_RE = re.compile(
+    r"^(?:[A-Z][A-Za-z' -]{2,30}? \u2014 )?if (?P<condition>[^,\n]+), "
+    r"this spell can't be countered\.[ \t]*\n?",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def _strip_conditional_cant_be_countered_line(text: str) -> str:
+    from ..models.game import condition_is_readable
+
+    return _CONDITIONAL_CANT_BE_COUNTERED_LINE_RE.sub(
+        lambda found: "" if condition_is_readable(found.group("condition")) else found.group(0),
+        text,
+    )
+
+
 #: A genuinely modal card (CR 700.2 - a bulleted list preceded by a "Choose
 #: ..." instruction) needs a registry keyed by mode, not by card - a later
 #: wave's job. Bailing here keeps a modal card's one parseable mode from being
@@ -9172,6 +9221,7 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _ADDITIONAL_COST_LINE_RE.sub("", text)
     text = _X_CAP_LINE_RE.sub("", text)
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
+    text = _strip_conditional_cant_be_countered_line(text)
     text = _PITCH_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _FREE_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _SELF_COST_REDUCTION_LINE_RE.sub("", text)
@@ -14698,6 +14748,69 @@ _BARE_DAMAGE_CONTINUATION_RE = re.compile(
 )
 
 
+#: "Destroy target `<permanent>`." + "[If `<condition>`, ]`<this>` deals N
+#: damage to that `<permanent>`'s controller." - Smash to Smithereens,
+#: Destructive Revelry, Consign to the Pit, Unlicensed Disintegration, and
+#: Cindervines' own sacrifice ability. CR 400.7's "that artifact" names the
+#: first instruction's target; its controller is read before the destroy
+#: moves it (CR 608.2h: last known information), and the damage is dealt
+#: whether or not the destroy happened (an indestructible target still has a
+#: controller). CR 608.2b: an illegal target determines nothing, so it
+#: contributes no controller.
+_DESTROY_TARGET_CLAUSE_RE = re.compile(r"^destroy (?:up to one )?target\b", re.IGNORECASE)
+_DAMAGE_THAT_PERMANENTS_CONTROLLER_RE = re.compile(
+    rf"^(?:if (?P<condition>[^,]+), )?(?P<subject>[^,]+?) deals (?P<n>{COUNT}) damage to "
+    r"that (?P<noun>[a-z ]+?)'s controller\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_destroy_then_damage_controller_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_DESTROY_TARGET_CLAUSE_RE` + `_DAMAGE_THAT_PERMANENTS_CONTROLLER_RE`,
+    read as one CR 608.2c instruction; see the banner above."""
+    from ..models.game import condition_is_readable
+
+    if index + 1 >= len(clauses):
+        return None
+    if _DESTROY_TARGET_CLAUSE_RE.match(clauses[index].strip()) is None:
+        return None
+    match = _DAMAGE_THAT_PERMANENTS_CONTROLLER_RE.fullmatch(clauses[index + 1].strip())
+    if match is None or re.search(r"\btarget\b", match.group("subject"), re.IGNORECASE):
+        return None
+    condition = match.group("condition")
+    if condition is not None and not condition_is_readable(condition):
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    destroy = _parse_targeted_clause(clauses[index], for_spell=for_spell)
+    if destroy is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controllers = [
+            game.controller_of(target).username
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        destroy(game, stack_object)
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)  # type: ignore[union-attr]
+        )
+        if condition is not None:
+            controller = game.controller_of(stack_object).username
+            if game.condition_holds(controller, condition, source) is not True:
+                return
+        for username in controllers:
+            game.deal_damage(game.player(username), amount, source=source)
+
+    return 2, effect
+
+
 def _merge_split_damage_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -14783,6 +14896,28 @@ def _merge_split_damage_clauses(
                 # illegal target for the parts of the effect it cannot
                 # satisfy, so no amount is paid rather than guessed.
                 amounts.append(0)
+        if second_requirement.controller is ControllerRestriction.PRIOR_TARGET_PLAYER:
+            # CR 608.2b: "that player or that planeswalker's controller" is
+            # rechecked against the first target as it is now - a creature
+            # that changed control since is illegal and is dealt nothing.
+            pair = TargetingProfile(requirements=(first_requirement, second_requirement))
+            anchor = pair.prior_target_player(
+                second_requirement,
+                [game.resolve_target(reference) for reference in stack_object.targets],
+                caster,
+                game,
+                source_id,
+            )
+            for position, reference in enumerate(stack_object.targets):
+                target = game.legal_target(stack_object, reference)
+                if (
+                    anchor is not None
+                    and isinstance(target, CardState)
+                    and amounts[position] == second_amount
+                    and first_requirement.rejects(target, caster, game, source_id) is not None
+                    and game.controller_of(target).username != anchor
+                ):
+                    amounts[position] = 0
         stack_object.target_amounts = amounts
         for reference, amount in zip(stack_object.targets, amounts, strict=True):
             if amount <= 0:
@@ -36059,6 +36194,38 @@ def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str
     return None
 
 
+_DAMAGE_AMOUNT_TO_RE = re.compile(
+    rf"\b(?P<n>{COUNT}) damage to (?P<to>that |target |any )", re.IGNORECASE
+)
+
+
+def _amount_substituted_base(base_text: str, alternative_text: str) -> str | None:
+    """The base instruction with the alternative's damage amounts put in, when
+    the alternative is the base again with only the numbers changed and every
+    target named back by CR 400.7's "that" - Searing Blaze's landfall "deals
+    3 damage to that player or planeswalker and 3 damage to that creature
+    instead" over its base "deals 1 damage to target player or planeswalker
+    and 1 damage to target creature that player ... controls". The targets
+    stay the ones announced (CR 601.2c); only the amounts are replaced
+    (CR 614.1a). `None` for any other shape."""
+    if re.search(r"\btarget\b", alternative_text, re.IGNORECASE):
+        return None
+    base_amounts = list(_DAMAGE_AMOUNT_TO_RE.finditer(base_text))
+    alternative_amounts = list(_DAMAGE_AMOUNT_TO_RE.finditer(alternative_text))
+    if not base_amounts or len(base_amounts) != len(alternative_amounts):
+        return None
+    if any(found.group("to").lower() != "that " for found in alternative_amounts):
+        return None
+    pieces: list[str] = []
+    cursor = 0
+    for base, alternative in zip(base_amounts, alternative_amounts, strict=True):
+        pieces.append(base_text[cursor : base.start("n")])
+        pieces.append(alternative.group("n"))
+        cursor = base.end("n")
+    pieces.append(base_text[cursor:])
+    return "".join(pieces)
+
+
 def _instead_branch_effect(branch_text: str) -> Effect | None:
     """One branch of a CR 614.1a base-or-alternative pair, read as its own
     instruction.
@@ -36096,6 +36263,11 @@ def _resolve_instead_alternative(base_text: str, alternative_text: str) -> Effec
     alternative = _instead_branch_effect(alternative_text)
     if alternative is not None:
         return alternative
+    renumbered = _amount_substituted_base(base_text, alternative_text)
+    if renumbered is not None:
+        resolved = _instead_branch_effect(renumbered)
+        if resolved is not None:
+            return resolved
     substituted = _anaphoric_target_substitution(base_text, alternative_text)
     if substituted is not None:
         resolved = _instead_branch_effect(substituted)
@@ -40073,6 +40245,49 @@ def _parse_shuffle_target_cards_into_library_clause(
     return effect
 
 
+#: "Players can't gain life this turn." (Skullcrack), "Your opponents can't
+#: gain life this turn." (Roiling Vortex, Atarka's Command) and "Damage can't
+#: be prevented this turn." (Skullcrack, Stomp, Impractical Joke) - CR 611.1's
+#: rules-of-the-game effects from a resolving spell or ability, recorded on
+#: `Game.casting_rule_effects` (CR 611.2c: they apply to anything later in
+#: the turn too) and dropped in the cleanup step (CR 514.2). CR 119.7 reads
+#: the life-gain ban, CR 615.12 the prevention one.
+_TURN_RULES_BAN_RE = re.compile(
+    r"^(?:(?P<players>players)|(?P<opponents>your opponents)) can'?t gain life this turn\.?$"
+    r"|^(?P<damage>damage) can'?t be prevented this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_turn_rules_ban_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_TURN_RULES_BAN_RE`'s three shapes, as a recorded `CastingRuleEffect`."""
+    match = _TURN_RULES_BAN_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    from .casting_restrictions import CastingRuleEffect, CastingRuleKind
+
+    if match.group("players"):
+        kind = CastingRuleKind.PLAYERS_CANT_GAIN_LIFE
+    elif match.group("opponents"):
+        kind = CastingRuleKind.OPPONENTS_CANT_GAIN_LIFE
+    else:
+        kind = CastingRuleKind.DAMAGE_CANT_BE_PREVENTED
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        game.casting_rule_effects.append(
+            CastingRuleEffect(
+                kind=kind,
+                controller=game.controller_of(stack_object).username,
+                source_name=source_name,
+            )
+        )
+
+    return effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -40107,6 +40322,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     spells_cant_be_countered = _parse_spells_cant_be_countered_clause(clause, for_spell=for_spell)
     if spells_cant_be_countered is not None:
         return spells_cant_be_countered
+    turn_rules_ban = _parse_turn_rules_ban_clause(clause, for_spell=for_spell)
+    if turn_rules_ban is not None:
+        return turn_rules_ban
     you_and_group_gain = _parse_you_and_group_gain_clause(clause, for_spell=for_spell)
     if you_and_group_gain is not None:
         return you_and_group_gain
@@ -41271,6 +41489,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_split_damage_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_destroy_then_damage_controller_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

@@ -359,16 +359,6 @@ def test_the_adventure_half_refuses_a_cast_with_no_target():
     casting.cancel()
 
 
-@pytest.mark.xfail(
-    reason="Stomp's own first clause, \"Damage can't be prevented this turn.\", is a "
-    "prevention-effect sentence no machine reads, and `machines/effects.effect_for` "
-    "returns None for the whole text rather than for that clause alone - so the "
-    "damage clause beside it never runs either. Nothing to do with faces: the same "
-    "text on a single-faced card parses the same way, and `effect_for('Stomp', "
-    "'Stomp deals 2 damage to any target.')` on its own does parse. The Adventure "
-    "half's resolution is proved end to end on Swift End below instead.",
-    strict=True,
-)
 def test_the_adventure_half_deals_its_damage_to_the_chosen_target():
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)

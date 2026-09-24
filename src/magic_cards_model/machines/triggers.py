@@ -3918,8 +3918,12 @@ _REPLICATE_CLAUSE = re.compile(r"^a replicate cost was paid for it$")
 #: symbols] was spent to cast it" (Wistfulness's "{G}{G}", Drowner of Truth's
 #: "{C}") - both always phrased as "... to cast it" in the pool, never "...
 #: to cast this spell/creature".
-_NO_MANA_SPENT_CLAUSE = re.compile(r"^no mana was spent to cast it$")
-_MANA_SPENT_CLAUSE = re.compile(r"^(?P<symbols>(?:\{[wubrgc]\})+) was spent to cast it$")
+#: Roiling Vortex spells the event's spell out: "if no mana was spent to cast
+#: that spell" - the same anaphor as Vexing Bauble's "it".
+_NO_MANA_SPENT_CLAUSE = re.compile(r"^no mana was spent to cast (?:it|that spell)$")
+_MANA_SPENT_CLAUSE = re.compile(
+    r"^(?P<symbols>(?:\{[wubrgc]\})+) was spent to cast (?:it|that spell)$"
+)
 _MANA_SYMBOL_LETTER = re.compile(r"\{([wubrgc])\}")
 
 #: CR 207.2c's Revolt ability word, both printed phrasings in the pool:

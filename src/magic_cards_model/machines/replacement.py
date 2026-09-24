@@ -714,7 +714,8 @@ _PREVENT_NEXT = re.compile(
     re.IGNORECASE,
 )
 _PREVENT_ALL = re.compile(
-    r"^Prevent all (?P<combat>combat )?damage that would be dealt(?P<rest>.*?)\.?$",
+    r"^Prevent all (?P<combat>(?P<noncombat>non)?combat )?damage that would be dealt"
+    r"(?P<rest>.*?)\.?$",
     re.IGNORECASE,
 )
 _PREVENT_NEXT_TIME = re.compile(
@@ -1029,7 +1030,9 @@ def _try_prevent_all(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
         _make(
             ReplacementKind.PREVENT_ALL,
             sentence,
-            combat_only=bool(match.group("combat")),
+            # "noncombat" is the opposite restriction, read off the sentence
+            # by `_compile_prevent_all_to_group`.
+            combat_only=bool(match.group("combat")) and not match.group("noncombat"),
             damage_target=target,
             event=_damage_event(sentence),
         )
@@ -1724,6 +1727,9 @@ class CardReplacement:
     label: str
     applies: Applies
     apply: Apply
+    #: A prevention effect (CR 615.1a) rather than a replacement one - what
+    #: CR 615.12's "can't be prevented" turns into a no-op.
+    prevention: bool = False
 
 
 @dataclass(frozen=True)
@@ -1752,6 +1758,10 @@ class ApplicableEffect:
     #: them must be chosen." True for exactly those (`EnterUnderYourControl`),
     #: which `order_effects` puts ahead of even a copy effect.
     controls_entry: bool = False
+
+    #: A prevention effect (CR 615.1a). CR 615.12: against damage that can't
+    #: be prevented it still applies, but prevents nothing.
+    prevention: bool = False
 
     @property
     def controller(self) -> str:
@@ -2367,47 +2377,192 @@ def _compile_damage_multiplier(effect: ReplacementEffect) -> CardReplacement | N
     return CardReplacement(label=effect.text, applies=applies, apply=apply)
 
 
-#: "If a source you control would deal noncombat damage to an opponent or a
-#: permanent an opponent controls, it deals that much damage plus [N]
-#: instead." - Artist's Talent's own level-3 (CR 716.2a), the Torbran-shaped
-#: template minus Torbran's own color qualifier. Read generically off the
-#: amount rather than pinned to this one printing.
-_DAMAGE_PLUS_AMOUNT_RE = re.compile(r"^it deals that much damage plus (?P<amount>\d+)$")
-
-_DAMAGE_PLUS_AMOUNT_EVENT = (
-    "a source you control would deal noncombat damage to an opponent or a "
-    "permanent an opponent controls"
+#: "If a [`<quality>`] source you control would deal [noncombat] damage to
+#: `<recipients>`, it deals that much damage plus N / double that damage [to
+#: that player or permanent] instead." - Artist's Talent's level 3 (CR
+#: 716.2a), Tomik, Izzet Sparkmage's "plus 1", Solphim, Mayhem Dominus's
+#: "double that damage to that player or permanent", Torbran's "red source".
+#: CR 614.2: a replacement effect that applies to damage from a source; CR
+#: 609.7b: the source's properties are checked as the damage would be dealt;
+#: CR 701.10g: doubling damage is the source dealing twice that much.
+_SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE = re.compile(
+    r"^an? (?:(?P<quality>[a-z]+) )?source you control would deal "
+    r"(?P<noncombat>noncombat )?damage to (?P<recipient>.+)$",
+    re.IGNORECASE,
 )
+_SOURCE_DAMAGE_MODIFIER_RE = re.compile(
+    rf"^it deals (?:that much damage plus (?P<plus>{COUNT})"
+    r"|(?P<mult>double|triple) that damage)"
+    r"(?: to that (?:player or permanent|permanent or player))?$",
+    re.IGNORECASE,
+)
+_DAMAGE_WORD_FACTORS = {"double": 2, "triple": 3}
+
+#: The recipient phrases the template prints, each a test on the damage event
+#: for the effect's controller. An unlisted phrase compiles to nothing.
+_DamageRecipient = Callable[["Game", str, ReplaceableEvent], bool]
+
+
+def _recipient_is_opponent(game: "Game", controller: str, event: ReplaceableEvent) -> bool:
+    return event.player is not None and _is_opponent(game, controller, event.player.username)
+
+
+def _recipient_is_opponents_permanent(
+    game: "Game", controller: str, event: ReplaceableEvent
+) -> bool:
+    return event.card is not None and _is_opponent(
+        game, controller, game.controller_of(event.card).username
+    )
+
+
+_DAMAGE_RECIPIENTS: dict[str, _DamageRecipient] = {
+    "an opponent or a permanent an opponent controls": lambda game, you, event: (
+        _recipient_is_opponent(game, you, event)
+        or _recipient_is_opponents_permanent(game, you, event)
+    ),
+    "an opponent": _recipient_is_opponent,
+    "a permanent an opponent controls": _recipient_is_opponents_permanent,
+    "a permanent or player": lambda game, you, event: True,
+    "a player or permanent": lambda game, you, event: True,
+}
 
 
 def _compile_damage_plus_amount(effect: ReplacementEffect) -> CardReplacement | None:
+    """`_SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE` + `_SOURCE_DAMAGE_MODIFIER_RE`."""
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
-    if (effect.event or "").strip().lower() != _DAMAGE_PLUS_AMOUNT_EVENT:
+    event_match = _SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE.fullmatch((effect.event or "").strip())
+    if event_match is None:
         return None
-    match = _DAMAGE_PLUS_AMOUNT_RE.match((effect.replacement or "").strip().rstrip("."))
+    recipient = _DAMAGE_RECIPIENTS.get(event_match.group("recipient").strip().lower())
+    if recipient is None:
+        return None
+    quality = event_match.group("quality")
+    noncombat = event_match.group("noncombat") is not None
+    match = _SOURCE_DAMAGE_MODIFIER_RE.fullmatch((effect.replacement or "").strip().rstrip("."))
     if match is None:
         return None
-    amount = int(match.group("amount"))
+    if match.group("plus") is not None:
+        addend = parse_count(match.group("plus"))
+        if addend is None:
+            return None
+        factor = 1
+    else:
+        addend = 0
+        factor = _DAMAGE_WORD_FACTORS[match.group("mult").lower()]
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-        if event.kind is not EventKind.DAMAGE or event.combat:
-            return False  # "noncombat damage" (CR 510.2 marks combat damage).
-        if event.source is None:
+        if event.kind is not EventKind.DAMAGE or event.source is None:
             return False
+        if noncombat and event.combat:
+            return False  # "noncombat damage" (CR 510.2 marks combat damage).
         source_controller = game.controller_of(source).username
         if game.controller_of(event.source).username != source_controller:
             return False  # "a source *you* control".
-        if event.player is not None:
-            return _is_opponent(game, source_controller, event.player.username)
-        if event.card is not None:
-            return _is_opponent(game, source_controller, game.controller_of(event.card).username)
-        return False
+        if quality is not None and not game.source_has_quality(event.source, quality):
+            return False  # CR 609.7b: Torbran's "red source", checked now.
+        return recipient(game, source_controller, event)
 
     def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-        event.amount += amount
+        event.amount = event.amount * factor + addend
 
     return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
+# -- "Double all damage <subject> would deal." --------------------------------
+
+#: Mjolnir, Hammer of Thor's "Double all damage equipped creature would deal."
+#: and Collective Inferno's "Double all damage that sources you control of the
+#: chosen type would deal." - a static ability with no "instead" (so the
+#: sentence parser above never claims it), read line by line here. CR
+#: 701.10g: "To double an amount of damage a source would deal, that source
+#: instead deals twice that much damage. This is a replacement effect."
+_DOUBLE_ALL_DAMAGE_RE = re.compile(
+    r"^(?P<mult>double|triple) all damage (?:that )?(?P<subject>.+?) would deal\.?$",
+    re.IGNORECASE,
+)
+
+
+def _source_subtypes(game: "Game", source: CardState) -> set[str]:
+    if source.zone is Zone.BATTLEFIELD:
+        return {subtype.lower() for subtype in game.characteristics_of(source).subtypes}
+    return {subtype.lower() for subtype in source.subtypes}
+
+
+def _double_all_damage_subject(
+    subject: str,
+) -> Callable[["Game", CardState, CardState], bool] | None:
+    """Whether a damage source is the printed subject, for the permanent
+    carrying the effect - `None` for a subject this does not read."""
+    words = subject.strip().lower()
+    if words in ("equipped creature", "enchanted creature"):
+        # CR 301.5a / CR 303.4b: the creature this permanent is attached to.
+        return lambda game, holder, source: (
+            holder.attached_to is not None and holder.attached_to == source.id
+        )
+    you_control = re.fullmatch(
+        r"(?P<what>sources|creatures) you control(?P<chosen> of the chosen type)?", words
+    )
+    if you_control is None:
+        return None
+    creatures_only = you_control.group("what") == "creatures"
+    chosen_type = you_control.group("chosen") is not None
+
+    def matches(game: "Game", holder: CardState, source: CardState) -> bool:
+        if game.controller_of(source).username != game.controller_of(holder).username:
+            return False
+        if creatures_only:
+            chars = game.characteristics_of(source) if source.zone is Zone.BATTLEFIELD else source
+            if Type.CREATURE not in chars.types:
+                return False
+        if chosen_type:
+            choice = holder.choice
+            if choice is None or choice.kind is not ChoiceKind.CREATURE_TYPE:
+                return False
+            return choice.value.lower() in _source_subtypes(game, source)
+        return True
+
+    return matches
+
+
+def _double_all_damage_replacements(lines: Iterable[str]) -> list[CardReplacement]:
+    """Every "Double all damage `<subject>` would deal." line among `lines`."""
+    found: list[CardReplacement] = []
+    for line in lines:
+        match = _DOUBLE_ALL_DAMAGE_RE.fullmatch(line.strip())
+        if match is None:
+            continue
+        subject = _double_all_damage_subject(match.group("subject"))
+        if subject is None:
+            continue
+        factor = _DAMAGE_WORD_FACTORS[match.group("mult").lower()]
+
+        def applies(
+            game: "Game",
+            source: CardState,
+            event: ReplaceableEvent,
+            subject=subject,
+        ) -> bool:
+            return (
+                event.kind is EventKind.DAMAGE
+                and event.source is not None
+                and subject(game, source, event.source)
+            )
+
+        def apply(
+            game: "Game", source: CardState | None, event: ReplaceableEvent, factor=factor
+        ) -> None:
+            event.amount *= factor
+
+        found.append(CardReplacement(label=line.strip(), applies=applies, apply=apply))
+    return found
+
+
+def double_all_damage_line(line: str) -> bool:
+    """Whether `line` is a "Double all damage ... would deal." static this
+    module performs - `support.py`'s credit for it."""
+    match = _DOUBLE_ALL_DAMAGE_RE.fullmatch(line.strip())
+    return match is not None and _double_all_damage_subject(match.group("subject")) is not None
 
 
 # -- "if [damage event], prevent that damage and [someone] mill[s] [N] that many cards" --
@@ -2476,7 +2631,7 @@ def _compile_prevent_damage_and_mill(effect: ReplacementEffect) -> CardReplaceme
         for player in millers(game, source, event):
             _mill(game, player, amount * multiplier)
 
-    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+    return CardReplacement(label=effect.text, applies=applies, apply=apply, prevention=True)
 
 
 # -- "prevent all combat damage that would be dealt to and dealt by this creature" --
@@ -2491,7 +2646,83 @@ def _compile_self_prevent_combat_damage(effect: ReplacementEffect) -> CardReplac
         return None
     if not _SELF_PREVENT_COMBAT_RE.match(effect.text.strip().rstrip(".")):
         return None
-    return CardReplacement(label=effect.text, applies=_fog_bank_applies, apply=_prevent_all)
+    return CardReplacement(
+        label=effect.text, applies=_fog_bank_applies, apply=_prevent_all, prevention=True
+    )
+
+
+# -- "Prevent all [non]combat damage that would be dealt to <group>" ----------
+
+#: Crystal Barricade's and Tajic, Legion's Edge's "Prevent all noncombat
+#: damage that would be dealt to other creatures you control.", Mark of
+#: Asylum's "... to creatures you control.", The Wanderer's "... to you and
+#: other permanents you control.", Magebane Armor's "... to equipped
+#: creature." CR 615.1a: a prevention effect; CR 510.2 marks combat damage.
+_PREVENT_ALL_TO_GROUP_RE = re.compile(
+    r"^Prevent all (?P<combat>(?P<non>non)?combat )?damage that would be dealt to "
+    r"(?P<group>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+_PreventionRecipient = Callable[["Game", CardState, ReplaceableEvent], bool]
+
+
+def _creature_on_battlefield(game: "Game", card: CardState) -> bool:
+    return card.zone is Zone.BATTLEFIELD and game.characteristics_of(card).is_creature
+
+
+def _prevention_recipient(group: str) -> _PreventionRecipient | None:
+    words = group.strip().lower()
+    if words in ("equipped creature", "enchanted creature"):
+        return lambda game, holder, event: (
+            event.card is not None
+            and holder.attached_to is not None
+            and holder.attached_to == event.card.id
+        )
+    match = re.fullmatch(
+        r"(?P<you>you and )?(?P<other>other )?(?P<what>creatures|permanents) you control", words
+    )
+    if match is None:
+        return None
+    you_too = match.group("you") is not None
+    other = match.group("other") is not None
+    creatures_only = match.group("what") == "creatures"
+
+    def recipient(game: "Game", holder: CardState, event: ReplaceableEvent) -> bool:
+        controller = game.controller_of(holder).username
+        if event.player is not None:
+            return you_too and event.player.username == controller
+        card = event.card
+        if card is None or game.controller_of(card).username != controller:
+            return False
+        if other and card.id == holder.id:
+            return False
+        return not creatures_only or _creature_on_battlefield(game, card)
+
+    return recipient
+
+
+def _compile_prevent_all_to_group(effect: ReplacementEffect) -> CardReplacement | None:
+    if effect.kind is not ReplacementKind.PREVENT_ALL:
+        return None
+    match = _PREVENT_ALL_TO_GROUP_RE.fullmatch(effect.text.strip())
+    if match is None:
+        return None
+    recipient = _prevention_recipient(match.group("group"))
+    if recipient is None:
+        return None
+    combat_word = (match.group("combat") or "").strip().lower()
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.DAMAGE or event.amount <= 0:
+            return False
+        if combat_word == "noncombat" and event.combat:
+            return False
+        if combat_word == "combat" and not event.combat:
+            return False
+        return recipient(game, source, event)
+
+    return CardReplacement(label=effect.text, applies=applies, apply=_prevent_all, prevention=True)
 
 
 # -- "if you would gain life, you gain twice that much life instead" /
@@ -3501,6 +3732,11 @@ def _cant_enter_applies(
     return applies
 
 
+def _rules_lines(text: str) -> list[str]:
+    """Each line of `text` with its reminder text stripped (CR 207.2a)."""
+    return [strip_reminder_text(line)[0] for line in text.splitlines()]
+
+
 def _cant_enter_replacements(card: Card) -> list[CardReplacement]:
     """Grafdigger's Cage's first line, and anything else printed to that shape.
 
@@ -3607,6 +3843,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_damage_plus_amount,
     _compile_prevent_damage_and_mill,
     _compile_self_prevent_combat_damage,
+    _compile_prevent_all_to_group,
     _compile_life_gain_doubler,
     _compile_draw_doubler_except_draw_step,
     _compile_draw_doubler,
@@ -3653,12 +3890,32 @@ def parsed_card_replacements(card: Card) -> list[CardReplacement]:
     would ever reach (see `_keyword_replacements`), and CR 614.17d's
     can't-enter effects, which the parser deliberately does not claim.
     """
-    found: list[CardReplacement] = _keyword_replacements(card) + _cant_enter_replacements(card)
+    found: list[CardReplacement] = (
+        _keyword_replacements(card)
+        + _cant_enter_replacements(card)
+        + _double_all_damage_replacements(_rules_lines(card.oracle_text or ""))
+    )
     for effect in parse_replacement_effects(card):
         compiled = _compile(effect)
         if compiled is not None:
             found.append(compiled)
     return found
+
+
+def performs_static_line(card: Card, text: str) -> bool:
+    """Whether one of this card's printed static lines is a replacement or
+    prevention effect this module actually performs - a generic compiler
+    claims it, or it is a "Double all damage ... would deal." line.
+    `support.py`'s credit for such a line (CR 614.1, CR 615.1)."""
+    line = strip_reminder_text(text)[0].strip()
+    if not line:
+        return False
+    if double_all_damage_line(line):
+        return True
+    return any(
+        effect.text.strip() == line and _compile(effect) is not None
+        for effect in parse_replacement_effects(card)
+    )
 
 
 def replacements_of(card: Card) -> list[CardReplacement]:
@@ -3702,9 +3959,13 @@ def replacements_of_state(
         return explicit
     card = permanent.card
     chars = (board or game.computed_board()).of(permanent)
-    found: list[CardReplacement] = _keyword_replacements(
-        card, computed_abilities=chars.abilities
-    ) + _cant_enter_replacements(card)
+    found: list[CardReplacement] = (
+        _keyword_replacements(card, computed_abilities=chars.abilities)
+        + _cant_enter_replacements(card)
+        # CR 613.1f: read off the computed ability list, so a layer-6 removal
+        # takes the doubling away with the rest of the permanent's text.
+        + _double_all_damage_replacements(_rules_lines("\n".join(chars.abilities)))
+    )
     if "Class" not in chars.subtypes:
         for effect in parse_replacement_effects(card):
             compiled = _compile(effect)
@@ -6614,6 +6875,20 @@ def _next_time_draw_replacement_effects(
     ]
 
 
+def _prevents_nothing(apply: Apply) -> Apply:
+    """CR 615.12: a prevention effect applied to damage that can't be
+    prevented - "Those effects won't prevent any damage, but any additional
+    effects they have will take place" (The Mindskinner's mill still
+    happens). The amount is put back after the effect runs."""
+
+    def unpreventable(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        amount = event.amount
+        apply(game, source, event)
+        event.amount = amount
+
+    return unpreventable
+
+
 def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """Every effect that would modify this event as it stands (CR 614.1, 616.1).
 
@@ -6627,8 +6902,14 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     """
     found: list[ApplicableEffect] = []
 
-    found.extend(_protection_effects(game, event))
-    found.extend(_shield_effects(game, event))
+    # CR 615.12: against damage that can't be prevented, prevention effects
+    # prevent nothing - protection (CR 702.16e) and a shield have no other
+    # effect to take place, and "existing damage prevention shields won't be
+    # reduced", so neither is offered at all.
+    unpreventable = game.damage_cant_be_prevented(event) is not None
+    if not unpreventable:
+        found.extend(_protection_effects(game, event))
+        found.extend(_shield_effects(game, event))
     found.extend(_regeneration_effects(game, event))
     found.extend(_finality_counter_effects(event))
     found.extend(_die_to_exile_this_turn_effects(game, event))
@@ -6660,12 +6941,16 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     for permanent in list(game.battlefield):
         for index, printed in enumerate(replacements_of_state(game, permanent, board)):
             if printed.applies(game, permanent, event):
+                apply = printed.apply
+                if printed.prevention and unpreventable:
+                    apply = _prevents_nothing(apply)
                 found.append(
                     ApplicableEffect(
                         key=f"{permanent.id}:{index}",
                         source=permanent,
                         label=printed.label,
-                        apply=printed.apply,
+                        apply=apply,
+                        prevention=printed.prevention,
                     )
                 )
 
@@ -6678,11 +6963,10 @@ def order_effects(
     """Put the applicable effects in the order they will be applied (CR 616.1).
 
     The rules hand the choice to the affected object's controller, one effect at
-    a time, and there is nobody here to ask. This was `Game.put_triggers_on_stack`'s
-    gap for CR 603.3b too, until `Game._order_triggers_by_controller` started
-    putting that one to the player; CR 616.1 has no such question yet. The
-    stand-in is deterministic: the effects that player
-    controls come first, then everybody else's, each group in battlefield order.
+    a time; `choose_effect` puts that question. This is the order it offers the
+    options in, and the order an unscripted player takes: the effects that
+    player controls come first, then everybody else's, each group in
+    battlefield order.
 
     CR 616.1a-d's forced choices are checked first even so, because they are not
     a matter of preference: a self-replacement effect (CR 614.15) must be chosen
@@ -6696,13 +6980,74 @@ def order_effects(
     ordered = list(candidates)
     chooser = event.chooser(game)
     ordered.sort(
-        key=lambda effect: (
-            0 if effect.controls_entry else 1,  # CR 616.1b, before a copy effect
-            0 if effect.copy_as_it_enters else 1,  # CR 616.1c, before the free choice
-            0 if effect.controller == chooser else 1,
-        )
+        key=lambda effect: (*_forced_tier(effect), 0 if effect.controller == chooser else 1)
     )
     return ordered
+
+
+def _forced_tier(effect: ApplicableEffect) -> tuple[int, int]:
+    """CR 616.1b, then 616.1c: the tiers a free choice (CR 616.1e) comes after."""
+    return (0 if effect.controls_entry else 1, 0 if effect.copy_as_it_enters else 1)
+
+
+def choose_effect(
+    game: "Game", event: ReplaceableEvent, candidates: Iterable[ApplicableEffect]
+) -> ApplicableEffect:
+    """The one effect to apply next, chosen by the affected player (CR 616.1).
+
+    "The affected object's controller (or its owner if it has no controller)
+    or the affected player chooses one to apply." CR 616.1a-c narrow the
+    choice to the forced tier first; within whatever tier is left, the chooser
+    is asked through `Game.ask` - a "choose one" among named options, the
+    question `CHOOSE_A_MODE` already puts, rather than a new kind every client
+    would have to learn. The prompt carries CR 616.1 so a seat can tell it
+    from a modal spell's.
+
+    Nothing is asked when there is no choice: one effect in the tier, no
+    affected player, or every option being the same printed effect under the
+    same controller (two Solphims - either order is the same order). CR 616.1f
+    repeats the process after each application, and `apply_replacements`
+    calls this again each time, so the second of two effects is never asked
+    about.
+    """
+    ordered = order_effects(game, event, candidates)
+    tier = [effect for effect in ordered if _forced_tier(effect) == _forced_tier(ordered[0])]
+    chooser = event.chooser(game)
+    distinct = {(effect.name, effect.label, effect.controller) for effect in tier}
+    if len(tier) < 2 or chooser is None or len(distinct) < 2:
+        return ordered[0]
+    options = _effect_options(tier)
+    answer = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_A_MODE,
+            player=chooser,
+            prompt=(
+                "choose which replacement or prevention effect applies first (CR 616.1): "
+                + "; ".join(
+                    f"{option} - {effect.label}"
+                    for option, effect in zip(options, tier, strict=True)
+                )
+            ),
+            options=options,
+        )
+    )
+    return tier[options.index(answer)] if answer in options else tier[0]
+
+
+def _effect_options(tier: list[ApplicableEffect]) -> tuple[str, ...]:
+    """One distinct name per effect: the source's name where that alone tells
+    them apart, else "name: label", numbered only if even that repeats."""
+    names = [effect.name for effect in tier]
+    options = [
+        name if names.count(name) == 1 else f"{name}: {effect.label}"
+        for name, effect in zip(names, tier, strict=True)
+    ]
+    seen: dict[str, int] = {}
+    for index, option in enumerate(options):
+        if options.count(option) > 1:
+            seen[option] = seen.get(option, 0) + 1
+            options[index] = f"{option} ({seen[option]})"
+    return tuple(options)
 
 
 def apply_replacements(game: "Game", event: ReplaceableEvent) -> ReplaceableEvent:
@@ -6718,7 +7063,7 @@ def apply_replacements(game: "Game", event: ReplaceableEvent) -> ReplaceableEven
         candidates = applicable_effects(game, event)
         if not candidates:
             return event
-        chosen = order_effects(game, event, candidates)[0]
+        chosen = choose_effect(game, event, candidates)
         event.applied.add(chosen.key)
         event.history.append(f"{chosen.name}: {chosen.label}")
         chosen.apply(game, chosen.source, event)

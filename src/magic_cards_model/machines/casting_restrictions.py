@@ -153,6 +153,18 @@ class CastingRuleKind:
     resolving spell that granted this protects every *other* spell its
     controller casts, never itself."""
 
+    PLAYERS_CANT_GAIN_LIFE = "players_cant_gain_life"
+    """Skullcrack's "Players can't gain life this turn." - every player (CR
+    119.7), recorded because the spell that made it is gone by the time
+    anyone would gain life (CR 611.2c). Read by `Game.life_gain_prohibited`."""
+    OPPONENTS_CANT_GAIN_LIFE = "opponents_cant_gain_life"
+    """Roiling Vortex's and Atarka's Command's "Your opponents can't gain life
+    this turn." - every opponent of `controller` (CR 119.7)."""
+    DAMAGE_CANT_BE_PREVENTED = "damage_cant_be_prevented"
+    """Skullcrack's, Stomp's and Impractical Joke's "Damage can't be
+    prevented this turn." - CR 615.12, read by `Game.damage_cant_be_
+    prevented`."""
+
 
 class CastingRuleEffect(EngineModel):
     """One recorded CR 611.1 effect over who may cast what.
@@ -653,6 +665,15 @@ _ZONE_WORDS: dict[str, Zone] = {
 #: CR 604.5 is what keeps it a live static there rather than an effect that
 #: resolved.
 _CANT_BE_COUNTERED_RE = re.compile(r"^this spell can't be countered\.?$", re.IGNORECASE)
+#: The same static behind a condition - Exquisite Firecraft's spell mastery
+#: line (CR 207.2c: the ability word is only a label), "If there are two or
+#: more instant and/or sorcery cards in your graveyard, this spell can't be
+#: countered."
+_CONDITIONAL_CANT_BE_COUNTERED_RE = re.compile(
+    r"^(?:[A-Z][A-Za-z' -]{2,30}? \u2014 )?if (?P<condition>[^,]+), "
+    r"this spell can't be countered\.?$",
+    re.IGNORECASE,
+)
 
 #: Ranger-Captain of Eos's exact printed sacrifice-ability effect (the cost,
 #: "Sacrifice this creature:", is a separate `CostKind.SACRIFICE` piece the
@@ -1073,3 +1094,27 @@ def cannot_be_countered(spell: Any) -> bool:
         line.kind is AbilityKind.STATIC and _CANT_BE_COUNTERED_RE.match((line.text or "").strip())
         for line in parse_granted_ability_lines(granted)
     )
+
+
+def conditionally_cannot_be_countered(game: Any, spell: Any) -> bool:
+    """Whether this spell's own "If `<condition>`, this spell can't be
+    countered." holds right now (CR 113.6g, CR 604.5).
+
+    Checked when something tries to counter it (CR 701.6a), so the condition
+    is read at that moment, for the spell's controller, by the same
+    `Game.condition_holds` every other printed condition goes through. An
+    unread condition (`None`) does not protect the spell.
+    """
+    card = getattr(spell, "card", None)
+    controller = getattr(spell, "controller", None)
+    if card is None or controller is None:
+        return False
+    for line in parse_abilities(card):
+        if line.kind is not AbilityKind.STATIC:
+            continue
+        match = _CONDITIONAL_CANT_BE_COUNTERED_RE.match((line.text or "").strip())
+        if match is None:
+            continue
+        if game.condition_holds(controller, match.group("condition"), spell) is True:
+            return True
+    return False

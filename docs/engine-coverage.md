@@ -303,7 +303,7 @@ test you write should be `xfail` with a reason, not a test bent until it passes.
 | "Activate only as a sorcery" | CR 602.5d, 307.5 | `Game.why_cannot_activate` | `scenarios/test_activated_abilities.py` |
 | The zone an activated ability functions in, enforced on the battlefield path too | CR 113.6, 113.6b, 113.6j, 113.6m | **Fixed defect (DDR#970)**: `ActivatedAbility.zone`/`zone_rule` were read off the printed text and enforced only by `machines/keywords.off_battlefield_activation`, so `Game.activate_ability` - the door `Scenario.activate` and the API use - let Gollum, Patient Plotter sacrifice itself on the battlefield to its own graveyard-only ability. `Game.why_cannot_activate` now compares `ability.zone` against `permanent.zone` before the flat battlefield rule, and quotes the sub-rule the parser tagged. **Follow-up fix (FRA S1)**: that comparison used to fall through to the flat battlefield rule even on a *match* - refusing an ability correctly sitting in its own named zone - so `Game.activate_ability` still could not reach a single CR 113.6j/113.6m ability anywhere until now; see the FRA S1 section below for the fix and the second, downstream `ManaSpend`/`NotOnBoard` bug it uncovered. | `scenarios/judge/test_judge_ability_zones.py`, `scenarios/test_self_referential_costs.py`, `scenarios/test_empower_jace.py` |
 | A life payment in an activation cost, refused before the activation begins | CR 119.4, 119.4b, 118.3, 704.5a | **Fixed defect**: `Game.why_cannot_activate` ignored `CostKind.PAY_LIFE`, so Nurturing Peatland's `{T}, Pay 1 life: Add {B} or {G}.` was offered at a life total that could not pay it and only `CostPayment.pay` refused, after `{T}` had been announced. The check sums the ability's life pieces and refuses when the payer's life is below the total; CR 119.4b's 0 is never refused, and paying down to exactly 0 is allowed (CR 704.5a is a state-based action, not a payment restriction). | `scenarios/judge/test_judge_paying_life.py` |
-| Ordering two effects on one event | CR 616.1, 616.1f, 616.1g, 616.2 | `order_effects`, `apply_replacements` | `scenarios/test_replacement_effects.py`, `scenarios/judge/test_judge_replacement_effects.py` |
+| Ordering two effects on one event | CR 616.1, 616.1f, 616.1g, 616.2 | `order_effects`, `choose_effect` (the affected player's choice, asked as `CHOOSE_A_MODE`), `apply_replacements` | `scenarios/test_replacement_effects.py`, `scenarios/judge/test_judge_replacement_effects.py` |
 | A permanent entering tapped or with counters | CR 614.1c, 614.12, 122.6 | `Game.enter_the_battlefield`, `_self_enters_modifiers` | `scenarios/test_replacement_effects.py` |
 | Replacing a move to a graveyard | CR 400.6, 700.4 | `Game.put_into_graveyard` | `scenarios/judge/test_judge_dies_triggers.py` |
 | Draws and life gain as replaceable events | CR 121.1, 121.2, 121.6, 119.3 | `Game.draw_cards`, `Game.gain_life` | `scenarios/test_replacement_effects.py` |
@@ -603,7 +603,6 @@ other work.
 | Which replacement effects exist at all | CR 614.1 | The application path is general; *which* effect a card generates comes from `machines/replacement.py`'s three-row `REPLACEMENTS` registry plus a set of generic compilers tried on a miss. A card whose wording matches no compiler and has no row generates no replacement effect however plainly it reads - the recurring shape is a sentence that mixes something the module can do with something it cannot. `test_replacement_registry_is_minimal.py` guards against a row for a shape a compiler already covers. |
 | An enters replacement with a condition about the board | CR 614.1c | The choice case (CR 614.12a, the shocklands) and an amount stated as X or as an expression with a resolver are all read. A condition about the board is not: Arena of Glory's "unless you control a Mountain" is skipped and the land enters untapped. Slumbering Trudge's "three minus X" parses into the expression shape and has no resolver, so it is skipped too. |
 | Self-replacement effects | CR 614.15, 616.1a | CR 616.1a's forced first choice is a hook in `order_effects` that never fires, because a self-replacement effect is an effect of a *resolving spell* replacing its own effect and `machines/effects.py` has no way to express one. Not to be confused with `ReplacementEffect.self_replacement`, which is CR 614.12's narrower "affects only that permanent". |
-| Who chooses when several effects apply | CR 616.1 | The affected object's controller is meant to choose one at a time. There is nobody to ask, so `order_effects` stands in with a deterministic rule - that player's own effects first, then everyone else's, in the order they were gathered. **Not** the same gap as CR 603.3b any more: that one is built, and a live seat is asked through `DecisionKind.ORDER_TRIGGERS`. This is the remaining one of the pair. |
 | Skip effects, and replacing a step | CR 614.1b, 614.10, 614.10a, 614.10b, 500.11 | `ReplacementKind.SKIP` is produced by the parser and consumed nowhere. Only two skips are hand-rolled: `Game.players_skipping_next_untap` (a per-username count, so two grants cost two untap steps) and `TurnMachine.skips_draw` for CR 103.8a. Necrodominance's "Skip your draw step" feeds neither, and no phase or whole turn can be skipped. |
 | Replacing a draw with something other than a draw | CR 121.6, 121.6b, 614.11a | `ReplaceableEvent` carries a player and a count, and nothing that could name a substituted action. Redirecting a draw to another player (Plagiarize) and doubling one are both built; replacing it with a mill, a reveal, or a search is not. Dredge exists only as a standalone primitive in `machines/keywords.py` that tests call directly - `Game.draw_cards` never offers it. |
 | Effects that say something *can't* happen | CR 614.17, 614.17c | Only CR 614.17d's can't-enter family is built (`_cant_enter_replacements`, Grafdigger's Cage). CR 614.17c's precedence - "if an event can't happen, it can only be replaced by a self-replacement effect" - is a rule this machinery cannot express, so a can't-enter effect competes for CR 616.1's ordering instead of pre-empting it. Every other "can't" effect is unmodelled. |
@@ -4593,3 +4592,49 @@ printing. CR numbers verified with `mise run rules:find`: 103.6, 106.12,
 
 Proof printings added: Anger of the Gods (listed), Hallowed Moonlight,
 Mistcaller, Nyxbloom Ancient, Underworld Fires.
+
+## C00-T4: damage modification, prevention, split damage and life-gain bans
+
+Artist's Talent, Mjolnir, Hammer of Thor, Crystal Barricade, Searing Blaze,
+Smash to Smithereens, Exquisite Firecraft, Skullcrack and Roiling Vortex
+were silent, notice or `static_unaudited`; every clause of all eight now
+sweeps `handled`. `support._static_ability_category` credits a static line
+`machines/replacement.py` really performs (`performs_static_line`) and the
+battlefield rules-of-the-game lines `Game` reads (`is_player_rules_static_line`),
+which also moved ~40 pool cards' replacement lines (Rest in Peace, Doubling
+Season, Furnace of Rath, ...) from `static_unaudited` to `handled`. CR numbers
+verified with `mise run rules:find`: 102.1, 113.6g, 113.7a, 115.3, 119.7,
+120.1, 207.2a, 207.2c, 301.5a, 301.5b, 303.4b, 305.1, 400.7, 503.1a, 510.2,
+514.2, 601.2c, 603.2b, 603.4, 604.2, 604.5, 608.2b, 608.2c, 608.2h, 609.7b,
+611.1, 611.2c, 611.3a, 613.1f, 613.5, 614.1, 614.1a, 614.2, 614.5, 614.12a,
+615.1, 615.1a, 615.12, 700.16, 701.6a, 701.10g, 701.21a, 702.6a, 702.6c,
+702.16e, 715.3a, 716.2a.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "If a [`<quality>`] source you control would deal [noncombat] damage to `<recipients>`, it deals that much damage plus N / double (triple) that damage [to that player or permanent] instead." (CR 614.2, 609.7b, 701.10g) | `replacement._compile_damage_plus_amount` (`_SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE`, `_DAMAGE_RECIPIENTS`) | Artist's Talent | Solphim, Mayhem Dominus | `test_damage_increase_and_double.py` |
+| "Double all damage `<subject>` would deal." - equipped/enchanted creature, "(that) sources/creatures you control [of the chosen type]" | `replacement._double_all_damage_replacements` (read off the computed abilities, CR 613.1f) | Mjolnir, Hammer of Thor | Collective Inferno | `test_damage_increase_and_double.py` |
+| "Equip [quality] [cost]" (CR 702.6c) - "worthy" (CR 700.16), supertype, "token", card type or subtype; the first printed equip ability whose quality the target has is activated, and the quality is rechecked on resolution (CR 608.2b). An Equip line is read even when Scryfall's keyword list omits Equip | `abilities._parse_equip_with_quality`, `keywords.equip_quality_refusal`, `equip_activation` | Mjolnir, Hammer of Thor | Steelclaw Lance | `test_equip_quality.py` |
+| "Prevent all [non]combat damage that would be dealt to `<group>`." - [other] creatures/permanents you control, "you and ...", equipped/enchanted creature (CR 615.1a) | `replacement._compile_prevent_all_to_group` | Crystal Barricade | Mark of Asylum | `test_noncombat_damage_prevention.py` |
+| "Players can't gain life this turn." / "Your opponents can't gain life this turn." (CR 119.7, 611.2c, 514.2) - recorded `CastingRuleKind.PLAYERS_CANT_GAIN_LIFE` / `OPPONENTS_CANT_GAIN_LIFE` | `effects._parse_turn_rules_ban_clause`, `Game.life_gain_prohibited` | Skullcrack, Roiling Vortex | Atarka's Command | `test_lifegain_and_prevention_bans.py` |
+| "Damage can't be prevented [this turn]." / "Combat damage can't be prevented." (CR 615.12) - prevention effects apply and prevent nothing (additional effects still happen), shields are not reduced, protection prevents nothing | `CastingRuleKind.DAMAGE_CANT_BE_PREVENTED`, `Game.damage_cant_be_prevented`, `replacement._prevents_nothing`, `CardReplacement.prevention` | Skullcrack | Impractical Joke, Stomp, Leyline of Punishment | `test_lifegain_and_prevention_bans.py`, `test_noncombat_damage_prevention.py` |
+| "deals N damage to target player or planeswalker and N damage to target creature that player or that planeswalker's controller controls" - the dependent target checked at announcement (CR 601.2c) and on resolution (CR 608.2b) | `targeting.ControllerRestriction.PRIOR_TARGET_PLAYER`, `TargetingProfile.prior_target_player`, `effects._merge_split_damage_clauses` | Searing Blaze | Soul of Shandalar | `test_split_player_creature_damage.py` |
+| landfall "If you had a land enter the battlefield under your control this turn, ... deals M ... to that player or planeswalker and M damage to that creature instead" - the amounts put into the base instruction, targets kept (CR 614.1a) | `Game` condition `_CONDITION_LAND_ENTERED_THIS_TURN` (`turn_facts["land_entered"]`, recorded as a land enters), `effects._amount_substituted_base` | Searing Blaze | - (no other legal printing carries the landfall split) | `test_split_player_creature_damage.py` |
+| "Destroy target `<permanent>`. [If `<condition>`, ]`<this>` deals N damage to that `<permanent>`'s controller." - the controller read before the destroy (CR 608.2h), dealt even if the destroy did nothing | `effects._merge_destroy_then_damage_controller_clauses` | Smash to Smithereens | Destructive Revelry, Consign to the Pit | `test_destroy_then_damage_controller.py` |
+| spell mastery "If there are two or more instant and/or sorcery cards in your graveyard, ..." - the condition, and "this spell can't be countered" behind a condition (CR 113.6g, 604.5, 701.6a) | `Game` `_CONDITION_GRAVEYARD_CARDS` ("X and/or Y" quality), `casting_restrictions.conditionally_cannot_be_countered`, `effects._strip_conditional_cant_be_countered_line` | Exquisite Firecraft | Fiery Impulse, Unholy Hunger | `test_spell_mastery.py` |
+| "At the beginning of each player's upkeep, `<this>` deals N damage to them / to that player [equal to `<count>` they control]." (CR 603.2b) | `effects._DAMAGE_THAT_PLAYER_RE` (widened), `_parse_damage_that_player_clause` | Roiling Vortex | Karma | `test_each_upkeep_damage.py` |
+| "Whenever a player casts a spell, if no mana was spent to cast that spell, ..." - "that spell" read like "it" (CR 603.4) | `triggers._NO_MANA_SPENT_CLAUSE` | Roiling Vortex | - | `test_mana_spent_intervening_if.py` |
+
+CR 616.1's choice of which replacement or prevention effect applies first is
+put to the affected player (or the affected object's controller) by
+`replacement.choose_effect`, as a `CHOOSE_A_MODE` question whose prompt cites
+CR 616.1, after CR 616.1b-c's forced tiers; asked again per CR 616.1f only
+while two or more distinct effects remain. Solphim beside Artist's Talent: Bob
+takes 8 (doubling first) or 10 (+2 first) as he answers
+(`test_damage_increase_and_double.py`). CR 616.1a's self-replacement tier is
+still a hook with nothing to hang on it.
+
+Proof printings added: Solphim, Mayhem Dominus, Collective Inferno, Mark of
+Asylum, Soul of Shandalar, Destructive Revelry, Consign to the Pit, Fiery
+Impulse, Unholy Hunger, Impractical Joke, Atarka's Command, Karma, Steelclaw
+Lance.
