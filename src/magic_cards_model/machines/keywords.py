@@ -2238,6 +2238,14 @@ _EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE = re.compile(
 )
 
 
+def is_equip_discount_for_this_line(line: str) -> bool:
+    """Whether one printed static line is `_EQUIP_ABILITIES_TARGETING_THIS_
+    COST_LESS_RE`'s discount, which `_equip_cost_reduction_for_target`
+    applies to every equip activation aimed at this creature - `support.py`'s
+    credit for it."""
+    return _EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE.fullmatch(line.strip()) is not None
+
+
 def _equip_cost_reduction_for_target(game: Any, target: CardState, player: str) -> int:
     """The total `{N}` an equip activation's own target discounts it by,
     read off that target's *own* static text (`_EQUIP_ABILITIES_TARGETING_

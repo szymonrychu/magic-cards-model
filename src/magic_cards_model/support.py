@@ -77,6 +77,7 @@ from magic_cards_model.machines.combat import (
     is_group_attack_restriction_line,
     is_self_card_count_restriction_line,
     is_self_control_count_restriction_line,
+    reads_self_combat_restriction_line,
 )
 from magic_cards_model.machines.companion import reads_companion_line
 from magic_cards_model.machines.cost import (
@@ -1755,6 +1756,14 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if is_attack_cost_line(text):
         # CR 508.1h: `Game._pay_attack_costs` charges it on every declaration
         # (`combat.total_attack_cost`), gated on a designation or not.
+        return HANDLED
+    if reads_self_combat_restriction_line(text, printing.name):
+        # CR 509.1a / 509.1b: `combat.evasion_restriction_refusal` and
+        # `combat.self_block_restriction_refusal` refuse the block.
+        return HANDLED
+    if keyword_machine.is_equip_discount_for_this_line(text):
+        # CR 601.2f via CR 602.2b: `keywords._equip_cost_reduction_for_target`
+        # discounts every equip activation aimed at this creature.
         return HANDLED
     if keyword_machine.is_free_first_equip_line(text):
         # CR 118.9 / CR 702.6a: `keywords.free_first_equip_source` prices the

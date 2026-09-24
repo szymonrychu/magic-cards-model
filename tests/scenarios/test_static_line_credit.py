@@ -103,7 +103,7 @@ def test_a_reduction_with_an_unread_tail_is_not_credited() -> None:
     )
     # A condition `condition_holds` may not read is left to its own reader.
     assert not reads_self_cost_reduction_line(
-        "This spell costs {1} less to cast if you control a Wizard."
+        "This spell costs {1} less to cast if a player has more cards in hand than you."
     )
 
 

@@ -1076,7 +1076,11 @@ def _self_reference_alternatives(state: CardState) -> tuple[str, ...]:
     as `effect_for`'s fix for a modal-DFC/transform permanent's raw,
     "Front // Back"-combined `card.name`.
     """
-    name = state.name
+    return _self_reference_names(state.name)
+
+
+def _self_reference_names(name: str) -> tuple[str, ...]:
+    """`_self_reference_alternatives` for a bare name."""
     words = name.split()
     candidates = {"this creature", "this token", name, name.split(",")[0].strip()}
     if len(words) > 1 and "," not in name:
@@ -1482,6 +1486,53 @@ def looks_like_unparsed_evasion_restriction(
         ):
             return True
     return False
+
+
+def _reads_evasion_sentence(sentence: str) -> bool:
+    """Whether `evasion_restriction_refusal` reads all of one self "can't be
+    blocked ..." sentence - the complement of `looks_like_unparsed_evasion_
+    restriction`'s per-sentence test."""
+    compound = _CANT_BLOCK_OR_BE_BLOCKED_BY_RE.search(sentence)
+    if compound is not None:
+        return _parse_creature_description(compound.group("description")) is not None
+    return any(
+        shape.search(sentence) is not None
+        for shape in (
+            _CANT_BE_BLOCKED_RE,
+            _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE,
+            _CANT_BE_BLOCKED_BY_GREATER_POWER_RE,
+            _CANT_BE_BLOCKED_BY_TOKENS_RE,
+        )
+    )
+
+
+def reads_self_combat_restriction_line(line: str, name: str) -> bool:
+    """Whether every sentence of one printed static line of a creature named
+    `name` is its own "can't be blocked ..." (CR 509.1a) or "can't block ..."
+    (CR 509.1b) restriction that `evasion_restriction_refusal` and
+    `self_block_restriction_refusal` enforce in full - `support.py`'s credit
+    for it.
+
+    Stricter than the enforcers' own sentence pick: the subject must be the
+    creature itself and be followed directly by "can't", so a group subject
+    ("this creature and other Zombies") or a condition in front of it is left
+    to the reader that answers for those.
+    """
+    subjects = "|".join(re.escape(subject) for subject in _self_reference_names(name))
+    own = re.compile(rf"^(?:{subjects}) can't (?:be blocked|block)\b", re.IGNORECASE)
+    sentences = layer_readable_sentences(line)
+    if not sentences:
+        return False
+    for sentence in sentences:
+        if own.search(sentence) is None:
+            return False
+        evasion = re.search(r"can't be blocked\b|can't block or be blocked by\b", sentence)
+        if evasion is not None and not _reads_evasion_sentence(sentence):
+            return False
+        blocks = re.search(r"can't block\b", sentence, re.IGNORECASE)
+        if blocks is not None and _parse_self_block_restriction(sentence) is None:
+            return False
+    return True
 
 
 # -- the blocker's own "can't block" restriction (CR 509.1b) ----------------
