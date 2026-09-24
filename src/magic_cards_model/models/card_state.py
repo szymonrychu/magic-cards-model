@@ -35,6 +35,14 @@ PERMANENT_TYPES = frozenset(
 )
 
 
+#: The canonical line an effect that says a permanent "can't become untapped"
+#: puts on it in layer 6 (Frozen in Ice's static, Spider-Woman's "for as long
+#: as" one-shot) - read by `CardState.untap`, which every route to untapping
+#: passes through. Not an ability the permanent has: `layers.LoseAllAbilities`
+#: leaves it in place (see `RULE_EFFECT_TEXTS` there).
+CANT_BECOME_UNTAPPED_TEXT = "Can't become untapped."
+
+
 class TargetKind(StrEnum):
     """The two things a spell can point at (CR 115.1)."""
 
@@ -2283,6 +2291,15 @@ class CardState(EngineModel):
         self.tapped = True
         return True
 
+    @property
+    def cant_become_untapped(self) -> bool:
+        """Whether an effect says this permanent "can't become untapped"
+        (Frozen in Ice, Spider-Woman, Secret Agent) - read off the computed
+        board (CR 613.5), where the layer-6 effect puts
+        `CANT_BECOME_UNTAPPED_TEXT`. False for an object no game has bound."""
+        computed = self.computed_characteristics
+        return computed is not None and CANT_BECOME_UNTAPPED_TEXT in computed.abilities
+
     def untap(self, *, exert_applies: bool = True) -> None:
         """Untap this card, unless it was exerted (CR 701.43a-b).
 
@@ -2323,6 +2340,12 @@ class CardState(EngineModel):
             return
         if not self.tapped:
             return  # CR 701.26b: nothing to untap, so nothing "would become untapped"
+        if self.cant_become_untapped:
+            # Frozen in Ice's "can't become untapped": every route to
+            # untapping is refused, the untap step's and an effect's alike -
+            # and ahead of a stun counter, which only replaces an untap that
+            # could have happened (CR 122.1d).
+            return
         if self.counters[Counter.STUN] > 0:
             self.counters.remove(Counter.STUN, 1)  # CR 122.1d
             return

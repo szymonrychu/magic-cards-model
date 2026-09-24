@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "0d4265fd-cbfa-4e57-89fd-a1d757acfe81",
+  "oracle_id": "dcd97730-b793-4c0c-b158-625ac3656b4a",
+  "multiverse_ids": [],
+  "resource_id": "EC3DC084CE477A9AE50D4A8164371D0D122EACA5DEBE5FD37265AC12B55E5C9D",
+  "mtgo_id": 152653,
+  "arena_id": 105128,
+  "tcgplayer_id": 696863,
+  "cardmarket_id": 891598,
+  "name": "Taskmaster, Mercenary Mimic",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/0d4265fd-cbfa-4e57-89fd-a1d757acfe81",
+  "scryfall_uri": "https://scryfall.com/card/msh/232/taskmaster-mercenary-mimic?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:34:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.jpg?1783902897",
+    "normal": "https://cards.scryfall.io/normal/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.jpg?1783902897",
+    "large": "https://cards.scryfall.io/large/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.jpg?1783902897",
+    "png": "https://cards.scryfall.io/png/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.png?1783902897",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.jpg?1783902897",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.jpg?1783902897",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.webp?1783902897",
+    "grid": "https://cards.scryfall.io/grid/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.webp?1783902897",
+    "display": "https://cards.scryfall.io/display/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.webp?1783902897",
+    "art": "https://cards.scryfall.io/art/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.webp?1783902897",
+    "crop": "https://cards.scryfall.io/crop/front/0/d/0d4265fd-cbfa-4e57-89fd-a1d757acfe81.webp?1783902897"
+  },
+  "mana_cost": "{2}{U}{B}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Human Mercenary Villain",
+  "oracle_text": "Photographic Reflexes \u2014 At the beginning of your first main phase, until your next turn, Taskmaster becomes a copy of up to one target creature on the battlefield or creature card in a graveyard, except his name is Taskmaster, Mercenary Mimic and he's a legendary Human Mercenary Villain creature.",
+  "power": "3",
+  "toughness": "5",
+  "colors": [
+    "B",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "U"
+  ],
+  "keywords": [
+    "Photographic Reflexes"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0d4265fd-cbfa-4e57-89fd-a1d757acfe81/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adcd97730-b793-4c0c-b158-625ac3656b4a&unique=prints",
+  "collector_number": "232",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Riccardo Federici",
+  "artist_ids": [
+    "3ce2a17a-a7c4-4a29-a1d1-43a49a7aadc2"
+  ],
+  "illustration_id": "f0d6651b-26f7-4ab4-ae87-1ff231c987be",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 8984,
+  "prices": {
+    "usd": "0.56",
+    "usd_foil": "1.06",
+    "usd_etched": null,
+    "eur": "0.40",
+    "eur_foil": "0.86",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTaskmaster%252C%2BMercenary%2BMimic",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTaskmaster%252C%2BMercenary%2BMimic",
+    "edhrec": "https://edhrec.com/route/?cc=Taskmaster%2C+Mercenary+Mimic"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696863%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891598&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152653?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

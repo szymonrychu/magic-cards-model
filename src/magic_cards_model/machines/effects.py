@@ -17723,6 +17723,9 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     put_from_outside = _parse_put_from_outside_the_game_into_hand_spell(text)
     if put_from_outside is not None:
         return put_from_outside
+    c02_t6 = _c02_t6_spell_effect(text)
+    if c02_t6 is not None:
+        return c02_t6
     # A genuine layer sentence goes to the mode-scoped composer ahead of the
     # per-clause dispatcher: `parse_mixed_effect_for_spell` reads "Target
     # creature gets -3/-1 until end of turn." (Witherbloom Command's third
@@ -22660,6 +22663,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     meld_activation = parse_meld_activation_clause(effect_text)
     if meld_activation is not None:
         return meld_activation
+    c02_t6 = _c02_t6_ability_effect(effect_text)
+    if c02_t6 is not None:
+        return c02_t6
     base_pt_become = _parse_base_pt_become_clause(effect_text)
     if base_pt_become is not None:
         return base_pt_become
@@ -26024,6 +26030,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    c02_t6 = _c02_t6_spell_effect(whole)
+    if c02_t6 is not None:
+        return c02_t6
     dealt_damage_this_way = _parse_dealt_damage_this_way_die_to_exile(whole)
     if dealt_damage_this_way is not None:
         return dealt_damage_this_way
@@ -52358,5 +52367,148 @@ def _parse_cast_from_graveyard_now_clause(effect_text: str) -> AbilityEffect | N
             pays_mana_cost=not free,
             exile_instead_of_graveyard=exile_instead,
         )
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# C02-T6: copy, control change, loses-all-abilities and type/P-T readers
+# ---------------------------------------------------------------------------
+
+#: "If this `<noun>` isn't a creature, it becomes a `<N/N ... creature>` ..."
+#: - Iron Man Armor's "{2}: If this Equipment isn't a creature, it becomes a
+#: 0/0 Construct Hero artifact creature with flying and "..." until end of
+#: turn." and Great Hall of the Biblioplex's "{5}: If this land isn't a
+#: creature, it becomes a 2/4 Wizard creature with "..." It's still a land."
+#: The condition is checked as the ability resolves (CR 608.2c: an "if"
+#: instruction is followed only when it holds); "it" is the source itself, so
+#: the rest is read as the source's own animation sentence.
+_IF_SELF_ISNT_A_CREATURE_RE = re.compile(
+    r"^if this (?:artifact|equipment|land|enchantment|permanent|vehicle) isn'?t a creature, "
+    r"it (?P<rest>becomes .+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | None:
+    """`_IF_SELF_ISNT_A_CREATURE_RE`'s shape, when the rest is one of
+    `machines/layers.py`'s own animation sentences - or `None`."""
+    match = _IF_SELF_ISNT_A_CREATURE_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    layer_sentence = f"This permanent {match.group('rest')}"
+    if parsed_layer_effects(layer_sentence, static_only=False) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if game.characteristics_of(source).is_creature:
+            return
+        continuous_effects(game).create(
+            source,
+            targets=[source],
+            context=layer_context_for(game, game.controller_of(ability)),
+            ability_text=layer_sentence,
+            game=game,
+        )
+
+    return effect
+
+
+def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
+    """C02-T6's whole-text ability readers, tried ahead of the clause split
+    (each reads an instruction chain `_prepare_effect_clauses` would cut
+    apart): the animation gate above, then `machines/copy_effects.py`'s and
+    `machines/control_change.py`'s own readers."""
+    from .control_change import control_change_ability_effect
+    from .copy_effects import copy_ability_effect
+
+    for reader in (
+        _parse_if_self_isnt_a_creature_clause,
+        _parse_double_target_power_and_toughness_clause,
+        copy_ability_effect,
+        control_change_ability_effect,
+    ):
+        effect = reader(effect_text)
+        if effect is not None:
+            return effect
+    return None
+
+
+def _c02_t6_spell_effect(effect_text: str) -> Effect | None:
+    """The spell-side twin of `_c02_t6_ability_effect`."""
+    from .control_change import control_change_spell_effect
+    from .copy_effects import copy_spell_effect
+
+    for reader in (
+        _parse_double_target_power_and_toughness_clause,
+        copy_spell_effect,
+        control_change_spell_effect,
+    ):
+        effect = reader(effect_text)
+        if effect is not None:
+            return effect
+    return None
+
+
+#: "Double target creature's power and toughness until end of turn." (Epic
+#: Fight's first mode, Choose Your Weapon's "Two-Weapon Fighting", Tifa's
+#: Limit Break's "Meteor Strikes") and its "Double the power and toughness of
+#: target creature ..." word order. CR 701.10b: "Doubling a creature's power
+#: and toughness gives it +X/+Y, where X is its power and Y is its
+#: toughness" as the spell or ability resolves; CR 701.10a makes it a
+#: modification, not a set - sublayer 7c (CR 613.4c). CR 701.10c's negative
+#: value (-X instead of +X) is the same arithmetic: X added to itself.
+_DOUBLE_TARGET_POWER_AND_TOUGHNESS_RE = re.compile(
+    r"^double (?:(?P<possessive>(?:up to one )?target [a-z ]*?creature(?: you control| an opponent "
+    r"controls)?)['’]s power and toughness|the power and toughness of "
+    r"(?P<phrase>(?:up to one )?target [a-z ]*?creature(?: you control| an opponent controls)?))"
+    r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_double_target_power_and_toughness_clause(
+    text: str,
+) -> Callable[["Game", "StackObject"], None] | None:
+    """`_DOUBLE_TARGET_POWER_AND_TOUGHNESS_RE`'s shape, on a spell, a mode or
+    an ability alike - the values are read once, as it resolves, through the
+    computed characteristics (CR 613.5), and the +X/+Y never recomputes."""
+    match = _DOUBLE_TARGET_POWER_AND_TOUGHNESS_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    phrase = match.group("possessive") or match.group("phrase")
+    if not _targets_understood(phrase, count_agnostic=False):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        store = continuous_effects(game)
+        for target in game.resolve_card_targets(stack_object):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            chars = game.characteristics_of(target)
+            if not chars.is_creature or chars.power is None or chars.toughness is None:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{source_name}: {target.name} gets "
+                        f"{chars.power:+d}/{chars.toughness:+d} (doubled)"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=modify_power_toughness(chars.power, chars.toughness),
+                )
+            )
 
     return effect

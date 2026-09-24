@@ -4885,6 +4885,7 @@ class Game(EngineModel):
                 state
                 for state in self.permanents_controlled_by(username)
                 if not self.characteristics_of(state).has_ability(DOESNT_UNTAP_TEXT)
+                and not state.cant_become_untapped
             ],
         )
 

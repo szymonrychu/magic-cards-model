@@ -91,7 +91,7 @@ from ..data.creature_types import creature_types
 from ..data.subtypes import canonical_subtype, subtype_vocabulary
 from ..ids import new_id
 from ..models.card import Color, Layout, Supertype, Type, has_changeling, with_every_creature_type
-from ..models.card_state import CardState, ChoiceKind, Counter
+from ..models.card_state import CANT_BECOME_UNTAPPED_TEXT, CardState, ChoiceKind, Counter
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
@@ -1249,12 +1249,20 @@ class ModificationBase(EngineModel):
 
 
 class LoseAllAbilities(ModificationBase):
-    """Layer 6 removal (CR 613.1f)."""
+    """Layer 6 removal (CR 613.1f).
+
+    `RULE_EFFECT_TEXTS` survive it: those lines are how an *effect* on the
+    object ("doesn't untap during its controller's untap step", "can't become
+    untapped") is carried on the computed board, not abilities the object
+    has, so a later "loses all abilities" (Humility over a Frozen in Ice)
+    does not end them."""
 
     kind: Literal["lose_all_abilities"] = "lose_all_abilities"
 
     def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
-        return chars.with_(abilities=())
+        return chars.with_(
+            abilities=tuple(line for line in chars.abilities if line in RULE_EFFECT_TEXTS)
+        )
 
 
 class GrantAbility(ModificationBase):
@@ -4425,10 +4433,25 @@ _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE = re.compile(
 #: layer 4 sets the creature type (CR 205.1a: it replaces the creature types
 #: and nothing else), layer 5 the colour (CR 613.1e), layer 6 removes the
 #: abilities (CR 613.1f), sublayer 7b sets the base P/T (CR 613.4b).
+#:
+#: Widened (C02) to any `_SUBJECT`, several creature types, an "artifact
+#: creature" noun and a trailing keyword grant: Reptil, Dinomorpher's "Until
+#: end of turn, Reptil becomes a Dinosaur Hero with base power and toughness
+#: 3/5 and gains reach and vigilance.", Mordenkainen's Polymorph's "... target
+#: creature becomes a Dragon with base power and toughness 4/4 and gains
+#: flying." and I Am Iron Man's "... target artifact or creature becomes an
+#: artifact creature with base power and toughness 4/4 and gains flying."
+#: CR 205.1b: "becomes an 'artifact creature'" retains every prior card type
+#: and subtype, "a '[creature type] artifact creature'" every one but the
+#: creature types, which it replaces; a bare creature-type list replaces the
+#: creature types alone (CR 205.1a).
 _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
-    r"^target creature (?P<loses>loses all abilities and )?becomes an? "
-    r"(?:(?P<color>white|blue|black|red|green) )?(?P<subtype>[a-z']+) with base power and "
-    r"toughness (?P<power>\d+)/(?P<toughness>\d+) until end of turn\.?$",
+    rf"^(?:{_SUBJECT}) (?P<loses>loses all abilities and )?becomes an? "
+    r"(?:(?P<color>white|blue|black|red|green) )?"
+    r"(?:(?P<artifact_types>(?:[a-z'-]+ )*?)(?P<artifact>artifact creature)"
+    r"|(?P<subtype>[a-z'-]+(?: [a-z'-]+)*?)) with base power and "
+    r"toughness (?P<power>\d+)/(?P<toughness>\d+)"
+    r"(?: and gains (?P<keywords>[a-z][a-z ,]*?))? until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -4690,7 +4713,8 @@ _ANIMATION_RE = re.compile(
     r"(?:white|blue|black|red|green))* )?"
     r"(?P<subtype>[A-Z][A-Za-z'-]*(?: [A-Z][A-Za-z'-]*)? )?"
     r"(?P<types>(?:artifact |enchantment |land )*creature)"
-    r"(?: with (?P<keywords>[^\"]+?))?"
+    r"(?: with (?:(?:(?P<quoted_keywords>[^\"]+?) and )?\"(?P<granted>[^\"]+?)\.?\""
+    r"|(?P<keywords>[^\"]+?)))?"
     r"(?: that's still an? (?P<retained_inline>[a-z]+))?"
     r"(?P<until_eot> until end of turn)?\.?"
     r"(?:\s+[Ii]t's still an? (?P<retained>[a-z]+)\.?)?$"
@@ -4711,17 +4735,22 @@ def _animation_type_modifications(
       are all that is left (CR 205.3d takes the old subtypes with their
       types).
     """
+    # "Construct Hero" is two creature types (CR 205.3m), each its own
+    # subtype; a phrase the official list does not split (a two-word type
+    # such as "Time Lord") stays whole.
+    subtypes: tuple[str, ...] = (
+        tuple(_creature_type_words(subtype) or [subtype]) if subtype is not None else ()
+    )
     if retained is not None:
         added: list[Modification] = [add_type(card_type) for card_type in types]
         added.append(add_type(retained))
-        if subtype is not None:
-            added.append(AddSubtype(subtype=subtype))
+        added.extend(AddSubtype(subtype=each) for each in subtypes)
         return added
     if Type.ARTIFACT in types:
         added = [add_type(card_type) for card_type in types]
-        added.append(SetCreatureTypes(subtypes=(subtype,) if subtype is not None else ()))
+        added.append(SetCreatureTypes(subtypes=subtypes))
         return added
-    return [SetTypesAndSubtypes(types=tuple(types), subtypes=(subtype,) if subtype else ())]
+    return [SetTypesAndSubtypes(types=tuple(types), subtypes=subtypes)]
 
 
 def _animation_builder(
@@ -4735,8 +4764,20 @@ def _animation_builder(
     retained: Type | None,
     anaphoric: bool,
     duration: Duration,
+    granted: str | None = None,
+    granted_effects: EffectBuilder | None = None,
 ) -> EffectBuilder:
     """`_ANIMATION_RE`'s shape.
+
+    `granted` is a quoted ability the animated object gains (CR 613.1f) -
+    Great Hall of the Biblioplex's "with "Whenever you cast an instant or
+    sorcery spell, this creature gets +1/+0 until end of turn."", Iron Man
+    Armor's "with flying and "This creature gets +1/+1 for each artifact you
+    control"". `granted_effects` is that quoted line's own builder when it is
+    a static ability of the object itself: it is built on the animated object
+    as its source, keyed by the granted text (`source_ability`) so a later
+    layer-6 removal of the ability stops it (CR 613.6), for the same
+    duration as the grant.
 
     The subject is `targets`, which `create_continuous_effect_of_ability`
     fills with what the ability targeted when its text names a target, and
@@ -4823,6 +4864,30 @@ def _animation_builder(
                     modification=set_power_toughness(power, toughness),
                 )
             )
+            if granted is not None:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gains {granted!r}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=duration,
+                        selector=stamp,
+                        modification=grant_ability(granted),
+                    )
+                )
+            if granted_effects is not None:
+                effects.extend(
+                    effect.model_copy(
+                        update={
+                            "timestamp": timestamp,
+                            "duration": duration,
+                            "source_id": target.id,
+                            "source_ability": granted,
+                            "selector": stamp,
+                        }
+                    )
+                    for effect in granted_effects(target, timestamp, [target], context)
+                )
         return effects
 
     return builder
@@ -4841,11 +4906,27 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
     if retained_word is not None and retained is None:
         return None
     keywords: list[str] = []
-    if match.group("keywords") is not None:
-        validated = _split_and_validate_keywords(match.group("keywords"))
+    raw_keywords = match.group("keywords") or match.group("quoted_keywords")
+    if raw_keywords is not None:
+        validated = _split_and_validate_keywords(raw_keywords)
         if validated is None:
             return None
         keywords = validated
+    granted = match.group("granted")
+    granted_effects: EffectBuilder | None = None
+    if granted is not None:
+        granted = granted.strip() + "."
+        # CR 613.1f: the quoted ability is added in layer 6 like any other
+        # grant. One that is itself a self static ("This creature gets +1/+1
+        # for each artifact you control", Iron Man Armor) also has to *apply*
+        # while it is had - read it now through this module's own parser; a
+        # quoted trigger or activated ability needs nothing more than the
+        # grant (`machines/triggers.added_ability_lines` finds it). A quoted
+        # self static this parser cannot read fails the whole sentence closed.
+        if re.match(r"^this (?:creature|permanent)\b", granted, re.IGNORECASE):
+            granted_effects = _parse_layer_sentence(granted)
+            if granted_effects is None:
+                return None
     raw_colors = match.group("colors")
     colors = (
         [_COLOR_WORDS[word] for word in re.findall(r"[a-z]+", raw_colors) if word in _COLOR_WORDS]
@@ -4864,6 +4945,8 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
         retained=retained,
         anaphoric=subject == "it" or subject.startswith("that "),
         duration=(Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE),
+        granted=granted,
+        granted_effects=granted_effects,
     )
 
 
@@ -6602,16 +6685,34 @@ def _base_pt_set_and_type_builder(
 
 
 def _becomes_creature_type_with_base_pt_builder(
-    subtype: str,
+    subtypes: Sequence[str],
     color: Color | None,
     power: int,
     toughness: int,
     *,
     loses_abilities: bool,
+    artifact_creature: bool = False,
+    keywords: Sequence[str] = (),
 ) -> EffectBuilder:
     """`_BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE`'s shape: one resolving effect
     applied in each layer it names (CR 613.6), until end of turn, to each
-    target's current incarnation (CR 400.7)."""
+    target's current incarnation (CR 400.7).
+
+    Layer 4 (CR 613.1d): a creature-type list sets the creature types
+    (CR 205.1a); "artifact creature" adds both card types and keeps every
+    prior type and subtype, and "<creature types> artifact creature" keeps
+    every prior one but the creature types, which it replaces (CR 205.1b).
+    Layer 6 (CR 613.1f) grants each keyword."""
+    subtypes = tuple(subtypes)
+    named = " ".join(subtypes)
+    type_parts: list[Modification]
+    if artifact_creature:
+        type_parts = [add_type(Type.ARTIFACT), add_type(Type.CREATURE)]
+        if subtypes:
+            type_parts.append(SetCreatureTypes(subtypes=subtypes))
+        named = f"{named} artifact creature".strip()
+    else:
+        type_parts = [SetCreatureTypes(subtypes=subtypes)]
 
     def builder(
         source: CardState,
@@ -6623,12 +6724,16 @@ def _becomes_creature_type_with_base_pt_builder(
         for target in targets:
             selector = only_this_incarnation(target, target.zone_change_stamp)
             parts: list[tuple[str, Layer, Sublayer | None, Modification]] = [
-                (f"is a {subtype}", Layer.TYPE, None, SetCreatureTypes(subtypes=(subtype,)))
+                (f"is a {named}", Layer.TYPE, None, modification) for modification in type_parts
             ]
             if color is not None:
                 parts.append((f"is {color.name.lower()}", Layer.COLOR, None, set_colors(color)))
             if loses_abilities:
                 parts.append(("loses all abilities", Layer.ABILITY, None, lose_all_abilities))
+            parts.extend(
+                (f"gains {keyword}", Layer.ABILITY, None, grant_ability(keyword))
+                for keyword in keywords
+            )
             parts.append(
                 (
                     f"has base P/T {power}/{toughness}",
@@ -7107,7 +7212,7 @@ _ATTACHED_CREATURE_STATIC_RE = re.compile(
     # not just on the new "from <quality>" shape but on the plain
     # "trample and haste." case too. Non-greedy backtracks down to the
     # shortest match that still lets the trailing `\.?$` consume the period.
-    r"(?: and has (?P<keywords>[a-z].+?))?"
+    r"(?: and has (?P<keywords>[a-z].+?)|(?P<every> and is all creature types))?"
     r'|has "(?P<granted>.+)"'
     # CR 111.10j's Cursed Role: "Enchanted creature has base power and
     # toughness 1/1." - a *set* (sublayer 7b, CR 613.4b), not the `gets`
@@ -7131,10 +7236,17 @@ _ATTACHED_CREATURE_STATIC_RE = re.compile(
 #: Written as its own shape rather than folded into
 #: `_ATTACHED_CREATURE_STATIC_RE` because none of that regex's branches is a
 #: type change, and a half-read sentence would be worse than an unread one.
+#:
+#: Widened (C02) to Kenrith's Transformation's "Enchanted creature loses all
+#: abilities and is a green Elk creature with base power and toughness 3/3."
+#: - a colour (layer 5, CR 613.1e) and no "in addition to its other types",
+#: so CR 205.1a's replacement: the new card type and creature type are all
+#: that is left.
 _ATTACHED_CREATURE_LOSES_AND_BECOMES_RE = re.compile(
     r"^(?P<attachment>[Ee]quipped|[Ee]nchanted) creature loses all abilities and is an? "
+    r"(?:(?P<color>white|blue|black|red|green) )?"
     r"(?P<subtype>[A-Z][a-z]+) (?P<types>[a-z]+(?: [a-z]+)*) with base power and toughness "
-    r"(?P<power>\d+)/(?P<toughness>\d+) in addition to its other types\.?$"
+    r"(?P<power>\d+)/(?P<toughness>\d+)(?P<in_addition> in addition to its other types)?\.?$"
 )
 
 #: "Enchanted permanent is a Construct creature with base power and
@@ -7194,8 +7306,8 @@ _SELF_DOESNT_UNTAP_RE = re.compile(
 #: share the combined form; Apathy and Bind the Monster print the plain one).
 _ATTACHED_DOESNT_UNTAP_RE = re.compile(
     r"^(?P<attachment>equipped|enchanted) (?P<subject>creature|permanent|artifact) "
-    r"(?:(?P<loses>loses all abilities) and )?doesn'?t untap during its "
-    r"controller'?s untap step\.?$",
+    r"(?:(?P<loses>loses all abilities) and )?(?:doesn'?t untap during its "
+    r"controller'?s untap step|(?P<cant>can'?t become untapped))\.?$",
     re.IGNORECASE,
 )
 
@@ -7277,8 +7389,14 @@ _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE = re.compile(
 #: refusal`, the same way that module already reads Ghalta's/Loot's own
 #: literal-text grants rather than a `Keyword` member, because "can't be
 #: blocked by more than one creature" has no keyword name of its own.
+#:
+#: Widened (C02) to any card type in the count - Undercover Skrull's "As long
+#: as there are two or more creature cards in your graveyard, this creature
+#: gets +2/+2 and is all creature types." - and to the "is all creature
+#: types" rider, a layer 4 addition (CR 613.1d) rather than a granted line.
 _DESCEND_GATED_SELF_STATIC_LEADING_RE = re.compile(
-    r"^as long as there are (?P<count>[a-z]+) or more permanent cards in your "
+    r"^as long as there are (?P<count>[a-z]+) or more "
+    r"(?P<card_type>permanent|creature|artifact|enchantment|land|instant|sorcery) cards in your "
     r"graveyard, this (?:creature|permanent|token) "
     r"(?:gets (?:an additional )?(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
     r"|(?P<grant_only>has .+?))\.?$",
@@ -7906,6 +8024,7 @@ def _attached_creature_static_builder(
     granted: str | None = None,
     base_power: int | None = None,
     base_toughness: int | None = None,
+    every_creature_type: bool = False,
     line: str,
 ) -> EffectBuilder:
     """`_ATTACHED_CREATURE_STATIC_RE`'s shape - Cori-Steel Cutter's "Equipped
@@ -7945,6 +8064,21 @@ def _attached_creature_static_builder(
         if attached is None:
             return []
         effects: list[ContinuousEffect] = []
+        if every_creature_type:
+            # Stalactite Dagger's "and is all creature types": layer 4
+            # (CR 613.1d), additive the way changeling's "every creature
+            # type" is.
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {subject} creature is all creature types",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=_only(attached),
+                    modification=AddEveryCreatureType(),
+                )
+            )
         if base_power is not None and base_toughness is not None:
             effects.append(
                 ContinuousEffect(
@@ -8012,6 +8146,10 @@ def _attached_creature_static_builder(
 #: string, so `Game._untap_step_impl` checks a single literal rather than
 #: pattern-matching either printed pronoun.
 DOESNT_UNTAP_TEXT = "Doesn't untap during its controller's untap step."
+
+#: The layer-6 lines that stand for an effect on the object rather than an
+#: ability of it - kept by `LoseAllAbilities`.
+RULE_EFFECT_TEXTS: frozenset[str] = frozenset({DOESNT_UNTAP_TEXT, CANT_BECOME_UNTAPPED_TEXT})
 
 #: Canonical granted-ability text for "<Type>s entering [the battlefield]
 #: don't cause abilities to trigger" - Torpor Orb's "Creatures entering
@@ -8223,7 +8361,7 @@ def _self_doesnt_untap_builder(*, line: str, unless: str | None = None) -> Effec
 
 
 def _attached_doesnt_untap_builder(
-    *, subject: str, loses_abilities: bool, line: str
+    *, subject: str, loses_abilities: bool, line: str, text: str = DOESNT_UNTAP_TEXT
 ) -> EffectBuilder:
     """ "Enchanted creature [loses all abilities and ]doesn't untap during
     its controller's untap step." (Infinite Coursework; Enchanted River's
@@ -8256,16 +8394,13 @@ def _attached_doesnt_untap_builder(
             )
         effects.append(
             ContinuousEffect(
-                description=(
-                    f"{source.name}: {subject} creature doesn't untap during its "
-                    "controller's untap step"
-                ),
+                description=f"{source.name}: {subject} creature: {text}",
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(attached),
-                modification=grant_ability(DOESNT_UNTAP_TEXT),
+                modification=grant_ability(text),
             )
         )
         return effects
@@ -8473,8 +8608,13 @@ def _attached_creature_loses_and_becomes_builder(
     *,
     subject: str,
     line: str,
+    color: Color | None = None,
+    in_addition: bool = True,
 ) -> EffectBuilder:
-    """`_ATTACHED_CREATURE_LOSES_AND_BECOMES_RE`'s shape - Unable to Scream.
+    """`_ATTACHED_CREATURE_LOSES_AND_BECOMES_RE`'s shape - Unable to Scream,
+    and Kenrith's Transformation's colour-setting, type-replacing twin
+    (`in_addition=False`: CR 205.1a, `SetTypesAndSubtypes`; the colour is a
+    layer 5 set, CR 613.1e).
 
     Three effects from one ability, in three layers (CR 613.6). They are
     deliberately not one:
@@ -8523,7 +8663,11 @@ def _attached_creature_loses_and_becomes_builder(
                 source_id=source.id,
                 source_ability=ability,
                 selector=selector,
-                modification=_add_types_and_subtype(types, subtype),
+                modification=(
+                    _add_types_and_subtype(types, subtype)
+                    if in_addition
+                    else SetTypesAndSubtypes(types=tuple(types), subtypes=(subtype,))
+                ),
             ),
             ContinuousEffect(
                 description=(f"{source.name}: {subject} creature has base P/T {power}/{toughness}"),
@@ -8536,6 +8680,18 @@ def _attached_creature_loses_and_becomes_builder(
                 modification=set_power_toughness(power, toughness),
             ),
         ]
+        if color is not None:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {subject} creature is {color.value}",
+                    layer=Layer.COLOR,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=ability,
+                    selector=selector,
+                    modification=set_colors(color),
+                )
+            )
         return effects
 
     return builder
@@ -8789,6 +8945,23 @@ def _linked_exile_card_types_gated_self_static_builder(
     )
 
 
+#: `_split_gated_grants`' verbatim line for an "is all creature types" rider,
+#: which `_graveyard_count_gated_self_static_builder` turns into a layer 4
+#: addition instead of granting it as text.
+_ALL_CREATURE_TYPES_GRANT = "Is all creature types"
+
+
+def _count_cards_of_type(card_type: Type | None) -> Callable[[Iterable[CardState]], int]:
+    """How many of the cards counted are of `card_type` (CR 110.4's "a
+    <type> card") - the plain filtered count Undercover Skrull's "two or more
+    creature cards in your graveyard" asks."""
+
+    def count(cards: Iterable[CardState]) -> int:
+        return sum(1 for state in cards if card_type in state.types)
+
+    return count
+
+
 def _graveyard_count_gated_self_static_builder(
     threshold: int,
     power: int,
@@ -8798,6 +8971,7 @@ def _graveyard_count_gated_self_static_builder(
     line: str,
     count_fn: Callable[[Iterable[CardState]], int],
     pile: Callable[[CardState, LayerContext], Iterable[CardState]] | None = None,
+    every_creature_type: bool = False,
 ) -> EffectBuilder:
     """A static pump/grant whose condition is some count over the controller's
     own graveyard - Dragon's Rage Channeler's *delirium* (`count_card_types`)
@@ -8829,6 +9003,18 @@ def _graveyard_count_gated_self_static_builder(
         if count_fn(cards) < threshold:
             return []
         effects: list[ContinuousEffect] = []
+        if every_creature_type:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: is all creature types",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=_only(source.id),
+                    modification=AddEveryCreatureType(),
+                )
+            )
         if power or toughness:
             effects.append(
                 ContinuousEffect(
@@ -10224,19 +10410,29 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             until_eot=bool(match.group("until_eot")),
         )
     if match := _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE.fullmatch(sentence):
-        subtype = next(
-            (kind for kind in creature_types() if kind.lower() == match.group("subtype").lower()),
-            None,
+        artifact = match.group("artifact") is not None
+        raw_subtypes = (
+            match.group("artifact_types") if artifact else match.group("subtype")
+        ).strip()
+        subtypes = _creature_type_words(raw_subtypes) if raw_subtypes else []
+        if subtypes is None or (not artifact and not subtypes):
+            return None
+        keywords = (
+            _split_and_validate_keywords(match.group("keywords"))
+            if match.group("keywords") is not None
+            else []
         )
-        if subtype is None:
+        if keywords is None:
             return None
         color = match.group("color")
         return _becomes_creature_type_with_base_pt_builder(
-            subtype,
+            tuple(subtypes),
             _COLOR_WORDS[color.lower()] if color else None,
             int(match.group("power")),
             int(match.group("toughness")),
             loses_abilities=match.group("loses") is not None,
+            artifact_creature=artifact,
+            keywords=tuple(keywords),
         )
     if (match := _BECOMES_TYPE_IN_ADDITION_RE.fullmatch(sentence)) and (
         extra_type := _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())
@@ -10746,12 +10942,14 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             granted=(match.group("granted") or "").strip() or None,
             base_power=int(base_power) if base_power is not None else None,
             base_toughness=int(base_toughness) if base_toughness is not None else None,
+            every_creature_type=match.group("every") is not None,
             line=sentence,
         )
     if match := _ATTACHED_CREATURE_LOSES_AND_BECOMES_RE.fullmatch(sentence):
         types = [_card_type_word(word) for word in match.group("types").split()]
         if any(card_type is None for card_type in types):
             return None
+        color = match.group("color")
         return _attached_creature_loses_and_becomes_builder(
             match.group("subtype"),
             [card_type for card_type in types if card_type is not None],
@@ -10759,6 +10957,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             subject=match.group("attachment").lower(),
             line=sentence,
+            color=_COLOR_WORDS[color.lower()] if color else None,
+            in_addition=match.group("in_addition") is not None,
         )
     if match := _ATTACHED_PERMANENT_BECOMES_CREATURE_RE.fullmatch(sentence):
         return _attached_permanent_becomes_creature_builder(
@@ -10803,6 +11003,7 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             subject=match.group("attachment").lower(),
             loses_abilities=match.group("loses") is not None,
             line=sentence,
+            text=CANT_BECOME_UNTAPPED_TEXT if match.group("cant") else DOESNT_UNTAP_TEXT,
         )
     if match := _OTHER_CREATURES_ARE_TYPE_RE.fullmatch(sentence):
         granted_type = _card_type_word(match.group("granted"))
@@ -10931,13 +11132,22 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
                 toughness = int(match.group("toughness"))
             if granted is None:
                 return None
+            every_creature_type = _ALL_CREATURE_TYPES_GRANT in granted
+            granted = [line for line in granted if line != _ALL_CREATURE_TYPES_GRANT]
+            counted = (match.groupdict().get("card_type") or "permanent").lower()
+            count_fn = (
+                count_permanent_cards
+                if counted == "permanent"
+                else _count_cards_of_type(_card_type_word(counted))
+            )
             return _graveyard_count_gated_self_static_builder(
                 threshold,
                 power,
                 toughness,
                 granted,
                 line=sentence,
-                count_fn=count_permanent_cards,
+                count_fn=count_fn,
+                every_creature_type=every_creature_type,
             )
     if match := _PER_COLOR_KEYWORD_GRANT_RE.fullmatch(sentence):
         grants = _split_per_color_grants(match.group("clauses"))

@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc",
+  "oracle_id": "5ad8963b-8091-4787-9147-20a1fe7bf0fb",
+  "multiverse_ids": [],
+  "resource_id": "7665E610710902E6E160325599C951A485B87C83E55B851B6419F9CC8A1241B0",
+  "mtgo_id": 152355,
+  "arena_id": 104979,
+  "tcgplayer_id": 696658,
+  "cardmarket_id": 891330,
+  "name": "The Wondrous Wasp",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc",
+  "scryfall_uri": "https://scryfall.com/card/msh/84/the-wondrous-wasp?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.jpg?1783902947",
+    "normal": "https://cards.scryfall.io/normal/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.jpg?1783902947",
+    "large": "https://cards.scryfall.io/large/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.jpg?1783902947",
+    "png": "https://cards.scryfall.io/png/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.png?1783902947",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.jpg?1783902947",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.jpg?1783902947",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.webp?1783902947",
+    "grid": "https://cards.scryfall.io/grid/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.webp?1783902947",
+    "display": "https://cards.scryfall.io/display/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.webp?1783902947",
+    "art": "https://cards.scryfall.io/art/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.webp?1783902947",
+    "crop": "https://cards.scryfall.io/crop/front/4/8/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc.webp?1783902947"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Hero",
+  "oracle_text": "Flash\nFlying\nWasp's Sting \u2014 When The Wondrous Wasp enters, tap up to one target creature. It loses all abilities for as long as The Wondrous Wasp remains on the battlefield.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Wasp's Sting",
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/484e80a4-1d5f-4c27-98a8-ee2ef9d6cbdc/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5ad8963b-8091-4787-9147-20a1fe7bf0fb&unique=prints",
+  "collector_number": "84",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Don't overlook the little things.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Gal Or",
+  "artist_ids": [
+    "4bbf92ce-72b4-4afa-9e3d-b54326e842b0"
+  ],
+  "illustration_id": "a948e450-fa65-4fe9-8d74-d9040ee580b2",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 13238,
+  "prices": {
+    "usd": "1.27",
+    "usd_foil": "2.67",
+    "usd_etched": null,
+    "eur": "1.16",
+    "eur_foil": "2.86",
+    "tix": "0.54"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BWondrous%2BWasp",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BWondrous%2BWasp",
+    "edhrec": "https://edhrec.com/route/?cc=The+Wondrous+Wasp"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696658%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891330&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152355?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
