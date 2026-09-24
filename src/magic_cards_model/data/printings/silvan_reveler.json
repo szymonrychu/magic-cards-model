@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "c71b74fb-fb0c-4953-b536-7a3f283c6918",
+  "oracle_id": "11932191-4b19-49b1-bfe4-abb7b83b2e59",
+  "multiverse_ids": [],
+  "resource_id": "6CE7584D55E5B335A0616DC820876224AB0AE8DDEFD1CAADA530B83F55E94450",
+  "mtgo_id": 154264,
+  "arena_id": 103543,
+  "tcgplayer_id": 707051,
+  "cardmarket_id": 898508,
+  "name": "Silvan Reveler",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/c71b74fb-fb0c-4953-b536-7a3f283c6918",
+  "scryfall_uri": "https://scryfall.com/card/hob/163/silvan-reveler?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-18T13:46:19Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.jpg?1784382379",
+    "normal": "https://cards.scryfall.io/normal/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.jpg?1784382379",
+    "large": "https://cards.scryfall.io/large/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.jpg?1784382379",
+    "png": "https://cards.scryfall.io/png/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.png?1784382379",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.jpg?1784382379",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.jpg?1784382379",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.webp?1784382379",
+    "grid": "https://cards.scryfall.io/grid/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.webp?1784382379",
+    "display": "https://cards.scryfall.io/display/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.webp?1784382379",
+    "art": "https://cards.scryfall.io/art/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.webp?1784382379",
+    "crop": "https://cards.scryfall.io/crop/front/c/7/c71b74fb-fb0c-4953-b536-7a3f283c6918.webp?1784382379"
+  },
+  "mana_cost": "{2}{G}{U}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Elf Citizen",
+  "oracle_text": "When this creature enters, draw a card, then discard a card. If you discard a land card this way, put it from your graveyard onto the battlefield tapped.\nLandfall \u2014 Whenever a land you control enters, you may pay {1}{G}{U}. If you do, return this card from your graveyard to your hand.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [
+    "Landfall"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c71b74fb-fb0c-4953-b536-7a3f283c6918/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A11932191-4b19-49b1-bfe4-abb7b83b2e59&unique=prints",
+  "collector_number": "163",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Bokun An",
+  "artist_ids": [
+    "9d897620-0e13-4e87-9718-9292763de83d"
+  ],
+  "illustration_id": "e4e62160-19de-48a5-a3a5-fe70d1eb434e",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 16752,
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.14",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSilvan%2BReveler",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSilvan%2BReveler",
+    "edhrec": "https://edhrec.com/route/?cc=Silvan+Reveler"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707051%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898508&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154264?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
