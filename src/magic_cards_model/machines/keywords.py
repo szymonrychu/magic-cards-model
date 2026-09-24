@@ -4307,6 +4307,19 @@ def why_cannot_enchant(aura: CardState, target: Any, caster: str, game: Any = No
     from .targeting import profile_for_text
 
     restrictions = enchant_restrictions(aura.card)
+    if not restrictions and aura.bestowed:
+        # CR 702.103b: "As a spell cast bestowed is put onto the stack, it
+        # becomes an Aura enchantment and gains enchant creature." That grant
+        # carries no printed line of its own - `enchant_restrictions` only
+        # ever reads the card's own text - the identical gap `machines/
+        # casting.Casting._with_bestowed_target` already closes for CR
+        # 702.5a's other half (the announcement's own target requirement).
+        # Left unclosed here, CR 704.5m's own state-based check read a
+        # bestowed permanent as having no enchant ability at all the instant
+        # after `Game.enter_the_battlefield` legally attached it, and put it
+        # straight back into its owner's graveyard - Detective's Phoenix
+        # never survived its own bestow, hardcast or cast from the graveyard.
+        restrictions = ["creature"]
     if not restrictions:
         return f"{aura.name} has no enchant ability, so it cannot be attached (CR 702.5a)"
 
@@ -4352,6 +4365,16 @@ def aura_state_based_actions(game: Any) -> list[CardState]:
             continue
         attachment = permanent.attachment
         if attachment is None:
+            if permanent.bestowed:
+                # CR 702.103f's own unattached half: "If a bestowed Aura
+                # becomes unattached, it ceases to be bestowed" - already
+                # true the moment `attachment` reads None, so there is
+                # nothing left to clear, and CR 702.103f's "This is an
+                # exception to rule 704.5m" means this permanent (a creature
+                # again, per `CardState.types`/`.subtypes` the instant
+                # `bestowed` is false) is never doomed for it.
+                permanent.unattach()
+                continue
             doomed.append(permanent)
             continue
         if attachment.is_player:
@@ -4373,6 +4396,20 @@ def aura_state_based_actions(game: Any) -> list[CardState]:
             # protection will be put into their owners' graveyards as a
             # state-based action" - CR 303.4c's "other applicable effects".
             illegal = _protection_refusal_for_attachment(game, permanent, host) is not None
+        if illegal and permanent.bestowed:
+            # CR 702.103f: "If a bestowed Aura is attached to an illegal
+            # object or player, it becomes unattached and ceases to be
+            # bestowed. This is an exception to rule 704.5m." - an ordinary
+            # Aura in the same spot goes to its owner's graveyard below;
+            # a bestowed one instead reverts to the creature (or other
+            # permanent type) its own printing gives it once `unattach`
+            # clears `bestowed`, and is never added to `doomed` for it.
+            # Detective's Phoenix's own graveyard-cast bestow is the proof:
+            # its enchanted creature dying used to send the Phoenix straight
+            # to the graveyard by the ordinary 704.5m route, instead of
+            # leaving it on the battlefield as the 2/2 flyer it prints.
+            permanent.unattach()
+            continue
         if illegal:
             doomed.append(permanent)
     return doomed

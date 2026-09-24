@@ -172,6 +172,12 @@ class KeywordCastOption(EngineModel):
     `Game.combat_damage_to_players_this_turn` - the record captured as the
     damage was dealt, so a source that has since died or changed still counts
     as it was."""
+    spectacle: bool = False
+    """True for CR 702.137a's spectacle: the alternative cost is available
+    only "if an opponent lost life this turn", checked by
+    `Game.spectacle_condition_holds` against `Player.life_lost_this_turn`
+    (CR 119.2/118.3b/701.12c's gross per-turn loss) rather than a new
+    per-turn record of its own."""
     understood: bool = True
     """False when the keyword's printed cost could not be read into something
     payable. The option is still reported, so a sweep can see the gap."""
@@ -259,6 +265,11 @@ class KeywordCastOption(EngineModel):
             return (
                 f"no player was dealt combat damage this turn by a source {caster} "
                 f"controlled that shared a creature type with {spell.name}, so it cannot "
+                f"be cast for its {self.keyword} cost ({self.rule})"
+            )
+        if self.spectacle and game is not None and not game.spectacle_condition_holds(caster):
+            return (
+                f"no opponent of {caster} has lost life this turn, so {spell.name} cannot "
                 f"be cast for its {self.keyword} cost ({self.rule})"
             )
 
@@ -639,6 +650,27 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             pays_mana_cost=False,
             timing=CastTiming.OWN_DECLARE_BLOCKERS,
             returns_unblocked_creature=True,
+            understood=cost is not None,
+        )
+
+    if canonical == "spectacle":
+        # CR 702.137a: "Spectacle is a static ability that functions on the
+        # stack. 'Spectacle [cost]' means 'You may pay [cost] rather than pay
+        # this spell's mana cost if an opponent lost life this turn.'" An
+        # alternative cost (CR 118.9) with no zone of its own, so the hand -
+        # the zone a card is cast from by default, the same reading prowl's
+        # and evoke's options make. "Casting a spell for its spectacle cost
+        # follows the rules for paying alternative costs in rules 601.2b and
+        # 601.2f-h" (CR 702.137a), which is exactly what `spectacle=True`
+        # routes through `why_not` to `Game.spectacle_condition_holds`.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.137a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            spectacle=True,
             understood=cost is not None,
         )
 

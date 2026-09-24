@@ -15272,6 +15272,24 @@ class Game(EngineModel):
             for record in self.combat_damage_to_players_this_turn
         )
 
+    def spectacle_condition_holds(self, caster: str) -> bool:
+        """CR 702.137a: "'Spectacle [cost]' means 'You may pay [cost] rather
+        than pay this spell's mana cost if an opponent lost life this turn.'"
+
+        "An opponent" is read relative to `caster`, the player proposing to
+        pay the spectacle cost, the same `players_in_game` exclusion
+        `condition_holds`'s own opponent-scoped conditions use.
+        `Player.life_lost_this_turn` is already CR 119.2/118.3b/701.12c's
+        gross per-turn loss (damage, a life payment, or the losing half of an
+        exchange, all routed through `Player.lose_life`), so nothing new is
+        recorded here - Light Up the Stage and Skewer the Critics are the
+        first readers of it from the casting side."""
+        return any(
+            player.life_lost_this_turn > 0
+            for player in self.players_in_game
+            if player.username != caster
+        )
+
     def _record_graveyard_arrival(
         self,
         card_state: CardState,

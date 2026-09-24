@@ -4681,3 +4681,31 @@ keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
 this task) before and after - none of this task's cards were ever silent or
 notice to begin with, and none of the new readers touch any other card's
 dispatch.
+
+## C00-T6: Spectacle, bestow's own CR 704.5m/CR 604.6 exceptions, scenario proof of pre-existing per-count reductions and additional-cost-exile
+
+Abhorrent Oculus, Emrakul the Promised End, Hollow One, Leyline Binding,
+Scion of Draco, Obsidian Charmaw, Detective's Phoenix and Kaheera, the
+Orphanguard were all already `handled`/`static_unaudited`-with-working-code
+on main; this task's own new work is Spectacle (previously unimplemented -
+`ignored_keywords` listed it) and two real bugs in bestow's resolution path
+that surfaced while proving Detective's Phoenix's "You may cast this card
+from your graveyard using its bestow ability" end to end. Light Up the Stage
+and Skewer the Critics now sweep `handled`. CR numbers verified with
+`mise run rules:find` this session: 106.7, 116.2g, 118.7a, 118.8a, 305.6,
+601.2f, 701.59a, 701.59b, 702.5a, 702.103a, 702.103b, 702.103f, 702.137a,
+702.139a, 702.139b, 704.5m.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| Spectacle: "Spectacle [cost]" - an alternative cost (CR 118.9, 601.2b/f-h) available only "if an opponent lost life this turn" | `casting._option_from_keyword` (`canonical == "spectacle"`), `KeywordCastOption.spectacle`, `Game.spectacle_condition_holds` (reads `Player.life_lost_this_turn`) | Light Up the Stage, Skewer the Critics | Rix Maadi Reveler (a creature spell, a differently priced cost) | `test_spectacle.py` |
+| `CardState.move_to`'s CR 702.103b carve-out only excused a STACK->BATTLEFIELD move, not a STACK->STACK re-statement (`Game._put_on_stack` restates the zone of a spell already on the stack for every ordinary cast) - so `bestowed` was cleared before CR 601.2f's cost was even paid, and no bestow spell, hardcast or from a graveyard permission, could ever resolve as the Aura CR 702.103b promises | `card_state.CardState.move_to` (`zone is not origin` guard added to the `bestowed` clear) | Detective's Phoenix | Hopeful Eidolon | `test_bestow_from_graveyard.py` |
+| `keywords.why_cannot_enchant` read only a card's own printed "Enchant [x]" line, never CR 702.103b's dynamic "gains enchant creature" grant - so CR 704.5m's own state-based sweep read a freshly bestowed, legally attached Aura as having no enchant ability at all and put it in the graveyard the instant it entered | `keywords.why_cannot_enchant` (`aura.bestowed` fallback to `["creature"]`) | Detective's Phoenix | Hopeful Eidolon | `test_bestow_from_graveyard.py` |
+| CR 702.103f's own exception to CR 704.5m: a bestowed Aura illegally attached (its host left the battlefield, was destroyed, etc.) becomes unattached and ceases to be bestowed instead of going to its owner's graveyard the ordinary Aura way | `keywords.aura_state_based_actions` (`permanent.bestowed` branch, both the unattached and the illegally-attached cases) | Detective's Phoenix | Hopeful Eidolon | `test_bestow_from_graveyard.py` (`test_the_enchanted_creature_dying_reverts_the_bestowed_aura_to_a_creature`) |
+| CR 604.6's "You may cast this card from your `<zone>` using its `<keyword>` ability" - bestow's own graveyard permission (Detective's Phoenix) - was already generic (`casting._printed_zone_permissions`, landed with bestow's own modelling before this task); proven end to end here rather than only at the option-listing level | `casting._printed_zone_permissions` (pre-existing) | Detective's Phoenix | - (the reader is generic across any keyword/zone pair a card prints; the graveyard-specific proof is Detective's Phoenix itself, the only pool card carrying the sentence) | `test_bestow_from_graveyard.py` |
+| "As an additional cost to cast this spell, exile `<N>` cards from your graveyard" - pre-existing generic reader (`cost._PHRASE_EXILE`/`cost_component_for_phrase`), proven end to end on the required card with corner cases (short graveyard, under-choosing, wrong zone) | `cost.cost_component_for_phrase` (pre-existing) | Abhorrent Oculus | - (the reader is proven generic elsewhere: Necropolis Fiend's activation-side "Exile X cards", Seasoned Pyromancer's "Exile this card", Force of Will's "Exile a blue card from your hand") | `test_additional_cost_exile_from_graveyard.py` |
+| "This spell costs `<N>` less to cast for each `<card type in graveyard / cycled-or-discarded this turn / basic land type controlled (Domain) / opponent's `{C}`-producing land>`" - pre-existing generic readers (`Game.cost_reduction_for`), proven end to end on all four required cards | `game.cost_reduction_for` (pre-existing) | Emrakul, the Promised End; Hollow One; Leyline Binding; Scion of Draco; Obsidian Charmaw | - (each already has dedicated genericity proofs in `test_dynamic_cost_reduction.py`/`test_cost_reduction_shapes.py`/`test_self_reduction_reaches_the_cast.py`) | `test_cost_reduction_per_count.py` |
+| Companion's type-disjunction condition ("Each creature card in your starting deck is a `<type>`, ... or `<type>` card") - pre-existing (`companion._TYPE_DISJUNCTION_RE`), a changeling creature's every-creature-type CDA (CR 702.73a) proven to satisfy it | `companion.companion_condition_satisfied` (pre-existing) | Kaheera, the Orphanguard | Fire-Belly Changeling, Changeling Outcast, Runeclaw Bear | `test_companion_type_condition.py` |
+
+Proof printings added: Light Up the Stage, Skewer the Critics, Rix Maadi
+Reveler, Hopeful Eidolon.
