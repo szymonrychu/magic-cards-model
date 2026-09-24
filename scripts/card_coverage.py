@@ -138,16 +138,42 @@ def is_eligible_printing(raw: dict) -> bool:
     return not (games is not None and "paper" not in games)
 
 
+#: Scryfall `set_type` values that mark a set as promo-like rather than a
+#: card's genuine gameplay home - a WPN/Prerelease/Pro-Tour promo, a
+#: memorabilia object, or a token set. Commander sets are deliberately not
+#: here: a card first printed in a Commander set really does belong there.
+_PROMO_LIKE_SET_TYPES = {"promo", "memorabilia", "token"}
+
+
+def is_promo_like_printing(raw: dict) -> bool:
+    """Whether a printing is promo-like for first-printing-attribution
+    purposes: a promo/memorabilia/token `set_type`, or flagged `promo: true`
+    or `digital: true` on the printing itself. A card whose earliest
+    printing is promo-like but that also has a genuine (non-promo-like)
+    printing is homed in that genuine printing, never the promo - see
+    `select_first_printing`."""
+    return (
+        raw.get("set_type") in _PROMO_LIKE_SET_TYPES
+        or bool(raw.get("promo"))
+        or bool(raw.get("digital"))
+    )
+
+
 def select_first_printing(printings: Sequence[dict]) -> dict | None:
-    """The printing a card "belongs to" for coverage purposes: the eligible
-    printing with the earliest `released_at`, ties broken by set code so the
-    choice is deterministic when two sets shipped the same day."""
+    """The printing a card "belongs to" for coverage purposes: the eligible,
+    non-promo-like printing with the earliest `released_at` - a prerelease or
+    promo printing sharing or preceding the main expansion's release date
+    must not win the card's home away from that expansion. Only when a card
+    has no eligible non-promo-like printing at all (e.g. a WPN- or Pro-Tour-
+    only card) does the earliest eligible promo-like printing win. Ties are
+    broken by set code so the choice is deterministic when two sets shipped
+    the same day."""
     eligible = [p for p in printings if is_eligible_printing(p)]
     if not eligible:
         return None
-    return min(
-        eligible, key=lambda p: (p.get("released_at") or "9999-99-99", p.get("set") or "zzzzzz")
-    )
+    non_promo = [p for p in eligible if not is_promo_like_printing(p)]
+    pool = non_promo if non_promo else eligible
+    return min(pool, key=lambda p: (p.get("released_at") or "9999-99-99", p.get("set") or "zzzzzz"))
 
 
 def group_first_printings(cards: Iterable[dict]) -> dict[str, dict]:
@@ -425,8 +451,22 @@ def classify_many(cards: Sequence[dict], *, workers: int = 1) -> list[Classifica
 # Missing-mechanics clustering
 # ---------------------------------------------------------------------------
 
-_CLUSTER_STRIP_RE = re.compile(r"\{[^}]*\}|\"[^\"]*\"|'[^']*'|\d+")
-_CARD_NAME_STOPWORD_RE = re.compile(r"[^a-z ]+")
+#: How many example card names a cluster carries for display - enough to
+#: recognize the mechanic without dumping the whole affected list.
+_CLUSTER_EXAMPLE_LIMIT = 5
+
+_MANA_SYMBOL_RE = re.compile(r"\{[^}]*\}")
+_TEMPLATE_QUOTED_RE = re.compile(r"\"[^\"]*\"|'[^']*'")
+_NUMBER_RE = re.compile(r"\d+")
+_X_WORD_RE = re.compile(r"\bx\b")
+_SELF_REFERENCE_RE = re.compile(r"\bthis [a-z']+\b")
+_WHITESPACE_RE = re.compile(r"\s+")
+
+#: A clause led by a keyword or ability word ("Waterbend", "Landfall",
+#: "Offspring", ...) followed by an em dash or a " - " - CR 207.2c's ability
+#: word template. Captured before any other normalization so the label reads
+#: exactly as printed.
+_KEYWORD_LEAD_RE = re.compile(r"^([A-Z][A-Za-z'’]*(?:\s+[A-Za-z][A-Za-z'’]*){0,3})\s*[-—]\s+")
 
 
 @dataclass(frozen=True)
@@ -435,39 +475,79 @@ class MechanicCluster:
     label: str
     count: int
     cards: tuple[str, ...]
+    sets: tuple[str, ...]
 
 
-def _clause_signature(text: str) -> str:
-    """A clustering key for one failing clause's printed text: mana costs,
-    quoted sub-clauses and numbers stripped (the parts of a template that
-    vary card to card), lowercased, collapsed to its first few words - two
-    clauses sharing that signature are (almost always) the same template."""
-    stripped = _CLUSTER_STRIP_RE.sub(" ", text.lower())
-    stripped = _CARD_NAME_STOPWORD_RE.sub(" ", stripped)
-    words = stripped.split()
-    return " ".join(words[:5])
+def _keyword_lead_label(text: str) -> str | None:
+    """The keyword/ability word a clause is led by ("Waterbend — ..."), or
+    `None` if the clause isn't in that template."""
+    match = _KEYWORD_LEAD_RE.match(text.strip())
+    return match.group(1).strip() if match else None
+
+
+def _normalize_template(text: str, card_name: str) -> str:
+    """The clause's printed text reduced to a normalized TEMPLATE: the
+    card's own name and generic self-references ("this creature", "this
+    spell", ...) become `~`; numbers and the variable `X` become `N`; mana
+    symbols become `{M}`; quoted ability text becomes `"..."`; the whole
+    thing is lowercased with whitespace collapsed. Two clauses sharing this
+    normalized template are (almost always) the same underlying mechanic,
+    unlike the old "same first 5 words" heuristic it replaces."""
+    working = text
+    for name in sorted({card_name, front_name(card_name)}, key=len, reverse=True):
+        if name:
+            working = re.sub(re.escape(name), "~", working, flags=re.IGNORECASE)
+    working = working.lower()
+    working = _SELF_REFERENCE_RE.sub("~", working)
+    working = _TEMPLATE_QUOTED_RE.sub('"..."', working)
+    working = _MANA_SYMBOL_RE.sub("{M}", working)
+    working = _NUMBER_RE.sub("N", working)
+    working = _X_WORD_RE.sub("N", working)
+    working = _WHITESPACE_RE.sub(" ", working).strip()
+    return working
 
 
 def cluster_missing_mechanics(
-    entries: Sequence[tuple[str, str, str, str, str]],
+    entries: Sequence[tuple[str, str, str, str, str, str]],
 ) -> list[MechanicCluster]:
     """Cluster failing clauses (`(card_name, status, clause_kind,
-    clause_text, reason)` tuples - status/kind/reason are carried for the
-    caller's own use, not part of the clustering key) by shared wording. One
-    cluster is one probable missing mechanic; `label` is a representative
-    printed clause."""
-    by_signature: dict[str, list[tuple[str, str]]] = {}
-    for card_name, _status, _kind, clause_text, _reason in entries:
-        signature = _clause_signature(clause_text)
-        if not signature:
-            signature = f"__unsignatured__:{card_name}"
-        by_signature.setdefault(signature, []).append((card_name, clause_text))
+    clause_text, reason, set_code)` tuples - status/kind/reason are carried
+    for the caller's own use, not part of the clustering key) into probable
+    missing mechanics.
+
+    A clause led by a keyword or ability word ("Waterbend — ...") clusters by
+    that word, labelled with it. Everything else clusters by its normalized
+    TEMPLATE (`_normalize_template`) - only identical templates group
+    together, never a loose "same first few words" match, so unrelated
+    clauses that happen to open the same way land in separate clusters."""
+    groups: dict[str, dict[str, object]] = {}
+    for card_name, _status, _kind, clause_text, _reason, set_code in entries:
+        keyword = _keyword_lead_label(clause_text)
+        if keyword:
+            signature = f"kw:{keyword.lower()}"
+            label = keyword
+        else:
+            template = _normalize_template(clause_text, card_name)
+            if not template:
+                signature = f"__unsignatured__:{card_name}"
+                label = clause_text
+            else:
+                signature = f"tmpl:{template}"
+                label = template
+        bucket = groups.setdefault(signature, {"label": label, "cards": {}, "sets": set()})
+        bucket["cards"][card_name] = None  # dict used as an ordered set
+        bucket["sets"].add(set_code)
     clusters: list[MechanicCluster] = []
-    for signature, rows in by_signature.items():
-        cards = tuple(dict.fromkeys(name for name, _ in rows))  # unique, order-preserving
-        label = max((text for _, text in rows), key=len) if rows else ""
+    for signature, data in groups.items():
+        cards = tuple(data["cards"].keys())
         clusters.append(
-            MechanicCluster(signature=signature, label=label, count=len(cards), cards=cards)
+            MechanicCluster(
+                signature=signature,
+                label=data["label"],
+                count=len(cards),
+                cards=cards[:_CLUSTER_EXAMPLE_LIMIT],
+                sets=tuple(sorted(data["sets"])),
+            )
         )
     clusters.sort(key=lambda c: (-c.count, c.signature))
     return clusters
@@ -551,7 +631,7 @@ def render_status_md(
     bucket_counts: dict[Bucket, int] = {}
     rows_not_full: list[tuple[str, ClassificationResult]] = []
     rows_full: list[str] = []
-    cluster_entries: list[tuple[str, str, str, str, str]] = []
+    cluster_entries: list[tuple[str, str, str, str, str, str]] = []
     for c in sorted(target_cards, key=lambda c: c["name"]):
         name = c["name"]
         result = classifications.get(name)
@@ -566,7 +646,14 @@ def render_status_md(
             rows_not_full.append((name, result))
             if result.status in ("silent", "notice", "unaudited"):
                 cluster_entries.append(
-                    (name, result.status, result.clause_kind, result.clause_text, result.reason)
+                    (
+                        name,
+                        result.status,
+                        result.clause_kind,
+                        result.clause_text,
+                        result.reason,
+                        meta.code,
+                    )
                 )
 
     total = len(target_cards)
@@ -626,12 +713,13 @@ def render_status_md(
     lines.append("")
     clusters = cluster_missing_mechanics(cluster_entries)
     if clusters:
-        lines.append("| Mechanic (representative clause) | Cards | Count |")
-        lines.append("|---|---|---|")
+        lines.append("| Mechanic (label / template) | Count | Example cards | Sets |")
+        lines.append("|---|---|---|---|")
         for cluster in clusters:
             card_list = ", ".join(cluster.cards)
             clause = cluster.label.replace("|", "\\|").replace("\n", " ")[:160]
-            lines.append(f"| {clause} | {card_list} | {cluster.count} |")
+            sets = ", ".join(cluster.sets)
+            lines.append(f"| {clause} | {cluster.count} | {card_list} | {sets} |")
     else:
         lines.append("None.")
     lines.append("")
@@ -703,13 +791,15 @@ def render_plan_md(
     lines.append("## Missing mechanics")
     lines.append("")
     if missing_mechanics:
-        lines.append("| Mechanic (representative clause) | Cards affected | Count |")
-        lines.append("|---|---|---|")
-        for cluster in missing_mechanics:
+        lines.append("| Mechanic (label / template) | Count | Example cards | Sets |")
+        lines.append("|---|---|---|---|")
+        # Top 50 by card count - `missing_mechanics` is already sorted
+        # (-count, signature) by `cluster_missing_mechanics`.
+        for cluster in missing_mechanics[:50]:
             clause = cluster.label.replace("|", "\\|").replace("\n", " ")[:160]
-            card_list = ", ".join(cluster.cards[:12])
-            more = " ..." if len(cluster.cards) > 12 else ""
-            lines.append(f"| {clause} | {card_list}{more} | {cluster.count} |")
+            card_list = ", ".join(cluster.cards)
+            sets = ", ".join(cluster.sets)
+            lines.append(f"| {clause} | {cluster.count} | {card_list} | {sets} |")
     else:
         lines.append("None.")
     lines.append("")
@@ -975,7 +1065,7 @@ def generate_all(
         tested_by_set[code][raw["name"]] = tested_index.is_tested(raw["name"])
 
     rows: list[PlanRow] = []
-    all_cluster_entries: list[tuple[str, str, str, str, str]] = []
+    all_cluster_entries: list[tuple[str, str, str, str, str, str]] = []
     total_card_count = 0
     for code in modern_codes:
         meta = index[code]
@@ -1007,6 +1097,7 @@ def generate_all(
                         result.clause_kind,
                         result.clause_text,
                         result.reason,
+                        code,
                     )
                 )
 

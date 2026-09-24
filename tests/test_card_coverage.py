@@ -48,6 +48,7 @@ def make_card(
     legal_pioneer: str = "not_legal",
     legal_modern: str = "legal",
     oracle_id: str | None = None,
+    promo: bool = False,
 ) -> dict:
     """A Scryfall-card-shaped dict: enough of the real fields for `Card.
     model_validate` (the engine model) plus the raw bulk-data fields
@@ -81,6 +82,7 @@ def make_card(
         "released_at": released_at,
         "digital": digital,
         "games": list(games),
+        "promo": promo,
     }
 
 
@@ -136,6 +138,91 @@ def test_select_first_printing_ties_break_on_set_code():
 def test_select_first_printing_none_when_nothing_eligible():
     token = make_card("Z", layout="token", set_type="token")
     assert cc.select_first_printing([token]) is None
+
+
+def test_select_first_printing_prefers_non_promo_over_earlier_promo():
+    """Review finding #1: a prerelease/promo printing that ships on or
+    before the main expansion's release date must not win - the card's home
+    is the main (non-promo) expansion whenever one exists at all."""
+    promo = make_card(
+        "Strixhaven Mascot",
+        set_code="psos",
+        set_type="promo",
+        released_at="2026-04-20",
+    )
+    main = make_card(
+        "Strixhaven Mascot",
+        set_code="sos",
+        set_type="expansion",
+        released_at="2026-04-24",
+    )
+    first = cc.select_first_printing([promo, main])
+    assert first["set"] == "sos"
+
+
+def test_select_first_printing_falls_back_to_promo_when_no_non_promo_exists():
+    promo = make_card(
+        "WPN Exclusive",
+        set_code="pwpn",
+        set_type="promo",
+        released_at="2026-01-01",
+    )
+    first = cc.select_first_printing([promo])
+    assert first["set"] == "pwpn"
+
+
+def test_select_first_printing_promo_flagged_true_is_also_promo_like():
+    promo_flagged = make_card(
+        "Judge Gift",
+        set_code="jgift",
+        set_type="expansion",  # set_type alone doesn't say promo
+        promo=True,
+        released_at="2020-01-01",
+    )
+    main = make_card(
+        "Judge Gift",
+        set_code="main",
+        set_type="expansion",
+        promo=False,
+        released_at="2021-01-01",
+    )
+    first = cc.select_first_printing([promo_flagged, main])
+    assert first["set"] == "main"
+
+
+def test_select_first_printing_memorabilia_and_token_set_types_are_promo_like():
+    memorabilia = make_card(
+        "Signed Bear", set_code="mem", set_type="memorabilia", released_at="2019-01-01"
+    )
+    token_set = make_card(
+        "Token-ish Bear", set_code="tok2", set_type="token", released_at="2019-06-01"
+    )
+    main = make_card("Signed Bear", set_code="main", set_type="expansion", released_at="2020-01-01")
+    assert cc.select_first_printing([memorabilia, main])["set"] == "main"
+    assert cc.select_first_printing([token_set])["set"] == "tok2"
+
+
+def test_select_first_printing_does_not_treat_commander_sets_as_promo():
+    """Commander sets stay as they are: a card first printed in a Commander
+    set really does belong there."""
+    commander = make_card(
+        "Command Zone Legend", set_code="cmd", set_type="commander", released_at="2020-01-01"
+    )
+    later_main = make_card(
+        "Command Zone Legend", set_code="main", set_type="expansion", released_at="2021-01-01"
+    )
+    first = cc.select_first_printing([commander, later_main])
+    assert first["set"] == "cmd"
+
+
+def test_select_first_printing_promo_set_code_no_longer_wins_tiebreak():
+    """Regression for the reported bug: with tie-breaking by set code alone,
+    "psos" used to win over "sos" (p < s). It must not, once set-type
+    preference is applied."""
+    promo = make_card("Tied Card", set_code="psos", set_type="promo", released_at="2026-04-24")
+    main = make_card("Tied Card", set_code="sos", set_type="expansion", released_at="2026-04-24")
+    first = cc.select_first_printing([promo, main])
+    assert first["set"] == "sos"
 
 
 def test_group_first_printings_keys_by_oracle_id():
@@ -377,19 +464,218 @@ def test_classify_many_sequential_matches_individual_calls():
 
 def test_cluster_missing_mechanics_groups_shared_wording():
     entries = [
-        ("Card A", "silent", "triggered", "Whenever you draw a card, Card A deals 1 damage.", "x"),
-        ("Card B", "silent", "triggered", "Whenever you draw a card, Card B gains 1 life.", "x"),
-        ("Card C", "notice", "static", "This permanent has no other abilities.", "x"),
+        (
+            "Card A",
+            "silent",
+            "triggered",
+            "Whenever you draw a card, Card A deals 1 damage.",
+            "x",
+            "seta",
+        ),
+        (
+            "Card B",
+            "silent",
+            "triggered",
+            "Whenever you draw a card, Card B deals 1 damage.",
+            "x",
+            "seta",
+        ),
+        ("Card C", "notice", "static", "This permanent has no other abilities.", "x", "seta"),
     ]
     clusters = cc.cluster_missing_mechanics(entries)
-    sizes = sorted(len(c.cards) for c in clusters)
+    sizes = sorted(c.count for c in clusters)
     assert sizes == [1, 2]
-    biggest = max(clusters, key=lambda c: len(c.cards))
+    biggest = max(clusters, key=lambda c: c.count)
     assert set(biggest.cards) == {"Card A", "Card B"}
 
 
 def test_cluster_missing_mechanics_empty_is_empty():
     assert cc.cluster_missing_mechanics([]) == []
+
+
+def test_cluster_missing_mechanics_does_not_group_by_first_five_words_alone():
+    """Review finding #2: grouping by the first 5 words holds hundreds of
+    unrelated cards together just because they share an opening clause. Two
+    upkeep triggers that share the same first five words but do genuinely
+    different things must land in separate clusters."""
+    entries = [
+        (
+            "Card A",
+            "silent",
+            "triggered",
+            "At the beginning of your upkeep, target opponent reveals their hand "
+            "and you choose a nonland card from it for them to discard.",
+            "x",
+            "seta",
+        ),
+        (
+            "Card B",
+            "silent",
+            "triggered",
+            "At the beginning of your upkeep, target opponent mills three cards.",
+            "x",
+            "seta",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert len(clusters) == 2
+    assert all(c.count == 1 for c in clusters)
+
+
+def test_cluster_missing_mechanics_groups_by_normalized_template():
+    """Same mechanic, different card name and different number, must land in
+    one cluster because the normalized template (name -> ~, number -> N)
+    is identical."""
+    entries = [
+        (
+            "Card X",
+            "silent",
+            "triggered",
+            "Whenever Card X attacks, you gain 1 life.",
+            "x",
+            "seta",
+        ),
+        (
+            "Card Y",
+            "silent",
+            "triggered",
+            "Whenever Card Y attacks, you gain 5 life.",
+            "x",
+            "setb",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert len(clusters) == 1
+    (cluster,) = clusters
+    assert cluster.count == 2
+    assert set(cluster.cards) == {"Card X", "Card Y"}
+    assert cluster.sets == ("seta", "setb")
+
+
+def test_cluster_missing_mechanics_normalizes_self_reference_like_card_name():
+    """ "This creature" and the card's own name are both self-references and
+    must normalize to the same token."""
+    entries = [
+        (
+            "Card A",
+            "silent",
+            "static",
+            "This creature can't be blocked except by two or more creatures.",
+            "x",
+            "seta",
+        ),
+        (
+            "Card B",
+            "silent",
+            "static",
+            "Card B can't be blocked except by two or more creatures.",
+            "x",
+            "seta",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert len(clusters) == 1
+    assert clusters[0].count == 2
+
+
+def test_cluster_missing_mechanics_normalizes_mana_symbols():
+    entries = [
+        (
+            "Card A",
+            "silent",
+            "activated",
+            "Pay {1}: Card A gets +1/+0 until end of turn.",
+            "x",
+            "s",
+        ),
+        (
+            "Card B",
+            "silent",
+            "activated",
+            "Pay {2}: Card B gets +1/+0 until end of turn.",
+            "x",
+            "s",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert len(clusters) == 1
+    assert clusters[0].count == 2
+
+
+def test_cluster_missing_mechanics_normalizes_quoted_text():
+    entries = [
+        (
+            "Card A",
+            "silent",
+            "triggered",
+            'Search your library for a card named "Plains".',
+            "x",
+            "s",
+        ),
+        (
+            "Card B",
+            "silent",
+            "triggered",
+            'Search your library for a card named "Island".',
+            "x",
+            "s",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert len(clusters) == 1
+    assert clusters[0].count == 2
+
+
+def test_cluster_missing_mechanics_clusters_ability_word_by_its_leading_word():
+    """A clause led by a keyword/ability word followed by an em dash (or
+    " - ") clusters by that word, whatever comes after the dash."""
+    entries = [
+        (
+            "Bender One",
+            "silent",
+            "triggered",
+            "Waterbend — Whenever you cast a spell, put a +1/+1 counter on target "
+            "creature you control.",
+            "x",
+            "seta",
+        ),
+        (
+            "Bender Two",
+            "silent",
+            "triggered",
+            "Waterbend — Whenever you cast a spell, draw a card.",
+            "x",
+            "setb",
+        ),
+        (
+            "Farmer",
+            "silent",
+            "triggered",
+            "Landfall - Whenever a land enters the battlefield under your control, "
+            "you gain 1 life.",
+            "x",
+            "setb",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert len(clusters) == 2
+    by_label = {c.label: c for c in clusters}
+    assert set(by_label) == {"Waterbend", "Landfall"}
+    assert by_label["Waterbend"].count == 2
+    assert set(by_label["Waterbend"].cards) == {"Bender One", "Bender Two"}
+    assert by_label["Waterbend"].sets == ("seta", "setb")
+    assert by_label["Landfall"].count == 1
+
+
+def test_cluster_missing_mechanics_limits_example_cards_to_five():
+    entries = [
+        (f"Card {i}", "silent", "static", "Card does a thing that isn't modelled.", "x", "s")
+        for i in range(7)
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert len(clusters) == 1
+    assert clusters[0].count == 7
+    assert len(clusters[0].cards) == 5
 
 
 # ---------------------------------------------------------------------------
@@ -491,6 +777,77 @@ def test_render_status_md_preserves_existing_notes():
         existing_notes="Human-written note that must survive regeneration.",
     )
     assert "Human-written note that must survive regeneration." in md
+
+
+def test_render_status_md_missing_mechanics_shows_cluster_and_sets():
+    meta = _sample_set_meta(code="tst")
+    classifications = {
+        "Silent Card": cc.ClassificationResult(
+            name="Silent Card",
+            status="silent",
+            clause_kind="keyword",
+            clause_text="Frobnicate",
+            reason="no machine executes this keyword",
+            error=False,
+        ),
+        "Full Card": cc.ClassificationResult(
+            name="Full Card",
+            status="handled",
+            clause_kind="spell",
+            clause_text="",
+            reason="",
+            error=False,
+        ),
+    }
+    md = cc.render_status_md(
+        meta,
+        number=1,
+        classifications=classifications,
+        tested={"Full Card": True, "Silent Card": False},
+        existing_notes=None,
+    )
+    section = cc.extract_section(md, "Missing mechanics")
+    assert section is not None
+    assert "Silent Card" in section
+    assert "tst" in section
+
+
+def test_render_plan_md_shows_only_top_50_missing_mechanics_clusters():
+    rows = [
+        cc.PlanRow(
+            number=1,
+            code="one",
+            name="One",
+            release_date="2020-01-01",
+            total=1,
+            full=0,
+            state="todo",
+        ),
+    ]
+    clusters = [
+        cc.MechanicCluster(
+            signature=f"tmpl:mechanic {i}",
+            label=f"mechanic {i}",
+            count=100 - i,
+            cards=(f"Card {i}",),
+            sets=("one",),
+        )
+        for i in range(60)
+    ]
+    md = cc.render_plan_md(
+        rows=rows,
+        round0_cards=[],
+        missing_mechanics=clusters,
+        existing_notes=None,
+        existing_done=None,
+    )
+    section = cc.extract_section(md, "Missing mechanics")
+    assert section is not None
+    shown = sum(1 for line in section.splitlines() if line.startswith("| mechanic "))
+    assert shown == 50
+    assert "mechanic 0" in section
+    assert "mechanic 49" in section
+    assert "mechanic 50" not in section
 
 
 def test_render_plan_md_contains_required_sections():
