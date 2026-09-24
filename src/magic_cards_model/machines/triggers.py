@@ -4201,7 +4201,16 @@ def intervening_if_holds(
         # shape.
         return meld_holds
 
-    if clause in ("you cast it", "you cast him", "you cast her", "you cast them"):
+    if clause in (
+        "you cast it",
+        "you cast him",
+        "you cast her",
+        "you cast them",
+        # The passive spelling (Doomsday Excruciator's "if it was cast") asks
+        # the same CR 601.2 question - was this object cast at all - and is
+        # answered by the same `CastRecord`.
+        "it was cast",
+    ):
         # CR 601.2's cast is a defined action distinct from every other way a
         # permanent can reach the battlefield (reanimation, a search-and-put
         # effect, ...); `Game.note_cast` (CR 601.2h) only ever records a

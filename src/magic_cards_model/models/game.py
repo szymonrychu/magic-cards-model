@@ -19627,6 +19627,30 @@ class Game(EngineModel):
         profile.check(list(targets), controller, self, source_id=permanent.id)
         return [TargetRef.coerce(target) for target in targets]
 
+    def _check_activation_division(
+        self,
+        ability: ActivatedAbility,
+        x_value: int,
+        targets: list[TargetRef],
+        division: list[int],
+    ) -> list[int]:
+        """Refuse an illegal CR 601.2d division of an activated ability's
+        effect, or return the shares as announced.
+
+        CR 602.2b runs CR 601.2d for an activation exactly as for a spell: one
+        share per target, each at least one, adding up to the whole amount -
+        the check `TargetingProfile.check_division` already makes for
+        `Casting.announce_division`. An ability whose text divides nothing
+        has no division to announce.
+        """
+        profile = profile_for_text(self._activation_target_text(ability, x_value))
+        if profile.division is None:
+            raise ValueError(f"{ability.text} does not divide anything to announce (CR 601.2d)")
+        shares = [int(share) for share in division]
+        amount = profile.division.amount if profile.division.amount is not None else x_value
+        profile.check_division(shares, targets, amount=amount)
+        return shares
+
     def begin_activating(
         self,
         permanent: CardState,
@@ -19640,6 +19664,7 @@ class Game(EngineModel):
         tapping: list[CardState] | None = None,
         x_value: int = 0,
         targets: list[object] | None = None,
+        division: Sequence[int] | None = None,
     ) -> CostPayment:
         """Announce an activation and open its payment (CR 602.2a, 602.2b).
 
@@ -19717,6 +19742,12 @@ class Game(EngineModel):
         announced = self._announce_activation_targets(
             permanent, controller, self._activation_target_text(ability, announced_x), targets
         )
+        if division is not None:
+            # CR 601.2d via CR 602.2b: the division is announced right after
+            # the targets, and refused now, before anything is paid.
+            self._check_activation_division(
+                ability, announced_x, list(announced or []), list(division)
+            )
         # CR 106.6: an activation is what Shang-Chi's and Eldrazi Temple's
         # mana is restricted *to*, and what Cavern of Souls's and Delighted
         # Halfling's is restricted *from*, so the payment is told which it is
@@ -19798,8 +19829,15 @@ class Game(EngineModel):
         x_value: int = 0,
         exiled_for_cost: CardState | None = None,
         sacrificed_for_cost: list[CardState] | None = None,
+        division: Sequence[int] | None = None,
     ) -> AbilityOnStack | None:
         """Finish activating: put the ability on the stack (CR 602.2).
+
+        `division` is CR 601.2d's announced split of a divided effect ("Distribute
+        three +1/+1 counters among up to three target creatures"), one share per
+        announced target in the same order - the same announcement
+        `Casting.announce_division` records for a spell, which CR 602.2b imports
+        for an activated ability. `None` leaves the effect's even-split fallback.
 
         `sacrificed_for_cost` is the sacrifice twin of `exiled_for_cost` -
         the same permanents the caller already handed to `begin_activating`'s
@@ -19907,6 +19945,16 @@ class Game(EngineModel):
                 )
                 if announced_targets is not None:
                     targets = list(announced_targets)
+            announced_division = (
+                self._check_activation_division(
+                    ability,
+                    x_value,
+                    [TargetRef.coerce(t) for t in targets or []],
+                    list(division),
+                )
+                if division is not None
+                else None
+            )
             self.activations[key] = self.activations.get(key, 0) + 1
             if ability.exhaust:
                 # CR 702.177a: "Activate only once" - unlike `activations`
@@ -20124,6 +20172,7 @@ class Game(EngineModel):
                 controller=controller,
                 targets=[TargetRef.coerce(target) for target in targets or []],
                 x_value=x_value,
+                division=announced_division,
                 cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,
                 # CR 602.2b: the objects the paid cost moved, read off the
                 # payment itself when `begin_activating` opened one, so a

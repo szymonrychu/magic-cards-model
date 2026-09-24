@@ -1274,8 +1274,12 @@ class PlayedScenario:
         color: Color | Sequence[Color] | str | None = None,
         auto: bool = False,
         x_value: int = 0,
+        division: list[int] | None = None,
     ) -> AbilityOnStack | None:
         """Activate one of `source`'s abilities, paying with `mana_sources`.
+
+        `division` is CR 601.2d's announced split of a divided effect among
+        `targets`, one share per target (CR 602.2b imports it for abilities).
 
         Returns the ability now on the stack, or None for a mana ability, which
         never goes on the stack at all (CR 605.3b). The activator keeps priority
@@ -1320,6 +1324,7 @@ class PlayedScenario:
             tapping=tapping_for_cost,
             x_value=x_value,
             targets=targets,
+            division=division,
         )
         if tapping:
             waterbend(payment, *tapping)
@@ -1337,6 +1342,7 @@ class PlayedScenario:
             x_value=x_value,
             exiled_for_cost=exiling[0] if exiling else None,
             sacrificed_for_cost=sacrificing,
+            division=division,
         )
         self.game.retain_priority(controller)
         return ability

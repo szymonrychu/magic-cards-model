@@ -4382,3 +4382,29 @@ legal printing carries it), a directly phased-out Aura phasing back in
 unattached when its object is gone (CR 702.26i; nothing legal phases an Aura
 out directly), Kaito Shizuki's self-referential "he phases out", and CR
 702.26f's "for as long as" durations ending at phase-out.
+
+## S32: top-of-library reveal/exile and exile-to-graveyard processing
+
+Ajani, Sleeper Agent (+1), Darkstar Augur, Doomsday Excruciator and Wasteland
+Strangler were silent; Ajani's -3 swept `handled` but silently dropped "They
+gain vigilance" (the plural pronoun was read as "whatever just entered").
+Every clause of all four now sweeps `handled` and is played in a scenario.
+CR numbers verified with `mise run rules:find`: 115.7f, 118.12, 202.3a,
+202.3e, 406.3, 406.3a, 514.2, 601.2, 601.2c, 601.2d, 602.2b, 603.3d, 603.4,
+606.3, 608.2b, 608.2c, 609.3, 611.2, 701.20a, 702.175a, 704.5f, 709.4,
+709.4c, 712.8a.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "Reveal the top card of your library. If it's a `<kind>`[ or `<kind>`] card, put it into your hand. Otherwise, [you may ]put it `<somewhere>`" - type disjunction, optional else-arm (decline leaves it on top); front face only for a DFC (CR 712.8a), combined halves for a split card (CR 709.4c) | `effects._LOOK_TOP_CARD_CONDITIONAL_RE`, `_parse_look_top_card_conditional_clause` | Ajani, Sleeper Agent +1 | Nylea, Keen-Eyed (graveyard, activated with mana) | `test_reveal_top_branch.py` |
+| "Reveal the top card ... put that card into your hand. You lose life equal to its mana value" (X counts 0, CR 202.3e); the offspring token copy triggers too | `effects._YOU_LOSE_LIFE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE` ("its" or "that card's") | Darkstar Augur | Dark Confidant | `test_reveal_top_lose_life.py` |
+| "Distribute N `<kind>` counters among up to N target creatures. They gain `<keywords>` until end of turn" - the pronoun names the legal targets | `effects._parse_distribute_counters_then_targets_gain_clause_pair` | Ajani, Sleeper Agent -3 | Vivien, Arkbow Ranger +1 (trample) | `test_distribute_counters_then_grant.py` |
+| CR 601.2d division announced for an *activated* ability (was spell-only); refused before the cost is paid | `Game.activate_ability(division=)`, `Game.begin_activating(division=)`, `Game._check_activation_division` | Ajani, Sleeper Agent -3 | Vivien, Arkbow Ranger +1 | `test_distribute_counters_then_grant.py` |
+| "each player exiles all but the bottom N cards of their library face down" (every player, APNAP; face down per CR 406.3a) | `effects._EXILE_ALL_BUT_BOTTOM_OF_LIBRARY_RE` subject/"their"/"face down" | Doomsday Excruciator | Nicol Bolas, the Arisen -12 (same reader, targeted subject) - no other legal printing carries the each-player form | `test_exile_all_but_bottom.py` |
+| intervening "if it was cast" (CR 603.4) | `triggers.intervening_if_holds` (same `CastRecord` check as "if you cast it") | Doomsday Excruciator | - (no other legal printing; "if you cast it" is the same branch, Transcendent Dragon) | `test_exile_all_but_bottom.py` |
+| processors: "[you may ]put a card an opponent owns from exile into that player's graveyard. If you do, `<clause>`" (CR 118.12 cost at resolution; payoff target chosen on the stack, CR 603.3d; face-down cards taken at random from their pile) | `effects._PROCESS_EXILED_CARD_RE`, `_merge_process_exile_if_you_do_clauses`, `_process_exiled_cards`, `_targeted_layer_consequence` | Wasteland Strangler | Murk Strider (bounce payoff) | `test_processors.py` |
+
+Known approximation: a face-down exile pile is keyed by owner and
+`CardState.exile_annotation`, not by the exact event that exiled it, so two
+separate un-annotated face-down exiles of the same player's cards form one
+pile for a processor's random pick.

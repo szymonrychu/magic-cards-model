@@ -7528,6 +7528,9 @@ def _merge_surveil_then_for_each_on_top_draw_and_lose_life_clauses(
 #: "Reveal the top card of your library and put that card into your hand.
 #: You lose life equal to that card's mana value." - the Dark Confidant
 #: template (CR 202.3's mana value), Pain Seer's own Inspired trigger.
+#: Current Oracle text prints the pronoun instead ("... equal to its mana
+#: value" - Dark Confidant's and Darkstar Augur's own upkeep triggers); "its"
+#: and "that card's" name the same revealed card, so both spellings read.
 #: `_prepare_effect_clauses` cuts the first sentence's own "and" the same
 #: way it cuts every other one, so this reads as three clauses rather than
 #: two.
@@ -7536,7 +7539,7 @@ _REVEAL_TOP_CARD_OF_LIBRARY_BARE_RE = re.compile(
 )
 _PUT_THAT_CARD_INTO_YOUR_HAND_BARE_RE = re.compile(r"^put that card into your hand$", re.IGNORECASE)
 _YOU_LOSE_LIFE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE = re.compile(
-    r"^you lose life equal to that card'?s mana value$", re.IGNORECASE
+    r"^you lose life equal to (?:that card'?s|its) mana value$", re.IGNORECASE
 )
 
 
@@ -10947,6 +10950,61 @@ def _parse_distribute_counters_among_targets_clause(
     return effect
 
 
+#: The plural anaphors a "They gain <keyword>" rider can use to name the
+#: creatures a distribute head just targeted.
+_DISTRIBUTE_RIDER_ANAPHORS = frozenset({"they", "those creatures"})
+
+
+def _parse_distribute_counters_then_targets_gain_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Distribute N `<kind>` counters among up to N target creatures. They
+    gain `<keywords>` until end of turn." - Ajani, Sleeper Agent's `-3`
+    (vigilance) and Vivien, Arkbow Ranger's `+1` (trample).
+
+    "They" is CR 608.2c's anaphor back to the creatures the first sentence
+    targeted - not to anything that entered the battlefield (the reading
+    `_parse_put_then_grant_then_delayed_whole_text` gives the same pronoun
+    after a "put ... onto the battlefield" head, which is why this pair is
+    read here, ahead of it). Only targets still legal on resolution get the
+    keyword (CR 608.2b), the same set `_distribute_counters_shares` pays.
+    """
+    head = _parse_distribute_counters_among_targets_clause(
+        first.strip().rstrip("."), for_spell=for_spell
+    )
+    if head is None:
+        return None
+    grant = _ANAPHOR_GAINS_KEYWORDS_RE.fullmatch(second.strip().rstrip("."))
+    if grant is None or grant.group("anaphor").lower() not in _DISTRIBUTE_RIDER_ANAPHORS:
+        return None
+    keywords = split_and_validate_keywords(grant.group("keywords"))
+    if keywords is None:
+        return None
+    duration = (grant.group("duration") or "").lower() or None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        head(game, stack_object)
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        for reference in stack_object.targets:
+            target = game.legal_target(stack_object, reference)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                _grant_keywords_to(
+                    game,
+                    target,
+                    list(keywords),
+                    duration,
+                    controller=controller,
+                    source_name=source_name,
+                )
+
+    return effect
+
+
 def _distribute_counters_shares(
     game: "Game", stack_object: "StackObject", kind: Counter | str, total: int
 ) -> None:
@@ -12717,9 +12775,18 @@ _EXILE_EACH_OPPONENTS_GRAVEYARD_RE = re.compile(
 #: the identical split `_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`'s own `who`
 #: reads between "opponent" and "player". `<n>` is optional (CR 107.3f's
 #: bare "the bottom card" prints no number at all) and defaults to one.
+#:
+#: The same instruction also comes with the players as the sentence's own
+#: subject - "each player exiles all but the bottom six cards of their
+#: library face down" (Doomsday Excruciator) - which is every player, the
+#: controller included, each on their own library ("their"). "Face down" is
+#: CR 406.3's hidden exile: the cards can't be examined and (CR 406.3a) have
+#: no characteristics.
 _EXILE_ALL_BUT_BOTTOM_OF_LIBRARY_RE = re.compile(
-    rf"^exile all but the bottom (?:{count_pattern('n')} )?cards? of "
-    r"(?P<who>each opponent'?s|target player'?s) librar(?:y|ies)\.?$",
+    r"^(?:(?P<subject>each player|each opponent) exiles?|exile) "
+    rf"all but the bottom (?:{count_pattern('n')} )?cards? of "
+    r"(?P<who>each opponent'?s|target player'?s|their|his or her) librar(?:y|ies)"
+    r"(?P<face_down> face down)?\.?$",
     re.IGNORECASE,
 )
 
@@ -12742,7 +12809,15 @@ def _parse_exile_all_but_bottom_of_library_clause(
     n = parse_count(match.group("n")) if match.group("n") else 1
     if n is None or n < 0:
         return None
-    targeted = match.group("who").lower().startswith("target")
+    who = match.group("who").lower()
+    subject = (match.group("subject") or "").lower()
+    # "their library" needs the "each player/opponent exiles" subject to name
+    # whose, and a subject never pairs with a second, different owner.
+    if bool(subject) != (who in ("their", "his or her")):
+        return None
+    targeted = who.startswith("target")
+    everyone = subject == "each player"
+    face_down = match.group("face_down") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         if targeted:
@@ -12751,6 +12826,8 @@ def _parse_exile_all_but_bottom_of_library_clause(
                 for target in game.resolve_targets(stack_object)
                 if isinstance(target, Player)
             ]
+        elif everyone:
+            players = _players_in_apnap_order(game)
         else:
             controller = game.controller_of(stack_object).username
             players = [player for player in game.players_in_game if player.username != controller]
@@ -12758,7 +12835,12 @@ def _parse_exile_all_but_bottom_of_library_clause(
             library = list(player.library)
             if len(library) <= n:
                 continue
-            game.exile_cards(library[: len(library) - n])
+            exiled = game.exile_cards(library[: len(library) - n])
+            if face_down:
+                for card_state in exiled:
+                    if card_state.zone is Zone.EXILE:
+                        # CR 406.3/406.3a: hidden, no characteristics.
+                        card_state.face_up = False
 
     return effect
 
@@ -18609,13 +18691,24 @@ def _parse_select_from_top_spell_clause(text: str) -> Effect | None:
 #: "reveal" shows the card to every player, "look at" shows it only to the
 #: ability's controller. `verb` picks which of `Game.reveal`/`Game.look` the
 #: effect below calls.
+#:
+#: The kind may be a disjunction ("If it's a creature or planeswalker card" -
+#: Ajani, Sleeper Agent's `+1`), met by a card of any one of the named types,
+#: and the "Otherwise" arm may itself be optional ("Otherwise, you may put it
+#: on the bottom of your library" - Ajani; "... you may put it into your
+#: graveyard" - Nylea, Keen-Eyed's `{2}{G}`): `else_may` asks, and a decline
+#: leaves the card on top of the library (CR 701.20a: revealing a card does
+#: not move it).
+_LOOK_TOP_CARD_KIND = (
+    r"(?:permanent|land|creature|artifact|enchantment|instant|sorcery|planeswalker)"
+)
 _LOOK_TOP_CARD_CONDITIONAL_RE = re.compile(
     r"^(?P<verb>look at|reveal) the top card of your library\. "
-    r"if it's an? (?P<kind>permanent|land|creature|artifact|enchantment|instant|sorcery"
-    r"|planeswalker) card, (?P<may>you may )?put it "
+    rf"if it's an? (?P<kind>{_LOOK_TOP_CARD_KIND}(?: or {_LOOK_TOP_CARD_KIND})*)"
+    r" card, (?P<may>you may )?put it "
     r"(?P<dest>onto the battlefield tapped|onto the battlefield|into your hand"
     r"|into your graveyard)\. "
-    r"(?:otherwise, put (?:it|that card|the card)"
+    r"(?:otherwise, (?P<else_may>you may )?put (?:it|that card|the card)"
     r"|(?P<decline_runs_else>if you don't put the card onto the battlefield, put it)) "
     r"(?P<other>into your hand|into your graveyard|on the bottom of your library)\.?$",
     re.IGNORECASE,
@@ -18636,11 +18729,19 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     match = _LOOK_TOP_CARD_CONDITIONAL_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    predicate = _SELECT_FROM_TOP_KINDS.get(match.group("kind").lower())
-    if predicate is None:
+    kinds = [
+        _SELECT_FROM_TOP_KINDS.get(word.strip())
+        for word in match.group("kind").lower().split(" or ")
+    ]
+    if any(kind is None for kind in kinds):
         return None
+
+    def predicate(state: CardState) -> bool:
+        return any(kind(state) for kind in kinds if kind is not None)
+
     reveals_to_all = match.group("verb").lower() == "reveal"
     optional = match.group("may") is not None
+    else_optional = match.group("else_may") is not None
     decline_runs_else = match.group("decline_runs_else") is not None
     destination = match.group("dest").lower()
     otherwise = match.group("other").lower()
@@ -18689,6 +18790,13 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
             else:
                 move(game, player, top, destination)
                 return
+        if else_optional and not game.may(
+            player,
+            f"put {top.name} {otherwise}",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
         move(game, player, top, otherwise)
 
     return effect
@@ -36516,6 +36624,170 @@ def _merge_counted_if_you_do_clauses(
     return 2, effect
 
 
+#: The processor cost (CR 118.12's "[do something]" half): "you may put a
+#: card an opponent owns from exile into that player's graveyard" (Wasteland
+#: Strangler, Murk Strider, Mind Raker, Ulamog's Reclaimer, Ruin Processor)
+#: and the counted "put two cards your opponents own from exile into their
+#: owners' graveyards" (Blight Herder). "you may" is optional in the pattern:
+#: the mandatory spelling asks the same CR 118.12 "if you do" of whether the
+#: player could start to pay.
+_PROCESS_EXILED_CARD_RE = re.compile(
+    r"^(?P<may>you may )?put "
+    rf"(?:an? card an opponent owns|(?P<n>{COUNT}) cards (?:your opponents|an opponent) own) "
+    r"from exile into (?:that player'?s|their owners'?|its owner'?s) graveyards?$",
+    re.IGNORECASE,
+)
+
+
+def _processable_exile_piles(game: "Game", controller: str) -> list[list[CardState]]:
+    """The exiled cards `controller`'s opponents own, as the piles a player
+    chooses among: every face-up card on its own, and each opponent's
+    face-down cards grouped by the exile pile they sit in
+    (`CardState.exile_annotation`) - CR 406.3 lets nobody look at a
+    face-down card, so the player picks a pile and the card comes from it at
+    random (the rulings on Wasteland Strangler)."""
+    piles: list[list[CardState]] = []
+    hidden: dict[tuple[str, object], list[CardState]] = {}
+    for state in game.exile:
+        if not isinstance(state, CardState) or state.zone is not Zone.EXILE:
+            continue
+        owner = state.owner
+        if owner is None or owner == controller:
+            continue
+        if state.face_down:
+            hidden.setdefault((owner, state.exile_annotation), []).append(state)
+        else:
+            piles.append([state])
+    piles.extend(hidden.values())
+    return piles
+
+
+def _process_exiled_cards(
+    game: "Game", player: Player, count: int, *, source: str, source_id: str | None
+) -> bool:
+    """Put `count` cards `player`'s opponents own from exile into their
+    owners' graveyards, `player` choosing which (a random one from a chosen
+    face-down pile), and say whether it was done. Fewer eligible cards than
+    `count` means the cost can't be paid at all, so nothing moves."""
+    piles = _processable_exile_piles(game, player.username)
+    if sum(len(pile) for pile in piles) < count:
+        return False
+    for _ in range(count):
+        piles = [pile for pile in _processable_exile_piles(game, player.username) if pile]
+        if not piles:
+            return False
+        chosen_pile = piles[0]
+        if len(piles) > 1:
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt="choose a card an opponent owns in exile to put into its owner's graveyard",
+                source=source,
+                source_id=source_id,
+                amount=1,
+                cards=tuple(pile[0].id for pile in piles),
+            )
+            (picked,) = game.ask(decision)
+            chosen_pile = next(pile for pile in piles if pile[0].id == picked)
+        card = chosen_pile[0]
+        if len(chosen_pile) > 1:
+            rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:process-exile")  # noqa: S311
+            game.shuffles_performed += 1
+            card = rng.choice(chosen_pile)
+        card.face_up = True
+        game.put_into_graveyard(card)
+    return True
+
+
+def _targeted_layer_consequence(text: str) -> TargetedClause | None:
+    """A one-shot continuous effect (CR 611.2) on the resolving object's
+    targets - "target creature gets -3/-3 until end of turn" - as a clause of
+    its own, read from `text` alone rather than from the whole printed
+    ability the way `create_continuous_effect(_of_ability)` reads it, so it
+    can sit behind a CR 118.12 "If you do". `None` unless `text` is a layer
+    effect `machines/layers.py` reads and it names a target."""
+    sentence = _as_sentence(text)
+    if not _is_layer_effect_text(sentence) or parsed_layer_effects(sentence) is None:
+        return None
+    profile = profile_for_text(sentence)
+    if not (profile.understood and profile.requirements):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        if source is None:
+            return
+        targets = game.resolve_card_targets(stack_object)
+        if not targets:
+            return
+        continuous_effects(game).create(
+            source,
+            targets=targets,
+            context=layer_context_for(game, game.controller_of(stack_object)),
+            ability_text=sentence,
+            game=game,
+        )
+
+    return effect
+
+
+def _merge_process_exile_if_you_do_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_PROCESS_EXILED_CARD_RE`, then "If you do, `<clause>`" - the processor
+    template, read as one CR 118.12 instruction: the put is a cost paid as the
+    ability resolves, and the payoff runs only if it was paid.
+
+    The payoff is read by `_parse_mixed_clause`, so it may target ("target
+    creature gets -3/-3 until end of turn", "return target creature to its
+    owner's hand"). Its target was chosen as the ability went on the stack
+    (CR 603.3d, 601.2c), and CR 608.2b's recheck of it happens before any of
+    this runs - an ability whose only target is gone never reaches here, so
+    no card is processed for nothing.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    cost = _PROCESS_EXILED_CARD_RE.fullmatch(clauses[index].strip().rstrip("."))
+    if cost is None:
+        return None
+    if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
+    if if_match is None:
+        return None
+    consequence_text = if_match.group("consequence").strip().rstrip(".")
+    consequence = _parse_mixed_clause(consequence_text, for_spell=for_spell)
+    if consequence is None:
+        consequence = _targeted_layer_consequence(consequence_text)
+    if consequence is None:
+        return None
+    count = parse_count(cost.group("n")) if cost.group("n") else 1
+    if count is None or count < 1:
+        return None
+    optional = cost.group("may") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        source_id = source_id_of(stack_object)
+        piles = _processable_exile_piles(game, player.username)
+        if sum(len(pile) for pile in piles) < count:
+            return  # CR 118.12: the player can't, so they didn't.
+        if optional and not game.may(
+            player,
+            "put a card an opponent owns from exile into that player's graveyard",
+            source=source,
+            source_id=source_id,
+        ):
+            return
+        if _process_exiled_cards(game, player, count, source=source, source_id=source_id):
+            consequence(game, stack_object)
+
+    return 2, effect
+
+
 def _merge_may_then_if_you_do_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -40594,6 +40866,9 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             or _parse_if_target_card_quality_rider_clause_pair(
                 sentences[0], sentences[1], for_spell=for_spell
             )
+            or _parse_distribute_counters_then_targets_gain_clause_pair(
+                sentences[0], sentences[1], for_spell=for_spell
+            )
         )
         if anaphor_pair is not None:
             return [anaphor_pair]
@@ -40730,6 +41005,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_counted_if_you_do_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_process_exile_if_you_do_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
