@@ -33,6 +33,7 @@ session that wrote this file.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Game, Zone
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 from tests.scenarios.test_outside_the_game import KARN_MINUS_TWO, _karn_board, _main_phase
 
@@ -202,3 +203,80 @@ def test_glittering_wish_reads_a_color_count_quality():
     assert reveal.viewers is None
     assert known(scenario.game, "bob") == [("Lightning Helix", Zone.HAND, None, True)]
     assert wish.zone is Zone.EXILE
+
+
+# -- the Wish shape with no "Exile <this>" tail ---------------------------------
+#
+# Vivien, Arkbow Ranger's −5 (the reported card, from the behavioural sweep:
+# `card_support` read it handled while it resolved to an unmodeled notice) is
+# the same instruction on a loyalty ability, and Granted - Fae of Wishes'
+# Adventure, in no listed deck - on a spell with nothing to exile. CR 715.3d
+# then exiles the Adventure itself on the way out. CR 606.3 read in full.
+
+
+def _vivien_board(sideboard: list[str]) -> tuple[Scenario, object]:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Vivien, Arkbow Ranger"], sideboard=sideboard)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    vivien = scenario.find("Vivien, Arkbow Ranger", Zone.BATTLEFIELD)
+    scenario.game.add_counters(vivien, Counter.LOYALTY, 2)
+    return scenario, vivien
+
+
+def test_vivien_minus_five_reveals_a_creature_card_into_hand():
+    scenario, vivien = _vivien_board(["Lightning Bolt", "Grizzly Bears"])
+    alice = scenario.player("alice")
+    (bears,) = [state for state in alice.outside_the_game if state.name == "Grizzly Bears"]
+    scenario.will_take_the_may(True, username="alice", source="Vivien, Arkbow Ranger")
+    scenario.will_choose_cards(bears, username="alice", source="Vivien, Arkbow Ranger")
+
+    scenario.activate(vivien, index=2, username="alice")
+    scenario.pass_until_resolved()
+
+    (offered,) = [d for d in scenario.game.decisions.asked if d.kind.value == "choose_cards"]
+    assert offered.cards == (bears.id,), "CR 108.3b: only a creature card is offered"
+    assert bears.zone is Zone.HAND
+    assert [state.name for state in alice.outside_the_game] == ["Lightning Bolt"]
+    assert known(scenario.game, "bob") == [("Grizzly Bears", Zone.HAND, None, True)]
+    assert scenario.game.unmodeled_trigger_effect_notices == []
+    assert vivien.zone is Zone.BATTLEFIELD
+
+
+def test_vivien_minus_five_with_no_creature_outside_the_game_does_nothing():
+    scenario, vivien = _vivien_board(["Lightning Bolt"])
+
+    scenario.activate(vivien, index=2, username="alice")
+    scenario.pass_until_resolved()
+
+    assert scenario.player("alice").hand == []
+    assert scenario.game.reveals == []
+    assert scenario.game.unmodeled_trigger_effect_notices == []
+
+
+def test_granted_reveals_a_noncreature_card_and_goes_on_an_adventure():
+    scenario = _wish_board(
+        "Fae of Wishes", ["Island", "Island", "Island", "Island"], ["Grizzly Bears", "Opt"]
+    )
+    alice = scenario.player("alice")
+    (opt,) = [state for state in alice.outside_the_game if state.name == "Opt"]
+    scenario.will_take_the_may(True, username="alice", source="Granted")
+    scenario.will_choose_cards(opt, username="alice", source="Granted")
+
+    casting = scenario.cast("Fae of Wishes")
+    casting.cast_as_adventure()
+    payment = casting.begin_paying()
+    payment.auto_tap(scenario.game.permanents_controlled_by("alice"))
+    payment.pay()
+    fae = scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+
+    (offered,) = [d for d in scenario.game.decisions.asked if d.kind.value == "choose_cards"]
+    assert offered.cards == (opt.id,), "a noncreature card only"
+    assert opt.zone is Zone.HAND
+    assert known(scenario.game, "bob") == [("Opt", Zone.HAND, None, True)]
+    assert fae.zone is Zone.EXILE, "CR 715.3d: the Adventure is exiled as it resolves"

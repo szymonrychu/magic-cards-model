@@ -42645,6 +42645,23 @@ def _parse_outside_the_game_fetch(effect_text: str) -> AbilityEffect | None:
             )
 
         return put_into_hand
+    reveal = _read_reveal_from_outside_the_game(effect_text)
+    if reveal is not None and reveal[2] is None:
+        # Vivien, Arkbow Ranger's −5: the Wish sentence on an ability, with no
+        # spell to exile.
+        quality, matches, _ = reveal
+
+        def reveal_into_hand(game: "Game", ability: AbilityOnStack) -> None:
+            _reveal_a_quality_card_from_outside_the_game(
+                game,
+                game.player(ability.controller),
+                quality,
+                matches,
+                ability.source_name,
+                source_id_of(ability),
+            )
+
+        return reveal_into_hand
     match = _OUTSIDE_THE_GAME_FETCH_RE.match(" ".join(effect_text.split()))
     if match is None:
         if _LOOKS_LIKE_OUTSIDE_THE_GAME_RE.search(effect_text):
@@ -42876,70 +42893,98 @@ def _parse_reveal_two_outside_opponent_chooses_clause(
 
 
 #: The Burning Wish family: "You may reveal a <quality> card you own from
-#: outside the game and put it into your hand. Exile <this>." Burning Wish
+#: outside the game and put it into your hand[. Exile <this>.]" Burning Wish
 #: (sorcery), Cunning Wish (instant), Living Wish (creature or land) and every
-#: other printing of the template share it; the quality is read by the same
-#: `_quality_matcher` a library search uses (Glittering Wish's "multicolored"
-#: is CR 105.2b's color count), and a quality it cannot read leaves the whole
-#: paragraph unread rather than half-run.
+#: other printing of the template share it, and so do Granted (Fae of Wishes'
+#: Adventure) and Vivien, Arkbow Ranger's −5 without the exile tail; the
+#: quality is read by the same `_quality_matcher` a library search uses
+#: (Glittering Wish's "multicolored" is CR 105.2b's color count), and a
+#: quality it cannot read leaves the whole paragraph unread rather than
+#: half-run.
 _REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE = re.compile(
     r"^you may reveal an? (?P<quality>.+?) card you own from outside the game "
-    r"and put (?:it|that card) into your hand\.\s*exile (?P<name>[^.]+)\.?$",
+    r"and put (?:it|that card) into your hand\.?(?:\s*exile (?P<name>[^.]+)\.?)?$",
     re.IGNORECASE,
 )
 
 
-def _parse_reveal_from_outside_the_game_into_hand_clause(effect_text: str) -> Effect | None:
-    """`_REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`'s shape, or `None`.
-
-    CR 400.11c lets this spell reach outside the game at all, CR 108.3b limits
-    it to cards its controller owns, and CR 608.2d makes the "you may" and the
-    choice as it resolves - with no candidate there is nothing to choose. The
-    reveal and the move are `_reveal_and_bring_into_hand`. "Exile <this>" is
-    CR 201.5's reference to this very spell, done last as printed, whether or
-    not a card was taken; a name that is not this spell's fails closed.
-    """
+def _read_reveal_from_outside_the_game(
+    effect_text: str,
+) -> tuple[str, Callable[[CardState], bool], str | None] | None:
+    """`(quality, matcher, exiled name or None)` for
+    `_REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`, or `None` when the text is
+    not that shape or its quality cannot be read."""
     match = _REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(" ".join(effect_text.split()))
     if match is None:
         return None
     quality = match.group("quality")
     if not _search_quality_is_readable(quality):
         return None
-    matches = _quality_matcher(quality)
-    named = match.group("name").strip()
+    named = match.group("name")
+    return quality, _quality_matcher(quality), named.strip() if named else None
+
+
+def _reveal_a_quality_card_from_outside_the_game(
+    game: "Game",
+    controller: Player,
+    quality: str,
+    matches: Callable[[CardState], bool],
+    source: str | None,
+    source_id: object,
+) -> None:
+    """CR 400.11c lets the spell or ability reach outside the game at all,
+    CR 108.3b limits it to cards its controller owns, and CR 608.2d makes the
+    "you may" and the choice as it resolves - with no candidate there is
+    nothing to choose. The reveal and the move are
+    `_reveal_and_bring_into_hand`."""
+    candidates = controller.owned_outside_the_game(matches)
+    if not candidates or not game.may(
+        controller,
+        f"reveal {with_indefinite_article(f'{quality} card')} you own from outside the game "
+        f"and put it into your hand",
+        source=source,
+        source_id=source_id,
+    ):
+        return
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller.username,
+            prompt=(
+                f"choose {with_indefinite_article(f'{quality} card')} you own from outside the game"
+            ),
+            source=source,
+            source_id=source_id,
+            amount=1,
+            cards=tuple(state.id for state in candidates),
+            card_labels=tuple(state.name for state in candidates),
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    by_id = {state.id: state for state in candidates}
+    for card_id in chosen_ids:
+        _reveal_and_bring_into_hand(game, controller, by_id[card_id], source)
+
+
+def _parse_reveal_from_outside_the_game_into_hand_clause(effect_text: str) -> Effect | None:
+    """`_REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`'s shape on a spell, or
+    `None`. "Exile <this>" is CR 201.5's reference to this very spell, done
+    last as printed, whether or not a card was taken; a name that is not this
+    spell's fails closed. Without the tail (Granted) the spell leaves the
+    stack the ordinary way (CR 608.2n, CR 715.3d for an Adventure)."""
+    read = _read_reveal_from_outside_the_game(effect_text)
+    if read is None:
+        return None
+    quality, matches, named = read
 
     def effect(game: "Game", spell: CardState) -> None:
-        if named.lower() != (spell.name or "").lower():
+        if named is not None and named.lower() != (spell.name or "").lower():
             return
-        controller = game.controller_of(spell)
-        candidates = controller.owned_outside_the_game(matches)
-        if candidates and game.may(
-            controller,
-            f"reveal {with_indefinite_article(f'{quality} card')} you own from outside the game "
-            f"and put it into your hand",
-            source=spell.name,
-            source_id=source_id_of(spell),
-        ):
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=controller.username,
-                    prompt=(
-                        f"choose {with_indefinite_article(f'{quality} card')} "
-                        "you own from outside the game"
-                    ),
-                    source=spell.name,
-                    source_id=source_id_of(spell),
-                    amount=1,
-                    cards=tuple(state.id for state in candidates),
-                    card_labels=tuple(state.name for state in candidates),
-                )
-            )
-            assert isinstance(chosen_ids, tuple)
-            by_id = {state.id: state for state in candidates}
-            for card_id in chosen_ids:
-                _reveal_and_bring_into_hand(game, controller, by_id[card_id], spell.name)
-        game.exile_cards([spell])
+        _reveal_a_quality_card_from_outside_the_game(
+            game, game.controller_of(spell), quality, matches, spell.name, source_id_of(spell)
+        )
+        if named is not None:
+            game.exile_cards([spell])
 
     return effect
 
