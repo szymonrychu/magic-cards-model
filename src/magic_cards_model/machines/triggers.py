@@ -5688,7 +5688,12 @@ def triggered_abilities_on(game: "Game", source: CardState) -> list[TriggeredAbi
     # CR 400.7b / CR 611.3d: an ability granted to this object is had by
     # this object, so it is asked here alongside the card's own printed
     # ones. Never *instead* of them - a grant adds.
-    granted = granted_triggered_abilities_of(source.granted_ability_texts)
+    # CR 603.10a: a source that has just left the battlefield looks back at
+    # what it was granted as it left - `CardState.move_to` has emptied the
+    # live tuple (CR 400.7).
+    granted = granted_triggered_abilities_of(
+        (*source.granted_ability_texts, *source.granted_as_it_left)
+    )
     # CR 613.5 / CR 707.2: a permanent whose computed ability text has been
     # rewritten by a layer 1 copy effect has the *copied* object's triggers
     # and not its own, so the printed card is the wrong thing to read.

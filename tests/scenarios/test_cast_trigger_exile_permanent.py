@@ -192,3 +192,54 @@ def test_putting_thief_onto_the_battlefield_is_not_casting_it() -> None:
 
     assert scenario.stack_names() == []
     assert thief.granted_ability_texts == ()
+
+
+def _thief_with_the_grant(scenario):
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")
+    scenario.choose_trigger_targets(THIEF, [ring])
+    thief = _cast_thief(scenario)
+    scenario.resolve_top()
+    scenario.resolve_top()
+    assert GRANTED in thief.granted_ability_texts
+    return thief
+
+
+def test_a_bounced_thief_is_a_new_object_without_the_grant() -> None:
+    """CR 400.7: the card returned to hand is a new object with no memory of
+    its previous existence, so the grant does not come back with it - put
+    back onto the battlefield (not cast), it has no leaves trigger. Its
+    leaving the battlefield the first time still triggered (CR 603.10a)."""
+    scenario = _board(["Sol Ring"])
+    thief = _thief_with_the_grant(scenario)
+
+    scenario.game.return_to_hand(thief)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == [f"{THIEF}'s triggered ability"]
+    scenario.resolve_top()
+    assert thief.zone is Zone.HAND
+    assert thief.granted_ability_texts == ()
+
+    scenario.game.put_onto_battlefield(thief, "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
+    scenario.game.destroy(thief)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
+
+
+def test_a_blinked_thief_returns_without_the_grant() -> None:
+    """CR 400.7 on an exile-and-return: the permanent that comes back is a
+    new object, and the grant was given to the old one."""
+    scenario = _board(["Sol Ring"])
+    thief = _thief_with_the_grant(scenario)
+
+    scenario.game.exile_permanent(thief)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+    scenario.game.put_onto_battlefield(thief, "alice")
+    assert thief.zone is Zone.BATTLEFIELD
+    assert thief.granted_ability_texts == ()
+
+    scenario.game.destroy(thief)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
