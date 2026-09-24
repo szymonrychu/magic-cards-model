@@ -147,6 +147,7 @@ from magic_cards_model.machines.triggers import (
     condition_matches,
     is_additional_trigger_line,
     is_batched_attack_condition,
+    total_power_attack_threshold,
     triggers_only_off_the_stack,
 )
 from magic_cards_model.machines.triggers import (
@@ -2214,6 +2215,16 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     if ability.event is TriggerEvent.ATTACKS and is_batched_attack_condition(ability.condition):
         # "one or more <description> attack" counts a declared attack, which
         # this closure's synthetic board has none of - no occurrence to try.
+        return None
+    if (
+        ability.event is TriggerEvent.ATTACKS
+        and total_power_attack_threshold(ability.condition) is not None
+    ):
+        # "you attack with creatures with total power N or greater" (Desert
+        # Were-Worm) is the identical subject-less CR 508.3d declaration
+        # event as the batched shape just above, summed instead of
+        # described - this closure's synthetic board never declares a real
+        # attack either, so there is equally no occurrence to try here.
         return None
     entering = ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
     probes = _probe_cards(printing, ability.condition, entering=entering)

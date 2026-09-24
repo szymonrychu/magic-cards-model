@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "e88e6b39-bb4d-4d69-8007-d42f31bcbc29",
+  "oracle_id": "086a911f-9ed4-4260-ae46-58c9333b95f5",
+  "multiverse_ids": [
+    527498
+  ],
+  "mtgo_id": 91924,
+  "arena_id": 77316,
+  "tcgplayer_id": 243078,
+  "cardmarket_id": 571082,
+  "name": "Werewolf Pack Leader",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/e88e6b39-bb4d-4d69-8007-d42f31bcbc29",
+  "scryfall_uri": "https://scryfall.com/card/afr/211/werewolf-pack-leader?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:07:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.jpg?1783926452",
+    "normal": "https://cards.scryfall.io/normal/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.jpg?1783926452",
+    "large": "https://cards.scryfall.io/large/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.jpg?1783926452",
+    "png": "https://cards.scryfall.io/png/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.png?1783926452",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.jpg?1783926452",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.jpg?1783926452",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.webp?1783926452",
+    "grid": "https://cards.scryfall.io/grid/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.webp?1783926452",
+    "display": "https://cards.scryfall.io/display/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.webp?1783926452",
+    "art": "https://cards.scryfall.io/art/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.webp?1783926452",
+    "crop": "https://cards.scryfall.io/crop/front/e/8/e88e6b39-bb4d-4d69-8007-d42f31bcbc29.webp?1783926452"
+  },
+  "mana_cost": "{G}{G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Werewolf",
+  "oracle_text": "Pack tactics \u2014 Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, draw a card.\n{3}{G}: Until end of turn, this creature has base power and toughness 5/3, gains trample, and isn't a Human.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Pack tactics"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set": "afr",
+  "set_name": "Adventures in the Forgotten Realms",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aafr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/afr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e88e6b39-bb4d-4d69-8007-d42f31bcbc29/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A086a911f-9ed4-4260-ae46-58c9333b95f5&unique=prints",
+  "collector_number": "211",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Miranda Meeks",
+  "artist_ids": [
+    "6c9ca5a9-5ac6-4478-9606-075fd10a8f01"
+  ],
+  "illustration_id": "54c7d1a2-19fe-44aa-a8a8-339d7084b4df",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8460,
+  "penny_rank": 2139,
+  "preview": {
+    "source": "Joe Manganiello",
+    "source_uri": "https://twitter.com/JoeManganiello/status/1409929983598882817",
+    "previewed_at": "2021-06-29"
+  },
+  "prices": {
+    "usd": "0.41",
+    "usd_foil": "0.71",
+    "usd_etched": null,
+    "eur": "1.00",
+    "eur_foil": "1.87",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=527498&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWerewolf%2BPack%2BLeader",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWerewolf%2BPack%2BLeader",
+    "edhrec": "https://edhrec.com/route/?cc=Werewolf+Pack+Leader"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243078%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=571082&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/91924?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

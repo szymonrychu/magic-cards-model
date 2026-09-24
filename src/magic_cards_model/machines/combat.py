@@ -54,6 +54,7 @@ from ..data.subtypes import canonical_subtype
 from ..models.card import Type
 from ..models.card_state import CardState, Counter, TargetRef
 from ..models.mana import ManaCost
+from ..models.token import is_token
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
@@ -1187,6 +1188,14 @@ _CANT_BE_BLOCKED_BY_GREATER_POWER_RE = re.compile(
     r"can't be blocked by creatures with greater power\.?$", re.IGNORECASE
 )
 
+#: Duskwatch Hunter: "This creature can't be blocked by tokens." - CR 111.1's
+#: token-ness (`models.token.is_token`), read off the blocker rather than off
+#: `_CREATURE_DESCRIPTION_RE`'s closed "creatures?" noun: "tokens" is a
+#: different count noun than "creatures", not a "creatures" sentence with an
+#: adjective in front of it, so it gets its own shape rather than stretching
+#: that regex's literal word to match a different one.
+_CANT_BE_BLOCKED_BY_TOKENS_RE = re.compile(r"can't be blocked by tokens\.?$", re.IGNORECASE)
+
 #: Realm of Koh's Spirit token: "can't block or be blocked by <description>."
 #: - one shared description restricting both halves of the compound: the
 #: "be blocked by" half is an evasion restriction read here, and the "can't
@@ -1345,6 +1354,12 @@ def evasion_restriction_refusal(
                     f"{threshold} or less, and {blocker.name} has power {blocker_power} "
                     "(CR 509.1a)"
                 )
+        elif _CANT_BE_BLOCKED_BY_TOKENS_RE.search(sentence):
+            if is_token(blocker):
+                return (
+                    f"{attacker.name} can't be blocked by tokens, and {blocker.name} "
+                    "is one (CR 509.1a, CR 111.1)"
+                )
         elif _CANT_BE_BLOCKED_RE.search(sentence):
             return f"{attacker.name} can't be blocked (CR 509.1a)"
     return None
@@ -1463,6 +1478,7 @@ def looks_like_unparsed_evasion_restriction(
             _CANT_BE_BLOCKED_RE.search(sentence) is None
             and _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence) is None
             and _CANT_BE_BLOCKED_BY_GREATER_POWER_RE.search(sentence) is None
+            and _CANT_BE_BLOCKED_BY_TOKENS_RE.search(sentence) is None
         ):
             return True
     return False

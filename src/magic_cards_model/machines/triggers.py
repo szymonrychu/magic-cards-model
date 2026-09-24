@@ -2386,6 +2386,21 @@ def condition_matches(
         )
 
     if ability.event is TriggerEvent.ATTACKS:
+        threshold = total_power_attack_threshold(condition)
+        if threshold is not None:
+            # CR 508.3d: "you attack" is one trigger for the whole
+            # declaration, read off `Game.declare_attackers`' own
+            # subject-less event, not once per attacker - the identical
+            # batched-declaration reading `_YOU_ATTACK_WITH_ONE_OR_MORE_RE`
+            # gets just below.
+            if event.subject_id is not None or event.player != controller:
+                return False
+            total_power = sum(
+                (game.power_of(attacker) or 0)
+                for attacker in game.attacking_creatures()
+                if game.controller_of(attacker).username == controller
+            )
+            return total_power >= threshold
         batch = batched_attackers(game, condition, controller)
         if batch is not None:
             # CR 603.2c: "one or more <description> attack" is one trigger
@@ -5929,6 +5944,32 @@ _DEFENDER_OPPONENT_RE = re.compile(
 _YOU_ATTACK_WITH_ONE_OR_MORE_RE = re.compile(
     r"^you attack with one or more (?P<description>.+?)$", re.IGNORECASE
 )
+
+#: Desert Were-Worm: "you attack with creatures with total power 12 or
+#: greater" - the same CR 508.3d subject-less "you attack" declaration event
+#: `_YOU_ATTACK_WITH_ONE_OR_MORE_RE` reads, qualified instead by the summed
+#: power of everything the declaration just made an attacker (CR 613.5's
+#: computed power, the same `Game.power_of` every other combat reader in
+#: `machines/combat.py` already asks), rather than by a per-attacker
+#: description. `machines/abilities._strip_condition_once_per_turn_trailer`
+#: already cut the printed sentence's own trailing "for the first time each
+#: turn" off the condition text before this ever sees it, so the count here
+#: is asked fresh on every attack declaration and `TriggeredAbility.once_per_
+#: turn` (CR 603.2h) is what stops it firing twice in the same turn.
+_TOTAL_POWER_ATTACK_RE = re.compile(
+    r"^you attack with creatures with total power (?P<threshold>\d+) or greater$",
+    re.IGNORECASE,
+)
+
+
+def total_power_attack_threshold(condition: str) -> int | None:
+    """The `N` in `_TOTAL_POWER_ATTACK_RE`'s "you attack with creatures with
+    total power `N` or greater", or `None` when `condition` is not that
+    shape."""
+    match = _TOTAL_POWER_ATTACK_RE.fullmatch(condition.strip())
+    if match is None:
+        return None
+    return int(match.group("threshold"))
 
 
 def _batched_attack_match(condition: str) -> "re.Match[str] | None":

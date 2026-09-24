@@ -2083,8 +2083,18 @@ _MASS_SUBJECT_RE = re.compile(
 #: `_MASS_SUBJECT_RE`'s own literal "creatures" is tried first and always
 #: wins when it matches, so this never intercepts "Creatures you control ..."
 #: (Violent Outburst), capitalized only because it opens the sentence.
+#: Along the Crooked Way's own "Goblins and Orcs you control gain menace
+#: until end of turn." - `_MASS_SUBTYPE_SUBJECT_RE`'s single bare CR 205.3m
+#: subtype, widened to a joined list the same way `_SUBTYPE_LIST` already
+#: reads one for `machines/layers.py`'s own static anthem subject (Warg
+#: Rider's "Orcs and Goblins you control have menace", a *permanent* CR
+#: 611.3 version of the identical two-subtype grammar) - membership in *any*
+#: one of the list is enough, the plain CR 205.2b reading a card with two
+#: creature types already gets from a bare type list everywhere else in this
+#: file.
 _MASS_SUBTYPE_SUBJECT_RE = re.compile(
-    r"^(?![Cc]reatures?\b)(?P<subtype>[A-Z][a-z]+) (?P<whose>you control|your opponents control)\b"
+    r"^(?![Cc]reatures?\b)(?P<subtypes>[A-Z][a-z]+(?:(?:,\s*| and )[A-Z][a-z]+)*) "
+    r"(?P<whose>you control|your opponents control)\b"
 )
 #: "Creatures you control with power `<n>` or greater gain `<keyword(s)>`
 #: until end of turn." (Smuggler's Surprise's third Spree mode: "gain
@@ -2146,7 +2156,11 @@ def _mass_creature_group_targets(
         # "Knights" (CR 205.3m plurals with a bare "s") against the subtype as
         # it is actually stored, singular - `board.of(...).subtypes` holds
         # "Knight", never "Knights".
-        subtype = subtype_match.group("subtype").lower().removesuffix("s")
+        subtypes = {
+            part.strip().lower().removesuffix("s")
+            for part in re.split(r",\s*|\s+and\s+", subtype_match.group("subtypes"))
+            if part.strip()
+        }
         base_selector = (
             creatures_controlled_by(controller)
             if subtype_match.group("whose") == "you control"
@@ -2157,7 +2171,7 @@ def _mass_creature_group_targets(
             permanent
             for permanent in game.battlefield
             if base_selector(board.of(permanent), board.characteristics)
-            and any(word.lower() == subtype for word in board.of(permanent).subtypes)
+            and subtypes & {word.lower() for word in board.of(permanent).subtypes}
         ]
     color_filter_match = _MASS_COLOR_FILTER_RE.match(text.strip())
     if color_filter_match is not None:
@@ -11974,6 +11988,55 @@ def _parse_additional_combat_and_main_phase_clause(clause: str) -> AbilityEffect
     return effect
 
 
+#: "Untap all attacking creatures." (Desert Were-Worm's own attack trigger,
+#: Hellkite Charger's identical real-world shape) - CR 508.1f's tap undone in
+#: bulk, off `Game.attacking_creatures` at resolution (a creature removed
+#: from combat between the trigger and its resolution is no longer among
+#: them, and stays as it is). No "you control" qualifier is printed because
+#: CR 508.1 already lets only the active player declare attackers, so every
+#: currently-attacking creature is this ability's own controller's.
+_UNTAP_ALL_ATTACKING_RE = re.compile(r"^untap all attacking creatures\.?$", re.IGNORECASE)
+
+
+def _parse_untap_all_attacking_clause(clause: str) -> AbilityEffect | None:
+    """`_UNTAP_ALL_ATTACKING_RE`'s shape; see the banner above."""
+    if _UNTAP_ALL_ATTACKING_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for creature in list(game.attacking_creatures()):
+            creature.untap()
+
+    return effect
+
+
+#: "After this phase, there is an additional combat phase." - Desert
+#: Were-Worm's and Hellkite Charger's own second sentence: CR 500.8's phase
+#: insertion again, but with no additional main phase riding along the way
+#: `_ADDITIONAL_COMBAT_AND_MAIN_PHASE_RE`'s "after this **main** phase ...
+#: followed by an additional main phase" always does. "This phase" is
+#: whichever phase (an ordinary combat phase, or an earlier extra one) the
+#: resolving ability's own trigger fired during - always the phase this
+#: effect resolves in, the same "no need to track which one" reading
+#: `_parse_additional_combat_and_main_phase_clause` already gives "this main
+#: phase".
+_ADDITIONAL_COMBAT_PHASE_ONLY_RE = re.compile(
+    r"^after this phase,\s*there is an additional combat phase\.?$", re.IGNORECASE
+)
+
+
+def _parse_additional_combat_phase_only_clause(clause: str) -> AbilityEffect | None:
+    """`_ADDITIONAL_COMBAT_PHASE_ONLY_RE`'s shape; see the banner above."""
+    if _ADDITIONAL_COMBAT_PHASE_ONLY_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert game.turn is not None
+        game.turn.insert_extra_phase(COMBAT_PHASE_STEPS)
+
+    return effect
+
+
 #: "Whenever a permanent you control enters tapped, untap it." (Amulet of
 #: Vigor). CR 603.10's "it" points back at whatever the trigger's own
 #: condition named - the permanent `TriggerEvent.ENTERS_THE_BATTLEFIELD`
@@ -14918,6 +14981,121 @@ def _merge_destroy_then_damage_controller_clauses(
                 return
         for username in controllers:
             game.deal_damage(game.player(username), amount, source=source)
+
+    return 2, effect
+
+
+#: "`<source>` deals `<n>` damage to `<target phrase>`. If a `<creature
+#: type>` is dealt damage this way, destroy it." - The Black Arrow's own ETB
+#: ("to any target") and Silver Bolt's real, modern/pioneer-legal activated
+#: ability ("to target creature"), split by the clause splitter's period
+#: into two raw clauses that name each other: the second's "this way" (CR
+#: 608.2h) points back at the first's own damage, so it is one CR 608.2c
+#: instruction, not two independent ones. `creature_type_vocabulary` is the
+#: same closed CR 205.3m word list `_GROUP_NON_SUBTYPE_RE`'s own subtype
+#: filter already validates against, read here off the *result* `Game.
+#: deal_damage` reports (CR 615.6: prevented damage was never "dealt this
+#: way"), not merely off whether the creature carries the type before
+#: damage is even assigned.
+_DAMAGE_ANY_TARGET_RE = re.compile(
+    r"^(?:it |this [a-z]+ )?deals (?P<n>\d+) damage to "
+    r"(?P<phrase>any (?:other )?target|[^.]*?\btargets?\b[^.]*?)\.?$",
+    re.IGNORECASE,
+)
+_DESTROY_IF_TYPE_DEALT_DAMAGE_THIS_WAY_RE = re.compile(
+    r"^if an? (?P<quality>[a-z]+) is dealt damage this way, destroy it\.?$", re.IGNORECASE
+)
+
+
+def _merge_damage_any_target_then_destroy_if_type_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_DAMAGE_ANY_TARGET_RE` + `_DESTROY_IF_TYPE_DEALT_DAMAGE_THIS_WAY_RE`,
+    read as one CR 608.2c instruction; see the banner above."""
+    if index + 1 >= len(clauses):
+        return None
+    first_match = _DAMAGE_ANY_TARGET_RE.fullmatch(clauses[index].strip())
+    if first_match is None:
+        return None
+    second_match = _DESTROY_IF_TYPE_DEALT_DAMAGE_THIS_WAY_RE.fullmatch(clauses[index + 1].strip())
+    if second_match is None:
+        return None
+    quality = second_match.group("quality")
+    if quality.title() not in creature_type_vocabulary():
+        return None
+    creature_type = quality.lower()
+    amount = int(first_match.group("n"))
+    if amount <= 0:
+        return None
+    phrase = first_match.group("phrase")
+    if not _targets_understood(phrase, allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)  # type: ignore[union-attr]
+        )
+        for target in game.resolve_targets(stack_object):
+            dealt = game.deal_damage(target, amount, source=source)
+            if dealt <= 0 or not isinstance(target, CardState):
+                continue
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            characteristics = game.characteristics_of(target)
+            if characteristics is not None and creature_type in {
+                subtype.lower() for subtype in characteristics.subtypes
+            }:
+                game.destroy(target)
+
+    return 2, effect
+
+
+#: "Add `<n>` mana in any combination of colors. Spend this mana only to
+#: `<restriction>`." - CR 106.6's own restriction sentence, printed as its
+#: own clause right after the production it tags (Desolation of Smaug's own
+#: "Add four mana in any combination of colors. Spend this mana only to
+#: cast Dragon spells.") - one CR 608.2c instruction, split by the clause
+#: splitter's period the same way the damage-then-destroy pair above is.
+#: `machines/cost.spend_restriction` is the exact CR 106.6 reader every mana
+#: ability's own trailing restriction sentence already goes through, reused
+#: here rather than rebuilt.
+def _merge_add_any_combination_mana_with_restriction_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_ADD_ANY_COMBINATION_MANA_RE` + `machines.cost.spend_restriction`,
+    read as one CR 608.2c instruction; see the banner above."""
+    if index + 1 >= len(clauses):
+        return None
+    match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(clauses[index].strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None or count <= 0:
+        return None
+    second = clauses[index + 1].strip()
+    if not second.endswith("."):
+        second = second + "."
+    restriction = spend_restriction(second)
+    if restriction is None or not restriction.understood:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        pool = player.mana_pool
+        source = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        for _ in range(count):
+            color = _choose_a_color(
+                game,
+                player,
+                source,
+                "choose a color for mana",
+                source_id=source_id_of(stack_object),
+            )
+            pool.add(color, restriction=restriction)
 
     return 2, effect
 
@@ -20803,6 +20981,234 @@ def _parse_batched_attack_group_pump_clause(text: str) -> AbilityEffect | None:
                 )
 
     return effect
+
+
+#: Who an attack trigger's own bare "it" names (CR 400.7): the ability's own
+#: source (CR 700.7's plain self-reference) - Eagle of the Great Shelf's
+#: "Whenever this creature attacks, it gets ..." - unless the printed
+#: condition instead reads "equipped creature attacks"/"enchanted creature
+#: attacks" (CR 301.5a, CR 303.4b), in which case "it" is whatever the
+#: Equipment or Aura is attached to, not the Equipment/Aura itself - Sigil
+#: of Valor's own "Whenever equipped creature attacks alone, it gets ...".
+_EQUIPPED_OR_ENCHANTED_CONDITION_RE = re.compile(
+    r"\b(?:equipped|enchanted) creature\b", re.IGNORECASE
+)
+
+
+def _attack_trigger_pump_subject(game: "Game", ability: AbilityOnStack) -> CardState | None:
+    source = ability.source(game)
+    if source is None:
+        return None
+    condition = ability.ability.condition if isinstance(ability.ability, TriggeredAbility) else ""
+    if _EQUIPPED_OR_ENCHANTED_CONDITION_RE.search(condition):
+        if source.attached_to is None:
+            return None
+        attached = game.find_by_id(source.attached_to)
+        return attached if isinstance(attached, CardState) else None
+    return source
+
+
+#: "Whenever this creature attacks, it gets `<P>`/`<T>` until end of turn
+#: for each `<qualifier>`." - Eagle of the Great Shelf's own "it gets +1/+1
+#: until end of turn for each other creature you control." CR 608.2h fixes
+#: the "for each" count once, as the ability resolves - `_for_each_
+#: multiplier` is the same "(other) `<qualifier>` you control" reader a mass
+#: pump's own "for each" tail already reuses - and the fixed pump is a
+#: one-shot continuous effect (CR 611.2) on `_attack_trigger_pump_subject`'s
+#: own answer, built directly the same way `_parse_batched_attack_group_
+#: pump_clause`'s own per-creature pump above is, rather than through
+#: `machines/layers.py`'s printed-sentence parser, which has no "self,
+#: scaled by a live for-each count, until end of turn" reader of its own to
+#: hand this to.
+_SELF_ATTACK_PUMP_FOR_EACH_RE = re.compile(
+    r"^it gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn "
+    r"for each (?P<each>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_pump_for_each_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_ATTACK_PUMP_FOR_EACH_RE`'s shape; see the banner above."""
+    match = _SELF_ATTACK_PUMP_FOR_EACH_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+    multiplier = _for_each_multiplier(match.group("each"))
+    if multiplier is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = _attack_trigger_pump_subject(game, ability)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        count = multiplier(game, ability.controller, str(source.id))
+        if count <= 0:
+            return
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: gets {power * count:+d}/{toughness * count:+d} "
+                    "until end of turn"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                source_id=ability.source_id,
+                selector=only_this_incarnation(source, source.zone_change_stamp),
+                modification=modify_power_toughness(power * count, toughness * count),
+            )
+        )
+
+    return effect
+
+
+#: "Whenever `<this>` attacks, `<pronoun>` deals damage equal to `<count>`
+#: to any target[/to each opponent]." - Smaug the Magnificent's own
+#: "Whenever Smaug attacks, he deals damage equal to the number of
+#: Treasures you control to any target." and Eivor, Battle-Ready's real,
+#: modern-legal "Whenever Eivor attacks, it deals damage equal to the
+#: number of Equipment you control to each opponent." - the identical
+#: magnitude grammar with two different printed recipients, read the CR
+#: 201.5-self-normalized way (the printed name/pronoun is rewritten to
+#: "it"/"he"/"she" before `trigger_effect_for`'s fallback ever reaches a
+#: clause parser, so the literal pronouns are read directly here rather
+#: than needing yet another normalization pass). `count_expression` already
+#: reads "the number of `<qualifier>` you control" whole - this is that
+#: same expression grammar, just reached from a "deals damage equal to ..."
+#: opening instead of a "for each" one.
+_SELF_DAMAGE_EQUAL_TO_COUNT_RE = re.compile(
+    r"^(?:it|he|she|this [a-z]+) deals damage equal to (?P<expr>.+?) to "
+    r"(?P<recipient>any (?:other )?target|each opponent)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_SELF_DAMAGE_EQUAL_TO_COUNT_RE`'s shape; see the banner above.
+
+    Ability-only: the bare pronoun/"this `<noun>`" subject only ever names a
+    permanent's own ability, the same restriction `_parse_damage_that_much_
+    clause` already holds itself to for the identical reason.
+    """
+    if for_spell:
+        return None
+    match = _SELF_DAMAGE_EQUAL_TO_COUNT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    counted = count_expression(match.group("expr"))
+    if counted is None:
+        return None
+    recipient = match.group("recipient").lower()
+    each_opponent = recipient == "each opponent"
+    if not each_opponent and not _targets_understood(recipient, allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        amount = counted(game, ability.controller)
+        if amount <= 0:
+            return
+        if each_opponent:
+            for opponent in _opponents(game, ability.controller):
+                game.deal_damage(opponent, amount, source=source)
+            return
+        for target in game.resolve_targets(ability):
+            game.deal_damage(target, amount, source=source)
+
+    return effect
+
+
+#: "[U]ntil end of turn, this creature gets `<P>`/`<T>` and creatures you
+#: control gain `<keyword(s)>`." - Wargling's own Ferocious payoff, split by
+#: `_CLAUSE_SEPARATOR`'s bare "and" into two raw clauses before either ever
+#: reaches `_parse_mixed_clause` - "until end of turn, this creature gets
+#: `<P>`/`<T>`" and "creatures you control gain `<keyword(s)>`" - which is
+#: what makes this one CR 608.2c instruction (one printed duration, shared
+#: rather than repeated) a `_merge_*_clauses` pair like every other "clause A,
+#: clause B carries A's own duration" case in this file, not an ordinary
+#: single-clause reader: `_parse_mass_pump_clause`'s own "creatures you
+#: control ..." subject grammar does not open on "this creature" either, so
+#: neither half alone, nor the never-reached compound whole, is a shape it
+#: (or `machines/layers.py`'s anthem readers) already reads. Two independent
+#: one-shot continuous effects (CR 611.2), not one shared `ContinuousEffect`,
+#: since one targets the source alone and the other the whole team, fixed
+#: **now** (CR 611.2c) the same "read the group once, at resolution" way
+#: `_parse_batched_attack_group_pump_clause`'s own per-creature pump above
+#: already is.
+_SELF_PUMP_DURATION_FIRST_NO_TAIL_RE = re.compile(
+    r"^until end of turn, this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)$",
+    re.IGNORECASE,
+)
+_GROUP_KEYWORD_GRANT_NO_DURATION_RE = re.compile(
+    r"^creatures you control gain (?P<keywords>[a-z][a-z, ]*?)$", re.IGNORECASE
+)
+
+
+def _merge_self_pump_and_group_keyword_grant_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, AbilityEffect] | None:
+    """`_SELF_PUMP_DURATION_FIRST_NO_TAIL_RE` + `_GROUP_KEYWORD_GRANT_NO_
+    DURATION_RE`, read as one CR 608.2c instruction; see the banner above."""
+    if for_spell or index + 1 >= len(clauses):
+        return None
+    first_match = _SELF_PUMP_DURATION_FIRST_NO_TAIL_RE.fullmatch(clauses[index].strip())
+    if first_match is None:
+        return None
+    second_match = _GROUP_KEYWORD_GRANT_NO_DURATION_RE.fullmatch(clauses[index + 1].strip())
+    if second_match is None:
+        return None
+    power = int(first_match.group("power"))
+    toughness = int(first_match.group("toughness"))
+    keywords = _split_and_validate_keywords(second_match.group("keywords").strip())
+    if keywords is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name}: gets {power:+d}/{toughness:+d} until end of turn",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                source_id=ability.source_id,
+                selector=only_this_incarnation(source, source.zone_change_stamp),
+                modification=modify_power_toughness(power, toughness),
+            )
+        )
+        controller = ability.controller
+        board = game.computed_board()
+        group = [
+            permanent
+            for permanent in game.battlefield
+            if board.of(permanent).is_creature
+            and game.controller_of(permanent).username == controller
+        ]
+        for creature in group:
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=(
+                            f"{ability.source_name}: creatures you control gain "
+                            f"{keyword} until end of turn"
+                        ),
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        source_id=ability.source_id,
+                        selector=only_this_incarnation(creature, creature.zone_change_stamp),
+                        modification=grant_ability(keyword),
+                    )
+                )
+
+    return 2, effect
 
 
 #: "exile a card from your hand" / "exile two cards from your hand" as a
@@ -41849,6 +42255,20 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     additional_combat_and_main_phase = _parse_additional_combat_and_main_phase_clause(clause)
     if additional_combat_and_main_phase is not None:
         return additional_combat_and_main_phase  # type: ignore[return-value]
+    untap_all_attacking = _parse_untap_all_attacking_clause(clause)
+    if untap_all_attacking is not None:
+        return untap_all_attacking  # type: ignore[return-value]
+    self_pump_for_each = _parse_self_pump_for_each_clause(clause)
+    if self_pump_for_each is not None:
+        return self_pump_for_each  # type: ignore[return-value]
+    self_damage_equal_to_count = _parse_self_damage_equal_to_count_clause(
+        clause, for_spell=for_spell
+    )
+    if self_damage_equal_to_count is not None:
+        return self_damage_equal_to_count  # type: ignore[return-value]
+    additional_combat_phase_only = _parse_additional_combat_phase_only_clause(clause)
+    if additional_combat_phase_only is not None:
+        return additional_combat_phase_only  # type: ignore[return-value]
     for_each_opponent_tap_then_stun = _parse_for_each_opponent_tap_then_stun_clause(
         clause, for_spell=for_spell
     )
@@ -42986,6 +43406,30 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_destroy_then_damage_controller_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_self_pump_and_group_keyword_grant_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_damage_any_target_then_destroy_if_type_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_add_any_combination_mana_with_restriction_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
