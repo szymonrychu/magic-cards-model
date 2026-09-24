@@ -1364,6 +1364,16 @@ class CardState(EngineModel):
     move just made. Never persisted: the departure event is raised and its
     triggers found within that same move."""
 
+    _abilities_as_it_left: tuple[str, ...] | None = PrivateAttr(default=None)
+    """The computed ability lines this object had as it last left the
+    battlefield (CR 603.10a's look-back), taken by
+    `remember_last_known_power_toughness` while the layer engine still
+    answered for it; `None` when no board was bound. A leaves-the-battlefield
+    trigger it had *lost* by then (Hellcat returned with no abilities, a
+    creature under Humility) does not trigger - read by `machines/triggers.
+    triggered_abilities_on`. Never persisted: the departure's triggers are
+    collected within that same move, and any later move clears it."""
+
     def bind_to_game(self, game: Any) -> None:
         """Tell this object which game computes its characteristics (CR 613.5).
 
@@ -2488,6 +2498,7 @@ class CardState(EngineModel):
         to record.
         """
         computed = self.computed_characteristics
+        self._abilities_as_it_left = None if computed is None else tuple(computed.abilities)
         power = None if computed is None else computed.power
         toughness = None if computed is None else computed.toughness
         self.last_known_power = None if power == self.printed_power else power
@@ -2515,6 +2526,11 @@ class CardState(EngineModel):
     def granted_as_it_left(self) -> tuple[str, ...]:
         """See `_granted_as_it_left`."""
         return self._granted_as_it_left
+
+    @property
+    def abilities_as_it_left(self) -> tuple[str, ...] | None:
+        """See `_abilities_as_it_left`."""
+        return self._abilities_as_it_left
 
     def move_to(self, zone: Zone) -> None:
         """Move to another zone, resetting the state a card loses on the way.
@@ -2550,6 +2566,7 @@ class CardState(EngineModel):
             self.last_known_types = None
             self.last_known_subtypes = None
             self.last_known_keywords = None
+            self._abilities_as_it_left = None
         self.zone_change_stamp = new_id()
         self.zone = zone
         self._granted_as_it_left = ()

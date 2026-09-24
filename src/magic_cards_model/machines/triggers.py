@@ -6111,8 +6111,25 @@ def triggered_abilities_on(game: "Game", source: CardState) -> list[TriggeredAbi
             # same way `CardState.class_ability_text` already keeps a
             # static ability quiet until then.
             continue
+        if id(ability) not in granted_ids and not _had_as_it_left(source, ability):
+            continue
         had.append(ability)
     return had
+
+
+def _had_as_it_left(source: CardState, ability: TriggeredAbility) -> bool:
+    """CR 603.10a: a leaves-the-battlefield ability looks back at the object
+    as it existed immediately before the event - so a printed one it had
+    lost by then (layer 6, CR 613.1f: Hellcat, Undying Vigilante returned
+    with no abilities) does not trigger. True for any object not just off
+    the battlefield, or with no look-back snapshot."""
+    if source.zone is Zone.BATTLEFIELD or ability.event not in _LOOK_BACK_EVENTS:
+        return True
+    lines = source.abilities_as_it_left
+    if lines is None:
+        return True
+    text = ability.raw or ability.text
+    return any(text in line or line in text for line in lines)
 
 
 def abilities_triggered_by(

@@ -15531,7 +15531,12 @@ class Game(EngineModel):
                         event=TriggerEvent.DIES,
                         subject_id=card_state.id,
                         subject_name=card_state.name,
-                        subject_controller=card_state.controller,
+                        # CR 603.10a: who controlled it as it died - layer 2
+                        # (a borrowed creature, CR 613.1b), not the stored
+                        # controller the zone change reset.
+                        subject_controller=(
+                            left_battlefield_chars.controller or card_state.controller
+                        ),
                         subject_card=card_state.card,
                         # CR 603.10a: dies is a look-back event - the
                         # snapshot taken above, while the permanent was still

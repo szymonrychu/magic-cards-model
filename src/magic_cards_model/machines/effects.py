@@ -246,6 +246,7 @@ from .turn import COMBAT_PHASE_STEPS, Step
 
 if TYPE_CHECKING:
     from ..models.game import Game, StackObject
+    from .layers import Modification
 
 Effect = Callable[["Game", CardState], None]
 AbilityEffect = Callable[["Game", AbilityOnStack], None]
@@ -52428,6 +52429,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
     for reader in (
         _parse_if_self_isnt_a_creature_clause,
         _parse_double_target_power_and_toughness_clause,
+        _parse_return_with_rider_clause,
         copy_ability_effect,
         control_change_ability_effect,
     ):
@@ -52509,6 +52511,110 @@ def _parse_double_target_power_and_toughness_clause(
                     selector=only_this_incarnation(target, target.zone_change_stamp),
                     modification=modify_power_toughness(chars.power, chars.toughness),
                 )
+            )
+
+    return effect
+
+
+#: "Return `<it|him|her|them>` to the battlefield[ tapped] under `<its owner's|
+#: your>` control[ with `<n>` `<kind>` counter(s) on `<it>`]. `<It|She|That
+#: creature>` `<rider>`." - Hellcat, Undying Vigilante's "... with a +1/+1
+#: counter on her. She loses all abilities and gains haste." and Thunderbolts
+#: Conspiracy's "... with a finality counter on it. That creature is a Hero in
+#: addition to its other types." Read whole: the rider's subject is the
+#: object the return just made (CR 400.7), which only this reader knows.
+#:
+#: "It" is the triggering event's subject when the event names one (the
+#: Villain that died, not the Conspiracy), else the ability's own source.
+_RETURN_WITH_RIDER_RE = re.compile(
+    r"^return (?:it|him|her|them|that card|that creature) to the battlefield(?P<tapped> tapped)?"
+    r" under (?P<control>(?:its|his|her|their) owners?'?s?|your) control"
+    rf"(?: with (?P<amount>{COUNT}) (?P<kind>[+/\w-]+) counters? on (?:it|him|her|them))?\.\s*"
+    r"(?:it|he|she|they|that creature) (?P<rider>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+#: One rider predicate: "loses all abilities", "gains <keywords>", or "is
+#: a[n] <creature types> in addition to its other types" (CR 205.1b).
+_RETURN_RIDER_PREDICATE_RE = re.compile(
+    r"^(?:(?P<loses>loses all abilities)"
+    r"|gains (?P<keywords>[a-z][a-z ,]*?)"
+    r"|is an? (?P<types>[A-Za-z][A-Za-z' -]*?) in addition to its other types)$",
+    re.IGNORECASE,
+)
+
+
+def _return_rider_modifications(rider: str) -> "list[tuple[str, Layer, Modification]] | None":
+    """Each predicate of a return rider as its layer and modification (CR
+    613.1d/e/f), in printed order - or `None` for one this reader cannot
+    read (the whole ability then fails closed)."""
+    from .layers import _creature_type_words, _split_and_validate_keywords
+
+    parts: "list[tuple[str, Layer, Modification]]" = []
+    for predicate in re.split(r"\s+and\s+(?=loses|gains|is\b)", rider.strip()):
+        match = _RETURN_RIDER_PREDICATE_RE.fullmatch(predicate.strip())
+        if match is None:
+            return None
+        if match.group("loses"):
+            parts.append(("loses all abilities", Layer.ABILITY, lose_all_abilities))
+            continue
+        if match.group("keywords") is not None:
+            keywords = _split_and_validate_keywords(match.group("keywords"))
+            if keywords is None:
+                return None
+            parts.extend((f"gains {kw}", Layer.ABILITY, grant_ability(kw)) for kw in keywords)
+            continue
+        subtypes = _creature_type_words(match.group("types"))
+        if subtypes is None:
+            return None
+        parts.extend((f"is a {subtype}", Layer.TYPE, add_subtype(subtype)) for subtype in subtypes)
+    return parts
+
+
+def _parse_return_with_rider_clause(effect_text: str) -> AbilityEffect | None:
+    """`_RETURN_WITH_RIDER_RE`'s shape. The return happens only while the card
+    is still in the graveyard it went to (CR 608.2's ordinary "the object is
+    gone"); the rider's effects are indefinite (CR 611.2a: no duration
+    stated) and follow only the object the return made (CR 400.7)."""
+    match = _RETURN_WITH_RIDER_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    parts = _return_rider_modifications(match.group("rider"))
+    if not parts:
+        return None
+    tapped = match.group("tapped") is not None
+    under_owner = not match.group("control").lower().startswith("your")
+    counter_kind = _counter_kind(match.group("kind")) if match.group("kind") else None
+    counter_amount = parse_count(match.group("amount")) if match.group("amount") else None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        referent_id = (
+            event.subject_id
+            if event is not None and event.subject_id is not None
+            else ability.source_id
+        )
+        card = game.find_by_id(referent_id) if referent_id is not None else None
+        if card is None or card.zone is not Zone.GRAVEYARD:
+            return
+        controller = (card.owner or ability.controller) if under_owner else ability.controller
+        returned = game.put_onto_battlefield(card, controller, tapped=tapped)
+        if returned.zone is not Zone.BATTLEFIELD:
+            return
+        if counter_kind is not None and counter_amount:
+            game.add_counters(returned, counter_kind, counter_amount)
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for what, layer, modification in parts:
+            store.add(
+                ContinuousEffect(
+                    description=f"{ability.source_name}: {returned.name} {what}",
+                    layer=layer,
+                    timestamp=timestamp,
+                    selector=only_this_incarnation(returned, returned.zone_change_stamp),
+                    modification=modification,
+                ),
+                game,
             )
 
     return effect
