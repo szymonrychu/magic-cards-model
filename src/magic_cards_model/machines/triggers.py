@@ -2247,6 +2247,16 @@ def condition_matches(
                 or Supertype.LEGENDARY not in game.characteristics_of(subject).supertypes
             ):
                 return False
+        if _color_condition(condition) is not None:
+            # Eldrazi Mimic's "another colorless creature you control enters"
+            # (CR 105.2c) and any colour adjective on the entering object,
+            # read off its computed colours (CR 613.1e) - unread, a green
+            # Grizzly Bears fired a colorless-only trigger.
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if subject is None or not _color_matches(
+                game.characteristics_of(subject).colors, condition
+            ):
+                return False
         if not _controller_clause_holds(
             condition, controller, event.subject_controller
         ) or not _types_match(event.subject_types, condition):

@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "4a865cea-f947-4736-8ace-ba478fceeb22",
+  "oracle_id": "e4402d21-bb7f-4777-bc8d-b24bf2faccb0",
+  "multiverse_ids": [],
+  "resource_id": "AB47F6E4D1A3FE6516BA7D6E9649E8F5D42E3970BAC9830ADD76FE4983B18FF0",
+  "mtgo_id": 154026,
+  "arena_id": 103424,
+  "tcgplayer_id": 709481,
+  "cardmarket_id": 900611,
+  "name": "Old Fat Spider Can't See Me",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/4a865cea-f947-4736-8ace-ba478fceeb22",
+  "scryfall_uri": "https://scryfall.com/card/hob/50/old-fat-spider-cant-see-me?utm_source=api",
+  "layout": "saga",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-08-20T04:44:26Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.jpg?1787201066",
+    "normal": "https://cards.scryfall.io/normal/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.jpg?1787201066",
+    "large": "https://cards.scryfall.io/large/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.jpg?1787201066",
+    "png": "https://cards.scryfall.io/png/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.png?1787201066",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.jpg?1787201066",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.jpg?1787201066",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.webp?1787201066",
+    "grid": "https://cards.scryfall.io/grid/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.webp?1787201066",
+    "display": "https://cards.scryfall.io/display/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.webp?1787201066",
+    "art": "https://cards.scryfall.io/art/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.webp?1787201066",
+    "crop": "https://cards.scryfall.io/crop/front/4/a/4a865cea-f947-4736-8ace-ba478fceeb22.webp?1787201066"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Enchantment \u2014 Saga",
+  "oracle_text": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after IV.)\nI \u2014 Target creature you control gains hexproof for as long as this Saga remains on the battlefield.\nII \u2014 Prevent all damage that would be dealt by up to one target creature for as long as this Saga remains on the battlefield.\nIII, IV \u2014 Draw a card.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4a865cea-f947-4736-8ace-ba478fceeb22/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae4402d21-bb7f-4777-bc8d-b24bf2faccb0&unique=prints",
+  "collector_number": "50",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Rovina Cai",
+  "artist_ids": [
+    "b64d0979-4028-4409-8285-eec2fa282dd4"
+  ],
+  "illustration_id": "6583cfcf-593e-4c14-96b3-a3781e16080f",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 18317,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.10",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOld%2BFat%2BSpider%2BCan%2527t%2BSee%2BMe",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOld%2BFat%2BSpider%2BCan%2527t%2BSee%2BMe",
+    "edhrec": "https://edhrec.com/route/?cc=Old+Fat+Spider+Can%27t+See+Me"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709481%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900611&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154026?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

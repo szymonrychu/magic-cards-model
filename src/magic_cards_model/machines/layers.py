@@ -601,10 +601,55 @@ class CountColorsAmongControlledBy(CountBase):
         return len(colors)
 
 
+class CountPermanentsControlledByItsController(CountBase):
+    """How many permanents of a card type or with a subtype the *asking
+    object's own controller* controls - the quoted "This creature's power and
+    toughness are each equal to the number of lands you control." that
+    Beorn's Hospitality grants itself. "You" in a granted ability is whoever
+    controls the object that has it, read off `chars.controller` every time
+    the board is computed (CR 613.5) rather than baked in when the grant
+    resolved, so a control change moves the count with it. Exactly one of
+    `card_type`/`subtype` (lowercased) is set.
+    """
+
+    kind: Literal["permanents_controlled_by_its_controller"] = (
+        "permanents_controlled_by_its_controller"
+    )
+    card_type: Type | None = None
+    subtype: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return sum(
+            1
+            for other in board.values()
+            if other.controller == chars.controller
+            and (self.card_type is None or self.card_type in other.types)
+            and (
+                self.subtype is None or any(word.lower() == self.subtype for word in other.subtypes)
+            )
+        )
+
+
+class CountCountersOnIt(CountBase):
+    """How many counters of one kind are on the asking object itself (CR
+    122.1) - Myth Realized's granted "This creature's power and toughness are
+    each equal to the number of lore counters on it." Counters are read off
+    the computed characteristics, so the count moves the moment one is added
+    or removed."""
+
+    kind: Literal["counters_on_it"] = "counters_on_it"
+    counter: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return chars.counters.get(self.counter, 0)
+
+
 #: How many of something an effect counts, judged against one object and the
 #: board as it stands in that sublayer (CR 613.5).
 Count = Annotated[
     FixedCount
+    | CountPermanentsControlledByItsController
+    | CountCountersOnIt
     | CountOtherCreaturesLikeThatOne
     | CountOtherCreaturesNamed
     | CountLandsControlledBy
@@ -3334,6 +3379,17 @@ _SELF_PUMP_PER_GRAVEYARD_CARD_BATCH_RE = re.compile(
 )
 
 
+#: Master's Councillors: "This creature gets +2/+0 for each graveyard with
+#: seven or more cards in it." - counted per *graveyard* (CR 404.1: each
+#: player has their own), not per card: a graveyard at or past the threshold
+#: counts once, however far past it is.
+_SELF_PUMP_PER_FULL_GRAVEYARD_RE = re.compile(
+    r"^this (?:creature|permanent|token) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"for each graveyard with (?P<threshold>[a-z]+|\d+) or more cards in it\.?$",
+    re.IGNORECASE,
+)
+
+
 def _card_type_word(word: str) -> Type | None:
     """ "creature[s]" -> `Type.CREATURE` (CR 205.2a), or `None` for anything
     not one of the fifteen printed card types. The same singularisation
@@ -3451,6 +3507,50 @@ def _self_pump_per_graveyard_card_builder(
                 sublayer=Sublayer.MODIFY,
                 timestamp=timestamp,
                 source_id=source.id,
+                selector=_only(source.id),
+                modification=modify_power_toughness(amount_power, amount_toughness),
+            )
+        ]
+
+    return builder
+
+
+def _self_pump_per_full_graveyard_builder(
+    power: int, toughness: int, threshold: int, *, line: str
+) -> EffectBuilder:
+    """`_SELF_PUMP_PER_FULL_GRAVEYARD_RE`'s shape. Sublayer 7c (CR 613.4c),
+    no duration (CR 611.3a: a static ability's effect is not locked in). The
+    count - how many of `context.graveyard_by_controller`'s graveyards hold
+    `threshold` or more cards - is read when the effect is built, which
+    `effects_for` does on every CR 613.5 computation, the same live recompute
+    `_self_pump_per_graveyard_card_builder` right above relies on.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        count = sum(
+            1
+            for graveyard in context.graveyard_by_controller.values()
+            if len(graveyard) >= threshold
+        )
+        if count == 0:
+            return []
+        amount_power, amount_toughness = power * count, toughness * count
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {amount_power:+d}/{amount_toughness:+d} from {count} "
+                    f"graveyard(s) with {threshold} or more cards"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
                 modification=modify_power_toughness(amount_power, amount_toughness),
             )
@@ -4227,9 +4327,15 @@ _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
 #: nowhere near this shape) which would strip them. `extra_type` is read
 #: through the same `_OTHER_PERMANENT_TYPE_WORDS` map Karn's own "becomes a[n]
 #: <type> creature" shape above uses.
+#:
+#: Widened to any `_SUBJECT` and an optional keyword grant riding on the same
+#: sentence - Stone by Sunlight's "Until end of turn, target creature becomes
+#: an artifact in addition to its other types and gains indestructible."
+#: (duration-first, normalised before this is tried): layer 4 adds the type,
+#: layer 6 the keywords (CR 613.1f), both until end of turn.
 _BECOMES_TYPE_IN_ADDITION_RE = re.compile(
-    r"^target permanent becomes an? (?P<extra_type>[a-z]+) in addition to its "
-    r"other types until end of turn\.?$",
+    rf"^(?:target permanent|{_SUBJECT}) becomes an? (?P<extra_type>[a-z]+) in addition to its "
+    r"other types(?: and gains (?P<keywords>[a-z][a-z ,]*?))? until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -4663,6 +4769,150 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
 # Guildpact print the same sentence verbatim. Keyed by name, the second card of
 # each pair silently did nothing - not even a `LayerNotice`, since these shapes
 # do not open the way `_LOOKS_LIKE_LAYER_EFFECT_RE`'s pump/anthem ones do.
+
+#: "This enchantment becomes a Bear creature in addition to its other types
+#: and gains "This creature's power and toughness are each equal to the number
+#: of lands you control."" (Beorn's Hospitality) and its until-end-of-turn
+#: twin "Until end of turn, this enchantment becomes a Monk Avatar creature
+#: ... and gains "... equal to the number of lore counters on it."" (Myth
+#: Realized; `_normalize_duration_first` has already moved the duration to
+#: the end). One instruction in three layers - see
+#: `_self_becomes_creature_with_pt_ability_builder`.
+_SELF_BECOMES_CREATURE_WITH_PT_ABILITY_RE = re.compile(
+    r"^this (?:enchantment|artifact|land|permanent) becomes an? "
+    r"(?P<subtypes>[A-Z][A-Za-z'-]*(?: [A-Z][A-Za-z'-]*)*) "
+    r"(?P<types>(?:artifact |enchantment )*creature) in addition to its other types "
+    r"and gains [\"“](?P<granted>this creature['’]s power and toughness are each equal to "
+    r"the number of (?P<counted>[^\"”]+?))\.?[\"”]"
+    r"(?P<until_eot> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+#: The two counted phrases `_SELF_BECOMES_CREATURE_WITH_PT_ABILITY_RE`'s
+#: quoted ability is read with: "`<qualifier>` you control" and "`<kind>`
+#: counters on it".
+_GRANTED_PT_COUNT_YOU_CONTROL_RE = re.compile(r"^(?P<qualifier>[a-z]+) you control$", re.I)
+_GRANTED_PT_COUNT_COUNTERS_RE = re.compile(r"^(?P<kind>[a-z+/0-9-]+) counters on it$", re.I)
+
+
+def _granted_pt_count(counted: str) -> Count | None:
+    """The `Count` a granted "power and toughness are each equal to the number
+    of `<counted>`" reads, relative to the object that has the ability - or
+    `None` for a phrase this module cannot count (fail closed)."""
+    counted = counted.strip()
+    if match := _GRANTED_PT_COUNT_YOU_CONTROL_RE.fullmatch(counted):
+        qualifier = match.group("qualifier")
+        card_type = _card_type_word(qualifier)
+        if card_type is not None:
+            return CountPermanentsControlledByItsController(card_type=card_type)
+        subtype = _singular_subtype_word(qualifier)
+        if subtype is not None:
+            return CountPermanentsControlledByItsController(subtype=subtype)
+        return None
+    if match := _GRANTED_PT_COUNT_COUNTERS_RE.fullmatch(counted):
+        return CountCountersOnIt(counter=match.group("kind").lower())
+    return None
+
+
+def _self_becomes_creature_with_pt_ability_builder(
+    subtypes: Sequence[str],
+    types: Sequence[Type],
+    granted: str,
+    count: Count,
+    duration: Duration,
+) -> EffectBuilder:
+    """`_SELF_BECOMES_CREATURE_WITH_PT_ABILITY_RE`'s shape.
+
+    - layer 4 (CR 613.1d): the new card types and creature subtypes are
+      *added* - "in addition to its other types" (CR 205.1b);
+    - layer 6 (CR 613.1f): the quoted ability is added;
+    - sublayer 7b (CR 613.4b): that ability sets power and toughness to the
+      count. It is not a characteristic-defining ability - CR 604.3a's fourth
+      criterion excludes "an ability that an object grants to itself" - so it
+      is never 7a. Its timestamp is the grant's (CR 613.7a: the later of the
+      object's and the creating effect's), and it is keyed to the granted
+      text (`source_ability`) so a later layer-6 removal of that ability
+      stops it before it ever applies (CR 613.6).
+
+    The subject is the ability's own source (`targets` holds it, since the
+    text names no target); a source that is no longer this object (CR 400.7)
+    is not in `targets` and nothing is built.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            selector = only_this_incarnation(target, target.zone_change_stamp)
+            named = " ".join(subtypes)
+            for modification in (
+                *(add_type(card_type) for card_type in types),
+                *(AddSubtype(subtype=subtype) for subtype in subtypes),
+            ):
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} becomes a {named} creature",
+                        layer=Layer.TYPE,
+                        timestamp=timestamp,
+                        duration=duration,
+                        selector=selector,
+                        modification=modification,
+                    )
+                )
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} gains {granted!r}",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    duration=duration,
+                    selector=selector,
+                    modification=grant_ability(granted),
+                )
+            )
+            effects.append(
+                ContinuousEffect(
+                    description=f"{target.name}: {granted}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    duration=duration,
+                    source_id=target.id,
+                    source_ability=granted,
+                    selector=selector,
+                    modification=define_power_toughness(count),
+                )
+            )
+        return effects
+
+    return builder
+
+
+def _parse_self_becomes_creature_with_pt_ability(sentence: str) -> EffectBuilder | None:
+    """`_SELF_BECOMES_CREATURE_WITH_PT_ABILITY_RE`'s match turned into its
+    builder, or `None` (an uncountable quoted phrase fails closed)."""
+    match = _SELF_BECOMES_CREATURE_WITH_PT_ABILITY_RE.fullmatch(sentence)
+    if match is None:
+        return None
+    types = [_card_type_word(word) for word in match.group("types").split()]
+    if any(card_type is None for card_type in types):
+        return None
+    count = _granted_pt_count(match.group("counted"))
+    if count is None:
+        return None
+    granted = match.group("granted").strip()
+    granted = granted[0].upper() + granted[1:] + "."
+    return _self_becomes_creature_with_pt_ability_builder(
+        match.group("subtypes").split(),
+        [card_type for card_type in types if card_type is not None],
+        granted,
+        count,
+        Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE,
+    )
+
 
 #: "Nonbasic lands are Mountains." (Blood Moon, Magus of the Moon) / "Nonbasic
 #: lands are Islands." (Harbinger of the Seas, confirmed with `resolve_cards`).
@@ -6160,7 +6410,9 @@ def _becomes_creature_type_with_base_pt_builder(
     return builder
 
 
-def _becomes_type_in_addition_builder(extra_type: Type) -> EffectBuilder:
+def _becomes_type_in_addition_builder(
+    extra_type: Type, keywords: Sequence[str] = ()
+) -> EffectBuilder:
     """ "Target permanent becomes an artifact in addition to its other types
     until end of turn." (Liquimetal Coating) - layer 4 only (CR 613.1d),
     additive: `add_type` keeps every type the permanent already had, which is
@@ -6178,18 +6430,32 @@ def _becomes_type_in_addition_builder(extra_type: Type) -> EffectBuilder:
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        return [
-            ContinuousEffect(
-                description=f"{source.name}: {target.name} becomes a "
-                f"{extra_type.value} in addition to its other types",
-                layer=Layer.TYPE,
-                timestamp=timestamp,
-                duration=Duration.UNTIL_END_OF_TURN,
-                selector=only_this_incarnation(target, target.zone_change_stamp),
-                modification=add_type(extra_type),
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            selector = only_this_incarnation(target, target.zone_change_stamp)
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} becomes a "
+                    f"{extra_type.value} in addition to its other types",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=add_type(extra_type),
+                )
             )
-            for target in targets
-        ]
+            effects.extend(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} gains {keyword}",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=grant_ability(keyword),
+                )
+                for keyword in keywords
+            )
+        return effects
 
     return builder
 
@@ -7277,14 +7543,14 @@ def _basic_land_type_count_power_only_cda_builder(line: str) -> EffectBuilder:
 #: guessing at the vocabulary check `count_expression`'s own subtype branch
 #: uses would be new, unverified scope.
 _QUALIFIER_COUNT_CDA_RE = re.compile(
-    r"^this (?:creature|permanent|token)'s power and toughness are each equal to "
-    r"the number of (?P<qualifier>[a-z]+) you control\.?$",
+    r"^this (?:creature|permanent|token)'s (?P<stats>power and toughness are each|power is) "
+    r"equal to the number of (?P<qualifier>[a-z]+) you control\.?$",
     re.IGNORECASE,
 )
 
 
 def _qualifier_count_cda_builder(
-    line: str, qualifier: str, count: ControlledCountFactory
+    line: str, qualifier: str, count: ControlledCountFactory, *, power_only: bool = False
 ) -> EffectBuilder:
     """`_QUALIFIER_COUNT_CDA_RE`'s shape - CR 604.3a's characteristic-
     defining ability, sublayer 7a (CR 613.4a), the same "set, not add" shape
@@ -7292,6 +7558,10 @@ def _qualifier_count_cda_builder(
     is a card type (Crusader of Odric's "creatures") or a subtype (Eluge, the
     Shoreless Sea's "Islands", Dungrove Elder's "Forests"), counted live off
     the board, so a land that became an Island in layer 4 counts in 7a.
+
+    `power_only` is CR 208.2a's other wording, "[This creature's] power is
+    equal to ..." (Esgaroth Garrison, Snow Villiers, Adeline): only the power
+    box is a `*`, the printed toughness is never touched (`define_power`).
     """
 
     def builder(
@@ -7303,7 +7573,8 @@ def _qualifier_count_cda_builder(
         return [
             ContinuousEffect(
                 description=(
-                    f"{source.name}: P/T equal to the number of {qualifier} its controller controls"
+                    f"{source.name}: {'power' if power_only else 'P/T'} equal to the number "
+                    f"of {qualifier} its controller controls"
                 ),
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.CHARACTERISTIC_DEFINING,
@@ -7312,7 +7583,11 @@ def _qualifier_count_cda_builder(
                 source_ability=_source_line_for(source, line),
                 characteristic_defining=True,
                 selector=_only(source.id),
-                modification=define_power_toughness(count(source.controller)),
+                modification=(
+                    define_power(count(source.controller))
+                    if power_only
+                    else define_power_toughness(count(source.controller))
+                ),
             )
         ]
 
@@ -9332,6 +9607,9 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     sentence = _strip_ability_word(_normalize_duration_first(sentence))
     if _BOARD_COUNT_GATE_RE.fullmatch(sentence):
         return _parse_board_gated_group_sentence(sentence)
+    self_becomes_creature_with_pt = _parse_self_becomes_creature_with_pt_ability(sentence)
+    if self_becomes_creature_with_pt is not None:
+        return self_becomes_creature_with_pt
     if match := _TARGET_AND_SAME_NAME_PUMP_RE.fullmatch(sentence):
         return _target_and_same_name_pump_builder(
             int(match.group("power")), int(match.group("toughness"))
@@ -9379,6 +9657,13 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("power")),
             int(match.group("toughness")),
             [card_type for card_type in card_types if card_type is not None],
+        )
+    if match := _SELF_PUMP_PER_FULL_GRAVEYARD_RE.fullmatch(sentence):
+        threshold = parse_count(match.group("threshold"), article=False)
+        if not threshold:
+            return None
+        return _self_pump_per_full_graveyard_builder(
+            int(match.group("power")), int(match.group("toughness")), threshold, line=sentence
         )
     if match := _SELF_PUMP_PER_GRAVEYARD_CARD_BATCH_RE.fullmatch(sentence):
         batch_size = parse_count(match.group("batch"), article=False)
@@ -9573,7 +9858,13 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         extra_type = _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())
         if extra_type is None:
             return None
-        return _becomes_type_in_addition_builder(extra_type)
+        type_keywords: list[str] = []
+        if match.group("keywords") is not None:
+            validated_keywords = _split_and_validate_keywords(match.group("keywords"))
+            if validated_keywords is None:
+                return None
+            type_keywords = validated_keywords
+        return _becomes_type_in_addition_builder(extra_type, type_keywords)
     if match := _BECOMES_SUBTYPE_IN_ADDITION_RE.fullmatch(sentence):
         subtypes = _creature_type_words(match.group("subtypes"))
         keywords = (
@@ -9937,7 +10228,12 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _QUALIFIER_COUNT_CDA_RE.fullmatch(sentence):
         count = _controlled_count_factory(match.group("qualifier"))
         if count is not None:
-            return _qualifier_count_cda_builder(sentence, match.group("qualifier").lower(), count)
+            return _qualifier_count_cda_builder(
+                sentence,
+                match.group("qualifier").lower(),
+                count,
+                power_only=match.group("stats").lower() == "power is",
+            )
     if match := _GRAVEYARD_CARD_COUNT_CDA_RE.fullmatch(sentence):
         words = re.split(r",\s*|\s+and/or\s+|\s+and\s+|\s+or\s+", match.group("types"))
         card_types = [_card_type_word(word) for word in words if word]

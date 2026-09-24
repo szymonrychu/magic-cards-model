@@ -17751,6 +17751,115 @@ def _parse_event_subject_pump_clause(effect_text: str) -> AbilityEffect | None:
     return effect
 
 
+#: A base power and toughness *set* (CR 613.4b, sublayer 7b) a triggered
+#: ability applies until end of turn, in three wordings of one mechanic:
+#:
+#: - Galion, Elvenking's Butler: "choose up to one other target creature you
+#:   control. Its base power and toughness become equal to Galion's power and
+#:   toughness until end of turn." - the target, a value copied off the source;
+#: - Mirkwood Meditator: "you may have this creature's base power and
+#:   toughness become 4/2 until end of turn." - optional (CR 608.2d), the
+#:   source, a printed value;
+#: - Eldrazi Mimic: "you may have this creature's base power and toughness
+#:   become equal to that creature's power and toughness until end of turn." -
+#:   optional, the source, a value copied off the trigger's own subject.
+#:
+#: A copied value is read once, as the ability resolves (CR 608.2h), and then
+#: fixed - a later pump on the object copied does not move it. The subject is
+#: fixed then too (CR 611.2c).
+_SELF_WORDS = r"this creature|this permanent"
+_BASE_PT_BECOME_RE = re.compile(
+    r"^(?:(?P<choose>choose (?:up to one |one |a )?(?:other |another )?target creature"
+    r"(?: you control)?)\. its"
+    rf"|(?P<may>you may have )?(?P<subject>{_SELF_WORDS}|that creature)['’]s)"
+    r" base power and toughness become "
+    r"(?:(?P<power>\d+)/(?P<toughness>\d+)"
+    rf"|equal to (?P<reference>{_SELF_WORDS}|that creature)['’]s power and toughness)"
+    r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _base_pt_become_object(game: "Game", ability: AbilityOnStack, word: str) -> CardState | None:
+    """ "this creature" is the ability's source, "that creature" the trigger's
+    own event subject (CR 603.2) - each only while it is still the object the
+    ability knew (a permanent that left the battlefield is a new object, CR
+    400.7, and has no current characteristics to set)."""
+    if word.lower() == "that creature":
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return None
+        return game.find_by_id(event.subject_id)
+    return ability.source(game)
+
+
+def _parse_base_pt_become_clause(effect_text: str) -> AbilityEffect | None:
+    """`_BASE_PT_BECOME_RE`'s shape - see the banner above."""
+    match = _BASE_PT_BECOME_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+    optional = match.group("may") is not None
+    fixed = (
+        (int(match.group("power")), int(match.group("toughness")))
+        if match.group("power") is not None
+        else None
+    )
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if match.group("choose") is not None:
+            subjects = [
+                target
+                for target in game.resolve_card_targets(ability)
+                if target.zone is Zone.BATTLEFIELD
+            ]
+        else:
+            subject = _base_pt_become_object(game, ability, match.group("subject"))
+            subjects = [subject] if subject is not None and subject.zone is Zone.BATTLEFIELD else []
+        if not subjects:
+            return
+        if fixed is not None:
+            power, toughness = fixed
+        else:
+            reference = _base_pt_become_object(game, ability, match.group("reference"))
+            if reference is None:
+                return
+            if reference.zone is Zone.BATTLEFIELD:
+                power, toughness = game.characteristics_of(reference).numeric_power_toughness
+            else:
+                # CR 608.2h: an object no longer where the ability expected
+                # it is read by its last known information.
+                power, toughness = reference.power or 0, reference.toughness or 0
+        controller = game.controller_of(ability)
+        if optional and not game.may(
+            controller,
+            f"have {subjects[0].name}'s base power and toughness become "
+            f"{power}/{toughness} until end of turn",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        effects = continuous_effects(game)
+        timestamp = effects.tick()
+        for subject in subjects:
+            effects.add(
+                ContinuousEffect(
+                    description=(
+                        f"{ability.source_name}: {subject.name} has base power and "
+                        f"toughness {power}/{toughness}"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(subject, subject.zone_change_stamp),
+                    modification=set_power_toughness(power, toughness),
+                ),
+                game,
+            )
+
+    return effect
+
+
 def _layer_sentences_come_last(sentences: Sequence[str]) -> bool:
     """True when every genuine layer sentence of an ability follows every
     other sentence - the printed order `_compose_layer_effect_with_
@@ -17884,6 +17993,22 @@ def _compose_layer_effect_with_remainder_for_mode(mode_text: str) -> Effect | No
     layer_effect = _create_continuous_effect_for_mode_text(mode_text)
     if not remainder:
         return layer_effect
+    if (
+        len(sentences) > 1
+        and remainder == sentences[1:]
+        and is_genuine_resolution_layer_sentence(sentences[0])
+    ):
+        # Gnashing of Teeth's first mode, "Target creature gets -5/-5 until
+        # end of turn. If that creature would die this turn, exile it
+        # instead." - every sentence after the pump is a rider naming the
+        # pump's own object (CR 608.2c: one instruction). Read alone, the
+        # rider has no antecedent and failed closed; the anaphoric series
+        # reads it against the pump, the same way a non-modal Bleed Dry is.
+        anaphoric = _parse_object_anaphor_clause_series(
+            sentences[0], sentences[1:], for_spell=True, layer_antecedent_first=True
+        )
+        if anaphoric is not None:
+            return anaphoric
     remainder_text = " ".join(remainder)
     remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=True)
     if remainder_effect is not None:
@@ -20964,6 +21089,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     meld_activation = parse_meld_activation_clause(effect_text)
     if meld_activation is not None:
         return meld_activation
+    base_pt_become = _parse_base_pt_become_clause(effect_text)
+    if base_pt_become is not None:
+        return base_pt_become
     meld_resolution = parse_meld_resolution_clause(effect_text)
     if meld_resolution is not None:
         return meld_resolution
@@ -26173,7 +26301,7 @@ def _parse_object_anaphor_clause_pair(
 
 
 def _parse_object_anaphor_clause_series(
-    first: str, riders: Sequence[str], *, for_spell: bool
+    first: str, riders: Sequence[str], *, for_spell: bool, layer_antecedent_first: bool = False
 ) -> TargetedClause | None:
     """`_parse_object_anaphor_clause_pair`'s own shape, widened to **two or
     more** trailing rider sentences that all refer back to the same
@@ -26198,7 +26326,14 @@ def _parse_object_anaphor_clause_series(
     referent_of = _referent_reader(first)
     if referent_of is None:
         return None
-    antecedent = _parse_mixed_clause(first, for_spell=for_spell)
+    # `layer_antecedent_first`: one *mode* of a modal spell (CR 700.2a), where
+    # `_parse_mixed_clause` reads a pump as the bare `create_continuous_
+    # effect` sentinel - which builds off the whole card's bulleted text and
+    # so applies nothing for the chosen mode. The scoped layer antecedent
+    # comes first there.
+    antecedent = (
+        _layer_antecedent_clause(first, referent_of) if layer_antecedent_first else None
+    ) or _parse_mixed_clause(first, for_spell=for_spell)
     if antecedent is None:
         antecedent = _layer_antecedent_clause(first, referent_of)
     if antecedent is None:
@@ -40516,6 +40651,89 @@ def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return ability_clause
 
 
+#: "Creatures target player controls get -1/-1 until end of turn." (Gnashing
+#: of Teeth's second mode), "Creatures target opponent controls get -1/-1
+#: until end of turn." (Wail of War, Neutralize the Guards) and the same
+#: subject with a keyword grant ("... get +2/+0 and gain haste until end of
+#: turn."). CR 611.2c: the creatures are the ones that player controls as the
+#: effect begins, fixed then - one sublayer 7c modification (CR 613.4c) and
+#: one layer 6 grant (CR 613.1f) each, ending at cleanup (CR 514.2).
+_TARGET_PLAYER_CREATURES_PUMP_RE = re.compile(
+    r"^(?P<leading>until end of turn, )?creatures (?P<targeted>target (?:player|opponent)) "
+    r"controls get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and gain (?P<keywords>[a-z][a-z ,]*?))?(?P<trailing> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_creatures_pump_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_CREATURES_PUMP_RE`'s shape, on a spell or an ability."""
+    match = _TARGET_PLAYER_CREATURES_PUMP_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    if bool(match.group("leading")) == bool(match.group("trailing")):
+        return None
+    if not _targets_understood(match.group("targeted"), allow_player_targets=True):
+        return None
+    keywords: list[str] = []
+    if match.group("keywords") is not None:
+        validated = _split_and_validate_keywords(match.group("keywords"))
+        if validated is None:
+            return None
+        keywords = validated
+    power, toughness = int(match.group("power")), int(match.group("toughness"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        players = {
+            target.username
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, Player)
+        }
+        if not players:
+            return
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
+        )
+        board = game.computed_board()
+        group = [
+            permanent
+            for permanent in game.battlefield
+            if board.of(permanent).is_creature and board.of(permanent).controller in players
+        ]
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for creature in group:
+            selector = only_this_incarnation(creature, creature.zone_change_stamp)
+            store.add(
+                ContinuousEffect(
+                    description=f"{source_name}: {creature.name} gets {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=modify_power_toughness(power, toughness),
+                ),
+                game,
+            )
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{source_name}: {creature.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=selector,
+                        modification=grant_ability(keyword),
+                    ),
+                    game,
+                )
+
+    return effect
+
+
 #: A mass, one-shot "lose all abilities" (CR 613.1f, layer 6), optionally
 #: with a base power/toughness it sets at the same time (CR 613.4b, sublayer
 #: 7b) - Final Showdown's "All creatures lose all abilities until end of
@@ -41020,6 +41238,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     mass_pump = _parse_mass_pump_group_clause(clause, for_spell=for_spell)
     if mass_pump is not None:
         return mass_pump
+    target_player_creatures_pump = _parse_target_player_creatures_pump_clause(
+        clause, for_spell=for_spell
+    )
+    if target_player_creatures_pump is not None:
+        return target_player_creatures_pump
     mass_lose_all = _parse_mass_lose_all_abilities_clause(clause, for_spell=for_spell)
     if mass_lose_all is not None:
         return mass_lose_all
