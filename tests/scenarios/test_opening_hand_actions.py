@@ -49,9 +49,9 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import CardSplit, DecisionKind, ScriptedAnswer
 from magic_cards_model.machines.opening_hand import (
-    RIDERS,
     OpeningHandActionKind,
     read_opening_hand_actions,
+    read_rider,
 )
 from magic_cards_model.models import Card, Deck, Game, Match, Player, Zone
 from tests.cards import CARD_POOL, card
@@ -212,7 +212,7 @@ def test_every_printing_in_the_pool_that_mentions_an_opening_hand_is_readable():
     """The fail-closed path has nothing to fire on today, and that is the assertion.
 
     A paragraph mentioning an opening hand that matches neither template, or one
-    that matches but carries a rider with no `RIDERS` entry, is refused with an
+    that matches but carries a rider `read_rider` cannot read, is refused with an
     `OpeningHandNotice` rather than half-performed. Nothing in the current
     fixture pool hits that path; this is the guard that says so when a new
     printing does.
@@ -226,9 +226,18 @@ def test_every_printing_in_the_pool_that_mentions_an_opening_hand_is_readable():
     assert unreadable == []
 
 
-def test_every_rider_in_the_pool_has_an_entry():
-    """The other half of the same guard, from the registry's side."""
-    assert set(RIDERS) == {"Gemstone Caverns", "Devourer of Destiny"}
+def test_every_rider_in_the_pool_is_read():
+    """The other half of the same guard, from the rider's side: every rider
+    printed in the pool is parsed by `read_rider`, never looked up by name."""
+    riders = []
+    for path in sorted(CARD_POOL.glob("*.json")):
+        printing = Card.model_validate_json(path.read_text())
+        for action in read_opening_hand_actions(printing)[0]:
+            if action.rider:
+                riders.append((printing.name, read_rider(printing.name, action.rider)))
+
+    assert {name for name, _ in riders} >= {"Gemstone Caverns", "Devourer of Destiny"}
+    assert all(rider is not None for _, rider in riders)
 
 
 # -- offered, and declined (CR 103.6's "may") ------------------------------
@@ -809,12 +818,6 @@ def test_no_action_is_offered_for_a_card_that_is_not_in_the_opening_hand():
     assert [state.name for state in alice.library].count("Leyline of Abundance") == 4
     assert offers(game, "alice") == []
     assert game.battlefield == []
-
-
-@pytest.mark.parametrize("name", sorted(RIDERS))
-def test_every_card_with_a_rider_is_a_real_printing_in_the_pool(name: str):
-    """A registry entry for a card the fixture pool does not have tests nothing."""
-    assert card(name) is not None
 
 
 def test_a_revealed_card_is_not_offered_a_second_time():

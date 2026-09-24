@@ -6027,8 +6027,43 @@ _ADDITIONAL_TRIGGER_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: The gate half of `_ADDITIONAL_TRIGGER_RE`: "an artifact or creature entering".
-_ENTERING_CAUSE_RE = re.compile(r"^an? (?P<types>[a-z ]+?) entering$", re.IGNORECASE)
+#: The gate half of `_ADDITIONAL_TRIGGER_RE`: "an artifact or creature
+#: entering" (Panharmonicon), "a permanent entering the battlefield" (Elesh
+#: Norn, Mother of Machines; Starfield Vocalist - WOTC's 2024 "enters" and the
+#: older "enters the battlefield" both print), "a land entering" (Ancient
+#: Greenwarden), "a Wizard you control entering" (Naban, Dean of Iteration).
+#: Each alternative is a card type, "permanent" (any of them), or a subtype;
+#: "you control" narrows the entering permanent to the multiplier's own
+#: controller's.
+_ENTERING_CAUSE_RE = re.compile(
+    r"^an? (?P<types>[a-z][a-z ]*?)(?P<yours> you control)? entering(?: the battlefield)?$",
+    re.IGNORECASE,
+)
+
+
+def is_additional_trigger_line(text: str) -> bool:
+    """Whether a static line is CR 603.2d's entering multiplier with a cause
+    `_entering_cause_matches` can read - what `support.py` counts handled."""
+    match = _ADDITIONAL_TRIGGER_RE.match(text.strip())
+    if match is None:
+        return False
+    cause = _ENTERING_CAUSE_RE.match(match["cause"].strip())
+    return cause is not None and _cause_words(cause["types"]) is not None
+
+
+def _cause_words(types: str) -> tuple[str, ...] | None:
+    """ "artifact or creature" -> ("artifact", "creature"): each alternative
+    a card type (CR 205.2a), "permanent", or a subtype (CR 205.3) - or None
+    when a word is none of them, so an unreadable cause matches nothing."""
+    words = tuple(
+        word.strip().lower() for word in re.split(r",\s*|\s+or\s+", types) if word.strip()
+    )
+    card_types = {card_type.value.lower() for card_type in Type}
+    subtypes = {subtype.lower() for subtype in subtype_vocabulary()}
+    for word in words:
+        if word != "permanent" and word not in card_types and word not in subtypes:
+            return None
+    return words or None
 
 
 def _computed_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
@@ -6043,25 +6078,38 @@ def _computed_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ..
         )
 
 
-def _entering_cause_matches(game: "Game", cause: str, event: GameEvent) -> bool:
-    """Whether this event is the "artifact or creature entering" the multiplier
-    names (CR 603.2d's own "an ability may state that a triggered ability
-    triggers additional times" is gated by the rest of the printed sentence)."""
+def _entering_cause_matches(game: "Game", cause: str, event: GameEvent, controller: str) -> bool:
+    """Whether this event is the entrance the multiplier names (CR 603.2d's
+    own "an ability may state that a triggered ability triggers additional
+    times" is gated by the rest of the printed sentence). `controller` is the
+    multiplier's own, for "a Wizard you control entering"."""
     match = _ENTERING_CAUSE_RE.match(cause.strip())
     if match is None or event.event is not TriggerEvent.ENTERS_THE_BATTLEFIELD:
         return False
-    wanted = {word.strip().lower() for word in match["types"].split(" or ") if word.strip()}
+    wanted = _cause_words(match["types"])
+    if wanted is None:
+        return False
     entering = game.find_by_id(event.subject_id) if event.subject_id is not None else None
     if isinstance(entering, CardState):
         try:
-            types = game.characteristics_of(entering).types
+            chars = game.characteristics_of(entering)
+            types, subtypes = tuple(chars.types), tuple(chars.subtypes)
         except KeyError:
-            types = tuple(entering.types)
+            types, subtypes = tuple(entering.types), tuple(entering.subtypes)
+        entering_controller = entering.controller
     elif event.subject_card is not None:
-        types = tuple(event.subject_card.types)
+        types, subtypes = tuple(event.subject_card.types), tuple(event.subject_card.subtypes)
+        entering_controller = event.subject_controller
     else:
         return False
-    return bool(wanted & {str(card_type).lower() for card_type in types})
+    if match["yours"] and entering_controller != controller:
+        return False
+    if "permanent" in wanted:
+        return True
+    have = {str(card_type).lower() for card_type in types} | {
+        subtype.lower() for subtype in subtypes
+    }
+    return bool(set(wanted) & have)
 
 
 def additional_trigger_times(
@@ -6076,10 +6124,11 @@ def additional_trigger_times(
 
     Every permanent on the battlefield is asked whether one of its own static
     ability lines is a multiplier of this shape, read off the *computed* text
-    (CR 613.5). Panharmonicon is the only printing in the pool. Its own gate is
-    checked here rather than assumed: the ability's source has to be a permanent
-    the Panharmonicon's controller controls, and the event has to be an artifact
-    or creature entering.
+    (CR 613.5) - Panharmonicon, Elesh Norn, Mother of Machines, Starfield
+    Vocalist, Ancient Greenwarden, Naban, Dean of Iteration. Each one's own gate
+    is checked here rather than assumed: the ability's source has to be a
+    permanent the multiplier's controller controls, and the event has to be the
+    entrance its cause names (`_entering_cause_matches`).
 
     Only what `triggers_for` builds from a *printed* ability is multiplied. A
     delayed triggered ability (CR 603.7a) is created during the resolution of
@@ -6098,7 +6147,7 @@ def additional_trigger_times(
             match = _ADDITIONAL_TRIGGER_RE.match(line.strip())
             if match is None:
                 continue
-            if _entering_cause_matches(game, match["cause"], event):
+            if _entering_cause_matches(game, match["cause"], event, controller):
                 extra += 1
     return extra
 

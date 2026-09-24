@@ -184,13 +184,12 @@ from ..machines.keywords import (
     keyword_effect_for,
     keyword_triggered_abilities,
     transform_for_day_night,
+    turn_face_up_ban,
     turn_face_up_cost,
     why_cannot_turn_face_up,
 )
 from ..machines.layers import (
-    ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT,
     BASIC_LAND_TYPES,
-    CREATURES_DONT_CAUSE_TRIGGERS_TEXT,
     DOESNT_UNTAP_TEXT,
     LEGEND_RULE_EXEMPT_TEXT,
     SPELLS_HAVE_SPLIT_SECOND_TEXT,
@@ -204,9 +203,11 @@ from ..machines.layers import (
     LayerNotice,
     additional_land_plays,
     count_card_types,
+    dont_cause_triggers_text,
     grant_ability,
     off_battlefield_characteristics_of,
     only_this_incarnation,
+    plays_lands_from_graveyard_line,
     spend_effect_effects,
 )
 from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
@@ -214,10 +215,10 @@ from ..machines.objects_as_costs import convoke as pay_convoke
 from ..machines.objects_as_costs import delve as pay_delve
 from ..machines.objects_as_costs import improvise as pay_improvise
 from ..machines.opening_hand import (
-    RIDERS,
     OpeningHandAction,
     OpeningHandActionKind,
     OpeningHandNotice,
+    perform_rider,
     read_opening_hand_actions,
 )
 from ..machines.priority import PriorityMachine, PriorityOutcome
@@ -2438,7 +2439,7 @@ class Game(EngineModel):
     """One entry per card paragraph that claims a CR 103.6 opening-hand action
     the engine did not carry out - a paragraph that mentions an opening hand but
     matches neither CR 103.6a's nor CR 103.6b's template, or one that matches but
-    carries a rider `machines/opening_hand.py`'s `RIDERS` has no entry for. The
+    carries a rider `machines/opening_hand.read_rider` cannot read. The
     action is then not offered at all, so nothing reads as permission while doing
     less than the card says. The same unreadable-is-not-the-same-as-no-effect
     record every other notice list here keeps."""
@@ -8282,34 +8283,53 @@ class Game(EngineModel):
             for permanent in self.battlefield
         )
 
-    def _etb_triggers_suppressed(self, event: "GameEvent") -> bool:
-        """Torpor Orb's "Creatures entering don't cause abilities to
-        trigger."; Karn, Argent Defender's "Artifacts and creatures entering
-        the battlefield don't cause abilities to trigger." - CR 603.2's
-        automatic trigger check is what this refuses, for every ability that
-        would otherwise fire off this one `ENTERS_THE_BATTLEFIELD` event, not
-        only the entering permanent's own: a suppression grant reads no
-        controller, the same way Torpor Orb's own printed sentence names
-        none.
+    def _without_etb_suppressed(
+        self, event: "GameEvent", triggered: list[AbilityOnStack]
+    ) -> list[AbilityOnStack]:
+        """`triggered` less what an entering-suppression grant stops -
+        Torpor Orb's "Creatures entering don't cause abilities to trigger.";
+        Karn, Argent Defender's "Artifacts and creatures entering the
+        battlefield don't cause abilities to trigger."; Elesh Norn, Mother of
+        Machines' "Permanents entering don't cause abilities of permanents your
+        opponents control to trigger." CR 603.2's automatic trigger check is
+        what this refuses, for the abilities that would otherwise fire off this
+        one `ENTERS_THE_BATTLEFIELD` event - every one of them for an unscoped
+        grant, whoever controls it; only those of permanents an opponent of the
+        grant's controller controls for a scoped one.
         """
-        if event.subject_id is None:
-            return False
+        if event.subject_id is None or not triggered:
+            return triggered
         entering = self.find_by_id(event.subject_id)
         if not isinstance(entering, CardState):
-            return False
+            return triggered
         chars = self.characteristics_of(entering)
-        watched: list[str] = []
-        if Type.CREATURE in chars.types:
-            watched.append(CREATURES_DONT_CAUSE_TRIGGERS_TEXT)
-        if Type.ARTIFACT in chars.types:
-            watched.append(ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT)
-        if not watched:
-            return False
+        entering_types: list[Type | None] = [None]
+        entering_types += [card_type for card_type in chars.types]
         board = self.computed_board()
-        return any(
-            any(board.of(permanent).has_ability(text) for text in watched)
-            for permanent in self.battlefield
-        )
+        for permanent in self.battlefield:
+            abilities = board.of(permanent).abilities
+            for card_type in entering_types:
+                if dont_cause_triggers_text(card_type) in abilities:
+                    return []
+                if dont_cause_triggers_text(card_type, opponents_only=True) in abilities:
+                    suppressor = board.of(permanent).controller
+                    triggered = [
+                        item
+                        for item in triggered
+                        if not self._ability_of_opponents_permanent(item, suppressor)
+                    ]
+        return triggered
+
+    def _ability_of_opponents_permanent(self, item: AbilityOnStack, player: str | None) -> bool:
+        """Whether `item` is an ability of a permanent an opponent of `player`
+        controls - the scope of Elesh Norn's "abilities of permanents your
+        opponents control"."""
+        if item.source_id is None:
+            return False
+        source = self.find_by_id(item.source_id)
+        if not isinstance(source, CardState) or source.zone is not Zone.BATTLEFIELD:
+            return False
+        return source.controller is not None and source.controller != player
 
     def emit(self, event: GameEvent) -> list[AbilityOnStack]:
         """Something happened; work out what it triggered (CR 603.2).
@@ -8424,14 +8444,12 @@ class Game(EngineModel):
                         sources = [*sources, gone]
 
             triggered = triggers_for(self, event, sources)
-            if event.event is TriggerEvent.ENTERS_THE_BATTLEFIELD and self._etb_triggers_suppressed(
-                event
-            ):
-                # Torpor Orb / Karn, Argent Defender: CR 603.2's automatic
-                # trigger check never fires at all for this entrance, so
-                # nothing watching for it - not even on another permanent -
-                # goes onto `pending_triggers`.
-                triggered = []
+            if event.event is TriggerEvent.ENTERS_THE_BATTLEFIELD:
+                # Torpor Orb / Karn, Argent Defender / Elesh Norn: CR 603.2's
+                # automatic trigger check never fires for what this entrance
+                # is stopped from causing - on the entering permanent or on
+                # any other.
+                triggered = self._without_etb_suppressed(event, triggered)
             # CR 603.7: a delayed triggered ability is not printed on any card, so
             # no source can be asked for it. It watches the event directly, and once
             # it has triggered it is an ordinary trigger in every other respect -
@@ -10154,9 +10172,9 @@ class Game(EngineModel):
         CR 103.6a puts the card onto the battlefield; CR 103.6b reveals it and
         leaves it where it is (CR 701.20b). The rider - the card's own trailing
         "If you do, ..." - runs afterwards, in the order the card prints it, and
-        is looked up by name in `machines/opening_hand.py`'s `RIDERS`. An action
-        with a rider and no entry there never reaches here: it is refused while
-        being read, with a notice.
+        is parsed by `machines/opening_hand.read_rider` and carried out by
+        `perform_rider`. An action whose rider no reader recognises never
+        reaches here: it is refused while being read, with a notice.
         """
         if action.kind is OpeningHandActionKind.BEGIN_ON_BATTLEFIELD:
             self.put_onto_battlefield(card_state, player.username)
@@ -10169,9 +10187,8 @@ class Game(EngineModel):
             self.reveal(card_state, source=card_state.name)
             self.opening_hand_reveals.append(card_state.id)
 
-        rider = RIDERS.get(card_state.card.name) if action.rider else None
-        if rider is not None:
-            rider(self, card_state, player)
+        if action.rider:
+            perform_rider(self, card_state, player, action.rider)
 
     # -- decisions made during resolution (CR 608.2d) -------------------------
 
@@ -15623,6 +15640,16 @@ class Game(EngineModel):
             # controller's Ring-bearer, a designation the layer engine cannot
             # see on the battlefield either.
             ring_bearers=self.ring_bearer_designations(),
+            # CR 119.1's life totals and CR 700.5's devotion: Serra Ascendant's
+            # "you have 30 or more life" and a Theros god's "your devotion to
+            # ..." read their controller's, neither of which stands on the
+            # battlefield as a characteristic the layer engine could see.
+            life_by_player={player.username: player.life for player in self.players_in_game},
+            mana_cost_by_id={
+                permanent.id: permanent.mana_cost
+                for permanent in self.battlefield
+                if permanent.mana_cost
+            },
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a
@@ -16520,10 +16547,9 @@ class Game(EngineModel):
         One by default - CR 305.2: "A player can normally play one land during
         their turn; however, continuous effects may increase this number." The
         increases come from static abilities of permanents the player controls,
-        read through `machines.layers.ADDITIONAL_LAND_PLAYS`: CR 611.3d is the
-        rule that lets a static ability allow playing a land at all, and since
-        static ability text is not parsed (see `docs/engine-coverage.md`) the
-        grants are a per-card registry like `LAYER_EFFECTS`.
+        read off their computed ability text by `machines.layers.
+        additional_land_plays`: CR 611.3d is the rule that lets a static
+        ability allow playing a land at all.
 
         Azusa's printed "on each of your turns" adds no condition of its own
         here: `can_play_land` refuses anyone who is not the active player
@@ -16539,11 +16565,30 @@ class Game(EngineModel):
         fetchland's find, CR 305.4) counts in neither number, because
         `put_onto_battlefield` never reaches `play_land`.
         """
+        board = self.computed_board()
         return (
             1
-            + additional_land_plays(self.permanents_controlled_by(username))
+            + additional_land_plays(
+                line
+                for permanent in self.permanents_controlled_by(username)
+                for line in board.of(permanent).abilities
+            )
             + self.extra_land_plays.get(username, 0)
         )
+
+    def graveyard_land_permission(self, land: CardState, username: str) -> CardState | None:
+        """The permanent whose "You may play lands from your graveyard." lets
+        `username` play this land from their own graveyard (CR 305.1, CR
+        611.3d), or None. Read off the computed abilities of the permanents
+        `username` controls (CR 613.5); "your graveyard" is the land's owner's,
+        so only a land `username` owns qualifies."""
+        if land.zone is not Zone.GRAVEYARD or land.owner != username:
+            return None
+        board = self.computed_board()
+        for permanent in self.permanents_controlled_by(username):
+            if any(plays_lands_from_graveyard_line(line) for line in board.of(permanent).abilities):
+                return permanent
+        return None
 
     def grant_extra_land_play(self, username: str, amount: int = 1) -> None:
         """CR 305.2's allowance increase for the rest of this turn only -
@@ -17333,9 +17378,11 @@ class Game(EngineModel):
             # zone it's in (usually the hand)" is the wider action, and only an
             # effect can open one of those other zones (CR 601.3's twin for
             # lands). A `PlayPermission` that says *cast* is not one of them -
-            # CR 601.1a keeps playing a land and casting a spell apart.
+            # CR 601.1a keeps playing a land and casting a spell apart. A
+            # permanent's "You may play lands from your graveyard." is the
+            # other opener (`graveyard_land_permission`).
             permission = self.play_permission_for(land, username, PlayAction.PLAY)
-            if permission is None:
+            if permission is None and self.graveyard_land_permission(land, username) is None:
                 granted = play_permissions_on(self, land)
                 if granted:
                     # A permission names this object and does not stretch this
@@ -19568,13 +19615,20 @@ class Game(EngineModel):
         anything has been spent.
         """
         self._refuse_if_over()
-        refusal = why_cannot_turn_face_up(permanent)
+        refusal = self.why_cannot_turn_face_up(permanent)
         if refusal is not None:
             raise ValueError(refusal)
         controller = controller or self.controller_of(permanent).username
         total = turn_face_up_cost(permanent, controller)
         assert total is not None  # `why_cannot_turn_face_up` already checked this
         return CostPayment.for_total(total, game=self, payer=controller)
+
+    def why_cannot_turn_face_up(self, permanent: CardState) -> str | None:
+        """Why this permanent cannot be turned face up right now, or None:
+        CR 702.37e's own conditions (`keywords.why_cannot_turn_face_up`), then
+        any static ban a permanent on the battlefield puts on it
+        (`keywords.turn_face_up_ban` - Unable to Scream, Karlov Watchdog)."""
+        return why_cannot_turn_face_up(permanent) or turn_face_up_ban(self, permanent)
 
     def turn_face_up(self, permanent: CardState, controller: str | None = None) -> CardState:
         """Finish turning a face-down permanent face up (CR 702.37e, 708.8).
@@ -19592,6 +19646,9 @@ class Game(EngineModel):
         for *itself*, not for what it triggers.
         """
         self._refuse_if_over()
+        ban = turn_face_up_ban(self, permanent)
+        if ban is not None:
+            raise ValueError(ban)
         with self._id_allocator_scope():
             controller = controller or self.controller_of(permanent).username
             permanent.turn_face_up()

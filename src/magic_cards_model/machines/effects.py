@@ -20198,6 +20198,108 @@ def _parse_batched_attack_group_pump_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "exile a card from your hand" / "exile two cards from your hand" as a
+#: resolution instruction, not a cost - Gemstone Caverns' own opening-hand
+#: rider ("If you do, exile a card from your hand."), read by
+#: `machines/opening_hand.py` through `trigger_effect_for` like any other
+#: effect text. CR 701.13a: "To exile an object, move it to the exile zone
+#: from wherever it is." The cards are the resolving player's own choice
+#: (CR 608.2d); a hand holding fewer than the count exiles what is there.
+_EXILE_CARDS_FROM_YOUR_HAND_RE = re.compile(
+    rf"^exile {count_pattern('n', article=True)} cards? from your hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_cards_from_your_hand_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_CARDS_FROM_YOUR_HAND_RE`'s shape: the controller chooses that
+    many cards from their own hand, and `Game.exile_cards` puts them into the
+    one shared exile zone (CR 400.1)."""
+    match = _EXILE_CARDS_FROM_YOUR_HAND_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"), article=True)
+    if count is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        hand = list(player.hand)
+        if not hand:
+            return
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=text.strip().rstrip(".").lower(),
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=min(count, len(hand)),
+                cards=tuple(state.id for state in hand),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        by_id = {state.id: state for state in hand}
+        game.exile_cards([by_id[card_id] for card_id in chosen])
+
+    return effect
+
+
+#: "look at the top N cards of your library. You may put one of those cards
+#: back on top of your library. Exile the rest." (Devourer of Destiny's
+#: first-upkeep rider) and "... Put the rest into your graveyard." (Sage of
+#: Days, Gurmag Nightwatch) - CR 608.2d's "you may" pick of at most one card
+#: kept on top, and the remainder sent to the zone the last sentence names.
+_LOOK_TOP_KEEP_ONE_ON_TOP_RE = re.compile(
+    rf"^look at the top (?P<n>{COUNT}) cards of your library\.\s*"
+    r"you may put one of (?:them|those cards) back on top of your library\.\s*"
+    r"(?:(?P<exile>exile the rest)|put the rest into your graveyard)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_look_top_keep_one_on_top_clause(text: str) -> AbilityEffect | None:
+    """`_LOOK_TOP_KEEP_ONE_ON_TOP_RE`'s shape, through `Game.look_at_top_and_
+    split`: the "moved" half is the card kept on top (at most one - the card
+    says "one"), so an unscripted player, whose default answer moves nothing,
+    sends all of them away, which is what declining a "you may" does.
+
+    The rest go to the one shared exile zone through `Game.exile_cards`
+    (CR 400.1, CR 701.13a), or each to its owner's graveyard through
+    `Game.put_into_graveyard`."""
+    match = _LOOK_TOP_KEEP_ONE_ON_TOP_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"), article=False)
+    if count is None:
+        return None
+    exiles = match.group("exile") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        kept, rest = game.look_at_top_and_split(
+            player,
+            count,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            prompt=f"look at the top {match.group('n')} cards; you may put one back on top",
+            moved_label="top of your library",
+            kept_label="exiled" if exiles else "into your graveyard",
+            moved_amount=1,
+        )
+        if exiles:
+            game.exile_cards(rest)
+        else:
+            for state in rest:
+                game.put_into_graveyard(state)
+        for index, state in enumerate(kept):
+            player.library.insert(index, state)
+        if kept:
+            player.note_library_changed()  # CR 701.20d
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -20286,6 +20388,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     linked_exile = _parse_linked_exile_clause(effect_text)
     if linked_exile is not None:
         return linked_exile
+    exile_cards_from_your_hand = _parse_exile_cards_from_your_hand_clause(effect_text)
+    if exile_cards_from_your_hand is not None:
+        return exile_cards_from_your_hand
+    look_top_keep_one_on_top = _parse_look_top_keep_one_on_top_clause(effect_text)
+    if look_top_keep_one_on_top is not None:
+        return look_top_keep_one_on_top
     # S22's whole-text readers: each names its own object ("exiled with this
     # creature", "that card" after an exile, "them" after a count), so none
     # of them may be cut apart by the clause splitter below.

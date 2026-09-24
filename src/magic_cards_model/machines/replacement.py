@@ -4330,7 +4330,47 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
 #: new type, not a card carrying its own choice) is a *targeted* clause of a
 #: different shape entirely and is never routed through here.
 _CHOOSE_A_COLOR_RE = re.compile(r"^choose a color\.?$", re.IGNORECASE)
-_CHOOSE_A_CARD_NAME_RE = re.compile(r"^choose a card name\.?$", re.IGNORECASE)
+#: "choose a card name" (Pithing Needle), or one qualified by CR 201.4a's
+#: "certain characteristics" - "choose a nonbasic land card name" (Alpine
+#: Moon), "a land card name", "a nonland card name".
+_CHOOSE_A_CARD_NAME_RE = re.compile(
+    r"^choose a (?:(?P<qualifier>nonbasic land|land|nonland) )?card name\.?$", re.IGNORECASE
+)
+
+
+def _card_name_qualifier(replacement_text: str) -> str | None:
+    """The characteristics a "choose a <qualifier> card name" demands, or None."""
+    match = _CHOOSE_A_CARD_NAME_RE.match(replacement_text.strip())
+    if match is None or match.group("qualifier") is None:
+        return None
+    return match.group("qualifier").lower()
+
+
+def _card_name_refusal(qualifier: str | None, name: str) -> str | None:
+    """CR 201.4a: "If a player is instructed to choose a card name with certain
+    characteristics, the player must choose the name of a card whose Oracle
+    text matches those characteristics." Judged against the bundled printing
+    of that name (`data/printing_pool`); a name this engine has no printing
+    for cannot be judged and is accepted as given."""
+    if qualifier is None:
+        return None
+    from ..data.printing_pool import resolve_printing
+
+    printing = resolve_printing(name)
+    if printing is None:
+        return None
+    is_land = Type.LAND in printing.types
+    is_basic = Supertype.BASIC in printing.supertypes
+    matches = {
+        "land": is_land,
+        "nonland": not is_land,
+        "nonbasic land": is_land and not is_basic,
+    }[qualifier]
+    if matches:
+        return None
+    return f"{name!r} is not {with_indefinite_article(qualifier)} card name (CR 201.4a)"
+
+
 _CHOOSE_A_CREATURE_TYPE_RE = re.compile(r"^choose a creature type\.?$", re.IGNORECASE)
 
 #: The five colors' letter codes (CR 105.1), the closed universe
@@ -4459,6 +4499,17 @@ _WIRED_CHOSEN_COLOR_MANA_HINT_RE = re.compile(
 )
 
 
+#: "Lands your opponents control with the chosen name lose all land types and
+#: abilities, and they gain ..." (Alpine Moon) - read by `machines/layers.py`
+#: against `CardState.choice`. Excluded so a wired consumer is not reported as
+#: an unwired one.
+_WIRED_CHOSEN_NAME_LAYER_HINT_RE = re.compile(
+    r"^(?:lands|creatures|permanents)(?: your opponents control| you control)? "
+    r"with the chosen name lose all\b",
+    re.IGNORECASE,
+)
+
+
 def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNotice]:
     """Every sentence of `card`'s own text that reads back a CR 614.12a
     choice this wave does not perform - see `UnwiredChoiceNotice`.
@@ -4478,6 +4529,7 @@ def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNo
             or _WIRED_NAMED_COST_INCREASE_HINT_RE.search(sentence)
             or _WIRED_CHOSEN_COLOR_MANA_HINT_RE.search(sentence)
             or _LAYER_HANDLED_SUBJECT_RE.match(sentence)
+            or _WIRED_CHOSEN_NAME_LAYER_HINT_RE.match(sentence)
         ):
             continue
         found.append(UnwiredChoiceNotice(source_id=source_id, source_name=card.name, text=sentence))
@@ -4499,7 +4551,7 @@ def _quality_options(kind: ChoiceKind) -> tuple[str, ...]:
     return ()
 
 
-def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
+def _choose_a_quality(kind: ChoiceKind, card_name: str, *, qualifier: str | None = None) -> Apply:
     """Ask CR 614.12a's choice and record it on the entering object itself.
 
     "If a replacement effect that modifies how a permanent enters the
@@ -4526,10 +4578,13 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
         who = source.controller if source is not None else None
         if who is None:
             return
+        quality = kind.value.replace("_", " ")
+        if qualifier is not None:
+            quality = f"{qualifier} {quality}"
         decision = Decision(
             kind=DecisionKind.CHOOSE_A_QUALITY,
             player=who,
-            prompt=f"choose {with_indefinite_article(kind.value.replace('_', ' '))}",
+            prompt=f"choose {with_indefinite_article(quality)}",
             source=card_name,
             source_id=source_id_of(source),
             options=_quality_options(kind),
@@ -4537,6 +4592,9 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
         )
         value = game.ask(decision)
         assert isinstance(value, str)
+        refusal = _card_name_refusal(qualifier, value)
+        if refusal is not None:
+            raise ValueError(refusal)
         source.choice = Choice(kind=kind, value=value)
         game.unwired_choice_notices.extend(_unwired_choice_notices(source.card, source.id))
 
@@ -5158,7 +5216,11 @@ def _self_enters_modifiers(
                 performable.append(
                     (
                         f"{key}:{index}",
-                        _choose_a_quality(choice_kind, card_state.card.name),
+                        _choose_a_quality(
+                            choice_kind,
+                            card_state.card.name,
+                            qualifier=_card_name_qualifier(effect.replacement or ""),
+                        ),
                         effect.text,
                         False,
                     )

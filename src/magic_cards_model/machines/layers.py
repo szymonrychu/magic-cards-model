@@ -735,6 +735,61 @@ class NonbasicLands(SelectorBase):
         return chars.is_land and not chars.is_basic
 
 
+class SelfIfDevotionBelow(SelectorBase):
+    """A Theros god's "As long as your devotion to <colors> is less than N,
+    <this> isn't a creature." - `Only`'s identity test plus CR 700.5's count:
+    "A player's devotion to [color 1] and [color 2] is equal to the number of
+    mana symbols among the mana costs of permanents that player controls that
+    are [color 1], [color 2], or both colors" - a hybrid symbol of both colours
+    is one symbol, counted once. Whose permanent each is comes off the board
+    being computed, so a control change already applied counts (CR 700.5a)."""
+
+    kind: Literal["self_if_devotion_below"] = "self_if_devotion_below"
+    card_id: UUID
+    colors: frozenset[Color]
+    threshold: int
+    mana_costs: tuple[tuple[UUID, str], ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        from ..models.mana import ManaCost
+
+        if chars.card_id != self.card_id:
+            return False
+        devotion = 0
+        for permanent_id, cost in self.mana_costs:
+            other = board.get(permanent_id)
+            if other is None or other.controller != chars.controller:
+                continue
+            for symbol in ManaCost.parse(cost).symbols:
+                if self.colors & set(symbol.colors):
+                    devotion += 1
+        return devotion < self.threshold
+
+
+class PermanentsWithName(SelectorBase):
+    """ "Lands your opponents control with the chosen name" (Alpine Moon) -
+    every permanent of `card_type` (any, when None) named `name` (CR 201.2a),
+    controlled by `username` ("you") or by anyone else ("opponents"), or by
+    anyone at all ("any")."""
+
+    kind: Literal["permanents_with_name"] = "permanents_with_name"
+    name: str
+    card_type: Type | None = None
+    username: str | None = None
+    scope: Literal["any", "you", "opponents"] = "any"
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if not self.name or chars.name != self.name:
+            return False
+        if self.card_type is not None and self.card_type not in chars.types:
+            return False
+        if self.scope == "you":
+            return chars.controller == self.username
+        if self.scope == "opponents":
+            return chars.controller is not None and chars.controller != self.username
+        return True
+
+
 class EveryLand(SelectorBase):
     kind: Literal["every_land"] = "every_land"
 
@@ -1106,6 +1161,8 @@ Selector = Annotated[
     | LandsControlledBy
     | NonbasicLands
     | EveryLand
+    | SelfIfDevotionBelow
+    | PermanentsWithName
     | OtherNonAuraEnchantments
     | QualifiedCreatures
     | SelfIfControls
@@ -1346,6 +1403,20 @@ class AddBasicLandTypes(ModificationBase):
         return chars.with_(subtypes=tuple(subtypes), abilities=tuple(abilities))
 
 
+class LoseAllLandTypes(ModificationBase):
+    """Layer 4: "lose all land types" (Alpine Moon) - every subtype on CR
+    205.3i's land-type list goes; the card types, and any other subtype, stay
+    (CR 613.1d)."""
+
+    kind: Literal["lose_all_land_types"] = "lose_all_land_types"
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        land_types = CLOSED_SUBTYPE_LISTS[Type.LAND]
+        return chars.with_(
+            subtypes=tuple(subtype for subtype in chars.subtypes if subtype not in land_types)
+        )
+
+
 class SetBasicLandType(ModificationBase):
     """Layer 4: become a basic land type, losing the old ones (CR 305.7)."""
 
@@ -1571,6 +1642,7 @@ Modification = Annotated[
     | AddSubtype
     | AddEveryCreatureType
     | AddBasicLandTypes
+    | LoseAllLandTypes
     | SetBasicLandType
     | SetColors
     | SetController
@@ -4631,7 +4703,7 @@ def _lands_are_every_basic_type_builder(line: str) -> EffectBuilder:
     source.
 
     Neither card's *other* lines are this shape's business: Dryad's extra land
-    drop is CR 611.3d's rule-modifying grant (`ADDITIONAL_LAND_PLAYS`), and
+    drop is CR 611.3d's rule-modifying grant (`additional_land_plays`), and
     Leyline of the Guildpact's "Each nonland permanent you control is all
     colors" is a layer 5 effect (CR 613.1e) no shape here reads yet.
     """
@@ -6517,9 +6589,15 @@ _YOU_CONTROL_ATTACHED_RE = re.compile(
 #: "Artifacts and creatures entering the battlefield don't cause abilities to
 #: trigger." (Karn, Argent Defender) - an and-joined card-type list, "the
 #: battlefield" optional (Torpor Orb's own Oracle wording drops it).
+#: "Permanents entering don't cause abilities of permanents your opponents
+#: control to trigger." (Elesh Norn, Mother of Machines) - "permanents" names
+#: every entering permanent, and the optional scope narrows which abilities
+#: are stopped to those of permanents the source's controller's opponents
+#: control.
 _DONT_CAUSE_TRIGGERS_RE = re.compile(
     r"^(?P<types>[a-z]+(?:,\s*[a-z]+)*(?:\s+and\s+[a-z]+)?) entering(?: the battlefield)? "
-    r"don'?t cause abilities to trigger\.?$",
+    r"don'?t cause abilities(?P<opponents> of permanents your opponents control)? "
+    r"to trigger\.?$",
     re.IGNORECASE,
 )
 
@@ -6645,6 +6723,58 @@ _GRAVEYARD_CARD_COUNT_GATED_SELF_STATIC_RE = re.compile(
     r"^this (?:creature|permanent|token) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
     r"(?P<rest>.*?) as long as there (?:is|are) (?P<count>[a-z]+) or more cards? in your "
     r"graveyard\.?$",
+    re.IGNORECASE,
+)
+
+#: "Lands your opponents control with the chosen name lose all land types and
+#: abilities, and they gain "{T}: Add one mana of any color."" (Alpine Moon) -
+#: a group of permanents picked by the name chosen as the source entered (CR
+#: 614.12a, `CardState.choice`), losing its land types in layer 4 (CR
+#: 613.1d) and its abilities in layer 6 (CR 613.1f), then - later in the same
+#: layer, CR 613.3's timestamp order within one effect - gaining the quoted
+#: ability.
+_CHOSEN_NAME_GROUP_LOSES_RE = re.compile(
+    r"^(?P<subject>lands|creatures|permanents)"
+    r"(?P<scope> your opponents control| you control)? with the chosen name "
+    r"lose all (?P<what>land types and abilities|abilities)"
+    r'(?:,? and (?:they )?gain "(?P<granted>[^"]+)")?\.?$',
+    re.IGNORECASE,
+)
+
+#: A self pump/grant gated on its controller's life total - condition-leading
+#: (Serra Ascendant's "As long as you have 30 or more life, this creature gets
+#: +5/+5 and has flying.") and condition-trailing (Divinity of Pride's "This
+#: creature gets +4/+4 as long as you have 25 or more life."). CR 604.2: the
+#: effect is active only while the condition holds, and CR 611.3a re-reads the
+#: life total (`LayerContext.life_of`) on every computation. The pump is
+#: sublayer 7c (CR 613.4c), the grants layer 6 (CR 613.1f).
+_LIFE_GATED_SELF_STATIC_LEADING_RE = re.compile(
+    rf"^as long as you have (?P<count>{COUNT}) or more life, "
+    r"(?:this (?:creature|permanent|token)|it) "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)|(?P<grant_only>has .+?))\.?$",
+    re.IGNORECASE,
+)
+_LIFE_GATED_SELF_STATIC_TRAILING_RE = re.compile(
+    r"^this (?:creature|permanent|token) "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>(?: and has [^.]+?)?)"
+    r"|(?P<grant_only>has .+?))"
+    rf" as long as you have (?P<count>{COUNT}) or more life\.?$",
+    re.IGNORECASE,
+)
+
+#: A Theros god's own type removal: "As long as your devotion to red and green
+#: is less than seven, Xenagos isn't a creature." (Xenagos, God of Revels);
+#: "As long as your devotion to blue is less than five, Thassa isn't a
+#: creature." (Thassa, Deep-Dwelling). The self-reference is already "this
+#: permanent" (`self_normalized_effect_text`, CR 201.5). Layer 4 (CR 613.1d:
+#: "Type-changing effects ... change an object's card type"), active only
+#: while the devotion (CR 700.5, `LayerContext.devotion_of`) is under the
+#: number (CR 604.2, CR 611.3a).
+_DEVOTION_GATED_NOT_A_CREATURE_RE = re.compile(
+    r"^as long as your devotion to (?P<colors>(?:white|blue|black|red|green)"
+    r"(?:(?:,\s*|,? and )(?:white|blue|black|red|green))*) "
+    rf"is less than (?P<count>{COUNT}), "
+    r"(?:this [a-z]+|it|(?:he|she|they)) (?:isn't|is not|aren't) a creature\.?$",
     re.IGNORECASE,
 )
 
@@ -7293,28 +7423,36 @@ DOESNT_UNTAP_TEXT = "Doesn't untap during its controller's untap step."
 #: don't cause abilities to trigger" - Torpor Orb's "Creatures entering
 #: don't cause abilities to trigger." and Karn, Argent Defender's "Artifacts
 #: and creatures entering the battlefield don't cause abilities to trigger."
-#: both normalise to one of these two fixed strings per type named, so
-#: `Game.emit` checks a literal rather than pattern-matching either printed
-#: wording. Two constants, not one parametrised on a type list, because the
-#: check site asks "is *this* card type suppressed" one type at a time.
-CREATURES_DONT_CAUSE_TRIGGERS_TEXT = "Creatures entering don't cause abilities to trigger."
-ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT = "Artifacts entering don't cause abilities to trigger."
+#: both normalise to one fixed string per type named (`dont_cause_triggers_
+#: text`), so `Game.emit` checks a literal rather than pattern-matching either
+#: printed wording. `None` is "permanents" - every entering permanent,
+#: whatever its types.
 
-#: The card types this shape can name, and the canonical text each grants.
-_DONT_CAUSE_TRIGGERS_TEXT_BY_TYPE: dict[Type, str] = {
-    Type.CREATURE: CREATURES_DONT_CAUSE_TRIGGERS_TEXT,
-    Type.ARTIFACT: ARTIFACTS_DONT_CAUSE_TRIGGERS_TEXT,
-}
+#: The card types this shape can name.
+_DONT_CAUSE_TRIGGERS_TYPES: frozenset[Type | None] = frozenset({Type.CREATURE, Type.ARTIFACT, None})
 
 
-def _self_suppresses_etb_triggers_builder(card_types: list[Type], *, line: str) -> EffectBuilder:
+def dont_cause_triggers_text(card_type: Type | None, *, opponents_only: bool = False) -> str:
+    """The canonical granted text for one entering type (None: any
+    permanent), unscoped or scoped to abilities of permanents the source's
+    controller's opponents control (Elesh Norn, Mother of Machines)."""
+    noun = "Permanents" if card_type is None else f"{card_type.value.capitalize()}s"
+    scope = " of permanents your opponents control" if opponents_only else ""
+    return f"{noun} entering don't cause abilities{scope} to trigger."
+
+
+def _self_suppresses_etb_triggers_builder(
+    card_types: list[Type | None], *, opponents_only: bool, line: str
+) -> EffectBuilder:
     """Torpor Orb's "Creatures entering don't cause abilities to trigger.";
     Karn, Argent Defender's "Artifacts and creatures entering the battlefield
-    don't cause abilities to trigger." - one grant per named type, all
-    landing on the source itself. `Game.emit` is the reader: CR 603.2's
-    trigger check for an ENTERS_THE_BATTLEFIELD event asks whether any
-    permanent on the battlefield carries the matching text before adding
-    anything caused by that entrance to `pending_triggers`.
+    don't cause abilities to trigger."; Elesh Norn's "Permanents entering
+    don't cause abilities of permanents your opponents control to trigger." -
+    one grant per named type, all landing on the source itself. `Game.emit`
+    is the reader: CR 603.2's trigger check for an ENTERS_THE_BATTLEFIELD
+    event asks which permanents on the battlefield carry a matching text, and
+    drops what each one stops before anything caused by that entrance reaches
+    `pending_triggers`.
     """
 
     def builder(
@@ -7325,13 +7463,16 @@ def _self_suppresses_etb_triggers_builder(card_types: list[Type], *, line: str) 
     ) -> list[ContinuousEffect]:
         return [
             ContinuousEffect(
-                description=f"{source.name}: {card_type.value}s entering don't cause triggers",
+                description=f"{source.name}: "
+                + dont_cause_triggers_text(card_type, opponents_only=opponents_only),
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(_DONT_CAUSE_TRIGGERS_TEXT_BY_TYPE[card_type]),
+                modification=grant_ability(
+                    dont_cause_triggers_text(card_type, opponents_only=opponents_only)
+                ),
             )
             for card_type in card_types
         ]
@@ -8619,6 +8760,159 @@ def _self_assigns_damage_as_though_positive_builder(*, line: str) -> EffectBuild
     return builder
 
 
+def _chosen_name_group_loses_builder(
+    card_type: Type | None,
+    scope: Literal["any", "you", "opponents"],
+    *,
+    land_types: bool,
+    granted: str | None,
+    line: str,
+) -> EffectBuilder:
+    """`_CHOSEN_NAME_GROUP_LOSES_RE`'s shape. No name chosen (the source was
+    put there without entering through CR 614.12a's choice) picks nothing."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        chosen = source.choice
+        if chosen is None or chosen.kind is not ChoiceKind.CARD_NAME or not chosen.value:
+            return []
+        selector = PermanentsWithName(
+            name=chosen.value, card_type=card_type, username=source.controller, scope=scope
+        )
+        effects: list[ContinuousEffect] = []
+        if land_types:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {chosen.value} loses all land types",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=selector,
+                    modification=LoseAllLandTypes(),
+                )
+            )
+        effects.append(
+            ContinuousEffect(
+                description=f"{source.name}: {chosen.value} loses all abilities",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=lose_all_abilities,
+            )
+        )
+        if granted is not None:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {chosen.value} gains {granted}",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=selector,
+                    modification=grant_ability(granted),
+                )
+            )
+        return effects
+
+    return builder
+
+
+def _context_gated_self_pump_builder(
+    condition: Callable[[CardState, LayerContext], bool],
+    power: int,
+    toughness: int,
+    granted: list[str],
+    *,
+    line: str,
+    description: str,
+) -> EffectBuilder:
+    """A self pump (sublayer 7c, CR 613.4c) plus any grants (layer 6, CR
+    613.1f), gated by something `LayerContext` carries - the controller's life
+    total (Serra Ascendant, Divinity of Pride). Checked at build time, the
+    same choice `_context_gated_self_static_builder` makes: `effects_for`
+    reruns on every CR 613.5 computation, so the effect is on exactly while the
+    condition holds (CR 604.2, CR 611.3a)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if not condition(source, context):
+            return []
+        effects: list[ContinuousEffect] = []
+        if power or toughness:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {power:+d}/{toughness:+d} {description}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=_only(source.id),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: has {ability} {description}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(ability),
+            )
+            for ability in granted
+        )
+        return effects
+
+    return builder
+
+
+def _devotion_gated_not_a_creature_builder(
+    colors: frozenset[Color], threshold: int, *, line: str
+) -> EffectBuilder:
+    """A Theros god's "As long as your devotion to <colors> is less than N,
+    <this> isn't a creature." - layer 4 (CR 613.1d) removes the creature card
+    type from the source itself while its controller's devotion (CR 700.5,
+    `SelfIfDevotionBelow`) is under `threshold`."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: isn't a creature while devotion is under {threshold}",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=SelfIfDevotionBelow(
+                    card_id=source.id,
+                    colors=colors,
+                    threshold=threshold,
+                    mana_costs=tuple(context.mana_cost_by_id.items()),
+                ),
+                modification=RemoveType(card_type=Type.CREATURE),
+            )
+        ]
+
+    return builder
+
+
 def _context_gated_self_static_builder(
     condition: Callable[[CardState, LayerContext], bool],
     granted: list[str],
@@ -9492,14 +9786,17 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _you_control_attached_builder(subject=match.group("subject"), line=sentence)
     if match := _DONT_CAUSE_TRIGGERS_RE.fullmatch(sentence):
         words = re.split(r",\s*|\s+and\s+", match.group("types"))
-        card_types = [_card_type_word(word.rstrip("sS")) for word in words]
-        if any(
-            card_type is None or card_type not in _DONT_CAUSE_TRIGGERS_TEXT_BY_TYPE
-            for card_type in card_types
-        ):
-            return None
+        card_types: list[Type | None] = []
+        for word in words:
+            singular = word.rstrip("sS")
+            card_type = None if singular.lower() == "permanent" else _card_type_word(singular)
+            if card_type is None and singular.lower() != "permanent":
+                return None
+            if card_type not in _DONT_CAUSE_TRIGGERS_TYPES:
+                return None
+            card_types.append(card_type)
         return _self_suppresses_etb_triggers_builder(
-            [card_type for card_type in card_types if card_type is not None], line=sentence
+            card_types, opponents_only=match.group("opponents") is not None, line=sentence
         )
     if _SPELLS_HAVE_SPLIT_SECOND_RE.fullmatch(sentence):
         return _self_grants_split_second_builder(line=sentence)
@@ -9551,6 +9848,64 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             granted,
             line=sentence,
         )
+    if match := _CHOSEN_NAME_GROUP_LOSES_RE.fullmatch(sentence):
+        subject = match.group("subject").lower()
+        group_type = None if subject == "permanents" else _card_type_word(subject.rstrip("s"))
+        scope_text = (match.group("scope") or "").strip().lower()
+        group_scope: Literal["any", "you", "opponents"] = (
+            "opponents"
+            if scope_text == "your opponents control"
+            else "you"
+            if scope_text == "you control"
+            else "any"
+        )
+        return _chosen_name_group_loses_builder(
+            group_type,
+            group_scope,
+            land_types=match.group("what").lower().startswith("land types"),
+            granted=match.group("granted"),
+            line=sentence,
+        )
+    for life_re in (_LIFE_GATED_SELF_STATIC_LEADING_RE, _LIFE_GATED_SELF_STATIC_TRAILING_RE):
+        if match := life_re.fullmatch(sentence):
+            threshold = parse_count(match.group("count"), article=False)
+            if threshold is None:
+                return None
+            grant_only = match.group("grant_only")
+            if grant_only is not None:
+                granted = _split_gated_grants(grant_only)
+                power = toughness = 0
+            else:
+                granted = _split_gated_grants(match.group("rest") or "")
+                power = int(match.group("power"))
+                toughness = int(match.group("toughness"))
+            if granted is None:
+                return None
+
+            def enough_life(
+                source: CardState, context: LayerContext, threshold: int = threshold
+            ) -> bool:
+                life = context.life_of(source.controller)
+                return life is not None and life >= threshold
+
+            return _context_gated_self_pump_builder(
+                enough_life,
+                power,
+                toughness,
+                granted,
+                line=sentence,
+                description=f"while its controller has {threshold} or more life",
+            )
+    if match := _DEVOTION_GATED_NOT_A_CREATURE_RE.fullmatch(sentence):
+        threshold = parse_count(match.group("count"), article=False)
+        if threshold is None:
+            return None
+        colors = frozenset(
+            _COLOR_WORDS[word.lower()]
+            for word in re.split(r",\s*(?:and\s+)?|\s+and\s+", match.group("colors"))
+            if word.strip()
+        )
+        return _devotion_gated_not_a_creature_builder(colors, threshold, line=sentence)
     if match := _GRAVEYARD_CARD_COUNT_GATED_SELF_STATIC_RE.fullmatch(sentence):
         threshold = parse_count(match.group("count"), article=False)
         if threshold is None:
@@ -10181,6 +10536,26 @@ class LayerContext(EngineModel):
     #: carries the designation any more than Tarmogoyf can see a graveyard.
     ring_bearers: Mapping[str, tuple[UUID, UUID]] = Field(default_factory=dict)
 
+    #: Each player's life total (CR 119.1), keyed by username - Serra
+    #: Ascendant's "As long as you have 30 or more life, ..." reads its own
+    #: controller's, which is not on the battlefield any more than a
+    #: graveyard is. Read when the effects are built, like every field here.
+    life_by_player: Mapping[str, int] = Field(default_factory=dict)
+
+    #: Every battlefield permanent's mana cost, keyed by its id - what CR
+    #: 700.5's devotion counts ("the number of mana symbols ... among the mana
+    #: costs of permanents that player controls"). Keyed by object rather than
+    #: by player so whose permanent each is can be read off the board as the
+    #: layers left it (CR 700.5a: after control-changing effects) by
+    #: `SelfIfDevotionBelow`.
+    mana_cost_by_id: Mapping[UUID, str] = Field(default_factory=dict)
+
+    def life_of(self, player: str | None) -> int | None:
+        """`player`'s life total, or None for a player this context does not know."""
+        if player is None:
+            return None
+        return self.life_by_player.get(player)
+
     def has_turn_fact(self, fact: str, player: str | None) -> bool:
         """Whether `player` is on this turn's ledger for `fact` - `False` for
         a player this context knows nothing about, the same empty-is-false
@@ -10327,7 +10702,7 @@ def _twisted_image(
 #: Leyline of the Guildpact, printing the identical sentence, generate it too.
 #: The Dryad's other line, "You may play an additional land on each of your
 #: turns", is CR 611.3d's rule-modifying grant rather than a continuous effect
-#: in any of the seven layers, and lives in `ADDITIONAL_LAND_PLAYS`.
+#: in any of the seven layers, and is read by `additional_land_plays_of_line`.
 
 
 def _dress_down(
@@ -10921,41 +11296,54 @@ def static_effects(
 # --------------------------------------------------------------------------
 
 #: CR 611.3d: "Continuous effects from static abilities may allow a player to
-#: play a land or cast a permanent spell..." A grant like Azusa's is not a
+#: play a land or cast a permanent spell..." A grant like these is not a
 #: change to any object's characteristics, so it belongs to none of the seven
-#: layers - it modifies the game's rules for a player instead. Static ability
-#: text is not parsed (the same trade `LAYER_EFFECTS` makes), so these grants
-#: are a per-card registry keyed by name.
+#: layers - it modifies the game's rules for a player instead. Both shapes are
+#: read off the permanent's own computed ability text (CR 613.5), so a
+#: permanent that lost its abilities grants nothing.
 #:
-#: Each entry is how many ADDITIONAL lands a turn the card lets its controller
-#: play, on each of that player's turns. The printed "on each of your turns"
-#: needs no stored condition: `Game.can_play_land` refuses any player who is
-#: not the active player (CR 305.3 - "A player can't play a land, for any
-#: reason, if it isn't their turn"), so a grant is only ever read for a player
-#: on their own turn. The grant also reaches only its controller, because
-#: `Game.permanents_controlled_by` is what feeds `additional_land_plays`.
-ADDITIONAL_LAND_PLAYS: dict[str, int] = {
-    # "You may play two additional lands on each of your turns."
-    "Azusa, Lost but Seeking": 2,
-}
+#: "You may play an additional land on each of your turns." (Icetill Explorer,
+#: Dryad of the Ilysian Grove) / "You may play two additional lands on each of
+#: your turns." (Azusa, Lost but Seeking) - CR 305.2's "continuous effects may
+#: increase this number". The printed "on each of your turns" needs no stored
+#: condition: `Game.why_cannot_play_land` refuses any player who is not the
+#: active player (CR 305.3), so a grant is only ever read for a player on their
+#: own turn, and only its controller's permanents are asked.
+_ADDITIONAL_LAND_PLAYS_RE = re.compile(
+    rf"^you may play (?P<n>{COUNT}) additional lands? on each of your turns\.?$",
+    re.IGNORECASE,
+)
+
+#: "You may play lands from your graveyard." (Icetill Explorer, Crucible of
+#: Worlds, Ancient Greenwarden) - CR 305.1's land drop from a zone other than
+#: the hand, for lands its controller owns. A permission to *play*, never to
+#: cast (CR 305.1: a land is never a spell).
+_PLAY_LANDS_FROM_YOUR_GRAVEYARD_RE = re.compile(
+    r"^you may play lands from your graveyard\.?$", re.IGNORECASE
+)
 
 
-def additional_land_plays(permanents: Sequence[CardState]) -> int:
-    """The additional land plays a set of permanents grants (CR 305.2, 611.3d).
+def additional_land_plays_of_line(text: str) -> int | None:
+    """How many additional lands one static line lets its controller play on
+    each of their turns, or None when the line is not that grant."""
+    match = _ADDITIONAL_LAND_PLAYS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    return parse_count(match.group("n"), article=True)
 
-    Summed over the permanents passed in; the caller passes only the ones the
-    player controls (`Game.permanents_controlled_by`), because a static ability
-    grants its controller and nobody else. CR 611.3b applies the effect "at all
-    times that the permanent generating it is on the battlefield", which reading
-    the board at every question gives for free - Azusa leaving mid-turn drops
-    the grant the moment she is gone.
-    """
-    total = 0
-    for permanent in permanents:
-        grant = ADDITIONAL_LAND_PLAYS.get(permanent.name)
-        if grant is not None:
-            total += grant
-    return total
+
+def plays_lands_from_graveyard_line(text: str) -> bool:
+    """Whether one static line is "You may play lands from your graveyard."."""
+    return _PLAY_LANDS_FROM_YOUR_GRAVEYARD_RE.fullmatch(text.strip()) is not None
+
+
+def additional_land_plays(abilities: Iterable[str]) -> int:
+    """The additional land plays a player's permanents grant (CR 305.2, 611.3d),
+    summed over the computed ability lines of the permanents that player
+    controls - a static ability grants its controller and nobody else, and
+    reading the board at every question means the grant is gone the moment
+    its source is."""
+    return sum(additional_land_plays_of_line(line) or 0 for line in abilities)
 
 
 # --------------------------------------------------------------------------

@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "79cfb366-ae2a-4b3d-9a80-383a32db1509",
+  "oracle_id": "73f44500-fe83-40fa-b6f2-ed5673d0edcc",
+  "multiverse_ids": [
+    646583
+  ],
+  "mtgo_id": 121528,
+  "arena_id": 88940,
+  "tcgplayer_id": 534125,
+  "cardmarket_id": 751996,
+  "name": "Karlov Watchdog",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/79cfb366-ae2a-4b3d-9a80-383a32db1509",
+  "scryfall_uri": "https://scryfall.com/card/mkm/20/karlov-watchdog?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:22:04Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.jpg?1783912924",
+    "normal": "https://cards.scryfall.io/normal/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.jpg?1783912924",
+    "large": "https://cards.scryfall.io/large/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.jpg?1783912924",
+    "png": "https://cards.scryfall.io/png/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.png?1783912924",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.jpg?1783912924",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.jpg?1783912924",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.webp?1783912924",
+    "grid": "https://cards.scryfall.io/grid/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.webp?1783912924",
+    "display": "https://cards.scryfall.io/display/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.webp?1783912924",
+    "art": "https://cards.scryfall.io/art/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.webp?1783912924",
+    "crop": "https://cards.scryfall.io/crop/front/7/9/79cfb366-ae2a-4b3d-9a80-383a32db1509.webp?1783912924"
+  },
+  "mana_cost": "{3}{W}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Dog",
+  "oracle_text": "Vigilance\nPermanents your opponents control can't be turned face up during your turn.\nWhenever you attack with three or more creatures, creatures you control get +1/+1 until end of turn.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Vigilance"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set": "mkm",
+  "set_name": "Murders at Karlov Manor",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/79cfb366-ae2a-4b3d-9a80-383a32db1509/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A73f44500-fe83-40fa-b6f2-ed5673d0edcc&unique=prints",
+  "collector_number": "20",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Teysa trusts only those for whom money has no meaning.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Craig J Spearing",
+  "artist_ids": [
+    "b0f15e74-0dd6-4156-959e-c5e30c5cdc52"
+  ],
+  "illustration_id": "82c8dabc-5215-462d-b7f2-cc135ca3a825",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 20643,
+  "preview": {
+    "source": "One More Mana",
+    "source_uri": "https://www.youtube.com/watch?v=mJary1sgRoo",
+    "previewed_at": "2024-01-21"
+  },
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.20",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.13",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=646583&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKarlov%2BWatchdog",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKarlov%2BWatchdog",
+    "edhrec": "https://edhrec.com/route/?cc=Karlov+Watchdog"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F534125%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=751996&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/121528?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

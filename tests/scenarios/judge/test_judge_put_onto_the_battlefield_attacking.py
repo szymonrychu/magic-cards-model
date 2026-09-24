@@ -16,12 +16,13 @@ creature" in Ilharg's delayed trigger is an identifier for the object, so
 Purphoros comes back to hand even if devotion has fallen and it is no longer a
 creature by the end step.
 
-The engine now plays the first ruling out for real: the attack trigger puts the
+The engine plays both rulings out for real: the attack trigger puts the
 creature card onto the battlefield tapped and attacking (CR 508.4) and creates
-CR 603.7's delayed triggered ability for the return. The devotion half is still
-missing - there is no devotion-gated type-changing static ability in
-`machines/layers.LAYER_EFFECTS` - so this file's Purphoros is always a creature,
-which is the episode's easy case and is recorded as such below.
+CR 603.7's delayed triggered ability for the return, and Purphoros' own
+"As long as your devotion to red is less than five, Purphoros isn't a
+creature." is read by `machines/layers._DEVOTION_GATED_NOT_A_CREATURE_RE`
+(CR 613.1d, CR 700.5). The easy case gives alice a Boggart Ram-Gang ({R/G}
+three times) beside Ilharg: 2 + 3 + Purphoros' own 1 is six.
 
 Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
@@ -29,20 +30,20 @@ with `knowledge_search(type="rules")` in this session.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
-from magic_cards_model.machines.layers import LAYER_EFFECTS
 from magic_cards_model.models import Zone
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
-def board() -> Scenario:
-    """Alice attacking with Ilharg, Purphoros waiting in hand."""
+def board(*, devoted: bool = True) -> Scenario:
+    """Alice attacking with Ilharg, Purphoros waiting in hand - with devotion
+    to red of six (Boggart Ram-Gang beside Ilharg) unless `devoted` is off."""
     return (
         Scenario()
         .player(
             "alice",
             hand=["Purphoros, God of the Forge"],
-            battlefield=["Ilharg, the Raze-Boar"],
+            battlefield=["Ilharg, the Raze-Boar", *(["Boggart Ram-Gang"] if devoted else [])],
         )
         .player("bob")
     )
@@ -68,7 +69,7 @@ def test_ilhargs_attack_trigger_reaches_the_stack_before_it_does_anything():
     scenario.attack_with(ilharg)
 
     assert scenario.stack_names() == ["Ilharg, the Raze-Boar's triggered ability"]
-    assert scenario.battlefield_names() == ["Ilharg, the Raze-Boar"]
+    assert "Purphoros, God of the Forge" not in scenario.battlefield_names()
     assert [state.card.name for state in scenario.player("alice").hand] == [
         "Purphoros, God of the Forge"
     ]
@@ -86,7 +87,7 @@ def test_declining_ilhargs_may_leaves_the_creature_in_hand():
     scenario.will_take_the_may(False, username="alice")
     scenario.pass_until_resolved()
 
-    assert scenario.battlefield_names() == ["Ilharg, the Raze-Boar"]
+    assert "Purphoros, God of the Forge" not in scenario.battlefield_names()
     assert scenario.game.delayed_triggers.triggers == []
 
 
@@ -131,34 +132,58 @@ def test_ilhargs_return_clause_is_part_of_the_same_trigger_paragraph():
     assert "Return that creature to your hand" in attack_trigger.effect
 
 
-def test_purphoros_has_no_devotion_gated_type_change():
+def test_purphoros_is_a_creature_only_with_devotion_of_five():
     """DDR#965's other premise: whether Purphoros is a creature at all.
 
     Purphoros, God of the Forge (verified with `resolve_cards`): "As long as
-    your devotion to red is less than five, Purphoros isn't a creature."
-
-    That is a continuous effect in CR 613's layer 4 (type-changing), and there
-    is no row for it in `machines/layers.LAYER_EFFECTS` - the same hand-written
-    registry gap DDR#982, DDR#801 and DDR#1010 already record in this package.
-    So the engine treats Purphoros as a creature on the battlefield regardless
-    of devotion, which happens to match the episode's *easy* case (devotion of
-    five or more) and silently mismatches the interesting one.
-
-    Devotion itself is not missing - `machines/effects.py` counts CR 700.5's
-    "your devotion to `<color>`" for Gray Merchant of Asphodel. It is the
-    static ability keyed off it that has no home.
+    your devotion to red is less than five, Purphoros isn't a creature." - a
+    CR 613.1d type-changing effect gated on CR 700.5's devotion.
     """
-    assert "Purphoros, God of the Forge" not in LAYER_EFFECTS
-
-    scenario = (
+    alone = (
         Scenario()
         .player("alice", battlefield=["Purphoros, God of the Forge"])
         .player("bob")
         .build()
     )
-    purphoros = scenario.find("Purphoros, God of the Forge", Zone.BATTLEFIELD, "alice")
+    purphoros = alone.find("Purphoros, God of the Forge", Zone.BATTLEFIELD, "alice")
+    assert not alone.game.characteristics_of(purphoros).is_creature
 
-    assert purphoros.is_creature, "devotion is never consulted"
+    devoted = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Purphoros, God of the Forge", "Boggart Ram-Gang", "Ball Lightning"],
+        )
+        .player("bob")
+        .build()
+    )
+    purphoros = devoted.find("Purphoros, God of the Forge", Zone.BATTLEFIELD, "alice")
+    assert devoted.game.characteristics_of(purphoros).is_creature
+
+
+def test_without_devotion_purphoros_is_not_attacking_but_still_returns():
+    """DDR#965's interesting case: devotion below five, so Purphoros enters as
+    a non-creature enchantment and is not attacking (only a creature can be,
+    CR 508.4) - yet "that creature" is an identifier for the object, so the
+    delayed trigger still returns it to hand at the end step."""
+    scenario = board(devoted=False).build()
+    ilharg = scenario.creature("Ilharg, the Raze-Boar", "alice")
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(ilharg)
+    scenario.pass_until_resolved()
+
+    purphoros = scenario.find("Purphoros, God of the Forge", Zone.BATTLEFIELD, "alice")
+    assert not scenario.game.characteristics_of(purphoros).is_creature
+    assert purphoros not in scenario.attackers()
+
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+    scenario.game.put_triggers_on_stack()
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
+
+    assert purphoros.zone is Zone.HAND
 
 
 def test_purphoros_is_put_in_attacking_and_returns_to_hand_at_end_of_turn():
