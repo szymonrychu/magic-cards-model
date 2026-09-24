@@ -1213,6 +1213,12 @@ _MANA_VALUE_EQUALS_COUNTERS = re.compile(
     r"with mana value equal to the number of (?P<kind>[a-z]+) counters on "
 )
 
+#: Gollum, Riddle Master's own "a spell with mana value of the chosen
+#: quality" - CR 614.12a's own "odd or even" choice (`ChoiceKind.ODD_OR_
+#: EVEN`), read off the source's own `CardState.choice` rather than a fixed
+#: number the way `_MANA_VALUE_EQUALS_COUNTERS` reads Chalice's counters.
+_MANA_VALUE_OF_CHOSEN_QUALITY = re.compile(r"with mana value of the chosen quality")
+
 
 def _is_legendary_source(source: CardState) -> bool:
     """Whether `source`'s own printed card carries CR 205.4a's Legendary
@@ -1739,29 +1745,50 @@ def _required_cast_subtype(condition: str) -> str | None:
 
 #: Cori-Steel Cutter's own *Flurry* shape: "you cast your second spell each
 #: turn" (the ability word itself, CR 207.2c, carries no rules meaning and is
-#: stripped before this text is ever seen). Unlike Alania, Divergent Storm's
-#: "it's the first ... spell ... you've cast this turn" - an intervening *if*
-#: read by `_first_spell_this_turn_holds`, rechecked at resolution (CR 603.4,
+#: stripped before this text is ever seen), and The Queen of Dale's own "an
+#: opponent casts their first noncreature spell each turn" - the identical
+#: ordinal read for whoever the trigger's own subject is rather than always
+#: the ability's controller, with an optional type qualifier
+#: (`_required_types` reads it back off the whole condition) between the
+#: ordinal and "spell(s)". Unlike Alania, Divergent Storm's "it's the
+#: first ... spell ... you've cast this turn" - an intervening *if* read by
+#: `_first_spell_this_turn_holds`, rechecked at resolution (CR 603.4,
 #: 608.2a) - this ordinal sits in the trigger condition itself (CR 603.2): the
 #: ability triggers (or doesn't) once, at the moment of casting, and is never
 #: revisited.
-_ORDINAL_SPELL_EACH_TURN = re.compile(r"your (?P<ordinal>[a-z]+) spells? each turn")
+_ORDINAL_SPELL_EACH_TURN = re.compile(
+    r"(?:your|their) (?P<ordinal>[a-z]+) (?:[a-z]+ )?spells? each turn"
+)
 
 
 def _ordinal_spell_this_turn_matches(
     game: "Game", condition: str, controller: str, event: GameEvent
 ) -> bool | None:
-    """Whether `event`'s spell is exactly the controller's Nth spell cast this
-    turn (CR 603.2), for "you cast your [ordinal] spell each turn". `None`,
-    not False, when `condition` isn't this shape at all, so the caller can
-    tell "read and false" from "not this pattern" the same way
-    `_first_spell_this_turn_holds` already does for its own clause.
+    """Whether `event`'s spell is exactly its own caster's Nth spell cast
+    this turn (CR 603.2), for "you cast your [ordinal] spell each turn" /
+    "an opponent casts their [ordinal] spell each turn". `None`, not False,
+    when `condition` isn't this shape at all, so the caller can tell "read
+    and false" from "not this pattern" the same way `_first_spell_this_turn_
+    holds` already does for its own clause.
+
+    Indexed by `event.player` - the spell's own caster - rather than always
+    `controller`: for "your" that is already the same player (the earlier
+    "an opponent"/`_controller_clause_holds` check has already refused any
+    other caster by the time this runs), and for "their" it is whichever
+    opponent actually cast the spell, not the ability's own controller.
 
     `game.spells_cast_this_turn` (`Game.put_on_stack`) already holds this very
     spell by the time the CAST_SPELL event reaches here - CR 601.2a's casting
     event has already happened - so its 1-indexed position in that per-turn,
-    per-controller list *is* the ordinal this clause asks about, with no
+    per-caster list *is* the ordinal this clause asks about, with no
     separate counter to maintain.
+
+    The Queen of Dale's own "noncreature" is CR 712.8f's ordinary type word
+    (`_required_types`, the same reader `_types_match` uses elsewhere in this
+    module): when the condition names one, both the ordinal *and* the type
+    have to match - the count is taken only over the caster's spells of that
+    type this turn, and a spell of the wrong type never satisfies the clause
+    at all, whatever position it fell in.
     """
     match = _ORDINAL_SPELL_EACH_TURN.search(condition.lower())
     if match is None:
@@ -1769,7 +1796,18 @@ def _ordinal_spell_this_turn_matches(
     ordinal = parse_ordinal(match.group("ordinal"))
     if ordinal is None:
         return False
-    cast_this_turn = game.spells_cast_this_turn.get(controller, [])
+    if event.player is None:
+        return False
+    if not _types_match(event.subject_types, condition):
+        return False
+    required, forbidden = _required_types(condition)
+    cast_this_turn = game.spells_cast_this_turn.get(event.player, [])
+    if required or forbidden:
+        cast_this_turn = [
+            state
+            for state in cast_this_turn
+            if not (forbidden & set(state.types)) and (not required or required & set(state.types))
+        ]
     position = next(
         (
             index
@@ -2551,6 +2589,17 @@ def condition_matches(
             # anyway, so this is not a narrower read for the ordinary case.
             mana_value = event.amount if event.amount is not None else event.subject_card.cmc
             return mana_value == threshold
+        if _MANA_VALUE_OF_CHOSEN_QUALITY.search(lowered) is not None:
+            if event.subject_card is None:
+                return False
+            if source.choice is None or source.choice.kind is not ChoiceKind.ODD_OR_EVEN:
+                # CR 614.12a: nothing was chosen (or the wrong kind was), so
+                # there is no "chosen quality" for the mana value to be of.
+                return False
+            mana_value = event.amount if event.amount is not None else event.subject_card.cmc
+            is_even = int(mana_value) % 2 == 0  # (Zero is even.)
+            if (source.choice.value == "even") != is_even:
+                return False
         if mine and "this spell" in lowered:
             return event.subject_id == source.id
         # Frontline Heroism's own "that targets only a single creature you
@@ -2694,7 +2743,12 @@ def condition_matches(
                     return False
             elif target.id == source.id:
                 return False
-        if "mana value" in lowered:
+        if "mana value" in lowered and _MANA_VALUE_OF_CHOSEN_QUALITY.search(lowered) is None:
+            # Gollum, Riddle Master's own "with mana value of the chosen
+            # quality" already answered the mana-value question above - it
+            # is not `_mana_value_comparison`'s own "greater than/less
+            # than/equal to N" shape, and must not fail closed here for not
+            # being one.
             comparison = _mana_value_comparison(condition)
             if comparison is None:
                 game.cast_condition_notices.append(
@@ -3148,11 +3202,16 @@ _LAND_ADDED_CHOSEN_MANA_CONDITION = re.compile(
     r"^a land's ability causes you to add one or more mana of the chosen color$"
 )
 
-#: Tamiyo, Inquisitive Student's "you draw your third card in a turn" and
-#: Faerie Vandal's "you draw your second card each turn" - an ordinal over
-#: CR 121.2's individual card draws, which are one event each. Both suffixes
-#: mean the same turn-scoped count; "each turn" is how most printings say it.
-_NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card (?:in a|each) turn$")
+#: Tamiyo, Inquisitive Student's "you draw your third card in a turn",
+#: Faerie Vandal's "you draw your second card each turn", and Gleaming
+#: Splendor's own "an opponent draws their second card each turn" - an
+#: ordinal over CR 121.2's individual card draws, which are one event each.
+#: Both trailing suffixes mean the same turn-scoped count; "each turn" is how
+#: most printings say it. "You"/"your" is the ability's own controller;
+#: "an opponent"/"their" is any player who is not.
+_NTH_DRAW_CONDITION = re.compile(
+    r"^(?P<who>you|an opponent) draws? (?:your|their) (?P<ordinal>[a-z]+) card (?:in a|each) turn$"
+)
 
 #: CR 702.62a's third ability, as `machines/keywords._suspend_abilities`
 #: writes it out: "the last time counter is removed from this card". Never
@@ -3169,6 +3228,12 @@ _REVEALED_THIS_WAY_CONDITION = re.compile(r"^you reveal this card this way$")
 #: 601.1a's "play" (a land played or a spell cast) of a card out of this
 #: object's own CR 607.2a pile.
 _PLAY_A_CARD_EXILED_WITH_CONDITION = re.compile(r"^you play a card exiled with this \w+$")
+
+#: The Master of Lake-town's own "Whenever a player loses life" (CR 119.3's
+#: own life-loss event, `Game.deal_damage_to_player`/`.exchange_life_totals`)
+#: - "a player" is anyone, "you"/"an opponent" the narrower forms other
+#: printings of the same shape could use (`GAINS_LIFE`'s identical split).
+_LOSES_LIFE_CONDITION = re.compile(r"^(?P<who>you|an opponent|a player) loses? life$")
 
 #: CR 601.1a's "play" spelled out as its two halves: "you play a land or
 #: cast a spell [from anywhere other than your hand]" (Shadow of the Goblin) -
@@ -3477,6 +3542,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND})
     if _PLAY_A_LAND_OR_CAST_CONDITION.match(lowered):
         return frozenset({TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND})
+    if _LOSES_LIFE_CONDITION.match(lowered):
+        return frozenset({TriggerEvent.LOSES_LIFE})
     if _returned_subject(lowered) is not None:
         return frozenset({TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND})
     if _CLASS_BECOMES_LEVEL_CONDITION.match(lowered):
@@ -3617,7 +3684,14 @@ def _unread_condition_matches(
 
     match = _NTH_DRAW_CONDITION.match(condition)
     if match is not None:
-        if event.event is not TriggerEvent.DRAWS_A_CARD or event.player != controller:
+        if event.event is not TriggerEvent.DRAWS_A_CARD or event.player is None:
+            return False
+        if match.group("who") == "you":
+            if event.player != controller:
+                return False
+        elif event.player == controller:
+            # "an opponent draws their Nth card each turn" (Gleaming
+            # Splendor) - never the ability's own controller.
             return False
         ordinal = parse_ordinal(match.group("ordinal"))
         if ordinal is None:
@@ -3630,7 +3704,7 @@ def _unread_condition_matches(
         drawn = getattr(game, "cards_drawn_this_turn", None)
         if not isinstance(drawn, dict):
             return False
-        return drawn.get(controller, 0) == ordinal
+        return drawn.get(event.player, 0) == ordinal
 
     if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(condition):
         # CR 605.1b's triggered mana ability: Caged Sun's own condition, read
@@ -3663,6 +3737,17 @@ def _unread_condition_matches(
         if who == "an opponent" and (event.player is None or event.player == controller):
             return False
         return _origin_zone_matches(event.origin_zone, play_or_cast.group("origin") or "")
+
+    loses_life = _LOSES_LIFE_CONDITION.match(condition)
+    if loses_life is not None:
+        if event.event is not TriggerEvent.LOSES_LIFE or event.player is None:
+            return False
+        who = loses_life.group("who")
+        if who == "you":
+            return event.player == controller
+        if who == "an opponent":
+            return event.player != controller
+        return True  # "a player" - anyone, CR 119.3.
 
     if _PLAY_A_CARD_EXILED_WITH_CONDITION.match(condition):
         # CR 601.1a: "Playing a card" means playing it as a land or casting it

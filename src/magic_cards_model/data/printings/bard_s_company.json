@@ -1,0 +1,162 @@
+{
+  "object": "card",
+  "id": "d14aa2ff-7bbd-47a6-8e36-481e56302a62",
+  "oracle_id": "5c5bfbb2-0e63-4e43-b441-c4878983288f",
+  "multiverse_ids": [],
+  "resource_id": "7D8FAB74CED193CC949F4BC400638E79159E1067936DEBF20FD39CCE1CA05147",
+  "mtgo_id": 154230,
+  "arena_id": 103526,
+  "tcgplayer_id": 708223,
+  "cardmarket_id": 899597,
+  "name": "Bard's Company",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/d14aa2ff-7bbd-47a6-8e36-481e56302a62",
+  "scryfall_uri": "https://scryfall.com/card/hob/146/bards-company?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-27T11:37:30Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.jpg?1785152250",
+    "normal": "https://cards.scryfall.io/normal/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.jpg?1785152250",
+    "large": "https://cards.scryfall.io/large/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.jpg?1785152250",
+    "png": "https://cards.scryfall.io/png/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.png?1785152250",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.jpg?1785152250",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.jpg?1785152250",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.webp?1785152250",
+    "grid": "https://cards.scryfall.io/grid/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.webp?1785152250",
+    "display": "https://cards.scryfall.io/display/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.webp?1785152250",
+    "art": "https://cards.scryfall.io/art/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.webp?1785152250",
+    "crop": "https://cards.scryfall.io/crop/front/d/1/d14aa2ff-7bbd-47a6-8e36-481e56302a62.webp?1785152250"
+  },
+  "mana_cost": "{2}{W}{U}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Human Citizen",
+  "oracle_text": "You may cast this spell as though it had flash if you control a Human.\nOther creatures you control get +1/+1.\nWhenever this creature enters or attacks, recruit. (Draw a card, then discard a card. If you discarded a nonland card, create a 1/1 white Human Soldier creature token.)",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Recruit"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7ca1300a-0ac3-413b-9617-5e8d1b5f1ca2",
+      "component": "combo_piece",
+      "name": "Bard's Company",
+      "type_line": "Creature \u2014 Human Citizen",
+      "uri": "https://api.scryfall.com/cards/7ca1300a-0ac3-413b-9617-5e8d1b5f1ca2"
+    },
+    {
+      "object": "related_card",
+      "id": "6007af81-4541-4b55-90ea-03d365362ae5",
+      "component": "token",
+      "name": "Human Soldier",
+      "type_line": "Token Creature \u2014 Human Soldier",
+      "uri": "https://api.scryfall.com/cards/6007af81-4541-4b55-90ea-03d365362ae5"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d14aa2ff-7bbd-47a6-8e36-481e56302a62/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5c5bfbb2-0e63-4e43-b441-c4878983288f&unique=prints",
+  "collector_number": "146",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jarel Threat",
+  "artist_ids": [
+    "0fd89fbd-bd59-4ded-890e-731a8982f278"
+  ],
+  "illustration_id": "0b99cfda-cade-4567-b96a-0dc673dedfb1",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 15680,
+  "preview": {
+    "source": "ScreenHub",
+    "source_uri": "https://www.screenhub.com.au/news/games/mtg-the-hobbit-card-preview-bards-company-2704628/",
+    "previewed_at": "2026-07-24"
+  },
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.39",
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": "0.27",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBard%2527s%2BCompany",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBard%2527s%2BCompany",
+    "edhrec": "https://edhrec.com/route/?cc=Bard%27s+Company"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708223%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=899597&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154230?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

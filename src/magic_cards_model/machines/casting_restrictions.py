@@ -98,6 +98,11 @@ class CastingRuleKind:
     TARGETED_CANT_CAST = "targeted_cant_cast"
     """Orim's Chant: `restricted_player` (a spell target, not "your
     opponents") can't cast spells at all this turn."""
+    PLAYERS_CANT_CAST = "players_cant_cast"
+    """Bilbo's Gambit's own "If the gift was promised, players can't cast
+    spells this turn." - every player, `controller` included (CR 601.3,
+    611.2c), unlike `OPPONENTS_CANT_CAST`'s controller-exempt "your
+    opponents"."""
     INSTANT_SORCERY_COST_REDUCTION_GRANT = "instant_sorcery_cost_reduction_grant"
     """Ral, Monsoon Mage's +1: "Until your next turn, instant and sorcery
     spells you cast cost {1} less to cast." Read by `Game.
@@ -276,6 +281,19 @@ def create_targeted_cant_cast_restriction(
     )
 
 
+def create_players_cant_cast_restriction(controller: str, source_name: str) -> CastingRuleEffect:
+    """Bilbo's Gambit's own "If the gift was promised, players can't cast
+    spells this turn." as a recorded effect - every player, `controller`
+    included (CR 601.3, CR 611.2c: the spell that made it is gone by the
+    time anyone tries to cast)."""
+    return CastingRuleEffect(
+        kind=CastingRuleKind.PLAYERS_CANT_CAST,
+        controller=controller,
+        source_name=source_name,
+        duration=Duration.UNTIL_END_OF_TURN,
+    )
+
+
 def create_spells_cant_be_countered_grant(
     controller: str,
     source_name: str,
@@ -374,6 +392,10 @@ def blanket_cant_cast_restriction(
     """
     for effect in getattr(game, "casting_rule_effects", []):
         if effect.kind == CastingRuleKind.TARGETED_CANT_CAST and effect.restricted_player == caster:
+            return effect
+        if effect.kind == CastingRuleKind.PLAYERS_CANT_CAST:
+            # Bilbo's Gambit's own "players can't cast spells this turn" -
+            # every player, the effect's own controller included.
             return effect
         # Silence's "Your opponents can't cast spells this turn" - the
         # effect's own controller is never among them.

@@ -47,11 +47,15 @@ from magic_cards_model.machines.abilities import (
     parse_abilities,
     parse_mana_abilities,
 )
+from magic_cards_model.machines.abilities import (
+    self_normalized_effect_text as _self_normalized_effect_text,
+)
 from magic_cards_model.machines.casting import (
     ADDITIONAL_COST_KEYWORDS,
     TARGET_LEGALITY_KEYWORDS,
     TIMING_KEYWORDS,
     adventure_face,
+    conditional_flash_condition,
     has_split_second,
     hexproof_abilities_in,
     keyword_cast_options,
@@ -60,7 +64,11 @@ from magic_cards_model.machines.casting import (
     reads_mandatory_additional_cost_line,
     reads_printed_zone_permission_line,
 )
-from magic_cards_model.machines.casting_restrictions import reads_player_rule_static_line
+from magic_cards_model.machines.casting_restrictions import (
+    _CANT_BE_COUNTERED_RE,
+    _CONDITIONAL_CANT_BE_COUNTERED_RE,
+    reads_player_rule_static_line,
+)
 from magic_cards_model.machines.combat import (
     Keyword,
     is_attack_cost_line,
@@ -170,6 +178,8 @@ from magic_cards_model.models.card import (
 )
 from magic_cards_model.models.card_state import Counters, TargetRef
 from magic_cards_model.models.game import (
+    condition_is_readable,
+    conditional_additional_land_plays_of_line,
     is_player_rules_static_line,
     reads_activation_rule_line,
     reads_self_cost_reduction_line,
@@ -1722,7 +1732,11 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return HANDLED
     if cost_modifier_effect(text) is not None:
         return HANDLED
-    if additional_land_plays_of_line(text) is not None or plays_lands_from_graveyard_line(text):
+    if (
+        additional_land_plays_of_line(text) is not None
+        or conditional_additional_land_plays_of_line(text) is not None
+        or plays_lands_from_graveyard_line(text)
+    ):
         # CR 305.2 / CR 611.3d: `Game.land_allowance` and
         # `Game.graveyard_land_permission` read the line off the board.
         return HANDLED
@@ -1835,6 +1849,18 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # CR 601.2f / 118.8a: `Game.cost_reduction_for` and
         # `casting.mandatory_additional_costs` charge them on every cast.
         return HANDLED
+    if _CANT_BE_COUNTERED_RE.match(text.strip()) or _CONDITIONAL_CANT_BE_COUNTERED_RE.match(
+        text.strip()
+    ):
+        # CR 113.6g: `casting_restrictions.cannot_be_countered` and
+        # `.conditionally_cannot_be_countered`, read by `Game.counter` at the
+        # one place this ability actually functions.
+        return HANDLED
+    flash_condition = conditional_flash_condition(text)
+    if flash_condition is not None and condition_is_readable(flash_condition):
+        # CR 702.8a: `casting.why_cannot_cast_now` reads this exact line off
+        # the spell's own text and asks `Game.condition_holds`.
+        return HANDLED
     if reads_printed_zone_permission_line(printing, text):
         # CR 604.6: `casting._printed_zone_permissions` offers the keyword.
         return HANDLED
@@ -1872,7 +1898,7 @@ def _modal_category(printing: Card) -> str:
     return NOTICE
 
 
-def _modal_trigger_category(effect_text: str) -> str | None:
+def _modal_trigger_category(effect_text: str, *, card_name: str | None = None) -> str | None:
     """`_modal_category`'s own worst-mode rule, for a modal *triggered*
     ability's "choose one/one or both -" tail (CR 700.2, CR 603.3c -
     Fateshaper Aspirant, Yuriko, Hope from the Shadows) rather than a modal
@@ -1904,22 +1930,47 @@ def _modal_trigger_category(effect_text: str) -> str | None:
     profile = modal_trigger_profile(effect_text)
     if profile is None:
         return None
-    if all(_first_reading(mode_effect_body(mode)) is not None for mode in profile.modes):
+    if all(
+        _first_reading(mode_effect_body(mode), card_name=card_name) is not None
+        for mode in profile.modes
+    ):
         return HANDLED
     return NOTICE
 
 
-def _first_reading(mode_text: str) -> object | None:
+def _first_reading(mode_text: str, *, card_name: str | None = None) -> object | None:
     """The first of `_resolve_modal_triggered_ability_clause`'s own three
     fallback readers, in its own order, that reads `mode_text` - or `None`
     when none of them do. Factored out so `_modal_trigger_category` can
-    never drift from the real dispatch's fallback order."""
+    never drift from the real dispatch's fallback order.
+
+    Tried again, once, on `card_name`'s own CR 201.5 self-normalized text
+    (Gollum, Riddle Master's own "Put a +1/+1 counter on Gollum." - a bare
+    legendary first-name self-reference bulleted modes print exactly the way
+    an ordinary triggered ability's body would, but which none of the three
+    fallback readers themselves normalize) when the raw text reads nothing -
+    the identical second pass `trigger_effect_for` already gives an ordinary
+    (non-modal) triggered ability's own text.
+    """
     for reader in (
         parse_mixed_effect,
         _compose_layer_effect_with_remainder_for_ability_mode,
         _parse_where_x_is_continuous_effect,
     ):
         result = reader(mode_text)
+        if result is not None:
+            return result
+    if card_name is None:
+        return None
+    normalized = _self_normalized_effect_text(card_name, mode_text)
+    if normalized == mode_text:
+        return None
+    for reader in (
+        parse_mixed_effect,
+        _compose_layer_effect_with_remainder_for_ability_mode,
+        _parse_where_x_is_continuous_effect,
+    ):
+        result = reader(normalized)
         if result is not None:
             return result
     return None
@@ -2883,7 +2934,7 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 for x_value in x_candidates
             ]
             effect = trigger_effects[0]
-            modal_category = _modal_trigger_category(ability.effect)
+            modal_category = _modal_trigger_category(ability.effect, card_name=dispatch_name)
             if modal_category is not None:
                 category = modal_category
             else:

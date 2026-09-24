@@ -206,7 +206,7 @@ from ..machines.layers import (
     Layer,
     LayerContext,
     LayerNotice,
-    additional_land_plays,
+    additional_land_plays_of_line,
     all_activated_abilities_grant,
     count_card_types,
     dont_cause_triggers_text,
@@ -507,6 +507,21 @@ _COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This spell costs {X} less to cast, where X is the total power of
+#: creatures you control with flying." (The Lord of the Eagles) and Ghalta,
+#: Primal Hunger's own unqualified "This spell costs {X} less to cast, where
+#: X is the total power of creatures you control." - CR 601.2f's counted
+#: quantity again, this time a *sum* over the caster's own creatures (all of
+#: them, or a keyword-filtered subset) rather than Ghalta the Immovable's
+#: single greatest stat. `combat.has_keyword` is the one place this engine
+#: already answers "does this permanent have `<keyword>` right now" (CR 702,
+#: CR 613.5's layers included), reused here rather than re-derived.
+_COSTS_LESS_X_WHERE_X_IS_TOTAL_POWER_WITH_KEYWORD_RE = re.compile(
+    r"this spell costs \{x\} less to cast,? where x is the total power of "
+    r"creatures you control(?: with (?P<keyword>[a-z]+))?",
+    re.IGNORECASE,
+)
+
 #: CR 601.2f's per-turn-history reduction: "This spell costs {2} less to cast
 #: for each card you've cycled or discarded this turn." (Hollow One, text
 #: confirmed with `resolve_cards` this session). Unlike Emrakul's row above,
@@ -569,6 +584,7 @@ _SELF_COST_REDUCTION_SHAPES = (
     _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE,
     _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE,
     _COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE,
+    _COSTS_LESS_X_WHERE_X_IS_TOTAL_POWER_WITH_KEYWORD_RE,
 )
 _ABILITY_WORD_PREFIX_RE = re.compile(r"^[A-Z][\w' -]*\s+[\u2014-]\s+")
 
@@ -577,7 +593,17 @@ def reads_self_cost_reduction_line(text: str) -> bool:
     """Whether one printed line is wholly a "This spell costs {N} less to
     cast ..." reduction `Game.cost_reduction_for` computes (CR 601.2f) -
     `support.py`'s credit for it on a permanent card, whose line is read as a
-    static (CR 604.2) rather than as part of a spell's resolution."""
+    static (CR 604.2) rather than as part of a spell's resolution.
+
+    Dreaded Bat-Cloud's own general "if `<condition>`"/"as long as
+    `<condition>`" shape (`_COSTS_LESS_IF_CONDITION_RE`) is not in
+    `_SELF_COST_REDUCTION_SHAPES` above - unlike every row there, its
+    condition is open text `condition_holds` may or may not recognise, so it
+    is credited here only once `condition_is_readable` has actually vouched
+    for that particular condition (Morbid's own "a creature died this turn"
+    among them), the same fail-closed posture `cost_modifier_effect`'s own
+    "as long as" tail already takes in `machines/cost.py`.
+    """
     line = _ABILITY_WORD_PREFIX_RE.sub("", text.strip(), count=1)
     for shape in _SELF_COST_REDUCTION_SHAPES:
         pattern = shape.pattern
@@ -585,7 +611,36 @@ def reads_self_cost_reduction_line(text: str) -> bool:
             pattern = f"this spell {pattern}"
         if re.fullmatch(rf"{pattern}\.?", line, re.IGNORECASE):
             return True
-    return False
+    condition_match = _COSTS_LESS_IF_CONDITION_RE.fullmatch(line)
+    return condition_match is not None and condition_is_readable(condition_match.group("condition"))
+
+
+#: Thranduil's Company's own "As long as you control another Elf, you may
+#: play an additional land on each of your turns." - the conditional twin of
+#: `machines.layers._ADDITIONAL_LAND_PLAYS_RE` (Icetill Explorer's/Azusa's
+#: own unconditional grant, CR 305.2/611.3d), gated on a board fact read
+#: fresh every time `Game.land_allowance` asks (CR 611.3a: never "locked
+#: in"). Kept here rather than widening that regex in `machines/layers.py`,
+#: because deciding the condition needs a live `Game` (`condition_holds`)
+#: that function's own pure per-line signature has no room for.
+_CONDITIONAL_ADDITIONAL_LAND_PLAYS_RE = re.compile(
+    rf"^as long as (?P<condition>[^,]+), you may play {count_pattern('n')} additional lands? "
+    r"on each of your turns\.?$",
+    re.IGNORECASE,
+)
+
+
+def conditional_additional_land_plays_of_line(text: str) -> tuple[int, str] | None:
+    """`_CONDITIONAL_ADDITIONAL_LAND_PLAYS_RE`'s shape: how many additional
+    lands the line grants and the condition that has to hold for it, or
+    `None` when the line is not this shape."""
+    match = _CONDITIONAL_ADDITIONAL_LAND_PLAYS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    n = parse_count(match.group("n"), article=True)
+    if n is None:
+        return None
+    return n, match.group("condition").strip()
 
 
 #: What "[text]" in CR 702.41a's "Affinity for [text]" can name, mapped to the
@@ -752,6 +807,15 @@ _CONDITION_POWER = re.compile(
 _CONDITION_CONTROLS_A = re.compile(r"you control (?P<qualities>an? .+)", re.IGNORECASE)
 _AND_AN = re.compile(r"\s+and\s+(?=an?\s)", re.IGNORECASE)
 _A_QUALITY = re.compile(r"an? (?P<quality>.+)", re.IGNORECASE)
+#: Thranduil's Company's own "As long as you control another Elf, you may
+#: play an additional land on each of your turns." - CR 305.2's own
+#: continuous-effect increase, gated on a board fact that names an object
+#: *other than the permanent carrying the ability itself* ("another", not
+#: "a"/"an"). `_CONDITION_CONTROLS_A` never reads this shape at all: its own
+#: `an? .+` alternative requires the word right after "you control" to be
+#: "a"/"an", which "another" is not. `source`, the permanent whose own line
+#: this condition sits on, is what "another" excludes.
+_CONDITION_CONTROLS_ANOTHER = re.compile(r"you control another (?P<quality>.+)", re.IGNORECASE)
 #: Power Plant Worker / Mine Worker / Tower Worker's own shared "you control
 #: creatures named `<name>` and `<name>`" - two specific printed names
 #: (CR 201.4), not `_CONDITION_CONTROLS_A`'s quality phrase, so it is its own
@@ -1038,6 +1102,7 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_POWER,
     _CONDITION_CONTROLS_N,
     _CONDITION_CONTROLS_A,
+    _CONDITION_CONTROLS_ANOTHER,
     _CONDITION_CONTROLS_NAMED_PAIR,
     _CONDITION_OPPONENT_COMPARISON,
     _CONDITION_SELF_IS_A_CREATURE,
@@ -3314,7 +3379,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 69
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 70
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3325,6 +3390,9 @@ class Game(EngineModel):
     #: `machines/triggers.GameEvent` gained `mana_ability` (a pending
     #: trigger's event); `machines/delayed` gained the
     #: `return_each_exiled_to_battlefield_under_owner` effect kind (C01-T3).
+    #: 70: `CardState` gained `chosen_modal_options` (Gollum, Riddle Master's
+    #: own "choose one that hasn't been chosen -" trigger), reachable from
+    #: `Game` through the battlefield (C01-T6).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -8975,8 +9043,22 @@ class Game(EngineModel):
         offers the legal modes; once the instruction's minimum is met, each
         further choice also offers `NO_FURTHER_MODES`, first, until the maximum.
         Then each chosen mode's targets are asked for in order.
+
+        Gollum, Riddle Master's own "choose one that hasn't been chosen -"
+        adds a second exclusion on top of legality: a mode this permanent's
+        own trigger has already picked (`CardState.chosen_modal_options`,
+        "modes tracked per object") is not offered again, the same way a
+        mode with no legal target is not. If every mode has already been
+        used, `legal` (after this filter) is short of `minimum` the same way
+        an all-illegal set already is, and the ability is removed from the
+        stack with none chosen (CR 700.2b) rather than repeating one.
         """
         legal = [mode for mode in modal.modes if self._trigger_mode_is_legal(ability, mode)]
+        exclusive = "hasn't been chosen" in modal.instruction.lower()
+        source_state = ability.source(self) if exclusive else None
+        if exclusive and source_state is not None:
+            already = source_state.chosen_modal_options
+            legal = [mode for mode in legal if mode.text not in already]
         # CR 603.3c: a "choose N instead" condition is checked as the ability
         # is put on the stack, the same moment its modes are announced.
         minimum, maximum = modal.allowed_range(
@@ -9009,6 +9091,10 @@ class Game(EngineModel):
             chosen.append(next((m for m in remaining if m.text == answer), remaining[0]))
         if len(chosen) < minimum:
             return False
+        if exclusive and source_state is not None and chosen:
+            source_state.chosen_modal_options = source_state.chosen_modal_options + tuple(
+                mode.text for mode in chosen
+            )
         slices: list[list[TargetRef]] = []
         scripted = self.trigger_targets.get(ability.source_name)
         for mode in chosen:
@@ -12881,9 +12967,13 @@ class Game(EngineModel):
         for player in (a, b):
             moved = player.life - before[player.username]
             if moved > 0:
-                self.emit(GameEvent(event=TriggerEvent.GAINS_LIFE, player=player.username))
+                self.emit(
+                    GameEvent(event=TriggerEvent.GAINS_LIFE, player=player.username, amount=moved)
+                )
             elif moved < 0:
-                self.emit(GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username))
+                self.emit(
+                    GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username, amount=-moved)
+                )
         return lost
 
     def life_gain_prohibited(self, username: str) -> str | None:
@@ -14852,9 +14942,17 @@ class Game(EngineModel):
                 player = self.player(player)
             if amount == 0:
                 return player.life
-            lost = player.lose_life(amount)
-            self.emit(GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username))
-            return lost
+            new_total = player.lose_life(amount)
+            # `Player.lose_life` returns the *new total* (CR 119.3's own
+            # contract, matched here), not how much was lost - `amount` is
+            # the number a "that player mills that many cards" trigger
+            # actually wants (The Master of Lake-town, Mindcrank), and this
+            # method's own callers already read its return value as the new
+            # total the identical way `lose_life` documents.
+            self.emit(
+                GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username, amount=amount)
+            )
+            return new_total
 
     def counter(
         self,
@@ -17160,9 +17258,14 @@ class Game(EngineModel):
         One by default - CR 305.2: "A player can normally play one land during
         their turn; however, continuous effects may increase this number." The
         increases come from static abilities of permanents the player controls,
-        read off their computed ability text by `machines.layers.
-        additional_land_plays`: CR 611.3d is the rule that lets a static
-        ability allow playing a land at all.
+        read off their computed ability text: `machines.layers.
+        additional_land_plays_of_line` for an unconditional grant, and
+        `conditional_additional_land_plays_of_line` just below for
+        Thranduil's Company's own "As long as `<condition>`, you may play an
+        additional land on each of your turns." - `condition_holds` decides
+        the conditional grant the same way it already gates a static cost
+        reduction's own "as long as" tail (`cost_modifier_effect`). CR 611.3d
+        is the rule that lets a static ability allow playing a land at all.
 
         Azusa's printed "on each of your turns" adds no condition of its own
         here: `can_play_land` refuses anyone who is not the active player
@@ -17179,15 +17282,20 @@ class Game(EngineModel):
         `put_onto_battlefield` never reaches `play_land`.
         """
         board = self.computed_board()
-        return (
-            1
-            + additional_land_plays(
-                line
-                for permanent in self.permanents_controlled_by(username)
-                for line in board.of(permanent).abilities
-            )
-            + self.extra_land_plays.get(username, 0)
-        )
+        total = 1 + self.extra_land_plays.get(username, 0)
+        for permanent in self.permanents_controlled_by(username):
+            for line in board.of(permanent).abilities:
+                unconditional = additional_land_plays_of_line(line)
+                if unconditional is not None:
+                    total += unconditional
+                    continue
+                conditional = conditional_additional_land_plays_of_line(line)
+                if conditional is None:
+                    continue
+                amount, condition = conditional
+                if self.condition_holds(username, condition, permanent):
+                    total += amount
+        return total
 
     def graveyard_land_permission(self, land: CardState, username: str) -> CardState | None:
         """The permanent whose "You may play lands from your graveyard." lets
@@ -18287,6 +18395,16 @@ class Game(EngineModel):
             ]
             amount += max(values, default=0)
 
+        total_power_with_keyword = _COSTS_LESS_X_WHERE_X_IS_TOTAL_POWER_WITH_KEYWORD_RE.search(text)
+        if total_power_with_keyword is not None:
+            keyword = total_power_with_keyword.group("keyword")
+            amount += sum(
+                self.characteristics_of(state).power or 0
+                for state in self.permanents_controlled_by(owner)
+                if self.characteristics_of(state).is_creature
+                and (keyword is None or has_keyword(state, keyword, self))
+            )
+
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
     def basic_land_types_controlled(self, controller: str) -> frozenset[str]:
@@ -18742,6 +18860,45 @@ class Game(EngineModel):
         if effect.colored is not None:
             return ManaCost.parse(f"{{{effect.colored.value}}}" * units)
         return ManaCost.parse(f"{{{units}}}")
+
+    def has_first_spell_flash_grant(self, caster: str, spell: CardState) -> bool:
+        """Whether some permanent `caster` controls grants `spell` CR
+        702.8a's flash right now, through Radagast of Rhosgobel's own shape:
+        "The first `<type>` spell you cast each turn costs `<N>` less to cast
+        and can be cast as though it had flash." (`CostModifierEffect.
+        grants_flash`, read off the identical static line `_counted_type_
+        decrease` already prices the discount from - the same permanent, the
+        same "first this turn" gate, CR 601.2f and CR 702.8a both answered
+        off one printed sentence).
+
+        `spell` has to carry one of the effect's own named types, and the
+        caster must not already have cast a spell of those types this turn -
+        the exact `first_each_turn` gate `_counted_type_decrease` uses for
+        the discount, asked here with no discount to compute.
+        """
+        for permanent in self.permanents_controlled_by(caster):
+            up_face_name = permanent.up_face_name or permanent.card.name
+            for line in parse_abilities(permanent.card):
+                if line.kind is not AbilityKind.STATIC or line.face != up_face_name:
+                    continue
+                effect = cost_modifier_effect((line.text or "").strip())
+                if (
+                    effect is None
+                    or not effect.grants_flash
+                    or effect.kind is not CostModifierKind.TYPE_DECREASE
+                ):
+                    continue
+                if effect.applies_to_types and not any(
+                    card_type in spell.types for card_type in effect.applies_to_types
+                ):
+                    continue
+                if effect.first_each_turn and any(
+                    any(card_type in earlier.types for card_type in effect.applies_to_types or ())
+                    for earlier in self.spells_cast_this_turn.get(caster, [])
+                ):
+                    continue
+                return True
+        return False
 
     def determine_total_cost(self, casting: object) -> CostPayment:
         """CR 601.2f: work out the reduction now, then lock the total cost in.
@@ -19229,6 +19386,12 @@ class Game(EngineModel):
             return all(
                 any(quality(board.of(state)) for state in controlled) for quality in qualities
             )
+
+        if match := _CONDITION_CONTROLS_ANOTHER.fullmatch(text):
+            quality = _permanent_quality(match.group("quality"))
+            if quality is None or source is None:
+                return None
+            return any(state.id != source.id and quality(board.of(state)) for state in controlled)
 
         if match := _CONDITION_CONTROLS_NAMED_PAIR.fullmatch(text):
             first = match.group("first").strip().lower()

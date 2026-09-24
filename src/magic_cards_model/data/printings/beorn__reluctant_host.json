@@ -1,0 +1,163 @@
+{
+  "object": "card",
+  "id": "804589b7-3ef9-473d-97cc-c61a2d41f70d",
+  "oracle_id": "288da486-393c-4995-ad02-c5093a71970d",
+  "multiverse_ids": [],
+  "resource_id": "66A77BB72CB005428BA8A6925E78D8ABE36CBE44A0B38453A5F9D4622323EDF7",
+  "mtgo_id": 154172,
+  "arena_id": 103497,
+  "tcgplayer_id": 708804,
+  "cardmarket_id": 900328,
+  "name": "Beorn, Reluctant Host // Till and Tend",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/804589b7-3ef9-473d-97cc-c61a2d41f70d",
+  "scryfall_uri": "https://scryfall.com/card/hob/118/beorn-reluctant-host-till-and-tend?utm_source=api",
+  "layout": "adventure",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-29T11:07:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.jpg?1785323267",
+    "normal": "https://cards.scryfall.io/normal/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.jpg?1785323267",
+    "large": "https://cards.scryfall.io/large/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.jpg?1785323267",
+    "png": "https://cards.scryfall.io/png/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.png?1785323267",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.jpg?1785323267",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.jpg?1785323267",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.webp?1785323267",
+    "grid": "https://cards.scryfall.io/grid/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.webp?1785323267",
+    "display": "https://cards.scryfall.io/display/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.webp?1785323267",
+    "art": "https://cards.scryfall.io/art/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.webp?1785323267",
+    "crop": "https://cards.scryfall.io/crop/front/8/0/804589b7-3ef9-473d-97cc-c61a2d41f70d.webp?1785323267"
+  },
+  "mana_cost": "{4}{G} // {1}{G}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Human Bear Shapeshifter // Sorcery \u2014 Adventure",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Beorn, Reluctant Host",
+      "mana_cost": "{4}{G}",
+      "type_line": "Legendary Creature \u2014 Human Bear Shapeshifter",
+      "oracle_text": "Trample",
+      "power": "5",
+      "toughness": "5",
+      "flavor_text": "He never invited people into his house if he could help it. Now he had got fifteen strangers sitting in his porch!",
+      "artist": "Javier Charro",
+      "artist_id": "8fd2d5fa-3b94-4e48-9cec-9d148acc8180",
+      "illustration_id": "72278333-ebd7-4f78-b92d-e96fe9b11dd2"
+    },
+    {
+      "object": "card_face",
+      "name": "Till and Tend",
+      "mana_cost": "{1}{G}",
+      "type_line": "Sorcery \u2014 Adventure",
+      "oracle_text": "You may play an additional land this turn. (Then exile this card. You may cast the creature later from exile.)",
+      "artist": "Javier Charro",
+      "artist_id": "8fd2d5fa-3b94-4e48-9cec-9d148acc8180"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/804589b7-3ef9-473d-97cc-c61a2d41f70d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A288da486-393c-4995-ad02-c5093a71970d&unique=prints",
+  "collector_number": "118",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "He never invited people into his house if he could help it. Now he had got fifteen strangers sitting in his porch!",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Javier Charro",
+  "artist_ids": [
+    "8fd2d5fa-3b94-4e48-9cec-9d148acc8180"
+  ],
+  "illustration_id": "72278333-ebd7-4f78-b92d-e96fe9b11dd2",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 13791,
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.28",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.05",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBeorn%252C%2BReluctant%2BHost%2B%252F%252F%2BTill%2Band%2BTend",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBeorn%252C%2BReluctant%2BHost%2B%252F%252F%2BTill%2Band%2BTend",
+    "edhrec": "https://edhrec.com/route/?cc=Beorn%2C+Reluctant+Host"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708804%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900328&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154172?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

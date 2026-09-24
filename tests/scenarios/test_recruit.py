@@ -29,6 +29,20 @@ type="rules")` in the session that wrote this file.
 The card is Lake-town Lookout, a 1/1 white Human Scout: "When this creature
 dies, recruit." It is killed with Lightning Bolt, which is the whole of the
 setup in every test here.
+
+C01-T6 adds the bottom two sections: Bard's Company prints the bare keyword
+word as its whole trigger effect ("Whenever this creature enters or attacks,
+recruit."), and The Queen of Dale prints the identical keyword action with a
+leading "you" ("... you recruit."), needed only for the grammar of naming a
+*different* player ("an opponent") as the trigger's own subject first - the
+keyword action itself (CR 701.70a) is unchanged either way, so the parser
+reads "recruit" and "you recruit" as the same clause
+(`effects._RECRUIT_RE`, widened). The Queen of Dale's own trigger condition
+is also this file's proof of `_ordinal_spell_this_turn_matches`'s widened
+reading: "an opponent casts their **first** noncreature spell each turn" is
+CR 603.2's ordinal, counted over *that opponent's* own casts this turn, not
+the ability's controller's - a second noncreature spell from the same
+opponent in the same turn does not trigger it again.
 """
 
 from magic_cards_model.machines import Step
@@ -319,3 +333,167 @@ def test_sound_the_trumpets_recruits_nothing_when_the_countered_spells_mana_valu
     assert TOKEN not in scenario.battlefield_names()
     # No draw or discard happened at all: recruit's own "if" never ran.
     assert _hand_names(scenario) == ["Llanowar Elves"]
+
+
+# -- C01-T6: Bard's Company (bare "recruit.") -------------------------------
+
+
+def _resolve_all(scenario: Scenario) -> None:
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+
+
+def test_bards_company_recruits_on_entering():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Bard's Company"],
+            library=["Lightning Bolt", "Mountain"],
+            battlefield=["Plains", "Plains", "Island", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.cast_and_resolve(
+        "Bard's Company", *scenario.untapped_sources("Plains", "Plains", "Island", "Island")
+    )
+    _resolve_all(scenario)
+
+    # Cast Bard's Company (hand -> 0), drew Lightning Bolt (hand -> 1), then
+    # discarded it (a nonland, hand -> 0) - a fresh 1/1 Human Soldier token.
+    assert len(scenario.player("alice").hand) == 0
+    tokens = [
+        state for state in scenario.game.battlefield if state.token and "Soldier" in state.subtypes
+    ]
+    assert len(tokens) == 1
+    # Printed 1/1, plus Bard's Company's own "Other creatures you control
+    # get +1/+1."
+    chars = scenario.game.computed_board().of(tokens[0])
+    assert (chars.power, chars.toughness) == (2, 2)
+
+
+def test_bards_company_recruits_on_attacking():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Bard's Company"],
+            library=["Mountain", "Forest"],
+        )
+        .player("bob", library=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    company = scenario.creature("Bard's Company", "alice")
+    company.summoning_sick = False
+    hand_before = len(scenario.player("alice").hand)
+
+    scenario.attack_with(company)
+    _resolve_all(scenario)
+
+    # Both cards in the library are lands, so the mandatory discard is a
+    # land and CR 701.70a's own "if you discarded a nonland card" never
+    # fires - no token, hand size unchanged (drew one, discarded one).
+    assert len(scenario.player("alice").hand) == hand_before
+    assert not any(
+        state.token and "Soldier" in state.subtypes for state in scenario.game.battlefield
+    )
+
+
+# -- C01-T6: The Queen of Dale ("you recruit."), ordinal-gated -------------
+
+
+def test_the_queen_of_dale_recruits_on_an_opponents_first_noncreature_spell():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["The Queen of Dale"],
+            library=["Mountain", "Grizzly Bears"],
+        )
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hand_before = len(scenario.player("alice").hand)
+
+    scenario.pass_priority("alice")
+    scenario.cast_onto_stack(
+        "Lightning Bolt",
+        *scenario.untapped_sources("Mountain", username="bob"),
+        username="bob",
+        targets=["alice"],
+    )
+    _resolve_all(scenario)
+
+    # Drew Mountain, discarded Mountain (a land) - no token, but the draw
+    # step proves the recruit fired at all.
+    assert scenario.player("alice").graveyard[-1].name == "Mountain"
+    assert len(scenario.player("alice").hand) == hand_before
+
+
+def test_the_queen_of_dale_does_not_recruit_on_a_second_noncreature_spell():
+    """CR 603.2's ordinal: only the opponent's *first* noncreature spell each
+    turn triggers it - a second one does nothing."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["The Queen of Dale"],
+            library=["Mountain", "Forest", "Island", "Swamp"],
+        )
+        .player("bob", hand=["Lightning Bolt", "Shock"], battlefield=["Mountain", "Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.pass_priority("alice")
+    scenario.cast_onto_stack(
+        "Lightning Bolt",
+        *scenario.untapped_sources("Mountain", username="bob"),
+        username="bob",
+        targets=["alice"],
+    )
+    _resolve_all(scenario)
+    graveyard_after_first = len(scenario.player("alice").graveyard)
+
+    scenario.pass_priority("alice")
+    scenario.cast_onto_stack(
+        "Shock",
+        *scenario.untapped_sources("Mountain", username="bob"),
+        username="bob",
+        targets=["alice"],
+    )
+    _resolve_all(scenario)
+
+    assert len(scenario.player("alice").graveyard) == graveyard_after_first, (
+        "no second recruit - nothing else drawn or discarded"
+    )
+
+
+def test_the_queen_of_dale_does_not_recruit_on_its_own_controllers_spell():
+    """ "An opponent" - never the ability's own controller."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lightning Bolt"],
+            battlefield=["The Queen of Dale", "Mountain"],
+            library=["Forest"],
+        )
+        .player("bob", battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hand_before = len(scenario.player("alice").hand)
+
+    scenario.cast_onto_stack(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=["bob"]
+    )
+    _resolve_all(scenario)
+
+    assert len(scenario.player("alice").hand) == hand_before - 1  # only the Bolt left, no draw

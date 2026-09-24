@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "79edf5f6-f6b6-4271-bd2a-14a980f30616",
+  "oracle_id": "4c67359d-5590-4eb0-827e-b411967ee238",
+  "multiverse_ids": [],
+  "resource_id": "4956E2666796CFB28D6177B7491E586BBB1A841FEF8815E404BFC7A0B1293EA2",
+  "mtgo_id": 154040,
+  "arena_id": 103431,
+  "tcgplayer_id": 709484,
+  "cardmarket_id": 900613,
+  "name": "Uncover the Moon-Letters",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/79edf5f6-f6b6-4271-bd2a-14a980f30616",
+  "scryfall_uri": "https://scryfall.com/card/hob/57/uncover-the-moon-letters?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-31T11:14:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.jpg?1785496445",
+    "normal": "https://cards.scryfall.io/normal/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.jpg?1785496445",
+    "large": "https://cards.scryfall.io/large/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.jpg?1785496445",
+    "png": "https://cards.scryfall.io/png/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.png?1785496445",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.jpg?1785496445",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.jpg?1785496445",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.webp?1785496445",
+    "grid": "https://cards.scryfall.io/grid/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.webp?1785496445",
+    "display": "https://cards.scryfall.io/display/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.webp?1785496445",
+    "art": "https://cards.scryfall.io/art/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.webp?1785496445",
+    "crop": "https://cards.scryfall.io/crop/front/7/9/79edf5f6-f6b6-4271-bd2a-14a980f30616.webp?1785496445"
+  },
+  "mana_cost": "{3}{U}",
+  "cmc": 4.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever you cast a noncreature spell, you may draw X cards, where X is the amount of mana spent to cast that spell. If you do, discard two cards.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/79edf5f6-f6b6-4271-bd2a-14a980f30616/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4c67359d-5590-4eb0-827e-b411967ee238&unique=prints",
+  "collector_number": "57",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Elrond took the map and gazed long at it, and he shook his head, until he saw what the moon revealed.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Leon Tukker",
+  "artist_ids": [
+    "669b8b90-758d-4f9e-b4f7-98cd6742eb97"
+  ],
+  "illustration_id": "879e575b-deb6-4079-97e1-88c66e8d7e19",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 14208,
+  "preview": {
+    "source": "Yamina Amane",
+    "source_uri": "https://www.instagram.com/p/DbZiw0XBIpn/",
+    "previewed_at": "2026-07-29"
+  },
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.31",
+    "eur_foil": "0.28",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUncover%2Bthe%2BMoon-Letters",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUncover%2Bthe%2BMoon-Letters",
+    "edhrec": "https://edhrec.com/route/?cc=Uncover+the+Moon-Letters"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709484%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900613&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154040?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
