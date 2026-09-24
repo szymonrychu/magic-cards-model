@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "113ebd1b-380d-42a1-accb-9889c40478f6",
+  "oracle_id": "c5e47644-c72c-40f9-b65f-57fcea075466",
+  "multiverse_ids": [
+    559804
+  ],
+  "tcgplayer_id": 269446,
+  "cardmarket_id": 652816,
+  "name": "Skyship Plunderer",
+  "lang": "en",
+  "released_at": "2022-04-29",
+  "uri": "https://api.scryfall.com/cards/113ebd1b-380d-42a1-accb-9889c40478f6",
+  "scryfall_uri": "https://scryfall.com/card/ncc/232/skyship-plunderer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:14:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.jpg?1783923275",
+    "normal": "https://cards.scryfall.io/normal/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.jpg?1783923275",
+    "large": "https://cards.scryfall.io/large/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.jpg?1783923275",
+    "png": "https://cards.scryfall.io/png/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.png?1783923275",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.jpg?1783923275",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.jpg?1783923275",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.webp?1783923275",
+    "grid": "https://cards.scryfall.io/grid/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.webp?1783923275",
+    "display": "https://cards.scryfall.io/display/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.webp?1783923275",
+    "art": "https://cards.scryfall.io/art/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.webp?1783923275",
+    "crop": "https://cards.scryfall.io/crop/front/1/1/113ebd1b-380d-42a1-accb-9889c40478f6.webp?1783923275"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Pirate",
+  "oracle_text": "Flying\nWhenever this creature deals combat damage to a player, for each kind of counter on target permanent or player, give that permanent or player another counter of that kind.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "c51de34b-d4d6-4179-a432-573744ded119",
+  "set": "ncc",
+  "set_name": "New Capenna Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/c51de34b-d4d6-4179-a432-573744ded119",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ancc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ncc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/113ebd1b-380d-42a1-accb-9889c40478f6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac5e47644-c72c-40f9-b65f-57fcea075466&unique=prints",
+  "collector_number": "232",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Escapes should always be daring.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Slawomir Maniak",
+  "artist_ids": [
+    "d887bc66-2779-416c-a1ff-d8720242063e"
+  ],
+  "illustration_id": "e8da02b7-45ef-4912-9e9a-95c1ebb8ee9a",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 16531,
+  "penny_rank": 6288,
+  "prices": {
+    "usd": "0.35",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.33",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=559804&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSkyship%2BPlunderer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSkyship%2BPlunderer",
+    "edhrec": "https://edhrec.com/route/?cc=Skyship+Plunderer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269446%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=652816&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Skyship+Plunderer&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

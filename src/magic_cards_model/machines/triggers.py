@@ -3665,7 +3665,9 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
     day_night = _day_night_events_named(lowered)
     if day_night:
         return day_night
-    return frozenset()
+    from .counter_effects import counter_trigger_events
+
+    return counter_trigger_events(condition)
 
 
 def _unread_condition_matches(
@@ -3977,7 +3979,9 @@ def _unread_condition_matches(
         # is no player or subject to compare.
         return event.event in day_night_events
 
-    return False
+    from .counter_effects import counter_condition_matches
+
+    return bool(counter_condition_matches(game, ability, source, controller, event))
 
 
 def triggers_only_off_the_stack(ability: TriggeredAbility) -> bool:

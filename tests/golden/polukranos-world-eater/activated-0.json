@@ -46,7 +46,7 @@
         "source": "Polukranos, World Eater"
       }
     ],
-    "fields_changed": [],
+    "fields_changed": ["counters_put_this_turn"],
     "notices": {},
     "objects": {
       "Polukranos, World Eater@alice#1": {

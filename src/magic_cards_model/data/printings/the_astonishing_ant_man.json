@@ -1,0 +1,164 @@
+{
+  "object": "card",
+  "id": "5d98073e-2828-4365-a8d6-f631aac0cca9",
+  "oracle_id": "6c7e4e51-099a-4398-a4b7-e2f0ddd36429",
+  "multiverse_ids": [],
+  "resource_id": "C0BE128D8C9BA448E4199DCDCEC7901208FBBF5A80D6963AB85CB0A10C8A0547",
+  "mtgo_id": 152595,
+  "arena_id": 105099,
+  "tcgplayer_id": 696632,
+  "cardmarket_id": 891340,
+  "name": "The Astonishing Ant-Man",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/5d98073e-2828-4365-a8d6-f631aac0cca9",
+  "scryfall_uri": "https://scryfall.com/card/msh/204/the-astonishing-ant-man?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:06Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.jpg?1783902906",
+    "normal": "https://cards.scryfall.io/normal/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.jpg?1783902906",
+    "large": "https://cards.scryfall.io/large/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.jpg?1783902906",
+    "png": "https://cards.scryfall.io/png/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.png?1783902906",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.jpg?1783902906",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.jpg?1783902906",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.webp?1783902906",
+    "grid": "https://cards.scryfall.io/grid/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.webp?1783902906",
+    "display": "https://cards.scryfall.io/display/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.webp?1783902906",
+    "art": "https://cards.scryfall.io/art/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.webp?1783902906",
+    "crop": "https://cards.scryfall.io/crop/front/5/d/5d98073e-2828-4365-a8d6-f631aac0cca9.webp?1783902906"
+  },
+  "mana_cost": "{G}{U}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Scientist Hero",
+  "oracle_text": "Whenever you draw a card, put a +1/+1 counter on The Astonishing Ant-Man.\n{2}{G}, {T}, Remove any number of +1/+1 counters from The Astonishing Ant-Man: Create that many 1/1 green Insect creature tokens.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "15850911-bfeb-4e9e-aec9-34a22faac896",
+      "component": "combo_piece",
+      "name": "The Astonishing Ant-Man",
+      "type_line": "Legendary Creature \u2014 Human Scientist Hero",
+      "uri": "https://api.scryfall.com/cards/15850911-bfeb-4e9e-aec9-34a22faac896"
+    },
+    {
+      "object": "related_card",
+      "id": "e5aa36ec-5f3a-405d-9a65-5a56a44dcee3",
+      "component": "token",
+      "name": "Insect",
+      "type_line": "Token Creature \u2014 Insect",
+      "uri": "https://api.scryfall.com/cards/e5aa36ec-5f3a-405d-9a65-5a56a44dcee3"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/5d98073e-2828-4365-a8d6-f631aac0cca9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6c7e4e51-099a-4398-a4b7-e2f0ddd36429&unique=prints",
+  "collector_number": "204",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Randy Gallegos",
+  "artist_ids": [
+    "a5048cc7-438a-4378-98e4-da99b78e1db0"
+  ],
+  "illustration_id": "97587100-8404-46d5-8fca-7812f83c1a09",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11856,
+  "penny_rank": 6487,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://bsky.app/profile/magic.wizards.com/post/3mni3wsfuyd2q",
+    "previewed_at": "2026-06-05"
+  },
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.63",
+    "usd_etched": null,
+    "eur": "0.32",
+    "eur_foil": "0.64",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BAstonishing%2BAnt-Man",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BAstonishing%2BAnt-Man",
+    "edhrec": "https://edhrec.com/route/?cc=The+Astonishing+Ant-Man"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696632%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891340&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152595?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

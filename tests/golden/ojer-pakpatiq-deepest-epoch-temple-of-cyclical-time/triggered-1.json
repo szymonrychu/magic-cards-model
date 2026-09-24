@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["turn_facts"],
+    "fields_changed": ["counters_put_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Ojer Pakpatiq, Deepest Epoch@alice#1": {

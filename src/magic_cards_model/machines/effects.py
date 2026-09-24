@@ -129,7 +129,13 @@ from .casting import (
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
 from .connive import parse_connive_clause
-from .cost import cost_announces_x, is_snow_source, spend_restriction
+from .cost import (
+    cost_announces_x,
+    is_snow_source,
+    removes_announced_number_of_counters,
+    spend_restriction,
+)
+from .counter_effects import parse_resolution_text as _parse_counter_resolution_text
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
@@ -1261,6 +1267,10 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     the function itself.
     """
     stripped = phrase.strip().rstrip(".")
+    from .counter_effects import counter_history_count
+
+    if (history_count := counter_history_count(stripped)) is not None:
+        return history_count
     if _COUNT_BASIC_LAND_TYPES_RE.fullmatch(stripped):
         # Domain: Tribal Flames' own X definition. `BASIC_LAND_TYPES` names
         # CR 305.6's five; a land counts once per distinct basic type it
@@ -11996,6 +12006,17 @@ def that_many(game: "Game", stack_object: "StackObject | None" = None) -> int | 
     resolving = stack_object if stack_object is not None else game.resolving
     if isinstance(resolving, AbilityOnStack) and resolving.event is not None:
         return resolving.event.amount
+    if (
+        isinstance(resolving, AbilityOnStack)
+        and isinstance(resolving.ability, ActivatedAbility)
+        and resolving.x_value is not None
+        and removes_announced_number_of_counters(resolving.ability.cost)
+    ):
+        # The Astonishing Ant-Man's "Remove any number of +1/+1 counters ...:
+        # Create that many ..." and Geistflame Reservoir's "... that much
+        # damage": the count removed as the cost was paid, announced as the
+        # ability was activated (CR 107.3a, CR 602.2b).
+        return resolving.x_value
     return None
 
 
@@ -18327,7 +18348,7 @@ def modal_trigger_profile(effect_text: str | None) -> ModalProfile | None:
     profile = modal_profile_from_text(text)
     if profile is None or not profile.understood or not profile.modes:
         return None
-    if profile.allowed_range()[0] < 1 or any(mode.cost is not None for mode in profile.modes):
+    if any(mode.cost is not None for mode in profile.modes):
         return None
     return profile
 
@@ -18403,7 +18424,9 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                 mode = profile.mode(number)
                 ability.targets = list(slices[position]) if position < len(slices) else []
                 mode_text = mode_effect_body(mode)
-                clause = parse_mixed_effect(mode_text)
+                clause = _parse_counter_resolution_text(mode_text)
+                if clause is None:
+                    clause = parse_mixed_effect(mode_text)
                 if clause is None:
                     clause = _compose_layer_effect_with_remainder_for_ability_mode(mode_text)
                 if clause is None:
@@ -21994,7 +22017,10 @@ def _get_emblem(game: "Game", player: Player, text: str, source: str) -> None:
 _COUNTERS_MORE_IF_SUBTYPE_RE = re.compile(
     rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
     r"(?P<subject>equipped creature|enchanted creature|target [^.]+?)\.\s*"
-    r"if (?:equipped creature|enchanted creature|that creature|it) is an? "
+    # Wakandan Royal Guard's "If that creature is another Hero" - "another"
+    # (any Hero but the ability's own source) in place of the article.
+    r"if (?:equipped creature|enchanted creature|that creature|it) is "
+    r"(?:an? |(?P<another>another ))"
     rf"(?P<subtype>[a-z]+), put (?P<m>{COUNT}) (?:(?:\+1/\+1|-1/-1|[a-z]+) )?counters? "
     r"on it instead\.?$",
     re.IGNORECASE,
@@ -22010,6 +22036,7 @@ def _parse_counters_more_if_subtype_clause(text: str) -> AbilityEffect | None:
     subtype = _bare_subtype_word(match.group("subtype"))
     subject = match.group("subject").lower()
     attached = subject in ("equipped creature", "enchanted creature")
+    another = match.group("another") is not None
     if base is None or more is None or subtype is None:
         return None
     if not attached and not _targets_understood(match.group("subject")):
@@ -22030,7 +22057,8 @@ def _parse_counters_more_if_subtype_clause(text: str) -> AbilityEffect | None:
         if creature is None or creature.zone is not Zone.BATTLEFIELD:
             return
         subtypes = {word.lower() for word in game.characteristics_of(creature).subtypes}
-        game.add_counters(creature, kind, more if subtype in subtypes else base)
+        qualifies = subtype in subtypes and not (another and creature.id == ability.source_id)
+        game.add_counters(creature, kind, more if qualifies else base)
 
     return effect
 
@@ -23186,6 +23214,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """
     from .meld import parse_meld_activation_clause, parse_meld_resolution_clause
 
+    counter_resolution = _parse_counter_resolution_text(effect_text)
+    if counter_resolution is not None:
+        return counter_resolution
     meld_activation = parse_meld_activation_clause(effect_text)
     if meld_activation is not None:
         return meld_activation
@@ -26719,6 +26750,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    counter_resolution = _parse_counter_resolution_text(whole, for_spell=True)
+    if counter_resolution is not None:
+        return counter_resolution
     dealt_damage_this_way = _parse_dealt_damage_this_way_die_to_exile(whole)
     if dealt_damage_this_way is not None:
         return dealt_damage_this_way

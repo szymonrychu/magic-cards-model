@@ -3276,7 +3276,9 @@ _COUNTER_AMOUNT_REPLACEMENT_RE = re.compile(
     r"(?: of each of those kinds of counters"
     rf"| (?P<kind>{_COUNTER_KIND_WORD}) counters(?: (?P<op>plus|minus) (?P<n>{COUNT}))?)"
     r" are put on (?:it|that creature|that permanent)"
-    rf"|put that many(?: plus (?P<put_plus>{COUNT}))? (?P<put_rkind>{_COUNTER_KIND_WORD}) counters"
+    rf"|put that many(?: plus (?P<put_plus>{COUNT}))?"
+    r" (?:(?P<put_each>of each of those kinds of counters)"
+    rf"|(?P<put_rkind>{_COUNTER_KIND_WORD}) counters)"
     r" on (?:it|that creature|that permanent)"
     rf"|you get (?:(?P<pmult>{MULTIPLIER}) that many|that many(?: plus (?P<pplus>{COUNT}))?)"
     r"(?: of each of those kinds of counters"
@@ -3417,7 +3419,15 @@ def read_counter_amount(effect: ReplacementEffect) -> "CounterAmountReplacement 
     if replacement_match is None:
         return None
     active_voice = event_match.group("put_subject") is not None
-    if active_voice != (replacement_match.group("put_rkind") is not None):
+    # Doc Samson, Super Psychiatrist's "put that many plus one of each of
+    # those kinds of counters on that permanent" is the active voice too, with
+    # Winding Constrictor's kindless "of each of those kinds" in place of a
+    # named kind.
+    active_replacement = (
+        replacement_match.group("put_rkind") is not None
+        or replacement_match.group("put_each") is not None
+    )
+    if active_voice != active_replacement:
         # "you would put ... put that many" is one voice throughout; a passive
         # event with an active replacement (or the reverse) is no printing.
         return None

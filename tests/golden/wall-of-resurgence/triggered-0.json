@@ -46,7 +46,7 @@
         "source": "Wall of Resurgence"
       }
     ],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["continuous_effects", "counters_put_this_turn"],
     "notices": {},
     "objects": {
       "Plains@alice#1": {

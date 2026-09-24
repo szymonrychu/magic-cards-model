@@ -120,6 +120,7 @@ from ..machines.cost import (
     untap_cost,
     why_payer_cannot_use,
 )
+from ..machines.counter_effects import event_count_target_text
 from ..machines.decisions import (
     CardSplit,
     Decision,
@@ -2333,6 +2334,29 @@ class CombatDamageToPlayer(EngineModel):
     damage."""
 
 
+class CountersPutRecord(EngineModel):
+    """One instruction's counters put on one permanent this turn (CR 122.6),
+    with who put them (CR 122.6a) - what "you've put one or more +1/+1
+    counters on `<it>` this turn" (Beast, Erudite Aerialist; Kid Loki) and
+    "for each +1/+1 counter you've put on creatures under your control this
+    turn" (Iridescent Hornbeetle) look back at. The counters themselves are
+    no answer: one may have been removed, or annihilated (CR 704.5q), since.
+
+    `controller` and `types` are the permanent's when the counters landed -
+    "creatures under your control" is judged then, not now."""
+
+    putter: str
+    card_id: UUID
+    kind: str
+    amount: int
+    controller: str | None = None
+    types: tuple[Type, ...] = ()
+    zone_change_stamp: UUID | None = None
+    """Which incarnation of `card_id` (CR 400.7): a permanent that left the
+    battlefield and came back is a new object the counters were never put
+    on."""
+
+
 #: CR 701.54c: "they get an emblem named The Ring".
 RING_EMBLEM_NAME = "The Ring"
 
@@ -3222,6 +3246,13 @@ class Game(EngineModel):
     `record_combat_damage_to_player`; `prowl_condition_holds` is the reader.
     Cleared when a new turn begins."""
 
+    counters_put_this_turn: list[CountersPutRecord] = Field(default_factory=list)
+    """Every counter placement on a permanent this turn, one entry per
+    instruction and permanent, in order - see `CountersPutRecord`.
+    `_emit_counters_put` is the single writer; `LayerContext.
+    counters_put_this_turn` carries it to the statics that read it
+    (`machines/counter_effects.py`). Cleared when a new turn begins."""
+
     graveyard_arrivals_this_turn: list[GraveyardArrival] = Field(default_factory=list)
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
     per arrival - see `GraveyardArrival`'s own docstring for why this is one
@@ -3559,13 +3590,15 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 75
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 76
     #: 75: `Game` gained `harnessed` (CR 701.64b's own designation) and
     #: `power_up_restricted_turns` (Kang the Conqueror's own power-up
     #: rider, CR 702.193a) - a snapshot written before either field decodes
     #: with both missing, which would silently read as "nothing is
     #: harnessed" and "no turn is power-up-restricted" for a game that
     #: actually has one of either recorded.
+    #: 76: `Game` gained `counters_put_this_turn` (C02-T4, "had a counter
+    #: put on it this turn").
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3585,6 +3618,9 @@ class Game(EngineModel):
     #: (pack tactics, C01 integration).
     #: 73: `ManaPool` gained `treasure` and `CastRecord` gained
     #: `treasure_mana_spent` (mana from a Treasure, C01 integration).
+    #: 74: `Game` gained `counters_put_this_turn` (per-turn counter placement
+    #: history, CR 122.6/122.6a), and a `COUNTERS_PUT` event's `player` is
+    #: now who put the counters (C02-T4).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -8731,30 +8767,7 @@ class Game(EngineModel):
             # rather than applied to every triggered event, so a cast
             # spell's own X never bleeds into an unrelated attack/dies
             # trigger's bare "X" (CR 107.3f territory, not this rule).
-            effect_text = ability.ability.effect
-            if (
-                ability.ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
-                and effect_text
-                and re.search(r"\bX\b", effect_text)
-            ):
-                # Ajani's Anguish's own "it deals X damage to any target."
-                # `cast_record_of` is already CR 400.7d's bridge (its own
-                # docstring), keyed by `zone_change_stamp`, which a spell
-                # resolving into a permanent carries across that exact zone
-                # change.
-                #
-                # Scoped to a spell whose *own* mana cost carried {X}
-                # (CR 107.3a): Craterhoof Behemoth's and Yuriko's own ETB
-                # triggers define X in their own text instead ("where X is
-                # the number of creatures you control", CR 107.3f), which
-                # CR 107.3m does not touch at all - substituting the cast
-                # record's own default `x_value=0` into that text would
-                # silently overwrite the real, ability-defined X with zero.
-                source = ability.source(self)
-                if source is not None and "{X}" in (source.mana_cost or ""):
-                    record = self.cast_record_of(source)
-                    if record is not None:
-                        effect_text = substitute_x(effect_text, record.x_value)
+            effect_text = self._etb_x_effect_text(ability)
             # CR 701.37c: "If a permanent's ability instructs a player to
             # 'monstrosity X,' other abilities of that permanent may also
             # refer to X. The value of X in those abilities is equal to the
@@ -9238,9 +9251,9 @@ class Game(EngineModel):
         )
         placed: list[AbilityOnStack] = []
         for ability in ordered:
-            modal = modal_trigger_profile(
-                ability.ability.effect if isinstance(ability.ability, TriggeredAbility) else None
-            )
+            # CR 107.3m: The Ruinous Wrecking Crew's "choose up to X -" counts
+            # the X its spell was cast with - 0 when it was never cast.
+            modal = modal_trigger_profile(self._etb_x_effect_text(ability, uncast_x=0))
             if modal is not None:
                 # CR 603.3c: the mode is announced as the ability is put on the
                 # stack, then CR 603.3d/CR 700.2c's targets for the chosen
@@ -9268,6 +9281,48 @@ class Game(EngineModel):
             self.trigger_targets.pop(ability.source_name, None)
             self.trigger_targets.pop(ability.source_name.split("//")[0].strip(), None)
         return placed
+
+    def _etb_x_effect_text(
+        self, ability: AbilityOnStack, *, uncast_x: int | None = None
+    ) -> str | None:
+        """A triggered ability's effect text with CR 107.3m's X written in:
+        "If an object's enters-the-battlefield triggered ability ... refers
+        to X, and the spell that became that object as it resolved had a value
+        of X chosen for any of its costs, the value of X for that ability is
+        the same as the value of X for that spell."
+
+        Ajani's Anguish's own "it deals X damage to any target." `cast_record_
+        of` is already CR 400.7d's bridge (its own docstring), keyed by
+        `zone_change_stamp`, which a spell resolving into a permanent carries
+        across that exact zone change.
+
+        Scoped to a spell whose *own* mana cost carried {X} (CR 107.3a):
+        Craterhoof Behemoth's and Yuriko's own ETB triggers define X in their
+        own text instead ("where X is the number of creatures you control", CR
+        107.3f), which CR 107.3m does not touch at all - substituting the cast
+        record's own default `x_value=0` into that text would silently
+        overwrite the real, ability-defined X with zero.
+
+        `uncast_x` is the X written in when no spell became the permanent (it
+        was put onto the battlefield): `None` leaves the text alone, the
+        resolution side's long-standing behaviour.
+        """
+        if not isinstance(ability.ability, TriggeredAbility):
+            return None
+        effect_text = ability.ability.effect
+        if (
+            ability.ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+            and effect_text
+            and re.search(r"\bX\b", effect_text)
+        ):
+            source = ability.source(self)
+            if source is not None and "{X}" in (source.mana_cost or ""):
+                record = self.cast_record_of(source)
+                if record is not None:
+                    effect_text = substitute_x(effect_text, record.x_value)
+                elif uncast_x is not None:
+                    effect_text = substitute_x(effect_text, uncast_x)
+        return effect_text
 
     def _announce_trigger_modes(self, ability: AbilityOnStack, modal: ModalProfile) -> bool:
         """Choose a modal triggered ability's modes and their targets as it goes
@@ -9313,7 +9368,12 @@ class Game(EngineModel):
                 break
             options = tuple(mode.text for mode in remaining)
             if len(chosen) >= minimum:
-                options = (NO_FURTHER_MODES, *options)
+                # "choose up to N -" (CR 700.2b) may stop before its first
+                # mode too; offered last until a mode is chosen, so the first
+                # printed mode stays the unscripted default (`default_answer`).
+                options = (
+                    (*options, NO_FURTHER_MODES) if not chosen else (NO_FURTHER_MODES, *options)
+                )
             answer = self.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_A_MODE,
@@ -9327,7 +9387,9 @@ class Game(EngineModel):
             if answer == NO_FURTHER_MODES:
                 break
             chosen.append(next((m for m in remaining if m.text == answer), remaining[0]))
-        if len(chosen) < minimum:
+        if len(chosen) < minimum or not chosen:
+            # CR 700.2b: "If no mode is chosen, the ability is removed from
+            # the stack" - "choose up to X -" allows choosing none.
             return False
         if exclusive and source_state is not None and chosen:
             source_state.chosen_modal_options = source_state.chosen_modal_options + tuple(
@@ -9545,6 +9607,10 @@ class Game(EngineModel):
             consequence = reflexive_consequence_text(text)
             if consequence is not None:
                 text = consequence
+        # Heroic Feast's "choose up to that many target creatures": CR 601.2c
+        # (via CR 603.3d) fixes the number as it goes on the stack, and "that
+        # many" is what the triggering event carried.
+        text = event_count_target_text(text, ability.event)
         profile = profile_for_text(text).for_event_player(_that_player_of(ability))
         return self._ask_targets(
             profile, ability.controller, ability.source_id, ability.source_name, text
@@ -13174,7 +13240,13 @@ class Game(EngineModel):
         # gained - a gain replaced to zero never happened (CR 603.2g).
         if event.amount > 0:
             player.gain_life(event.amount)
-            self.emit(GameEvent(event=TriggerEvent.GAINS_LIFE, player=player.username))
+            # The amount travels too: Heroic Feast's "choose up to that many
+            # target creatures" counts the life this event gained (CR 119.9).
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.GAINS_LIFE, player=player.username, amount=event.amount
+                )
+            )
         return player.life
 
     def lose_life(self, player: Player | str, amount: int) -> int:
@@ -13355,7 +13427,7 @@ class Game(EngineModel):
             new_total = permanent.add_counters(kind, event.amount)
             if str(kind) == str(Counter.LORE):
                 self._emit_lore_counters_added(permanent, event.amount)
-            self._emit_counters_put(permanent, str(kind), event.amount)
+            self._emit_counters_put(permanent, str(kind), event.amount, putter=event.putter)
             return new_total
 
     def proliferate(
@@ -13472,7 +13544,9 @@ class Game(EngineModel):
             )
         )
 
-    def _emit_counters_put(self, permanent: CardState, kind: str, amount: int) -> None:
+    def _emit_counters_put(
+        self, permanent: CardState, kind: str, amount: int, *, putter: str | None = None
+    ) -> None:
         """CR 122.6's generic "counters are put on this object" event.
 
         "Some spells and abilities refer to counters being put on an object.
@@ -13503,6 +13577,17 @@ class Game(EngineModel):
         # computed ones, not the printed type line (CR 613.1's starting
         # point) - a land animated by earthbend is a creature only there.
         chars = self.characteristics_of(permanent)
+        self.counters_put_this_turn.append(
+            CountersPutRecord(
+                putter=putter or permanent.controller,
+                card_id=permanent.id,
+                kind=kind,
+                amount=amount,
+                controller=permanent.controller,
+                types=chars.types,
+                zone_change_stamp=permanent.zone_change_stamp,
+            )
+        )
         self.emit(
             GameEvent(
                 event=ExtraTriggerEvent.COUNTERS_PUT,
@@ -13514,7 +13599,8 @@ class Game(EngineModel):
                 subject_subtypes=chars.subtypes,
                 counter_kind=kind,
                 amount=amount,
-                player=permanent.controller,
+                # CR 122.6a: who put them - "whenever you put ..." asks this.
+                player=putter or permanent.controller,
             )
         )
 
@@ -16613,6 +16699,12 @@ class Game(EngineModel):
             active_player=self.turn.active_player if self.turn is not None else None,
             turn_facts={fact: frozenset(players) for fact, players in self.turn_facts.items()},
             combat_damage_dealt_this_turn=frozenset(self.combat_damage_dealt_this_turn_by),
+            # CR 122.6's per-turn placement history (Beast, Erudite
+            # Aerialist; Kid Loki), who put what kind on which permanent.
+            counters_put_this_turn=tuple(
+                (record.putter, record.card_id, record.kind, record.zone_change_stamp)
+                for record in self.counters_put_this_turn
+            ),
             # CR 607.2a: Keen-Eyed Curator's "card types among cards exiled
             # with this creature" counts a pile in the shared exile zone.
             exile=tuple(self.exile),
@@ -22461,6 +22553,7 @@ class Game(EngineModel):
             self.turn_facts = {}
             self.combat_damage_dealt_this_turn_by = set()
             self.combat_damage_to_players_this_turn = []
+            self.counters_put_this_turn = []
             self.graveyard_arrivals_this_turn = []
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and

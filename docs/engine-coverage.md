@@ -5197,3 +5197,52 @@ offspring as instances of one mechanism rather than one rule each.
 
 Proof printings added: Magda, Brazen Outlaw. Schema 73 -> 74
 (`CastRecord.cast_using_teamwork`, `Game.became_tapped_count_this_turn`).
+
+## C02-T4: counter-placed triggers and statics, counter replacements, variable counter removal, ETB tokens and modal ETB/spell effects
+
+Ant-Man, Colony Commander; Knight of Wundagore; Invisible Woman, Sue Storm;
+Beast, Erudite Aerialist; Kid Loki; Training Regimen; Doc Samson, Super
+Psychiatrist; Powerful Broker; The Astonishing Ant-Man; Mister Hyde, Monster
+Within; Wakandan Royal Guard; Restorative Technique; Heroic Feast; Alien
+Invasion; The Thing, Ben Grimm; Vision Quest; Ant-Man's Army; HYDRA Troopers;
+Panther Pounce; The Ruinous Wrecking Crew were silent or notice; every clause
+of every one now sweeps `handled`. The readers live in
+`machines/counter_effects.py`, reached through one-line hooks in
+`triggers._unread_trigger_events`/`_unread_condition_matches`,
+`layers._parse_static_layer_sentence`, `effects._ability_effect_or_notice`/
+`_spell_effect_or_notice`/the modal-trigger mode chain (as
+`_parse_counter_resolution_text`, visible to the dispatch fingerprint) and
+`effects.count_expression`. CR numbers verified with `mise run rules:find`:
+107.3a, 107.3m, 111.10a, 111.10b, 113.12, 118.3, 118.12, 119.3, 119.9, 120.1,
+122.1, 122.6, 122.6a, 201.5, 201.5c, 400.7, 508.1d, 510.2, 601.2c, 602.2b,
+602.5d, 603.2c, 603.2h, 603.3, 603.3c, 603.3d, 604.2, 605.1a, 605.3b, 608.2b,
+608.2c, 608.2d, 611.3a, 613.1f, 614.1a, 616.1, 616.1e, 616.1f, 700.2b,
+700.2d, 701.16a, 701.17a, 701.23a, 701.23b, 701.34a, 704.5q.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "Whenever you put a[n]/one or more `<kind>` counter(s) on `<a[n] / another / one or more [other] <type or subtype> [you control]>`" (CR 122.6, 122.6a) - `COUNTERS_PUT` now carries who put the counters as its `player`; "one or more `<plural>`" is one event per instruction (CR 603.2c: a second pending trigger of the same ability off the same putter and kind is not raised) | `counter_effects._YOU_PUT_COUNTERS_CONDITION`, `parse_description`, `counter_condition_matches` | Ant-Man, Colony Commander; Knight of Wundagore; Invisible Woman, Sue Storm | Stocking the Pantry, Terrasymbiosis | `test_counter_riders.py` |
+| "Whenever one or more `<Heroes>` you control deal damage to a player" - combat damage as the step's one `COMBAT_DAMAGE_TO_PLAYERS` event judged off its records, noncombat as its own `DEALS_DAMAGE` | `counter_effects._ONE_OR_MORE_DEAL_DAMAGE_CONDITION`, `_damage_matches` | The Thing, Ben Grimm | - (MSH-only wording; see MEMORY.md) | `test_counter_riders.py` |
+| Per-turn counter placement history: `Game.counters_put_this_turn` (schema 74), carried to statics as `LayerContext.counters_put_this_turn`, CR 400.7-aware through the zone change stamp | `Game._emit_counters_put`, `CountersPutRecord` | - | - | `test_counter_placed_this_turn.py` |
+| "As long as you've put one or more `<kind>` counters on `<this>` this turn, `<he/it>` has `<keywords>`." / "Each creature you control that you've put one or more `<kind>` counters on this turn has `<keywords>`." (layer 6, CR 613.1f) | `counter_effects._PUT_ON_SELF_THIS_TURN_GRANT_RE`, `_EACH_PUT_ON_THIS_TURN_GRANT_RE`, `layers.CreatureControlledByWithId` | Beast, Erudite Aerialist; Kid Loki | - (MSH-only wordings, each other's proof; see MEMORY.md) | `test_counter_placed_this_turn.py` |
+| "for each `<kind>` counter you've put on creatures under your control this turn" as a count | `counter_effects.counter_history_count` (via `effects.count_expression`) | - | Iridescent Hornbeetle | `test_counter_placed_this_turn.py` |
+| "Creatures you control with `<kind>` counters on them have `<keywords>`." - the plural of Gallia's counter-gated grant | `counter_effects._CREATURES_WITH_COUNTERS_GRANT_RE` -> `layers._counter_gated_keyword_grant_builder` | Training Regimen | Badgermole | `test_counter_placed_this_turn.py` |
+| "If you would put one or more counters on a permanent you control, put that many plus one of each of those kinds of counters on that permanent instead." - the active voice of Winding Constrictor's line; CR 616.1 order against Doubling Season chosen by the controller | `replacement._COUNTER_AMOUNT_REPLACEMENT_RE` (`put_each`), `read_counter_amount` | Doc Samson, Super Psychiatrist | Winding Constrictor, Hardened Scales (the replacement it widens) | `test_counter_replacement_plus_one.py` |
+| "{T}: Add X mana of any one color, where X is `<Name>`'s power." (CR 201.5) | `abilities._SELF_CHARACTERISTIC_RE` | Doc Samson, Super Psychiatrist | Helga, Skittish Seer | `test_counter_replacement_plus_one.py` |
+| "For each kind of counter on target permanent or player, give that permanent or player another counter of that kind." - CR 701.34a's gift to one target | `counter_effects._each_kind_another_counter` | Powerful Broker | Maulfist Revolutionary, Skyship Plunderer | `test_counter_kind_duplication.py` |
+| "Remove any number of `<kind>` counters from `<this>`" as a cost (CR 107.3a: announced like an X), and "that many"/"that much" counting it back | `cost._PHRASE_REMOVE_COUNTERS` (`any_number`, self-name subject), `cost.cost_announces_x`, `cost.removes_announced_number_of_counters`, `effects.that_many`, `counter_effects._create_that_many_tokens` | The Astonishing Ant-Man | Geistflame Reservoir (its cost never built before) | `test_remove_counters_cost.py` |
+| "[You may] remove a counter from a[n] `<description>` you control. If you do, `<effect>`." (CR 118.12) | `counter_effects._remove_a_counter_if_you_do` | Mister Hyde, Monster Within | Sanctuary Warden | `test_remove_counters_cost.py` |
+| "put a +1/+1 counter on target creature. If that creature is another `<subtype>`, put two ... instead." | `effects._COUNTERS_MORE_IF_SUBTYPE_RE` (`another`) | Wakandan Royal Guard | Elder Cathar (the article form) | `test_counter_riders.py` |
+| "choose up to that many target `<description>`. Put a `<kind>` counter on each of them." - the count fixed from the event as the trigger goes on the stack (CR 601.2c via 603.3d); `GAINS_LIFE` now carries its amount | `counter_effects.event_count_target_text`, `_choose_targets_put_counter_on_each` | Heroic Feast | - (MSH-only; see MEMORY.md) | `test_counter_riders.py` |
+| "create `<token>`. Put a `<kind>` counter on it for each `<kind>` counter on this `<type>`, then put a `<kind>` counter on this `<type>`." - and "This token attacks each combat if able." read by the attack requirement | `counter_effects._create_then_counters_per_source_counter`, `combat._attack_requirement_match` ("this token") | Alien Invasion | - (MSH-only; see MEMORY.md) | `test_counter_riders.py` |
+| "create a `<Predefined>` token or a `<Predefined>` token" (CR 111.10) | `counter_effects._create_one_token_or_another` | Ant-Man's Army | Tireless Provisioner | `test_etb_token_choices.py` |
+| "`<effect>` if there are N or more `<quality>` cards in your graveyard. Otherwise, `<effect>`." | `counter_effects._if_graveyard_count_otherwise` | HYDRA Troopers | - (MSH-only; see MEMORY.md) | `test_etb_token_choices.py` |
+| "Target player investigates. `<rest>`" (CR 701.16a) | `counter_effects._target_player_investigates` | Panther Pounce | - (MSH-only; see MEMORY.md) | `test_etb_token_choices.py` |
+| "Target player gains N life, then searches their library for ... puts it onto the battlefield tapped, then shuffles. `<rest>`" | `counter_effects._target_player_gains_then_searches` | Restorative Technique | Scale the Heights (the "up to one target creature" half) | `test_etb_token_choices.py` |
+| "[You may] search your library and/or graveyard for `<quality>` card [with no abilities] [with mana value X or less] ... put it onto the battlefield [with X additional counters] / into your hand. [If X is N or greater, it gains `<keyword>` until end of turn.] If you search your library this way, shuffle." - one choice over both zones, the library searched only when the player says so | `counter_effects._search_library_and_or_graveyard`, `_card_quality` ("artifact creature") | Vision Quest | Fang-Druid Summoner | `test_etb_token_choices.py` |
+| "choose up to X -" / "choose up to one -" modal triggers - X from the spell (CR 107.3m, 0 when never cast), no mode chosen removes the ability (CR 700.2b) | `effects.modal_trigger_profile` (minimum 0 accepted), `Game._etb_x_effect_text`, `Game._announce_trigger_modes` | The Ruinous Wrecking Crew | Sawblade Slinger | `test_choose_up_to_x_modes.py` |
+
+Proof printings added: Stocking the Pantry, Terrasymbiosis, Iridescent
+Hornbeetle, Badgermole, Helga, Skittish Seer, Maulfist Revolutionary, Skyship
+Plunderer, Geistflame Reservoir, Sanctuary Warden, Tireless Provisioner,
+Scale the Heights, Fang-Druid Summoner, Sawblade Slinger.
