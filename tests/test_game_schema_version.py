@@ -733,3 +733,28 @@ def test_a_snapshot_written_before_next_end_step_permissions_is_refused() -> Non
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NEXT_END_STEP_PERMISSIONS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before S29's day and night (CR 731): `Game` gained
+#: `day_night` and `previous_turn_active_player`.
+_SCHEMA_VERSION_BEFORE_DAY_AND_NIGHT = 60
+
+
+def test_the_day_night_bump_moved_the_version_past_sixty() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_DAY_AND_NIGHT
+
+
+def test_a_snapshot_written_before_day_and_night_is_refused() -> None:
+    """A version-60 dump has no `day_night`; decoded as current it would read
+    as "neither" even for a game whose Gavony Dawnguard had already made it
+    day, and no daybound permanent would ever transform."""
+    dumped = _a_played_game().model_dump(mode="json")
+    del dumped["day_night"]
+    del dumped["previous_turn_active_player"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_DAY_AND_NIGHT
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_DAY_AND_NIGHT}",
+    ):
+        Game.model_validate(dumped)

@@ -98,6 +98,7 @@ from .triggers import (
     activated_abilities_of,
     triggers_for,
 )
+from .turn import DayNight
 
 
 class KeywordRule(StrEnum):
@@ -218,6 +219,13 @@ def executes(keyword: str) -> bool:
         # (`_TRIGGER_EXPANSIONS`), and `machines/effects._parse_firebending_
         # add_mana` reads the "add N {R}" effect it puts on the stack.
         "firebending",
+        # CR 702.145b / CR 702.145e. Static abilities driven by the game's
+        # day/night designation (CR 731): `apply_daybound_nightbound` below
+        # transforms and sets the designation, `enters_transformed_at_night`
+        # is read by `Game.enter_the_battlefield`, and `CardState.transform`
+        # refuses any other transform of a permanent carrying either keyword.
+        "daybound",
+        "nightbound",
         # CR 702.175a. The same two-places shape as evoke just above: the
         # additional-cost half is `machines/casting.py`'s `Casting.
         # pay_offspring` (`ADDITIONAL_COST_KEYWORDS`), the triggered half -
@@ -4949,6 +4957,128 @@ def keyword_activation_effect(keyword: str) -> Callable[[KeywordActivation], Any
     if lowered.endswith("cycling"):
         return _cycling_effect
     return KEYWORD_EFFECTS.get(lowered)
+
+
+# -- daybound and nightbound (CR 702.145) and day/night (CR 731) ---------------
+
+DAYBOUND = "daybound"
+NIGHTBOUND = "nightbound"
+
+
+def _printed_day_night_bound(permanent: CardState) -> bool:
+    """Whether either face of this card prints daybound or nightbound - a
+    cheap pre-filter only; `has_keyword` then asks the computed board, so a
+    keyword removed in layer 6 (CR 613.1f) stops working."""
+    return any(k.lower() in (DAYBOUND, NIGHTBOUND) for k in permanent.card.keywords)
+
+
+def enters_transformed_at_night(game: Any, card_state: CardState) -> bool:
+    """CR 702.145b's first ability: "If it is night and this permanent is
+    represented by a double-faced card, it enters transformed."
+
+    Asked while the card is still where it was, front face up, so its own
+    `keywords` are the front face's - the face daybound is printed on
+    (CR 702.145a)."""
+    if game.day_night is not DayNight.NIGHT or card_state.card.back_face is None:
+        return False
+    return any(keyword.lower() == DAYBOUND for keyword in card_state.keywords)
+
+
+def transform_for_day_night(game: Any) -> None:
+    """Turn every permanent whose face disagrees with the designation.
+
+    CR 702.145b: "As it becomes night, if this permanent is front face up,
+    transform it"; CR 702.145c: any time a front-face-up daybound permanent
+    is controlled while it's night, it transforms, immediately and not as a
+    state-based action. CR 702.145e and CR 702.145f are the same for a
+    back-face-up nightbound permanent and day. Each is a real transform
+    (`effects.transform_permanent`), so "transforms into" (CR 701.27e) sees
+    it.
+    """
+    from .effects import transform_permanent
+
+    for permanent in list(game.battlefield):
+        if not _printed_day_night_bound(permanent):
+            continue
+        if (
+            game.day_night is DayNight.NIGHT
+            and not permanent.transformed
+            and has_keyword(permanent, DAYBOUND, game)
+        ) or (
+            game.day_night is DayNight.DAY
+            and permanent.transformed
+            and has_keyword(permanent, NIGHTBOUND, game)
+        ):
+            transform_permanent(game, permanent, day_night=True)
+
+
+def apply_daybound_nightbound(game: Any) -> None:
+    """The "any time" halves of CR 702.145, checked whenever the game looks.
+
+    CR 702.145d: a daybound permanent while it's neither day nor night makes
+    it day. CR 702.145g: a nightbound one, with no daybound permanent on the
+    battlefield, makes it night. Otherwise CR 702.145c/702.145f's transforms
+    (`transform_for_day_night`). `Game.set_day_night` runs those transforms
+    itself as the designation changes.
+    """
+    bound = [p for p in game.battlefield if _printed_day_night_bound(p)]
+    if not bound:
+        return
+    if game.day_night is None:
+        if any(has_keyword(p, DAYBOUND, game) for p in bound):
+            game.set_day_night(DayNight.DAY)
+        elif any(has_keyword(p, NIGHTBOUND, game) for p in bound):
+            game.set_day_night(DayNight.NIGHT)
+        return
+    transform_for_day_night(game)
+
+
+def is_day_night_bound(permanent: CardState, game: Any) -> bool:
+    """Whether CR 702.145b's / CR 702.145e's "This permanent can't transform
+    except due to its daybound [nightbound] ability" applies to it now."""
+    if not _printed_day_night_bound(permanent):
+        return False
+    return has_keyword(permanent, DAYBOUND, game) or has_keyword(permanent, NIGHTBOUND, game)
+
+
+#: "If it's neither day nor night, it becomes day as this creature enters."
+#: (Gavony Dawnguard, Brimstone Vandal, Sunstreak Phoenix, ...). The subject is
+#: the permanent itself - "this `<type>`", its name, or a legendary card's
+#: shortened name (CR 201.5c) - and the designation is either word, since the
+#: template reads the same both ways.
+_AS_ENTERS_DAY_NIGHT_RE = re.compile(
+    r"^if it's neither day nor night, it becomes (?P<designation>day|night) as "
+    r"(?P<subject>.+?) enters(?: the battlefield)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def as_enters_day_night(text: str, card_name: str) -> DayNight | None:
+    """The designation an "if it's neither day nor night, it becomes day as
+    this creature enters" line sets, or None when `text` is not that line."""
+    match = _AS_ENTERS_DAY_NIGHT_RE.fullmatch(text.strip().replace("’", "'"))
+    if match is None:
+        return None
+    subject = match.group("subject").strip().lower()
+    names = {card_name.lower(), card_name.split(",")[0].strip().lower()}
+    if not (re.fullmatch(r"this [a-z]+", subject) or subject in names):
+        return None
+    return DayNight(match.group("designation").lower())
+
+
+def apply_as_enters_day_night(game: Any, permanent: CardState) -> None:
+    """Apply the permanent's own "if it's neither day nor night, it becomes
+    day as this creature enters" as it enters (CR 731.1: "Other effects can
+    also make it day or night"). Read off its computed abilities, so a copy
+    or a permanent whose abilities were removed as it entered behaves as it
+    would exist on the battlefield (CR 614.12)."""
+    if game.day_night is not None:
+        return
+    for line in game.characteristics_of(permanent).abilities:
+        designation = as_enters_day_night(line, permanent.name)
+        if designation is not None:
+            game.set_day_night(designation)
+            return
 
 
 # `AbilityOnStack.keyword_activation`/`.unless_payment` (machines/triggers.py)

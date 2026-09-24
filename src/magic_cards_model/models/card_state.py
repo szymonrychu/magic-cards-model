@@ -2292,8 +2292,14 @@ class CardState(EngineModel):
             return None
         return faces[0] if self.transformed else faces[1]
 
-    def transform(self) -> None:
+    def transform(self, *, day_night: bool = False) -> None:
         """Turn this permanent over so its other face is up (CR 701.27a).
+
+        `day_night` marks the transform daybound or nightbound itself performs
+        (`machines/keywords.transform_for_day_night`). Every other transform of
+        a permanent with either keyword does nothing: CR 702.145b and CR
+        702.145e each include "This permanent can't transform except due to its
+        daybound [nightbound] ability."
 
         Only a double-faced card can transform (CR 712.9: "Only permanents
         represented by double-faced tokens and double-faced cards that are not
@@ -2316,6 +2322,11 @@ class CardState(EngineModel):
         say "transform all Humans" and sweep a board of mixed permanents
         without the caller having to filter it first.
         """
+        if not day_night and self.zone is Zone.BATTLEFIELD:
+            from ..machines.keywords import is_day_night_bound
+
+            if is_day_night_bound(self, self._board_source):
+                return  # CR 702.145b, CR 702.145e
         target = self.face_it_would_transform_into
         if target is None:
             return  # CR 701.27c, CR 712.9

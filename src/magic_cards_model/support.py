@@ -1726,6 +1726,11 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if reads_as_transforms_line(text):
         # CR 712.20: `effects.transform_permanent` applies it as it transforms.
         return HANDLED
+    if keyword_machine.as_enters_day_night(text, printing.name) is not None:
+        # CR 731.1: "If it's neither day nor night, it becomes day as this
+        # creature enters" - `keywords.apply_as_enters_day_night`, run by
+        # `Game.enter_the_battlefield`.
+        return HANDLED
     self_enters = _self_enters_line_category(printing, text)
     if self_enters is not None:
         return self_enters

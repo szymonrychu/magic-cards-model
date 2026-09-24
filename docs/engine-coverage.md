@@ -586,7 +586,7 @@ other work.
 | Cumulative upkeep costs that are not an ordinary cost | CR 702.24a | `machines/cost.cumulative_upkeep_cost` reads [cost] with the ordinary cost parser (`total_cost_for_phrase`) plus the "{A} or {B}" choice form, and accepts only mana, discard, sacrifice and life - the parts `Game.may_pay_unless_cost` can pay mid-resolution. Anything else fails closed: no age counter, no question, no sacrifice, and an `UnmodeledTriggerEffectNotice` naming the effect text. The Modern/Pioneer/Standard-legal printings this leaves unread (none of them in the pool): Braid of Fire ("Add {R}."), Herald of Leshrac ("Gain control of a land you don't control."), Karplusan Minotaur ("Flip a coin."), Jotun Grunt ("Put two cards from a single graveyard on the bottom of their owner's library."), Sheltering Ancient ("Put a +1/+1 counter on a creature an opponent controls."), Wall of Shards ("An opponent gains 1 life."). Cover of Winter's and Glacial Plating's "{S}" is read as `{S}` per counter but no scenario proves paying it with snow mana. A cost mixing mana with a non-mana part pays its mana from the floating pool only (`may_pay_unless_cost`); no legal printing has one. |
 | Block requirements, and attack requirements beyond a creature's own | CR 508.1d, 509.1c | A creature's own "attacks each combat if able" and goad (CR 701.15) are enforced (see the Modelled rows). Not read: "must block if able" (CR 509.1c) beyond a resolving ability's "target creature blocks this creature this turn if able" (see the Modelled row), requirements naming other creatures or a defender, and "can't attack unless [a player pays]" costs, so CR 508.1d's unpaid-cost clause has nothing to apply to. |
 | Removed from combat, other causes | CR 506.4 | Every `Combat.remove` call site is a zone change, plus `Game.end_the_turn` and `Game._player_left`. A controller or protector change (`Layer.CONTROL` does change control, and combat never notices), phasing out, and an effect that says so do not remove anything from combat. |
-| Phasing, day/night, and Attractions | CR 703.4a, 703.4b, 703.4g, 502.1, 702.26a, 731.2, 717.4 | Three turn-based actions with no mechanism at all behind them. `Game.turn_based_actions` dispatches untap, draw, the Saga lore counter, the three combat steps and cleanup, and nothing else. Mana pools emptying (CR 703.4q) is modelled. Note that rolling to visit Attractions is a turn-based action of the precombat main phase, not a step of its own. |
+| Phasing and Attractions | CR 703.4a, 703.4g, 502.1, 702.26a, 717.4 | Two turn-based actions with no mechanism at all behind them (day/night, CR 703.4b, is modelled - see "S29: day and night"). `Game.turn_based_actions` dispatches untap, draw, the Saga lore counter, the three combat steps and cleanup, and nothing else. Mana pools emptying (CR 703.4q) is modelled. Note that rolling to visit Attractions is a turn-based action of the precombat main phase, not a step of its own. |
 | Draws with no mechanism behind them | CR 104.4c, 104.4d, 104.4e, 104.4g, 104.4i | CR 104.4a's simultaneous loss is modelled, and CR 104.4b is detected for exactly one loop shape - `Game.resolve_triggered_mana_abilities` sets `Game.drawn` past `TRIGGERED_MANA_ABILITY_LOOP_BOUND` consecutive inline resolutions (`judge/test_judge_mana_abilities.py`). Loops of any other shape, an effect that states the game is a draw, the team and limited-range-of-influence variants, and the intentional draw have nothing behind them; `Game.end_in_draw` is the staging entry a scenario calls. |
 | Pregame effects a card can grant | CR 103.5b | Starting a game, the London mulligan and CR 103.6's opening-hand actions are all modelled - see the Modelled table and `machines/opening_hand.py`. What is left is CR 103.5b's "any time [that player] could mulligan" permission, which nothing reads, and the Chancellor cycle, which has no printing in the fixture pool. |
 | Layer 1's sublayers, past the ordering itself | CR 613.2, 613.2a, 613.2b, 613.2c, 708.2 | `CopySublayer.COPIABLE`/`FACE_DOWN` put CR 613.2a before CR 613.2b whatever the timestamps say, and `machines/layers.py` registers copy effects in 1a. Nothing in `src/` ever registers a 1b effect: a face-down permanent's characteristics come from `FaceDownCharacteristics`/`CardState.has_no_characteristics` outside the layer system, so CR 708.2 is applied but never *in* layer 1b, and only `tests/test_layers.py` exercises the sublayer ordering at all. CR 613.2a's other half - merging an object with a permanent - has no mechanic. |
@@ -2523,7 +2523,8 @@ permanent (CR 105.4's choice). Keen-Eyed Curator stood beside it until S09 read
 its linked-exile threshold (see that section); Gavony Dawnguard's day/night
 text (CR 731) replaced it as the sweeper's control in `tests/test_sweep_pool.py`
 and `tests/test_survey_cards.py`, which used to be Rancor and Angel of
-Jubilation.
+Jubilation, until S29 built day and night; the control is now chosen from
+the pool at test time.
 
 ## Number words: one shared count reader (number sweep G0)
 
@@ -4323,3 +4324,27 @@ Not read: Harsh Mentor's "..., if it isn't a mana ability," intervening-if
 form of the activation punisher. A *permanent* back face of a modal DFC
 (Esika's Prismatic Bridge) is still not offered as a cast: it would have to
 enter the battlefield with that face up (CR 712.8f), which nothing records.
+
+## S29: day and night (CR 731), daybound and nightbound (CR 702.145)
+
+Gavony Dawnguard was silent on its "Whenever day becomes night or night
+becomes day" trigger and unaudited on its "neither day nor night" static;
+every clause now sweeps `handled`. The task brief said CR 726 - day and
+night is CR 731 in the current rules (726 is the initiative). CR numbers
+verified with `mise run rules:find`: 731.1, 731.1a, 731.2, 731.2a, 731.2b,
+731.2c, 502.2, 614.1c, 614.10, 614.12, 702.145a-g, 701.27a, 701.27e, 603.1b,
+201.5c, 613.1f (code) and 702.21a, 608.2d (tests).
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| The game's day/night designation (CR 731.1): starts neither (`None`), never returns to neither; persisted on `Game.day_night` (schema 61) | `turn.DayNight`, `Game.set_day_night` / `become_day` / `become_night` | Gavony Dawnguard | Brimstone Vandal | `test_day_night.py` |
+| CR 502.2's untap-step check (CR 731.2a-c): day and the previous turn's active player cast no spells - night; night and that player cast two or more - day; neither - no check; skipped with a skipped untap step (CR 614.10) | `turn.day_night_after_untap_check`, `Game._day_night_untap_check` over `spells_cast_last_turn` and the new persisted `Game.previous_turn_active_player` | Gavony Dawnguard | Brimstone Vandal | `test_day_night.py` |
+| "If it's neither day nor night, it becomes day as this creature enters" (CR 614.1c), read off the entering permanent's computed abilities | `keywords.as_enters_day_night` / `apply_as_enters_day_night`, run by `Game.enter_the_battlefield`; `support._static_ability_category` credits it | Gavony Dawnguard | Brimstone Vandal | `test_day_night.py` |
+| "Whenever day becomes night or night becomes day" (either half alone too); neither-to-day is not a change (CR 731.1a) | `triggers._DAY_NIGHT_CONDITION`, `ExtraTriggerEvent.DAY_BECOMES_NIGHT` / `NIGHT_BECOMES_DAY`, emitted by `Game.set_day_night` | Gavony Dawnguard | Brimstone Vandal | `test_day_night.py` |
+| "You may reveal a `<quality>` card with mana value N or less from among them and put it into your hand" (CR 608.2d refuses a card over the bound) | `effects._MAY_REVEAL_FROM_AMONG_THEM_RE` `max_mv` group, `_bounded_quality_matcher` | Gavony Dawnguard | Recruitment Officer (activated, random-order tail) | `test_day_night.py` |
+| Daybound / nightbound (CR 702.145b-g): enters transformed at night; transforms as the designation changes and any time a face disagrees (not a state-based action, but also checked whenever state-based actions are); a daybound permanent makes neither into day, a nightbound one (with no daybound around) into night; any other transform of either does nothing | `keywords.enters_transformed_at_night`, `transform_for_day_night`, `apply_daybound_nightbound`, `is_day_night_bound`; `CardState.transform(day_night=...)`, `effects.transform_permanent(day_night=...)` | - | Tavern Ruffian, Brutal Cathar, Reckless Stormseeker | `test_daybound_nightbound.py` |
+| "Whenever this creature enters or transforms into `<face>`" (CR 603.1b, 701.27e): split into its enters half and its transforms-into half | `triggers._expand_enters_or_transforms_into` | Brutal Cathar (proof card) | Huntmaster of the Fells | `test_transforms_into_trigger.py`, `test_daybound_nightbound.py` |
+
+Not modelled: CR 731.2a/731.2b's shared-team-turns variant (CR 805) and an
+effect granting daybound/nightbound to a card that does not print it (no such
+printing exists; the pre-filter reads the printed keywords).

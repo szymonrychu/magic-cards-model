@@ -19030,13 +19030,16 @@ _AS_TRANSFORMS_INTO_RE = re.compile(
 )
 
 
-def transform_permanent(game: "Game", permanent: CardState) -> None:
+def transform_permanent(game: "Game", permanent: CardState, *, day_night: bool = False) -> None:
     """CR 701.27a's transform, then the new face's own "As this ...
     transforms into `<face>`, `<effect>`" (CR 712.20) for the permanent's
     controller. An "as transforms" effect this cannot read records an
-    `UnmodeledTriggerEffectNotice` rather than being skipped silently."""
+    `UnmodeledTriggerEffectNotice` rather than being skipped silently.
+
+    `day_night` is passed only by daybound/nightbound's own transform - see
+    `CardState.transform`."""
     before = permanent.up_face_name
-    permanent.transform()
+    permanent.transform(day_night=day_night)
     after = permanent.up_face_name
     if after == before:
         return  # CR 712.9: nothing happened
@@ -36638,8 +36641,12 @@ _LOOK_AT_TOP_N_CARDS_RE = re.compile(
 #: taken. Reality Heist and Domri, Chaos Bringer's own -3 print "up to two";
 #: Lead the Stampede prints "any number of" (CR 107.1c). Duskwatch Recruiter's
 #: bare "a" stays readable as `QUANTITY`'s own fixed-one case.
+#: A mana value ceiling after the noun - Gavony Dawnguard's and Recruitment
+#: Officer's "a creature card with mana value 3 or less" - is read too, the
+#: same `max_mv` bound `_bounded_quality_matcher` applies to a search.
 _MAY_REVEAL_FROM_AMONG_THEM_RE = re.compile(
-    rf"^you may reveal {quantity_pattern('n')} (?P<quality>.+?) cards? from among them$",
+    rf"^you may reveal {quantity_pattern('n')} (?P<quality>.+?) cards?"
+    r"(?: with mana value (?P<max_mv>\d+) or less)? from among them$",
     re.IGNORECASE,
 )
 #: "put it into your hand" / "put them into your hand" / "put the revealed
@@ -36710,7 +36717,7 @@ def _merge_look_top_reveal_to_hand_clauses(
     # closed rather than guessing.
     if quantity is None or quantity.source not in (QuantitySource.FIXED, QuantitySource.ANY_NUMBER):
         return None
-    matches = _quality_matcher(reveal_match.group("quality"))
+    matches = _bounded_quality_matcher(reveal_match.group("quality"), reveal_match.group("max_mv"))
     if _PUT_IT_OR_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 2].strip()) is None:
         return None
     bottom_match = _PUT_REST_ON_BOTTOM_ANY_ORDER_RE.fullmatch(clauses[index + 3].strip())

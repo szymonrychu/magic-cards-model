@@ -98,3 +98,64 @@ def test_turning_back_to_the_front_face_does_not_trigger_the_back_face():
 
     assert avacyn.name == AVACYN
     assert scenario.stack_names() == []
+
+
+# "Whenever this creature enters or transforms into <face>" -------------------
+#
+# CR 603.1b: "A triggered ability may have more than one trigger condition" -
+# Huntmaster of the Fells' front face watches both its own entering and its
+# own transform back into Huntmaster (CR 701.27e). Brutal Cathar prints the
+# same pair; `tests/scenarios/test_daybound_nightbound.py` covers it through
+# daybound's own transform.
+
+HUNTMASTER = "Huntmaster of the Fells"
+RAVAGER = "Ravager of the Fells"
+
+
+def _wolves(scenario: PlayedScenario, username: str) -> int:
+    return sum(
+        1
+        for state in scenario.game.battlefield
+        if state.name == "Wolf Token" and state.controller == username
+    )
+
+
+def test_huntmaster_entering_makes_a_wolf_and_gains_two():
+    scenario = (
+        Scenario()
+        .player("alice", hand=[HUNTMASTER], library=["Forest"] * 5)
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    life = scenario.player("alice").life
+    scenario.put_onto_battlefield(HUNTMASTER, "alice")
+    _resolve_everything(scenario)
+    assert _wolves(scenario, "alice") == 1
+    assert scenario.player("alice").life == life + 2
+
+
+def test_huntmaster_transforming_back_into_itself_triggers_the_same_ability():
+    from magic_cards_model.machines.effects import transform_permanent
+
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[HUNTMASTER], library=["Forest"] * 5)
+        .player("bob", battlefield=["Grizzly Bears"], library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    huntmaster = scenario.creature(HUNTMASTER, "alice")
+    transform_permanent(scenario.game, huntmaster)
+    assert huntmaster.name == RAVAGER
+    scenario.will_choose_targets("bob", scenario.creature("Grizzly Bears", "bob"), source=RAVAGER)
+    _resolve_everything(scenario)
+    assert _wolves(scenario, "alice") == 0, "turning into Ravager is not 'into Huntmaster'"
+    life = scenario.player("alice").life
+
+    transform_permanent(scenario.game, huntmaster)
+    _resolve_everything(scenario)
+
+    assert huntmaster.name == HUNTMASTER
+    assert _wolves(scenario, "alice") == 1
+    assert scenario.player("alice").life == life + 2

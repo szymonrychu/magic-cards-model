@@ -169,9 +169,12 @@ from ..machines.effects import (
     trigger_effect_for,
 )
 from ..machines.keywords import (
+    apply_as_enters_day_night,
+    apply_daybound_nightbound,
     ascend_as_a_spell_resolves,
     attachment_state_based_actions,
     aura_state_based_actions,
+    enters_transformed_at_night,
     equipment_state_based_actions,
     grant_the_citys_blessing,
     has_miracle,
@@ -180,6 +183,7 @@ from ..machines.keywords import (
     is_indestructible,
     keyword_effect_for,
     keyword_triggered_abilities,
+    transform_for_day_night,
     turn_face_up_cost,
     why_cannot_turn_face_up,
 )
@@ -261,8 +265,10 @@ from ..machines.triggers import (
 from ..machines.turn import (
     MAIN_PHASES,
     STEP_SEQUENCE,
+    DayNight,
     Step,
     TurnMachine,
+    day_night_after_untap_check,
 )
 from ..numbers import MULTIPLIER, count_pattern, parse_count, parse_multiplier
 from ..serialization import SortedFrozenSet, SortedSet
@@ -2622,6 +2628,19 @@ class Game(EngineModel):
     which is exactly what `put_on_stack` already records.
     """
 
+    day_night: DayNight | None = None
+    """The game's day/night designation (CR 731.1). `None` is "neither", the
+    designation every game starts with; once set it is only ever replaced by
+    the other one. Changed only through `set_day_night`."""
+
+    previous_turn_active_player: str | None = None
+    """Who was the active player during the turn before this one - the player
+    CR 502.2's untap-step day/night check asks about ("the previous turn's
+    active player", CR 731.2a, CR 731.2b), read against
+    `spells_cast_last_turn`. Snapshotted at the same moment that ledger is,
+    because an extra turn (CR 500.7) makes it unanswerable from the seat
+    order. `None` before any turn has ended."""
+
     cards_discarded_this_turn: dict[str, int] = Field(default_factory=dict)
     """How many cards each player has cycled or discarded this turn, keyed by
     the player who discarded them.
@@ -3025,7 +3044,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 60
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 61
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3839,6 +3858,13 @@ class Game(EngineModel):
     Ambusher, all already in the pool, now apply where a version-59 board
     applied nothing, and protection now also refuses blocks (CR 702.16f) and
     attachments (CR 702.16c, CR 702.16d), the second bullet.
+
+    Bumped 60 -> 61 (S29, day and night): `Game` gained `day_night` (CR
+    731.1) and `previous_turn_active_player` (CR 502.2's "previous turn's
+    active player") - fields added to `Game`, the bump rule's first bullet.
+    Daybound/nightbound permanents already in the pool now transform, and
+    "whenever day becomes night or night becomes day" and "enters or
+    transforms into" triggers now fire, the second bullet.
     """
 
     @model_validator(mode="before")
@@ -4403,6 +4429,9 @@ class Game(EngineModel):
             else:
                 del self.players_skipping_next_untap[active.username]
             return
+        # CR 502.2: second, the day/night check (CR 731.2) - after CR 502.1's
+        # phasing and before CR 502.3's untap, and skipped with the step.
+        self._day_night_untap_check()
         untappable = verdict.permanents
         tapped = [state for state in untappable if state.tapped]
         active.untap_all(untappable)
@@ -4431,6 +4460,53 @@ class Game(EngineModel):
                     step=Step.UNTAP,
                 )
             )
+
+    def _day_night_untap_check(self) -> None:
+        """CR 502.2's turn-based action: the previous turn's active player's
+        spells decide whether day becomes night or night becomes day
+        (CR 731.2a, CR 731.2b); with neither designation nothing is checked
+        (CR 731.2c). Copies are not cast, so `spells_cast_last_turn` already
+        leaves them out."""
+        if self.day_night is None or self.previous_turn_active_player is None:
+            return
+        cast = len(self.spells_cast_last_turn.get(self.previous_turn_active_player, []))
+        designation = day_night_after_untap_check(self.day_night, cast)
+        if designation is not None:
+            self.set_day_night(designation)
+
+    def set_day_night(self, designation: DayNight) -> None:
+        """Make it day or night (CR 731.1).
+
+        As it becomes night, every front-face-up daybound permanent transforms
+        (CR 702.145b); as it becomes day, every back-face-up nightbound one
+        does (CR 702.145e). Only replacing one designation with the other is
+        "day becomes night" or "night becomes day" (CR 731.1a), so only that
+        raises the event a "Whenever day becomes night or night becomes day"
+        trigger watches - becoming day from neither triggers nothing.
+        """
+        with self._id_allocator_scope():
+            previous = self.day_night
+            if previous is designation:
+                return
+            self.day_night = designation
+            transform_for_day_night(self)
+            if previous is None:
+                return
+            self.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.DAY_BECOMES_NIGHT
+                    if designation is DayNight.NIGHT
+                    else ExtraTriggerEvent.NIGHT_BECOMES_DAY
+                )
+            )
+
+    def become_day(self) -> None:
+        """ "It becomes day" (CR 731.1)."""
+        self.set_day_night(DayNight.DAY)
+
+    def become_night(self) -> None:
+        """ "It becomes night" (CR 731.1)."""
+        self.set_day_night(DayNight.NIGHT)
 
     # -- turn-based actions (CR 703) ---------------------------------------
 
@@ -9128,6 +9204,8 @@ class Game(EngineModel):
             # Ajani, Nacatl Pariah enters with is his back face's 3 - read off
             # whichever face is up. A card that has no back face is left alone
             # (CR 701.28c's "nothing happens" for the sibling action).
+            # CR 702.145b: a daybound card entering at night enters transformed.
+            transformed = transformed or enters_transformed_at_night(self, card_state)
             card_state.transformed = transformed and card_state.card.back_face is not None
             stamp_on_the_stack = card_state.zone_change_stamp
             card_state.move_to(Zone.BATTLEFIELD)
@@ -9198,6 +9276,12 @@ class Game(EngineModel):
             extra_loyalty = self._additional_entering_loyalty(card_state)
             if extra_loyalty:
                 self.add_counters(card_state, Counter.LOYALTY, extra_loyalty)
+
+            # CR 614.1c: "If it's neither day nor night, it becomes day as this
+            # creature enters" - then CR 702.145d/g's "any time" checks, which
+            # a daybound or nightbound newcomer may now satisfy.
+            apply_as_enters_day_night(self, card_state)
+            apply_daybound_nightbound(self)
 
             # CR 603.4's "if it entered from your graveyard" (Prized Amalgam,
             # Archfiend's Vessel) asks where the permanent came from - the
@@ -15119,6 +15203,11 @@ class Game(EngineModel):
         for why it is split out."""
         if self.is_over:
             return []
+        # CR 702.145c/d/f/g are not state-based actions - each "happens
+        # immediately" any time its condition is true - but every point the
+        # game checks state-based actions is a point it looks, so a permanent
+        # that gained or lost daybound some other way is caught here too.
+        apply_daybound_nightbound(self)
         gone: list[CardState] = []
         for _ in range(len(self.players) + len(self.battlefield) + 1):
             leaving = self._state_based_actions_once()
@@ -20241,6 +20330,7 @@ class Game(EngineModel):
         """
         assert self.turn is not None
         previous_turns_taken = self.turn.turns_taken
+        previous_active_player = self.turn.active_player
         previous_step = self.turn.step
         if (
             self.automatic_turn_based_actions
@@ -20322,6 +20412,7 @@ class Game(EngineModel):
             # answer once this is cleared.
             self.spells_cast_last_turn = self.spells_cast_this_turn
             self.spells_cast_this_turn = {}
+            self.previous_turn_active_player = previous_active_player
             self.permanents_left_battlefield_this_turn = {}
             self.attacked_this_turn = set()
             self.permanents_sacrificed_this_turn = {}

@@ -102,6 +102,36 @@ class Step(StrEnum):
     CLEANUP = "cleanup"
 
 
+class DayNight(StrEnum):
+    """The game's own day/night designation (CR 731.1).
+
+    "The game starts with neither designation" - that is `Game.day_night`
+    being `None`, not a third member here: once it has become day or night
+    "the game will have exactly one of those designations from that point
+    forward", so neither is only ever the starting state.
+    """
+
+    DAY = "day"
+    NIGHT = "night"
+
+
+def day_night_after_untap_check(
+    current: DayNight | None, spells_cast_by_previous_active_player: int
+) -> DayNight | None:
+    """The designation CR 502.2's untap-step check leaves (CR 731.2).
+
+    CR 731.2a: day, and the previous turn's active player cast no spells
+    during that turn - it becomes night. CR 731.2b: night, and that player
+    cast two or more - it becomes day. CR 731.2c: neither - "this check
+    doesn't happen and it remains neither". Anything else leaves it as it is.
+    """
+    if current is DayNight.DAY and spells_cast_by_previous_active_player == 0:
+        return DayNight.NIGHT
+    if current is DayNight.NIGHT and spells_cast_by_previous_active_player >= 2:
+        return DayNight.DAY
+    return current
+
+
 TURN_ORDER: tuple[Step, ...] = (
     Step.UNTAP,
     Step.UPKEEP,

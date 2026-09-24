@@ -271,6 +271,13 @@ class ExtraTriggerEvent(StrEnum):
     #: and `machines/keywords.KeywordActivation` (cycling, equip and every
     #: other keyword activation), once the ability is on the stack.
     ABILITY_ACTIVATED = "ability_activated"
+    #: CR 731.1a: "'day becomes night' and 'night becomes day' refer to the
+    #: game losing the first designation and gaining the second one" - so
+    #: neither-to-day or neither-to-night is neither event. No subject and no
+    #: player: the designation is the game's own (CR 731.1). **Emitted by:**
+    #: `Game.set_day_night`, only when a designation is replaced.
+    DAY_BECOMES_NIGHT = "day_becomes_night"
+    NIGHT_BECOMES_DAY = "night_becomes_day"
 
 
 class GameEvent(EngineModel):
@@ -3169,6 +3176,25 @@ _ABILITY_ACTIVATED_CONDITION = re.compile(
     r"(?: of (?P<types>an? [a-z]+(?:(?:,\s*(?:or\s+)?|\s+or\s+)(?:an? )?[a-z]+)*))?"
     r" that isn't a mana ability$"
 )
+#: "Whenever day becomes night or night becomes day" (Gavony Dawnguard,
+#: Brimstone Vandal), and either half on its own. CR 731.1a's two phrases,
+#: in either order.
+_DAY_NIGHT_PHRASE = r"(?:day becomes night|night becomes day)"
+_DAY_NIGHT_CONDITION = re.compile(rf"^{_DAY_NIGHT_PHRASE}(?: or {_DAY_NIGHT_PHRASE})?$")
+_DAY_NIGHT_EVENTS: dict[str, ExtraTriggerEvent] = {
+    "day becomes night": ExtraTriggerEvent.DAY_BECOMES_NIGHT,
+    "night becomes day": ExtraTriggerEvent.NIGHT_BECOMES_DAY,
+}
+
+
+def _day_night_events_named(condition: str) -> frozenset[ExtraTriggerEvent]:
+    """Every CR 731.1a change `condition` watches, or an empty set."""
+    if _DAY_NIGHT_CONDITION.match(condition) is None:
+        return frozenset()
+    return frozenset(
+        _DAY_NIGHT_EVENTS[phrase] for phrase in re.findall(_DAY_NIGHT_PHRASE, condition)
+    )
+
 
 #: CR 701.67c's own words, "whenever a player waterbends", read off however
 #: the condition actually names the bending verbs - a bare "you waterbend"
@@ -3254,6 +3280,9 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
     bending = _bending_events_named(lowered)
     if bending:
         return bending
+    day_night = _day_night_events_named(lowered)
+    if day_night:
+        return day_night
     return frozenset()
 
 
@@ -3497,6 +3526,12 @@ def _unread_condition_matches(
         # own player has to be the ability's controller, exactly like every
         # other "whenever you `<verb>`" condition this module reads.
         return event.event in bending_events and event.player == controller
+
+    day_night_events = _day_night_events_named(condition)
+    if day_night_events:
+        # CR 731.1a: the game's own designation changed - nobody's, so there
+        # is no player or subject to compare.
+        return event.event in day_night_events
 
     return False
 
@@ -5114,13 +5149,12 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
                 split, card.name, legendary=Supertype.LEGENDARY in card.supertypes
             ):
                 for leaves_split in _expand_enters_or_leaves(enters_split):
-                    expanded.extend(
-                        _expand_enters_or_dies(
-                            leaves_split,
-                            card.name,
-                            legendary=Supertype.LEGENDARY in card.supertypes,
-                        )
-                    )
+                    for dies_split in _expand_enters_or_dies(
+                        leaves_split,
+                        card.name,
+                        legendary=Supertype.LEGENDARY in card.supertypes,
+                    ):
+                        expanded.extend(_expand_enters_or_transforms_into(dies_split))
     return expanded + keyword_triggered_abilities(card)
 
 
@@ -5173,6 +5207,40 @@ def _expand_attacks_or_blocks(ability: TriggeredAbility) -> list[TriggeredAbilit
 #: would never see its own attack trigger. "this `<kind>`", the identical
 #: open read `_ATTACKS_OR_BLOCKS_RE` takes just above.
 _ENTERS_OR_ATTACKS_RE = re.compile(r"^this (?P<kind>[a-z]+) enters or attacks$", re.IGNORECASE)
+
+#: "Whenever this creature enters or transforms into `<face>`, ..." - Brutal
+#: Cathar's and Huntmaster of the Fells' own condition. CR 603.1b: "A
+#: triggered ability may have more than one trigger condition";
+#: `_trigger_event` (`machines/abilities.py`) reads "enters" first and
+#: stops, so the CR 701.27e transform half was silently dropped.
+_ENTERS_OR_TRANSFORMS_INTO_RE = re.compile(
+    r"^this (?P<kind>[a-z]+) enters or (?P<transforms>transforms into .+)$", re.IGNORECASE
+)
+
+
+def _expand_enters_or_transforms_into(ability: TriggeredAbility) -> list[TriggeredAbility]:
+    """One "enters or transforms into `<face>`" ability becomes two: the
+    entering half (CR 603.6a) and the "transforms into" half (CR 701.27e),
+    each matched by its own existing `TriggerEvent` reader. Anything else
+    passes through unchanged, singleton-wrapped."""
+    match = _ENTERS_OR_TRANSFORMS_INTO_RE.match(ability.condition.strip())
+    if match is None:
+        return [ability]
+    kind = match.group("kind").lower()
+    return [
+        ability.model_copy(
+            update={
+                "condition": f"this {kind} enters",
+                "event": TriggerEvent.ENTERS_THE_BATTLEFIELD,
+            }
+        ),
+        ability.model_copy(
+            update={
+                "condition": f"this {kind} {match.group('transforms')}",
+                "event": TriggerEvent.TRANSFORMS,
+            }
+        ),
+    ]
 
 
 def _expand_enters_or_attacks(
@@ -5492,7 +5560,8 @@ def granted_triggered_abilities_of(texts: Sequence[str]) -> list[TriggeredAbilit
     for ability in granted:
         for split in _expand_attacks_or_blocks(ability):
             for enters_split in _expand_enters_or_attacks(split):
-                expanded.extend(_expand_enters_or_leaves(enters_split))
+                for leaves_split in _expand_enters_or_leaves(enters_split):
+                    expanded.extend(_expand_enters_or_transforms_into(leaves_split))
     return expanded + granted_keyword_triggered_abilities(texts)
 
 
