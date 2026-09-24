@@ -50,8 +50,10 @@ from pydantic import ConfigDict, Field
 
 from magic_cards_model.phrases import with_indefinite_article
 
+from ..data.subtypes import canonical_subtype
 from ..models.card import Type
 from ..models.card_state import CardState, Counter, TargetRef
+from ..models.mana import ManaCost
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
@@ -63,6 +65,7 @@ from .abilities import (
     unread_keyword_tokens,
 )
 from .decisions import Decision, DecisionKind
+from .designations import designation_holds, split_as_long_as
 from .triggers import ExtraTriggerEvent, GameEvent
 
 #: What a creature may attack besides a player (CR 306.6, 310.5).
@@ -534,6 +537,7 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
 
     return (
         self_card_count_restriction_refusal(game, creature, "attack")
+        or self_control_count_restriction_refusal(game, creature, "attack")
         or _defender_refusal(game, defender, active)
         or group_attack_restriction_refusal(game, creature, defender)
     )
@@ -594,6 +598,190 @@ def self_card_count_restriction_refusal(
         have = _cards_in(game, match["zone"].lower(), creature.controller)
         if have < needed:
             return f'{creature.name} can\'t {action}: "{sentence}" - there are {have} ({rule})'
+    return None
+
+
+# -- costs to attack (CR 508.1h) ----------------------------------------------
+
+#: "Creatures can't attack you unless their controller pays {2} for each
+#: creature they control that's attacking you." (Ghostly Prison, Propaganda,
+#: Windborn Muse) and "creatures can't attack you unless their controller pays
+#: {1} for each of those creatures" (Dain, Lord of the Iron Hills, behind its
+#: enduring-story gate) - CR 508.1h's cost to attack, charged per creature
+#: attacking the permanent's controller. Two wordings of one per-attacker
+#: cost; the "you" is the permanent's controller (CR 109.5).
+_ATTACK_COST_RE = re.compile(
+    r"^creatures can't attack you unless their controller pays (?P<cost>(?:\{[^}]+\})+) "
+    r"for each (?:creature they control that's attacking you|of those creatures)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _attack_cost_match(line: str) -> "tuple[re.Match[str], str | None] | None":
+    """`_ATTACK_COST_RE`'s match for one ability line and the designation
+    that gates it (`machines/designations.py`), or None."""
+    text = line.strip()
+    condition: str | None = None
+    gated = split_as_long_as(text)
+    if gated is not None:
+        condition, text = gated
+    match = _ATTACK_COST_RE.fullmatch(text)
+    if match is None:
+        return None
+    return match, condition
+
+
+def is_attack_cost_line(line: str) -> bool:
+    """Whether a static line is a per-attacker cost to attack its controller
+    (CR 508.1h) - what `support.py` counts handled."""
+    return _attack_cost_match(line) is not None
+
+
+@dataclass(frozen=True)
+class AttackCost:
+    """One permanent's per-creature cost to attack its controller."""
+
+    source: CardState
+    cost: ManaCost
+    sentence: str
+
+
+def attack_costs_against(game: "Game", defender: TargetRef) -> list[AttackCost]:
+    """The costs each creature attacking `defender` must pay (CR 508.1h),
+    one per permanent that charges it - read off the computed board (CR
+    613.5, CR 611.3a) at the moment asked, a designation gate checked
+    against the charging permanent's controller. An attack on a planeswalker
+    or battle is not an attack on "you", and costs nothing here."""
+    if not defender.is_player or defender.username is None:
+        return []
+    board = game.computed_board()
+    costs: list[AttackCost] = []
+    for source in game.battlefield:
+        characteristics = board.of(source)
+        if characteristics.controller != defender.username:
+            continue
+        for line in characteristics.abilities:
+            if "can't attack you unless" not in line.lower():
+                continue
+            found = _attack_cost_match(line)
+            if found is None:
+                continue
+            match, condition = found
+            if condition is not None and not designation_holds(
+                condition, game.player(defender.username)
+            ):
+                continue
+            costs.append(AttackCost(source, ManaCost.parse(match["cost"]), line.strip()))
+    return costs
+
+
+def total_attack_cost(
+    game: "Game", attacks: "list[tuple[CardState, TargetRef]]"
+) -> tuple[ManaCost, list[str]]:
+    """CR 508.1h's total cost to attack for a declaration, and a line per
+    charge naming what it is for. A player "is not required to pay" it
+    (CR 508.1d) - `most_obedient_attack` skips a defender that charges."""
+    total = ManaCost.parse("")
+    reasons: list[str] = []
+    for creature, defender in attacks:
+        for charge in attack_costs_against(game, defender):
+            total = total.plus(charge.cost)
+            reasons.append(f"{creature.name}: {charge.cost} ({charge.source.name})")
+    return total, reasons
+
+
+#: A creature's own "can't attack [or block] unless you control `<count>`
+#: `<quality>`" - Chief Warg's Company's "This creature can't attack unless
+#: you control two or more other Wolves.", Mouser Mark III's and Steelclad
+#: Serpent's "... unless you control another artifact.", Gadrak, the Crown-
+#: Scourge's "... unless you control four or more artifacts." and War
+#: Falcon's "... unless you control a Knight or a Soldier." CR 508.1c/509.1b's
+#: "can't attack/block unless some condition is met", the condition a count
+#: of the creature's controller's own permanents.
+_SELF_CANT_UNLESS_CONTROL_RE = re.compile(
+    r"\bcan't (?P<what>attack or block|attack|block) unless you control "
+    rf"(?:(?P<article>an?|another)|(?P<count>{COUNT}) or more(?P<other> other)?) "
+    r"(?P<quality>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _control_quality(quality: str) -> "list[tuple[Type | None, str | None]] | None":
+    """ "Wolves" -> [(None, "wolf")]; "artifacts" -> [(ARTIFACT, None)];
+    "Knight or a Soldier" -> two alternatives. Each word a card type (CR
+    205.2a) or a subtype (CR 205.3), singular or plural - or None for anything
+    else ("creature with power 4 or greater"), which restricts nothing rather
+    than guessing."""
+    alternatives: list[tuple[Type | None, str | None]] = []
+    for part in re.split(r"\s+or\s+(?:an?\s+)?", quality.strip()):
+        word = part.strip()
+        if " " in word or not word:
+            return None
+        lowered = word.lower()
+        card_type = next(
+            (t for t in Type if lowered in (t.value.lower(), t.value.lower() + "s")), None
+        )
+        if card_type is not None:
+            alternatives.append((card_type, None))
+            continue
+        subtype = canonical_subtype(word)
+        if subtype is None:
+            return None
+        alternatives.append((None, subtype))
+    return alternatives or None
+
+
+def _self_control_count_match(text: str) -> "tuple[re.Match[str], int, list] | None":
+    match = _SELF_CANT_UNLESS_CONTROL_RE.search(text.strip())
+    if match is None:
+        return None
+    needed = 1 if match["article"] else parse_count(match["count"], article=False)
+    quality = _control_quality(match["quality"])
+    if needed is None or quality is None:
+        return None
+    return match, needed, quality
+
+
+def is_self_control_count_restriction_line(text: str) -> bool:
+    """Whether a static line is `_SELF_CANT_UNLESS_CONTROL_RE`'s shape with a
+    readable count and quality - what `support.py` counts handled."""
+    return _self_control_count_match(text) is not None
+
+
+def self_control_count_restriction_refusal(
+    game: "Game", creature: CardState, action: str
+) -> str | None:
+    """Why this creature's own "can't `action` unless you control `<count>`
+    [other] `<quality>`" stops it now, or None (CR 508.1c for "attack", CR
+    509.1b for "block"). Read off its computed abilities and the computed
+    board (CR 613.5), counted at the moment asked (CR 611.3a); "another" and
+    "other" leave the creature itself out of its own count."""
+    subjects = _self_reference_alternatives(creature)
+    subject = re.compile(rf"^(?:{'|'.join(re.escape(name) for name in subjects)})\b", re.IGNORECASE)
+    rule = "CR 508.1c" if action == "attack" else "CR 509.1b"
+    for sentence in _computed_ability_sentences(creature, game):
+        found = _self_control_count_match(sentence)
+        if found is None or not subject.search(sentence):
+            continue
+        match, needed, quality = found
+        if action not in match["what"].lower().split(" or "):
+            continue
+        excludes_self = (match["article"] or "").lower() == "another" or bool(match["other"])
+        board = game.computed_board()
+        have = 0
+        for permanent in game.permanents_controlled_by(creature.controller or ""):
+            if excludes_self and permanent.id == creature.id:
+                continue
+            chars = board.of(permanent)
+            subtypes = {subtype.lower() for subtype in chars.subtypes}
+            if any(
+                (card_type is None or card_type in chars.types)
+                and (subtype is None or subtype in subtypes)
+                for card_type, subtype in quality
+            ):
+                have += 1
+        if have < needed:
+            return f'{creature.name} can\'t {action}: "{sentence}" - you control {have} ({rule})'
     return None
 
 
@@ -1548,6 +1736,9 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
     self_restriction = self_block_restriction_refusal(
         game, blocker, attacker
     ) or self_card_count_restriction_refusal(game, blocker, "block")
+    self_restriction = self_restriction or self_control_count_restriction_refusal(
+        game, blocker, "block"
+    )
     if self_restriction is not None:
         return self_restriction
     if looks_like_unparsed_self_block_restriction(blocker, game) and not any(
@@ -2220,6 +2411,11 @@ def most_obedient_attack(game: "Game", creature: CardState) -> tuple[TargetRef |
     for defender in attackable_defenders(game, game.turn.active_player):
         if attack_refusal(game, creature, defender) is not None:
             continue
+        if attack_costs_against(game, defender):
+            # CR 508.1d: "If a creature can't attack unless a player pays a
+            # cost, that player is not required to pay that cost" - an
+            # attack that would cost something obeys nothing it must.
+            continue
         count = attack_requirements_obeyed(game, creature, defender)
         if best is None or count > best_count:
             best, best_count = defender, count
@@ -2273,8 +2469,9 @@ def unobeyed_attack_requirement(
     attacking its goader while another player could be attacked). In a
     two-player game the goader is the only player, so "a player other than"
     the goader cannot be obeyed and attacking the goader is the maximum.
-    No "can't attack unless a player pays" cost is modelled, so CR 508.1d's
-    unpaid-cost clause has nothing to exempt.
+    CR 508.1d's unpaid-cost clause is `most_obedient_attack`'s: a defender
+    whose attack costs something (`attack_costs_against`) is never the best
+    attack a holder is held to.
     """
     if game.turn is None:
         return None

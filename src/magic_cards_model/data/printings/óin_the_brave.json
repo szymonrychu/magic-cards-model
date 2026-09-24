@@ -1,0 +1,145 @@
+{
+  "object": "card",
+  "id": "9984b9ef-e81c-48f4-aa33-0504171a2d3c",
+  "oracle_id": "a25ba5cc-6ff8-4215-b70d-7e86e15e3c1a",
+  "multiverse_ids": [],
+  "resource_id": "624FA1440A6F03BE89D5EE7F7A854D0AABE9BBFF8DDAF9DB1E3D14EC09F5B6CB",
+  "mtgo_id": 154146,
+  "arena_id": 103484,
+  "tcgplayer_id": 709505,
+  "cardmarket_id": 900630,
+  "name": "\u00d3in the Brave",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/9984b9ef-e81c-48f4-aa33-0504171a2d3c",
+  "scryfall_uri": "https://scryfall.com/card/hob/106/%C3%B3in-the-brave?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-31T11:10:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.jpg?1785496200",
+    "normal": "https://cards.scryfall.io/normal/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.jpg?1785496200",
+    "large": "https://cards.scryfall.io/large/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.jpg?1785496200",
+    "png": "https://cards.scryfall.io/png/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.png?1785496200",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.jpg?1785496200",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.jpg?1785496200",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.webp?1785496200",
+    "grid": "https://cards.scryfall.io/grid/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.webp?1785496200",
+    "display": "https://cards.scryfall.io/display/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.webp?1785496200",
+    "art": "https://cards.scryfall.io/art/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.webp?1785496200",
+    "crop": "https://cards.scryfall.io/crop/front/9/9/9984b9ef-e81c-48f4-aa33-0504171a2d3c.webp?1785496200"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Dwarf Warrior",
+  "oracle_text": "Storied (If you control three or more artifacts, legendaries, and/or Sagas, you have an enduring story for the rest of the game.)\nAs long as you have an enduring story, \u00d3in gets +1/+0 and has haste.\n{1}, {T}, Discard a card: Draw a card.",
+  "power": "1",
+  "toughness": "3",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Storied"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9984b9ef-e81c-48f4-aa33-0504171a2d3c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa25ba5cc-6ff8-4215-b70d-7e86e15e3c1a&unique=prints",
+  "collector_number": "106",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "When the heart of a Dwarf is wakened by gold, he grows suddenly bold and fierce.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Colin Boyer",
+  "artist_ids": [
+    "9c201dbe-db56-429a-87e6-189ea70c2632"
+  ],
+  "illustration_id": "268d4735-ccc1-43af-83f4-dd40a6d7ad72",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 12127,
+  "preview": {
+    "source": "RobertRedBeardMTG",
+    "source_uri": "https://www.instagram.com/p/DbVtsM5jd2K/?igsh=MXBma2VybTM4cXozcA==",
+    "previewed_at": "2026-07-30"
+  },
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.04",
+    "eur_foil": "0.11",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3D%25C3%2593in%2Bthe%2BBrave",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3D%25C3%2593in%2Bthe%2BBrave",
+    "edhrec": "https://edhrec.com/route/?cc=%C3%93in+the+Brave"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709505%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900630&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154146?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

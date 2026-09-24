@@ -79,6 +79,7 @@ from .cost import (
 )
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import anaphoric_delayed_trigger
+from .designations import designation_holds, split_as_long_as
 from .layers import (
     ComputedBoard,
     ContinuousEffect,
@@ -1375,6 +1376,10 @@ class KeywordActivation(EngineModel):
     twice when both the resolver and `resolve` know how to run it."""
     result: Any = Field(default=None, exclude=True, repr=False)
     """Whatever the effect returned, kept for the caller that asked."""
+    free_equip_from: str | None = None
+    """The permanent whose "you may pay {0} rather than pay the equip cost of
+    the first equip ability you activate ..." this equip activation took
+    (`free_first_equip_source`, CR 118.9), or None for the printed cost."""
     generic_effect: bool = False
     """True for a printed, non-keyword activated ability (CR 602.1) whose
     effect is whatever `machines/effects.py` already makes of its own text -
@@ -1580,6 +1585,10 @@ class KeywordActivation(EngineModel):
             keyword_activation=None if self.generic_effect else self,
         )
         self.game.stack.append(self.on_stack)
+        if self.keyword == "Equip":
+            # "the first equip ability you activate each turn" counts this one
+            # whichever cost it paid (`free_first_equip_source`).
+            self.game.record_turn_fact(ACTIVATED_EQUIP_FACT, self.player)
         self._emit_activation_events()
         self.game.put_triggers_on_stack()  # CR 117.3c hands priority straight back
         return self.on_stack
@@ -2152,8 +2161,77 @@ def _equip_quality_of(raw: str) -> str | None:
     return match.group("quality").strip() if match else None
 
 
+#: "You may pay {0} rather than pay the equip cost of the first equip ability
+#: you activate each turn." (Bruenor Battlehammer; Kili the Resourceful behind
+#: its enduring-story gate) and "... during each of your turns." (Forge
+#: Anew) - an alternative cost for an activated ability (CR 118.9's "You may
+#: [action] rather than pay ...", here the equip ability's CR 702.6a
+#: "[Cost]"), once per turn.
+_FREE_FIRST_EQUIP_RE = re.compile(
+    r"^you may pay \{0\} rather than pay the equip cost of the first equip ability you "
+    r"activate (?P<when>each turn|during each of your turns)\.?$",
+    re.IGNORECASE,
+)
+
+#: `Game.turn_facts`' key for "has activated an equip ability this turn" -
+#: what "the first equip ability you activate each turn" counts, whichever
+#: cost that activation paid.
+ACTIVATED_EQUIP_FACT = "activated_equip"
+
+
+def _free_first_equip_match(line: str) -> "tuple[re.Match[str], str | None] | None":
+    text = line.strip()
+    condition: str | None = None
+    gated = split_as_long_as(text)
+    if gated is not None:
+        condition, text = gated
+    match = _FREE_FIRST_EQUIP_RE.fullmatch(text)
+    return None if match is None else (match, condition)
+
+
+def is_free_first_equip_line(line: str) -> bool:
+    """Whether a static line is `_FREE_FIRST_EQUIP_RE`'s permission, gated or
+    not - what `support.py` counts handled."""
+    return _free_first_equip_match(line) is not None
+
+
+def free_first_equip_source(game: Any, player: str) -> CardState | None:
+    """The permanent whose "you may pay {0} rather than pay the equip cost of
+    the first equip ability you activate ..." applies to `player`'s next
+    equip activation right now, or None.
+
+    None once `player` has activated any equip ability this turn
+    (`ACTIVATED_EQUIP_FACT`); a "during each of your turns" permission only
+    on `player`'s own turn; a designation gate (`machines/designations.py`)
+    only while `player` holds it. Read off the computed board (CR 613.5), so
+    a permanent that lost the ability grants nothing.
+    """
+    if game.turn_fact_holds(ACTIVATED_EQUIP_FACT, player):
+        return None
+    board = game.computed_board()
+    for permanent in game.permanents_controlled_by(player):
+        for line in board.of(permanent).abilities:
+            found = _free_first_equip_match(line)
+            if found is None:
+                continue
+            match, condition = found
+            if condition is not None and not designation_holds(condition, game.player(player)):
+                continue
+            if match["when"].lower() == "during each of your turns" and (
+                game.turn is None or game.turn.active_player != player
+            ):
+                continue
+            return permanent
+    return None
+
+
 def equip_activation(
-    game: Any, equipment: CardState, target: CardState, player: str
+    game: Any,
+    equipment: CardState,
+    target: CardState,
+    player: str,
+    *,
+    pay_zero: bool = True,
 ) -> KeywordActivation:
     """Build the activation for an Equipment's equip ability (CR 702.6a).
 
@@ -2196,7 +2274,9 @@ def equip_activation(
     )
     if candidates and chosen is None:
         raise ValueError(next(refusal for refusal in refusals if refusal is not None))
-    activation = unannounced_equip_activation(game, equipment, player, ability=chosen)
+    activation = unannounced_equip_activation(
+        game, equipment, player, ability=chosen, pay_zero=pay_zero
+    )
     profile_for_text(EQUIP_EFFECT).check([target], player, game, source_id=equipment.id)
     # CR 702.16b: the equip ability is "from a source with the stated quality"
     # whenever the Equipment has it, and a bare-text profile carries no source
@@ -2207,6 +2287,10 @@ def equip_activation(
     activation.targets = [TargetRef.to_card(target)]
     ability = chosen or _keyword(equipment.card, "equip")
     reduction = ability.cost_reduction if ability is not None else None
+    if activation.free_equip_from is not None:
+        # CR 118.9: the alternative cost replaces the printed cost whole, so
+        # there is nothing left for a "costs [N] less" to reduce.
+        reduction = None
     if reduction is not None and reduction.target_quality is not None:
         amount = target_cost_reduction_amount(reduction, target, game)
         if amount is None:
@@ -2230,13 +2314,22 @@ def equip_activation(
 
 
 def unannounced_equip_activation(
-    game: Any, equipment: CardState, player: str, *, ability: KeywordAbility | None = None
+    game: Any,
+    equipment: CardState,
+    player: str,
+    *,
+    ability: KeywordAbility | None = None,
+    pay_zero: bool = True,
 ) -> KeywordActivation:
     """An equip activation with no target announced yet: its cost, timing and
     rule, for a caller that asks about the activation before choosing
     (`legal_actions`). Never put this on the stack; `equip_activation` is the
     one that announces a target. `ability` picks one of several printed equip
-    abilities (CR 702.6c); the first printed one otherwise."""
+    abilities (CR 702.6c); the first printed one otherwise.
+
+    `pay_zero` is the player's "you may" on a `free_first_equip_source`
+    permission (CR 118.9's alternative cost): taken by default whenever one
+    applies, `False` to pay the printed cost instead."""
     ability = ability or _keyword(equipment.card, "equip")
     if ability is None:
         raise ValueError(f"{equipment.name} has no equip ability ({KeywordRule.EQUIP})")
@@ -2246,6 +2339,9 @@ def unannounced_equip_activation(
             f"{equipment.name}'s equip cost {ability.cost!r} could not be read, "
             f"so it cannot be paid"
         )
+    free_from = free_first_equip_source(game, player) if pay_zero and game is not None else None
+    if free_from is not None:
+        cost = TotalCost(mana=ManaCost.parse("{0}"))
     return KeywordActivation(
         card=equipment,
         player=player,
@@ -2256,6 +2352,7 @@ def unannounced_equip_activation(
         sorcery_only=True,
         ability=_synthetic_ability(ability, cost_text=ability.cost or "", effect=EQUIP_EFFECT),
         game=game,
+        free_equip_from=free_from.name if free_from is not None else None,
     )
 
 
@@ -2975,6 +3072,74 @@ def grant_the_citys_blessing(game: Any) -> list[str]:
         player.has_citys_blessing = True
         blessed.append(player.username)
     return blessed
+
+
+_STORIED_LINE = re.compile(r"^storied\b", re.IGNORECASE)
+
+
+def _has_computed_storied(board: ComputedBoard, permanent: CardState) -> bool:
+    """Whether this permanent currently has storied (CR 613.5), off `board` -
+    the same first-word line match `_has_computed_ascend` makes, so a
+    permanent stripped of its abilities in layer 6 (CR 613.1f) has none."""
+    try:
+        abilities = board.of(permanent).abilities
+    except KeyError:
+        return any(keyword.lower() == "storied" for keyword in permanent.card.keywords)
+    return any(_STORIED_LINE.match(line) for line in abilities)
+
+
+def _counts_toward_storied(board: ComputedBoard, permanent: CardState) -> bool:
+    """CR 702.195a's "permanents that are artifacts, Sagas, and/or legendary",
+    read off the computed characteristics - one permanent counts once however
+    many of the three it is."""
+    try:
+        chars = board.of(permanent)
+        types, subtypes, supertypes = chars.types, chars.subtypes, chars.supertypes
+    except KeyError:
+        types, subtypes = permanent.types, permanent.subtypes
+        supertypes = permanent.card.supertypes
+    return (
+        Type.ARTIFACT in types
+        or Supertype.LEGENDARY in supertypes
+        or any(subtype.lower() == "saga" for subtype in subtypes)
+    )
+
+
+def grant_enduring_stories(game: Any) -> list[str]:
+    """CR 702.195a: "Storied is a static ability. It means 'Any time you
+    control three or more permanents that are artifacts, Sagas, and/or
+    legendary and you don't have an enduring story, you have an enduring story
+    for the rest of the game.'"
+
+    Ascend's twin (`grant_the_citys_blessing`), and run from the same two
+    places for the same reasons: `Game.emit` before it matches any trigger -
+    CR 702.195c: "After a player gets an enduring story, continuous effects
+    are reapplied before the game checks to see if the game state or
+    preceding events have matched any trigger conditions" - and the
+    state-based pass, for a change no event announces.
+
+    `Player.has_enduring_story` is CR 702.195b's designation: only ever set,
+    and a player who already has it is skipped. Storied and the qualifying
+    types are both read off the computed board (CR 613.5), which is computed
+    only once some player without the story controls three permanents.
+    """
+    granted: list[str] = []
+    board: ComputedBoard | None = None
+    for player in game.players_in_game:
+        if player.has_enduring_story:
+            continue
+        permanents = game.permanents_controlled_by(player.username)
+        if len(permanents) < 3:
+            continue
+        if board is None:
+            board = game.computed_board()
+        if not any(_has_computed_storied(board, permanent) for permanent in permanents):
+            continue
+        if sum(1 for permanent in permanents if _counts_toward_storied(board, permanent)) < 3:
+            continue
+        player.has_enduring_story = True
+        granted.append(player.username)
+    return granted
 
 
 def ascend_as_a_spell_resolves(game: Any, spell: CardState) -> bool:

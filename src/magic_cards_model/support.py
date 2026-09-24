@@ -63,10 +63,12 @@ from magic_cards_model.machines.casting import (
 from magic_cards_model.machines.casting_restrictions import reads_player_rule_static_line
 from magic_cards_model.machines.combat import (
     Keyword,
+    is_attack_cost_line,
     is_attack_requirement_line,
     is_blocked_by_at_most_one_line,
     is_group_attack_restriction_line,
     is_self_card_count_restriction_line,
+    is_self_control_count_restriction_line,
 )
 from magic_cards_model.machines.companion import reads_companion_line
 from magic_cards_model.machines.cost import (
@@ -793,6 +795,12 @@ def executed_keywords(printing: Card) -> dict[str, str]:
             "machines/keywords.py (has_ascend, _has_computed_ascend, "
             "ascend_as_a_spell_resolves, CR 702.131)"
         )
+
+    # Storied (CR 702.195a) is ascend's twin: a static ability granting the
+    # enduring story designation (CR 702.195b), which every "as long as you
+    # have an enduring story" rider reads (`machines/designations.py`).
+    if any(k.lower() == "storied" for k in printing.keywords):
+        found["storied"] = "machines/keywords.py (grant_enduring_stories, CR 702.195)"
 
     # Explore (CR 701.44a: "Certain spells and abilities instruct a
     # permanent to explore.") is the bare-word keyword-action shape, read by
@@ -1724,6 +1732,18 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if is_self_card_count_restriction_line(text):
         # CR 508.1c / 509.1b: `combat.self_card_count_restriction_refusal`
         # refuses the attack or block while the zone holds too few cards.
+        return HANDLED
+    if is_self_control_count_restriction_line(text):
+        # CR 508.1c / 509.1b: `combat.self_control_count_restriction_refusal`
+        # refuses the attack or block while you control too few of the type.
+        return HANDLED
+    if is_attack_cost_line(text):
+        # CR 508.1h: `Game._pay_attack_costs` charges it on every declaration
+        # (`combat.total_attack_cost`), gated on a designation or not.
+        return HANDLED
+    if keyword_machine.is_free_first_equip_line(text):
+        # CR 118.9 / CR 702.6a: `keywords.free_first_equip_source` prices the
+        # first equip activation each turn at {0}.
         return HANDLED
     if is_additional_trigger_line(text):
         # CR 603.2d: `triggers.additional_trigger_times` multiplies what an

@@ -164,6 +164,7 @@ from .delayed import (
     return_subject_to_hand,
     sacrificed_by_its_controller,
 )
+from .designations import designation_holds, split_if
 from .layers import (
     BASIC_LAND_TYPES,
     CLOSED_SUBTYPE_LISTS,
@@ -21435,6 +21436,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     damage_to_that_spells_controller = _parse_damage_to_that_spells_controller_clause(effect_text)
     if damage_to_that_spells_controller is not None:
         return damage_to_that_spells_controller
+    discard_hand_draw_x = _parse_discard_hand_draw_x_clause(effect_text)
+    if discard_hand_draw_x is not None:
+        return discard_hand_draw_x
     pump_per_discard_then_delayed_draw = _parse_pump_per_discard_then_delayed_draw_clause(
         effect_text
     )
@@ -34537,6 +34541,63 @@ def _parse_damage_to_that_spells_controller_clause(text: str) -> AbilityEffect |
             return
         controller = game.controller_of(spell)
         game.deal_damage(controller, amount, source=ability.source_or_last_known(game))
+
+    return effect
+
+
+#: "You may discard your hand. Draw X cards, where X is the number of cards
+#: discarded this way. If you have an enduring story, Balin deals X damage to
+#: each opponent." (Balin, Loremaster) - one CR 608.2c sequence: the optional
+#: discard of the whole hand (CR 701.9a, CR 608.2d), a draw of exactly what
+#: that discard moved, and an optional rider behind a designation
+#: (`machines/designations.py`, checked as it is reached) dealing that same X
+#: to each opponent (CR 120.3a). The rider's subject is the ability's own
+#: source, whatever name it prints.
+_DISCARD_HAND_DRAW_X_RE = re.compile(
+    r"^you may discard your hand\.\s*"
+    r"draw x cards, where x is the number of cards discarded this way"
+    r"(?:\.\s*(?P<rider>if [^,]+, [^,.]+? deals x damage to each opponent))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_discard_hand_draw_x_clause(text: str) -> AbilityEffect | None:
+    """`_DISCARD_HAND_DRAW_X_RE`'s shape, or None - an unreadable rider
+    condition reads nothing rather than dropping the rider."""
+    match = _DISCARD_HAND_DRAW_X_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    condition: str | None = None
+    if match.group("rider") is not None:
+        split = split_if(match.group("rider"))
+        if split is None:
+            return None
+        condition = split[0]
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        discarded = 0
+        if game.may(
+            controller,
+            "discard your hand",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            hand = list(controller.hand)
+            if hand:
+                discarded = len(
+                    game.discard_cards(controller.username, hand, source=ability.source_name)
+                )
+        # CR 608.2c: X is what the discard actually moved - none when declined.
+        game.record_count(discarded)
+        if discarded:
+            game.draw_cards(controller.username, discarded)
+        if condition is None or not discarded:
+            return
+        if designation_holds(condition, controller):
+            source = ability.source_or_last_known(game)
+            for opponent in _opponents(game, ability.controller):
+                game.deal_damage(opponent, discarded, source=source)
 
     return effect
 

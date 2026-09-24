@@ -893,3 +893,26 @@ def test_a_snapshot_written_before_the_delve_exile_link_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_DELVE_EXILE_LINK}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before C01-T1's `Player.has_enduring_story`.
+_SCHEMA_VERSION_BEFORE_ENDURING_STORY = 67
+
+
+def test_the_enduring_story_bump_moved_the_version_past_sixty_seven() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_ENDURING_STORY
+
+
+def test_a_snapshot_written_before_the_enduring_story_is_refused() -> None:
+    """A version-67 dump is refused rather than decoded as current: its
+    players carry no `has_enduring_story`, so a player who had already met
+    CR 702.195a's count would decode without the designation every "as long
+    as you have an enduring story" static reads."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_ENDURING_STORY
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_ENDURING_STORY}",
+    ):
+        Game.model_validate(dumped)

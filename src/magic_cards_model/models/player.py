@@ -299,6 +299,15 @@ class Player(EngineModel):
     who drops back under ten permanents keeps it, and this field is never
     cleared on a new turn the way `life_gained_this_turn` is."""
 
+    has_enduring_story: bool = False
+    """CR 702.195b: "Enduring story is a designation that has no rules meaning
+    other than to act as a marker that other rules and effects can identify."
+    Granted by *storied* (CR 702.195a's "any time", through `machines.
+    keywords.grant_enduring_stories`, which `Game.emit` runs before matching
+    triggers) once a player controls three or more permanents that are
+    artifacts, Sagas, and/or legendary. Set-only, like the city's blessing:
+    "for the rest of the game", and nothing in the rules takes it away."""
+
     ring_tempted_count: int = 0
     """How many times the Ring has tempted this player this game (CR 701.54).
 

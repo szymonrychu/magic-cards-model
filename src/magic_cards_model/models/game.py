@@ -180,6 +180,7 @@ from ..machines.keywords import (
     aura_state_based_actions,
     enters_transformed_at_night,
     equipment_state_based_actions,
+    grant_enduring_stories,
     grant_the_citys_blessing,
     has_miracle,
     has_paradigm,
@@ -3289,7 +3290,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 67
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 68
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4156,6 +4157,12 @@ class Game(EngineModel):
     integration): `CostComponent` gained `link_to_permanent_id` (CR 607.2q),
     carried on a pending ability's own `CostPayment.components` - the first
     bullet.
+
+    Bumped 67 -> 68 (C01-T1, storied): `Player` gained `has_enduring_story`
+    (CR 702.195b's designation) - the first bullet. A version-67 board with
+    three storied qualifiers has no story where a version-68 one does, and
+    every "as long as you have an enduring story" static reads it - the
+    second.
     """
 
     @model_validator(mode="before")
@@ -8715,6 +8722,10 @@ class Game(EngineModel):
             # below reads the event, and before the rest of a resolving effect
             # asks about it.
             grant_the_citys_blessing(self)
+            # CR 702.195a's "any time" and CR 702.195c's "before the game
+            # checks ... trigger conditions" - storied's enduring story, the
+            # same timing as the city's blessing above.
+            grant_enduring_stories(self)
             sources: list[CardState] = list(self.battlefield)
             # CR 113.6m: "An ability whose cost or effect specifies that it moves
             # the object it's on out of a particular zone functions only in that
@@ -16107,6 +16118,11 @@ class Game(EngineModel):
             # ..." read their controller's, neither of which stands on the
             # battlefield as a characteristic the layer engine could see.
             life_by_player={player.username: player.life for player in self.players_in_game},
+            # CR 702.195b's enduring story, which "As long as you have an
+            # enduring story, ..." statics read off their controller.
+            enduring_story_players=frozenset(
+                player.username for player in self.players_in_game if player.has_enduring_story
+            ),
             mana_cost_by_id={
                 permanent.id: permanent.mana_cost
                 for permanent in self.battlefield
@@ -16335,6 +16351,8 @@ class Game(EngineModel):
         # here too for a change no event announces. See
         # `machines/keywords.grant_the_citys_blessing`.
         grant_the_citys_blessing(self)
+        # CR 702.195a (storied): the enduring story, checked the same way.
+        grant_enduring_stories(self)
 
     def _roles_beyond_the_newest(self, board: ComputedBoard) -> list[CardState]:
         """The Roles CR 704.5z puts into their owners' graveyards.
@@ -16645,7 +16663,12 @@ class Game(EngineModel):
         """The reason a declaration would be refused, for a scenario to assert on."""
         return combat_rules.attack_refusal(self, creature, self.attack_target(defender))
 
-    def declare_attacker(self, creature: CardState, defender: "Targetable | str") -> Attack:
+    def declare_attacker(
+        self,
+        creature: CardState,
+        defender: "Targetable | str",
+        attack_cost_sources: "Sequence[CardState] | None" = None,
+    ) -> Attack:
         """Declare one attacker (CR 508.1). Taps it unless it has vigilance.
 
         The attack triggers whatever watches for it, but nothing goes on the
@@ -16663,9 +16686,60 @@ class Game(EngineModel):
         is wrong for every attacker but the last; see its own docstring.
         """
         self._refuse_if_over()
-        attack = combat_rules.declare_attacker(self, creature, self.attack_target(defender))
-        self._emit_attacks(creature, attack)
+        with self._id_allocator_scope():
+            refusal = combat_rules.attack_refusal(self, creature, self.attack_target(defender))
+            if refusal is not None:
+                raise ValueError(refusal)
+            self._pay_attack_costs([(creature, defender)], attack_cost_sources)
+            attack = combat_rules.declare_attacker(self, creature, self.attack_target(defender))
+            self._emit_attacks(creature, attack)
         return attack
+
+    def _pay_attack_costs(
+        self,
+        attacks: "Sequence[tuple[CardState, Targetable | str]]",
+        sources: "Sequence[CardState] | None" = None,
+    ) -> None:
+        """CR 508.1h-j: determine the total cost to attack, let the active
+        player activate mana abilities for it, and pay it in full - or refuse
+        the whole declaration (CR 508.1: "the game returns to the moment
+        before the declaration") when it cannot be paid, since "Partial
+        payments are not allowed" (CR 508.1j).
+
+        The costs are `combat.total_attack_cost`'s - Ghostly Prison's and
+        Dain, Lord of the Iron Hills' per-creature charges. Mana already in
+        the pool pays first (`CostPayment.for_total` seeds it); the rest is
+        auto-tapped from `sources` (the player's own choice of mana sources),
+        else from every untapped permanent they control that is not being
+        declared as an attacker - CR 508.1f has already tapped those by the
+        time CR 508.1i's mana abilities are activated.
+        """
+        refs = [(creature, self.attack_target(defender)) for creature, defender in attacks]
+        total, reasons = combat_rules.total_attack_cost(self, refs)
+        if not total.symbols:
+            return
+        active = self.active_player.username
+        attacking = {creature.id for creature, _defender in attacks}
+        pool = (
+            list(sources)
+            if sources is not None
+            else [
+                permanent
+                for permanent in self.permanents_controlled_by(active)
+                if permanent.id not in attacking and not permanent.tapped
+            ]
+        )
+        payment = CostPayment.for_total(TotalCost(mana=total), game=self, payer=active)
+        try:
+            payment.auto_tap(pool)
+            payment.pay()
+        except ValueError as error:
+            if payment.step is not CostStep.PAID:
+                payment.cancel()
+            raise ValueError(
+                f"the cost to attack is {total} ({'; '.join(reasons)}) and it cannot be paid: "
+                f"{error} (CR 508.1h, CR 508.1j)"
+            ) from error
 
     def _emit_attacks(self, creature: CardState, attack: "Attack") -> None:
         """Emit one attacker's own `ATTACKS` event (CR 508.3c/d), read against
@@ -16782,7 +16856,11 @@ class Game(EngineModel):
                 declaration.append((creature.id, target))
         return declaration
 
-    def declare_attackers(self, attacks: list[tuple[CardState, "Targetable | str"]]) -> None:
+    def declare_attackers(
+        self,
+        attacks: list[tuple[CardState, "Targetable | str"]],
+        attack_cost_sources: "Sequence[CardState] | None" = None,
+    ) -> None:
         """Declare a whole attack at once, in order (CR 508.1, 508.2b).
 
         CR 508.1a: "the active player... declares [attackers]. This is done
@@ -16813,6 +16891,9 @@ class Game(EngineModel):
                 refusal = combat_rules.attack_refusal(self, creature, self.attack_target(defender))
                 if refusal is not None:
                     raise ValueError(refusal)
+            # CR 508.1h-j: the whole declaration's cost to attack, paid in
+            # full before anyone becomes an attacking creature (CR 508.1k).
+            self._pay_attack_costs(attacks, attack_cost_sources)
             registered = [
                 (
                     creature,
