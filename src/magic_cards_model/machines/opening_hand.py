@@ -90,7 +90,13 @@ from pydantic import ConfigDict
 from ..models.card import Card
 from ..models.card_state import CardState
 from ..snapshot import EngineModel
-from .abilities import AbilityKind, TriggeredAbility, TriggerEvent, TriggerWord
+from .abilities import (
+    AbilityKind,
+    TriggeredAbility,
+    TriggerEvent,
+    TriggerWord,
+    self_normalized_effect_text,
+)
 from .delayed import CreatedTriggeredAbility, DelayedTrigger
 from .triggers import AbilityOnStack
 from .turn import Step
@@ -159,8 +165,18 @@ class OpeningHandNotice(EngineModel):
 #: CR 103.6a, both eras of wording. WOTC shortened "enters the battlefield" to
 #: "enters" in 2024 but this template still says "on the battlefield" in every
 #: printing in the pool; the optional counter clause is Gemstone Caverns'.
+#:
+#: "this card", not "this permanent", is the literal it is matched against:
+#: `read_opening_hand_line` tries the paragraph unnormalized first, then
+#: `self_normalized_effect_text`'s CR 201.5/201.5c rewrite (which turns a
+#: legend's own printed name into "this permanent") - Quicksilver, Brash
+#: Blur's own "If Quicksilver, Brash Blur is in your opening hand, you may
+#: begin the game with him on the battlefield." names itself instead of
+#: saying "this card" the way every other printing in the pool does, and
+#: this template used to be the only reader in the package with no such
+#: fallback at all.
 _BEGIN_ON_BATTLEFIELD = re.compile(
-    r"^If this card is in your opening hand"
+    r"^If (?:this card|this permanent) is in your opening hand"
     r"(?P<restriction> and you're not the starting player)?"
     r", you may begin the game with (?:it|.+?) on the battlefield"
     r"(?: with an? (?P<counter>[\w+/-]+) counter on it)?"
@@ -208,6 +224,17 @@ def read_opening_hand_line(
 
     begin = _BEGIN_ON_BATTLEFIELD.match(line)
     reveal = _REVEAL.match(line)
+    if begin is None and reveal is None:
+        # Quicksilver, Brash Blur's own self-named form - see
+        # `_BEGIN_ON_BATTLEFIELD`'s own docstring. Tried only once the
+        # unnormalized line has already failed both templates, the same
+        # "raw first, normalized fallback" order `effects.py`'s own
+        # `activated_effect_for`/`trigger_effect_for` already use for CR
+        # 201.5's identical self-reference, so a card that already reads
+        # "this card" literally is unaffected.
+        normalized_line = self_normalized_effect_text(card_name, line)
+        if normalized_line != line:
+            begin = _BEGIN_ON_BATTLEFIELD.match(normalized_line)
     if begin is not None:
         action = OpeningHandAction(
             kind=OpeningHandActionKind.BEGIN_ON_BATTLEFIELD,

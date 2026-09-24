@@ -1,0 +1,145 @@
+{
+  "object": "card",
+  "id": "33631d6c-c584-42ff-afe5-2647b5fb321f",
+  "oracle_id": "ac1b6ffc-12a9-4d9c-a9fc-68a839a40738",
+  "multiverse_ids": [],
+  "resource_id": "9A4D2114247DD8F1B419B7016B7277262ABE3205A0F84165354414CBB5FAB046",
+  "mtgo_id": 152197,
+  "arena_id": 104900,
+  "tcgplayer_id": 668456,
+  "cardmarket_id": 886592,
+  "name": "Captain America, Super-Soldier",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/33631d6c-c584-42ff-afe5-2647b5fb321f",
+  "scryfall_uri": "https://scryfall.com/card/msh/9/captain-america-super-soldier?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:36:21Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.jpg?1783902981",
+    "normal": "https://cards.scryfall.io/normal/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.jpg?1783902981",
+    "large": "https://cards.scryfall.io/large/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.jpg?1783902981",
+    "png": "https://cards.scryfall.io/png/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.png?1783902981",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.jpg?1783902981",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.jpg?1783902981",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.webp?1783902981",
+    "grid": "https://cards.scryfall.io/grid/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.webp?1783902981",
+    "display": "https://cards.scryfall.io/display/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.webp?1783902981",
+    "art": "https://cards.scryfall.io/art/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.webp?1783902981",
+    "crop": "https://cards.scryfall.io/crop/front/3/3/33631d6c-c584-42ff-afe5-2647b5fb321f.webp?1783902981"
+  },
+  "mana_cost": "{1}{W}{W}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Soldier Hero",
+  "oracle_text": "First strike\nCaptain America enters with a shield counter on him. (If he would be dealt damage or destroyed, remove a shield counter from him instead.)\nAs long as Captain America has a shield counter on him, you and other Heroes you control have hexproof.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "First strike"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/33631d6c-c584-42ff-afe5-2647b5fb321f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aac1b6ffc-12a9-4d9c-a9fc-68a839a40738&unique=prints",
+  "collector_number": "9",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Anna Podedworna",
+  "artist_ids": [
+    "1874cb2c-f690-475f-a217-c14f11166758"
+  ],
+  "illustration_id": "09ed944f-86a6-4725-83c5-a942342decf7",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 10820,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/news/feature/marvel-super-heroes-preview-prologue",
+    "previewed_at": "2025-12-09"
+  },
+  "prices": {
+    "usd": "3.42",
+    "usd_foil": "5.07",
+    "usd_etched": null,
+    "eur": "2.28",
+    "eur_foil": "2.93",
+    "tix": "0.07"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCaptain%2BAmerica%252C%2BSuper-Soldier",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCaptain%2BAmerica%252C%2BSuper-Soldier",
+    "edhrec": "https://edhrec.com/route/?cc=Captain+America%2C+Super-Soldier"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F668456%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=886592&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152197?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

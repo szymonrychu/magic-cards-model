@@ -65,7 +65,7 @@ from pydantic import ConfigDict
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.subtypes import canonical_subtype, creature_type_vocabulary, subtype_vocabulary
-from ..models.card import Color, Supertype, Type, types_of
+from ..models.card import Color, Layout, Supertype, Type, types_of
 from ..models.card_state import (
     PERMANENT_TYPES,
     CardState,
@@ -7590,6 +7590,23 @@ _TAKE_EXTRA_TURNS_RE = re.compile(
 #: is their next untap step - `Game.players_skipping_next_untap`'s count.
 _SKIP_UNTAP_STEP_OF_THAT_TURN_RE = re.compile(r"skip the untap step of that turn", re.IGNORECASE)
 
+#: "Harness this permanent." (CR 701.64a) - The Mind Stone's own "{5}{W},
+#: {T}: Harness The Mind Stone." (self-normalized before this ever runs, the
+#: same "this permanent" `_COUNTER_ON_SELF_RE` already reads a card's own
+#: printed name as). `<noun>` is any word, matching every other self-
+#: reference shape in this module.
+_HARNESS_SELF_RE = re.compile(r"^harness this \w+\.?$", re.IGNORECASE)
+
+#: "During that turn, power-up abilities can't be activated." (CR 702.193a) -
+#: Kang the Conqueror's own rider on "Take an extra turn after this one.":
+#: "that turn" is the extra turn the previous clause just inserted directly
+#: after this one (CR 500.7), the identical anaphora `_SKIP_UNTAP_STEP_OF_
+#: THAT_TURN_RE` already reads for Savor the Moment's own rider on the same
+#: clause.
+_DURING_THAT_TURN_POWER_UP_RESTRICTED_RE = re.compile(
+    r"^during that turn, power-up abilities can'?t be activated\.?$", re.IGNORECASE
+)
+
 #: The optional "for each `<expr>`" tail - Mastery of the Unseen's "gain 1
 #: life for each creature you control" - is read by `_for_each_multiplier`
 #: below, once, at the moment CR 608.2h fixes the count.
@@ -8823,6 +8840,24 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             skipping[player.username] = skipping.get(player.username, 0) + 1
 
         return skip_that_turns_untap_step
+
+    if _DURING_THAT_TURN_POWER_UP_RESTRICTED_RE.fullmatch(clause):
+
+        def restrict_power_up_next_turn(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            game.power_up_restricted_turns.add(game.turn.turns_taken + 1)
+
+        return restrict_power_up_next_turn
+
+    if _HARNESS_SELF_RE.fullmatch(clause):
+
+        def harness_self(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            permanent = game.find_by_id(UUID(source_id)) if source_id is not None else None
+            if permanent is not None:
+                game.harness(permanent)
+
+        return harness_self
 
     if match := _ADDITIONAL_LAND_PLAY_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
@@ -11885,6 +11920,53 @@ _COUNTER_ON_SELF_RE = re.compile(
     rf"{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
+
+#: "Put `<n1>` `<kind1>` counter(s) and `<n2>` `<kind2>` counter(s) on this
+#: `<noun>`." - Captain Marvel, Earth's Protector's own power-up effect
+#: ("Put a +1/+1 counter and an indestructible counter on Captain Marvel.")
+#: and Quicksilver, Brash Blur's ("Put a +1/+1 counter and a double strike
+#: counter on Quicksilver.") - both keyword counters (CR 122.1a/122.1b),
+#: placed by one instruction (CR 608.2c). Read whole, ahead of
+#: `_CLAUSE_SEPARATOR`'s own bare " and " split, which would otherwise cut
+#: "counter" away from "on this permanent" and leave both fragments
+#: unreadable - neither carries a verb, and neither names a target.
+_TWO_COUNTERS_ON_SELF_RE = re.compile(
+    rf"^put (?P<n1>{COUNT}) (?P<kind1>\+1/\+1|-1/-1|[a-z]+(?: [a-z]+)?) counters? "
+    rf"and (?P<n2>{COUNT}) (?P<kind2>\+1/\+1|-1/-1|[a-z]+(?: [a-z]+)?) counters? "
+    r"on this \w+\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_two_counters_on_self_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_TWO_COUNTERS_ON_SELF_RE`'s shape - see its own docstring.
+
+    Ability-only (CR 122.1: a counter marks a permanent, and a resolving
+    spell is never one) - the same restriction `_parse_put_counters_on_self_
+    clause` already draws for its single-counter shape, and `ability.
+    source(game)` is the identical "this permanent" self-lookup that
+    function and `_parse_self_fights_target_clause` both already use.
+    """
+    if for_spell:
+        return None
+    match = _TWO_COUNTERS_ON_SELF_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    n1 = parse_count(match.group("n1"))
+    n2 = parse_count(match.group("n2"))
+    if n1 is None or n2 is None or n1 <= 0 or n2 <= 0:
+        return None
+    kind1 = _counter_kind(match.group("kind1"))
+    kind2 = _counter_kind(match.group("kind2"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.add_counters(source, kind1, n1)
+        game.add_counters(source, kind2, n2)
+
+    return effect
 
 
 def that_many(game: "Game", stack_object: "StackObject | None" = None) -> int | None:
@@ -15102,6 +15184,101 @@ def _parse_bottom_hand_then_draw_plus_one_clause(text: str) -> Effect | None:
         for state in bottomed:
             controller.move(state, Zone.LIBRARY)
         game.draw_cards(controller.username, len(bottomed) + 1)
+
+    return effect
+
+
+#: Nick Fury, Agent of S.H.I.E.L.D.'s own power-up effect: "Put two +1/+1
+#: counters on this permanent, then look at the top seven cards of your
+#: library. You may put a Hero, Equipment, or Vehicle card from among them
+#: onto the battlefield. If it's a double-faced card, you may transform it.
+#: Put the rest on the bottom of your library in a random order." - the
+#: identical impulsive-look-and-put shape `_LOOK_TOP_N_MAY_BATTLEFIELD_
+#: CREATURE_BONUS_RE` reads for Turntimber Symbiosis, plus a leading
+#: self-counter clause the "then" joins into the same instruction (CR
+#: 608.2c) and a trailing optional transform (CR 701.27a) for the card just
+#: put onto the battlefield. Read whole, ahead of `_CLAUSE_SEPARATOR`'s own
+#: bare ", then "/" and " splits, the same reason every other multi-sentence
+#: shape in this file is. `<quality>` is any comma/"or" list `_quality_
+#: matcher` already reads - Hero, Equipment and Vehicle are not hardcoded
+#: here, only in the card's own printed text this regex captures.
+_COUNTERS_THEN_LOOK_TOP_MAY_BATTLEFIELD_TRANSFORM_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) \+1/\+1 counters? on this \w+, then "
+    rf"look at the top (?P<look_n>{COUNT}) cards? of your library\.\s*"
+    r"you may put an? (?P<quality>[a-z][a-z, ]*?) card from among them onto the battlefield\.\s*"
+    r"if it'?s a double-faced card, you may transform it\.\s*"
+    r"put the rest on the bottom of your library in a random order\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_counters_then_look_top_may_battlefield_transform_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_COUNTERS_THEN_LOOK_TOP_MAY_BATTLEFIELD_TRANSFORM_RE`'s shape - see
+    its own docstring. Ability-only (the leading counter clause names "this
+    permanent", CR 122.1's own permanent-only restriction every other
+    self-counter reader in this file already draws).
+    """
+    if for_spell:
+        return None
+    match = _COUNTERS_THEN_LOOK_TOP_MAY_BATTLEFIELD_TRANSFORM_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    n = parse_count(match.group("n"))
+    look_n = parse_count(match.group("look_n"))
+    quality = match.group("quality").strip()
+    if n is None or look_n is None or n <= 0 or look_n <= 0:
+        return None
+    if not _card_description_is_readable(quality):
+        return None
+    matches_quality = _quality_matcher(quality)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.add_counters(source, Counter.PLUS_ONE, n)
+        controller = game.player(ability.controller)
+        looked = list(controller.library[:look_n])
+        candidates = [state for state in looked if matches_quality(state)]
+        chosen: CardState | None = None
+        if candidates and game.may(
+            controller.username,
+            f"put {with_indefinite_article(quality)} card onto the battlefield",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=(
+                    f"choose {with_indefinite_article(quality)} card to put onto the battlefield"
+                ),
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                cards=tuple(state.id for state in reversed(candidates)),
+            )
+            chosen_ids = game.ask(decision)
+            by_id = {state.id: state for state in candidates}
+            chosen = by_id[chosen_ids[0]]
+        rest = [state for state in looked if state is not chosen]
+        if chosen is not None:
+            put = game.put_onto_battlefield(chosen, controller.username)
+            if put.card.layout in (Layout.TRANSFORM, Layout.MODAL_DFC) and game.may(
+                controller.username,
+                "transform it",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+            ):
+                transform_permanent(game, put)
+        if rest:
+            rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:nick-fury-bottom")  # noqa: S311
+            rng.shuffle(rest)
+            for state in rest:
+                controller.move(state, Zone.LIBRARY)
+            game.shuffles_performed += 1
 
     return effect
 
@@ -24324,6 +24501,145 @@ def _parse_destroy_each_clause(sentence: str) -> TargetedClause | None:
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
         _destroy_matching(game, predicate, source)
+
+    return effect
+
+
+#: Thanos, the Mad Titan's own power-up effect: "Put two +1/+1 counters on
+#: Thanos. Choose odd or even. Destroy each other creature with mana value
+#: of the chosen quality." `pre` is whatever ordinary CR 608.2c instruction
+#: (or instructions) comes before the choose/destroy pair - Thanos's own
+#: counter placement, read the same "any number of earlier clauses" way
+#: `_COUNTER_THRESHOLD_RE`'s own `pre` group already is - so this reads on
+#: its own even for a future printing with no leading clause at all.
+#:
+#: The choice itself is CR 608.2d's, made as the ability resolves - not CR
+#: 614.12a's "as [this] enters" choice `replacement.py::ChoiceKind.ODD_OR_
+#: EVEN`/`CardState.choice` is built for (Gollum, Riddle Master's own "As
+#: Gollum enters, choose odd or even.") - so the answer is read straight
+#: back rather than stashed on the permanent; nothing later in this same
+#: ability needs to ask "the chosen quality" a second time. "Other" is CR
+#: 109.2's exclusion of the ability's own source, spelled out here rather
+#: than reused from `_parse_mass_destroy_predicate` (`_DESTROY_EACH_RE`'s
+#: own qualifier grammar has no "other" of its own to strip).
+_CHOOSE_ODD_OR_EVEN_THEN_DESTROY_RE = re.compile(
+    r"^(?P<pre>(?:[^.]+\.\s+)*?)"
+    r"choose odd or even\.\s*"
+    r"destroy each other (?P<qualifier>.+?) with mana value of the chosen quality\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_choose_odd_or_even_then_destroy_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_CHOOSE_ODD_OR_EVEN_THEN_DESTROY_RE`'s shape - see its own docstring.
+
+    `qualifier` reuses `_parse_mass_type_qualifier` - the same card-type-list
+    reading `_parse_destroy_each_clause` already draws on - so "creature" is
+    read generally, not hardcoded to Thanos's own printing.
+    """
+    match = _CHOOSE_ODD_OR_EVEN_THEN_DESTROY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    pre_text = match.group("pre").strip()
+    pre = _parse_mixed_clauses(pre_text, for_spell=for_spell) if pre_text else []
+    if pre is None:
+        return None
+    type_predicate = _parse_mass_type_qualifier(match.group("qualifier").strip())
+    if type_predicate is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for clause in pre:
+            clause(game, stack_object)
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        controller = game.controller_of(stack_object)
+        source_name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_A_QUALITY,
+            player=controller.username,
+            prompt="choose odd or even",
+            source=source_name,
+            source_id=source_id_of(stack_object),
+            options=("odd", "even"),
+            quality=ChoiceKind.ODD_OR_EVEN.value,
+        )
+        answer = game.ask(decision)
+        assert isinstance(answer, str)
+        wants_even = answer.lower() == "even"
+
+        def predicate(game: "Game", permanent: CardState, src: CardState | None) -> bool:
+            if src is not None and permanent.id == src.id:
+                return False  # CR 109.2: "other" excludes the ability's own source.
+            chars = game.characteristics_of(permanent)
+            if not type_predicate(chars):
+                return False
+            return (int(chars.mana_value) % 2 == 0) == wants_even
+
+        _destroy_matching(game, predicate, source)
+
+    return effect
+
+
+#: Super-Adaptoid's own "enters or attacks" trigger: "choose another target
+#: creature. If that creature has haste and this permanent doesn't, put a
+#: haste counter on this permanent. Do the same for flying, first strike,
+#: double strike, deathtouch, indestructible, lifelink, menace, reach,
+#: trample, and vigilance." - CR 603.3d's targeted triggered ability
+#: (targeted the same way Icy Manipulator's activated "Tap target artifact,
+#: creature, or land." is, just printed inside the effect text rather than
+#: the condition), then one CR 122.1b keyword-counter grant (this module's
+#: own `_counter_kind`, `Game.add_counters`) per keyword the comparison
+#: creature has and this one does not - "haste" first, "Do the same for
+#: `<list>`" repeating the identical comparison for every keyword the list
+#: names. The list is read generally, not hardcoded to the ten this card
+#: happens to print, so a future printing naming a different (CR 122.1b-
+#: legal) subset reads the same way.
+_CHOOSE_CREATURE_COPY_KEYWORDS_RE = re.compile(
+    r"^choose another target creature\.\s*"
+    r"if that creature has (?P<first>[a-z]+(?: [a-z]+)?) and this permanent doesn'?t, "
+    r"put an? (?P=first) counter on this permanent\.\s*"
+    r"do the same for (?P<rest>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_choose_creature_copy_keywords_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_CHOOSE_CREATURE_COPY_KEYWORDS_RE`'s shape - see its own docstring.
+    Ability-only: "this permanent" names a permanent (CR 122.1), the same
+    restriction every self-counter reader in this file already draws.
+    """
+    if for_spell:
+        return None
+    match = _CHOOSE_CREATURE_COPY_KEYWORDS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    keywords = [match.group("first").strip().lower()]
+    for word in _MASS_TYPE_JOIN_RE.sub(", ", match.group("rest")).split(","):
+        word = word.strip().lower()
+        if word:
+            keywords.append(word)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        target = next(
+            (
+                found
+                for found in game.resolve_targets(ability)
+                if isinstance(found, CardState) and found.zone is Zone.BATTLEFIELD
+            ),
+            None,
+        )
+        if target is None:
+            return
+        for keyword in keywords:
+            if has_keyword(target, keyword, game) and not has_keyword(source, keyword, game):
+                game.add_counters(source, keyword, 1)
 
     return effect
 
@@ -46218,6 +46534,36 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # Read whole: "on it" and "those counters" point back at the counter
         # sentence, and the consequence list's commas would split it apart.
         return [counter_threshold]
+    two_counters_on_self = _parse_two_counters_on_self_clause(text, for_spell=for_spell)
+    if two_counters_on_self is not None:
+        # Read whole, ahead of the bare-"and" split, for the identical
+        # reason every other whole-text case above it is - see
+        # `_TWO_COUNTERS_ON_SELF_RE`'s own docstring.
+        return [two_counters_on_self]
+    counters_then_look_top_transform = (
+        _parse_counters_then_look_top_may_battlefield_transform_clause(text, for_spell=for_spell)
+    )
+    if counters_then_look_top_transform is not None:
+        # Read whole, ahead of the ", then "/period split, for the identical
+        # reason - see `_COUNTERS_THEN_LOOK_TOP_MAY_BATTLEFIELD_TRANSFORM_
+        # RE`'s own docstring.
+        return [counters_then_look_top_transform]
+    choose_odd_or_even_then_destroy = _parse_choose_odd_or_even_then_destroy_clause(
+        text, for_spell=for_spell
+    )
+    if choose_odd_or_even_then_destroy is not None:
+        # Read whole: "the chosen quality" in the second sentence is CR
+        # 608.2c anaphora back to the first, which a per-clause parser
+        # cannot resolve alone.
+        return [choose_odd_or_even_then_destroy]
+    choose_creature_copy_keywords = _parse_choose_creature_copy_keywords_clause(
+        text, for_spell=for_spell
+    )
+    if choose_creature_copy_keywords is not None:
+        # Read whole: "that creature" across every "do the same for ..."
+        # repetition is CR 608.2c anaphora back to the first sentence's own
+        # target, which no per-clause parser can resolve alone.
+        return [choose_creature_copy_keywords]
     tap_all_pay_energy_counter_chosen = _parse_tap_all_pay_energy_counter_chosen_whole_text(
         text, for_spell=for_spell
     )
@@ -47842,7 +48188,31 @@ def activated_effect_for(
         substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))
         if substituted is not None:
             return substituted
-    return _ability_effect_or_notice(effect_text)
+    named = _ability_effect_or_notice(effect_text)
+    if named is not None and not getattr(named, "__name__", "").endswith("notice_only"):
+        return named
+    if not legendary:
+        return named
+    # Abomination, Terrifying Titan's power-up rider: "Put a +1/+1 counter
+    # on Abomination. He fights up to one target creature an opponent
+    # controls." - name substitution above turns "Abomination" into "this
+    # permanent" in the first sentence, but the second sentence's own
+    # CR 201.5c self-reference is the gendered pronoun "He", which name
+    # substitution does not touch. `trigger_effect_for`'s own fallback tries
+    # this for a triggered ability's text; an activated ability's power-up
+    # rider is the identical shape and had no equivalent fallback until now.
+    #
+    # `named` is checked for a `..._notice_only` stand-in, not merely for
+    # `None`, and the pronoun attempt is tried whenever it is one: the first
+    # sentence's own self-name substitution ("this permanent") can leave the
+    # *second* sentence's unresolved "He" looking anaphoric rather than
+    # unreadable outright, so a bare `named is not None` check would return
+    # the wrong notice before the pronoun rewrite ever ran.
+    pronoun = legendary_self_pronoun_normalized(effect_text)
+    if pronoun == effect_text:
+        return named
+    pronoun_effect = _ability_effect_or_notice(pronoun)
+    return pronoun_effect if pronoun_effect is not None else named
 
 
 # --------------------------------------------------------------------------
