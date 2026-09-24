@@ -616,7 +616,10 @@ def test_an_unread_condition_is_not_reclassified():
     """
 
     # Caretaker's Talent stood here until S19 read its "When this Class
-    # becomes level 2"; the card is chosen now, never named.
+    # becomes level 2"; the card is chosen now, never named. Round 4 (S28's
+    # cycle/activation events, S29's day and night) read the last in-pool
+    # ones, so Grudge Keeper (Conspiracy, voting - out of every target
+    # format) was added as the out-of-format vehicle.
     def unread(printing) -> bool:
         return any(c.source == "triggered (unread condition)" for c in classify_clauses(printing))
 
