@@ -46,7 +46,7 @@
         "source": "Static Prison"
       }
     ],
-    "fields_changed": ["graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Static Prison@alice#1": {

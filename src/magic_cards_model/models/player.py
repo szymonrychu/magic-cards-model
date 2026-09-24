@@ -1,5 +1,6 @@
 """A player: their name, their zones, and the cards in them."""
 
+import re
 from collections.abc import Callable, Iterable, Mapping
 from random import Random
 from typing import Annotated, Any, Literal
@@ -8,6 +9,7 @@ from uuid import UUID
 from pydantic import AfterValidator, ConfigDict, Field
 
 from ..machines.layers import Duration
+from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
 from .card import Card
 from .card_state import CardState, Counter, CounterKind, Counters
@@ -112,6 +114,24 @@ _NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT = "you have no maximum hand size"
 
 def _is_no_maximum_hand_size_line(line: str) -> bool:
     return line.strip().rstrip(".").lower() == _NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT
+
+
+#: "Your maximum hand size is ten." (The Ten Rings; Doctor Octopus, Master
+#: Planner's "eight") - CR 402.2's maximum set to a number, CR 613.11's
+#: rule-modifying effect.
+_MAXIMUM_HAND_SIZE_IS_RE = re.compile(rf"^your maximum hand size is (?P<n>{COUNT})$")
+
+
+def maximum_hand_size_of_line(line: str) -> int | None:
+    """The number "Your maximum hand size is N." sets, or `None`."""
+    match = _MAXIMUM_HAND_SIZE_IS_RE.fullmatch(line.strip().rstrip(".").lower())
+    return None if match is None else parse_count(match.group("n"))
+
+
+def reads_maximum_hand_size_line(line: str) -> bool:
+    """Whether `line` is one of the two maximum-hand-size statics
+    `Player.cards_over_maximum_hand_size` performs - `support.py`'s credit."""
+    return _is_no_maximum_hand_size_line(line) or maximum_hand_size_of_line(line) is not None
 
 
 def _computed_ability_lines(game: Any, permanent: CardState) -> tuple[str, ...]:
@@ -668,7 +688,9 @@ class Player(EngineModel):
         - a static ability of a permanent this player controls (Reliquary
           Tower), read off the computed board each time so it ends with the
           permanent (CR 604.2) and an ability an effect removed grants
-          nothing (CR 613.1f, CR 305.7);
+          nothing (CR 613.1f, CR 305.7) - unless a later-timestamped "Your
+          maximum hand size is N." (The Ten Rings) applies after it (CR
+          613.11, `_permanents_maximum_hand_size`);
         - a resolved "for the rest of the game" effect
           (`no_maximum_hand_size_for_rest_of_game`, Sea Gate Restoration).
         """
@@ -678,14 +700,34 @@ class Player(EngineModel):
             _is_no_maximum_hand_size_line(emblem.card.oracle_text or "") for emblem in self.emblems
         ):
             return True
+        return self._permanents_maximum_hand_size() is None
+
+    def _permanent_hand_size_statics(self) -> list[int | None]:
+        """Each maximum-hand-size static line of this player's permanents, in
+        timestamp order (CR 613.7a: a static ability's effect has its
+        permanent's timestamp; the battlefield is kept in that order): the
+        number "Your maximum hand size is N." sets, or `None` for "You have no
+        maximum hand size." (Reliquary Tower)."""
         game = self.game
         if game is None:
-            return False
-        return any(
-            _is_no_maximum_hand_size_line(line)
-            for permanent in game.permanents_controlled_by(self.username)
-            for line in _computed_ability_lines(game, permanent)
-        )
+            return []
+        found: list[int | None] = []
+        for permanent in game.battlefield:
+            if game.controller_of(permanent).username != self.username:
+                continue
+            for line in _computed_ability_lines(game, permanent):
+                if _is_no_maximum_hand_size_line(line):
+                    found.append(None)
+                elif (size := maximum_hand_size_of_line(line)) is not None:
+                    found.append(size)
+        return found
+
+    def _permanents_maximum_hand_size(self) -> int | None:
+        """CR 613.11: this player's permanents' maximum-hand-size effects
+        applied in timestamp order - the last one wins - over CR 402.2's
+        own `maximum_hand_size`. `None` is "no maximum"."""
+        statics = self._permanent_hand_size_statics()
+        return statics[-1] if statics else self.maximum_hand_size
 
     def remove_maximum_hand_size_for_rest_of_game(self) -> None:
         """ "You have no maximum hand size for the rest of the game." (CR
@@ -699,7 +741,10 @@ class Player(EngineModel):
         holds (CR 613.11's own game-rule-modifying continuous effect)."""
         if self.has_no_maximum_hand_size:
             return 0
-        return max(0, len(self.hand) - self.maximum_hand_size)
+        maximum = self._permanents_maximum_hand_size()
+        if maximum is None:
+            return 0
+        return max(0, len(self.hand) - maximum)
 
     def discard_to_maximum_hand_size(
         self, chosen: list[CardState] | None = None

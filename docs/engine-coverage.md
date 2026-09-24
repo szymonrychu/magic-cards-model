@@ -5246,3 +5246,46 @@ Proof printings added: Stocking the Pantry, Terrasymbiosis, Iridescent
 Hornbeetle, Badgermole, Helga, Skittish Seer, Maulfist Revolutionary, Skyship
 Plunderer, Geistflame Reservoir, Sanctuary Warden, Tireless Provisioner,
 Scale the Heights, Fang-Druid Summoner, Sawblade Slinger.
+
+## C02-T5: Plan enchantments, msh Saga chapters, second-draw triggers, controlling a player's turn, maximum hand size
+
+Claim the Kingdom, Construct a Cosmic Cube, Death to Our Enemies, Doom Reigns
+Supreme, Political Triumph, Rewrite History, Robot Domination, Doctor Doom,
+Armor Wars, Avengers: Under Siege, Origin of the Avengers, World War Hulk,
+Moon Girl and Devil Dinosaur, King T'Challa // Black Panther, Hope Enduring and
+The Ten Rings now sweep every clause `handled`. CR numbers verified with `mise
+run rules:find`: 105.1, 107.2, 108.2, 110.2a, 113.7a, 115.1, 118.9, 120.2,
+120.4, 121.2, 121.2c, 122.1, 122.6, 201.5, 202.3, 205.2a, 205.3, 205.3h,
+205.3m, 400.6, 400.7, 402.2, 406.2, 506.5, 508.1f, 514.1, 514.2, 601.2d,
+601.2f, 601.2i, 602.2, 603.2, 603.2c, 603.3, 603.3d, 603.4, 603.12, 604.2,
+608.2b, 608.2c, 608.2d, 608.2g, 608.2h, 611.2a, 611.2c, 611.3a, 613.1f,
+613.4b, 613.4c, 613.7a, 613.11, 615.1, 615.1a, 700.6, 701.10a-c, 701.21a,
+701.26a, 702.12b, 714.2b, 714.3a, 723.1, 723.1a, 723.3, 723.5, 723.9, 733.1.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "When the Nth `<kind>` counter is put on this `<noun>`" - CR 122.6 read as a threshold: the one event taking the count from below N to N or more, once, however many counters it carried | `triggers._NTH_COUNTER_PUT_CONDITION` (COUNTERS_PUT) | the seven Plans | msh-only (MEMORY.md) - the seven Plans' differing payoffs and counter events | `test_plan_counters.py` |
+| "sacrifice it. When you do, `<effect>`" (CR 603.12, mandatory: the reflexive ability exists only if the source really was sacrificed); "sacrifice it, `<effect>`, and `<effect>`" (CR 608.2c, nothing conditional); "put `<counters>` on `<object>` and `<counters>` on this `<noun>`" | `plans.parse_sacrifice_self_when_you_do` / `parse_sacrifice_self_then_series` / `parse_put_counters_on_two_objects` | Claim the Kingdom, Death to Our Enemies, Doom Reigns Supreme, Rewrite History, Construct a Cosmic Cube; Political Triumph; Claim the Kingdom | msh-only (MEMORY.md) | `test_plan_counters.py` |
+| "Whenever one or more `<description>` become tapped" - CR 603.2c's one event per batch of permanents tapped together (a declaration, a cost, a resolution), whatever tapped them (`CardState.tap`/`tap_if_untapped` note the tap, `Game.announce_batched_events` raises `PERMANENTS_TAPPED`); schema 74 | `triggers._ONE_OR_MORE_BECOME_TAPPED_CONDITION`, `_tapped_batch_matching` | Rewrite History | Deeproot Pilgrimage | `test_plan_counters.py` |
+| "Whenever one or more `<type>` cards are put into your graveyard from anywhere[ during your turn]" - one `PUT_INTO_GRAVEYARD` per batch off `graveyard_arrivals_this_turn` (`graveyard_arrivals_announced`), tokens excluded (CR 108.2); the finest batch line is one resolution / one round of state-based actions | `triggers._ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION` | Robot Domination | Crawling Infestation | `test_plan_counters.py` |
+| "As long as you control a[n] `<quality>` or a[n] `<quality>`, this creature has `<keywords>`" - the leading form, each alternative card types and/or a subtype, live (CR 611.3a) | `layers._LEADING_SELF_CONTROLS_KEYWORD_GRANT_RE`, `SelfIfControlsAnyOf` | Doctor Doom | Flutterfox | `test_plan_counters.py` |
+| "target opponent exiles the top N cards of their library. You may cast up to N spells from among the exiled cards without paying their mana costs" (CR 608.2g) | `effects._EXILE_TOP_OF_OTHER_LIBRARIES_RE` (widened), `_CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE` (widened, `limit`) | Doom Reigns Supreme | Korvold and the Noble Thief (the antecedent); "up to N ... the exiled cards" msh-only | `test_plan_counters.py` |
+| "You control target player/opponent during that player's/their next turn" (CR 723.1) - the printed sentence, onto the existing `Game.gain_control_of_player` | `player_control.parse_control_target_player_next_turn` | Construct a Cosmic Cube | Mindslaver | `test_control_player_turn.py` |
+| "each opponent draws N card(s)" (CR 121.2c's turn order) | `effects._each_opponent_draws_clause` | Armor Wars I | Master of the Feast | `test_msh_saga_chapters.py` |
+| "`<Quality>` spells you cast this turn cost {N} less to cast" (CR 601.2f) and "The next `<quality>` spell you cast this turn can be cast without paying its mana cost" (CR 118.9, used up by that spell as it becomes cast, CR 601.2i) - recorded on `Game.spell_cost_reduction_grants` / `next_spell_free_cast_grants`; schema 74 | `effects._parse_this_turn_spell_grant_clause`, `next_spell.spell_has_quality` | Armor Wars II; World War Hulk I | Ballad of the Black Flag IV; the free cast msh-only | `test_msh_saga_chapters.py` |
+| "the greatest mana value among `<type>`s you control" (CR 202.3, CR 107.2) | `effects._GREATEST_CHARACTERISTIC_AMONG_RE` (widened) | Armor Wars III | One with the Machine | `test_msh_saga_chapters.py` |
+| "`<this>` deals N damage to each [other ][non-`<Subtype>` ]`<type>` and each opponent/player" | `effects._DAMAGE_EACH_OTHER_TYPE_AND_EACH_OPPONENT_RE` (widened) | Avengers: Under Siege II | Archangel Avacyn // Avacyn, the Purifier (the original shape); no "other" / "non-`<Subtype>`" / "each player" msh-only in the pool | `test_msh_saga_chapters.py` |
+| "You may put a `<quality>` card[ with mana value N or less] from your hand onto the battlefield[. If you don't, `<effect>`]" (CR 608.2d, CR 110.2a) | `effects._parse_may_put_card_from_hand_clause` | Origin of the Avengers II | Warren Instigator; the cap and "If you don't" msh-only | `test_msh_saga_chapters.py` |
+| "[Choose target creature you control. ]Until end of turn, double its power and toughness[ and it gains `<keywords>`]" / "double its power and toughness until end of turn" (CR 701.10a-c, 7c) | `effects._parse_double_power_and_toughness_clause` | World War Hulk III | Grunn, the Lonely King | `test_msh_saga_chapters.py` |
+| "historic" as a card group ("a historic card from among them") and as a readable search quality (CR 700.6) - `_search_quality_is_readable` had drifted from `_quality_matcher` | `effects._parse_card_group_qualifier`, `_search_quality_is_readable` | - | Ballad of the Black Flag I-III | `test_msh_saga_chapters.py` |
+| "Whenever a player draws their second card each turn" - the third subject of the ordinal draw reader | `triggers._NTH_DRAW_CONDITION` (widened) | King T'Challa | msh-only; the shared reader on Moon Girl, Construct a Cosmic Cube, Faerie Mastermind | `test_draw_second_card_triggers.py` |
+| "until end of turn, `<this>`'s base power and toughness become N/M and they gain `<keywords>`" / "this creature has base power and toughness N/M until end of turn and gains `<keywords>` until end of turn" (7b + layer 6) | `effects._parse_self_base_pt_set_with_keywords_clause` | Moon Girl and Devil Dinosaur | Shorecrasher Mimic | `test_draw_second_card_triggers.py` |
+| "Prevent all damage that would be dealt to `<this card's name>`" (CR 615.1a, CR 201.5) | `replacement._prevention_recipient` (widened) | Black Panther, Hope Enduring | Cho-Manno, Revolutionary | `test_draw_second_card_triggers.py` |
+| "Your maximum hand size is N." (CR 402.2, 613.11) applied with "You have no maximum hand size." in timestamp order (CR 613.7a); both credited `handled` | `player.maximum_hand_size_of_line`, `Player._permanents_maximum_hand_size`, `support` | The Ten Rings | Doctor Octopus, Master Planner; Reliquary Tower | `test_maximum_hand_size_statics.py` |
+| "if you have fewer than N cards in hand, draw cards equal to the difference" - the intervening if (CR 603.4) and the difference read as it resolves (CR 608.2h) | `triggers._HAND_CARD_COUNT_CLAUSE`, `effects._parse_draw_the_difference_clause` | The Ten Rings | Doctor Octopus, Master Planner; Kozilek, the Great Distortion | `test_maximum_hand_size_statics.py` |
+
+Proof printings added: Mindslaver, Deeproot Pilgrimage, Crawling Infestation,
+Flutterfox, Korvold and the Noble Thief, Master of the Feast, Ballad of the
+Black Flag, One with the Machine, Warren Instigator,
+Grunn, the Lonely King, Shorecrasher Mimic, Cho-Manno, Revolutionary, Doctor
+Octopus, Master Planner, Kozilek, the Great Distortion. Schema 73 -> 74.

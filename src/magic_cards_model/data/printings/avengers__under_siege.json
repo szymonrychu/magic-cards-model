@@ -1,0 +1,171 @@
+{
+  "object": "card",
+  "id": "3c379a3f-bde1-4dc1-9843-afcb5f40792f",
+  "oracle_id": "d911cf65-7273-4162-a766-7d4107699dc2",
+  "multiverse_ids": [],
+  "resource_id": "92EBEE5FCC839315F7B0BF1F585374EC24B981380E897CF24F15996AEC363ECD",
+  "mtgo_id": 152597,
+  "arena_id": 105100,
+  "tcgplayer_id": 696857,
+  "cardmarket_id": 891592,
+  "name": "Avengers: Under Siege",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/3c379a3f-bde1-4dc1-9843-afcb5f40792f",
+  "scryfall_uri": "https://scryfall.com/card/msh/205/avengers:-under-siege?utm_source=api",
+  "layout": "saga",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.jpg?1783902909",
+    "normal": "https://cards.scryfall.io/normal/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.jpg?1783902909",
+    "large": "https://cards.scryfall.io/large/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.jpg?1783902909",
+    "png": "https://cards.scryfall.io/png/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.png?1783902909",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.jpg?1783902909",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.jpg?1783902909",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.webp?1783902909",
+    "grid": "https://cards.scryfall.io/grid/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.webp?1783902909",
+    "display": "https://cards.scryfall.io/display/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.webp?1783902909",
+    "art": "https://cards.scryfall.io/art/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.webp?1783902909",
+    "crop": "https://cards.scryfall.io/crop/front/3/c/3c379a3f-bde1-4dc1-9843-afcb5f40792f.webp?1783902909"
+  },
+  "mana_cost": "{2}{B}{R}",
+  "cmc": 4.0,
+  "type_line": "Enchantment \u2014 Saga",
+  "oracle_text": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI \u2014 Create two 2/1 black Villain creature tokens with menace.\nII \u2014 This Saga deals 2 damage to each non-Villain creature and each opponent.\nIII \u2014 Create a Treasure token for each Villain you control.",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Treasure"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "cec5cc8b-bc15-415a-bde6-6c783f8d0b0b",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/cec5cc8b-bc15-415a-bde6-6c783f8d0b0b"
+    },
+    {
+      "object": "related_card",
+      "id": "cd76092f-0f5e-4890-996c-33f4f47c659c",
+      "component": "token",
+      "name": "Villain",
+      "type_line": "Token Creature \u2014 Villain",
+      "uri": "https://api.scryfall.com/cards/cd76092f-0f5e-4890-996c-33f4f47c659c"
+    },
+    {
+      "object": "related_card",
+      "id": "3e02a423-363a-422e-b71b-0daf3722ffcc",
+      "component": "combo_piece",
+      "name": "Avengers: Under Siege",
+      "type_line": "Enchantment \u2014 Saga",
+      "uri": "https://api.scryfall.com/cards/3e02a423-363a-422e-b71b-0daf3722ffcc"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3c379a3f-bde1-4dc1-9843-afcb5f40792f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad911cf65-7273-4162-a766-7d4107699dc2&unique=prints",
+  "collector_number": "205",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Serena Malyon",
+  "artist_ids": [
+    "d9fee7a6-7c5e-48a5-8639-bba25abc8a06"
+  ],
+  "illustration_id": "b435330c-194b-4a31-b2b4-757dbb75f474",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 16102,
+  "preview": {
+    "source": "Gemini Twins",
+    "source_uri": "https://www.instagram.com/gemini.twins.magic/p/DZN27j0ksNo/",
+    "previewed_at": "2026-06-05"
+  },
+  "prices": {
+    "usd": "0.30",
+    "usd_foil": "0.37",
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": "0.42",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAvengers%253A%2BUnder%2BSiege",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAvengers%253A%2BUnder%2BSiege",
+    "edhrec": "https://edhrec.com/route/?cc=Avengers%3A+Under+Siege"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696857%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891592&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152597?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

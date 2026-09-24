@@ -999,6 +999,46 @@ class SelfIfControls(SelectorBase):
         return controller == self.username
 
 
+class ControlledQuality(EngineModel):
+    """One alternative of "as long as you control a[n] `<quality>` or a[n]
+    `<quality>`": every one of `card_types` (an "artifact creature" is both,
+    CR 205.2a) and, when set, `subtype` (CR 205.3)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    card_types: tuple[Type, ...] = ()
+    subtype: str | None = None
+
+    def matches(self, other: Characteristics) -> bool:
+        return all(card_type in other.types for card_type in self.card_types) and (
+            self.subtype is None
+            or any(each.lower() == self.subtype.lower() for each in other.subtypes)
+        )
+
+
+class SelfIfControlsAnyOf(SelectorBase):
+    """ "As long as you control an artifact creature or a Plan, Doctor Doom
+    has indestructible." / "As long as you control an artifact or enchantment,
+    this creature has flying." (Flutterfox) - `Only`'s identity test plus CR
+    611.3a's live board condition: the source's controller controls at least
+    one permanent matching any one of `alternatives`, re-asked on every CR
+    613.5 computation."""
+
+    kind: Literal["self_if_controls_any_of"] = "self_if_controls_any_of"
+    card_id: UUID
+    username: str | None = None
+    alternatives: tuple[ControlledQuality, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if chars.card_id != self.card_id:
+            return False
+        return any(
+            other.controller == self.username
+            and any(alternative.matches(other) for alternative in self.alternatives)
+            for other in board.values()
+        )
+
+
 class ControlledCountRequirement(EngineModel):
     """One "you control N or more `<quality>`" test on the board: permanents
     the source's controller controls with this `name` (CR 201.2), card type
@@ -1245,6 +1285,7 @@ Selector = Annotated[
     | OtherNonAuraEnchantments
     | QualifiedCreatures
     | SelfIfControls
+    | SelfIfControlsAnyOf
     | SelfIfControlsCounted
     | CreaturesControlledByWhereToughnessExceedsPower
     | CreaturesControlledByWherePowerOrToughnessAtMost
@@ -7412,6 +7453,39 @@ _SELF_CONTROLS_KEYWORD_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "As long as you control an artifact creature or a Plan, Doctor Doom has
+#: indestructible." (Doctor Doom, its name already "this creature"), "As long
+#: as you control an artifact or enchantment, this creature has flying."
+#: (Flutterfox) - the leading form of `_SELF_CONTROLS_KEYWORD_GRANT_RE`, with
+#: "or" alternatives, each a card-type list and/or a subtype
+#: (`_controlled_quality`). A colour or anything else unread fails closed.
+_LEADING_SELF_CONTROLS_KEYWORD_GRANT_RE = re.compile(
+    r"^as long as you control (?P<alternatives>an? [^,]+?), "
+    r"this (?:creature|permanent|token) (?:has|have) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _controlled_quality(phrase: str) -> ControlledQuality | None:
+    """ "an artifact creature" / "a Plan" / "enchantment" -> the card types and
+    subtype it names (CR 205.2a, 205.3), or `None` for any other word."""
+    words = re.sub(r"^an? ", "", phrase.strip(), flags=re.IGNORECASE).split()
+    if not words:
+        return None
+    card_types: list[Type] = []
+    subtype: str | None = None
+    for word in words:
+        card_type = _card_type_word(word) if word == word.lower() else None
+        if card_type is not None:
+            card_types.append(card_type)
+        elif word[:1].isupper() and subtype is None and canonical_subtype(word) is not None:
+            subtype = canonical_subtype(word)
+        else:
+            return None
+    return ControlledQuality(card_types=tuple(card_types), subtype=subtype)
+
+
 #: "This creature gets +1/+0 as long as any player controls a black
 #: permanent." (Knight of Grace; Knight of Malice's "a white permanent") - a
 #: self pump (CR 613.4c) behind CR 611.3a's live board condition, asked of
@@ -9174,6 +9248,37 @@ def _turn_fact_gated_self_pump_builder(
                 }
             )
             for effect in pump(source, timestamp, targets, context)
+        ]
+
+    return builder
+
+
+def _self_gated_by_controlling_any_of_builder(
+    keywords: list[str], alternatives: tuple[ControlledQuality, ...], *, line: str
+) -> EffectBuilder:
+    """`_LEADING_SELF_CONTROLS_KEYWORD_GRANT_RE`'s grant, gated by
+    `SelfIfControlsAnyOf` (CR 611.3a's live board condition)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = SelfIfControlsAnyOf(
+            card_id=source.id, username=source.controller, alternatives=alternatives
+        )
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: has {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
         ]
 
     return builder
@@ -11003,6 +11108,16 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             color=_COLOR_WORDS[color_word.lower()] if color_word else None,
             controlled_by="any" if who == "any player" else "you" if who == "you" else "opponent",
             line=sentence,
+        )
+    if match := _LEADING_SELF_CONTROLS_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        alternatives = [
+            _controlled_quality(phrase) for phrase in re.split(r" or ", match.group("alternatives"))
+        ]
+        if keywords is None or any(alternative is None for alternative in alternatives):
+            return None
+        return _self_gated_by_controlling_any_of_builder(
+            keywords, tuple(a for a in alternatives if a is not None), line=sentence
         )
     if match := _SELF_CONTROLS_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))

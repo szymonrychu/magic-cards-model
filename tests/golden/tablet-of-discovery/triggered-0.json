@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["graveyard_arrivals_this_turn", "play_permissions"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "play_permissions"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

@@ -1,0 +1,182 @@
+{
+  "object": "card",
+  "id": "add7d3ce-aa58-4da0-8c2a-cfd01c3a8975",
+  "oracle_id": "fe00278d-4385-4e3f-919c-12a794fd86f5",
+  "multiverse_ids": [],
+  "resource_id": "B83C6A8DBB947ECBFEF20A47898E4E0B8164330FB6FC3CE8CFB3642657A60F61",
+  "mtgo_id": 152625,
+  "arena_id": 105114,
+  "tcgplayer_id": 696324,
+  "cardmarket_id": 890581,
+  "name": "King T'Challa // Black Panther, Hope Enduring",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975",
+  "scryfall_uri": "https://scryfall.com/card/msh/219/king-tchalla-black-panther-hope-enduring?utm_source=api",
+  "layout": "modal_dfc",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:11Z",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Noble Hero // Legendary Creature \u2014 Human Warrior Hero",
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Transform",
+    "Double strike",
+    "Flash"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "King T'Challa",
+      "mana_cost": "{1}{W}{U}",
+      "type_line": "Legendary Creature \u2014 Human Noble Hero",
+      "oracle_text": "Flash\nWhenever a player draws their second card each turn, you draw a card.\n{4}{W}{U}: Transform King T'Challa. Activate only as a sorcery.",
+      "colors": [
+        "U",
+        "W"
+      ],
+      "power": "3",
+      "toughness": "2",
+      "artist": "Aaron J. Riley",
+      "artist_id": "f21b412c-aef5-4d15-88be-4f40615acde3",
+      "illustration_id": "0386898c-efa9-43db-9bb8-89e2463fd748",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "normal": "https://cards.scryfall.io/normal/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "large": "https://cards.scryfall.io/large/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "png": "https://cards.scryfall.io/png/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.png?1783902911",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "thumb": "https://cards.scryfall.io/thumb/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911",
+        "grid": "https://cards.scryfall.io/grid/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911",
+        "display": "https://cards.scryfall.io/display/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911",
+        "art": "https://cards.scryfall.io/art/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911",
+        "crop": "https://cards.scryfall.io/crop/front/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Black Panther, Hope Enduring",
+      "mana_cost": "{4}{W}{U}",
+      "type_line": "Legendary Creature \u2014 Human Warrior Hero",
+      "oracle_text": "Flash\nDouble strike\nPrevent all damage that would be dealt to Black Panther.\nWhenever Black Panther deals combat damage to a player, draw a card.",
+      "colors": [
+        "U",
+        "W"
+      ],
+      "power": "3",
+      "toughness": "3",
+      "artist": "Eric Wilkerson",
+      "artist_id": "525ec49d-a7c8-4ddc-96aa-58cf5ad5e937",
+      "illustration_id": "d9f06a81-ebf6-4e64-adf3-61b2308c11dc",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "normal": "https://cards.scryfall.io/normal/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "large": "https://cards.scryfall.io/large/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "png": "https://cards.scryfall.io/png/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.png?1783902911",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.jpg?1783902911",
+        "thumb": "https://cards.scryfall.io/thumb/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911",
+        "grid": "https://cards.scryfall.io/grid/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911",
+        "display": "https://cards.scryfall.io/display/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911",
+        "art": "https://cards.scryfall.io/art/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911",
+        "crop": "https://cards.scryfall.io/crop/back/a/d/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975.webp?1783902911"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/add7d3ce-aa58-4da0-8c2a-cfd01c3a8975/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afe00278d-4385-4e3f-919c-12a794fd86f5&unique=prints",
+  "collector_number": "219",
+  "digital": false,
+  "rarity": "mythic",
+  "artist": "Aaron J. Riley & Eric Wilkerson",
+  "artist_ids": [
+    "f21b412c-aef5-4d15-88be-4f40615acde3",
+    "525ec49d-a7c8-4ddc-96aa-58cf5ad5e937"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 6075,
+  "prices": {
+    "usd": "8.51",
+    "usd_foil": "12.24",
+    "usd_etched": null,
+    "eur": "11.43",
+    "eur_foil": "13.87",
+    "tix": "0.67"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKing%2BT%2527Challa%2B%252F%252F%2BBlack%2BPanther%252C%2BHope%2BEnduring",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKing%2BT%2527Challa%2B%252F%252F%2BBlack%2BPanther%252C%2BHope%2BEnduring",
+    "edhrec": "https://edhrec.com/route/?cc=King+T%27Challa"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696324%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=890581&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152625?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

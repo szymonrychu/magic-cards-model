@@ -1,0 +1,157 @@
+{
+  "object": "card",
+  "id": "e2449311-a705-4a31-a345-a36d436ae561",
+  "oracle_id": "188656d8-4ea8-4e58-88da-b010a16eb6f2",
+  "multiverse_ids": [
+    636749
+  ],
+  "mtgo_id": 117894,
+  "arena_id": 87486,
+  "tcgplayer_id": 524353,
+  "cardmarket_id": 741093,
+  "name": "Deeproot Pilgrimage",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/e2449311-a705-4a31-a345-a36d436ae561",
+  "scryfall_uri": "https://scryfall.com/card/lci/52/deeproot-pilgrimage?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:36:37Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.jpg?1783913797",
+    "normal": "https://cards.scryfall.io/normal/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.jpg?1783913797",
+    "large": "https://cards.scryfall.io/large/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.jpg?1783913797",
+    "png": "https://cards.scryfall.io/png/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.png?1783913797",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.jpg?1783913797",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.jpg?1783913797",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.webp?1783913797",
+    "grid": "https://cards.scryfall.io/grid/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.webp?1783913797",
+    "display": "https://cards.scryfall.io/display/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.webp?1783913797",
+    "art": "https://cards.scryfall.io/art/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.webp?1783913797",
+    "crop": "https://cards.scryfall.io/crop/front/e/2/e2449311-a705-4a31-a345-a36d436ae561.webp?1783913797"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever one or more nontoken Merfolk you control become tapped, create a 1/1 blue Merfolk creature token with hexproof.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "790d70a9-ff02-4676-a804-ee0e030dfe3b",
+      "component": "combo_piece",
+      "name": "Deeproot Pilgrimage",
+      "type_line": "Enchantment",
+      "uri": "https://api.scryfall.com/cards/790d70a9-ff02-4676-a804-ee0e030dfe3b"
+    },
+    {
+      "object": "related_card",
+      "id": "f5d353ad-7160-41fa-809c-d76b36478a2a",
+      "component": "token",
+      "name": "Merfolk",
+      "type_line": "Token Creature \u2014 Merfolk",
+      "uri": "https://api.scryfall.com/cards/f5d353ad-7160-41fa-809c-d76b36478a2a"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set": "lci",
+  "set_name": "The Lost Caverns of Ixalan",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alci&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lci?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e2449311-a705-4a31-a345-a36d436ae561/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A188656d8-4ea8-4e58-88da-b010a16eb6f2&unique=prints",
+  "collector_number": "52",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"These glyphs are more than trail markings! They tell a story as they go. But does it end in celebration or tragedy?\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "R\u00e9mi Jacquot",
+  "artist_ids": [
+    "95678eed-9760-4962-b380-ded14232ea3e"
+  ],
+  "illustration_id": "47e8eb31-dafd-42ec-911a-6f4d65481380",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4481,
+  "penny_rank": 3451,
+  "preview": {
+    "source": "The Sun",
+    "source_uri": "",
+    "previewed_at": "2023-10-25"
+  },
+  "prices": {
+    "usd": "1.74",
+    "usd_foil": "7.73",
+    "usd_etched": null,
+    "eur": "1.26",
+    "eur_foil": "1.50",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636749&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDeeproot%2BPilgrimage",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDeeproot%2BPilgrimage",
+    "edhrec": "https://edhrec.com/route/?cc=Deeproot+Pilgrimage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F524353%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=741093&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/117894?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

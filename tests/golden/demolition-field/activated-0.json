@@ -73,7 +73,7 @@
         "source": "Demolition Field"
       }
     ],
-    "fields_changed": ["continuous_effects", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "shuffles_performed", "turn_facts"],
+    "fields_changed": ["continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "shuffles_performed", "turn_facts"],
     "notices": {},
     "objects": {
       "Abstergo Entertainment@bob#1": {

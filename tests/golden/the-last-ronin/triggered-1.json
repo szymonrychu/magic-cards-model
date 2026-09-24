@@ -46,7 +46,7 @@
         "source": "The Last Ronin"
       }
     ],
-    "fields_changed": ["delayed_triggers", "graveyard_arrivals_this_turn"],
+    "fields_changed": ["delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

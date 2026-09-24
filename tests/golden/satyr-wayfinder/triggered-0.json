@@ -55,7 +55,7 @@
         "source": "Satyr Wayfinder"
       }
     ],
-    "fields_changed": ["graveyard_arrivals_this_turn", "known_carries", "reveals"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "known_carries", "reveals"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

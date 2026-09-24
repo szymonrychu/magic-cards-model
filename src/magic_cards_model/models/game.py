@@ -228,6 +228,11 @@ from ..machines.layers import (
     spend_effect_effects,
 )
 from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
+from ..machines.next_spell import (
+    NextSpellFreeCastGrant,
+    SpellCostReductionGrant,
+    spell_has_quality,
+)
 from ..machines.objects_as_costs import convoke as pay_convoke
 from ..machines.objects_as_costs import delve as pay_delve
 from ..machines.objects_as_costs import improvise as pay_improvise
@@ -2969,6 +2974,14 @@ class Game(EngineModel):
     """Per damage source currently being watched by `recording_damage_from`,
     the permanents it has actually dealt damage to (CR 120.3), in order. Not
     persisted: the block opens and closes within one resolving effect."""
+    _tapped_batch: tuple[CardState, ...] = PrivateAttr(default=())
+    """The permanents `ExtraTriggerEvent.PERMANENTS_TAPPED` is being matched
+    for right now (`tapped_batch`). Empty outside `announce_batched_events`.
+    Not persisted: read only while that event is being raised."""
+    _graveyard_batch: tuple["GraveyardArrival", ...] = PrivateAttr(default=())
+    """The arrivals `ExtraTriggerEvent.PUT_INTO_GRAVEYARD` is being matched for
+    right now (`graveyard_batch`). Empty outside `announce_batched_events`.
+    Not persisted: read only while that event is being raised."""
     _returned_to_hand_batch: tuple[GameEvent, ...] = PrivateAttr(default=())
     """The `LEAVES_BATTLEFIELD_TO_HAND` events being raised right now as one
     event (`returned_to_hand_batch`). Empty outside `_announce_returns`. Not
@@ -3252,6 +3265,30 @@ class Game(EngineModel):
     `_emit_counters_put` is the single writer; `LayerContext.
     counters_put_this_turn` carries it to the statics that read it
     (`machines/counter_effects.py`). Cleared when a new turn begins."""
+
+    next_spell_free_cast_grants: list[NextSpellFreeCastGrant] = Field(default_factory=list)
+    """"The next `<quality>` spell you cast this turn can be cast without paying
+    its mana cost." (CR 118.9) - live until that spell becomes cast (CR
+    601.2i) or the turn ends. See `machines/next_spell.py`."""
+
+    spell_cost_reduction_grants: list[SpellCostReductionGrant] = Field(default_factory=list)
+    """"`<Quality>` spells you cast this turn cost {N} less to cast." (CR
+    601.2f) - live for the rest of the turn it was created in. See
+    `machines/next_spell.py`."""
+
+    tapped_since_last_batch: list[UUID] = Field(default_factory=list)
+    """Permanents tapped (CR 701.26a) since `announce_batched_events` last
+    raised `ExtraTriggerEvent.PERMANENTS_TAPPED`, in the order tapped - one
+    instruction's, cost's or declaration's worth, which CR 603.2c makes one
+    event for a "one or more ... become tapped" condition. Filled by
+    `note_permanent_tapped`. Persisted: a resolution paused on a decision
+    (CR 608.2d) may already have tapped some."""
+
+    graveyard_arrivals_announced: int = 0
+    """How many of `graveyard_arrivals_this_turn`'s entries `announce_batched_
+    events` has already raised as `ExtraTriggerEvent.PUT_INTO_GRAVEYARD` -
+    everything after it is the next batch (CR 603.2c). Reset with the ledger
+    when a new turn begins."""
 
     graveyard_arrivals_this_turn: list[GraveyardArrival] = Field(default_factory=list)
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
@@ -3590,15 +3627,15 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 76
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 77
     #: 75: `Game` gained `harnessed` (CR 701.64b's own designation) and
     #: `power_up_restricted_turns` (Kang the Conqueror's own power-up
     #: rider, CR 702.193a) - a snapshot written before either field decodes
     #: with both missing, which would silently read as "nothing is
     #: harnessed" and "no turn is power-up-restricted" for a game that
     #: actually has one of either recorded.
-    #: 76: `Game` gained `counters_put_this_turn` (C02-T4, "had a counter
-    #: put on it this turn").
+    #: 77: `Game` gained `tapped_since_last_batch` and
+    #: `graveyard_arrivals_announced` (C02-T5, "one or more" batch triggers).
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3618,7 +3655,7 @@ class Game(EngineModel):
     #: (pack tactics, C01 integration).
     #: 73: `ManaPool` gained `treasure` and `CastRecord` gained
     #: `treasure_mana_spent` (mana from a Treasure, C01 integration).
-    #: 74: `Game` gained `counters_put_this_turn` (per-turn counter placement
+    #: 76: `Game` gained `counters_put_this_turn` (per-turn counter placement
     #: history, CR 122.6/122.6a), and a `COUNTERS_PUT` event's `player` is
     #: now who put the counters (C02-T4).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
@@ -4518,6 +4555,12 @@ class Game(EngineModel):
     "if this spell was cast using teamwork" rider in the pool would read
     false even for a spell that paid it, and a version-73 board has no
     per-turn tap count for Captain America's trigger to read at all - the
+    second.
+
+    Bumped 76 -> 77 (C02-T5, "one or more" batch triggers): `Game` gained
+    `tapped_since_last_batch` and `graveyard_arrivals_announced` - the first
+    bullet. A version-76 game would decode with every graveyard arrival this
+    turn not yet announced and raise them all again as one batch - the
     second.
     """
 
@@ -6271,6 +6314,13 @@ class Game(EngineModel):
         x_count = (card_state.mana_cost or "").count("{X}")
         if x_count:
             mana_value += x_count * self.cast_record(card_state).x_value
+        # CR 601.2i: this is "the next <quality> spell you cast this turn" -
+        # the permission is used up by it, taken or not.
+        self.next_spell_free_cast_grants = [
+            grant
+            for grant in self.next_spell_free_cast_grants
+            if not (grant.controller == controller and spell_has_quality(card_state, grant.quality))
+        ]
         self.emit(
             GameEvent(
                 event=TriggerEvent.CAST_SPELL,
@@ -9226,6 +9276,7 @@ class Game(EngineModel):
         if self.is_over:
             return []  # CR 104.1: the game has ended
         with self._id_allocator_scope():
+            self.announce_batched_events()
             placed: list[AbilityOnStack] = []
             # CR 603.8 / CR 704.1a: a state trigger is a triggered ability whose
             # condition is a game state, so it is swept for here too - a state that
@@ -13616,6 +13667,64 @@ class Game(EngineModel):
         such event is being raised."""
         return self._returned_to_hand_batch
 
+    @property
+    def tapped_batch(self) -> tuple[CardState, ...]:
+        """The permanents of the `PERMANENTS_TAPPED` event being matched."""
+        return self._tapped_batch
+
+    @property
+    def graveyard_batch(self) -> tuple[GraveyardArrival, ...]:
+        """The arrivals of the `PUT_INTO_GRAVEYARD` event being matched."""
+        return self._graveyard_batch
+
+    def note_permanent_tapped(self, permanent: CardState) -> None:
+        """`permanent` just became tapped (CR 701.26a) - `CardState.tap` and
+        `.tap_if_untapped` call this for a bound permanent, whatever tapped it
+        (an attack, a cost, an effect)."""
+        # Assigned, not appended: the store has to be announced like any
+        # other change (`snapshot.py`), a tap can land outside any command.
+        self.tapped_since_last_batch = [*self.tapped_since_last_batch, permanent.id]
+
+    def announce_batched_events(self) -> None:
+        """Raise the "one or more" batch events (CR 603.2c) for everything
+        since the last call: one `PERMANENTS_TAPPED` for the permanents tapped,
+        one `PUT_INTO_GRAVEYARD` for the cards that reached a graveyard.
+
+        Called where one batch ends and the next begins - after each
+        instruction of a resolving spell or ability (CR 608.2c; every clause
+        runner in `machines/effects.py` calls it between its steps), before
+        and between rounds of state-based actions, and before triggers go on
+        the stack (CR 603.3), which catches a cost or a declaration. One
+        instruction moving several objects stays one event; two instructions
+        are two.
+        """
+        with self._id_allocator_scope():
+            if self.tapped_since_last_batch:
+                tapped = [
+                    permanent
+                    for card_id in self.tapped_since_last_batch
+                    if isinstance(permanent := self.find_by_id(card_id), CardState)
+                ]
+                self.tapped_since_last_batch = []
+                if tapped:
+                    self._tapped_batch = tuple(tapped)
+                    try:
+                        self.emit(
+                            GameEvent(event=ExtraTriggerEvent.PERMANENTS_TAPPED, amount=len(tapped))
+                        )
+                    finally:
+                        self._tapped_batch = ()
+            if self.graveyard_arrivals_announced < len(self.graveyard_arrivals_this_turn):
+                arrivals = self.graveyard_arrivals_this_turn[self.graveyard_arrivals_announced :]
+                self.graveyard_arrivals_announced = len(self.graveyard_arrivals_this_turn)
+                self._graveyard_batch = tuple(arrivals)
+                try:
+                    self.emit(
+                        GameEvent(event=ExtraTriggerEvent.PUT_INTO_GRAVEYARD, amount=len(arrivals))
+                    )
+                finally:
+                    self._graveyard_batch = ()
+
     @contextmanager
     def returning_together(self) -> Iterator[None]:
         """Every permanent returned to hand inside the block leaves as one event.
@@ -16616,10 +16725,14 @@ class Game(EngineModel):
         # game checks state-based actions is a point it looks, so a permanent
         # that gained or lost daybound some other way is caught here too.
         apply_daybound_nightbound(self)
+        # CR 603.2c: what the resolution or payment before this check did is
+        # one batch, and each round of state-based actions below is another.
+        self.announce_batched_events()
         gone: list[CardState] = []
         for _ in range(len(self.players) + len(self.battlefield) + 1):
             leaving = self._state_based_actions_once()
             gone.extend(leaving)
+            self.announce_batched_events()
             losing = self._losing_players()
             if not leaving and not losing:
                 break
@@ -18349,6 +18462,18 @@ class Game(EngineModel):
                 )
             )
 
+        for free_grant in self.next_spell_free_cast_grants_for(card, caster):
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.STATIC,
+                    rule="CR 118.9",
+                    source_name=free_grant.source_name,
+                    description="nothing",
+                    cost=None,
+                )
+            )
+
         for source_name, grant in static_free_cast_grants(self, caster):
             unavailable = None
             if origin_zone is not grant.zone:
@@ -18386,6 +18511,21 @@ class Game(EngineModel):
                 )
             )
         return options
+
+    def next_spell_free_cast_grants_for(
+        self, spell: CardState, caster: str
+    ) -> list[NextSpellFreeCastGrant]:
+        """The live "the next `<quality>` spell you cast this turn can be cast
+        without paying its mana cost" grants `spell` answers for (CR 118.9)."""
+        if self.turn is None:
+            return []
+        return [
+            grant
+            for grant in self.next_spell_free_cast_grants
+            if grant.controller == caster
+            and grant.turn == self.turn.turns_taken
+            and spell_has_quality(spell, grant.quality)
+        ]
 
     def object_cost_offers(self, card: CardState, player: str) -> dict[str, "ObjectCostOffer"]:
         """Which objects could be spent on `card`'s cost, and for what -
@@ -19394,6 +19534,16 @@ class Game(EngineModel):
                         # `CardState.subtypes`: the spell is off the battlefield,
                         # so its changeling CDA is read there (CR 702.73a).
                         decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+
+        for reduction in self.spell_cost_reduction_grants:
+            # CR 601.2f: "<quality> spells you cast this turn cost {N} less".
+            if (
+                reduction.controller == caster
+                and self.turn is not None
+                and reduction.turn == self.turn.turns_taken
+                and spell_has_quality(spell, reduction.quality)
+            ):
+                decreases.append(ManaCost.parse(f"{{{reduction.amount}}}"))
 
         for grant in self.casting_rule_effects:
             if (
@@ -22554,7 +22704,11 @@ class Game(EngineModel):
             self.combat_damage_dealt_this_turn_by = set()
             self.combat_damage_to_players_this_turn = []
             self.counters_put_this_turn = []
+            self.announce_batched_events()
             self.graveyard_arrivals_this_turn = []
+            self.graveyard_arrivals_announced = 0
+            self.next_spell_free_cast_grants = []
+            self.spell_cost_reduction_grants = []
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and
             # `cleanup_step` does exactly that; a game driven step by step may
