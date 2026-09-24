@@ -826,3 +826,25 @@ def test_a_snapshot_written_before_source_times_transformed_is_refused() -> None
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_SOURCE_TIMES_TRANSFORMED}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before C00-T1's `ManaSpend.any_color` (CR 609.4b).
+_SCHEMA_VERSION_BEFORE_SPEND_AS_ANY_COLOR = 64
+
+
+def test_the_spend_as_any_color_bump_moved_the_version_past_sixty_four() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_SPEND_AS_ANY_COLOR
+
+
+def test_a_snapshot_written_before_spend_as_any_color_is_refused() -> None:
+    """A version-64 dump is refused rather than decoded as current: an open
+    activation payment in it carries no `ManaSpend.any_color`, so CR 609.4b's
+    "as though it were mana of any color" would silently stop applying."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_SPEND_AS_ANY_COLOR
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_SPEND_AS_ANY_COLOR}",
+    ):
+        Game.model_validate(dumped)

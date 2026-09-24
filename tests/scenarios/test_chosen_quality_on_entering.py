@@ -158,11 +158,12 @@ def test_runed_halos_protection_grant_is_not_silently_dropped():
     )
 
 
-def test_pithing_needles_activation_restriction_is_not_silently_dropped():
+def test_pithing_needles_activation_restriction_is_wired_not_noticed():
     """Pithing Needle: "Activated abilities of sources with the chosen name
-    can't be activated unless they're mana abilities." is a cost/legality
-    restriction on activating an ability that nothing in `why_cannot_activate`
-    checks - recorded rather than silently doing nothing.
+    can't be activated unless they're mana abilities." used to be recorded as
+    an unwired choice; `Game.activation_prohibition` now reads it against the
+    recorded name on every activation (CR 602.5), so it is no longer noticed -
+    `test_activation_prohibitions.py` is where it is shown doing its job.
     """
     scenario = (
         Scenario()
@@ -176,24 +177,18 @@ def test_pithing_needles_activation_restriction_is_not_silently_dropped():
 
     needle = scenario.cast_and_resolve("Pithing Needle", forest)
 
-    notices = scenario.game.unwired_choice_notices
-    assert any(
-        notice.source_id == needle.id and "activated" in notice.text.lower() for notice in notices
-    )
+    assert needle.choice is not None and needle.choice.value == "Sol Ring"
+    assert not [
+        notice for notice in scenario.game.unwired_choice_notices if notice.source_id == needle.id
+    ]
 
 
-def test_disruptor_flutes_activation_restriction_is_not_silently_dropped():
+def test_disruptor_flutes_chosen_name_lines_are_both_wired():
     """Disruptor Flute prints *two* lines that read back the chosen name, and
-    they are no longer in the same state.
-
-    Its cost increase - "Spells with the chosen name cost {3} more to cast." -
-    is wired now: `machines/cost.cost_modifier_effect` reads it as
-    `CostModifierKind.NAMED_INCREASE` and `Game.static_cost_modifiers_for`
-    applies it against the recorded choice, so it must *not* appear here any
-    more; a notice for a consumer that works is a false alarm, and
-    `scenarios/test_cost_increase_by_chosen_name.py` is where that line is
-    tested doing its job. The activation restriction is still unwired and
-    still recorded.
+    both are wired now: the cost increase - "Spells with the chosen name cost
+    {3} more to cast." - through `CostModifierKind.NAMED_INCREASE`, and the
+    activation prohibition through `Game.activation_prohibition`. Neither is
+    noticed; a notice for a consumer that works is a false alarm.
     """
     scenario = (
         Scenario()
@@ -207,13 +202,9 @@ def test_disruptor_flutes_activation_restriction_is_not_silently_dropped():
 
     flute = scenario.cast_and_resolve("Disruptor Flute", *sources)
 
-    texts = [
-        notice.text.lower()
-        for notice in scenario.game.unwired_choice_notices
-        if notice.source_id == flute.id
+    assert not [
+        notice for notice in scenario.game.unwired_choice_notices if notice.source_id == flute.id
     ]
-    assert any("activated" in text for text in texts)
-    assert not any("more to cast" in text for text in texts)
     # Nor does the wired line come back as an unreadable cost modifier on the
     # other list (DDR#978's own fail-closed record).
     assert not [

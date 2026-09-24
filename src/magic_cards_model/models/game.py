@@ -30,6 +30,7 @@ from ..machines.abilities import (
     parse_mana_abilities,
     parse_triggered_mana,
     resolve_mana_count_expression,
+    self_normalized_effect_text,
     self_reference_names,
 )
 from ..machines.casting import (
@@ -203,6 +204,7 @@ from ..machines.layers import (
     LayerContext,
     LayerNotice,
     additional_land_plays,
+    all_activated_abilities_grant,
     count_card_types,
     grant_ability,
     off_battlefield_characteristics_of,
@@ -822,6 +824,19 @@ _LOYALTY_INSTANT_SPEED_STATIC_RE = re.compile(
     r"you could cast an instant",
     re.IGNORECASE,
 )
+#: The same permission printed with a pronoun for its own subject and, on The
+#: Wandering Emperor, a condition in front: "As long as The Wandering Emperor
+#: entered this turn, you may activate her loyalty abilities any time you could
+#: cast an instant." Read off the permanent's own static line after its name
+#: has become "this permanent" (`self_normalized_effect_text`), so the
+#: condition is one `Game.condition_holds` already reads ("this permanent
+#: entered this turn", `_CONDITION_SELF_ENTERED_THIS_TURN`). "her/his/its/
+#: their" is the permanent itself (CR 606.3 is per permanent), never another.
+_SELF_LOYALTY_INSTANT_SPEED_RE = re.compile(
+    r"^(?:as long as (?P<condition>[^,]+), )?you may activate (?:her|his|its|their) loyalty "
+    r"abilities (?:on any player'?s turn )?any time you could cast an instant\.?$",
+    re.IGNORECASE,
+)
 #: CR 702.62b: "A card is 'suspended' if it's in the exile zone, has suspend,
 #: and has a time counter on it." Greater Gargadon's own restriction.
 _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IGNORECASE)
@@ -1178,10 +1193,10 @@ def _card_quality(word: str | None) -> Callable[[CardState], bool] | None:
 #: battlefield, which is why `_activation_prohibition` reads the battlefield
 #: fresh every time rather than caching anything (CR 611.3a: not "locked in").
 #:
-#: The optional "unless they're mana abilities" tail is Pithing Needle's and
-#: Disruptor Flute's wording; those two name the ability's *source by chosen
-#: name* rather than by quality, so they do not match this shape and keep the
-#: `UnwiredChoiceNotice` they already get (`machines/replacement.py`).
+#: The optional "unless they're mana abilities" tail is Damping Matrix's
+#: wording. Pithing Needle and Disruptor Flute print the same tail but name the
+#: ability's *source by chosen name* rather than by quality, which is
+#: `_CHOSEN_NAME_PROHIBITION_RE`'s shape below.
 _ACTIVATION_PROHIBITION_RE = re.compile(
     r"^activated abilities of (?P<subjects>[a-z, ]+?)"
     r"(?P<opponents> your opponents control)?"
@@ -1269,12 +1284,85 @@ _LOOKS_LIKE_HASTE_ACTIVATION_PERMISSION_RE = re.compile(
     r"^you may activate\b.*\bas though\b.*\bhaste\b", re.IGNORECASE
 )
 
-#: Pithing Needle's and Disruptor Flute's "sources with the chosen name", which
-#: name their subjects by a CR 614.12a choice rather than by a quality. Left
-#: alone here on purpose: `machines/replacement.py` already records an
-#: `UnwiredChoiceNotice` for exactly those two lines, and a second record on a
-#: second list would be the same gap counted twice.
+#: "You may spend mana as though it were mana of any color to activate
+#: abilities of creatures you control." (Agatha's Soul Cauldron) and "... to
+#: activate those abilities." (Drana and Linvala, whose "those abilities" are
+#: the ones the sentence before it grants). CR 609.4b: "If an effect allows a
+#: player to spend mana 'as though it were mana of any [type or color],' this
+#: affects only how the player may pay a cost. It doesn't change that cost,
+#: and it doesn't change what mana was actually spent to pay that cost." So
+#: this is read where a payment is opened (`ManaSpend.any_color`) and nowhere
+#: else. The subject is a plain "A, B and C" of card-type plurals "you
+#: control", with CR 613's usual optional "other".
+_SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE = re.compile(
+    r"^you may spend mana as though it were mana of any colou?r to activate "
+    r"(?:abilities of (?P<other>other )?(?P<subjects>[a-z, ]+?) you control"
+    r"|(?P<those>those abilities))\.?$",
+    re.IGNORECASE,
+)
+
+#: A sentence of the same family this engine cannot read - matched only to
+#: fail closed with a notice, the way `_LOOKS_LIKE_HASTE_ACTIVATION_PERMISSION_RE`
+#: does for its own family. Scoped to activation: an unscoped "You may spend
+#: mana as though it were mana of any color." is a different permission (it
+#: reaches spells too) and is not this reader's.
+_LOOKS_LIKE_SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE = re.compile(
+    r"^you may spend mana as though it were mana of any \w+ to activate\b", re.IGNORECASE
+)
+
+#: Pithing Needle's, Disruptor Flute's and Phyrexian Revoker's "Activated
+#: abilities of sources with the chosen name can't be activated [unless they're
+#: mana abilities]." - the subject named by CR 614.12a's recorded choice
+#: (`CardState.choice`, a card name per CR 201.4) rather than by a quality.
+#: CR 109.2c: "source" means a source "in any zone", so unlike the card-type
+#: shape above this one reaches a named card's cycling in a hand too.
+_CHOSEN_NAME_PROHIBITION_RE = re.compile(
+    r"^activated abilities of sources with the chosen name can't be activated"
+    r"(?P<mana_exempt> unless they're mana abilities)?\.?$",
+    re.IGNORECASE,
+)
+
+#: Any other "the chosen ..." subject (Scheming Fence's "the chosen
+#: permanent") names a choice this reader does not record; it is left to the
+#: reader that owns that choice rather than guessed at here.
 _CHOSEN_NAME_SUBJECT_RE = re.compile(r"\bthe chosen\b", re.IGNORECASE)
+
+
+def _names_match(obj: CardState, chosen: str) -> bool:
+    """Whether `obj` has the chosen card name (CR 201.4). A split card has
+    both halves' names (CR 201.4b's own premise), so either half matches."""
+    name = obj.name
+    return chosen == name or chosen in (part.strip() for part in name.split("//"))
+
+
+def reads_activation_rule_line(
+    text: str, card_name: str | None = None, *, legendary: bool = True
+) -> bool:
+    """Whether a permanent's static line is one of the activation-legality
+    shapes this module reads (CR 602.5, CR 609.4, CR 609.4b, CR 606.3): an
+    activation prohibition by card type or by chosen name, an "as though ...
+    haste" activation permission, a loyalty-timing permission, or a "spend
+    mana as though it were mana of any color to activate" permission - the
+    line `support.py` credits as handled only because one of these readers
+    actually enforces it. `card_name` lets a self-named line (The Wandering
+    Emperor's) be read the way `Game._self_loyalty_instant_speed` reads it."""
+    line = text.strip()
+    if card_name is not None:
+        normalized = self_normalized_effect_text(card_name, line, legendary=legendary)
+        if _SELF_LOYALTY_INSTANT_SPEED_RE.match(normalized):
+            match = _SELF_LOYALTY_INSTANT_SPEED_RE.match(normalized)
+            condition = match.group("condition") if match is not None else None
+            return condition is None or condition_is_readable(condition)
+    if _CHOSEN_NAME_PROHIBITION_RE.match(line) or _parse_activation_prohibition(line):
+        return True
+    if _HASTE_ACTIVATION_PERMISSION_RE.match(line):
+        return True
+    if _LOYALTY_INSTANT_SPEED_STATIC_RE.search(line) or _SELF_LOYALTY_INSTANT_SPEED_RE.match(line):
+        return True
+    sentences = [part for part in re.split(r"(?<=\.)\s+", line) if part]
+    return bool(sentences) and all(
+        _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE.match(sentence) for sentence in sentences
+    )
 
 
 class ActivationProhibition(EngineModel):
@@ -3116,7 +3204,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 64
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 65
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3960,6 +4048,13 @@ class Game(EngineModel):
     Guardian's airbend, a board-wide "Spells you cast cost {W}{U}{B}{R}{G}
     less" and "that player controls" targets now resolve where a version-63
     board did nothing, the second.
+
+    Bumped 64 -> 65 (C00-T1, activation prohibitions and permissions):
+    `ManaSpend` gained `any_color` (CR 609.4b), carried on an open
+    `CostPayment.spend` - the first bullet. Pithing Needle's chosen-name
+    prohibition, The Wandering Emperor's timing, Agatha's Soul Cauldron's
+    grant and any-color spend now apply where a version-64 board did nothing,
+    the second.
     """
 
     @model_validator(mode="before")
@@ -4353,6 +4448,8 @@ class Game(EngineModel):
         the controller's own battlefield the same way `attacker_cap_
         restriction`/`_zero_loyalty_exemption_controllers` already read
         their own static text)."""
+        if self._self_loyalty_instant_speed(permanent):
+            return True
         for permission in self.loyalty_instant_speed_permissions:
             if permission.player != controller:
                 continue
@@ -4392,6 +4489,42 @@ class Game(EngineModel):
                     continue
                 if subtype == short_name and source.id == permanent.id:
                     return True
+        return False
+
+    def _self_loyalty_instant_speed(self, permanent: CardState) -> bool:
+        """`permanent`'s own "[As long as <condition>, ]you may activate her
+        loyalty abilities any time you could cast an instant." (The Wandering
+        Emperor) - `_SELF_LOYALTY_INSTANT_SPEED_RE`.
+
+        CR 604.2: the static ability applies while the permanent is on the
+        battlefield and has it (`_still_has_static_line`), and its "as long
+        as" condition is asked afresh every time (CR 611.3a) through
+        `condition_holds` with the permanent itself as the condition's source.
+        A condition that reader cannot read grants nothing and is recorded
+        (`_record_unread_static_line`) rather than guessed at.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        legendary = Supertype.LEGENDARY in permanent.card.supertypes
+        for line in parse_abilities(permanent.card):
+            if line.kind is not AbilityKind.STATIC:
+                continue
+            text = (line.text or "").strip()
+            normalized = self_normalized_effect_text(permanent.name, text, legendary=legendary)
+            match = _SELF_LOYALTY_INSTANT_SPEED_RE.match(normalized)
+            if match is None or not self._still_has_static_line(permanent, text):
+                continue
+            condition = match.group("condition")
+            if condition is None:
+                return True
+            held = self.condition_holds(
+                self.controller_of(permanent).username, condition, permanent
+            )
+            if held is None:
+                self._record_unread_static_line(permanent, text)
+                continue
+            if held:
+                return True
         return False
 
     def permanents_controlled_by(self, username: str) -> list[CardState]:
@@ -5311,6 +5444,100 @@ class Game(EngineModel):
                     continue
                 return source.name
         return None
+
+    def spends_mana_as_any_color(
+        self, permanent: CardState, ability: ActivatedAbility, controller: str
+    ) -> bool:
+        """Whether `controller` may spend mana as though it were mana of any
+        color to activate this ability of `permanent` (CR 609.4b).
+
+        Read off every battlefield permanent's printed static lines on every
+        call (CR 604.2, CR 611.3a), gated on `_still_has_static_line` (CR
+        613.1f), and only for the source's own controller - "you control" and
+        "you may" are both the source's controller (CR 109.5).
+
+        - "... to activate abilities of creatures you control" reaches any
+          ability of a permanent that is, on the computed board (CR 613.5), of
+          one of the named card types and controlled by that player.
+        - "... to activate those abilities" reaches only the abilities the
+          sentence just before it grants - `layers.all_activated_abilities_
+          grant` read again here, so the two cannot disagree about which
+          abilities "those" are.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        if self.controller_of(permanent).username != controller:
+            return False
+        for source in list(self.battlefield):
+            if self.controller_of(source).username != controller:
+                continue
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                sentences = [part for part in re.split(r"(?<=\.)\s+", text) if part]
+                for position, sentence in enumerate(sentences):
+                    if not _LOOKS_LIKE_SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE.match(sentence):
+                        continue
+                    match = _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE.match(sentence)
+                    if match is None:
+                        self._record_unread_static_line(source, text)
+                        continue
+                    if not self._still_has_static_line(source, text):
+                        continue
+                    if match.group("those") is not None:
+                        if self._granted_by_preceding_sentence(
+                            source, sentences[:position], permanent, ability
+                        ):
+                            return True
+                        continue
+                    if match.group("other") is not None and permanent.id == source.id:
+                        continue
+                    words = [
+                        word.strip()
+                        for word in match.group("subjects")
+                        .lower()
+                        .replace(" and ", ", ")
+                        .split(",")
+                        if word.strip()
+                    ]
+                    types = [_card_type_named(word) for word in words]
+                    if not types or any(kind is None for kind in types):
+                        self._record_unread_static_line(source, text)
+                        continue
+                    if any(
+                        kind is not None and self._has_computed_type(permanent, kind)
+                        for kind in types
+                    ):
+                        return True
+        return False
+
+    def _granted_by_preceding_sentence(
+        self,
+        source: CardState,
+        before: list[str],
+        permanent: CardState,
+        ability: ActivatedAbility,
+    ) -> bool:
+        """Whether `ability` on `permanent` is one of the abilities the grant
+        sentence just before a "those abilities" permission gives (Drana and
+        Linvala) - the antecedent of "those" (CR 613.1f's grant)."""
+        if not before:
+            return False
+        legendary = Supertype.LEGENDARY in source.card.supertypes
+        antecedent = self_normalized_effect_text(source.name, before[-1], legendary=legendary)
+        grant = all_activated_abilities_grant(antecedent)
+        if grant is None:
+            return False
+        board = self.computed_board().characteristics
+        chars = board.get(permanent.id)
+        if chars is None or not grant.selector(source)(chars, board):
+            return False
+        if grant.from_exile:
+            texts = grant.exile_texts(source, LayerContext(exile=tuple(self.exile)))
+        else:
+            texts = grant.board_modification(source).texts(board, permanent.id)
+        return ability.raw in texts
 
     def note_cast(
         self,
@@ -18843,6 +19070,22 @@ class Game(EngineModel):
         every activation on an unreadable sentence would lock up boards the
         sentence was never about.
         """
+        return self.activation_prohibition(permanent, is_mana=ability.mana is not None)
+
+    def activation_prohibition(self, obj: CardState, *, is_mana: bool) -> str | None:
+        """Why a static ability on the battlefield prohibits activating any
+        ability of `obj` right now, or None (CR 602.5) - the whole of
+        `_activation_prohibition`, callable for an ability that is not one of
+        `activated_abilities`' printed lines: a keyword's activated ability
+        (equip, crew, cycling - `machines/keywords.KeywordActivation.why_not`),
+        in whatever zone it functions.
+
+        CR 109.2: a card-type subject ("artifacts") means permanents on the
+        battlefield, so those shapes are only asked of a permanent; CR 109.2c:
+        "sources with the chosen name" reaches a source in any zone. `is_mana`
+        is CR 605.1a's mana ability, spared by an "unless they're mana
+        abilities" tail.
+        """
         for source in list(self.battlefield):
             for line in parse_abilities(source.card):
                 if line.kind is not AbilityKind.STATIC:
@@ -18850,8 +19093,26 @@ class Game(EngineModel):
                 text = (line.text or "").strip()
                 if not _LOOKS_LIKE_ACTIVATION_PROHIBITION_RE.match(text):
                     continue
+                chosen = _CHOSEN_NAME_PROHIBITION_RE.match(text)
+                if chosen is not None:
+                    if not self._still_has_static_line(source, text):
+                        continue
+                    choice = source.choice
+                    if choice is None or choice.kind is not ChoiceKind.CARD_NAME:
+                        continue
+                    if not _names_match(obj, choice.value):
+                        continue
+                    if chosen.group("mana_exempt") is not None and is_mana:
+                        continue
+                    return (
+                        f"{obj.name}'s activated abilities can't be activated: "
+                        f"{source.name} names it (CR 602.5, CR 611.1)"
+                    )
                 if _CHOSEN_NAME_SUBJECT_RE.search(text):
                     continue
+                if obj.zone is not Zone.BATTLEFIELD:
+                    continue
+                permanent = obj
                 prohibition = _parse_activation_prohibition(text)
                 if prohibition is None:
                     self._record_unread_static_line(source, text)
@@ -18868,7 +19129,7 @@ class Game(EngineModel):
                     self._has_computed_type(permanent, quality) for quality in prohibition.qualities
                 ):
                     continue
-                if prohibition.mana_abilities_exempt and ability.mana is not None:
+                if prohibition.mana_abilities_exempt and is_mana:
                     # CR 605.1a: a mana ability the sentence spares.
                     continue
                 return (
@@ -19815,7 +20076,10 @@ class Game(EngineModel):
             total,
             game=self,
             payer=controller,
-            spend=ManaSpend.activating(source_characteristics),
+            spend=ManaSpend.activating(
+                source_characteristics,
+                any_color=self.spends_mana_as_any_color(permanent, ability, controller),
+            ),
         )
         if announced is not None:
             self._announced_targets[key] = (announced, payment)

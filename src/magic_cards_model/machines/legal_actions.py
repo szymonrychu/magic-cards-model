@@ -1317,7 +1317,13 @@ def _battlefield_ability_actions(
         # source. `ManaSpend.activating` takes either shape (see its
         # `HasCharacteristics` protocol); `permanent.card` here was the printed
         # front face, wrong for a transformed permanent even before layers.
-        spend = ManaSpend.activating(board.of(permanent))
+        # CR 609.4b: Agatha's Soul Cauldron's "spend mana as though it were
+        # mana of any color" is asked here exactly as `Game.begin_activating`
+        # asks it, so the affordability verdict and the payment agree.
+        spend = ManaSpend.activating(
+            board.of(permanent),
+            any_color=game.spends_mana_as_any_color(permanent, ability, player),
+        )
         affordable, reason, pays_with = _cost_affordability(
             game, player, total, candidate_scan, spend=spend
         )

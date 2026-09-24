@@ -1417,6 +1417,15 @@ class KeywordActivation(EngineModel):
             )
         if self.zone is Zone.BATTLEFIELD and self.card.controller not in (None, self.player):
             return f"{self.player} does not control {self.card.name}"
+        if self.game is not None:
+            # CR 602.5: a keyword's activated ability is an activated ability
+            # like any printed one, so Clarion Conqueror stops equip and crew
+            # and Pithing Needle naming a card stops its cycling in a hand
+            # (CR 109.2c's "source" in any zone). None of these is a mana
+            # ability (CR 605.1a).
+            prohibited = self.game.activation_prohibition(self.card, is_mana=False)
+            if prohibited is not None:
+                return prohibited
         if (
             self.zone is Zone.BATTLEFIELD
             and self.game is not None

@@ -95,7 +95,13 @@ from ..models.card_state import CardState, ChoiceKind, Counter
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
-from .abilities import layer_readable_sentences, self_normalized_effect_text
+from .abilities import (
+    ActivatedAbility,
+    layer_readable_sentences,
+    parse_abilities,
+    parse_granted_ability_lines,
+    self_normalized_effect_text,
+)
 from .combat import (
     ASSIGNS_DAMAGE_AS_THOUGH_POSITIVE_TEXT,
     ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT,
@@ -1561,9 +1567,69 @@ class AddTypesAndSubtype(ModificationBase):
 
 #: What the effect does to one object it applies to. Pure: returns a new
 #: `Characteristics`, never edits the one it was handed.
+def activated_ability_lines(lines: Iterable[str], name: str) -> tuple[str, ...]:
+    """The activated abilities (CR 602.1) among an object's ability `lines`,
+    each with its own name rewritten to "this permanent" (CR 201.5b) - the form
+    it takes once another object has it, since the self-reference then means
+    the object that has the ability, not the card it was printed on.
+
+    What "has all activated abilities of ..." (CR 613.1f) copies: the whole
+    ability, cost and effect together, and nothing that is not an activated
+    ability (a static, a triggered ability, a keyword line).
+    """
+    found: list[str] = []
+    for line in lines:
+        if any(
+            isinstance(ability, ActivatedAbility) for ability in parse_granted_ability_lines([line])
+        ):
+            found.append(self_normalized_effect_text(name, line))
+    return tuple(dict.fromkeys(found))
+
+
+class GrantActivatedAbilitiesOf(ModificationBase):
+    """Layer 6 addition (CR 613.1f) of every activated ability of every *other
+    permanent* that matches - Drana and Linvala's "has all activated abilities
+    of all creatures your opponents control".
+
+    Read off the board as layer 6 finds it (CR 613.5), so a creature that
+    became one earlier in the layer order is counted and one whose abilities
+    were removed earlier in layer 6 contributes nothing. `whose` is relative
+    to `controller`, the source's controller: "opponents", "you", or "any".
+    """
+
+    kind: Literal["grant_activated_abilities_of"] = "grant_activated_abilities_of"
+    card_types: tuple[Type, ...] = ()
+    controller: str | None = None
+    whose: Literal["opponents", "you", "any"] = "any"
+
+    def texts(self, board: Board, host_id: UUID | None) -> tuple[str, ...]:
+        """Every activated ability line this grant copies onto `host_id`."""
+        lines: list[str] = []
+        for other in board.values():
+            if other.card_id == host_id:
+                continue
+            if self.card_types and not any(kind in other.types for kind in self.card_types):
+                continue
+            if self.whose == "opponents" and other.controller == self.controller:
+                continue
+            if self.whose == "you" and other.controller != self.controller:
+                continue
+            lines.extend(activated_ability_lines(other.abilities, other.name))
+        return tuple(dict.fromkeys(lines))
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        added = tuple(
+            text for text in self.texts(board, chars.card_id) if not chars.has_ability(text)
+        )
+        if not added:
+            return chars
+        return chars.with_(abilities=chars.abilities + added)
+
+
 Modification = Annotated[
     LoseAllAbilities
     | GrantAbility
+    | GrantActivatedAbilitiesOf
     | GrantAbilityInstance
     | AddType
     | AddSupertype
@@ -9308,6 +9374,164 @@ def _ring_bearer_static_builder(predicates: str, *, line: str) -> EffectBuilder 
     return builder
 
 
+#: "<subject> has/have all activated abilities of all <pile>." (CR 613.1f) -
+#: the whole family of printed ability-copying statics:
+#:
+#: - Agatha's Soul Cauldron: "Creatures you control with +1/+1 counters on
+#:   them have all activated abilities of all creature cards exiled with
+#:   <this>." (read after its own name became "this permanent");
+#: - Patchwork Crawler / Dark Impostor: "This creature has all activated
+#:   abilities of all creature cards exiled with it."; Myr Welder's "... of all
+#:   cards exiled with it." with no card type at all;
+#: - Drana and Linvala: "<this> has all activated abilities of all creatures
+#:   your opponents control."
+#:
+#: An exile pile is CR 607.2a's linked pile - only the cards this object's own
+#: exile ability put there (`LayerContext.cards_exiled_with`, this incarnation
+#: only, CR 400.7); a battlefield pile is read off the board as layer 6 finds
+#: it (`GrantActivatedAbilitiesOf`).
+_HAS_ALL_ACTIVATED_ABILITIES_RE = re.compile(
+    r"^(?P<subject>this (?:creature|permanent|artifact)"
+    r"|creatures you control with (?:an? )?(?P<counter>[+-]\d+/[+-]\d+|[a-z]+) counters? on them)"
+    r" (?:has|have) all activated abilities of all "
+    r"(?:(?:(?P<pile_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards exiled with (?:this \w+|it)"
+    r"|(?P<board_types>[a-z]+)(?P<board_whose> your opponents control| you control)?)\.?$",
+    re.IGNORECASE,
+)
+
+
+class AllActivatedAbilitiesGrant(NamedTuple):
+    """One `_HAS_ALL_ACTIVATED_ABILITIES_RE` sentence, read.
+
+    `self_only` is "this creature"/"it" (the source itself); otherwise the
+    subject is the source's controller's creatures carrying `counter_kind`.
+    Exactly one of the two piles is named: `exile_types` (possibly empty,
+    meaning every card) with `from_exile`, or `board_types`/`board_whose`.
+    """
+
+    self_only: bool
+    counter_kind: str | None
+    from_exile: bool
+    exile_types: tuple[Type, ...]
+    board_types: tuple[Type, ...]
+    board_whose: Literal["opponents", "you", "any"]
+
+    def exile_texts(self, source: CardState, context: LayerContext) -> tuple[str, ...]:
+        """The activated abilities of every matching card in `source`'s own
+        linked pile (CR 607.2a), each once. A face-down exiled card has no
+        characteristics (CR 406.3a) and so no abilities to give."""
+        texts: list[str] = []
+        for exiled in context.cards_exiled_with(source):
+            if exiled.face_down:
+                continue
+            if self.exile_types and not any(kind in exiled.types for kind in self.exile_types):
+                continue
+            lines = [
+                ability.raw
+                for ability in parse_abilities(exiled.card)
+                if isinstance(ability, ActivatedAbility)
+            ]
+            texts.extend(self_normalized_effect_text(exiled.name, line) for line in lines)
+        return tuple(dict.fromkeys(texts))
+
+    def board_modification(self, source: CardState) -> GrantActivatedAbilitiesOf:
+        return GrantActivatedAbilitiesOf(
+            card_types=self.board_types, controller=source.controller, whose=self.board_whose
+        )
+
+    def selector(self, source: CardState) -> Selector:
+        if self.self_only:
+            return _only(source.id)
+        return PermanentsControlledByWithCounters(
+            username=source.controller, counter_kind=self.counter_kind, creatures_only=True
+        )
+
+
+def all_activated_abilities_grant(sentence: str) -> AllActivatedAbilitiesGrant | None:
+    """`sentence` read as an "has all activated abilities of all ..." grant,
+    or None. Every card-type word must be one of CR 205.2a's card types."""
+    match = _HAS_ALL_ACTIVATED_ABILITIES_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    counter = match.group("counter")
+    if counter is not None and not match.group("subject").lower().startswith("creatures"):
+        return None
+
+    def types_of(words: str | None) -> tuple[Type, ...] | None:
+        if not words:
+            return ()
+        found = [
+            _card_type_word(word)
+            for word in re.split(r",\s*|\s+(?:and|or)\s+|\s+", words.strip())
+            if word and word.lower() not in {"and", "or"}
+        ]
+        if any(kind is None for kind in found):
+            return None
+        return tuple(kind for kind in found if kind is not None)
+
+    from_exile = match.group("board_types") is None
+    exile_types = types_of(match.group("pile_types"))
+    board_types = types_of(match.group("board_types"))
+    if exile_types is None or board_types is None:
+        return None
+    whose_text = (match.group("board_whose") or "").strip().lower()
+    whose: Literal["opponents", "you", "any"] = (
+        "opponents" if whose_text == "your opponents control" else "you" if whose_text else "any"
+    )
+    return AllActivatedAbilitiesGrant(
+        self_only=counter is None,
+        counter_kind=counter,
+        from_exile=from_exile,
+        exile_types=exile_types,
+        board_types=board_types,
+        board_whose=whose,
+    )
+
+
+def _all_activated_abilities_builder(
+    grant: AllActivatedAbilitiesGrant, *, line: str
+) -> EffectBuilder:
+    """Layer 6 (CR 613.1f): one `GrantAbility` per copied line for an exile
+    pile, rebuilt with the board (CR 613.5) so a card joining or leaving the
+    pile changes what is granted at once; one `GrantActivatedAbilitiesOf` for
+    a battlefield pile, which reads the board itself as layer 6 applies it."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = grant.selector(source)
+        if not grant.from_exile:
+            return [
+                ContinuousEffect(
+                    description=f"{source.name}: has all activated abilities it names",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=selector,
+                    modification=grant.board_modification(source),
+                )
+            ]
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: grants {text}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                order=order,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(text),
+            )
+            for order, text in enumerate(grant.exile_texts(source, context))
+        ]
+
+    return builder
+
+
 def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     """The board-wide and filtered *static* shapes (CR 611.3), split out of
     `_parse_layer_sentence` only to keep either function readable - the two are
@@ -9319,6 +9543,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     """
     if ring_bearer := _RING_BEARER_STATIC_RE.fullmatch(sentence):
         return _ring_bearer_static_builder(ring_bearer.group("predicates"), line=sentence)
+    if (all_activated := all_activated_abilities_grant(sentence)) is not None:
+        return _all_activated_abilities_builder(all_activated, line=sentence)
     if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
         return _self_protection_from_chosen_color_builder(line=sentence)
     if match := _EACH_ANTHEM_PER_OTHER_CREATURE_RE.fullmatch(sentence):

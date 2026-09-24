@@ -121,7 +121,7 @@ from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.creature_types import creature_types
 from ..ids import new_id
-from ..models.card import Card, Color, Supertype, Type
+from ..models.card import Card, Color, Supertype, Type, types_of
 from ..models.card_state import CardState, Choice, ChoiceKind, Counter, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
@@ -4330,7 +4330,14 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
 #: new type, not a card carrying its own choice) is a *targeted* clause of a
 #: different shape entirely and is never routed through here.
 _CHOOSE_A_COLOR_RE = re.compile(r"^choose a color\.?$", re.IGNORECASE)
-_CHOOSE_A_CARD_NAME_RE = re.compile(r"^choose a card name\.?$", re.IGNORECASE)
+#: "choose a card name", and CR 201.4a's "choose a card name with certain
+#: characteristics" - Phyrexian Revoker's and Voidstone Gargoyle's "choose a
+#: nonland card name", one card-type word (optionally "non"-prefixed) ahead of
+#: "card name". The word is kept (`card_name_quality`) so the answer can be
+#: checked against it.
+_CHOOSE_A_CARD_NAME_RE = re.compile(
+    r"^choose an? (?:(?P<quality>(?:non-?)?[a-z]+) )?card name\.?$", re.IGNORECASE
+)
 _CHOOSE_A_CREATURE_TYPE_RE = re.compile(r"^choose a creature type\.?$", re.IGNORECASE)
 
 #: The five colors' letter codes (CR 105.1), the closed universe
@@ -4364,17 +4371,19 @@ class UnwiredChoiceNotice(EngineModel):
     use elsewhere in this codebase for a clause this read but did not
     perform.
 
-    Three of the pool's seven "as this enters, choose ..." cards land here:
+    The "as this enters, choose ..." cards that land here (Pithing Needle's
+    and Disruptor Flute's activation line has since been wired - see
+    `_WIRED_CHOSEN_NAME_PROHIBITION_HINT_RE` - and is kept below only as the
+    history of why it once did):
 
     - **Runed Halo** - "You have protection from the chosen card name." is a
       layer 6 static ability (CR 613.1f) granted to a *player*, not a
       permanent; nothing in `machines/layers.py` grants protection to a
       player at all yet (its whole static-ability sweep is permanent-only).
-    - **Pithing Needle** / **Disruptor Flute** - "Activated abilities of
-      sources with the chosen name can't be activated unless they're mana
-      abilities." is a cost/legality restriction on *activating* an ability,
-      which has no representation anywhere the engine checks
-      `why_cannot_activate`. Disruptor Flute's *other* line, "Spells with the
+    - **Pithing Needle** / **Disruptor Flute** (wired now, no longer here) -
+      "Activated abilities of sources with the chosen name can't be
+      activated unless they're mana abilities." is enforced by
+      `Game.activation_prohibition` (CR 602.5). Disruptor Flute's *other* line, "Spells with the
       chosen name cost {3} more to cast.", is no longer here: CR 601.2f's
       cost-increase step reads it as `CostModifierKind.NAMED_INCREASE` and
       `Game.static_cost_modifiers_for` compares the chosen name against the
@@ -4454,6 +4463,15 @@ _LAYER_HANDLED_SUBJECT_RE = re.compile(
 #: chosen color" alone (no leading "add") is left unexcluded, since nothing
 #: in the pool prints the anaphora that way without the mana verb in front
 #: of it.
+#: The fourth: "Activated abilities of sources with the chosen name can't be
+#: activated [unless they're mana abilities]." (Pithing Needle, Disruptor
+#: Flute, Phyrexian Revoker), read by `Game.activation_prohibition` against
+#: `CardState.choice` on every activation, in every zone (CR 602.5, CR
+#: 109.2c).
+_WIRED_CHOSEN_NAME_PROHIBITION_HINT_RE = re.compile(
+    r"^activated abilities of sources with the chosen name can't be activated\b",
+    re.IGNORECASE,
+)
 _WIRED_CHOSEN_COLOR_MANA_HINT_RE = re.compile(
     r"\badds? (?:[a-z]+|\d+) mana of the chosen color\b", re.IGNORECASE
 )
@@ -4477,6 +4495,7 @@ def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNo
             or _WIRED_MANA_CLAUSE_HINT_RE.search(sentence)
             or _WIRED_NAMED_COST_INCREASE_HINT_RE.search(sentence)
             or _WIRED_CHOSEN_COLOR_MANA_HINT_RE.search(sentence)
+            or _WIRED_CHOSEN_NAME_PROHIBITION_HINT_RE.match(sentence)
             or _LAYER_HANDLED_SUBJECT_RE.match(sentence)
         ):
             continue
@@ -4499,7 +4518,49 @@ def _quality_options(kind: ChoiceKind) -> tuple[str, ...]:
     return ()
 
 
-def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
+def card_name_quality(replacement_text: str) -> str | None:
+    """The characteristic a "choose a <quality> card name" choice carries
+    (CR 201.4a) - "nonland" for Phyrexian Revoker - or None for a plain
+    "choose a card name" or anything else."""
+    match = _CHOOSE_A_CARD_NAME_RE.match(replacement_text.strip())
+    if match is None or match.group("quality") is None:
+        return None
+    return match.group("quality").lower()
+
+
+def _card_name_quality_refusal(value: str, quality: str) -> str | None:
+    """Why `value` is not a legal answer to "choose a `quality` card name"
+    (CR 201.4a: "the player must choose the name of a card whose Oracle text
+    matches those characteristics"), or None.
+
+    Judged against the engine's own Scryfall printings
+    (`data.printing_pool.resolve_printing`); a name the pool does not hold
+    cannot be judged here and is accepted rather than refused on a guess. A
+    split card is judged by the half named (CR 201.4b), which `resolve_
+    printing`'s own face lookup already gives.
+    """
+    from ..data.printing_pool import resolve_printing
+
+    negated = quality.startswith("non")
+    word = quality.removeprefix("non").lstrip("-")
+    try:
+        card_type = Type(word)
+    except ValueError:
+        return None
+    printing = resolve_printing(value)
+    if printing is None:
+        return None
+    types = set(printing.types)
+    for face in printing.card_faces or ():
+        if face.name == value and face.type_line:
+            types = set(types_of(face.type_line))
+    has_type = card_type in types
+    if has_type == negated:
+        return f"{value!r} is not a {quality} card name (CR 201.4a)"
+    return None
+
+
+def _choose_a_quality(kind: ChoiceKind, card_name: str, name_quality: str | None = None) -> Apply:
     """Ask CR 614.12a's choice and record it on the entering object itself.
 
     "If a replacement effect that modifies how a permanent enters the
@@ -4537,6 +4598,10 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
         )
         value = game.ask(decision)
         assert isinstance(value, str)
+        if name_quality is not None:
+            refusal = _card_name_quality_refusal(value, name_quality)
+            if refusal is not None:
+                raise ValueError(f"{card_name}: {refusal}")
         source.choice = Choice(kind=kind, value=value)
         game.unwired_choice_notices.extend(_unwired_choice_notices(source.card, source.id))
 
@@ -5158,7 +5223,13 @@ def _self_enters_modifiers(
                 performable.append(
                     (
                         f"{key}:{index}",
-                        _choose_a_quality(choice_kind, card_state.card.name),
+                        _choose_a_quality(
+                            choice_kind,
+                            card_state.card.name,
+                            card_name_quality(effect.replacement or "")
+                            if choice_kind is ChoiceKind.CARD_NAME
+                            else None,
+                        ),
                         effect.text,
                         False,
                     )
