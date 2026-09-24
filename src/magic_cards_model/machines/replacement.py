@@ -5159,8 +5159,8 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str, name_quality: str | None
         if who is None:
             return
         quality = kind.value.replace("_", " ")
-        if qualifier is not None:
-            quality = f"{qualifier} {quality}"
+        if name_quality is not None:
+            quality = f"{name_quality} {quality}"
         decision = Decision(
             kind=DecisionKind.CHOOSE_A_QUALITY,
             player=who,
