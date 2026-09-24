@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "fbcb310c-be73-46f8-8e65-8632454ccc6e",
+  "oracle_id": "3f4d6f91-95ad-4687-8899-5a21a0abb49e",
+  "multiverse_ids": [],
+  "resource_id": "230ADB037FDE79CA3B92972B908DADADC5CFDC7675E8D13575470493242BE644",
+  "mtgo_id": 153994,
+  "arena_id": 103408,
+  "tcgplayer_id": 707071,
+  "cardmarket_id": 898487,
+  "name": "Elrond, Moon-Reader",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/fbcb310c-be73-46f8-8e65-8632454ccc6e",
+  "scryfall_uri": "https://scryfall.com/card/hob/36/elrond-moon-reader?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-18T12:15:48Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.jpg?1784376948",
+    "normal": "https://cards.scryfall.io/normal/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.jpg?1784376948",
+    "large": "https://cards.scryfall.io/large/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.jpg?1784376948",
+    "png": "https://cards.scryfall.io/png/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.png?1784376948",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.jpg?1784376948",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.jpg?1784376948",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.webp?1784376948",
+    "grid": "https://cards.scryfall.io/grid/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.webp?1784376948",
+    "display": "https://cards.scryfall.io/display/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.webp?1784376948",
+    "art": "https://cards.scryfall.io/art/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.webp?1784376948",
+    "crop": "https://cards.scryfall.io/crop/front/f/b/fbcb310c-be73-46f8-8e65-8632454ccc6e.webp?1784376948"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Elf Noble",
+  "oracle_text": "Whenever you activate an ability of a creature, draw a card. This ability triggers only once each turn.\n{5}{U}{U}: Exile up to two other target nonland permanents you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fbcb310c-be73-46f8-8e65-8632454ccc6e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3f4d6f91-95ad-4687-8899-5a21a0abb49e&unique=prints",
+  "collector_number": "36",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Christina Kraus",
+  "artist_ids": [
+    "685354c3-302d-486a-b575-cb19bb2c31c9"
+  ],
+  "illustration_id": "29506b50-6ce4-4f4b-b81d-4493f91f2466",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11110,
+  "prices": {
+    "usd": "2.23",
+    "usd_foil": "2.97",
+    "usd_etched": null,
+    "eur": "2.66",
+    "eur_foil": "3.32",
+    "tix": "0.09"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DElrond%252C%2BMoon-Reader",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DElrond%252C%2BMoon-Reader",
+    "edhrec": "https://edhrec.com/route/?cc=Elrond%2C+Moon-Reader"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707071%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898487&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153994?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

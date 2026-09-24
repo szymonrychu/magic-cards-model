@@ -10755,7 +10755,11 @@ def _parse_counter_each_other_creature_clause(
     self-reference the other direction) - read from `stack_object`'s own
     source when it is a permanent, and excluding nothing when it is a spell
     (a resolving spell is never itself a creature on the battlefield to be
-    "other" than, CR 300.1).
+    "other" than, CR 300.1). On a spell that targeted creatures earlier in
+    its text - Moment of Glory's "Put a +1/+1 counter on target creature you
+    control. If this spell was cast from a graveyard, also put a +1/+1
+    counter on each other creature you control." - "other" is other than
+    those targets, the English reading CR 608.2c asks for.
     """
     match = _COUNTER_EACH_OTHER_CREATURE_RE.fullmatch(clause.strip())
     if match is None:
@@ -10770,8 +10774,15 @@ def _parse_counter_each_other_creature_clause(
         source = (
             stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
         )
+        excluded = (
+            {reference.card_id for reference in stack_object.targets if reference.is_card}
+            if isinstance(stack_object, CardState)
+            else set()
+        )
         for permanent in list(game.battlefield):
             if source is not None and permanent.id == source.id:
+                continue
+            if permanent.id in excluded:
                 continue
             if game.controller_of(permanent).username != controller:
                 continue
@@ -20970,6 +20981,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     may_transform_self_if_you_do = _parse_may_transform_self_if_you_do_clause(effect_text)
     if may_transform_self_if_you_do is not None:
         return may_transform_self_if_you_do
+    self_layer_and_verb = _parse_self_layer_and_verb_clause(effect_text)
+    if self_layer_and_verb is not None:
+        return self_layer_and_verb
+    counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(effect_text)
+    if counter_exile_may_cast is not None:
+        return counter_exile_may_cast
     cast_from_hand_then_exile = _parse_cast_from_hand_then_exile_clause(effect_text)
     if cast_from_hand_then_exile is not None:
         return cast_from_hand_then_exile
@@ -24351,6 +24368,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     citys_blessing_instead = _parse_citys_blessing_instead_clause(whole)
     if citys_blessing_instead is not None:
         return citys_blessing_instead
+    counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(whole)
+    if counter_exile_may_cast is not None:
+        return counter_exile_may_cast
     condition_instead = _parse_condition_instead_clause(whole)
     if condition_instead is not None:
         return condition_instead
@@ -40408,7 +40428,13 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
     leading = _LEADING_IF_CLAUSE_RE.fullmatch(stripped)
     if leading is not None:
         condition_text = leading.group("condition").strip()
-        consequence_text = leading.group("consequence").strip()
+        # "If `<condition>`, also `<consequence>`" (Moment of Glory's
+        # cast-from-a-graveyard rider): "also" marks the instruction as
+        # additional to the ones before it (CR 608.2c), which is already
+        # what running it after them means - it names no rule of its own.
+        consequence_text = re.sub(
+            r"^also\s+", "", leading.group("consequence").strip(), flags=re.IGNORECASE
+        )
     else:
         trailing = _TRAILING_IF_CLAUSE_RE.fullmatch(stripped)
         if trailing is None:
@@ -47986,5 +48012,140 @@ def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
                     controller=controller,
                     source_name=source_name,
                 )
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# C01-T3: zone play, graveyard casting and blink readers
+# ---------------------------------------------------------------------------
+
+#: "This creature gets `<layer phrase>` until end of turn and `<verb phrase>`."
+#: - one sentence, two instructions sharing the one self-referencing subject
+#: (CR 700.7's "this creature", or the card's own name CR 201.5 lets it use,
+#: normalised to it by `trigger_effect_for`/`activated_effect_for` before
+#: this sees it): Gandalf, Goblins' Bane's cast trigger and Penregon
+#: Strongbull's activated ability, "... gets +1/+1 until end of turn and
+#: deals 1 damage to each opponent." `_CLAUSE_SEPARATOR`'s bare " and " cut
+#: strands the second half with no subject, and the layer fallback reads the
+#: whole sentence as one continuous effect it cannot build - so it is read
+#: whole here: the first half as its own CR 611.2a layer sentence, the
+#: second as the same subject's own instruction.
+_SELF_LAYER_AND_VERB_RE = re.compile(
+    r"^(?P<subject>this (?:creature|permanent)) (?P<layer>gets [^.]+? until end of turn) "
+    r"and (?P<rest>(?:deals|loses|gains) [^.]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_layer_and_verb_clause(effect_text: str) -> AbilityEffect | None:
+    """`_SELF_LAYER_AND_VERB_RE`'s shape: the layer half through
+    `_create_continuous_effect_of_ability_for_mode_text` (which does nothing
+    once the source has left the battlefield - there is no object left to
+    modify), then the verb half through `parse_mixed_effect`, whose damage
+    reader uses the source's last known information (CR 608.2h: "it's the
+    object as it exists - or as it most recently existed - that does it").
+    Either half unread leaves the whole sentence unread (CR 608.2c)."""
+    match = _SELF_LAYER_AND_VERB_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    subject = match.group("subject")
+    layer_sentence = f"{subject[0].upper()}{subject[1:]} {match.group('layer')}."
+    if not is_genuine_resolution_layer_sentence(layer_sentence):
+        return None
+    rest = parse_mixed_effect(f"{subject} {match.group('rest')}.")
+    if rest is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            continuous_effects(game).create(
+                source,
+                targets=[source],
+                context=layer_context_for(game, game.controller_of(ability)),
+                ability_text=layer_sentence,
+                game=game,
+            )
+        rest(game, ability)
+
+    return effect
+
+
+#: "Counter target `<qualifier>` spell. If {that spell|a `<type>` spell} is
+#: countered this way, exile it instead of putting it into its owner's
+#: graveyard. You may cast that card without paying its mana cost for as long
+#: as it remains exiled." - Thranduil's Decree ("a permanent spell") and
+#: Kheru Spellsnatcher's turned-face-up trigger ("that spell"). CR 701.6a's
+#: graveyard is replaced by exile (CR 614.1a) - for the "a `<type>` spell"
+#: form only when the countered spell is one (CR 110.4b's "permanent spell")
+#: - and CR 601.3's permission hands the exiled card to the countering
+#: object's controller ("you"), free (CR 118.9), with no "this turn" limit:
+#: "for as long as it remains exiled" is the permission's own CR 400.7 stamp.
+_COUNTER_EXILE_MAY_CAST_FREE_RE = re.compile(
+    rf"^counter target(?: {_SPELL_QUALIFIER})? spell\.\s*"
+    r"if (?:that spell|an? (?P<quality>permanent|creature|noncreature|artifact|enchantment"
+    r"|instant|sorcery|planeswalker) spell) is countered this way, exile it instead of "
+    r"putting it into its owner'?s graveyard\.\s*"
+    r"you may cast (?:that card|it) without paying its mana cost for as long as it "
+    r"remains exiled\.?$",
+    re.IGNORECASE,
+)
+
+
+def _counter_exile_quality_holds(spell: CardState, quality: str | None) -> bool:
+    """Whether the countered `spell` is the "a `<quality>` spell" the rider
+    names (CR 110.4b for "permanent"; a card type otherwise, CR 205.2a)."""
+    if quality is None:
+        return True
+    word = quality.lower()
+    if word == "permanent":
+        return spell.is_permanent
+    types = {type_.value.lower() for type_ in spell.types}
+    if word.startswith("non"):
+        return word[3:] not in types
+    return word in types
+
+
+def _parse_counter_exile_may_cast_free_clause(effect_text: str) -> TargetedClause | None:
+    """`_COUNTER_EXILE_MAY_CAST_FREE_RE`'s shape, read whole: the three
+    sentences are one CR 608.2c instruction, "it" and "that card" both CR
+    400.7 anaphora back to the countered spell. A spell that could not be
+    countered (CR 101.2's "can't be countered") stays on the stack and is
+    neither exiled nor handed out; a target already gone is skipped."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _COUNTER_EXILE_MAY_CAST_FREE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    quality = match.group("quality")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        for reference in stack_object.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            exiles = isinstance(target, CardState) and _counter_exile_quality_holds(target, quality)
+            countered = game.counter(target, to_exile=exiles)
+            if not exiles or countered in game.stack:
+                continue
+            assert isinstance(countered, CardState)
+            if countered.zone is not Zone.EXILE:
+                continue
+            game.grant_play_permission(
+                countered,
+                controller,
+                action=PlayAction.CAST,
+                pays_mana_cost=False,
+                source_name=source_name,
+                rule="CR 601.3",
+                zone=Zone.EXILE,
+                until_end_of_turn=False,
+            )
 
     return effect

@@ -974,6 +974,14 @@ _CONDITION_SELF_NO_COUNTERS = re.compile(
 _CONDITION_NOT_CAST_FROM_HAND = re.compile(
     r"this spell wasn'?t cast from (?:your )?hand", re.IGNORECASE
 )
+#: "this spell was cast from a graveyard" - Plunder the Trollshaws', Tidings
+#: of War's and Secrets of the Key's flashback rider: CR 601.2a's own "from
+#: where it is to the stack" zone, read off the resolving spell's own
+#: `CastRecord` (`source`) the same way `_CONDITION_NOT_CAST_FROM_HAND` is. A
+#: copy (CR 707.10) is never cast, so it was never cast from a graveyard.
+_CONDITION_CAST_FROM_GRAVEYARD = re.compile(
+    r"this spell was cast from (?:a|your) graveyard", re.IGNORECASE
+)
 #: "this spell's additional cost was paid" - Burning Curiosity's "If this
 #: spell's additional cost was paid, exile the top three cards instead." and
 #: Cinder Strike's "... instead if this spell's additional cost was paid."
@@ -1038,6 +1046,7 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_LIBRARY_EMPTY_RE,
     _CONDITION_CREATURE_DIED_THIS_TURN,
     _CONDITION_NOT_CAST_FROM_HAND,
+    _CONDITION_CAST_FROM_GRAVEYARD,
     _CONDITION_ADDITIONAL_COST_PAID,
     _CONDITION_SELF_ENTERED_THIS_TURN,
     _CONDITION_YOU_ATTACKED_THIS_TURN,
@@ -19250,6 +19259,14 @@ class Game(EngineModel):
                 return None
             record = self.cast_record(source)
             return record.is_copy or record.origin_zone is not Zone.HAND
+
+        if _CONDITION_CAST_FROM_GRAVEYARD.fullmatch(text):
+            # CR 601.2a's origin zone of the resolving spell itself; a copy
+            # (CR 707.10) was not cast at all, so it answers False.
+            if source is None:
+                return None
+            record = self.cast_record(source)
+            return not record.is_copy and record.origin_zone is Zone.GRAVEYARD
 
         if _CONDITION_ADDITIONAL_COST_PAID.fullmatch(text):
             # Read off `source`, the resolving spell; no spell, no answer.
