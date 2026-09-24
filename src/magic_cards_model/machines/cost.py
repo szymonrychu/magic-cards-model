@@ -46,7 +46,14 @@ from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.subtypes import canonical_subtype
 from ..models.card import Card, Color, Supertype, Type
-from ..models.card_state import CardState, ChoiceKind, Counter, CounterKind
+from ..models.card_state import (
+    CardState,
+    ChoiceKind,
+    Counter,
+    CounterKind,
+    ExileAnnotation,
+    ExileMarker,
+)
 from ..models.mana import (
     NO_SPEND_EFFECT,
     NOT_RETAINED,
@@ -2518,6 +2525,24 @@ class CostComponent(EngineModel):
     and stays hardcoded.
     """
 
+    link_to_permanent_id: UUID | None = None
+    """`ComponentKind.EXILE` only: the id of the permanent-to-be this exile
+    cost's cards should be recorded as "exiled with" (CR 607.2q: "If a
+    permanent spell has an ability printed on it that allows one or more
+    cards to be exiled while paying a cost to cast it and the permanent that
+    spell becomes has an ability that refers to cards 'exiled with [this
+    object],' those abilities are linked. The second ability refers only to
+    cards exiled to pay the cost of the spell that became that permanent.")
+
+    Set by `machines/objects_as_costs.delve` to the delving spell's own
+    `CardState.id` - which stays the same across the stack-to-battlefield
+    zone change in this engine (`CardState.move_to`'s own docstring) - so
+    Murktide Regent's own "a +1/+1 counter on it for each instant and sorcery
+    card exiled with it" can find them again once it resolves. `None` for
+    every other exile cost (Force of Will's hand exile, Seasoned Pyromancer's
+    graveyard exile), which links nothing and changes nothing about how they
+    pay."""
+
     variable_count: bool = False
     """The printed count is CR 107.3a's X or "one or more", so the number is
     whatever the payer announced or chose rather than one the text fixes. For
@@ -2971,6 +2996,34 @@ class CostComponent(EngineModel):
                 # combat clean-up - so this delegates outright rather than
                 # special-casing one more zone by hand.
                 game.exile_cards(list(self.cards))
+                if self.link_to_permanent_id is not None:
+                    # CR 607.2q: cards exiled paying this cost are "exiled
+                    # with" the permanent the spell becomes. Written after
+                    # `exile_cards` moves them - `CardState.move_to` keeps
+                    # `exile_annotation` alone on a move *into* exile
+                    # (`models/card_state.py`'s own docstring) exactly so a
+                    # caller can annotate either side of the move, the same
+                    # hook `Game.put_into_graveyard`'s own "exile instead of
+                    # graveyard, linked" branch already uses.
+                    # `linked_permanent_stamp` is left `None`: the id names
+                    # the spell that is still on the stack right now, and its
+                    # own stamp changes the moment it resolves onto the
+                    # battlefield (`CardState.move_to`), so no stamp fixed
+                    # here would ever equal the one the entering permanent
+                    # reads it back with. `ExileAnnotation.links_to` already
+                    # matches on the id alone whenever either side's stamp is
+                    # `None`.
+                    for card in self.cards:
+                        if card.zone is Zone.EXILE:
+                            card.exile_annotation = ExileAnnotation(
+                                marker=ExileMarker.LINKED,
+                                owner=card.owner,
+                                turn_exiled=(
+                                    game.turn.turns_taken if game.turn is not None else None
+                                ),
+                                linked_permanent_id=self.link_to_permanent_id,
+                                linked_permanent_stamp=None,
+                            )
         elif self.kind is ComponentKind.REVEAL:
             # CR 701.20a: showing the cards is the whole payment, and CR
             # 701.20b keeps them where they are. The record is what

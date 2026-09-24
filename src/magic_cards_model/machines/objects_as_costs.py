@@ -492,11 +492,23 @@ def delve(payment: CostPayment, spell: CardState, *cards: CardState) -> list[Cos
     whole bound: an empty graveyard delves for nothing, and offering more cards
     than the cost has generic mana is refused by `CostPayment.substitute`
     rather than quietly exiling a card for no benefit.
+
+    CR 607.2q links every card this exiles to `spell` itself: "the permanent
+    that spell becomes" is what a card like Murktide Regent's own "a +1/+1
+    counter on it for each instant and sorcery card exiled with it" reads
+    back, so each substitution's component carries `spell.id` in
+    `link_to_permanent_id` regardless of whether this particular printing
+    ever asks for it back - nothing reads an unclaimed link, the same way an
+    unclaimed `ExileAnnotation.linked_permanent_id` already sits harmlessly
+    on every other exiled card in this engine.
     """
     if not has_delve(spell.card):
         raise ValueError(f"{spell.name} does not have delve ({DELVE_RULE})")
     offer = delve_offer()
-    return [_substitute(payment, offer, card, None) for card in cards]
+    substitutions = [_substitute(payment, offer, card, None) for card in cards]
+    for substitution in substitutions:
+        substitution.component.link_to_permanent_id = spell.id
+    return substitutions
 
 
 def improvise(

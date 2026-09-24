@@ -1270,6 +1270,23 @@ _COUNTERS_EQUAL_TO = re.compile(
     re.IGNORECASE,
 )
 
+#: "a +1/+1 counter on it for each instant and sorcery card exiled with it"
+#: (Murktide Regent) and "an additional loyalty counter on him for each
+#: instant and sorcery spell you've cast this turn" (Ral, Leyline Prodigy) -
+#: a singular counter, once per matching thing, rather than `_COUNTERS_EQUAL_
+#: TO`'s "a number of ... equal to [expression]" or `_COUNTERS`'s literal
+#: count. `kind` reads the same as both of those; the "for each ..." tail is
+#: carried as `amount_expression` unevaluated, the same field `_COUNTERS_
+#: EQUAL_TO` fills, and read the same way by `_self_enters_modifiers` -
+#: `machines/effects.amount_expression`'s own terms are what actually know
+#: how to count "instant and sorcery card(s) exiled with it" and "instant and
+#: sorcery spell(s) you've cast this turn".
+_COUNTER_FOR_EACH = re.compile(
+    r"^an? (?:additional )?(?P<kind>[\w+/-]+) counters?"
+    r"(?: on (?:it|him|her|them))? for each (?P<description>.+?)$",
+    re.IGNORECASE,
+)
+
 #: "[`<multiplier>`] that many `<kind>` counters" - Shimatsu the Bloodcloaked's
 #: bare "that many +1/+1 counters" and Devouring Hellion's "twice that many
 #: +1/+1 counters". Unlike `_amount_of`'s own refusal of "that many" as a
@@ -1311,6 +1328,15 @@ def _read_counters(
             True,
             equal_to.group("kind").strip(),
             equal_to.group("expression").strip(),
+            None,
+        )
+    for_each = _COUNTER_FOR_EACH.match(text)
+    if for_each:
+        return (
+            None,
+            True,
+            for_each.group("kind").strip(),
+            for_each.group("description").strip(),
             None,
         )
     that_many = _THAT_MANY_COUNTERS.match(text)

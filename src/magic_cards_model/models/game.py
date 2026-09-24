@@ -3247,7 +3247,10 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 65
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 66
+    #: 66: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
+    #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
+    #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -4098,6 +4101,11 @@ class Game(EngineModel):
     prohibition, The Wandering Emperor's timing, Agatha's Soul Cauldron's
     grant and any-color spend now apply where a version-64 board did nothing,
     the second.
+
+    Bumped 65 -> 66 (C00-T5, enters-state; renumbered from 65 at the C00
+    integration): `CostComponent` gained `link_to_permanent_id` (CR 607.2q),
+    carried on a pending ability's own `CostPayment.components` - the first
+    bullet.
     """
 
     @model_validator(mode="before")
