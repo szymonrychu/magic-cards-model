@@ -3150,6 +3150,36 @@ _BENDING_LIST_CONDITION_BOUNDARY = re.compile(
     re.IGNORECASE,
 )
 
+#: The Great Goblin's own "Whenever you put one or more counters on a
+#: Goblin, Orc, or Army you control, `<effect>`." - a comma-separated
+#: subtype list *inside* the trigger condition itself, the identical class of
+#: defect `_CAST_TYPE_LIST_CONDITION_BOUNDARY` above exists to fix for a cast
+#: condition's own type list: `_split_top_level`'s naive first-top-level-comma
+#: cut would slice this condition down to "you put one or more counters on a
+#: Goblin", leaving "Orc, or Army you control" sitting in front of the effect
+#: text instead of behind it. Not case-insensitive, on purpose - Oracle's own
+#: subtype capitalisation (`[A-Z]`) is what tells a subtype apart from a
+#: card-type word here, the same discriminator `machines/triggers.
+#: _DYING_SUBTYPE`/`_ENTERING_SUBTYPE` already rely on for their own subjects.
+#: `machines/triggers._COUNTERS_PUT_ON_DESCRIPTION_CONDITION` reads the
+#: captured condition.
+_COUNTERS_PUT_SUBTYPE_LIST_CONDITION_BOUNDARY = re.compile(
+    r"^(?P<condition>you put one or more counters on an? "
+    r"[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,)?\s+or\s+[A-Z][A-Za-z]*"
+    r" you control)\s*,\s*"
+)
+
+#: The Great Goblin's own second trigger, "Whenever another Goblin, Orc, or
+#: Army you control dies, `<effect>`." - the identical class of comma-list
+#: boundary defect, for CR 700.4's own dies condition rather than a
+#: counters-put one. `machines/triggers._DYING_SUBTYPE` reads the captured
+#: condition (already widened to this same subtype-list shape).
+_DIES_SUBTYPE_LIST_CONDITION_BOUNDARY = re.compile(
+    r"^(?P<condition>(?:an?|another|one or more) (?:nontoken )?"
+    r"[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,)?\s+or\s+[A-Z][A-Za-z]*"
+    r"(?: you control| an opponent controls)? (?:dies|die))\s*,\s*"
+)
+
 #: CR 603.2h's own trailing restriction, in either the rule's own wording
 #: ("Do this only once each turn") or Caretaker's Talent's paraphrase ("This
 #: ability triggers only once each turn") - both always the ability's last
@@ -3223,6 +3253,35 @@ def _split_compound_condition(word: TriggerWord, condition: str) -> list[tuple[T
 _TRANSFORMS_INTO_LEAD = re.compile(r"^this [a-z]+ transforms into ", re.IGNORECASE)
 
 
+def _self_named_condition_boundary(body: str, face: str) -> tuple[str, str] | None:
+    """(condition, effect) when `body` opens with the card's own full printed
+    name (CR 201.5) as its plain trigger subject - "When `<Name>` `<verb>`,
+    `<effect>`." - and that printed name itself carries an internal comma,
+    the way Tom, Bert, and William's own three-name legend does ("Tom, Bert,
+    and William"). `_split_top_level`'s naive first-top-level-comma cut has
+    no way to tell the name's own internal comma apart from the real
+    condition/effect boundary, and sliced the condition down to "Tom",
+    leaving "Bert, and William die, if they were a creature, ..." sitting in
+    the effect instead - the same class of defect `_transforms_into_face_
+    boundary` just below already exists to fix for a different fixed phrase
+    (CR 701.27e's "transforms into `<face>`").
+
+    `None` for the overwhelmingly common case: a printed name with no
+    internal comma is untouched by this at all (`_split_top_level`'s own cut
+    already reads it correctly), and a `body` that does not open with the
+    name literally is left to the ordinary split too - self-reference by a
+    shortened name or a pronoun (CR 201.5c, `_self_referential`) is read
+    downstream of `condition`, not here.
+    """
+    if not face or "," not in face or not body.startswith(face):
+        return None
+    rest = body[len(face) :]
+    parts = _split_top_level(rest)
+    if len(parts) < 2:
+        return None
+    return f"{face} {parts[0]}", ", ".join(parts[1:])
+
+
 def _transforms_into_face_boundary(body: str, face: str) -> tuple[str, str] | None:
     """`(condition, effect)` for "this `<noun>` transforms into `<face>`,
     `<effect>`" when `<face>` is the name of the face the ability is printed
@@ -3258,8 +3317,21 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
     bending_list_boundary = (
         None if type_list_boundary is not None else _BENDING_LIST_CONDITION_BOUNDARY.match(body)
     )
+    subtype_list_boundary = (
+        None
+        if type_list_boundary is not None or bending_list_boundary is not None
+        else (
+            _COUNTERS_PUT_SUBTYPE_LIST_CONDITION_BOUNDARY.match(body)
+            or _DIES_SUBTYPE_LIST_CONDITION_BOUNDARY.match(body)
+        )
+    )
+    self_named_boundary = _self_named_condition_boundary(body, common.get("face") or "")
     transforms_into_boundary = _transforms_into_face_boundary(body, common.get("face") or "")
-    if transforms_into_boundary is not None:
+    if self_named_boundary is not None:
+        condition, rest = self_named_boundary
+        if not rest:
+            return None
+    elif transforms_into_boundary is not None:
         # CR 701.27e's "transforms into `<face>`": the face's own name may
         # hold a comma (Avacyn, the Purifier), which the plain top-level
         # comma split below would cut through.
@@ -3274,6 +3346,11 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
     elif bending_list_boundary is not None:
         condition = bending_list_boundary.group("condition")
         rest = body[bending_list_boundary.end() :].strip()
+        if not rest:
+            return None
+    elif subtype_list_boundary is not None:
+        condition = subtype_list_boundary.group("condition")
+        rest = body[subtype_list_boundary.end() :].strip()
         if not rest:
             return None
     else:

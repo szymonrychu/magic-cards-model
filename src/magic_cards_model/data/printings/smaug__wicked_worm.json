@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "19cc91f0-e724-41ac-b6d8-9a293bd63b42",
+  "oracle_id": "20535126-f811-4386-bdce-d73f30691724",
+  "multiverse_ids": [],
+  "resource_id": "933AAA9BEF7198AC6677FCA80ACBBCED23BF4CE501274E84E9D7E6A210FBF976",
+  "mtgo_id": 154266,
+  "arena_id": 103544,
+  "tcgplayer_id": 709006,
+  "cardmarket_id": 900342,
+  "name": "Smaug, Wicked Worm",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/19cc91f0-e724-41ac-b6d8-9a293bd63b42",
+  "scryfall_uri": "https://scryfall.com/card/hob/164/smaug-wicked-worm?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-29T11:08:33Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.jpg?1785323313",
+    "normal": "https://cards.scryfall.io/normal/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.jpg?1785323313",
+    "large": "https://cards.scryfall.io/large/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.jpg?1785323313",
+    "png": "https://cards.scryfall.io/png/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.png?1785323313",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.jpg?1785323313",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.jpg?1785323313",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.webp?1785323313",
+    "grid": "https://cards.scryfall.io/grid/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.webp?1785323313",
+    "display": "https://cards.scryfall.io/display/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.webp?1785323313",
+    "art": "https://cards.scryfall.io/art/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.webp?1785323313",
+    "crop": "https://cards.scryfall.io/crop/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.webp?1785323313"
+  },
+  "mana_cost": "{3}{B}{R}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Dragon",
+  "oracle_text": "Flying\nWhen Smaug enters, create X tapped Treasure tokens, where X is the number of artifacts your opponents control.\nWhenever you cast a spell, if mana from a Treasure was spent to cast it, you draw a card and lose 1 life.",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Flying",
+    "Treasure"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "5091e2bd-247d-4a1d-adf4-6e66324ee20b",
+      "component": "combo_piece",
+      "name": "Smaug, Wicked Worm",
+      "type_line": "Legendary Creature \u2014 Dragon",
+      "uri": "https://api.scryfall.com/cards/5091e2bd-247d-4a1d-adf4-6e66324ee20b"
+    },
+    {
+      "object": "related_card",
+      "id": "d1892b78-7663-4cbd-a732-9a4b0b18d4c8",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/d1892b78-7663-4cbd-a732-9a4b0b18d4c8"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/19cc91f0-e724-41ac-b6d8-9a293bd63b42/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A20535126-f811-4386-bdce-d73f30691724&unique=prints",
+  "collector_number": "164",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Antonio Jos\u00e9 Manzanedo",
+  "artist_ids": [
+    "74986d28-0001-4a78-827c-e490b325d0e3"
+  ],
+  "illustration_id": "d8b6ccf4-e7b6-4a37-8183-46009b3d9916",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 6905,
+  "prices": {
+    "usd": "1.11",
+    "usd_foil": "1.90",
+    "usd_etched": null,
+    "eur": "1.76",
+    "eur_foil": "1.92",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSmaug%252C%2BWicked%2BWorm",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSmaug%252C%2BWicked%2BWorm",
+    "edhrec": "https://edhrec.com/route/?cc=Smaug%2C+Wicked+Worm"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709006%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900342&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154266?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

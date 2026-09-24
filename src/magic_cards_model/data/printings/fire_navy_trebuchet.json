@@ -134,7 +134,7 @@
   "promo_types": [
     "universesbeyond"
   ],
-  "edhrec_rank": 11193,
+  "edhrec_rank": 11061,
   "preview": {
     "source": "The Outerhaven",
     "source_uri": "https://www.theouterhaven.net/magic-the-gathering-x-avatar-card-preview/",
@@ -142,10 +142,10 @@
   },
   "prices": {
     "usd": "0.22",
-    "usd_foil": "0.31",
+    "usd_foil": "0.28",
     "usd_etched": null,
-    "eur": "0.07",
-    "eur_foil": "0.12",
+    "eur": "0.11",
+    "eur_foil": "0.20",
     "tix": "0.03"
   },
   "related_uris": {

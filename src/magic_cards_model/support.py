@@ -2099,14 +2099,28 @@ def _probe_cards(printing: Card, condition: str, *, entering: bool) -> list[Card
     """
     required, forbidden = _condition_required_types(condition)
     candidates: list[Card] = [printing]
-    subtype = (
+    raw_subtype = (
         _condition_required_entering_subtype(condition)
         if entering
         else _condition_required_subtype(condition)
     )
-    if subtype is not None:
-        found = [c for c in _cards_by_subtype().get(subtype, ()) if not forbidden & set(c.types)]
-        if not found and subtype.lower() not in {s.lower() for s in printing.subtypes}:
+    # `_required_entering_subtype` still returns one bare subtype string (no
+    # pool printing lists more than one entering subtype yet); `_required_
+    # subtype`/`_required_dying_subtype` read a comma/or-separated list (The
+    # Great Goblin's own "Goblin, Orc, or Army") and so already return a
+    # tuple. Normalised here so the probe below reads either the same way -
+    # a real printing satisfying any one item is as good a reachability
+    # witness as one satisfying all, since the condition itself is an "or".
+    subtypes = (raw_subtype,) if isinstance(raw_subtype, str) else raw_subtype
+    if subtypes is not None:
+        found = [
+            card
+            for subtype in subtypes
+            for card in _cards_by_subtype().get(subtype, ())
+            if not forbidden & set(card.types)
+        ]
+        printing_subtypes = {s.lower() for s in printing.subtypes}
+        if not found and not any(subtype.lower() in printing_subtypes for subtype in subtypes):
             return None
         candidates.extend(found)
     for card_type in required:

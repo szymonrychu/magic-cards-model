@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "211a9764-3c60-46ba-bb53-e6692640ec8f",
+  "oracle_id": "0ea58cfe-b37c-49a6-a3be-7e60065b8238",
+  "multiverse_ids": [],
+  "resource_id": "C9D9F68C93D359AABEB9C858AC0E1A8D6DB2F2FDD39794A32E4019C72B131F51",
+  "mtgo_id": 154278,
+  "arena_id": 103550,
+  "tcgplayer_id": 693006,
+  "cardmarket_id": 898511,
+  "name": "Tom, Bert, and William",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/211a9764-3c60-46ba-bb53-e6692640ec8f",
+  "scryfall_uri": "https://scryfall.com/card/hob/169/tom-bert-and-william?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:33:04Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.jpg?1783902784",
+    "normal": "https://cards.scryfall.io/normal/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.jpg?1783902784",
+    "large": "https://cards.scryfall.io/large/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.jpg?1783902784",
+    "png": "https://cards.scryfall.io/png/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.png?1783902784",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.jpg?1783902784",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.jpg?1783902784",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.webp?1783902784",
+    "grid": "https://cards.scryfall.io/grid/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.webp?1783902784",
+    "display": "https://cards.scryfall.io/display/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.webp?1783902784",
+    "art": "https://cards.scryfall.io/art/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.webp?1783902784",
+    "crop": "https://cards.scryfall.io/crop/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.webp?1783902784"
+  },
+  "mana_cost": "{3}{B}{G}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Troll",
+  "oracle_text": "{1}, Sacrifice another creature: Draw cards equal to the sacrificed creature's power, then discard a card.\nWhen Tom, Bert, and William die, if they were a creature, return them to the battlefield. They're an artifact. (They're no longer a creature.)",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "B",
+    "G"
+  ],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/211a9764-3c60-46ba-bb53-e6692640ec8f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0ea58cfe-b37c-49a6-a3be-7e60065b8238&unique=prints",
+  "collector_number": "169",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Leonardo Borazio",
+  "artist_ids": [
+    "608e3b85-cdd3-4d1a-8a3a-7f1ed8856f6b"
+  ],
+  "illustration_id": "7e9c78d8-330c-42ac-b341-d2da166f5927",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11992,
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.39",
+    "usd_etched": null,
+    "eur": "0.30",
+    "eur_foil": "0.36",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTom%252C%2BBert%252C%2Band%2BWilliam",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTom%252C%2BBert%252C%2Band%2BWilliam",
+    "edhrec": "https://edhrec.com/route/?cc=Tom%2C+Bert%2C+and+William"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F693006%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898511&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154278?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

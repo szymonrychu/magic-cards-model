@@ -1322,6 +1322,38 @@ def _types_match(types: tuple[Type, ...] | None, condition: str) -> bool:
 #: so "Cats" yields "Cat" rather than swallowing the trailing "s".
 _OTHER_SUBTYPE = re.compile(r"\bother ([A-Za-z]+?)s?\s+you control\b", re.IGNORECASE)
 
+
+def _parse_subtype_list(text: str) -> tuple[str, ...] | None:
+    """ "Goblin, Orc, or Army" (CR 205.3m) - a comma/or-separated list of
+    capitalized subtype words, or a single one, as `_DYING_SUBTYPE`'s own
+    `subtype` group (or a future widened sibling) captures it whole. `None`
+    if any item is not a bare capitalized word (a lowercase qualifier or a
+    multi-word phrase among them is not a shape this reads).
+
+    The Great Goblin's own condition prints every item already singular
+    ("Goblin, Orc, or Army"), so no plural-stripping is attempted here the
+    way `_required_dying_subtype`'s own single-subtype callers already do for
+    their own subject - a future printing with a plural item in a list is
+    left unread rather than guessed at.
+    """
+    text = text.strip()
+    if not text:
+        return None
+    if "," in text:
+        parts = [part.strip() for part in text.split(",")]
+        parts = [part for part in parts if part]
+        if parts:
+            parts[-1] = re.sub(r"^or\s+", "", parts[-1], flags=re.IGNORECASE).strip()
+    else:
+        parts = [part.strip() for part in re.split(r"\s+or\s+", text, flags=re.IGNORECASE)]
+    words: list[str] = []
+    for word in parts:
+        if not re.fullmatch(r"[A-Z][A-Za-z]*", word):
+            return None
+        words.append(word)
+    return tuple(words) if words else None
+
+
 #: "that targets only a single creature [you control | other than
 #: `<self-reference>`]" - Frontline Heroism's own "you control" and Ivy,
 #: Gleeful Spellthief's own "other than Ivy" are the identical CR 601.2c
@@ -1465,10 +1497,10 @@ def _cast_spell_targets_condition_holds(
     return False
 
 
-def _required_subtype(condition: str) -> str | None:
+def _required_subtype(condition: str) -> tuple[str, ...] | None:
     match = _OTHER_SUBTYPE.search(condition)
     if match is not None:
-        return match.group(1)
+        return (match.group(1),)
     return _required_dying_subtype(condition)
 
 
@@ -1481,26 +1513,49 @@ def _required_subtype(condition: str) -> str | None:
 #: creature dies" (no subtype at all) and "a nontoken creature you control
 #: dies" (Lightning Coils - "nontoken" is lowercase and "creature" is a card
 #: type, not a subtype) never match this.
+#: The Great Goblin's own "another Goblin, Orc, or Army you control dies" -
+#: `_DYING_SUBTYPE`'s single-subtype subject widened to a comma/or list, read
+#: by `_parse_subtype_list`. Every single-subtype printing this pool already
+#: has (Lightning Coils' "a nontoken creature", Archangel Avacyn's own
+#: non-Angel qualifier read separately by `_excluded_subtype_absent`) still
+#: matches: a lone word is a list of one.
 _DYING_SUBTYPE = re.compile(
-    r"^(?:an?|another|one or more) (?:nontoken )?(?P<subtype>[A-Z][A-Za-z]*?)(?P<plural_s>s?)"
+    r"^(?:an?|another|one or more) (?:nontoken )?"
+    r"(?P<subtype>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,?\s+or\s+[A-Z][A-Za-z]*)?)"
     r"(?: you control| an opponent controls)?"
     r" (?:dies\b|die\b|is put into a graveyard from the battlefield\b|"
     r"are put into a graveyard from the battlefield\b)"
 )
 
 
-def _required_dying_subtype(condition: str) -> str | None:
-    """The subtype `_DYING_SUBTYPE` names, or `None` - `_required_entering_
+def _required_dying_subtype(condition: str) -> tuple[str, ...] | None:
+    """The subtype(s) `_DYING_SUBTYPE` names, or `None` - `_required_entering_
     subtype`'s own reading, mirrored for a DIES condition's subject rather
-    than an ENTERS_THE_BATTLEFIELD one."""
+    than an ENTERS_THE_BATTLEFIELD one, and widened to a list the way that
+    one's own single subject does not need to be (no pool printing yet lists
+    more than one entering subtype).
+
+    Each word is singularised the same way the single-subtype shape always
+    was - a trailing "s" dropped, except for CR 305.6's basic land types
+    ("Plains" keeps its own plural spelling) - applied per list item so
+    "Goblin, Orc, or Army" and a future plural list both read the same way.
+    """
     match = _DYING_SUBTYPE.match(condition.strip())
     if match is None:
         return None
-    subtype, plural_s = match.group("subtype"), match.group("plural_s")
-    whole = subtype + plural_s
+    words = _parse_subtype_list(match.group("subtype"))
+    if words is None:
+        return None
     from .layers import BASIC_LAND_TYPES
 
-    return whole if whole in BASIC_LAND_TYPES else subtype
+    return tuple(
+        word
+        if word in BASIC_LAND_TYPES
+        else word[:-1]
+        if word.endswith("s") and len(word) > 1
+        else word
+        for word in words
+    )
 
 
 #: "a Mountain you control enters" (Valakut, the Molten Pinnacle) - a *subtype*
@@ -1594,15 +1649,21 @@ def _excluded_subtype_absent(subtypes: tuple[str, ...] | None, condition: str) -
     return not any(word.lower() in excluded for word in subtypes or ())
 
 
-def _subtype_matches(subtypes: tuple[str, ...] | None, subtype: str | None) -> bool:
-    """Whether `subtypes` names `subtype` (CR 712.8f). See `_types_match`'s
-    docstring for why this reads `GameEvent.subject_subtypes`, not a raw
-    `Card`."""
+def _subtype_matches(
+    subtypes: tuple[str, ...] | None, subtype: str | tuple[str, ...] | None
+) -> bool:
+    """Whether `subtypes` names `subtype` (CR 712.8f), or *any* of them when
+    `subtype` is a list (The Great Goblin's own "Goblin, Orc, or Army" -
+    CR 205.3m names each a distinct subtype, and the condition is an "or", not
+    an "and", of the three). See `_types_match`'s docstring for why this
+    reads `GameEvent.subject_subtypes`, not a raw `Card`."""
     if subtype is None:
         return True
     if subtypes is None:
         return False
-    return any(word.lower() == subtype.lower() for word in subtypes)
+    wanted = (subtype,) if isinstance(subtype, str) else subtype
+    lowered = {word.lower() for word in subtypes}
+    return any(word.lower() in lowered for word in wanted)
 
 
 #: Tetsuko Umezawa, Pursuer's own "with power or toughness 1 or less" -
@@ -3012,6 +3073,24 @@ _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION = re.compile(
     r"^(?P<who>you put|an opponent puts) one or more loyalty counters on a planeswalker$"
 )
 
+#: The Great Goblin's own "Whenever you put one or more counters on a
+#: Goblin, Orc, or Army you control, ..." - `_LOYALTY_COUNTERS_PUT_ON_
+#: PLANESWALKER_CONDITION`'s own active-voice shape widened from one fixed
+#: subject ("a planeswalker") to any subtype or subtype list a "target
+#: `<description>`" phrase's own grammar could name, read by `_parse_subtype_
+#: list` the identical way `_DYING_SUBTYPE`'s own widened subject is.
+#: Matched against `ability.condition` **unlowercased** (unlike every other
+#: condition in this family, matched against a `.lower()`'d copy) because
+#: `_parse_subtype_list` needs Oracle's own subtype capitalisation to tell a
+#: subtype from a card-type word - the reason `_DYING_SUBTYPE`/`_ENTERING_
+#: SUBTYPE` are both matched the same unlowered way from `condition_matches`
+#: itself, just above this module's `ability.event is None` fallback.
+_COUNTERS_PUT_ON_DESCRIPTION_CONDITION = re.compile(
+    r"^you put one or more counters on an? "
+    r"(?P<subtypes>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,?\s+or\s+[A-Z][A-Za-z]*)?)"
+    r" you control$"
+)
+
 #: Hardened Academic's "one or more cards leave your graveyard" and Murktide
 #: Regent's "an instant or sorcery card leaves your graveyard" - one shape with
 #: an optional type restriction (CR 603.10a's own "abilities that trigger when
@@ -3305,6 +3384,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
     if _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
+    if _COUNTERS_PUT_ON_DESCRIPTION_CONDITION.match(condition.strip()):
+        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
     if _PLAYER_COUNTERS_PUT_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.PLAYER_COUNTERS_PUT})
     if _LEAVES_GRAVEYARD_CONDITION.match(lowered):
@@ -3417,6 +3498,21 @@ def _unread_condition_matches(
         if match.group("who") == "you put":
             return event.subject_controller == controller
         return event.subject_controller is not None and event.subject_controller != controller
+
+    # The Great Goblin's own "you put one or more counters on a Goblin, Orc,
+    # or Army you control" - matched against `ability.condition` unlowered
+    # (not the `condition` local above), the same reason `_DYING_SUBTYPE`'s
+    # own subject is read off the unlowered text from `condition_matches`
+    # itself: Oracle's subtype capitalisation is the only thing telling a
+    # subtype from a card-type word.
+    description_match = _COUNTERS_PUT_ON_DESCRIPTION_CONDITION.match(ability.condition.strip())
+    if description_match is not None:
+        if event.event is not ExtraTriggerEvent.COUNTERS_PUT:
+            return False
+        subtypes = _parse_subtype_list(description_match.group("subtypes"))
+        if not _subtype_matches(event.subject_subtypes, subtypes):
+            return False
+        return event.subject_controller == controller
 
     match = _PLAYER_COUNTERS_PUT_CONDITION.match(condition)
     if match is not None:
@@ -4189,15 +4285,21 @@ def _self_is_a_creature_holds(game: "Game", clause: str, source: CardState) -> b
 
 
 #: The Enduring cycle's "if it was a creature" on its own death trigger - a
-#: past-tense type check on the source as it left the battlefield.
+#: past-tense type check on the source as it left the battlefield. "they
+#: were" is the identical clause on a plural-subject source - Tom, Bert, and
+#: William's own "if they were a creature" (three trolls as one legendary
+#: creature, CR 201.5's own printed-name self-reference already reads the
+#: plural verb on the condition side; this is the same plurality carried
+#: into the intervening *if*).
 _SELF_WAS_A_TYPE = re.compile(
-    r"^it was an? (?P<type>artifact|battle|creature|enchantment|land|planeswalker)$"
+    r"^(?:it was|they were) an? (?P<type>artifact|battle|creature|enchantment|land|planeswalker)$"
 )
 
 
 def _self_was_a_type_holds(clause: str, source: CardState, event: GameEvent | None) -> bool | None:
-    """ "if it was a `<card type>`" on a leaves-the-battlefield trigger of the
-    source itself, or `None` for any other clause.
+    """ "if it was a `<card type>`"/"if they were a `<card type>`" on a
+    leaves-the-battlefield trigger of the source itself, or `None` for any
+    other clause.
 
     CR 603.10a: a leaves-the-battlefield ability looks back in time, so the
     answer is the permanent's types as it last existed on the battlefield -
