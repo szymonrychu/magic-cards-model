@@ -77,7 +77,9 @@ def _plural_forms(word: str) -> set[str]:
         forms.add(word[:-2] + "ves")
     elif word.endswith("f"):
         forms.add(word[:-1] + "ves")
-    if word.endswith(("s", "x", "z", "ch", "sh")):
+    if word.endswith(("s", "x", "z", "ch", "sh", "o")):
+        # "Hero" -> "Heroes" (Avengers Assemble!'s "Heroes you control"); an
+        # "-os" plural ("Servos") is still the `+ "s"` form above.
         forms.add(word + "es")
     if len(word) > 1 and word.endswith("y") and word[-2] not in _VOWELS:
         forms.add(word[:-1] + "ies")

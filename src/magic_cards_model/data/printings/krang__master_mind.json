@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "d27fa497-e842-4812-80fe-28517544e1c5",
+  "oracle_id": "52562194-4a97-40d2-aa73-7827f7834f2f",
+  "multiverse_ids": [],
+  "resource_id": "955852B8AE435D70C23EB01771A4B927D3C821E323DE9411B9D8643018BDDD0F",
+  "mtgo_id": 147709,
+  "arena_id": 100500,
+  "tcgplayer_id": 657751,
+  "cardmarket_id": 868288,
+  "name": "Krang, Master Mind",
+  "lang": "en",
+  "released_at": "2026-03-06",
+  "uri": "https://api.scryfall.com/cards/d27fa497-e842-4812-80fe-28517544e1c5",
+  "scryfall_uri": "https://scryfall.com/card/tmt/43/krang-master-mind?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:55:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.jpg?1783904114",
+    "normal": "https://cards.scryfall.io/normal/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.jpg?1783904114",
+    "large": "https://cards.scryfall.io/large/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.jpg?1783904114",
+    "png": "https://cards.scryfall.io/png/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.png?1783904114",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.jpg?1783904114",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.jpg?1783904114",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.webp?1783904114",
+    "grid": "https://cards.scryfall.io/grid/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.webp?1783904114",
+    "display": "https://cards.scryfall.io/display/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.webp?1783904114",
+    "art": "https://cards.scryfall.io/art/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.webp?1783904114",
+    "crop": "https://cards.scryfall.io/crop/front/d/2/d27fa497-e842-4812-80fe-28517544e1c5.webp?1783904114"
+  },
+  "mana_cost": "{6}{U}{U}",
+  "cmc": 8.0,
+  "type_line": "Legendary Artifact Creature \u2014 Utrom Warrior",
+  "oracle_text": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)\nWhen Krang enters, if you have fewer than four cards in hand, draw cards equal to the difference.\nKrang gets +1/+0 for each other artifact you control.",
+  "power": "1",
+  "toughness": "4",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Affinity"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set": "tmt",
+  "set_name": "Teenage Mutant Ninja Turtles",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atmt&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tmt?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d27fa497-e842-4812-80fe-28517544e1c5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A52562194-4a97-40d2-aa73-7827f7834f2f&unique=prints",
+  "collector_number": "43",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Narendra Bintara Adi",
+  "artist_ids": [
+    "1be2b84d-99c5-4a51-b741-105cbeb53078"
+  ],
+  "illustration_id": "0bb5acc8-20fd-491a-98ee-218460aa4950",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11095,
+  "prices": {
+    "usd": "0.60",
+    "usd_foil": "1.16",
+    "usd_etched": null,
+    "eur": "1.53",
+    "eur_foil": "2.09",
+    "tix": "0.47"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKrang%252C%2BMaster%2BMind",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKrang%252C%2BMaster%2BMind",
+    "edhrec": "https://edhrec.com/route/?cc=Krang%2C+Master+Mind"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F657751%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868288&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/147709?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

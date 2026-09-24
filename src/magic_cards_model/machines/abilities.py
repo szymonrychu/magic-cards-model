@@ -2599,7 +2599,10 @@ def _parse_chapter_line(text: str, common: dict) -> list[TriggeredAbility] | Non
 #: never consults this module's own `Ability` classification, but fatal for
 #: a triggered one, whose `abilities_triggered_by`/`intervening_if_holds`
 #: only ever see a `TriggeredAbility`.
-_ABILITY_WORD = re.compile(r"^([A-Z][A-Za-z'\- ]{2,30}?(?: \d+)?)\s+—\s+(?=\S)")
+#: A flavor word may end in its own punctuation - The Unbeatable Squirrel
+#: Girl's "Do You Like Squirrels? —" and "I LOVE Squirrels! —" (CR 207.2d:
+#: flavor words have no rules meaning either) - so "?" and "!" are allowed.
+_ABILITY_WORD = re.compile(r"^([A-Z][A-Za-z'\-?! ]{2,30}?(?: \d+)?)\s+—\s+(?=\S)")
 
 #: CR 603.1's three words, at the start of the line.
 _TRIGGER = re.compile(r"^(When|Whenever|At)\b\s*", re.IGNORECASE)

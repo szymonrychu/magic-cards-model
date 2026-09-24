@@ -16379,6 +16379,9 @@ class Game(EngineModel):
                 for permanent in self.battlefield
                 if permanent.mana_cost
             },
+            # CR 506.4: "Attacking tokens you control have flying" reads who
+            # is attacking, which is combat state, not a characteristic.
+            attacking=frozenset(self.combat.attacker_ids),
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a

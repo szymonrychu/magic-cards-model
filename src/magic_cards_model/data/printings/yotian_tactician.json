@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "760c0369-c2e4-4bd7-a301-9f707f5f48a8",
+  "oracle_id": "0d9d7f04-6319-4596-8b74-de5a794936e5",
+  "multiverse_ids": [
+    583809
+  ],
+  "mtgo_id": 105080,
+  "arena_id": 82713,
+  "tcgplayer_id": 453034,
+  "cardmarket_id": 683442,
+  "name": "Yotian Tactician",
+  "lang": "en",
+  "released_at": "2022-11-18",
+  "uri": "https://api.scryfall.com/cards/760c0369-c2e4-4bd7-a301-9f707f5f48a8",
+  "scryfall_uri": "https://scryfall.com/card/bro/228/yotian-tactician?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:20:23Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.jpg?1783920023",
+    "normal": "https://cards.scryfall.io/normal/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.jpg?1783920023",
+    "large": "https://cards.scryfall.io/large/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.jpg?1783920023",
+    "png": "https://cards.scryfall.io/png/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.png?1783920023",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.jpg?1783920023",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.jpg?1783920023",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.webp?1783920023",
+    "grid": "https://cards.scryfall.io/grid/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.webp?1783920023",
+    "display": "https://cards.scryfall.io/display/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.webp?1783920023",
+    "art": "https://cards.scryfall.io/art/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.webp?1783920023",
+    "crop": "https://cards.scryfall.io/crop/front/7/6/760c0369-c2e4-4bd7-a301-9f707f5f48a8.webp?1783920023"
+  },
+  "mana_cost": "{2}{W}{U}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Human Soldier",
+  "oracle_text": "Other Soldiers you control get +1/+1.",
+  "power": "3",
+  "toughness": "4",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set": "bro",
+  "set_name": "The Brothers' War",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abro&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bro?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/760c0369-c2e4-4bd7-a301-9f707f5f48a8/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0d9d7f04-6319-4596-8b74-de5a794936e5&unique=prints",
+  "collector_number": "228",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Time for the Iron Alliance to remind the qadir's army how inhospitable the Sword Marches can be.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Fariba Khamseh",
+  "artist_ids": [
+    "f18a7bd6-4aca-4201-b2f5-942c28ee4f18"
+  ],
+  "illustration_id": "e57ddc98-9068-4821-b50c-37a38c33f6a1",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19527,
+  "preview": {
+    "source": "anzidmtg",
+    "source_uri": "https://www.twitch.tv/videos/1642619521",
+    "previewed_at": "2022-11-04"
+  },
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.10",
+    "eur_foil": "0.16",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=583809&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DYotian%2BTactician",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DYotian%2BTactician",
+    "edhrec": "https://edhrec.com/route/?cc=Yotian+Tactician"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F453034%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=683442&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/105080?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
