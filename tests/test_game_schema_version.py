@@ -826,3 +826,25 @@ def test_a_snapshot_written_before_source_times_transformed_is_refused() -> None
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_SOURCE_TIMES_TRANSFORMED}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before S26's graveyard cast permissions.
+_SCHEMA_VERSION_BEFORE_GRAVEYARD_CAST_PERMISSIONS = 64
+
+
+def test_the_graveyard_cast_permission_bump_moved_the_version_past_sixty_four() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_GRAVEYARD_CAST_PERMISSIONS
+
+
+def test_a_snapshot_written_before_graveyard_cast_permissions_is_refused() -> None:
+    """A version-64 dump is refused rather than decoded as current: it has no
+    `once_per_turn_cast_permissions_used`, so a Rivaz of the Claw already used
+    this turn would decode as unused."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_GRAVEYARD_CAST_PERMISSIONS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_GRAVEYARD_CAST_PERMISSIONS}",
+    ):
+        Game.model_validate(dumped)

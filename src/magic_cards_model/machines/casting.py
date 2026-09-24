@@ -192,6 +192,20 @@ class KeywordCastOption(EngineModel):
     carry the line. `Casting._use_keyword` stamps it onto
     `CardState.granted_ability_texts`, where
     `machines/triggers.granted_triggered_abilities_of` reads it back."""
+    exile_instead_of_graveyard: bool = False
+    """The grant's own "If a spell cast this way would be put into a/your
+    graveyard, exile it instead." (CR 614.1a) - Kess, Dissident Mage's and
+    The Great Work's rider. `Casting.cast()` copies it onto
+    `CastRecord.exile_instead_of_graveyard`, the same record a
+    `PlayPermission`'s identical rider already reaches."""
+    once_per_turn_key: str | None = None
+    """Set for "Once during each of your turns, you may cast ... from your
+    graveyard" (Rivaz of the Claw, Gisa and Geralf, Kess, Dissident Mage):
+    the granting permanent as that object (`"<id>:<zone change stamp>"`,
+    CR 400.7), which `Game.once_per_turn_cast_permissions_used` records the
+    moment a spell is cast under it, so the same permanent grants no second
+    one that turn - while a new object, or a second such permanent, grants
+    its own."""
 
     def why_not(
         self, spell: CardState, caster: str, game: Any = None, origin: Zone | None = None
@@ -987,6 +1001,10 @@ def granted_cast_options(
                 option = _grant_on_a_card_in_a_zone(
                     text, game, spell, caster, origin_zone, up_face_name, ability.raw
                 )
+            if option is None:
+                option = _once_each_turn_cast_from_graveyard(
+                    text, spell, origin_zone, game, caster, permanent
+                )
             if option is not None:
                 found.append(GrantedCastOption(source_name=permanent.name, option=option))
     # CR 114.4: an emblem's abilities function in the command zone, so the
@@ -1000,6 +1018,15 @@ def granted_cast_options(
             )
             if option is not None:
                 found.append(GrantedCastOption(source_name=emblem.name, option=option))
+    # CR 611.2c: a resolved "you may cast ... spells from <a> graveyard this
+    # turn" is a rule of the game for the rest of the turn, recorded rather
+    # than read off a permanent (The Great Work, Liliana, Untouched by Death).
+    from .casting_restrictions import graveyard_cast_grants_for
+
+    for grant in graveyard_cast_grants_for(game, caster):
+        option = _graveyard_cast_grant_option(grant, spell, origin_zone, caster)
+        if option is not None:
+            found.append(GrantedCastOption(source_name=grant.source_name, option=option))
     return found
 
 
@@ -1042,6 +1069,106 @@ def _cast_spells_from_a_zone(
     timing = CastTiming.SORCERY if Type.SORCERY in spell.types else CastTiming.ANY
     return KeywordCastOption(
         keyword=CAST_PERMISSION, rule="CR 601.3", zone=zone, pays_mana_cost=True, timing=timing
+    )
+
+
+#: "Once during each of your turns, you may cast <a quality> spell from your
+#: graveyard. [If a spell cast this way would be put into your graveyard,
+#: exile it instead.]" - Rivaz of the Claw ("a Dragon creature spell"), Gisa
+#: and Geralf ("a Zombie creature spell"), Kess, Dissident Mage ("an instant
+#: or sorcery spell", with the exile rider). CR 601.3's permission, limited to
+#: one use per turn of the permanent printing it, only during its controller's
+#: own turn. A grant that charges something extra ("by sacrificing a creature
+#: in addition to paying its other costs") is not this shape.
+_ONCE_EACH_TURN_CAST_FROM_GRAVEYARD = re.compile(
+    r"^Once during each of your turns, you may cast an? (?P<what>[\w' -]+?) spell "
+    r"from your graveyard\.(?P<tail>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def reads_as_graveyard_cast_permission_line(text: str) -> bool:
+    """Whether one static line is `_ONCE_EACH_TURN_CAST_FROM_GRAVEYARD`'s
+    shape, with nothing unread left in its tail - what `support.py` asks
+    before calling the line handled."""
+    match = _ONCE_EACH_TURN_CAST_FROM_GRAVEYARD.match(text.strip())
+    if match is None:
+        return False
+    tail = match.group("tail").strip()
+    return not tail or _EXILE_SPELLS_CAST_THIS_WAY_ANY.fullmatch(tail.rstrip(".")) is not None
+
+
+#: The exile rider in either spelling: "your graveyard" (Jaya Ballard's
+#: emblem, Kess) or "a graveyard" (The Great Work).
+_EXILE_SPELLS_CAST_THIS_WAY_ANY = re.compile(
+    r"if a spell cast this way would be put into (?:your|a) graveyard, exile it instead",
+    re.IGNORECASE,
+)
+
+
+def once_per_turn_key(permanent: CardState) -> str:
+    """The granting permanent as that object (CR 400.7)."""
+    return f"{permanent.id}:{permanent.zone_change_stamp}"
+
+
+def _once_each_turn_cast_from_graveyard(
+    text: str,
+    spell: CardState,
+    origin_zone: Zone,
+    game: Any,
+    caster: str,
+    permanent: CardState,
+) -> KeywordCastOption | None:
+    if not reads_as_graveyard_cast_permission_line(text):
+        return None
+    match = _ONCE_EACH_TURN_CAST_FROM_GRAVEYARD.match(text.strip())
+    assert match is not None
+    if origin_zone is not Zone.GRAVEYARD:
+        return None
+    # "your graveyard": the card has to be the caster's own.
+    if (spell.owner or caster) != caster:
+        return None
+    # "during each of your turns": only while the caster is the active player.
+    turn = getattr(game, "turn", None)
+    if turn is None or turn.active_player != caster:
+        return None
+    key = once_per_turn_key(permanent)
+    if key in getattr(game, "once_per_turn_cast_permissions_used", {}):
+        return None
+    if not _spell_matches_grant_filter(spell, match.group("what")):
+        return None
+    timing = CastTiming.SORCERY if Type.SORCERY in spell.types else CastTiming.ANY
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION,
+        rule="CR 601.3",
+        zone=Zone.GRAVEYARD,
+        pays_mana_cost=True,
+        timing=timing,
+        exile_instead_of_graveyard=bool(match.group("tail").strip()),
+        once_per_turn_key=key,
+    )
+
+
+def _graveyard_cast_grant_option(
+    grant: Any, spell: CardState, origin_zone: Zone, caster: str
+) -> KeywordCastOption | None:
+    """One recorded `CastingRuleKind.GRAVEYARD_CAST_GRANT` applied to `spell`:
+    from a graveyard, the caster's own unless the grant says "any graveyard",
+    and only a spell the grant's noun phrase names."""
+    if origin_zone is not Zone.GRAVEYARD:
+        return None
+    if not grant.any_graveyard and (spell.owner or caster) != caster:
+        return None
+    if not _spell_matches_grant_filter(spell, grant.spell_quality or ""):
+        return None
+    timing = CastTiming.SORCERY if Type.SORCERY in spell.types else CastTiming.ANY
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION,
+        rule="CR 601.3, CR 611.2c",
+        zone=Zone.GRAVEYARD,
+        pays_mana_cost=True,
+        timing=timing,
+        exile_instead_of_graveyard=grant.exile_instead,
     )
 
 
@@ -2758,6 +2885,14 @@ class Casting(EngineModel):
     what `cast()` checks to know the CR 601.3 permission was actually claimed,
     rather than inferred after the fact from the zone the card happened to be
     in."""
+    keyword_exiles_instead: bool = False
+    """The keyword option `use_keyword` chose carries CR 614.1a's "If a spell
+    cast this way would be put into a graveyard, exile it instead." - copied
+    onto `CastRecord.exile_instead_of_graveyard` by `cast()`."""
+    keyword_once_per_turn_key: str | None = None
+    """The once-each-turn grant the chosen option spends
+    (`KeywordCastOption.once_per_turn_key`), recorded as used when `cast()`
+    completes - not before, since CR 601.6 can still rewind the announcement."""
     alternative_cost: TotalCost | None = None
     free_cast_source: str | None = None
     """The permanent whose static ability applied CR 118.9's alternative cost
@@ -3754,9 +3889,13 @@ class Casting(EngineModel):
                     raise ValueError(reason)
             raise ValueError(next(reason for reason in reasons if reason is not None))
 
-        option = usable[0]
+        # A once-each-turn grant is spent by using it, so an unlimited grant
+        # for the same cast is the one to claim when both apply.
+        option = min(usable, key=lambda candidate: candidate.once_per_turn_key is not None)
         self._enter_modes()
         self.keyword_used = option.keyword
+        self.keyword_exiles_instead = option.exile_instead_of_graveyard
+        self.keyword_once_per_turn_key = option.once_per_turn_key
         self.keyword_cost_paid = not option.pays_mana_cost
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
         if option.keyword.lower() == "bestow":
@@ -5540,7 +5679,8 @@ class Casting(EngineModel):
                 keyword_cost_paid=self.keyword_cost_paid,
                 exile_instead_of_graveyard=bool(
                     self.permission_used and self.permission_used.exile_instead_of_graveyard
-                ),
+                )
+                or self.keyword_exiles_instead,
                 origin_zone=self.origin_zone,
                 face=self.face,
                 modes=list(self.chosen_mode_numbers),
@@ -5593,6 +5733,9 @@ class Casting(EngineModel):
                     for card in component.cards
                 ],
             )
+            if self.keyword_once_per_turn_key is not None:
+                # "Once during each of your turns": this cast is the once.
+                self.game.once_per_turn_cast_permissions_used[self.keyword_once_per_turn_key] = 1
         return self.spell
 
     def _turn_face_down_if_cast_that_way(self) -> None:

@@ -146,6 +146,15 @@ class CastingRuleKind:
     `Game.counter`. `excluded_source_id` is Determined's own "Other": the
     resolving spell that granted this protects every *other* spell its
     controller casts, never itself."""
+    GRAVEYARD_CAST_GRANT = "graveyard_cast_grant"
+    """The Great Work's chapter III, "Until end of turn, you may cast instant
+    and sorcery spells from any graveyard. If a spell cast this way would be
+    put into a graveyard, exile it instead.", and Liliana, Untouched by
+    Death's "-3: You may cast Zombie spells from your graveyard this turn." -
+    CR 601.3's permission as a CR 611.2c rule of the game: it modifies no
+    object, so a card that reaches a graveyard after it began is covered too.
+    `machines/casting.granted_cast_options` reads it for `controller`, with
+    `spell_quality`, `any_graveyard` and `exile_instead`."""
 
 
 class CastingRuleEffect(EngineModel):
@@ -189,6 +198,17 @@ class CastingRuleEffect(EngineModel):
     turn" - the resolving spell that granted the protection, excluded from
     the very protection it grants. `None` for Veil of Summer's plain
     "Spells you control", which excludes nothing."""
+    spell_quality: str | None = None
+    """`GRAVEYARD_CAST_GRANT`: the printed noun phrase naming which spells
+    may be cast - "instant and sorcery" (The Great Work), "Zombie" (Liliana,
+    Untouched by Death) - matched the way every other cast grant's phrase is
+    (`machines/casting._spell_matches_grant_filter`)."""
+    any_graveyard: bool = False
+    """`GRAVEYARD_CAST_GRANT`: "from any graveyard" rather than "from your
+    graveyard"."""
+    exile_instead: bool = False
+    """`GRAVEYARD_CAST_GRANT`: "If a spell cast this way would be put into a
+    graveyard, exile it instead." (CR 614.1a)."""
     amount: int | None = None
     """`INSTANT_SORCERY_COST_REDUCTION_GRANT`: the flat discount.
     `SPELL_COUNT_CANT_CAST`: the printed cap that has been reached."""
@@ -684,6 +704,29 @@ _INSTANT_SORCERY_COST_REDUCTION_GRANT_RE = re.compile(
 )
 
 
+#: "[Until end of turn, ]you may cast <quality> spells from <your|any>
+#: graveyard[ this turn]. [If a spell cast this way would be put into a/your
+#: graveyard, exile it instead.]" - a duration is required, at the front or
+#: the back: a sentence with neither is a static grant (Jaya Ballard's
+#: emblem), read by `machines/casting` off the object that carries it.
+_GRAVEYARD_CAST_GRANT_RE = re.compile(
+    r"^(?P<front>until end of turn, )?you may cast (?P<what>[\w' -]+?) spells from "
+    r"(?P<whose>your|any) graveyard(?P<back> this turn)?\.?"
+    r"(?:\s*(?P<rider>if a spell cast this way would be put into (?:your|a) graveyard, "
+    r"exile it instead)\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def graveyard_cast_grants_for(game: Any, caster: str) -> list[CastingRuleEffect]:
+    """Every live `GRAVEYARD_CAST_GRANT` belonging to `caster`."""
+    return [
+        effect
+        for effect in getattr(game, "casting_rule_effects", [])
+        if effect.kind == CastingRuleKind.GRAVEYARD_CAST_GRANT and effect.controller == caster
+    ]
+
+
 def parse_casting_rule_clause(clause: str, *, for_spell: bool) -> Callable[[Any, Any], None] | None:
     """One clause that records a `CastingRuleEffect` when it resolves, or
     None.
@@ -696,6 +739,33 @@ def parse_casting_rule_clause(clause: str, *, for_spell: bool) -> Callable[[Any,
     `for_spell=True` misses them.
     """
     stripped = clause.strip()
+
+    grant_match = _GRAVEYARD_CAST_GRANT_RE.fullmatch(stripped)
+    if grant_match is not None and (grant_match.group("front") or grant_match.group("back")):
+        quality = grant_match.group("what").strip()
+        any_graveyard = grant_match.group("whose").lower() == "any"
+        exile_instead = grant_match.group("rider") is not None
+
+        def grant_graveyard_casting(game: Any, obj: Any) -> None:
+            controller = (
+                obj.controller
+                if isinstance(obj, AbilityOnStack)
+                else game.controller_of(obj).username
+            )
+            source_name = obj.source_name if isinstance(obj, AbilityOnStack) else obj.name
+            game.casting_rule_effects.append(
+                CastingRuleEffect(
+                    kind=CastingRuleKind.GRAVEYARD_CAST_GRANT,
+                    controller=controller,
+                    source_name=source_name,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    spell_quality=quality,
+                    any_graveyard=any_graveyard,
+                    exile_instead=exile_instead,
+                )
+            )
+
+        return grant_graveyard_casting
 
     lock_match = _OPPONENTS_CANT_CAST_THIS_TURN_RE.match(stripped)
     if lock_match is not None:

@@ -2875,6 +2875,15 @@ class Game(EngineModel):
     trigger on the stack later in the same turn. Cleared when a new turn
     begins, alongside `activations`/`loyalty_activations`."""
 
+    once_per_turn_cast_permissions_used: dict[str, int] = Field(default_factory=dict)
+    """Which "Once during each of your turns, you may cast ... from your
+    graveyard" grants have been used this turn (Rivaz of the Claw, Gisa and
+    Geralf, Kess, Dissident Mage), keyed by the granting permanent as that
+    object (`machines/casting.once_per_turn_key`, CR 400.7) - a permanent
+    that leaves and returns is a new object with a use of its own. Written
+    by `Casting.cast()` when a spell is cast under the grant, and cleared
+    when a new turn begins."""
+
     resolving: StackObject | None = Field(default=None, exclude=True, repr=False)
     """The object currently resolving, or None (CR 608.2).
 
@@ -3116,7 +3125,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 64
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 65
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3960,6 +3969,13 @@ class Game(EngineModel):
     Guardian's airbend, a board-wide "Spells you cast cost {W}{U}{B}{R}{G}
     less" and "that player controls" targets now resolve where a version-63
     board did nothing, the second.
+
+    Bumped 64 -> 65 (S26, graveyard cast permissions): `Game` gained
+    `once_per_turn_cast_permissions_used` and `CastingRuleEffect` gained
+    `spell_quality`/`any_graveyard`/`exile_instead`, the first bullet. Saga
+    chapters printed with a name, The Great Work's and Liliana, Untouched by
+    Death's turn-long graveyard permissions and Jace, Telepath Unbound's -3 now
+    resolve where a version-64 board did nothing, the second.
     """
 
     @model_validator(mode="before")
@@ -20806,6 +20822,7 @@ class Game(EngineModel):
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
             self.once_per_turn_triggers = {}  # CR 603.2h restrictions are per turn too
+            self.once_per_turn_cast_permissions_used = {}  # "Once during each of your turns"
             # Snapshotted, not dropped: "last turn" is a question the
             # werewolves ask every upkeep (CR 603.4) and nothing else can
             # answer once this is cleared.
