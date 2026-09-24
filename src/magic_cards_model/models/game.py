@@ -3319,7 +3319,10 @@ class Game(EngineModel):
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
     #: 68: `machines/casting.PlayPermission` gained `pays_life_for_mana_value`
     #: (CR 118.9b's required life alternative cost) and `choice_group` ("one of
-    #: those cards"), both reachable from `Game.play_permissions` (C01-T3).
+    #: those cards"), both reachable from `Game.play_permissions`;
+    #: `machines/triggers.GameEvent` gained `mana_ability` (a pending
+    #: trigger's event); `machines/delayed` gained the
+    #: `return_each_exiled_to_battlefield_under_owner` effect kind (C01-T3).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
