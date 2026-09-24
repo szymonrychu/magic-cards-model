@@ -378,3 +378,20 @@ def test_collective_inferno_doubles_combat_damage():
     scenario.combat_damage()
 
     assert scenario.player("bob").life == 16
+
+
+def test_an_entering_lands_own_modifiers_ask_no_order_question():
+    """CR 616.1 is only put where the order can change the outcome. Sunken
+    Citadel's own "enters tapped" and "As it enters, choose a color" (CR
+    614.1c/d, 614.12) each modify a different aspect of the one entering
+    permanent, so either order gives the same permanent: only the color is
+    asked (CR 614.12a)."""
+    scenario = Scenario().player("alice", hand=["Sunken Citadel"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose("U", source="Sunken Citadel", username="alice")
+    scenario.play_land("Sunken Citadel")
+
+    citadel = scenario.find("Sunken Citadel", Zone.BATTLEFIELD, "alice")
+    assert citadel.tapped
+    assert citadel.choice is not None and citadel.choice.value == "U"
+    assert _replacement_order_questions(scenario) == []

@@ -326,9 +326,16 @@ def perform_rider(game: "Game", card_state: CardState, player: "Player", text: s
     if rider.step is not None:
         whose = "your" if rider.yours else "each"
         created = f"At the beginning of {whose} {rider.step.value}, {rider.effect}"
+        # The trigger as printed ("your first upkeep" / "the first upkeep") is
+        # what a seat is shown; `created` is the shape the matcher reads, and
+        # `remaining=1` is what makes it the first (CR 603.7b).
+        printed = (
+            f"At the beginning of {'your' if rider.yours else 'the'} first "
+            f"{rider.step.value}, {rider.effect}"
+        )
         game.delayed_triggers.create(
             DelayedTrigger(
-                text=created,
+                text=printed,
                 effect=CreatedTriggeredAbility(ability_text=created, source_card=card_state.card),
                 event=TriggerEvent.BEGINNING_OF_STEP,
                 step=rider.step,

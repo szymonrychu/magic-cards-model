@@ -7134,6 +7134,18 @@ def choose_effect(
     distinct = {(effect.name, effect.label, effect.controller) for effect in tier}
     if len(tier) < 2 or chooser is None or len(distinct) < 2:
         return ordered[0]
+    if all(
+        effect.source is not None
+        and effect.source is event.card
+        and not effect.copy_as_it_enters
+        and not effect.controls_entry
+        for effect in tier
+    ):
+        # The entering permanent's own CR 614.12 modifiers ("enters tapped",
+        # "as it enters, choose a color") each change a different aspect of
+        # the one object, so every order gives the same permanent - no choice
+        # worth asking, the same reasoning as two identical effects above.
+        return ordered[0]
     options = _effect_options(tier)
     answer = game.ask(
         Decision(
@@ -7147,6 +7159,9 @@ def choose_effect(
                 )
             ),
             options=options,
+            # The object the event affects - no one effect's source asks a
+            # CR 616.1 order question; `None` for an event on a player.
+            source_id=source_id_of(event.card),
         )
     )
     return tier[options.index(answer)] if answer in options else tier[0]

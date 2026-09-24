@@ -1411,7 +1411,12 @@ class CreatedTriggeredAbility(DelayedEffectSpecBase):
         parsed = self.parsed()
         if parsed is None:
             return None
-        return parsed.model_copy(update={"face": trigger.source_name})
+        # Shown as the trigger's own text: the opening-hand rider reads "your
+        # upkeep" for the matcher but prints "your first upkeep" (CR 603.7b's
+        # once is `remaining=1`), and a seat is shown what was printed.
+        return parsed.model_copy(
+            update={"face": trigger.source_name, "text": trigger.text, "raw": trigger.text}
+        )
 
     def _source(self, game: "Game", trigger: "DelayedTrigger") -> CardState | None:
         if trigger.source_id is not None:

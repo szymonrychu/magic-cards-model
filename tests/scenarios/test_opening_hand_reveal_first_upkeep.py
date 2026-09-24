@@ -124,6 +124,8 @@ def test_revealing_leaves_the_card_in_hand_and_creates_one_delayed_trigger() -> 
     assert trigger.step is Step.UPKEEP
     assert trigger.only_when_active == "alice"
     assert trigger.remaining == 1
+    # A seat is shown the trigger as printed, "first" included.
+    assert trigger.text.startswith("At the beginning of your first upkeep, look at the top")
 
 
 def test_declining_the_reveal_creates_nothing() -> None:
