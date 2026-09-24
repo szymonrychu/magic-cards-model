@@ -176,6 +176,7 @@ from .layers import (
     Characteristics,
     ContinuousEffect,
     ContinuousEffects,
+    CreaturesControlledByWhereToughnessExceedsPower,
     Duration,
     HasCounter,
     Layer,
@@ -53086,6 +53087,142 @@ def _parse_self_counter_then_rider(text: str) -> AbilityEffect | None:
     return counter_then_reflexive
 
 
+#: "you may pay {W/B}. If you do, each opponent loses 1 life and you gain
+#: life equal to the total life lost this way." - extort's own effect (CR
+#: 702.101a, `machines/keywords._extort_ability`). CR 118.12's optional
+#: payment, then each opponent loses N (CR 119.3) and the controller gains
+#: exactly what was lost in total (a player who can't lose life loses none,
+#: so adds none).
+_MAY_PAY_THEN_DRAIN_TOTAL_RE = re.compile(
+    rf"^you may pay (?P<mana>(?:\{{[^}}]+\}})+)\.\s*if you do,\s*each opponent loses "
+    rf"(?P<n>{COUNT}) life and you gain life equal to the total life lost this way\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_may_pay_then_drain_total(text: str) -> AbilityEffect | None:
+    """`_MAY_PAY_THEN_DRAIN_TOTAL_RE`'s shape, or `None`."""
+    match = _MAY_PAY_THEN_DRAIN_TOTAL_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    cost = ManaCost.parse(match.group("mana"))
+    amount = parse_count(match.group("n"))
+    if not amount:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        if not game.may_pay_mana_cost(
+            player, cost, source=ability.source_name, source_id=source_id_of(ability)
+        ):
+            return
+        lost = 0
+        for opponent in _opponents(game, player.username):
+            before = opponent.life
+            game.lose_life(opponent, amount)
+            lost += max(before - opponent.life, 0)
+        if lost:
+            game.gain_life(player, lost)
+
+    return effect
+
+
+#: "until end of turn, creatures you control with toughness greater than
+#: their power assign combat damage equal to their toughness rather than
+#: their power." (The Kingpin of Crime's paid rider); "Until end of turn,
+#: target creature you control assigns combat damage equal to its toughness
+#: rather than its power." (Bill the Pony) - CR 510.1a's "equal to its power"
+#: replaced for the group or target, for CR 611.2a's stated duration. The
+#: group form modifies the rules of the game rather than any characteristic,
+#: so it is not fixed when it begins (CR 611.2c): the live
+#: `CreaturesControlledByWhereToughnessExceedsPower` selector judges each
+#: creature as it assigns.
+_UNTIL_EOT_ASSIGNS_TOUGHNESS_RE = re.compile(
+    r"^until end of turn,\s*(?:(?P<group>creatures you control(?P<exceeds> with toughness "
+    r"greater than their power)?) assign|(?P<target>target creature you control) assigns) "
+    r"combat damage equal to (?:its|their) toughness rather than (?:its|their) power\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_until_eot_assigns_toughness(text: str) -> AbilityEffect | None:
+    """`_UNTIL_EOT_ASSIGNS_TOUGHNESS_RE`'s shape, or `None`."""
+    match = _UNTIL_EOT_ASSIGNS_TOUGHNESS_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    group = match.group("group") is not None
+    exceeds = match.group("exceeds") is not None
+    grant = grant_ability(combat_rules.ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        store = game.continuous_effects
+        if group:
+            store.add(
+                ContinuousEffect(
+                    description=f"{ability.source_name}: assigns combat damage equal to "
+                    "toughness this turn",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=ability.source_id,
+                    selector=(
+                        CreaturesControlledByWhereToughnessExceedsPower(username=ability.controller)
+                        if exceeds
+                        else creatures_controlled_by(ability.controller)
+                    ),
+                    modification=grant,
+                )
+            )
+            return
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=f"{target.name} assigns combat damage equal to its toughness",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=ability.source_id,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant,
+                )
+            )
+
+    return effect
+
+
+#: "you may pay 2 life. If you do, `<rest>`" (The Kingpin of Crime) - CR
+#: 119.4's optional life payment, and the rest only if it was paid (CR
+#: 118.12), for a rest one of the readers here reads.
+_MAY_PAY_LIFE_THEN_RE = re.compile(
+    rf"^you may pay (?P<n>{COUNT}) life\.\s*if you do,\s*(?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_pay_life_then_rider(text: str) -> AbilityEffect | None:
+    """`_MAY_PAY_LIFE_THEN_RE` over `_parse_until_eot_assigns_toughness`."""
+    match = _MAY_PAY_LIFE_THEN_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    rest = _parse_until_eot_assigns_toughness(match.group("rest"))
+    if not amount or rest is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if game.may_pay_life(
+            game.controller_of(ability),
+            amount,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            rest(game, ability)
+
+    return effect
+
+
 def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffect | None:
     """The readers above, tried in turn on a resolving ability's whole text -
     `_ability_effect_or_notice` asks this first."""
@@ -53102,6 +53239,9 @@ def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffec
         _parse_put_type_from_hand_attach_if_subtype,
         _parse_return_self_then_may_attach_equipment,
         _parse_self_counter_then_rider,
+        _parse_may_pay_then_drain_total,
+        _parse_until_eot_assigns_toughness,
+        _parse_may_pay_life_then_rider,
     ):
         found = reader(effect_text)
         if found is not None:

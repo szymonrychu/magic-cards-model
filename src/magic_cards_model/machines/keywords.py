@@ -163,6 +163,8 @@ def executes(keyword: str) -> bool:
         "equip",
         "ward",
         "prowess",
+        # CR 702.101a: `_extort_ability` (`_TRIGGER_EXPANSIONS`).
+        "extort",
         "cascade",
         "storm",
         "persist",
@@ -706,6 +708,29 @@ def _partner_with_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _extort_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.101a: "Extort is a triggered ability. "Extort" means "Whenever
+    you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life
+    and you gain life equal to the total life lost this way.""
+
+    CR 702.101b: "If a permanent has multiple instances of extort, each
+    triggers separately" - one expansion per printed instance, as every
+    `_TRIGGER_EXPANSIONS` entry gives. The effect is read off this text by
+    `machines/effects.py`'s pay-then-drain reader.
+    """
+    return _expansion(
+        ability,
+        keyword="extort",
+        word=TriggerWord.WHENEVER,
+        condition="you cast a spell",
+        effect=(
+            "you may pay {W/B}. If you do, each opponent loses 1 life and you gain life "
+            "equal to the total life lost this way."
+        ),
+        event=TriggerEvent.CAST_SPELL,
+    )
+
+
 def _battle_cry_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.91a: "Battle cry" means "Whenever this creature attacks, each
     other attacking creature gets +1/+0 until end of turn.""
@@ -1193,6 +1218,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "cumulative upkeep": _single(_cumulative_upkeep_ability),
     "partner with": _single(_partner_with_ability),
     "annihilator": _single(_annihilator_ability),
+    "extort": _single(_extort_ability),
 }
 
 
