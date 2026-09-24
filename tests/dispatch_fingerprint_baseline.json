@@ -11244,6 +11244,7 @@
         "Create X 4/4 white Angel creature tokens with flying.": "<none>",
         "Create X tokens that are copies of target creature you control, except they have \"When this token enters, it fights up to one target creature you don't control.\"": "<none>",
         "Create a 1/1 green Snake creature token, a 2/2 green Wolf creature token, and a 3/3 green Elephant creature token.": "parse_mixed_effect_for_spell",
+        "Create a 1/1 white Human creature token.": "parse_mixed_effect_for_spell",
         "Create a 2/1 white and black Inkling creature token with flying, a 3/2 red and white Spirit creature token, and a 4/4 blue and red Elemental creature token.": "parse_mixed_effect_for_spell",
         "Create a 2/2 colorless Wizard Soldier creature token named Cadet, then put a +1/+1 counter on each other Wizard token you control.": "_parse_create_tokens_then_counter_other_subtype_clause",
         "Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.": "parse_mixed_effect_for_spell",

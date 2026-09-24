@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "37f9be6b-ae6e-4708-9749-83bebd351102",
+  "oracle_id": "8957f7c2-040c-4048-9f21-efa7c97682b7",
+  "multiverse_ids": [
+    686027
+  ],
+  "mtgo_id": 135784,
+  "tcgplayer_id": 609793,
+  "cardmarket_id": 805813,
+  "name": "Ambush Viper",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/37f9be6b-ae6e-4708-9749-83bebd351102",
+  "scryfall_uri": "https://scryfall.com/card/inr/186/ambush-viper?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:01:43Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.jpg?1783908103",
+    "normal": "https://cards.scryfall.io/normal/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.jpg?1783908103",
+    "large": "https://cards.scryfall.io/large/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.jpg?1783908103",
+    "png": "https://cards.scryfall.io/png/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.png?1783908103",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.jpg?1783908103",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.jpg?1783908103",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.webp?1783908103",
+    "grid": "https://cards.scryfall.io/grid/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.webp?1783908103",
+    "display": "https://cards.scryfall.io/display/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.webp?1783908103",
+    "art": "https://cards.scryfall.io/art/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.webp?1783908103",
+    "crop": "https://cards.scryfall.io/crop/front/3/7/37f9be6b-ae6e-4708-9749-83bebd351102.webp?1783908103"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Snake",
+  "oracle_text": "Flash\nDeathtouch",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Flash",
+    "Deathtouch"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "37f9be6b-ae6e-4708-9749-83bebd351102",
+      "component": "combo_piece",
+      "name": "Ambush Viper",
+      "type_line": "Creature \u2014 Snake",
+      "uri": "https://api.scryfall.com/cards/37f9be6b-ae6e-4708-9749-83bebd351102"
+    },
+    {
+      "object": "related_card",
+      "id": "59c1e4e5-da4b-418a-833a-f96c10abdf6c",
+      "component": "combo_piece",
+      "name": "Jessie Zane, Fangbringer",
+      "type_line": "Legendary Creature \u2014 Human Assassin",
+      "uri": "https://api.scryfall.com/cards/59c1e4e5-da4b-418a-833a-f96c10abdf6c"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/37f9be6b-ae6e-4708-9749-83bebd351102/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8957f7c2-040c-4048-9f21-efa7c97682b7&unique=prints",
+  "collector_number": "186",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"Living creatures seldom impress me. But I like this one.\"\n\u2014Uta Falkenrath",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Alan Pollack",
+  "artist_ids": [
+    "70c20ea3-5ad6-4082-a337-6e994ae5828e"
+  ],
+  "illustration_id": "cfc6dacd-e9eb-4756-a404-8c120aa5f0a6",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4815,
+  "penny_rank": 7355,
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.16",
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=686027&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAmbush%2BViper",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAmbush%2BViper",
+    "edhrec": "https://edhrec.com/route/?cc=Ambush+Viper"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609793%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805813&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135784?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

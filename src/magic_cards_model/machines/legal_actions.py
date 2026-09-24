@@ -18,6 +18,18 @@ activate* checks pass (zone, timing, CR 611.1 prohibitions), never gated on
 whether the cost happens to be payable - that is what `Action.affordable`/
 `Action.unaffordable_reason` report, alongside the action, not instead of it.
 
+**A refused cast is reported too, separately.** CR 117.1a's timing and CR
+611.1's rules-modifying prohibitions both refuse a `CAST` face outright, not
+merely mark it unaffordable, so - unlike an unpayable cost - `legal_actions`
+builds no `Action` for it at all: CR 601.3 makes it an illegal action, full
+stop. `blocked_casts(game, player, pending=None)`, right below, is that
+missing half - one `BlockedCast` (`models/action.py`) per face `_cast_
+actions`'s own per-face check (`_why_cannot_cast_face`) refuses, carrying the
+engine's own reason and the CR number it cites, so a seat can tell "there was
+nothing to cast" apart from "Ocelot Pride sat in hand the whole game,
+uncastable only because the stack was never empty". `legal_actions` itself
+never grows a row for one of these.
+
 **A pending `Decision` changes what "legal" even means.** `Game` never
 carries one - it is raised as a `DecisionPending` exception and held by
 whichever caller catches it (the api's own mailbox is one such holder; see
@@ -67,12 +79,14 @@ enumerating every legal subset or permutation of it.
 import re
 from collections.abc import Iterable
 from typing import Any, NamedTuple
+from uuid import UUID
 
 from ..models.action import (
     Action,
     ActionKind,
     AdditionalCostOption,
     Affordability,
+    BlockedCast,
     ManaPlanEntry,
     SpliceOption,
     TargetSlot,
@@ -694,6 +708,41 @@ def _why_cannot_cast_face(
     )
 
 
+#: The first CR citation a `_why_cannot_cast_face` refusal names - every
+#: reason `why_cannot_cast_now`/`why_cannot_cast_restriction` return ends in
+#: a parenthesized `(CR ..., CR ...)` aside, one or more rule numbers, in the
+#: order the prose leads with. `BlockedCast.rule` reads this off the string
+#: rather than re-deriving it from which branch produced the refusal, so it
+#: can never disagree with what the reason itself says.
+_CR_CITATION_RE = re.compile(r"CR\s+(\d+(?:\.\d+)?[a-z]?)")
+
+
+def _record_blocked(
+    blocked: list[BlockedCast] | None, card: CardState, face_name: str | None, reason: str
+) -> None:
+    """Append one `BlockedCast` row for `card`'s `face_name`, or do nothing
+    when `blocked` is `None` (the ordinary `legal_actions` path, which never
+    builds this list at all).
+
+    Called from the exact spot in `_cast_actions`/`_permission_cast_actions`
+    that used to `continue` past `_why_cannot_cast_face`'s refusal without
+    keeping it - the walk that decides a face is refused is the one walk
+    that reports it, never a second pass over the same faces."""
+    if blocked is None:
+        return
+    citation = _CR_CITATION_RE.search(reason)
+    blocked.append(
+        BlockedCast(
+            card_id=card.id,
+            name=card.name,
+            zone=card.zone,
+            spell_face=face_name,
+            reason=reason,
+            rule=citation.group(1) if citation is not None else "",
+        )
+    )
+
+
 def _base_cost_options(card: CardState) -> list[tuple[str | None, ManaCost]]:
     """Every face this object could announce a plain cast for (CR 709.3's
     split-card choice, CR 715.3's Adventure, CR 722.3c's prepare-spell
@@ -773,6 +822,7 @@ def _permission_cast_actions(
     card: CardState,
     candidate_scan: list[_ScannedCandidate],
     splice_options: tuple[SpliceOption, ...] = (),
+    blocked: list[BlockedCast] | None = None,
 ) -> list[Action]:
     """CAST under a live `PlayPermission` (CR 601.3) naming this exact
     object - cascade's hit, Ugin's exiled card, Wrenn's Resolve's Bolt.
@@ -785,6 +835,9 @@ def _permission_cast_actions(
     is allowed at all (`usable_play_permission`), which is exactly why the
     zone-HAND branch above never reaches this case - a bare permission is in
     none of the collections it enumerates.
+
+    `blocked` is threaded straight through from `_cast_actions` - see
+    `_record_blocked`.
     """
     actions: list[Action] = []
     for permission in play_permissions_on(game, card):
@@ -801,7 +854,9 @@ def _permission_cast_actions(
                 # CR 709.3a/715.3a: both of CR 601.3's questions belong to the
                 # *named* face - see the plain-hand branch in `_cast_actions`
                 # for what the face-blind versions of these calls reported.
-                if _why_cannot_cast_face(game, player, card, face_name) is not None:
+                refusal = _why_cannot_cast_face(game, player, card, face_name)
+                if refusal is not None:
+                    _record_blocked(blocked, card, face_name, refusal)
                     continue
                 actions.append(
                     _cast_action(
@@ -817,7 +872,11 @@ def _permission_cast_actions(
                         splice_options=splice_options,
                     )
                 )
-        elif _why_cannot_cast_face(game, player, card, None) is None:
+        else:
+            refusal = _why_cannot_cast_face(game, player, card, None)
+            if refusal is not None:
+                _record_blocked(blocked, card, None, refusal)
+                continue
             actions.append(
                 _cast_action(
                     game,
@@ -835,8 +894,30 @@ def _permission_cast_actions(
 
 
 def _cast_actions(
-    game: Any, player: str, card: CardState, candidate_scan: list[_ScannedCandidate]
+    game: Any,
+    player: str,
+    card: CardState,
+    candidate_scan: list[_ScannedCandidate],
+    blocked: list[BlockedCast] | None = None,
 ) -> list[Action]:
+    """Every legal `CAST` `Action` for `card`, exactly as `legal_actions`
+    already builds it.
+
+    `blocked` is `None` on this path (the ordinary one, called from
+    `_legal_actions`) - `_record_blocked` is then a no-op wherever a face is
+    refused, which is the silent `continue` this function always took. A
+    caller building `blocked_casts` instead passes a list to collect into,
+    from the *same* per-face checks below - CR 601.3's refusal is computed
+    once either way; only whether it is kept anywhere differs. Every loop
+    that asks `_why_cannot_cast_face`/`why_cannot_cast_restriction` below -
+    the plain hand cast (CR 601.2), the permission-granted cast
+    (`_permission_cast_actions`), the keyword/marker/granted cast-option
+    loop (flashback, escape, Adventure, and the rest CR 601.3e faces
+    included), and the CR 118.9 alternative-cost loop - feeds the same
+    `_record_blocked(blocked, ...)` call at the spot it used to `continue`
+    from, so a face refused through any of those paths gets exactly one row,
+    never a silent drop.
+    """
     if not set(card.card.types) & _CASTABLE_TYPES:
         return []
     if why_cannot_cast_a_land(card) is not None:
@@ -874,7 +955,9 @@ def _cast_actions(
                 # // Incongruity (`Sorcery // Instant`) as castable at all,
                 # and `spell_face=Stomp` as castable while "your opponents
                 # can't cast noncreature spells this turn" was live.
-                if _why_cannot_cast_face(game, player, card, face_name) is not None:
+                refusal = _why_cannot_cast_face(game, player, card, face_name)
+                if refusal is not None:
+                    _record_blocked(blocked, card, face_name, refusal)
                     continue
                 actions.append(
                     _cast_action(
@@ -891,7 +974,11 @@ def _cast_actions(
                     )
                 )
     else:
-        actions.extend(_permission_cast_actions(game, player, card, candidate_scan, splice_options))
+        actions.extend(
+            _permission_cast_actions(
+                game, player, card, candidate_scan, splice_options, blocked=blocked
+            )
+        )
 
     keyword_options: list[tuple[str | None, Any]] = [
         (None, option) for option in keyword_cast_options(card.card) + marker_cast_options(card)
@@ -919,7 +1006,13 @@ def _cast_actions(
         # for the card otherwise.
         if option.pays_mana_cost:
             for face_name, mana in _base_cost_options(card):
-                if _why_cannot_cast_face(game, player, card, face_name) is not None:
+                if option.normal_face_only and face_name is not None:
+                    # CR 715.3d: "It can't be cast as an Adventure this way" -
+                    # never an option here, so never a `blocked_casts` row.
+                    continue
+                refusal = _why_cannot_cast_face(game, player, card, face_name)
+                if refusal is not None:
+                    _record_blocked(blocked, card, face_name, refusal)
                     continue
                 actions.append(
                     _cast_action(
@@ -935,15 +1028,19 @@ def _cast_actions(
                         splice_options=splice_options,
                     )
                 )
-        elif (
+        else:
             # CR 702.190a's window is the option's own timing, already
             # answered by `option.why_not` above; CR 117.1a's ordinary timing
             # is exactly what it overrides, so only CR 611.1's prohibitions
             # are left to ask.
-            why_cannot_cast_restriction(card, player, game, face=None)
-            if option.timing is CastTiming.OWN_DECLARE_BLOCKERS
-            else _why_cannot_cast_face(game, player, card, None)
-        ) is None:
+            option_refusal = (
+                why_cannot_cast_restriction(card, player, game, face=None)
+                if option.timing is CastTiming.OWN_DECLARE_BLOCKERS
+                else _why_cannot_cast_face(game, player, card, None)
+            )
+            if option_refusal is not None:
+                _record_blocked(blocked, card, None, option_refusal)
+                continue
             total = option.cost if option.cost is not None else TotalCost()
             actions.append(
                 _cast_action(
@@ -982,7 +1079,9 @@ def _cast_actions(
             # the card itself is exempt (instant, flash, an `immediate`
             # permission) - `alternative.available` never asked either
             # question.
-            if _why_cannot_cast_face(game, player, card, None) is not None:
+            refusal = _why_cannot_cast_face(game, player, card, None)
+            if refusal is not None:
+                _record_blocked(blocked, card, None, refusal)
                 continue
             # `alternative.cost is None` is a real answer for a STATIC grant
             # (Omniscience: "nothing" is the whole cost, CR 107.3b), not a
@@ -1933,4 +2032,79 @@ def _legal_actions(
     return actions
 
 
-__all__: Iterable[str] = ["decision_answers", "legal_actions"]
+# ---------------------------------------------------------------------------
+# blocked_casts: the companion enumeration of `legal_actions` - see
+# `BlockedCast`'s own docstring (`models/action.py`) for the full contract.
+# ---------------------------------------------------------------------------
+
+
+def blocked_casts(
+    game: Any, player: str, pending: PendingDecision | None = None
+) -> list[BlockedCast]:
+    """Every `CAST` face CR 601.3 refuses on timing (CR 117.1a) or a CR
+    611.1 prohibition right now, for `player`'s own cards only.
+
+    `_why_cannot_cast_face` bundles exactly those two questions
+    (`why_cannot_cast_now`/`why_cannot_cast_restriction`) into one refusal
+    string - see its own docstring - and this is the answer `_cast_actions`
+    already computes per face and used to drop on the floor. Walks the same
+    zones `_legal_actions` walks building `CAST` rows (hand, graveyard, the
+    shared exile) and the same per-face checks (`_cast_actions`/
+    `_permission_cast_actions`, now instrumented with an optional `blocked`
+    output list) - never a second, independently-written pass over the same
+    faces that could drift from what `legal_actions` itself omits.
+
+    **A pending `Decision` empties this out**, the same way `_legal_actions`
+    answers only that decision's own legal answers while one is outstanding
+    (see its own docstring): nothing but the decision's answers is a legal
+    move right now, so nothing else is usefully reported as "blocked"
+    either - and the caller already knows the one thing that is live.
+
+    Never reads another player's hand, graveyard, or exile holdings for any
+    purpose beyond the shared zone's own visibility (CR 400's public zones) -
+    `game.player(player)` is the only per-player zone this ever opens.
+    """
+    with board_snapshot(game):
+        return _blocked_casts(game, player, pending=pending)
+
+
+def _blocked_casts(
+    game: Any, player: str, *, pending: PendingDecision | None = None
+) -> list[BlockedCast]:
+    """`blocked_casts`, inside its board snapshot."""
+    if game.is_over:
+        return []  # CR 104.1: nothing is legal in a game that has ended
+    if pending is not None:
+        return []
+    if not game.is_in_game(player):
+        return []
+
+    candidate_scan = mana_candidate_scan(game.battlefield, game=game, payer=player)
+    blocked: list[BlockedCast] = []
+    me = game.player(player)
+    for card in list(me.hand):
+        _cast_actions(game, player, card, candidate_scan, blocked=blocked)
+    for card in list(me.graveyard):
+        _cast_actions(game, player, card, candidate_scan, blocked=blocked)
+    for card in list(game.shared_zones.get(Zone.EXILE, [])):
+        if not isinstance(card, CardState):
+            continue
+        _cast_actions(game, player, card, candidate_scan, blocked=blocked)
+
+    # A card reachable through more than one live `PlayPermission`
+    # (`_permission_cast_actions` loops over every one of them) can have the
+    # identical face refused more than once - the refusal is a pure function
+    # of (card, face, game), so the rows would be byte-identical duplicates.
+    # One row per face the check refused, never one per path that reached it.
+    seen: set[tuple[UUID, str | None]] = set()
+    deduped: list[BlockedCast] = []
+    for row in blocked:
+        key = (row.card_id, row.spell_face)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(row)
+    return deduped
+
+
+__all__: Iterable[str] = ["blocked_casts", "decision_answers", "legal_actions"]
