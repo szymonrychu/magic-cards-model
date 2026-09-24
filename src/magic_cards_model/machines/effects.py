@@ -5566,9 +5566,7 @@ def _read_search_count(match: re.Match[str]) -> Callable[["Game", str], int | No
     return lambda _game, _controller: amount
 
 
-def _search_and_place_for(
-    match: re.Match[str], *, optional: bool
-) -> Callable[["Game", Player, str, str | None], None] | None:
+def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[..., None] | None:
     """The core of one search-and-put match - search, then place the find -
     as a function of **whichever player is doing it**, independent of who
     controls the resolving spell or ability.
@@ -5609,7 +5607,14 @@ def _search_and_place_for(
     )
     reveal = bool(match.groupdict().get("reveal"))
 
-    def run(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+    def run(
+        game: "Game",
+        player: Player,
+        source: str,
+        source_id: str | None,
+        *,
+        caused_by: str | None = None,
+    ) -> None:
         count = count_reader(game, player.username)
         if count is None:
             _that_many_or_notice(game, match.group(0), source_id=source_id, source_name=source)
@@ -5630,6 +5635,7 @@ def _search_and_place_for(
             tapped=tapped,
             source=source,
             source_id=source_id,
+            caused_by=caused_by,
         )
 
     return run
@@ -5655,7 +5661,20 @@ def _build_search_clause(match: re.Match[str], *, for_spell: bool) -> TargetedCl
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        run(game, game.controller_of(stack_object), source, source_id_of(stack_object))
+        controller = game.controller_of(stack_object)
+        # Ashiok, Dream Render's gate: this shape is always "you may search
+        # your library" or a mandatory "search your library" (never "its
+        # controller may", which `_parse_anaphoric_clause_pair` reads instead,
+        # below) - the resolving spell or ability's own controller is both the
+        # cause and the searcher, exactly the self-search
+        # `machines.casting_restrictions.search_prohibition_source` reaches.
+        run(
+            game,
+            controller,
+            source,
+            source_id_of(stack_object),
+            caused_by=controller.username,
+        )
 
     return effect
 

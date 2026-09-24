@@ -69,7 +69,9 @@ from ..machines.casting_restrictions import (
     CastingRuleKind,
     cannot_be_countered,
     combat_lockdown_restriction_source,
+    draw_cap_restriction,
     loyalty_activation_restriction,
+    search_prohibition_source,
     spell_protected_from_countering,
 )
 from ..machines.combat import (
@@ -11551,9 +11553,23 @@ class Game(EngineModel):
         source: str | None = None,
         source_id: str | None = None,
         zone: Zone = Zone.LIBRARY,
+        caused_by: str | None = None,
     ) -> list[CardState]:
         """Search one of a player's zones, take what was found out of it, and
         (library only) shuffle.
+
+        `caused_by` is Ashiok, Dream Render's own reader: the username of the
+        spell or ability's controller that is causing this search, when the
+        caller knows it and it is the same player as `player` - a *self*
+        search, the only shape "Spells and abilities your opponents control
+        can't cause their controller to search their library" ever reaches
+        (see `machines.casting_restrictions.search_prohibition_source`'s own
+        docstring for why a different searcher, Bribery's "target opponent's
+        library", is deliberately untouched). `None` is every caller that
+        either does not yet thread this through or is searching a zone the
+        static never names - no behaviour changes for either. When it does
+        apply, the whole instruction is refused (CR 101.2): nothing is found,
+        nothing is removed, and nothing is shuffled.
 
         CR 701.23a: "To search for a card in a zone, look at all cards in that
         zone (even if it's a hidden zone) and find a card that matches the given
@@ -11635,6 +11651,13 @@ class Game(EngineModel):
             if isinstance(player, str):
                 player = self.player(player)
 
+            if (
+                caused_by is not None
+                and caused_by == player.username
+                and search_prohibition_source(self, caused_by) is not None
+            ):
+                return []
+
             candidates = [state for state in player.cards_in(zone) if matches(state)]
             limit = min(count, len(candidates))
             found: list[CardState] = candidates[:limit]
@@ -11679,6 +11702,7 @@ class Game(EngineModel):
         tapped: bool = False,
         source: str | None = None,
         source_id: str | None = None,
+        caused_by: str | None = None,
     ) -> list[CardState]:
         """Search a library for a stated quality, reveal the finds if the text
         says so, put them into the hand, onto the battlefield, or into the
@@ -11700,6 +11724,12 @@ class Game(EngineModel):
         path `Zone.HAND` already takes - CR 701.23 puts no restriction on
         which zone a search may name, and `player.add` already stamps a
         card's owner correctly for any of the seven rules zones.
+
+        `caused_by` is `Game.search_library`'s own Ashiok, Dream Render gate -
+        see that method's docstring. Checked again here, ahead of calling
+        `search_library` at all, because this method's own trailing shuffle is
+        part of the same printed "search ... then shuffle" instruction: CR
+        101.2's "can't" beats the whole thing, not just the find.
         """
         with self._id_allocator_scope():
             if isinstance(player, str):
@@ -11709,6 +11739,12 @@ class Game(EngineModel):
                     "a search puts its finds into a hand, onto the battlefield, or "
                     f"into a graveyard, not {destination.value}"
                 )
+            if (
+                caused_by is not None
+                and caused_by == player.username
+                and search_prohibition_source(self, caused_by) is not None
+            ):
+                return []
             found = self.search_library(
                 player,
                 matches,
@@ -11717,6 +11753,7 @@ class Game(EngineModel):
                 shuffle=False,
                 source=source,
                 source_id=source_id,
+                caused_by=caused_by,
             )
             if reveal:
                 for state in found:
@@ -12190,6 +12227,20 @@ class Game(EngineModel):
 
             drawn: list[CardState] = []
             for _ in range(count):
+                # CR 121.2b: "Some effects say that a player can't draw more
+                # than one card each turn. Such an effect applies to
+                # individual card draws." - Narset, Parter of Veils's and
+                # Spirit of the Labyrinth's cap, checked fresh (CR 611.3a) once
+                # per draw in this very loop rather than once per instruction,
+                # which is exactly what lets "draw two cards" against a cap of
+                # one "still be partially carried out": the first draw below
+                # is unaffected, and only the one that would exceed the cap is
+                # skipped.
+                restriction = draw_cap_restriction(self, player.username)
+                if restriction is not None:
+                    already = self.cards_drawn_this_turn.get(player.username, 0)
+                    if already >= (restriction.amount or 0):
+                        continue
                 event = ReplaceableEvent(
                     kind=EventKind.DRAW,
                     player=player,

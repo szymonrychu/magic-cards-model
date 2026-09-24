@@ -3422,7 +3422,9 @@ def _keyword_replacements(
 # happens: the event's destination is set back to its origin.
 
 _CANT_ENTER_RE = re.compile(
-    r"^(?P<filter>\w+) cards in (?P<zones>[\w, ]+?) can'?t enter the battlefield\.?$",
+    r"^(?:non(?P<excluded>artifact|creature|enchantment|land|planeswalker) )?"
+    r"(?P<filter>artifact|creature|enchantment|land|permanent|planeswalker) "
+    r"cards in (?P<zones>[\w, ]+?) can'?t enter the battlefield\.?$",
     re.IGNORECASE,
 )
 
@@ -3468,7 +3470,9 @@ def _cant_enter(game: "Game", source: CardState | None, event: ReplaceableEvent)
         event.destination = event.origin
 
 
-def _cant_enter_applies(wanted: Type, zones: frozenset[Zone]) -> Applies:
+def _cant_enter_applies(
+    wanted: Type | None, excluded: Type | None, zones: frozenset[Zone]
+) -> Applies:
     """ "**Creature cards** in graveyards and libraries can't enter the battlefield."
 
     "Cards", so a token is excluded: CR 111.6, "a token isn't a card", and a
@@ -3476,6 +3480,14 @@ def _cant_enter_applies(wanted: Type, zones: frozenset[Zone]) -> Applies:
     read off the entering object's own types, and the origin off the event -
     which is why this refuses a creature entering from a hand, from exile, or
     as a resolving spell off the stack, all of which the Cage leaves alone.
+
+    `wanted` is `None` for Soulless Jailer's "Permanent cards" - CR 110.1
+    already excludes instants and sorceries from the only event this fires on,
+    so a bare "permanent" filter is the same as no filter at all, the same
+    reading `_copy_candidates` already gives that word. `excluded` is
+    Weathered Runestone's "Nonland permanent" - the one negated type word a
+    two-word filter may carry, checked the same way `_copy_candidates`'
+    own `excluded` group is.
     """
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
@@ -3484,7 +3496,10 @@ def _cant_enter_applies(wanted: Type, zones: frozenset[Zone]) -> Applies:
             return False
         if event.origin not in zones or is_token(card_state):
             return False
-        return wanted in card_state.types
+        types = card_state.types
+        if wanted is not None and wanted not in types:
+            return False
+        return excluded is None or excluded not in types
 
     return applies
 
@@ -3503,14 +3518,18 @@ def _cant_enter_replacements(card: Card) -> list[CardReplacement]:
         match = _CANT_ENTER_RE.match(rules_text.strip())
         if match is None:
             continue
-        wanted = _CARD_TYPE_WORDS.get(match.group("filter").lower())
+        word = match.group("filter").lower()
+        wanted = None if word == "permanent" else _CARD_TYPE_WORDS.get(word)
+        if wanted is None and word != "permanent":
+            continue
+        excluded = _CARD_TYPE_WORDS.get((match.group("excluded") or "").lower())
         zones = _read_zone_list(match.group("zones"))
-        if wanted is None or zones is None:
+        if zones is None:
             continue
         found.append(
             CardReplacement(
                 label=f"{rules_text.strip()} (CR 614.17d)",
-                applies=_cant_enter_applies(wanted, zones),
+                applies=_cant_enter_applies(wanted, excluded, zones),
                 apply=_cant_enter,
             )
         )
