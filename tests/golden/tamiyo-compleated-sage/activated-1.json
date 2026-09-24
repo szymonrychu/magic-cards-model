@@ -52,7 +52,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["continuous_effects", "turn_counts"],
     "notices": {},
     "objects": {
       "Memnite@alice#2": {

@@ -120,6 +120,7 @@ from magic_cards_model.models import Card, CardState, Color, Type, Zone
 from magic_cards_model.models.action import ActionKind
 from magic_cards_model.models.card import Layout
 from magic_cards_model.models.card_state import Choice, ChoiceKind, TargetRef
+from magic_cards_model.models.game import _STEP_NAMES, read_activation_instructions
 from magic_cards_model.models.token import PREDEFINED, create_predefined_tokens, token_copy_of
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.support import _probe_cards, card_support, in_target_formats
@@ -1055,8 +1056,41 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         source.class_level = level
     _attach(scenario, source)
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
+    _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _chosen_parity(source, getattr(ability, "condition", None))
     return source
+
+
+def _history_threshold(scenario: PlayedScenario, source: CardState, condition: str | None) -> None:
+    """A this-turn condition the stock board has not met yet is made true on
+    it, read off the condition's own words: "an opponent lost life this turn"
+    (the opponent loses 1 life, CR 119.3) and "a card left your graveyard
+    this turn" (a stock graveyard card other than the source is exiled, CR
+    603.10a). For an intervening "if" (CR 603.4) and an "Activate only if"
+    (CR 602.5b) alike."""
+    lowered = (condition or "").lower()
+    game = scenario.game
+    if "an opponent lost life this turn" in lowered:
+        game.lose_life(BOB, 1)
+    if "left your graveyard this turn" in lowered:
+        graveyard = [card for card in game.player(ALICE).graveyard if card is not source]
+        if graveyard:
+            game.exile_cards([graveyard[-1]])
+
+
+def _activation_step(ability: ActivatedAbility) -> Step:
+    """The step an "Activate only during ..." instruction (CR 602.1b) allows
+    the activation in: the named step ("during your upkeep", "during the end
+    of combat step"), the beginning of combat for "during combat", the
+    precombat main phase otherwise."""
+    for window in read_activation_instructions(ability.instructions).windows:
+        lowered = window.lower()
+        for name, step in sorted(_STEP_NAMES.items(), key=lambda item: -len(item[0])):
+            if lowered.endswith(f"{name} step") or lowered.endswith(f"your {name}"):
+                return step
+        if lowered.endswith("combat"):
+            return Step.BEGINNING_OF_COMBAT
+    return Step.PRECOMBAT_MAIN
 
 
 def _chosen_parity(source: CardState, condition: str | None) -> None:
@@ -2576,8 +2610,11 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
     not start with: energy (CR 107.14), counters to remove (CR 122.1),
     loyalty for a minus ability (CR 606.6), the level below a Class's bar
     (CR 716.2a), a card exiled with the source for a "card exiled with this"
-    target (CR 607.2a), and an ability on the stack to target (CR 115.1c)."""
+    target (CR 607.2a), an ability on the stack to target (CR 115.1c), and a
+    this-turn "Activate only if" condition (`_history_threshold`)."""
     game = scenario.game
+    for condition in read_activation_instructions(ability.instructions).conditions:
+        _history_threshold(scenario, source, condition)
     cost = ability.cost.lower()
     if "{e}" in cost:
         game.add_player_counters(ALICE, "energy", 10)
@@ -2788,13 +2825,20 @@ def _activation_board(
             raise _Unavailable(f"combat: {error}") from error
     elif combat:
         # "target attacking or blocking creature" (CR 506.3): the
-        # controller's own stock creature attacks, the source stays home.
+        # controller's own stock creature attacks, the source stays home -
+        # and the combat moves on to the step an "Activate only during ..."
+        # names (Desert's end of combat step), the attacker still attacking
+        # until that step ends (CR 511.3).
         scenario = _board(battlefield=(card.name,), step=Step.DECLARE_ATTACKERS)
         scenario.attack_with(_first(scenario, "Memnite", ALICE), defending=BOB)
         scenario.no_blocks()
+        window = _activation_step(ability)
+        if window in (Step.DECLARE_BLOCKERS, Step.COMBAT_DAMAGE, Step.END_OF_COMBAT):
+            scenario.turn.advance_to(window)
+            scenario.game.sync_priority_with_step()
         source = _source(scenario, case, ability)
     elif enters:
-        scenario = _board(hand=(card.name,))
+        scenario = _board(hand=(card.name,), step=_activation_step(ability))
         state = _last(scenario, card.name, Zone.HAND, ALICE)
         source = scenario.game.put_onto_battlefield(
             state, ALICE, transformed=_back_face(card, ability)
@@ -2805,7 +2849,7 @@ def _activation_board(
             scenario.game.resolve_top()
             _settle(scenario)
     else:
-        scenario = _board(battlefield=(card.name,))
+        scenario = _board(battlefield=(card.name,), step=_activation_step(ability))
         source = _source(scenario, case, ability)
     indexes = [
         i for i, a in enumerate(scenario.game.activated_abilities(source)) if a.text == case.text
@@ -2947,7 +2991,7 @@ def _off_zone_home(case: Case, ability: ActivatedAbility) -> tuple[PlayedScenari
     functions "only if this card is suspended"."""
     card = case.printing
     combat = any(r.combat_states for r in profile_for_text(ability.effect).requirements)
-    where: dict[str, Any] = {}
+    where: dict[str, Any] = {"step": _activation_step(ability)}
     if combat:
         # "target attacking or blocking creature": during the opponent's
         # attack (CR 506.3), where such a creature exists.

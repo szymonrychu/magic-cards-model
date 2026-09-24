@@ -1026,6 +1026,7 @@ def declare_attacker(game: "Game", creature: CardState, defender: TargetRef) -> 
                 subject_controller=game.controller_of(creature).username,
                 subject_card=creature.card,
                 player=game.controller_of(creature).username,
+                declared_attacker=True,
             )
         )
 

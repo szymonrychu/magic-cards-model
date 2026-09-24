@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["damage_dealt_this_turn"],
     "notices": {},
     "objects": {
       "Fleecemane Lion@bob#1": {

@@ -1532,7 +1532,10 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     `machines/replacement._compleated_modifier` reads the keyword directly
     (CR 702.150a), the same hand-named shape Sunburst already used, and every
     compleated pool printing resolves through it rather than falling through
-    unexecuted."""
+    unexecuted. Flanking (CR 702.25, Knight of the Holy Nimbus) and Saddle
+    (CR 702.171, Brightfield Mustang) are on it since EC2 brought those two
+    printings in for their activation instruction and "while saddled"
+    clause: genuinely unbuilt keywords, reported rather than hidden."""
     from magic_cards_model.support import in_target_formats
 
     names = [name for name in pool() if in_target_formats(card(name))]
@@ -1540,7 +1543,10 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     for name in names:
         for keyword in ignored_keywords(card(name)):
             by_keyword.setdefault(keyword, []).append(name)
-    assert set(by_keyword) == set()
+    assert by_keyword == {
+        "Flanking": ["Knight of the Holy Nimbus"],
+        "Saddle": ["Brightfield Mustang"],
+    }
 
 
 # -- CR 702.11d: "Hexproof from" has an execution path ----------------------

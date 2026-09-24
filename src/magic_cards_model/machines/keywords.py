@@ -1494,38 +1494,20 @@ class KeywordActivation(EngineModel):
                 f"sorcery: {self.player}'s main phase, with the stack empty "
                 f"({self.rule}, CR 307.5)"
             )
-        if self.rule != "CR 702.62b" and self.game is not None:
-            # CR 602.5b's "Activate only if <condition>" applies here exactly
-            # as it does to a battlefield activation
-            # (`Game.why_cannot_activate`'s own `Game._activation_condition_
-            # holds`, built on `Game.condition_holds`) - this entry point
-            # never reached that check at all, so Grim Repriser's own
-            # graveyard-functioning "Activate only if an opponent has been
-            # dealt noncombat damage this turn" was activatable whether or
-            # not it actually held. Skipped for `"CR 702.62b"` - Greater
-            # Gargadon's own "this card is suspended" restriction - which the
-            # branch just above already checks more precisely (and, unlike
-            # this generic reader, runs before the zone/controller checks
-            # above ever let a wrongly-zoned Gargadon reach it); every other
-            # zone rule's ability is free to also carry an ordinary "Activate
-            # only if" restriction of its own, unrelated to why it functions
-            # off the battlefield at all.
-            held = self.game._activation_condition_holds(  # noqa: SLF001
-                self.ability, self.player, self.card
-            )
-            if held is not True:
-                from ..models.game import _activation_condition  # avoids an import cycle
-
-                condition = _activation_condition(self.ability.instructions or "") or (
-                    self.ability.instructions or ""
-                )
-                if held is None:
-                    return (
-                        f"{self.card.name}'s activation restriction \"Activate only if "
-                        f'{condition}" is not read by this engine, so the activation is '
-                        "refused rather than allowed unchecked (CR 602.5b)"
-                    )
-                return f"{self.card.name}'s activation restriction is not met (CR 602.5b)"
+        if self.game is not None:
+            # CR 602.1b's activation instructions apply here exactly as they
+            # do to a battlefield activation - `Game.activation_instruction_
+            # refusal` is the one reader of them both go through: "Activate
+            # only if <condition>" (Grim Repriser's graveyard-functioning
+            # "... an opponent has been dealt noncombat damage this turn"),
+            # "Activate only as a sorcery" (Expendable Lackey's), "Activate
+            # only during your upkeep" (Grim Reminder's) - each once read
+            # nowhere on this entry point, so allowed at any time. An
+            # instruction nothing reads is refused rather than allowed
+            # unchecked.
+            refusal = self.game.activation_instruction_refusal(self.ability, self.card, self.player)
+            if refusal is not None:
+                return refusal
         return None
 
     def begin_paying(self) -> CostPayment:

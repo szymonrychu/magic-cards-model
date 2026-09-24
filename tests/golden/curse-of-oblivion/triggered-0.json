@@ -46,7 +46,7 @@
         "source": "Curse of Oblivion"
       }
     ],
-    "fields_changed": [],
+    "fields_changed": ["turn_counts"],
     "notices": {},
     "objects": {
       "Serra Angel@alice#1": {

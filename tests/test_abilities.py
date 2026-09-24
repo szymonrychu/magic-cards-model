@@ -623,5 +623,7 @@ def test_a_while_condition_with_a_comma_side_if_still_parses_as_a_trigger():
     )
     assert isinstance(ability, TriggeredAbility)
     assert ability.condition == "this creature attacks"
-    assert ability.intervening_if == "saddled"
+    # CR 702.171b: the permanent's own saddled designation, spelled as the
+    # object-state clause its reader reads.
+    assert ability.intervening_if == "it's saddled"
     assert ability.effect == "if you control an artifact, draw a card."

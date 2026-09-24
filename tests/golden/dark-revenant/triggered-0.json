@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["reveals"],
+    "fields_changed": ["reveals", "turn_counts"],
     "notices": {},
     "objects": {
       "Dark Revenant@alice#1": {

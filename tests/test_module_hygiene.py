@@ -47,7 +47,12 @@ def _packages() -> list[pathlib.Path]:
 #: them), where every name really was unique by construction and a
 #: collision is a fresh accident worth failing on. `main`-inherited reuse in
 #: the two grouping packages is out of that scope.
-_SPLIT_PACKAGE_EXEMPT = {SRC / "models", SRC / "machines"}
+#: `machines/conditions/` is a grouping package too, and by design: each
+#: family module exports the same registry name, `READERS`, which the
+#: package's `__init__` reads module by module (`conditions.readers()`) and
+#: never imports into one namespace - the collision (b) guards against
+#: cannot happen there.
+_SPLIT_PACKAGE_EXEMPT = {SRC / "models", SRC / "machines", SRC / "machines" / "conditions"}
 
 
 def _split_packages() -> list[pathlib.Path]:

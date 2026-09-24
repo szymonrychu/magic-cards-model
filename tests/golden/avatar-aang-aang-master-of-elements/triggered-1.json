@@ -46,7 +46,7 @@
         "source": "Aang, Master of Elements"
       }
     ],
-    "fields_changed": ["cards_drawn_this_turn", "life_gained_amount_this_turn", "life_gained_this_turn", "turn_facts"],
+    "fields_changed": ["cards_drawn_this_turn", "damage_dealt_this_turn", "life_gained_amount_this_turn", "life_gained_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Aang, Master of Elements@alice#1": {
